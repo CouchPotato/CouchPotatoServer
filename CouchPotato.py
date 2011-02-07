@@ -33,8 +33,9 @@ except ImportError:
         print "Registering libraries..."
         # Insert local directories into path
         lib_path = os.path.join(os.path.abspath(cwd), 'libs')
-        sys.path.insert(0, lib_path)
         src_path = os.path.join(os.path.abspath(cwd), 'src')
+        sys.path.insert(0, lib_path)
+        sys.path.insert(0, src_path)
         print "Passing execution to couchpotato..."
         try:
             from couchpotato import cli
