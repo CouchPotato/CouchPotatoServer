@@ -1,0 +1,3 @@
+[submodule "libs"]
+	path = libs
+	url = github_alshain:CouchPotato/Dependencies.git
