@@ -20,9 +20,10 @@ setup(name="couchpotato",
       package_dir={'': 'src'},
       install_requires=[
           'argparse',
-          'sqlalchemy',
           'elixir',
-          'nose'],
+          'flask',
+          'nose',
+          'sqlalchemy'],
       entry_points="""
       [console_scripts]
       couchpotato = couchpotato.cli:cmd_couchpotato
