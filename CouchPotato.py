@@ -5,6 +5,7 @@ import os
 from os.path import dirname, isfile
 import subprocess
 import sys
+import traceback
 
 
 try:
@@ -41,7 +42,11 @@ except ImportError:
             from couchpotato import cli
         except ImportError:
             print "[ERROR]: Something's seriously wrong."
-            print "Could not load couchpotato from src directory."
+            print "="*78
+            traceback.print_exc()
+            print "="*78
+            print "Aborting..."
+            sys.exit(1)
     else:
         # Running from Titanium
         raise NotImplementedError("Don't know how to do that.")
