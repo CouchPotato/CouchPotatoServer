@@ -1,4 +1,17 @@
 #!/usr/bin/env python
+"""You need to have setuptools installed.
+
+Usage:
+    python setup.py develop
+
+This will register the couchpotato package in your system and thereby make it
+available from anywhere.
+
+Also, a script will be installed to control couchpotato from the shell.
+Try running:
+    couchpotato --help
+
+"""
 
 from setuptools import setup
 
