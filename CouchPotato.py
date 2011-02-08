@@ -37,7 +37,7 @@ except ImportError:
         src_path = os.path.join(os.path.abspath(cwd), 'src')
         sys.path.insert(0, lib_path)
         sys.path.insert(0, src_path)
-        print sys.path
+
         print "Passing execution to couchpotato..."
         try:
             from couchpotato import cli
@@ -52,5 +52,5 @@ except ImportError:
         # Running from Titanium
         raise NotImplementedError("Don't know how to do that.")
 
-
-cli.cmd_couchpotato()
+if __name__ == "__main__":
+    cli.cmd_couchpotato()
