@@ -23,6 +23,8 @@ class Release(Entity):
     """Logically groups all files that belong to a certain release, such as
     parts of a movie, subtitles, nfo, trailers etc."""
     files = OneToMany('File')
+    mooli_id = Field(Integer)
+    resource = ManyToOne('Resource')
 
 
 class File(Entity):
