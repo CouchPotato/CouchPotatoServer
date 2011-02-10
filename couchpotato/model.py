@@ -16,6 +16,7 @@ class Resource(Entity):
     offline."""
     name = Field(UnicodeString(255))
     path = Field(UnicodeString(255))
+    releases = OneToMany('Release')
 
 
 class Release(Entity):
