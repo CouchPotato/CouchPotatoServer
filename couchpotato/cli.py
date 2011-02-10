@@ -1,11 +1,8 @@
-from flask import Flask
+from couchpotato import app
 import argparse
 
 def cmd_couchpotato():
-    app = Flask(__name__)
-
-#    @app.route("/")
-#    def hello():
-#        return "Hello World!"
-
-    app.run(debug = True)
+    """Commandline entry point."""
+    # Make sure views are imported and registered.
+    import couchpotato.views
+    app.run(debug=True)
