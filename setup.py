@@ -17,7 +17,6 @@ from setuptools import setup
 
 setup(name="couchpotato",
       packages=['couchpotato'],
-      package_dir={'': 'src'},
       install_requires=[
           'argparse',
           'elixir',
