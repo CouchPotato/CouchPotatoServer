@@ -44,3 +44,10 @@ class FileType(Entity):
     identifier = Field(String(20), unique=True)
     name = Field(UnicodeString(255), nullable=False)
     files = OneToMany('File')
+
+
+class RenameHistory(Entity):
+    """Remembers from where to where files have been moved."""
+    file = ManyToOne('File')
+    old = Field(String(255))
+    new = Field(String(255))
