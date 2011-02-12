@@ -14,7 +14,7 @@ base_path = dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(base_path, 'libs'))
 
 from couchpotato.core.logger import CPLog
-log = CPLog(__name__);
+log = CPLog(__name__)
 
 try:
     from couchpotato import cli

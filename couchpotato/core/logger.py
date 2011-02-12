@@ -1,4 +1,3 @@
-from couchpotato import app
 import logging
 
 class CPLog():

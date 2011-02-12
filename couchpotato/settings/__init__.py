@@ -36,7 +36,7 @@ class Settings():
         for option, value in options.iteritems():
             self.setDefault(section_name, option, value)
 
-        log.debug('Registered defaults %s: %s' % (section_name, options))
+        log.debug('Defaults for "%s": %s' % (section_name, options))
         self.on_register.send(self)
 
         if save:
