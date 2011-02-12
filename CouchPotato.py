@@ -1,16 +1,21 @@
 #!/usr/bin/env python
 """Wrapper for the command line interface."""
 
-import os
 from os.path import dirname, isfile
+import os
 import subprocess
 import sys
 import traceback
 
+# Root path
+base_path = dirname(os.path.abspath(__file__))
+
+# Insert local directories into path
+sys.path.insert(0, os.path.join(base_path, 'libs'))
 
 try:
     from couchpotato import cli
-except ImportError:
+except ImportError, e:
     print "Checking local dependencies..."
     if isfile(__file__):
         cwd = dirname(__file__)
@@ -31,12 +36,6 @@ except ImportError:
             print "=" * 78
             print stderr
             print "=" * 78
-        print "Registering libraries..."
-        # Insert local directories into path
-        lib_path = os.path.join(os.path.abspath(cwd), 'libs')
-        src_path = os.path.join(os.path.abspath(cwd), 'src')
-        sys.path.insert(0, lib_path)
-        sys.path.insert(0, src_path)
 
         print "Passing execution to couchpotato..."
         try:
@@ -53,4 +52,4 @@ except ImportError:
         raise NotImplementedError("Don't know how to do that.")
 
 if __name__ == "__main__":
-    cli.cmd_couchpotato()
+    cli.cmd_couchpotato(base_path)

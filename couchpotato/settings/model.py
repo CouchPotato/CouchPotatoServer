@@ -1,7 +1,7 @@
-from sqlalchemy.orm import scoped_session, sessionmaker
-from sqlalchemy import create_engine
-from sqlalchemy.schema import ThreadLocalMetaData
 from elixir import *
+from sqlalchemy import create_engine
+from sqlalchemy.orm import scoped_session, sessionmaker
+from sqlalchemy.schema import ThreadLocalMetaData
 
 # We would like to be able to create this schema in a specific database at
 # will, so we can test it easily.
@@ -30,19 +30,19 @@ class Release(Entity):
 class File(Entity):
     """File that belongs to a release."""
     history = OneToMany('RenameHistory')
-    path = Field(UnicodeString(255), nullable=False, unique=True)
+    path = Field(UnicodeString(255), nullable = False, unique = True)
     # Subtitles can have multiple parts, too
     part = Field(Integer)
     release = ManyToOne('Release')
     # Let's remember the size so we know about offline media.
-    size = Field(Integer, nullable=False)
+    size = Field(Integer, nullable = False)
     type = ManyToOne('FileType')
 
 
 class FileType(Entity):
     """Types could be trailer, subtitle, movie, partial movie etc."""
-    identifier = Field(String(20), unique=True)
-    name = Field(UnicodeString(255), nullable=False)
+    identifier = Field(String(20), unique = True)
+    name = Field(UnicodeString(255), nullable = False)
     files = OneToMany('File')
 
 
