@@ -2,10 +2,10 @@ from __future__ import with_statement
 from blinker import signal, Signal
 from couchpotato.core.logger import CPLog
 import ConfigParser
+import os.path
 import time
 
 log = CPLog(__name__)
-settings = signal('settings_register')
 
 class Settings():
 
@@ -20,13 +20,17 @@ class Settings():
         self.p = ConfigParser.RawConfigParser()
         self.p.read(file)
 
+        # Connect signals
+        signal('settings.register').connect(self.registerDefaults)
+        signal('settings.save').connect(self.save)
+
     def parser(self):
         return self.p
 
     def sections(self):
         return self.s
 
-    def registerDefaults(self, section_name, options):
+    def registerDefaults(self, section_name, options = {}, save = True):
 
         self.addSection(section_name)
         for option, value in options.iteritems():
@@ -35,30 +39,28 @@ class Settings():
         log.debug('Registered defaults %s: %s' % (section_name, options))
         self.on_register.send(self)
 
-        self.save()
+        if save:
+            self.save(self)
 
     def set(self, section, option, value):
         return self.p.set(section, option, value)
 
-    def get(self, option = '', section = 'global'):
-        value = self.p.get(section, option)
+    def get(self, option = '', section = 'global', default = ''):
 
-        if(self.is_int(value)):
-            return int(value)
-
-        if str(value).lower() in self.bool:
-            return self.bool.get(str(value).lower())
-
-        return value if type(value) != str else value.strip()
-
-    def is_int(self, value):
         try:
-            int(value)
-            return True
-        except ValueError:
-            return False
+            value = self.p.get(section, option)
 
-    def save(self):
+            if(self.is_int(value)):
+                return int(value)
+
+            if str(value).lower() in self.bool:
+                return self.bool.get(str(value).lower())
+
+            return value if type(value) != str else value.strip()
+        except:
+            return default
+
+    def save(self, caller):
         with open(self.file, 'wb') as configfile:
             self.p.write(configfile)
 
@@ -72,3 +74,10 @@ class Settings():
     def setDefault(self, section, option, value):
         if not self.p.has_option(section, option):
             self.p.set(section, option, value)
+
+    def is_int(self, value):
+        try:
+            int(value)
+            return True
+        except ValueError:
+            return False

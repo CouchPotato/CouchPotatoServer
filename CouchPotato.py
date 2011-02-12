@@ -13,6 +13,9 @@ base_path = dirname(os.path.abspath(__file__))
 # Insert local directories into path
 sys.path.insert(0, os.path.join(base_path, 'libs'))
 
+from couchpotato.core.logger import CPLog
+log = CPLog(__name__);
+
 try:
     from couchpotato import cli
 except ImportError, e:
@@ -52,4 +55,7 @@ except ImportError, e:
         raise NotImplementedError("Don't know how to do that.")
 
 if __name__ == "__main__":
-    cli.cmd_couchpotato(base_path)
+    try:
+        cli.cmd_couchpotato(base_path)
+    except Exception, e:
+        log.critical(e)
