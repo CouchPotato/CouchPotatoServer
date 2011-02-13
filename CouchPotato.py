@@ -50,6 +50,6 @@ except ImportError, e:
 
 if __name__ == '__main__':
     try:
-        cli.cmd_couchpotato(base_path)
+        cli.cmd_couchpotato(base_path, sys.argv[1:])
     except Exception, e:
         log.critical(e)
