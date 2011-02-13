@@ -1,7 +1,8 @@
+from couchpotato import web
 from couchpotato.api import api
 from couchpotato.core.logger import CPLog
 from couchpotato.core.settings import settings
-from couchpotato import web
+from libs.daemon import createDaemon
 from logging import handlers
 from optparse import OptionParser
 import logging
@@ -36,6 +37,8 @@ def cmd_couchpotato(base_path):
     settings.setFile(os.path.join(options.data_dir, 'settings.conf'))
     debug = options.debug or settings.get('debug', default = False)
 
+    if options.daemonize:
+        createDaemon()
 
     # Logger
     logger = logging.getLogger()
@@ -44,7 +47,7 @@ def cmd_couchpotato(base_path):
     logger.setLevel(level)
 
     # To screen
-    if debug and not options.quiet:
+    if debug and not options.quiet and not options.daemonize:
         hdlr = logging.StreamHandler(sys.stderr)
         hdlr.setFormatter(formatter)
         logger.addHandler(hdlr)
@@ -53,7 +56,6 @@ def cmd_couchpotato(base_path):
     hdlr2 = handlers.RotatingFileHandler(os.path.join(log_dir, 'CouchPotato.log'), 'a', 5000000, 4)
     hdlr2.setFormatter(formatter)
     logger.addHandler(hdlr2)
-
 
     # Start logging
     log = CPLog(__name__)
@@ -71,6 +73,7 @@ def cmd_couchpotato(base_path):
     from couchpotato import app
     api_key = settings.get('api_key')
     url_base = '/%s/' % settings.get('url_base')
+    reloader = debug and not options.daemonize
 
     # Basic config
     app.host = settings.get('host', default = '0.0.0.0')
@@ -89,4 +92,4 @@ def cmd_couchpotato(base_path):
     app.register_module(api, url_prefix = '%s/%s' % (url_base + 'api', api_key))
 
     # Go go go!
-    app.run()
+    app.run(use_reloader = reloader)
