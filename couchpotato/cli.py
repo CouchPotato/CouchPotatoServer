@@ -37,6 +37,7 @@ def cmd_couchpotato(base_path):
     settings.setFile(os.path.join(options.data_dir, 'settings.conf'))
     debug = options.debug or settings.get('debug', default = False)
 
+    # Daemonize app
     if options.daemonize:
         createDaemon()
 

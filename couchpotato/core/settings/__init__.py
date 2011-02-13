@@ -14,23 +14,23 @@ class Settings():
 
     bool = {'true':True, 'false':False}
 
-    def __init__(self):
-
-        # Connect signals
-        signal('settings.register').connect(self.registerDefaults)
-        signal('settings.save').connect(self.save)
-
     def setFile(self, file):
         self.file = file
 
         self.p = ConfigParser.RawConfigParser()
         self.p.read(file)
 
+        self.connectSignals()
+
     def parser(self):
         return self.p
 
     def sections(self):
         return self.s
+
+    def connectSignals(self):
+        signal('settings.register').connect(self.registerDefaults)
+        signal('settings.save').connect(self.save)
 
     def registerDefaults(self, section_name, options = {}, save = True):
 
