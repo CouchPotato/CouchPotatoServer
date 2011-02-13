@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-"""Wrapper for the command line interface."""
+# -*- coding: utf-8 -*-
+'''Wrapper for the command line interface.'''
 
 from os.path import dirname, isfile
 import os
@@ -19,42 +20,35 @@ log = CPLog(__name__)
 try:
     from couchpotato import cli
 except ImportError, e:
-    print "Checking local dependencies..."
+    log.info('Checking local dependencies...')
     if isfile(__file__):
         cwd = dirname(__file__)
-        print "Updating libraries..."
-        stdout, stderr = subprocess.Popen(["git", "submodule", "init"],
+        log.info('Updating libraries...')
+        stdout, stderr = subprocess.Popen(['git', 'submodule', 'init'],
                                           stderr = subprocess.PIPE,
                                           stdout = subprocess.PIPE).communicate()
         if stderr:
-            print "[WARNING] Git is complaining:"
-            print "=" * 78
-            print stderr
-            print "=" * 78
-        stdout, stderr = subprocess.Popen(["git", "submodule", "update"],
+            log.info('[WARNING] Git is complaining:')
+            log.info(stderr)
+        stdout, stderr = subprocess.Popen(['git', 'submodule', 'update'],
                                           stderr = subprocess.PIPE,
                                           stdout = subprocess.PIPE).communicate()
         if stderr:
-            print "[WARNING] Git is complaining:"
-            print "=" * 78
-            print stderr
-            print "=" * 78
+            log.info('[WARNING] Git is complaining:')
+            log.info(stderr)
 
-        print "Passing execution to couchpotato..."
+        log.info('Passing execution to couchpotato...')
         try:
             from couchpotato import cli
         except ImportError:
-            print "[ERROR]: Something's seriously wrong."
-            print "=" * 78
-            traceback.print_exc()
-            print "=" * 78
-            print "Aborting..."
+            log.error("[ERROR]: Something's seriously wrong.")
+            log.error(traceback.print_exc())
             sys.exit(1)
     else:
         # Running from Titanium
         raise NotImplementedError("Don't know how to do that.")
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     try:
         cli.cmd_couchpotato(base_path)
     except Exception, e:

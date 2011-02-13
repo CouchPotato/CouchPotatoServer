@@ -1,6 +1,8 @@
 from couchpotato import app
+from couchpotato.api import api
 from couchpotato.core.logger import CPLog
-from couchpotato.settings import Settings
+from couchpotato.core.settings import Settings
+from couchpotato import web
 from logging import handlers
 from optparse import OptionParser
 import logging
@@ -60,14 +62,31 @@ def cmd_couchpotato(base_path):
 
 
     # Load configs
-    from couchpotato.settings.loader import SettingsLoader
+    from couchpotato.core.settings.loader import SettingsLoader
     sl = SettingsLoader(root = base_path)
     sl.addConfig('couchpotato', 'core')
     sl.run()
 
 
     # Create app
+    api_key = settings.get('api_key')
+    url_base = '/%s/' % settings.get('url_base')
+
+    # Basic config
     app.host = settings.get('host', default = '0.0.0.0')
     app.port = settings.get('port', default = 5000)
     app.debug = debug
+    app.secret_key = api_key
+    app.static_path = url_base + 'static'
+
+    # Add static url with url_base
+    app.add_url_rule(app.static_path + '/<path:filename>',
+                      endpoint = 'static',
+                      view_func = app.send_static_file)
+
+    # Register modules
+    app.register_module(web, url_prefix = url_base)
+    app.register_module(api, url_prefix = '%sapi/%s' % (url_base, api_key))
+
+    # Go go go!
     app.run()

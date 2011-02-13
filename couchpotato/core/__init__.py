@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 config = ('global', {
     'debug': False,
     'host': '0.0.0.0',
@@ -6,4 +8,5 @@ config = ('global', {
     'password': '',
     'launch_browser': True,
     'url_base': '',
+    'api_key': uuid4().hex,
 })

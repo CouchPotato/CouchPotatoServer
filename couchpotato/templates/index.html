@@ -1,0 +1,6 @@
+{% extends "_desktop.html" %}
+
+{% block content %}
+{{ url_for('.static', filename='style/main.css') }}
+{{ url_for('api.index') }}
+{% endblock %}

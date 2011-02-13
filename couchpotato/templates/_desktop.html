@@ -1,0 +1,14 @@
+<!doctype html>
+<html>
+  <head>
+    <link rel="stylesheet" href="{{ url_for('.static', filename='style/main.css') }}">
+    <title>CouchPotato</title>
+  </head>
+<body>
+  <div id="content">{% block content %}{% endblock %}</div>
+  <div id="footer">
+    {% block footer %}
+    Footer
+    {% endblock %}
+  </div>
+</body>
