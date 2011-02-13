@@ -1,3 +1,4 @@
+from argparse import ArgumentParser
 from couchpotato import web
 from couchpotato.api import api
 from couchpotato.core.logger import CPLog
@@ -14,13 +15,17 @@ def cmd_couchpotato(base_path, args):
     '''Commandline entry point.'''
 
     # Options
-    parser = OptionParser('usage: %prog [options]')
-    parser.add_option('-s', '--datadir', dest = 'data_dir', default = base_path, help = 'Absolute or ~/ path, where settings/logs/database data is saved (default ./)')
-    parser.add_option('-t', '--test', '--debug', action = 'store_true', dest = 'debug', help = 'Debug mode')
-    parser.add_option('-q', '--quiet', action = 'store_true', dest = 'quiet', help = "Don't log to console")
-    parser.add_option('-d', '--daemon', action = 'store_true', dest = 'daemonize', help = 'Daemonize the app')
+    parser = ArgumentParser('usage: %prog [options]')
+    parser.add_argument('-s', '--datadir', default = base_path,
+                        dest = 'data_dir', help = 'Absolute or ~/ path, where settings/logs/database data is saved (default ./)')
+    parser.add_argument('-t', '--test', '--debug', action = 'store_true',
+                        dest = 'debug', help = 'Debug mode')
+    parser.add_argument('-q', '--quiet', action = 'store_true',
+                        dest = 'quiet', help = "Don't log to console")
+    parser.add_argument('-d', '--daemon', action = 'store_true',
+                        dest = 'daemonize', help = 'Daemonize the app')
 
-    (options, args) = parser.parse_args(args)
+    (options, args) = parser.parse_known_args(args)
 
     # Create data dir if needed
     if not os.path.isdir(options.data_dir):
@@ -33,13 +38,15 @@ def cmd_couchpotato(base_path, args):
         os.mkdir(log_dir)
 
 
+    # Daemonize app
+    if options.daemonize:
+        createDaemon()
+
+
     # Register settings
     settings.setFile(os.path.join(options.data_dir, 'settings.conf'))
     debug = options.debug or settings.get('debug', default = False)
 
-    # Daemonize app
-    if options.daemonize:
-        createDaemon()
 
     # Logger
     logger = logging.getLogger()
@@ -64,7 +71,7 @@ def cmd_couchpotato(base_path, args):
 
     # Start logging
     log = CPLog(__name__)
-    log.debug('Started with params %s' % args)
+    log.debug('Started with options %s' % options)
 
 
     # Load configs
