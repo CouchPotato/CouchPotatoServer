@@ -1,7 +1,6 @@
-from couchpotato import app
 from couchpotato.api import api
 from couchpotato.core.logger import CPLog
-from couchpotato.core.settings import Settings
+from couchpotato.core.settings import settings
 from couchpotato import web
 from logging import handlers
 from optparse import OptionParser
@@ -34,7 +33,7 @@ def cmd_couchpotato(base_path):
 
 
     # Register settings
-    settings = Settings(os.path.join(options.data_dir, 'settings.conf'))
+    settings.setFile(os.path.join(options.data_dir, 'settings.conf'))
     debug = options.debug or settings.get('debug', default = False)
 
 
@@ -69,6 +68,7 @@ def cmd_couchpotato(base_path):
 
 
     # Create app
+    from couchpotato import app
     api_key = settings.get('api_key')
     url_base = '/%s/' % settings.get('url_base')
 
@@ -86,7 +86,7 @@ def cmd_couchpotato(base_path):
 
     # Register modules
     app.register_module(web, url_prefix = url_base)
-    app.register_module(api, url_prefix = '%sapi/%s' % (url_base, api_key))
+    app.register_module(api, url_prefix = '%s/%s' % (url_base + 'api', api_key))
 
     # Go go go!
     app.run()

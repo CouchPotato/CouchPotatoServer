@@ -14,15 +14,17 @@ class Settings():
 
     bool = {'true':True, 'false':False}
 
-    def __init__(self, file):
-        self.file = file
-
-        self.p = ConfigParser.RawConfigParser()
-        self.p.read(file)
+    def __init__(self):
 
         # Connect signals
         signal('settings.register').connect(self.registerDefaults)
         signal('settings.save').connect(self.save)
+
+    def setFile(self, file):
+        self.file = file
+
+        self.p = ConfigParser.RawConfigParser()
+        self.p.read(file)
 
     def parser(self):
         return self.p
@@ -81,3 +83,5 @@ class Settings():
             return True
         except ValueError:
             return False
+
+settings = Settings()
