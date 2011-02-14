@@ -1,8 +1,8 @@
+from argparse import ArgumentParser
 from couchpotato import web
 from couchpotato.api import api
 from libs.daemon import createDaemon
 from logging import handlers
-from optparse import OptionParser
 import logging
 import os.path
 import sys
@@ -12,17 +12,17 @@ def cmd_couchpotato(base_path, args):
     '''Commandline entry point.'''
 
     # Options
-    parser = OptionParser()
-    parser.add_option('-s', '--datadir', default = base_path,
+    parser = ArgumentParser()
+    parser.add_argument('-s', '--datadir', default = base_path,
                         dest = 'data_dir', help = 'Absolute or ~/ path, where settings/logs/database data is saved (default ./)')
-    parser.add_option('-t', '--test', '--debug', action = 'store_true',
+    parser.add_argument('-t', '--test', '--debug', action = 'store_true',
                         dest = 'debug', help = 'Debug mode')
-    parser.add_option('-q', '--quiet', action = 'store_true',
+    parser.add_argument('-q', '--quiet', action = 'store_true',
                         dest = 'quiet', help = "Don't log to console")
-    parser.add_option('-d', '--daemon', action = 'store_true',
+    parser.add_argument('-d', '--daemon', action = 'store_true',
                         dest = 'daemonize', help = 'Daemonize the app')
 
-    (options, args) = parser.parse_args(args)
+    options = parser.parse_args(args)
 
 
     # Create data dir if needed
