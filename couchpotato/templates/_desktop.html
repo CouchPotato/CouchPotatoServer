@@ -1,14 +1,23 @@
 <!doctype html>
 <html>
-  <head>
-    <link rel="stylesheet" href="{{ url_for('.static', filename='style/main.css') }}">
-    <title>CouchPotato</title>
-  </head>
-<body>
-  <div id="content">{% block content %}{% endblock %}</div>
-  <div id="footer">
-    {% block footer %}
-    Footer
-    {% endblock %}
-  </div>
-</body>
+	<head>
+		<link rel="stylesheet" href="{{ url_for('.static', filename='style/main.css') }}">
+		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/mootools.js') }}"></script>
+		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/mootools_more.js') }}"></script>
+		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/couchpotato.js') }}"></script>
+		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/history.js') }}"></script>
+		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/pages.js') }}"></script>
+		<link href="{{ url_for('.static', filename='images/favicon.ico') }}" rel="icon" type="image/x-icon" />
+
+		<script type="text/javascript">
+			window.addEvent('domready', function() {
+				var cp = new CouchPotato({
+					'url': '{{ request.path }}',
+					'api_url': '{{ url_for('api.index') }}'
+				});
+			})
+		</script>
+		<title>CouchPotato</title>
+	</head>
+	<body></body>
+</html>

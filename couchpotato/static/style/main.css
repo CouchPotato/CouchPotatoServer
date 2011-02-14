@@ -1,0 +1,161 @@
+html {
+	color: #343434;
+	font-size: 12px;
+	line-height: 1.5;
+	font-family: "Helvetica Neue", Helvetica, Arial, Geneva, sans-serif;
+}
+
+body {
+	margin: 0;
+	padding: 0;
+	background: #fff;
+	overflow-y: scroll;
+}
+	body.noscroll { overflow: hidden; }
+
+	#clean {
+		background: transparent !important;
+	}
+
+pre {
+	white-space: pre-wrap;
+	white-space: -moz-pre-wrap;
+	white-space: -pre-wrap;
+	white-space: -o-pre-wrap;
+	word-wrap: break-word;
+}
+
+input, textarea {
+	font-size: 12px;
+	font-family: "Helvetica Neue", Helvetica, Arial, Geneva, sans-serif;
+}
+
+a img {
+	border:none;
+}
+
+a {
+	text-decoration:none;
+	color: #6ea1d7;
+	outline: 0;
+}
+a:hover { color: #4d66c4; }
+
+.page {
+	width: 960px;
+	margin: 0 auto;
+	line-height: 24px;
+	padding: 0 0 20px;
+}
+
+	.page .noticeMe {
+		background-color: lightgoldenrodyellow;
+		display: block;
+		padding: 20px 10px;
+		margin: 0 -10px 40px;
+		font-size: 19px;
+		text-align: center;
+	}
+
+.content {
+	clear:both;
+	padding: 130px 10px 10px;
+}
+
+.footer {
+	text-align:center;
+	padding: 50px 0 0 0;
+	color: #999;
+	font-size: 10px;
+	clear: both;
+}
+
+	.footer .check {
+		color: #333;
+	}
+
+#toTop {
+	background: black;
+	position: fixed;
+	bottom: 0;
+	right: 0;
+	padding: 10px 10px 10px 40px;
+	background: #f7f7f7 url('../images/toTop.gif') no-repeat 10px center;
+	border-radius: 5px 0 0 0; 
+	-moz-border-radius: 5px 0 0 0; 
+	-webkit-border-radius: 5px 0 0 0; 
+}
+	
+form {
+	padding:0;
+	margin:0;
+}
+
+.spinner{
+	background: #f7f7f7 url('../images/spinner.gif') no-repeat center;
+}
+
+/*** Navigation ***/
+#header {
+	background: #f7f7f7;
+	padding:10px;
+	margin-bottom: 20px;
+	border-bottom: 1px solid #f1f1f1;
+	height: 60px;
+	-moz-box-shadow:  0 0 30px rgba(0,0,0,0.1);
+	-webkit-box-shadow:  0 0 30px rgba(0,0,0,0.1);
+	position: fixed;
+	width: 99%;
+}
+
+#header .navigation {
+	width: 960px;
+	margin: 0 auto;
+	overflow:hidden;
+}
+
+	#header .navigation ul {
+		float: left;
+		padding: 0;
+		margin: 0 0 0 6px;
+		width: 450px;
+	}
+
+	#header .navigation ul li {
+		color: #8b8b8b;
+		display: block;
+		font-size:20px;
+		font-weight: bold;
+		margin: 0;
+		text-align: center;
+		float: left;
+	}
+
+		#header .navigation ul li a {
+			display: block;
+			padding: 15px;
+		}
+			#header .navigation ul li:first-child a { padding-left: 10px; }
+			#header .navigation ul li a.logLink { font-size: 13px; padding: 23px 20px 15px; }
+			#header .navigation ul li a#showConfig { 
+				background: url('../../media/images/gear.png') no-repeat center;
+				height: 35px;
+				width: 10px;
+			}
+
+			#header .navigation ul li span {
+				display: block;
+				margin-top: 5px;
+			}
+	
+		#header .navigation ul li.disabled {
+			color: #e5e5e5;
+		}
+		
+		#header .navigation ul li a:link, #header .navigation ul li a:visited {
+			color: #2c2c2c;
+		}
+		
+		#header .navigation ul li a:hover, #header .navigation ul li a:active {
+			color: #8b8b8b;
+		}

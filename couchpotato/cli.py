@@ -1,4 +1,3 @@
-from blinker.base import signal
 from couchpotato import web
 from couchpotato.api import api
 from couchpotato.core.logger import CPLog
