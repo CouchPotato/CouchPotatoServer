@@ -12,7 +12,7 @@
 		<script type="text/javascript">
 			window.addEvent('domready', function() {
 				var cp = new CouchPotato({
-					'url': '{{ request.path }}',
+					'base_url': '{{ request.path }}',
 					'api_url': '{{ url_for('api.index') }}'
 				});
 			})

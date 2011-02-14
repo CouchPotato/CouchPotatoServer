@@ -23,7 +23,6 @@ def page_not_found(error):
     url = request.path[len(index_url):]
     return redirect(index_url + '#' + url)
 
-
 @web.route('/exit')
 @requires_auth
 def exit():

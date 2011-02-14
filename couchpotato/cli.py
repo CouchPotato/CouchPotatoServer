@@ -1,7 +1,5 @@
 from couchpotato import web
 from couchpotato.api import api
-from couchpotato.core.logger import CPLog
-from couchpotato.core.settings import settings
 from libs.daemon import createDaemon
 from logging import handlers
 from optparse import OptionParser
@@ -44,7 +42,10 @@ def cmd_couchpotato(base_path, args):
 
 
     # Register settings
+    from couchpotato.core.settings import settings
     settings.setFile(os.path.join(options.data_dir, 'settings.conf'))
+
+    # Determine debug
     debug = options.debug or settings.get('debug', default = False)
 
 
@@ -70,6 +71,7 @@ def cmd_couchpotato(base_path, args):
     server_log.disabled = True
 
     # Start logging
+    from couchpotato.core.logger import CPLog
     log = CPLog(__name__)
     log.debug('Started with options %s' % options)
 
@@ -84,7 +86,7 @@ def cmd_couchpotato(base_path, args):
     # Create app
     from couchpotato import app
     api_key = settings.get('api_key')
-    url_base = '/%s/' % settings.get('url_base')
+    url_base = '/' + settings.get('url_base') if settings.get('url_base') else ''
     reloader = debug and not options.daemonize
 
     # Basic config
@@ -92,7 +94,7 @@ def cmd_couchpotato(base_path, args):
     app.port = settings.get('port', default = 5000)
     app.debug = debug
     app.secret_key = api_key
-    app.static_path = url_base + 'static'
+    app.static_path = url_base + '/static'
 
     # Add static url with url_base
     app.add_url_rule(app.static_path + '/<path:filename>',
@@ -100,8 +102,8 @@ def cmd_couchpotato(base_path, args):
                       view_func = app.send_static_file)
 
     # Register modules
-    app.register_module(web, url_prefix = url_base)
-    app.register_module(api, url_prefix = '%s/%s' % (url_base + 'api', api_key))
+    app.register_module(web, url_prefix = '%s/' % url_base)
+    app.register_module(api, url_prefix = '%s/%s/%s/' % (url_base, 'api', api_key))
 
     # Go go go!
     app.run(use_reloader = reloader)

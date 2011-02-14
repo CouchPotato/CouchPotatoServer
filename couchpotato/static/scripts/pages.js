@@ -8,6 +8,17 @@ Page.Movie = new Class({
 
 	initialize: function(options){
 
+	},
+
+	indexAction: function(param){
+		var self = this
+		self.getMovies()
+	},
+
+	getMovies: function(){
+		var self = this
+
+		this.api().request('movie', {'status': 'wanted'})
 	}
 
 })

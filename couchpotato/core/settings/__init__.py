@@ -1,11 +1,9 @@
 from __future__ import with_statement
 from blinker import signal, Signal
-from couchpotato.core.logger import CPLog
 import ConfigParser
 import os.path
 import time
 
-log = CPLog(__name__)
 
 class Settings():
 
@@ -19,6 +17,9 @@ class Settings():
 
         self.p = ConfigParser.RawConfigParser()
         self.p.read(file)
+
+        from couchpotato.core.logger import CPLog
+        self.log = CPLog(__name__)
 
         self.connectSignals()
 
@@ -38,7 +39,7 @@ class Settings():
         for option, value in options.iteritems():
             self.setDefault(section_name, option, value)
 
-        log.debug('Defaults for "%s": %s' % (section_name, options))
+        self.log.debug('Defaults for "%s": %s' % (section_name, options))
         self.on_register.send(self)
 
         if save:
@@ -66,7 +67,7 @@ class Settings():
         with open(self.file, 'wb') as configfile:
             self.p.write(configfile)
 
-        log.debug('Saved settings')
+        self.log.debug('Saved settings')
         self.on_save.send(self)
 
     def addSection(self, section):
