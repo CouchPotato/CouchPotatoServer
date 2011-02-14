@@ -22,3 +22,17 @@ def page_not_found(error):
     index_url = url_for('web.index')
     url = request.path[len(index_url):]
     return redirect(index_url + '#' + url)
+
+
+@web.route('/exit')
+@requires_auth
+def exit():
+    # stopping code
+    pass
+
+
+@web.route('/restart')
+@requires_auth
+def restart():
+    # restart code
+    pass
