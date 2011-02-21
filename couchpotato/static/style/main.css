@@ -96,7 +96,7 @@ form {
 }
 
 /*** Navigation ***/
-#header {
+.header {
 	background: #f7f7f7;
 	padding:10px;
 	margin-bottom: 20px;
@@ -106,22 +106,16 @@ form {
 	-webkit-box-shadow:  0 0 30px rgba(0,0,0,0.1);
 	position: fixed;
 	width: 99%;
+	z-index: 9999;
 }
 
-#header .navigation {
+.header .navigation {
 	width: 960px;
 	margin: 0 auto;
-	overflow:hidden;
+	overflow: hidden;
 }
 
-	#header .navigation ul {
-		float: left;
-		padding: 0;
-		margin: 0 0 0 6px;
-		width: 450px;
-	}
-
-	#header .navigation ul li {
+	.header .navigation li {
 		color: #8b8b8b;
 		display: block;
 		font-size:20px;
@@ -131,31 +125,31 @@ form {
 		float: left;
 	}
 
-		#header .navigation ul li a {
+		.header .navigation li a {
 			display: block;
 			padding: 15px;
 		}
-			#header .navigation ul li:first-child a { padding-left: 10px; }
-			#header .navigation ul li a.logLink { font-size: 13px; padding: 23px 20px 15px; }
-			#header .navigation ul li a#showConfig { 
+			.header .navigation li:first-child a { padding-left: 10px; }
+			.header .navigation li a.logLink { font-size: 13px; padding: 23px 20px 15px; }
+			.header .navigation li a#showConfig { 
 				background: url('../../media/images/gear.png') no-repeat center;
 				height: 35px;
 				width: 10px;
 			}
 
-			#header .navigation ul li span {
+			.header .navigation li span {
 				display: block;
 				margin-top: 5px;
 			}
 	
-		#header .navigation ul li.disabled {
+		.header .navigation li.disabled {
 			color: #e5e5e5;
 		}
 		
-		#header .navigation ul li a:link, #header .navigation ul li a:visited {
+		.header .navigation li a:link, .header .navigation li a:visited {
 			color: #2c2c2c;
 		}
 		
-		#header .navigation ul li a:hover, #header .navigation ul li a:active {
+		.header .navigation li a:hover, .header .navigation li a:active {
 			color: #8b8b8b;
 		}

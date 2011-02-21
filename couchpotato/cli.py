@@ -77,10 +77,10 @@ def cmd_couchpotato(base_path, args):
 
 
     # Load configs
-    from couchpotato.core.settings.loader import SettingsLoader
-    sl = SettingsLoader(root = base_path)
-    sl.addConfig('couchpotato', 'core')
-    sl.run()
+    from couchpotato.core.settings.loader import settings_loader
+    settings_loader.load(root = base_path)
+    settings_loader.addConfig('couchpotato', 'core')
+    settings_loader.run()
 
 
     # Create app
@@ -103,7 +103,7 @@ def cmd_couchpotato(base_path, args):
 
     # Register modules
     app.register_module(web, url_prefix = '%s/' % url_base)
-    app.register_module(api, url_prefix = '%s/%s/%s/' % (url_base, 'api', api_key))
+    app.register_module(api, url_prefix = '%s/%s/%s/' % (url_base, 'api', api_key if not debug else 'apikey'))
 
     # Go go go!
     app.run(use_reloader = reloader)

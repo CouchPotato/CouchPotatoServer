@@ -3,20 +3,13 @@ var CouchPotato = new Class({
 	Implements: [Options],
 
 	defaults: {
-		page: 'movie',
+		page: 'wanted',
 		action: 'index',
 		params: {}
 	},
 
 	pages: [],
-
-	tabs: [
-	    {'href': '/movie/', 'title':'Gimmy gimmy gimmy!', 'label':'Wanted'},
-	    {'href': '/manage/', 'title':'Do stuff to your existing movies!', 'label':'Manage'},
-	    {'href': '/feed/', 'title':'Which wanted movies are released soon?', 'label':'Soon'},
-	    {'href': '/log/', 'title':'Show recent logs.', 'class':'logLink', 'label':'Logs'},
-	    {'href': '/config/', 'title':'Change settings.', 'id':'showConfig'}
-	],
+	block: [],
 
 	initialize: function(options) {
 		var self = this;
@@ -25,38 +18,24 @@ var CouchPotato = new Class({
 		self.c = $(document.body)
 
 		self.route = new Route(self.defaults);
-		self.api = new Api(self.options.api_url)
+		self.api = new Api(self.options.api)
 
-		History.addEvent('change', self.createPage.bind(self));
+		self.createLayout();
+		self.createPages();
+
+		History.addEvent('change', self.openPage.bind(self));
 		History.handleInitialState();
 
-		self.createLayout()
-		self.createNavigation()
-
-		self.c.addEvent('click:relay(a)', self.openPage.bind(self))
+		self.c.addEvent('click:relay(a)', self.pushState.bind(self));
 	},
 
-	openPage: function(e){
+	pushState: function(e){
 		var self = this;
-		(e).stop()
+		(e).stop();
 
-		var url = e.target.get('href')
-		History.push(url)
-	},
-
-	createNavigation: function(){
-		var self = this
-
-		self.tabs.each(function(tab){
-			new Element('li').adopt(
-				new Element('a', {
-					'href': tab.href,
-					'title': tab.title,
-					'text': tab.label
-				})
-			).inject(self.navigation)
-		})
-
+		var url = e.target.get('href');
+		if(History.getPath() != url)
+			History.push(url);
 	},
 
 	createLayout: function(){
@@ -64,15 +43,27 @@ var CouchPotato = new Class({
 
 		self.c.adopt(
 			self.header = new Element('div.header').adopt(
-				self.navigation = new Element('ul.navigation'),
-				self.add_form = new Element('div.add_form')
+				self.block.navigation = new Block.Navigation(self, {}),
+				self.block.search = new Block.Search(self, {})
 			),
 			self.content = new Element('div.content'),
-			self.footer = new Element('div.footer')
-		)
+			self.block.footer = new Block.Footer(self, {})
+		);
 	},
 
-	createPage: function(url) {
+	createPages: function(){
+		var self = this;
+
+		Object.each(Page, function(page_class, class_name){
+			pg = new Page[class_name](self, {});
+			self.pages[class_name] = pg;
+
+			$(pg).inject(self.content);
+		});
+
+	},
+
+	openPage: function(url) {
 		var self = this;
 
 		self.route.parse(url);
@@ -80,14 +71,19 @@ var CouchPotato = new Class({
 		var action = self.route.getAction();
 		var params = self.route.getParams();
 
-		var pg = self.pages[page_name]
-		if(!pg){
-			pg = new Page[page_name]();
-			pg.setParent(self)
-			self.pages[page_name] = pg;
-		}
-		pg.open(action, params)
+		var page = self.pages[page_name];
+			page.open(action, params);
+			page.show();
 
+		if(self.current_page)
+			self.current_page.hide()
+
+		self.current_page = page;
+
+	},
+
+	getBlock: function(block_name){
+		return this.block[block_name]
 	},
 
 	getApi: function(){
@@ -95,76 +91,40 @@ var CouchPotato = new Class({
 	}
 });
 
-var PageBase = new Class({
-
-	Implements: [Options],
-
-	initialize: function(options) {
-
-	},
-
-	open: function(action, params){
-		var self = this;
-		p('Opening: ' +self.getName() + ', ' + action + ', ' + Object.toQueryString(params));
-
-		try {
-			self[action+'Action'](params)
-		}
-		catch (e){
-			self.errorAction(e)
-		}
-	},
-
-	errorAction: function(e){
-		p('Error, action not found', e);
-	},
-
-	getName: function(){
-		return this.name
-	},
-
-	setParent: function(parent){
-		this.parent = parent
-	},
-
-	getParent: function(){
-		return this.parent
-	},
-
-	api: function(){
-		return this.parent.getApi()
-	}
-});
 
 var Api = new Class({
 
 	url: '',
 
-	initialize: function(url){
+	initialize: function(options){
 		var self = this
 
-		self.url = url
+		self.options = options;
 		self.req = new Request.JSON({
 			'method': 'get'
 		})
 
 	},
 
-	request: function(type, params, data){
+	request: function(type, options){
 		var self = this;
 
-		self.req.setOptions({
-			'url': self.createUrl(type, params),
-			'data': data
-		})
-		self.req.send()
+		new Request.JSON(Object.merge({
+			'method': 'get',
+			'url': self.createUrl(type),
+		}, options)).send()
 	},
 
-	createUrl: function(action, params){
-		return this.url + (action || 'default') + '/?' + Object.toQueryString(params)
+	createUrl: function(action){
+		return this.options.url + (action || 'default') + '/'
+	},
+
+	getOption: function(name){
+		return this.options[name]
 	}
 
 });
+
 
 var Route = new Class({
 

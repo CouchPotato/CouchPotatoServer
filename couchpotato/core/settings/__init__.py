@@ -27,7 +27,7 @@ class Settings():
         return self.p
 
     def sections(self):
-        return self.s
+        return self.p.sections()
 
     def connectSignals(self):
         signal('settings.register').connect(self.registerDefaults)
@@ -46,24 +46,34 @@ class Settings():
             self.save(self)
 
     def set(self, section, option, value):
-        return self.p.set(section, option, value)
+        return self.p.set(section, option, self.cleanValue(value))
 
     def get(self, option = '', section = 'global', default = ''):
-
         try:
             value = self.p.get(section, option)
-
-            if(self.is_int(value)):
-                return int(value)
-
-            if str(value).lower() in self.bool:
-                return self.bool.get(str(value).lower())
-
-            return value if type(value) != str else value.strip()
+            return self.cleanValue(value)
         except:
             return default
 
-    def save(self, caller):
+    def cleanValue(self, value):
+        if(self.is_int(value)):
+            return int(value)
+
+        if str(value).lower() in self.bool:
+            return self.bool.get(str(value).lower())
+
+        return value.strip()
+
+    def getValues(self):
+        values = {}
+        for section in self.sections():
+            values[section] = {}
+            for option in self.p.items(section):
+                (option_name, option_value) = option
+                values[section][option_name] = option_value
+        return values
+
+    def save(self, caller = ''):
         with open(self.file, 'wb') as configfile:
             self.p.write(configfile)
 

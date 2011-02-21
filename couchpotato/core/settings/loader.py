@@ -8,11 +8,13 @@ log = CPLog(__name__)
 class SettingsLoader:
 
     configs = {}
+    sections = {}
 
-    def __init__(self, root = ''):
-
+    def __init__(self):
         self.settings_register = signal('settings.register')
         self.settings_save = signal('settings.save')
+
+    def load(self, root = ''):
 
         self.paths = {
             'plugins' : ('couchpotato.core.plugins', os.path.join(root, 'couchpotato', 'core', 'plugins')),
@@ -42,8 +44,13 @@ class SettingsLoader:
         module_name = '%s.%s' % (module, name)
         try:
             m = getattr(self.loadModule(module_name), name)
-            (section, options) = m.config
-            self.settings_register.send(section, options = options, save = save)
+
+            for section in m.config:
+                self.addSection(section['name'], section)
+                options = {}
+                for key, option in section['options'].iteritems():
+                    options[key] = option['default']
+                self.settings_register.send(section['name'], options = options, save = save)
 
             return True
         except Exception, e:
@@ -62,3 +69,11 @@ class SettingsLoader:
             return m
         except:
             raise
+
+    def addSection(self, section_name, options):
+        self.sections[section_name] = options
+
+    def getSections(self):
+        return self.sections
+
+settings_loader = SettingsLoader()

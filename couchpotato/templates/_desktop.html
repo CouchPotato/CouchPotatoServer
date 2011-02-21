@@ -2,18 +2,35 @@
 <html>
 	<head>
 		<link rel="stylesheet" href="{{ url_for('.static', filename='style/main.css') }}">
+		<link rel="stylesheet" href="{{ url_for('.static', filename='style/uniform.generic.css') }}">
+		<link rel="stylesheet" href="{{ url_for('.static', filename='style/uniform.css') }}">
 		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/mootools.js') }}"></script>
 		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/mootools_more.js') }}"></script>
 		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/couchpotato.js') }}"></script>
 		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/history.js') }}"></script>
-		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/pages.js') }}"></script>
+
+		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/block.js') }}"></script>
+		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/block/navigation.js') }}"></script>
+		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/block/footer.js') }}"></script>
+		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/block/search.js') }}"></script>
+
+		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/page.js') }}"></script>
+		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/page/wanted.js') }}"></script>
+		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/page/settings.js') }}"></script>
+		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/page/log.js') }}"></script>
+		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/page/soon.js') }}"></script>
+		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/page/manage.js') }}"></script>
+
 		<link href="{{ url_for('.static', filename='images/favicon.ico') }}" rel="icon" type="image/x-icon" />
 
 		<script type="text/javascript">
 			window.addEvent('domready', function() {
 				var cp = new CouchPotato({
 					'base_url': '{{ request.path }}',
-					'api_url': '{{ url_for('api.index') }}'
+					'api': {
+						'url': '{{ url_for('api.index') }}',
+						'path_sep': '{{ sep }}'
+					}
 				});
 			})
 		</script>
