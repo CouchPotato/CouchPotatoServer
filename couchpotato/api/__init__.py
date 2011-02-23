@@ -1,6 +1,7 @@
 from couchpotato.api.file_browser import FileBrowser
-from couchpotato.core.settings import settings
 from couchpotato.core.settings.loader import settings_loader
+from couchpotato.core.settings.model import Resource
+from couchpotato.environment import Env
 from flask import Module
 from flask.helpers import jsonify
 import flask
@@ -16,7 +17,7 @@ def index():
 def settings_view():
     return jsonify({
         'sections': settings_loader.sections,
-        'values': settings.getValues()
+        'values': Env.get('settings').getValues()
     })
 
 @api.route('setting.save/')
@@ -27,8 +28,8 @@ def setting_save_view():
     option = a.get('name')
     value = a.get('value')
 
-    settings.set(section, option, value)
-    settings.save()
+    Env.get('settings').set(section, option, value)
+    Env.get('settings').save()
 
     return jsonify({
         'success': True,
@@ -36,6 +37,7 @@ def setting_save_view():
 
 @api.route('movie/')
 def movie():
+
     return jsonify({
         'success': True,
         'movies': [

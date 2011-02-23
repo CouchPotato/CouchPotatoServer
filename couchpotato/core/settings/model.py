@@ -1,7 +1,10 @@
-from elixir import *
-from sqlalchemy import create_engine
-from sqlalchemy.orm import scoped_session, sessionmaker
-from sqlalchemy.schema import ThreadLocalMetaData
+from elixir.entity import Entity
+from elixir.fields import Field
+from elixir.options import options_defaults
+from elixir.relationships import OneToMany, ManyToOne
+from sqlalchemy.types import Integer, String, Unicode
+
+options_defaults["shortnames"] = True
 
 # We would like to be able to create this schema in a specific database at
 # will, so we can test it easily.
@@ -10,12 +13,11 @@ from sqlalchemy.schema import ThreadLocalMetaData
 # http://elixir.ematia.de/trac/wiki/Recipes/MultipleDatabasesOneMetadata
 __session__ = None
 
-
 class Resource(Entity):
-    """Represents a resource of movies.  This recources can be online or
-    offline."""
-    name = Field(UnicodeString(255))
-    path = Field(UnicodeString(255))
+    """Represents a resource of movies.  
+    This resources can be online or offline."""
+    name = Field(Unicode(255))
+    path = Field(Unicode(255))
     releases = OneToMany('Release')
 
 
@@ -30,7 +32,7 @@ class Release(Entity):
 class File(Entity):
     """File that belongs to a release."""
     history = OneToMany('RenameHistory')
-    path = Field(UnicodeString(255), nullable = False, unique = True)
+    path = Field(Unicode(255), nullable = False, unique = True)
     # Subtitles can have multiple parts, too
     part = Field(Integer)
     release = ManyToOne('Release')
@@ -42,7 +44,7 @@ class File(Entity):
 class FileType(Entity):
     """Types could be trailer, subtitle, movie, partial movie etc."""
     identifier = Field(String(20), unique = True)
-    name = Field(UnicodeString(255), nullable = False)
+    name = Field(Unicode(255), nullable = False)
     files = OneToMany('File')
 
 

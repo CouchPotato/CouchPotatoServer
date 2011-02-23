@@ -1,9 +1,9 @@
-from couchpotato.core.settings import settings
+from couchpotato.environment import Env
 from flask import request, Response
 from functools import wraps
 
 def check_auth(username, password):
-    return username == settings.get('username') and password == settings.get('password')
+    return username == Env.get('settings').get('username') and password == Env.get('settings').get('password')
 
 def authenticate():
     return Response(
@@ -16,7 +16,7 @@ def requires_auth(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         auth = request.authorization
-        if settings.get('username') and (not auth or not check_auth(auth.username, auth.password)):
+        if Env.get('settings').get('username') and (not auth or not check_auth(auth.username, auth.password)):
             return authenticate()
 
         return f(*args, **kwargs)

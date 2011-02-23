@@ -1,6 +1,8 @@
 from argparse import ArgumentParser
-from couchpotato import web
+from couchpotato import get_engine, web
 from couchpotato.api import api
+from couchpotato.core.settings.model import *
+from couchpotato.environment import Env
 from libs.daemon import createDaemon
 from logging import handlers
 import logging
@@ -13,8 +15,8 @@ def cmd_couchpotato(base_path, args):
 
     # Options
     parser = ArgumentParser()
-    parser.add_argument('-s', '--datadir', default = base_path,
-                        dest = 'data_dir', help = 'Absolute or ~/ path, where settings/logs/database data is saved (default ./)')
+    parser.add_argument('-s', '--datadir', default = os.path.join(base_path, '_data'),
+                        dest = 'data_dir', help = 'Absolute or ~/ path, where settings/logs/database data is saved (default ./_data)')
     parser.add_argument('-t', '--test', '--debug', action = 'store_true',
                         dest = 'debug', help = 'Debug mode')
     parser.add_argument('-q', '--quiet', action = 'store_true',
@@ -41,12 +43,15 @@ def cmd_couchpotato(base_path, args):
         createDaemon()
 
 
-    # Register settings
-    from couchpotato.core.settings import settings
-    settings.setFile(os.path.join(options.data_dir, 'settings.conf'))
+    # Register environment settings
+    Env.get('settings').setFile(os.path.join(options.data_dir, 'settings.conf'))
+    Env.set('app_dir', base_path)
+    Env.set('data_dir', options.data_dir)
+    Env.set('db_path', os.path.join(options.data_dir, 'couchpotato.db'))
 
     # Determine debug
-    debug = options.debug or settings.get('debug', default = False)
+    debug = options.debug or Env.get('settings').get('debug', default = False)
+    Env.set('debug', debug)
 
 
     # Logger
@@ -83,15 +88,21 @@ def cmd_couchpotato(base_path, args):
     settings_loader.run()
 
 
+    # Configure Database
+    from elixir import setup_all, create_all
+    setup_all()
+    create_all(get_engine())
+
+
     # Create app
     from couchpotato import app
-    api_key = settings.get('api_key')
-    url_base = '/' + settings.get('url_base') if settings.get('url_base') else ''
+    api_key = Env.get('settings').get('api_key')
+    url_base = '/' + Env.get('settings').get('url_base') if Env.get('settings').get('url_base') else ''
     reloader = debug and not options.daemonize
 
     # Basic config
-    app.host = settings.get('host', default = '0.0.0.0')
-    app.port = settings.get('port', default = 5000)
+    app.host = Env.get('settings').get('host', default = '0.0.0.0')
+    app.port = Env.get('settings').get('port', default = 5000)
     app.debug = debug
     app.secret_key = api_key
     app.static_path = url_base + '/static'
