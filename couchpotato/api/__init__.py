@@ -28,8 +28,7 @@ def setting_save_view():
     option = a.get('name')
     value = a.get('value')
 
-    Env.get('settings').set(section, option, value)
-    Env.get('settings').save()
+    Env.setting(option, section, value).save()
 
     return jsonify({
         'success': True,

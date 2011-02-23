@@ -16,12 +16,14 @@ app = Flask(__name__)
 log = CPLog(__name__)
 web = Module(__name__, 'web')
 
+
 def get_session(engine):
     engine = engine if engine else get_engine()
-    return scoped_session(sessionmaker(autoflush = True, transactional = True, bind = engine))
+    return scoped_session(sessionmaker(transactional = True, bind = engine))
 
 def get_engine():
-    return create_engine('sqlite:///' + Env.get('db_path'), echo = Env.get('debug'))
+    return create_engine('sqlite:///' + Env.get('db_path'), echo = False)
+
 
 @web.route('/')
 @requires_auth

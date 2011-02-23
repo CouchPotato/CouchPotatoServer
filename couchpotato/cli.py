@@ -48,9 +48,12 @@ def cmd_couchpotato(base_path, args):
     Env.set('app_dir', base_path)
     Env.set('data_dir', options.data_dir)
     Env.set('db_path', os.path.join(options.data_dir, 'couchpotato.db'))
+    Env.set('quiet', options.quiet)
+    Env.set('daemonize', options.daemonize)
+    Env.set('args', args)
 
     # Determine debug
-    debug = options.debug or Env.get('settings').get('debug', default = False)
+    debug = options.debug or Env.setting('debug', default = False)
     Env.set('debug', debug)
 
 
@@ -96,13 +99,13 @@ def cmd_couchpotato(base_path, args):
 
     # Create app
     from couchpotato import app
-    api_key = Env.get('settings').get('api_key')
-    url_base = '/' + Env.get('settings').get('url_base') if Env.get('settings').get('url_base') else ''
+    api_key = Env.setting('api_key')
+    url_base = '/' + Env.setting('url_base') if Env.setting('url_base') else ''
     reloader = debug and not options.daemonize
 
     # Basic config
-    app.host = Env.get('settings').get('host', default = '0.0.0.0')
-    app.port = Env.get('settings').get('port', default = 5000)
+    app.host = Env.setting('host', default = '0.0.0.0')
+    app.port = Env.setting('port', default = 5000)
     app.debug = debug
     app.secret_key = api_key
     app.static_path = url_base + '/static'
