@@ -47,7 +47,7 @@ def cmd_couchpotato(base_path, args):
     Env.get('settings').setFile(os.path.join(options.data_dir, 'settings.conf'))
     Env.set('app_dir', base_path)
     Env.set('data_dir', options.data_dir)
-    Env.set('db_path', os.path.join(options.data_dir, 'couchpotato.db'))
+    Env.set('db_path', 'sqlite:///' + os.path.join(options.data_dir, 'couchpotato.db'))
     Env.set('quiet', options.quiet)
     Env.set('daemonize', options.daemonize)
     Env.set('args', args)
@@ -90,6 +90,23 @@ def cmd_couchpotato(base_path, args):
     settings_loader.addConfig('couchpotato', 'core')
     settings_loader.run()
 
+
+    # Load migrations
+    from migrate.versioning.api import version_control, db_version, version, upgrade
+    db = Env.get('db_path')
+    repo = os.path.join('couchpotato', 'core', 'migration')
+
+    latest_db_version = version(repo)
+
+    try:
+        current_db_version = db_version(db, repo)
+    except:
+        version_control(db, repo, version = latest_db_version)
+        current_db_version = db_version(db, repo)
+
+    if current_db_version < latest_db_version and not debug:
+        log.info('Doing database upgrade. From %d to %d' % (current_db_version, latest_db_version))
+        upgrade(db, repo)
 
     # Configure Database
     from elixir import setup_all, create_all

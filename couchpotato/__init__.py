@@ -22,7 +22,7 @@ def get_session(engine):
     return scoped_session(sessionmaker(transactional = True, bind = engine))
 
 def get_engine():
-    return create_engine('sqlite:///' + Env.get('db_path'), echo = False)
+    return create_engine(Env.get('db_path'), echo = False)
 
 
 @web.route('/')
