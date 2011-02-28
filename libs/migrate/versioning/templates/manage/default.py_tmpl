@@ -1,0 +1,10 @@
+#!/usr/bin/env python
+from migrate.versioning.shell import main
+
+{{py:
+_vars = locals().copy()
+del _vars['__template_name__']
+_vars.pop('repository_name', None)
+defaults = ", ".join(["%s='%s'" % var for var in _vars.iteritems()])
+}}
+main({{ defaults }})
