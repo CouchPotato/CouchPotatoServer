@@ -1,3 +1,6 @@
+def start():
+    pass
+
 config = [{
     'name': 'Renamer',
     'tab': 'renaming',

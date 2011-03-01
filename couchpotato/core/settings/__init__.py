@@ -1,5 +1,7 @@
 from __future__ import with_statement
-from blinker import signal, Signal
+from couchpotato.api import addApiView
+from couchpotato.core.event import addEvent
+from flask.helpers import jsonify
 import ConfigParser
 import os.path
 import time
@@ -7,10 +9,13 @@ import time
 
 class Settings():
 
-    on_save = Signal()
-    on_register = Signal()
-
     bool = {'true':True, 'false':False}
+    options = {}
+
+    def __init__(self):
+
+        addApiView('settings', self.view)
+        addApiView('settings.save', self.saveView)
 
     def setFile(self, file):
         self.file = file
@@ -21,7 +26,7 @@ class Settings():
         from couchpotato.core.logger import CPLog
         self.log = CPLog(__name__)
 
-        self.connectSignals()
+        self.connectEvents()
 
     def parser(self):
         return self.p
@@ -29,18 +34,17 @@ class Settings():
     def sections(self):
         return self.p.sections()
 
-    def connectSignals(self):
-        signal('settings.register').connect(self.registerDefaults)
-        signal('settings.save').connect(self.save)
+    def connectEvents(self):
+        addEvent('settings.options', self.addOptions)
+        addEvent('settings.register', self.registerDefaults)
+        addEvent('settings.save', self.save)
 
     def registerDefaults(self, section_name, options = {}, save = True):
-
         self.addSection(section_name)
         for option, value in options.iteritems():
             self.setDefault(section_name, option, value)
 
         self.log.debug('Defaults for "%s": %s' % (section_name, options))
-        self.on_register.send(self)
 
         if save:
             self.save(self)
@@ -73,12 +77,11 @@ class Settings():
                 values[section][option_name] = option_value
         return values
 
-    def save(self, caller = ''):
+    def save(self):
         with open(self.file, 'wb') as configfile:
             self.p.write(configfile)
 
         self.log.debug('Saved settings')
-        self.on_save.send(self)
 
     def addSection(self, section):
         if not self.p.has_section(section):
@@ -94,3 +97,32 @@ class Settings():
             return True
         except ValueError:
             return False
+
+    def addOptions(self, section_name, options):
+        self.options[section_name] = options
+
+    def getOptions(self):
+        return self.options
+
+
+    def view(self):
+
+        return jsonify({
+            'options': self.getOptions(),
+            'values': self.getValues()
+        })
+
+    def saveView(self):
+
+        a = Env.getParams()
+
+        section = a.get('section')
+        option = a.get('name')
+        value = a.get('value')
+
+        self.set(option, section, value)
+        self.save()
+
+        return jsonify({
+            'success': True,
+        })

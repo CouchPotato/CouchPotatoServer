@@ -15,7 +15,7 @@ def requires_auth(f):
 
     @wraps(f)
     def decorated(*args, **kwargs):
-        auth = request.authorization
+        auth = getattr(request, 'authorization')
         if Env.setting('username') and (not auth or not check_auth(auth.username, auth.password)):
             return authenticate()
 

@@ -1,3 +1,8 @@
+from couchpotato.core.providers.tmdb.main import TMDB
+
+def start():
+    return TMDB()
+
 config = [{
     'name': 'TheMovieDB',
     'tab': 'providers',

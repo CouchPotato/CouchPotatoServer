@@ -109,7 +109,7 @@ var Api = new Class({
 	request: function(type, options){
 		var self = this;
 
-		new Request.JSON(Object.merge({
+		return new Request.JSON(Object.merge({
 			'method': 'get',
 			'url': self.createUrl(type),
 		}, options)).send()

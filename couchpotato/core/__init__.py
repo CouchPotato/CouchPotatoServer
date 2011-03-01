@@ -1,5 +1,8 @@
 from uuid import uuid4
 
+def start():
+    pass
+
 config = [{
     'name': 'global',
     'tab': 'general',

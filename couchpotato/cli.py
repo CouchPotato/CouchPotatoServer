@@ -2,7 +2,6 @@ from argparse import ArgumentParser
 from couchpotato import get_engine, web
 from couchpotato.api import api
 from couchpotato.core.settings.model import *
-from couchpotato.environment import Env
 from libs.daemon import createDaemon
 from logging import handlers
 import logging
@@ -44,10 +43,12 @@ def cmd_couchpotato(base_path, args):
 
 
     # Register environment settings
+    from couchpotato.environment import Env
     Env.get('settings').setFile(os.path.join(options.data_dir, 'settings.conf'))
     Env.set('app_dir', base_path)
     Env.set('data_dir', options.data_dir)
     Env.set('db_path', 'sqlite:///' + os.path.join(options.data_dir, 'couchpotato.db'))
+    Env.set('cache_dir', os.path.join(options.data_dir, 'cache'))
     Env.set('quiet', options.quiet)
     Env.set('daemonize', options.daemonize)
     Env.set('args', args)
@@ -84,11 +85,11 @@ def cmd_couchpotato(base_path, args):
     log.debug('Started with options %s' % options)
 
 
-    # Load configs
-    from couchpotato.core.settings.loader import settings_loader
-    settings_loader.load(root = base_path)
-    settings_loader.addConfig('couchpotato', 'core')
-    settings_loader.run()
+    # Load configs & plugins
+    loader = Env.get('loader')
+    loader.preload(root = base_path)
+    loader.addModule('core', 'couchpotato.core', 'core')
+    loader.run()
 
 
     # Load migrations

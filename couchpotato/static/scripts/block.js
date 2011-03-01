@@ -8,13 +8,21 @@ var BlockBase = new Class({
 		var self = this;
 		self.setOptions(options);
 		
-		self.parent = parent;
+		self.page = parent;
 
 		self.create();
 	},
 	
 	create: function(){
 		this.el = new Element('div.block');
+	},
+
+	api: function(){
+		return this.getParent().getApi()
+	},
+
+	getParent: function(){
+		return this.page
 	},
 
 	toElement: function(){
