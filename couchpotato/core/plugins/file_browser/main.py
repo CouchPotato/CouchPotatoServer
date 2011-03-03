@@ -1,6 +1,5 @@
 from couchpotato.api import addApiView
-from couchpotato.environment import Env
-from flask.helpers import jsonify
+from couchpotato.core.helpers.request import getParam, jsonified
 import os
 import string
 
@@ -45,12 +44,12 @@ class FileBrowser():
     def view(self):
 
         try:
-            fb = FileBrowser(Env.getParam('path', '/'))
+            fb = FileBrowser(getParam('path', '/'))
             dirs = fb.getDirectories()
         except:
             dirs = []
 
-        return jsonify({
+        return jsonified({
             'empty': len(dirs) == 0,
             'dirs': dirs,
         })

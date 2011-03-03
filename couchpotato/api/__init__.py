@@ -1,30 +1,20 @@
-from couchpotato.core.settings.model import Resource
+from couchpotato.core.helpers.request import jsonified
 from flask import Module
-from flask.helpers import jsonify
 
 api = Module(__name__)
 
 def addApiView(route, func):
-    api.add_url_rule(route + '/', route, func)
+    api.add_url_rule(route + '/', endpoint = route if route else 'index', view_func = func)
 
-
-@api.route('')
+""" Api view """
 def index():
-    return jsonify({'test': 'bla'})
+    from couchpotato import app
 
+    routes = []
+    for route, x in sorted(app.view_functions.iteritems()):
+        if route[0:4] == 'api.':
+            routes += [route[4:]]
 
-@api.route('movie/')
-def movie():
-    return jsonify({
-        'success': True,
-        'movies': [
-            {
-                'name': 'Movie 1',
-                'description': 'Description 1',
-            },
-            {
-                'name': 'Movie 2',
-                'description': 'Description 2',
-            }
-        ]
-    })
+    return jsonified({'routes': routes})
+
+addApiView('', index)

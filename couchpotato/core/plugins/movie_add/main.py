@@ -1,30 +1,36 @@
 from couchpotato.api import addApiView
-from couchpotato.core.event import getEvent, fireEvent
+from couchpotato.core.event import fireEvent
+from couchpotato.core.helpers.request import getParams, jsonified
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.environment import Env
-from flask.helpers import jsonify
 
 class MovieAdd(Plugin):
 
     def __init__(self):
         addApiView('movie.add.search', self.search)
+        addApiView('movie.add.select', self.select)
 
     def search(self):
 
-        a = Env.getParams()
+        a = getParams()
 
-        print fireEvent('provider.movie.search', q = a.get('q'))
+        results = fireEvent('provider.movie.search', q = a.get('q'))
 
-        movies = [
-            {'id': 1, 'name': 'test'}
-        ]
+        # Combine movie results
+        movies = []
+        for r in results:
+            movies += r
 
-        return jsonify({
+        return jsonified({
             'success': True,
             'empty': len(movies) == 0,
             'movies': movies,
         })
 
-
     def select(self):
-        pass
+
+        a = getParams()
+
+        return jsonified({
+            'success': True,
+            'added': True,
+        })

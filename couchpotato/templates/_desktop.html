@@ -4,8 +4,11 @@
 		<link rel="stylesheet" href="{{ url_for('.static', filename='style/main.css') }}">
 		<link rel="stylesheet" href="{{ url_for('.static', filename='style/uniform.generic.css') }}">
 		<link rel="stylesheet" href="{{ url_for('.static', filename='style/uniform.css') }}">
+
 		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/mootools.js') }}"></script>
 		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/mootools_more.js') }}"></script>
+
+		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/uniform.js') }}"></script>
 		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/couchpotato.js') }}"></script>
 		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/history.js') }}"></script>
 
@@ -25,11 +28,13 @@
 
 		<script type="text/javascript">
 			window.addEvent('domready', function() {
+				new Uniform();
 				var cp = new CouchPotato({
 					'base_url': '{{ request.path }}',
 					'api': {
 						'url': '{{ url_for('api.index') }}',
-						'path_sep': '{{ sep }}'
+						'path_sep': '{{ sep }}',
+						'is_remote': false
 					}
 				});
 			})

@@ -100,16 +100,15 @@ var Api = new Class({
 		var self = this
 
 		self.options = options;
-		self.req = new Request.JSON({
-			'method': 'get'
-		})
 
 	},
 
 	request: function(type, options){
 		var self = this;
 
-		return new Request.JSON(Object.merge({
+		var r_type = self.options.is_remote ? 'JSONP' : 'JSON';
+		return new Request[r_type](Object.merge({
+			'callbackKey': 'json_callback',
 			'method': 'get',
 			'url': self.createUrl(type),
 		}, options)).send()

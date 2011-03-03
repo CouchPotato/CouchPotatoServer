@@ -1,7 +1,7 @@
 from __future__ import with_statement
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent
-from flask.helpers import jsonify
+from couchpotato.core.helpers.request import getParams, jsonified
 import ConfigParser
 import os.path
 import time
@@ -107,14 +107,14 @@ class Settings():
 
     def view(self):
 
-        return jsonify({
+        return jsonified({
             'options': self.getOptions(),
             'values': self.getValues()
         })
 
     def saveView(self):
 
-        a = Env.getParams()
+        a = getParams()
 
         section = a.get('section')
         option = a.get('name')
@@ -123,6 +123,6 @@ class Settings():
         self.set(option, section, value)
         self.save()
 
-        return jsonify({
+        return jsonified({
             'success': True,
         })

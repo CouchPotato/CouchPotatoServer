@@ -22,7 +22,7 @@ Page.Settings = new Class({
 
 		if(self.current)
 			self.toggleTab(self.current, true);
-		
+
 		self.toggleTab(action)
 		self.current = action;
 
@@ -34,9 +34,9 @@ Page.Settings = new Class({
 		var a = hide ? 'removeClass' : 'addClass';
 		var c = 'active';
 
-		var g = self.groups[tab] || self.groups.general
-				g.tab[a](c);
-				g.group[a](c);
+		var g = self.groups[tab] || self.groups.general;
+			g.tab[a](c);
+			g.group[a](c);
 
 	},
 
@@ -76,7 +76,7 @@ Page.Settings = new Class({
 			self.containers = new Element('form.uniForm.containers')
 		);
 
-		Object.each(json.sections, function(section, section_name){
+		Object.each(json.options, function(section, section_name){
 
 			// Create tab
 			var tab = new Element('li').adopt(
@@ -132,13 +132,7 @@ var OptionBase = new Class({
 		// Add focus events
 		self.input.addEvents({
 			'change': self.changed.bind(self),
-			'keyup': self.changed.bind(self),
-			'focus': function() {
-				self.el.addClass(self.focused_class);
-			},
-			'blur' : function() {
-				self.el.removeClass(self.focused_class);
-			}
+			'keyup': self.changed.bind(self)
 		});
 
 	},

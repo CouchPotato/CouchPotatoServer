@@ -1,5 +1,6 @@
-from couchpotato.core.logger import CPLog
 from axl.axel import Event
+from couchpotato.core.logger import CPLog
+import traceback
 
 log = CPLog(__name__)
 events = {}
@@ -21,7 +22,17 @@ def fireEvent(name, *args, **kwargs):
     try:
         e = events[name]
         e.asynchronous = False
-        return e(*args, **kwargs)
+        result = e(*args, **kwargs)
+
+        results = []
+        for r in result:
+            if r[0] == True:
+                results.append(r[1])
+            else:
+                etype, value, tb = r[1]
+                log.debug(''.join(traceback.format_exception(etype, value, tb)))
+
+        return results
     except Exception, e:
         log.debug(e)
 
@@ -29,7 +40,8 @@ def fireEventAsync(name, *args, **kwargs):
     try:
         e = events[name]
         e.asynchronous = True
-        return e(*args, **kwargs)
+        e(*args, **kwargs)
+        return True
     except Exception, e:
         log.debug(e)
 

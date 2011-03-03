@@ -1,6 +1,5 @@
 from couchpotato.core.loader import Loader
 from couchpotato.core.settings import Settings
-import flask
 
 class Env:
 
@@ -42,11 +41,3 @@ class Env:
         s = Env.get('settings')
         s.set(section, attr, value)
         return s
-
-    @staticmethod
-    def getParams():
-        return getattr(flask.request, 'args')
-
-    @staticmethod
-    def getParam(attr, default = None):
-        return getattr(flask.request, 'args').get(attr, default)

@@ -2,7 +2,7 @@ from elixir.entity import Entity
 from elixir.fields import Field
 from elixir.options import options_defaults
 from elixir.relationships import OneToMany, ManyToOne
-from sqlalchemy.types import Integer, String, Unicode
+from sqlalchemy.types import Integer, String, Unicode, UnicodeText, Boolean
 
 options_defaults["shortnames"] = True
 
@@ -13,43 +13,111 @@ options_defaults["shortnames"] = True
 # http://elixir.ematia.de/trac/wiki/Recipes/MultipleDatabasesOneMetadata
 __session__ = None
 
-class Resource(Entity):
-    """Represents a resource of movies.  
-    This resources can be online or offline."""
-    name = Field(Unicode(255))
-    path = Field(Unicode(255))
+
+class Movie(Entity):
+    """Movie Resource a movie could have multiple releases
+    The files belonging to the movie object are global for the whole movie
+    such as trailers, nfo, thumbnails"""
+
+    mooli_id = Field(Integer)
+
+    profile = ManyToOne('Profile')
     releases = OneToMany('Release')
+    files = OneToMany('File')
 
 
 class Release(Entity):
     """Logically groups all files that belong to a certain release, such as
-    parts of a movie, subtitles, nfo, trailers etc."""
-    files = OneToMany('File')
-    mooli_id = Field(Integer)
-    resource = ManyToOne('Resource')
+    parts of a movie, subtitles."""
 
+    movie = ManyToOne('Movie')
+    status = ManyToOne('Status')
+    quality = ManyToOne('Quality')
+    files = OneToMany('File')
+    history = OneToMany('History')
+
+
+class Status(Entity):
+    """The status of a release, such as Downloaded, Deleted, Wanted etc"""
+
+    identifier = Field(String(20), unique = True)
+    label = Field(String(20))
+
+    releases = OneToMany('Release')
+
+
+class Quality(Entity):
+    """Quality name of a release, DVD, 720P, DVD-Rip etc"""
+
+    identifier = Field(String(20), unique = True)
+    label = Field(String(20))
+
+    releases = OneToMany('Release')
+    profile_types = ManyToOne('ProfileType')
+
+class Profile(Entity):
+    """"""
+
+    identifier = Field(String(20), unique = True)
+    label = Field(Unicode(50))
+    order = Field(Integer)
+    wait_for = Field(Integer)
+
+    movie = OneToMany('Movie')
+    profile_type = OneToMany('ProfileType')
+
+class ProfileType(Entity):
+    """"""
+
+    order = Field(Integer)
+    mark_completed = Field(Boolean)
+    wait_for = Field(Integer)
+
+    type = OneToMany('Quality')
+    profile = ManyToOne('Profile')
 
 class File(Entity):
     """File that belongs to a release."""
-    history = OneToMany('RenameHistory')
+
     path = Field(Unicode(255), nullable = False, unique = True)
-    # Subtitles can have multiple parts, too
     part = Field(Integer)
+
+    history = OneToMany('RenameHistory')
+    movie = ManyToOne('Movie')
     release = ManyToOne('Release')
-    # Let's remember the size so we know about offline media.
-    size = Field(Integer, nullable = False)
     type = ManyToOne('FileType')
+    properties = OneToMany('FileProperty')
 
 
 class FileType(Entity):
     """Types could be trailer, subtitle, movie, partial movie etc."""
+
     identifier = Field(String(20), unique = True)
-    name = Field(Unicode(255), nullable = False)
+    name = Field(Unicode(50), nullable = False)
+
     files = OneToMany('File')
 
 
+class FileProperty(Entity):
+    """Properties that can be bound to a file for off-line usage"""
+
+    identifier = Field(String(20))
+    value = Field(Unicode(255), nullable = False)
+
+    file = ManyToOne('File')
+
+
+class History(Entity):
+    """History of actions that are connected to a certain release,
+    such as, renamed to, downloaded, deleted, download subtitles etc"""
+
+    message = Field(UnicodeText())
+    release = ManyToOne('Release')
+
 class RenameHistory(Entity):
     """Remembers from where to where files have been moved."""
-    file = ManyToOne('File')
+
     old = Field(String(255))
     new = Field(String(255))
+
+    file = ManyToOne('File')
