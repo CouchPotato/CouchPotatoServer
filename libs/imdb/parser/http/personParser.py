@@ -63,85 +63,131 @@ class DOMHTMLMaindetailsParser(DOMParserBase):
 
     _birth_attrs = [Attribute(key='birth date',
                         path={
-                            'day': "./div/a[starts-with(@href, " \
+                            'day': ".//a[starts-with(@href, " \
                                     "'/date/')]/text()",
-                            'year': "./div/a[starts-with(@href, " \
+                            'year': ".//a[starts-with(@href, " \
                                     "'/search/name?birth_year=')]/text()"
                             },
                         postprocess=build_date),
-                    Attribute(key='birth notes',
-                        path="./div/a[starts-with(@href, " \
+                    Attribute(key='birth place',
+                        path=".//a[starts-with(@href, " \
                                 "'/search/name?birth_place=')]/text()")]
     _death_attrs = [Attribute(key='death date',
                         path={
-                            'day': "./div/a[starts-with(@href, " \
+                            'day': ".//a[starts-with(@href, " \
                                     "'/date/')]/text()",
-                            'year': "./div/a[starts-with(@href, " \
-                                    "'/search/name?death_date=')]/text()"
+                            'year': ".//a[starts-with(@href, " \
+                                    "'/search/name?death_year=')]/text()"
                             },
                         postprocess=build_date),
-                    Attribute(key='death notes',
-                        path="./div/text()",
-                        # TODO: check if this slicing is always correct
-                        postprocess=lambda x: x.strip()[2:])]
+                    Attribute(key='death place',
+                        path=".//a[starts-with(@href, " \
+                                "'/search/name?death_place=')]/text()")]
     _film_attrs = [Attribute(key=None,
                       multi=True,
                       path={
-                          'link': "./a[1]/@href",
-                          'title': ".//text()",
-                          'status': "./i/a//text()",
-                          'roleID': "./div[@class='_imdbpyrole']/@roleid"
+                          'link': "./b/a[1]/@href",
+                          'title': "./b/a[1]/text()",
+                          'notes': "./b/following-sibling::text()",
+                          'year': "./span[@class='year_column']/text()",
+                          'status': "./a[@class='in_production']/text()",
+                          'rolesNoChar': './/br/following-sibling::text()',
+                          'chrRoles': "./a[@imdbpyname]/@imdbpyname",
+                          'roleID': "./a[starts-with(@href, '/character/')]/@href"
                           },
                       postprocess=lambda x:
                           build_movie(x.get('title') or u'',
+                              year=x.get('year'),
                               movieID=analyze_imdbid(x.get('link') or u''),
-                              roleID=(x.get('roleID') or u'').split('/'),
+                              rolesNoChar=(x.get('rolesNoChar') or u'').strip(),
+                              chrRoles=(x.get('chrRoles') or u'').strip(),
+                              additionalNotes=x.get('notes'),
+                              roleID=(x.get('roleID') or u''),
                               status=x.get('status') or None))]
 
     extractors = [
-            Extractor(label='page title',
-                        path="//title",
+            Extractor(label='name',
+                        path="//h1[@class='header']",
                         attrs=Attribute(key='name',
-                            path="./text()",
+                            path=".//text()",
                             postprocess=lambda x: analyze_name(x,
-                                                            canonical=1))),
+                                                               canonical=1))),
 
             Extractor(label='birth info',
-                        path="//div[h5='Date of Birth:']",
+                        path="//div[h4='Born:']",
                         attrs=_birth_attrs),
 
             Extractor(label='death info',
-                        path="//div[h5='Date of Death:']",
+                        path="//div[h4='Died:']",
                         attrs=_death_attrs),
 
             Extractor(label='headshot',
-                        path="//a[@name='headshot']",
+                        path="//td[@id='img_primary']/a",
                         attrs=Attribute(key='headshot',
                             path="./img/@src")),
 
             Extractor(label='akas',
-                        path="//div[h5='Alternate Names:']",
+                        path="//div[h4='Alternate Names:']",
                         attrs=Attribute(key='akas',
-                            path="./div/text()",
-                            postprocess=lambda x: x.strip().split(' | '))),
+                            path="./text()",
+                            postprocess=lambda x: x.strip().split('  '))),
 
             Extractor(label='filmography',
-                        group="//div[@class='filmo'][h5]",
-                        group_key="./h5/a[@name]/text()",
-                        group_key_normalize=lambda x: x.lower()[:-1],
-                        path="./ol/li",
-                        attrs=_film_attrs)
+                        group="//div[starts-with(@id, 'filmo-head-')]",
+                        group_key="./a[@name]/text()",
+                        group_key_normalize=lambda x: x.lower().replace(': ', ' '),
+                        path="./following-sibling::div[1]" \
+                                "/div[starts-with(@class, 'filmo-row')]",
+                        attrs=_film_attrs),
+
+            Extractor(label='indevelopment',
+                        path="//div[starts-with(@class,'devitem')]",
+                        attrs=Attribute(key='in development',
+                            multi=True,
+                            path={
+                                'link': './a/@href',
+                                'title': './a/text()'
+                                },
+                                postprocess=lambda x:
+                                    build_movie(x.get('title') or u'',
+                                        movieID=analyze_imdbid(x.get('link') or u''),
+                                        roleID=(x.get('roleID') or u'').split('/'),
+                                        status=x.get('status') or None)))
             ]
-    preprocessors = [
-            # XXX: check that this doesn't cut "status" or other info...
-            (re.compile(r'<br>(\.\.\.|    ?).+?</li>', re.I | re.M | re.S),
-                '</li>'),
-            (_reRoles, _manageRoles)]
+
+    preprocessors = [('<div class="clear"/> </div>', ''),
+            ('<br/>', '<br />'),
+            (re.compile(r'(<a href="/character/ch[0-9]{7}")>(.*?)</a>'),
+                r'\1 imdbpyname="\2@@">\2</a>')]
 
     def postprocess_data(self, data):
         for what in 'birth date', 'death date':
             if what in data and not data[what]:
                 del data[what]
+        # XXX: the code below is for backwards compatibility
+        # probably could be removed
+        for key in data.keys():
+            if key.startswith('actor '):
+                if not data.has_key('actor'):
+                    data['actor'] = []
+                data['actor'].extend(data[key])
+                del data[key]
+            if key.startswith('actress '):
+                if not data.has_key('actress'):
+                    data['actress'] = []
+                data['actress'].extend(data[key])
+                del data[key]
+            if key.startswith('self '):
+                if not data.has_key('self'):
+                    data['self'] = []
+                data['self'].extend(data[key])
+                del data[key]
+            if key == 'birth place':
+                data['birth notes'] = data[key]
+                del data[key]
+            if key == 'death place':
+                data['death notes'] = data[key]
+                del data[key]
         return data
 
 
@@ -181,6 +227,10 @@ class DOMHTMLBioParser(DOMParserBase):
                         # TODO: check if this slicing is always correct
                         postprocess=lambda x: u''.join(x).strip()[2:])]
     extractors = [
+            Extractor(label='headshot',
+                        path="//a[@name='headshot']",
+                        attrs=Attribute(key='headshot',
+                            path="./img/@src")),
             Extractor(label='birth info',
                         path="//div[h5='Date of Birth']",
                         attrs=_birth_attrs),

@@ -52,6 +52,10 @@ re_imdbID = re.compile(r'(?<=nm|tt|ch)([0-9]{7})\b')
 # movie AKAs.
 re_makas = re.compile('(<p class="find-aka">.*?</p>)')
 
+# Remove episode numbers.
+re_filmo_episodes = re.compile('<div class="filmo-episodes">.*?</div>',
+        re.M | re.I)
+
 
 def _unHtml(s):
     """Return a string without tags and no multiple spaces."""
@@ -537,24 +541,33 @@ class IMDbMobileAccessSystem(IMDbHTTPAccessSystem):
             if _parseChr: w = 'characterID'
             else: w = 'personID'
             raise IMDbDataAccessError, 'unable to get %s "%s"' % (w, personID)
-        name = _unHtml(name[0])
+        name = _unHtml(name[0].replace(' - IMDb', ''))
         if _parseChr:
             name = name.replace('(Character)', '').strip()
             name = name.replace('- Filmography by type', '').strip()
         else:
             name = name.replace('- Filmography by', '').strip()
         r = analyze_name(name, canonical=not _parseChr)
-        for dKind in ('birth', 'death'):
-            date = _findBetween(s, '<h5>Date of %s:</h5>' % dKind.capitalize(),
-                                ('<a class', '</div>', '<br/><br/>'), maxRes=1)
+        for dKind in ('Born', 'Died'):
+            date = _findBetween(s, '%s:</h4>' % dKind.capitalize(),
+                                ('<div class', '</div>', '<br/><br/>'), maxRes=1)
             if date:
                 date = _unHtml(date[0])
                 if date:
-                    date, notes = date_and_notes(date)
+                    #date, notes = date_and_notes(date)
+                    # TODO: fix to handle real names.
+                    date_notes = date.split(' in ', 1)
+                    notes = u''
+                    date = date_notes[0]
+                    if len(date_notes) == 2:
+                        notes = date_notes[1]
+                    dtitle = 'birth'
+                    if dKind == 'Died':
+                        dtitle = 'death'
                     if date:
-                        r['%s date' % dKind] = date
+                        r['%s date' % dtitle] = date
                     if notes:
-                        r['%s notes' % dKind] = notes
+                        r['%s notes' % dtitle] = notes
         akas = _findBetween(s, 'Alternate Names:</h5>', ('</div>',
                             '<br/><br/>'), maxRes=1)
         if akas:
@@ -569,18 +582,13 @@ class IMDbMobileAccessSystem(IMDbHTTPAccessSystem):
             hs[:] = _findBetween(hs[0], 'src="', '"', maxRes=1)
             if hs: r['headshot'] = hs[0]
         # Build a list of tuples such [('hrefLink', 'section name')]
-        workkind = _findBetween(s, '<div class="strip jump">', '</div>',
-                                maxRes=1)
-        if workkind:
-            workkind[:] = _findBetween(workkind[0], 'href="#', '</a>')
-        else:
-            # Assume there's only one section and/or there are no
-            # section links, for some reason.
-            workkind[:] = _findBetween(s, '<h5><a name=', '</a></h5>')
-            workkind[:] = [x.lstrip('"').rstrip(':').lower() for x in workkind]
+        workkind = _findBetween(s, 'id="jumpto_', '</a>')
         ws = []
         for work in workkind:
-            wsplit = work.split('">', 1)
+            sep = '" >'
+            if '">' in work:
+                sep = '">'
+            wsplit = work.split(sep, 1)
             if len(wsplit) == 2:
                 sect = wsplit[0]
                 if '"' in sect:
@@ -600,16 +608,22 @@ class IMDbMobileAccessSystem(IMDbHTTPAccessSystem):
             else:
                 inisect = s.find('<a name="%s' % sect)
             if inisect != -1:
-                endsect = s[inisect:].find('</ol>')
+                endsect = s[inisect:].find('<div id="filmo-head-')
                 if endsect != -1: raws = s[inisect:inisect+endsect]
             if not raws: continue
-            mlist = _findBetween(raws, '<li>', ('</li>', '<br>', '<br/>'))
+            mlist = _findBetween(raws, '<div class="filmo-row',
+                    ('<div class="clear"/>',))
             for m in mlist:
+                fCB = m.find('>')
+                if fCB != -1:
+                    m = m[fCB+1:].lstrip()
+                m = re_filmo_episodes.sub('', m)
                 # For every movie in the current section.
                 movieID = re_imdbID.findall(m)
                 if not movieID:
                     self._mobile_logger.debug('no movieID in %s', m)
                     continue
+                m = m.replace('<br/>', ' .... ', 1)
                 if not _parseChr:
                     chrIndx = m.find(' .... ')
                 else:
@@ -638,14 +652,22 @@ class IMDbMobileAccessSystem(IMDbHTTPAccessSystem):
                     if stendidx != -1:
                         status = _unHtml(m[stidx+3:stendidx])
                         m = m.replace(m[stidx+3:stendidx], '')
+                year = _findBetween(m, 'year_column">', '</span>', maxRes=1)
+                if year:
+                    year = year[0]
+                    m = m.replace('<span class="year_column">%s</span>' % year,
+                            '')
+                else:
+                    year = None
                 m = _unHtml(m)
                 if not m:
-                    self._mobile_logger.warn('no title fo rmovieID %s', movieID)
+                    self._mobile_logger.warn('no title for movieID %s', movieID)
                     continue
                 movie = build_movie(m, movieID=movieID, status=status,
                                     roleID=chids, modFunct=self._defModFunct,
                                     accessSystem=self.accessSystem,
-                                    _parsingCharacter=_parseChr)
+                                    _parsingCharacter=_parseChr, year=year)
+                sectName = sectName.split(':')[0]
                 r.setdefault(sectName, []).append(movie)
         # If available, take the always correct name from a form.
         itag = _getTagsWith(s, 'NAME="primary"', maxRes=1)

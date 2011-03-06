@@ -225,8 +225,8 @@ class DOMHTMLMovieParser(DOMParserBase):
                                 postprocess=lambda x: x.strip()),
                             Attribute(key="countries",
                                 path="./h5[starts-with(text(), " \
-                                        "'Countr')]/..//a/text()",
-                                    postprocess=makeSplitter(sep='\n')),
+                            "'Countr')]/../div[@class='info-content']//text()",
+                            postprocess=makeSplitter('|')),
                             Attribute(key="language",
                                 path="./h5[starts-with(text(), " \
                                         "'Language')]/..//text()",
@@ -541,11 +541,13 @@ class DOMHTMLPlotParser(DOMParserBase):
 
 def _process_award(x):
     award = {}
+    award['award'] = x.get('award').strip()
+    if not award['award']:
+        return {}
     award['year'] = x.get('year').strip()
     if award['year'] and award['year'].isdigit():
         award['year'] = int(award['year'])
     award['result'] = x.get('result').strip()
-    award['award'] = x.get('award').strip()
     category = x.get('category').strip()
     if category:
         award['category'] = category
@@ -649,6 +651,8 @@ class DOMHTMLAwardsParser(DOMParserBase):
             assigner = self.xpath(dom, "//a/text()")[0]
             for entry in data[key]:
                 if not entry.has_key('name'):
+                    if not entry:
+                        continue
                     # this is an award, not a recipient
                     entry['assigner'] = assigner.strip()
                     # find the recipients
@@ -996,8 +1000,10 @@ class DOMHTMLRatingsParser(DOMParserBase):
         if votes:
             nd['number of votes'] = {}
             for i in xrange(1, 11):
-                nd['number of votes'][int(votes[i]['ordinal'])] = \
-                        int(votes[i]['votes'].replace(',', ''))
+                _ordinal = int(votes[i]['ordinal'])
+                _strvts = votes[i]['votes'] or '0'
+                nd['number of votes'][_ordinal] = \
+                        int(_strvts.replace(',', ''))
         mean = data.get('mean and median', '')
         if mean:
             means = self.re_means.findall(mean)
@@ -1699,10 +1705,14 @@ class DOMHTMLEpisodesParser(DOMParserBase):
                 try: season_key = int(season_key)
                 except: pass
                 nd[season_key] = {}
+                ep_counter = 1
                 for episode in data[key]:
                     if not episode: continue
                     episode_key = episode.get('episode')
                     if episode_key is None: continue
+                    if not isinstance(episode_key, int):
+                        episode_key = ep_counter
+                        ep_counter += 1
                     cast_key = 'Season %s, Episode %s:' % (season_key,
                                                             episode_key)
                     if data.has_key(cast_key):

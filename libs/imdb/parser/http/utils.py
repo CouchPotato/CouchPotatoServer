@@ -262,14 +262,20 @@ def build_person(txt, personID=None, billingPos=None,
     return person
 
 
+_re_chrIDs = re.compile('[0-9]{7}')
+
 _b_m_logger = logging.getLogger('imdbpy.parser.http.build_movie')
 # To shrink spaces.
 re_spaces = re.compile(r'\s+')
 def build_movie(txt, movieID=None, roleID=None, status=None,
                 accessSystem='http', modFunct=None, _parsingCharacter=False,
-                _parsingCompany=False):
+                _parsingCompany=False, year=None, chrRoles=None,
+                rolesNoChar=None, additionalNotes=None):
     """Given a string as normally seen on the "categorized" page of
     a person on the IMDb's web site, returns a Movie instance."""
+    # FIXME: Oook, lets face it: build_movie and build_person are now
+    # two horrible sets of patches to support the new IMDb design.  They
+    # must be rewritten from scratch.
     if _parsingCharacter:
         _defSep = ' Played by '
     elif _parsingCompany:
@@ -291,6 +297,8 @@ def build_movie(txt, movieID=None, roleID=None, status=None,
         title = title[:-14] + ' (mini)'
     # Try to understand where the movie title ends.
     while True:
+        if year:
+            break
         if title[-1:] != ')':
             # Ignore the silly "TV Series" notice.
             if title[-9:] == 'TV Series':
@@ -319,12 +327,24 @@ def build_movie(txt, movieID=None, roleID=None, status=None,
         if notes: notes = '%s %s' % (title[nidx:], notes)
         else: notes = title[nidx:]
         title = title[:nidx].rstrip()
+    if year:
+        year = year.strip()
+        if title[-1] == ')':
+            fpIdx = title.rfind('(')
+            if fpIdx != -1:
+                if notes: notes = '%s %s' % (title[fpIdx:], notes)
+                else: notes = title[fpIdx:]
+                title = title[:fpIdx].rstrip()
+        title = u'%s (%s)' % (title, year)
     if _parsingCharacter and roleID and not role:
         roleID = None
     if not roleID:
         roleID = None
     elif len(roleID) == 1:
         roleID = roleID[0]
+    if not role and chrRoles and isinstance(roleID, (str, unicode)):
+        roleID = _re_chrIDs.findall(roleID)
+        role = ' / '.join(filter(None, chrRoles.split('@@')))
     # Manages multiple roleIDs.
     if isinstance(roleID, list):
         tmprole = role.split('/')
@@ -355,13 +375,29 @@ def build_movie(txt, movieID=None, roleID=None, status=None,
         movieID = str(movieID)
     if (not title) or (movieID is None):
         _b_m_logger.error('empty title or movieID for "%s"', txt)
+    if rolesNoChar:
+        rolesNoChar = filter(None, [x.strip() for x in rolesNoChar.split('/')])
+        if not role:
+            role = []
+        elif not isinstance(role, list):
+            role = [role]
+        role += rolesNoChar
+    notes = notes.strip()
+    if additionalNotes:
+        additionalNotes = re_spaces.sub(' ', additionalNotes).strip()
+        if notes:
+            notes += u' '
+        notes += additionalNotes
     m = Movie(title=title, movieID=movieID, notes=notes, currentRole=role,
                 roleID=roleID, roleIsPerson=_parsingCharacter,
                 modFunct=modFunct, accessSystem=accessSystem)
     if roleNotes and len(roleNotes) == len(roleID):
         for idx, role in enumerate(m.currentRole):
-            if roleNotes[idx]:
-                role.notes = roleNotes[idx]
+            try:
+                if roleNotes[idx]:
+                    role.notes = roleNotes[idx]
+            except IndexError:
+                break
     # Status can't be checked here, and must be detected by the parser.
     if status:
         m['status'] = status
@@ -468,8 +504,10 @@ class DOMParserBase(object):
         # converted to title=""Family Guy"" and this confuses BeautifulSoup.
         if self.usingModule == 'beautifulsoup':
             html_string = html_string.replace('""', '"')
+        #print html_string.encode('utf8')
         if html_string:
             dom = self.get_dom(html_string)
+            #print self.tostring(dom).encode('utf8')
             try:
                 dom = self.preprocess_dom(dom)
             except Exception, e:

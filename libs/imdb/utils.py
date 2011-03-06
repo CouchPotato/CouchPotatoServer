@@ -141,6 +141,9 @@ def analyze_name(name, canonical=None):
         if cpi > opi and re_index.match(name[opi:cpi+1]):
             imdbIndex = name[opi+1:cpi]
             name = name[:opi].rstrip()
+        else:
+            # XXX: for the birth and death dates case like " (1926-2004)"
+            name = name[:opi-1]
     if not name:
         raise IMDbParserError, 'invalid name: "%s"' % original_n
     if canonical is not None:
@@ -377,6 +380,9 @@ def analyze_title(title, canonical=None, canonicalSeries=None,
     elif title.endswith('(V)'):
         kind = u'video movie'
         title = title[:-3].rstrip()
+    elif title.endswith('(video)'):
+        kind = u'video movie'
+        title = title[:-7].rstrip()
     elif title.endswith('(mini)'):
         kind = u'tv mini series'
         title = title[:-6].rstrip()
@@ -400,6 +406,9 @@ def analyze_title(title, canonical=None, canonicalSeries=None,
         if not kind:
             kind = u'tv series'
         title = title[1:-1].strip()
+    elif title.endswith('(TV series)'):
+        kind = u'tv series'
+        title = title[:-11].rstrip()
     if not title:
         raise IMDbParserError, 'invalid title: "%s"' % original_t
     if canonical is not None:

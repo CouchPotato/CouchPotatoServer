@@ -23,7 +23,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import logging
 
 
-class IMDbError(Exception):
+class IMDbError(Exception, object):
     """Base class for every exception raised by the imdb package."""
     _logger = logging.getLogger('imdbpy')
 
