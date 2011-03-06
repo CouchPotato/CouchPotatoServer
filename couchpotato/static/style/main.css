@@ -1,8 +1,11 @@
+/* @override http://localhost:5000/static/style/main.css */
+
 html {
 	color: #343434;
 	font-size: 12px;
 	line-height: 1.5;
-	font-family: "Helvetica Neue", Helvetica, Arial, Geneva, sans-serif;
+	font-family: Helvetica, Arial, Geneva, sans-serif;
+	height: 100%;
 }
 
 body {
@@ -10,6 +13,7 @@ body {
 	padding: 0;
 	background: #fff;
 	overflow-y: scroll;
+	height: 100%;
 }
 	body.noscroll { overflow: hidden; }
 
@@ -42,11 +46,13 @@ a {
 a:hover { color: #4d66c4; }
 
 .page {
+	display: none;
 	width: 960px;
 	margin: 0 auto;
 	line-height: 24px;
 	padding: 0 0 20px;
 }
+	.page.active { display: block; }
 
 	.page .noticeMe {
 		background-color: lightgoldenrodyellow;
@@ -59,7 +65,7 @@ a:hover { color: #4d66c4; }
 
 .content {
 	clear:both;
-	padding: 130px 10px 10px;
+	padding: 80px 10px 10px;
 }
 
 .footer {
@@ -99,7 +105,6 @@ form {
 .header {
 	background: #f7f7f7;
 	padding:10px;
-	margin-bottom: 20px;
 	border-bottom: 1px solid #f1f1f1;
 	height: 60px;
 	-moz-box-shadow:  0 0 30px rgba(0,0,0,0.1);
@@ -109,20 +114,24 @@ form {
 	z-index: 9999;
 }
 
-.header .navigation {
+.header > div {
 	width: 960px;
 	margin: 0 auto;
 	overflow: hidden;
 }
-
+	.header .navigation {
+		display: inline-block;
+		width: 75%;
+		margin: 0;
+		padding: 0;
+	}
 	.header .navigation li {
 		color: #8b8b8b;
-		display: block;
+		display: inline-block;
 		font-size:20px;
 		font-weight: bold;
 		margin: 0;
 		text-align: center;
-		float: left;
 	}
 
 		.header .navigation li a {
@@ -153,3 +162,4 @@ form {
 		.header .navigation li a:hover, .header .navigation li a:active {
 			color: #8b8b8b;
 		}
+

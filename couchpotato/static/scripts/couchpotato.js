@@ -18,7 +18,6 @@ var CouchPotato = new Class({
 		self.c = $(document.body)
 
 		self.route = new Route(self.defaults);
-		self.api = new Api(self.options.api)
 
 		self.createLayout();
 		self.createPages();
@@ -43,8 +42,10 @@ var CouchPotato = new Class({
 
 		self.c.adopt(
 			self.header = new Element('div.header').adopt(
-				self.block.navigation = new Block.Navigation(self, {}),
-				self.block.search = new Block.Search(self, {})
+				new Element('div').adopt(
+					self.block.navigation = new Block.Navigation(self, {}),
+					self.block.search = new Block.Search(self, {})
+				)
 			),
 			self.content = new Element('div.content'),
 			self.block.footer = new Block.Footer(self, {})
@@ -71,12 +72,12 @@ var CouchPotato = new Class({
 		var action = self.route.getAction();
 		var params = self.route.getParams();
 
+		if(self.current_page)
+			self.current_page.hide()
+
 		var page = self.pages[page_name];
 			page.open(action, params);
 			page.show();
-
-		if(self.current_page)
-			self.current_page.hide()
 
 		self.current_page = page;
 
@@ -84,23 +85,16 @@ var CouchPotato = new Class({
 
 	getBlock: function(block_name){
 		return this.block[block_name]
-	},
-
-	getApi: function(){
-		return this.api
 	}
 });
 
 
-var Api = new Class({
+var ApiClass = new Class({
 
-	url: '',
-
-	initialize: function(options){
+	setup: function(options){
 		var self = this
 
 		self.options = options;
-
 	},
 
 	request: function(type, options){
@@ -123,6 +117,7 @@ var Api = new Class({
 	}
 
 });
+window.Api = new ApiClass()
 
 
 var Route = new Class({
@@ -183,4 +178,44 @@ var Route = new Class({
 var p = function(){
 	if(typeof(console) !== 'undefined' && console != null)
 		console.log(arguments)
-}
+};
+
+(function(){
+
+	var keyPaths = [];
+
+	var saveKeyPath = function(path) {
+		keyPaths.push({
+			sign: (path[0] === '+' || path[0] === '-')? parseInt(path.shift()+1) : 1,
+			path: path
+		});
+	};
+
+	var valueOf = function(object, path) {
+		var ptr = object;
+		path.each(function(key) { ptr = ptr[key] });
+		return ptr;
+	};
+
+	var comparer = function(a, b) {
+		for (var i = 0, l = keyPaths.length; i < l; i++) {
+			aVal = valueOf(a, keyPaths[i].path);
+			bVal = valueOf(b, keyPaths[i].path);
+			if (aVal > bVal) return keyPaths[i].sign;
+			if (aVal < bVal) return -keyPaths[i].sign;
+		}
+		return 0;
+	};
+
+	Array.implement('sortBy', function(){
+		keyPaths.empty();
+		Array.each(arguments, function(argument) {
+			switch (typeOf(argument)) {
+				case "array": saveKeyPath(argument); break;
+				case "string": saveKeyPath(argument.match(/[+-]|[^.]+/g)); break;
+			}
+		});
+		return this.sort(comparer);
+	});
+
+})();

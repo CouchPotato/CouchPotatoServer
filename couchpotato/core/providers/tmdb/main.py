@@ -5,8 +5,9 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.base import Provider
 from couchpotato.environment import Env
 from urllib import quote_plus
-import urllib2
+import copy
 import simplejson as json
+import urllib2
 
 log = CPLog(__name__)
 
@@ -21,7 +22,7 @@ class TMDB(Provider):
         addEvent('provider.movie.search', self.search)
 
     def conf(self, attr):
-        return Env.setting(attr, 'TheMovieDB')
+        return Env.setting(attr, 'themoviedb')
 
     def search(self, q, limit = 12, alternative = True):
         ''' Find movie by name '''
@@ -48,7 +49,7 @@ class TMDB(Provider):
                 nr = 0
                 for movie in data:
 
-                    year = movie['released'][:4]
+                    year = str(movie['released'])[:4]
 
                     # Poster url
                     poster = ''
@@ -59,7 +60,7 @@ class TMDB(Provider):
                             break
 
                     # 1900 is the same as None
-                    if year == '1900':
+                    if year == '1900' or year.lower() == 'none':
                         year = None
 
                     movie_data = {
@@ -70,14 +71,13 @@ class TMDB(Provider):
                         'year': year,
                         'tagline': 'This is the tagline of the movie',
                     }
-                    results.append(movie_data)
+                    results.append(copy.deepcopy(movie_data))
 
                     alternativeName = movie['alternative_name']
                     if alternativeName and alternative:
                         if alternativeName.lower() != movie['name'].lower() and alternativeName.lower() != 'none' and alternativeName != None:
                             movie_data['name'] = toUnicode(alternativeName)
-                            results.append(movie_data)
-
+                            results.append(copy.deepcopy(movie_data))
                     nr += 1
                     if nr == limit:
                         break

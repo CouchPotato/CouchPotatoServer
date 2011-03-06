@@ -17,10 +17,6 @@ var BlockBase = new Class({
 		this.el = new Element('div.block');
 	},
 
-	api: function(){
-		return this.getParent().getApi()
-	},
-
 	getParent: function(){
 		return this.page
 	},

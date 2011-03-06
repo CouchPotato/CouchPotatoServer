@@ -4,14 +4,22 @@ def start():
     return TMDB()
 
 config = [{
-    'name': 'TheMovieDB',
-    'tab': 'providers',
-    'options': {
-        'api_key': {
+    'name': 'themoviedb',
+    'groups': [
+        {
+            'tab': 'providers',
+            'name': 'tmdb',
+            'label': 'TheMovieDB',
             'advanced': True,
-            'default': '9b939aee0aaafc12a65bf448e4af9543',
-            'type': 'string',
-            'description': 'Api key to use for calls to TheMovieDB.',
-        }
-    }
+            'options': [
+                {
+                    'name': 'api_key',
+                    'default': '9b939aee0aaafc12a65bf448e4af9543',
+                    'type': 'string',
+                    'label': 'Api Key',
+                    'description': 'Used for all calls to TheMovieDB.',
+                },
+            ],
+        },
+    ],
 }]

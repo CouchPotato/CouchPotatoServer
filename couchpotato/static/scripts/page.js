@@ -57,10 +57,6 @@ var PageBase = new Class({
 	getParent: function(){
 		return this.app
 	},
-
-	api: function(){
-		return this.getParent().getApi()
-	},
 	
 	show: function(){
 		this.el.addClass('active');

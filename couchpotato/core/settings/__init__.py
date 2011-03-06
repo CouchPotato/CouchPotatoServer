@@ -52,7 +52,7 @@ class Settings():
     def set(self, section, option, value):
         return self.p.set(section, option, self.cleanValue(value))
 
-    def get(self, option = '', section = 'global', default = ''):
+    def get(self, option = '', section = 'core', default = ''):
         try:
             value = self.p.get(section, option)
             return self.cleanValue(value)

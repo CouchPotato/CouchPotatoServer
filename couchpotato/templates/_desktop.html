@@ -5,12 +5,17 @@
 		<link rel="stylesheet" href="{{ url_for('.static', filename='style/uniform.generic.css') }}">
 		<link rel="stylesheet" href="{{ url_for('.static', filename='style/uniform.css') }}">
 
+		<link rel="stylesheet" href="{{ url_for('.static', filename='style/page/settings.css') }}">
+		<link rel="stylesheet" href="{{ url_for('.static', filename='style/movie_add.css') }}">
+
 		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/mootools.js') }}"></script>
 		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/mootools_more.js') }}"></script>
 
 		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/uniform.js') }}"></script>
 		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/couchpotato.js') }}"></script>
 		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/history.js') }}"></script>
+		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/eventstack.js') }}"></script>
+		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/eventstack_outerclick.js') }}"></script>
 
 		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/block.js') }}"></script>
 		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/block/navigation.js') }}"></script>
@@ -29,13 +34,15 @@
 		<script type="text/javascript">
 			window.addEvent('domready', function() {
 				new Uniform();
+
+				Api.setup({
+					'url': '{{ url_for('api.index') }}',
+					'path_sep': '{{ sep }}',
+					'is_remote': false
+				})
+
 				var cp = new CouchPotato({
-					'base_url': '{{ request.path }}',
-					'api': {
-						'url': '{{ url_for('api.index') }}',
-						'path_sep': '{{ sep }}',
-						'is_remote': false
-					}
+					'base_url': '{{ request.path }}'
 				});
 			})
 		</script>

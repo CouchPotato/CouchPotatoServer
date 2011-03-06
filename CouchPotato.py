@@ -2,11 +2,9 @@
 # -*- coding: utf-8 -*-
 '''Wrapper for the command line interface.'''
 
-from os.path import dirname, isfile
+from os.path import dirname
 import os
-import subprocess
 import sys
-import traceback
 
 # Root path
 base_path = dirname(os.path.abspath(__file__))
@@ -17,37 +15,8 @@ sys.path.insert(0, os.path.join(base_path, 'libs'))
 from couchpotato.core.logger import CPLog
 log = CPLog(__name__)
 
-try:
-    from couchpotato import cli
-except ImportError, e:
-    log.info('Checking local dependencies...')
-    if isfile(__file__):
-        cwd = dirname(__file__)
-        log.info('Updating libraries...')
-        stdout, stderr = subprocess.Popen(['git', 'submodule', 'init'],
-                                          stderr = subprocess.PIPE,
-                                          stdout = subprocess.PIPE).communicate()
-        if stderr:
-            log.info('[WARNING] Git is complaining:')
-            log.info(stderr)
-        stdout, stderr = subprocess.Popen(['git', 'submodule', 'update'],
-                                          stderr = subprocess.PIPE,
-                                          stdout = subprocess.PIPE).communicate()
-        if stderr:
-            log.info('[WARNING] Git is complaining:')
-            log.info(stderr)
 
-        log.info('Passing execution to couchpotato...')
-        try:
-            from couchpotato import cli
-        except ImportError:
-            log.error("[ERROR]: Something's seriously wrong.")
-            log.error(traceback.print_exc())
-            sys.exit(1)
-    else:
-        # Running from Titanium
-        raise NotImplementedError("Don't know how to do that.")
-
+from couchpotato import cli
 if __name__ == '__main__':
     try:
         cli.cmd_couchpotato(base_path, sys.argv[1:])

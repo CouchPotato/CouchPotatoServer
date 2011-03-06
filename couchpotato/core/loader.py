@@ -53,8 +53,9 @@ class Loader:
             for section in module.config:
                 fireEventAsync('settings.options', section['name'], section)
                 options = {}
-                for key, option in section['options'].iteritems():
-                    options[key] = option['default']
+                for group in section['groups']:
+                    for option in group['options']:
+                        options[option['name']] = option['default']
                 fireEventAsync('settings.register', section_name = section['name'], options = options, save = save)
             return True
         except Exception, e:

@@ -5,11 +5,19 @@ Page.Settings = new Class({
 	name: 'settings',
 	title: 'Change settings.',
 
-	groups: {},
+	tabs: {
+		'general': {
+			'label': 'General'
+		},
+		'providers': {
+			'label': 'Providers'
+		}
+	},
 
 	open: function(action, params){
 		var self = this
-		//p('open config', action, params)
+		self.action = action;
+		self.params = params;
 
 		if(!self.data)
 			self.getData(self.create.bind(self))
@@ -19,6 +27,7 @@ Page.Settings = new Class({
 
 	openTab: function(action){
 		var self = this;
+		action = action || self.action
 
 		if(self.current)
 			self.toggleTab(self.current, true);
@@ -27,16 +36,16 @@ Page.Settings = new Class({
 		self.current = action;
 
 	},
-	
-	toggleTab: function(tab, hide){
+
+	toggleTab: function(tab_name, hide){
 		var self = this;
-		
+
 		var a = hide ? 'removeClass' : 'addClass';
 		var c = 'active';
 
-		var g = self.groups[tab] || self.groups.general;
-			g.tab[a](c);
-			g.group[a](c);
+		var t = self.tabs[tab_name] || self.tabs[self.action] || self.tabs.general;
+			t.tab[a](c);
+			t.content[a](c);
 
 	},
 
@@ -44,7 +53,7 @@ Page.Settings = new Class({
 		var self = this;
 
 		if(onComplete)
-			self.api().request('settings', {
+			Api.request('settings', {
 				'useSpinner': true,
 				'spinnerOptions': {
 					'target': self.el
@@ -68,38 +77,79 @@ Page.Settings = new Class({
 		}
 	},
 
+	showAdvanced: function(){
+		var self = this;
+
+		var c = self.advanced_toggle.checked ? 'addClass' : 'removeClass';
+		self.el[c]('show_advanced')
+	},
+
 	create: function(json){
 		var self = this
 
 		self.el.adopt(
-			self.tabs = new Element('ul.tabs'),
-			self.containers = new Element('form.uniForm.containers')
+			self.tabs_container = new Element('ul.tabs'),
+			self.containers = new Element('form.uniForm.containers').adopt(
+				new Element('label.advanced_toggle').adopt(
+					new Element('span', {
+						'text': 'Show advanced settings'
+					}),
+					self.advanced_toggle = new Element('input[type=checkbox]', {
+						'events': {
+							'change': self.showAdvanced.bind(self)
+						}
+					})
+				)
+			)
 		);
 
+		// Create tabs
+		Object.each(self.tabs, function(tab, tab_name){
+			if(!self.tabs[tab_name].tab){
+				var tab_el = new Element('li').adopt(
+					new Element('a', {
+						'href': '/'+self.name+'/'+tab_name+'/',
+						'text': tab.label.capitalize()
+					})
+				).inject(self.tabs_container);
+
+				self.tabs[tab_name] = Object.merge(self.tabs[tab_name], {
+					'tab': tab_el,
+					'content': new Element('div.tab_content').inject(self.containers),
+					'groups': {}
+				})
+			}
+		});
+
+		// Add content to tabs
 		Object.each(json.options, function(section, section_name){
 
-			// Create tab
-			var tab = new Element('li').adopt(
-				new Element('a', {
-					'href': '/'+self.name+'/'+section.tab+'/',
-					'text': section.tab.capitalize()
-				})
-			).inject(self.tabs);
-			var group = new Element('div.group').inject(self.containers);
+			// Add groups to content
+			section.groups.sortBy('order').each(function(group){
 
-			self.groups[section.tab] = {
-				'tab': tab,
-				'group': group
-			}
+				// Create the group
+				var group_el = new Element('fieldset', {
+					'class': group.advanced ? 'inlineLabels advanced' : 'inlineLabels'
+				}).adopt(
+					new Element('h2', {
+						'text': group.label
+					}).adopt(
+						new Element('span.hint', {
+							'text': group.description
+						})
+					)
+				).inject(self.tabs[group.tab].content);
 
-			// Add section
-			var fieldset = new Element('fieldset.inlineLabels').inject(group)
-			Object.each(section.options, function(option, option_name){
-				var class_name = (option.type || 'input').capitalize();
-				var input = new Option[class_name](self, section_name, option_name, option);
-					input.inject(fieldset);
+				self.tabs[group.tab].groups[group.name] = group_el
+
+				// Add options to group
+				group.options.sortBy('order').each(function(option){
+					var class_name = (option.type || 'input').capitalize();
+					var input = new Option[class_name](self, section_name, option.name, option);
+						input.inject(group_el);
+				});
+
 			});
-
 		});
 
 		self.openTab();
@@ -251,6 +301,7 @@ Option.String = new Class({
 				'text': self.options.label
 			}),
 			self.input = new Element('input', {
+				'type': 'text',
 				'name': self.postName(),
 				'value': self.getSettingValue()
 			})
@@ -291,15 +342,19 @@ Option.Checkbox = new Class({
 	create: function(){
 		var self = this;
 
+		var randomId = 'option-'+Math.floor(Math.random()*1000000)
+
 		new Element('label', {
-			'text': self.options.label
-		}).adopt(
-			self.input = new Element('input', {
-				'type': 'checkbox',
-				'value': self.getSettingValue(),
-				'checked': self.getSettingValue() !== undefined
-			})
-		).inject(self.el);
+			'text': self.options.label,
+			'for': randomId
+		}).inject(self.el);
+
+		self.input = new Element('input', {
+			'type': 'checkbox',
+			'value': self.getSettingValue(),
+			'checked': self.getSettingValue() !== undefined,
+			'id': randomId
+		}).inject(self.el);
 	}
 });
 

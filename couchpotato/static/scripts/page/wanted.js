@@ -30,7 +30,7 @@ Page.Wanted = new Class({
 		var self = this
 
 		if(self.movies.length == 0)
-			self.api().request('movie', {
+			Api.request('movie', {
 				'data': {},
 				'onComplete': function(json){
 					self.store(json.movies);

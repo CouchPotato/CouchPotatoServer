@@ -1,7 +1,6 @@
 from argparse import ArgumentParser
-from couchpotato import get_engine, web
+from couchpotato import web
 from couchpotato.api import api
-from couchpotato.core.settings.model import *
 from libs.daemon import createDaemon
 from logging import handlers
 import logging
@@ -110,9 +109,8 @@ def cmd_couchpotato(base_path, args):
         upgrade(db, repo)
 
     # Configure Database
-    from elixir import setup_all, create_all
-    setup_all()
-    create_all(get_engine())
+    from couchpotato.core.settings.model import setup
+    setup()
 
 
     # Create app

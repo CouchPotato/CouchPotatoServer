@@ -1,0 +1,126 @@
+/* @override http://localhost:5000/static/style/page/settings.css */
+
+.page.settings {
+	overflow: hidden;
+}
+
+	.page.settings .tabs {
+		float: left;
+		width: 20%;
+		font-size: 25px;
+		text-align: right;
+		list-style: none;
+		padding: 40px 0;
+		margin: 0;
+		min-height: 300px;
+	}
+		.page.settings .tabs a {
+			display: block;
+			padding: 10px 15px;
+			border: 1px solid transparent;
+			position: relative;
+			z-index: 200;
+			margin-right: -1px;
+		}
+		.page.settings .tabs .active a {
+			color: black;
+			background: #fbfbfb;
+			border-color: #f1f1f1;
+			border-right-color: transparent;
+		}
+	
+	.page.settings .containers {
+		width: 75.8%;
+		float: left;
+		padding: 20px 2%;
+		min-height: 300px;
+		background: #fbfbfb;
+		border-left: 1px solid #f1f1f1;s
+	}	
+
+		.page.settings .advanced { 
+			display: none;
+			color: #ce3b19;
+		}
+		.page.settings.show_advanced .advanced { display: block; }
+		
+		.page.settings .tab_content {
+			display: none;
+		}
+		.page.settings .tab_content.active { display: block; }
+
+		.page.settings fieldset {
+			padding: 10px 0;
+		}
+			.page.settings fieldset h2 {
+				font-weight: normal;
+				font-size: 25px;
+				padding:  0 9px 10px;
+				margin: 0;
+				border-bottom: 1px solid #f3f3f3;
+			}
+			.page.settings fieldset h2 .hint {
+				color: #888;
+				font-size: 12px;
+				margin-left: 10px;
+			}
+
+	.page.settings .ctrlHolder {
+		line-height: 25px;
+		padding: 10px;
+		border-bottom: 1px solid #f3f3f3;
+		font-size: 14px;
+	}
+		.page.settings .ctrlHolder:last-child { border: none; }
+		.page.settings .ctrlHolder:hover { background: rgba(211,234,254,0.1); }
+		.page.settings .ctrlHolder.focused:hover { background: rgba(251,246,48,0.29); }
+
+		.page.settings .ctrlHolder .formHint {
+			float: right;
+			width: 47%;
+			margin: -18px 0;
+			padding: 0;
+		}
+
+			.page.settings .ctrlHolder input[type=checkbox] + .formHint {
+				float: none;
+				width: auto;
+				display: inline-block;
+				margin-left: 1% !important;
+				color: #222;
+			}
+	
+		.page.settings .ctrlHolder label {
+			font-weight: bold;
+			width: 20%;
+			margin: 0;
+			padding: 6px 0 0;
+		}
+
+	.page.settings input[type=text] {
+		border: 1px solid #aaa;
+		padding: 3px;
+		margin: 0;
+		width: 30%;
+
+		border-radius: 3px;
+		-webkit-border-radius: 3px;
+		-moz-border-radius: 3px;
+	}
+		.page.settings .input.xsmall { width: 5% }
+		.page.settings .input.small { width: 10% }
+		.page.settings .input.medium { width: 15% }
+		.page.settings .input.large { width: 25% }
+		.page.settings .input.xlarge { width: 30% }
+		
+	.page.settings .advanced_toggle {
+		clear: both;
+		display: block;
+		text-align: right;
+		height: 20px;
+		margin: 0;
+	}
+		.page.settings .advanced_toggle span { padding: 0 5px; }
+		.page.settings.show_advanced .advanced_toggle { 
+			color: #ce3b19;
+		}

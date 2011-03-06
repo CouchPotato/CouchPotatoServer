@@ -121,3 +121,12 @@ class RenameHistory(Entity):
     new = Field(String(255))
 
     file = ManyToOne('File')
+
+
+def setup():
+    """ Setup the database and create the tables that don't exists yet """
+    from elixir import setup_all, create_all
+    from couchpotato import get_engine
+
+    setup_all()
+    create_all(get_engine())

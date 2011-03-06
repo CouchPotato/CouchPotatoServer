@@ -31,7 +31,7 @@ class Env:
         return setattr(Env, '_' + attr, value)
 
     @staticmethod
-    def setting(attr, section = 'global', value = None, default = ''):
+    def setting(attr, section = 'core', value = None, default = ''):
 
         # Return setting
         if value == None:
