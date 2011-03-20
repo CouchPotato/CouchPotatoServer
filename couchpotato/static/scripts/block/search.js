@@ -35,6 +35,9 @@ Block.Search = new Class({
 
 		self.OuterClickStack = new EventStack.OuterClick();
 
+		//debug
+		//self.input.set('value', 'kick ass')
+		//self.autocomplete()
 	},
 
 	clear: function(e){
@@ -98,7 +101,7 @@ Block.Search = new Class({
 		self.hideResults(false)
 
 		if(!cache){
-			self.api_request = Api.request('movie.add.search', {
+			self.api_request = Api.request('movie.search', {
 				'data': {
 					'q': q
 				},
@@ -118,7 +121,7 @@ Block.Search = new Class({
 		self.spinner.hide();
 		self.cache[q] = json
 
-		self.movies = []
+		self.movies = {}
 		self.results.empty()
 
 		Object.each(json.movies, function(movie){
@@ -126,9 +129,14 @@ Block.Search = new Class({
 			if(!movie.imdb || (movie.imdb && !self.results.getElement('#'+movie.imdb))){
 				var m = new Block.Search.Item(movie);
 				$(m).inject(self.results)
+				self.movies[movie.imdb || 'r-'+Math.floor(Math.random()*10000)] = m
+			}
+			else {
+				self.movies[movie.imdb].alternativeName({
+					'name': movie.name
+				})
 			}
 
-			self.movies.include(m)
 		});
 
 	},
@@ -149,6 +157,7 @@ Block.Search.Item = new Class({
 		var self = this;
 
 		self.info = info;
+		self.alternative_names = [];
 
 		self.create();
 
@@ -163,11 +172,7 @@ Block.Search.Item = new Class({
 		self.el = new Element('div.movie', {
 			'id': info.imdb
 		}).adopt(
-			new Element('div.add').adopt(
-				new Element('span', {
-					'text': 'test'
-				})
-			),
+			self.options = new Element('div.options'),
 			self.data_container = new Element('div.data', {
 				'tween': {
 					duration: 400,
@@ -208,10 +213,22 @@ Block.Search.Item = new Class({
 				}).inject(self.starring)
 			})
 		}
+
+		self.alternativeName({
+			'name': info.name
+		});
+	},
+
+	alternativeName: function(alternative){
+		var self = this;
+
+		self.alternative_names.include(alternative);
 	},
 
 	showOptions: function(){
 		var self = this;
+
+		self.createOptions();
 
 		if(!self.width)
 			self.width = self.data_container.getCoordinates().width
@@ -219,6 +236,80 @@ Block.Search.Item = new Class({
 		self.data_container.tween('margin-left', 0, self.width);
 
 		self.OuterClickStack.push(self.closeOptions.bind(self), self.el);
+
+	},
+
+	add: function(e){
+		var self = this;
+		(e).stop();
+
+		Api.request('movie.add', {
+			'data': {
+				'identifier': self.info.imdb,
+				'name': self.name_select.get('value'),
+				'quality': self.quality_select.get('value')
+			},
+			'useSpinner': true,
+			'spinnerTarget': self.options,
+			'onComplete': function(){
+				self.options.empty();
+				self.options.adopt(
+					new Element('div.message', {
+						'text': 'Movie succesfully added.'
+					})
+				);
+			},
+			'onFailure': function(){
+				self.options.empty();
+				self.options.adopt(
+					new Element('div.message', {
+						'text': 'Something went wrong, check the logs for more info.'
+					})
+				);
+			}
+		});
+	},
+
+	createOptions: function(){
+		var self = this;
+
+		if(!self.options.hasClass('set')){
+
+			self.options.adopt(
+				new Element('div').adopt(
+					self.info.poster ? new Element('img.thumbnail', {
+						'src': self.info.poster
+					}) : null,
+					self.name_select = new Element('select', {
+						'name': 'name'
+					}),
+					self.quality_select = new Element('select', {
+						'name': 'profile_identifier'
+					}),
+					new Element('a.button', {
+						'text': 'Add',
+						'events': {
+							'click': self.add.bind(self)
+						}
+					})
+				)
+			);
+
+			Array.each(self.alternative_names, function(alt){
+				new Element('option', {
+					'text': alt.name
+				}).inject(self.name_select)
+			})
+
+			Array.each(Quality.profiles, function(q){
+				new Element('option', {
+					'value': q.indentifier,
+					'text': q.label
+				}).inject(self.quality_select)
+			});
+
+			self.options.addClass('set');
+		}
 
 	},
 
@@ -232,4 +323,4 @@ Block.Search.Item = new Class({
 		return this.el
 	}
 
-})
+});

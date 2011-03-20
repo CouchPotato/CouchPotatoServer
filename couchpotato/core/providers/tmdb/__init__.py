@@ -1,7 +1,7 @@
-from couchpotato.core.providers.tmdb.main import TMDB
+from couchpotato.core.providers.tmdb.main import TMDBWrapper
 
 def start():
-    return TMDB()
+    return TMDBWrapper()
 
 config = [{
     'name': 'themoviedb',

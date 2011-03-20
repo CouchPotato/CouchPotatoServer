@@ -3,6 +3,7 @@ from couchpotato import web
 from couchpotato.api import api
 from libs.daemon import createDaemon
 from logging import handlers
+from werkzeug.contrib.cache import FileSystemCache
 import logging
 import os.path
 import sys
@@ -48,6 +49,7 @@ def cmd_couchpotato(base_path, args):
     Env.set('data_dir', options.data_dir)
     Env.set('db_path', 'sqlite:///' + os.path.join(options.data_dir, 'couchpotato.db'))
     Env.set('cache_dir', os.path.join(options.data_dir, 'cache'))
+    Env.set('cache', FileSystemCache(Env.get('cache_dir')))
     Env.set('quiet', options.quiet)
     Env.set('daemonize', options.daemonize)
     Env.set('args', args)
@@ -133,7 +135,7 @@ def cmd_couchpotato(base_path, args):
 
     # Register modules
     app.register_module(web, url_prefix = '%s/' % url_base)
-    app.register_module(api, url_prefix = '%s/%s/%s/' % (url_base, 'api', api_key if not debug else 'apikey'))
+    app.register_module(api, url_prefix = '%s/%s/' % (url_base, api_key if not debug else 'api'))
 
     # Go go go!
     app.run(use_reloader = reloader)

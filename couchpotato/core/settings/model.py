@@ -2,7 +2,8 @@ from elixir.entity import Entity
 from elixir.fields import Field
 from elixir.options import options_defaults
 from elixir.relationships import OneToMany, ManyToOne
-from sqlalchemy.types import Integer, String, Unicode, UnicodeText, Boolean
+from sqlalchemy.types import Integer, String, Unicode, UnicodeText, Boolean, \
+    Float
 
 options_defaults["shortnames"] = True
 
@@ -19,11 +20,24 @@ class Movie(Entity):
     The files belonging to the movie object are global for the whole movie
     such as trailers, nfo, thumbnails"""
 
-    mooli_id = Field(Integer)
+    library = ManyToOne('Library')
 
     profile = ManyToOne('Profile')
     releases = OneToMany('Release')
     files = OneToMany('File')
+
+
+class Library(Entity):
+
+    title = Field(Unicode)
+    year = Field(Integer)
+    identifier = Field(Unicode)
+    rating = Field(Float)
+
+    plot = Field(UnicodeText)
+    tagline = Field(UnicodeText(255))
+
+    movie = OneToMany('Movie')
 
 
 class Release(Entity):
@@ -55,6 +69,7 @@ class Quality(Entity):
     releases = OneToMany('Release')
     profile_types = ManyToOne('ProfileType')
 
+
 class Profile(Entity):
     """"""
 
@@ -66,6 +81,7 @@ class Profile(Entity):
     movie = OneToMany('Movie')
     profile_type = OneToMany('ProfileType')
 
+
 class ProfileType(Entity):
     """"""
 
@@ -75,6 +91,7 @@ class ProfileType(Entity):
 
     type = OneToMany('Quality')
     profile = ManyToOne('Profile')
+
 
 class File(Entity):
     """File that belongs to a release."""
@@ -113,6 +130,7 @@ class History(Entity):
 
     message = Field(UnicodeText())
     release = ManyToOne('Release')
+
 
 class RenameHistory(Entity):
     """Remembers from where to where files have been moved."""

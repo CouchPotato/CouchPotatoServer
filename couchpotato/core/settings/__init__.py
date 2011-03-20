@@ -1,6 +1,7 @@
 from __future__ import with_statement
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent
+from couchpotato.core.helpers.encoding import is_int
 from couchpotato.core.helpers.request import getParams, jsonified
 import ConfigParser
 import os.path
@@ -60,7 +61,7 @@ class Settings():
             return default
 
     def cleanValue(self, value):
-        if(self.is_int(value)):
+        if(is_int(value)):
             return int(value)
 
         if str(value).lower() in self.bool:
@@ -90,13 +91,6 @@ class Settings():
     def setDefault(self, section, option, value):
         if not self.p.has_option(section, option):
             self.p.set(section, option, value)
-
-    def is_int(self, value):
-        try:
-            int(value)
-            return True
-        except ValueError:
-            return False
 
     def addOptions(self, section_name, options):
         self.options[section_name] = options

@@ -4,6 +4,7 @@ from couchpotato.core.helpers.encoding import simplifyString, toUnicode
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.base import Provider
 from couchpotato.environment import Env
+from libs.themoviedb import tmdb
 from urllib import quote_plus
 import copy
 import simplejson as json
@@ -11,7 +12,7 @@ import urllib2
 
 log = CPLog(__name__)
 
-class TMDB(Provider):
+class TMDBWrapper(Provider):
     """Api for theMovieDb"""
 
     type = 'movie'
@@ -20,6 +21,10 @@ class TMDB(Provider):
 
     def __init__(self):
         addEvent('provider.movie.search', self.search)
+        addEvent('provider.movie.info', self.getInfo)
+
+        # Use base wrapper
+        tmdb.Config.api_key = self.conf('api_key')
 
     def conf(self, attr):
         return Env.setting(attr, 'themoviedb')
@@ -32,31 +37,32 @@ class TMDB(Provider):
 
         log.debug('TheMovieDB - Searching for movie: %s' % q)
 
-        url = "%s/%s/%s/json/%s/%s" % (self.apiUrl, 'Movie.search', 'en', self.conf('api_key'), quote_plus(simplifyString(q)))
+        raw = tmdb.search(simplifyString(q))
 
-        log.info('Searching: %s' % url)
+        #url = "%s/%s/%s/json/%s/%s" % (self.apiUrl, 'Movie.search', 'en', self.conf('api_key'), quote_plus(simplifyString(q)))
 
-        data = urllib2.urlopen(url)
-        jsn = json.load(data)
 
-        return self.parse(jsn, limit, alternative = alternative)
+#        data = urllib2.urlopen(url)
+#        jsn = json.load(data)
 
-    def parse(self, data, limit, alternative = True):
-        if data:
+        if raw:
             log.debug('TheMovieDB - Parsing RSS')
             try:
                 results = []
                 nr = 0
-                for movie in data:
+                for movie in raw:
 
-                    year = str(movie['released'])[:4]
+                    for k, x in movie.iteritems():
+                        print k
+                        print x
+
+                    year = str(movie.get('released', 'none'))[:4]
 
                     # Poster url
                     poster = ''
-                    for p in movie['posters']:
-                        p = p['image']
-                        if(p['size'] == 'thumb'):
-                            poster = p['url']
+                    for p in movie.get('images'):
+                        if(p.get('type') == 'poster'):
+                            poster = p.get('thumb')
                             break
 
                     # 1900 is the same as None
@@ -64,16 +70,16 @@ class TMDB(Provider):
                         year = None
 
                     movie_data = {
-                        'id': int(movie['id']),
-                        'name': toUnicode(movie['name']),
+                        'id': int(movie.get('id', 0)),
+                        'name': toUnicode(movie.get('name')),
                         'poster': poster,
-                        'imdb': movie['imdb_id'],
+                        'imdb': movie.get('imdb_id'),
                         'year': year,
                         'tagline': 'This is the tagline of the movie',
                     }
                     results.append(copy.deepcopy(movie_data))
 
-                    alternativeName = movie['alternative_name']
+                    alternativeName = movie.get('alternative_name')
                     if alternativeName and alternative:
                         if alternativeName.lower() != movie['name'].lower() and alternativeName.lower() != 'none' and alternativeName != None:
                             movie_data['name'] = toUnicode(alternativeName)
@@ -88,6 +94,10 @@ class TMDB(Provider):
                 log.error('TheMovieDB - Failed to parse XML response from TheMovieDb: %s' % e)
                 return False
 
+        return results
+
+    def getInfo(self):
+        pass
 
     def isDisabled(self):
         if self.conf('api_key') == '':

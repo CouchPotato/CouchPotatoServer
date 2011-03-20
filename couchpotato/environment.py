@@ -7,6 +7,7 @@ class Env:
     _debug = False
     _settings = Settings()
     _loader = Loader()
+    _cache = None
     _options = None
     _args = None
     _quiet = False

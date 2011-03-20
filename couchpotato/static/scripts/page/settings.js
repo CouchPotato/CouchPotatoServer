@@ -105,20 +105,7 @@ Page.Settings = new Class({
 
 		// Create tabs
 		Object.each(self.tabs, function(tab, tab_name){
-			if(!self.tabs[tab_name].tab){
-				var tab_el = new Element('li').adopt(
-					new Element('a', {
-						'href': '/'+self.name+'/'+tab_name+'/',
-						'text': tab.label.capitalize()
-					})
-				).inject(self.tabs_container);
-
-				self.tabs[tab_name] = Object.merge(self.tabs[tab_name], {
-					'tab': tab_el,
-					'content': new Element('div.tab_content').inject(self.containers),
-					'groups': {}
-				})
-			}
+			self.createTab(tab_name, tab)
 		});
 
 		// Add content to tabs
@@ -128,17 +115,7 @@ Page.Settings = new Class({
 			section.groups.sortBy('order').each(function(group){
 
 				// Create the group
-				var group_el = new Element('fieldset', {
-					'class': group.advanced ? 'inlineLabels advanced' : 'inlineLabels'
-				}).adopt(
-					new Element('h2', {
-						'text': group.label
-					}).adopt(
-						new Element('span.hint', {
-							'text': group.description
-						})
-					)
-				).inject(self.tabs[group.tab].content);
+				var group_el = self.createGroup(group).inject(self.tabs[group.tab].content);
 
 				self.tabs[group.tab].groups[group.name] = group_el
 
@@ -152,8 +129,57 @@ Page.Settings = new Class({
 			});
 		});
 
+
+
+		self.fireEvent('create');
 		self.openTab();
 
+	},
+
+	createTab: function(tab_name, tab){
+		var self = this;
+
+		if(self.tabs[tab_name] && self.tabs[tab_name].tab)
+			return self.tabs[tab_name].tab
+
+		var tab_el = new Element('li').adopt(
+			new Element('a', {
+				'href': '/'+self.name+'/'+tab_name+'/',
+				'text': tab.label.capitalize()
+			})
+		).inject(self.tabs_container);
+
+		if(!self.tabs[tab_name])
+			self.tabs[tab_name] = {
+				'label': tab.label
+			}
+
+		self.tabs[tab_name] = Object.merge(self.tabs[tab_name], {
+			'tab': tab_el,
+			'content': new Element('div.tab_content').inject(self.containers),
+			'groups': {}
+		})
+
+		return self.tabs[tab_name]
+
+	},
+
+	createGroup: function(group){
+		var self = this;
+
+		var group_el = new Element('fieldset', {
+			'class': group.advanced ? 'inlineLabels advanced' : 'inlineLabels'
+		}).adopt(
+			new Element('h2', {
+				'text': group.label
+			}).adopt(
+				new Element('span.hint', {
+					'text': group.description
+				})
+			)
+		)
+
+		return group_el
 	}
 
 });
@@ -226,7 +252,7 @@ var OptionBase = new Class({
 	save: function(){
 		var self = this;
 
-		self.api().request('setting.save', {
+		Api.request('setting.save', {
 			'data': {
 				'section': self.section,
 				'name': self.name,
@@ -271,10 +297,6 @@ var OptionBase = new Class({
 	getSettingValue: function(){
 		var self = this;
 		return self.page.getValue(self.section, self.name);
-	},
-
-	api: function(){
-		return this.page.api();
 	},
 
 	inject: function(el, position){
@@ -448,7 +470,7 @@ Option.Directory = new Class({
 			self.fillBrowser()
 		}
 		else {
-			self.api().request('directory.list', {
+			Api.request('directory.list', {
 				'data': {
 					'path': c
 				},
@@ -461,7 +483,7 @@ Option.Directory = new Class({
 		var self = this;
 
 		var v = self.input.get('value');
-		var sep = self.api().getOption('path_sep');
+		var sep = Api.getOption('path_sep');
 		var dirs = v.split(sep);
 			dirs.pop();
 

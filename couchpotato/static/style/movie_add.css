@@ -66,9 +66,30 @@
 		min-height: 140px;
 	}
 	
-		.search_form .results .movie .add {
-			min-height: 140px;
+		.search_form .results .movie .options {
+			height: 140px;
 		}
+	
+			.search_form .results .movie .options > div {
+				margin: 0 10px;
+			}
+			
+			.search_form .results .movie .options .thumbnail {
+				vertical-align: middle;
+			}
+			
+			.search_form .results .movie .options select {
+				vertical-align: middle;
+				display: inline-block;
+				margin-right: 10px;
+			}
+				.search_form .results .movie .options select[name=name] { width: 180px; }
+				.search_form .results .movie .options select[name=quality] { width: 90px; }
+			
+			.search_form .results .movie .options .button {
+				vertical-align: middle;
+				display: inline-block;
+			}
 		
 		.search_form .results .movie .data {
 			padding: 0 15px;

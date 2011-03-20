@@ -8,14 +8,14 @@
 		<link rel="stylesheet" href="{{ url_for('.static', filename='style/page/settings.css') }}">
 		<link rel="stylesheet" href="{{ url_for('.static', filename='style/movie_add.css') }}">
 
-		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/mootools.js') }}"></script>
-		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/mootools_more.js') }}"></script>
+		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/library/mootools.js') }}"></script>
+		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/library/mootools_more.js') }}"></script>
 
-		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/uniform.js') }}"></script>
+		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/library/uniform.js') }}"></script>
 		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/couchpotato.js') }}"></script>
-		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/history.js') }}"></script>
-		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/eventstack.js') }}"></script>
-		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/eventstack_outerclick.js') }}"></script>
+		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/library/history.js') }}"></script>
+		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/library/eventstack.js') }}"></script>
+		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/library/eventstack_outerclick.js') }}"></script>
 
 		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/block.js') }}"></script>
 		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/block/navigation.js') }}"></script>
@@ -29,6 +29,8 @@
 		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/page/soon.js') }}"></script>
 		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/page/manage.js') }}"></script>
 
+		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/quality.js') }}"></script>
+
 		<link href="{{ url_for('.static', filename='images/favicon.ico') }}" rel="icon" type="image/x-icon" />
 
 		<script type="text/javascript">
@@ -39,9 +41,39 @@
 					'url': '{{ url_for('api.index') }}',
 					'path_sep': '{{ sep }}',
 					'is_remote': false
+				});
+
+				Quality.setup({
+					'profiles': [
+						{
+							'identifier': 'hd',
+							'label': 'HD',
+							'wait_for': 7,
+							'types': [
+								{'quality': '720p', 'finish': true},
+								{'quality': '1080p', 'finish': true}
+							]
+						},{
+							'identifier': 'best',
+							'label': 'Best',
+							'wait_for': 7,
+							'types': [
+								{'quality': '720p', 'finish': true},
+								{'quality': '1080p', 'finish': true},
+								{'quality': 'brrip'},
+								{'quality': 'dvdrip'}
+							]
+						}
+					],
+					'qualities': [
+						{'identifier': '1080p', 'label': '1080P'},
+						{'identifier': '720p', 'label': '720P'},
+						{'identifier': 'brrip', 'label': 'BR-Rip'},
+						{'identifier': 'dvdrip', 'label': 'DVD-Rip'}
+					]
 				})
 
-				var cp = new CouchPotato({
+				App.setup({
 					'base_url': '{{ request.path }}'
 				});
 			})

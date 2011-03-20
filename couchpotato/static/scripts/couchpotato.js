@@ -1,6 +1,6 @@
 var CouchPotato = new Class({
 
-	Implements: [Options],
+	Implements: [Events, Options],
 
 	defaults: {
 		page: 'wanted',
@@ -11,7 +11,7 @@ var CouchPotato = new Class({
 	pages: [],
 	block: [],
 
-	initialize: function(options) {
+	setup: function(options) {
 		var self = this;
 		self.setOptions(options);
 
@@ -62,6 +62,8 @@ var CouchPotato = new Class({
 			$(pg).inject(self.content);
 		});
 
+		self.fireEvent('load')
+
 	},
 
 	openPage: function(url) {
@@ -85,9 +87,13 @@ var CouchPotato = new Class({
 
 	getBlock: function(block_name){
 		return this.block[block_name]
+	},
+
+	getPage: function(name){
+		return this.pages[name]
 	}
 });
-
+window.App = new CouchPotato();
 
 var ApiClass = new Class({
 

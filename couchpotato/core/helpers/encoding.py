@@ -24,3 +24,11 @@ def toUnicode(original, *args):
     except UnicodeDecodeError:
         ascii_text = str(original).encode('string_escape')
         return unicode(ascii_text)
+
+
+def is_int(value):
+    try:
+        int(value)
+        return True
+    except ValueError:
+        return False
