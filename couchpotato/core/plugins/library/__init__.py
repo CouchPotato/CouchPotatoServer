@@ -1,4 +1,4 @@
-from couchpotato.core.plugins.library.main import LibraryPlugin
+from .main import LibraryPlugin
 
 def start():
     return LibraryPlugin()

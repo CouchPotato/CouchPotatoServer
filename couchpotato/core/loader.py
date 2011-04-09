@@ -1,4 +1,4 @@
-from couchpotato.core.event import fireEvent, fireEventAsync
+from couchpotato.core.event import fireEvent
 from couchpotato.core.logger import CPLog
 import glob
 import os
@@ -17,6 +17,8 @@ class Loader:
         self.paths = {
             'plugin' : ('couchpotato.core.plugins', os.path.join(root, 'couchpotato', 'core', 'plugins')),
             'provider' : ('couchpotato.core.providers', os.path.join(root, 'couchpotato', 'core', 'providers')),
+            'notifications' : ('couchpotato.core.notifications', os.path.join(root, 'couchpotato', 'core', 'notifications')),
+            'downloaders' : ('couchpotato.core.downloaders', os.path.join(root, 'couchpotato', 'core', 'downloaders')),
         }
 
         for type, tuple in self.paths.iteritems():
@@ -28,14 +30,17 @@ class Loader:
         for module_name, plugin in sorted(self.modules.iteritems()):
 
             # Load module
-            m = getattr(self.loadModule(module_name), plugin.get('name'))
+            try:
+                m = getattr(self.loadModule(module_name), plugin.get('name'))
 
-            log.info("Loading '%s'" % module_name)
+                log.info("Loading %s: %s" % (plugin['type'], plugin['name']))
 
-            # Save default settings for plugin/provider
-            did_save += self.loadSettings(m, module_name, save = False)
+                # Save default settings for plugin/provider
+                did_save += self.loadSettings(m, module_name, save = False)
 
-            self.loadPlugins(m, plugin.get('name'))
+                self.loadPlugins(m, plugin.get('name'))
+            except Exception, e:
+                log.error(e)
 
         if did_save:
             fireEvent('settings.save')
@@ -51,12 +56,12 @@ class Loader:
     def loadSettings(self, module, name, save = True):
         try:
             for section in module.config:
-                fireEventAsync('settings.options', section['name'], section)
+                fireEvent('settings.options', section['name'], section)
                 options = {}
                 for group in section['groups']:
                     for option in group['options']:
                         options[option['name']] = option['default']
-                fireEventAsync('settings.register', section_name = section['name'], options = options, save = save)
+                fireEvent('settings.register', section_name = section['name'], options = options, save = save)
             return True
         except Exception, e:
             log.debug("Failed loading settings for '%s': %s" % (name, e))
@@ -67,7 +72,7 @@ class Loader:
             module.start()
             return True
         except Exception, e:
-            log.debug("Failed loading plugin '%s': %s" % (name, e))
+            log.error("Failed loading plugin '%s': %s" % (name, e))
             return False
 
     def addModule(self, type, module, name):

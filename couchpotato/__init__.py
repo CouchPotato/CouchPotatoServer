@@ -1,4 +1,5 @@
 from couchpotato.core.auth import requires_auth
+from couchpotato.core.event import fireEvent
 from couchpotato.core.logger import CPLog
 from couchpotato.environment import Env
 from flask.app import Flask
@@ -30,7 +31,7 @@ def get_engine():
 @web.route('/')
 @requires_auth
 def index():
-    return render_template('index.html', sep = os.sep)
+    return render_template('index.html', sep = os.sep, fireEvent = fireEvent)
 
 @app.errorhandler(404)
 def page_not_found(error):

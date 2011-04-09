@@ -1,6 +1,7 @@
 from argparse import ArgumentParser
 from couchpotato import web
 from couchpotato.api import api
+from couchpotato.core.event import fireEvent
 from libs.daemon import createDaemon
 from logging import handlers
 from werkzeug.contrib.cache import FileSystemCache
@@ -49,7 +50,7 @@ def cmd_couchpotato(base_path, args):
     Env.set('data_dir', options.data_dir)
     Env.set('db_path', 'sqlite:///' + os.path.join(options.data_dir, 'couchpotato.db'))
     Env.set('cache_dir', os.path.join(options.data_dir, 'cache'))
-    Env.set('cache', FileSystemCache(Env.get('cache_dir')))
+    Env.set('cache', FileSystemCache(os.path.join(Env.get('cache_dir'), 'python')))
     Env.set('quiet', options.quiet)
     Env.set('daemonize', options.daemonize)
     Env.set('args', args)
@@ -97,6 +98,7 @@ def cmd_couchpotato(base_path, args):
     from migrate.versioning.api import version_control, db_version, version, upgrade
     db = Env.get('db_path')
     repo = os.path.join('couchpotato', 'core', 'migration')
+    logging.getLogger('migrate').setLevel(logging.WARNING) # Disable logging for migration
 
     latest_db_version = version(repo)
 
@@ -114,6 +116,7 @@ def cmd_couchpotato(base_path, args):
     from couchpotato.core.settings.model import setup
     setup()
 
+    fireEvent('app.load')
 
     # Create app
     from couchpotato import app
@@ -127,11 +130,6 @@ def cmd_couchpotato(base_path, args):
     app.debug = debug
     app.secret_key = api_key
     app.static_path = url_base + '/static'
-
-    # Add static url with url_base
-    app.add_url_rule(app.static_path + '/<path:filename>',
-                      endpoint = 'static',
-                      view_func = app.send_static_file)
 
     # Register modules
     app.register_module(web, url_prefix = '%s/' % url_base)

@@ -1,9 +1,9 @@
 from couchpotato import get_session
 from couchpotato.api import addApiView
-from couchpotato.core.event import fireEvent
+from couchpotato.core.event import fireEvent, fireEventAsync
 from couchpotato.core.helpers.request import getParams, jsonified
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.core.settings.model import Movie, Release, Profile
+from couchpotato.core.settings.model import Movie
 from couchpotato.environment import Env
 from urllib import urlencode
 
@@ -13,30 +13,28 @@ class MoviePlugin(Plugin):
     def __init__(self):
         addApiView('movie.search', self.search)
         addApiView('movie.list', self.list)
+        addApiView('movie.refresh', self.refresh)
+
         addApiView('movie.add', self.add)
+        addApiView('movie.edit', self.edit)
+        addApiView('movie.delete', self.delete)
 
     def list(self):
 
-        a = getParams()
+        params = getParams()
+        db = get_session()
 
-        results = get_session().query(Movie).filter(
-                Movie.releases.any(
-                    Release.status.has(identifier = 'wanted')
-                )
-            ).all()
+        results = db.query(Movie).filter(
+            Movie.status.has(identifier = params.get('status', 'active'))
+        ).all()
 
         movies = []
         for movie in results:
-            temp = {
-                'id': movie.id,
-                'name': movie.id,
-                'releases': [],
-            }
-            for release in movie.releases:
-                temp['releases'].append({
-                    'status': release.status.label,
-                    'quality': release.quality.label
-                })
+            temp = movie.to_dict(deep = {
+                'releases': {'status': {}, 'quality': {}},
+                'library': {'titles': {}, 'files':{}},
+                'files': {}
+            })
 
             movies.append(temp)
 
@@ -46,22 +44,41 @@ class MoviePlugin(Plugin):
             'movies': movies,
         })
 
+    def refresh(self):
+
+        params = getParams()
+        db = get_session()
+
+        movie = db.query(Movie).filter_by(id = params.get('id')).first()
+
+        # Get current selected title
+        default_title = ''
+        for title in movie.library.titles:
+            if title.default: default_title = title.title
+
+        if movie:
+            #addEvent('library.update.after', )
+            fireEventAsync('library.update', library = movie.library, default_title = default_title)
+
+        return jsonified({
+            'success': True,
+        })
+
     def search(self):
 
-        a = getParams()
-        cache_key = '%s/%s' % (__name__, urlencode(a))
+        params = getParams()
+        cache_key = '%s/%s' % (__name__, urlencode(params))
         movies = Env.get('cache').get(cache_key)
 
         if not movies:
-            results = fireEvent('provider.movie.search', q = a.get('q'))
+            results = fireEvent('provider.movie.search', q = params.get('q'))
 
             # Combine movie results
             movies = []
             for r in results:
                 movies += r
 
-            Env.get('cache').set(cache_key, movies, timeout = 10)
-
+            Env.get('cache').set(cache_key, movies)
 
         return jsonified({
             'success': True,
@@ -71,24 +88,46 @@ class MoviePlugin(Plugin):
 
     def add(self):
 
-        a = getParams()
+        params = getParams()
         db = get_session();
 
-        library = fireEvent('library.add', attrs = a)
-        profile = db.query(Profile).filter_by(identifier = a.get('profile_identifier'))
+        library = fireEvent('library.add', single = True, attrs = params)
+        status = fireEvent('status.add', 'active', single = True)
 
-        m = db.query(Movie).filter_by(library = library).first()
-
+        m = db.query(Movie).filter_by(library_id = library.id).first()
         if not m:
             m = Movie(
-                library = library,
-                profile = profile,
+                library_id = library.id,
+                profile_id = params.get('profile_id')
             )
             db.add(m)
-            db.commit()
+
+        m.status_id = status.id
+        db.commit()
 
         return jsonified({
             'success': True,
             'added': True,
-            'params': a,
+            'movie': m.to_dict(deep = {
+                'releases': {'status': {}, 'quality': {}},
+                'library': {'titles': {}}
+            })
+        })
+
+    def edit(self):
+        pass
+
+    def delete(self):
+
+        params = getParams()
+        db = get_session()
+
+        status = fireEvent('status.add', 'deleted', single = True)
+
+        movie = db.query(Movie).filter_by(id = params.get('id')).first()
+        movie.status_id = status.id
+        db.commit()
+
+        return jsonified({
+            'success': True,
         })

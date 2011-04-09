@@ -11,6 +11,12 @@ Page.Settings = new Class({
 		},
 		'providers': {
 			'label': 'Providers'
+		},
+		'downloaders': {
+			'label': 'Downloaders'
+		},
+		'notifications': {
+			'label': 'Notifications'
 		}
 	},
 
@@ -27,13 +33,13 @@ Page.Settings = new Class({
 
 	openTab: function(action){
 		var self = this;
-		action = action || self.action
+		var action = action || self.action;
 
 		if(self.current)
 			self.toggleTab(self.current, true);
 
-		self.toggleTab(action)
-		self.current = action;
+		var tab = self.toggleTab(action)
+		self.current = tab == self.tabs.general ? 'general' : action;
 
 	},
 
@@ -47,6 +53,7 @@ Page.Settings = new Class({
 			t.tab[a](c);
 			t.content[a](c);
 
+		return t
 	},
 
 	getData: function(onComplete){
@@ -121,7 +128,7 @@ Page.Settings = new Class({
 
 				// Add options to group
 				group.options.sortBy('order').each(function(option){
-					var class_name = (option.type || 'input').capitalize();
+					var class_name = (option.type || 'string').capitalize();
 					var input = new Option[class_name](self, section_name, option.name, option);
 						input.inject(group_el);
 				});
@@ -145,13 +152,13 @@ Page.Settings = new Class({
 		var tab_el = new Element('li').adopt(
 			new Element('a', {
 				'href': '/'+self.name+'/'+tab_name+'/',
-				'text': tab.label.capitalize()
+				'text': (tab.label || tab.name).capitalize()
 			})
 		).inject(self.tabs_container);
 
 		if(!self.tabs[tab_name])
 			self.tabs[tab_name] = {
-				'label': tab.label
+				'label': tab.label || tab.name
 			}
 
 		self.tabs[tab_name] = Object.merge(self.tabs[tab_name], {
@@ -171,7 +178,7 @@ Page.Settings = new Class({
 			'class': group.advanced ? 'inlineLabels advanced' : 'inlineLabels'
 		}).adopt(
 			new Element('h2', {
-				'text': group.label
+				'text': group.label || group.name.capitalize()
 			}).adopt(
 				new Element('span.hint', {
 					'text': group.description
@@ -222,6 +229,13 @@ var OptionBase = new Class({
 	},
 
 	create: function(){},
+	
+	createLabel: function(){
+		var self = this;
+		return new Element('label', {
+			'text': self.options.label || self.options.name.capitalize()
+		})
+	},
 
 	setAdvanced: function(){
 		this.el.addClass(this.options.advanced ? 'advanced': '')
@@ -319,9 +333,7 @@ Option.String = new Class({
 		var self = this
 
 		self.el.adopt(
-			new Element('label', {
-				'text': self.options.label
-			}),
+			self.createLabel(),
 			self.input = new Element('input', {
 				'type': 'text',
 				'name': self.postName(),
@@ -337,18 +349,17 @@ Option.Dropdown = new Class({
 	create: function(){
 		var self = this
 
-		new Element('label', {
-			'text': self.options.label
-		}).adopt(
+		self.el.adopt(
+			self.createLabel(),
 			self.input = new Element('select', {
 				'name': self.postName()
 			})
-		).inject(self.el)
+		)
 
-		Object.each(self.options.values, function(label, value){
+		Object.each(self.options.values, function(value){
 			new Element('option', {
-				'text': label,
-				'value': value
+				'text': value[0],
+				'value': value[1]
 			}).inject(self.input)
 		})
 
@@ -366,22 +377,29 @@ Option.Checkbox = new Class({
 
 		var randomId = 'option-'+Math.floor(Math.random()*1000000)
 
-		new Element('label', {
-			'text': self.options.label,
-			'for': randomId
-		}).inject(self.el);
-
-		self.input = new Element('input', {
-			'type': 'checkbox',
-			'value': self.getSettingValue(),
-			'checked': self.getSettingValue() !== undefined,
-			'id': randomId
-		}).inject(self.el);
+		self.el.adopt(
+			self.createLabel().set('for', randomId),
+			self.input = new Element('input', {
+				'type': 'checkbox',
+				'value': self.getSettingValue(),
+				'checked': self.getSettingValue() !== undefined,
+				'id': randomId
+			})
+		)
 	}
+});
+
+Option.Password = new Class({
+	Extends: Option.String,
+	type: 'password'
 });
 
 Option.Bool = new Class({
 	Extends: Option.Checkbox
+});
+
+Option.Enabler = new Class({
+	Extends: Option.Bool
 });
 
 Option.Int = new Class({
@@ -401,9 +419,7 @@ Option.Directory = new Class({
 
 
 		self.el.adopt(
-			new Element('label', {
-				'text': self.options.label
-			}),
+			self.createLabel(),
 			self.input = new Element('span', {
 				'text': self.getSettingValue(),
 				'events': {

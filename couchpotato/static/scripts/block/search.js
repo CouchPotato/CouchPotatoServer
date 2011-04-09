@@ -34,6 +34,7 @@ Block.Search = new Class({
 		self.spinner = new Spinner(self.result_container);
 
 		self.OuterClickStack = new EventStack.OuterClick();
+		History.addEvent('change', self.hideResults.bind(self, true));
 
 		//debug
 		//self.input.set('value', 'kick ass')
@@ -126,16 +127,16 @@ Block.Search = new Class({
 
 		Object.each(json.movies, function(movie){
 
-			if(!movie.imdb || (movie.imdb && !self.results.getElement('#'+movie.imdb))){
+			// if(!movie.imdb || (movie.imdb && !self.results.getElement('#'+movie.imdb))){
 				var m = new Block.Search.Item(movie);
 				$(m).inject(self.results)
 				self.movies[movie.imdb || 'r-'+Math.floor(Math.random()*10000)] = m
-			}
-			else {
-				self.movies[movie.imdb].alternativeName({
-					'name': movie.name
-				})
-			}
+			// }
+			// else {
+			// 	self.movies[movie.imdb].alternativeTitle({
+			// 		'title': movie.title
+			// 	})
+			// }
 
 		});
 
@@ -157,7 +158,7 @@ Block.Search.Item = new Class({
 		var self = this;
 
 		self.info = info;
-		self.alternative_names = [];
+		self.alternative_titles = [];
 
 		self.create();
 
@@ -167,7 +168,7 @@ Block.Search.Item = new Class({
 	create: function(){
 		var self = this;
 
-		var info = self.info
+		var info = self.info;
 
 		self.el = new Element('div.movie', {
 			'id': info.imdb
@@ -182,12 +183,12 @@ Block.Search.Item = new Class({
 					'click': self.showOptions.bind(self)
 				}
 			}).adopt(
-				self.thumbnail = info.poster ? new Element('img.thumbnail', {
-					'src': info.poster
+				self.thumbnail = info.images.posters.length > 0 ? new Element('img.thumbnail', {
+					'src': info.images.posters[0]
 				}) : null,
 				new Element('div.info').adopt(
-					self.name = new Element('h2', {
-						'text': info.name
+					self.title = new Element('h2', {
+						'text': info.titles[0]
 					}).adopt(
 						self.year = info.year ? new Element('span', {
 							'text': info.year
@@ -214,15 +215,18 @@ Block.Search.Item = new Class({
 			})
 		}
 
-		self.alternativeName({
-			'name': info.name
-		});
+		
+		info.titles.each(function(title){
+			self.alternativeTitle({
+				'title': title
+			});
+		})
 	},
 
-	alternativeName: function(alternative){
+	alternativeTitle: function(alternative){
 		var self = this;
 
-		self.alternative_names.include(alternative);
+		self.alternative_titles.include(alternative);
 	},
 
 	showOptions: function(){
@@ -246,8 +250,8 @@ Block.Search.Item = new Class({
 		Api.request('movie.add', {
 			'data': {
 				'identifier': self.info.imdb,
-				'name': self.name_select.get('value'),
-				'quality': self.quality_select.get('value')
+				'title': self.title_select.get('value'),
+				'profile_id': self.profile_select.get('value')
 			},
 			'useSpinner': true,
 			'spinnerTarget': self.options,
@@ -277,14 +281,14 @@ Block.Search.Item = new Class({
 
 			self.options.adopt(
 				new Element('div').adopt(
-					self.info.poster ? new Element('img.thumbnail', {
-						'src': self.info.poster
+					self.info.images.posters.length > 0 ? new Element('img.thumbnail', {
+						'src': self.info.images.posters[0]
 					}) : null,
-					self.name_select = new Element('select', {
-						'name': 'name'
+					self.title_select = new Element('select', {
+						'name': 'title'
 					}),
-					self.quality_select = new Element('select', {
-						'name': 'profile_identifier'
+					self.profile_select = new Element('select', {
+						'name': 'profile'
 					}),
 					new Element('a.button', {
 						'text': 'Add',
@@ -295,17 +299,17 @@ Block.Search.Item = new Class({
 				)
 			);
 
-			Array.each(self.alternative_names, function(alt){
+			Array.each(self.alternative_titles, function(alt){
 				new Element('option', {
-					'text': alt.name
-				}).inject(self.name_select)
+					'text': alt.title
+				}).inject(self.title_select)
 			})
 
-			Array.each(Quality.profiles, function(q){
+			Array.each(Quality.profiles, function(profile){
 				new Element('option', {
-					'value': q.indentifier,
-					'text': q.label
-				}).inject(self.quality_select)
+					'value': profile.id ? profile.id : profile.data.id,
+					'text': profile.label ? profile.label : profile.data.label
+				}).inject(self.profile_select)
 			});
 
 			self.options.addClass('set');

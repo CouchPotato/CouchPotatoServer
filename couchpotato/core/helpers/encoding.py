@@ -5,15 +5,18 @@ import unicodedata
 
 log = CPLog(__name__)
 
+
 def toSafeString(original):
     valid_chars = "-_.() %s%s" % (ascii_letters, digits)
     cleanedFilename = unicodedata.normalize('NFKD', toUnicode(original)).encode('ASCII', 'ignore')
     return ''.join(c for c in cleanedFilename if c in valid_chars)
 
+
 def simplifyString(original):
     string = toSafeString(original)
     split = re.split('\W+', string.lower())
     return toUnicode(' '.join(split))
+
 
 def toUnicode(original, *args):
     try:

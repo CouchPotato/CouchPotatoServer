@@ -6,11 +6,17 @@ var QualityBase = new Class({
 	setup: function(data){
 		var self = this;
 
-		self.profiles = data.profiles;
 		self.qualities = data.qualities;
+
+		self.profiles = {}
+		Object.each(data.profiles, self.createProfilesClass.bind(self));
 
 		App.addEvent('load', self.addSettings.bind(self))
 
+	},
+
+	getProfile: function(id){
+		return this.profiles[id]
 	},
 
 	addSettings: function(){
@@ -47,22 +53,34 @@ var QualityBase = new Class({
 			new Element('a.add_new', {
 				'text': 'Create a new quality profile',
 				'events': {
-					'click': self.createNewProfile.bind(self)
+					'click': function(){
+						var profile = self.createProfilesClass();
+						$(profile).inject(self.profile_container, 'top')
+					}
 				}
 			}),
 			self.profile_container = new Element('div.container')
 		)
 
-		Object.each(self.profiles, self.createNewProfile.bind(self))
+		Object.each(self.profiles, function(profile){
+			if(!profile.isCore())
+				$(profile).inject(self.profile_container, 'top')
+		})
 
 	},
 
-	createNewProfile: function(data, nr){
+	createProfilesClass: function(data){
 		var self = this;
 
-		self.profiles[nr] = new Profile(data);
-		$(self.profiles[nr]).inject(self.profile_container)
-
+		if(data){
+			return self.profiles[data.id] = new Profile(data);
+		}
+		else {
+			var data = {
+				'id': randomString()
+			}
+			return self.profiles[data.id] = new Profile(data);
+		}
 	},
 
 	/**
@@ -95,7 +113,7 @@ var QualityBase = new Class({
 window.Quality = new QualityBase();
 
 var Profile = new Class({
-	
+
 	data: {},
 	types: [],
 
@@ -119,12 +137,9 @@ var Profile = new Class({
 
 		var data = self.data;
 
-		self.el = new Element('div', {
-			'class': 'profile'
-		}).adopt(
-			new Element('h4', {'text': data.label}),
-			new Element('span.delete', {
-				'html': 'del',
+		self.el = new Element('div.profile').adopt(
+			self.header = new Element('h4', {'text': data.label}),
+			new Element('span.delete.icon', {
 				'events': {
 					'click': self.del.bind(self)
 				}
@@ -135,25 +150,29 @@ var Profile = new Class({
 				new Element('label', {'text':'Name'}),
 				new Element('input.label.textInput.large', {
 					'type':'text',
-					'value': data.label
+					'value': data.label,
+					'events': {
+						'keyup': function(){
+							self.header.set('text', this.get('value'))
+						}
+					}
 				})
 			),
 			new Element('div.ctrlHolder').adopt(
 				new Element('label', {'text':'Wait'}),
 				new Element('input.wait_for.textInput.xsmall', {
 					'type':'text',
-					'value': data.wait_for
+					'value': data.types && data.types.length > 0 ? data.types[0].wait_for : 0
 				}),
 				new Element('span', {'text':' day(s) for better quality.'})
 			),
 			new Element('div.ctrlHolder').adopt(
 				new Element('label', {'text': 'Qualities'}),
-				self.type_container = new Element('div.types').adopt(
-					new Element('div.head').adopt(
-						new Element('span.quality_type', {'text': 'Search for'}),
-						new Element('span.finish', {'html': '<acronym title="Won\'t download anything else if it has found this quality.">Finish</acronym>'})
-					)
+				new Element('div.head').adopt(
+					new Element('span.quality_type', {'text': 'Search for'}),
+					new Element('span.finish', {'html': '<acronym title="Won\'t download anything else if it has found this quality.">Finish</acronym>'})
 				),
+				self.type_container = new Element('ol.types'),
 				new Element('a.addType', {
 					'text': 'Add another quality to search for.',
 					'href': '#',
@@ -163,6 +182,8 @@ var Profile = new Class({
 				})
 			)
 		);
+
+		self.makeSortable()
 
 		if(data.types)
 			Object.each(data.types, self.addType.bind(self))
@@ -174,11 +195,19 @@ var Profile = new Class({
 		if(self.save_timer) clearTimeout(self.save_timer);
 		self.save_timer = (function(){
 
+			var data = self.getData();
+			if(data.types.length < 2) return;
+
 			Api.request('profile.save', {
 				'data': self.getData(),
 				'useSpinner': true,
 				'spinnerOptions': {
 					'target': self.el
+				},
+				'onComplete': function(json){
+					if(json.success){
+						self.data = json.profile
+					}
 				}
 			});
 		}).delay(delay, self)
@@ -194,12 +223,15 @@ var Profile = new Class({
 			'wait_for' : self.el.getElement('.wait_for').get('value'),
 			'types': []
 		}
-		
-		Object.each(self.types, function(type){
-			if(!type.deleted)
-				data.types.include(type.getData());
+
+		Array.each(self.type_container.getElements('.type'), function(type){
+			if(!type.hasClass('deleted'))
+				data.types.include({
+					'quality_id': type.getElement('select').get('value'),
+					'finish': +type.getElement('input[type=checkbox]').checked
+				});
 		})
-		
+
 		return data
 	},
 
@@ -208,6 +240,7 @@ var Profile = new Class({
 
 		var t = new Profile.Type(data);
 		$(t).inject(self.type_container);
+		self.sortable.addItems($(t));
 
 		self.types.include(t);
 
@@ -215,6 +248,8 @@ var Profile = new Class({
 
 	del: function(){
 		var self = this;
+
+        if(!confirm('Are you sure you want to delete this profile?')) return
 
 		Api.request('profile.delete', {
 			'data': {
@@ -224,10 +259,33 @@ var Profile = new Class({
 			'spinnerOptions': {
 				'target': self.el
 			},
-			'onComplete': function(){
-				self.el.destroy();
+			'onComplete': function(json){
+				if(json.success)
+					self.el.destroy();
+				else
+					alert(json.message)
 			}
 		});
+	},
+
+	makeSortable: function(){
+		var self = this;
+
+		self.sortable = new Sortables(self.type_container, {
+			'revert': true,
+			//'clone': true,
+			'handle': '.handle',
+			'opacity': 0.5,
+			'onComplete': self.save.bind(self, 300)
+		});
+	},
+
+	get: function(attr){
+		return this.data[attr]
+	},
+
+	isCore: function(){
+		return this.data.core
 	},
 
 	toElement: function(){
@@ -252,7 +310,7 @@ Profile.Type = Class({
 		var self = this;
 		var data = self.data;
 
-		self.el = new Element('div.type').adopt(
+		self.el = new Element('li.type').adopt(
 			new Element('span.quality_type').adopt(
 				self.fillQualities()
 			),
@@ -263,15 +321,12 @@ Profile.Type = Class({
 					'checked': data.finish
 				})
 			),
-			new Element('span.delete', {
-				'html': 'del',
+			new Element('span.delete.icon', {
 				'events': {
 					'click': self.del.bind(self)
 				}
 			}),
-			new Element('span', {
-				'class':'handle'
-			})
+			new Element('span.handle')
 		)
 
 	},
@@ -284,21 +339,21 @@ Profile.Type = Class({
 		Object.each(Quality.qualities, function(q){
 			new Element('option', {
 				'text': q.label,
-				'value': q.identifier
+				'value': q.id
 			}).inject(self.qualities)
 		});
 
-		self.qualities.set('value', self.data.quality);
+		self.qualities.set('value', self.data.quality_id);
 
 		return self.qualities;
 
 	},
-	
+
 	getData: function(){
 		var self = this;
-		
+
 		return {
-			'quality': self.qualities.get('value'),
+			'quality_id': self.qualities.get('value'),
 			'finish': +self.finish.checked
 		}
 	},
@@ -306,6 +361,7 @@ Profile.Type = Class({
 	del: function(){
 		var self = this;
 
+		self.el.addClass('deleted');
 		self.el.hide();
 		self.deleted = true;
 	},

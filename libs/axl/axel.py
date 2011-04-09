@@ -179,10 +179,12 @@ class Event(object):
                     if not self.asynchronous:
                         self.result.append(tuple(r))
 
-                except Exception:
+                except Exception, e:
                     if not self.asynchronous:
                         self.result.append((False, self._error(sys.exc_info()),
                                             handler))
+                    else:
+                        self.error_handler(sys.exc_info())
                 finally:
                     if isinstance(self.lock, threading._RLock):
                         self.lock.release()

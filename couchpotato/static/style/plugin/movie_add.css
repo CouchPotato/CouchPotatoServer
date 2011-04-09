@@ -24,7 +24,7 @@
 			margin: 0 0 -5px -20px;
 			top: 4px;
 			right: 5px;
-			background: url('../images/close_button.png') 0 center no-repeat;
+			background: url('../../images/close_button.png') 0 center no-repeat;
 			cursor: pointer;
 		}
 		.search_form .input a:hover { background-position: -12px center; }
@@ -46,7 +46,7 @@
 		-moz-border-radius: 3px;
 	}
 	.search_form .spinner {
-		background: #fff url('../images/spinner.gif') no-repeat center 70px;
+		background: #fff url('../../images/spinner.gif') no-repeat center 70px;
 	}
 	
 		.search_form .pointer {
@@ -83,7 +83,7 @@
 				display: inline-block;
 				margin-right: 10px;
 			}
-				.search_form .results .movie .options select[name=name] { width: 180px; }
+				.search_form .results .movie .options select[name=title] { width: 180px; }
 				.search_form .results .movie .options select[name=quality] { width: 90px; }
 			
 			.search_form .results .movie .options .button {

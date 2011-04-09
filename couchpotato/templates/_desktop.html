@@ -1,12 +1,13 @@
 <!doctype html>
 <html>
 	<head>
-		<link rel="stylesheet" href="{{ url_for('.static', filename='style/main.css') }}">
-		<link rel="stylesheet" href="{{ url_for('.static', filename='style/uniform.generic.css') }}">
-		<link rel="stylesheet" href="{{ url_for('.static', filename='style/uniform.css') }}">
+		<link rel="stylesheet" href="{{ url_for('.static', filename='style/main.css') }}" type="text/css">
+		<link rel="stylesheet" href="{{ url_for('.static', filename='style/uniform.generic.css') }}" type="text/css">
+		<link rel="stylesheet" href="{{ url_for('.static', filename='style/uniform.css') }}" type="text/css">
 
-		<link rel="stylesheet" href="{{ url_for('.static', filename='style/page/settings.css') }}">
-		<link rel="stylesheet" href="{{ url_for('.static', filename='style/movie_add.css') }}">
+		<link rel="stylesheet" href="{{ url_for('.static', filename='style/page/settings.css') }}" type="text/css">
+		<link rel="stylesheet" href="{{ url_for('.static', filename='style/plugin/movie_add.css') }}" type="text/css">
+		<link rel="stylesheet" href="{{ url_for('.static', filename='style/plugin/quality.css') }}" type="text/css">
 
 		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/library/mootools.js') }}"></script>
 		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/library/mootools_more.js') }}"></script>
@@ -30,8 +31,11 @@
 		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/page/manage.js') }}"></script>
 
 		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/quality.js') }}"></script>
+		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/status.js') }}"></script>
+		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/file.js') }}"></script>
 
 		<link href="{{ url_for('.static', filename='images/favicon.ico') }}" rel="icon" type="image/x-icon" />
+		<link rel="apple-touch-icon" href="{{ url_for('.static', filename='images/homescreen.png') }}" />
 
 		<script type="text/javascript">
 			window.addEvent('domready', function() {
@@ -44,34 +48,13 @@
 				});
 
 				Quality.setup({
-					'profiles': [
-						{
-							'identifier': 'hd',
-							'label': 'HD',
-							'wait_for': 7,
-							'types': [
-								{'quality': '720p', 'finish': true},
-								{'quality': '1080p', 'finish': true}
-							]
-						},{
-							'identifier': 'best',
-							'label': 'Best',
-							'wait_for': 7,
-							'types': [
-								{'quality': '720p', 'finish': true},
-								{'quality': '1080p', 'finish': true},
-								{'quality': 'brrip'},
-								{'quality': 'dvdrip'}
-							]
-						}
-					],
-					'qualities': [
-						{'identifier': '1080p', 'label': '1080P'},
-						{'identifier': '720p', 'label': '720P'},
-						{'identifier': 'brrip', 'label': 'BR-Rip'},
-						{'identifier': 'dvdrip', 'label': 'DVD-Rip'}
-					]
-				})
+					'profiles': {{ fireEvent('profile.all', single = True)|tojson|safe }},
+					'qualities': {{ fireEvent('quality.all', single = True)|tojson|safe }}
+				});
+
+				Status.setup({{ fireEvent('status.all', single = True)|tojson|safe }});
+
+				File.Type.setup({{ fireEvent('file.types', single = True)|tojson|safe }});
 
 				App.setup({
 					'base_url': '{{ request.path }}'

@@ -1,28 +1,90 @@
+from couchpotato import get_session
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent
-from couchpotato.core.helpers.request import jsonified, getParams
+from couchpotato.core.helpers.request import jsonified, getParams, getParam
+from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
+from couchpotato.core.settings.model import Profile, ProfileType
+
+log = CPLog(__name__)
+
 
 class ProfilePlugin(Plugin):
 
     def __init__(self):
-        addEvent('profile.get', self.get)
+        addEvent('profile.all', self.all)
 
         addApiView('profile.save', self.save)
         addApiView('profile.delete', self.delete)
 
-    def get(self, key = ''):
+    def all(self):
 
-        pass
+        db = get_session()
+        profiles = db.query(Profile).all()
+
+        temp = []
+        for profile in profiles:
+            temp.append(profile.to_dict(deep = {'types': {}}))
+
+        return temp
 
     def save(self):
 
-        a = getParams()
+        params = getParams()
+
+        db = get_session()
+
+        p = db.query(Profile).filter_by(id = params.get('id')).first()
+        if not p:
+            p = Profile()
+            db.add(p)
+
+        p.label = params.get('label')
+        p.order = params.get('order', p.order if p.order else 0)
+        p.core = params.get('core', False)
+
+        #delete old types
+        [db.delete(t) for t in p.types]
+
+        order = 0
+        for type in params.get('types', []):
+            t = ProfileType(
+                order = order,
+                finish = type.get('finish'),
+                wait_for = params.get('wait_for'),
+                quality_id = type.get('quality_id')
+            )
+            p.types.append(t)
+
+            order += 1
+
+        db.commit()
 
         return jsonified({
             'success': True,
-            'a': a
+            'profile': p.to_dict(deep = {'types': {}})
         })
 
     def delete(self):
-        pass
+
+        id = getParam('id')
+
+        db = get_session()
+
+        success = False
+        message = ''
+        try:
+            p = db.query(Profile).filter_by(id = id).first()
+
+            db.delete(p)
+            db.commit()
+
+            success = True
+        except Exception, e:
+            message = 'Failed deleting Profile: %s' % e
+            log.error(message)
+
+        return jsonified({
+            'success': success,
+            'message': message
+        })

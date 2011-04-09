@@ -3,10 +3,10 @@
 MooTools: the javascript framework
 
 web build:
- - http://mootools.net/core/bd6349d3fbc489736e5aefb01157c8a8
+ - http://mootools.net/core/c1215700e7dedaa9d48503126daf2111
 
 packager build:
- - packager build Core/Class Core/Class.Extras Core/Element Core/Element.Style Core/Element.Dimensions Core/Fx.Tween Core/Fx.Transitions Core/Request.JSON Core/DOMReady
+ - packager build Core/Class Core/Class.Extras Core/Element Core/Element.Style Core/Element.Dimensions Core/Fx.Tween Core/Fx.Morph Core/Fx.Transitions Core/Request.JSON Core/DOMReady
 
 /*
 ---
@@ -4079,6 +4079,85 @@ Element.implement({
 			this.setStyle('background-color', this.retrieve('highlight:original'));
 			tween.callChain();
 		}.bind(this));
+		return this;
+	}
+
+});
+
+
+/*
+---
+
+name: Fx.Morph
+
+description: Formerly Fx.Styles, effect to transition any number of CSS properties for an element using an object of rules, or CSS based selector rules.
+
+license: MIT-style license.
+
+requires: Fx.CSS
+
+provides: Fx.Morph
+
+...
+*/
+
+Fx.Morph = new Class({
+
+	Extends: Fx.CSS,
+
+	initialize: function(element, options){
+		this.element = this.subject = document.id(element);
+		this.parent(options);
+	},
+
+	set: function(now){
+		if (typeof now == 'string') now = this.search(now);
+		for (var p in now) this.render(this.element, p, now[p], this.options.unit);
+		return this;
+	},
+
+	compute: function(from, to, delta){
+		var now = {};
+		for (var p in from) now[p] = this.parent(from[p], to[p], delta);
+		return now;
+	},
+
+	start: function(properties){
+		if (!this.check(properties)) return this;
+		if (typeof properties == 'string') properties = this.search(properties);
+		var from = {}, to = {};
+		for (var p in properties){
+			var parsed = this.prepare(this.element, p, properties[p]);
+			from[p] = parsed.from;
+			to[p] = parsed.to;
+		}
+		return this.parent(from, to);
+	}
+
+});
+
+Element.Properties.morph = {
+
+	set: function(options){
+		this.get('morph').cancel().setOptions(options);
+		return this;
+	},
+
+	get: function(){
+		var morph = this.retrieve('morph');
+		if (!morph){
+			morph = new Fx.Morph(this, {link: 'cancel'});
+			this.store('morph', morph);
+		}
+		return morph;
+	}
+
+};
+
+Element.implement({
+
+	morph: function(props){
+		this.get('morph').start(props);
 		return this;
 	}
 

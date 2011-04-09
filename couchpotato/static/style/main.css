@@ -121,6 +121,12 @@ form {
     cursor: pointer;
 }
 
+/*** Icons ***/
+.icon.delete {
+	background: url('../images/delete.png') no-repeat;
+	display: inline-block;
+}
+
 /*** Navigation ***/
 .header {
 	background: #f7f7f7;

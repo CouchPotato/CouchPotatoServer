@@ -42,7 +42,7 @@ def dictToList(params):
         new = {}
         for x, value in params.iteritems():
             try:
-                new_value = [dictToList(value2) for value2 in value.itervalues()]
+                new_value = [dictToList(value[k]) for k in sorted(value.iterkeys())]
             except:
                 new_value = value
 

@@ -114,8 +114,8 @@ var ApiClass = new Class({
 		}, options)).send()
 	},
 
-	createUrl: function(action){
-		return this.options.url + (action || 'default') + '/'
+	createUrl: function(action, params){
+		return this.options.url + (action || 'default') + '/' + (params ? '?'+Object.toQueryString(params) : '')
 	},
 
 	getOption: function(name){
@@ -185,6 +185,17 @@ var p = function(){
 	if(typeof(console) !== 'undefined' && console != null)
 		console.log(arguments)
 };
+
+function randomString(length, extra) {
+	var chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz" + (extra ? '-._!@#$%^&*()+=' : '');
+	var stringLength = length || 8;
+	var randomString = '';
+	for (var i = 0; i < stringLength; i++) {
+		var rnum = Math.floor(Math.random() * chars.length);
+		randomString += chars.charAt(rnum);
+	}
+	return randomString;
+}
 
 (function(){
 
