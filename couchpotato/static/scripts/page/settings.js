@@ -436,7 +436,7 @@ Option.Enabler = new Class({
 	checkState: function(){
 		var self = this;
 
-		self.parentFieldset[ self.getValue() ? 'addClass' : 'removeClass']('enabled');
+		self.parentFieldset[ self.getValue() ? 'removeClass' : 'addClass']('disabled');
 	},
 
 	afterInject: function(){

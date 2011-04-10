@@ -13,7 +13,9 @@ var File = new Class({
 	createImage: function(){
 		var self = this;
 
-		self.el = new Element('div.type_image').adopt(
+		self.el = new Element('div', {
+			'class': 'type_image ' + self.type.identifier
+		}).adopt(
 			new Element('img', {
 				'src': Api.createUrl('file.cache') + self.data.path.substring(1) + '/'
 			})

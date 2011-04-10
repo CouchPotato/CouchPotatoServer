@@ -1,4 +1,4 @@
-/* @override http://localhost:5000/static/style/movie_add.css */
+/* @override http://localhost:5000/static/style/plugin/movie_add.css */
 
 .search_form {
 	display: inline-block;
@@ -71,7 +71,7 @@
 		}
 	
 			.search_form .results .movie .options > div {
-				margin: 0 10px;
+				padding: 0 15px;
 			}
 			
 			.search_form .results .movie .options .thumbnail {
@@ -89,6 +89,14 @@
 			.search_form .results .movie .options .button {
 				vertical-align: middle;
 				display: inline-block;
+			}
+			
+			.search_form .results .movie .options .message {
+				height: 100%;
+				line-height: 140px;
+				font-size: 20px;
+				text-align: center;
+				color: #fff;
 			}
 		
 		.search_form .results .movie .data {

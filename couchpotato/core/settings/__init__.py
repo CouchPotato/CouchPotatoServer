@@ -75,7 +75,7 @@ class Settings():
             values[section] = {}
             for option in self.p.items(section):
                 (option_name, option_value) = option
-                values[section][option_name] = option_value
+                values[section][option_name] = self.cleanValue(option_value)
         return values
 
     def save(self):

@@ -23,6 +23,7 @@ Page.Wanted = new Class({
 		Object.each(self.movies, function(info){
 			var m = new Movie(self, {}, info);
 			$(m).inject(self.movie_container);
+			m.fireEvent('injected');
 		});
 
 		self.movie_container.addEvents({
@@ -69,29 +70,37 @@ var Movie = new Class({
 
 		self.profile = Quality.getProfile(data.profile_id);
 		self.parent(self, options);
+		self.addEvent('injected', self.afterInject.bind(self))
 	},
 
 	create: function(){
 		var self = this;
 
 		self.el = new Element('div.movie').adopt(
-			self.data_container = new Element('div').adopt(
+			self.data_container = new Element('div.data', {
+				'tween': {
+					duration: 400,
+					transition: 'quint:in:out'
+				}
+			}).adopt(
 				self.thumbnail = File.Select.single('poster', self.data.library.files),
-				self.title = new Element('div.title', {
-					'text': self.getTitle()
-				}),
-				self.description = new Element('div.description', {
-					'text': self.data.library.plot
-				}),
-				self.rating = new Element('div.rating', {
-					'text': self.data.library.rating || 10
-				}),
-				self.year = new Element('div.year', {
-					'text': self.data.library.year || 'Unknown'
-				}),
-				self.quality = new Element('div.quality', {
-					'text': self.profile.get('label')
-				}),
+				self.info_container = new Element('div.info').adopt(
+					self.title = new Element('div.title', {
+						'text': self.getTitle()
+					}),
+					self.year = new Element('div.year', {
+						'text': self.data.library.year || 'Unknown'
+					}),
+					self.rating = new Element('div.rating', {
+						'text': self.data.library.rating
+					}),
+					self.description = new Element('div.description', {
+						'text': self.data.library.plot
+					}),
+					self.quality = new Element('div.quality', {
+						'text': self.profile.get('label')
+					})
+				),
 				self.actions = new Element('div.actions').adopt(
 					self.action_imdb = new Movie.Action.IMDB(self),
 					self.action_edit = new Movie.Action.Edit(self),
@@ -101,6 +110,16 @@ var Movie = new Class({
 			)
 		);
 
+		if(!self.data.library.rating)
+			self.rating.hide();
+
+	},
+
+	afterInject: function(){
+		var self = this;
+
+		var height = self.getHeight();
+		self.el.setStyle('height', height);
 	},
 
 	getTitle: function(){
@@ -118,6 +137,37 @@ var Movie = new Class({
 			return titles[0].title
 
 		return 'Unknown movie'
+	},
+
+	slide: function(direction){
+		var self = this;
+
+		if(direction == 'in'){
+			self.el.addEvent('outerClick', self.slide.bind(self, 'out'))
+			self.data_container.tween('left', 0, self.getWidth());
+		}
+		else {
+			self.el.removeEvents('outerClick')
+			self.data_container.tween('left', self.getWidth(), 0);
+		}
+	},
+
+	getHeight: function(){
+		var self = this;
+
+		if(!self.height)
+			self.height = self.data_container.getCoordinates().height;
+
+		return self.height;
+	},
+
+	getWidth: function(){
+		var self = this;
+
+		if(!self.width)
+			self.width = self.data_container.getCoordinates().width;
+
+		return self.width;
 	},
 
 	get: function(attr){
@@ -164,7 +214,6 @@ Movie.Action.Edit = new Class({
 		var self = this;
 
 		self.el = new Element('a.edit', {
-			'text': 'edit',
 			'title': 'Refresh the movie info and do a forced search',
 			'events': {
 				'click': self.editMovie.bind(self)
@@ -177,21 +226,27 @@ Movie.Action.Edit = new Class({
 		var self = this;
 		(e).stop();
 
-		self.optionContainer = new Element('div.options').adopt(
-			$(self.movie.thumbnail).clone(),
-			self.title_select = new Element('select', {
-				'name': 'title'
-			}),
-			self.profile_select = new Element('select', {
-				'name': 'profile'
-			}),
-			new Element('a.button.edit', {
-				'text': 'Save',
-				'events': {
-					'click': self.save.bind(self)
-				}
-			})
-		).inject(self.movie, 'top');
+		if(!self.options_container){
+			self.options_container = new Element('div.options').adopt(
+				$(self.movie.thumbnail).clone(),
+				new Element('div.form').adopt(
+					self.title_select = new Element('select', {
+						'name': 'title'
+					}),
+					self.profile_select = new Element('select', {
+						'name': 'profile'
+					}),
+					new Element('a.button.edit', {
+						'text': 'Save',
+						'events': {
+							'click': self.save.bind(self)
+						}
+					})
+				)
+			).inject(self.movie, 'top');
+		}
+
+		self.movie.slide('in');
 	},
 
 	save: function(){
@@ -220,7 +275,6 @@ Movie.Action.IMDB = new Class({
 		self.id = self.movie.get('identifier');
 
 		self.el = new Element('a.imdb', {
-			'text': 'imdb',
 			'title': 'Go to the IMDB page of ' + self.movie.getTitle(),
 			'events': {
 				'click': self.gotoIMDB.bind(self)
@@ -247,7 +301,6 @@ Movie.Action.Refresh = new Class({
 		var self = this;
 
 		self.el = new Element('a.refresh', {
-			'text': 'refresh',
 			'title': 'Refresh the movie info and do a forced search',
 			'events': {
 				'click': self.doSearch.bind(self)
@@ -279,7 +332,6 @@ Movie.Action.Delete = new Class({
 		var self = this;
 
 		self.el = new Element('a.delete', {
-			'text': 'delete',
 			'title': 'Remove the movie from your wanted list',
 			'events': {
 				'click': self.showConfirm.bind(self)
@@ -292,27 +344,39 @@ Movie.Action.Delete = new Class({
 		var self = this;
 		(e).stop();
 
-		self.mask = $(self.movie).mask({
-			'destroyOnHide': true
-		});
+		if(!self.delete_container){
+			self.delete_container = new Element('div.delete_container', {
+				'styles': {
+					'line-height': self.movie.getHeight()
+				}
+			}).adopt(
+				new Element('a.cancel', {
+					'text': 'Cancel',
+					'events': {
+						'click': self.hideConfirm.bind(self)
+					}
+				}),
+				new Element('span.or', {
+					'text': 'or'
+				}),
+				new Element('a.button.delete', {
+					'text': 'Delete movie',
+					'events': {
+						'click': self.del.bind(self)
+					}
+				})
+			).inject(self.movie, 'top')
+		}
 
-		$(self.mask).adopt(
-			new Element('a.button.cancel', {
-				'text': 'Cancel',
-				'events': {
-					'click': self.mask.hide.bind(self.mask)
-				}
-			}),
-			new Element('span', {
-				'text': 'or'
-			}),
-			new Element('a.button.delete', {
-				'text': 'Delete movie',
-				'events': {
-					'click': self.del.bind(self)
-				}
-			})
-		);
+		self.movie.slide('in');
+
+	},
+
+	hideConfirm: function(e){
+		var self = this;
+		(e).stop();
+
+		self.movie.slide('out');
 	},
 
 	del: function(e){
@@ -323,7 +387,7 @@ Movie.Action.Delete = new Class({
 
 		self.chain(
 			function(){
-				$(self.mask).empty().addClass('loading');
+				$(movie).mask().addClass('loading')
 				self.callChain();
 			},
 			function(){
@@ -332,8 +396,12 @@ Movie.Action.Delete = new Class({
 						'id': self.movie.get('id')
 					},
 					'onComplete': function(){
-						p(movie, $(self.movie))
-						movie.slide('in');
+						movie.set('tween', {
+							'onComplete': function(){
+								movie.destroy();
+							}
+						})
+						movie.tween('height', 0)
 					}
 				})
 			}

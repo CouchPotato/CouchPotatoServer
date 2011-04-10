@@ -42,6 +42,7 @@ a {
 	text-decoration:none;
 	color: #6ea1d7;
 	outline: 0;
+	cursor: pointer;
 }
 a:hover { color: #4d66c4; }
 

@@ -1,0 +1,134 @@
+/* @override http://localhost:5000/static/style/page/wanted.css */
+
+.page.wanted .movies {
+	padding: 20px 0;
+}
+
+	.page.wanted .movie {
+		overflow: hidden;
+		position: relative;
+		background: #999;
+
+		border-radius: 4px;
+		-moz-border-radius: 4px;
+		-webkit-border-radius: 4px;
+		margin: 10px 0;
+		border: 1px solid #fff;
+		border-color: #eee #fff #fff #eee;
+		background: #ddd;
+	}
+		.page.wanted .movie:hover { 
+			border-color: #ddd #fff #fff #ddd;
+		}
+		.page.wanted .movie:hover .data { 
+			background: #f5f5f5;
+		}
+		.page.wanted .data {
+			padding: 2%;
+			position: absolute;
+			width: 96.1%;
+			top: 0;
+			left: 0;
+			background: #f9f9f9;
+		}
+			.page.wanted .data:after {
+			    content: "";
+			    display: block;
+			    height: 0;
+			    clear: both;
+			    visibility: hidden;
+			}
+		.page.wanted .data .poster, .page.wanted .options .poster {
+			overflow: hidden;
+			float: left;
+			max-width: 10%;
+			margin: 0 2% 0 0;
+			border-radius:3px;
+			-moz-border-radius: 3px;
+			-webkit-border-radius: 3px;
+			-moz-box-shadow: 0 0 10px rgba(0,0,0,0.35);
+			-webkit-box-shadow: 0 0 10px rgba(0,0,0,0.35);
+			line-height: 0;
+		}
+		
+		.page.wanted .info {
+			float: right;
+			width: 88%;
+		}
+		
+			.page.wanted .info .title {
+				font-size: 30px;
+				font-weight: bold;
+				margin-bottom: 10px;
+				float: left;
+				width: 80%;
+			}
+			
+			.page.wanted .info .year {
+				font-size: 30px;
+				margin-bottom: 10px;
+				float: right;
+				color: #bbb;
+				width: 10%;
+				text-align: right;
+			}
+			
+			.page.wanted .info .rating {
+				font-size: 30px;
+				margin-bottom: 10px;
+				color: #444;
+				float: left;
+				width: 5%;
+				padding: 0 0 0 3%;
+				background: url('../../images/rating.png') no-repeat left center;
+			}
+			
+			.page.wanted .info .description {
+				clear: both;
+				width: 95%;
+			}
+		.page.wanted .data .actions {
+			position: absolute;
+			right: 15px;
+			bottom: 15px;
+			line-height: 0;
+		}
+			.page.wanted .data:hover .action { opacity: 0.6; } 
+			.page.wanted .data:hover .action:hover { opacity: 1; } 
+		
+			.page.wanted .data .action {
+				background: no-repeat center;
+				display: inline-block;
+				width: 20px;
+				height: 20px;
+				padding: 3px;
+				opacity: 0;
+			}
+			.page.wanted .data .action.refresh { background-image: url('../../images/reload.png'); }
+			.page.wanted .data .action.delete { background-image: url('../../images/delete.png'); }
+			.page.wanted .data .action.edit { background-image: url('../../images/edit.png'); }
+			.page.wanted .data .action.imdb { background-image: url('../../images/imdb.png'); }
+			
+		.page.wanted .delete_container {
+			clear: both;
+			text-align: center;
+			font-size: 20px;
+			position: relative;
+		}
+			.page.wanted .delete_container .cancel {
+			}
+			.page.wanted .delete_container .or {
+				padding: 10px;
+			}
+			.page.wanted .delete_container .delete {
+				background-color: #ff321c;
+				font-weight: normal;
+			}
+			.page.wanted .delete_container .delete:hover {
+				color: #fff;
+				background-color: #d32917;
+			}
+			
+		.page.wanted .options {
+			padding: 2%;
+		}

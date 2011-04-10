@@ -127,16 +127,9 @@ Block.Search = new Class({
 
 		Object.each(json.movies, function(movie){
 
-			// if(!movie.imdb || (movie.imdb && !self.results.getElement('#'+movie.imdb))){
-				var m = new Block.Search.Item(movie);
-				$(m).inject(self.results)
-				self.movies[movie.imdb || 'r-'+Math.floor(Math.random()*10000)] = m
-			// }
-			// else {
-			// 	self.movies[movie.imdb].alternativeTitle({
-			// 		'title': movie.title
-			// 	})
-			// }
+			var m = new Block.Search.Item(movie);
+			$(m).inject(self.results)
+			self.movies[movie.imdb || 'r-'+Math.floor(Math.random()*10000)] = m
 
 		});
 
@@ -213,7 +206,6 @@ Block.Search.Item = new Class({
 			})
 		}
 
-
 		info.titles.each(function(title){
 			self.alternativeTitle({
 				'title': title
@@ -235,10 +227,17 @@ Block.Search.Item = new Class({
 		if(!self.width)
 			self.width = self.data_container.getCoordinates().width
 
-		self.data_container.tween('margin-left', 0, self.width);
+		self.data_container.tween('left', 0, self.width);
 
-		self.el.addEvents('outerClick', self.closeOptions.bind(self))
+		self.el.addEvent('outerClick', self.closeOptions.bind(self))
 
+	},
+
+	closeOptions: function(){
+		var self = this;
+
+		self.data_container.tween('left', self.width, 0);
+		self.el.removeEvents('outerClick')
 	},
 
 	add: function(e){
@@ -303,7 +302,7 @@ Block.Search.Item = new Class({
 				}).inject(self.title_select)
 			})
 
-			Array.each(Quality.profiles, function(profile){
+			Object.each(Quality.profiles, function(profile){
 				new Element('option', {
 					'value': profile.id ? profile.id : profile.data.id,
 					'text': profile.label ? profile.label : profile.data.label
@@ -313,13 +312,6 @@ Block.Search.Item = new Class({
 			self.options.addClass('set');
 		}
 
-	},
-
-	closeOptions: function(){
-		var self = this;
-
-		self.data_container.tween('margin-left', self.width, 0);
-		self.el.removeEvents('outerClick', self.closeOptions.bind(self))
 	},
 
 	toElement: function(){

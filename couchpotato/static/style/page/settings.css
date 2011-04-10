@@ -55,7 +55,7 @@
 			.page.settings fieldset h2 {
 				font-weight: normal;
 				font-size: 25px;
-				padding:  0 9px 10px;
+				padding:  0 9px 10px 30px;
 				margin: 0;
 				border-bottom: 1px solid #f3f3f3;
 			}
@@ -64,10 +64,23 @@
 				font-size: 12px;
 				margin-left: 10px;
 			}
+			
+			.page.settings fieldset.disabled .ctrlHolder {
+				display: none;
+			}
+			.page.settings fieldset .ctrlHolder:first-child {
+				display: block;
+				padding: 0;
+				width: auto;
+				margin: 0;
+				position: relative;
+				margin-bottom: -25px;
+				border: none;
+			}
 
 	.page.settings .ctrlHolder {
 		line-height: 25px;
-		padding: 10px;
+		padding: 10px 10px 10px 30px;
 		border-bottom: 1px solid #f3f3f3;
 		font-size: 14px;
 	}
@@ -97,7 +110,7 @@
 			padding: 6px 0 0;
 		}
 
-	.page.settings input[type=text] {
+	.page.settings input[type=text], .page.settings input[type=password] {
 		border: 1px solid #aaa;
 		padding: 3px;
 		margin: 0;
