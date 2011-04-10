@@ -5,6 +5,7 @@ from imdb import IMDb
 
 log = CPLog(__name__)
 
+
 class IMDB(Provider):
 
     type = 'movie'

@@ -297,19 +297,19 @@ Movie.Action.Delete = new Class({
 		});
 
 		$(self.mask).adopt(
-			new Element('a.button.delete', {
-				'text': 'Delete movie',
+			new Element('a.button.cancel', {
+				'text': 'Cancel',
 				'events': {
-					'click': self.del.bind(self)
+					'click': self.mask.hide.bind(self.mask)
 				}
 			}),
 			new Element('span', {
 				'text': 'or'
 			}),
-			new Element('a.button.cancel', {
-				'text': 'Cancel',
+			new Element('a.button.delete', {
+				'text': 'Delete movie',
 				'events': {
-					'click': self.mask.hide.bind(self.mask)
+					'click': self.del.bind(self)
 				}
 			})
 		);

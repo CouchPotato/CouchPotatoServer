@@ -13,17 +13,14 @@ config = [{
             'options': [
                 {
                     'name': 'enabled',
-                    'default': False,
+                    'default': 0,
                     'type': 'enabler',
                 },
                 {
                     'name': 'username',
-                    'default': '',
-                    'type': 'string',
                 },
                 {
                     'name': 'password',
-                    'default': '',
                     'type': 'password',
                 },
             ],

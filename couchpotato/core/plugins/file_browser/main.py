@@ -8,24 +8,22 @@ if os.name == 'nt':
 
 class FileBrowser():
 
-    def __init__(self, path = '/'):
-        self.path = path
-
+    def __init__(self):
         addApiView('directory.list', self.view)
 
-    def getDirectories(self):
+    def getDirectories(self, path = '/', show_hidden = True):
 
         # Return driveletters or root if path is empty
-        if self.path == '/' or not self.path:
+        if path == '/' or not path:
             if os.name == 'nt':
                 return self.getDriveLetters()
-            self.path = '/'
+            path = '/'
 
         dirs = []
-        for f in os.listdir(self.path):
-            path = os.path.join(self.path, f)
-            if(os.path.isdir(path)):
-                dirs.append(path)
+        for f in os.listdir(path):
+            p = os.path.join(path, f)
+            if(os.path.isdir(p)):
+                dirs.append(p + '/')
 
         return dirs
 
@@ -44,8 +42,7 @@ class FileBrowser():
     def view(self):
 
         try:
-            fb = FileBrowser(getParam('path', '/'))
-            dirs = fb.getDirectories()
+            dirs = self.getDirectories(path = getParam('path', '/'), show_hidden = getParam('show_hidden', True))
         except:
             dirs = []
 

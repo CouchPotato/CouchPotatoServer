@@ -10,20 +10,16 @@ config = [{
             'tab': 'downloaders',
             'name': 'blackhole',
             'label': 'Black hole',
-            'description': 'Fill in your Sabnzbd settings.',
+            'description': 'Download NZBs to a specific folder.',
             'options': [
                 {
                     'name': 'enabled',
-                    'default': False,
-                    'type': 'bool',
-                    'label': 'Enabled',
-                    'description': 'Send snatched NZBs to Sabnzbd',
+                    'default': 0,
+                    'type': 'enabler',
                 },
                 {
                     'name': 'directory',
-                    'default': '',
                     'type': 'directory',
-                    'label': 'Directory',
                     'description': 'Directory where the .nzb (or .torrent) file is saved to.',
                 },
             ],

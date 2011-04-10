@@ -33,12 +33,6 @@ Block.Search = new Class({
 
 		self.spinner = new Spinner(self.result_container);
 
-		self.OuterClickStack = new EventStack.OuterClick();
-		History.addEvent('change', self.hideResults.bind(self, true));
-
-		//debug
-		//self.input.set('value', 'kick ass')
-		//self.autocomplete()
 	},
 
 	clear: function(e){
@@ -59,8 +53,14 @@ Block.Search = new Class({
 
 		self.result_container.fade(bool ? 0 : 1)
 
-		if(!bool && self.OuterClickStack.stack.length == 0)
-			self.OuterClickStack.push(self.hideResults.bind(self, true), self.el);
+		if(bool){
+			History.removeEvent('change', self.hideResults.bind(self, !bool));
+			self.el.removeEvent('outerClick', self.hideResults.bind(self, !bool));
+		}
+		else {
+			History.addEvent('change', self.hideResults.bind(self, !bool));
+			self.el.addEvent('outerClick', self.hideResults.bind(self, !bool));
+		}
 
 		self.hidden = bool;
 	},
@@ -161,8 +161,6 @@ Block.Search.Item = new Class({
 		self.alternative_titles = [];
 
 		self.create();
-
-		self.OuterClickStack = new EventStack.OuterClick();
 	},
 
 	create: function(){
@@ -215,7 +213,7 @@ Block.Search.Item = new Class({
 			})
 		}
 
-		
+
 		info.titles.each(function(title){
 			self.alternativeTitle({
 				'title': title
@@ -239,7 +237,7 @@ Block.Search.Item = new Class({
 
 		self.data_container.tween('margin-left', 0, self.width);
 
-		self.OuterClickStack.push(self.closeOptions.bind(self), self.el);
+		self.el.addEvents('outerClick', self.closeOptions.bind(self))
 
 	},
 
@@ -321,6 +319,7 @@ Block.Search.Item = new Class({
 		var self = this;
 
 		self.data_container.tween('margin-left', self.width, 0);
+		self.el.removeEvents('outerClick', self.closeOptions.bind(self))
 	},
 
 	toElement: function(){

@@ -1,7 +1,7 @@
-from couchpotato.core.providers.tmdb.main import TMDBWrapper
+from .main import TheMovieDb
 
 def start():
-    return TMDBWrapper()
+    return TheMovieDb()
 
 config = [{
     'name': 'themoviedb',
@@ -11,13 +11,12 @@ config = [{
             'name': 'tmdb',
             'label': 'TheMovieDB',
             'advanced': True,
+            'description': 'Used for all calls to TheMovieDB.',
             'options': [
                 {
                     'name': 'api_key',
                     'default': '9b939aee0aaafc12a65bf448e4af9543',
-                    'type': 'string',
                     'label': 'Api Key',
-                    'description': 'Used for all calls to TheMovieDB.',
                 },
             ],
         },

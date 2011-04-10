@@ -12,21 +12,17 @@ config = [{
             'options': [
                 {
                     'name': 'enabled',
-                    'default': False,
+                    'default': 0,
                     'type': 'enabler',
-                    'description': '',
                 },
                 {
                     'name': 'api_key',
-                    'default': '',
                     'label': 'Api key',
-                    'description': '',
                 },
                 {
                     'name': 'priority',
                     'default': '0',
                     'type': 'dropdown',
-                    'description': '',
                     'values': [('Very Low', -2), ('Moderate', -1), ('Normal', 0), ('High', 1), ('Emergency', 2)]
                 },
             ],

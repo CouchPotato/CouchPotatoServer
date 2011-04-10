@@ -133,7 +133,7 @@ def cmd_couchpotato(base_path, args):
 
     # Register modules
     app.register_module(web, url_prefix = '%s/' % url_base)
-    app.register_module(api, url_prefix = '%s/%s/' % (url_base, api_key if not debug else 'api'))
+    app.register_module(api, url_prefix = '%s/%s/' % (url_base, api_key))
 
     # Go go go!
     app.run(use_reloader = reloader)

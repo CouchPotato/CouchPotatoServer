@@ -35,7 +35,7 @@ config = [{
                 },
                 {
                     'name': 'launch_browser',
-                    'default': True,
+                    'default': 1,
                     'type': 'bool',
                     'label': 'Launch Browser',
                     'description': 'Launch the browser when I start.',
@@ -51,13 +51,13 @@ config = [{
                 {
                     'name': 'api_key',
                     'default': uuid4().hex,
-                    'readonly': True,
+                    'readonly': 1,
                     'label': 'Api Key',
                     'description': "This is top-secret! Don't share this!",
                 },
                 {
                     'name': 'debug',
-                    'default': False,
+                    'default': 0,
                     'type': 'bool',
                     'label': 'Debug',
                     'description': 'Enable debugging.',

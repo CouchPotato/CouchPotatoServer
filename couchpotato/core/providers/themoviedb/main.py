@@ -3,13 +3,12 @@ from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import simplifyString, toUnicode
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.base import Provider
-from couchpotato.environment import Env
 from libs.themoviedb import tmdb
-import copy
 
 log = CPLog(__name__)
 
-class TMDBWrapper(Provider):
+
+class TheMovieDb(Provider):
     """Api for theMovieDb"""
 
     type = 'movie'
@@ -22,9 +21,6 @@ class TMDBWrapper(Provider):
 
         # Use base wrapper
         tmdb.Config.api_key = self.conf('api_key')
-
-    def conf(self, attr):
-        return Env.setting(attr, 'themoviedb')
 
     def search(self, q, limit = 12):
         ''' Find movie by name '''

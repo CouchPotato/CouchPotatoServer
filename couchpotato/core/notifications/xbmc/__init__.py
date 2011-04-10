@@ -12,25 +12,21 @@ config = [{
             'options': [
                 {
                     'name': 'enabled',
-                    'default': False,
+                    'default': 0,
                     'type': 'enabler',
-                    'description': '',
                 },
                 {
                     'name': 'host',
                     'default': 'localhost:8080',
-                    'description': '',
                 },
                 {
                     'name': 'username',
                     'default': 'xbmc',
-                    'description': '',
                 },
                 {
                     'name': 'password',
                     'default': 'xbmc',
                     'type': 'password',
-                    'description': '',
                 },
             ],
         }

@@ -12,20 +12,16 @@ config = [{
             'options': [
                 {
                     'name': 'enabled',
-                    'default': False,
+                    'default': 0,
                     'type': 'enabler',
-                    'description': '',
                 },
                 {
                     'name': 'host',
                     'default': 'localhost',
-                    'description': '',
                 },
                 {
                     'name': 'password',
-                    'default': '',
                     'type': 'password',
-                    'description': '',
                 },
             ],
         }

@@ -108,13 +108,13 @@ class Settings():
 
     def saveView(self):
 
-        a = getParams()
+        params = getParams()
 
-        section = a.get('section')
-        option = a.get('name')
-        value = a.get('value')
+        section = params.get('section')
+        option = params.get('name')
+        value = params.get('value')
 
-        self.set(option, section, value)
+        self.set(section, option, value)
         self.save()
 
         return jsonified({

@@ -77,7 +77,7 @@ Page.Settings = new Class({
 	getValue: function(section, name){
 		var self = this;
 		try {
-			return self.data.values[section][name] || '';
+			return self.data.values[section][name];
 		}
 		catch(e){
 			return ''
@@ -131,6 +131,7 @@ Page.Settings = new Class({
 					var class_name = (option.type || 'string').capitalize();
 					var input = new Option[class_name](self, section_name, option.name, option);
 						input.inject(group_el);
+						input.fireEvent('injected')
 				});
 
 			});
@@ -218,6 +219,8 @@ var OptionBase = new Class({
 			'keyup': self.changed.bind(self)
 		});
 
+		self.addEvent('injected', self.afterInject.bind(self))
+
 	},
 
 	/**
@@ -229,7 +232,7 @@ var OptionBase = new Class({
 	},
 
 	create: function(){},
-	
+
 	createLabel: function(){
 		var self = this;
 		return new Element('label', {
@@ -249,6 +252,8 @@ var OptionBase = new Class({
 			}).inject(self.el);
 	},
 
+	afterInject: function(){},
+
 	// Element has changed, do something
 	changed: function(){
 		var self = this;
@@ -266,7 +271,7 @@ var OptionBase = new Class({
 	save: function(){
 		var self = this;
 
-		Api.request('setting.save', {
+		Api.request('settings.save', {
 			'data': {
 				'section': self.section,
 				'name': self.name,
@@ -327,7 +332,7 @@ var Option = {}
 Option.String = new Class({
 	Extends: OptionBase,
 
-	type: 'input',
+	type: 'string',
 
 	create: function(){
 		var self = this
@@ -375,23 +380,35 @@ Option.Checkbox = new Class({
 	create: function(){
 		var self = this;
 
-		var randomId = 'option-'+Math.floor(Math.random()*1000000)
+		var randomId = 'r-'+randomString()
 
 		self.el.adopt(
 			self.createLabel().set('for', randomId),
 			self.input = new Element('input', {
 				'type': 'checkbox',
-				'value': self.getSettingValue(),
-				'checked': self.getSettingValue() !== undefined,
+				'checked': self.getSettingValue(),
 				'id': randomId
 			})
 		)
+
+	},
+
+	getValue: function(){
+		var self = this;
+		return +self.input.checked;
 	}
 });
 
 Option.Password = new Class({
 	Extends: Option.String,
-	type: 'password'
+	type: 'password',
+
+	create: function(){
+		var self = this;
+
+		self.parent()
+		self.input.set('type', 'password')
+	}
 });
 
 Option.Bool = new Class({
@@ -399,7 +416,37 @@ Option.Bool = new Class({
 });
 
 Option.Enabler = new Class({
-	Extends: Option.Bool
+	Extends: Option.Bool,
+
+	create: function(){
+		var self = this;
+
+		self.el.adopt(
+			self.input = new Element('input', {
+				'type': 'checkbox',
+				'checked': self.getSettingValue(),
+				'id': 'r-'+randomString(),
+				'events': {
+					'change': self.checkState.bind(self)
+				}
+			})
+		)
+	},
+
+	checkState: function(){
+		var self = this;
+
+		self.parentFieldset[ self.getValue() ? 'addClass' : 'removeClass']('enabled');
+	},
+
+	afterInject: function(){
+		var self = this;
+
+		self.parentFieldset = self.el.getParent('fieldset')
+		self.el.inject(self.parentFieldset, 'top')
+		self.checkState()
+	}
+
 });
 
 Option.Int = new Class({
@@ -413,18 +460,17 @@ Option.Directory = new Class({
 	type: 'span',
 	browser: '',
 	save_on_change: false,
+	show_hidden: false,
 
 	create: function(){
 		var self = this;
-
 
 		self.el.adopt(
 			self.createLabel(),
 			self.input = new Element('span', {
 				'text': self.getSettingValue(),
 				'events': {
-					'click': self.showBrowser.bind(self),
-					'outerClick': self.hideBrowser.bind(self)
+					'click': self.showBrowser.bind(self)
 				}
 			})
 		);
@@ -432,47 +478,99 @@ Option.Directory = new Class({
 		self.cached = {};
 	},
 
+	selectDirectory: function(e, el){
+		var self = this;
+
+		self.input.set('text', el.get('data-value'));
+
+		self.getDirs()
+		self.fireEvent('change')
+	},
+
+	previousDirectory: function(e){
+		var self = this;
+
+		self.selectDirectory(null, self.back_button)
+	},
+
 	showBrowser: function(){
 		var self = this;
 
 		if(!self.browser)
 			self.browser = new Element('div.directory_list').adopt(
-				self.dir_list = new Element('ul')
+				self.back_button = new Element('a.button.back', {
+					'text': '',
+					'events': {
+						'click': self.previousDirectory.bind(self)
+					}
+				}),
+				self.dir_list = new Element('ul', {
+					'events': {
+						'click:relay(li)': self.selectDirectory.bind(self)
+					}
+				}),
+				new Element('div.actions').adopt(
+					new Element('a.button.cancel', {
+						'text': 'Cancel',
+						'events': {
+							'click': self.hideBrowser.bind(self)
+						}
+					}),
+					new Element('span', {
+						'text': 'or'
+					}),
+					self.save_button = new Element('a.button.save', {
+						'text': 'Save',
+						'events': {
+							'click': self.hideBrowser.bind(self, true)
+						}
+					})
+				)
 			).inject(self.input, 'after')
 
 		self.getDirs()
 		self.browser.show()
+		self.el.addEvent('outerClick', self.hideBrowser.bind(self))
 	},
 
-	hideBrowser: function(){
-		this.browser.hide()
+	hideBrowser: function(save){
+		var self = this;
+
+		if(save) self.save()
+
+		self.browser.hide()
+		self.el.removeEvent('outerClick', self.hideBrowser.bind(self))
+
 	},
 
 	fillBrowser: function(json){
 		var self = this;
 
-		var c = self.getCurrentDir();
-		var v = self.input.get('value');
-		var add = true
+		var c = self.getParentDir();
+		var v = self.input.get('text');
+		var previous_dir = self.getParentDir(c.substring(0, c.length-1));
 
-		if(!json){
-			json = self.cached[c];
+		if(previous_dir){
+			self.back_button.set('data-value', previous_dir)
+			self.back_button.set('text', self.getCurrentDirname(previous_dir))
+			self.back_button.show()
 		}
 		else {
-			self.cached[c] = json;
+			self.back_button.hide()
 		}
+
+		if(!json)
+			json = self.cached[c];
+		else
+			self.cached[c] = json;
 
 		self.dir_list.empty();
 		json.dirs.each(function(dir){
 			if(dir.indexOf(v) != -1){
 				new Element('li', {
-					'text': dir
+					'data-value': dir,
+					'text': self.getCurrentDirname(dir)
 				}).inject(self.dir_list)
-
-				if(add){
-					self.input.insertAtCursor(dir.substring(v.length), true);
-					add = false
-				}
 			}
 		})
 	},
@@ -480,7 +578,7 @@ Option.Directory = new Class({
 	getDirs: function(){
 		var self = this;
 
-		var c = self.getCurrentDir();
+		var c = self.getParentDir();
 
 		if(self.cached[c]){
 			self.fillBrowser()
@@ -488,22 +586,31 @@ Option.Directory = new Class({
 		else {
 			Api.request('directory.list', {
 				'data': {
-					'path': c
+					'path': c,
+					'show_hidden': +self.show_hidden
 				},
 				'onComplete': self.fillBrowser.bind(self)
 			})
 		}
 	},
 
-	getCurrentDir: function(){
+	getParentDir: function(dir){
 		var self = this;
 
-		var v = self.input.get('value');
+		var v = dir || self.input.get('text');
 		var sep = Api.getOption('path_sep');
 		var dirs = v.split(sep);
 			dirs.pop();
 
-		return dirs.join(sep)
+		return dirs.join(sep) + sep
+	},
+
+	getCurrentDirname: function(dir){
+		var self = this;
+
+		var dir_split = dir.split(Api.getOption('path_sep'));
+
+		return dir_split[dir_split.length-2] || '/'
 	},
 
 	getValue: function(){

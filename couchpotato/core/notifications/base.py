@@ -1,7 +1,7 @@
 from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.request import jsonified
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.environment import Env
+
 
 class Notification(Plugin):
 
@@ -13,9 +13,6 @@ class Notification(Plugin):
 
     def notify(self, message = '', data = {}):
         pass
-
-    def conf(self, attr):
-        return Env.setting(attr, self.__class__.__name__.lower())
 
     def isDisabled(self):
         return not self.isEnabled()

@@ -13,23 +13,18 @@ config = [{
             'options': [
                 {
                     'name': 'enabled',
-                    'default': False,
+                    'default': 0,
                     'type': 'enabler',
                 },
                 {
                     'name': 'host',
                     'default': 'localhost',
-                    'description': '',
                 },
                 {
                     'name': 'database',
-                    'default': '',
-                    'description': '',
                 },
                 {
                     'name': 'mount',
-                    'default': '',
-                    'description': '',
                 },
             ],
         }
