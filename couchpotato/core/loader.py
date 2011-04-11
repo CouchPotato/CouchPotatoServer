@@ -60,7 +60,7 @@ class Loader:
                 options = {}
                 for group in section['groups']:
                     for option in group['options']:
-                        options[option['name']] = option['default']
+                        options[option['name']] = option.get('default', '')
                 fireEvent('settings.register', section_name = section['name'], options = options, save = save)
             return True
         except Exception, e:

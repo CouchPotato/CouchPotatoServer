@@ -3,8 +3,8 @@ from flask import Module
 
 api = Module(__name__)
 
-def addApiView(route, func):
-    api.add_url_rule(route + '/', endpoint = route if route else 'index', view_func = func)
+def addApiView(route, func, static = False):
+    api.add_url_rule(route + ('' if static else '/'), endpoint = route if route else 'index', view_func = func)
 
 """ Api view """
 def index():

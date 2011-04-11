@@ -7,8 +7,6 @@
 
 		<link rel="stylesheet" href="{{ url_for('.static', filename='style/page/settings.css') }}" type="text/css">
 		<link rel="stylesheet" href="{{ url_for('.static', filename='style/page/wanted.css') }}" type="text/css">
-		<link rel="stylesheet" href="{{ url_for('.static', filename='style/plugin/movie_add.css') }}" type="text/css">
-		<link rel="stylesheet" href="{{ url_for('.static', filename='style/plugin/quality.css') }}" type="text/css">
 
 		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/library/mootools.js') }}"></script>
 		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/library/mootools_more.js') }}"></script>
@@ -20,7 +18,6 @@
 		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/block.js') }}"></script>
 		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/block/navigation.js') }}"></script>
 		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/block/footer.js') }}"></script>
-		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/block/search.js') }}"></script>
 
 		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/page.js') }}"></script>
 		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/page/wanted.js') }}"></script>
@@ -29,9 +26,10 @@
 		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/page/soon.js') }}"></script>
 		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/page/manage.js') }}"></script>
 
-		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/quality.js') }}"></script>
-		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/status.js') }}"></script>
-		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/file.js') }}"></script>
+		{% for url in fireEvent('clientscript.get_scripts', as_html = True, single = True) %}
+		<script type="text/javascript" src="{{ url_for('api.index') }}{{ url }}"></script>{% endfor %}
+		{% for url in fireEvent('clientscript.get_styles', as_html = True, single = True) %}
+		<link rel="stylesheet" href="{{ url_for('api.index') }}{{ url }}" type="text/css">{% endfor %}
 
 		<link href="{{ url_for('.static', filename='images/favicon.ico') }}" rel="icon" type="image/x-icon" />
 		<link rel="apple-touch-icon" href="{{ url_for('.static', filename='images/homescreen.png') }}" />

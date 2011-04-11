@@ -19,6 +19,10 @@ class MoviePlugin(Plugin):
         addApiView('movie.edit', self.edit)
         addApiView('movie.delete', self.delete)
 
+        path = self.registerStatic(__file__)
+        fireEvent('register_script', path + 'search.js')
+        fireEvent('register_style', path + 'search.css')
+
     def list(self):
 
         params = getParams()

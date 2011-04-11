@@ -1,13 +1,14 @@
 from couchpotato import get_session
-from couchpotato.core.event import addEvent
+from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.logger import CPLog
+from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Quality, Profile, ProfileType
-
 
 log = CPLog(__name__)
 
-class QualityPlugin:
+
+class QualityPlugin(Plugin):
 
     qualities = [
         {'identifier': 'bd50', 'size': (15000, 60000), 'label': 'BR-Disk', 'alternative': ['1080p', 'bd25'], 'allow': [], 'ext':[], 'tags': ['x264', 'h264', 'blu ray']},
@@ -27,6 +28,10 @@ class QualityPlugin:
     def __init__(self):
         addEvent('quality.all', self.all)
         addEvent('app.load', self.fill)
+
+        path = self.registerStatic(__file__)
+        fireEvent('register_script', path + 'quality.js')
+        fireEvent('register_style', path + 'quality.css')
 
     def all(self):
 

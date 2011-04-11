@@ -1,12 +1,14 @@
 from couchpotato import get_session
-from couchpotato.core.event import addEvent
+from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.logger import CPLog
+from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Status
 
 log = CPLog(__name__)
 
-class StatusPlugin:
+
+class StatusPlugin(Plugin):
 
     statuses = {
         'active': 'Active',
@@ -20,6 +22,9 @@ class StatusPlugin:
         addEvent('status.add', self.add)
         addEvent('status.all', self.all)
         addEvent('app.load', self.fill)
+
+        path = self.registerStatic(__file__)
+        fireEvent('register_script', path + 'status.js')
 
     def all(self):
 

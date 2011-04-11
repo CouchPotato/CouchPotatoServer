@@ -1,6 +1,6 @@
 from couchpotato import get_session
 from couchpotato.api import addApiView
-from couchpotato.core.event import addEvent
+from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.variable import md5, getExt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
@@ -21,6 +21,9 @@ class FileManager(Plugin):
         addEvent('file.types', self.getTypes)
 
         addApiView('file.cache/<path:file>', self.showImage)
+
+        path = self.registerStatic(__file__)
+        fireEvent('register_script', path + 'file.js')
 
     def showImage(self, file = ''):
 
