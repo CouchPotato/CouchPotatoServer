@@ -14,11 +14,18 @@ class Loader:
 
     def preload(self, root = ''):
 
+        core = os.path.join(root, 'couchpotato', 'core')
+        providers = os.path.join(root, 'couchpotato', 'core', 'providers')
+
         self.paths = {
-            'plugin' : ('couchpotato.core.plugins', os.path.join(root, 'couchpotato', 'core', 'plugins')),
-            'provider' : ('couchpotato.core.providers', os.path.join(root, 'couchpotato', 'core', 'providers')),
-            'notifications' : ('couchpotato.core.notifications', os.path.join(root, 'couchpotato', 'core', 'notifications')),
+            'plugin' : ('couchpotato.core.plugins', os.path.join(core, 'plugins')),
+            'notifications' : ('couchpotato.core.notifications', os.path.join(core, 'notifications')),
             'downloaders' : ('couchpotato.core.downloaders', os.path.join(root, 'couchpotato', 'core', 'downloaders')),
+            'movie_provider' : ('couchpotato.core.providers.movie', os.path.join(providers, 'movie')),
+            'nzb_provider' : ('couchpotato.core.providers.nzb', os.path.join(providers, 'nzb')),
+            'torrent_provider' : ('couchpotato.core.providers.torrent', os.path.join(providers, 'torrent')),
+            'trailer_provider' : ('couchpotato.core.providers.trailer', os.path.join(providers, 'trailer')),
+            'subtitle_provider' : ('couchpotato.core.providers.subtitle', os.path.join(providers, 'subtitle')),
         }
 
         for type, tuple in self.paths.iteritems():
