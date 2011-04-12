@@ -6,18 +6,10 @@ Page.Settings = new Class({
 	title: 'Change settings.',
 
 	tabs: {
-		'general': {
-			'label': 'General'
-		},
-		'providers': {
-			'label': 'Providers'
-		},
-		'downloaders': {
-			'label': 'Downloaders'
-		},
-		'notifications': {
-			'label': 'Notifications'
-		}
+		'general': {},
+		'providers': {},
+		'downloaders': {},
+		'notifications': {}
 	},
 
 	open: function(action, params){
@@ -150,16 +142,17 @@ Page.Settings = new Class({
 		if(self.tabs[tab_name] && self.tabs[tab_name].tab)
 			return self.tabs[tab_name].tab
 
+		var label = (tab.label || tab.name).capitalize()
 		var tab_el = new Element('li').adopt(
 			new Element('a', {
 				'href': '/'+self.name+'/'+tab_name+'/',
-				'text': (tab.label || tab.name).capitalize()
+				'text': label
 			})
 		).inject(self.tabs_container);
 
 		if(!self.tabs[tab_name])
 			self.tabs[tab_name] = {
-				'label': tab.label || tab.name
+				'label': label
 			}
 
 		self.tabs[tab_name] = Object.merge(self.tabs[tab_name], {
@@ -179,7 +172,7 @@ Page.Settings = new Class({
 			'class': group.advanced ? 'inlineLabels advanced' : 'inlineLabels'
 		}).adopt(
 			new Element('h2', {
-				'text': group.label || group.name.capitalize()
+				'text': (group.label || group.name).capitalize()
 			}).adopt(
 				new Element('span.hint', {
 					'text': group.description
@@ -236,7 +229,7 @@ var OptionBase = new Class({
 	createLabel: function(){
 		var self = this;
 		return new Element('label', {
-			'text': self.options.label || self.options.name.capitalize()
+			'text': (self.options.label || self.options.name).capitalize()
 		})
 	},
 

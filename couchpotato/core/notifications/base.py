@@ -14,12 +14,6 @@ class Notification(Plugin):
     def notify(self, message = '', data = {}):
         pass
 
-    def isDisabled(self):
-        return not self.isEnabled()
-
-    def isEnabled(self):
-        return self.conf('enabled', True)
-
     def test(self):
         success = self.notify(message = self.test_message)
 

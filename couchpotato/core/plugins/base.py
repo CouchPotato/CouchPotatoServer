@@ -7,7 +7,10 @@ import os.path
 class Plugin():
 
     def conf(self, attr):
-        return Env.setting(attr, self.__class__.__name__.lower())
+        return Env.setting(attr, self.getName().lower())
+
+    def getName(self):
+        return self.__class__.__name__
 
     def registerStatic(self, file_path):
 
@@ -25,3 +28,9 @@ class Plugin():
         dir = os.path.join(plugin_dir, 'static')
 
         return send_from_directory(dir, file)
+
+    def isDisabled(self):
+        return not self.isEnabled()
+
+    def isEnabled(self):
+        return self.conf('enabled', True)

@@ -8,18 +8,17 @@ var PageBase = new Class({
 
 	has_tab: true,
 
-	initialize: function(parent, options) {
+	initialize: function(options) {
 		var self = this;
 
 		self.setOptions(options)
-		self.setParent(parent)
 
 		// Create main page container
 		self.el = new Element('div.page.'+self.name);
 
 		// Create tab for page
 		if(self.has_tab){
-			var nav = self.getParent().getBlock('navigation');
+			var nav = App.getBlock('navigation');
 			self.tab = nav.addTab({
 				'href': '/'+self.name,
 				'title': self.title,
@@ -48,14 +47,6 @@ var PageBase = new Class({
 
 	getName: function(){
 		return this.name
-	},
-
-	setParent: function(parent){
-		this.app = parent
-	},
-
-	getParent: function(){
-		return this.app
 	},
 	
 	show: function(){

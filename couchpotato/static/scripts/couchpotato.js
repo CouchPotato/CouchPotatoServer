@@ -92,6 +92,7 @@ var CouchPotato = new Class({
 	getPage: function(name){
 		return this.pages[name]
 	}
+
 });
 window.App = new CouchPotato();
 

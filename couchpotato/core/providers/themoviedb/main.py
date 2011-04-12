@@ -2,16 +2,15 @@ from __future__ import with_statement
 from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import simplifyString, toUnicode
 from couchpotato.core.logger import CPLog
-from couchpotato.core.providers.base import Provider
+from couchpotato.core.providers.base import MovieProvider
 from libs.themoviedb import tmdb
 
 log = CPLog(__name__)
 
 
-class TheMovieDb(Provider):
+class TheMovieDb(MovieProvider):
     """Api for theMovieDb"""
 
-    type = 'movie'
     apiUrl = 'http://api.themoviedb.org/2.1'
     imageUrl = 'http://hwcdn.themoviedb.org'
 

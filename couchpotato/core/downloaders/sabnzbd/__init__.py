@@ -26,6 +26,12 @@ config = [{
                     'label': 'Api Key',
                     'description': 'Used for all calls to Sabnzbd.',
                 },
+                {
+                    'advanced': True,
+                    'name': 'pp_directory',
+                    'type': 'directory',
+                    'description': 'Your Post-Processing Script directory, set in Sabnzbd > Config > Directories.',
+                },
             ],
         }
     ],
