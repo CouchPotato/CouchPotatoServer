@@ -23,7 +23,11 @@ var CouchPotato = new Class({
 		self.createPages();
 
 		History.addEvent('change', self.openPage.bind(self));
-		History.handleInitialState();
+
+		if(window.location.hash)
+			History.handleInitialState();
+		else
+			self.openPage(window.location.pathname);
 
 		self.c.addEvent('click:relay(a)', self.pushState.bind(self));
 	},
@@ -77,9 +81,14 @@ var CouchPotato = new Class({
 		if(self.current_page)
 			self.current_page.hide()
 
-		var page = self.pages[page_name];
-			page.open(action, params);
-			page.show();
+		try {
+			var page = self.pages[page_name] || self.pages.Wanted;
+				page.open(action, params);
+				page.show();
+		}
+		catch(e){
+			p("Can't open page:" + url)
+		}
 
 		self.current_page = page;
 
