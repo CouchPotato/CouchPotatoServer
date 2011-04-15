@@ -14,7 +14,7 @@ def cmd_couchpotato(base_path, args):
     '''Commandline entry point.'''
 
     # Options
-    parser = ArgumentParser()
+    parser = ArgumentParser(prog = 'CouchPotato.py')
     parser.add_argument('-s', '--datadir', default = os.path.join(base_path, '_data'),
                         dest = 'data_dir', help = 'Absolute or ~/ path, where settings/logs/database data is saved (default ./_data)')
     parser.add_argument('-t', '--test', '--debug', action = 'store_true',
@@ -97,7 +97,7 @@ def cmd_couchpotato(base_path, args):
     # Load migrations
     from migrate.versioning.api import version_control, db_version, version, upgrade
     db = Env.get('db_path')
-    repo = os.path.join('couchpotato', 'core', 'migration')
+    repo = os.path.join(base_path, 'couchpotato', 'core', 'migration')
     logging.getLogger('migrate').setLevel(logging.WARNING) # Disable logging for migration
 
     latest_db_version = version(repo)
