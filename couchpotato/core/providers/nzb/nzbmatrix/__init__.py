@@ -20,7 +20,7 @@ config = [{
                 },
                 {
                     'name': 'api_key',
-                    'default': '9b939aee0aaafc12a65bf448e4af9543',
+                    'default': '',
                     'label': 'Api Key',
                 },
             ],

@@ -1,5 +1,10 @@
+from couchpotato.core.event import addEvent
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.base import NZBProvider
+from dateutil.parser import parse
+from urllib import urlencode
+from urllib2 import URLError
+import time
 
 log = CPLog(__name__)
 
@@ -20,12 +25,10 @@ class NZBMatrix(NZBProvider):
     ]
     cat_backup_id = 2
 
-    def __init__(self, config):
-        log.info('Using NZBMatrix provider')
+    def __init__(self):
+        addEvent('provider.nzb.search', self.search)
 
-        self.config = config
-
-    def find(self, movie, quality, type, retry = False):
+    def search(self, movie, quality):
 
         self.cleanCache();
 
@@ -113,4 +116,4 @@ class NZBMatrix(NZBProvider):
         return '&username=%s&apikey=%s' % (self.conf('username'), self.conf('apikey'))
 
     def isEnabled(self):
-        return self.conf('enabled') and self.conf('username') and self.conf('apikey')
+        return NZBProvider.isEnabled(self) and self.conf('enabled') and self.conf('username') and self.conf('apikey')

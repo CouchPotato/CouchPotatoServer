@@ -1,7 +1,8 @@
-from couchpotato.api import addApiView
+from couchpotato import addView
 from couchpotato.environment import Env
 from flask.helpers import send_from_directory
 import os.path
+import re
 
 
 class Plugin():
@@ -12,20 +13,23 @@ class Plugin():
     def getName(self):
         return self.__class__.__name__
 
-    def registerStatic(self, file_path):
+    def registerStatic(self, plugin_file):
 
-        class_name = self.__class__.__name__.lower()
-        self.plugin_file = file_path
-        path = class_name + '.static/'
+        # Register plugin path
+        self.plugin_path = os.path.dirname(plugin_file)
 
-        addApiView(path + '<path:file>', self.showStatic, static = True)
+        # Get plugin_name from PluginName
+        s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', self.__class__.__name__)
+        class_name = re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
+
+        path = 'static/' + class_name + '/'
+        addView(path + '<path:file>', self.showStatic, static = True)
 
         return path
 
     def showStatic(self, file = ''):
 
-        plugin_dir = os.path.dirname(self.plugin_file)
-        dir = os.path.join(plugin_dir, 'static')
+        dir = os.path.join(self.plugin_path, 'static')
 
         return send_from_directory(dir, file)
 

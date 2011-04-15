@@ -45,7 +45,7 @@ class Settings():
         for option, value in options.iteritems():
             self.setDefault(section_name, option, value)
 
-        self.log.debug('Defaults for "%s": %s' % (section_name, options))
+        #self.log.debug('Defaults for "%s": %s' % (section_name, options))
 
         if save:
             self.save(self)

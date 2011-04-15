@@ -9,7 +9,8 @@ Page.Settings = new Class({
 		'general': {},
 		'providers': {},
 		'downloaders': {},
-		'notifications': {}
+		'notifications': {},
+		'renamer': {}
 	},
 
 	open: function(action, params){
@@ -114,15 +115,16 @@ Page.Settings = new Class({
 			section.groups.sortBy('order').each(function(group){
 
 				// Create the group
-				var group_el = self.createGroup(group).inject(self.tabs[group.tab].content);
-
-				self.tabs[group.tab].groups[group.name] = group_el
+				if(!self.tabs[group.tab].groups[group.name]){
+					var group_el = self.createGroup(group).inject(self.tabs[group.tab].content);
+					self.tabs[group.tab].groups[group.name] = group_el
+				}
 
 				// Add options to group
 				group.options.sortBy('order').each(function(option){
 					var class_name = (option.type || 'string').capitalize();
 					var input = new Option[class_name](self, section_name, option.name, option);
-						input.inject(group_el);
+						input.inject(self.tabs[group.tab].groups[group.name]);
 						input.fireEvent('injected')
 				});
 
@@ -142,7 +144,7 @@ Page.Settings = new Class({
 		if(self.tabs[tab_name] && self.tabs[tab_name].tab)
 			return self.tabs[tab_name].tab
 
-		var label = (tab.label || tab.name).capitalize()
+		var label = (tab.label || tab.name || tab_name).capitalize()
 		var tab_el = new Element('li').adopt(
 			new Element('a', {
 				'href': '/'+self.name+'/'+tab_name+'/',

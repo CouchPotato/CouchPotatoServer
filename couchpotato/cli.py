@@ -90,7 +90,7 @@ def cmd_couchpotato(base_path, args):
     # Load configs & plugins
     loader = Env.get('loader')
     loader.preload(root = base_path)
-    loader.addModule('core', 'couchpotato.core', 'core')
+    loader.addModule(0, 'core', 'couchpotato.core', 'core')
     loader.run()
 
 

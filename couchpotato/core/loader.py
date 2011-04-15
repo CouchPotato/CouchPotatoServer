@@ -18,47 +18,48 @@ class Loader:
         providers = os.path.join(root, 'couchpotato', 'core', 'providers')
 
         self.paths = {
-            'plugin' : ('couchpotato.core.plugins', os.path.join(core, 'plugins')),
-            'notifications' : ('couchpotato.core.notifications', os.path.join(core, 'notifications')),
-            'downloaders' : ('couchpotato.core.downloaders', os.path.join(root, 'couchpotato', 'core', 'downloaders')),
-            'movie_provider' : ('couchpotato.core.providers.movie', os.path.join(providers, 'movie')),
-            'nzb_provider' : ('couchpotato.core.providers.nzb', os.path.join(providers, 'nzb')),
-            'torrent_provider' : ('couchpotato.core.providers.torrent', os.path.join(providers, 'torrent')),
-            'trailer_provider' : ('couchpotato.core.providers.trailer', os.path.join(providers, 'trailer')),
-            'subtitle_provider' : ('couchpotato.core.providers.subtitle', os.path.join(providers, 'subtitle')),
+            'plugin' : (0, 'couchpotato.core.plugins', os.path.join(core, 'plugins')),
+            'notifications' : (20, 'couchpotato.core.notifications', os.path.join(core, 'notifications')),
+            'downloaders' : (20, 'couchpotato.core.downloaders', os.path.join(core, 'downloaders')),
+            'movie_provider' : (20, 'couchpotato.core.providers.movie', os.path.join(providers, 'movie')),
+            'nzb_provider' : (20, 'couchpotato.core.providers.nzb', os.path.join(providers, 'nzb')),
+            'torrent_provider' : (20, 'couchpotato.core.providers.torrent', os.path.join(providers, 'torrent')),
+            'trailer_provider' : (20, 'couchpotato.core.providers.trailer', os.path.join(providers, 'trailer')),
+            'subtitle_provider' : (20, 'couchpotato.core.providers.subtitle', os.path.join(providers, 'subtitle')),
         }
 
         for type, tuple in self.paths.iteritems():
-            self.addFromDir(type, tuple[0], tuple[1])
+            priority, module, dir = tuple
+            self.addFromDir(type, priority, module, dir)
 
     def run(self):
         did_save = 0
 
-        for module_name, plugin in sorted(self.modules.iteritems()):
+        for priority in self.modules:
+            for module_name, plugin in sorted(self.modules[priority].iteritems()):
+                # Load module
+                try:
+                    m = getattr(self.loadModule(module_name), plugin.get('name'))
 
-            # Load module
-            try:
-                m = getattr(self.loadModule(module_name), plugin.get('name'))
+                    log.info("Loading %s: %s" % (plugin['type'], plugin['name']))
 
-                log.info("Loading %s: %s" % (plugin['type'], plugin['name']))
+                    # Save default settings for plugin/provider
+                    did_save += self.loadSettings(m, module_name, save = False)
 
-                # Save default settings for plugin/provider
-                did_save += self.loadSettings(m, module_name, save = False)
-
-                self.loadPlugins(m, plugin.get('name'))
-            except Exception, e:
-                log.error(e)
+                    self.loadPlugins(m, plugin.get('name'))
+                except Exception, e:
+                    log.error('Can\'t import %s: %s' % (plugin.get('name'), e))
 
         if did_save:
             fireEvent('settings.save')
 
-    def addFromDir(self, type, module, dir):
+    def addFromDir(self, type, priority, module, dir):
 
         for file in glob.glob(os.path.join(dir, '*')):
             name = os.path.basename(file)
             if os.path.isdir(os.path.join(dir, name)):
                 module_name = '%s.%s' % (module, name)
-                self.addModule(type, module_name, name)
+                self.addModule(priority, type, module_name, name)
 
     def loadSettings(self, module, name, save = True):
         try:
@@ -82,8 +83,14 @@ class Loader:
             log.error("Failed loading plugin '%s': %s" % (name, e))
             return False
 
-    def addModule(self, type, module, name):
-        self.modules[module] = {
+    def addModule(self, priority, type, module, name):
+
+        if not self.modules.get(priority):
+            self.modules[priority] = {}
+
+        self.modules[priority][module] = {
+            'priority': priority,
+            'module': module,
             'type': type,
             'name': name,
         }

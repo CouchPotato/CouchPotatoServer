@@ -20,7 +20,7 @@ def removeEvent(name, handler):
     e -= handler
 
 def fireEvent(name, *args, **kwargs):
-    log.debug('Firing "%s": %s, %s' % (name, args, kwargs))
+    #log.debug('Firing "%s": %s, %s' % (name, args, kwargs))
     try:
 
         # Return single handler
@@ -64,7 +64,7 @@ def fireEvent(name, *args, **kwargs):
         log.error('%s: %s' % (name, e))
 
 def fireEventAsync(name, *args, **kwargs):
-    log.debug('Async "%s": %s, %s' % (name, args, kwargs))
+    #log.debug('Async "%s": %s, %s' % (name, args, kwargs))
     try:
         e = events[name]
         e.asynchronous = True

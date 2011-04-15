@@ -1,6 +1,6 @@
 // MooTools: the javascript framework.
-// Load this file's selection again by visiting: http://mootools.net/more/2b832e45b9bf2f9e5fdbdafc9b16febf 
-// Or build this file again with packager using: packager build More/Element.Forms More/Element.Delegation More/Element.Shortcuts More/Fx.Slide More/Sortables More/Request.JSONP More/Spinner
+// Load this file's selection again by visiting: http://mootools.net/more/1e3edb90c5e02d9b9013b54e6ab001ea 
+// Or build this file again with packager using: packager build More/Element.Forms More/Element.Delegation More/Element.Shortcuts More/Fx.Slide More/Sortables More/Request.JSONP More/Request.Periodical More/Spinner
 /*
 ---
 
@@ -1752,6 +1752,59 @@ Request.JSONP = new Class({
 
 Request.JSONP.counter = 0;
 Request.JSONP.request_map = {};
+
+
+/*
+---
+
+script: Request.Periodical.js
+
+name: Request.Periodical
+
+description: Requests the same URL to pull data from a server but increases the intervals if no data is returned to reduce the load
+
+license: MIT-style license
+
+authors:
+  - Christoph Pojer
+
+requires:
+  - Core/Request
+  - /MooTools.More
+
+provides: [Request.Periodical]
+
+...
+*/
+
+Request.implement({
+
+	options: {
+		initialDelay: 5000,
+		delay: 5000,
+		limit: 60000
+	},
+
+	startTimer: function(data){
+		var fn = function(){
+			if (!this.running) this.send({data: data});
+		};
+		this.lastDelay = this.options.initialDelay;
+		this.timer = fn.delay(this.lastDelay, this);
+		this.completeCheck = function(response){
+			clearTimeout(this.timer);
+			this.lastDelay = (response) ? this.options.delay : (this.lastDelay + this.options.delay).min(this.options.limit);
+			this.timer = fn.delay(this.lastDelay, this);
+		};
+		return this.addEvent('complete', this.completeCheck);
+	},
+
+	stopTimer: function(){
+		clearTimeout(this.timer);
+		return this.removeEvent('complete', this.completeCheck);
+	}
+
+});
 
 
 /*

@@ -20,6 +20,10 @@ class NZBProvider(Provider):
     time_between_searches = 10 # Seconds
 
 
+    def isEnabled(self):
+        return True # nzb_downloaded is enabled check
+
+
 class TorrentProvider(Provider):
     type = 'torrent'
 

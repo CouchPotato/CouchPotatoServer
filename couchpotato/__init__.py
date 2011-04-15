@@ -26,6 +26,8 @@ def get_session(engine = None):
 def get_engine():
     return create_engine(Env.get('db_path'), echo = False)
 
+def addView(route, func, static = False):
+    web.add_url_rule(route + ('' if static else '/'), endpoint = route if route else 'index', view_func = func)
 
 """ Web view """
 @web.route('/')
