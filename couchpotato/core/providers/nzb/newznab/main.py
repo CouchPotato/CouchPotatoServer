@@ -1,20 +1,24 @@
-from couchpotato.core.event import addEvent
+from couchpotato.core.event import addEvent, fireEvent
+from couchpotato.core.helpers.rss import RSS
 from couchpotato.core.helpers.variable import cleanHost
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.base import NZBProvider
+from couchpotato.environment import Env
 from dateutil.parser import parse
 from urllib import urlencode
 from urllib2 import URLError
 import time
+import xml.etree.ElementTree as XMLTree
 
 log = CPLog(__name__)
 
 
-class Newznab(NZBProvider):
+class Newznab(NZBProvider, RSS):
 
     urls = {
-        'download': 'get&id=%s%s',
+        'download': 'get&id=%s',
         'detail': 'details&id=%s',
+        'search': 'movie',
     }
 
     cat_ids = [
@@ -29,43 +33,35 @@ class Newznab(NZBProvider):
 
     def __init__(self):
         addEvent('provider.nzb.search', self.search)
+        addEvent('provider.yarr.search', self.search)
 
     def getUrl(self, type):
         return cleanHost(self.conf('host')) + 'api?t=' + type
 
     def search(self, movie, quality):
 
-        self.cleanCache();
-
         results = []
-        if not self.enabled() or not self.isAvailable(self.getUrl(self.searchUrl)):
+        if self.isDisabled() or not self.isAvailable(self.getUrl(self.urls['search'])):
             return results
 
-        catId = self.getCatId(type)
+        cat_id = self.getCatId(quality['identifier'])
         arguments = urlencode({
-            'imdbid': movie.imdb.replace('tt', ''),
-            'cat': catId,
-            'apikey': self.conf('apikey'),
-            't': self.searchUrl,
+            'imdbid': movie['library']['identifier'].replace('tt', ''),
+            'cat': cat_id[0],
+            'apikey': self.conf('api_key'),
+            't': self.urls['search'],
             'extended': 1
         })
-        url = "%s&%s" % (self.getUrl(self.searchUrl), arguments)
-        cacheId = str(movie.imdb) + '-' + str(catId)
-        singleCat = (len(self.catIds.get(catId)) == 1 and catId != self.catBackupId)
+        url = "%s&%s" % (self.getUrl(self.urls['search']), arguments)
+
+        cache_key = '%s-%s' % (movie['library']['identifier'], cat_id[0])
+        single_cat = (len(cat_id) == 1 and cat_id[0] != self.cat_backup_id)
 
         try:
-            cached = False
-            if(self.cache.get(cacheId)):
-                data = True
-                cached = True
-                log.info('Getting RSS from cache: %s.' % cacheId)
-            else:
-                log.info('Searching: %s' % url)
+            data = self.getCache(cache_key)
+            if not data:
                 data = self.urlopen(url)
-                self.cache[cacheId] = {
-                    'time': time.time()
-                }
-
+                self.setCache(cache_key, data)
         except (IOError, URLError):
             log.error('Failed to open %s.' % url)
             return results
@@ -73,17 +69,14 @@ class Newznab(NZBProvider):
         if data:
             try:
                 try:
-                    if cached:
-                        xml = self.cache[cacheId]['xml']
-                    else:
-                        xml = self.getItems(data)
-                        self.cache[cacheId]['xml'] = xml
-                except:
-                    log.debug('No valid xml or to many requests.' % self.name)
+                    data = XMLTree.fromstring(data)
+                    nzbs = self.getElements(data, 'channel/item')
+                except Exception, e:
+                    log.debug('%s, %s' % (self.getName(), e))
                     return results
 
                 results = []
-                for nzb in xml:
+                for nzb in nzbs:
 
                     for item in nzb:
                         if item.attrib.get('name') == 'size':
@@ -91,20 +84,26 @@ class Newznab(NZBProvider):
                         elif item.attrib.get('name') == 'usenetdate':
                             date = item.attrib.get('value')
 
-                    new = self.feedItem()
-                    new.id = self.gettextelement(nzb, "guid").split('/')[-1:].pop()
-                    new.type = 'nzb'
-                    new.name = self.gettextelement(nzb, "title")
-                    new.date = int(time.mktime(parse(date).timetuple()))
-                    new.size = int(size) / 1024 / 1024
-                    new.url = self.downloadLink(new.id)
-                    new.detailUrl = self.detailLink(new.id)
-                    new.content = self.gettextelement(nzb, "description")
-                    new.score = self.calcScore(new, movie)
+                    id = self.getTextElement(nzb, "guid").split('/')[-1:].pop()
+                    new = {
+                        'id': id,
+                        'type': 'nzb',
+                        'name': self.getTextElement(nzb, "title"),
+                        'age': self.calculateAge(int(time.mktime(parse(date).timetuple()))),
+                        'size': int(size) / 1024 / 1024,
+                        'url': (self.getUrl(self.urls['download']) % id) + self.getApiExt(),
+                        'detail_url': (self.getUrl(self.urls['detail']) % id) + self.getApiExt(),
+                        'content': self.getTextElement(nzb, "description"),
+                    }
+                    new['score'] = fireEvent('score.calculate', new, movie, single = True)
 
-                    if new.date > time.time() - (int(self.config.get('NZB', 'retention')) * 24 * 60 * 60) and self.isCorrectMovie(new, movie, type, imdbResults = True, singleCategory = singleCat):
+                    is_correct_movie = fireEvent('searcher.correct_movie',
+                                                 nzb = new, movie = movie, quality = quality,
+                                                 imdb_results = True, single_category = single_cat, single = True)
+
+                    if is_correct_movie:
                         results.append(new)
-                        log.info('Found: %s' % new.name)
+                        self.found(new)
 
                 return results
             except SyntaxError:
@@ -114,13 +113,10 @@ class Newznab(NZBProvider):
         return results
 
     def isEnabled(self):
-        return NZBProvider.isEnabled(self) and self.conf('enabled') and self.conf('host') and self.conf('apikey')
+        return NZBProvider.isEnabled(self) and self.conf('host') and self.conf('api_key')
 
     def getApiExt(self):
-        return '&apikey=%s' % self.conf('apikey')
-
-    def downloadLink(self, id):
-        return self.getUrl(self.downloadUrl) % (id, self.getApiExt())
+        return '&apikey=%s' % self.conf('api_key')
 
     def detailLink(self, id):
         return self.getUrl(self.detailUrl) % id

@@ -23,6 +23,13 @@ config = [{
                     'default': '',
                     'label': 'Api Key',
                 },
+                {
+                    'name': 'english_only',
+                    'default': 1,
+                    'type': 'bool',
+                    'label': 'English only',
+                    'description': 'Only search for English spoken movies on NZBMatrix',
+                },
             ],
         },
     ],

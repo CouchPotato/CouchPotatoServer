@@ -29,13 +29,12 @@ class Nzbs(NZBProvider):
 
     def __init__(self):
         addEvent('provider.nzb.search', self.search)
+        addEvent('provider.yarr.search', self.search)
 
     def search(self, movie, quality):
 
-        self.cleanCache();
-
         results = []
-        if not self.enabled() or not self.isAvailable(self.apiUrl + '?test' + self.getApiExt()):
+        if self.isDisabled() or not self.isAvailable(self.apiUrl + '?test' + self.getApiExt()):
             return results
 
         catId = self.getCatId(type)

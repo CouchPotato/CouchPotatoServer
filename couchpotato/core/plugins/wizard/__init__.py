@@ -13,7 +13,7 @@ config = [{
                 {
                     'name': 'show_wizard',
                     'label': 'Run the wizard',
-                    'default': True,
+                    'default': 1,
                     'type': 'bool',
                 },
             ],

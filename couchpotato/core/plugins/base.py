@@ -37,4 +37,4 @@ class Plugin():
         return not self.isEnabled()
 
     def isEnabled(self):
-        return self.conf('enabled', True)
+        return self.conf('enabled')

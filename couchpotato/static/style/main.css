@@ -138,7 +138,7 @@ form {
 	-webkit-box-shadow:  0 0 30px rgba(0,0,0,0.1);
 	position: fixed;
 	width: 99%;
-	z-index: 9999;
+	z-index: 2;
 }
 
 .header > div {

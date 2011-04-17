@@ -19,7 +19,7 @@
 			padding: 10px 15px;
 			border: 1px solid transparent;
 			position: relative;
-			z-index: 200;
+			z-index: 1;
 			margin-right: -1px;
 		}
 		.page.settings .tabs .active a {

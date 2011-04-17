@@ -1,7 +1,7 @@
 from argparse import ArgumentParser
 from couchpotato import web
 from couchpotato.api import api
-from couchpotato.core.event import fireEvent
+from couchpotato.core.event import fireEventAsync
 from libs.daemon import createDaemon
 from logging import handlers
 from werkzeug.contrib.cache import FileSystemCache
@@ -90,7 +90,6 @@ def cmd_couchpotato(base_path, args):
     # Load configs & plugins
     loader = Env.get('loader')
     loader.preload(root = base_path)
-    loader.addModule(0, 'core', 'couchpotato.core', 'core')
     loader.run()
 
 
@@ -116,7 +115,7 @@ def cmd_couchpotato(base_path, args):
     from couchpotato.core.settings.model import setup
     setup()
 
-    fireEvent('app.load')
+    fireEventAsync('app.load')
 
     # Create app
     from couchpotato import app

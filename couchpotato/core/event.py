@@ -1,6 +1,7 @@
 from axl.axel import Event
-from couchpotato.core.helpers.variable import merge_dicts
+from couchpotato.core.helpers.variable import mergeDicts
 from couchpotato.core.logger import CPLog
+import threading
 import traceback
 
 log = CPLog(__name__)
@@ -11,7 +12,7 @@ def addEvent(name, handler):
     if events.get(name):
         e = events[name]
     else:
-        e = events[name] = Event(threads = 20, exc_info = True, traceback = True)
+        e = events[name] = Event(threads = 20, exc_info = True, traceback = True, lock = threading.RLock())
 
     e += handler
 
@@ -51,15 +52,24 @@ def fireEvent(name, *args, **kwargs):
                 else:
                     errorHandler(r[1])
 
-            # Merge the results
-            if merge:
+            # Merge dict
+            if merge and type(results[0]) == dict:
                 merged = {}
                 for result in results:
-                    merged = merge_dicts(merged, result)
+                    merged = mergeDicts(merged, result)
+
+                results = merged
+            # Merg lists
+            elif merge and type(results[0]) == list:
+                merged = []
+                for result in results:
+                    merged += result
 
                 results = merged
 
         return results
+    except KeyError:
+        pass
     except Exception, e:
         log.error('%s: %s' % (name, e))
 

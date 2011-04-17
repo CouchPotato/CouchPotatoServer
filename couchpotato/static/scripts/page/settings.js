@@ -7,6 +7,7 @@ Page.Settings = new Class({
 
 	tabs: {
 		'general': {},
+		'searcher': {},
 		'providers': {},
 		'downloaders': {},
 		'notifications': {},
@@ -177,7 +178,7 @@ Page.Settings = new Class({
 				'text': (group.label || group.name).capitalize()
 			}).adopt(
 				new Element('span.hint', {
-					'text': group.description
+					'html': group.description
 				})
 			)
 		)
@@ -243,7 +244,7 @@ var OptionBase = new Class({
 		var self = this;
 		if(self.options.description)
 			new Element('p.formHint', {
-				'text': self.options.description
+				'html': self.options.description
 			}).inject(self.el);
 	},
 
@@ -380,6 +381,7 @@ Option.Checkbox = new Class({
 		self.el.adopt(
 			self.createLabel().set('for', randomId),
 			self.input = new Element('input', {
+				'name': self.postName(),
 				'type': 'checkbox',
 				'checked': self.getSettingValue(),
 				'id': randomId

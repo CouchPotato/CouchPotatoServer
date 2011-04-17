@@ -1,7 +1,7 @@
 from __future__ import with_statement
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent
-from couchpotato.core.helpers.encoding import is_int
+from couchpotato.core.helpers.encoding import isInt
 from couchpotato.core.helpers.request import getParams, jsonified
 import ConfigParser
 import os.path
@@ -61,7 +61,7 @@ class Settings():
             return default
 
     def cleanValue(self, value):
-        if(is_int(value)):
+        if(isInt(value)):
             return int(value)
 
         if str(value).lower() in self.bool:

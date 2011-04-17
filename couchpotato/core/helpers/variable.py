@@ -1,12 +1,12 @@
 import hashlib
 import os.path
 
-def is_dict(object):
+def isDict(object):
     return isinstance(object, dict)
 
 
-def merge_dicts(a, b):
-    assert is_dict(a), is_dict(b)
+def mergeDicts(a, b):
+    assert isDict(a), isDict(b)
     dst = a.copy()
 
     stack = [(dst, b)]
@@ -16,7 +16,7 @@ def merge_dicts(a, b):
             if key not in current_dst:
                 current_dst[key] = current_src[key]
             else:
-                if is_dict(current_src[key]) and is_dict(current_dst[key]) :
+                if isDict(current_src[key]) and isDict(current_dst[key]) :
                     stack.append((current_dst[key], current_src[key]))
                 else:
                     current_dst[key] = current_src[key]

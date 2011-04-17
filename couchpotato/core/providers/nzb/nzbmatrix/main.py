@@ -1,24 +1,27 @@
-from couchpotato.core.event import addEvent
+from couchpotato.core.event import addEvent, fireEvent
+from couchpotato.core.helpers.rss import RSS
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.base import NZBProvider
+from couchpotato.environment import Env
 from dateutil.parser import parse
 from urllib import urlencode
 from urllib2 import URLError
 import time
+import xml.etree.ElementTree as XMLTree
 
 log = CPLog(__name__)
 
 
-class NZBMatrix(NZBProvider):
+class NZBMatrix(NZBProvider, RSS):
 
     urls = {
-        'download': 'https://api.nzbmatrix.com/v1.1/download.php?id=%s%s',
+        'download': 'https://api.nzbmatrix.com/v1.1/download.php?id=%s',
         'detail': 'https://nzbmatrix.com/nzb-details.php?id=%s&hit=1',
         'search': 'http://rss.nzbmatrix.com/rss.php',
     }
 
     cat_ids = [
-        ([42], ['720p', '1080p']),
+        ([42, 53], ['720p', '1080p']),
         ([2], ['cam', 'ts', 'dvdrip', 'tc', 'r5', 'scr']),
         ([54], ['brrip']),
         ([1], ['dvdr']),
@@ -27,41 +30,37 @@ class NZBMatrix(NZBProvider):
 
     def __init__(self):
         addEvent('provider.nzb.search', self.search)
+        addEvent('provider.yarr.search', self.search)
 
     def search(self, movie, quality):
 
-        self.cleanCache();
-
         results = []
-        if not self.enabled() or not self.isAvailable(self.searchUrl):
+
+        if self.isDisabled() or not self.isAvailable(self.urls['search']):
             return results
 
-        catId = self.getCatId(type)
+        cat_ids = ','.join(['%s' % x for x in self.getCatId(quality.get('identifier'))])
+
         arguments = urlencode({
-            'term': movie.imdb,
-            'subcat': catId,
+            'term': movie['library']['identifier'],
+            'subcat': cat_ids,
             'username': self.conf('username'),
-            'apikey': self.conf('apikey'),
+            'apikey': self.conf('api_key'),
             'searchin': 'weblink',
-            'english': 1 if self.conf('english') else 0,
+            'age': Env.setting('retention', section = 'nzb'),
+            'english': self.conf('english_only'),
         })
-        url = "%s?%s" % (self.searchUrl, arguments)
-        cacheId = str(movie.imdb) + '-' + str(catId)
-        singleCat = (len(self.catIds.get(catId)) == 1 and catId != self.catBackupId)
+        url = "%s?%s" % (self.urls['search'], arguments)
+        log.info('Searching: %s' % url)
+
+        cache_key = '%s-%s' % (movie['library'].get('identifier'), cat_ids)
+        single_cat = True
 
         try:
-            cached = False
-            if(self.cache.get(cacheId)):
-                data = True
-                cached = True
-                log.info('Getting RSS from cache: %s.' % cacheId)
-            else:
-                log.info('Searching: %s' % url)
+            data = self.getCache(cache_key)
+            if not data:
                 data = self.urlopen(url)
-                self.cache[cacheId] = {
-                    'time': time.time()
-                }
-
+                self.setCache(cache_key, data)
         except (IOError, URLError):
             log.error('Failed to open %s.' % url)
             return results
@@ -69,42 +68,41 @@ class NZBMatrix(NZBProvider):
         if data:
             try:
                 try:
-                    if cached:
-                        xml = self.cache[cacheId]['xml']
-                    else:
-                        xml = self.getItems(data)
-                        self.cache[cacheId]['xml'] = xml
-                except:
-                    log.debug('No valid xml or to many requests.. You never know with %s.' % self.name)
+                    data = XMLTree.fromstring(data)
+                    nzbs = self.getElements(data, 'channel/item')
+                except Exception, e:
+                    log.debug('%s, %s' % (self.getName(), e))
                     return results
 
-                for nzb in xml:
+                for nzb in nzbs:
 
-                    title = self.gettextelement(nzb, "title")
+                    title = self.getTextElement(nzb, "title")
                     if 'error' in title.lower(): continue
 
-                    id = int(self.gettextelement(nzb, "link").split('&')[0].partition('id=')[2])
-                    size = self.gettextelement(nzb, "description").split('<br /><b>')[2].split('> ')[1]
-                    date = str(self.gettextelement(nzb, "description").split('<br /><b>')[3].partition('Added:</b> ')[2])
+                    id = int(self.getTextElement(nzb, "link").split('&')[0].partition('id=')[2])
+                    size = self.getTextElement(nzb, "description").split('<br /><b>')[2].split('> ')[1]
+                    date = str(self.getTextElement(nzb, "description").split('<br /><b>')[3].partition('Added:</b> ')[2])
 
-                    new = self.feedItem()
-                    new.id = id
-                    new.type = 'nzb'
-                    new.name = title
-                    new.date = int(time.mktime(parse(date).timetuple()))
-                    new.size = self.parseSize(size)
-                    new.url = self.downloadLink(id)
-                    new.detailUrl = self.detailLink(id)
-                    new.content = self.gettextelement(nzb, "description")
-                    new.score = self.calcScore(new, movie)
-                    new.checkNZB = True
+                    new = {
+                        'id': id,
+                        'type': 'nzb',
+                        'name': title,
+                        'age': self.calculateAge(int(time.mktime(parse(date).timetuple()))),
+                        'size': self.parseSize(size),
+                        'url': self.urls['download'] % id + self.getApiExt(),
+                        'detail_url': self.urls['detail'] % id,
+                        'description': self.getTextElement(nzb, "description"),
+                        'check_nzb': True,
+                    }
+                    new['score'] = fireEvent('score.calculate', new, movie, single = True)
 
-                    if new.date > time.time() - (int(self.config.get('NZB', 'retention')) * 24 * 60 * 60):
-                        if self.isCorrectMovie(new, movie, type, imdbResults = True, singleCategory = singleCat):
-                            results.append(new)
-                            log.info('Found: %s' % new.name)
-                    else:
-                        log.info('Found outside retention: %s' % new.name)
+                    is_correct_movie = fireEvent('searcher.correct_movie',
+                                                 nzb = new, movie = movie, quality = quality,
+                                                 imdb_results = True, single_category = single_cat, single = True)
+
+                    if is_correct_movie:
+                        results.append(new)
+                        self.found(new)
 
                 return results
             except SyntaxError:
@@ -116,4 +114,4 @@ class NZBMatrix(NZBProvider):
         return '&username=%s&apikey=%s' % (self.conf('username'), self.conf('apikey'))
 
     def isEnabled(self):
-        return NZBProvider.isEnabled(self) and self.conf('enabled') and self.conf('username') and self.conf('apikey')
+        return NZBProvider.isEnabled(self) and self.conf('username') and self.conf('api_key')

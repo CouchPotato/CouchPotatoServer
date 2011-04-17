@@ -193,7 +193,7 @@ var Spotlight = new Class({
 				'position': 'absolute',
 				'background-color': 'rgba('+self.options.fillColor.join(',')+', '+self.options.fillOpacity+')',
 				'display': 'block',
-				'z-index': 2,
+				'z-index': 999,
 				'top': self.top[nr],
 				'left': self.left[nr],
 				'height': self.height[nr],
@@ -276,7 +276,7 @@ var Spotlight = new Class({
 		var self = this;
 
 		var soften = self.options.soften;
-		var edge = new Element('div', {
+		var edge = new Element('div.edge', {
 			'styles': Object.merge({
 				'position': 'absolute',
 				'width': soften,

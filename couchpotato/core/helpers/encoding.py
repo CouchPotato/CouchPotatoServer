@@ -29,7 +29,7 @@ def toUnicode(original, *args):
         return unicode(ascii_text)
 
 
-def is_int(value):
+def isInt(value):
     try:
         int(value)
         return True

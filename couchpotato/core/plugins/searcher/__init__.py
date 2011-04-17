@@ -1,0 +1,78 @@
+from .main import Searcher
+import random
+
+def start():
+    return Searcher()
+
+config = [{
+    'name': 'searcher',
+    'groups': [
+        {
+            'tab': 'searcher',
+            'name': 'searcher',
+            'label': 'Search',
+            'description': 'Options for the searchers',
+            'options': [
+                {
+                    'name': 'required_words',
+                    'label': 'Required words',
+                    'default': '',
+                },
+                {
+                    'name': 'ignored_words',
+                    'label': 'Ignored words',
+                    'default': '',
+                },
+            ],
+        }, {
+            'tab': 'searcher',
+            'name': 'searcher',
+            'label': 'Cronjob',
+            'advanced': True,
+            'description': 'Cron settings for the searcher see: <a href="http://packages.python.org/APScheduler/cronschedule.html">APScheduler</a> for details.',
+            'options': [
+                {
+                    'name': 'cron_day',
+                    'label': 'Day',
+                    'advanced': True,
+                    'default': '*',
+                    'type': 'string',
+                    'description': '<strong>*</strong>: Every day, <strong>*/2</strong>: Every 2 days, <strong>1</strong>: Every first of the month.',
+                },
+                {
+                    'name': 'cron_hour',
+                    'label': 'Hour',
+                    'advanced': True,
+                    'default': random.randint(0, 23),
+                    'type': 'string',
+                    'description': '<strong>*</strong>: Every hour, <strong>*/8</strong>: Every 8 hours, <strong>3</strong>: At 3, midnight.',
+                },
+                {
+                    'name': 'cron_minute',
+                    'label': 'Minute',
+                    'advanced': True,
+                    'default': random.randint(0, 59),
+                    'type': 'string',
+                    'description': "Just keep it random, so the providers don't get DDOSed by every CP user on a 'full' hour."
+                },
+            ],
+        },
+    ],
+}, {
+    'name': 'nzb',
+    'groups': [
+        {
+            'tab': 'searcher',
+            'name': 'nzb',
+            'label': 'NZB',
+            'options': [
+                {
+                    'name': 'retention',
+                    'default': 350,
+                    'type': 'int',
+                    'unit': 'days'
+                },
+            ],
+        },
+    ],
+}]

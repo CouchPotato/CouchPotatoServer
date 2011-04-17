@@ -27,6 +27,7 @@ class QualityPlugin(Plugin):
 
     def __init__(self):
         addEvent('quality.all', self.all)
+        addEvent('quality.single', self.single)
         addEvent('app.load', self.fill)
 
         path = self.registerStatic(__file__)
@@ -45,6 +46,14 @@ class QualityPlugin(Plugin):
             temp.append(q)
 
         return temp
+
+    def single(self, identifier = ''):
+
+        db = get_session()
+
+        quality = db.query(Quality).filter_by(identifier = identifier).first()
+
+        return dict(self.getQuality(quality.identifier), **quality.to_dict())
 
     def getQuality(self, identifier):
 

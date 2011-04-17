@@ -6,13 +6,22 @@ var WizardBase = new Class({
 		var self = this;
 
 		self.steps = steps;
-		self.start();
+		self.spotlight = new Spotlight([], {
+			'fillColor': [0,0,0],
+			'soften': 0
+		});
+		window.addEvent('resize', self.spotlight.create.bind(self.spotlight))
 
 	},
 
 	start: function(){
+		var self = this;
 		
+		var els = $(document.body).getElements("[name='core[username]'], [name='core[password]'], [name='core[launch_browser]']").getParent('.ctrlHolder')
 		
+		p(els, self.spotlight.setElements(els))
+		
+		self.spotlight.create();
 
 	},
 

@@ -18,7 +18,8 @@ class Loader:
         providers = os.path.join(root, 'couchpotato', 'core', 'providers')
 
         self.paths = {
-            'plugin' : (0, 'couchpotato.core.plugins', os.path.join(core, 'plugins')),
+            'core' : (0, 'couchpotato.core._base', os.path.join(core, '_base')),
+            'plugin' : (1, 'couchpotato.core.plugins', os.path.join(core, 'plugins')),
             'notifications' : (20, 'couchpotato.core.notifications', os.path.join(core, 'notifications')),
             'downloaders' : (20, 'couchpotato.core.downloaders', os.path.join(core, 'downloaders')),
             'movie_provider' : (20, 'couchpotato.core.providers.movie', os.path.join(providers, 'movie')),
@@ -48,7 +49,7 @@ class Loader:
 
                     self.loadPlugins(m, plugin.get('name'))
                 except Exception, e:
-                    log.error('Can\'t import %s: %s' % (plugin.get('name'), e))
+                    log.error('Can\'t import %s: %s' % (module_name, e))
 
         if did_save:
             fireEvent('settings.save')

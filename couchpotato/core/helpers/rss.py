@@ -5,7 +5,7 @@ log = CPLog(__name__)
 
 class RSS():
 
-    def gettextelements(self, xml, path):
+    def getTextElements(self, xml, path):
         ''' Find elements and return tree'''
 
         textelements = []
@@ -17,7 +17,17 @@ class RSS():
             textelements.append(element.text)
         return textelements
 
-    def gettextelement(self, xml, path):
+    def getElements(self, xml, path):
+
+        elements = []
+        try:
+            elements = xml.findall(path)
+        except:
+            pass
+
+        return elements
+
+    def getTextElement(self, xml, path):
         ''' Find element and return text'''
 
         try:
