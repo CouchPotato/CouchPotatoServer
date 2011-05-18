@@ -22,6 +22,12 @@ def mergeDicts(a, b):
                     current_dst[key] = current_src[key]
     return dst
 
+def flattenList(l):
+    if isinstance(l, list):
+        return sum(map(flattenList, l))
+    else:
+        return l
+
 def md5(text):
     return hashlib.md5(text).hexdigest()
 

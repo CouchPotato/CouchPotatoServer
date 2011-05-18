@@ -1,8 +1,13 @@
 from couchpotato.core.event import addEvent
+from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
+
+log = CPLog(__name__)
 
 
 class Downloader(Plugin):
+
+    type = []
 
     def __init__(self):
         addEvent('download', self.download)
@@ -15,3 +20,11 @@ class Downloader(Plugin):
 
     def isEnabled(self):
         return self.conf('enabled', True)
+
+    def isCorrectType(self, type):
+        is_correct = type in self.type
+
+        if not is_correct:
+            log.debug("Downloader doesn't support this type")
+
+        return bool

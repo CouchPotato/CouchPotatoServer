@@ -52,8 +52,9 @@ class QualityPlugin(Plugin):
         db = get_session()
 
         quality = db.query(Quality).filter_by(identifier = identifier).first()
+        quality_dict = dict(self.getQuality(quality.identifier), **quality.to_dict())
 
-        return dict(self.getQuality(quality.identifier), **quality.to_dict())
+        return quality_dict
 
     def getQuality(self, identifier):
 

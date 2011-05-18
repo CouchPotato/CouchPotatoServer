@@ -11,15 +11,18 @@ log = CPLog(__name__)
 class StatusPlugin(Plugin):
 
     statuses = {
+        'needs_update': 'Needs update',
         'active': 'Active',
         'done': 'Done',
         'downloaded': 'Downloaded',
         'wanted': 'Wanted',
+        'snatched': 'Snatched',
         'deleted': 'Deleted',
     }
 
     def __init__(self):
         addEvent('status.add', self.add)
+        addEvent('status.get', self.add) # Alias for .add
         addEvent('status.all', self.all)
         addEvent('app.load', self.fill)
 
@@ -52,8 +55,9 @@ class StatusPlugin(Plugin):
             db.add(s)
             db.commit()
 
-        #db.remove()
-        return s
+        status_dict = s.to_dict()
+
+        return status_dict
 
     def fill(self):
 
@@ -71,3 +75,4 @@ class StatusPlugin(Plugin):
 
             s.label = label
             db.commit()
+

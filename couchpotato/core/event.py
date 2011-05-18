@@ -43,35 +43,41 @@ def fireEvent(name, *args, **kwargs):
         result = e(*args, **kwargs)
 
         if single and not merge:
-            results = result[0][1]
+            results = None
+            if result[0][0] == True and result[0][1]:
+                results = result[0][1]
+            elif result[0][1]:
+                errorHandler(result[0][1])
         else:
             results = []
             for r in result:
-                if r[0] == True:
+                if r[0] == True and r[1]:
                     results.append(r[1])
-                else:
+                elif r[1]:
                     errorHandler(r[1])
 
-            # Merge dict
-            if merge and type(results[0]) == dict:
-                merged = {}
-                for result in results:
-                    merged = mergeDicts(merged, result)
+            # Merge
+            if merge and len(results) > 0:
+                # Dict
+                if type(results[0]) == dict:
+                    merged = {}
+                    for result in results:
+                        merged = mergeDicts(merged, result)
 
-                results = merged
-            # Merg lists
-            elif merge and type(results[0]) == list:
-                merged = []
-                for result in results:
-                    merged += result
+                    results = merged
+                # Lists
+                elif type(results[0]) == list:
+                    merged = []
+                    for result in results:
+                        merged += result
 
-                results = merged
+                    results = merged
 
         return results
-    except KeyError:
+    except KeyError, e:
         pass
-    except Exception, e:
-        log.error('%s: %s' % (name, e))
+    except Exception:
+        log.error('%s: %s' % (name, traceback.format_exc()))
 
 def fireEventAsync(name, *args, **kwargs):
     #log.debug('Async "%s": %s, %s' % (name, args, kwargs))

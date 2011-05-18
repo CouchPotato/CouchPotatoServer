@@ -1,6 +1,7 @@
 from couchpotato import get_session
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent
+from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.variable import md5, getExt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
@@ -55,23 +56,24 @@ class FileManager(Plugin):
 
         return False
 
-    def add(self, path = '', part = 1, type = (), properties = {}):
-
+    def add(self, path = '', part = 1, type = (), available = 1, properties = {}):
         db = get_session()
 
-        f = db.query(File).filter_by(path = path).first()
+        f = db.query(File).filter_by(path = toUnicode(path)).first()
         if not f:
             f = File()
             db.add(f)
 
         f.path = path
         f.part = part
+        f.available = available
         f.type_id = self.getType(type).id
 
         db.commit()
 
-        db.expunge(f)
-        return f
+        file_dict = f.to_dict()
+
+        return file_dict
 
     def getType(self, type):
 
@@ -100,7 +102,6 @@ class FileManager(Plugin):
 
         types = []
         for type in results:
-            temp = type.to_dict()
-            types.append(temp)
+            types.append(type.to_dict())
 
         return types

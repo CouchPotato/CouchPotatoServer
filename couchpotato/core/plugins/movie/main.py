@@ -101,21 +101,23 @@ class MoviePlugin(Plugin):
         m = db.query(Movie).filter_by(library_id = library.id).first()
         if not m:
             m = Movie(
-                library_id = library.id,
+                library_id = library.get('id'),
                 profile_id = params.get('profile_id')
             )
             db.add(m)
 
-        m.status_id = status.id
+        m.status_id = status.get('id')
         db.commit()
+        
+        movie_dict = m.to_dict(deep = {
+            'releases': {'status': {}, 'quality': {}},
+            'library': {'titles': {}}
+        })
 
         return jsonified({
             'success': True,
             'added': True,
-            'movie': m.to_dict(deep = {
-                'releases': {'status': {}, 'quality': {}},
-                'library': {'titles': {}}
-            })
+            'movie': movie_dict,
         })
 
     def edit(self):
@@ -129,7 +131,7 @@ class MoviePlugin(Plugin):
         status = fireEvent('status.add', 'deleted', single = True)
 
         movie = db.query(Movie).filter_by(id = params.get('id')).first()
-        movie.status_id = status.id
+        movie.status_id = status.get('id')
         db.commit()
 
         return jsonified({

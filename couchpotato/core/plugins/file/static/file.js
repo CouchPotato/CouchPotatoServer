@@ -36,12 +36,8 @@ var FileSelect = new Class({
 			return file.type_id == File.Type.get(type).id;
 		});
 
-		if(single){
-			results = new File(results.pop());
-		}
-		else {
-
-		}
+		if(single)
+			return new File(results.pop());
 
 		return results;
 

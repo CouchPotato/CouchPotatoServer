@@ -19,6 +19,7 @@ class Searcher(Plugin):
 
         # Schedule cronjob
         fireEvent('schedule.cron', 'searcher.all', self.all, day = self.conf('cron_day'), hour = self.conf('cron_hour'), minute = self.conf('cron_minute'))
+        addEvent('app.load', self.all)
 
     def all(self):
 
@@ -28,22 +29,49 @@ class Searcher(Plugin):
             Movie.status.has(identifier = 'active')
         ).all()
 
+        snatched_status = fireEvent('status.get', 'snatched', single = True)
+
         for movie in movies:
-            self.single(movie.to_dict(deep = {
+            success = self.single(movie.to_dict(deep = {
                 'profile': {'types': {'quality': {}}},
                 'releases': {'status': {}, 'quality': {}},
                 'library': {'titles': {}, 'files':{}},
                 'files': {}
             }))
 
+            # Mark as snatched on success
+            if success:
+                movie.status_id = snatched_status.get('id')
+                db.commit()
+
 
     def single(self, movie):
 
+        successful = False
         for type in movie['profile']['types']:
-            results = fireEvent('provider.yarr.search', movie, type['quality'], merge = True)
-            sorted_results = sorted(results, key = lambda k: k['score'], reverse = True)
-            for nzb in sorted_results:
-                print nzb['name']
+
+            has_better_quality = False
+
+            # See if beter quality is available
+            for release in movie['releases']:
+                if release['quality']['order'] <= type['quality']['order']:
+                    has_better_quality = True
+
+            # Don't search for quality lower then already available.
+            if not has_better_quality:
+
+                log.info('Search for %s in %s' % (movie['library']['titles'][0]['title'], type['quality']['label']))
+                results = fireEvent('provider.yarr.search', movie, type['quality'], merge = True)
+                sorted_results = sorted(results, key = lambda k: k['score'], reverse = True)
+
+                for nzb in sorted_results:
+                    successful = fireEvent('download', data = nzb, single = True)
+
+                    if successful:
+                        log.info('Downloading of %s successful.' % nzb.get('name'))
+                        return True
+
+        return False
 
 
     def correctMovie(self, nzb = {}, movie = {}, quality = {}, **kwargs):
@@ -53,7 +81,7 @@ class Searcher(Plugin):
         retention = Env.setting('retention', section = 'nzb')
 
         if retention < nzb.get('age', 0):
-            log.info('Wrong: Outside retention, age = %s, needs = %s: %s' % (nzb['age'], retention, nzb['name']))
+            log.info('Wrong: Outside retention, age is %s, needs %s or lower: %s' % (nzb['age'], retention, nzb['name']))
             return False
 
         nzb_words = re.split('\W+', simplifyString(nzb['name']))
@@ -66,7 +94,7 @@ class Searcher(Plugin):
         ignored_words = self.conf('ignored_words').split(',')
         blacklisted = list(set(nzb_words) & set(ignored_words))
         if self.conf('ignored_words') and blacklisted:
-            log.info("NZB '%s' contains the following blacklisted words: %s" % (nzb['name'], ", ".join(blacklisted)))
+            log.info("Wrong: '%s' blacklisted words: %s" % (nzb['name'], ", ".join(blacklisted)))
             return False
 
         #qualities = fireEvent('quality.all', single = True)
@@ -154,3 +182,10 @@ class Searcher(Plugin):
                 return True
 
         return False
+
+    def correctName(self, check_name, movie_name):
+
+        check_words = re.split('\W+', simplifyString(check_name))
+        movie_words = re.split('\W+', simplifyString(movie_name))
+
+        return len(list(set(check_words) & set(movie_words))) == len(movie_words)

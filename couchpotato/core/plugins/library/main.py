@@ -2,7 +2,8 @@ from couchpotato import get_session
 from couchpotato.core.event import addEvent, fireEventAsync, fireEvent
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.core.settings.model import Library, LibraryTitle
+from couchpotato.core.settings.model import Library, LibraryTitle, File
+import traceback
 
 log = CPLog(__name__)
 
@@ -12,17 +13,19 @@ class LibraryPlugin(Plugin):
         addEvent('library.add', self.add)
         addEvent('library.update', self.update)
 
-    def add(self, attrs = {}):
+    def add(self, attrs = {}, update_after = True):
 
         db = get_session()
 
         l = db.query(Library).filter_by(identifier = attrs.get('identifier')).first()
         if not l:
+            status = fireEvent('status.get', 'needs_update', single = True)
             l = Library(
                 year = attrs.get('year'),
                 identifier = attrs.get('identifier'),
                 plot = attrs.get('plot'),
-                tagline = attrs.get('tagline')
+                tagline = attrs.get('tagline'),
+                status_id = status.get('id')
             )
 
             title = LibraryTitle(
@@ -35,26 +38,36 @@ class LibraryPlugin(Plugin):
             db.commit()
 
         # Update library info
-        fireEventAsync('library.update', library = l, default_title = attrs.get('title', ''))
+        if update_after:
+            fireEventAsync('library.update', identifier = l.identifier, default_title = attrs.get('title', ''))
 
-        #db.remove()
-        return l
+        library_dict = l.to_dict()
 
-    def update(self, library, default_title = ''):
+        return library_dict
+
+    def update(self, identifier, default_title = '', force = False):
 
         db = get_session()
-        library = db.query(Library).filter_by(identifier = library.identifier).first()
+        library = db.query(Library).filter_by(identifier = identifier).first()
+        done_status = fireEvent('status.get', 'done', single = True)
 
-        info = fireEvent('provider.movie.info', merge = True, identifier = library.identifier)
+        if library.status_id == done_status.get('id') and not force:
+            return
+
+        info = fireEvent('provider.movie.info', merge = True, identifier = identifier)
+        if not info or len(info) == 0:
+            log.error('Could not update, no movie info to work with: %s' % identifier)
+            return
 
         # Main info
         library.plot = info.get('plot', '')
         library.tagline = info.get('tagline', '')
         library.year = info.get('year', 0)
+        library.status_id = done_status.get('id')
 
         # Titles
         [db.delete(title) for title in library.titles]
-        titles = info.get('titles')
+        titles = info.get('titles', [])
 
         log.debug('Adding titles: %s' % titles)
         for title in titles:
@@ -67,15 +80,17 @@ class LibraryPlugin(Plugin):
         db.commit()
 
         # Files
-        images = info.get('images')
+        images = info.get('images', [])
         for type in images:
             for image in images[type]:
                 file_path = fireEvent('file.download', url = image, single = True)
                 file = fireEvent('file.add', path = file_path, type = ('image', type[:-1]), single = True)
                 try:
+                    file = db.query(File).filter_by(id = file.get('id')).one()
                     library.files.append(file)
                     db.commit()
                 except:
-                    log.debug('File already attached to library')
+                    pass
+                    #log.debug('Failed to attach to library: %s' % traceback.format_exc())
 
         fireEvent('library.update.after')

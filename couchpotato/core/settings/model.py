@@ -43,7 +43,7 @@ class Library(Entity):
 
     status = ManyToOne('Status')
     movie = OneToMany('Movie')
-    titles = OneToMany('LibraryTitle')
+    titles = OneToMany('LibraryTitle', order_by = '-default')
     files = ManyToMany('File')
 
 
@@ -70,11 +70,23 @@ class Release(Entity):
     """Logically groups all files that belong to a certain release, such as
     parts of a movie, subtitles."""
 
+    identifier = Field(String(100))
+
     movie = ManyToOne('Movie')
     status = ManyToOne('Status')
     quality = ManyToOne('Quality')
     files = ManyToMany('File')
     history = OneToMany('History')
+    info = OneToMany('ReleaseInfo')
+
+
+class ReleaseInfo(Entity):
+    """Properties that can be bound to a file for off-line usage"""
+
+    identifier = Field(String(50))
+    value = Field(Unicode(255), nullable = False)
+
+    release = ManyToOne('Release')
 
 
 class Status(Entity):
@@ -132,6 +144,7 @@ class File(Entity):
 
     path = Field(Unicode(255), nullable = False, unique = True)
     part = Field(Integer, default = 1)
+    available = Field(Boolean)
 
     type = ManyToOne('FileType')
     properties = OneToMany('FileProperty')
@@ -178,8 +191,15 @@ class RenameHistory(Entity):
     file = ManyToOne('File')
 
 
+class Folder(Entity):
+    """Renamer destination folders."""
+
+    path = Field(Unicode(255))
+    label = Field(Unicode(255))
+
+
 def setup():
-    """ Setup the database and create the tables that don't exists yet """
+    """Setup the database and create the tables that don't exists yet"""
     from elixir import setup_all, create_all
     from couchpotato import get_engine
 

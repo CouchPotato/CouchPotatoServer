@@ -53,6 +53,7 @@ class Provider(Plugin):
         self.wait()
 
         try:
+            log.info('Opening url: %s' % url)
             if username and password:
                 passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
                 passman.add_password(None, url, username, password)
@@ -120,7 +121,7 @@ class YarrProvider(Provider):
         return False
 
     def found(self, new):
-        log.info('Found, score(%(score)s): %(name)s' % new)
+        log.info('Found: score(%(score)s): %(name)s' % new)
 
 
 class NZBProvider(YarrProvider):

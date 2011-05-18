@@ -179,7 +179,7 @@ class Event(object):
                     if not self.asynchronous:
                         self.result.append(tuple(r))
 
-                except Exception, e:
+                except Exception:
                     if not self.asynchronous:
                         self.result.append((False, self._error(sys.exc_info()),
                                             handler))

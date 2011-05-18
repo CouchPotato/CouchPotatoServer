@@ -1,4 +1,4 @@
-from couchpotato import addView
+from couchpotato import addView, get_session
 from couchpotato.environment import Env
 from flask.helpers import send_from_directory
 import os.path
@@ -7,8 +7,8 @@ import re
 
 class Plugin():
 
-    def conf(self, attr):
-        return Env.setting(attr, self.getName().lower())
+    def conf(self, attr, default = None):
+        return Env.setting(attr, self.getName().lower(), default = default)
 
     def getName(self):
         return self.__class__.__name__

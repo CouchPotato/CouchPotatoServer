@@ -27,36 +27,53 @@ class TheMovieDb(MovieProvider):
         if self.isDisabled():
             return False
 
-        log.debug('TheMovieDB - Searching for movie: %s' % q)
-        raw = tmdb.search(simplifyString(q))
+        search_string = simplifyString(q)
+        cache_key = 'tmdb.cache.%s.%s' % (search_string, limit)
+        results = self.getCache(cache_key)
 
-        results = []
-        if raw:
-            try:
-                nr = 0
-                for movie in raw:
+        if not results:
+            log.debug('TheMovieDB - Searching for movie: %s' % q)
+            raw = tmdb.search(search_string)
 
-                    results.append(self.parseMovie(movie))
+            results = []
+            if raw:
+                try:
+                    nr = 0
+                    for movie in raw:
 
-                    nr += 1
-                    if nr == limit:
-                        break
+                        results.append(self.parseMovie(movie))
 
-                log.info('TheMovieDB - Found: %s' % [result['titles'][0] + ' (' + str(result['year']) + ')' for result in results])
-                return results
-            except SyntaxError, e:
-                log.error('Failed to parse XML response: %s' % e)
-                return False
+                        nr += 1
+                        if nr == limit:
+                            break
+
+                    log.info('TheMovieDB - Found: %s' % [result['titles'][0] + ' (' + str(result['year']) + ')' for result in results])
+                    self.setCache(cache_key, results)
+                    return results
+                except SyntaxError, e:
+                    log.error('Failed to parse XML response: %s' % e)
+                    return False
 
         return results
 
     def getInfo(self, identifier = None):
-        result = {}
 
-        movie = tmdb.imdbLookup(id = identifier)[0]
+        cache_key = 'tmdb.cache.%s' % identifier
+        result = self.getCache(cache_key)
 
-        if movie:
-            result = self.parseMovie(movie)
+        if not result:
+            result = {}
+            movie = None
+
+            try:
+                log.debug('Getting info: %s' % cache_key)
+                movie = tmdb.imdbLookup(id = identifier)
+            except:
+                pass
+
+            if movie:
+                result = self.parseMovie(movie[0])
+                self.setCache(cache_key, result)
 
         return result
 

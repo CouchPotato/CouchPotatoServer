@@ -59,10 +59,12 @@ class ProfilePlugin(Plugin):
             order += 1
 
         db.commit()
+        
+        profile_dict = p.to_dict(deep = {'types': {}})
 
         return jsonified({
             'success': True,
-            'profile': p.to_dict(deep = {'types': {}})
+            'profile': profile_dict
         })
 
     def delete(self):

@@ -2,6 +2,7 @@ from couchpotato.core.event import fireEvent
 from couchpotato.core.logger import CPLog
 import glob
 import os
+import traceback
 
 log = CPLog(__name__)
 
@@ -49,7 +50,7 @@ class Loader:
 
                     self.loadPlugins(m, plugin.get('name'))
                 except Exception, e:
-                    log.error('Can\'t import %s: %s' % (module_name, e))
+                    log.error('Can\'t import %s: %s' % (module_name, traceback.format_exc()))
 
         if did_save:
             fireEvent('settings.save')
@@ -73,7 +74,7 @@ class Loader:
                 fireEvent('settings.register', section_name = section['name'], options = options, save = save)
             return True
         except Exception, e:
-            log.debug("Failed loading settings for '%s': %s" % (name, e))
+            log.debug("Failed loading settings for '%s': %s" % (name, traceback.format_exc()))
             return False
 
     def loadPlugins(self, module, name):
@@ -81,7 +82,7 @@ class Loader:
             module.start()
             return True
         except Exception, e:
-            log.error("Failed loading plugin '%s': %s" % (name, e))
+            log.error("Failed loading plugin '%s': %s" % (name, traceback.format_exc()))
             return False
 
     def addModule(self, priority, type, module, name):

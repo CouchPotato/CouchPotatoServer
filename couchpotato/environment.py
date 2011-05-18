@@ -12,6 +12,7 @@ class Env:
     _args = None
     _quiet = False
     _deamonize = False
+    _version = 0.5
 
     ''' Data paths and directories '''
     _app_dir = ""

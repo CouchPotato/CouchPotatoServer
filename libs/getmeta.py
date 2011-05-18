@@ -1,11 +1,10 @@
-from hachoir_parser import createParser
-from hachoir_metadata import extractMetadata
+from flask.helpers import json
 from hachoir_core.cmd_line import unicodeFilename
-
+from hachoir_metadata import extractMetadata
+from hachoir_parser import createParser
 import datetime
-import json
-import sys
 import re
+import sys
 
 
 def getMetadata(filename):
