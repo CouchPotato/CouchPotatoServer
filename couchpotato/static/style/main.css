@@ -111,10 +111,11 @@ form {
     font-weight: bold;
     line-height: 1;
     
+    border-radius: 5px;
     -moz-border-radius: 5px;
     -webkit-border-radius: 5px;
-    border-radius: 5px;
     
+	box-shadow: 0 1px 3px rgba(0,0,0,0.5);
 	-moz-box-shadow: 0 1px 3px rgba(0,0,0,0.5);
 	-webkit-box-shadow: 0 1px 3px rgba(0,0,0,0.5);
 	box-shadow: 0 1px 3px rgba(0,0,0,0.5);
@@ -134,6 +135,7 @@ form {
 	background: #4e5969;
 	padding:10px;
 	height: 60px;
+	box-shadow:  0 0 30px rgba(0,0,0,0.1);
 	-moz-box-shadow:  0 0 30px rgba(0,0,0,0.1);
 	-webkit-box-shadow:  0 0 30px rgba(0,0,0,0.1);
 	position: fixed;

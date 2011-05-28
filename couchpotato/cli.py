@@ -120,7 +120,7 @@ def cmd_couchpotato(base_path, args):
     # Create app
     from couchpotato import app
     api_key = Env.setting('api_key')
-    url_base = '/' + Env.setting('url_base') if Env.setting('url_base') else ''
+    url_base = '/' + Env.setting('url_base').lstrip('/') if Env.setting('url_base') else ''
     reloader = debug and not options.daemonize
 
     # Basic config
@@ -129,6 +129,9 @@ def cmd_couchpotato(base_path, args):
     app.debug = debug
     app.secret_key = api_key
     app.static_path = url_base + '/static'
+    app.add_url_rule(app.static_path + '/<path:filename>',
+                      endpoint = 'static',
+                      view_func = app.send_static_file)
 
     # Register modules
     app.register_module(web, url_prefix = '%s/' % url_base)

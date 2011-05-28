@@ -24,7 +24,7 @@ def get_session(engine = None):
     return scoped_session(sessionmaker(bind = engine))
 
 def get_engine():
-    return create_engine(Env.get('db_path')+'?check_same_thread=False', echo = False)
+    return create_engine(Env.get('db_path') + '?check_same_thread=False', echo = False)
 
 def addView(route, func, static = False):
     web.add_url_rule(route + ('' if static else '/'), endpoint = route if route else 'index', view_func = func)

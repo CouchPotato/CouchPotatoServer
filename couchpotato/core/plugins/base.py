@@ -1,4 +1,4 @@
-from couchpotato import addView, get_session
+from couchpotato import addView
 from couchpotato.environment import Env
 from flask.helpers import send_from_directory
 import os.path
@@ -28,9 +28,7 @@ class Plugin():
         return path
 
     def showStatic(self, file = ''):
-
         dir = os.path.join(self.plugin_path, 'static')
-
         return send_from_directory(dir, file)
 
     def isDisabled(self):
