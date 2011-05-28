@@ -22,6 +22,9 @@ class MoviePlugin(Plugin):
         path = self.registerStatic(__file__)
         fireEvent('register_script', path + 'search.js')
         fireEvent('register_style', path + 'search.css')
+        fireEvent('register_script', path + 'movie.js')
+        fireEvent('register_style', path + 'movie.css')
+        fireEvent('register_script', path + 'list.js')
 
     def list(self):
 
@@ -35,7 +38,7 @@ class MoviePlugin(Plugin):
         movies = []
         for movie in results:
             temp = movie.to_dict(deep = {
-                'releases': {'status': {}, 'quality': {}},
+                'releases': {'status': {}, 'quality': {}, 'files':{}},
                 'library': {'titles': {}, 'files':{}},
                 'files': {}
             })
@@ -62,7 +65,13 @@ class MoviePlugin(Plugin):
 
         if movie:
             #addEvent('library.update.after', )
-            fireEventAsync('library.update', library = movie.library, default_title = default_title)
+            fireEventAsync('library.update', identifier = movie.library.identifier, default_title = default_title, force = True)
+            fireEventAsync('searcher.single', movie.to_dict(deep = {
+                'profile': {'types': {'quality': {}}},
+                'releases': {'status': {}, 'quality': {}},
+                'library': {'titles': {}, 'files':{}},
+                'files': {}
+            }))
 
         return jsonified({
             'success': True,
@@ -98,7 +107,7 @@ class MoviePlugin(Plugin):
         library = fireEvent('library.add', single = True, attrs = params)
         status = fireEvent('status.add', 'active', single = True)
 
-        m = db.query(Movie).filter_by(library_id = library.id).first()
+        m = db.query(Movie).filter_by(library_id = library.get('id')).first()
         if not m:
             m = Movie(
                 library_id = library.get('id'),
@@ -108,7 +117,7 @@ class MoviePlugin(Plugin):
 
         m.status_id = status.get('id')
         db.commit()
-        
+
         movie_dict = m.to_dict(deep = {
             'releases': {'status': {}, 'quality': {}},
             'library': {'titles': {}}
@@ -121,7 +130,22 @@ class MoviePlugin(Plugin):
         })
 
     def edit(self):
-        pass
+
+        params = getParams()
+        db = get_session();
+
+        m = db.query(Movie).filter_by(id = params.get('id')).first()
+        m.profile_id = params.get('profile_id')
+
+        # Default title
+        for title in m.library.titles:
+            title.default = params.get('default_title').lower() == title.title.lower()
+
+        db.commit()
+
+        return jsonified({
+            'success': True,
+        })
 
     def delete(self):
 

@@ -2,6 +2,11 @@ var File = new Class({
 
 	initialize: function(file){
 		var self = this;
+		
+		if(!file){
+			self.el = new Element('div');
+			return
+		}
 
 		self.data = file;
 		self.type = File.Type.get(file.type_id);

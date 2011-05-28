@@ -19,7 +19,7 @@ class Searcher(Plugin):
 
         # Schedule cronjob
         fireEvent('schedule.cron', 'searcher.all', self.all, day = self.conf('cron_day'), hour = self.conf('cron_hour'), minute = self.conf('cron_minute'))
-        addEvent('app.load', self.all)
+        #addEvent('app.load', self.all)
 
     def all(self):
 

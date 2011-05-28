@@ -42,13 +42,14 @@ class Library(Entity):
     tagline = Field(UnicodeText(255))
 
     status = ManyToOne('Status')
-    movie = OneToMany('Movie')
-    titles = OneToMany('LibraryTitle', order_by = '-default')
+    movies = OneToMany('Movie')
+    titles = OneToMany('LibraryTitle')
     files = ManyToMany('File')
 
 
 class LibraryTitle(Entity):
     """"""
+    using_options(order_by = '-default')
 
     title = Field(Unicode)
     default = Field(Boolean)

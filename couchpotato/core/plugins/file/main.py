@@ -8,7 +8,9 @@ from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import FileType, File
 from couchpotato.environment import Env
 from flask.helpers import send_from_directory
+from sqlalchemy.sql.expression import or_
 import os.path
+import traceback
 import urllib2
 
 log = CPLog(__name__)
@@ -51,15 +53,15 @@ class FileManager(Plugin):
 
             return dest
 
-        except Exception, e:
-            log.error('Unable to download file "%s": %s' % (url, e))
+        except Exception:
+            log.error('Unable to download file "%s": %s' % (url, traceback.format_exc()))
 
         return False
 
     def add(self, path = '', part = 1, type = (), available = 1, properties = {}):
         db = get_session()
 
-        f = db.query(File).filter_by(path = toUnicode(path)).first()
+        f = db.query(File).filter(or_(File.path == toUnicode(path), File.path == path)).first()
         if not f:
             f = File()
             db.add(f)
@@ -78,7 +80,6 @@ class FileManager(Plugin):
     def getType(self, type):
 
         db = get_session()
-
         type, identifier = type
 
         ft = db.query(FileType).filter_by(identifier = identifier).first()

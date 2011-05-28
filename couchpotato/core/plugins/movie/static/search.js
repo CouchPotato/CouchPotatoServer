@@ -9,7 +9,7 @@ Block.Search = new Class({
 
 		self.el = new Element('div.search_form').adopt(
 			new Element('div.input').adopt(
-				self.input = new Element('input', {
+				self.input = new Element('input.inlay', {
 					'events': {
 						'keyup': self.keyup.bind(self),
 						'focus': self.hideResults.bind(self, false)
@@ -164,7 +164,7 @@ Block.Search.Item = new Class({
 		self.el = new Element('div.movie', {
 			'id': info.imdb
 		}).adopt(
-			self.options = new Element('div.options'),
+			self.options = new Element('div.options.inlay'),
 			self.data_container = new Element('div.data', {
 				'tween': {
 					duration: 400,

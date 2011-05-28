@@ -15,11 +15,43 @@ class TheMovieDb(MovieProvider):
     imageUrl = 'http://hwcdn.themoviedb.org'
 
     def __init__(self):
+        addEvent('provider.movie.by_hash', self.byHash)
         addEvent('provider.movie.search', self.search)
         addEvent('provider.movie.info', self.getInfo)
 
         # Use base wrapper
         tmdb.Config.api_key = self.conf('api_key')
+
+    def byHash(self, file):
+        ''' Find movie by hash '''
+
+        if self.isDisabled():
+            return False
+
+        cache_key = 'tmdb.cache.%s' % simplifyString(file)
+        results = self.getCache(cache_key)
+
+        if not results:
+            log.debug('Searching for movie by hash: %s' % file)
+            try:
+                raw = tmdb.searchByHashingFile(file)
+
+                results = []
+                if raw:
+                    try:
+                        results = self.parseMovie(raw)
+                        log.info('Found: %s' % results['titles'][0] + ' (' + str(results['year']) + ')')
+
+                        self.setCache(cache_key, results)
+                        return results
+                    except SyntaxError, e:
+                        log.error('Failed to parse XML response: %s' % e)
+                        return False
+            except:
+                log.debug('No movies known by hash for: %s' % file)
+                pass
+
+        return results
 
     def search(self, q, limit = 12):
         ''' Find movie by name '''
@@ -32,7 +64,7 @@ class TheMovieDb(MovieProvider):
         results = self.getCache(cache_key)
 
         if not results:
-            log.debug('TheMovieDB - Searching for movie: %s' % q)
+            log.debug('Searching for movie: %s' % q)
             raw = tmdb.search(search_string)
 
             results = []
@@ -47,7 +79,8 @@ class TheMovieDb(MovieProvider):
                         if nr == limit:
                             break
 
-                    log.info('TheMovieDB - Found: %s' % [result['titles'][0] + ' (' + str(result['year']) + ')' for result in results])
+                    log.info('Found: %s' % [result['titles'][0] + ' (' + str(result['year']) + ')' for result in results])
+
                     self.setCache(cache_key, results)
                     return results
                 except SyntaxError, e:

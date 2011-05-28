@@ -95,7 +95,7 @@ Page.Settings = new Class({
 					new Element('span', {
 						'text': 'Show advanced settings'
 					}),
-					self.advanced_toggle = new Element('input[type=checkbox]', {
+					self.advanced_toggle = new Element('input[type=checkbox].inlay', {
 						'events': {
 							'change': self.showAdvanced.bind(self)
 						}
@@ -103,6 +103,10 @@ Page.Settings = new Class({
 				)
 			)
 		);
+		
+		new Form.Check(self.advanced_toggle, {
+			'onChange': self.showAdvanced.bind(self)
+		})
 
 		// Create tabs
 		Object.each(self.tabs, function(tab, tab_name){
@@ -132,8 +136,6 @@ Page.Settings = new Class({
 			});
 		});
 
-
-
 		self.fireEvent('create');
 		self.openTab();
 
@@ -150,7 +152,7 @@ Page.Settings = new Class({
 			new Element('a', {
 				'href': '/'+self.name+'/'+tab_name+'/',
 				'text': label
-			})
+			}).adopt()
 		).inject(self.tabs_container);
 
 		if(!self.tabs[tab_name])
@@ -335,7 +337,7 @@ Option.String = new Class({
 
 		self.el.adopt(
 			self.createLabel(),
-			self.input = new Element('input', {
+			self.input = new Element('input.inlay', {
 				'type': 'text',
 				'name': self.postName(),
 				'value': self.getSettingValue()
@@ -365,6 +367,11 @@ Option.Dropdown = new Class({
 		})
 
 		self.input.set('value', self.getSettingValue());
+
+		var dd = new Form.Dropdown(self.input, {
+			'onChange': self.changed.bind(self)
+		});
+		self.input = dd.input;
 	}
 });
 
@@ -380,13 +387,17 @@ Option.Checkbox = new Class({
 
 		self.el.adopt(
 			self.createLabel().set('for', randomId),
-			self.input = new Element('input', {
+			self.input = new Element('input.inlay', {
 				'name': self.postName(),
 				'type': 'checkbox',
 				'checked': self.getSettingValue(),
 				'id': randomId
 			})
-		)
+		);
+
+		new Form.Check(self.input, {
+			'onChange': self.changed.bind(self)
+		});
 
 	},
 
@@ -419,7 +430,7 @@ Option.Enabler = new Class({
 		var self = this;
 
 		self.el.adopt(
-			self.input = new Element('input', {
+			self.input = new Element('input.inlay', {
 				'type': 'checkbox',
 				'checked': self.getSettingValue(),
 				'id': 'r-'+randomString(),
@@ -427,7 +438,16 @@ Option.Enabler = new Class({
 					'change': self.checkState.bind(self)
 				}
 			})
-		)
+		);
+
+		new Form.Check(self.input, {
+			'onChange': self.changed.bind(self)
+		});
+	},
+
+	changed: function(){
+		this.parent();
+		this.checkState();
 	},
 
 	checkState: function(){
@@ -457,14 +477,13 @@ Option.Directory = new Class({
 	type: 'span',
 	browser: '',
 	save_on_change: false,
-	show_hidden: false,
 
 	create: function(){
 		var self = this;
 
 		self.el.adopt(
 			self.createLabel(),
-			self.input = new Element('span', {
+			self.input = new Element('span.directory', {
 				'text': self.getSettingValue(),
 				'events': {
 					'click': self.showBrowser.bind(self)
@@ -495,12 +514,19 @@ Option.Directory = new Class({
 
 		if(!self.browser)
 			self.browser = new Element('div.directory_list').adopt(
-				self.back_button = new Element('a.button.back', {
-					'text': '',
-					'events': {
-						'click': self.previousDirectory.bind(self)
-					}
-				}),
+				new Element('div.actions').adopt(
+					self.back_button = new Element('a.button.back', {
+						'text': '',
+						'events': {
+							'click': self.previousDirectory.bind(self)
+						}
+					}),
+					new Element('label', {
+						'text': 'Show hidden files'
+					}).adopt(
+						self.show_hidden = new Element('input[type=checkbox].inlay')
+					)
+				),
 				self.dir_list = new Element('ul', {
 					'events': {
 						'click:relay(li)': self.selectDirectory.bind(self)
@@ -584,7 +610,7 @@ Option.Directory = new Class({
 			Api.request('directory.list', {
 				'data': {
 					'path': c,
-					'show_hidden': +self.show_hidden
+					'show_hidden': +self.show_hidden.checked
 				},
 				'onComplete': self.fillBrowser.bind(self)
 			})

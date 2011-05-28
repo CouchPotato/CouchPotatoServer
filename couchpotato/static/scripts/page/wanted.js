@@ -5,208 +5,26 @@ Page.Wanted = new Class({
 	name: 'wanted',
 	title: 'Gimmy gimmy gimmy!',
 
-	movies: [],
-
 	indexAction: function(param){
 		var self = this;
 
-		self.get()
-	},
-
-	list: function(){
-		var self = this;
-
-		if(!self.movie_container)
-			self.movie_container = new Element('div.movies').inject(self.el);
-
-		self.movie_container.empty();
-		Object.each(self.movies, function(info){
-			var m = new Movie(self, {}, info);
-			$(m).inject(self.movie_container);
-			m.fireEvent('injected');
+		self.list = new MovieList({
+			'status': 'active',
+			'actions': Wanted.Action
 		});
+		$(self.list).inject(self.el);
 
-		self.movie_container.addEvents({
-			'mouseenter:relay(.movie)': function(e, el){
-				el.addClass('hover')
-			},
-			'mouseleave:relay(.movie)': function(e, el){
-				el.removeClass('hover')
-			}
-		})
-	},
-
-	get: function(status, onComplete){
-		var self = this
-
-		if(self.movies.length == 0)
-			Api.request('movie.list', {
-				'data': {},
-				'onComplete': function(json){
-					self.store(json.movies);
-					self.list();
-				}
-			})
-		else
-			self.list()
-	},
-
-	store: function(movies){
-		var self = this;
-
-		self.movies = movies;
 	}
 
 });
 
-var Movie = new Class({
-
-	Extends: BlockBase,
-
-	initialize: function(self, options, data){
-		var self = this;
-
-		self.data = data;
-
-		self.profile = Quality.getProfile(data.profile_id);
-		self.parent(self, options);
-		self.addEvent('injected', self.afterInject.bind(self))
-	},
-
-	create: function(){
-		var self = this;
-
-		self.el = new Element('div.movie').adopt(
-			self.data_container = new Element('div.data', {
-				'tween': {
-					duration: 400,
-					transition: 'quint:in:out'
-				}
-			}).adopt(
-				self.thumbnail = File.Select.single('poster', self.data.library.files),
-				self.info_container = new Element('div.info').adopt(
-					self.title = new Element('div.title', {
-						'text': self.getTitle()
-					}),
-					self.year = new Element('div.year', {
-						'text': self.data.library.year || 'Unknown'
-					}),
-					self.rating = new Element('div.rating', {
-						'text': self.data.library.rating
-					}),
-					self.description = new Element('div.description', {
-						'text': self.data.library.plot
-					}),
-					self.quality = new Element('div.quality', {
-						'text': self.profile.get('label')
-					})
-				),
-				self.actions = new Element('div.actions').adopt(
-					self.action_imdb = new Movie.Action.IMDB(self),
-					self.action_edit = new Movie.Action.Edit(self),
-					self.action_refresh = new Movie.Action.Refresh(self),
-					self.action_delete = new Movie.Action.Delete(self)
-				)
-			)
-		);
-
-		if(!self.data.library.rating)
-			self.rating.hide();
-
-	},
-
-	afterInject: function(){
-		var self = this;
-
-		var height = self.getHeight();
-		self.el.setStyle('height', height);
-	},
-
-	getTitle: function(){
-		var self = this;
-
-		var titles = self.data.library.titles;
-
-		var title = titles.filter(function(title){
-			return title['default']
-		}).pop()
-
-		if(title)
-			return  title.title
-		else if(titles.length > 0)
-			return titles[0].title
-
-		return 'Unknown movie'
-	},
-
-	slide: function(direction){
-		var self = this;
-
-		if(direction == 'in'){
-			self.el.addEvent('outerClick', self.slide.bind(self, 'out'))
-			self.data_container.tween('left', 0, self.getWidth());
-		}
-		else {
-			self.el.removeEvents('outerClick')
-			self.data_container.tween('left', self.getWidth(), 0);
-		}
-	},
-
-	getHeight: function(){
-		var self = this;
-
-		if(!self.height)
-			self.height = self.data_container.getCoordinates().height;
-
-		return self.height;
-	},
-
-	getWidth: function(){
-		var self = this;
-
-		if(!self.width)
-			self.width = self.data_container.getCoordinates().width;
-
-		return self.width;
-	},
-
-	get: function(attr){
-		return this.data[attr] || this.data.library[attr]
+var Wanted = {
+	'Action': {
+		'IMBD': IMDBAction
 	}
+}
 
-});
-
-var MovieAction = new Class({
-
-	class_name: 'action',
-
-	initialize: function(movie){
-		var self = this;
-		self.movie = movie;
-
-		self.create();
-		self.el.addClass(self.class_name)
-	},
-
-	create: function(){},
-
-	disable: function(){
-		this.el.addClass('disable')
-	},
-
-	enable: function(){
-		this.el.removeClass('disable')
-	},
-
-	toElement: function(){
-		return this.el
-	}
-
-})
-
-Movie.Action = {}
-
-Movie.Action.Edit = new Class({
+Wanted.Action.Edit = new Class({
 
 	Extends: MovieAction,
 
@@ -229,7 +47,11 @@ Movie.Action.Edit = new Class({
 		if(!self.options_container){
 			self.options_container = new Element('div.options').adopt(
 				$(self.movie.thumbnail).clone(),
-				new Element('div.form').adopt(
+				new Element('div.form', {
+					'styles': {
+						'line-height': self.movie.getHeight()
+					}
+				}).adopt(
 					self.title_select = new Element('select', {
 						'name': 'title'
 					}),
@@ -244,56 +66,49 @@ Movie.Action.Edit = new Class({
 					})
 				)
 			).inject(self.movie, 'top');
-		}
 
+			Array.each(self.movie.data.library.titles, function(alt){
+				new Element('option', {
+					'text': alt.title
+				}).inject(self.title_select)
+			});
+
+			Object.each(Quality.profiles, function(profile){
+				new Element('option', {
+					'value': profile.id ? profile.id : profile.data.id,
+					'text': profile.label ? profile.label : profile.data.label
+				}).inject(self.profile_select);
+				self.profile_select.set('value', self.movie.profile.get('id'));
+			});
+
+		}
 		self.movie.slide('in');
 	},
 
-	save: function(){
+	save: function(e){
+		(e).stop();
 		var self = this;
 
 		Api.request('movie.edit', {
 			'data': {
+				'id': self.movie.get('id'),
 				'default_title': self.title_select.get('value'),
 				'profile_id': self.profile_select.get('value')
 			},
 			'useSpinner': true,
-			'spinnerTarget': self.movie
-		})
-	}
-
-})
-
-Movie.Action.IMDB = new Class({
-
-	Extends: MovieAction,
-	id: null,
-
-	create: function(){
-		var self = this;
-
-		self.id = self.movie.get('identifier');
-
-		self.el = new Element('a.imdb', {
-			'title': 'Go to the IMDB page of ' + self.movie.getTitle(),
-			'events': {
-				'click': self.gotoIMDB.bind(self)
+			'spinnerTarget': $(self.movie),
+			'onComplete': function(){
+				self.movie.quality.set('text', self.profile_select.getSelected()[0].get('text'))
+				self.movie.title.set('text', self.title_select.getSelected()[0].get('text'))
 			}
 		});
 
-		if(!self.id) self.disable();
-	},
-
-	gotoIMDB: function(e){
-		var self = this;
-		(e).stop();
-
-		window.open('http://www.imdb.com/title/'+self.id+'/');
+		self.movie.slide('out');
 	}
 
 })
 
-Movie.Action.Refresh = new Class({
+Wanted.Action.Refresh = new Class({
 
 	Extends: MovieAction,
 
@@ -322,7 +137,7 @@ Movie.Action.Refresh = new Class({
 
 })
 
-Movie.Action.Delete = new Class({
+Wanted.Action.Delete = new Class({
 
 	Extends: MovieAction,
 
@@ -360,7 +175,7 @@ Movie.Action.Delete = new Class({
 					'text': 'or'
 				}),
 				new Element('a.button.delete', {
-					'text': 'Delete movie',
+					'text': 'Delete ' + self.movie.title.get('text'),
 					'events': {
 						'click': self.del.bind(self)
 					}

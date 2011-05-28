@@ -4,6 +4,8 @@ from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Quality, Profile, ProfileType
+import os.path
+import re
 
 log = CPLog(__name__)
 
@@ -11,10 +13,10 @@ log = CPLog(__name__)
 class QualityPlugin(Plugin):
 
     qualities = [
-        {'identifier': 'bd50', 'size': (15000, 60000), 'label': 'BR-Disk', 'alternative': ['1080p', 'bd25'], 'allow': [], 'ext':[], 'tags': ['x264', 'h264', 'blu ray']},
-        {'identifier': '1080p', 'size': (5000, 20000), 'label': '1080P', 'alternative': [], 'allow': [], 'ext':['mkv', 'm2ts'], 'tags': ['x264', 'h264', 'bluray']},
-        {'identifier': '720p', 'size': (3500, 10000), 'label': '720P', 'alternative': [], 'allow': [], 'ext':['mkv', 'm2ts'], 'tags': ['x264', 'h264', 'bluray']},
-        {'identifier': 'brrip', 'size': (700, 7000), 'label': 'BR-Rip', 'alternative': ['bdrip'], 'allow': ['720p'], 'ext':['mkv', 'avi']},
+        {'identifier': 'bd50', 'size': (15000, 60000), 'label': 'BR-Disk', 'width': 1920, 'alternative': ['1080p', 'bd25'], 'allow': [], 'ext':[], 'tags': ['x264', 'h264', 'blu ray']},
+        {'identifier': '1080p', 'size': (5000, 20000), 'label': '1080P', 'width': 1920, 'alternative': [], 'allow': [], 'ext':['mkv', 'm2ts'], 'tags': ['x264', 'h264', 'bluray']},
+        {'identifier': '720p', 'size': (3500, 10000), 'label': '720P', 'width': 1280, 'alternative': [], 'allow': [], 'ext':['mkv', 'm2ts'], 'tags': ['x264', 'h264', 'bluray']},
+        {'identifier': 'brrip', 'size': (700, 7000), 'label': 'BR-Rip', 'alternative': ['bdrip'], 'allow': ['720p'], 'ext':['avi']},
         {'identifier': 'dvdr', 'size': (3000, 10000), 'label': 'DVD-R', 'alternative': [], 'allow': [], 'ext':['iso', 'img'], 'tags': ['pal', 'ntsc']},
         {'identifier': 'dvdrip', 'size': (600, 2400), 'label': 'DVD-Rip', 'alternative': [], 'allow': [], 'ext':['avi', 'mpg', 'mpeg']},
         {'identifier': 'scr', 'size': (600, 1600), 'label': 'Screener', 'alternative': ['dvdscr'], 'allow': ['dvdr'], 'ext':['avi', 'mpg', 'mpeg']},
@@ -28,6 +30,7 @@ class QualityPlugin(Plugin):
     def __init__(self):
         addEvent('quality.all', self.all)
         addEvent('quality.single', self.single)
+        addEvent('quality.guess', self.guess)
         addEvent('app.load', self.fill)
 
         path = self.registerStatic(__file__)
@@ -50,9 +53,11 @@ class QualityPlugin(Plugin):
     def single(self, identifier = ''):
 
         db = get_session()
+        quality_dict = {}
 
         quality = db.query(Quality).filter_by(identifier = identifier).first()
-        quality_dict = dict(self.getQuality(quality.identifier), **quality.to_dict())
+        if quality:
+            quality_dict = dict(self.getQuality(quality.identifier), **quality.to_dict())
 
         return quality_dict
 
@@ -110,3 +115,41 @@ class QualityPlugin(Plugin):
             db.commit()
 
         return True
+
+    def guess(self, files, extra = {}):
+        found = False
+
+        for file in files:
+            size = (os.path.getsize(file) / 1024 / 1024)
+            words = re.split('\W+', file.lower())
+            for quality in self.all():
+                correctSize = False
+
+                if size >= quality['size_min'] and size <= quality['size_max']:
+                    correctSize = True
+
+                # Check tags
+                if type in words:
+                    found = True
+
+                for alt in quality.get('alternative'):
+                    if alt in words:
+                        found = True
+
+                for tag in quality.get('tags', []):
+                    if tag in words:
+                        found = True
+
+                # Check extension + filesize
+                for ext in quality.get('ext'):
+                    if ext in words and correctSize:
+                        found = True
+
+                # Last check on resolution only
+                if quality.get('width', 480) == extra.get('resolution_width', 0):
+                    found = True
+
+                if found:
+                    return quality
+
+        return ''

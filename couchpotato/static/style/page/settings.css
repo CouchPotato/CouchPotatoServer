@@ -12,35 +12,40 @@
 		list-style: none;
 		padding: 40px 0;
 		margin: 0;
-		min-height: 300px;
+		min-height: 470px;
+		
+		background-image: -webkit-gradient(
+		    linear,
+		    right top,
+		    40% 4%,
+		    color-stop(0, rgba(0,0,0, 0.3)),
+		    color-stop(0.9, rgba(0,0,0, 0))
+		);
+		background-image: -moz-linear-gradient(
+		    30% 0% 16deg,
+		    rgba(0,0,0,0) 0%,
+		    rgba(0,0,0,0.3) 100%
+		);
 	}
 		.page.settings .tabs a {
 			display: block;
-			padding: 10px 15px;
-			border: 1px solid transparent;
-			position: relative;
-			z-index: 1;
-			margin-right: -1px;
+			padding: 11px 15px;
 		}
 		.page.settings .tabs .active a {
-			color: black;
-			background: #fbfbfb;
-			border-color: #f1f1f1;
-			border-right-color: transparent;
+			background: #4e5969;
 		}
+
 	
 	.page.settings .containers {
 		width: 75.8%;
 		float: left;
 		padding: 20px 2%;
 		min-height: 300px;
-		background: #fbfbfb;
-		border-left: 1px solid #f1f1f1;s
 	}	
 
 		.page.settings .advanced { 
 			display: none;
-			color: #ce3b19;
+			color: #edc07f;
 		}
 		.page.settings.show_advanced .advanced { display: block; }
 		
@@ -57,10 +62,13 @@
 				font-size: 25px;
 				padding:  0 9px 10px 30px;
 				margin: 0;
-				border-bottom: 1px solid #f3f3f3;
+				border-bottom: 1px solid #333;
+				
+				box-shadow: 0 1px 0px rgba(255,255,255, 0.15);
+				-moz-box-shadow: 0 1px 0px rgba(255,255,255, 0.15);
+				-webkit-box-shadow: 0 1px 0px rgba(255,255,255, 0.15);
 			}
 			.page.settings fieldset h2 .hint {
-				color: #888;
 				font-size: 12px;
 				margin-left: 10px;
 			}
@@ -81,26 +89,44 @@
 	.page.settings .ctrlHolder {
 		line-height: 25px;
 		padding: 10px 10px 10px 30px;
-		border-bottom: 1px solid #f3f3f3;
 		font-size: 14px;
+		border: 0;
 	}
 		.page.settings .ctrlHolder:last-child { border: none; }
-		.page.settings .ctrlHolder:hover { background: rgba(211,234,254,0.1); }
-		.page.settings .ctrlHolder.focused:hover { background: rgba(251,246,48,0.29); }
+		.page.settings .ctrlHolder:hover { background: rgba(255,255,255,0.05); }
+		.page.settings .ctrlHolder.focused { background: rgba(255,255,255,0.2); }
 
 		.page.settings .ctrlHolder .formHint {
 			float: right;
 			width: 47%;
 			margin: -18px 0;
 			padding: 0;
+			color: #fff;
 		}
+		
+			.check {
+				display: inline-block;
+				vertical-align: middle;
+				height: 16px;
+				width: 16px;
+				cursor: pointer;
+			}
+				.check.highlighted { background-color: #424c59; }
+				.check.checked {
+					background-image: url('../../images/checks.png');
+					background-position: -2px 0;
+}
+			.check input {
+				display: none;
+			}
 
-			.page.settings .ctrlHolder input[type=checkbox] + .formHint {
+			.page.settings .check + .formHint {
 				float: none;
 				width: auto;
 				display: inline-block;
 				margin-left: 1% !important;
-				color: #222;
+				height: 24px;
+				vertical-align: middle;
 			}
 	
 		.page.settings .ctrlHolder label {
@@ -111,8 +137,7 @@
 		}
 
 	.page.settings input[type=text], .page.settings input[type=password] {
-		border: 1px solid #aaa;
-		padding: 3px;
+		padding: 5px 3px;
 		margin: 0;
 		width: 30%;
 
@@ -135,5 +160,44 @@
 	}
 		.page.settings .advanced_toggle span { padding: 0 5px; }
 		.page.settings.show_advanced .advanced_toggle { 
-			color: #ce3b19;
+			color: #edc07f;
 		}
+	
+	.page.settings .directory {
+		display: inline-block;
+		padding: 0 4px;
+		font-size: 13px;
+		width: 29.7%;
+	}	
+	.page.settings .directory_list {
+		position: absolute;
+		width: 300px;
+		margin: 0 0 0 16.5%;
+	  	background: #282d34;
+	  	border: 1px solid #1f242b;
+		position: absolute;
+		box-shadow: 0 1px 2px rgba(0,0,0,0.4);
+		-moz-box-shadow: 0 1px 2px rgba(0,0,0,0.4);
+		-webkit-box-shadow: 0 1px 2px rgba(0,0,0,0.4);
+		border-radius:3px;
+		-moz-border-radius: 3px;
+		-webkit-border-radius: 3px;
+	}
+	
+	.page.settings .directory_list ul {
+		width: 100%;
+		max-height: 200px;
+		overflow: auto;
+	}
+	
+	.page.settings .directory_list li {
+		padding: 2px 10px;
+	}
+	
+	.page.settings .directory_list .actions {
+		clear: both;
+		padding: 10px;
+		background: #414953;
+	}
+		.page.settings .directory_list .actions:first-child { border-bottom: 1px solid #1f242b; }
+		.page.settings .directory_list .actions:last-child { border-top: 1px solid #1f242b; }

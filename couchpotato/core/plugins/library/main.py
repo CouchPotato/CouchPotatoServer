@@ -41,9 +41,7 @@ class LibraryPlugin(Plugin):
         if update_after:
             fireEventAsync('library.update', identifier = l.identifier, default_title = attrs.get('title', ''))
 
-        library_dict = l.to_dict()
-
-        return library_dict
+        return l.to_dict({'titles': {}, 'files':{}})
 
     def update(self, identifier, default_title = '', force = False):
 
@@ -51,22 +49,27 @@ class LibraryPlugin(Plugin):
         library = db.query(Library).filter_by(identifier = identifier).first()
         done_status = fireEvent('status.get', 'done', single = True)
 
+        library_dict = library.to_dict({'titles': {}, 'files':{}})
+
         if library.status_id == done_status.get('id') and not force:
-            return
+            return library_dict
 
         info = fireEvent('provider.movie.info', merge = True, identifier = identifier)
         if not info or len(info) == 0:
             log.error('Could not update, no movie info to work with: %s' % identifier)
-            return
+            return library_dict
 
         # Main info
         library.plot = info.get('plot', '')
         library.tagline = info.get('tagline', '')
         library.year = info.get('year', 0)
         library.status_id = done_status.get('id')
+        db.commit()
 
         # Titles
         [db.delete(title) for title in library.titles]
+        db.commit()
+
         titles = info.get('titles', [])
 
         log.debug('Adding titles: %s' % titles)
@@ -83,6 +86,9 @@ class LibraryPlugin(Plugin):
         images = info.get('images', [])
         for type in images:
             for image in images[type]:
+                if not isinstance(image, str):
+                    continue
+
                 file_path = fireEvent('file.download', url = image, single = True)
                 file = fireEvent('file.add', path = file_path, type = ('image', type[:-1]), single = True)
                 try:
@@ -94,3 +100,5 @@ class LibraryPlugin(Plugin):
                     #log.debug('Failed to attach to library: %s' % traceback.format_exc())
 
         fireEvent('library.update.after')
+
+        return library.to_dict({'titles': {}, 'files':{}})

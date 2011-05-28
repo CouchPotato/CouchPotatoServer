@@ -1,6 +1,6 @@
 from couchpotato import get_session
 from couchpotato.api import addApiView
-from couchpotato.core.event import addEvent
+from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.request import jsonified, getParams, getParam
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
@@ -16,6 +16,10 @@ class ProfilePlugin(Plugin):
 
         addApiView('profile.save', self.save)
         addApiView('profile.delete', self.delete)
+
+        path = self.registerStatic(__file__)
+        fireEvent('register_script', path + 'profile.js')
+        fireEvent('register_style', path + 'profile.css')
 
     def all(self):
 
@@ -59,7 +63,7 @@ class ProfilePlugin(Plugin):
             order += 1
 
         db.commit()
-        
+
         profile_dict = p.to_dict(deep = {'types': {}})
 
         return jsonified({

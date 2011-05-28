@@ -13,10 +13,9 @@ def toSafeString(original):
 
 
 def simplifyString(original):
-    string = toSafeString(original)
+    string = toSafeString(' '.join(re.split('\W+', original.lower())))
     split = re.split('\W+', string.lower())
     return toUnicode(' '.join(split))
-
 
 def toUnicode(original, *args):
     try:
