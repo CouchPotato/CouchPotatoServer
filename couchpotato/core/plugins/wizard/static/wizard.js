@@ -10,7 +10,7 @@ var WizardBase = new Class({
 			'fillColor': [0,0,0],
 			'soften': 0
 		});
-		window.addEvent('resize', self.spotlight.create.bind(self.spotlight))
+		//window.addEvent('resize', self.spotlight.create.bind(self.spotlight))
 
 	},
 
