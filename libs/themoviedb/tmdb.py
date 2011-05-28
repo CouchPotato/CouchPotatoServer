@@ -550,5 +550,5 @@ def mediaGetInfo(hash, size):
 def searchByHashingFile(filename):
     """Searches for the specified file using the OpenSubtitle hashing method
     """
-    return mediaGetInfo(opensubtitleHashFile(filename), os.path.size(filename))
+    return mediaGetInfo(opensubtitleHashFile(filename), os.path.getsize(filename))
 
