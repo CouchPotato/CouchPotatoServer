@@ -18,6 +18,7 @@ config = [{
                 {
                     'name': 'host',
                     'default': 'localhost:8080',
+                    'description': 'You can add multiple hosts in here, seperate with a comma.'
                 },
                 {
                     'name': 'username',

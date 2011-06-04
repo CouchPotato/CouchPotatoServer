@@ -39,7 +39,7 @@ var Movie = new Class({
 						'text': self.data.library.plot
 					}),
 					self.quality = new Element('div.quality', {
-						'text': self.profile ? self.profile.get('label') : ''
+						'html': self.profile ? '<strong>Quality:</strong> ' + self.profile.get('label') : ''
 					})
 				),
 				self.actions = new Element('div.actions')

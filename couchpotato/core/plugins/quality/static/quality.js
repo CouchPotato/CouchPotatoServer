@@ -89,7 +89,7 @@ var QualityBase = new Class({
 
 		var group = self.settings.createGroup({
 			'label': 'Sizes',
-			'description': 'Only download the quality that is between these two sizes (in MB).',
+			'description': 'Only download the quality that is between these two sizes.',
 			'advanced': true
 		}).inject(self.content)
 		
