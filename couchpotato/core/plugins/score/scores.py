@@ -1,14 +1,16 @@
+from couchpotato.core.event import fireEvent
 from couchpotato.core.helpers.encoding import simplifyString
 from couchpotato.environment import Env
 import re
 
 name_scores = [
-    'proper:2', 'repack:2',
+    'proper:5', 'repack:5',
     'unrated:1',
-    'x264:1',
+    'x264:1', 'h264:1',
     'DTS:4', 'AC3:2',
-    '720p:10', '1080p:10', 'bluray:10', 'dvd:1', 'dvdrip:1', 'brrip:1', 'bdrip:1',
-    'metis:1', 'diamond:1', 'wiki:1', 'CBGB:1',
+    '720p:10', '1080p:10', 'bluray:10', 'dvd:1', 'dvdrip:1', 'brrip:1', 'bdrip:1', 'bd50:1', 'bd25:1',
+    'imbt:1', 'cocain:1', 'vomit:1', 'fico:1', 'arrow:1', 'pukka:1', 'prism:1', 'devise:1', 'esir:1',
+    'metis:1', 'diamond:1', 'wiki:1', 'cbgb:1', 'crossbow:1', 'sinners:1', 'amiable:1', 'refined:1', 'twizted:1', 'felony:1', 'hubris:1', 'machd:1',
     'german:-10', 'french:-10', 'spanish:-10', 'swesub:-20', 'danish:-10'
 ]
 
@@ -40,12 +42,8 @@ def nameScore(name, year):
 
 def nameRatioScore(nzb_name, movie_name):
 
-    nzb_words = re.split('\W+', simplifyString(nzb_name))
+    nzb_words = re.split('\W+', fireEvent('scanner.create_file_identifier', nzb_name, single = True))
     movie_words = re.split('\W+', simplifyString(movie_name))
 
-    # Replace .,-_ with space
-    left_over = len(nzb_words) - len(movie_words)
-    if 2 <= left_over <= 6:
-        return 4
-    else:
-        return 0
+    left_over = set(nzb_words) - set(movie_words)
+    return 10 - len(left_over)
