@@ -7,6 +7,7 @@ var MovieList = new Class({
 	},
 
 	movies: [],
+	letters: {},
 
 	initialize: function(options){
 		var self = this;
@@ -19,9 +20,10 @@ var MovieList = new Class({
 	create: function(){
 		var self = this;
 
+		self.el.empty();
+
 		// Create the alphabet nav
-		if(self.options.navigation)
-			self.createNavigation();
+		self.createNavigation();
 
 		Object.each(self.movies, function(info){
 			var m = new Movie(self, {
@@ -29,6 +31,9 @@ var MovieList = new Class({
 			}, info);
 			$(m).inject(self.el);
 			m.fireEvent('injected');
+			
+			var first_char = m.getTitle().substr(0, 1);
+			self.activateLetter(first_char);
 		});
 
 		self.el.addEvents({
@@ -44,7 +49,6 @@ var MovieList = new Class({
 	createNavigation: function(){
 		var self = this;
 		var chars = '#ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-		var selected = 'Z';
 
 		self.navigation = new Element('div.alph_nav').adopt(
 			self.alpha = new Element('ul.inlay'),
@@ -54,32 +58,39 @@ var MovieList = new Class({
 				new Element('li.thumbnails'),
 				new Element('li.text')
 			)
-		).inject(this.el, 'top')
+		).inject(this.el, 'top');
 
 		chars.split('').each(function(c){
-			new Element('li', {
+			self.letters[c] = new Element('li', {
 				'text': c,
-				'class': c == selected ? 'selected' : ''
+				'class': 'letter_'+c
 			}).inject(self.alpha)
-		})
+		});
 
 	},
+	
+	activateLetter: function(letter){
+		this.letters[letter].addClass('active')
+	},
 
-	getMovies: function(status, onComplete){
+	update: function(){
+		var self = this;
+
+		self.getMovies();
+	},
+
+	getMovies: function(){
 		var self = this
 
-		if(self.movies.length == 0)
-			Api.request('movie.list', {
-				'data': {
-					'status': self.options.status
-				},
-				'onComplete': function(json){
-					self.store(json.movies);
-					self.create();
-				}
-			})
-		else
-			self.list()
+		Api.request('movie.list', {
+			'data': {
+				'status': self.options.status
+			},
+			'onComplete': function(json){
+				self.store(json.movies);
+				self.create();
+			}
+		})
 	},
 
 	store: function(movies){

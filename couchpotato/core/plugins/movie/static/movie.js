@@ -127,7 +127,8 @@ var MovieAction = new Class({
 		self.movie = movie;
 
 		self.create();
-		self.el.addClass(self.class_name)
+		if(self.el)
+			self.el.addClass(self.class_name)
 	},
 
 	create: function(){},
@@ -141,7 +142,7 @@ var MovieAction = new Class({
 	},
 
 	toElement: function(){
-		return this.el
+		return this.el || null
 	}
 
 });
@@ -173,4 +174,45 @@ var IMDBAction = new Class({
 		window.open('http://www.imdb.com/title/'+self.id+'/');
 	}
 
-})
+});
+
+var ReleaseAction = new Class({
+
+	Extends: MovieAction,
+	id: null,
+
+	create: function(){
+		var self = this;
+
+		self.id = self.movie.get('identifier');
+
+		self.el = new Element('a.releases', {
+			'title': 'Show the releases that are available for ' + self.movie.getTitle(),
+			'events': {
+				'click': self.show.bind(self)
+			}
+		});
+
+	},
+
+	show: function(e){
+		var self = this;
+		(e).stop();
+
+		if(!self.options_container){
+			self.options_container = new Element('div.options').adopt(
+				$(self.movie.thumbnail).clone(),
+				self.release_container = new Element('div.releases')
+			).inject(self.movie, 'top');
+
+			Array.each(self.movie.data.releases, function(release){
+				new Element('div', {
+					'text': release.title
+				}).inject(self.release_container)
+			});
+
+		}
+		self.movie.slide('in');
+	},
+
+});
