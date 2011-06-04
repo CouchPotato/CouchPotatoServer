@@ -13,7 +13,7 @@ class Blackhole(Downloader):
 
     type = ['nzb', 'torrent']
 
-    def download(self, data = {}):
+    def download(self, data = {}, movie = {}):
 
         if self.isDisabled() or not self.isCorrectType(data.get('type')):
             return
@@ -23,7 +23,8 @@ class Blackhole(Downloader):
         if not directory or not os.path.isdir(directory):
             log.error('No directory set for blackhole %s download.' % data.get('type'))
         else:
-            fullPath = os.path.join(directory, toSafeString(data.get('name')) + '.' + data.get('type'))
+            cp_tag = '.cp(' + movie['library'].get('identifier') + ')' if movie['library'].get('identifier') else ''
+            fullPath = os.path.join(directory, '%s%s.%s' % (toSafeString(data.get('name')), cp_tag , data.get('type')))
 
             try:
                 if not os.path.isfile(fullPath):
