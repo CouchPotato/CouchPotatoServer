@@ -3,7 +3,7 @@ from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import simplifyString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.core.settings.model import Movie
+from couchpotato.core.settings.model import Movie, Release
 from couchpotato.environment import Env
 import re
 
@@ -19,7 +19,7 @@ class Searcher(Plugin):
 
         # Schedule cronjob
         fireEvent('schedule.cron', 'searcher.all', self.all, day = self.conf('cron_day'), hour = self.conf('cron_hour'), minute = self.conf('cron_minute'))
-        #addEvent('app.load', self.all)
+        addEvent('app.load', self.all)
 
     def all(self):
 
@@ -29,47 +29,56 @@ class Searcher(Plugin):
             Movie.status.has(identifier = 'active')
         ).all()
 
-        snatched_status = fireEvent('status.get', 'snatched', single = True)
-
         for movie in movies:
-            success = self.single(movie.to_dict(deep = {
+            self.single(movie.to_dict(deep = {
                 'profile': {'types': {'quality': {}}},
                 'releases': {'status': {}, 'quality': {}},
                 'library': {'titles': {}, 'files':{}},
                 'files': {}
             }))
 
-            # Mark as snatched on success
-            if success:
-                movie.status_id = snatched_status.get('id')
-                db.commit()
-
-
     def single(self, movie):
 
         successful = False
         for type in movie['profile']['types']:
 
-            has_better_quality = False
+            has_better_quality = 0
+            default_title = movie['library']['titles'][0]['title']
 
             # See if beter quality is available
             for release in movie['releases']:
                 if release['quality']['order'] <= type['quality']['order']:
-                    has_better_quality = True
+                    has_better_quality += 1
 
             # Don't search for quality lower then already available.
-            if not has_better_quality:
+            if has_better_quality is 0:
 
-                log.info('Search for %s in %s' % (movie['library']['titles'][0]['title'], type['quality']['label']))
+                log.info('Search for %s in %s' % (default_title, type['quality']['label']))
                 results = fireEvent('provider.yarr.search', movie, type['quality'], merge = True)
                 sorted_results = sorted(results, key = lambda k: k['score'], reverse = True)
 
                 for nzb in sorted_results:
-                    successful = fireEvent('download', data = nzb, single = True)
+                    successful = fireEvent('download', data = nzb, movie = movie, single = True)
 
                     if successful:
                         log.info('Downloading of %s successful.' % nzb.get('name'))
+
+                        # Add release item, should be updated later when renaming
+                        snatched_status = fireEvent('status.get', 'snatched', single = True)
+                        db = get_session()
+                        rls = Release(
+                            identifier = '%s.%s' % (movie['library']['identifier'], type['quality']['identifier']),
+                            movie_id = movie.get('id'),
+                            quality_id = type.get('quality_id'),
+                            status_id = snatched_status.get('id')
+                        )
+                        db.add(rls)
+                        db.commit()
+
                         return True
+            else:
+                log.info('Better quality (%s) already available or snatched for %s' % (type['quality']['label'], default_title))
+                break
 
         return False
 
