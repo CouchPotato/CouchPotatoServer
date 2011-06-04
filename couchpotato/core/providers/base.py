@@ -118,7 +118,7 @@ class YarrProvider(Provider):
             if identifier in qualities:
                 return ids
 
-        return False
+        return [self.cat_backup_id]
 
     def found(self, new):
         log.info('Found: score(%(score)s): %(name)s' % new)
