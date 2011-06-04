@@ -69,8 +69,9 @@ var MovieList = new Class({
 				'class': c == selected ? 'selected' : '',
 				events: {
 					click: function() {
-						$$("ul.inlay > li.selected").removeClass("selected");
+						$$("div.content > div.active ul.inlay > li.selected").removeClass("selected");
 						$$(this).addClass("selected");
+						
 						self.getMoviesByString($$(this).get("text")[0], true);
 					}
 				}
@@ -81,7 +82,7 @@ var MovieList = new Class({
 	
 	getMoviesByString: function(SearchValue, StartsWith) {
 		var self = this,
-			titles = $$("div.info > div.title");
+			titles = $$("div.content > div.active div.info > div.title");
 		
 		if(StartsWith === undefined) {
 			StartsWith = false;
