@@ -7,7 +7,7 @@ var NotificationBase = new Class({
 		var self = this;
 		self.setOptions(options);
 
-		//App.addEvent('load', self.request.bind(self));
+		App.addEvent('load', self.request.bind(self));
 
 		self.addEvent('notification', self.notify.bind(self))
 
@@ -33,7 +33,7 @@ var NotificationBase = new Class({
 		var self = this;
 
 		Array.each(json.result, function(result){
-			self.fireEvent(result.type, result.data)
+			App.fireEvent(result.type, result.data)
 		})
 	}
 

@@ -100,5 +100,6 @@ class LibraryPlugin(Plugin):
                     #log.debug('Failed to attach to library: %s' % traceback.format_exc())
 
         fireEvent('library.update.after')
+        fireEvent('notify.core', type = 'library.update', data = library_dict)
 
         return library.to_dict({'titles': {}, 'files':{}})
