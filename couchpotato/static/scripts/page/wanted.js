@@ -8,11 +8,15 @@ Page.Wanted = new Class({
 	indexAction: function(param){
 		var self = this;
 
-		self.list = new MovieList({
-			'status': 'active',
-			'actions': Wanted.Action
-		});
-		$(self.list).inject(self.el);
+		if(!self.list){
+			self.list = new MovieList({
+				'status': 'active',
+				'actions': Wanted.Action
+			});
+			$(self.list).inject(self.el);
+
+			App.addEvent('library.update', self.list.update.bind(self.list))
+		}
 
 	}
 
@@ -21,6 +25,7 @@ Page.Wanted = new Class({
 var Wanted = {
 	'Action': {
 		'IMBD': IMDBAction
+		//,'releases': ReleaseAction
 	}
 }
 
