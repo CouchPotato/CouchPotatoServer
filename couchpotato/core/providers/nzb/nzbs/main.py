@@ -50,7 +50,7 @@ class Nzbs(NZBProvider, RSS):
         })
         url = "%s?%s" % (self.urls['api'], arguments)
 
-        cache_key = '%s-%s' % (movie['library'].get('identifier'), str(cat_id))
+        cache_key = 'nzbs.%s.%s' % (movie['library'].get('identifier'), str(cat_id))
 
         try:
             data = self.getCache(cache_key)
@@ -72,8 +72,9 @@ class Nzbs(NZBProvider, RSS):
 
                 for nzb in nzbs:
 
+                    id = int(self.getTextElement(nzb, "link").partition('nzbid=')[2])
                     new = {
-                        'id': int(self.getTextElement(nzb, "link").partition('nzbid=')[2]),
+                        'id': id,
                         'type': 'nzb',
                         'name': self.getTextElement(nzb, "title"),
                         'age': self.calculateAge(int(time.mktime(parse(self.getTextElement(nzb, "pubDate")).timetuple()))),
