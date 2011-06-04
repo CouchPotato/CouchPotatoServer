@@ -18,13 +18,14 @@ class Renamer(Plugin):
     def __init__(self):
 
         addEvent('renamer.scan', self.scan)
-        #addEvent('app.load', self.scan)
+        addEvent('app.load', self.scan)
 
-        #fireEvent('schedule.interval', 'renamer.scan', self.scan, minutes = self.conf('run_every'))
+        fireEvent('schedule.interval', 'renamer.scan', self.scan, minutes = self.conf('run_every'))
 
     def scan(self):
 
         groups = fireEvent('scanner.scan', folder = self.conf('from'), single = True)
+        if groups is None: return
 
         destination = self.conf('to')
         folder_name = self.conf('folder_name')
@@ -151,41 +152,51 @@ class Renamer(Plugin):
                 # Before renaming, remove the lower quality files
                 db = get_session()
                 library = db.query(Library).filter_by(identifier = group['library']['identifier']).first()
+                done_status = fireEvent('status.get', 'done', single = True)
                 for movie in library.movies:
                     for release in movie.releases:
                         if release.quality.order < group['meta_data']['quality']['order']:
                             log.info('Removing older release for %s, with quality %s' % (movie.library.titles[0].title, release.quality.label))
-                        elif release.quality.order is group['meta_data']['quality']['order']:
-                            log.info('Same quality release already exists for %s, with quality %s. Assuming repack.' % (movie.library.titles[0].title, release.quality.label))
-                        else:
-                            log.info('Better quality release already exists for %s, with quality %s' % (movie.library.titles[0].title, release.quality.label))
+                        elif release.status_id is done_status.get('id'):
+                            if release.quality.order is group['meta_data']['quality']['order']:
+                                log.info('Same quality release already exists for %s, with quality %s. Assuming repack.' % (movie.library.titles[0].title, release.quality.label))
+                            else:
+                                log.info('Better quality release already exists for %s, with quality %s' % (movie.library.titles[0].title, release.quality.label))
 
-                            # Add _EXISTS_ to the parent dir
-                            if group['dirname']:
-                                for rename_me in rename_files: # Don't rename anything in this group
-                                    rename_files[rename_me] = None
-                                rename_files[group['parentdir']] = group['parentdir'].replace(group['dirname'], '_EXISTS_%s' % group['dirname'])
-                            else: # Add it to filename
-                                for rename_me in rename_files:
-                                    filename = os.path.basename(rename_me)
-                                    rename_files[rename_me] = rename_me.replace(filename, '_EXISTS_%s' % filename)
+                                # Add _EXISTS_ to the parent dir
+                                if group['dirname']:
+                                    for rename_me in rename_files: # Don't rename anything in this group
+                                        rename_files[rename_me] = None
+                                    rename_files[group['parentdir']] = group['parentdir'].replace(group['dirname'], '_EXISTS_%s' % group['dirname'])
+                                else: # Add it to filename
+                                    for rename_me in rename_files:
+                                        filename = os.path.basename(rename_me)
+                                        rename_files[rename_me] = rename_me.replace(filename, '_EXISTS_%s' % filename)
 
-                            break
+                                break
 
                         for file in release.files:
                             log.info('Removing "%s"' % file.path)
 
             # Rename
-            for rename_me in rename_files:
-                if rename_files[rename_me]:
-                    log.info('Renaming "%s" to "%s"' % (rename_me, rename_files[rename_me]))
+            for src in rename_files:
+                if rename_files[src]:
 
-                    path = os.path.dirname(rename_files[rename_me])
+                    dst = rename_files[src]
+
+                    log.info('Renaming "%s" to "%s"' % (src, dst))
+
+                    path = os.path.dirname(dst)
                     try:
                         if not os.path.isdir(path): os.makedirs(path)
                     except:
                         log.error('Failed creating dir %s: %s' % (path, traceback.format_exc()))
                         continue
+
+                    try:
+                        shutil.move(src, dst)
+                    except:
+                        log.error('Failed moving the file "%s" : %s' % (os.path.basename(src), traceback.format_exc()))
 
                 #print rename_me, rename_files[rename_me]
 
