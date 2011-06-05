@@ -300,6 +300,12 @@ form {
 	-webkit-box-shadow: inset 0 1px 8px rgba(0,0,0,0.25), 0 1px 0px rgba(255,255,255,0.25);
 }
 
+input[type=text].inlay {
+	float: right;
+	color: #999;
+	text-indent: 0.4em;
+}
+
 	.inlay.light {
 		background: #47515f;
 		outline: none;

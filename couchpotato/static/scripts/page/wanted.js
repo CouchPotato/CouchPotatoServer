@@ -36,7 +36,7 @@ Wanted.Action.Edit = new Class({
 		var self = this;
 
 		self.el = new Element('a.edit', {
-			'title': 'Refresh the movie info and do a forced search',
+			'title': 'Change the quality of this movie or select an alternative name.',
 			'events': {
 				'click': self.editMovie.bind(self)
 			}
