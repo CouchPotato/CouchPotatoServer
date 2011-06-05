@@ -143,8 +143,7 @@ class Searcher(Plugin):
 
     def containsOtherQuality(self, name, preferred_quality = {}, single_category = False):
 
-        nzb_words = re.split('\W+', simplifyString(name))
-
+        nzb_words = re.split('\W+', simplifyString(name.lower()))
         qualities = fireEvent('quality.all', single = True)
 
         found = {}
@@ -152,7 +151,7 @@ class Searcher(Plugin):
             # Main in words
             if quality['identifier'] in nzb_words:
                 found[quality['identifier']] = True
-
+            
             # Alt in words
             if list(set(nzb_words) & set(quality['alternative'])):
                 found[quality['identifier']] = True
@@ -161,11 +160,11 @@ class Searcher(Plugin):
         for allowed in preferred_quality.get('allow'):
             if found.get(allowed):
                 del found[allowed]
-
+        
         if (len(found) == 0 and single_category):
             return False
 
-        return not (found.get(preferred_quality['identifier']) and len(found) == 1)
+        return not (found.get(preferred_quality['identifier']) and len(found) > 0)
 
     def checkIMDB(self, haystack, imdbId):
 
