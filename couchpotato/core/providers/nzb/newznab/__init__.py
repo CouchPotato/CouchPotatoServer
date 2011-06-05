@@ -16,8 +16,8 @@ config = [{
                 },
                 {
                     'name': 'host',
-                    'default': 'http://nzb.su',
-                    'description': 'The hostname of your newznab provider, like http://nzb.su'
+                    'default': 'https://nzb.su',
+                    'description': 'The hostname of your newznab provider, like https://nzb.su'
                 },
                 {
                     'name': 'api_key',
