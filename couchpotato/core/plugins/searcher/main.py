@@ -68,8 +68,8 @@ class Searcher(Plugin):
                     successful = fireEvent('download', data = nzb, single = True)
 
                     if successful:
-                        log.info('Downloading of %s successful.' % nzb.get('name'))
-                        return True
+                         log.info('Downloading of %s successful.' % nzb.get('name'))
+                    return True
 
         return False
 
@@ -163,8 +163,20 @@ class Searcher(Plugin):
         
         if (len(found) == 0 and single_category):
             return False
-
-        return not (found.get(preferred_quality['identifier']) and len(found) > 0)
+        
+        if len(found) > 1:
+            # Multiple results, let's pick the last one.
+            old_results = found.keys()
+            old_results.reverse()
+            
+            for i in old_results:
+                log.info(i)
+                
+                if len(found) > 1:
+                    log.info("Remove a redundant quality named %s" % i)
+                    found.pop(i)
+                    
+        return not (found.get(preferred_quality['identifier']) and len(found) == 1)
 
     def checkIMDB(self, haystack, imdbId):
 

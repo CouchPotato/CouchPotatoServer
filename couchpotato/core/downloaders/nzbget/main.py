@@ -41,11 +41,14 @@ class Nzbget(Downloader):
             return False
         except xmlrpclib.ProtocolError, e:
             if e.errormsg == "Unauthorized":
-                logger.error("The supplied password for NZBget is incorrect.")
+                log.error("The supplied password for NZBget is incorrect.")
             else:
-                logger.error("Protocol error: %s" % e.errormsg)
+                log.error("Protocol error: %s" % e.errormsg)
             
             return False
+        except Exception, e:
+            log.error("Unexpected exception. See: %s" % e.errormsg)
+        
         try:
             nzbcontent = urllib2.urlopen(data.get('url'), timeout = 30)
         except Exception, e:
