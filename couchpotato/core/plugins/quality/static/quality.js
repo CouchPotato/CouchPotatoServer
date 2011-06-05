@@ -8,15 +8,15 @@ var QualityBase = new Class({
 
 		self.qualities = data.qualities;
 
-		self.profiles = {}
+		self.profiles = {};
 		Object.each(data.profiles, self.createProfilesClass.bind(self));
 
-		App.addEvent('load', self.addSettings.bind(self))
+		App.addEvent('load', self.addSettings.bind(self));
 
 	},
 
 	getProfile: function(id){
-		return this.profiles[id]
+		return this.profiles[id];
 	},
 
 	addSettings: function(){
@@ -35,7 +35,7 @@ var QualityBase = new Class({
 			self.createProfiles();
 			self.createSizes();
 
-		})
+		});
 
 	},
 
@@ -47,24 +47,24 @@ var QualityBase = new Class({
 
 		self.settings.createGroup({
 			'label': 'Custom',
-			'description': 'Discriptions'
+			'description': 'Your own quality profiles.'
 		}).inject(self.content).adopt(
 			new Element('a.add_new', {
 				'text': 'Create a new quality profile',
 				'events': {
 					'click': function(){
 						var profile = self.createProfilesClass();
-						$(profile).inject(self.profile_container, 'top')
+						$(profile).inject(self.profile_container, 'top');
 					}
 				}
 			}),
 			self.profile_container = new Element('div.container')
-		)
+		);
 
 		Object.each(self.profiles, function(profile){
 			if(!profile.isCore())
-				$(profile).inject(self.profile_container, 'top')
-		})
+				$(profile).inject(self.profile_container, 'top');
+		});
 
 	},
 
@@ -73,8 +73,7 @@ var QualityBase = new Class({
 
 		if(data){
 			return self.profiles[data.id] = new Profile(data);
-		}
-		else {
+		} else {
 			var data = {
 				'id': randomString()
 			}
@@ -90,15 +89,19 @@ var QualityBase = new Class({
 
 		var group = self.settings.createGroup({
 			'label': 'Sizes',
-			'description': 'Discriptions',
+			'description': 'Only download the quality that is between these two sizes (in MB).',
 			'advanced': true
 		}).inject(self.content)
 		
-		new Element('div.item.header').adopt(
+		new Element('h3 div.item').adopt(
 			new Element('span.label', {'text': 'Quality'}),
-			new Element('span.min', {'text': 'Min'}),
-			new Element('span.max', {'text': 'Max'})
-		).inject(group)
+			new Element('span.min', {'text': 'Min (in MB)'}),
+			new Element('span.max', {'text': 'Max (in MB)'}).set({
+				styles: {
+					"margin-left": "6em"
+				}
+			})
+		).inject(group);
 		
 		Object.each(self.qualities, function(quality){
 			new Element('div.item').adopt(
