@@ -45,6 +45,10 @@ class Newznab(NZBProvider, RSS):
             return results
 
         cat_id = self.getCatId(quality['identifier'])
+        
+        if cat_id == False:
+            cat_id = [ self.cat_backup_id ]
+            
         arguments = urlencode({
             'imdbid': movie['library']['identifier'].replace('tt', ''),
             'cat': cat_id[0],
