@@ -7,7 +7,11 @@ Page.Wanted = new Class({
 
 	indexAction: function(param){
 		var self = this;
-
+		
+		if($$("." + self.getName() + " > .movies").length > 0) {
+			return;
+		}
+		
 		self.list = new MovieList({
 			'status': 'active',
 			'actions': Wanted.Action
