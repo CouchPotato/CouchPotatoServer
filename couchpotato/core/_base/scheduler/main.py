@@ -40,7 +40,13 @@ class Scheduler(Plugin):
         for identifier in self.crons:
             self.remove(identifier)
             cron = self.crons[identifier]
-            job = self.sched.add_cron_job(cron['handle'], day = cron['day'], hour = cron['hour'], minute = cron['minute'])
+            
+            try:
+                job = self.sched.add_cron_job(cron['handle'], day = cron['day'], hour = cron['hour'], minute = cron['minute'])
+            except ValueError, e:
+                log.error("An error occured while adding the cronjobs, make sure that the syntax is correct. Message: %s" % e)
+                return False
+                
             cron['job'] = job
 
         # Intervals
