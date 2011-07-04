@@ -35,7 +35,7 @@ class Sabnzbd(Downloader):
             pp = False
 
         params = {
-            'apikey': self.conf('apikey'),
+            'apikey': self.conf('api_key'),
             'cat': self.conf('category'),
             'mode': 'addurl',
             'name': data.get('url')
