@@ -50,16 +50,26 @@ var Profile = new Class({
 					'type':'text',
 					'value': data.types && data.types.length > 0 ? data.types[0].wait_for : 0
 				}),
-				new Element('span', {'text':' day(s) for better quality.'})
+				new Element('span', {
+					'text':' day(s) for better quality.',
+					'styles': {
+						"margin-left": "1em"
+					}
+				})
 			),
 			new Element('div.ctrlHolder').adopt(
 				new Element('label', {'text': 'Qualities'}),
 				new Element('div.head').adopt(
 					new Element('span.quality_type', {'text': 'Search for'}),
-					new Element('span.finish', {'html': '<acronym title="Won\'t download anything else if it has found this quality.">Finish</acronym>'})
+					new Element('span.finish', {
+						'html': '<acronym title="Won\'t download anything else if it has found this quality.">Finish</acronym>',
+						'styles': {
+							"margin-left": "17em"
+						}
+					})
 				),
 				self.type_container = new Element('ol.types'),
-				new Element('a.addType', {
+				self.addType_container = new Element('a.addType', {
 					'text': 'Add another quality to search for.',
 					'href': '#',
 					'events': {
@@ -69,7 +79,7 @@ var Profile = new Class({
 			)
 		);
 
-		self.makeSortable()
+		self.makeSortable();
 
 		if(data.types)
 			Object.each(data.types, self.addType.bind(self))

@@ -7,7 +7,11 @@ Page.Wanted = new Class({
 
 	indexAction: function(param){
 		var self = this;
-
+		
+		if($$("." + self.getName() + " > .movies").length > 0) {
+			return;
+		}
+		
 		self.list = new MovieList({
 			'status': 'active',
 			'actions': Wanted.Action
@@ -32,7 +36,7 @@ Wanted.Action.Edit = new Class({
 		var self = this;
 
 		self.el = new Element('a.edit', {
-			'title': 'Refresh the movie info and do a forced search',
+			'title': 'Change the quality of this movie or select an alternative name.',
 			'events': {
 				'click': self.editMovie.bind(self)
 			}

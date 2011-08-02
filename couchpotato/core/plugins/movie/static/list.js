@@ -44,25 +44,63 @@ var MovieList = new Class({
 	createNavigation: function(){
 		var self = this;
 		var chars = '#ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-		var selected = 'Z';
+		var selected = '#';
 
 		self.navigation = new Element('div.alph_nav').adopt(
 			self.alpha = new Element('ul.inlay'),
-			self.input = new Element('input.inlay'),
+			self.input = new Element('input.inlay', {
+				type: "text",
+				events: {
+					keyup: function(e) {
+						self.getMoviesByString($$(this).get("value")[0].trim());
+					}
+				}
+			}),
 			self.view = new Element('ul.inlay').adopt(
 				new Element('li.list'),
 				new Element('li.thumbnails'),
 				new Element('li.text')
 			)
 		).inject(this.el, 'top')
-
+		
 		chars.split('').each(function(c){
 			new Element('li', {
 				'text': c,
-				'class': c == selected ? 'selected' : ''
+				'class': c == selected ? 'selected' : '',
+				events: {
+					click: function() {
+						$$("div.content > div.active ul.inlay > li.selected").removeClass("selected");
+						$$(this).addClass("selected");
+						
+						self.getMoviesByString($$(this).get("text")[0], true);
+					}
+				}
 			}).inject(self.alpha)
 		})
 
+	},
+	
+	getMoviesByString: function(SearchValue, StartsWith) {
+		var self = this,
+			titles = $$("div.content > div.active div.info > div.title");
+		
+		if(StartsWith === undefined) {
+			StartsWith = false;
+		}
+		
+		titles.each(function(value, index) {
+			var parent = value.getParent().getParent().getParent();
+			
+			if(
+				(SearchValue !== "" && SearchValue !== "#") &&
+				(StartsWith && value.get("text").toLowerCase().substring(0, 1) !== SearchValue.toLowerCase()) || 
+				(!StartsWith && new String(value.get("text").toLowerCase()).test(SearchValue.toLowerCase()) === false)
+			) {
+				parent.setStyle("display", "none");
+			} else {
+				parent.setStyle("display", "block");
+			}
+		});
 	},
 
 	getMovies: function(status, onComplete){

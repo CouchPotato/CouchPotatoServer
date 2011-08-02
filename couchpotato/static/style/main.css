@@ -128,6 +128,7 @@ form {
 .icon.delete {
 	background: url('../images/delete.png') no-repeat;
 	display: inline-block;
+	cursor: pointer;
 }
 
 /*** Navigation ***/
@@ -297,6 +298,12 @@ form {
 	box-shadow: inset 0 1px 8px rgba(0,0,0,0.25), 0 1px 0px rgba(255,255,255,0.25);
 	-moz-box-shadow: inset 0 1px 8px rgba(0,0,0,0.25), 0 1px 0px rgba(255,255,255,0.25);
 	-webkit-box-shadow: inset 0 1px 8px rgba(0,0,0,0.25), 0 1px 0px rgba(255,255,255,0.25);
+}
+
+.alph_nav input[type=text].inlay {
+	float: right;
+	color: #999;
+	text-indent: 0.4em;
 }
 
 	.inlay.light {

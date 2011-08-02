@@ -1,3 +1,7 @@
 /settings.conf
 /logs/*.log
 /_source/
+.project
+*.pyc
+.pydevproject
+/_data/*
