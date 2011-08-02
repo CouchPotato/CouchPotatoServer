@@ -68,8 +68,8 @@ class Searcher(Plugin):
                     successful = fireEvent('download', data = nzb, single = True)
 
                     if successful:
-                        log.info('Downloading of %s successful.' % nzb.get('name'))
-                        return True
+                         log.info('Downloading of %s successful.' % nzb.get('name'))
+                    return True
 
         return False
 
@@ -143,8 +143,7 @@ class Searcher(Plugin):
 
     def containsOtherQuality(self, name, preferred_quality = {}, single_category = False):
 
-        nzb_words = re.split('\W+', simplifyString(name))
-
+        nzb_words = re.split('\W+', simplifyString(name.lower()))
         qualities = fireEvent('quality.all', single = True)
 
         found = {}
@@ -152,7 +151,7 @@ class Searcher(Plugin):
             # Main in words
             if quality['identifier'] in nzb_words:
                 found[quality['identifier']] = True
-
+            
             # Alt in words
             if list(set(nzb_words) & set(quality['alternative'])):
                 found[quality['identifier']] = True
@@ -161,10 +160,22 @@ class Searcher(Plugin):
         for allowed in preferred_quality.get('allow'):
             if found.get(allowed):
                 del found[allowed]
-
+        
         if (len(found) == 0 and single_category):
             return False
-
+        
+        if len(found) > 1:
+            # Multiple results, let's pick the last one.
+            old_results = found.keys()
+            old_results.reverse()
+            
+            for i in old_results:
+                log.info(i)
+                
+                if len(found) > 1:
+                    log.info("Remove a redundant quality named %s" % i)
+                    found.pop(i)
+                    
         return not (found.get(preferred_quality['identifier']) and len(found) == 1)
 
     def checkIMDB(self, haystack, imdbId):

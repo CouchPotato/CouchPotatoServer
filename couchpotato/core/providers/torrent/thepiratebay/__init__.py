@@ -4,20 +4,17 @@ def start():
     return ThePirateBay()
 
 config = [{
-    'name': 'themoviedb',
+    'name': 'thepiratebay',
     'groups': [
         {
             'tab': 'providers',
-            'name': 'tmdb',
-            'label': 'TheMovieDB',
-            'advanced': True,
-            'description': 'Used for all calls to TheMovieDB.',
+            'name': 'tpb',
+            'label': 'The Pirate Bay',
             'options': [
                 {
-                    'name': 'api_key',
-                    'default': '9b939aee0aaafc12a65bf448e4af9543',
-                    'label': 'Api Key',
-                },
+                    'name': 'enabled',
+                    'type': 'enabler',
+                }
             ],
         },
     ],
