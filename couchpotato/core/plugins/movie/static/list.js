@@ -3,7 +3,7 @@ var MovieList = new Class({
 	Implements: [Options],
 
 	options: {
-		navigation: true
+		navigation: false
 	},
 
 	movies: [],
@@ -23,7 +23,8 @@ var MovieList = new Class({
 		self.el.empty();
 
 		// Create the alphabet nav
-		self.createNavigation();
+		if(self.options.navigation)
+			self.createNavigation();
 
 		Object.each(self.movies, function(info){
 			var m = new Movie(self, {
@@ -32,16 +33,18 @@ var MovieList = new Class({
 			$(m).inject(self.el);
 			m.fireEvent('injected');
 			
-			var first_char = m.getTitle().substr(0, 1);
-			self.activateLetter(first_char);
+			if(self.options.navigation){
+				var first_char = m.getTitle().substr(0, 1);
+				self.activateLetter(first_char);
+			}
 		});
 
 		self.el.addEvents({
 			'mouseenter:relay(.movie)': function(e, el){
-				el.addClass('hover')
+				el.addClass('hover');
 			},
 			'mouseleave:relay(.movie)': function(e, el){
-				el.removeClass('hover')
+				el.removeClass('hover');
 			}
 		});
 	},
@@ -64,13 +67,13 @@ var MovieList = new Class({
 			self.letters[c] = new Element('li', {
 				'text': c,
 				'class': 'letter_'+c
-			}).inject(self.alpha)
+			}).inject(self.alpha);
 		});
 
 	},
 	
 	activateLetter: function(letter){
-		this.letters[letter].addClass('active')
+		this.letters[letter].addClass('active');
 	},
 
 	update: function(){
@@ -80,7 +83,7 @@ var MovieList = new Class({
 	},
 
 	getMovies: function(){
-		var self = this
+		var self = this;
 
 		Api.request('movie.list', {
 			'data': {
@@ -90,7 +93,7 @@ var MovieList = new Class({
 				self.store(json.movies);
 				self.create();
 			}
-		})
+		});
 	},
 
 	store: function(movies){

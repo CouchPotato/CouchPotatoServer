@@ -38,7 +38,7 @@ class MoviePlugin(Plugin):
         movies = []
         for movie in results:
             temp = movie.to_dict(deep = {
-                'releases': {'status': {}, 'quality': {}, 'files':{}},
+                'releases': {'status': {}, 'quality': {}, 'files':{}, 'info': {}},
                 'library': {'titles': {}, 'files':{}},
                 'files': {}
             })
@@ -68,7 +68,7 @@ class MoviePlugin(Plugin):
             fireEventAsync('library.update', identifier = movie.library.identifier, default_title = default_title, force = True)
             fireEventAsync('searcher.single', movie.to_dict(deep = {
                 'profile': {'types': {'quality': {}}},
-                'releases': {'status': {}, 'quality': {}},
+                'releases': {'status': {}, 'quality': {}, 'files': {}, 'info': {}},
                 'library': {'titles': {}, 'files':{}},
                 'files': {}
             }))
@@ -119,7 +119,7 @@ class MoviePlugin(Plugin):
         db.commit()
 
         movie_dict = m.to_dict(deep = {
-            'releases': {'status': {}, 'quality': {}},
+            'releases': {'status': {}, 'quality': {}, 'files': {}, 'info': {}},
             'library': {'titles': {}}
         })
 

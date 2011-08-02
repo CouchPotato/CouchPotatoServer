@@ -206,6 +206,7 @@ var ReleaseAction = new Class({
 			).inject(self.movie, 'top');
 
 			Array.each(self.movie.data.releases, function(release){
+				p(release);
 				new Element('div', {
 					'text': release.title
 				}).inject(self.release_container)

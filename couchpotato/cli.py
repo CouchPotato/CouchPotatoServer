@@ -74,7 +74,7 @@ def cmd_couchpotato(base_path, args):
         logger.addHandler(hdlr)
 
     # To file
-    hdlr2 = handlers.RotatingFileHandler(Env.get('log_path'), 'a', 5000000, 4)
+    hdlr2 = handlers.RotatingFileHandler(Env.get('log_path'), 'a', 500000, 10)
     hdlr2.setFormatter(formatter)
     logger.addHandler(hdlr2)
 

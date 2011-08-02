@@ -1,9 +1,10 @@
 from couchpotato import get_session
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import simplifyString
+from couchpotato.core.helpers.variable import md5
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.core.settings.model import Movie, Release
+from couchpotato.core.settings.model import Movie, Release, ReleaseInfo
 from couchpotato.environment import Env
 import re
 
@@ -39,15 +40,20 @@ class Searcher(Plugin):
 
     def single(self, movie):
 
+        downloaded_status = fireEvent('status.get', 'downloaded', single = True)
+        available_status = fireEvent('status.get', 'available', single = True)
+        snatched_status = fireEvent('status.get', 'snatched', single = True)
+
         successful = False
         for type in movie['profile']['types']:
+            print type
 
             has_better_quality = 0
             default_title = movie['library']['titles'][0]['title']
 
             # See if beter quality is available
             for release in movie['releases']:
-                if release['quality']['order'] <= type['quality']['order']:
+                if release['quality']['order'] <= type['quality']['order'] and release['status_id'] is not available_status.get('id'):
                     has_better_quality += 1
 
             # Don't search for quality lower then already available.
@@ -57,25 +63,51 @@ class Searcher(Plugin):
                 results = fireEvent('provider.yarr.search', movie, type['quality'], merge = True)
                 sorted_results = sorted(results, key = lambda k: k['score'], reverse = True)
 
+                # Add them to this movie releases list
+                for nzb in sorted_results:
+                    db = get_session()
+
+                    rls = db.query(Release).filter_by(identifier = md5(nzb['url'])).first()
+                    if not rls:
+                        rls = Release(
+                            identifier = md5(nzb['url']),
+                            movie_id = movie.get('id'),
+                            quality_id = type.get('quality_id'),
+                            status_id = available_status.get('id')
+                        )
+                        db.add(rls)
+                        db.commit()
+
+                        for info in nzb:
+                            rls_info = ReleaseInfo(
+                                identifier = info,
+                                value = nzb[info]
+                            )
+                            rls.info.append(rls_info)
+                            db.commit()
+
+
                 for nzb in sorted_results:
                     successful = fireEvent('download', data = nzb, movie = movie, single = True)
 
                     if successful:
                         log.info('Downloading of %s successful.' % nzb.get('name'))
 
-                        # Add release item, should be updated later when renaming
-                        snatched_status = fireEvent('status.get', 'snatched', single = True)
+                        # Mark release as snatched
                         db = get_session()
-                        rls = Release(
-                            identifier = '%s.%s' % (movie['library']['identifier'], type['quality']['identifier']),
-                            movie_id = movie.get('id'),
-                            quality_id = type.get('quality_id'),
-                            status_id = snatched_status.get('id')
-                        )
-                        db.add(rls)
+                        rls = db.query(Release).filter_by(identifier = md5(nzb['url'])).first()
+                        rls.status_id = snatched_status.get('id')
                         db.commit()
 
+                        # Mark movie snatched if quality is finish-checked
+                        if type['finish']:
+                            mvie = db.query(Movie).filter_by(id = movie['id']).first()
+                            mvie.status_id = snatched_status.get('id')
+                            db.commit()
+
                         return True
+
+                    return False
             else:
                 log.info('Better quality (%s) already available or snatched for %s' % (type['quality']['label'], default_title))
                 break
