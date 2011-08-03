@@ -44,10 +44,17 @@ def fireEvent(name, *args, **kwargs):
 
         if single and not merge:
             results = None
-            if result[0][0] is True and result[0][1] is not None:
-                results = result[0][1]
-            elif result[0][1]:
-                errorHandler(result[0][1])
+
+            # Loop over results, stop when first not None result is found.
+            for r in result:
+                if r[0] is True and r[1] is not None:
+                    results = r[1]
+                    break
+                elif r[1]:
+                    errorHandler(r[1])
+                else:
+                    log.debug('Assume disabled plugin: %s' % r[2])
+
         else:
             results = []
             for r in result:
