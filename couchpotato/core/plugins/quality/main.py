@@ -33,9 +33,7 @@ class QualityPlugin(Plugin):
         addEvent('quality.guess', self.guess)
         addEvent('app.load', self.fill)
 
-        path = self.registerStatic(__file__)
-        fireEvent('register_script', path + 'quality.js')
-        fireEvent('register_style', path + 'quality.css')
+        self.registerStatic(__file__)
 
     def all(self):
 

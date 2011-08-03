@@ -17,9 +17,7 @@ class ProfilePlugin(Plugin):
         addApiView('profile.save', self.save)
         addApiView('profile.delete', self.delete)
 
-        path = self.registerStatic(__file__)
-        fireEvent('register_script', path + 'profile.js')
-        fireEvent('register_style', path + 'profile.css')
+        self.registerStatic(__file__)
 
     def all(self):
 

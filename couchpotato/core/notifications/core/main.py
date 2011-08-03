@@ -19,8 +19,7 @@ class CoreNotifier(Plugin):
 
         addApiView('core_notifier.listener', self.listener)
 
-        static = self.registerStatic(__file__)
-        fireEvent('register_script', static + 'notification.js')
+        self.registerStatic(__file__)
 
     def notify(self, message = '', data = {}):
         self.add(data = {

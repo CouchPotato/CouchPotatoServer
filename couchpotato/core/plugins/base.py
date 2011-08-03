@@ -1,6 +1,9 @@
 from couchpotato import addView
+from couchpotato.core.event import fireEvent
+from couchpotato.core.helpers.variable import getExt
 from couchpotato.environment import Env
 from flask.helpers import send_from_directory
+import glob
 import os.path
 import re
 
@@ -25,7 +28,8 @@ class Plugin():
         path = 'static/' + class_name + '/'
         addView(path + '<path:file>', self.showStatic, static = True)
 
-        return path
+        for file in glob.glob(os.path.join(self.plugin_path, 'static', '*')):
+            fireEvent('register_script' if getExt(file) in 'js' else 'register_style', path + os.path.basename(file))
 
     def showStatic(self, file = ''):
         dir = os.path.join(self.plugin_path, 'static')

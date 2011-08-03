@@ -176,7 +176,7 @@ class Renamer(Plugin):
                                 break
 
                         for file in release.files:
-                            log.info('Removing "%s"' % file.path)
+                            log.info('Removing (not really) "%s"' % file.path)
 
             # Rename
             for src in rename_files:

@@ -26,8 +26,7 @@ class StatusPlugin(Plugin):
         addEvent('status.all', self.all)
         addEvent('app.load', self.fill)
 
-        path = self.registerStatic(__file__)
-        fireEvent('register_script', path + 'status.js')
+        self.registerStatic(__file__)
 
     def all(self):
 

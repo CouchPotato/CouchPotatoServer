@@ -46,7 +46,6 @@ class Searcher(Plugin):
 
         successful = False
         for type in movie['profile']['types']:
-            print type
 
             has_better_quality = 0
             default_title = movie['library']['titles'][0]['title']
@@ -89,6 +88,7 @@ class Searcher(Plugin):
 
                 for nzb in sorted_results:
                     successful = fireEvent('download', data = nzb, movie = movie, single = True)
+                    print successful
 
                     if successful:
                         log.info('Downloading of %s successful.' % nzb.get('name'))

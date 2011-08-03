@@ -21,7 +21,7 @@ config = [{
                 {
                     'name': 'ignored_words',
                     'label': 'Ignored words',
-                    'default': '',
+                    'default': 'german, dutch, french, danish, swedish, dubbed, swesub, korsub',
                 },
             ],
         }, {

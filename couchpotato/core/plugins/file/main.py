@@ -25,8 +25,7 @@ class FileManager(Plugin):
 
         addApiView('file.cache/<path:file>', self.showImage)
 
-        path = self.registerStatic(__file__)
-        fireEvent('register_script', path + 'file.js')
+        self.registerStatic(__file__)
 
     def showImage(self, file = ''):
 
