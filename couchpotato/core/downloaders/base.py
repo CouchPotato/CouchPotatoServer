@@ -15,6 +15,9 @@ class Downloader(Plugin):
     def download(self, data = {}):
         pass
 
+    def cpTag(self, movie):
+        return '.cp(' + movie['library'].get('identifier') + ')' if movie['library'].get('identifier') else ''
+
     def isDisabled(self):
         return not self.isEnabled()
 

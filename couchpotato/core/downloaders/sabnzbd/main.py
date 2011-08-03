@@ -35,13 +35,12 @@ class Sabnzbd(Downloader):
             pp = False
 
 
-        cp_tag = '.cp(' + movie['library'].get('identifier') + ')' if movie['library'].get('identifier') else ''
         params = {
             'apikey': self.conf('api_key'),
             'cat': self.conf('category'),
             'mode': 'addurl',
             'name': data.get('url'),
-            'nzbname': '%s%s' % (data.get('name'), cp_tag),
+            'nzbname': '%s%s' % (data.get('name'), self.cpTag(movie)),
         }
 
         # sabNzbd complains about "invalid archive file" for newzbin urls

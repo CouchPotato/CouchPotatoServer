@@ -23,8 +23,7 @@ class Blackhole(Downloader):
         if not directory or not os.path.isdir(directory):
             log.error('No directory set for blackhole %s download.' % data.get('type'))
         else:
-            cp_tag = '.cp(' + movie['library'].get('identifier') + ')' if movie['library'].get('identifier') else ''
-            fullPath = os.path.join(directory, '%s%s.%s' % (toSafeString(data.get('name')), cp_tag , data.get('type')))
+            fullPath = os.path.join(directory, '%s%s.%s' % (toSafeString(data.get('name')), self.cpTag(movie) , data.get('type')))
 
             try:
                 if not os.path.isfile(fullPath):
