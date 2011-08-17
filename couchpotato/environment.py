@@ -4,6 +4,7 @@ from couchpotato.core.settings import Settings
 class Env:
 
     ''' Environment variables '''
+    _uses_git = False
     _debug = False
     _settings = Settings()
     _loader = Loader()
