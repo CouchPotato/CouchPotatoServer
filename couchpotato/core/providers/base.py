@@ -64,7 +64,7 @@ class Provider(Plugin):
                 data = urllib2.urlopen(url).read()
 
         except IOError, e:
-            log.debug(e)
+            log.error('Failed opening url, %s: %s' % (url, e))
             data = ''
 
         self.last_use = time.time()
