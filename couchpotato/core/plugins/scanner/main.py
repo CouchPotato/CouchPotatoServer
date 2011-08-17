@@ -7,7 +7,7 @@ from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import File, Release, Movie
 from couchpotato.environment import Env
 from flask.helpers import json
-from themoviedb.tmdb import opensubtitleHashFile
+from sqlalchemy.sql.expression import and_, or_
 import os
 import re
 import subprocess
@@ -70,6 +70,7 @@ class Scanner(Plugin):
     def __init__(self):
 
         #addEvent('app.load', self.scanLibrary)
+        addEvent('scanner.create_file_identifier', self.createStringIdentifier)
 
         addEvent('scanner.scan', self.scan)
 
@@ -95,7 +96,7 @@ class Scanner(Plugin):
                 #library = db.query(Library).filter_by(id = library.get('id')).one()
 
                 # Add release
-                self.addRelease(group)
+                fireEvent('release.add', group = group)
 
                 # Add identifier for library update
                 update_after.append(group['library'].get('identifier'))
@@ -133,7 +134,7 @@ class Scanner(Plugin):
                 is_dvd_file = self.isDVDFile(file_path)
                 if os.path.getsize(file_path) > self.minimal_filesize['media'] or is_dvd_file: # Minimal 300MB files or is DVD file
 
-                    identifier = self.createFileIdentifier(file_path, folder, exclude_filename = is_dvd_file)
+                    identifier = self.createStringIdentifier(file_path, folder, exclude_filename = is_dvd_file)
 
                     if not movie_files.get(identifier):
                         movie_files[identifier] = {
@@ -220,51 +221,6 @@ class Scanner(Plugin):
                 log.error('Unable to determin movie: %s' % group['identifiers'])
 
         return movie_files
-
-
-    def addRelease(self, group):
-        db = get_session()
-
-        identifier = '%s.%s.%s' % (group['library']['identifier'], group['meta_data'].get('audio', 'unknown'), group['meta_data']['quality']['identifier'])
-
-        # Add movie
-        done_status = fireEvent('status.get', 'done', single = True)
-        movie = db.query(Movie).filter_by(library_id = group['library'].get('id')).first()
-        if not movie:
-            movie = Movie(
-                library_id = group['library'].get('id'),
-                profile_id = 0,
-                status_id = done_status.get('id')
-            )
-            db.add(movie)
-            db.commit()
-
-        # Add release
-        release = db.query(Release).filter_by(identifier = identifier).first()
-        if not release:
-
-            release = Release(
-                identifier = identifier,
-                movie = movie,
-                quality_id = group['meta_data']['quality'].get('id'),
-                status_id = done_status.get('id')
-            )
-            db.add(release)
-            db.commit()
-
-        # Add each file type
-        for type in group['files']:
-
-            for file in group['files'][type]:
-                added_file = self.saveFile(file, type = type, include_media_info = type is 'movie')
-                try:
-                    added_file = db.query(File).filter_by(id = added_file.get('id')).one()
-                    release.files.append(added_file)
-                    db.commit()
-                except Exception, e:
-                    log.debug('Failed to attach "%s" to release: %s' % (file, e))
-
-        db.remove()
 
     def getMetaData(self, group):
 
@@ -373,17 +329,6 @@ class Scanner(Plugin):
 
         log.error('No imdb_id found for %s.' % group['identifiers'])
         return {}
-
-    def saveFile(self, file, type = 'unknown', include_media_info = False):
-
-        properties = {}
-
-        # Get media info for files
-        if include_media_info:
-            properties = {}
-
-        # Check database and update/insert if necessary
-        return fireEvent('file.add', path = file, part = self.getPartNumber(file), type = self.file_types[type], properties = properties, single = True)
 
     def getCPImdb(self, string):
 
@@ -501,9 +446,9 @@ class Scanner(Plugin):
         return False
 
     def getGroupFiles(self, identifier, folder, file_pile):
-        return set(filter(lambda s:identifier in self.createFileIdentifier(s, folder), file_pile))
+        return set(filter(lambda s:identifier in self.createStringIdentifier(s, folder), file_pile))
 
-    def createFileIdentifier(self, file_path, folder, exclude_filename = False):
+    def createStringIdentifier(self, file_path, folder = '', exclude_filename = False):
 
         identifier = file_path.replace(folder, '') # root folder
         identifier = os.path.splitext(identifier)[0] # ext

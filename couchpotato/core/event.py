@@ -44,7 +44,7 @@ def fireEvent(name, *args, **kwargs):
 
         if single and not merge:
             results = None
-            if result[0][0] == True and result[0][1]:
+            if result[0][0] is True and result[0][1] is not None:
                 results = result[0][1]
             elif result[0][1]:
                 errorHandler(result[0][1])

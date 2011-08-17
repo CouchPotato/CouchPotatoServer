@@ -19,6 +19,7 @@ class Env:
     _data_dir = ""
     _cache_dir = ""
     _db_path = ""
+    _log_path = ""
 
     @staticmethod
     def doDebug():

@@ -12,23 +12,14 @@ import xml.etree.ElementTree as XMLTree
 log = CPLog(__name__)
 
 
-class Nzbs(NZBProvider, RSS):
+class NzbIndex(NZBProvider, RSS):
 
     urls = {
-        'download': 'http://nzbs.org/index.php?action=getnzb&nzbid=%s%s',
-        'nfo': 'http://nzbs.org/index.php?action=view&nzbid=%s&nfo=1',
-        'detail': 'http://nzbs.org/index.php?action=view&nzbid=%s',
-        'api': 'http://nzbs.org/rss.php',
+        'download': 'http://www.nzbindex.nl/download/%s/%s',
+        'api': 'http://www.nzbindex.nl/rss/', #http://www.nzbindex.nl/rss/?q=due+date+720p&age=1000&sort=agedesc&minsize=3500&maxsize=10000
     }
 
-    cat_ids = [
-        ([4], ['720p', '1080p']),
-        ([2], ['cam', 'ts', 'dvdrip', 'tc', 'brrip', 'r5', 'scr']),
-        ([9], ['dvdr']),
-    ]
-    cat_backup_id = 't2'
-
-    time_between_searches = 3 # Seconds
+    time_between_searches = 1 # Seconds
 
     def __init__(self):
         addEvent('provider.nzb.search', self.search)
@@ -37,20 +28,19 @@ class Nzbs(NZBProvider, RSS):
     def search(self, movie, quality):
 
         results = []
-        if self.isDisabled() or not self.isAvailable(self.urls['api'] + '?test' + self.getApiExt()):
+        if self.isDisabled() or not self.isAvailable(self.urls['api']):
             return results
 
-        cat_id = self.getCatId(quality.get('identifier'))
         arguments = urlencode({
-            'action':'search',
-            'q': simplifyString(movie['library']['titles'][0]['title']),
-            'catid': cat_id[0],
-            'i': self.conf('id'),
-            'h': self.conf('api_key'),
+            'q': '%s %s' % (simplifyString(movie['library']['titles'][0]['title']), quality.get('identifier')),
+            'sort': 'agedesc',
+            'minsize': quality.get('size_min'),
+            'maxsize': quality.get('size_max'),
+            'rating': '1',
         })
         url = "%s?%s" % (self.urls['api'], arguments)
 
-        cache_key = 'nzbs.%s.%s' % (movie['library'].get('identifier'), str(cat_id))
+        cache_key = 'nzbindex.%s.%s' % (movie['library'].get('identifier'), quality.get('identifier'))
 
         try:
             data = self.getCache(cache_key)
@@ -72,15 +62,17 @@ class Nzbs(NZBProvider, RSS):
 
                 for nzb in nzbs:
 
-                    id = int(self.getTextElement(nzb, "link").partition('nzbid=')[2])
+                    enclosure = self.getElements(nzb, 'enclosure')[0].attrib
+
+                    id = int(self.getTextElement(nzb, "link").split('/')[4])
                     new = {
                         'id': id,
                         'type': 'nzb',
                         'name': self.getTextElement(nzb, "title"),
                         'age': self.calculateAge(int(time.mktime(parse(self.getTextElement(nzb, "pubDate")).timetuple()))),
-                        'size': self.parseSize(self.getTextElement(nzb, "description").split('</a><br />')[1].split('">')[1]),
-                        'url': self.urls['download'] % (id, self.getApiExt()),
-                        'detail_url': self.urls['detail'] % id,
+                        'size': enclosure['length'],
+                        'url': enclosure['url'],
+                        'detail_url': enclosure['url'].replace('/download/', '/release/'),
                         'description': self.getTextElement(nzb, "description"),
                         'check_nzb': True,
                     }
@@ -102,7 +94,4 @@ class Nzbs(NZBProvider, RSS):
 
 
     def isEnabled(self):
-        return NZBProvider.isEnabled(self) and self.conf('enabled') and self.conf('id') and self.conf('api_key')
-
-    def getApiExt(self):
-        return '&i=%s&h=%s' % (self.conf('id'), self.conf('api_key'))
+        return NZBProvider.isEnabled(self) and self.conf('enabled')

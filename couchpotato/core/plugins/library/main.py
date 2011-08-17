@@ -96,9 +96,10 @@ class LibraryPlugin(Plugin):
                     library.files.append(file)
                     db.commit()
                 except:
-                    pass
-                    #log.debug('Failed to attach to library: %s' % traceback.format_exc())
+                    log.debug('Failed to attach to library: %s' % traceback.format_exc())
 
-        fireEvent('library.update.after')
+        library_dict = library.to_dict({'titles': {}, 'files':{}})
 
-        return library.to_dict({'titles': {}, 'files':{}})
+        fireEvent('notify.core', type = 'library.update', data = library_dict)
+
+        return library_dict

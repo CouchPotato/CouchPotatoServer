@@ -27,6 +27,11 @@ config = [{
                     'description': 'Used for all calls to Sabnzbd.',
                 },
                 {
+                    'name': 'category',
+                    'label': 'Category',
+                    'description': 'The category CP places the nzb in. Like <strong>movies</strong> or <strong>couchpotato</strong>',
+                },
+                {
                     'advanced': True,
                     'name': 'pp_directory',
                     'type': 'directory',

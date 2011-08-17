@@ -54,7 +54,7 @@ class Newznab(NZBProvider, RSS):
         })
         url = "%s&%s" % (self.getUrl(self.urls['search']), arguments)
 
-        cache_key = '%s-%s' % (movie['library']['identifier'], cat_id[0])
+        cache_key = 'newznab.%s.%s' % (movie['library']['identifier'], cat_id[0])
         single_cat = (len(cat_id) == 1 and cat_id[0] != self.cat_backup_id)
 
         try:

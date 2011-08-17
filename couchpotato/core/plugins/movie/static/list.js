@@ -3,10 +3,11 @@ var MovieList = new Class({
 	Implements: [Options],
 
 	options: {
-		navigation: true
+		navigation: false
 	},
 
 	movies: [],
+	letters: {},
 
 	initialize: function(options){
 		var self = this;
@@ -19,6 +20,8 @@ var MovieList = new Class({
 	create: function(){
 		var self = this;
 
+		self.el.empty();
+
 		// Create the alphabet nav
 		if(self.options.navigation)
 			self.createNavigation();
@@ -29,14 +32,19 @@ var MovieList = new Class({
 			}, info);
 			$(m).inject(self.el);
 			m.fireEvent('injected');
+			
+			if(self.options.navigation){
+				var first_char = m.getTitle().substr(0, 1);
+				self.activateLetter(first_char);
+			}
 		});
 
 		self.el.addEvents({
 			'mouseenter:relay(.movie)': function(e, el){
-				el.addClass('hover')
+				el.addClass('hover');
 			},
 			'mouseleave:relay(.movie)': function(e, el){
-				el.removeClass('hover')
+				el.removeClass('hover');
 			}
 		});
 	},
@@ -44,7 +52,6 @@ var MovieList = new Class({
 	createNavigation: function(){
 		var self = this;
 		var chars = '#ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-		var selected = 'Z';
 
 		self.navigation = new Element('div.alph_nav').adopt(
 			self.alpha = new Element('ul.inlay'),
@@ -54,32 +61,39 @@ var MovieList = new Class({
 				new Element('li.thumbnails'),
 				new Element('li.text')
 			)
-		).inject(this.el, 'top')
+		).inject(this.el, 'top');
 
 		chars.split('').each(function(c){
-			new Element('li', {
+			self.letters[c] = new Element('li', {
 				'text': c,
-				'class': c == selected ? 'selected' : ''
-			}).inject(self.alpha)
-		})
+				'class': 'letter_'+c
+			}).inject(self.alpha);
+		});
 
 	},
+	
+	activateLetter: function(letter){
+		this.letters[letter].addClass('active');
+	},
 
-	getMovies: function(status, onComplete){
-		var self = this
+	update: function(){
+		var self = this;
 
-		if(self.movies.length == 0)
-			Api.request('movie.list', {
-				'data': {
-					'status': self.options.status
-				},
-				'onComplete': function(json){
-					self.store(json.movies);
-					self.create();
-				}
-			})
-		else
-			self.list()
+		self.getMovies();
+	},
+
+	getMovies: function(){
+		var self = this;
+
+		Api.request('movie.list', {
+			'data': {
+				'status': self.options.status
+			},
+			'onComplete': function(json){
+				self.store(json.movies);
+				self.create();
+			}
+		});
 	},
 
 	store: function(movies){

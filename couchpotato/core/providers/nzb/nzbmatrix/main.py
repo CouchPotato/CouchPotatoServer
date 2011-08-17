@@ -53,7 +53,7 @@ class NZBMatrix(NZBProvider, RSS):
         url = "%s?%s" % (self.urls['search'], arguments)
         log.info('Searching: %s' % url)
 
-        cache_key = '%s-%s' % (movie['library'].get('identifier'), cat_ids)
+        cache_key = 'nzbmatrix.%s.%s' % (movie['library'].get('identifier'), cat_ids)
         single_cat = True
 
         try:

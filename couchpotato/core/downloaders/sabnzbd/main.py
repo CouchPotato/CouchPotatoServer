@@ -14,7 +14,7 @@ class Sabnzbd(Downloader):
 
     type = ['nzb']
 
-    def download(self, data = {}):
+    def download(self, data = {}, movie = {}):
 
         if self.isDisabled() or not self.isCorrectType(data.get('type')):
             return
@@ -34,11 +34,14 @@ class Sabnzbd(Downloader):
         else:
             pp = False
 
+
+        cp_tag = '.cp(' + movie['library'].get('identifier') + ')' if movie['library'].get('identifier') else ''
         params = {
             'apikey': self.conf('api_key'),
             'cat': self.conf('category'),
             'mode': 'addurl',
-            'name': data.get('url')
+            'name': data.get('url'),
+            'nzbname': '%s%s' % (data.get('name'), cp_tag),
         }
 
         # sabNzbd complains about "invalid archive file" for newzbin urls
@@ -53,9 +56,9 @@ class Sabnzbd(Downloader):
         log.info("URL: " + url)
 
         try:
-            r = urllib2.urlopen(url, timeout = 30)
-        except:
-            log.error("Unable to connect to SAB.")
+            r = urllib2.urlopen(url)
+        except Exception, e:
+            log.error("Unable to connect to SAB: %s" % e)
             return False
 
         result = r.read().strip()

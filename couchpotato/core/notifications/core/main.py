@@ -13,9 +13,9 @@ class CoreNotifier(Plugin):
     messages = []
 
     def __init__(self):
+
         addEvent('notify', self.notify)
-        addEvent('notify.core_notifier', self.notify)
-        addEvent('core_notifier.frontend', self.frontend)
+        addEvent('notify.core', self.frontend)
 
         addApiView('core_notifier.listener', self.listener)
 
@@ -29,7 +29,6 @@ class CoreNotifier(Plugin):
         })
 
     def frontend(self, type = 'notification', data = {}):
-
         self.messages.append({
             'time': time.time(),
             'type': type,
@@ -38,12 +37,15 @@ class CoreNotifier(Plugin):
 
     def listener(self):
 
+        messages = []
         for message in self.messages:
+            print message['time'], (time.time() - 5)
             #delete message older then 15s
-            if message['time'] < (time.time() - 15):
-                del message
+            if message['time'] > (time.time() - 15):
+                messages.append(message)
 
+        self.messages = []
         return jsonified({
             'success': True,
-            'result': self.messages,
+            'result': messages,
         })

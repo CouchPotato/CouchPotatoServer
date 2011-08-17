@@ -48,6 +48,7 @@ def cmd_couchpotato(base_path, args):
     Env.get('settings').setFile(os.path.join(options.data_dir, 'settings.conf'))
     Env.set('app_dir', base_path)
     Env.set('data_dir', options.data_dir)
+    Env.set('log_path', os.path.join(log_dir, 'CouchPotato.log'))
     Env.set('db_path', 'sqlite:///' + os.path.join(options.data_dir, 'couchpotato.db'))
     Env.set('cache_dir', os.path.join(options.data_dir, 'cache'))
     Env.set('cache', FileSystemCache(os.path.join(Env.get('cache_dir'), 'python')))
@@ -73,7 +74,7 @@ def cmd_couchpotato(base_path, args):
         logger.addHandler(hdlr)
 
     # To file
-    hdlr2 = handlers.RotatingFileHandler(os.path.join(log_dir, 'CouchPotato.log'), 'a', 5000000, 4)
+    hdlr2 = handlers.RotatingFileHandler(Env.get('log_path'), 'a', 500000, 10)
     hdlr2.setFormatter(formatter)
     logger.addHandler(hdlr2)
 
