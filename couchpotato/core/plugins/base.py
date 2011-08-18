@@ -5,7 +5,7 @@ import os.path
 import re
 
 
-class Plugin():
+class Plugin(object):
 
     def conf(self, attr, default = None):
         return Env.setting(attr, self.getName().lower(), default = default)
@@ -35,4 +35,4 @@ class Plugin():
         return not self.isEnabled()
 
     def isEnabled(self):
-        return self.conf('enabled')
+        return self.conf('enabled') or self.conf('enabled') == None

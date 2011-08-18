@@ -1,5 +1,4 @@
 from couchpotato.api import addApiView
-from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.request import getParams, jsonified
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
@@ -19,11 +18,11 @@ log = CPLog(__name__)
 
 class NMJ(Notification):
 
-    def __init__(self):
-        addEvent('notify', self.notify)
-        addEvent('notify.nmj', self.notify)
+    listen_to = ['movie.downloaded', 'movie.snatched']
 
-        addApiView('notify.nmj.test', self.test)
+    def __init__(self):
+        super(NMJ, self).__init__()
+
         addApiView('notify.nmj.auto_config', self.autoConfig)
 
     def conf(self, attr):
@@ -76,10 +75,8 @@ class NMJ(Notification):
             'mount': mount,
         })
 
-    def notify(self, message = '', data = {}):
-
-        if self.isDisabled():
-            return False
+    def notify(self, message = '', data = {}, type = None):
+        if self.dontNotify(type): return
 
         host = self.conf('host')
         mount = self.conf('mount')

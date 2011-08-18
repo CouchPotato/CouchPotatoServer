@@ -1,5 +1,3 @@
-from couchpotato.api import addApiView
-from couchpotato.core.event import addEvent
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
 import base64
@@ -11,16 +9,10 @@ log = CPLog(__name__)
 
 class XBMC(Notification):
 
-    def __init__(self):
-        addEvent('notify', self.notify)
-        addEvent('notify.xbmc', self.notify)
+    listen_to = ['movie.downloaded', 'movie.snatched']
 
-        addApiView('notify.xbmc.test', self.test)
-
-    def notify(self, message = '', data = {}):
-
-        if self.isDisabled():
-            return
+    def notify(self, message = '', data = {}, type = None):
+        if self.dontNotify(type): return
 
         for host in [x.strip() for x in self.conf('host').split(",")]:
             self.send({'command': 'ExecBuiltIn', 'parameter': 'Notification(CouchPotato, %s)' % message}, host)

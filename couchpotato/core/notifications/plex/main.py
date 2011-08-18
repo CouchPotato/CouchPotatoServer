@@ -10,16 +10,10 @@ log = CPLog(__name__)
 
 class Plex(Notification):
 
-    def __init__(self):
-        addEvent('notify', self.notify)
-        addEvent('notify.plex', self.notify)
+    listen_to = ['movie.downloaded', 'movie.snatched']
 
-        addApiView('notify.plex.test', self.test)
-
-    def notify(self, message = '', data = {}):
-
-        if self.isDisabled():
-            return
+    def notify(self, message = '', data = {}, type = None):
+        if self.dontNotify(type): return
 
         log.info('Sending notification to Plex')
         hosts = [x.strip() for x in self.conf('host').split(",")]
