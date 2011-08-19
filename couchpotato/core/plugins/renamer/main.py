@@ -149,6 +149,10 @@ class Renamer(Plugin):
                         if multiple:
                             cd += 1
 
+                    # Notify on download
+                    download_message = 'Download of %s (%s) successful.' % (group['library']['titles'][0]['title'], replacements['quality'])
+                    fireEvent('notify', type = 'movie.downloaded', message = download_message, data = replacements)
+
                 # Before renaming, remove the lower quality files
                 db = get_session()
                 library = db.query(Library).filter_by(identifier = group['library']['identifier']).first()
@@ -172,6 +176,10 @@ class Renamer(Plugin):
                                     for rename_me in rename_files:
                                         filename = os.path.basename(rename_me)
                                         rename_files[rename_me] = rename_me.replace(filename, '_EXISTS_%s' % filename)
+                                
+                                # Notify on rename fail
+                                download_message = 'Renaming of %s (%s) canceled, exists in %s already.' % (movie.library.titles[0].title, group['meta_data']['quality']['label'], release.quality.label)
+                                fireEvent('notify', type = 'movie.renaming.canceled', message = download_message, data = group)
 
                                 break
 
@@ -200,7 +208,7 @@ class Renamer(Plugin):
 
                 #print rename_me, rename_files[rename_me]
 
-            # Search for trailers
+            # Search for trailers etc
             fireEvent('renamer.after', group)
 
     def moveFile(self, old, dest, suppress = True):

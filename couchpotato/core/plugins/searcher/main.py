@@ -91,7 +91,6 @@ class Searcher(Plugin):
                     print successful
 
                     if successful:
-                        log.info('Downloading of %s successful.' % nzb.get('name'))
 
                         # Mark release as snatched
                         db = get_session()
@@ -104,6 +103,9 @@ class Searcher(Plugin):
                             mvie = db.query(Movie).filter_by(id = movie['id']).first()
                             mvie.status_id = snatched_status.get('id')
                             db.commit()
+
+                        log.info('Downloading of %s successful.' % nzb.get('name'))
+                        fireEvent('notify', type = 'movie.snatched', message = 'Downloading of %s successful.' % nzb.get('name'), data = rls.to_dict())
 
                         return True
 

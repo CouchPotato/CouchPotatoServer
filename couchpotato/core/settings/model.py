@@ -2,8 +2,8 @@ from elixir.entity import Entity
 from elixir.fields import Field
 from elixir.options import options_defaults
 from elixir.relationships import OneToMany, ManyToOne
-from libs.elixir.options import using_options
-from libs.elixir.relationships import ManyToMany
+from elixir.options import using_options
+from elixir.relationships import ManyToMany
 from sqlalchemy.types import Integer, Unicode, UnicodeText, Boolean, Float, \
     String
 
@@ -179,7 +179,10 @@ class History(Entity):
     """History of actions that are connected to a certain release,
     such as, renamed to, downloaded, deleted, download subtitles etc"""
 
+    added = Field(Integer)
     message = Field(UnicodeText())
+    type = Field(Unicode(50))
+
     release = ManyToOne('Release')
 
 

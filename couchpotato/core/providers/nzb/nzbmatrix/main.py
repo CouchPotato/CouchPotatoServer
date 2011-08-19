@@ -111,7 +111,7 @@ class NZBMatrix(NZBProvider, RSS):
         return results
 
     def getApiExt(self):
-        return '&username=%s&apikey=%s' % (self.conf('username'), self.conf('apikey'))
+        return '&username=%s&apikey=%s' % (self.conf('username'), self.conf('api_key'))
 
     def isEnabled(self):
         return NZBProvider.isEnabled(self) and self.conf('username') and self.conf('api_key')

@@ -2,13 +2,13 @@ from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.request import jsonified
 from couchpotato.core.logger import CPLog
-from couchpotato.core.plugins.base import Plugin
+from couchpotato.core.notifications.base import Notification
 import time
 
 log = CPLog(__name__)
 
 
-class CoreNotifier(Plugin):
+class CoreNotifier(Notification):
 
     messages = []
 
@@ -21,7 +21,7 @@ class CoreNotifier(Plugin):
 
         self.registerStatic(__file__)
 
-    def notify(self, message = '', data = {}):
+    def notify(self, message = '', data = {}, type = None):
         self.add(data = {
             'message': message,
             'raw': data,

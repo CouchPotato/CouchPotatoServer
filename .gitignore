@@ -1,3 +1,4 @@
 /settings.conf
 /logs/*.log
 /_source/
+/_data/

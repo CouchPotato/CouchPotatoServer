@@ -1,5 +1,3 @@
-from couchpotato.api import addApiView
-from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
@@ -11,16 +9,10 @@ log = CPLog(__name__)
 
 class Prowl(Notification):
 
-    def __init__(self):
-        addEvent('notify', self.notify)
-        addEvent('notify.prowl', self.notify)
+    listen_to = ['movie.downloaded', 'movie.snatched']
 
-        addApiView('notify.prowl.test', self.test)
-
-    def notify(self, message = '', data = {}):
-
-        if self.isDisabled():
-            return
+    def notify(self, message = '', data = {}, type = None):
+        if self.dontNotify(type): return
 
         http_handler = HTTPSConnection('api.prowlapp.com')
 

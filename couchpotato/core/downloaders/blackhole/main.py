@@ -34,6 +34,7 @@ class Blackhole(Downloader):
                             log.debug('Failed download file: %s' % data.get('name'))
                             return False
                     else:
+                        log.info('Downloading: %s' % data.get('url'))
                         file = urllib.urlopen(data.get('url')).read()
 
                     with open(fullPath, 'wb') as f:

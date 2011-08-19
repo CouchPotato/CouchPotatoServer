@@ -23,6 +23,8 @@ def cmd_couchpotato(base_path, args):
                         dest = 'quiet', help = "Don't log to console")
     parser.add_argument('-d', '--daemon', action = 'store_true',
                         dest = 'daemonize', help = 'Daemonize the app')
+    parser.add_argument('-g', '--nogit', action = 'store_true',
+                        dest = 'git', help = 'Running from git')
 
     options = parser.parse_args(args)
 
@@ -46,6 +48,7 @@ def cmd_couchpotato(base_path, args):
     # Register environment settings
     from couchpotato.environment import Env
     Env.get('settings').setFile(os.path.join(options.data_dir, 'settings.conf'))
+    Env.set('uses_git', not options.git)
     Env.set('app_dir', base_path)
     Env.set('data_dir', options.data_dir)
     Env.set('log_path', os.path.join(log_dir, 'CouchPotato.log'))

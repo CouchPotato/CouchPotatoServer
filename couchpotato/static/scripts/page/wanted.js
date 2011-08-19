@@ -17,14 +17,6 @@ Page.Wanted = new Class({
 			});
 			$(self.wanted).inject(self.el);
 			App.addEvent('library.update', self.wanted.update.bind(self.wanted));
-			
-			// Snatched movies
-			self.snatched = new MovieList({
-				'status': 'snatched',
-				'actions': SnatchedActions
-			});
-			$(self.snatched).inject(self.el);
-			App.addEvent('library.update', self.snatched.update.bind(self.snatched));
 		}
 
 	}
