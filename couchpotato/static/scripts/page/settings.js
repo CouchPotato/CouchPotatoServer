@@ -121,7 +121,9 @@ Page.Settings = new Class({
 
 				// Create the group
 				if(!self.tabs[group.tab].groups[group.name]){
-					var group_el = self.createGroup(group).inject(self.tabs[group.tab].content);
+					var group_el = self.createGroup(group)
+						.inject(self.tabs[group.tab].content)
+						.addClass('section_'+section_name);
 					self.tabs[group.tab].groups[group.name] = group_el
 				}
 

@@ -35,26 +35,41 @@ class Newznab(NZBProvider, RSS):
         addEvent('provider.nzb.search', self.search)
         addEvent('provider.yarr.search', self.search)
 
-    def getUrl(self, type):
-        return cleanHost(self.conf('host')) + 'api?t=' + type
+        self.registerStatic(__file__)
+
+    def getUrl(self, host, type):
+        return cleanHost(host) + 'api?t=' + type
 
     def search(self, movie, quality):
 
+        uses = str(self.conf('use')).split(',')
+        hosts = self.conf('host').split(',')
+        api_keys = self.conf('api_key').split(',')
+
+        for nr in range(len(hosts)):
+            self.singleSearch({
+                'use': uses[nr],
+                'host': hosts[nr],
+                'api_key': api_keys[nr]
+            }, movie, quality)
+
+    def singleSearch(self, host, movie, quality):
+
         results = []
-        if self.isDisabled() or not self.isAvailable(self.getUrl(self.urls['search'])):
+        if self.isDisabled(host) or not self.isAvailable(self.getUrl(host['host'], self.urls['search'])):
             return results
 
         cat_id = self.getCatId(quality['identifier'])
         arguments = urlencode({
             'imdbid': movie['library']['identifier'].replace('tt', ''),
             'cat': cat_id[0],
-            'apikey': self.conf('api_key'),
+            'apikey': host['api_key'],
             't': self.urls['search'],
             'extended': 1
         })
-        url = "%s&%s" % (self.getUrl(self.urls['search']), arguments)
+        url = "%s&%s" % (self.getUrl(host['host'], self.urls['search']), arguments)
 
-        cache_key = 'newznab.%s.%s' % (movie['library']['identifier'], cat_id[0])
+        cache_key = 'newznab.%s.%s.%s' % (host['host'], movie['library']['identifier'], cat_id[0])
         single_cat = (len(cat_id) == 1 and cat_id[0] != self.cat_backup_id)
 
         try:
@@ -91,8 +106,8 @@ class Newznab(NZBProvider, RSS):
                         'name': self.getTextElement(nzb, "title"),
                         'age': self.calculateAge(int(time.mktime(parse(date).timetuple()))),
                         'size': int(size) / 1024 / 1024,
-                        'url': (self.getUrl(self.urls['download']) % id) + self.getApiExt(),
-                        'detail_url': (self.getUrl(self.urls['detail']) % id) + self.getApiExt(),
+                        'url': (self.getUrl(host['host'], self.urls['download']) % id) + self.getApiExt(host),
+                        'detail_url': (self.getUrl(host['host'], self.urls['detail']) % id) + self.getApiExt(host),
                         'content': self.getTextElement(nzb, "description"),
                     }
                     new['score'] = fireEvent('score.calculate', new, movie, single = True)
@@ -112,11 +127,11 @@ class Newznab(NZBProvider, RSS):
 
         return results
 
-    def isEnabled(self):
-        return NZBProvider.isEnabled(self) and self.conf('host') and self.conf('api_key')
+    def isDisabled(self, host):
+        return not self.isEnabled(host)
 
-    def getApiExt(self):
-        return '&apikey=%s' % self.conf('api_key')
+    def isEnabled(self, host):
+        return NZBProvider.isEnabled(self) and host['host'] and host['api_key'] and int(host['use'])
 
-    def detailLink(self, id):
-        return self.getUrl(self.detailUrl) % id
+    def getApiExt(self, host):
+        return '&apikey=%s' % host['api_key']

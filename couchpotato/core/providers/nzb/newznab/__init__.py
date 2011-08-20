@@ -9,10 +9,15 @@ config = [{
         {
             'tab': 'providers',
             'name': 'newznab',
+            'description': 'Enable multiple NewzNab providers',
             'options': [
                 {
                     'name': 'enabled',
                     'type': 'enabler',
+                },
+                {
+                    'name': 'use',
+                    'default': '0'
                 },
                 {
                     'name': 'host',
@@ -23,7 +28,7 @@ config = [{
                     'name': 'api_key',
                     'default': '',
                     'label': 'Api Key',
-                    'description': 'Can be found after login on the "API" page, bottom left. The string after "&amp;apikey=".',
+                    'description': 'Can be found on your profile page',
                 },
             ],
         },

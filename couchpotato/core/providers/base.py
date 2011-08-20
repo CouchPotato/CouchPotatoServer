@@ -2,10 +2,12 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
 from urllib2 import URLError
+from urlparse import urlparse
 import math
 import re
 import socket
 import time
+import urllib
 import urllib2
 
 log = CPLog(__name__)
@@ -16,9 +18,9 @@ class Provider(Plugin):
     type = None # movie, nzb, torrent, subtitle, trailer
     time_between_searches = 10 # Default timeout for url requests
 
-    last_use = 0
-    last_available_check = 0
-    is_available = 0
+    last_use = {}
+    last_available_check = {}
+    is_available = {}
 
     def getCache(self, cache_key):
         cache = Env.get('cache').get(cache_key)
@@ -35,49 +37,48 @@ class Provider(Plugin):
         if Env.get('debug'): return True
 
         now = time.time()
+        host = urlparse(test_url).hostname
 
-        if self.last_available_check < now - 900:
-            self.last_available_check = now
+        if self.last_available_check.get(host) < now - 900:
+            self.last_available_check[host] = now
             try:
                 self.urlopen(test_url, 30)
-                self.is_available = True
+                self.is_available[host] = True
             except (IOError, URLError):
                 log.error('%s unavailable, trying again in an 15 minutes.' % self.name)
-                self.is_available = False
+                self.is_available[host] = False
 
-        return self.is_available
+        return self.is_available[host]
 
-    def urlopen(self, url, timeout = 10, username = None, password = None):
+    def urlopen(self, url, timeout = 10, params = {}):
 
         socket.setdefaulttimeout(timeout)
-        self.wait()
+
+        host = urlparse(url).hostname
+        self.wait(host)
 
         try:
-            log.info('Opening url: %s' % url)
-            if username and password:
-                passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
-                passman.add_password(None, url, username, password)
-                authhandler = urllib2.HTTPBasicAuthHandler(passman)
-                opener = urllib2.build_opener(authhandler)
-                data = opener.open(url).read()
-            else:
-                data = urllib2.urlopen(url).read()
-
+            log.info('Opening url: %s, params: %s' % (url, params))
+            request = urllib2.Request(url, urllib.urlencode(params))
+            data = urllib2.urlopen(request).read()
         except IOError, e:
             log.error('Failed opening url, %s: %s' % (url, e))
             data = ''
 
-        self.last_use = time.time()
+        self.last_use[host] = time.time()
 
         return data
 
-    def wait(self):
+    def wait(self, host = ''):
         now = time.time()
-        wait = math.ceil(self.last_use - now + self.time_between_searches)
+
+        last_use = self.last_use.get(host, 0)
+
+        wait = math.ceil(last_use - now + self.time_between_searches)
 
         if wait > 0:
             log.debug('Waiting for %s, %d seconds' % (self.getName(), wait))
-            time.sleep(self.last_use - now + self.time_between_searches)
+            time.sleep(last_use - now + self.time_between_searches)
 
 
 class MovieProvider(Provider):
