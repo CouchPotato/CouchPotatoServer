@@ -14,9 +14,16 @@ config = [{
             'description': 'Options for the searchers',
             'options': [
                 {
+                    'name': 'preferred_words',
+                    'label': 'Preferred words',
+                    'default': '',
+                    'description': 'These words will give the releases a higher score.'
+                },
+                {
                     'name': 'required_words',
                     'label': 'Required words',
                     'default': '',
+                    'description': 'Ignore releases that doesn\'t contain one of these words.'
                 },
                 {
                     'name': 'ignored_words',
