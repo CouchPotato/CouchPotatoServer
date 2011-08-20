@@ -88,7 +88,6 @@ class Searcher(Plugin):
 
                 for nzb in sorted_results:
                     successful = fireEvent('download', data = nzb, movie = movie, single = True)
-                    print successful
 
                     if successful:
 
