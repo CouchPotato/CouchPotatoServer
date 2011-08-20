@@ -9,6 +9,7 @@ config = [{
         {
             'tab': 'notifications',
             'name': 'xbmc',
+            'label': 'XBMC',
             'options': [
                 {
                     'name': 'enabled',
