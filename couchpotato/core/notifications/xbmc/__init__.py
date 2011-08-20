@@ -25,7 +25,7 @@ config = [{
                 },
                 {
                     'name': 'password',
-                    'default': 'xbmc',
+                    'default': '',
                     'type': 'password',
                 },
             ],
