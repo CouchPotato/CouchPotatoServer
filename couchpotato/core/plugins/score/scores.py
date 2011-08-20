@@ -4,14 +4,19 @@ from couchpotato.environment import Env
 import re
 
 name_scores = [
-    'proper:5', 'repack:5',
-    'unrated:1',
+    # Tags
+    'proper:15', 'repack:15', 'directors cut:15', 'extended:7', 'unrated:2',
+    # Video
     'x264:1', 'h264:1',
+    # Audio
     'DTS:4', 'AC3:2',
+    # Quality
     '720p:10', '1080p:10', 'bluray:10', 'dvd:1', 'dvdrip:1', 'brrip:1', 'bdrip:1', 'bd50:1', 'bd25:1',
-    'imbt:1', 'cocain:1', 'vomit:1', 'fico:1', 'arrow:1', 'pukka:1', 'prism:1', 'devise:1', 'esir:1',
+    # Language / Subs
+    'german:-10', 'french:-10', 'spanish:-10', 'swesub:-20', 'danish:-10', 'dutch:-10',
+    # Release groups
+    'imbt:1', 'cocain:1', 'vomit:1', 'fico:1', 'arrow:1', 'pukka:1', 'prism:1', 'devise:1', 'esir:1', 'ctrlhd:1',
     'metis:1', 'diamond:1', 'wiki:1', 'cbgb:1', 'crossbow:1', 'sinners:1', 'amiable:1', 'refined:1', 'twizted:1', 'felony:1', 'hubris:1', 'machd:1',
-    'german:-10', 'french:-10', 'spanish:-10', 'swesub:-20', 'danish:-10'
 ]
 
 def nameScore(name, year):
@@ -29,7 +34,7 @@ def nameScore(name, year):
 
     #points if the year is correct
     if str(year) in name:
-        score = score + 1
+        score = score + 5
 
     # Contains preferred word
     nzb_words = re.split('\W+', simplifyString(name))
