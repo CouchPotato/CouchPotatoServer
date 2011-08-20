@@ -16,7 +16,7 @@ class Plugin(object):
     def getName(self):
         return self.__class__.__name__
 
-    def registerStatic(self, plugin_file):
+    def registerStatic(self, plugin_file, add_to_head = True):
 
         # Register plugin path
         self.plugin_path = os.path.dirname(plugin_file)
@@ -28,8 +28,9 @@ class Plugin(object):
         path = 'static/' + class_name + '/'
         addView(path + '<path:file>', self.showStatic, static = True)
 
-        for file in glob.glob(os.path.join(self.plugin_path, 'static', '*')):
-            fireEvent('register_script' if getExt(file) in 'js' else 'register_style', path + os.path.basename(file))
+        if add_to_head:
+            for file in glob.glob(os.path.join(self.plugin_path, 'static', '*')):
+                fireEvent('register_%s' % ('script' if getExt(file) in 'js' else 'style'), path + os.path.basename(file))
 
     def showStatic(self, file = ''):
         dir = os.path.join(self.plugin_path, 'static')
