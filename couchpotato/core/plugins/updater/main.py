@@ -53,7 +53,7 @@ class Updater(Plugin):
                 local = self.repo.getHead()
                 remote = branch.getHead()
 
-                if local.getDate() <  remote.getDate():
+                if local.getDate() < remote.getDate():
                     if self.conf('automatic') and not self.updateFailed:
                         self.doUpdate()
                     else:
@@ -76,4 +76,3 @@ class Updater(Plugin):
 
     def isEnabled(self):
         return Plugin.isEnabled(self) and Env.get('uses_git')
-    

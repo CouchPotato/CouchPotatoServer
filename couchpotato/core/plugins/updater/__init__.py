@@ -11,17 +11,17 @@ config = [{
             'name': 'updater',
             'label': 'Updater',
             'git_only': True,
+            'description': 'Enable periodic update checking',
             'options': [
                 {
                     'name': 'enabled',
                     'default': True,
                     'type': 'enabler',
-                    'description': 'Enable periodic update checking',
                 },
                 {
                     'name': 'automatic',
-                    'default': False,
-                    'type': 'enabler',
+                    'default': True,
+                    'type': 'bool',
                     'description': 'Automaticly update when update is available',
                 },
             ],
