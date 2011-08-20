@@ -10,7 +10,7 @@ config = [{
             'tab': 'downloaders',
             'name': 'blackhole',
             'label': 'Black hole',
-            'description': 'Download NZBs to a specific folder.',
+            'description': 'Download the NZB/Torrent to a specific folder.',
             'options': [
                 {
                     'name': 'enabled',
