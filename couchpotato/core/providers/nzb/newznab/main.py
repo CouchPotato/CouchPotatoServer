@@ -36,21 +36,52 @@ class Newznab(NZBProvider, RSS):
 
         self.registerStatic(__file__)
 
-    def getUrl(self, host, type):
-        return cleanHost(host) + 'api?t=' + type
+        addEvent('app.load', self.feed)
+
+    def feed(self):
+
+        hosts = self.getHosts()
+
+        results = []
+        for host in hosts:
+            result = self.singleFeed(host)
+
+            if result:
+                results.extend(result)
+
+        return results
+
+    def singleFeed(self, host):
+
+        results = []
+        if self.isDisabled(host) or not self.isAvailable(self.getUrl(host['host'], self.urls['search'])):
+            return results
+
+        arguments = urlencode({
+            't': self.cat_backup_id,
+            'r': host['api_key'],
+            'i': 58,
+        })
+        url = "%s?%s" % (cleanHost(host['host']) + 'rss', arguments)
+        cache_key = 'newznab.%s.feed.%s' % (host['host'], arguments)
+
+        results = self.createItems(url, cache_key, host, for_feed = True)
+
+        return results
+
 
     def search(self, movie, quality):
 
-        uses = str(self.conf('use')).split(',')
-        hosts = self.conf('host').split(',')
-        api_keys = self.conf('api_key').split(',')
+        hosts = self.getHosts()
 
-        for nr in range(len(hosts)):
-            self.singleSearch({
-                'use': uses[nr],
-                'host': hosts[nr],
-                'api_key': api_keys[nr]
-            }, movie, quality)
+        results = []
+        for host in hosts:
+            result = self.singleSearch(host, movie, quality)
+
+            if result:
+                results.extend(result)
+
+        return results
 
     def singleSearch(self, host, movie, quality):
 
@@ -70,6 +101,13 @@ class Newznab(NZBProvider, RSS):
 
         cache_key = 'newznab.%s.%s.%s' % (host['host'], movie['library']['identifier'], cat_id[0])
         single_cat = (len(cat_id) == 1 and cat_id[0] != self.cat_backup_id)
+
+        results = self.createItems(url, cache_key, host, single_cat = single_cat, movie = movie, quality = quality)
+
+        return results
+
+    def createItems(self, url, cache_key, host, single_cat = False, movie = None, quality = None, for_feed = False):
+        results = []
 
         try:
             data = self.getCache(cache_key)
@@ -109,22 +147,43 @@ class Newznab(NZBProvider, RSS):
                         'detail_url': (self.getUrl(host['host'], self.urls['detail']) % id) + self.getApiExt(host),
                         'content': self.getTextElement(nzb, "description"),
                     }
-                    new['score'] = fireEvent('score.calculate', new, movie, single = True)
 
-                    is_correct_movie = fireEvent('searcher.correct_movie',
-                                                 nzb = new, movie = movie, quality = quality,
-                                                 imdb_results = True, single_category = single_cat, single = True)
+                    if not for_feed:
+                        new['score'] = fireEvent('score.calculate', new, movie, single = True)
 
-                    if is_correct_movie:
+                        is_correct_movie = fireEvent('searcher.correct_movie',
+                                                     nzb = new, movie = movie, quality = quality,
+                                                     imdb_results = True, single_category = single_cat, single = True)
+
+                        if is_correct_movie:
+                            results.append(new)
+                            self.found(new)
+                    else:
                         results.append(new)
-                        self.found(new)
 
                 return results
             except SyntaxError:
-                log.error('Failed to parse XML response from Newznab')
-                return False
+                log.error('Failed to parse XML response from Newznab: %s' % host)
+                return results
 
-        return results
+    def getHosts(self):
+
+        uses = str(self.conf('use')).split(',')
+        hosts = self.conf('host').split(',')
+        api_keys = self.conf('api_key').split(',')
+
+        list = []
+        for nr in range(len(hosts)):
+            list.append({
+                'use': uses[nr],
+                'host': hosts[nr],
+                'api_key': api_keys[nr]
+            })
+
+        return list
+
+    def getUrl(self, host, type):
+        return cleanHost(host) + 'api?t=' + type
 
     def isDisabled(self, host):
         return not self.isEnabled(host)

@@ -136,6 +136,10 @@ class NZBProvider(YarrProvider):
         addEvent('provider.yarr.search', self.search)
 
         addEvent('provider.nzb.feed', self.feed)
+
+    def feed(self):
+        return []
+
     def search(self, movie, quality):
         return []
 
