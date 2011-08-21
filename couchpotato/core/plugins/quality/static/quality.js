@@ -19,6 +19,12 @@ var QualityBase = new Class({
 		return this.profiles[id]
 	},
 
+	getQuality: function(id){
+		return this.qualities.filter(function(q){
+			return q.id == id;
+		}).pick();
+	},
+
 	addSettings: function(){
 		var self = this;
 
@@ -106,9 +112,7 @@ var QualityBase = new Class({
 				new Element('input.min', {'value': quality.size_min}),
 				new Element('input.max', {'value': quality.size_max})
 			).inject(group)
-		})
-		
-		p(group)
+		});
 		
 	}
 

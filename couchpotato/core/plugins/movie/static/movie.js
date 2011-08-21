@@ -39,12 +39,19 @@ var Movie = new Class({
 						'text': self.data.library.plot
 					}),
 					self.quality = new Element('div.quality', {
-						'text': self.profile ? self.profile.get('label') : ''
+						'text': self.profile.get('label')+ ':'
 					})
 				),
 				self.actions = new Element('div.actions')
 			)
 		);
+		
+		self.profile.get('types').each(function(type){
+			var q = Quality.getQuality(type.quality_id);
+			new Element('span', {
+				'text': ' '+q.label
+			}).inject(self.quality);
+		})
 
 		Object.each(self.options.actions, function(action, key){
 			self.actions.adopt(

@@ -131,6 +131,7 @@ class Renamer(Plugin):
                             final_file_name = final_file_name.replace(' ', separator)
 
                         # Main file
+                        group['destination_dir'] = os.path.join(destination, final_folder_name)
                         rename_files[file] = os.path.join(destination, final_folder_name, final_file_name)
 
                         # Check for extra subtitle files
@@ -176,7 +177,7 @@ class Renamer(Plugin):
                                     for rename_me in rename_files:
                                         filename = os.path.basename(rename_me)
                                         rename_files[rename_me] = rename_me.replace(filename, '_EXISTS_%s' % filename)
-                                
+
                                 # Notify on rename fail
                                 download_message = 'Renaming of %s (%s) canceled, exists in %s already.' % (movie.library.titles[0].title, group['meta_data']['quality']['label'], release.quality.label)
                                 fireEvent('notify', type = 'movie.renaming.canceled', message = download_message, data = group)
