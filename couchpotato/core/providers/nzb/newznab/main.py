@@ -36,8 +36,6 @@ class Newznab(NZBProvider, RSS):
 
         self.registerStatic(__file__)
 
-        addEvent('app.load', self.feed)
-
     def feed(self):
 
         hosts = self.getHosts()
