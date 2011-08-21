@@ -28,10 +28,6 @@ class NZBMatrix(NZBProvider, RSS):
     ]
     cat_backup_id = 2
 
-    def __init__(self):
-        addEvent('provider.nzb.search', self.search)
-        addEvent('provider.yarr.search', self.search)
-
     def search(self, movie, quality):
 
         results = []

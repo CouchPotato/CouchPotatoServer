@@ -1,3 +1,4 @@
+from couchpotato.core.event import addEvent
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
@@ -129,6 +130,14 @@ class NZBProvider(YarrProvider):
     type = 'nzb'
 
     time_between_searches = 10 # Seconds
+
+    def __init__(self):
+        addEvent('provider.nzb.search', self.search)
+        addEvent('provider.yarr.search', self.search)
+
+        addEvent('provider.nzb.feed', self.feed)
+    def search(self, movie, quality):
+        return []
 
     def calculateAge(self, unix):
         return int(time.time() - unix) / 24 / 60 / 60

@@ -32,8 +32,7 @@ class Newznab(NZBProvider, RSS):
     time_between_searches = 1 # Seconds
 
     def __init__(self):
-        addEvent('provider.nzb.search', self.search)
-        addEvent('provider.yarr.search', self.search)
+        super(NZBProvider, self).__init__()
 
         self.registerStatic(__file__)
 
