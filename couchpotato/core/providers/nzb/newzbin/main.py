@@ -122,38 +122,17 @@ class Newzbin(NZBProvider, RSS):
         return results
 
     def download(self, nzb_id):
-
         try:
-            conn = httplib.HTTPSConnection('www.newzbin.com')
+            log.info('Download nzb from newzbin, report id: %s ' % nzb_id)
 
-            postdata = { 'username': self.conf('username'), 'password': self.conf('password'), 'reportid': nzb_id }
-            postdata = urllib.urlencode(postdata)
-
-            headers = {
-                'User-agent': 'CouchPotato+/%s' % Env.get('version'),
-                'Content-type': 'application/x-www-form-urlencoded',
-            }
-
-            fetchurl = '/api/dnzb/'
-            conn.request('POST', fetchurl, postdata, headers)
-            response = conn.getresponse()
-
-            # Save debug info if we have to
-            data = response.read()
-
-        except:
-            log.error('Problem with Newzbin server: %s' % traceback.format_exc())
+            return self.urlopen(self.url['download'], params = {
+                'username' : self.conf('username'),
+                'password' : self.conf('password'),
+                'reportid' : nzb_id
+            })
+        except Exception, e:
+            log.error('Failed downloading from newzbin, check credit: %s' % e)
             return False
-
-        # Is a valid response
-        return_code = response.getheader('X-DNZB-RCode')
-        return_text = response.getheader('X-DNZB-RText')
-
-        if return_code is not '200':
-            log.error('Error getting nzb from Newzbin: %s, %s' % (return_code, return_text))
-            return False
-
-        return data
 
     def getFormatId(self, format):
         for id, quality in self.format_ids.iteritems():
