@@ -17,6 +17,11 @@ log = CPLog(__name__)
 
 
 class Newzbin(NZBProvider, RSS):
+
+    urls = {
+        'search': 'https://www.newzbin.com/search/',
+        'download': 'http://www.newzbin.com/api/dnzb/',
+    }
     searchUrl = 'https://www.newzbin.com/search/'
 
     format_ids = {
@@ -57,14 +62,14 @@ class Newzbin(NZBProvider, RSS):
             'ps_rb_source': str(format_id),
         })
 
-        url = "%s?%s" % (self.searchUrl, arguments)
+        url = "%s?%s" % (self.url['search'], arguments)
         cache_key = str('newzbin.%s.%s.%s' % (movie['library']['identifier'], str(format_id), str(cat_id)))
         single_cat = True
 
         try:
             data = self.getCache(cache_key)
             if not data:
-                data = self.urlopen(url, username = self.conf('username'), password = self.conf('password'))
+                data = self.urlopen(url, params = {'username': self.conf('username'), 'password': self.conf('password')})
                 self.setCache(cache_key, data)
         except (IOError, URLError):
             log.error('Failed to open %s.' % url)
