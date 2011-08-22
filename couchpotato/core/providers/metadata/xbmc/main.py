@@ -1,8 +1,15 @@
 from couchpotato.core.providers.metadata.base import MetaDataBase
-from xml.etree.ElementTree import Element, SubElement, Comment, tostring
+from xml.etree.ElementTree import Element, SubElement, tostring
+import re
 import xml.dom.minidom
 
 class XBMC(MetaDataBase):
+
+    def getRootName(self, data = {}):
+
+
+
+        return '/Users/ruud/Downloads/Test/Transformers'
 
     def getFanartName(self, root):
         return '%s-fanart.jpg' % root
@@ -13,92 +20,31 @@ class XBMC(MetaDataBase):
     def getNfoName(self, root):
         return '%s.nfo' % root
 
-    def getNfo(self):
-        pass
-
-
-"""
-    def write_nfo(self, path, url = True, xml = True):
-
-        self.out_string = ''
-
-        if xml:
-            self.out_string = self._generate_nfo_xml()
-
-        if url:
-            self.out_string = self.out_string + self.nfo_string
-
-        try:
-            f = open(path, 'w')
-            f.write(self.out_string)
-            f.close()
-        except:
-            raise NfoError("Couldn't write nfo")
-
-    def _generate_nfo_xml(self):
+    def getNfo(self, data):
         nfoxml = Element('movie')
 
-        try:
-            title = SubElement(nfoxml, 'title')
-            title.text = self.tmdb_data['name']
-        except:
-            pass
+        types = ['title', 'rating', 'year', 'votes', 'rating', 'mpaa', 'originaltitle:original_title', 'outline:overview', 'premiered:released', 'id:imdb_id']
 
-        try:
-            originaltitle = SubElement(nfoxml, 'originaltitel')
-            originaltitle.text = self.tmdb_data['original_name']
-        except:
-            pass
+        for type in types:
 
-        try:
-            rating = SubElement(nfoxml, 'rating')
-            rating.text = str(self.tmdb_data['rating'])
-        except:
-            pass
+            if ':' in type:
+                name, type = type.split(':')
+            else:
+                name = type
 
-        try:
-            year = SubElement(nfoxml, 'year')
-            year.text = self.tmdb_data['released'][:4]
-        except:
-            pass
+            try:
+                el = SubElement(nfoxml, name)
+                el.text = data.get(type, '')
+            except:
+                pass
 
-        try:
-            votes = SubElement(nfoxml, 'votes')
-            votes.text = str(self.tmdb_data['votes'])
-        except:
-            pass
-
-        try:
-            plot = SubElement(nfoxml, 'outline')
-            plot.text = self.tmdb_data['overview']
-        except:
-            pass
-
-        for genre in self.tmdb_data['genres']:
-            genres = SubElement(nfoxml, 'genre')
-            genres.text = genre['name']
+        #for genre in self.get('genres'):
+        #    genres = SubElement(nfoxml, 'genre')
+        #    genres.text = genre
 
         try:
             runtime = SubElement(nfoxml, 'runtime')
-            runtime.text = str(self.tmdb_data['runtime']) + " min"
-        except:
-            pass
-
-        try:
-            premiered = SubElement(nfoxml, 'premiered')
-            premiered.text = self.tmdb_data['released']
-        except:
-            pass
-
-        try:
-            mpaa = SubElement(nfoxml, 'mpaa')
-            mpaa.text = self.tmdb_data['certification']
-        except:
-            pass
-
-        try:
-            id = SubElement(nfoxml, 'id')
-            id.text = self.tmdb_data['imdb_id']
+            runtime.text = data.get('runtime') + " min"
         except:
             pass
 
@@ -109,7 +55,7 @@ class XBMC(MetaDataBase):
         xml_string = text_re.sub('>\g<1></', xml_string)
 
         return xml_string.encode('utf-8')
-
+"""
     def _get_fanart(self, min_height, min_width):
         '''  Fetches the fanart for the specified imdb_id and saves it to dir.
         Arguments

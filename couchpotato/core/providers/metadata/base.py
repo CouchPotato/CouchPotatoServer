@@ -1,26 +1,59 @@
 from couchpotato.core.event import addEvent
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
+from couchpotato.environment import Env
+import os
 
 log = CPLog(__name__)
 
 
 class MetaDataBase(Plugin):
 
+    enabled_option = 'meta_enabled'
+
     def __init__(self):
         addEvent('metadata.create', self.create)
 
-    def create(self):
-        print 'create metadata %s' % __name__
+    def create(self, release):
+        if self.isDisabled(): return
 
-    def getFanartName(self):
+        log.info('Creating %s metadata.' % self.getName())
+
+        root = self.getRootName()
+
+        for type in ['nfo', 'thumbnail', 'fanart']:
+            try:
+                # Get file path
+                name = getattr(self, 'get' + type.capitalize() + 'Name')(root)
+
+                if name and self.conf('meta_' + type):
+
+                    # Get file content
+                    content = getattr(self, 'get' + type.capitalize())(release)
+                    if content:
+                        log.debug('Creating %s file: %s' % (type, name))
+                        self.createFile(name, content)
+
+            except Exception, e:
+                log.error('Unable to create %s file: %s' % (type, e))
+
+    def getRootName(self, data):
         return
 
-    def getThumbnailName(self):
+    def getFanartName(self, root):
         return
 
-    def getNfoName(self):
+    def getThumbnailName(self, root):
         return
 
-    def getNfo(self):
+    def getNfoName(self, root):
+        return
+
+    def getNfo(self, data):
+        return
+
+    def getThumbnail(self, data):
+        return
+
+    def getFanart(self, data):
         return

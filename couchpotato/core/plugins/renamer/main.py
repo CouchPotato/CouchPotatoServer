@@ -105,6 +105,7 @@ class Renamer(Plugin):
 
                         # Original filename
                         replacements['original'] = os.path.basename(file)
+                        replacements['original_folder'] = os.path.basename(os.path.dirname(file))
 
                         # Extension
                         replacements['ext'] = getExt(file)
@@ -122,7 +123,7 @@ class Renamer(Plugin):
                         if file_type is 'trailer':
                             final_file_name = self.doReplace(trailer_name, replacements)
                         elif file_type is 'nfo':
-                            final_file_name = self.doReplace(nfo_name, replacements)
+                            final_file_name = self.doReplace(nfo_name, replacements) + '-orig'
                         elif file_type is 'backdrop':
                             final_file_name = self.doReplace(backdrop_name, replacements)
 
@@ -131,7 +132,6 @@ class Renamer(Plugin):
                             final_file_name = final_file_name.replace(' ', separator)
 
                         # Main file
-                        group['destination_dir'] = os.path.join(destination, final_folder_name)
                         rename_files[file] = os.path.join(destination, final_folder_name, final_file_name)
 
                         # Check for extra subtitle files
@@ -147,12 +147,16 @@ class Renamer(Plugin):
                                 final_file_name = self.doReplace(file_name, replacements)
                                 rename_files[subtitle_extra] = os.path.join(destination, final_folder_name, final_file_name)
 
+                        # Filename without cd etc
+                        if file_type is 'movie':
+                            group['destination_dir'] = os.path.join(destination, final_folder_name)
+
                         if multiple:
                             cd += 1
 
                     # Notify on download
                     download_message = 'Download of %s (%s) successful.' % (group['library']['titles'][0]['title'], replacements['quality'])
-                    fireEvent('notify', type = 'movie.downloaded', message = download_message, data = replacements)
+                    fireEvent('notify', type = 'movie.downloaded', message = download_message, data = group)
 
                 # Before renaming, remove the lower quality files
                 db = get_session()

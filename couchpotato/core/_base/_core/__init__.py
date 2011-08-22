@@ -68,6 +68,18 @@ config = [{
                     'label': 'Url Base',
                     'description': 'When using mod_proxy use this to append the url with this.',
                 },
+                {
+                    'name': 'permission_folder',
+                    'default': 0755,
+                    'label': 'Folder CHMOD',
+                    'description': 'Permission for creating/copying folders',
+                },
+                {
+                    'name': 'permission_file',
+                    'default': 0755,
+                    'label': 'File CHMOD',
+                    'description': 'Permission for creating/copying files',
+                },
             ],
         },
     ],

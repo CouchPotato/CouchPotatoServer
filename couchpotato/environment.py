@@ -45,3 +45,7 @@ class Env:
         s = Env.get('settings')
         s.set(section, attr, value)
         return s
+
+    @staticmethod
+    def getPermission(type):
+        return int(Env.get('settings').get('permission_%s' % type, default = 0777))

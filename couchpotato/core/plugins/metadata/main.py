@@ -12,11 +12,9 @@ class MetaData(Plugin):
 
         self.registerStatic(__file__)
 
-        def test():
-            fireEvent('metadata.create')
-
-        addEvent('app.load', test)
+        addEvent('app.load', self.add)
 
     def add(self, data = {}):
         log.info('Getting meta data')
 
+        fireEvent('metadata.create', data)

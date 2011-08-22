@@ -1,14 +1,19 @@
 from couchpotato import addView
 from couchpotato.core.event import fireEvent
 from couchpotato.core.helpers.variable import getExt
+from couchpotato.core.logger import CPLog
 from couchpotato.environment import Env
 from flask.helpers import send_from_directory
 import glob
 import os.path
 import re
 
+log = CPLog(__name__)
+
 
 class Plugin(object):
+
+    enabled_option = 'enabled'
 
     def conf(self, attr, default = None):
         return Env.setting(attr, self.getName().lower(), default = default)
@@ -36,8 +41,26 @@ class Plugin(object):
         dir = os.path.join(self.plugin_path, 'static')
         return send_from_directory(dir, file)
 
+    def createFile(self, path, content):
+
+        self.makeDir(os.path.dirname(path))
+
+        try:
+            file = open(path, 'w')
+            file.write(content)
+            file.close()
+        except Exception, e:
+            log.error('Unable writing to file "%s": %s' % (path, e))
+
+    def makeDir(self, path):
+        try:
+            if not os.path.isdir(path):
+                os.makedirs(path, Env.getPermission('folder'))
+        except Exception, e:
+            log.error('Unable to create folder "%s": %s' % (path, e))
+
     def isDisabled(self):
         return not self.isEnabled()
 
     def isEnabled(self):
-        return self.conf('enabled') or self.conf('enabled') == None
+        return self.conf(self.enabled_option) or self.conf(self.enabled_option) == None
