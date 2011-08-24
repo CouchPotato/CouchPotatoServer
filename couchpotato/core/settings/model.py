@@ -45,6 +45,16 @@ class Library(Entity):
     movies = OneToMany('Movie')
     titles = OneToMany('LibraryTitle')
     files = ManyToMany('File')
+    info = OneToMany('LibraryInfo')
+
+
+class LibraryInfo(Entity):
+    """"""
+
+    identifier = Field(String(50))
+    value = Field(Unicode(255), nullable = False)
+
+    library = ManyToOne('Library')
 
 
 class LibraryTitle(Entity):
