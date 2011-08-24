@@ -18,7 +18,7 @@
                          updated=post.last_update, published=post.pub_date)
             return feed.get_response()
 
-    :copyright: (c) 2010 by the Werkzeug Team, see AUTHORS for more details.
+    :copyright: (c) 2011 by the Werkzeug Team, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
 from datetime import datetime
@@ -152,7 +152,7 @@ class AtomFeed(object):
         # atom demands either an author element in every entry or a global one
         if not self.author:
             if False in map(lambda e: bool(e.author), self.entries):
-                self.author = ({'name': u'unbekannter Autor'},)
+                self.author = ({'name': 'Unknown author'},)
 
         if not self.updated:
             dates = sorted([entry.updated for entry in self.entries])

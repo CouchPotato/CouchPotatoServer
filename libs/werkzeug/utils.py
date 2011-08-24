@@ -7,17 +7,15 @@
     them are used by the request and response wrappers but especially for
     middleware development it makes sense to use them without the wrappers.
 
-    :copyright: (c) 2010 by the Werkzeug Team, see AUTHORS for more details.
+    :copyright: (c) 2011 by the Werkzeug Team, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
 import re
 import os
-from time import time
-from datetime import datetime, timedelta
+import sys
 
-from werkzeug._internal import _decode_unicode, \
-     _iter_modules, _ExtendedCookie, _ExtendedMorsel, \
-     _DictAccessorProperty, _parse_signature, _missing
+from werkzeug._internal import _iter_modules, _DictAccessorProperty, \
+     _parse_signature, _missing
 
 
 _format_re = re.compile(r'\$(?:(%s)|\{(%s)\})' % (('[a-zA-Z_][a-zA-Z0-9_]*',) * 2))
@@ -340,106 +338,6 @@ def unescape(s):
     return _entity_re.sub(handle_match, s)
 
 
-def parse_cookie(header, charset='utf-8', errors='ignore',
-                 cls=None):
-    """Parse a cookie.  Either from a string or WSGI environ.
-
-    Per default encoding errors are ignored.  If you want a different behavior
-    you can set `errors` to ``'replace'`` or ``'strict'``.  In strict mode a
-    :exc:`HTTPUnicodeError` is raised.
-
-    .. versionchanged:: 0.5
-       This function now returns a :class:`TypeConversionDict` instead of a
-       regular dict.  The `cls` parameter was added.
-
-    :param header: the header to be used to parse the cookie.  Alternatively
-                   this can be a WSGI environment.
-    :param charset: the charset for the cookie values.
-    :param errors: the error behavior for the charset decoding.
-    :param cls: an optional dict class to use.  If this is not specified
-                       or `None` the default :class:`TypeConversionDict` is
-                       used.
-    """
-    if isinstance(header, dict):
-        header = header.get('HTTP_COOKIE', '')
-    if cls is None:
-        cls = TypeConversionDict
-    cookie = _ExtendedCookie()
-    cookie.load(header)
-    result = {}
-
-    # decode to unicode and skip broken items.  Our extended morsel
-    # and extended cookie will catch CookieErrors and convert them to
-    # `None` items which we have to skip here.
-    for key, value in cookie.iteritems():
-        if value.value is not None:
-            result[key] = _decode_unicode(unquote_header_value(value.value),
-                                          charset, errors)
-
-    return cls(result)
-
-
-def dump_cookie(key, value='', max_age=None, expires=None, path='/',
-                domain=None, secure=None, httponly=False, charset='utf-8',
-                sync_expires=True):
-    """Creates a new Set-Cookie header without the ``Set-Cookie`` prefix
-    The parameters are the same as in the cookie Morsel object in the
-    Python standard library but it accepts unicode data, too.
-
-    :param max_age: should be a number of seconds, or `None` (default) if
-                    the cookie should last only as long as the client's
-                    browser session.  Additionally `timedelta` objects
-                    are accepted, too.
-    :param expires: should be a `datetime` object or unix timestamp.
-    :param path: limits the cookie to a given path, per default it will
-                 span the whole domain.
-    :param domain: Use this if you want to set a cross-domain cookie. For
-                   example, ``domain=".example.com"`` will set a cookie
-                   that is readable by the domain ``www.example.com``,
-                   ``foo.example.com`` etc. Otherwise, a cookie will only
-                   be readable by the domain that set it.
-    :param secure: The cookie will only be available via HTTPS
-    :param httponly: disallow JavaScript to access the cookie.  This is an
-                     extension to the cookie standard and probably not
-                     supported by all browsers.
-    :param charset: the encoding for unicode values.
-    :param sync_expires: automatically set expires if max_age is defined
-                         but expires not.
-    """
-    try:
-        key = str(key)
-    except UnicodeError:
-        raise TypeError('invalid key %r' % key)
-    if isinstance(value, unicode):
-        value = value.encode(charset)
-    value = quote_header_value(value)
-    morsel = _ExtendedMorsel(key, value)
-    if isinstance(max_age, timedelta):
-        max_age = (max_age.days * 60 * 60 * 24) + max_age.seconds
-    if expires is not None:
-        if not isinstance(expires, basestring):
-            expires = cookie_date(expires)
-        morsel['expires'] = expires
-    elif max_age is not None and sync_expires:
-        morsel['expires'] = cookie_date(time() + max_age)
-    if domain and ':' in domain:
-        # The port part of the domain should NOT be used. Strip it
-        domain = domain.split(':', 1)[0]
-    if domain:
-        assert '.' in domain, (
-            "Setting \"domain\" for a cookie on a server running localy (ex: "
-            "localhost) is not supportted by complying browsers. You should "
-            "have something like: \"127.0.0.1 localhost dev.localhost\" on "
-            "your hosts file and then point your server to run on "
-            "\"dev.localhost\" and also set \"domain\" for \"dev.localhost\""
-        )
-    for k, v in (('path', path), ('domain', domain), ('secure', secure),
-                 ('max-age', max_age), ('httponly', httponly)):
-        if v is not None and v is not False:
-            morsel[k] = str(v)
-    return morsel.output(header='').lstrip()
-
-
 def redirect(location, code=302):
     """Return a response object (a WSGI application) that, if called,
     redirects the client to the target location.  Supported codes are 301,
@@ -452,7 +350,7 @@ def redirect(location, code=302):
        the :func:`iri_to_uri` function.
 
     :param location: the location the response should redirect to.
-    :param code: the redirect status code.
+    :param code: the redirect status code. defaults to 302.
     """
     assert code in (201, 301, 302, 303, 305, 307), 'invalid code'
     from werkzeug.wrappers import BaseResponse
@@ -521,9 +419,9 @@ def import_string(import_name, silent=False):
             modname = module + '.' + obj
             __import__(modname)
             return sys.modules[modname]
-    except ImportError:
+    except ImportError, e:
         if not silent:
-            raise
+            raise ImportStringError(import_name, e), None, sys.exc_info()[2]
 
 
 def find_modules(import_path, include_packages=False, recursive=False):
@@ -658,13 +556,56 @@ class ArgumentValidationError(ValueError):
         ))
 
 
+class ImportStringError(ImportError):
+    """Provides information about a failed :func:`import_string` attempt."""
+
+    #: String in dotted notation that failed to be imported.
+    import_name = None
+    #: Wrapped exception.
+    exception = None
+
+    def __init__(self, import_name, exception):
+        self.import_name = import_name
+        self.exception = exception
+
+        msg = (
+            'import_string() failed for %r. Possible reasons are:\n\n'
+            '- missing __init__.py in a package;\n'
+            '- package or module path not included in sys.path;\n'
+            '- duplicated package or module name taking precedence in '
+            'sys.path;\n'
+            '- missing module, class, function or variable;\n\n'
+            'Debugged import:\n\n%s\n\n'
+            'Original exception:\n\n%s: %s')
+
+        name = ''
+        tracked = []
+        for part in import_name.replace(':', '.').split('.'):
+            name += (name and '.') + part
+            imported = import_string(name, silent=True)
+            if imported:
+                tracked.append((name, imported.__file__))
+            else:
+                track = ['- %r found in %r.' % (n, i) for n, i in tracked]
+                track.append('- %r not found.' % name)
+                msg = msg % (import_name, '\n'.join(track),
+                             exception.__class__.__name__, str(exception))
+                break
+
+        ImportError.__init__(self, msg)
+
+    def __repr__(self):
+        return '<%s(%r, %r)>' % (self.__class__.__name__, self.import_name,
+                                 self.exception)
+
+
 # circular dependencies
 from werkzeug.http import quote_header_value, unquote_header_value, \
      cookie_date
-from werkzeug.datastructures import TypeConversionDict
 
 # DEPRECATED
 # these objects were previously in this module as well.  we import
 # them here for backwards compatibility with old pickles.
 from werkzeug.datastructures import MultiDict, CombinedMultiDict, \
      Headers, EnvironHeaders
+from werkzeug.http import parse_cookie, dump_cookie

@@ -5,7 +5,7 @@ r"""
 
     A minimal template engine.
 
-    :copyright: (c) 2010 by the Werkzeug Team, see AUTHORS for more details.
+    :copyright: (c) 2011 by the Werkzeug Team, see AUTHORS for more details.
     :license: BSD License.
 """
 import sys
@@ -17,6 +17,11 @@ from tokenize import PseudoToken
 from werkzeug import urls, utils
 from werkzeug._internal import _decode_unicode
 from werkzeug.datastructures import MultiDict
+
+
+from warnings import warn
+warn(DeprecationWarning('werkzeug.templates is deprecated and '
+                        'will be removed in Werkzeug 1.0'))
 
 
 # Copyright notice: The `parse_data` method uses the string interpolation

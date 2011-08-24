@@ -54,7 +54,7 @@
                 return e
 
 
-    :copyright: (c) 2010 by the Werkzeug Team, see AUTHORS for more details.
+    :copyright: (c) 2011 by the Werkzeug Team, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
 import sys
@@ -279,6 +279,21 @@ class RequestTimeout(HTTPException):
     )
 
 
+class Conflict(HTTPException):
+    """*409* `Conflict`
+
+    Raise to signal that a request cannot be completed because it conflicts
+    with the current state on the server.
+
+    .. versionadded:: 0.7
+    """
+    code = 409
+    description = (
+        '<p>A conflict happened while processing the request.  The resource '
+        'might have been modified while the request was being processed.'
+    )
+
+
 class Gone(HTTPException):
     """*410* `Gone`
 
@@ -352,6 +367,47 @@ class UnsupportedMediaType(HTTPException):
     description = (
         '<p>The server does not support the media type transmitted in '
         'the request.</p>'
+    )
+
+
+class RequestedRangeNotSatisfiable(HTTPException):
+    """*416* `Requested Range Not Satisfiable`
+
+    The client asked for a part of the file that lies beyond the end
+    of the file.
+
+    .. versionadded:: 0.7
+    """
+    code = 416
+    description = (
+        '<p>The server cannot provide the requested range.'
+    )
+
+
+class ExpectationFailed(HTTPException):
+    """*417* `Expectation Failed`
+
+    The server cannot meet the requirements of the Expect request-header.
+
+    .. versionadded:: 0.7
+    """
+    code = 417
+    description = (
+        '<p>The server could not meet the requirements of the Expect header'
+    )
+
+
+class ImATeapot(HTTPException):
+    """*418* `I'm a teapot`
+
+    The server should return this if it is a teapot and someone attempted
+    to brew coffee with it.
+
+    .. versionadded:: 0.7
+    """
+    code = 418
+    description = (
+        '<p>This server is a teapot, not a coffee machine'
     )
 
 
@@ -454,6 +510,11 @@ class Aborter(object):
         raise self.mapping[code](*args, **kwargs)
 
 abort = Aborter()
+
+
+#: an exception that is used internally to signal both a key error and a
+#: bad request.  Used by a lot of the datastructures.
+BadRequestKeyError = BadRequest.wrap(KeyError)
 
 
 # imported here because of circular dependencies of werkzeug.utils

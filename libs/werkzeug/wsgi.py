@@ -5,7 +5,7 @@
 
     This module implements WSGI related helpers.
 
-    :copyright: (c) 2010 by the Werkzeug Team, see AUTHORS for more details.
+    :copyright: (c) 2011 by the Werkzeug Team, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
 import os
@@ -153,7 +153,7 @@ def peek_path_info(environ):
 
 
 def extract_path_info(environ_or_baseurl, path_or_url, charset='utf-8',
-                      errors='ignore', collapse_http_schemes=True):
+                      errors='replace', collapse_http_schemes=True):
     """Extracts the path info from the given URL (or WSGI environment) and
     path.  The path info returned is a unicode string, not a bytestring
     suitable for a WSGI environment.  The URLs might also be IRIs.
@@ -298,7 +298,7 @@ class SharedDataMiddleware(object):
     :param app: the application to wrap.  If you don't want to wrap an
                 application you can pass it :exc:`NotFound`.
     :param exports: a dict of exported files and folders.
-    :param diallow: a list of :func:`~fnmatch.fnmatch` rules.
+    :param disallow: a list of :func:`~fnmatch.fnmatch` rules.
     :param fallback_mimetype: the fallback mimetype for unknown files.
     :param cache: enable or disable caching headers.
     :Param cache_timeout: the cache timeout in seconds for the headers.

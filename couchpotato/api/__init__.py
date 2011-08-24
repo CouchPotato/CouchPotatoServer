@@ -1,7 +1,7 @@
 from couchpotato.core.helpers.request import jsonified
-from flask import Module
+from flask.blueprints import Blueprint
 
-api = Module(__name__)
+api = Blueprint('api', __name__)
 
 def addApiView(route, func, static = False):
     api.add_url_rule(route + ('' if static else '/'), endpoint = route if route else 'index', view_func = func)

@@ -85,8 +85,8 @@ class FilterTestCase(JinjaTestCase):
         )
         out = tmpl.render()
         assert out == (
-            '100 Bytes|1.0 KB|1.0 MB|1.0 GB|1000.0 GB|'
-            '100 Bytes|1000 Bytes|976.6 KiB|953.7 MiB|931.3 GiB'
+            '100 Bytes|0.0 kB|0.0 MB|0.0 GB|0.0 TB|100 Bytes|'
+            '1000 Bytes|1.0 KiB|0.9 MiB|0.9 GiB'
         )
 
     def test_first(self):
@@ -287,6 +287,13 @@ class FilterTestCase(JinjaTestCase):
             "3: 3, 4",
             ""
         ]
+
+    def test_groupby_tuple_index(self):
+        tmpl = env.from_string('''
+        {%- for grouper, list in [('a', 1), ('a', 2), ('b', 1)]|groupby(0) -%}
+            {{ grouper }}{% for x in list %}:{{ x.1 }}{% endfor %}|
+        {%- endfor %}''')
+        assert tmpl.render() == 'a:1:2|b:1|'
 
     def test_groupby_multidot(self):
         class Date(object):

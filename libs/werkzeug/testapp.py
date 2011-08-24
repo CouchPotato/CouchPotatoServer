@@ -6,7 +6,7 @@
     Provide a small test application that can be used to test a WSGI server
     and check it for WSGI compliance.
 
-    :copyright: (c) 2010 by the Werkzeug Team, see AUTHORS for more details.
+    :copyright: (c) 2011 by the Werkzeug Team, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
 import os
@@ -160,9 +160,13 @@ def render_testapp(req):
                                    b.project_name.lower()))
     python_eggs = []
     for egg in eggs:
+        try:
+            version = egg.version
+        except (ValueError, AttributeError):
+            version = 'unknown'
         python_eggs.append('<li>%s <small>[%s]</small>' % (
             escape(egg.project_name),
-            escape(egg.version)
+            escape(version)
         ))
 
     wsgi_env = []

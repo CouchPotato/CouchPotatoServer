@@ -17,7 +17,7 @@
     decoded into an unicode object if possible and if it makes sense.
 
 
-    :copyright: (c) 2010 by the Werkzeug Team, see AUTHORS for more details.
+    :copyright: (c) 2011 by the Werkzeug Team, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
 import urlparse
@@ -28,17 +28,20 @@ from werkzeug.http import HTTP_STATUS_CODES, \
      parse_date, generate_etag, is_resource_modified, unquote_etag, \
      quote_etag, parse_set_header, parse_authorization_header, \
      parse_www_authenticate_header, remove_entity_headers, \
-     parse_options_header, dump_options_header, http_date
+     parse_options_header, dump_options_header, http_date, \
+     parse_if_range_header, parse_cookie, dump_cookie, \
+     parse_range_header, parse_content_range_header, dump_header
 from werkzeug.urls import url_decode, iri_to_uri
 from werkzeug.formparser import parse_form_data, default_stream_factory
 from werkzeug.utils import cached_property, environ_property, \
-     parse_cookie, dump_cookie, header_property, get_content_type
+     header_property, get_content_type
 from werkzeug.wsgi import get_current_url, get_host, LimitedStream, \
      ClosingIterator
 from werkzeug.datastructures import MultiDict, CombinedMultiDict, Headers, \
      EnvironHeaders, ImmutableMultiDict, ImmutableTypeConversionDict, \
      ImmutableList, MIMEAccept, CharsetAccept, LanguageAccept, \
-     ResponseCacheControl, RequestCacheControl, CallbackDict
+     ResponseCacheControl, RequestCacheControl, CallbackDict, \
+     ContentRange
 from werkzeug._internal import _empty_stream, _decode_unicode, \
      _patch_wrapper, _get_environ
 
@@ -113,17 +116,14 @@ class BaseRequest(object):
     #: the charset for the request, defaults to utf-8
     charset = 'utf-8'
 
-    #: the error handling procedure for errors, defaults to 'ignore'
-    encoding_errors = 'ignore'
-
-    #: set to True if the application runs behind an HTTP proxy
-    is_behind_proxy = False
+    #: the error handling procedure for errors, defaults to 'replace'
+    encoding_errors = 'replace'
 
     #: the maximum content length.  This is forwarded to the form data
     #: parsing function (:func:`parse_form_data`).  When set and the
     #: :attr:`form` or :attr:`files` attribute is accessed and the
     #: parsing fails because more than the specified value is transmitted
-    #: a :exc:`~exceptions.RequestEntityTooLarge` exception is raised.
+    #: a :exc:`~werkzeug.exceptions.RequestEntityTooLarge` exception is raised.
     #:
     #: Have a look at :ref:`dealing-with-request-data` for more details.
     #:
@@ -134,7 +134,7 @@ class BaseRequest(object):
     #: parsing function (:func:`parse_form_data`).  When set and the
     #: :attr:`form` or :attr:`files` attribute is accessed and the
     #: data in memory for post data is longer than the specified value a
-    #: :exc:`~exceptions.RequestEntityTooLarge` exception is raised.
+    #: :exc:`~werkzeug.exceptions.RequestEntityTooLarge` exception is raised.
     #:
     #: Have a look at :ref:`dealing-with-request-data` for more details.
     #:
@@ -142,25 +142,27 @@ class BaseRequest(object):
     max_form_memory_size = None
 
     #: the class to use for `args` and `form`.  The default is an
-    #: :class:`ImmutableMultiDict` which supports multiple values per key.
-    #: alternatively it makes sense to use an :class:`ImmutableOrderedMultiDict`
-    #: which preserves order or a :class:`ImmutableDict` which is
-    #: the fastest but only remembers the last key.  It is also possible
-    #: to use mutable structures, but this is not recommended.
+    #: :class:`~werkzeug.datastructures.ImmutableMultiDict` which supports
+    #: multiple values per key.  alternatively it makes sense to use an
+    #: :class:`~werkzeug.datastructures.ImmutableOrderedMultiDict` which
+    #: preserves order or a :class:`~werkzeug.datastructures.ImmutableDict`
+    #: which is the fastest but only remembers the last key.  It is also
+    #: possible to use mutable structures, but this is not recommended.
     #:
     #: .. versionadded:: 0.6
     parameter_storage_class = ImmutableMultiDict
 
-    #: the type to be used for list values from the incoming WSGI
-    #: environment.  By default an :class:`ImmutableList` is used
+    #: the type to be used for list values from the incoming WSGI environment.
+    #: By default an :class:`~werkzeug.datastructures.ImmutableList` is used
     #: (for example for :attr:`access_list`).
     #:
     #: .. versionadded:: 0.6
     list_storage_class = ImmutableList
 
-    #: the type to be used for dict values from the incoming WSGI
-    #: environment.  By default an :class:`ImmutableTypeConversionDict`
-    #: is used (for example for :attr:`cookies`).
+    #: the type to be used for dict values from the incoming WSGI environment.
+    #: By default an
+    #: :class:`~werkzeug.datastructures.ImmutableTypeConversionDict` is used
+    #: (for example for :attr:`cookies`).
     #:
     #: .. versionadded:: 0.6
     dict_storage_class = ImmutableTypeConversionDict
@@ -205,12 +207,13 @@ class BaseRequest(object):
         object (:class:`Client`) that allows to create multipart requests,
         support for cookies etc.
 
-        This accepts the same options as the :class:`EnvironBuilder`.
+        This accepts the same options as the
+        :class:`~werkzeug.test.EnvironBuilder`.
 
         .. versionchanged:: 0.5
            This method now accepts the same arguments as
-           :class:`EnvironBuilder`.  Because of this the `environ` parameter
-           is now called `environ_overrides`.
+           :class:`~werkzeug.test.EnvironBuilder`.  Because of this the
+           `environ` parameter is now called `environ_overrides`.
 
         :return: request object
         """
@@ -277,7 +280,7 @@ class BaseRequest(object):
         filled with the incoming form data.  As a matter of fact the input
         stream will be empty afterwards.
 
-        :internal:
+        .. versionadded:: 0.8
         """
         # abort early if we have already consumed the stream
         if 'stream' in self.__dict__:
@@ -288,7 +291,7 @@ class BaseRequest(object):
                                'that, set `shallow` to False.')
         data = None
         stream = _empty_stream
-        if self.environ['REQUEST_METHOD'] in ('POST', 'PUT'):
+        if self.environ['REQUEST_METHOD'] in ('POST', 'PUT', 'PATCH'):
             try:
                 data = parse_form_data(self.environ, self._get_file_stream,
                                        self.charset, self.encoding_errors,
@@ -344,7 +347,8 @@ class BaseRequest(object):
 
     @cached_property
     def args(self):
-        """The parsed URL parameters.  By default a :class:`ImmutableMultiDict`
+        """The parsed URL parameters.  By default an
+        :class:`~werkzeug.datastructures.ImmutableMultiDict`
         is returned from this function.  This can be changed by setting
         :attr:`parameter_storage_class` to a different type.  This might
         be necessary if the order of the form data is important.
@@ -366,7 +370,8 @@ class BaseRequest(object):
 
     @cached_property
     def form(self):
-        """The form parameters.  By default a :class:`ImmutableMultiDict`
+        """The form parameters.  By default an
+        :class:`~werkzeug.datastructures.ImmutableMultiDict`
         is returned from this function.  This can be changed by setting
         :attr:`parameter_storage_class` to a different type.  This might
         be necessary if the order of the form data is important.
@@ -386,16 +391,18 @@ class BaseRequest(object):
 
     @cached_property
     def files(self):
-        """:class:`MultiDict` object containing all uploaded files.  Each key in
-        :attr:`files` is the name from the ``<input type="file" name="">``.  Each
-        value in :attr:`files` is a Werkzeug :class:`FileStorage` object.
+        """:class:`~werkzeug.datastructures.MultiDict` object containing
+        all uploaded files.  Each key in :attr:`files` is the name from the
+        ``<input type="file" name="">``.  Each value in :attr:`files` is a
+        Werkzeug :class:`~werkzeug.datastructures.FileStorage` object.
 
         Note that :attr:`files` will only contain data if the request method was
-        POST or PUT and the ``<form>`` that posted to the request had
+        POST, PUT or PATCH and the ``<form>`` that posted to the request had
         ``enctype="multipart/form-data"``.  It will be empty otherwise.
 
-        See the :class:`MultiDict` / :class:`FileStorage` documentation for more
-        details about the used data structure.
+        See the :class:`~werkzeug.datastructures.MultiDict` /
+        :class:`~werkzeug.datastructures.FileStorage` documentation for
+        more details about the used data structure.
         """
         self._load_form_data()
         return self.files
@@ -409,7 +416,7 @@ class BaseRequest(object):
     @cached_property
     def headers(self):
         """The headers from the WSGI environ as immutable
-        :class:`EnvironHeaders`.
+        :class:`~werkzeug.datastructures.EnvironHeaders`.
         """
         return EnvironHeaders(self.environ)
 
@@ -473,14 +480,17 @@ class BaseRequest(object):
     @property
     def remote_addr(self):
         """The remote address of the client."""
-        if self.is_behind_proxy and self.access_route:
-            return self.access_route[0]
         return self.environ.get('REMOTE_ADDR')
 
     remote_user = environ_property('REMOTE_USER', doc='''
         If the server supports user authentication, and the script is
         protected, this attribute contains the username the user has
         authenticated as.''')
+
+    scheme = environ_property('wsgi.url_scheme', doc='''
+        URL scheme (http or https).
+
+        .. versionadded:: 0.7''')
 
     is_xhr = property(lambda x: x.environ.get('HTTP_X_REQUESTED_WITH', '')
                       .lower() == 'xmlhttprequest', doc='''
@@ -544,9 +554,10 @@ class BaseResponse(object):
     encoded.  Please refer to `the unicode chapter <unicode.txt>`_ for more
     details about customizing the behavior.
 
-    Response can be any kind of iterable or string.  If it's a string
-    it's considered being an iterable with one item which is the string
-    passed.  Headers can be a list of tuples or a :class:`Headers` object.
+    Response can be any kind of iterable or string.  If it's a string it's
+    considered being an iterable with one item which is the string passed.
+    Headers can be a list of tuples or a
+    :class:`~werkzeug.datastructures.Headers` object.
 
     Special note for `mimetype` and `content_type`:  For most mime types
     `mimetype` and `content_type` work the same, the difference affects
@@ -560,7 +571,8 @@ class BaseResponse(object):
 
     :param response: a string or response iterable.
     :param status: a string with a status or an integer with the status code.
-    :param headers: a list of headers or an :class:`Headers` object.
+    :param headers: a list of headers or a
+                    :class:`~werkzeug.datastructures.Headers` object.
     :param mimetype: the mimetype for the request.  See notice above.
     :param content_type: the content type for the request.  See notice above.
     :param direct_passthrough: if set to `True` :meth:`iter_encoded` is not
@@ -627,11 +639,14 @@ class BaseResponse(object):
 
     def call_on_close(self, func):
         """Adds a function to the internal list of functions that should
-        be called as part of closing down the response.
+        be called as part of closing down the response.  Since 0.7 this
+        function also returns the function that was passed so that this
+        can be used as a decorator.
 
         .. versionadded:: 0.6
         """
         self._on_close.append(func)
+        return func
 
     def __repr__(self):
         if self.is_sequence:
@@ -918,7 +933,8 @@ class BaseResponse(object):
            encoded and the iterable is buffered.
 
         :param environ: the WSGI environment of the request.
-        :return: returns a new :class:`Headers` object.
+        :return: returns a new :class:`~werkzeug.datastructures.Headers`
+                 object.
         """
         headers = Headers(self.headers)
         location = None
@@ -963,8 +979,10 @@ class BaseResponse(object):
         # if we can determine the content length automatically, we
         # should try to do that.  But only if this does not involve
         # flattening the iterator or encoding of unicode strings in
-        # the response.
-        if self.is_sequence and content_length is None:
+        # the response.  We however should not do that if we have a 304
+        # response.
+        if self.is_sequence and content_length is None and \
+           self.status_code != 304:
             try:
                 content_length = sum(len(str(x)) for x in self.response)
             except UnicodeError:
@@ -1027,7 +1045,7 @@ class BaseResponse(object):
         else:
             headers = self.get_wsgi_headers(environ)
         app_iter = self.get_app_iter(environ)
-        return app_iter, self.status, headers.to_list(self.charset)
+        return app_iter, self.status, headers.to_list()
 
     def __call__(self, environ, start_response):
         """Process this response as WSGI application.
@@ -1043,22 +1061,23 @@ class BaseResponse(object):
 
 
 class AcceptMixin(object):
-    """A mixin for classes with an :attr:`~BaseResponse.environ` attribute to
-    get all the HTTP accept headers as :class:`Accept` objects (or subclasses
+    """A mixin for classes with an :attr:`~BaseResponse.environ` attribute
+    to get all the HTTP accept headers as
+    :class:`~werkzeug.datastructures.Accept` objects (or subclasses
     thereof).
     """
 
     @cached_property
     def accept_mimetypes(self):
-        """List of mimetypes this client supports as :class:`MIMEAccept`
-        object.
+        """List of mimetypes this client supports as
+        :class:`~werkzeug.datastructures.MIMEAccept` object.
         """
         return parse_accept_header(self.environ.get('HTTP_ACCEPT'), MIMEAccept)
 
     @cached_property
     def accept_charsets(self):
-        """List of charsets this client supports as :class:`CharsetAccept`
-        object.
+        """List of charsets this client supports as
+        :class:`~werkzeug.datastructures.CharsetAccept` object.
         """
         return parse_accept_header(self.environ.get('HTTP_ACCEPT_CHARSET'),
                                    CharsetAccept)
@@ -1073,11 +1092,12 @@ class AcceptMixin(object):
 
     @cached_property
     def accept_languages(self):
-        """List of languages this client accepts as :class:`LanguageAccept`
-        object.
+        """List of languages this client accepts as
+        :class:`~werkzeug.datastructures.LanguageAccept` object.
 
         .. versionchanged 0.5
-           In previous versions this was a regular :class:`Accept` object.
+           In previous versions this was a regular
+           :class:`~werkzeug.datastructures.Accept` object.
         """
         return parse_accept_header(self.environ.get('HTTP_ACCEPT_LANGUAGE'),
                                    LanguageAccept)
@@ -1091,8 +1111,8 @@ class ETagRequestMixin(object):
 
     @cached_property
     def cache_control(self):
-        """A :class:`RequestCacheControl` object for the incoming cache control
-        headers.
+        """A :class:`~werkzeug.datastructures.RequestCacheControl` object
+        for the incoming cache control headers.
         """
         cache_control = self.environ.get('HTTP_CACHE_CONTROL')
         return parse_cache_control_header(cache_control, None,
@@ -1102,8 +1122,7 @@ class ETagRequestMixin(object):
     def if_match(self):
         """An object containing all the etags in the `If-Match` header.
 
-        :rtype: :class:`~ETags`
-
+        :rtype: :class:`~werkzeug.datastructures.ETags`
         """
         return parse_etags(self.environ.get('HTTP_IF_MATCH'))
 
@@ -1111,8 +1130,7 @@ class ETagRequestMixin(object):
     def if_none_match(self):
         """An object containing all the etags in the `If-None-Match` header.
 
-        :rtype: :class:`~ETags`
-
+        :rtype: :class:`~werkzeug.datastructures.ETags`
         """
         return parse_etags(self.environ.get('HTTP_IF_NONE_MATCH'))
 
@@ -1126,11 +1144,31 @@ class ETagRequestMixin(object):
         """The parsed `If-Unmodified-Since` header as datetime object."""
         return parse_date(self.environ.get('HTTP_IF_UNMODIFIED_SINCE'))
 
+    @cached_property
+    def if_range(self):
+        """The parsed `If-Range` header.
+
+        .. versionadded:: 0.7
+
+        :rtype: :class:`~werkzeug.datastructures.IfRange`
+        """
+        return parse_if_range_header(self.environ.get('HTTP_IF_RANGE'))
+
+    @cached_property
+    def range(self):
+        """The parsed `Range` header.
+
+        .. versionadded:: 0.7
+
+        :rtype: :class:`~werkzeug.datastructures.Range`
+        """
+        return parse_range_header(self.environ.get('HTTP_RANGE'))
+
 
 class UserAgentMixin(object):
     """Adds a `user_agent` attribute to the request object which contains the
     parsed user agent of the browser that triggered the request as a
-    :class:`~UserAgent` object.
+    :class:`~werkzeug.useragents.UserAgent` object.
     """
 
     @cached_property
@@ -1141,8 +1179,9 @@ class UserAgentMixin(object):
 
 
 class AuthorizationMixin(object):
-    """Adds an :attr:`authorization` property that represents the parsed value
-    of the `Authorization` header as :class:`Authorization` object.
+    """Adds an :attr:`authorization` property that represents the parsed
+    value of the `Authorization` header as
+    :class:`~werkzeug.datastructures.Authorization` object.
     """
 
     @cached_property
@@ -1155,7 +1194,8 @@ class AuthorizationMixin(object):
 class ETagResponseMixin(object):
     """Adds extra functionality to a response object for etag and cache
     handling.  This mixin requires an object with at least a `headers`
-    object that implements a dict like interface similar to :class:`Headers`.
+    object that implements a dict like interface similar to
+    :class:`~werkzeug.datastructures.Headers`.
 
     If you want the :meth:`freeze` method to automatically add an etag, you
     have to mixin this method before the response base class.  The default
@@ -1234,6 +1274,44 @@ class ETagResponseMixin(object):
         if not no_etag:
             self.add_etag()
         super(ETagResponseMixin, self).freeze()
+
+    accept_ranges = header_property('Accept-Ranges', doc='''
+        The `Accept-Ranges` header.  Even though the name would indicate
+        that multiple values are supported, it must be one string token only.
+
+        The values ``'bytes'`` and ``'none'`` are common.
+
+        .. versionadded:: 0.7''')
+
+    def _get_content_range(self):
+        def on_update(rng):
+            if not rng:
+                del self.headers['content-range']
+            else:
+                self.headers['Content-Range'] = rng.to_header()
+        rv = parse_content_range_header(self.headers.get('content-range'),
+                                        on_update)
+        # always provide a content range object to make the descriptor
+        # more user friendly.  It provides an unset() method that can be
+        # used to remove the header quickly.
+        if rv is None:
+            rv = ContentRange(None, None, None, on_update=on_update)
+        return rv
+    def _set_content_range(self, value):
+        if not value:
+            del self.headers['content-range']
+        elif isinstance(value, basestring):
+            self.headers['Content-Range'] = value
+        else:
+            self.headers['Content-Range'] = value.to_header()
+    content_range = property(_get_content_range, _set_content_range, doc='''
+        The `Content-Range` header as
+        :class:`~werkzeug.datastructures.ContentRange` object.  Even if the
+        header is not set it wil provide such an object for easier
+        manipulation.
+
+        .. versionadded:: 0.7''')
+    del _get_content_range, _set_content_range
 
 
 class ResponseStream(object):
@@ -1469,7 +1547,14 @@ class CommonResponseDescriptorsMixin(object):
                 elif header_set:
                     self.headers[name] = header_set.to_header()
             return parse_set_header(self.headers.get(name), on_update)
-        return property(fget, doc=doc)
+        def fset(self, value):
+            if not value:
+                del self.headers[name]
+            elif isinstance(value, basestring):
+                self.headers[name] = value
+            else:
+                self.headers[name] = dump_header(value)
+        return property(fget, fset, doc=doc)
 
     vary = _set_property('Vary', doc='''
          The Vary field value indicates the set of request-header fields that
