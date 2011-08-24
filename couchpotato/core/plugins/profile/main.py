@@ -17,8 +17,6 @@ class ProfilePlugin(Plugin):
         addApiView('profile.save', self.save)
         addApiView('profile.delete', self.delete)
 
-        self.registerStatic(__file__)
-
     def all(self):
 
         db = get_session()

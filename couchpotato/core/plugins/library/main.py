@@ -100,6 +100,6 @@ class LibraryPlugin(Plugin):
 
         library_dict = library.to_dict({'titles': {}, 'files':{}})
 
-        fireEvent('notify.core', type = 'library.update', data = library_dict)
+        fireEvent('library.update', data = library_dict)
 
         return library_dict

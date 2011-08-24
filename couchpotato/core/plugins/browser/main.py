@@ -1,12 +1,13 @@
 from couchpotato.api import addApiView
 from couchpotato.core.helpers.request import getParam, jsonified
+from couchpotato.core.plugins.base import Plugin
 import os
 import string
 
 if os.name == 'nt':
     import win32file
 
-class FileBrowser():
+class FileBrowser(Plugin):
 
     def __init__(self):
         addApiView('directory.list', self.view)

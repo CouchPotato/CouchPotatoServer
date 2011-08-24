@@ -25,8 +25,6 @@ class FileManager(Plugin):
 
         addApiView('file.cache/<path:file>', self.showImage)
 
-        self.registerStatic(__file__)
-
     def showImage(self, file = ''):
 
         cache_dir = Env.get('cache_dir')

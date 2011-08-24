@@ -14,6 +14,7 @@ log = CPLog(__name__)
 class Plugin(object):
 
     enabled_option = 'enabled'
+    auto_register_static = True
 
     def conf(self, attr, default = None):
         return Env.setting(attr, self.getName().lower(), default = default)

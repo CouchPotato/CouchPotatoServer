@@ -10,8 +10,6 @@ class MetaData(Plugin):
     def __init__(self):
         addEvent('renaming.after', self.add)
 
-        self.registerStatic(__file__)
-
         addEvent('app.load', self.add)
 
     def add(self, data = {}):

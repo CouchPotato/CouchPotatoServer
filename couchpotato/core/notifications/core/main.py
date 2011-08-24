@@ -15,11 +15,19 @@ class CoreNotifier(Notification):
     def __init__(self):
 
         addEvent('notify', self.notify)
-        addEvent('notify.core', self.frontend)
+        addEvent('notify.frontend', self.frontend)
 
         addApiView('core_notifier.listener', self.listener)
 
-        self.registerStatic(__file__)
+        self.registerEvents()
+
+
+    def registerEvents(self):
+
+        # Library update, frontend refresh
+        def onLibraryUpdate(data):
+            fireEvent('notify.frontend', type = 'library.update', data = data)
+        addEvent('library.update', onLibraryUpdate)
 
     def notify(self, message = '', data = {}, type = None):
         self.add(data = {
@@ -38,7 +46,6 @@ class CoreNotifier(Notification):
 
         messages = []
         for message in self.messages:
-            print message['time'], (time.time() - 5)
             #delete message older then 15s
             if message['time'] > (time.time() - 15):
                 messages.append(message)

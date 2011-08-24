@@ -33,8 +33,6 @@ class QualityPlugin(Plugin):
         addEvent('quality.guess', self.guess)
         addEvent('app.load', self.fill)
 
-        self.registerStatic(__file__)
-
     def all(self):
 
         db = get_session()

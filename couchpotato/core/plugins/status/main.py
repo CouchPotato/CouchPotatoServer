@@ -26,8 +26,6 @@ class StatusPlugin(Plugin):
         addEvent('status.all', self.all)
         addEvent('app.load', self.fill)
 
-        self.registerStatic(__file__)
-
     def all(self):
 
         db = get_session()

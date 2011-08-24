@@ -1,4 +1,6 @@
+from .main import IMDB
+
 def start():
-    pass
+    return IMDB()
 
 config = []

@@ -31,11 +31,6 @@ class Newznab(NZBProvider, RSS):
 
     time_between_searches = 1 # Seconds
 
-    def __init__(self):
-        super(NZBProvider, self).__init__()
-
-        self.registerStatic(__file__)
-
     def feed(self):
 
         hosts = self.getHosts()

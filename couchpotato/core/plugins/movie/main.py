@@ -19,8 +19,6 @@ class MoviePlugin(Plugin):
         addApiView('movie.edit', self.edit)
         addApiView('movie.delete', self.delete)
 
-        self.registerStatic(__file__)
-
     def list(self):
 
         params = getParams()
