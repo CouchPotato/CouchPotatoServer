@@ -49,57 +49,59 @@ class LibraryPlugin(Plugin):
         library = db.query(Library).filter_by(identifier = identifier).first()
         done_status = fireEvent('status.get', 'done', single = True)
 
-        library_dict = library.to_dict({'titles': {}, 'files':{}})
+        library_dict = library.to_dict({'titles': {}, 'files':{}, 'info':{}})
+        do_update = True
 
         if library.status_id == done_status.get('id') and not force:
-            return library_dict
-
-        info = fireEvent('provider.movie.info', merge = True, identifier = identifier)
-        if not info or len(info) == 0:
-            log.error('Could not update, no movie info to work with: %s' % identifier)
-            return library_dict
+            do_update = False
+        else:
+            info = fireEvent('provider.movie.info', merge = True, identifier = identifier)
+            if not info or len(info) == 0:
+                log.error('Could not update, no movie info to work with: %s' % identifier)
+                do_update = False
 
         # Main info
-        library.plot = info.get('plot', '')
-        library.tagline = info.get('tagline', '')
-        library.year = info.get('year', 0)
-        library.status_id = done_status.get('id')
-        db.commit()
+        if do_update:
+            library.plot = info.get('plot', '')
+            library.tagline = info.get('tagline', '')
+            library.year = info.get('year', 0)
+            library.status_id = done_status.get('id')
+            db.commit()
 
-        # Titles
-        [db.delete(title) for title in library.titles]
-        db.commit()
+            # Titles
+            [db.delete(title) for title in library.titles]
+            db.commit()
 
-        titles = info.get('titles', [])
+            titles = info.get('titles', [])
 
-        log.debug('Adding titles: %s' % titles)
-        for title in titles:
-            t = LibraryTitle(
-                title = title,
-                default = title.lower() == default_title.lower()
-            )
-            library.titles.append(t)
+            log.debug('Adding titles: %s' % titles)
+            for title in titles:
+                t = LibraryTitle(
+                    title = title,
+                    default = title.lower() == default_title.lower()
+                )
+                library.titles.append(t)
 
-        db.commit()
+            db.commit()
 
-        # Files
-        images = info.get('images', [])
-        for type in images:
-            for image in images[type]:
-                if not isinstance(image, str):
-                    continue
+            # Files
+            images = info.get('images', [])
+            for type in images:
+                for image in images[type]:
+                    if not isinstance(image, str):
+                        continue
 
-                file_path = fireEvent('file.download', url = image, single = True)
-                file = fireEvent('file.add', path = file_path, type = ('image', type[:-1]), single = True)
-                try:
-                    file = db.query(File).filter_by(id = file.get('id')).one()
-                    library.files.append(file)
-                    db.commit()
-                except:
-                    log.debug('Failed to attach to library: %s' % traceback.format_exc())
+                    file_path = fireEvent('file.download', url = image, single = True)
+                    file = fireEvent('file.add', path = file_path, type = ('image', type[:-1]), single = True)
+                    try:
+                        file = db.query(File).filter_by(id = file.get('id')).one()
+                        library.files.append(file)
+                        db.commit()
+                    except:
+                        log.debug('Failed to attach to library: %s' % traceback.format_exc())
 
-        library_dict = library.to_dict({'titles': {}, 'files':{}})
+            library_dict = library.to_dict({'titles': {}, 'files':{}, 'info':{}})
 
-        fireEvent('library.update', data = library_dict)
+        fireEvent('library.update_finish', data = library_dict)
 
         return library_dict
