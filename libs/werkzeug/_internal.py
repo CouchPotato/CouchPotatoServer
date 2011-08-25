@@ -5,7 +5,7 @@
 
     This module provides internally used helpers and constants.
 
-    :copyright: (c) 2010 by the Werkzeug Team, see AUTHORS for more details.
+    :copyright: (c) 2011 by the Werkzeug Team, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
 import inspect
@@ -204,7 +204,7 @@ def _decode_unicode(value, charset, errors):
         return value.decode(charset, errors)
     except UnicodeError, e:
         if fallback is not None:
-            return value.decode(fallback, 'ignore')
+            return value.decode(fallback, 'replace')
         from werkzeug.exceptions import HTTPUnicodeError
         raise HTTPUnicodeError(str(e))
 
@@ -383,8 +383,11 @@ mj2Z/FM1vQWgDynsRwNvrWnJHlespkrp8+vO1jNaibm+PhqXPPv30YwDZ6jApe3wUjFQobghvW9p
         if environ.get('QUERY_STRING') != 'macgybarchakku':
             return app(environ, injecting_start_response)
         injecting_start_response('200 OK', [('Content-Type', 'text/html')])
-        return ['''<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
-<title>About Werkzeug</>
+        return ['''
+<!DOCTYPE html>
+<html>
+<head>
+<title>About Werkzeug</title>
 <style type="text/css">
   body { font: 15px Georgia, serif; text-align: center; }
   a { color: #333; text-decoration: none; }
@@ -392,7 +395,11 @@ mj2Z/FM1vQWgDynsRwNvrWnJHlespkrp8+vO1jNaibm+PhqXPPv30YwDZ6jApe3wUjFQobghvW9p
   p { margin: 0 0 30px 0; }
   pre { font: 11px 'Consolas', 'Monaco', monospace; line-height: 0.95; }
 </style>
+</head>
+<body>
 <h1><a href="http://werkzeug.pocoo.org/">Werkzeug</a></h1>
-<p>the Swiss Army knife of Python web development.
-<pre>%s\n\n\n</>''' % gyver]
+<p>the Swiss Army knife of Python web development.</p>
+<pre>%s\n\n\n</pre>
+</body>
+</html>''' % gyver]
     return easteregged

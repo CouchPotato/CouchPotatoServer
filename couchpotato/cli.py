@@ -132,14 +132,15 @@ def cmd_couchpotato(base_path, args):
     app.port = Env.setting('port', default = 5000)
     app.debug = debug
     app.secret_key = api_key
-    app.static_path = url_base + '/static'
-    app.add_url_rule(app.static_path + '/<path:filename>',
+
+    # Static path
+    web.add_url_rule(url_base + '/static/<path:filename>',
                       endpoint = 'static',
                       view_func = app.send_static_file)
 
     # Register modules
-    app.register_module(web, url_prefix = '%s/' % url_base)
-    app.register_module(api, url_prefix = '%s/%s/' % (url_base, api_key))
+    app.register_blueprint(web, url_prefix = '%s/' % url_base)
+    app.register_blueprint(api, url_prefix = '%s/%s/' % (url_base, api_key))
 
     # Go go go!
     app.run(use_reloader = reloader)

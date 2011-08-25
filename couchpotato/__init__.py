@@ -3,9 +3,9 @@ from couchpotato.core.event import fireEvent
 from couchpotato.core.logger import CPLog
 from couchpotato.environment import Env
 from flask.app import Flask
+from flask.blueprints import Blueprint
 from flask.globals import request
 from flask.helpers import url_for
-from flask.module import Module
 from flask.templating import render_template
 from sqlalchemy.engine import create_engine
 from sqlalchemy.orm import scoped_session
@@ -16,7 +16,7 @@ import os
 log = CPLog(__name__)
 
 app = Flask(__name__)
-web = Module(__name__, 'web')
+web = Blueprint('web', __name__)
 
 
 def get_session(engine = None):

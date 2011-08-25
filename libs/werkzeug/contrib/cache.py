@@ -53,7 +53,7 @@
     you have access to it (either as a module global you can import or you just
     put it into your WSGI application).
 
-    :copyright: (c) 2010 by the Werkzeug Team, see AUTHORS for more details.
+    :copyright: (c) 2011 by the Werkzeug Team, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
 import os
@@ -68,6 +68,19 @@ from time import time
 from cPickle import loads, dumps, load, dump, HIGHEST_PROTOCOL
 from werkzeug.posixemulation import rename
 
+def _items(mappingorseq):
+    """Wrapper for efficient iteration over mappings represented by dicts
+    or sequences::
+
+        >>> for k, v in _items((i, i*i) for i in xrange(5)):
+        ...    assert k*k == v
+
+        >>> for k, v in _items(dict((i, i*i) for i in xrange(5))):
+        ...    assert k*k == v
+
+    """
+    return mappingorseq.iteritems() if hasattr(mappingorseq, 'iteritems') \
+        else mappingorseq
 
 class BaseCache(object):
     """Baseclass for the cache systems.  All the cache systems implement this
@@ -145,13 +158,13 @@ class BaseCache(object):
         pass
 
     def set_many(self, mapping, timeout=None):
-        """Sets multiple keys and values from a dict.
+        """Sets multiple keys and values from a mapping.
 
-        :param mapping: a dict with the keys/values to set.
+        :param mapping: a mapping with the keys/values to set.
         :param timeout: the cache timeout for the key (if not specified,
                         it uses the default timeout).
         """
-        for key, value in mapping.iteritems():
+        for key, value in _items(mapping):
             self.set(key, value, timeout)
 
     def delete_many(self, *keys):
@@ -279,35 +292,40 @@ class MemcachedCache(BaseCache):
     def __init__(self, servers, default_timeout=300, key_prefix=None):
         BaseCache.__init__(self, default_timeout)
         if isinstance(servers, (list, tuple)):
+            is_cmemcached = is_cmemcache = is_pylibmc = False
             try:
-                import cmemcache as memcache
-                is_cmemcache = True
+                import cmemcached as memcache
+                is_cmemcached = True
             except ImportError:
                 try:
-                    import memcache
-                    is_cmemcache = False
-                    is_pylibmc = False
+                    import cmemcache as memcache
+                    is_cmemcache = True
                 except ImportError:
                     try:
-                        import pylibmc as memcache
+                        import memcache
                         is_cmemcache = False
-                        is_pylibmc = True
+                        is_pylibmc = False
                     except ImportError:
-                        raise RuntimeError('no memcache module found')
+                        try:
+                            import pylibmc as memcache
+                            is_cmemcache = False
+                            is_pylibmc = True
+                        except ImportError:
+                            raise RuntimeError('no memcache module found')
 
-            # cmemcache has a bug that debuglog is not defined for the
-            # client.  Whenever pickle fails you get a weird AttributeError.
             if is_cmemcache:
+                # cmemcache has a bug that debuglog is not defined for the
+                # client.  Whenever pickle fails you get a weird
+                # AttributeError.
                 client = memcache.Client(map(str, servers))
                 try:
                     client.debuglog = lambda *a: None
                 except Exception:
                     pass
+            elif is_pylibmc or is_cmemcached:
+                client = memcache.Client(servers, False)
             else:
-                if is_pylibmc:
-                    client = memcache.Client(servers, False)
-                else:
-                    client = memcache.Client(servers, False, HIGHEST_PROTOCOL)
+                client = memcache.Client(servers, False, HIGHEST_PROTOCOL)
         else:
             client = servers
 
@@ -378,7 +396,7 @@ class MemcachedCache(BaseCache):
         if timeout is None:
             timeout = self.default_timeout
         new_mapping = {}
-        for key, value in mapping.iteritems():
+        for key, value in _items(mapping):
             if isinstance(key, unicode):
                 key = key.encode('utf-8')
             if self.key_prefix:
@@ -439,6 +457,77 @@ class GAEMemcachedCache(MemcachedCache):
         from google.appengine.api import memcache
         MemcachedCache.__init__(self, memcache.Client(),
                                 default_timeout, key_prefix)
+
+
+class RedisCache(BaseCache):
+    """Uses the Redis key-value store as a cache backend.
+
+    The first argument can be either a string denoting address of the Redis
+    server or an object resembling an instance of a redis.Redis class.
+
+    Note: Python Redis API already takes care of encoding unicode strings on
+    the fly.
+
+    .. versionadded:: 0.7
+
+    :param host: address of the Redis server or an object which API is
+                 compatible with the official Python Redis client (redis-py).
+    :param port: port number on which Redis server listens for connections
+    :param default_timeout: the default timeout that is used if no timeout is
+                            specified on :meth:`~BaseCache.set`.
+
+    """
+    def __init__(self, host='localhost', port=6379, default_timeout=300):
+        BaseCache.__init__(self, default_timeout)
+        if isinstance(host, basestring):
+            try:
+                import redis
+            except ImportError:
+                raise RuntimeError('no redis module found')
+            self._client = redis.Redis(host=host, port=port)
+        else:
+            self._client = host
+
+    def get(self, key):
+        return self._client.get(key)
+
+    def get_many(self, *keys):
+        return self._client.mget(keys)
+
+    def set(self, key, value, timeout=None):
+        if timeout is None:
+            timeout = self.default_timeout
+        self._client.setex(key, value, timeout)
+
+    def add(self, key, value, timeout=None):
+        if timeout is None:
+            timeout = self.default_timeout
+        added = self._client.setnx(key, value)
+        if added:
+            self._client.expire(key, timeout)
+
+    def set_many(self, mapping, timeout=None):
+        if timeout is None:
+            timeout = self.default_timeout
+        pipe = self._client.pipeline()
+        for key, value in _items(mapping):
+            pipe.setex(key, value, timeout)
+        pipe.execute()
+
+    def delete(self, key):
+        self._client.delete(key)
+
+    def delete_many(self, *keys):
+        self._client.delete(*keys)
+
+    def clear(self):
+        self._client.flushdb()
+
+    def inc(self, key, delta=1):
+        return self._client.incr(key, delta)
+
+    def dec(self, key, delta=1):
+        return self._client.decr(key, delta)
 
 
 class FileSystemCache(BaseCache):

@@ -32,7 +32,7 @@
     instead of a simple start file.
 
 
-    :copyright: (c) 2010 by the Werkzeug Team, see AUTHORS for more details.
+    :copyright: (c) 2011 by the Werkzeug Team, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
 import os
@@ -40,6 +40,7 @@ import socket
 import sys
 import time
 import thread
+import signal
 import subprocess
 from urllib import unquote
 from SocketServer import ThreadingMixIn, ForkingMixIn
@@ -63,6 +64,10 @@ class WSGIRequestHandler(BaseHTTPRequestHandler, object):
         else:
             path_info = self.path
             query = ''
+
+        def shutdown_server():
+            self.server.shutdown_signal = True
+
         url_scheme = self.server.ssl_context is None and 'http' or 'https'
         environ = {
             'wsgi.version':         (1, 0),
@@ -72,6 +77,8 @@ class WSGIRequestHandler(BaseHTTPRequestHandler, object):
             'wsgi.multithread':     self.server.multithread,
             'wsgi.multiprocess':    self.server.multiprocess,
             'wsgi.run_once':        False,
+            'werkzeug.server.shutdown':
+                                    shutdown_server,
             'SERVER_SOFTWARE':      self.server_version,
             'REQUEST_METHOD':       self.command,
             'SCRIPT_NAME':          '',
@@ -171,12 +178,27 @@ class WSGIRequestHandler(BaseHTTPRequestHandler, object):
     def handle(self):
         """Handles a request ignoring dropped connections."""
         try:
-            return BaseHTTPRequestHandler.handle(self)
+            rv = BaseHTTPRequestHandler.handle(self)
         except (socket.error, socket.timeout), e:
             self.connection_dropped(e)
         except Exception:
             if self.server.ssl_context is None or not is_ssl_error():
                 raise
+        if self.server.shutdown_signal:
+            self.initiate_shutdown()
+        return rv
+
+    def initiate_shutdown(self):
+        """A horrible, horrible way to kill the server for Python 2.6 and
+        later.  It's the best we can do.
+        """
+        # reloader active
+        if os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
+            os.kill(os.getpid(), signal.SIGKILL)
+        # python 2.7
+        self.server._BaseServer__shutdown_request = True
+        # python 2.6
+        self.server._BaseServer__serving = False
 
     def connection_dropped(self, error, environ=None):
         """Called if the connection was closed by the client.  By default
@@ -299,6 +321,7 @@ class BaseWSGIServer(HTTPServer, object):
     """Simple single-threaded, single-process WSGI server."""
     multithread = False
     multiprocess = False
+    request_queue_size = 128
 
     def __init__(self, host, port, app, handler=None,
                  passthrough_errors=False, ssl_context=None):
@@ -308,6 +331,7 @@ class BaseWSGIServer(HTTPServer, object):
         HTTPServer.__init__(self, (host, int(port)), handler)
         self.app = app
         self.passthrough_errors = passthrough_errors
+        self.shutdown_signal = False
 
         if ssl_context is not None:
             try:
@@ -326,6 +350,7 @@ class BaseWSGIServer(HTTPServer, object):
         _log(type, message, *args)
 
     def serve_forever(self):
+        self.shutdown_signal = False
         try:
             HTTPServer.serve_forever(self)
         except KeyboardInterrupt:
@@ -410,6 +435,7 @@ def reloader_loop(extra_files=None, interval=1):
 
     reloader(fnames, interval=interval)
 
+
 def _reloader_stat_loop(fnames, interval=1):
     mtimes = {}
     while 1:
@@ -428,15 +454,23 @@ def _reloader_stat_loop(fnames, interval=1):
                 sys.exit(3)
         time.sleep(interval)
 
+
 def _reloader_inotify(fnames, interval=None):
-    #: Mutated by inotify loop when changes occur.
+    # Mutated by inotify loop when changes occur.
     changed = [False]
 
     # Setup inotify watches
-    from pyinotify import WatchManager, EventsCodes, Notifier
+    from pyinotify import WatchManager, Notifier
+
+    # this API changed at one point, support both
+    try:
+        from pyinotify import EventsCodes as ec
+        ec.IN_ATTRIB
+    except (ImportError, AttributeError):
+        import pyinotify as ec
+
     wm = WatchManager()
-    mask = "IN_DELETE_SELF IN_MOVE_SELF IN_MODIFY IN_ATTRIB".split()
-    mask = reduce(lambda m, a: m | getattr(EventsCodes, a), mask, 0)
+    mask = ec.IN_DELETE_SELF | ec.IN_MOVE_SELF | ec.IN_MODIFY | ec.IN_ATTRIB
 
     def signal_changed(event):
         if changed[0]:
@@ -459,15 +493,11 @@ def _reloader_inotify(fnames, interval=None):
         notif.stop()
     sys.exit(3)
 
-# Decide which reloader to use
-try:
-    __import__("pyinotify")   # Pyflakes-avoidant
-except ImportError:
-    reloader = _reloader_stat_loop
-    reloader_name = "stat() polling"
-else:
-    reloader = _reloader_inotify
-    reloader_name = "inotify events"
+
+# currently we always use the stat loop reloader for the simple reason
+# that the inotify one does not respond to added files properly.  Also
+# it's quite buggy and the API is a mess.
+reloader = _reloader_stat_loop
 
 
 def restart_with_reloader():
@@ -475,7 +505,7 @@ def restart_with_reloader():
     but running the reloader thread.
     """
     while 1:
-        _log('info', ' * Restarting with reloader: %s', reloader_name)
+        _log('info', ' * Restarting with reloader')
         args = [sys.executable] + sys.argv
         new_environ = os.environ.copy()
         new_environ['WERKZEUG_RUN_MAIN'] = 'true'
@@ -495,6 +525,8 @@ def restart_with_reloader():
 
 def run_with_reloader(main_func, extra_files=None, interval=1):
     """Run the given function in an independent python interpreter."""
+    import signal
+    signal.signal(signal.SIGTERM, lambda *args: sys.exit(0))
     if os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
         thread.start_new_thread(main_func, ())
         try:

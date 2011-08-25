@@ -6,7 +6,7 @@
     This module implements the form parsing.  It supports url-encoded forms
     as well as non-nested multipart uploads.
 
-    :copyright: (c) 2010 by the Werkzeug Team, see AUTHORS for more details.
+    :copyright: (c) 2011 by the Werkzeug Team, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
 import re
@@ -42,12 +42,12 @@ def default_stream_factory(total_content_length, filename, content_type,
 
 
 def parse_form_data(environ, stream_factory=None, charset='utf-8',
-                    errors='ignore', max_form_memory_size=None,
+                    errors='replace', max_form_memory_size=None,
                     max_content_length=None, cls=None,
                     silent=True):
     """Parse the form data in the environ and return it as tuple in the form
     ``(stream, form, files)``.  You should only call this method if the
-    transport method is `POST` or `PUT`.
+    transport method is `POST`, `PUT`, or `PATCH`.
 
     If the mimetype of the data transmitted is `multipart/form-data` the
     files multidict will be filled with `FileStorage` objects.  If the
@@ -169,7 +169,7 @@ def is_valid_multipart_boundary(boundary):
 
 
 def parse_multipart(file, boundary, content_length, stream_factory=None,
-                    charset='utf-8', errors='ignore', buffer_size=10 * 1024,
+                    charset='utf-8', errors='replace', buffer_size=10 * 1024,
                     max_form_memory_size=None):
     """Parse a multipart/form-data stream.  This is invoked by
     :func:`utils.parse_form_data` if the content type matches.  Currently it

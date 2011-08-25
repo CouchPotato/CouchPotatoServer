@@ -36,11 +36,11 @@ r"""
 
     .. _greenlet: http://codespeak.net/py/dist/greenlet.html
 
-    :copyright: (c) 2010 by the Werkzeug Team, see AUTHORS for more details.
+    :copyright: (c) 2011 by the Werkzeug Team, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
 try:
-    from py.magic import greenlet
+    import greenlet
 except ImportError:
     greenlet = None
 

@@ -5,7 +5,7 @@
 
     This module implements various URL related functions.
 
-    :copyright: (c) 2010 by the Werkzeug Team, see AUTHORS for more details.
+    :copyright: (c) 2011 by the Werkzeug Team, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
 import urlparse
@@ -57,13 +57,13 @@ def _safe_urlsplit(s):
     to what we think it is.
     """
     rv = urlparse.urlsplit(s)
-    if type(rv[1]) is not type(s):
-        try:
-            return tuple(map(type(s), rv))
-        except UnicodeError:
-            # oh well, we most likely will break later again, but
-            # let's just say it worked out well to that point.
-            pass
+    # we have to check rv[2] here and not rv[1] as rv[1] will be
+    # an empty bytestring in case no domain was given.
+    if type(rv[2]) is not type(s):
+        assert hasattr(urlparse, 'clear_cache')
+        urlparse.clear_cache()
+        rv = urlparse.urlsplit(s)
+        assert type(rv[2]) is type(s)
     return rv
 
 
@@ -143,10 +143,12 @@ def iri_to_uri(iri, charset='utf-8'):
     path = _quote(path.encode(charset), safe="/:~+")
     query = _quote(query.encode(charset), safe="=%&[]:;$()+,!?*/")
 
-    return urlparse.urlunsplit([scheme, hostname, path, query, fragment])
+    # this absolutely always must return a string.  Otherwise some parts of
+    # the system might perform double quoting (#61)
+    return str(urlparse.urlunsplit([scheme, hostname, path, query, fragment]))
 
 
-def uri_to_iri(uri, charset='utf-8', errors='ignore'):
+def uri_to_iri(uri, charset='utf-8', errors='replace'):
     r"""Converts a URI in a given charset to a IRI.
 
     Examples for URI versus IRI
@@ -203,7 +205,7 @@ def uri_to_iri(uri, charset='utf-8', errors='ignore'):
 
 
 def url_decode(s, charset='utf-8', decode_keys=False, include_empty=True,
-               errors='ignore', separator='&', cls=None):
+               errors='replace', separator='&', cls=None):
     """Parse a querystring and return it as :class:`MultiDict`.  Per default
     only values are decoded into unicode strings.  If `decode_keys` is set to
     `True` the same will happen for keys.
@@ -321,7 +323,7 @@ def url_quote_plus(s, charset='utf-8', safe=''):
     return _quote_plus(s, safe=safe)
 
 
-def url_unquote(s, charset='utf-8', errors='ignore'):
+def url_unquote(s, charset='utf-8', errors='replace'):
     """URL decode a single string with a given decoding.
 
     Per default encoding errors are ignored.  If you want a different behavior
@@ -337,7 +339,7 @@ def url_unquote(s, charset='utf-8', errors='ignore'):
     return _decode_unicode(_unquote(s), charset, errors)
 
 
-def url_unquote_plus(s, charset='utf-8', errors='ignore'):
+def url_unquote_plus(s, charset='utf-8', errors='replace'):
     """URL decode a single string with the given decoding and decode
     a "+" to whitespace.
 
@@ -368,7 +370,7 @@ def url_fix(s, charset='utf-8'):
                     unicode string.
     """
     if isinstance(s, unicode):
-        s = s.encode(charset, 'ignore')
+        s = s.encode(charset, 'replace')
     scheme, netloc, path, qs, anchor = _safe_urlsplit(s)
     path = _quote(path, '/%')
     qs = _quote_plus(qs, ':&%=')
@@ -458,7 +460,7 @@ class Href(object):
         if path:
             if not rv.endswith('/'):
                 rv += '/'
-            rv = urlparse.urljoin(rv, path)
+            rv = urlparse.urljoin(rv, './' + path)
         if query:
             rv += '?' + url_encode(query, self.charset, sort=self.sort,
                                    key=self.key)

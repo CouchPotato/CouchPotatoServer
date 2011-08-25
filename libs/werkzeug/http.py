@@ -13,11 +13,11 @@
     module.
 
 
-    :copyright: (c) 2010 by the Werkzeug Team, see AUTHORS for more details.
+    :copyright: (c) 2011 by the Werkzeug Team, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
 import re
-import inspect
+from time import time
 try:
     from email.utils import parsedate_tz
 except ImportError: # pragma: no cover
@@ -32,7 +32,8 @@ except ImportError: # pragma: no cover
 
 #: HTTP_STATUS_CODES is "exported" from this module.
 #: XXX: move to werkzeug.consts or something
-from werkzeug._internal import HTTP_STATUS_CODES, _dump_date
+from werkzeug._internal import HTTP_STATUS_CODES, _dump_date, \
+     _ExtendedCookie, _ExtendedMorsel, _decode_unicode
 
 
 _accept_re = re.compile(r'([^\s;,]+)(?:[^,]*?;\s*q=(\d*(?:\.\d+)?))?')
@@ -284,13 +285,14 @@ def parse_cache_control_header(value, on_update=None, cls=None):
 
     .. versionadded:: 0.5
        The `cls` was added.  If not specified an immutable
-       :class:`RequestCacheControl` is returned.
+       :class:`~werkzeug.datastructures.RequestCacheControl` is returned.
 
     :param value: a cache control header to be parsed.
-    :param on_update: an optional callable that is called every time a
-                      value on the :class:`CacheControl` object is changed.
+    :param on_update: an optional callable that is called every time a value
+                      on the :class:`~werkzeug.datastructures.CacheControl`
+                      object is changed.
     :param cls: the class for the returned object.  By default
-                                :class:`RequestCacheControl` is used.
+                :class:`~werkzeug.datastructures.RequestCacheControl` is used.
     :return: a `cls` object.
     """
     if cls is None:
@@ -301,7 +303,8 @@ def parse_cache_control_header(value, on_update=None, cls=None):
 
 
 def parse_set_header(value, on_update=None):
-    """Parse a set-like header and return a :class:`HeaderSet` object:
+    """Parse a set-like header and return a
+    :class:`~werkzeug.datastructures.HeaderSet` object:
 
     >>> hs = parse_set_header('token, "quoted value"')
 
@@ -320,8 +323,9 @@ def parse_set_header(value, on_update=None):
 
     :param value: a set header to be parsed.
     :param on_update: an optional callable that is called every time a
-                      value on the :class:`HeaderSet` object is changed.
-    :return: a :class:`HeaderSet`
+                      value on the :class:`~werkzeug.datastructures.HeaderSet`
+                      object is changed.
+    :return: a :class:`~werkzeug.datastructures.HeaderSet`
     """
     if not value:
         return HeaderSet(None, on_update)
@@ -331,10 +335,11 @@ def parse_set_header(value, on_update=None):
 def parse_authorization_header(value):
     """Parse an HTTP basic/digest authorization header transmitted by the web
     browser.  The return value is either `None` if the header was invalid or
-    not given, otherwise an :class:`Authorization` object.
+    not given, otherwise an :class:`~werkzeug.datastructures.Authorization`
+    object.
 
     :param value: the authorization header to parse.
-    :return: a :class:`Authorization` object or `None`.
+    :return: a :class:`~werkzeug.datastructures.Authorization` object or `None`.
     """
     if not value:
         return
@@ -360,13 +365,14 @@ def parse_authorization_header(value):
 
 
 def parse_www_authenticate_header(value, on_update=None):
-    """Parse an HTTP WWW-Authenticate header into a :class:`WWWAuthenticate`
-    object.
+    """Parse an HTTP WWW-Authenticate header into a
+    :class:`~werkzeug.datastructures.WWWAuthenticate` object.
 
     :param value: a WWW-Authenticate header to parse.
-    :param on_update: an optional callable that is called every time a
-                      value on the :class:`WWWAuthenticate` object is changed.
-    :return: a :class:`WWWAuthenticate` object.
+    :param on_update: an optional callable that is called every time a value
+                      on the :class:`~werkzeug.datastructures.WWWAuthenticate`
+                      object is changed.
+    :return: a :class:`~werkzeug.datastructures.WWWAuthenticate` object.
     """
     if not value:
         return WWWAuthenticate(on_update=on_update)
@@ -377,6 +383,109 @@ def parse_www_authenticate_header(value, on_update=None):
         return WWWAuthenticate(value.strip().lower(), on_update=on_update)
     return WWWAuthenticate(auth_type, parse_dict_header(auth_info),
                            on_update)
+
+
+def parse_if_range_header(value):
+    """Parses an if-range header which can be an etag or a date.  Returns
+    a :class:`~werkzeug.datastructures.IfRange` object.
+
+    .. versionadded:: 0.7
+    """
+    if not value:
+        return IfRange()
+    date = parse_date(value)
+    if date is not None:
+        return IfRange(date=date)
+    # drop weakness information
+    return IfRange(unquote_etag(value)[0])
+
+
+def parse_range_header(value, make_inclusive=True):
+    """Parses a range header into a :class:`~werkzeug.datastructures.Range`
+    object.  If the header is missing or malformed `None` is returned.
+    `ranges` is a list of ``(start, stop)`` tuples where the ranges are
+    non-inclusive.
+
+    .. versionadded:: 0.7
+    """
+    if not value or '=' not in value:
+        return None
+
+    ranges = []
+    last_end = 0
+    units, rng = value.split('=', 1)
+    units = units.strip().lower()
+
+    for item in rng.split(','):
+        item = item.strip()
+        if '-' not in item:
+            return None
+        if item.startswith('-'):
+            if last_end < 0:
+                return None
+            begin = int(item)
+            end = None
+            last_end = -1
+        elif '-' in item:
+            begin, end = item.split('-', 1)
+            begin = int(begin)
+            if begin < last_end or last_end < 0:
+                return None
+            if end:
+                end = int(end) + 1
+                if begin >= end:
+                    return None
+            else:
+                end = None
+            last_end = end
+        ranges.append((begin, end))
+
+    return Range(units, ranges)
+
+
+def parse_content_range_header(value, on_update=None):
+    """Parses a range header into a
+    :class:`~werkzeug.datastructures.ContentRange` object or `None` if
+    parsing is not possible.
+
+    .. versionadded:: 0.7
+
+    :param value: a content range header to be parsed.
+    :param on_update: an optional callable that is called every time a value
+                      on the :class:`~werkzeug.datastructures.ContentRange`
+                      object is changed.
+    """
+    if value is None:
+        return None
+    try:
+        units, rangedef = (value or '').strip().split(None, 1)
+    except ValueError:
+        return None
+
+    if '/' not in rangedef:
+        return None
+    rng, length = rangedef.split('/', 1)
+    if length == '*':
+        length = None
+    elif length.isdigit():
+        length = int(length)
+    else:
+        return None
+
+    if rng == '*':
+        return ContentRange(units, None, None, length, on_update=on_update)
+    elif '-' not in rng:
+        return None
+
+    start, stop = rng.split('-', 1)
+    try:
+        start = int(start)
+        stop = int(stop) + 1
+    except ValueError:
+        return None
+
+    if is_byte_range_valid(start, stop, length):
+        return ContentRange(units, start, stop, length, on_update=on_update)
 
 
 def quote_etag(etag, weak=False):
@@ -420,7 +529,7 @@ def parse_etags(value):
     """Parse an etag header.
 
     :param value: the tag header to parse
-    :return: an :class:`ETags` object.
+    :return: an :class:`~werkzeug.datastructures.ETags` object.
     """
     if not value:
         return ETags()
@@ -532,6 +641,12 @@ def is_resource_modified(environ, etag=None, data=None, last_modified=None):
     unmodified = False
     if isinstance(last_modified, basestring):
         last_modified = parse_date(last_modified)
+
+    # ensure that microsecond is zero because the HTTP spec does not transmit
+    # that either and we might have some false positives.  See issue #39
+    if last_modified is not None:
+        last_modified = last_modified.replace(microsecond=0)
+
     modified_since = parse_date(environ.get('HTTP_IF_MODIFIED_SINCE'))
 
     if modified_since and last_modified and last_modified <= modified_since:
@@ -596,12 +711,129 @@ def is_hop_by_hop_header(header):
     return header.lower() in _hop_by_pop_headers
 
 
+def parse_cookie(header, charset='utf-8', errors='replace',
+                 cls=None):
+    """Parse a cookie.  Either from a string or WSGI environ.
+
+    Per default encoding errors are ignored.  If you want a different behavior
+    you can set `errors` to ``'replace'`` or ``'strict'``.  In strict mode a
+    :exc:`HTTPUnicodeError` is raised.
+
+    .. versionchanged:: 0.5
+       This function now returns a :class:`TypeConversionDict` instead of a
+       regular dict.  The `cls` parameter was added.
+
+    :param header: the header to be used to parse the cookie.  Alternatively
+                   this can be a WSGI environment.
+    :param charset: the charset for the cookie values.
+    :param errors: the error behavior for the charset decoding.
+    :param cls: an optional dict class to use.  If this is not specified
+                       or `None` the default :class:`TypeConversionDict` is
+                       used.
+    """
+    if isinstance(header, dict):
+        header = header.get('HTTP_COOKIE', '')
+    if cls is None:
+        cls = TypeConversionDict
+    cookie = _ExtendedCookie()
+    cookie.load(header)
+    result = {}
+
+    # decode to unicode and skip broken items.  Our extended morsel
+    # and extended cookie will catch CookieErrors and convert them to
+    # `None` items which we have to skip here.
+    for key, value in cookie.iteritems():
+        if value.value is not None:
+            result[key] = _decode_unicode(unquote_header_value(value.value),
+                                          charset, errors)
+
+    return cls(result)
+
+
+def dump_cookie(key, value='', max_age=None, expires=None, path='/',
+                domain=None, secure=None, httponly=False, charset='utf-8',
+                sync_expires=True):
+    """Creates a new Set-Cookie header without the ``Set-Cookie`` prefix
+    The parameters are the same as in the cookie Morsel object in the
+    Python standard library but it accepts unicode data, too.
+
+    :param max_age: should be a number of seconds, or `None` (default) if
+                    the cookie should last only as long as the client's
+                    browser session.  Additionally `timedelta` objects
+                    are accepted, too.
+    :param expires: should be a `datetime` object or unix timestamp.
+    :param path: limits the cookie to a given path, per default it will
+                 span the whole domain.
+    :param domain: Use this if you want to set a cross-domain cookie. For
+                   example, ``domain=".example.com"`` will set a cookie
+                   that is readable by the domain ``www.example.com``,
+                   ``foo.example.com`` etc. Otherwise, a cookie will only
+                   be readable by the domain that set it.
+    :param secure: The cookie will only be available via HTTPS
+    :param httponly: disallow JavaScript to access the cookie.  This is an
+                     extension to the cookie standard and probably not
+                     supported by all browsers.
+    :param charset: the encoding for unicode values.
+    :param sync_expires: automatically set expires if max_age is defined
+                         but expires not.
+    """
+    try:
+        key = str(key)
+    except UnicodeError:
+        raise TypeError('invalid key %r' % key)
+    if isinstance(value, unicode):
+        value = value.encode(charset)
+    value = quote_header_value(value)
+    morsel = _ExtendedMorsel(key, value)
+    if isinstance(max_age, timedelta):
+        max_age = (max_age.days * 60 * 60 * 24) + max_age.seconds
+    if expires is not None:
+        if not isinstance(expires, basestring):
+            expires = cookie_date(expires)
+        morsel['expires'] = expires
+    elif max_age is not None and sync_expires:
+        morsel['expires'] = cookie_date(time() + max_age)
+    if domain and ':' in domain:
+        # The port part of the domain should NOT be used. Strip it
+        domain = domain.split(':', 1)[0]
+    if domain:
+        assert '.' in domain, (
+            "Setting \"domain\" for a cookie on a server running localy (ex: "
+            "localhost) is not supportted by complying browsers. You should "
+            "have something like: \"127.0.0.1 localhost dev.localhost\" on "
+            "your hosts file and then point your server to run on "
+            "\"dev.localhost\" and also set \"domain\" for \"dev.localhost\""
+        )
+    for k, v in (('path', path), ('domain', domain), ('secure', secure),
+                 ('max-age', max_age), ('httponly', httponly)):
+        if v is not None and v is not False:
+            morsel[k] = str(v)
+    return morsel.output(header='').lstrip()
+
+
+def is_byte_range_valid(start, stop, length):
+    """Checks if a given byte content range is valid for the given length.
+
+    .. versionadded:: 0.7
+    """
+    if (start is None) != (stop is None):
+        return False
+    elif start is None:
+        return length is None or length >= 0
+    elif length is None:
+        return 0 <= start < stop
+    elif start >= stop:
+        return False
+    return 0 <= start < length
+
+
 # circular dependency fun
-from werkzeug.datastructures import Headers, Accept, RequestCacheControl, \
-     ResponseCacheControl, HeaderSet, ETags, Authorization, \
-     WWWAuthenticate
+from werkzeug.datastructures import Accept, HeaderSet, ETags, Authorization, \
+     WWWAuthenticate, TypeConversionDict, IfRange, Range, ContentRange, \
+     RequestCacheControl
 
 
 # DEPRECATED
 # backwards compatible imports
-from werkzeug.datastructures import MIMEAccept, CharsetAccept, LanguageAccept
+from werkzeug.datastructures import MIMEAccept, CharsetAccept, \
+     LanguageAccept, Headers
