@@ -17,9 +17,11 @@ class Plugin(object):
     auto_register_static = True
 
     needs_shutdown = False
+    running = 0
 
     def registerPlugin(self):
         addEvent('app.shutdown', self.doShutdown)
+        addEvent('plugin.running', self.isRunning)
 
     def conf(self, attr, default = None):
         return Env.setting(attr, self.getName().lower(), default = default)
@@ -40,21 +42,21 @@ class Plugin(object):
         addView(path + '<path:file>', self.showStatic, static = True)
 
         if add_to_head:
-            for file in glob.glob(os.path.join(self.plugin_path, 'static', '*')):
-                fireEvent('register_%s' % ('script' if getExt(file) in 'js' else 'style'), path + os.path.basename(file))
+            for f in glob.glob(os.path.join(self.plugin_path, 'static', '*')):
+                fireEvent('register_%s' % ('script' if getExt(f) in 'js' else 'style'), path + os.path.basename(f))
 
-    def showStatic(self, file = ''):
-        dir = os.path.join(self.plugin_path, 'static')
-        return send_from_directory(dir, file)
+    def showStatic(self, f = ''):
+        d = os.path.join(self.plugin_path, 'static')
+        return send_from_directory(d, f)
 
     def createFile(self, path, content):
 
         self.makeDir(os.path.dirname(path))
 
         try:
-            file = open(path, 'w')
-            file.write(content)
-            file.close()
+            f = open(path, 'w')
+            f.write(content)
+            f.close()
         except Exception, e:
             log.error('Unable writing to file "%s": %s' % (path, e))
 
@@ -74,6 +76,13 @@ class Plugin(object):
             return self.needs_shutdown
 
         self.needs_shutdown = value
+
+    def isRunning(self, value = None):
+        if value is None:
+            return self.running
+
+        log.debug('Running %s: %s' % (value, self.getName()))
+        self.running += 1 if value else -1
 
     def isDisabled(self):
         return not self.isEnabled()

@@ -2,7 +2,7 @@ from argparse import ArgumentParser
 from couchpotato import web
 from couchpotato.api import api
 from couchpotato.core.event import fireEventAsync
-from libs.daemon import createDaemon
+from daemon import createDaemon
 from logging import handlers
 from werkzeug.contrib.cache import FileSystemCache
 import logging
@@ -67,36 +67,37 @@ def cmd_couchpotato(options, base_path, args):
     debug = options.debug or Env.setting('debug', default = False)
     Env.set('debug', debug)
 
-
-    # Logger
-    logger = logging.getLogger()
-    formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s', '%H:%M:%S')
-    level = logging.DEBUG if debug else logging.INFO
-    logger.setLevel(level)
-
-    # To screen
-    if debug and not options.quiet and not options.daemonize:
-        hdlr = logging.StreamHandler(sys.stderr)
-        hdlr.setFormatter(formatter)
-        logger.addHandler(hdlr)
-
-    # To file
-    hdlr2 = handlers.RotatingFileHandler(Env.get('log_path'), 'a', 500000, 10)
-    hdlr2.setFormatter(formatter)
-    logger.addHandler(hdlr2)
-
-    # Disable server access log
-    server_log = logging.getLogger('werkzeug')
-    server_log.disabled = True
-
-    # Start logging
-    from couchpotato.core.logger import CPLog
-    log = CPLog(__name__)
-    log.debug('Started with options %s' % options)
-
-
-    # Load configs & plugins (only run once when debugging)
+    # Only run once when debugging
     if os.environ.get('WERKZEUG_RUN_MAIN') or not debug:
+
+        # Logger
+        logger = logging.getLogger()
+        formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s', '%H:%M:%S')
+        level = logging.DEBUG if debug else logging.INFO
+        logger.setLevel(level)
+
+        # To screen
+        if debug and not options.quiet and not options.daemonize:
+            hdlr = logging.StreamHandler(sys.stderr)
+            hdlr.setFormatter(formatter)
+            logger.addHandler(hdlr)
+
+        # To file
+        hdlr2 = handlers.RotatingFileHandler(Env.get('log_path'), 'a', 500000, 10)
+        hdlr2.setFormatter(formatter)
+        logger.addHandler(hdlr2)
+
+        # Disable server access log
+        server_log = logging.getLogger('werkzeug')
+        server_log.disabled = True
+
+        # Start logging
+        from couchpotato.core.logger import CPLog
+        log = CPLog(__name__)
+        log.debug('Started with options %s' % options)
+
+
+        # Load configs & plugins
         loader = Env.get('loader')
         loader.preload(root = base_path)
         loader.run()

@@ -30,12 +30,17 @@ class Searcher(Plugin):
         ).all()
 
         for movie in movies:
+
             self.single(movie.to_dict(deep = {
                 'profile': {'types': {'quality': {}}},
                 'releases': {'status': {}, 'quality': {}},
                 'library': {'titles': {}, 'files':{}},
                 'files': {}
             }))
+
+            # Break if CP wants to shut down
+            if self.shuttingDown():
+                break
 
     def single(self, movie):
 

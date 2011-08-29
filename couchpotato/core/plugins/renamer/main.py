@@ -216,6 +216,10 @@ class Renamer(Plugin):
             # Search for trailers etc
             fireEvent('renamer.after', group)
 
+            # Break if CP wants to shut down
+            if self.shuttingDown():
+                break
+
     def moveFile(self, old, dest, suppress = True):
         try:
             shutil.move(old, dest)
