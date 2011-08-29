@@ -1,7 +1,8 @@
+from .main import Core
 from uuid import uuid4
 
 def start():
-    pass
+    return Core()
 
 config = [{
     'name': 'core',

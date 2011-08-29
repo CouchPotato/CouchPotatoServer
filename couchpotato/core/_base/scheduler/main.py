@@ -20,6 +20,7 @@ class Scheduler(Plugin):
         addEvent('schedule.restart', self.start)
 
         addEvent('app.load', self.start)
+        addEvent('app.shutdown', self.stop)
 
         self.sched = Sched(misfire_grace_time = 60)
 

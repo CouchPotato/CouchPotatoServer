@@ -1,5 +1,5 @@
 from couchpotato import addView
-from couchpotato.core.event import fireEvent
+from couchpotato.core.event import fireEvent, addEvent
 from couchpotato.core.helpers.variable import getExt
 from couchpotato.core.logger import CPLog
 from couchpotato.environment import Env
@@ -15,6 +15,11 @@ class Plugin(object):
 
     enabled_option = 'enabled'
     auto_register_static = True
+
+    needs_shutdown = False
+
+    def registerPlugin(self):
+        addEvent('app.shutdown', self.doShutdown)
 
     def conf(self, attr, default = None):
         return Env.setting(attr, self.getName().lower(), default = default)
@@ -59,6 +64,16 @@ class Plugin(object):
                 os.makedirs(path, Env.getPermission('folder'))
         except Exception, e:
             log.error('Unable to create folder "%s": %s' % (path, e))
+
+
+    def doShutdown(self):
+        self.shuttingDown(True)
+
+    def shuttingDown(self, value = None):
+        if value is None:
+            return self.needs_shutdown
+
+        self.needs_shutdown = value
 
     def isDisabled(self):
         return not self.isEnabled()

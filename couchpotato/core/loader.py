@@ -81,6 +81,7 @@ class Loader:
     def loadPlugins(self, module, name):
         try:
             klass = module.start()
+            klass.registerPlugin()
 
             if klass and getattr(klass, 'auto_register_static'):
                 klass.registerStatic(module.__file__)

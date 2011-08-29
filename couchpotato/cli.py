@@ -9,9 +9,7 @@ import logging
 import os.path
 import sys
 
-
-def cmd_couchpotato(base_path, args):
-    '''Commandline entry point.'''
+def getOptions(base_path, args):
 
     # Options
     parser = ArgumentParser(prog = 'CouchPotato.py')
@@ -28,10 +26,16 @@ def cmd_couchpotato(base_path, args):
 
     options = parser.parse_args(args)
 
+    options.data_dir = os.path.expanduser(options.data_dir)
+
+    return options
+
+
+def cmd_couchpotato(options, base_path, args):
+    '''Commandline entry point.'''
 
     # Create data dir if needed
     if not os.path.isdir(options.data_dir):
-        options.data_dir = os.path.expanduser(options.data_dir)
         os.makedirs(options.data_dir)
 
     # Create logging dir
@@ -91,35 +95,36 @@ def cmd_couchpotato(base_path, args):
     log.debug('Started with options %s' % options)
 
 
-    # Load configs & plugins
-    loader = Env.get('loader')
-    loader.preload(root = base_path)
-    loader.run()
+    # Load configs & plugins (only run once when debugging)
+    if os.environ.get('WERKZEUG_RUN_MAIN') or not debug:
+        loader = Env.get('loader')
+        loader.preload(root = base_path)
+        loader.run()
 
 
-    # Load migrations
-    from migrate.versioning.api import version_control, db_version, version, upgrade
-    db = Env.get('db_path')
-    repo = os.path.join(base_path, 'couchpotato', 'core', 'migration')
-    logging.getLogger('migrate').setLevel(logging.WARNING) # Disable logging for migration
+        # Load migrations
+        from migrate.versioning.api import version_control, db_version, version, upgrade
+        db = Env.get('db_path')
+        repo = os.path.join(base_path, 'couchpotato', 'core', 'migration')
+        logging.getLogger('migrate').setLevel(logging.WARNING) # Disable logging for migration
 
-    latest_db_version = version(repo)
+        latest_db_version = version(repo)
 
-    try:
-        current_db_version = db_version(db, repo)
-    except:
-        version_control(db, repo, version = latest_db_version)
-        current_db_version = db_version(db, repo)
+        try:
+            current_db_version = db_version(db, repo)
+        except:
+            version_control(db, repo, version = latest_db_version)
+            current_db_version = db_version(db, repo)
 
-    if current_db_version < latest_db_version and not debug:
-        log.info('Doing database upgrade. From %d to %d' % (current_db_version, latest_db_version))
-        upgrade(db, repo)
+        if current_db_version < latest_db_version and not debug:
+            log.info('Doing database upgrade. From %d to %d' % (current_db_version, latest_db_version))
+            upgrade(db, repo)
 
-    # Configure Database
-    from couchpotato.core.settings.model import setup
-    setup()
+        # Configure Database
+        from couchpotato.core.settings.model import setup
+        setup()
 
-    fireEventAsync('app.load')
+        fireEventAsync('app.load')
 
     # Create app
     from couchpotato import app
