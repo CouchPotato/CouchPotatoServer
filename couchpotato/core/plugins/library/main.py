@@ -9,6 +9,8 @@ log = CPLog(__name__)
 
 class LibraryPlugin(Plugin):
 
+    default_dict = {'titles': {}, 'files':{}, 'info':{}}
+
     def __init__(self):
         addEvent('library.add', self.add)
         addEvent('library.update', self.update)
@@ -41,7 +43,7 @@ class LibraryPlugin(Plugin):
         if update_after:
             fireEventAsync('library.update', identifier = l.identifier, default_title = attrs.get('title', ''))
 
-        return l.to_dict({'titles': {}, 'files':{}})
+        return l.to_dict(self.default_dict)
 
     def update(self, identifier, default_title = '', force = False):
 
@@ -49,7 +51,7 @@ class LibraryPlugin(Plugin):
         library = db.query(Library).filter_by(identifier = identifier).first()
         done_status = fireEvent('status.get', 'done', single = True)
 
-        library_dict = library.to_dict({'titles': {}, 'files':{}, 'info':{}})
+        library_dict = library.to_dict(self.default_dict)
         do_update = True
 
         if library.status_id == done_status.get('id') and not force:
@@ -100,7 +102,7 @@ class LibraryPlugin(Plugin):
                     except:
                         log.debug('Failed to attach to library: %s' % traceback.format_exc())
 
-            library_dict = library.to_dict({'titles': {}, 'files':{}, 'info':{}})
+            library_dict = library.to_dict(self.default_dict)
 
         fireEvent('library.update_finish', data = library_dict)
 
