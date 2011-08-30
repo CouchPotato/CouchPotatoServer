@@ -10,6 +10,7 @@ log = CPLog(__name__)
 class XBMC(Notification):
 
     def notify(self, message = '', data = {}):
+        if self.isDisabled(): return
 
         for host in [x.strip() for x in self.conf('host').split(",")]:
             self.send({'command': 'ExecBuiltIn', 'parameter': 'Notification(CouchPotato, %s)' % message}, host)

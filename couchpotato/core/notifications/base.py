@@ -25,7 +25,7 @@ class Notification(Plugin):
             if not listener in self.dont_listen_to:
                 addEvent(listener, self.notify)
 
-    def notify(self, message = '', data = {}, type = ''):
+    def notify(self, message = '', data = {}):
         pass
 
     def test(self):
@@ -36,11 +36,10 @@ class Notification(Plugin):
 
         success = self.notify(
             message = self.test_message,
-            data = {},
-            type = test_type
+            data = {}
         )
 
-        return jsonified({'success': success})
+        #return jsonified({'success': success})
 
     def testNotifyName(self):
         return 'notify.%s.test' % self.getName().lower()

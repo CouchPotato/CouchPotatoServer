@@ -20,6 +20,7 @@ class Notifo(Notification):
         return Env.setting(attr, 'notifo')
 
     def notify(self, message = '', data = {}):
+        if self.isDisabled(): return
 
         try:
             data = urllib.urlencode({

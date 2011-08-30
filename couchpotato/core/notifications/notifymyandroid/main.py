@@ -1,6 +1,6 @@
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
-from libs import pynma
+import pynma
 
 log = CPLog(__name__)
 
@@ -8,6 +8,7 @@ log = CPLog(__name__)
 class NotifyMyAndroid(Notification):
 
     def notify(self, message = '', data = {}):
+        if self.isDisabled(): return
 
         nma = pynma.PyNMA()
         keys = self.conf('api_key').split(',')

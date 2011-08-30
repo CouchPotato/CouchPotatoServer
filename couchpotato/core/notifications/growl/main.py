@@ -16,6 +16,7 @@ class Growl(Notification):
         return Env.setting(attr, 'growl')
 
     def notify(self, message = '', data = {}):
+        if self.isDisabled(): return
 
         hosts = [x.strip() for x in self.conf('host').split(",")]
         password = self.conf('password')

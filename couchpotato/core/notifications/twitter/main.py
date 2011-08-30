@@ -20,6 +20,7 @@ class Twitter(Notification):
     }
 
     def notify(self, message = '', data = {}):
+        if self.isDisabled(): return
 
         api = Api(self.consumer_key, self.consumer_secret, self.conf('username'), self.conf('password'))
 

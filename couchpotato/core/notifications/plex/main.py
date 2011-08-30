@@ -11,6 +11,7 @@ log = CPLog(__name__)
 class Plex(Notification):
 
     def notify(self, message = '', data = {}):
+        if self.isDisabled(): return
 
         log.info('Sending notification to Plex')
         hosts = [x.strip() for x in self.conf('host').split(",")]

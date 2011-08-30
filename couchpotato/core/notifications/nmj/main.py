@@ -74,6 +74,7 @@ class NMJ(Notification):
         })
 
     def notify(self, message = '', data = {}):
+        if self.isDisabled(): return
 
         host = self.conf('host')
         mount = self.conf('mount')
