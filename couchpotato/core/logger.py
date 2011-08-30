@@ -8,6 +8,13 @@ class CPLog():
         self.context = context
         self.logger = logging.getLogger()
 
+        try:
+            from couchpotato.environment import Env
+            if Env.doDebug():
+                import color_logs
+        except:
+            pass
+
     def info(self, msg):
         self.logger.info(self.addContext(msg))
 
