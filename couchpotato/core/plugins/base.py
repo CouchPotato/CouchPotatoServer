@@ -4,6 +4,7 @@ from couchpotato.core.helpers.variable import getExt
 from couchpotato.core.logger import CPLog
 from couchpotato.environment import Env
 from flask.helpers import send_from_directory
+from urlparse import urlparse
 import glob
 import math
 import os.path
@@ -12,7 +13,6 @@ import socket
 import time
 import urllib
 import urllib2
-import urlparse
 
 log = CPLog(__name__)
 
