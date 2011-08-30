@@ -98,7 +98,10 @@ class MoviePlugin(Plugin):
         db = get_session();
 
         library = fireEvent('library.add', single = True, attrs = params)
-        status = fireEvent('status.add', 'active', single = True)
+
+        # Status
+        status_active = fireEvent('status.add', 'active', single = True)
+        status_snatched = fireEvent('status.add', 'snatched', single = True)
 
         m = db.query(Movie).filter_by(library_id = library.get('id')).first()
         if not m:
@@ -107,8 +110,13 @@ class MoviePlugin(Plugin):
                 profile_id = params.get('profile_id')
             )
             db.add(m)
+        else:
+            # Clean snatched history
+            for release in m.releases:
+                if release.status_id == status_snatched.get('id'):
+                    release.delete()
 
-        m.status_id = status.get('id')
+        m.status_id = status_active.get('id')
         db.commit()
 
         movie_dict = m.to_dict(deep = {
