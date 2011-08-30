@@ -54,9 +54,9 @@ class Plugin(object):
             for f in glob.glob(os.path.join(self.plugin_path, 'static', '*')):
                 fireEvent('register_%s' % ('script' if getExt(f) in 'js' else 'style'), path + os.path.basename(f))
 
-    def showStatic(self, f = ''):
+    def showStatic(self, file = ''):
         d = os.path.join(self.plugin_path, 'static')
-        return send_from_directory(d, f)
+        return send_from_directory(d, file)
 
     def createFile(self, path, content):
 
