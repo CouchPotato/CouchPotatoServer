@@ -35,7 +35,8 @@ class Core(Plugin):
 
             brk = True
             for running in still_running:
-                if running > 0:
+                if len(running) > 0:
+                    log.info('Waiting on plugins to finish: %s' % running)
                     brk = False
 
             if brk: break

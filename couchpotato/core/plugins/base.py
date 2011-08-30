@@ -17,7 +17,7 @@ class Plugin(object):
     auto_register_static = True
 
     needs_shutdown = False
-    running = 0
+    running = []
 
     def registerPlugin(self):
         addEvent('app.shutdown', self.doShutdown)
@@ -67,11 +67,12 @@ class Plugin(object):
         except Exception, e:
             log.error('Unable to create folder "%s": %s' % (path, e))
 
-    def beforeCall(self):
-        self.isRunning(True)
+    def beforeCall(self, handler):
+        log.debug('Calling %s.%s' % (self.getName(), handler.__name__))
+        self.isRunning('%s.%s' % (self.getName(), handler.__name__))
 
-    def afterCall(self):
-        self.isRunning(False)
+    def afterCall(self, handler):
+        self.isRunning('%s.%s' % (self.getName(), handler.__name__), False)
 
     def doShutdown(self):
         self.shuttingDown(True)
@@ -82,12 +83,17 @@ class Plugin(object):
 
         self.needs_shutdown = value
 
-    def isRunning(self, value = None):
+    def isRunning(self, value = None, bool = True):
         if value is None:
             return self.running
 
-        log.debug('Running %s: %s' % (value, self.getName()))
-        self.running += 1 if value else -1
+        if bool:
+            self.running.append(value)
+        else:
+            try:
+                self.running.remove(value)
+            except:
+                log.error("Something went wrong when finishing the plugin function. Could not find the 'is_running' key")
 
     def isDisabled(self):
         return not self.isEnabled()

@@ -19,9 +19,9 @@ def addEvent(name, handler):
 
         try:
             parent = handler.im_self
-            parent.beforeCall()
+            parent.beforeCall(handler)
             h = handler(*args, **kwargs)
-            parent.afterCall()
+            parent.afterCall(handler)
         except:
             h = handler(*args, **kwargs)
 
