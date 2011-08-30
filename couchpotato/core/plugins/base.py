@@ -67,6 +67,11 @@ class Plugin(object):
         except Exception, e:
             log.error('Unable to create folder "%s": %s' % (path, e))
 
+    def beforeCall(self):
+        self.isRunning(True)
+
+    def afterCall(self):
+        self.isRunning(False)
 
     def doShutdown(self):
         self.shuttingDown(True)

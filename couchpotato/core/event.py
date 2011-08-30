@@ -1,14 +1,11 @@
 from axl.axel import Event
 from couchpotato.core.helpers.variable import mergeDicts
 from couchpotato.core.logger import CPLog
-import inspect
 import threading
 import traceback
 
 log = CPLog(__name__)
 events = {}
-
-
 
 
 def addEvent(name, handler):
@@ -18,14 +15,19 @@ def addEvent(name, handler):
     else:
         e = events[name] = Event(threads = 20, exc_info = True, traceback = True, lock = threading.RLock())
 
-    def createHandle(handler, *args, **kwargs):
-        handler.im_self.isRunning(True)
-        h = handler(*args, **kwargs)
-        handler.im_self.isRunning(True)
+    def createHandle(*args, **kwargs):
+
+        try:
+            parent = handler.im_self
+            parent.beforeCall()
+            h = handler(*args, **kwargs)
+            parent.afterCall()
+        except:
+            h = handler(*args, **kwargs)
 
         return h
 
-    e += createHandle(handler)
+    e += createHandle
 
 def removeEvent(name, handler):
     e = events[name]
