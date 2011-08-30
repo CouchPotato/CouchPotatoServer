@@ -156,7 +156,7 @@ class Renamer(Plugin):
 
                     # Notify on download
                     download_message = 'Download of %s (%s) successful.' % (group['library']['titles'][0]['title'], replacements['quality'])
-                    fireEvent('notify', type = 'movie.downloaded', message = download_message, data = group)
+                    fireEvent('movie.downloaded', message = download_message, data = group)
 
                 # Before renaming, remove the lower quality files
                 db = get_session()
@@ -184,7 +184,7 @@ class Renamer(Plugin):
 
                                 # Notify on rename fail
                                 download_message = 'Renaming of %s (%s) canceled, exists in %s already.' % (movie.library.titles[0].title, group['meta_data']['quality']['label'], release.quality.label)
-                                fireEvent('notify', type = 'movie.renaming.canceled', message = download_message, data = group)
+                                fireEvent('movie.renaming.canceled', message = download_message, data = group)
 
                                 break
 

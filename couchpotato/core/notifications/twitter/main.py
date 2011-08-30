@@ -10,8 +10,6 @@ log = CPLog(__name__)
 
 class Twitter(Notification):
 
-    listen_to = ['movie.downloaded', 'movie.snatched']
-
     consumer_key = "3POVsO3KW90LKZXyzPOjQ"
     consumer_secret = "Qprb94hx9ucXvD4Wvg2Ctsk4PDK7CcQAKgCELXoyIjE"
 
@@ -21,8 +19,7 @@ class Twitter(Notification):
         'authorize': 'https://api.twitter.com/oauth/authorize',
     }
 
-    def notify(self, message = '', data = {}, type = None):
-        if self.dontNotify(type): return
+    def notify(self, message = '', data = {}):
 
         api = Api(self.consumer_key, self.consumer_secret, self.conf('username'), self.conf('password'))
 

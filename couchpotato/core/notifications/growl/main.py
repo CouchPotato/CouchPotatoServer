@@ -12,13 +12,10 @@ log = CPLog(__name__)
 
 class Growl(Notification):
 
-    listen_to = ['movie.downloaded', 'movie.snatched']
-
     def conf(self, attr):
         return Env.setting(attr, 'growl')
 
-    def notify(self, message = '', data = {}, type = None):
-        if self.dontNotify(type): return
+    def notify(self, message = '', data = {}):
 
         hosts = [x.strip() for x in self.conf('host').split(",")]
         password = self.conf('password')

@@ -108,13 +108,17 @@ class Searcher(Plugin):
                             db.commit()
 
                         log.info('Downloading of %s successful.' % nzb.get('name'))
-                        fireEvent('notify', type = 'movie.snatched', message = 'Downloading of %s successful.' % nzb.get('name'), data = rls.to_dict())
+                        fireEvent('movie.snatched', message = 'Downloading of %s successful.' % nzb.get('name'), data = rls.to_dict())
 
                         return True
 
                     return False
             else:
                 log.info('Better quality (%s) already available or snatched for %s' % (type['quality']['label'], default_title))
+                break
+
+            # Break if CP wants to shut down
+            if self.shuttingDown():
                 break
 
         return False

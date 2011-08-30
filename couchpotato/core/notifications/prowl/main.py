@@ -9,10 +9,7 @@ log = CPLog(__name__)
 
 class Prowl(Notification):
 
-    listen_to = ['movie.downloaded', 'movie.snatched']
-
-    def notify(self, message = '', data = {}, type = None):
-        if self.dontNotify(type): return
+    def notify(self, message = '', data = {}):
 
         http_handler = HTTPSConnection('api.prowlapp.com')
 

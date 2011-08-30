@@ -27,7 +27,7 @@ class CoreNotifier(Notification):
         # Library update, frontend refresh
         addEvent('library.update_finish', lambda data: fireEvent('notify.frontend', type = 'library.update', data = data))
 
-    def notify(self, message = '', data = {}, type = None):
+    def notify(self, message = '', data = {}):
         self.add(data = {
             'message': message,
             'raw': data,

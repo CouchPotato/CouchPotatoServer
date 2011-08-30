@@ -7,10 +7,7 @@ log = CPLog(__name__)
 
 class NotifyMyAndroid(Notification):
 
-    listen_to = ['movie.downloaded', 'movie.snatched']
-
-    def notify(self, message = '', data = {}, type = None):
-        if self.dontNotify(type): return
+    def notify(self, message = '', data = {}):
 
         nma = pynma.PyNMA()
         keys = self.conf('api_key').split(',')

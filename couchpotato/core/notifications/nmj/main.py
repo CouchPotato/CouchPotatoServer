@@ -18,8 +18,6 @@ log = CPLog(__name__)
 
 class NMJ(Notification):
 
-    listen_to = ['movie.downloaded', 'movie.snatched']
-
     def __init__(self):
         super(NMJ, self).__init__()
 
@@ -75,8 +73,7 @@ class NMJ(Notification):
             'mount': mount,
         })
 
-    def notify(self, message = '', data = {}, type = None):
-        if self.dontNotify(type): return
+    def notify(self, message = '', data = {}):
 
         host = self.conf('host')
         mount = self.conf('mount')

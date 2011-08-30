@@ -10,7 +10,7 @@ log = CPLog(__name__)
 
 class History(Notification):
 
-    listen_to = ['movie.downloaded', 'movie.snatched', 'movie.renaming.']
+    listen_to = ['movie.downloaded', 'movie.snatched', 'renamer.canceled']
 
     def __init__(self):
 
@@ -19,8 +19,7 @@ class History(Notification):
         addEvent('app.load', self.test)
 
 
-    def notify(self, message = '', data = {}, type = None):
-        if self.dontNotify(type): return
+    def notify(self, message = '', data = {}):
 
         db = get_session()
         history = Hist(

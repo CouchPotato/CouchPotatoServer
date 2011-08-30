@@ -16,13 +16,10 @@ class Notifo(Notification):
 
     url = 'https://api.notifo.com/v1/send_notification'
 
-    listen_to = ['movie.downloaded', 'movie.snatched']
-
     def conf(self, attr):
         return Env.setting(attr, 'notifo')
 
-    def notify(self, message = '', data = {}, type = None):
-        if self.dontNotify(type): return
+    def notify(self, message = '', data = {}):
 
         try:
             data = urllib.urlencode({
