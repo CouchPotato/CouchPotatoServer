@@ -5,7 +5,6 @@ from couchpotato.core.logger import CPLog
 from inspect import isfunction
 import os
 import traceback
-import urllib
 
 log = CPLog(__name__)
 
@@ -30,12 +29,12 @@ class Blackhole(Downloader):
                     log.info('Downloading %s to %s.' % (data.get('type'), fullPath))
                     if isfunction(data.get('download')):
                         file = data.get('download')()
-                        if not file:
-                            log.debug('Failed download file: %s' % data.get('name'))
-                            return False
                     else:
-                        log.info('Downloading: %s' % data.get('url'))
-                        file = urllib.urlopen(data.get('url')).read()
+                        file = self.urlopen(data.get('url'))
+
+                    if not file or file == '':
+                        log.debug('Failed download file: %s' % data.get('name'))
+                        return False
 
                     with open(fullPath, 'wb') as f:
                         f.write(file)

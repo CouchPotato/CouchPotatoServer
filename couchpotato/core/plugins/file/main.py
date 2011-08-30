@@ -34,26 +34,24 @@ class FileManager(Plugin):
 
     def download(self, url = '', dest = None, overwrite = False):
 
-        try:
-            file = urllib2.urlopen(url)
+        file = self.urlopen(url)
+        if not file:
+            log.error('File is empty, don\'t download')
+            return False
 
-            if not dest: # to Cache
-                dest = os.path.join(Env.get('cache_dir'), '%s.%s' % (md5(url), getExt(url)))
+        if not dest: # to Cache
+            dest = os.path.join(Env.get('cache_dir'), '%s.%s' % (md5(url), getExt(url)))
 
-            if overwrite or not os.path.exists(dest):
-                log.debug('Writing file to: %s' % dest)
-                output = open(dest, 'wb')
-                output.write(file.read())
-                output.close()
-            else:
-                log.debug('File already exists: %s' % dest)
+        if overwrite or not os.path.exists(dest):
+            log.debug('Writing file to: %s' % dest)
+            output = open(dest, 'wb')
+            output.write(file)
+            output.close()
+        else:
+            log.debug('File already exists: %s' % dest)
 
-            return dest
+        return dest
 
-        except Exception:
-            log.error('Unable to download file "%s": %s' % (url, traceback.format_exc()))
-
-        return False
 
     def add(self, path = '', part = 1, type = (), available = 1, properties = {}):
         db = get_session()

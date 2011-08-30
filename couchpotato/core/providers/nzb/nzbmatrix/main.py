@@ -1,11 +1,10 @@
-from couchpotato.core.event import addEvent, fireEvent
+from couchpotato.core.event import fireEvent
 from couchpotato.core.helpers.rss import RSS
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.base import NZBProvider
 from couchpotato.environment import Env
 from dateutil.parser import parse
 from urllib import urlencode
-from urllib2 import URLError
 import time
 import xml.etree.ElementTree as XMLTree
 
@@ -52,14 +51,14 @@ class NZBMatrix(NZBProvider, RSS):
         cache_key = 'nzbmatrix.%s.%s' % (movie['library'].get('identifier'), cat_ids)
         single_cat = True
 
-        try:
-            data = self.getCache(cache_key)
+        data = self.getCache(cache_key)
+        if not data:
+            data = self.urlopen(url)
+            self.setCache(cache_key, data)
+
             if not data:
-                data = self.urlopen(url)
-                self.setCache(cache_key, data)
-        except (IOError, URLError):
-            log.error('Failed to open %s.' % url)
-            return results
+                log.error('Failed to get data from %s.' % url)
+                return results
 
         if data:
             try:

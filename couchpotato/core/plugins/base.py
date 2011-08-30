@@ -5,8 +5,14 @@ from couchpotato.core.logger import CPLog
 from couchpotato.environment import Env
 from flask.helpers import send_from_directory
 import glob
+import math
 import os.path
 import re
+import socket
+import time
+import urllib
+import urllib2
+import urlparse
 
 log = CPLog(__name__)
 
@@ -18,6 +24,9 @@ class Plugin(object):
 
     needs_shutdown = False
     running = []
+
+    http_last_use = {}
+    http_time_between_calls = 0
 
     def registerPlugin(self):
         addEvent('app.shutdown', self.doShutdown)
@@ -66,6 +75,40 @@ class Plugin(object):
                 os.makedirs(path, Env.getPermission('folder'))
         except Exception, e:
             log.error('Unable to create folder "%s": %s' % (path, e))
+
+    # http request
+    def urlopen(self, url, timeout = 10, params = {}, headers = {}):
+
+        socket.setdefaulttimeout(timeout)
+
+        host = urlparse(url).hostname
+        self.wait(host)
+
+        try:
+            log.info('Opening url: %s, params: %s' % (url, params))
+
+            data = urllib.urlencode(params) if len(params) > 0 else None
+            request = urllib2.Request(url, data, headers)
+
+            data = urllib2.urlopen(request).read()
+        except IOError, e:
+            log.error('Failed opening url, %s: %s' % (url, e))
+            data = ''
+
+        self.http_last_use[host] = time.time()
+
+        return data
+
+    def wait(self, host = ''):
+        now = time.time()
+
+        last_use = self.http_last_use.get(host, 0)
+
+        wait = math.ceil(last_use - now + self.http_time_between_calls)
+
+        if wait > 0:
+            log.debug('Waiting for %s, %d seconds' % (self.getName(), wait))
+            time.sleep(last_use - now + self.http_time_between_calls)
 
     def beforeCall(self, handler):
         log.debug('Calling %s.%s' % (self.getName(), handler.__name__))

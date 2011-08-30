@@ -1,9 +1,6 @@
-from couchpotato.api import addApiView
-from couchpotato.core.event import addEvent
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
 from xml.dom import minidom
-import urllib
 
 log = CPLog(__name__)
 
@@ -23,12 +20,12 @@ class Plex(Notification):
             refresh_url = '%s/%%s/refresh' % base_url
 
             try:
-                xml_sections = minidom.parse(urllib.urlopen(base_url))
+                xml_sections = minidom.parse(self.urlopen(base_url))
                 sections = xml_sections.getElementsByTagName('Directory')
                 for s in sections:
                     if s.getAttribute('type') in source_type:
                         url = refresh_url % s.getAttribute('key')
-                        x = urllib.urlopen(url)
+                        x = self.urlopen(url)
             except:
                 log.error('Plex library update failed for %s.' % host)
 

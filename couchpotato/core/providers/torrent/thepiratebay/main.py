@@ -38,10 +38,9 @@ class ThePirateBay(TorrentProvider):
 
         log.info('Searching: %s' % url)
 
-        try:
-            data = urllib2.urlopen(url, timeout = self.timeout).read()
-        except (IOError, URLError):
-            log.error('Failed to open %s.' % url)
+        data = self.urlopen(url)
+        if not data:
+            log.error('Failed to get data from %s.' % url)
             return results
 
         try:
@@ -129,11 +128,10 @@ class ThePirateBay(TorrentProvider):
 
     def getInfo(self, url):
         log.debug('Getting info: %s' % url)
-        try:
-            data = urllib2.urlopen(url, timeout = self.timeout).read()
-            pass
-        except IOError:
-            log.error('Failed to open %s.' % url)
+
+        data = self.urlopen(url)
+        if not data:
+            log.error('Failed to get data from %s.' % url)
             return ''
 
         div = SoupStrainer('div')

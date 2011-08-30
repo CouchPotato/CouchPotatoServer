@@ -2,7 +2,6 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
 import base64
 import urllib
-import urllib2
 
 log = CPLog(__name__)
 
@@ -22,15 +21,14 @@ class XBMC(Notification):
 
         url = 'http://%s/xbmcCmds/xbmcHttp/?%s' % (host, urllib.urlencode(command))
 
-        try:
-            req = urllib2.Request(url)
-            if self.password:
-                authHeader = "Basic %s" % base64.encodestring('%s:%s' % (self.conf('username'), self.conf('password')))[:-1]
-                req.add_header("Authorization", authHeader)
+        headers = {}
+        if self.password:
+            headers = {
+               'Authorization': "Basic %s" % base64.encodestring('%s:%s' % (self.conf('username'), self.conf('password')))[:-1]
+            }
 
-            urllib2.urlopen(req, timeout = 10).read()
-        except Exception, e:
-            log.error("Couldn't sent command to XBMC. %s" % e)
+        if not self.urlopen(url, headers = headers):
+            log.error("Couldn't sent command to XBMC")
             return False
 
         log.info('XBMC notification to %s successful.' % host)

@@ -4,12 +4,8 @@ from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
 from urllib2 import URLError
 from urlparse import urlparse
-import math
 import re
-import socket
 import time
-import urllib
-import urllib2
 
 log = CPLog(__name__)
 
@@ -17,9 +13,8 @@ log = CPLog(__name__)
 class Provider(Plugin):
 
     type = None # movie, nzb, torrent, subtitle, trailer
-    time_between_searches = 10 # Default timeout for url requests
+    http_time_between_calls = 10 # Default timeout for url requests
 
-    last_use = {}
     last_available_check = {}
     is_available = {}
 
@@ -42,44 +37,15 @@ class Provider(Plugin):
 
         if self.last_available_check.get(host) < now - 900:
             self.last_available_check[host] = now
-            try:
-                self.urlopen(test_url, 30)
-                self.is_available[host] = True
-            except (IOError, URLError):
+
+            data = self.urlopen(test_url, 30)
+            if not data:
                 log.error('%s unavailable, trying again in an 15 minutes.' % self.name)
                 self.is_available[host] = False
+            else:
+                self.is_available[host] = True
 
         return self.is_available[host]
-
-    def urlopen(self, url, timeout = 10, params = {}):
-
-        socket.setdefaulttimeout(timeout)
-
-        host = urlparse(url).hostname
-        self.wait(host)
-
-        try:
-            log.info('Opening url: %s, params: %s' % (url, params))
-            request = urllib2.Request(url, urllib.urlencode(params))
-            data = urllib2.urlopen(request).read()
-        except IOError, e:
-            log.error('Failed opening url, %s: %s' % (url, e))
-            data = ''
-
-        self.last_use[host] = time.time()
-
-        return data
-
-    def wait(self, host = ''):
-        now = time.time()
-
-        last_use = self.last_use.get(host, 0)
-
-        wait = math.ceil(last_use - now + self.time_between_searches)
-
-        if wait > 0:
-            log.debug('Waiting for %s, %d seconds' % (self.getName(), wait))
-            time.sleep(last_use - now + self.time_between_searches)
 
 
 class MovieProvider(Provider):
@@ -128,8 +94,6 @@ class YarrProvider(Provider):
 
 class NZBProvider(YarrProvider):
     type = 'nzb'
-
-    time_between_searches = 10 # Seconds
 
     def __init__(self):
         addEvent('provider.nzb.search', self.search)

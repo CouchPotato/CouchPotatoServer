@@ -6,7 +6,6 @@ from urllib import urlencode
 import base64
 import os
 import re
-import urllib2
 
 log = CPLog(__name__)
 
@@ -52,15 +51,14 @@ class Sabnzbd(Downloader):
             params['script'] = pp_script_fn
 
         url = cleanHost(self.conf('host')) + "api?" + urlencode(params)
-        log.info("URL: " + url)
 
         try:
-            r = urllib2.urlopen(url)
+            data = self.urlopen(url)
         except Exception, e:
             log.error("Unable to connect to SAB: %s" % e)
             return False
 
-        result = r.read().strip()
+        result = data.strip()
         if not result:
             log.error("SABnzbd didn't return anything.")
             return False

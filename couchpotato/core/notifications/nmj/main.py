@@ -6,7 +6,6 @@ from couchpotato.environment import Env
 import re
 import telnetlib
 import urllib
-import urllib2
 
 try:
     import xml.etree.cElementTree as etree
@@ -81,12 +80,10 @@ class NMJ(Notification):
         database = self.conf('database')
 
         if self.mount:
-            try:
-                req = urllib2.Request(mount)
-                log.debug('Try to mount network drive via url: %s' % (mount))
-                handle = urllib2.urlopen(req)
-            except IOError, e:
-                log.error('Warning: Couldn\'t contact popcorn hour on host %s: %s' % (host, e))
+            log.debug('Try to mount network drive via url: %s' % (mount))
+            data = self.urlopen(mount)
+            if not data:
+                log.error('Warning: Couldn\'t contact popcorn hour on host %s' % host)
                 return False
 
         params = {
@@ -99,13 +96,9 @@ class NMJ(Notification):
         UPDATE_URL = 'http://%(host)s:8008/metadata_database?%(params)s'
         updateUrl = UPDATE_URL % {'host': host, 'params': params}
 
-        try:
-            req = urllib2.Request(updateUrl)
-            log.debug('Sending NMJ scan update command via url: %s' % (updateUrl))
-            handle = urllib2.urlopen(req)
-            response = handle.read()
-        except IOError, e:
-            log.error('Warning: Couldn\'t contact Popcorn Hour on host %s: %s' % (host, e))
+        response = self.urlopen(updateUrl)
+        if not response:
+            log.error('Warning: Couldn\'t contact Popcorn Hour on host %s' % host)
             return False
 
         try:
