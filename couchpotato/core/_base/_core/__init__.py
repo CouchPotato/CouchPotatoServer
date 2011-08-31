@@ -64,6 +64,11 @@ config = [{
                     'description': 'Enable debugging.',
                 },
                 {
+                    'name': 'data_dir',
+                    'label': 'Data dir',
+                    'description': 'Where cache/logs/etc are stored.',
+                },
+                {
                     'name': 'url_base',
                     'default': '',
                     'label': 'Url Base',

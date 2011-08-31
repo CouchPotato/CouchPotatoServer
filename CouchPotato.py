@@ -18,7 +18,7 @@ from couchpotato.core.logger import CPLog
 log = CPLog(__name__)
 
 # Get options via arg
-from couchpotato.cli import getOptions
+from couchpotato.runner import getOptions
 options = getOptions(base_path, sys.argv[1:])
 
 def start():
@@ -38,12 +38,12 @@ def start():
         log.critical(e)
         return 0
 
-from couchpotato import cli
+from couchpotato.runner import runCouchPotato
 if __name__ == '__main__':
 
     if os.environ.get('cp_main', 'false') == 'true':
         try:
-            cli.cmd_couchpotato(options, base_path, sys.argv[1:])
+            runCouchPotato(options, base_path, sys.argv[1:])
         except Exception, e:
             log.critical(e)
     else:

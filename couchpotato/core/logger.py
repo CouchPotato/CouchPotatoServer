@@ -33,6 +33,11 @@ class CPLog():
         return '[%+25.25s] %s' % (self.context[-25:], self.removePrivateData(msg))
 
     def removePrivateData(self, msg):
+        try:
+            msg = unicode(msg)
+        except:
+            pass
+
         for replace in self.replace_private:
             msg = re.sub('(%s=)[^\&]+' % replace, '%s=xxx' % replace, msg)
 

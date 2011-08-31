@@ -13,8 +13,8 @@ def getOptions(base_path, args):
 
     # Options
     parser = ArgumentParser(prog = 'CouchPotato.py')
-    parser.add_argument('-s', '--datadir', default = os.path.join(base_path, '_data'),
-                        dest = 'data_dir', help = 'Absolute or ~/ path, where settings/logs/database data is saved (default ./_data)')
+    parser.add_argument('-c', '--config_file', default = os.path.join(base_path, '_data', 'settings.conf'),
+                        dest = 'config_file', help = 'Absolute or ~/ path of the settings file (default ./_data/settings.conf)')
     parser.add_argument('-t', '--test', '--debug', action = 'store_true',
                         dest = 'debug', help = 'Debug mode')
     parser.add_argument('-q', '--quiet', action = 'store_true',
@@ -26,23 +26,29 @@ def getOptions(base_path, args):
 
     options = parser.parse_args(args)
 
-    options.data_dir = os.path.expanduser(options.data_dir)
+    options.config_file = os.path.expanduser(options.config_file)
 
     return options
 
 
-def cmd_couchpotato(options, base_path, args):
-    '''Commandline entry point.'''
+def runCouchPotato(options, base_path, args):
+
+    # Load settings
+    from couchpotato.environment import Env
+    settings = Env.get('settings')
+    settings.setFile(options.config_file)
 
     # Create data dir if needed
-    if not os.path.isdir(options.data_dir):
-        os.makedirs(options.data_dir)
+    data_dir = os.path.expanduser(Env.setting('data_dir'))
+    if data_dir == '':
+        data_dir = os.path.join(base_path, '_data')
+    if not os.path.isdir(data_dir):
+        os.makedirs(data_dir)
 
     # Create logging dir
-    log_dir = os.path.join(options.data_dir, 'logs');
+    log_dir = os.path.join(data_dir, 'logs');
     if not os.path.isdir(log_dir):
         os.mkdir(log_dir)
-
 
     # Daemonize app
     if options.daemonize:
@@ -50,14 +56,12 @@ def cmd_couchpotato(options, base_path, args):
 
 
     # Register environment settings
-    from couchpotato.environment import Env
-    Env.get('settings').setFile(os.path.join(options.data_dir, 'settings.conf'))
     Env.set('uses_git', not options.git)
     Env.set('app_dir', base_path)
-    Env.set('data_dir', options.data_dir)
+    Env.set('data_dir', data_dir)
     Env.set('log_path', os.path.join(log_dir, 'CouchPotato.log'))
-    Env.set('db_path', 'sqlite:///' + os.path.join(options.data_dir, 'couchpotato.db'))
-    Env.set('cache_dir', os.path.join(options.data_dir, 'cache'))
+    Env.set('db_path', 'sqlite:///' + os.path.join(data_dir, 'couchpotato.db'))
+    Env.set('cache_dir', os.path.join(data_dir, 'cache'))
     Env.set('cache', FileSystemCache(os.path.join(Env.get('cache_dir'), 'python')))
     Env.set('quiet', options.quiet)
     Env.set('daemonize', options.daemonize)
