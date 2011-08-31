@@ -39,17 +39,23 @@ class Scheduler(Plugin):
 
         # Crons
         for identifier in self.crons:
-            self.remove(identifier)
-            cron = self.crons[identifier]
-            job = self.sched.add_cron_job(cron['handle'], day = cron['day'], hour = cron['hour'], minute = cron['minute'])
-            cron['job'] = job
+            try:
+                self.remove(identifier)
+                cron = self.crons[identifier]
+                job = self.sched.add_cron_job(cron['handle'], day = cron['day'], hour = cron['hour'], minute = cron['minute'])
+                cron['job'] = job
+            except ValueError, e:
+                log.error("Failed adding cronjob: %s" % e)
 
         # Intervals
         for identifier in self.intervals:
-            self.remove(identifier)
-            interval = self.intervals[identifier]
-            job = self.sched.add_interval_job(interval['handle'], hours = interval['hours'], minutes = interval['minutes'], seconds = interval['seconds'], repeat = interval['repeat'])
-            interval['job'] = job
+            try:
+                self.remove(identifier)
+                interval = self.intervals[identifier]
+                job = self.sched.add_interval_job(interval['handle'], hours = interval['hours'], minutes = interval['minutes'], seconds = interval['seconds'], repeat = interval['repeat'])
+                interval['job'] = job
+            except ValueError, e:
+                log.error("Failed adding interval cronjob: %s" % e)
 
         # Start it
         self.sched.start()
