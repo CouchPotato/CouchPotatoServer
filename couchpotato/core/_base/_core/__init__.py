@@ -66,6 +66,7 @@ config = [{
                 {
                     'name': 'data_dir',
                     'label': 'Data dir',
+                    'type': 'directory',
                     'description': 'Where cache/logs/etc are stored.',
                 },
                 {
