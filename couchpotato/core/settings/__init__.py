@@ -3,6 +3,7 @@ from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import isInt
 from couchpotato.core.helpers.request import getParams, jsonified
+from couchpotato.core.helpers.variable import mergeDicts
 import ConfigParser
 import os.path
 import time
@@ -93,7 +94,12 @@ class Settings():
             self.p.set(section, option, value)
 
     def addOptions(self, section_name, options):
-        self.options[section_name] = options
+
+        if not self.options.get(section_name):
+            self.options[section_name] = options
+        else:
+            options['groups'] = self.options[section_name].get('groups') + options.get('groups')
+            self.options[section_name] = mergeDicts(self.options[section_name], options)
 
     def getOptions(self):
         return self.options

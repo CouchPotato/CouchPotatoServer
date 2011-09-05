@@ -51,7 +51,9 @@ class LibraryPlugin(Plugin):
         library = db.query(Library).filter_by(identifier = identifier).first()
         done_status = fireEvent('status.get', 'done', single = True)
 
-        library_dict = library.to_dict(self.default_dict)
+        if library:
+            library_dict = library.to_dict(self.default_dict)
+
         do_update = True
 
         if library.status_id == done_status.get('id') and not force:

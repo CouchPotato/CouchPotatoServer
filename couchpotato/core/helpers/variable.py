@@ -4,7 +4,6 @@ import os.path
 def isDict(object):
     return isinstance(object, dict)
 
-
 def mergeDicts(a, b):
     assert isDict(a), isDict(b)
     dst = a.copy()
@@ -16,7 +15,7 @@ def mergeDicts(a, b):
             if key not in current_dst:
                 current_dst[key] = current_src[key]
             else:
-                if isDict(current_src[key]) and isDict(current_dst[key]) :
+                if isDict(current_src[key]) and isDict(current_dst[key]):
                     stack.append((current_dst[key], current_src[key]))
                 else:
                     current_dst[key] = current_src[key]

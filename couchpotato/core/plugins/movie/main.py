@@ -10,6 +10,14 @@ from urllib import urlencode
 
 class MoviePlugin(Plugin):
 
+    default_dict = {
+        'profile': {'types': {'quality': {}}},
+        'releases': {'status': {}, 'quality': {}, 'files':{}, 'info': {}},
+        'library': {'titles': {}, 'files':{}},
+        'files': {},
+        'status': {}
+    }
+
     def __init__(self):
         addApiView('movie.search', self.search)
         addApiView('movie.list', self.list)
@@ -30,12 +38,7 @@ class MoviePlugin(Plugin):
 
         movies = []
         for movie in results:
-            temp = movie.to_dict(deep = {
-                'releases': {'status': {}, 'quality': {}, 'files':{}, 'info': {}},
-                'library': {'titles': {}, 'files':{}},
-                'files': {}
-            })
-
+            temp = movie.to_dict(self.default_dict)
             movies.append(temp)
 
         return jsonified({
@@ -59,12 +62,7 @@ class MoviePlugin(Plugin):
         if movie:
             #addEvent('library.update.after', )
             fireEventAsync('library.update', identifier = movie.library.identifier, default_title = default_title, force = True)
-            fireEventAsync('searcher.single', movie.to_dict(deep = {
-                'profile': {'types': {'quality': {}}},
-                'releases': {'status': {}, 'quality': {}, 'files': {}, 'info': {}},
-                'library': {'titles': {}, 'files':{}},
-                'files': {}
-            }))
+            fireEventAsync('searcher.single', movie.to_dict(self.default_dict))
 
         return jsonified({
             'success': True,
@@ -119,10 +117,7 @@ class MoviePlugin(Plugin):
         m.status_id = status_active.get('id')
         db.commit()
 
-        movie_dict = m.to_dict(deep = {
-            'releases': {'status': {}, 'quality': {}, 'files': {}, 'info': {}},
-            'library': {'titles': {}}
-        })
+        movie_dict = m.to_dict(self.default_dict)
 
         return jsonified({
             'success': True,

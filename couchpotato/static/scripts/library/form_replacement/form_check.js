@@ -114,6 +114,7 @@ Form.Check = new Class({
       this.check();
     }
     this.fireEvent('change', this);
+    this.input.fireEvent('change', this);
     return this;
   },
   uncheck: function() {
