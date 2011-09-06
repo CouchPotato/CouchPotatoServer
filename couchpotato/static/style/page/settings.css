@@ -100,14 +100,17 @@
 		font-size: 14px;
 		border: 0;
 	}
+		.page.settings .ctrlHolder.save_success:not(:first-child) {
+			background: url('../../images/check.png') no-repeat 7px center;
+		}
 		.page.settings .ctrlHolder:last-child { border: none; }
-		.page.settings .ctrlHolder:hover { background: rgba(255,255,255,0.05); }
-		.page.settings .ctrlHolder.focused { background: rgba(255,255,255,0.2); }
+		.page.settings .ctrlHolder:hover { background-color: rgba(255,255,255,0.05); }
+		.page.settings .ctrlHolder.focused { background-color: rgba(255,255,255,0.2); }
 
 		.page.settings .ctrlHolder .formHint {
 			float: right;
 			width: 47%;
-			margin: -18px 0;
+			margin: -25px 0;
 			padding: 0;
 			color: #fff;
 		}
@@ -180,6 +183,7 @@
 		background-repeat: no-repeat;
 		background-position: 97% center;
 		overflow: hidden;
+		vertical-align: top;
 	}
 		.page.settings .directory > span {
 			height: 25px;
