@@ -110,7 +110,7 @@
 		.page.settings .ctrlHolder .formHint {
 			float: right;
 			width: 47%;
-			margin: -25px 0;
+			margin: -18px 0;
 			padding: 0;
 			color: #fff;
 		}
@@ -219,9 +219,10 @@
 		}
 	
 	.page.settings .directory_list ul {
-		width: 100%;
-		height: 200px;
+		width: 92%;
+		height: 300px;
 		overflow: auto;
+		margin: 0 4%;
 	}
 	
 		.page.settings .directory_list li {
@@ -241,15 +242,14 @@
 	
 	.page.settings .directory_list .actions {
 		clear: both;
-		padding: 10px;
+		padding: 4% 4% 2%;
+		min-height: 25px;
 	}
-	
-	.page.settings .directory_list .actions {}
 		
 		.page.settings .directory_list .actions label {
 			float: right;
 			width: auto;
-			padding: 5px 3px;
+			padding: 0;
 		}
 			.page.settings .directory_list .actions .inlay {
 				margin: -2px 0 0 7px;
@@ -259,16 +259,26 @@
 			font-weight: bold;
 			width: 160px;
 			display: inline-block;
+			padding: 0;
+			line-height: 120%;
+			vertical-align: top;
 		}
 	
 	.page.settings .directory_list .actions:last-child {
 		float: right;
+		padding: 4%;
 	}
 
 		.page.settings .directory_list .actions:last-child > span {
 			padding: 0 5px;
 			text-shadow: none;
 		}
+		
+		.page.settings .directory_list .actions:last-child > .clear {
+			left: -90%;
+			position: relative;
+	background-color: #af3128;
+}
 		
 		.page.settings .directory_list .actions:last-child > .cancel {
 			font-weight: bold;

@@ -66,7 +66,8 @@ config = [{
                 {
                     'name': 'data_dir',
                     'label': 'Data dir',
-                    'description': 'Where cache/logs/etc are stored.',
+                    'type': 'directory',
+                    'description': 'Where cache/logs/etc are stored. Keep empty for <strong>./_data</strong>.',
                 },
                 {
                     'name': 'url_base',
@@ -78,13 +79,13 @@ config = [{
                     'name': 'permission_folder',
                     'default': 0755,
                     'label': 'Folder CHMOD',
-                    'description': 'Permission for creating/copying folders',
+                    'description': 'Permission (octal) for creating/copying folders.',
                 },
                 {
                     'name': 'permission_file',
                     'default': 0755,
                     'label': 'File CHMOD',
-                    'description': 'Permission for creating/copying files',
+                    'description': 'Permission (octal) for creating/copying files',
                 },
             ],
         },

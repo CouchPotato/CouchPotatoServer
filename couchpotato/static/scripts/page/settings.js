@@ -549,6 +549,15 @@ Option.Directory = new Class({
 					}
 				}),
 				new Element('div.actions').adopt(
+					new Element('a.clear.button', {
+						'text': 'Clear',
+						'events': {
+							'click': function(e){
+								self.input.set('text', '');
+								self.hideBrowser(e, true);
+							}
+						}
+					}),
 					new Element('a.cancel', {
 						'text': 'Cancel',
 						'events': {
