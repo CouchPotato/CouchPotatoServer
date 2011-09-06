@@ -9,7 +9,7 @@ config = [{
         {
             'tab': 'providers',
             'name': 'newznab',
-            'description': 'Enable multiple NewzNab providers',
+            'description': 'Enable multiple NewzNab providers such as <a href="http://nzb.su" target="_blank">NZB.su</a>',
             'options': [
                 {
                     'name': 'enabled',
@@ -22,7 +22,7 @@ config = [{
                 {
                     'name': 'host',
                     'default': 'http://nzb.su',
-                    'description': 'The hostname of your newznab provider, like http://nzb.su'
+                    'description': 'The hostname of your newznab provider'
                 },
                 {
                     'name': 'api_key',

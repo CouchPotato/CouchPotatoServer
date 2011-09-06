@@ -38,6 +38,7 @@
 		.page.settings .tabs a {
 			display: block;
 			padding: 11px 15px;
+			color: #fff;
 		}
 		.page.settings .tabs .active a {
 			background: #4e5969;
@@ -92,6 +93,7 @@
 				position: relative;
 				margin-bottom: -25px;
 				border: none;
+				width: 20px;
 			}
 
 	.page.settings .ctrlHolder {
@@ -106,6 +108,7 @@
 		.page.settings .ctrlHolder:last-child { border: none; }
 		.page.settings .ctrlHolder:hover { background-color: rgba(255,255,255,0.05); }
 		.page.settings .ctrlHolder.focused { background-color: rgba(255,255,255,0.2); }
+		.page.settings .ctrlHolder.focused:first-child, .page.settings .ctrlHolder:first-child{ background-color: transparent; }
 
 		.page.settings .ctrlHolder .formHint {
 			float: right;
@@ -288,3 +291,42 @@
 		.page.settings .directory_list .actions:last-child > .save {
 			background: #9dc156;
 		}
+		
+	.page.settings .section_newznab {
+		
+	}
+	
+	.page.settings .section_newznab .head {
+		margin: 0 0 0 60px;
+	}
+		.page.settings .section_newznab .head abbr {
+			display: inline-block;
+			font-weight: bold;
+			border-bottom: 1px dotted #fff;
+			line-height: 140%;
+			cursor: help;
+		}
+		.page.settings .section_newznab .head abbr.host {
+			margin-right: 197px;
+		}
+		
+	.page.settings .section_newznab .ctrlHolder {
+		padding-top: 2px;
+		padding-bottom: 3px;
+	}
+		
+	.page.settings .section_newznab .ctrlHolder > * {
+		margin: 0 10px 0 0;
+	}
+		
+	.page.settings .section_newznab .ctrlHolder .delete {
+		display: inline-block;
+		width: 22px;
+		height: 22px;
+		vertical-align: middle;
+		background-position: left center;
+	}
+	
+	.page.settings .section_newznab .ctrlHolder.is_empty .delete, .page.settings .section_newznab .ctrlHolder.is_empty .use {
+		visibility: hidden;
+}

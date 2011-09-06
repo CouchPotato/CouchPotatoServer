@@ -31,26 +31,49 @@ var MultipleNewznab = new Class({
 				});
 
 				self.inputs[name].getParent().hide()
+				self.inputs[name].addEvent('change', self.addEmpty.bind(self))
 			});
 
 
 			self.values.each(function(item, nr){
 				self.createItem(item.use, item.host, item.api_key);
 			});
-			
-			new Element('a.nice_button', {
-				'text': 'Add new NewzNab provider',
-				'events': {
-					'click': function(e){
-						(e).stop();
-						
-						self.createItem(1, '', '');
-					}
-				}
-			}).inject(self.fieldset.getElement('h2'), 'after');
+
+			new Element('div.head').adopt(
+				new Element('abbr.host', {
+					'text': 'Host',
+					'title': self.inputs['host'].getNext().get('text')
+				}),
+				new Element('abbr.api_key', {
+					'text': 'Api Key',
+					'title': self.inputs['api_key'].getNext().get('text')
+				})
+			).inject(self.fieldset.getElement('h2'), 'after');
+
+			self.addEmpty();
 
 		})
 
+	},
+
+	add_empty_timeout: 0,
+	addEmpty: function(){
+		var self = this;
+
+		if(self.add_empty_timeout) clearTimeout(self.add_empty_timeout);
+
+		var has_empty = false;
+		self.items.each(function(ctrl_holder){
+			if(ctrl_holder.getElement('.host').get('value') == '' && ctrl_holder.getElement('.api_key').get('value') == ''){
+				has_empty = true;
+			}
+			ctrl_holder[has_empty ? 'addClass' : 'removeClass']('is_empty');
+		});
+		if(has_empty) return;
+
+		self.add_empty_timeout = setTimeout(function(){
+			self.createItem(false);
+		}, 10);
 	},
 
 	createItem: function(use, host, api){
@@ -83,12 +106,12 @@ var MultipleNewznab = new Class({
 				}
 			}),
 			new Element('a.icon.delete', {
-				'text': 'delete',
 				'events': {
 					'click': self.deleteItem.bind(self)
 				}
 			})
 		).inject(self.fieldset);
+		item[!host ? 'addClass' : 'removeClass']('is_empty');
 
 		new Form.Check(checkbox, {
 			'onChange': checkbox.fireEvent.bind(checkbox, 'change')
@@ -105,6 +128,7 @@ var MultipleNewznab = new Class({
 		self.items.each(function(item, nr){
 			self.input_types.each(function(type){
 				var input = item.getElement('input.'+type);
+				if(input.getParent('.ctrlHolder').hasClass('is_empty')) return;
 
 				if(!temp[type]) temp[type] = [];
 				temp[type][nr] = input.get('type') == 'checkbox' ? +input.get('checked') : input.get('value').trim();
@@ -125,7 +149,7 @@ var MultipleNewznab = new Class({
 		(e).stop();
 
 		var item = e.target.getParent();
-		
+
 		self.items.erase(item);
 		item.destroy();
 

@@ -1,4 +1,7 @@
-/* @override http://localhost:5000/static/style/main.css */
+/* @override 
+	http://localhost:5000/static/style/main.css
+	http://192.168.1.20:5000/static/style/main.css
+*/
 
 html {
 	color: #fff;
@@ -35,15 +38,24 @@ input, textarea {
 	font-family: "Helvetica Neue", Helvetica, Arial, Geneva, sans-serif;
 }
 
+input:-moz-placeholder, textarea:-moz-placeholder {
+	color: rgba(255, 255, 255, 0.6);
+}
+
+::-webkit-input-placeholder, ::-webkit-textarea-placeholder {
+	color: rgba(255, 255, 255, 0.6);
+}
+
 a img {
 	border:none;
 }
 
 a {
 	text-decoration:none;
-	color: #fff;
+	color: #ebfcbc;
 	outline: 0;
 	cursor: pointer;
+	font-weight: bold;
 }
 a:hover { color: #f3f3f3; }
 
