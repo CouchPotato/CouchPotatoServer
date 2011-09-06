@@ -82,7 +82,9 @@ Page.Settings = new Class({
 		var self = this;
 
 		var c = self.advanced_toggle.checked ? 'addClass' : 'removeClass';
-		self.el[c]('show_advanced')
+		self.el[c]('show_advanced');
+
+		Cookie.write('advanced_toggle_checked', +self.advanced_toggle.checked, {'duration': 365});
 	},
 
 	create: function(json){
@@ -96,6 +98,7 @@ Page.Settings = new Class({
 						'text': 'Show advanced settings'
 					}),
 					self.advanced_toggle = new Element('input[type=checkbox].inlay', {
+						'checked': +Cookie.read('advanced_toggle_checked'),
 						'events': {
 							'change': self.showAdvanced.bind(self)
 						}
@@ -103,6 +106,7 @@ Page.Settings = new Class({
 				)
 			)
 		);
+		self.showAdvanced();
 
 		new Form.Check(self.advanced_toggle)
 
@@ -130,7 +134,7 @@ Page.Settings = new Class({
 					var class_name = (option.type || 'string').capitalize();
 					var input = new Option[class_name](self, section_name, option.name, option);
 						input.inject(self.tabs[group.tab].groups[group.name]);
-						input.fireEvent('injected')
+						input.fireEvent('injected');
 				});
 
 			});
