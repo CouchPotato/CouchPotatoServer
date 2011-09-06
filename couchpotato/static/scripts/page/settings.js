@@ -104,9 +104,7 @@ Page.Settings = new Class({
 			)
 		);
 
-		new Form.Check(self.advanced_toggle, {
-			'onChange': self.showAdvanced.bind(self)
-		})
+		new Form.Check(self.advanced_toggle)
 
 		// Create tabs
 		Object.each(self.tabs, function(tab, tab_name){
@@ -397,9 +395,7 @@ Option.Checkbox = new Class({
 			})
 		);
 
-		new Form.Check(self.input, {
-			'onChange': self.changed.bind(self)
-		});
+		new Form.Check(self.input);
 
 	},
 
@@ -435,16 +431,11 @@ Option.Enabler = new Class({
 			self.input = new Element('input.inlay', {
 				'type': 'checkbox',
 				'checked': self.getSettingValue(),
-				'id': 'r-'+randomString(),
-				'events': {
-					'change': self.checkState.bind(self)
-				}
+				'id': 'r-'+randomString()
 			})
 		);
 
-		new Form.Check(self.input, {
-			'onChange': self.changed.bind(self)
-		});
+		new Form.Check(self.input);
 	},
 
 	changed: function(){
