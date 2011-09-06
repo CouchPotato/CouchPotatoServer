@@ -149,6 +149,8 @@
 			margin: 0;
 			padding: 6px 0 0;
 		}
+		
+		.page.settings .xsmall { width: 20px !important; text-align: center; }
 
 	.page.settings input[type=text], .page.settings input[type=password] {
 		padding: 5px 3px;

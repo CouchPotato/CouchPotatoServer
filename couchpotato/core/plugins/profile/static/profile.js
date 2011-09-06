@@ -24,47 +24,32 @@ var Profile = new Class({
 		var data = self.data;
 
 		self.el = new Element('div.profile').adopt(
-			self.header = new Element('h4', {'text': data.label}),
 			new Element('span.delete.icon', {
 				'events': {
 					'click': self.del.bind(self)
 				}
 			}),
-			new Element('div', {
-				'class': 'ctrlHolder'
-			}).adopt(
+			new Element('.quality_label.ctrlHolder').adopt(
 				new Element('label', {'text':'Name'}),
-				new Element('input.label.textInput.large', {
+				new Element('input.inlay', {
 					'type':'text',
 					'value': data.label,
-					'events': {
-						'keyup': function(){
-							self.header.set('text', this.get('value'))
-						}
-					}
+					'placeholder': 'Profile name'
 				})
 			),
-			new Element('div.ctrlHolder').adopt(
-				new Element('label', {'text':'Wait'}),
-				new Element('input.wait_for.textInput.xsmall', {
+			new Element('div.wait_for.ctrlHolder').adopt(
+				new Element('span', {'text':'Wait'}),
+				new Element('input.inlay.xsmall', {
 					'type':'text',
 					'value': data.types && data.types.length > 0 ? data.types[0].wait_for : 0
 				}),
-				new Element('span', {'text':' day(s) for better quality.'})
+				new Element('span', {'text':'day(s) for a better quality.'})
 			),
-			new Element('div.ctrlHolder').adopt(
-				new Element('label', {'text': 'Qualities'}),
-				new Element('div.head').adopt(
-					new Element('span.quality_type', {'text': 'Search for'}),
-					new Element('span.finish', {'html': '<acronym title="Won\'t download anything else if it has found this quality.">Finish</acronym>'})
-				),
+			new Element('div.qualities.ctrlHolder').adopt(
+				new Element('label', {'text': 'Search for'}),
 				self.type_container = new Element('ol.types'),
-				new Element('a.addType', {
-					'text': 'Add another quality to search for.',
-					'href': '#',
-					'events': {
-						'click': self.addType.bind(self)
-					}
+				new Element('div.formHint', {
+					'html': "Search these qualities, from top to bottom. <br />Use the checkbox, if I don't have to search any further."
 				})
 			)
 		);
@@ -73,6 +58,8 @@ var Profile = new Class({
 
 		if(data.types)
 			Object.each(data.types, self.addType.bind(self))
+			
+		self.addType();
 	},
 
 	save: function(delay){
@@ -96,6 +83,9 @@ var Profile = new Class({
 					}
 				}
 			});
+
+			self.addType();
+
 		}).delay(delay, self)
 
 	},
@@ -105,8 +95,8 @@ var Profile = new Class({
 
 		var data = {
 			'id' : self.data.id,
-			'label' : self.el.getElement('.label').get('value'),
-			'wait_for' : self.el.getElement('.wait_for').get('value'),
+			'label' : self.el.getElement('.quality_label input').get('value'),
+			'wait_for' : self.el.getElement('.wait_for input').get('value'),
 			'types': []
 		}
 
@@ -124,8 +114,19 @@ var Profile = new Class({
 	addType: function(data){
 		var self = this;
 
-		var t = new Profile.Type(data);
+		var has_empty = false;
+		self.types.each(function(type){
+			if($(type).hasClass('is_empty'))
+				has_empty = true;
+		});
+
+		if(has_empty) return;
+
+		var t = new Profile.Type(data, {
+			'onChange': self.save.bind(self, 0)
+		});
 		$(t).inject(self.type_container);
+
 		self.sortable.addItems($(t));
 
 		self.types.include(t);
@@ -135,23 +136,35 @@ var Profile = new Class({
 	del: function(){
 		var self = this;
 
-        if(!confirm('Are you sure you want to delete this profile?')) return
-
-		Api.request('profile.delete', {
-			'data': {
-				'id': self.data.id
-			},
-			'useSpinner': true,
-			'spinnerOptions': {
-				'target': self.el
-			},
-			'onComplete': function(json){
-				if(json.success)
-					self.el.destroy();
-				else
-					alert(json.message)
+		var label = self.el.getElement('.quality_label input').get('value');
+		new Question('Are you sure you want to delete <strong>"'+label+'"</strong>?', 'Items using this profile, will be set to the default quality.', [{
+			'text': 'Delete "'+label+'"',
+			'class': 'delete',
+			'events': {
+				'click': function(e){
+					(e).stop();
+					Api.request('profile.delete', {
+						'data': {
+							'id': self.data.id
+						},
+						'useSpinner': true,
+						'spinnerOptions': {
+							'target': self.el
+						},
+						'onComplete': function(json){
+							if(json.success)
+								self.el.destroy();
+							else
+								alert(json.message)
+						}
+					});
+				}
 			}
-		});
+		}, {
+			'text': 'Cancel',
+			'cancel': true
+		}]);
+
 	},
 
 	makeSortable: function(){
@@ -180,15 +193,23 @@ var Profile = new Class({
 
 });
 
-Profile.Type = Class({
+Profile.Type = new Class({
+
+	Implements: [Events, Options],
 
 	deleted: false,
 
-	initialize: function(data){
+	initialize: function(data, options){
 		var self = this;
+		self.setOptions(options);
 
-		self.data = data;
+		self.data = data || {};
 		self.create();
+
+		self.addEvent('change', function(){
+			self.el[self.qualities.get('value') == '-1' ? 'addClass' : 'removeClass']('is_empty');
+			self.deleted = self.qualities.get('value') == '-1';
+		});
 
 	},
 
@@ -201,10 +222,11 @@ Profile.Type = Class({
 				self.fillQualities()
 			),
 			new Element('span.finish').adopt(
-				self.finish = new Element('input', {
-					'type':'checkbox',
-					'class':'finish',
-					'checked': data.finish
+				self.finish = new Element('input.inlay.finish[type=checkbox]', {
+					'checked': data.finish,
+					'events': {
+						'change': self.fireEvent.bind(self, 'change')
+					}
 				})
 			),
 			new Element('span.delete.icon', {
@@ -213,14 +235,27 @@ Profile.Type = Class({
 				}
 			}),
 			new Element('span.handle')
-		)
+		);
+
+		self.el[self.data.quality_id > 0 ? 'removeClass' : 'addClass']('is_empty');
+
+		new Form.Check(self.finish);
 
 	},
 
 	fillQualities: function(){
 		var self = this;
 
-		self.qualities = new Element('select');
+		self.qualities = new Element('select', {
+			'events': {
+				'change': self.fireEvent.bind(self, 'change')
+			}
+		}).adopt(
+			new Element('option', {
+				'text': '+ Add another quality',
+				'value': -1
+			})
+		);
 
 		Object.each(Quality.qualities, function(q){
 			new Element('option', {
@@ -250,6 +285,8 @@ Profile.Type = Class({
 		self.el.addClass('deleted');
 		self.el.hide();
 		self.deleted = true;
+
+		self.fireEvent('change');
 	},
 
 	toElement: function(){

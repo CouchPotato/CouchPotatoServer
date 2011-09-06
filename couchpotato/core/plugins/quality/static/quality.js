@@ -31,7 +31,7 @@ var QualityBase = new Class({
 		self.settings = App.getPage('Settings')
 		self.settings.addEvent('create', function(){
 			var tab = self.settings.createTab('profile', {
-				'label': 'Profile',
+				'label': 'Profiles',
 				'name': 'profile'
 			});
 
@@ -52,10 +52,11 @@ var QualityBase = new Class({
 		var self = this;
 
 		self.settings.createGroup({
-			'label': 'Custom',
-			'description': 'Discriptions'
+			'label': 'Quality Profiles',
+			'description': 'Create your own profiles with multiple qualities.',
+			'class': 'test123'
 		}).inject(self.content).adopt(
-			new Element('a.add_new', {
+			new Element('a.add_new_profile', {
 				'text': 'Create a new quality profile',
 				'events': {
 					'click': function(){
@@ -96,11 +97,11 @@ var QualityBase = new Class({
 
 		var group = self.settings.createGroup({
 			'label': 'Sizes',
-			'description': 'Discriptions',
+			'description': 'Edit the minimal and maximum sizes (in MB) for each quality.',
 			'advanced': true
 		}).inject(self.content)
 		
-		new Element('div.item.header').adopt(
+		new Element('div.item.head').adopt(
 			new Element('span.label', {'text': 'Quality'}),
 			new Element('span.min', {'text': 'Min'}),
 			new Element('span.max', {'text': 'Max'})
