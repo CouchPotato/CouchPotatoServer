@@ -46,7 +46,7 @@ config = [{
         {
             'tab': 'general',
             'name': 'advanced',
-            'description': "For those who know what the're doing",
+            'description': "For those who know what they're doing",
             'advanced': True,
             'options': [
                 {
