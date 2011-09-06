@@ -49,7 +49,7 @@ var Profile = new Class({
 				new Element('label', {'text': 'Search for'}),
 				self.type_container = new Element('ol.types'),
 				new Element('div.formHint', {
-					'html': "Search these qualities, from top to bottom. <br />Use the checkbox, if I don't have to search any further."
+					'html': "Search these qualities (2 minimum), from top to bottom. Use the checkbox, to stop searching after it found this quality."
 				})
 			)
 		);
@@ -68,6 +68,8 @@ var Profile = new Class({
 		if(self.save_timer) clearTimeout(self.save_timer);
 		self.save_timer = (function(){
 
+			self.addType();
+
 			var data = self.getData();
 			if(data.types.length < 2) return;
 
@@ -83,8 +85,6 @@ var Profile = new Class({
 					}
 				}
 			});
-
-			self.addType();
 
 		}).delay(delay, self)
 

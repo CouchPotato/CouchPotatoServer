@@ -61,8 +61,8 @@ var Question = new Class( {
 				e.stop();
 				new Request(Object.merge(options, {
 					'url': options.href,
-					'onSuccess': function() {
-						(options.onSuccess || function(){})()
+					'onComplete': function() {
+						(options.onComplete || function(){})()
 						self.close();
 					}
 				})).send();	

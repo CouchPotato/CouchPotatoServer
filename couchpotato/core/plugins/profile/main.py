@@ -1,6 +1,7 @@
 from couchpotato import get_session
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent
+from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.request import jsonified, getParams, getParam
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
@@ -16,6 +17,8 @@ class ProfilePlugin(Plugin):
 
         addApiView('profile.save', self.save)
         addApiView('profile.delete', self.delete)
+
+        addEvent('app.initialize', self.fill)
 
     def all(self):
 
@@ -90,3 +93,44 @@ class ProfilePlugin(Plugin):
             'success': success,
             'message': message
         })
+
+    def fill(self):
+
+        db = get_session();
+
+        profiles = [{
+            'label': 'Best',
+            'qualities': ['720p', '1080p', 'brrip', 'dvdrip']
+        }, {
+            'label': 'HD',
+            'qualities': ['720p', '1080p']
+        }]
+
+        # Create default quality profile
+        order = 99
+        for profile in profiles:
+            log.info('Creating default profile: %s' % profile.get('label'))
+            p = Profile(
+                label = toUnicode(profile.get('label')),
+                order = order
+            )
+            db.add(p)
+
+            quality_order = 0
+            for quality in profile.get('qualities'):
+                quality = fireEvent('quality.single', identifier = quality, single = True)
+                profile_type = ProfileType(
+                    quality_id = quality.get('id'),
+                    profile = p,
+                    finish = True,
+                    wait_for = 0,
+                    order = quality_order
+                )
+                p.types.append(profile_type)
+
+                db.commit()
+                quality_order += 1
+
+            order += 1
+
+        return True

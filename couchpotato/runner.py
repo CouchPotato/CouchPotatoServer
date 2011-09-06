@@ -115,8 +115,10 @@ def runCouchPotato(options, base_path, args):
 
         latest_db_version = version(repo)
 
+        initialize = True
         try:
             current_db_version = db_version(db, repo)
+            initialize = False
         except:
             version_control(db, repo, version = latest_db_version)
             current_db_version = db_version(db, repo)
@@ -130,6 +132,9 @@ def runCouchPotato(options, base_path, args):
         setup()
 
         fireEventAsync('app.load')
+
+        if initialize:
+            fireEventAsync('app.initialize')
 
     # Create app
     from couchpotato import app

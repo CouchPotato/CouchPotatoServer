@@ -19,7 +19,7 @@ class QualityPlugin(Plugin):
         {'identifier': 'brrip', 'size': (700, 7000), 'label': 'BR-Rip', 'alternative': ['bdrip'], 'allow': ['720p'], 'ext':['avi']},
         {'identifier': 'dvdr', 'size': (3000, 10000), 'label': 'DVD-R', 'alternative': [], 'allow': [], 'ext':['iso', 'img'], 'tags': ['pal', 'ntsc']},
         {'identifier': 'dvdrip', 'size': (600, 2400), 'label': 'DVD-Rip', 'alternative': [], 'allow': [], 'ext':['avi', 'mpg', 'mpeg']},
-        {'identifier': 'scr', 'size': (600, 1600), 'label': 'Screener', 'alternative': ['dvdscr'], 'allow': ['dvdr'], 'ext':['avi', 'mpg', 'mpeg']},
+        {'identifier': 'scr', 'size': (600, 1600), 'label': 'Screener', 'alternative': ['dvdscr', 'ppvrip'], 'allow': ['dvdr'], 'ext':['avi', 'mpg', 'mpeg']},
         {'identifier': 'r5', 'size': (600, 1000), 'label': 'R5', 'alternative': [], 'allow': ['dvdr'], 'ext':['avi', 'mpg', 'mpeg']},
         {'identifier': 'tc', 'size': (600, 1000), 'label': 'TeleCine', 'alternative': ['telecine'], 'allow': [], 'ext':['avi', 'mpg', 'mpeg']},
         {'identifier': 'ts', 'size': (600, 1000), 'label': 'TeleSync', 'alternative': ['telesync'], 'allow': [], 'ext':['avi', 'mpg', 'mpeg']},
@@ -31,7 +31,8 @@ class QualityPlugin(Plugin):
         addEvent('quality.all', self.all)
         addEvent('quality.single', self.single)
         addEvent('quality.guess', self.guess)
-        addEvent('app.load', self.fill)
+
+        addEvent('app.initialize', self.fill)
 
     def all(self):
 

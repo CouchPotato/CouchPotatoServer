@@ -18,6 +18,10 @@
 		padding: 14px;
 		background-position: center;
 	}
+	
+	.profile .qualities {
+		min-height: 80px;
+	}
 
 	.profile .formHint {
 		width: 250px !important;

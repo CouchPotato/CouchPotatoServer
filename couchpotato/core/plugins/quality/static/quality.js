@@ -31,7 +31,7 @@ var QualityBase = new Class({
 		self.settings = App.getPage('Settings')
 		self.settings.addEvent('create', function(){
 			var tab = self.settings.createTab('profile', {
-				'label': 'Profiles',
+				'label': 'Quality',
 				'name': 'profile'
 			});
 
@@ -53,8 +53,7 @@ var QualityBase = new Class({
 
 		self.settings.createGroup({
 			'label': 'Quality Profiles',
-			'description': 'Create your own profiles with multiple qualities.',
-			'class': 'test123'
+			'description': 'Create your own profiles with multiple qualities.'
 		}).inject(self.content).adopt(
 			new Element('a.add_new_profile', {
 				'text': 'Create a new quality profile',

@@ -10,6 +10,7 @@ Block.Search = new Class({
 		self.el = new Element('div.search_form').adopt(
 			new Element('div.input').adopt(
 				self.input = new Element('input.inlay', {
+					'placeholder': 'Search for new movies',
 					'events': {
 						'keyup': self.keyup.bind(self),
 						'focus': self.hideResults.bind(self, false)
