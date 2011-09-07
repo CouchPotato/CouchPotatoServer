@@ -54,7 +54,7 @@ class ProfilePlugin(Plugin):
         for type in params.get('types', []):
             t = ProfileType(
                 order = order,
-                finish = type.get('finish'),
+                finish = type.get('finish') if order > 0 else 1,
                 wait_for = params.get('wait_for'),
                 quality_id = type.get('quality_id')
             )
