@@ -78,7 +78,7 @@ MovieActions.Wanted = {
 					}).inject(self.title_select);
 				});
 
-				Object.each(Quality.profiles, function(profile){
+				Object.each(Quality.getActiveProfiles(), function(profile){
 					new Element('option', {
 						'value': profile.id ? profile.id : profile.data.id,
 						'text': profile.label ? profile.label : profile.data.label

@@ -19,6 +19,13 @@ var QualityBase = new Class({
 		return this.profiles[id]
 	},
 
+	// Hide items when getting profiles
+	getActiveProfiles: function(){
+		return Object.filter(this.profiles, function(profile){
+			return !profile.data.hide
+		});
+	},
+
 	getQuality: function(id){
 		return this.qualities.filter(function(q){
 			return q.id == id;
