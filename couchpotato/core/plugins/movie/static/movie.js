@@ -1,7 +1,7 @@
 var Movie = new Class({
 
 	Extends: BlockBase,
-	
+
 	action: {},
 
 	initialize: function(self, options, data){
@@ -45,7 +45,7 @@ var Movie = new Class({
 				self.actions = new Element('div.actions')
 			)
 		);
-		
+
 		self.profile.get('types').each(function(type){
 			var q = Quality.getQuality(type.quality_id);
 			new Element('span', {

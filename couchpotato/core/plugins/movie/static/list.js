@@ -27,12 +27,17 @@ var MovieList = new Class({
 			self.createNavigation();
 
 		Object.each(self.movies, function(info){
+
+			// Attach proper actions
+			var a = self.options.actions
+			var actions = a[info.status.identifier.capitalize()] || a.Wanted || {};
+
 			var m = new Movie(self, {
-				'actions': self.options.actions
+				'actions': actions
 			}, info);
 			$(m).inject(self.el);
 			m.fireEvent('injected');
-			
+
 			if(self.options.navigation){
 				var first_char = m.getTitle().substr(0, 1);
 				self.activateLetter(first_char);
@@ -71,7 +76,7 @@ var MovieList = new Class({
 		});
 
 	},
-	
+
 	activateLetter: function(letter){
 		this.letters[letter].addClass('active');
 	},
