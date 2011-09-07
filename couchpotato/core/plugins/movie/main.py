@@ -5,6 +5,7 @@ from couchpotato.core.helpers.request import getParams, jsonified
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Movie
 from couchpotato.environment import Env
+from sqlalchemy.sql.expression import or_
 from urllib import urlencode
 
 
@@ -32,9 +33,12 @@ class MoviePlugin(Plugin):
         params = getParams()
         db = get_session()
 
-        results = db.query(Movie).filter(
-            Movie.status.has(identifier = params.get('status', 'active'))
-        ).all()
+        # Make a list from string
+        status = params.get('status', ['active'])
+        if not isinstance(status, (list, tuple)):
+            status = [status]
+
+        results = db.query(Movie).filter(or_(*[Movie.status.has(identifier = s) for s in status])).all()
 
         movies = []
         for movie in results:
