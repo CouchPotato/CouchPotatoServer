@@ -1,5 +1,6 @@
 import hashlib
 import os.path
+import re
 
 def isDict(object):
     return isinstance(object, dict)
@@ -41,3 +42,13 @@ def cleanHost(host):
         host += '/'
 
     return host
+
+def tryInt(s):
+    try: return int(s)
+    except: return s
+
+def natsortKey(s):
+    return map(tryInt, re.findall(r'(\d+|\D+)', s))
+
+def natcmp(a, b):
+    return cmp(natsortKey(a), natsortKey(b))

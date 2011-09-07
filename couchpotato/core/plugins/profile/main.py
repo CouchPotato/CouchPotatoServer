@@ -16,6 +16,7 @@ class ProfilePlugin(Plugin):
         addEvent('profile.all', self.all)
 
         addApiView('profile.save', self.save)
+        addApiView('profile.save_order', self.saveOrder)
         addApiView('profile.delete', self.delete)
 
         addEvent('app.initialize', self.fill)
@@ -68,6 +69,25 @@ class ProfilePlugin(Plugin):
         return jsonified({
             'success': True,
             'profile': profile_dict
+        })
+
+    def saveOrder(self):
+
+        params = getParams()
+        db = get_session()
+
+        order = 0
+        for profile in params.get('ids', []):
+            p = db.query(Profile).filter_by(id = profile).first()
+            p.hide = params.get('hidden')[order]
+            p.order = order
+
+            order += 1
+
+        db.commit()
+
+        return jsonified({
+            'success': True
         })
 
     def delete(self):

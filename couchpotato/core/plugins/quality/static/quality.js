@@ -39,6 +39,7 @@ var QualityBase = new Class({
 			self.content = tab.content;
 
 			self.createProfiles();
+			self.createProfileOrdering();
 			self.createSizes();
 
 		})
@@ -67,6 +68,7 @@ var QualityBase = new Class({
 			self.profile_container = new Element('div.container')
 		)
 
+		// Add profiles, that aren't part of the core (for editing)
 		Object.each(self.profiles, function(profile){
 			if(!profile.isCore())
 				$(profile).inject(self.profile_container, 'top')
@@ -77,15 +79,80 @@ var QualityBase = new Class({
 	createProfilesClass: function(data){
 		var self = this;
 
-		if(data){
-			return self.profiles[data.id] = new Profile(data);
-		}
-		else {
-			var data = {
-				'id': randomString()
+		var data = data || {'id': randomString()}
+
+		return self.profiles[data.id] = new Profile(data);
+	},
+
+	createProfileOrdering: function(){
+		var self = this;
+
+		var profile_list;
+		var group = self.settings.createGroup({
+			'label': 'Profile Order',
+			'description': 'Change the order the profiles are in the dropdown list.'
+		}).adopt(
+			new Element('.ctrlHolder#profile_ordering').adopt(
+				new Element('label[text=Order]'),
+				new Element('.head').adopt(
+					new Element('span.show[text=Show]'),
+					new Element('span.profile_label[text=Profile]')
+				),
+				profile_list = new Element('ul')
+			)
+		).inject(self.content)
+
+		
+		
+
+		Object.each(self.profiles, function(profile){
+			var check;
+			new Element('li', {'data-id': profile.data.id}).adopt(
+				check = new Element('input.inlay[type=checkbox]', {
+					'checked': !profile.data.hide,
+					'events': {
+						'change': self.saveProfileOrdering.bind(self)
+					}
+				}),
+				new Element('span.profile_label', {
+					'text': profile.data.label
+				}),
+				new Element('span.handle')
+			).inject(profile_list);
+			
+			new Form.Check(check);
+			
+		});
+
+		// Sortable
+		self.profile_sortable = new Sortables(profile_list, {
+			'revert': true,
+			'handle': '',
+			'opacity': 0.5,
+			'onComplete': self.saveProfileOrdering.bind(self)
+		});
+
+	},
+	
+	saveProfileOrdering: function(){
+		var self = this;
+		
+		var ids = [];
+		var hidden = [];
+		
+		self.profile_sortable.list.getElements('li').each(function(el, nr){
+			ids.include(el.get('data-id'));
+			hidden[nr] = +!el.getElement('input[type=checkbox]').get('checked');
+		});
+		
+		p(ids, hidden);
+		Api.request('profile.save_order', {
+			'data': {
+				'ids': ids,
+				'hidden': hidden
 			}
-			return self.profiles[data.id] = new Profile(data);
-		}
+		});
+		
 	},
 
 	/**
@@ -99,21 +166,22 @@ var QualityBase = new Class({
 			'description': 'Edit the minimal and maximum sizes (in MB) for each quality.',
 			'advanced': true
 		}).inject(self.content)
-		
+
+
 		new Element('div.item.head').adopt(
 			new Element('span.label', {'text': 'Quality'}),
 			new Element('span.min', {'text': 'Min'}),
 			new Element('span.max', {'text': 'Max'})
 		).inject(group)
-		
+
 		Object.each(self.qualities, function(quality){
-			new Element('div.item').adopt(
+			new Element('div.ctrlHolder.item').adopt(
 				new Element('span.label', {'text': quality.label}),
 				new Element('input.min', {'value': quality.size_min}),
 				new Element('input.max', {'value': quality.size_max})
 			).inject(group)
 		});
-		
+
 	}
 
 });
