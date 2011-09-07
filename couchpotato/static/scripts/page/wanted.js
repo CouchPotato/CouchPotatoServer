@@ -9,11 +9,11 @@ Page.Wanted = new Class({
 		var self = this;
 
 		if(!self.list){
-			
+
 			// Wanted movies
 			self.wanted = new MovieList({
 				'status': ['active', 'snatched'],
-				'actions': WantedActions
+				'actions': MovieActions
 			});
 			$(self.wanted).inject(self.el);
 			App.addEvent('library.update', self.wanted.update.bind(self.wanted));
@@ -23,30 +23,32 @@ Page.Wanted = new Class({
 
 });
 
-var WantedActions = {
+var MovieActions = {};
+
+MovieActions.Wanted = {
 	'IMBD': IMDBAction
 	//,'releases': ReleaseAction
 
 	,'Edit': new Class({
 
 		Extends: MovieAction,
-	
+
 		create: function(){
 			var self = this;
-	
+
 			self.el = new Element('a.edit', {
 				'title': 'Refresh the movie info and do a forced search',
 				'events': {
 					'click': self.editMovie.bind(self)
 				}
 			});
-	
+
 		},
-	
+
 		editMovie: function(e){
 			var self = this;
 			(e).stop();
-	
+
 			if(!self.options_container){
 				self.options_container = new Element('div.options').adopt(
 					$(self.movie.thumbnail).clone(),
@@ -69,13 +71,13 @@ var WantedActions = {
 						})
 					)
 				).inject(self.movie, 'top');
-	
+
 				Array.each(self.movie.data.library.titles, function(alt){
 					new Element('option', {
 						'text': alt.title
 					}).inject(self.title_select);
 				});
-	
+
 				Object.each(Quality.profiles, function(profile){
 					new Element('option', {
 						'value': profile.id ? profile.id : profile.data.id,
@@ -83,15 +85,15 @@ var WantedActions = {
 					}).inject(self.profile_select);
 					self.profile_select.set('value', self.movie.profile.get('id'));
 				});
-	
+
 			}
 			self.movie.slide('in');
 		},
-	
+
 		save: function(e){
 			(e).stop();
 			var self = this;
-	
+
 			Api.request('movie.edit', {
 				'data': {
 					'id': self.movie.get('id'),
@@ -105,63 +107,63 @@ var WantedActions = {
 					self.movie.title.set('text', self.title_select.getSelected()[0].get('text'));
 				}
 			});
-	
+
 			self.movie.slide('out');
 		}
-	
+
 	})
 
 	,'Refresh': new Class({
 
 		Extends: MovieAction,
-	
+
 		create: function(){
 			var self = this;
-	
+
 			self.el = new Element('a.refresh', {
 				'title': 'Refresh the movie info and do a forced search',
 				'events': {
 					'click': self.doSearch.bind(self)
 				}
 			});
-	
+
 		},
-	
+
 		doSearch: function(e){
 			var self = this;
 			(e).stop();
-	
+
 			Api.request('movie.refresh', {
 				'data': {
 					'id': self.movie.get('id')
 				}
 			});
 		}
-	
+
 	})
 
 	,'Delete': new Class({
 
 		Extends: MovieAction,
-	
+
 		Implements: [Chain],
-	
+
 		create: function(){
 			var self = this;
-	
+
 			self.el = new Element('a.delete', {
 				'title': 'Remove the movie from your wanted list',
 				'events': {
 					'click': self.showConfirm.bind(self)
 				}
 			});
-	
+
 		},
-	
+
 		showConfirm: function(e){
 			var self = this;
 			(e).stop();
-	
+
 			if(!self.delete_container){
 				self.delete_container = new Element('div.delete_container', {
 					'styles': {
@@ -185,24 +187,24 @@ var WantedActions = {
 					})
 				).inject(self.movie, 'top');
 			}
-	
+
 			self.movie.slide('in');
-	
+
 		},
-	
+
 		hideConfirm: function(e){
 			var self = this;
 			(e).stop();
-	
+
 			self.movie.slide('out');
 		},
-	
+
 		del: function(e){
 			(e).stop();
 			var self = this;
-	
+
 			var movie = $(self.movie);
-	
+
 			self.chain(
 				function(){
 					$(movie).mask().addClass('loading');
@@ -224,16 +226,16 @@ var WantedActions = {
 					});
 				}
 			);
-	
+
 			self.callChain();
-	
+
 		}
 
 	})
 };
 
-var SnatchedActions = {
+MovieActions.Snatched = {
 	'IMBD': IMDBAction
 	,'Releases': ReleaseAction
-	,'Delete': WantedActions.Delete
+	,'Delete': MovieActions.Wanted.Delete
 };
