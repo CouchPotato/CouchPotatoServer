@@ -92,30 +92,21 @@
 	
 }
 
-	#profile_ordering .head {
-		float: left;
-	}
-
-		#profile_ordering .head span {
-			margin: 0 10px 0 -5px;
-		}
-
 	#profile_ordering ul {
-		clear: both;
 		float: left;
-		margin-left: 20%;
+		margin: 0;
 		width: 275px;
+		padding: 0;
 	}
 
 		#profile_ordering li {
-			clear: both;
-			overflow: hidden;
 			cursor: grab;
 			cursor: -moz-grab;
 			cursor: -webkit-grab;
 			border-bottom: 1px solid rgba(255,255,255,0.2);
 			padding: 0 5px;
 		}
+		#profile_ordering li:last-child { border: 0; }
 	
 			#profile_ordering li .check {
 				margin: 2px 10px 0 0;
@@ -134,3 +125,10 @@
 				width: 20px;
 				float: right;
 			}
+
+	#profile_ordering .formHint {
+		clear: none;
+		float: right;
+		width: 250px;
+		margin: 0;
+	}

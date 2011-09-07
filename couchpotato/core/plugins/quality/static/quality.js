@@ -58,28 +58,30 @@ var QualityBase = new Class({
 	 */
 	createProfiles: function(){
 		var self = this;
+		
+		var non_core_profiles = Object.filter(self.profiles, function(profile){ return !profile.isCore() });
+		var count = Object.getLength(non_core_profiles);
 
 		self.settings.createGroup({
 			'label': 'Quality Profiles',
 			'description': 'Create your own profiles with multiple qualities.'
 		}).inject(self.content).adopt(
+			self.profile_container = new Element('div.container'),
 			new Element('a.add_new_profile', {
-				'text': 'Create a new quality profile',
+				'text': count > 0 ? 'Create another quality profile' : 'Click here to create a quality profile.',
 				'events': {
 					'click': function(){
 						var profile = self.createProfilesClass();
-						$(profile).inject(self.profile_container, 'top')
+						$(profile).inject(self.profile_container)
 					}
 				}
-			}),
-			self.profile_container = new Element('div.container')
-		)
+			})
+		);
 
 		// Add profiles, that aren't part of the core (for editing)
-		Object.each(self.profiles, function(profile){
-			if(!profile.isCore())
-				$(profile).inject(self.profile_container, 'top')
-		})
+		Object.each(non_core_profiles, function(profile){
+			$(profile).inject(self.profile_container)
+		});
 
 	},
 
@@ -96,21 +98,16 @@ var QualityBase = new Class({
 
 		var profile_list;
 		var group = self.settings.createGroup({
-			'label': 'Profile Order',
-			'description': 'Change the order the profiles are in the dropdown list.'
+			'label': 'Profile Defaults'
 		}).adopt(
 			new Element('.ctrlHolder#profile_ordering').adopt(
 				new Element('label[text=Order]'),
-				new Element('.head').adopt(
-					new Element('span.show[text=Show]'),
-					new Element('span.profile_label[text=Profile]')
-				),
-				profile_list = new Element('ul')
+				profile_list = new Element('ul'),
+				new Element('p.formHint', {
+					'html': 'Change the order the profiles are in the dropdown list. Uncheck to hide it completely.<br />First one will be default.'
+				})
 			)
 		).inject(self.content)
-
-		
-		
 
 		Object.each(self.profiles, function(profile){
 			var check;
@@ -126,9 +123,9 @@ var QualityBase = new Class({
 				}),
 				new Element('span.handle')
 			).inject(profile_list);
-			
+
 			new Form.Check(check);
-			
+
 		});
 
 		// Sortable
@@ -140,26 +137,25 @@ var QualityBase = new Class({
 		});
 
 	},
-	
+
 	saveProfileOrdering: function(){
 		var self = this;
-		
+
 		var ids = [];
 		var hidden = [];
-		
+
 		self.profile_sortable.list.getElements('li').each(function(el, nr){
 			ids.include(el.get('data-id'));
 			hidden[nr] = +!el.getElement('input[type=checkbox]').get('checked');
 		});
-		
-		p(ids, hidden);
+
 		Api.request('profile.save_order', {
 			'data': {
 				'ids': ids,
 				'hidden': hidden
 			}
 		});
-		
+
 	},
 
 	/**
