@@ -8,7 +8,7 @@ config = [{
     'groups': [
         {
             'tab': 'renamer',
-            'name': 'metadata',
+            'name': 'mediabrowser_metadata',
             'label': 'MediaBrowser',
             'description': 'Enable metadata MediaBrowser can understand',
             'options': [

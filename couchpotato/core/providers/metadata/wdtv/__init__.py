@@ -8,7 +8,7 @@ config = [{
     'groups': [
         {
             'tab': 'renamer',
-            'name': 'metadata',
+            'name': 'wdtv_metadata',
             'label': 'WDTV',
             'description': 'Enable metadata WDTV can understand',
             'options': [
