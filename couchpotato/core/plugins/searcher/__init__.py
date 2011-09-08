@@ -23,7 +23,7 @@ config = [{
                     'name': 'required_words',
                     'label': 'Required words',
                     'default': '',
-                    'description': 'Ignore releases that doesn\'t contain one of these words.'
+                    'description': 'Ignore releases that don\'t contain at least one of these words.'
                 },
                 {
                     'name': 'ignored_words',
