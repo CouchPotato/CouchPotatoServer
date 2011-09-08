@@ -118,10 +118,14 @@ class MoviePlugin(Plugin):
                 if release.status_id == status_snatched.get('id'):
                     release.delete()
 
+            m.profile_id = params.get('profile_id')
+
         m.status_id = status_active.get('id')
         db.commit()
 
         movie_dict = m.to_dict(self.default_dict)
+
+        fireEventAsync('searcher.single', movie_dict)
 
         return jsonified({
             'success': True,

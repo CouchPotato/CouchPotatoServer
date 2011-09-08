@@ -1,4 +1,7 @@
-/* @override http://localhost:5000/static/movie_plugin/search.css */
+/* @override 
+	http://localhost:5000/static/movie_plugin/search.css
+	http://192.168.1.20:5000/static/movie_plugin/search.css
+*/
 
 .search_form {
 	display: inline-block;
@@ -86,7 +89,7 @@
 				margin-right: 10px;
 			}
 				.search_form .results .movie .options select[name=title] { width: 180px; }
-				.search_form .results .movie .options select[name=quality] { width: 90px; }
+				.search_form .results .movie .options select[name=profile] { width: 90px; }
 			
 			.search_form .results .movie .options .button {
 				vertical-align: middle;

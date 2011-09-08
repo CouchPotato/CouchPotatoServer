@@ -39,7 +39,7 @@ class Notification(Plugin):
             data = {}
         )
 
-        #return jsonified({'success': success})
+        return jsonified({'success': success})
 
     def testNotifyName(self):
         return 'notify.%s.test' % self.getName().lower()

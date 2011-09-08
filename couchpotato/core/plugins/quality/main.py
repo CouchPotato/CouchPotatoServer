@@ -18,7 +18,7 @@ class QualityPlugin(Plugin):
         {'identifier': '720p', 'size': (3500, 10000), 'label': '720P', 'width': 1280, 'alternative': [], 'allow': [], 'ext':['mkv', 'm2ts'], 'tags': ['x264', 'h264', 'bluray']},
         {'identifier': 'brrip', 'size': (700, 7000), 'label': 'BR-Rip', 'alternative': ['bdrip'], 'allow': ['720p'], 'ext':['avi']},
         {'identifier': 'dvdr', 'size': (3000, 10000), 'label': 'DVD-R', 'alternative': [], 'allow': [], 'ext':['iso', 'img'], 'tags': ['pal', 'ntsc']},
-        {'identifier': 'dvdrip', 'size': (600, 2400), 'label': 'DVD-Rip', 'alternative': [], 'allow': [], 'ext':['avi', 'mpg', 'mpeg']},
+        {'identifier': 'dvdrip', 'size': (600, 2400), 'label': 'DVD-Rip', 'alternative': ['dvdrip'], 'allow': [], 'ext':['avi', 'mpg', 'mpeg']},
         {'identifier': 'scr', 'size': (600, 1600), 'label': 'Screener', 'alternative': ['dvdscr', 'ppvrip'], 'allow': ['dvdr'], 'ext':['avi', 'mpg', 'mpeg']},
         {'identifier': 'r5', 'size': (600, 1000), 'label': 'R5', 'alternative': [], 'allow': ['dvdr'], 'ext':['avi', 'mpg', 'mpeg']},
         {'identifier': 'tc', 'size': (600, 1000), 'label': 'TeleCine', 'alternative': ['telecine'], 'allow': [], 'ext':['avi', 'mpg', 'mpeg']},
@@ -113,12 +113,15 @@ class QualityPlugin(Plugin):
 
         return True
 
-    def guess(self, files, extra = {}):
+    def guess(self, files, extra = {}, loose = False):
         found = False
+
+        print files, extra
 
         for file in files:
             size = (os.path.getsize(file) / 1024 / 1024)
             words = re.split('\W+', file.lower())
+
             for quality in self.all():
                 correctSize = False
 
@@ -126,27 +129,37 @@ class QualityPlugin(Plugin):
                     correctSize = True
 
                 # Check tags
-                if type in words:
+                if quality['identifier'] in words:
+                    log.debug('Found via identifier "%s" in %s' % (quality['identifier'], file))
                     found = True
 
-                for alt in quality.get('alternative'):
-                    if alt in words:
-                        found = True
-
-                for tag in quality.get('tags', []):
-                    if tag in words:
-                        found = True
-
-                # Check extension + filesize
-                for ext in quality.get('ext'):
-                    if ext in words and correctSize:
-                        found = True
-
-                # Last check on resolution only
-                if quality.get('width', 480) == extra.get('resolution_width', 0):
+                if list(set(quality.get('alternative', [])) & set(words)):
+                    log.debug('Found via alt %s in %s' % (quality.get('alternative'), file))
                     found = True
+
+                if list(set(quality.get('tags', [])) & set(words)):
+                    log.debug('Found via tag %s in %s' % (quality.get('tags'), file))
+                    found = True
+
+                # Check on unreliable stuff
+                if loose:
+                    # Check extension + filesize
+                    if list(set(quality.get('ext', [])) & set(words)) and correctSize:
+                        log.debug('Found via ext %s in %s' % (quality.get('ext'), words))
+                        found = True
+
+                    # Last check on resolution only
+                    if quality.get('width', 480) == extra.get('resolution_width', 0):
+                        log.debug('Found via resoludtion_width: %s == %s' % (quality.get('width', 480), extra.get('resolution_width', 0)))
+                        found = True
 
                 if found:
                     return quality
 
-        return ''
+        # Try again with loose testing
+        quality = self.guess(files, extra = extra, loose = True)
+        if quality:
+            return quality
+
+        log.error('Could not identify quality for: %s' % files)
+        return {}

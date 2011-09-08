@@ -73,8 +73,11 @@ class Plugin(object):
         try:
             if not os.path.isdir(path):
                 os.makedirs(path, Env.getPermission('folder'))
+            return True
         except Exception, e:
             log.error('Unable to create folder "%s": %s' % (path, e))
+
+        return False
 
     # http request
     def urlopen(self, url, timeout = 10, params = {}, headers = {}):
@@ -93,7 +96,7 @@ class Plugin(object):
             data = urllib2.urlopen(request).read()
         except IOError, e:
             log.error('Failed opening url, %s: %s' % (url, e))
-            data = ''
+            data = None
 
         self.http_last_use[host] = time.time()
 
@@ -111,7 +114,7 @@ class Plugin(object):
             time.sleep(last_use - now + self.http_time_between_calls)
 
     def beforeCall(self, handler):
-        log.debug('Calling %s.%s' % (self.getName(), handler.__name__))
+        #log.debug('Calling %s.%s' % (self.getName(), handler.__name__))
         self.isRunning('%s.%s' % (self.getName(), handler.__name__))
 
     def afterCall(self, handler):

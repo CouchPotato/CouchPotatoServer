@@ -62,7 +62,7 @@ class LibraryPlugin(Plugin):
             info = fireEvent('provider.movie.info', merge = True, identifier = identifier)
             if not info or len(info) == 0:
                 log.error('Could not update, no movie info to work with: %s' % identifier)
-                do_update = False
+                return False
 
         # Main info
         if do_update:
