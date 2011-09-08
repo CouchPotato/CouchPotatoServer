@@ -4,7 +4,7 @@ import re
 class CPLog():
 
     context = ''
-    replace_private = ['api', 'apikey', 'api_key', 'password', 'username']
+    replace_private = ['api', 'apikey', 'api_key', 'password', 'username', 'h']
 
     def __init__(self, context = ''):
         self.context = context
