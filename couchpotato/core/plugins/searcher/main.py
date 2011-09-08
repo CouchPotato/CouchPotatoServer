@@ -192,6 +192,7 @@ class Searcher(Plugin):
                 if len(movie_words) == 2 and self.correctYear([nzb['name']], movie['library']['year'], 0):
                     return True
 
+        log.info("Wrong: %s, undetermined naming. Looking for '%s (%s)'" % (nzb['name'], movie['library']['titles'][0]['title'], movie['library']['year']))
         return False
 
     def containsOtherQuality(self, name, preferred_quality = {}, single_category = False):
