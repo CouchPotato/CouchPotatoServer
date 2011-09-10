@@ -6,6 +6,7 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Movie, Release, ReleaseInfo
 from couchpotato.environment import Env
+from sqlalchemy.exc import InterfaceError
 import re
 import traceback
 
@@ -85,14 +86,17 @@ class Searcher(Plugin):
 
                         for info in nzb:
                             try:
+                                if not isinstance(nzb[info], (str, unicode)):
+                                    continue
+
                                 rls_info = ReleaseInfo(
                                     identifier = info,
                                     value = nzb[info]
                                 )
                                 rls.info.append(rls_info)
-                            except Exception:
+                                db.commit()
+                            except InterfaceError:
                                 log.debug('Couldn\'t add %s to ReleaseInfo: %s' % (info, traceback.format_exc()))
-                            db.commit()
 
 
                 for nzb in sorted_results:

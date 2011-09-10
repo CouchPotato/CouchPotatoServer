@@ -16,6 +16,7 @@ class Release(Plugin):
         addEvent('release.add', self.add)
 
         addApiView('release.download', self.download)
+        addApiView('release.delete', self.delete)
 
     def add(self, group):
         db = get_session()
@@ -76,6 +77,20 @@ class Release(Plugin):
 
         # Check database and update/insert if necessary
         return fireEvent('file.add', path = file, part = self.getPartNumber(file), type = self.file_types[type], properties = properties, single = True)
+
+    def delete(self):
+
+        db = get_session()
+        id = getParam('id')
+
+        rel = db.query(Relea).filter_by(id = id).first()
+        if rel:
+            rel.delete()
+            db.commit()
+
+        return jsonified({
+            'success': True
+        })
 
     def download(self):
 

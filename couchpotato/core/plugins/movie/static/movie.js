@@ -249,7 +249,8 @@ var ReleaseAction = new Class({
 						'events': {
 							'click': function(e){
 								(e).stop();
-								self.delete(release);
+								self.del(release);
+								this.getParent('.item').destroy();
 							}
 						}
 					})
@@ -259,11 +260,17 @@ var ReleaseAction = new Class({
 		}
 		self.movie.slide('in');
 	},
+
+	get: function(release, type){
+		var self = this;
+
+		return (release.info.filter(function(info){
+			return type == info.identifier
+		}).pick() || {}).value
+	},
 	
 	download: function(release){
 		var self = this;
-		
-		p(release)
 		
 		Api.request('release.download', {
 			'data': {
@@ -272,7 +279,7 @@ var ReleaseAction = new Class({
 		});
 	},
 	
-	delete: function(release){
+	del: function(release){
 		var self = this;
 
 		Api.request('release.delete', {
@@ -281,14 +288,6 @@ var ReleaseAction = new Class({
 			}
 		})
 		
-	},
-
-	get: function(release, type){
-		var self = this;
-
-		return (release.info.filter(function(info){
-			return type == info.identifier
-		}).pick() || {}).value
 	}
 
 });
