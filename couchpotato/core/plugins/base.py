@@ -4,7 +4,9 @@ from couchpotato.core.helpers.variable import getExt
 from couchpotato.core.logger import CPLog
 from couchpotato.environment import Env
 from flask.helpers import send_from_directory
+from libs.multipartpost import MultipartPostHandler
 from urlparse import urlparse
+import cookielib
 import glob
 import math
 import os.path
@@ -80,7 +82,7 @@ class Plugin(object):
         return False
 
     # http request
-    def urlopen(self, url, timeout = 10, params = {}, headers = {}):
+    def urlopen(self, url, timeout = 10, params = {}, headers = {}, multipart = False):
 
         socket.setdefaulttimeout(timeout)
 
@@ -88,15 +90,24 @@ class Plugin(object):
         self.wait(host)
 
         try:
-            log.info('Opening url: %s, params: %s' % (url, params))
 
-            data = urllib.urlencode(params) if len(params) > 0 else None
-            request = urllib2.Request(url, data, headers)
+            if multipart:
+                log.info('Opening multipart url: %s, params: %s' % (url, params.iterkeys()))
+                request = urllib2.Request(url, params, headers)
 
-            data = urllib2.urlopen(request).read()
+                cookies = cookielib.CookieJar()
+                opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookies), MultipartPostHandler)
+
+                data = opener.open(request).read()
+            else:
+                log.info('Opening url: %s, params: %s' % (url, params))
+                data = urllib.urlencode(params) if len(params) > 0 else None
+                request = urllib2.Request(url, data, headers)
+
+                data = urllib2.urlopen(request).read()
         except IOError, e:
             log.error('Failed opening url, %s: %s' % (url, e))
-            data = None
+            raise
 
         self.http_last_use[host] = time.time()
 

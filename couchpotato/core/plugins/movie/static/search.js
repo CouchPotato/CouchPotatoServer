@@ -29,7 +29,7 @@ Block.Search = new Class({
 			}).adopt(
 				new Element('div.pointer'),
 				self.results = new Element('div.results')
-			).fade('hide')
+			).hide()
 		);
 
 		self.spinner = new Spinner(self.result_container);
@@ -52,7 +52,7 @@ Block.Search = new Class({
 
 		if(self.hidden == bool) return;
 
-		self.result_container.fade(bool ? 0 : 1)
+		self.result_container[bool ? 'hide' : 'show']();
 
 		if(bool){
 			History.removeEvent('change', self.hideResults.bind(self, !bool));

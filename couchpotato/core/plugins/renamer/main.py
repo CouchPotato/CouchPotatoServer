@@ -4,7 +4,7 @@ from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.variable import getExt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.core.settings.model import Library
+from couchpotato.core.settings.model import Library, Movie
 import os.path
 import re
 import shutil
@@ -134,8 +134,18 @@ class Renamer(Plugin):
 
                         # Move DVD files (no structure renaming)
                         if group['is_dvd'] and file_type is 'movie':
-                            structure_dir = file.split(group['dirname'])[-1].lstrip(os.path.sep)
-                            rename_files[file] = os.path.join(destination, final_folder_name, structure_dir)
+                            found = False
+                            for top_dir in ['video_ts', 'audio_ts', 'bdmv', 'certificate']:
+                                has_string = file.lower().find(os.path.sep + top_dir + os.path.sep)
+                                if has_string >= 0:
+                                    structure_dir = file[has_string:].lstrip(os.path.sep)
+                                    rename_files[file] = os.path.join(destination, final_folder_name, structure_dir)
+                                    found = True
+                                    break
+
+                            if not found:
+                                log.error('Could not determin dvd structure for: %s' % file)
+
                         # Do rename others
                         else:
                             rename_files[file] = os.path.join(destination, final_folder_name, final_file_name)
@@ -162,15 +172,41 @@ class Renamer(Plugin):
 
                 # Before renaming, remove the lower quality files
                 db = get_session()
+
                 library = db.query(Library).filter_by(identifier = group['library']['identifier']).first()
                 done_status = fireEvent('status.get', 'done', single = True)
+                active_status = fireEvent('status.get', 'active', single = True)
+
                 for movie in library.movies:
+
+                    # Mark movie "done" onces it found the quality with the finish check
+                    try:
+                        if movie.status_id == active_status.get('id'):
+                            for type in movie.profile.types:
+                                if type.quality_id == group['meta_data']['quality']['id'] and type.finish:
+                                    movie.status_id = done_status.get('id')
+                                    db.commit()
+                    except Exception, e:
+                        log.error('Failed marking movie finished: %s %s' % (e, traceback.format_exc()))
+
+                    # Go over current movie releases
                     for release in movie.releases:
+
+                        # This is where CP removes older, lesser quality releases
                         if release.quality.order > group['meta_data']['quality']['order']:
                             log.info('Removing older release for %s, with quality %s' % (movie.library.titles[0].title, release.quality.label))
+
+                            for file in release.files:
+                                log.info('Removing (not really) "%s"' % file.path)
+
+                        # When a release already exists
                         elif release.status_id is done_status.get('id'):
+
+                            # Same quality, but still downloaded, so maybe repack/proper/unrated/directors cut etc
                             if release.quality.order is group['meta_data']['quality']['order']:
                                 log.info('Same quality release already exists for %s, with quality %s. Assuming repack.' % (movie.library.titles[0].title, release.quality.label))
+
+                            # Downloaded a lower quality, rename the newly downloaded files/folder to exclude them from scan
                             else:
                                 log.info('Better quality release already exists for %s, with quality %s' % (movie.library.titles[0].title, release.quality.label))
 
@@ -190,10 +226,7 @@ class Renamer(Plugin):
 
                                 break
 
-                        for file in release.files:
-                            log.info('Removing (not really) "%s"' % file.path)
-
-            # Rename
+            # Rename all files marked
             for src in rename_files:
                 if rename_files[src]:
 

@@ -137,10 +137,18 @@ form {
 }
 
 /*** Icons ***/
-.icon.delete {
-	background: url('../images/delete.png') no-repeat;
+.icon {
 	display: inline-block;
+	background: center no-repeat;
 }
+.icon.delete { background-image: url('../images/icon.delete.png'); }
+.icon.download { background-image: url('../images/icon.download.png'); }
+.icon.edit { background-image: url('../images/icon.edit.png'); }
+.icon.check { background-image: url('../images/icon.check.png'); }
+.icon.folder { background-image: url('../images/icon.folder.png'); }
+.icon.imdb { background-image: url('../images/icon.imdb.png'); }
+.icon.refresh { background-image: url('../images/icon.refresh.png'); }
+.icon.rating { background-image: url('../images/icon.rating.png'); }
 
 /*** Navigation ***/
 .header {

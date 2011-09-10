@@ -23,11 +23,11 @@ class Scanner(Plugin):
         'trailer': 1048576, # 1MB
     }
     ignored_in_path = ['_unpack', '_failed_', '_unknown_', '_exists_', '.appledouble', '.appledb', '.appledesktop', os.path.sep + '._', '.ds_store', 'cp.cpnfo'] #unpacking, smb-crap, hidden files
-    ignore_names = ['extract', 'extracting', 'extracted', 'movie', 'movies', 'film', 'films', 'download', 'downloads', 'video_ts', 'audio_ts']
+    ignore_names = ['extract', 'extracting', 'extracted', 'movie', 'movies', 'film', 'films', 'download', 'downloads', 'video_ts', 'audio_ts', 'bdmv', 'certificate']
     extensions = {
         'movie': ['mkv', 'wmv', 'avi', 'mpg', 'mpeg', 'mp4', 'm2ts', 'iso', 'img'],
         'dvd': ['vts_*', 'vob'],
-        'nfo': ['nfo', 'txt', 'tag'],
+        'nfo': ['nfo', 'nfo-orig', 'txt', 'tag'],
         'subtitle': ['sub', 'srt', 'ssa', 'ass'],
         'subtitle_extra': ['idx'],
         'trailer': ['mov', 'mp4', 'flv']
@@ -210,13 +210,13 @@ class Scanner(Plugin):
                 group['parentdir'] = os.path.dirname(movie_file)
                 group['dirname'] = None
 
-                folders = group['parentdir'].replace(folder, '').split(os.path.sep)
-                folders.reverse()
+                folder_names = group['parentdir'].replace(folder, '').split(os.path.sep)
+                folder_names.reverse()
 
                 # Try and get a proper dirname, so no "A", "Movie", "Download" etc
-                for folder in folders:
-                    if folder.lower() not in self.ignore_names and len(folder) > 2:
-                        group['dirname'] = folder
+                for folder_name in folder_names:
+                    if folder_name.lower() not in self.ignore_names and len(folder_name) > 2:
+                        group['dirname'] = folder_name
                         break
 
                 break
@@ -426,7 +426,7 @@ class Scanner(Plugin):
         if list(set(file.lower().split(os.path.sep)) & set(['video_ts', 'audio_ts'])):
             return True
 
-        for needle in ['vts_', 'video_ts', 'audio_ts']:
+        for needle in ['vts_', 'video_ts', 'audio_ts', 'bdmv', 'certificate']:
             if needle in file.lower():
                 return True
 

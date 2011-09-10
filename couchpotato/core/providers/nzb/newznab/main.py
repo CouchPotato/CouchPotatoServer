@@ -5,6 +5,7 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.base import NZBProvider
 from dateutil.parser import parse
 from urllib import urlencode
+from urlparse import urlparse
 import time
 import xml.etree.ElementTree as XMLTree
 
@@ -130,11 +131,13 @@ class Newznab(NZBProvider, RSS):
                     id = self.getTextElement(nzb, "guid").split('/')[-1:].pop()
                     new = {
                         'id': id,
+                        'provider': self.getName(),
                         'type': 'nzb',
                         'name': self.getTextElement(nzb, "title"),
                         'age': self.calculateAge(int(time.mktime(parse(date).timetuple()))),
                         'size': int(size) / 1024 / 1024,
                         'url': (self.getUrl(host['host'], self.urls['download']) % id) + self.getApiExt(host),
+                        'download': self.download,
                         'detail_url': (self.getUrl(host['host'], self.urls['detail']) % id) + self.getApiExt(host),
                         'content': self.getTextElement(nzb, "description"),
                     }
@@ -172,6 +175,17 @@ class Newznab(NZBProvider, RSS):
             })
 
         return list
+
+    def belongsTo(self, url):
+
+        hosts = self.getHosts()
+
+        for host in hosts:
+            result = super(Newznab, self).belongsTo(url, host = host['host'])
+            if result:
+                return result
+
+        return
 
     def getUrl(self, host, type):
         return cleanHost(host) + 'api?t=' + type

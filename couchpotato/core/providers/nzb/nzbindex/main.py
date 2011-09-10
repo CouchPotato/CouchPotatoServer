@@ -14,7 +14,7 @@ log = CPLog(__name__)
 class NzbIndex(NZBProvider, RSS):
 
     urls = {
-        'download': 'http://www.nzbindex.nl/download/%s/%s',
+        'download': 'http://www.nzbindex.nl/download/',
         'api': 'http://www.nzbindex.nl/rss/', #http://www.nzbindex.nl/rss/?q=due+date+720p&age=1000&sort=agedesc&minsize=3500&maxsize=10000
     }
 
@@ -63,10 +63,12 @@ class NzbIndex(NZBProvider, RSS):
                     new = {
                         'id': id,
                         'type': 'nzb',
+                        'provider': self.getName(),
                         'name': self.getTextElement(nzb, "title"),
                         'age': self.calculateAge(int(time.mktime(parse(self.getTextElement(nzb, "pubDate")).timetuple()))),
                         'size': enclosure['length'],
                         'url': enclosure['url'],
+                        'download': self.download,
                         'detail_url': enclosure['url'].replace('/download/', '/release/'),
                         'description': self.getTextElement(nzb, "description"),
                         'check_nzb': True,

@@ -32,7 +32,7 @@ var Movie = new Class({
 					self.year = new Element('div.year', {
 						'text': self.data.library.year || 'Unknown'
 					}),
-					self.rating = new Element('div.rating', {
+					self.rating = new Element('div.rating.icon', {
 						'text': self.data.library.rating
 					}),
 					self.description = new Element('div.description', {
@@ -47,11 +47,18 @@ var Movie = new Class({
 		);
 
 		self.profile.get('types').each(function(type){
+
+			// Check if quality is snatched
+			var is_snatched = self.data.releases.filter(function(release){
+				return release.quality_id == type.quality_id && release.status.identifier == 'snatched'
+			}).pick();
+
 			var q = Quality.getQuality(type.quality_id);
 			new Element('span', {
-				'text': ' '+q.label
+				'text': q.label,
+				'class': is_snatched ? 'snatched' : ''
 			}).inject(self.quality);
-		})
+		});
 
 		Object.each(self.options.actions, function(action, key){
 			self.actions.adopt(
@@ -127,7 +134,7 @@ var Movie = new Class({
 
 var MovieAction = new Class({
 
-	class_name: 'action',
+	class_name: 'action icon',
 
 	initialize: function(movie){
 		var self = this;
@@ -193,7 +200,7 @@ var ReleaseAction = new Class({
 
 		self.id = self.movie.get('identifier');
 
-		self.el = new Element('a.releases', {
+		self.el = new Element('a.releases.icon.download', {
 			'title': 'Show the releases that are available for ' + self.movie.getTitle(),
 			'events': {
 				'click': self.show.bind(self)
@@ -211,16 +218,77 @@ var ReleaseAction = new Class({
 				$(self.movie.thumbnail).clone(),
 				self.release_container = new Element('div.releases')
 			).inject(self.movie, 'top');
+			
+			// Header
+			new Element('div.item.head').adopt(
+				new Element('span.name', {'text': 'Release name'}),
+				new Element('span.quality', {'text': 'Quality'}),
+				new Element('span.age', {'text': 'Age'}),
+				new Element('span.score', {'text': 'Score'}),
+				new Element('span.provider', {'text': 'Provider'})
+			).inject(self.release_container)
 
 			Array.each(self.movie.data.releases, function(release){
-				p(release);
 				new Element('div', {
-					'text': release.title
-				}).inject(self.release_container)
+					'class': 'item ' + release.status.identifier
+				}).adopt(
+					new Element('span.name', {'text': self.get(release, 'name'), 'title': self.get(release, 'name')}),
+					new Element('span.quality', {'text': release.quality.label}),
+					new Element('span.age', {'text': self.get(release, 'age')}),
+					new Element('span.score', {'text': self.get(release, 'score')}),
+					new Element('span.provider', {'text': self.get(release, 'provider')}),
+					new Element('a.download.icon', {
+						'events': {
+							'click': function(e){
+								(e).stop();
+								self.download(release);
+							}
+						}
+					}),
+					new Element('a.delete.icon', {
+						'events': {
+							'click': function(e){
+								(e).stop();
+								self.delete(release);
+							}
+						}
+					})
+				).inject(self.release_container)
 			});
 
 		}
 		self.movie.slide('in');
 	},
+	
+	download: function(release){
+		var self = this;
+		
+		p(release)
+		
+		Api.request('release.download', {
+			'data': {
+				'id': release.id
+			}
+		});
+	},
+	
+	delete: function(release){
+		var self = this;
+
+		Api.request('release.delete', {
+			'data': {
+				'id': release.id
+			}
+		})
+		
+	},
+
+	get: function(release, type){
+		var self = this;
+
+		return (release.info.filter(function(info){
+			return type == info.identifier
+		}).pick() || {}).value
+	}
 
 });

@@ -27,7 +27,7 @@ var MovieActions = {};
 
 MovieActions.Wanted = {
 	'IMBD': IMDBAction
-	//,'releases': ReleaseAction
+	,'releases': ReleaseAction
 
 	,'Edit': new Class({
 
@@ -207,7 +207,6 @@ MovieActions.Wanted = {
 
 			self.chain(
 				function(){
-					$(movie).mask().addClass('loading');
 					self.callChain();
 				},
 				function(){
@@ -236,6 +235,5 @@ MovieActions.Wanted = {
 
 MovieActions.Snatched = {
 	'IMBD': IMDBAction
-	,'Releases': ReleaseAction
 	,'Delete': MovieActions.Wanted.Delete
 };

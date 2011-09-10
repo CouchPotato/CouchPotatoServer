@@ -2,7 +2,6 @@ from couchpotato.core.event import addEvent
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
-from urllib2 import URLError
 from urlparse import urlparse
 import re
 import time
@@ -60,6 +59,20 @@ class YarrProvider(Provider):
     sizeMb = ['mb', 'mib']
     sizeKb = ['kb', 'kib']
 
+    def __init__(self):
+        addEvent('provider.belongs_to', self.belongsTo)
+
+    def belongsTo(self, url, host = None):
+        try:
+            hostname = urlparse(url).hostname
+            download_url = host if host else self.urls['download']
+            if hostname in download_url:
+                return self
+        except:
+            log.debug('Url % s doesn\'t belong to %s' % (url, self.getName()))
+
+        return
+
     def parseSize(self, size):
 
         sizeRaw = size.lower()
@@ -96,10 +109,15 @@ class NZBProvider(YarrProvider):
     type = 'nzb'
 
     def __init__(self):
+        super(NZBProvider, self).__init__()
+
         addEvent('provider.nzb.search', self.search)
         addEvent('provider.yarr.search', self.search)
 
         addEvent('provider.nzb.feed', self.feed)
+
+    def download(self, url = '', nzb_id = ''):
+        return self.urlopen(url)
 
     def feed(self):
         return []

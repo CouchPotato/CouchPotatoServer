@@ -1,4 +1,7 @@
-/* @override http://localhost:5000/static/movie_plugin/movie.css */
+/* @override 
+	http://localhost:5000/static/movie_plugin/movie.css
+	http://192.168.1.20:5000/static/movie_plugin/movie.css
+*/
 
 .movies {
 	padding: 20px 0;
@@ -79,13 +82,21 @@
 				float: left;
 				width: 5%;
 				padding: 0 0 0 3%;
-				background: url('../images/rating.png') no-repeat left center;
 			}
 			
 			.movies .info .description {
 				clear: both;
 				width: 95%;
 			}
+			
+		.movies .data .quality span {
+			padding: 5px;
+			font-weight: bold;
+		}
+		
+		.movies .data .quality .available { color: orange; }
+		.movies .data .quality .snatched { color: lightgreen; }
+			
 		.movies .data .actions {
 			position: absolute;
 			right: 15px;
@@ -96,17 +107,14 @@
 			.movies .data:hover .action:hover { opacity: 1; } 
 		
 			.movies .data .action {
-				background: no-repeat center;
+				background-repeat: no-repeat;
+				background-position: center;
 				display: inline-block;
 				width: 20px;
 				height: 20px;
 				padding: 3px;
 				opacity: 0;
 			}
-			.movies .data .action.refresh { background-image: url('../images/reload.png'); }
-			.movies .data .action.delete { background-image: url('../images/delete.png'); }
-			.movies .data .action.edit { background-image: url('../images/edit.png'); }
-			.movies .data .action.imdb { background-image: url('../images/imdb.png'); }
 			
 		.movies .delete_container {
 			clear: both;
@@ -141,6 +149,65 @@
 		.movies .options {
 			padding: 2%;
 		}
+		
+			.movies .options .releases {
+				height: 157px;
+				overflow: auto;
+				margin: -20px -20px -20px 110px;
+				padding: 15px 0 5px;
+			}
+				.movies .options .releases .item {
+					border-bottom: 1px solid rgba(255,255,255,0.1);
+				}
+				.movies .options .releases .item:last-child { border: 0; }
+				.movies .options .releases .item:nth-child(even) { 
+					background: rgba(255,255,255,0.05);
+				}
+				.movies .options .releases .item:not(.head):hover { 
+					background: rgba(255,255,255,0.03);
+				}
+				
+					.movies .options .releases .item > * {
+						display: inline-block;
+						padding: 0 5px;
+						width: 50px;
+						min-height: 24px;
+						white-space: nowrap;
+						text-overflow: ellipsis;
+						-moz-text-overflow: ellipsis;
+						text-align: center;
+						vertical-align: top;
+						border-left: 1px solid rgba(255, 255, 255, 0.1);
+					}
+						.movies .options .releases .item > *:first-child {
+							border: 0;
+						}
+						.movies .options .releases .provider {
+							width: 120px;
+						}
+						.movies .options .releases .name {
+							width: 420px;
+							overflow: hidden;
+							text-align: left;
+							padding: 0 10px;
+						}
+						
+						.movies .options .releases a {
+							width: 16px !important;
+							height: 16px;
+							opacity: 0.8;
+						}
+						.movies .options .releases a:hover {
+							opacity: 1;
+						}
+
+				.movies .options .releases .head > * {
+					font-weight: bold;
+					font-size: 14px;
+					padding-top: 4px;
+					padding-bottom: 4px;
+					height: auto;
+				}
 		
 .movies .alph_nav ul {
 	list-style: none;

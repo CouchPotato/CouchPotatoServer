@@ -103,7 +103,7 @@
 		border: 0;
 	}
 		.page.settings .ctrlHolder.save_success:not(:first-child) {
-			background: url('../../images/check.png') no-repeat 7px center;
+			background: url('../../images/icon.check.png') no-repeat 7px center;
 		}
 		.page.settings .ctrlHolder:last-child { border: none; }
 		.page.settings .ctrlHolder:hover { background-color: rgba(255,255,255,0.05); }

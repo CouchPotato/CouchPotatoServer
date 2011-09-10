@@ -47,6 +47,9 @@ class Library(Entity):
     files = ManyToMany('File')
     info = OneToMany('LibraryInfo')
 
+    def title(self):
+        return self.titles[0]['title']
+
 
 class LibraryInfo(Entity):
     """"""
