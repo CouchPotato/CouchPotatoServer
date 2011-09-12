@@ -33,7 +33,7 @@ def start():
                     new_environ[key] = value.encode('iso-8859-1')
 
         subprocess.call(args, env = new_environ)
-        return os.path.isfile(os.path.join(options.data_dir, 'restart'))
+        return os.path.isfile(os.path.join(base_path, 'restart'))
     except Exception, e:
         log.critical(e)
         return 0

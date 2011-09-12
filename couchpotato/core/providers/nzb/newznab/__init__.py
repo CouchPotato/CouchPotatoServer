@@ -21,7 +21,7 @@ config = [{
                 },
                 {
                     'name': 'host',
-                    'default': 'http://nzb.su',
+                    'default': 'nzb.su',
                     'description': 'The hostname of your newznab provider'
                 },
                 {

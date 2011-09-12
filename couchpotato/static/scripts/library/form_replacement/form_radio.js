@@ -22,7 +22,7 @@ Form.Radio = new Class({
   toggle: function(e) {
     if (this.element.hasClass('checked') || this.disabled) { return; }
     var evt;
-    if (e) { evt = new Event(e).stop(); }
+    if (e) { evt = (e).stop(); }
     if (this.checked) {
       this.uncheck();
     } else {

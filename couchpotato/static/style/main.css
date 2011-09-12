@@ -1,6 +1,7 @@
 /* @override 
 	http://localhost:5000/static/style/main.css
 	http://192.168.1.20:5000/static/style/main.css
+	http://127.0.0.1:5000/static/style/main.css
 */
 
 html {
@@ -210,6 +211,27 @@ form {
 		
 		.header .navigation li a:hover, .header .navigation li a:active {
 			color: #b1d8dc;
+		}
+	
+	.header .message {
+		text-align: center;
+		position: relative;
+		top: -70px;
+		padding: 15px 0 20px;
+		background: #ff6134;
+		font-size: 26px;
+
+	    border-radius: 0 0 5px 5px;
+	    -moz-border-radius: 0 0 5px 5px;
+	    -webkit-border-radius: 0 0 5px 5px;
+
+		box-shadow: 0 2px 1px rgba(0,0,0, 0.3);
+		-moz-box-shadow:  0 2px 1px rgba(0,0,0, 0.3);
+		-webkit-box-shadow: 0 2px 1px rgba(0,0,0, 0.3);
+	}
+
+		.header .message a {
+			padding: 0 10px;
 		}
 
 /*** Global Styles ***/

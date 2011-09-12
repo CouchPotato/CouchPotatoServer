@@ -19,7 +19,7 @@ class ProfilePlugin(Plugin):
         addApiView('profile.save_order', self.saveOrder)
         addApiView('profile.delete', self.delete)
 
-        addEvent('app.initialize', self.fill)
+        addEvent('app.initialize', self.fill, priority = 90)
 
     def all(self):
 
@@ -127,7 +127,7 @@ class ProfilePlugin(Plugin):
         }]
 
         # Create default quality profile
-        order = 99
+        order = -2
         for profile in profiles:
             log.info('Creating default profile: %s' % profile.get('label'))
             p = Profile(

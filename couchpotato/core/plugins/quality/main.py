@@ -32,7 +32,7 @@ class QualityPlugin(Plugin):
         addEvent('quality.single', self.single)
         addEvent('quality.guess', self.guess)
 
-        addEvent('app.initialize', self.fill)
+        addEvent('app.initialize', self.fill, priority = 10)
 
     def all(self):
 

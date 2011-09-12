@@ -8,11 +8,11 @@ Page.Wanted = new Class({
 	indexAction: function(param){
 		var self = this;
 
-		if(!self.list){
+		if(!self.wanted){
 
 			// Wanted movies
 			self.wanted = new MovieList({
-				'status': ['active', 'snatched'],
+				'status': 'active',
 				'actions': MovieActions
 			});
 			$(self.wanted).inject(self.el);

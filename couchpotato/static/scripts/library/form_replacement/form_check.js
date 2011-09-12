@@ -96,14 +96,14 @@ Form.Check = new Class({
     this.fireEvent('removeHighlight', this);
   },
   keyToggle: function(e) {
-    var evt = new Event(e);
+    var evt = (e);
     if (evt.key === 'space') { this.toggle(e); }
   },
   toggle: function(e) {
     var evt;
     if (this.disabled) { return this; }
     if (e) {
-      evt = new Event(e).stopPropagation();
+      evt = (e).stopPropagation();
       if (evt.target.tagName.toLowerCase() !== 'a') {
         evt.stop();
       }

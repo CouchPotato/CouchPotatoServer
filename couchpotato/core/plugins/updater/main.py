@@ -1,4 +1,6 @@
+from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent
+from couchpotato.core.helpers.request import jsonified
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
@@ -10,14 +12,13 @@ log = CPLog(__name__)
 
 class Updater(Plugin):
 
-    git = 'git://github.com/CouchPotato/CouchPotato.git'
+    repo_name = 'RuudBurger/CouchPotatoServer'
 
     running = False
     version = None
-    updateFailed = False
-    updateAvailable = False
-    updateVersion = None
-    lastCheck = 0
+    update_failed = False
+    update_version = None
+    last_check = 0
 
     def __init__(self):
 
@@ -26,6 +27,18 @@ class Updater(Plugin):
         fireEvent('schedule.interval', 'updater.check', self.check, hours = 6)
 
         addEvent('app.load', self.check)
+
+        addApiView('updater.info', self.getInfo)
+        addApiView('updater.update', self.doUpdateView)
+
+    def getInfo(self):
+
+        return jsonified({
+            'repo_name': self.repo_name,
+            'last_check': self.last_check,
+            'update_version': self.update_version,
+            'version': self.getVersion(),
+        })
 
     def getVersion(self):
 
@@ -42,7 +55,7 @@ class Updater(Plugin):
 
     def check(self):
 
-        if self.updateAvailable or self.isDisabled():
+        if self.update_version or self.isDisabled():
             return
 
         current_branch = self.repo.getCurrentBranch().name
@@ -54,13 +67,17 @@ class Updater(Plugin):
                 remote = branch.getHead()
 
                 if local.getDate() < remote.getDate():
-                    if self.conf('automatic') and not self.updateFailed:
+                    if self.conf('automatic') and not self.update_failed:
                         self.doUpdate()
                     else:
-                        self.updateAvailable = True
-                        self.updateVersion = remote.hash
+                        self.update_version = remote.hash
 
-        self.lastCheck = time.time()
+        self.last_check = time.time()
+
+    def doUpdateView(self):
+        return jsonified({
+            'success': self.doUpdate()
+        })
 
     def doUpdate(self):
         try:
@@ -70,7 +87,7 @@ class Updater(Plugin):
         except Exception, e:
             log.error('Failed updating via GIT: %s' % e)
 
-        self.updateFailed = True
+        self.update_failed = True
 
         return False
 

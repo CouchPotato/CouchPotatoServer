@@ -72,7 +72,7 @@ var MultipleNewznab = new Class({
 		if(has_empty) return;
 
 		self.add_empty_timeout = setTimeout(function(){
-			self.createItem(false);
+			self.createItem(false, null, null);
 		}, 10);
 	},
 

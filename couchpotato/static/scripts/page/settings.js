@@ -184,7 +184,7 @@ Page.Settings = new Class({
 				'text': (group.label || group.name).capitalize()
 			}).adopt(
 				new Element('span.hint', {
-					'html': group.description
+					'html': group.description || ''
 				})
 			)
 		)

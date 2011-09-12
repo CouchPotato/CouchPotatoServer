@@ -29,7 +29,7 @@ var CouchPotato = new Class({
 		else
 			self.openPage(window.location.pathname);
 
-		self.c.addEvent('click:relay(a)', self.pushState.bind(self));
+		self.c.addEvent('click:relay(a:not([target=_blank]))', self.pushState.bind(self));
 	},
 
 	pushState: function(e){
@@ -100,6 +100,14 @@ var CouchPotato = new Class({
 
 	getPage: function(name){
 		return this.pages[name]
+	},
+
+	shutdown: function(){
+		Api.request('app.shutdown');
+	},
+
+	restart: function(){
+		Api.request('app.restart');
 	}
 
 });

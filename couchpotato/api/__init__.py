@@ -18,3 +18,4 @@ def index():
     return jsonified({'routes': routes})
 
 addApiView('', index)
+addApiView('default', index)
