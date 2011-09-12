@@ -76,19 +76,19 @@ class YarrProvider(Provider):
     def parseSize(self, size):
 
         sizeRaw = size.lower()
-        size = re.sub(r'[^0-9.]', '', size).strip()
+        size = float(re.sub(r'[^0-9.]', '', size).strip())
 
         for s in self.sizeGb:
             if s in sizeRaw:
-                return float(size) * 1024
+                return int(size) * 1024
 
         for s in self.sizeMb:
             if s in sizeRaw:
-                return float(size)
+                return int(size)
 
         for s in self.sizeKb:
             if s in sizeRaw:
-                return float(size) / 1024
+                return int(size) / 1024
 
         return 0
 

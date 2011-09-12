@@ -223,6 +223,7 @@ var ReleaseAction = new Class({
 			new Element('div.item.head').adopt(
 				new Element('span.name', {'text': 'Release name'}),
 				new Element('span.quality', {'text': 'Quality'}),
+				new Element('span.size', {'text': 'Size (MB)'}),
 				new Element('span.age', {'text': 'Age'}),
 				new Element('span.score', {'text': 'Score'}),
 				new Element('span.provider', {'text': 'Provider'})
@@ -234,6 +235,7 @@ var ReleaseAction = new Class({
 				}).adopt(
 					new Element('span.name', {'text': self.get(release, 'name'), 'title': self.get(release, 'name')}),
 					new Element('span.quality', {'text': release.quality.label}),
+					new Element('span.size', {'text': (self.get(release, 'size') || 'unknown')}),
 					new Element('span.age', {'text': self.get(release, 'age')}),
 					new Element('span.score', {'text': self.get(release, 'score')}),
 					new Element('span.provider', {'text': self.get(release, 'provider')}),

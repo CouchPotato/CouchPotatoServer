@@ -213,7 +213,7 @@ form {
 			color: #b1d8dc;
 		}
 	
-	.header .message {
+	.header .message.update {
 		text-align: center;
 		position: relative;
 		top: -70px;

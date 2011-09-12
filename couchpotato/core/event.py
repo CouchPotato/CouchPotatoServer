@@ -27,9 +27,6 @@ def addEvent(name, handler, priority = 0):
 
         return h
 
-    if name == 'app.initialize':
-        print 'test', priority
-
     e.handle(createHandle, priority = priority)
 
 def removeEvent(name, handler):
