@@ -44,11 +44,9 @@ class Library(Entity):
     status = ManyToOne('Status')
     movies = OneToMany('Movie')
     titles = OneToMany('LibraryTitle')
+    genres = ManyToMany('LibraryGenre')
     files = ManyToMany('File')
     info = OneToMany('LibraryInfo')
-
-    def title(self):
-        return self.titles[0]['title']
 
 
 class LibraryInfo(Entity):
@@ -69,6 +67,14 @@ class LibraryTitle(Entity):
 
     language = OneToMany('Language')
     libraries = ManyToOne('Library')
+
+
+class LibraryGenre(Entity):
+    """"""
+
+    name = Field(Unicode)
+
+    libraries = ManyToMany('Library')
 
 
 class Language(Entity):

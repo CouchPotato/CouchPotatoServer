@@ -92,7 +92,7 @@ class TheMovieDb(MovieProvider):
     def getInfo(self, identifier = None):
 
         cache_key = 'tmdb.cache.%s' % identifier
-        result = self.getCache(cache_key)
+        result = None #self.getCache(cache_key)
 
         if not result:
             result = {}
@@ -112,27 +112,33 @@ class TheMovieDb(MovieProvider):
 
     def parseMovie(self, movie):
 
-        year = str(movie.get('released', 'none'))[:4]
-
         # Poster url
         poster = self.getImage(movie, type = 'poster')
         backdrop = self.getImage(movie, type = 'backdrop')
 
+        # Genres
+        genres = self.getCategory(movie, 'genre')
+
         # 1900 is the same as None
+        year = str(movie.get('released', 'none'))[:4]
         if year == '1900' or year.lower() == 'none':
             year = None
 
         movie_data = {
             'id': int(movie.get('id', 0)),
             'titles': [toUnicode(movie.get('name'))],
+            'original_title': movie.get('original_name'),
             'images': {
                 'posters': [poster],
                 'backdrops': [backdrop],
             },
             'imdb': movie.get('imdb_id'),
+            'runtime': movie.get('runtime'),
+            'released': movie.get('released'),
             'year': year,
             'plot': movie.get('overview', ''),
             'tagline': '',
+            'genres': genres,
         }
 
         # Add alternative names
@@ -152,6 +158,19 @@ class TheMovieDb(MovieProvider):
                 break
 
         return image
+
+    def getCategory(self, movie, type = 'genre'):
+
+        cats = movie.get('categories', {}).get(type)
+
+        categories = []
+        for category in cats:
+            try:
+                categories.append(category)
+            except:
+                pass
+
+        return categories
 
     def isDisabled(self):
         if self.conf('api_key') == '':

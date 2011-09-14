@@ -77,11 +77,6 @@ config = [{
                     'label': 'Trailer naming',
                     'default': '<filename>-trailer.<ext>',
                 },
-                {
-                    'name': 'backdrop_name',
-                    'label': 'Backdrop naming',
-                    'default': '<filename>-backdrop.<ext>',
-                }
             ],
         },
     ],

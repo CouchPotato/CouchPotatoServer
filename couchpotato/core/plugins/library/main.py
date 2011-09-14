@@ -2,14 +2,15 @@ from couchpotato import get_session
 from couchpotato.core.event import addEvent, fireEventAsync, fireEvent
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.core.settings.model import Library, LibraryTitle, File
+from couchpotato.core.settings.model import Library, LibraryTitle, File, \
+    LibraryGenre
 import traceback
 
 log = CPLog(__name__)
 
 class LibraryPlugin(Plugin):
 
-    default_dict = {'titles': {}, 'files':{}, 'info':{}}
+    default_dict = {'titles': {}, 'files':{}, 'info':{}, 'genres':{}}
 
     def __init__(self):
         addEvent('library.add', self.add)
@@ -77,7 +78,6 @@ class LibraryPlugin(Plugin):
             db.commit()
 
             titles = info.get('titles', [])
-
             log.debug('Adding titles: %s' % titles)
             for title in titles:
                 t = LibraryTitle(
@@ -85,6 +85,20 @@ class LibraryPlugin(Plugin):
                     default = title.lower() == default_title.lower()
                 )
                 library.titles.append(t)
+
+            db.commit()
+
+            # Genres
+            [db.delete(genre) for genre in library.genres]
+            db.commit()
+
+            genres = info.get('genres', [])
+            log.debug('Adding genres: %s' % genres)
+            for genre in genres:
+                g = LibraryGenre(
+                    name = genre
+                )
+                library.genres.append(g)
 
             db.commit()
 

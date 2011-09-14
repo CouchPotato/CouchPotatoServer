@@ -194,7 +194,7 @@ class Scanner(Plugin):
                 'subtitle_extra': self.getSubtitlesExtras(group['unsorted_files']),
                 'nfo': self.getNfo(group['unsorted_files']),
                 'trailer': self.getTrailers(group['unsorted_files']),
-                'backdrop': images['backdrop'],
+                #'backdrop': images['backdrop'],
                 'leftover': set(group['unsorted_files']),
             }
 
