@@ -1,3 +1,4 @@
+from couchpotato.core.event import fireEvent
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.providers.metadata.base import MetaDataBase
 from xml.etree.ElementTree import Element, SubElement, tostring

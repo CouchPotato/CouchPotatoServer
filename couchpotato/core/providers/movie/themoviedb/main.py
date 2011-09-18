@@ -112,12 +112,19 @@ class TheMovieDb(MovieProvider):
 
     def parseMovie(self, movie):
 
-        # Poster url
+        # Images
         poster = self.getImage(movie, type = 'poster')
         backdrop = self.getImage(movie, type = 'backdrop')
+        poster_original = self.getImage(movie, type = 'poster', size = 'mid')
+        backdrop_original = self.getImage(movie, type = 'backdrop', size = 'w1280')
+
+        print poster_original, backdrop_original
 
         # Genres
-        genres = self.getCategory(movie, 'genre')
+        try:
+            genres = self.getCategory(movie, 'genre')
+        except:
+            genres = []
 
         # 1900 is the same as None
         year = str(movie.get('released', 'none'))[:4]
@@ -129,8 +136,10 @@ class TheMovieDb(MovieProvider):
             'titles': [toUnicode(movie.get('name'))],
             'original_title': movie.get('original_name'),
             'images': {
-                'posters': [poster],
-                'backdrops': [backdrop],
+                'poster': [poster],
+                'backdrop': [backdrop],
+                'poster_original': [poster_original],
+                'backdrop_original': [backdrop_original],
             },
             'imdb': movie.get('imdb_id'),
             'runtime': movie.get('runtime'),
@@ -149,12 +158,12 @@ class TheMovieDb(MovieProvider):
 
         return movie_data
 
-    def getImage(self, movie, type = 'poster'):
+    def getImage(self, movie, type = 'poster', size = 'thumb'):
 
         image = ''
         for image in movie.get('images', []):
-            if(image.get('type') == type):
-                image = image.get('thumb')
+            if(image.get('type') == type) and image.get(size):
+                image = image.get(size)
                 break
 
         return image
