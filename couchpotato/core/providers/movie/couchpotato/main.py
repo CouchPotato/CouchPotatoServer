@@ -1,6 +1,10 @@
+from couchpotato import get_session
+from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent
+from couchpotato.core.helpers.request import jsonified, getParams
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.base import MovieProvider
+from couchpotato.core.settings.model import Movie
 from flask.helpers import json
 
 log = CPLog(__name__)
@@ -8,15 +12,16 @@ log = CPLog(__name__)
 
 class CouchPotatoApi(MovieProvider):
 
-    apiUrl = 'http://couchpotatoapp.com/api/%s/%s/'
+    apiUrl = 'http://couchpotatoapp.com/api/%s/'
 
     def __init__(self):
-
         addEvent('provider.movie.release_date', self.releaseDate)
+        addApiView('movie.suggest', self.suggestView)
+
 
     def releaseDate(self, imdb_id):
 
-        data = self.urlopen(self.apiUrl % ('eta', id))
+        data = self.urlopen((self.apiUrl % ('eta')) + (id + '/'))
 
         try:
             dates = json.loads(data)
@@ -25,3 +30,35 @@ class CouchPotatoApi(MovieProvider):
             log.error('Error getting ETA for %s: %s' % (imdb_id, e))
 
         return dates
+
+    def suggest(self, movies = [], ignore = []):
+
+        data = self.urlopen((self.apiUrl % ('suggest')) + ','.join(movies) + '/' + ','.join(ignore) + '/')
+
+        try:
+            suggestions = json.loads(data)
+            log.info('Found Suggestions for %s' % (suggestions))
+        except Exception, e:
+            log.error('Error getting suggestions for %s: %s' % (movies, e))
+
+        return suggestions
+
+    def suggestView(self):
+
+        params = getParams()
+        movies = params.get('movies')
+        ignore = params.get('ignore', [])
+
+        if not movies:
+            db = get_session()
+            active_movies = db.query(Movie).filter(Movie.status.has(identifier = 'active')).all()
+            print active_movies
+            movies = []
+
+        suggestions = self.suggest(movies, ignore)
+
+        return jsonified({
+            'success': True,
+            'count': len(suggestions),
+            'suggestions': suggestions
+        })
