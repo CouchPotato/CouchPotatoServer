@@ -82,7 +82,9 @@ Page.Settings = new Class({
 		var self = this;
 
 		var c = self.advanced_toggle.checked ? 'addClass' : 'removeClass';
-		self.el[c]('show_advanced')
+		self.el[c]('show_advanced');
+
+		Cookie.write('advanced_toggle_checked', +self.advanced_toggle.checked, {'duration': 365});
 	},
 
 	create: function(json){
@@ -96,6 +98,7 @@ Page.Settings = new Class({
 						'text': 'Show advanced settings'
 					}),
 					self.advanced_toggle = new Element('input[type=checkbox].inlay', {
+						'checked': +Cookie.read('advanced_toggle_checked'),
 						'events': {
 							'change': self.showAdvanced.bind(self)
 						}
@@ -103,10 +106,9 @@ Page.Settings = new Class({
 				)
 			)
 		);
-		
-		new Form.Check(self.advanced_toggle, {
-			'onChange': self.showAdvanced.bind(self)
-		})
+		self.showAdvanced();
+
+		new Form.Check(self.advanced_toggle)
 
 		// Create tabs
 		Object.each(self.tabs, function(tab, tab_name){
@@ -132,7 +134,7 @@ Page.Settings = new Class({
 					var class_name = (option.type || 'string').capitalize();
 					var input = new Option[class_name](self, section_name, option.name, option);
 						input.inject(self.tabs[group.tab].groups[group.name]);
-						input.fireEvent('injected')
+						input.fireEvent('injected');
 				});
 
 			});
@@ -182,7 +184,7 @@ Page.Settings = new Class({
 				'text': (group.label || group.name).capitalize()
 			}).adopt(
 				new Element('span.hint', {
-					'html': group.description
+					'html': group.description || ''
 				})
 			)
 		)
@@ -397,9 +399,7 @@ Option.Checkbox = new Class({
 			})
 		);
 
-		new Form.Check(self.input, {
-			'onChange': self.changed.bind(self)
-		});
+		new Form.Check(self.input);
 
 	},
 
@@ -435,16 +435,11 @@ Option.Enabler = new Class({
 			self.input = new Element('input.inlay', {
 				'type': 'checkbox',
 				'checked': self.getSettingValue(),
-				'id': 'r-'+randomString(),
-				'events': {
-					'change': self.checkState.bind(self)
-				}
+				'id': 'r-'+randomString()
 			})
 		);
 
-		new Form.Check(self.input, {
-			'onChange': self.changed.bind(self)
-		});
+		new Form.Check(self.input);
 	},
 
 	changed: function(){
@@ -479,63 +474,86 @@ Option.Directory = new Class({
 	type: 'span',
 	browser: '',
 	save_on_change: false,
+	use_cache: false,
 
 	create: function(){
 		var self = this;
 
 		self.el.adopt(
 			self.createLabel(),
-			self.input = new Element('span.directory', {
-				'text': self.getSettingValue(),
+			new Element('span.directory.inlay', {
 				'events': {
 					'click': self.showBrowser.bind(self)
 				}
-			})
+			}).adopt(
+				self.input = new Element('span', {
+					'text': self.getSettingValue()
+				})
+			)
 		);
 
 		self.cached = {};
 	},
 
-	selectDirectory: function(e, el){
+	selectDirectory: function(dir){
 		var self = this;
 
-		self.input.set('text', el.get('data-value'));
+		self.input.set('text', dir);
 
 		self.getDirs()
-		self.fireEvent('change')
 	},
 
 	previousDirectory: function(e){
 		var self = this;
 
-		self.selectDirectory(null, self.back_button)
+		self.selectDirectory(self.getParentDir())
 	},
 
 	showBrowser: function(){
 		var self = this;
 
-		if(!self.browser)
+		if(!self.browser){
 			self.browser = new Element('div.directory_list').adopt(
+				new Element('div.pointer'),
 				new Element('div.actions').adopt(
-					self.back_button = new Element('a.button.back', {
-						'text': '',
+					self.back_button = new Element('a.back', {
+						'html': '',
 						'events': {
 							'click': self.previousDirectory.bind(self)
 						}
 					}),
 					new Element('label', {
-						'text': 'Show hidden files'
+						'text': 'Hidden folders'
 					}).adopt(
-						self.show_hidden = new Element('input[type=checkbox].inlay')
+						self.show_hidden = new Element('input[type=checkbox].inlay', {
+							'events': {
+								'change': self.getDirs.bind(self)
+							}
+						})
 					)
 				),
 				self.dir_list = new Element('ul', {
 					'events': {
-						'click:relay(li)': self.selectDirectory.bind(self)
+						'click:relay(li)': function(e, el){
+							(e).stop();
+							self.selectDirectory(el.get('data-value'))
+						},
+						'mousewheel': function(e){
+							(e).stopPropagation();
+						}
 					}
 				}),
 				new Element('div.actions').adopt(
-					new Element('a.button.cancel', {
+					new Element('a.clear.button', {
+						'text': 'Clear',
+						'events': {
+							'click': function(e){
+								self.input.set('text', '');
+								self.hideBrowser(e, true);
+							}
+						}
+					}),
+					new Element('a.cancel', {
 						'text': 'Cancel',
 						'events': {
 							'click': self.hideBrowser.bind(self)
@@ -547,21 +565,32 @@ Option.Directory = new Class({
 					self.save_button = new Element('a.button.save', {
 						'text': 'Save',
 						'events': {
-							'click': self.hideBrowser.bind(self, true)
+							'click': function(e){
+								self.hideBrowser(e, true)
+							}
 						}
 					})
 				)
-			).inject(self.input, 'after')
+			).inject(self.el)
+
+			new Form.Check(self.show_hidden);
+		}
+
+		self.initial_directory = self.input.get('text');
 
 		self.getDirs()
 		self.browser.show()
 		self.el.addEvent('outerClick', self.hideBrowser.bind(self))
 	},
 
-	hideBrowser: function(save){
+	hideBrowser: function(e, save){
 		var self = this;
+		(e).stop();
 
-		if(save) self.save()
+		if(save)
+			self.save()
+		else
+			self.input.set('text', self.initial_directory);
 
 		self.browser.hide()
 		self.el.removeEvent('outerClick', self.hideBrowser.bind(self))
@@ -571,41 +600,43 @@ Option.Directory = new Class({
 	fillBrowser: function(json){
 		var self = this;
 
-		var c = self.getParentDir();
 		var v = self.input.get('text');
-		var previous_dir = self.getParentDir(c.substring(0, c.length-1));
+		var previous_dir = self.getParentDir();
 
-		if(previous_dir){
+		if(previous_dir != v){
 			self.back_button.set('data-value', previous_dir)
-			self.back_button.set('text', self.getCurrentDirname(previous_dir))
+			self.back_button.set('html', '&laquo; '+self.getCurrentDirname(previous_dir))
 			self.back_button.show()
 		}
 		else {
 			self.back_button.hide()
 		}
 
-		if(!json)
-			json = self.cached[c];
-		else
-			self.cached[c] = json;
+		if(self.use_cache)
+			if(!json)
+				json = self.cached[v];
+			else
+				self.cached[v] = json;
 
-		self.dir_list.empty();
-		json.dirs.each(function(dir){
-			if(dir.indexOf(v) != -1){
-				new Element('li', {
-					'data-value': dir,
-					'text': self.getCurrentDirname(dir)
-				}).inject(self.dir_list)
-			}
-		})
+		setTimeout(function(){
+			self.dir_list.empty();
+			json.dirs.each(function(dir){
+				if(dir.indexOf(v) != -1){
+					new Element('li', {
+						'data-value': dir,
+						'text': self.getCurrentDirname(dir)
+					}).inject(self.dir_list)
+				}
+			});
+		}, 50);
 	},
 
 	getDirs: function(){
 		var self = this;
 
-		var c = self.getParentDir();
+		var c = self.input.get('text');
 
-		if(self.cached[c]){
+		if(self.cached[c] && self.use_cache){
 			self.fillBrowser()
 		}
 		else {
@@ -625,7 +656,8 @@ Option.Directory = new Class({
 		var v = dir || self.input.get('text');
 		var sep = Api.getOption('path_sep');
 		var dirs = v.split(sep);
-			dirs.pop();
+			if(dirs.pop() == '')
+				dirs.pop();
 
 		return dirs.join(sep) + sep
 	},

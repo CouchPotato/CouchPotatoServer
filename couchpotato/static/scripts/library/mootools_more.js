@@ -1,6 +1,6 @@
 // MooTools: the javascript framework.
-// Load this file's selection again by visiting: http://mootools.net/more/1e3edb90c5e02d9b9013b54e6ab001ea 
-// Or build this file again with packager using: packager build More/Element.Forms More/Element.Delegation More/Element.Shortcuts More/Fx.Slide More/Sortables More/Request.JSONP More/Request.Periodical More/Spinner
+// Load this file's selection again by visiting: http://mootools.net/more/13115b95c0560a5c35a61ccf237f3ed9 
+// Or build this file again with packager using: packager build More/Element.Forms More/Element.Shortcuts More/Fx.Slide More/Sortables More/Request.JSONP More/Request.Periodical More/Spinner
 /*
 ---
 
@@ -20,6 +20,7 @@ authors:
   - Tim Wienk
   - Christoph Pojer
   - Aaron Newton
+  - Jacob Thornton
 
 requires:
   - Core/MooTools
@@ -30,8 +31,8 @@ provides: [MooTools.More]
 */
 
 MooTools.More = {
-	'version': '1.3.1.1',
-	'build': '0292a3af1eea242b817fecf9daa127417d10d4ce'
+	'version': '1.4.0.1',
+	'build': 'a4244edf2aa97ac8a196fc96082dd35af1abab87'
 };
 
 
@@ -182,7 +183,7 @@ String.implement({
 
 });
 
-}).call(this);
+})();
 
 
 /*
@@ -330,368 +331,6 @@ Element.implement({
 /*
 ---
 
-name: Events.Pseudos
-
-description: Adds the functionality to add pseudo events
-
-license: MIT-style license
-
-authors:
-  - Arian Stolwijk
-
-requires: [Core/Class.Extras, Core/Slick.Parser, More/MooTools.More]
-
-provides: [Events.Pseudos]
-
-...
-*/
-
-Events.Pseudos = function(pseudos, addEvent, removeEvent){
-
-	var storeKey = 'monitorEvents:';
-
-	var storageOf = function(object){
-		return {
-			store: object.store ? function(key, value){
-				object.store(storeKey + key, value);
-			} : function(key, value){
-				(object.$monitorEvents || (object.$monitorEvents = {}))[key] = value;
-			},
-			retrieve: object.retrieve ? function(key, dflt){
-				return object.retrieve(storeKey + key, dflt);
-			} : function(key, dflt){
-				if (!object.$monitorEvents) return dflt;
-				return object.$monitorEvents[key] || dflt;
-			}
-		};
-	};
-
-	var splitType = function(type){
-		if (type.indexOf(':') == -1 || !pseudos) return null;
-
-		var parsed = Slick.parse(type).expressions[0][0],
-			parsedPseudos = parsed.pseudos,
-			l = parsedPseudos.length,
-			splits = [];
-
-		while (l--) if (pseudos[parsedPseudos[l].key]){
-			splits.push({
-				event: parsed.tag,
-				value: parsedPseudos[l].value,
-				pseudo: parsedPseudos[l].key,
-				original: type
-			});
-		}
-
-		return splits.length ? splits : null;
-	};
-
-	var mergePseudoOptions = function(split){
-		return Object.merge.apply(this, split.map(function(item){
-			return pseudos[item.pseudo].options || {};
-		}));
-	};
-
-	return {
-
-		addEvent: function(type, fn, internal){
-			var split = splitType(type);
-			if (!split) return addEvent.call(this, type, fn, internal);
-
-			var storage = storageOf(this),
-				events = storage.retrieve(type, []),
-				eventType = split[0].event,
-				options = mergePseudoOptions(split),
-				stack = fn,
-				eventOptions = options[eventType] || {},
-				args = Array.slice(arguments, 2),
-				self = this,
-				monitor;
-
-			if (eventOptions.args) args.append(Array.from(eventOptions.args));
-			if (eventOptions.base) eventType = eventOptions.base;
-			if (eventOptions.onAdd) eventOptions.onAdd(this);
-
-			split.each(function(item){
-				var stackFn = stack;
-				stack = function(){
-					(eventOptions.listener || pseudos[item.pseudo].listener).call(self, item, stackFn, arguments, monitor, options);
-				};
-			});
-			monitor = stack.bind(this);
-
-			events.include({event: fn, monitor: monitor});
-			storage.store(type, events);
-
-			addEvent.apply(this, [type, fn].concat(args));
-			return addEvent.apply(this, [eventType, monitor].concat(args));
-		},
-
-		removeEvent: function(type, fn){
-			var split = splitType(type);
-			if (!split) return removeEvent.call(this, type, fn);
-
-			var storage = storageOf(this),
-				events = storage.retrieve(type);
-			if (!events) return this;
-
-			var eventType = split[0].event,
-				options = mergePseudoOptions(split),
-				eventOptions = options[eventType] || {},
-				args = Array.slice(arguments, 2);
-
-			if (eventOptions.args) args.append(Array.from(eventOptions.args));
-			if (eventOptions.base) eventType = eventOptions.base;
-			if (eventOptions.onRemove) eventOptions.onRemove(this);
-
-			removeEvent.apply(this, [type, fn].concat(args));
-			events.each(function(monitor, i){
-				if (!fn || monitor.event == fn) removeEvent.apply(this, [eventType, monitor.monitor].concat(args));
-				delete events[i];
-			}, this);
-
-			storage.store(type, events);
-			return this;
-		}
-
-	};
-
-};
-
-(function(){
-
-var pseudos = {
-
-	once: {
-		listener: function(split, fn, args, monitor){
-			fn.apply(this, args);
-			this.removeEvent(split.event, monitor)
-				.removeEvent(split.original, fn);
-		}
-	},
-
-	throttle: {
-		listener: function(split, fn, args){
-			if (!fn._throttled){
-				fn.apply(this, args);
-				fn._throttled = setTimeout(function(){
-					fn._throttled = false;
-				}, split.value || 250);
-			}
-		}
-	},
-
-	pause: {
-		listener: function(split, fn, args){
-			clearTimeout(fn._pause);
-			fn._pause = fn.delay(split.value || 250, this, args);
-		}
-	}
-
-};
-
-Events.definePseudo = function(key, listener){
-	pseudos[key] = Type.isFunction(listener) ? {listener: listener} : listener;
-	return this;
-};
-
-Events.lookupPseudo = function(key){
-	return pseudos[key];
-};
-
-var proto = Events.prototype;
-Events.implement(Events.Pseudos(pseudos, proto.addEvent, proto.removeEvent));
-
-['Request', 'Fx'].each(function(klass){
-	if (this[klass]) this[klass].implement(Events.prototype);
-});
-
-}).call(this);
-
-
-/*
----
-
-name: Element.Event.Pseudos
-
-description: Adds the functionality to add pseudo events for Elements
-
-license: MIT-style license
-
-authors:
-  - Arian Stolwijk
-
-requires: [Core/Element.Event, Events.Pseudos]
-
-provides: [Element.Event.Pseudos]
-
-...
-*/
-
-(function(){
-
-var pseudos = {},
-	copyFromEvents = ['once', 'throttle', 'pause'],
-	count = copyFromEvents.length;
-
-while (count--) pseudos[copyFromEvents[count]] = Events.lookupPseudo(copyFromEvents[count]);
-
-Event.definePseudo = function(key, listener){
-	pseudos[key] = Type.isFunction(listener) ? {listener: listener} : listener;
-	return this;
-};
-
-var proto = Element.prototype;
-[Element, Window, Document].invoke('implement', Events.Pseudos(pseudos, proto.addEvent, proto.removeEvent));
-
-}).call(this);
-
-
-/*
----
-
-script: Element.Delegation.js
-
-name: Element.Delegation
-
-description: Extends the Element native object to include the delegate method for more efficient event management.
-
-credits:
-  - "Event checking based on the work of Daniel Steigerwald. License: MIT-style license. Copyright: Copyright (c) 2008 Daniel Steigerwald, daniel.steigerwald.cz"
-
-license: MIT-style license
-
-authors:
-  - Aaron Newton
-  - Daniel Steigerwald
-
-requires: [/MooTools.More, Element.Event.Pseudos]
-
-provides: [Element.Delegation]
-
-...
-*/
-
-(function(){
-
-var eventListenerSupport = !(window.attachEvent && !window.addEventListener),
-	nativeEvents = Element.NativeEvents;
-
-nativeEvents.focusin = 2;
-nativeEvents.focusout = 2;
-
-var check = function(split, target, event){
-	var elementEvent = Element.Events[split.event], condition;
-	if (elementEvent) condition = elementEvent.condition;
-	return Slick.match(target, split.value) && (!condition || condition.call(target, event));
-};
-
-var formObserver = function(eventName){
-
-	var $delegationKey = '$delegation:';
-
-	return {
-		base: 'focusin',
-
-		onRemove: function(element){
-			element.retrieve($delegationKey + 'forms', []).each(function(el){
-				el.retrieve($delegationKey + 'listeners', []).each(function(listener){
-					el.removeEvent(eventName, listener);
-				});
-				el.eliminate($delegationKey + eventName + 'listeners')
-					.eliminate($delegationKey + eventName + 'originalFn');
-			});
-		},
-
-		listener: function(split, fn, args, monitor, options){
-			var event = args[0],
-				forms = this.retrieve($delegationKey + 'forms', []),
-				target = event.target,
-				form = (target.get('tag') == 'form') ? target : event.target.getParent('form'),
-				formEvents = form.retrieve($delegationKey + 'originalFn', []),
-				formListeners = form.retrieve($delegationKey + 'listeners', []);
-
-			forms.include(form);
-			this.store($delegationKey + 'forms', forms);
-
-			if (!formEvents.contains(fn)){
-				var formListener = function(event){
-					if (check(split, this, event)) fn.call(this, event);
-				};
-				form.addEvent(eventName, formListener);
-
-				formEvents.push(fn);
-				formListeners.push(formListener);
-
-				form.store($delegationKey + eventName + 'originalFn', formEvents)
-					.store($delegationKey + eventName + 'listeners', formListeners);
-			}
-		}
-	};
-};
-
-var inputObserver = function(eventName){
-	return {
-		base: 'focusin',
-		listener: function(split, fn, args){
-			var events = {blur: function(){
-				this.removeEvents(events);
-			}};
-			events[eventName] = function(event){
-				if (check(split, this, event)) fn.call(this, event);
-			};
-			args[0].target.addEvents(events);
-		}
-	};
-};
-
-var eventOptions = {
-	mouseenter: {
-		base: 'mouseover'
-	},
-	mouseleave: {
-		base: 'mouseout'
-	},
-	focus: {
-		base: 'focus' + (eventListenerSupport ? '' : 'in'),
-		args: [true]
-	},
-	blur: {
-		base: eventListenerSupport ? 'blur' : 'focusout',
-		args: [true]
-	}
-};
-
-if (!eventListenerSupport) Object.append(eventOptions, {
-	submit: formObserver('submit'),
-	reset: formObserver('reset'),
-	change: inputObserver('change'),
-	select: inputObserver('select')
-});
-
-
-Event.definePseudo('relay', {
-	listener: function(split, fn, args, monitor, options){
-		var event = args[0];
-
-		for (var target = event.target; target && target != this; target = target.parentNode){
-			var finalTarget = document.id(target);
-			if (check(split, finalTarget, event)){
-				if (finalTarget) fn.call(finalTarget, event, finalTarget);
-				return;
-			}
-		}
-	},
-	options: eventOptions
-});
-
-}).call(this);
-
-
-
-/*
----
-
 script: Element.Shortcuts.js
 
 name: Element.Shortcuts
@@ -826,7 +465,7 @@ Fx.Slide = new Class({
 
 		this.addEvent('complete', function(){
 			this.open = (wrapper['offset' + this.layout.capitalize()] != 0);
-			if (this.open && options.resetHeight) wrapper.setStyle('height', '');
+			if (this.open && this.options.resetHeight) wrapper.setStyle('height', '');
 		}, true);
 	},
 
@@ -1050,12 +689,6 @@ var Drag = new Class({
 		var limit = options.limit;
 		this.limit = {x: [], y: []};
 
-		var styles = this.element.getStyles('left', 'right', 'top', 'bottom');
-		this._invert = {
-			x: options.modifiers.x == 'left' && styles.left == 'auto' && !isNaN(styles.right.toInt()) && (options.modifiers.x = 'right'),
-			y: options.modifiers.y == 'top' && styles.top == 'auto' && !isNaN(styles.bottom.toInt()) && (options.modifiers.y = 'bottom')
-		};
-
 		var z, coordinates;
 		for (z in options.modifiers){
 			if (!options.modifiers[z]) continue;
@@ -1072,7 +705,6 @@ var Drag = new Class({
 			else this.value.now[z] = this.element[options.modifiers[z]];
 
 			if (options.invert) this.value.now[z] *= -1;
-			if (this._invert[z]) this.value.now[z] *= -1;
 
 			this.mouse.pos[z] = event.page[z] - this.value.now[z];
 
@@ -1122,7 +754,6 @@ var Drag = new Class({
 			this.value.now[z] = this.mouse.now[z] - this.mouse.pos[z];
 
 			if (options.invert) this.value.now[z] *= -1;
-			if (this._invert[z]) this.value.now[z] *= -1;
 
 			if (options.limit && this.limit[z]){
 				if ((this.limit[z][1] || this.limit[z][1] === 0) && (this.value.now[z] > this.limit[z][1])){
@@ -1236,10 +867,9 @@ Drag.Move = new Class({
 			this.container = document.id(this.container.getDocument().body);
 
 		if (this.options.style){
-			if (this.options.modifiers.x == "left" && this.options.modifiers.y == "top"){
-				var parentStyles,
-					parent = element.getOffsetParent();
-				var styles = element.getStyles('left', 'top');
+			if (this.options.modifiers.x == 'left' && this.options.modifiers.y == 'top'){
+				var parent = element.getOffsetParent(),
+					styles = element.getStyles('left', 'top');
 				if (parent && (styles.left == 'auto' || styles.top == 'auto')){
 					element.setPosition(element.getPosition(parent));
 				}
@@ -1529,7 +1159,7 @@ var Sortables = new Class({
 		if (
 			!this.idle ||
 			event.rightClick ||
-			['button', 'input', 'a'].contains(event.target.get('tag'))
+			['button', 'input', 'a', 'textarea'].contains(event.target.get('tag'))
 		) return;
 
 		this.idle = false;
@@ -1640,8 +1270,7 @@ Request.JSONP = new Class({
 
 	Implements: [Chain, Events, Options],
 
-	options: {
-	/*
+	options: {/*
 		onRequest: function(src, scriptElement){},
 		onComplete: function(data){},
 		onSuccess: function(data){},
@@ -1708,7 +1337,8 @@ Request.JSONP = new Class({
 	},
 
 	getScript: function(src){
-		if (!this.script) this.script = new Element('script[type=text/javascript]', {
+		if (!this.script) this.script = new Element('script', {
+			type: 'text/javascript',
 			async: true,
 			src: src
 		});
@@ -1716,7 +1346,7 @@ Request.JSONP = new Class({
 	},
 
 	success: function(args, index){
-		if (!this.running) return false;
+		if (!this.running) return;
 		this.clear()
 			.fireEvent('complete', args).fireEvent('success', args)
 			.callChain();
@@ -1835,10 +1465,10 @@ Class.refactor = function(original, refactors){
 
 	Object.each(refactors, function(item, name){
 		var origin = original.prototype[name];
-		if (origin && origin.$origin) origin = origin.$origin;
+		origin = (origin && origin.$origin) || origin || function(){};
 		original.implement(name, (typeof item == 'function') ? function(){
 			var old = this.previous;
-			this.previous = origin || function(){};
+			this.previous = origin;
 			var value = item.apply(this, arguments);
 			this.previous = old;
 			return value;
@@ -1875,7 +1505,7 @@ provides: [Class.Binds]
 
 Class.Mutators.Binds = function(binds){
 	if (!this.prototype.initialize) this.implement('initialize', function(){});
-	return binds;
+	return Array.from(binds).concat(this.prototype.Binds || []);
 };
 
 Class.Mutators.initialize = function(initialize){
@@ -2055,7 +1685,7 @@ Element.implement({
 
 });
 
-}).call(this);
+})();
 
 
 /*
@@ -2071,219 +1701,228 @@ license: MIT-style license
 
 authors:
   - Aaron Newton
+  - Jacob Thornton
 
 requires:
+  - Core/Options
   - Core/Element.Dimensions
-  - /Element.Measure
+  - Element.Measure
 
 provides: [Element.Position]
 
 ...
 */
 
-(function(){
+(function(original){
 
-var original = Element.prototype.position;
+var local = Element.Position = {
+
+	options: {/*
+		edge: false,
+		returnPos: false,
+		minimum: {x: 0, y: 0},
+		maximum: {x: 0, y: 0},
+		relFixedPosition: false,
+		ignoreMargins: false,
+		ignoreScroll: false,
+		allowNegative: false,*/
+		relativeTo: document.body,
+		position: {
+			x: 'center', //left, center, right
+			y: 'center' //top, center, bottom
+		},
+		offset: {x: 0, y: 0}
+	},
+
+	getOptions: function(element, options){
+		options = Object.merge({}, local.options, options);
+		local.setPositionOption(options);
+		local.setEdgeOption(options);
+		local.setOffsetOption(element, options);
+		local.setDimensionsOption(element, options);
+		return options;
+	},
+
+	setPositionOption: function(options){
+		options.position = local.getCoordinateFromValue(options.position);
+	},
+
+	setEdgeOption: function(options){
+		var edgeOption = local.getCoordinateFromValue(options.edge);
+		options.edge = edgeOption ? edgeOption :
+			(options.position.x == 'center' && options.position.y == 'center') ? {x: 'center', y: 'center'} :
+			{x: 'left', y: 'top'};
+	},
+
+	setOffsetOption: function(element, options){
+		var parentOffset = {x: 0, y: 0},
+			offsetParent = element.measure(function(){
+				return document.id(this.getOffsetParent());
+			}),
+			parentScroll = offsetParent.getScroll();
+
+		if (!offsetParent || offsetParent == element.getDocument().body) return;
+		parentOffset = offsetParent.measure(function(){
+			var position = this.getPosition();
+			if (this.getStyle('position') == 'fixed'){
+				var scroll = window.getScroll();
+				position.x += scroll.x;
+				position.y += scroll.y;
+			}
+			return position;
+		});
+
+		options.offset = {
+			parentPositioned: offsetParent != document.id(options.relativeTo),
+			x: options.offset.x - parentOffset.x + parentScroll.x,
+			y: options.offset.y - parentOffset.y + parentScroll.y
+		};
+	},
+
+	setDimensionsOption: function(element, options){
+		options.dimensions = element.getDimensions({
+			computeSize: true,
+			styles: ['padding', 'border', 'margin']
+		});
+	},
+
+	getPosition: function(element, options){
+		var position = {};
+		options = local.getOptions(element, options);
+		var relativeTo = document.id(options.relativeTo) || document.body;
+
+		local.setPositionCoordinates(options, position, relativeTo);
+		if (options.edge) local.toEdge(position, options);
+
+		var offset = options.offset;
+		position.left = ((position.x >= 0 || offset.parentPositioned || options.allowNegative) ? position.x : 0).toInt();
+		position.top = ((position.y >= 0 || offset.parentPositioned || options.allowNegative) ? position.y : 0).toInt();
+
+		local.toMinMax(position, options);
+
+		if (options.relFixedPosition || relativeTo.getStyle('position') == 'fixed') local.toRelFixedPosition(relativeTo, position);
+		if (options.ignoreScroll) local.toIgnoreScroll(relativeTo, position);
+		if (options.ignoreMargins) local.toIgnoreMargins(position, options);
+
+		position.left = Math.ceil(position.left);
+		position.top = Math.ceil(position.top);
+		delete position.x;
+		delete position.y;
+
+		return position;
+	},
+
+	setPositionCoordinates: function(options, position, relativeTo){
+		var offsetY = options.offset.y,
+			offsetX = options.offset.x,
+			calc = (relativeTo == document.body) ? window.getScroll() : relativeTo.getPosition(),
+			top = calc.y,
+			left = calc.x,
+			winSize = window.getSize();
+
+		switch(options.position.x){
+			case 'left': position.x = left + offsetX; break;
+			case 'right': position.x = left + offsetX + relativeTo.offsetWidth; break;
+			default: position.x = left + ((relativeTo == document.body ? winSize.x : relativeTo.offsetWidth) / 2) + offsetX; break;
+		}
+
+		switch(options.position.y){
+			case 'top': position.y = top + offsetY; break;
+			case 'bottom': position.y = top + offsetY + relativeTo.offsetHeight; break;
+			default: position.y = top + ((relativeTo == document.body ? winSize.y : relativeTo.offsetHeight) / 2) + offsetY; break;
+		}
+	},
+
+	toMinMax: function(position, options){
+		var xy = {left: 'x', top: 'y'}, value;
+		['minimum', 'maximum'].each(function(minmax){
+			['left', 'top'].each(function(lr){
+				value = options[minmax] ? options[minmax][xy[lr]] : null;
+				if (value != null && ((minmax == 'minimum') ? position[lr] < value : position[lr] > value)) position[lr] = value;
+			});
+		});
+	},
+
+	toRelFixedPosition: function(relativeTo, position){
+		var winScroll = window.getScroll();
+		position.top += winScroll.y;
+		position.left += winScroll.x;
+	},
+
+	toIgnoreScroll: function(relativeTo, position){
+		var relScroll = relativeTo.getScroll();
+		position.top -= relScroll.y;
+		position.left -= relScroll.x;
+	},
+
+	toIgnoreMargins: function(position, options){
+		position.left += options.edge.x == 'right'
+			? options.dimensions['margin-right']
+			: (options.edge.x != 'center'
+				? -options.dimensions['margin-left']
+				: -options.dimensions['margin-left'] + ((options.dimensions['margin-right'] + options.dimensions['margin-left']) / 2));
+
+		position.top += options.edge.y == 'bottom'
+			? options.dimensions['margin-bottom']
+			: (options.edge.y != 'center'
+				? -options.dimensions['margin-top']
+				: -options.dimensions['margin-top'] + ((options.dimensions['margin-bottom'] + options.dimensions['margin-top']) / 2));
+	},
+
+	toEdge: function(position, options){
+		var edgeOffset = {},
+			dimensions = options.dimensions,
+			edge = options.edge;
+
+		switch(edge.x){
+			case 'left': edgeOffset.x = 0; break;
+			case 'right': edgeOffset.x = -dimensions.x - dimensions.computedRight - dimensions.computedLeft; break;
+			// center
+			default: edgeOffset.x = -(Math.round(dimensions.totalWidth / 2)); break;
+		}
+
+		switch(edge.y){
+			case 'top': edgeOffset.y = 0; break;
+			case 'bottom': edgeOffset.y = -dimensions.y - dimensions.computedTop - dimensions.computedBottom; break;
+			// center
+			default: edgeOffset.y = -(Math.round(dimensions.totalHeight / 2)); break;
+		}
+
+		position.x += edgeOffset.x;
+		position.y += edgeOffset.y;
+	},
+
+	getCoordinateFromValue: function(option){
+		if (typeOf(option) != 'string') return option;
+		option = option.toLowerCase();
+
+		return {
+			x: option.test('left') ? 'left'
+				: (option.test('right') ? 'right' : 'center'),
+			y: option.test(/upper|top/) ? 'top'
+				: (option.test('bottom') ? 'bottom' : 'center')
+		};
+	}
+
+};
 
 Element.implement({
 
 	position: function(options){
-		//call original position if the options are x/y values
 		if (options && (options.x != null || options.y != null)){
-			return original ? original.apply(this, arguments) : this;
+			return (original ? original.apply(this, arguments) : this);
 		}
+		var position = this.setStyle('position', 'absolute').calculatePosition(options);
+		return (options && options.returnPos) ? position : this.setStyles(position);
+	},
 
-		Object.each(options || {}, function(v, k){
-			if (v == null) delete options[k];
-		});
-
-		options = Object.merge({
-			// minimum: { x: 0, y: 0 },
-			// maximum: { x: 0, y: 0},
-			relativeTo: document.body,
-			position: {
-				x: 'center', //left, center, right
-				y: 'center' //top, center, bottom
-			},
-			offset: {x: 0, y: 0}/*,
-			edge: false,
-			returnPos: false,
-			relFixedPosition: false,
-			ignoreMargins: false,
-			ignoreScroll: false,
-			allowNegative: false*/
-		}, options);
-
-		//compute the offset of the parent positioned element if this element is in one
-		var parentOffset = {x: 0, y: 0},
-			parentPositioned = false;
-
-		/* dollar around getOffsetParent should not be necessary, but as it does not return
-		 * a mootools extended element in IE, an error occurs on the call to expose. See:
-		 * http://mootools.lighthouseapp.com/projects/2706/tickets/333-element-getoffsetparent-inconsistency-between-ie-and-other-browsers */
-		var offsetParent = this.measure(function(){
-			return document.id(this.getOffsetParent());
-		});
-		if (offsetParent && offsetParent != this.getDocument().body){
-			parentOffset = offsetParent.measure(function(){
-				return this.getPosition();
-			});
-			parentPositioned = offsetParent != document.id(options.relativeTo);
-			options.offset.x = options.offset.x - parentOffset.x;
-			options.offset.y = options.offset.y - parentOffset.y;
-		}
-
-		//upperRight, bottomRight, centerRight, upperLeft, bottomLeft, centerLeft
-		//topRight, topLeft, centerTop, centerBottom, center
-		var fixValue = function(option){
-			if (typeOf(option) != 'string') return option;
-			option = option.toLowerCase();
-			var val = {};
-
-			if (option.test('left')){
-				val.x = 'left';
-			} else if (option.test('right')){
-				val.x = 'right';
-			} else {
-				val.x = 'center';
-			}
-
-			if (option.test('upper') || option.test('top')){
-				val.y = 'top';
-			} else if (option.test('bottom')){
-				val.y = 'bottom';
-			} else {
-				val.y = 'center';
-			}
-
-			return val;
-		};
-
-		options.edge = fixValue(options.edge);
-		options.position = fixValue(options.position);
-		if (!options.edge){
-			if (options.position.x == 'center' && options.position.y == 'center') options.edge = {x:'center', y:'center'};
-			else options.edge = {x:'left', y:'top'};
-		}
-
-		this.setStyle('position', 'absolute');
-		var rel = document.id(options.relativeTo) || document.body,
-				calc = rel == document.body ? window.getScroll() : rel.getPosition(),
-				top = calc.y, left = calc.x;
-
-		var dim = this.getDimensions({
-			computeSize: true,
-			styles:['padding', 'border','margin']
-		});
-
-		var pos = {},
-			prefY = options.offset.y,
-			prefX = options.offset.x,
-			winSize = window.getSize();
-
-		switch (options.position.x){
-			case 'left':
-				pos.x = left + prefX;
-				break;
-			case 'right':
-				pos.x = left + prefX + rel.offsetWidth;
-				break;
-			default: //center
-				pos.x = left + ((rel == document.body ? winSize.x : rel.offsetWidth)/2) + prefX;
-				break;
-		}
-
-		switch (options.position.y){
-			case 'top':
-				pos.y = top + prefY;
-				break;
-			case 'bottom':
-				pos.y = top + prefY + rel.offsetHeight;
-				break;
-			default: //center
-				pos.y = top + ((rel == document.body ? winSize.y : rel.offsetHeight)/2) + prefY;
-				break;
-		}
-
-		if (options.edge){
-			var edgeOffset = {};
-
-			switch (options.edge.x){
-				case 'left':
-					edgeOffset.x = 0;
-					break;
-				case 'right':
-					edgeOffset.x = -dim.x-dim.computedRight-dim.computedLeft;
-					break;
-				default: //center
-					edgeOffset.x = -(dim.totalWidth/2);
-					break;
-			}
-
-			switch (options.edge.y){
-				case 'top':
-					edgeOffset.y = 0;
-					break;
-				case 'bottom':
-					edgeOffset.y = -dim.y-dim.computedTop-dim.computedBottom;
-					break;
-				default: //center
-					edgeOffset.y = -(dim.totalHeight/2);
-					break;
-			}
-
-			pos.x += edgeOffset.x;
-			pos.y += edgeOffset.y;
-		}
-
-		pos = {
-			left: ((pos.x >= 0 || parentPositioned || options.allowNegative) ? pos.x : 0).toInt(),
-			top: ((pos.y >= 0 || parentPositioned || options.allowNegative) ? pos.y : 0).toInt()
-		};
-
-		var xy = {left: 'x', top: 'y'};
-
-		['minimum', 'maximum'].each(function(minmax){
-			['left', 'top'].each(function(lr){
-				var val = options[minmax] ? options[minmax][xy[lr]] : null;
-				if (val != null && ((minmax == 'minimum') ? pos[lr] < val : pos[lr] > val)) pos[lr] = val;
-			});
-		});
-
-		if (rel.getStyle('position') == 'fixed' || options.relFixedPosition){
-			var winScroll = window.getScroll();
-			pos.top+= winScroll.y;
-			pos.left+= winScroll.x;
-		}
-		if (options.ignoreScroll){
-			var relScroll = rel.getScroll();
-			pos.top -= relScroll.y;
-			pos.left -= relScroll.x;
-		}
-
-		if (options.ignoreMargins){
-			pos.left += (
-				options.edge.x == 'right' ? dim['margin-right'] :
-				options.edge.x == 'center' ? -dim['margin-left'] + ((dim['margin-right'] + dim['margin-left'])/2) :
-					- dim['margin-left']
-			);
-			pos.top += (
-				options.edge.y == 'bottom' ? dim['margin-bottom'] :
-				options.edge.y == 'center' ? -dim['margin-top'] + ((dim['margin-bottom'] + dim['margin-top'])/2) :
-					- dim['margin-top']
-			);
-		}
-
-		pos.left = Math.ceil(pos.left);
-		pos.top = Math.ceil(pos.top);
-		if (options.returnPos) return pos;
-		else this.setStyles(pos);
-		return this;
+	calculatePosition: function(options){
+		return local.getPosition(this, options);
 	}
 
 });
 
-}).call(this);
+})(Element.prototype.position);
 
 
 /*

@@ -4,13 +4,13 @@ from couchpotato.core.helpers.encoding import toUnicode, simplifyString
 from couchpotato.core.helpers.variable import getExt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.core.settings.model import File, Release, Movie
+from couchpotato.core.settings.model import File
 from couchpotato.environment import Env
 from flask.helpers import json
-from sqlalchemy.sql.expression import and_, or_
 import os
 import re
 import subprocess
+import time
 import traceback
 
 log = CPLog(__name__)
@@ -23,11 +23,11 @@ class Scanner(Plugin):
         'trailer': 1048576, # 1MB
     }
     ignored_in_path = ['_unpack', '_failed_', '_unknown_', '_exists_', '.appledouble', '.appledb', '.appledesktop', os.path.sep + '._', '.ds_store', 'cp.cpnfo'] #unpacking, smb-crap, hidden files
-    ignore_names = ['extract', 'extracting', 'extracted', 'movie', 'movies', 'film', 'films', 'download', 'downloads']
+    ignore_names = ['extract', 'extracting', 'extracted', 'movie', 'movies', 'film', 'films', 'download', 'downloads', 'video_ts', 'audio_ts', 'bdmv', 'certificate']
     extensions = {
         'movie': ['mkv', 'wmv', 'avi', 'mpg', 'mpeg', 'mp4', 'm2ts', 'iso', 'img'],
         'dvd': ['vts_*', 'vob'],
-        'nfo': ['nfo', 'txt', 'tag'],
+        'nfo': ['nfo', 'nfo-orig', 'txt', 'tag'],
         'subtitle': ['sub', 'srt', 'ssa', 'ass'],
         'subtitle_extra': ['idx'],
         'trailer': ['mov', 'mp4', 'flv']
@@ -172,8 +172,20 @@ class Scanner(Plugin):
 
 
         # Determine file types
+        delete_identifier = []
         for identifier in movie_files:
             group = movie_files[identifier]
+
+            # Check if movie is fresh and maybe still unpacking, ignore files new then 1 minute
+            file_too_new = False
+            for file in group['unsorted_files']:
+                if os.path.getmtime(file) > time.time() - 60:
+                    file_too_new = True
+
+            if file_too_new:
+                log.info('Files seem to be still unpacking or just unpacked, ignoring for now: %s' % identifier)
+                delete_identifier.append(identifier)
+                continue
 
             # Group extra (and easy) files first
             images = self.getImages(group['unsorted_files'])
@@ -182,7 +194,7 @@ class Scanner(Plugin):
                 'subtitle_extra': self.getSubtitlesExtras(group['unsorted_files']),
                 'nfo': self.getNfo(group['unsorted_files']),
                 'trailer': self.getTrailers(group['unsorted_files']),
-                'backdrop': images['backdrop'],
+                #'backdrop': images['backdrop'],
                 'leftover': set(group['unsorted_files']),
             }
 
@@ -198,12 +210,13 @@ class Scanner(Plugin):
                 group['parentdir'] = os.path.dirname(movie_file)
                 group['dirname'] = None
 
-                folders = group['parentdir'].replace(folder, '').split(os.path.sep)
+                folder_names = group['parentdir'].replace(folder, '').split(os.path.sep)
+                folder_names.reverse()
 
-                # Try and get a proper dirname, so no "A", "Movie", "Download"
-                for folder in folders:
-                    if folder.lower() in self.ignore_names or len(folder) < 2:
-                        group['dirname'] = folder
+                # Try and get a proper dirname, so no "A", "Movie", "Download" etc
+                for folder_name in folder_names:
+                    if folder_name.lower() not in self.ignore_names and len(folder_name) > 2:
+                        group['dirname'] = folder_name
                         break
 
                 break
@@ -220,12 +233,16 @@ class Scanner(Plugin):
             if not group['library']:
                 log.error('Unable to determin movie: %s' % group['identifiers'])
 
+        # Delete still (asuming) unpacking files
+        for identifier in delete_identifier:
+            del movie_files[identifier]
+
         return movie_files
 
     def getMetaData(self, group):
 
         data = {}
-        files = group['files']['movie']
+        files = list(group['files']['movie'])
 
         for file in files:
             if os.path.getsize(file) < self.minimal_filesize['media']: continue # Ignore smaller files
@@ -246,10 +263,11 @@ class Scanner(Plugin):
         if not data['quality']:
             data['quality'] = fireEvent('quality.single', 'dvdr' if group['is_dvd'] else 'dvdrip', single = True)
 
-        data['quality_type'] = 'HD' if data.get('resolution_width', 0) >= 720 else 'SD'
+        data['quality_type'] = 'HD' if data.get('resolution_width', 0) >= 1280 else 'SD'
 
-        data['group'] = self.getGroup(file[0])
-        data['source'] = self.getSourceMedia(file[0])
+        file = re.sub('(.cp\(tt[0-9{7}]+\))', '', files[0])
+        data['group'] = self.getGroup(file)
+        data['source'] = self.getSourceMedia(file)
 
         return data
 
@@ -365,7 +383,6 @@ class Scanner(Plugin):
         return set(filter(test, files))
 
     def getDVDFiles(self, files):
-
         def test(s):
             return self.isDVDFile(s)
 
@@ -409,7 +426,7 @@ class Scanner(Plugin):
         if list(set(file.lower().split(os.path.sep)) & set(['video_ts', 'audio_ts'])):
             return True
 
-        for needle in ['vts_', 'video_ts', 'audio_ts']:
+        for needle in ['vts_', 'video_ts', 'audio_ts', 'bdmv', 'certificate']:
             if needle in file.lower():
                 return True
 
@@ -510,8 +527,8 @@ class Scanner(Plugin):
 
     def getGroup(self, file):
         try:
-            group = re.search('-(?P<group>[A-Z0-9]+)$', file, re.I)
-            return group.group('group') or ''
+            match = re.search('-(?P<group>[A-Z0-9]+).', file, re.I)
+            return match.group('group') or ''
         except:
             return ''
 

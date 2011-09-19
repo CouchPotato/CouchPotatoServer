@@ -1,18 +1,134 @@
-.profile > .delete {
-	background-position: center;
-	height: 20px;
-	width: 20px;
+/* @override http://192.168.1.20:5000/static/profile_plugin/profile.css */
+
+.add_new_profile {
+	padding: 20px;
+	display: block;
+	text-align: center;
+	font-size: 20px;
+	border-bottom: 1px solid rgba(255,255,255,0.2);
 }
 
-.profile .types .type .handle {
-	background: url('../../images/handle.png') center;
-	display: inline-block;
-	height: 20px;
-	width: 20px;
+.profile {	border-bottom: 1px solid rgba(255,255,255,0.2) }
+
+	.profile > .delete {
+		height: 20px;
+		width: 20px;
+		position: absolute;
+		margin-left: 690px;
+		padding: 14px;
+		background-position: center;
+	}
+	
+	.profile .qualities {
+		min-height: 80px;
+	}
+
+	.profile .formHint {
+		width: 250px !important;
+	}
+
+	.profile .wait_for {
+		position: absolute;
+		margin: -45px 0 0 437px;
+	}
+
+	.profile .wait_for input {
+		margin: 0 5px !important;
+	}
+	
+	.profile .types {
+		padding: 0;
+		margin: 0 20px 0 -4px;
+		display: inline-block;
+	}
+	
+		.profile .types li {
+			padding: 3px 5px;
+			border-bottom: 1px solid rgba(255,255,255,0.2);
+			list-style: none;
+		}
+			.profile .types li:last-child { border: 0; }
+	
+			.profile .types li > * {
+				display: inline-block;
+				vertical-align: middle;
+				line-height: 0;
+				margin-right: 10px;
+			}
+	
+			.profile .quality_type select {
+				width: 186px;
+				margin-left: -1px;
+			}
+	
+			.profile .types li.is_empty .check, .profile .types li.is_empty .delete, .profile .types li.is_empty .handle {
+				visibility: hidden;
+			}
+	
+		.profile .types .type .handle {
+			background: url('./handle.png') center;
+			display: inline-block;
+			height: 20px;
+			width: 20px;
+			cursor: grab;
+			cursor: -moz-grab;
+			cursor: -webkit-grab;
+			margin: 0;
+		}
+		
+		.profile .types .type .delete {
+			background-position: left center;
+			height: 20px;
+			width: 20px;
+			visibility: hidden;
+			cursor: pointer;
+		}
+		
+		.profile .types .type:hover:not(.is_empty) .delete {
+			visibility: visible;
+		}
+		
+#profile_ordering {
+	
 }
 
-.profile .types .type .delete {
-	background-position: center;
-	height: 20px;
-	width: 20px;
-}
+	#profile_ordering ul {
+		float: left;
+		margin: 0;
+		width: 275px;
+		padding: 0;
+	}
+
+		#profile_ordering li {
+			cursor: grab;
+			cursor: -moz-grab;
+			cursor: -webkit-grab;
+			border-bottom: 1px solid rgba(255,255,255,0.2);
+			padding: 0 5px;
+		}
+		#profile_ordering li:last-child { border: 0; }
+	
+			#profile_ordering li .check {
+				margin: 2px 10px 0 0;
+				vertical-align: top;
+			}
+	
+			#profile_ordering li > span {
+				display: inline-block;
+				height: 20px;
+				vertical-align: top;
+				line-height: 20px;	
+			}
+		
+			#profile_ordering li .handle {
+				background: url('./handle.png') center;
+				width: 20px;
+				float: right;
+			}
+
+	#profile_ordering .formHint {
+		clear: none;
+		float: right;
+		width: 250px;
+		margin: 0;
+	}

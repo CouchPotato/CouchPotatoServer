@@ -13,10 +13,9 @@ log = CPLog(__name__)
 class Newzbin(NZBProvider, RSS):
 
     urls = {
-        'search': 'https://www.newzbin.com/search/',
         'download': 'http://www.newzbin.com/api/dnzb/',
+        'search': 'https://www.newzbin.com/search/',
     }
-    searchUrl = 'https://www.newzbin.com/search/'
 
     format_ids = {
         2: ['scr'],
@@ -36,7 +35,7 @@ class Newzbin(NZBProvider, RSS):
     def search(self, movie, quality):
 
         results = []
-        if self.isDisabled() or not self.isAvailable(self.searchUrl):
+        if self.isDisabled() or not self.isAvailable(self.urls['search']):
             return results
 
         format_id = self.getFormatId(type)
@@ -97,11 +96,12 @@ class Newzbin(NZBProvider, RSS):
                     new = {
                         'id': id,
                         'type': 'nzb',
+                        'provider': self.getName(),
                         'name': title,
                         'age': self.calculateAge(int(time.mktime(parse(date).timetuple()))),
                         'size': self.parseSize(size),
                         'url': str(self.getTextElement(nzb, '{%s}nzb' % REPORT_NS)),
-                        'download': lambda: self.download(id),
+                        'download': self.download,
                         'detail_url': str(self.getTextElement(nzb, 'link')),
                         'description': self.getTextElement(nzb, "description"),
                         'check_nzb': False,
@@ -121,7 +121,7 @@ class Newzbin(NZBProvider, RSS):
 
         return results
 
-    def download(self, nzb_id):
+    def download(self, url = '', nzb_id = ''):
         try:
             log.info('Download nzb from newzbin, report id: %s ' % nzb_id)
 

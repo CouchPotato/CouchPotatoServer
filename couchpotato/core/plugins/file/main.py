@@ -42,16 +42,10 @@ class FileManager(Plugin):
         if not dest: # to Cache
             dest = os.path.join(Env.get('cache_dir'), '%s.%s' % (md5(url), getExt(url)))
 
-        if overwrite or not os.path.exists(dest):
-            log.debug('Writing file to: %s' % dest)
-            output = open(dest, 'wb')
-            output.write(file)
-            output.close()
-        else:
-            log.debug('File already exists: %s' % dest)
+        if overwrite or not os.path.isfile(dest):
+            self.createFile(dest, file)
 
         return dest
-
 
     def add(self, path = '', part = 1, type = (), available = 1, properties = {}):
         db = get_session()

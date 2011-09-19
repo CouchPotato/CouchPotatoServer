@@ -12,6 +12,7 @@ class Synoindex(Notification):
         addEvent('renamer.after', self.addToLibrary)
 
     def addToLibrary(self, group = {}):
+        if self.isDisabled(): return
 
         command = ['/usr/syno/bin/synoindex', '-A', group.get('destination_dir')]
         log.info(u'Executing synoindex command: %s ' % command)

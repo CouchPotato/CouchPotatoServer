@@ -1,6 +1,7 @@
 from couchpotato.core.event import addEvent
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
+from couchpotato.environment import Env
 
 log = CPLog(__name__)
 
@@ -16,7 +17,10 @@ class Downloader(Plugin):
         pass
 
     def cpTag(self, movie):
-        return '.cp(' + movie['library'].get('identifier') + ')' if movie['library'].get('identifier') else ''
+        if Env.setting('enabled', 'renamer'):
+            return '.cp(' + movie['library'].get('identifier') + ')' if movie['library'].get('identifier') else ''
+
+        return ''
 
     def isDisabled(self):
         return not self.isEnabled()

@@ -27,17 +27,15 @@ class Blackhole(Downloader):
             try:
                 if not os.path.isfile(fullPath):
                     log.info('Downloading %s to %s.' % (data.get('type'), fullPath))
-                    if isfunction(data.get('download')):
-                        file = data.get('download')()
-                    else:
-                        file = self.urlopen(data.get('url'))
 
-                    if not file or file == '':
+                    try:
+                        file = data.get('download')(url = data.get('url'), nzb_id = data.get('id'))
+
+                        with open(fullPath, 'wb') as f:
+                            f.write(file)
+                    except:
                         log.debug('Failed download file: %s' % data.get('name'))
                         return False
-
-                    with open(fullPath, 'wb') as f:
-                        f.write(file)
 
                     return True
                 else:

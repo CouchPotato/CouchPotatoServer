@@ -2,14 +2,15 @@ from couchpotato import get_session
 from couchpotato.core.event import addEvent, fireEventAsync, fireEvent
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.core.settings.model import Library, LibraryTitle, File
+from couchpotato.core.settings.model import Library, LibraryTitle, File, \
+    LibraryGenre
 import traceback
 
 log = CPLog(__name__)
 
 class LibraryPlugin(Plugin):
 
-    default_dict = {'titles': {}, 'files':{}, 'info':{}}
+    default_dict = {'titles': {}, 'files':{}, 'info':{}, 'genres':{}}
 
     def __init__(self):
         addEvent('library.add', self.add)
@@ -51,7 +52,9 @@ class LibraryPlugin(Plugin):
         library = db.query(Library).filter_by(identifier = identifier).first()
         done_status = fireEvent('status.get', 'done', single = True)
 
-        library_dict = library.to_dict(self.default_dict)
+        if library:
+            library_dict = library.to_dict(self.default_dict)
+
         do_update = True
 
         if library.status_id == done_status.get('id') and not force:
@@ -60,7 +63,7 @@ class LibraryPlugin(Plugin):
             info = fireEvent('provider.movie.info', merge = True, identifier = identifier)
             if not info or len(info) == 0:
                 log.error('Could not update, no movie info to work with: %s' % identifier)
-                do_update = False
+                return False
 
         # Main info
         if do_update:
@@ -75,7 +78,6 @@ class LibraryPlugin(Plugin):
             db.commit()
 
             titles = info.get('titles', [])
-
             log.debug('Adding titles: %s' % titles)
             for title in titles:
                 t = LibraryTitle(
@@ -83,6 +85,20 @@ class LibraryPlugin(Plugin):
                     default = title.lower() == default_title.lower()
                 )
                 library.titles.append(t)
+
+            db.commit()
+
+            # Genres
+            [db.delete(genre) for genre in library.genres]
+            db.commit()
+
+            genres = info.get('genres', [])
+            log.debug('Adding genres: %s' % genres)
+            for genre in genres:
+                g = LibraryGenre(
+                    name = genre
+                )
+                library.genres.append(g)
 
             db.commit()
 

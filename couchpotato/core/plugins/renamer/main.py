@@ -1,10 +1,10 @@
 from couchpotato import get_session
-from couchpotato.core.event import addEvent, fireEvent
+from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.variable import getExt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.core.settings.model import Library
+from couchpotato.core.settings.model import Library, Movie
 import os.path
 import re
 import shutil
@@ -40,7 +40,7 @@ class Renamer(Plugin):
             group = groups[group_identifier]
             rename_files = {}
 
-            # Add _UNKNOWN_ if no library is connected
+            # Add _UNKNOWN_ if no library item is connected
             if not group['library']:
                 if group['dirname']:
                     rename_files[group['parentdir']] = group['parentdir'].replace(group['dirname'], '_UNKNOWN_%s' % group['dirname'])
@@ -53,6 +53,10 @@ class Renamer(Plugin):
             # Rename the files using the library data
             else:
                 group['library'] = fireEvent('library.update', identifier = group['library']['identifier'], single = True)
+                if not group['library']:
+                    log.error('Could not rename, no library item to work with: %s' % group_identifier)
+                    continue
+
                 library = group['library']
 
                 # Find subtitle for renaming
@@ -85,12 +89,9 @@ class Renamer(Plugin):
 
                 for file_type in group['files']:
 
-                    # Move DVD files (no renaming)
-                    if group['is_dvd'] and file_type is 'movie':
-                        continue
-
                     # Move nfo depending on settings
                     if file_type is 'nfo' and not self.conf('rename_nfo'):
+                        log.debug('Skipping, renaming of %s disabled' % file_type)
                         continue
 
                     # Subtitle extra
@@ -98,7 +99,7 @@ class Renamer(Plugin):
                         continue
 
                     # Move other files
-                    multiple = len(group['files']['movie']) > 1
+                    multiple = len(group['files']['movie']) > 1 and not group['is_dvd']
                     cd = 1 if multiple else 0
 
                     for file in sorted(list(group['files'][file_type])):
@@ -118,21 +119,35 @@ class Renamer(Plugin):
                         final_folder_name = self.doReplace(folder_name, replacements)
                         final_file_name = self.doReplace(file_name, replacements)
                         replacements['filename'] = final_file_name[:-(len(getExt(final_file_name)) + 1)]
+                        group['filename'] = replacements['filename']
 
                         # Meta naming
                         if file_type is 'trailer':
                             final_file_name = self.doReplace(trailer_name, replacements)
                         elif file_type is 'nfo':
-                            final_file_name = self.doReplace(nfo_name, replacements) + '-orig'
-                        elif file_type is 'backdrop':
-                            final_file_name = self.doReplace(backdrop_name, replacements)
+                            final_file_name = self.doReplace(nfo_name, replacements)
 
                         # Seperator replace
                         if separator:
                             final_file_name = final_file_name.replace(' ', separator)
 
-                        # Main file
-                        rename_files[file] = os.path.join(destination, final_folder_name, final_file_name)
+                        # Move DVD files (no structure renaming)
+                        if group['is_dvd'] and file_type is 'movie':
+                            found = False
+                            for top_dir in ['video_ts', 'audio_ts', 'bdmv', 'certificate']:
+                                has_string = file.lower().find(os.path.sep + top_dir + os.path.sep)
+                                if has_string >= 0:
+                                    structure_dir = file[has_string:].lstrip(os.path.sep)
+                                    rename_files[file] = os.path.join(destination, final_folder_name, structure_dir)
+                                    found = True
+                                    break
+
+                            if not found:
+                                log.error('Could not determin dvd structure for: %s' % file)
+
+                        # Do rename others
+                        else:
+                            rename_files[file] = os.path.join(destination, final_folder_name, final_file_name)
 
                         # Check for extra subtitle files
                         if file_type is 'subtitle':
@@ -154,21 +169,43 @@ class Renamer(Plugin):
                         if multiple:
                             cd += 1
 
-                    # Notify on download
-                    download_message = 'Download of %s (%s) successful.' % (group['library']['titles'][0]['title'], replacements['quality'])
-                    fireEvent('movie.downloaded', message = download_message, data = group)
-
                 # Before renaming, remove the lower quality files
                 db = get_session()
+
                 library = db.query(Library).filter_by(identifier = group['library']['identifier']).first()
                 done_status = fireEvent('status.get', 'done', single = True)
+                active_status = fireEvent('status.get', 'active', single = True)
+
                 for movie in library.movies:
+
+                    # Mark movie "done" onces it found the quality with the finish check
+                    try:
+                        if movie.status_id == active_status.get('id'):
+                            for type in movie.profile.types:
+                                if type.quality_id == group['meta_data']['quality']['id'] and type.finish:
+                                    movie.status_id = done_status.get('id')
+                                    db.commit()
+                    except Exception, e:
+                        log.error('Failed marking movie finished: %s %s' % (e, traceback.format_exc()))
+
+                    # Go over current movie releases
                     for release in movie.releases:
-                        if release.quality.order < group['meta_data']['quality']['order']:
+
+                        # This is where CP removes older, lesser quality releases
+                        if release.quality.order > group['meta_data']['quality']['order']:
                             log.info('Removing older release for %s, with quality %s' % (movie.library.titles[0].title, release.quality.label))
+
+                            for file in release.files:
+                                log.info('Removing (not really) "%s"' % file.path)
+
+                        # When a release already exists
                         elif release.status_id is done_status.get('id'):
+
+                            # Same quality, but still downloaded, so maybe repack/proper/unrated/directors cut etc
                             if release.quality.order is group['meta_data']['quality']['order']:
                                 log.info('Same quality release already exists for %s, with quality %s. Assuming repack.' % (movie.library.titles[0].title, release.quality.label))
+
+                            # Downloaded a lower quality, rename the newly downloaded files/folder to exclude them from scan
                             else:
                                 log.info('Better quality release already exists for %s, with quality %s' % (movie.library.titles[0].title, release.quality.label))
 
@@ -188,10 +225,7 @@ class Renamer(Plugin):
 
                                 break
 
-                        for file in release.files:
-                            log.info('Removing (not really) "%s"' % file.path)
-
-            # Rename
+            # Rename all files marked
             for src in rename_files:
                 if rename_files[src]:
 
@@ -200,21 +234,24 @@ class Renamer(Plugin):
                     log.info('Renaming "%s" to "%s"' % (src, dst))
 
                     path = os.path.dirname(dst)
-                    try:
-                        if not os.path.isdir(path): os.makedirs(path)
-                    except:
-                        log.error('Failed creating dir %s: %s' % (path, traceback.format_exc()))
-                        continue
+
+                    # Create dir
+                    self.makeDir(path)
 
                     try:
-                        shutil.move(src, dst)
+                        pass
+                        #shutil.move(src, dst)
                     except:
                         log.error('Failed moving the file "%s" : %s' % (os.path.basename(src), traceback.format_exc()))
 
                 #print rename_me, rename_files[rename_me]
 
             # Search for trailers etc
-            fireEvent('renamer.after', group)
+            fireEventAsync('renamer.after', group)
+
+            # Notify on download
+            download_message = 'Download of %s (%s) successful.' % (group['library']['titles'][0]['title'], replacements['quality'])
+            fireEventAsync('movie.downloaded', message = download_message, data = group)
 
             # Break if CP wants to shut down
             if self.shuttingDown():

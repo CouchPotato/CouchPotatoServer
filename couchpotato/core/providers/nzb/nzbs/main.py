@@ -71,10 +71,12 @@ class Nzbs(NZBProvider, RSS):
                     new = {
                         'id': id,
                         'type': 'nzb',
+                        'provider': self.getName(),
                         'name': self.getTextElement(nzb, "title"),
                         'age': self.calculateAge(int(time.mktime(parse(self.getTextElement(nzb, "pubDate")).timetuple()))),
                         'size': self.parseSize(self.getTextElement(nzb, "description").split('</a><br />')[1].split('">')[1]),
                         'url': self.urls['download'] % (id, self.getApiExt()),
+                        'download': self.download,
                         'detail_url': self.urls['detail'] % id,
                         'description': self.getTextElement(nzb, "description"),
                         'check_nzb': True,

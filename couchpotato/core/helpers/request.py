@@ -1,3 +1,4 @@
+from couchpotato.core.helpers.variable import natcmp
 from flask.globals import current_app
 from flask.helpers import json
 from libs.werkzeug.urls import url_decode
@@ -42,7 +43,7 @@ def dictToList(params):
         new = {}
         for x, value in params.iteritems():
             try:
-                new_value = [dictToList(value[k]) for k in sorted(value.iterkeys())]
+                new_value = [dictToList(value[k]) for k in sorted(value.iterkeys(), cmp = natcmp)]
             except:
                 new_value = value
 
@@ -70,4 +71,3 @@ def jsonified(*args, **kwargs):
         return padded_jsonify(callback, *args, **kwargs)
     else:
         return jsonify('text/javascript' if Env.doDebug() else 'application/json', *args, **kwargs)
-

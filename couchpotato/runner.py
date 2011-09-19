@@ -115,8 +115,10 @@ def runCouchPotato(options, base_path, args):
 
         latest_db_version = version(repo)
 
+        initialize = True
         try:
             current_db_version = db_version(db, repo)
+            initialize = False
         except:
             version_control(db, repo, version = latest_db_version)
             current_db_version = db_version(db, repo)
@@ -131,6 +133,9 @@ def runCouchPotato(options, base_path, args):
 
         fireEventAsync('app.load')
 
+        if initialize:
+            fireEventAsync('app.initialize')
+
     # Create app
     from couchpotato import app
     api_key = Env.setting('api_key')
@@ -138,10 +143,12 @@ def runCouchPotato(options, base_path, args):
     reloader = debug and not options.daemonize
 
     # Basic config
-    app.host = Env.setting('host', default = '0.0.0.0')
-    app.port = Env.setting('port', default = 5000)
-    app.debug = debug
     app.secret_key = api_key
+    config = {
+        'use_reloader': reloader,
+        'host': Env.setting('host', default = '0.0.0.0'),
+        'port': Env.setting('port', default = 5000)
+    }
 
     # Static path
     web.add_url_rule(url_base + '/static/<path:filename>',
@@ -153,4 +160,4 @@ def runCouchPotato(options, base_path, args):
     app.register_blueprint(api, url_prefix = '%s/%s/' % (url_base, api_key))
 
     # Go go go!
-    app.run(use_reloader = reloader)
+    app.run(**config)

@@ -1,4 +1,4 @@
-from couchpotato.core.event import addEvent
+from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 
@@ -17,7 +17,7 @@ class MetaDataBase(Plugin):
 
         log.info('Creating %s metadata.' % self.getName())
 
-        root = self.getRootName()
+        root = self.getRootName(release)
 
         for type in ['nfo', 'thumbnail', 'fanart']:
             try:

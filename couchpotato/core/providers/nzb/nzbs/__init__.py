@@ -9,6 +9,7 @@ config = [{
         {
             'tab': 'providers',
             'name': 'nzbs',
+            'description': 'Id and Key can be found <a href="http://nzbs.org/index.php?action=rss" target="_blank">on your nzbs.org RSS page</a>.',
             'options': [
                 {
                     'name': 'enabled',
@@ -17,12 +18,12 @@ config = [{
                 {
                     'name': 'id',
                     'label': 'Id',
-                    'description': 'Can be found <a href="http://nzbs.org/index.php?action=rss" target="_blank">here</a>, the number after "&amp;i="',
+                    'description': 'The number after "&amp;i="',
                 },
                 {
                     'name': 'api_key',
                     'label': 'Api Key',
-                    'description': 'Can be found <a href="http://nzbs.org/index.php?action=rss" target="_blank">here</a>, the string after "&amp;h="'
+                    'description': 'The string after "&amp;h="'
                 },
             ],
         },

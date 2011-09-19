@@ -8,7 +8,7 @@ config = [{
     'groups': [
         {
             'tab': 'renamer',
-            'name': 'metadata',
+            'name': 'xbmc_metadata',
             'label': 'XBMC',
             'description': 'Enable metadata XBMC can understand',
             'options': [

@@ -10,7 +10,7 @@ class IMDB(MovieProvider):
 
     def __init__(self):
 
-        addEvent('provider.movie.search', self.search)
+        #addEvent('provider.movie.search', self.search)
 
         self.p = IMDb('http')
 

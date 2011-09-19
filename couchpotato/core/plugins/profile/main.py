@@ -1,6 +1,7 @@
 from couchpotato import get_session
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent
+from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.request import jsonified, getParams, getParam
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
@@ -15,7 +16,10 @@ class ProfilePlugin(Plugin):
         addEvent('profile.all', self.all)
 
         addApiView('profile.save', self.save)
+        addApiView('profile.save_order', self.saveOrder)
         addApiView('profile.delete', self.delete)
+
+        addEvent('app.initialize', self.fill, priority = 90)
 
     def all(self):
 
@@ -50,7 +54,7 @@ class ProfilePlugin(Plugin):
         for type in params.get('types', []):
             t = ProfileType(
                 order = order,
-                finish = type.get('finish'),
+                finish = type.get('finish') if order > 0 else 1,
                 wait_for = params.get('wait_for'),
                 quality_id = type.get('quality_id')
             )
@@ -65,6 +69,25 @@ class ProfilePlugin(Plugin):
         return jsonified({
             'success': True,
             'profile': profile_dict
+        })
+
+    def saveOrder(self):
+
+        params = getParams()
+        db = get_session()
+
+        order = 0
+        for profile in params.get('ids', []):
+            p = db.query(Profile).filter_by(id = profile).first()
+            p.hide = params.get('hidden')[order]
+            p.order = order
+
+            order += 1
+
+        db.commit()
+
+        return jsonified({
+            'success': True
         })
 
     def delete(self):
@@ -90,3 +113,44 @@ class ProfilePlugin(Plugin):
             'success': success,
             'message': message
         })
+
+    def fill(self):
+
+        db = get_session();
+
+        profiles = [{
+            'label': 'Best',
+            'qualities': ['720p', '1080p', 'brrip', 'dvdrip']
+        }, {
+            'label': 'HD',
+            'qualities': ['720p', '1080p']
+        }]
+
+        # Create default quality profile
+        order = -2
+        for profile in profiles:
+            log.info('Creating default profile: %s' % profile.get('label'))
+            p = Profile(
+                label = toUnicode(profile.get('label')),
+                order = order
+            )
+            db.add(p)
+
+            quality_order = 0
+            for quality in profile.get('qualities'):
+                quality = fireEvent('quality.single', identifier = quality, single = True)
+                profile_type = ProfileType(
+                    quality_id = quality.get('id'),
+                    profile = p,
+                    finish = True,
+                    wait_for = 0,
+                    order = quality_order
+                )
+                p.types.append(profile_type)
+
+                db.commit()
+                quality_order += 1
+
+            order += 1
+
+        return True

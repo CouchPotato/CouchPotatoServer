@@ -10,6 +10,7 @@ Block.Search = new Class({
 		self.el = new Element('div.search_form').adopt(
 			new Element('div.input').adopt(
 				self.input = new Element('input.inlay', {
+					'placeholder': 'Search for new movies',
 					'events': {
 						'keyup': self.keyup.bind(self),
 						'focus': self.hideResults.bind(self, false)
@@ -28,7 +29,7 @@ Block.Search = new Class({
 			}).adopt(
 				new Element('div.pointer'),
 				self.results = new Element('div.results')
-			).fade('hide')
+			).hide()
 		);
 
 		self.spinner = new Spinner(self.result_container);
@@ -51,7 +52,7 @@ Block.Search = new Class({
 
 		if(self.hidden == bool) return;
 
-		self.result_container.fade(bool ? 0 : 1)
+		self.result_container[bool ? 'hide' : 'show']();
 
 		if(bool){
 			History.removeEvent('change', self.hideResults.bind(self, !bool));
@@ -302,7 +303,7 @@ Block.Search.Item = new Class({
 				}).inject(self.title_select)
 			})
 
-			Object.each(Quality.profiles, function(profile){
+			Object.each(Quality.getActiveProfiles(), function(profile){
 				new Element('option', {
 					'value': profile.id ? profile.id : profile.data.id,
 					'text': profile.label ? profile.label : profile.data.label

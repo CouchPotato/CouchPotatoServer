@@ -1,5 +1,5 @@
 from couchpotato.api import addApiView
-from couchpotato.core.event import fireEvent
+from couchpotato.core.event import fireEvent, addEvent
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
@@ -43,14 +43,13 @@ class Core(Plugin):
 
             time.sleep(1)
 
-
         if restart:
             self.createFile(self.restartFilePath(), 'This is the most suckiest way to register if CP is restarted. Ever...')
 
-        func = request.environ.get('werkzeug.server.shutdown')
-        if func is None:
+        try:
+            request.environ.get('werkzeug.server.shutdown')()
+        except:
             log.error('Failed shutting down the server')
-        func()
 
     def removeRestartFile(self):
         try:
@@ -59,4 +58,4 @@ class Core(Plugin):
             pass
 
     def restartFilePath(self):
-        return os.path.join(Env.get('data_dir'), 'restart')
+        return os.path.join(Env.get('app_dir'), 'restart')

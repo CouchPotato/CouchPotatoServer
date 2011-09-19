@@ -350,7 +350,7 @@ class MovieDb:
         etree = XmlHandler(url).getEt()
         lookup_results = SearchResults()
         for cur_lookup in etree.find("movies").findall("movie"):
-            cur_movie = self._parseSearchResults(cur_lookup)
+            cur_movie = self._parseMovie(cur_lookup)
             lookup_results.append(cur_movie)
         return lookup_results
 

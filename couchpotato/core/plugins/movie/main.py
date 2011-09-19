@@ -5,10 +5,19 @@ from couchpotato.core.helpers.request import getParams, jsonified
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Movie
 from couchpotato.environment import Env
+from sqlalchemy.sql.expression import or_
 from urllib import urlencode
 
 
 class MoviePlugin(Plugin):
+
+    default_dict = {
+        'profile': {'types': {'quality': {}}},
+        'releases': {'status': {}, 'quality': {}, 'files':{}, 'info': {}},
+        'library': {'titles': {}, 'files':{}},
+        'files': {},
+        'status': {}
+    }
 
     def __init__(self):
         addApiView('movie.search', self.search)
@@ -24,18 +33,16 @@ class MoviePlugin(Plugin):
         params = getParams()
         db = get_session()
 
-        results = db.query(Movie).filter(
-            Movie.status.has(identifier = params.get('status', 'active'))
-        ).all()
+        # Make a list from string
+        status = params.get('status', ['active'])
+        if not isinstance(status, (list, tuple)):
+            status = [status]
+
+        results = db.query(Movie).filter(or_(*[Movie.status.has(identifier = s) for s in status])).all()
 
         movies = []
         for movie in results:
-            temp = movie.to_dict(deep = {
-                'releases': {'status': {}, 'quality': {}, 'files':{}, 'info': {}},
-                'library': {'titles': {}, 'files':{}},
-                'files': {}
-            })
-
+            temp = movie.to_dict(self.default_dict)
             movies.append(temp)
 
         return jsonified({
@@ -59,12 +66,7 @@ class MoviePlugin(Plugin):
         if movie:
             #addEvent('library.update.after', )
             fireEventAsync('library.update', identifier = movie.library.identifier, default_title = default_title, force = True)
-            fireEventAsync('searcher.single', movie.to_dict(deep = {
-                'profile': {'types': {'quality': {}}},
-                'releases': {'status': {}, 'quality': {}, 'files': {}, 'info': {}},
-                'library': {'titles': {}, 'files':{}},
-                'files': {}
-            }))
+            fireEventAsync('searcher.single', movie.to_dict(self.default_dict))
 
         return jsonified({
             'success': True,
@@ -116,13 +118,14 @@ class MoviePlugin(Plugin):
                 if release.status_id == status_snatched.get('id'):
                     release.delete()
 
+            m.profile_id = params.get('profile_id')
+
         m.status_id = status_active.get('id')
         db.commit()
 
-        movie_dict = m.to_dict(deep = {
-            'releases': {'status': {}, 'quality': {}, 'files': {}, 'info': {}},
-            'library': {'titles': {}}
-        })
+        movie_dict = m.to_dict(self.default_dict)
+
+        fireEventAsync('searcher.single', movie_dict)
 
         return jsonified({
             'success': True,

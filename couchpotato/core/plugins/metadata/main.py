@@ -8,9 +8,7 @@ log = CPLog(__name__)
 class MetaData(Plugin):
 
     def __init__(self):
-        addEvent('renaming.after', self.add)
-
-        addEvent('app.load', self.add)
+        addEvent('renamer.after', self.add)
 
     def add(self, data = {}):
         log.info('Getting meta data')

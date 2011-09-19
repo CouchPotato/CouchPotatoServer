@@ -1,9 +1,9 @@
 import hashlib
 import os.path
+import re
 
 def isDict(object):
     return isinstance(object, dict)
-
 
 def mergeDicts(a, b):
     assert isDict(a), isDict(b)
@@ -16,7 +16,7 @@ def mergeDicts(a, b):
             if key not in current_dst:
                 current_dst[key] = current_src[key]
             else:
-                if isDict(current_src[key]) and isDict(current_dst[key]) :
+                if isDict(current_src[key]) and isDict(current_dst[key]):
                     stack.append((current_dst[key], current_src[key]))
                 else:
                     current_dst[key] = current_src[key]
@@ -42,3 +42,13 @@ def cleanHost(host):
         host += '/'
 
     return host
+
+def tryInt(s):
+    try: return int(s)
+    except: return s
+
+def natsortKey(s):
+    return map(tryInt, re.findall(r'(\d+|\D+)', s))
+
+def natcmp(a, b):
+    return cmp(natsortKey(a), natsortKey(b))

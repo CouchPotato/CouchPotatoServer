@@ -81,10 +81,12 @@ class NZBMatrix(NZBProvider, RSS):
                     new = {
                         'id': id,
                         'type': 'nzb',
+                        'provider': self.getName(),
                         'name': title,
                         'age': self.calculateAge(int(time.mktime(parse(date).timetuple()))),
                         'size': self.parseSize(size),
                         'url': self.urls['download'] % id + self.getApiExt(),
+                        'download': self.download,
                         'detail_url': self.urls['detail'] % id,
                         'description': self.getTextElement(nzb, "description"),
                         'check_nzb': True,

@@ -4,7 +4,7 @@ def start():
     return Wizard()
 
 config = [{
-    'name': 'global',
+    'name': 'core',
     'groups': [
         {
             'tab': 'general',

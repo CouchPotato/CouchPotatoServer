@@ -6,6 +6,7 @@ from urllib import urlencode
 import base64
 import os
 import re
+import traceback
 
 log = CPLog(__name__)
 
@@ -37,15 +38,11 @@ class Sabnzbd(Downloader):
         params = {
             'apikey': self.conf('api_key'),
             'cat': self.conf('category'),
-            'mode': 'addurl',
-            'name': data.get('url'),
+            'mode': 'addfile',
             'nzbname': '%s%s' % (data.get('name'), self.cpTag(movie)),
         }
 
-        # sabNzbd complains about "invalid archive file" for newzbin urls
-        # added using addurl, works fine with addid
-        if data.get('addbyid'):
-            params['mode'] = 'addid'
+        nzb_file = data.get('download')(url = data.get('url'), nzb_id = data.get('id'))
 
         if pp:
             params['script'] = pp_script_fn
@@ -53,9 +50,9 @@ class Sabnzbd(Downloader):
         url = cleanHost(self.conf('host')) + "api?" + urlencode(params)
 
         try:
-            data = self.urlopen(url)
-        except Exception, e:
-            log.error("Unable to connect to SAB: %s" % e)
+            data = self.urlopen(url, params = {"nzbfile": (params['nzbname'] + ".nzb", nzb_file)}, multipart = True)
+        except Exception:
+            log.error("Unable to connect to SAB: %s" % traceback.format_exc())
             return False
 
         result = data.strip()
@@ -63,7 +60,7 @@ class Sabnzbd(Downloader):
             log.error("SABnzbd didn't return anything.")
             return False
 
-        log.debug("Result text from SAB: " + result)
+        log.debug("Result text from SAB: " + result[:40])
         if result == "ok":
             log.info("NZB sent to SAB successfully.")
             return True
@@ -71,7 +68,7 @@ class Sabnzbd(Downloader):
             log.error("Incorrect username/password.")
             return False
         else:
-            log.error("Unknown error: " + result)
+            log.error("Unknown error: " + result[:40])
             return False
 
     def buildPp(self, imdb_id):

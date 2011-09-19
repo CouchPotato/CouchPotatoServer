@@ -11,7 +11,10 @@
 # Source: http://pypi.python.org/pypi/axel
 # Docs:   http://packages.python.org/axel
 
-import sys, threading, Queue
+from couchpotato.core.helpers.variable import natcmp
+import Queue
+import sys
+import threading
 
 class Event(object):
     """ 
@@ -100,7 +103,7 @@ class Event(object):
         self.handlers = {}
         self.memoize = {}
 
-    def handle(self, handler):
+    def handle(self, handler, priority = 0):
         """ Registers a handler. The handler can be transmitted together 
         with two arguments as a list or dictionary. The arguments are:
         
@@ -118,7 +121,7 @@ class Event(object):
             event += {'handler':handler, 'memoize':True, 'timeout':1.5}         
         """
         handler_, memoize, timeout = self._extract(handler)
-        self.handlers[hash(handler_)] = (handler_, memoize, timeout)
+        self.handlers['%s.%s' % (priority, hash(handler_))] = (handler_, memoize, timeout)
         return self
 
     def unhandle(self, handler):
@@ -144,7 +147,7 @@ class Event(object):
                 t.daemon = True
                 t.start()
 
-            for handler in self.handlers:
+            for handler in sorted(self.handlers.iterkeys(), cmp = natcmp):
                 self.queue.put(handler)
 
                 if self.asynchronous:

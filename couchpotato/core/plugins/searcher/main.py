@@ -6,7 +6,9 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Movie, Release, ReleaseInfo
 from couchpotato.environment import Env
+from sqlalchemy.exc import InterfaceError
 import re
+import traceback
 
 log = CPLog(__name__)
 
@@ -17,6 +19,7 @@ class Searcher(Plugin):
         addEvent('searcher.all', self.all)
         addEvent('searcher.single', self.single)
         addEvent('searcher.correct_movie', self.correctMovie)
+        addEvent('searcher.download', self.download)
 
         # Schedule cronjob
         fireEvent('schedule.cron', 'searcher.all', self.all, day = self.conf('cron_day'), hour = self.conf('cron_hour'), minute = self.conf('cron_minute'))
@@ -34,7 +37,7 @@ class Searcher(Plugin):
 
         for movie in movies:
 
-            self.single(movie.to_dict(deep = {
+            self.single(movie.to_dict({
                 'profile': {'types': {'quality': {}}},
                 'releases': {'status': {}, 'quality': {}},
                 'library': {'titles': {}, 'files':{}},
@@ -47,11 +50,8 @@ class Searcher(Plugin):
 
     def single(self, movie):
 
-        downloaded_status = fireEvent('status.get', 'downloaded', single = True)
         available_status = fireEvent('status.get', 'available', single = True)
-        snatched_status = fireEvent('status.get', 'snatched', single = True)
 
-        successful = False
         for type in movie['profile']['types']:
 
             has_better_quality = 0
@@ -85,37 +85,22 @@ class Searcher(Plugin):
                         db.commit()
 
                         for info in nzb:
-                            rls_info = ReleaseInfo(
-                                identifier = info,
-                                value = nzb[info]
-                            )
-                            rls.info.append(rls_info)
-                            db.commit()
+                            try:
+                                if not isinstance(nzb[info], (str, unicode, int, long)):
+                                    continue
+
+                                rls_info = ReleaseInfo(
+                                    identifier = info,
+                                    value = nzb[info]
+                                )
+                                rls.info.append(rls_info)
+                                db.commit()
+                            except InterfaceError:
+                                log.debug('Couldn\'t add %s to ReleaseInfo: %s' % (info, traceback.format_exc()))
 
 
                 for nzb in sorted_results:
-                    successful = fireEvent('download', data = nzb, movie = movie, single = True)
-
-                    if successful:
-
-                        # Mark release as snatched
-                        db = get_session()
-                        rls = db.query(Release).filter_by(identifier = md5(nzb['url'])).first()
-                        rls.status_id = snatched_status.get('id')
-                        db.commit()
-
-                        # Mark movie snatched if quality is finish-checked
-                        if type['finish']:
-                            mvie = db.query(Movie).filter_by(id = movie['id']).first()
-                            mvie.status_id = snatched_status.get('id')
-                            db.commit()
-
-                        log.info('Downloading of %s successful.' % nzb.get('name'))
-                        fireEvent('movie.snatched', message = 'Downloading of %s successful.' % nzb.get('name'), data = rls.to_dict())
-
-                        return True
-
-                    return False
+                    return self.download(data = nzb, movie = movie)
             else:
                 log.info('Better quality (%s) already available or snatched for %s' % (type['quality']['label'], default_title))
                 break
@@ -126,6 +111,26 @@ class Searcher(Plugin):
 
         return False
 
+    def download(self, data, movie):
+
+        snatched_status = fireEvent('status.get', 'snatched', single = True)
+
+        successful = fireEvent('download', data = data, movie = movie, single = True)
+
+        if successful:
+
+            # Mark release as snatched
+            db = get_session()
+            rls = db.query(Release).filter_by(identifier = md5(data['url'])).first()
+            rls.status_id = snatched_status.get('id')
+            db.commit()
+
+            log.info('Downloading of %s successful.' % data.get('name'))
+            fireEvent('movie.snatched', message = 'Downloading of %s successful.' % data.get('name'), data = rls.to_dict())
+
+            return True
+
+        return False
 
     def correctMovie(self, nzb = {}, movie = {}, quality = {}, **kwargs):
 
@@ -192,6 +197,7 @@ class Searcher(Plugin):
                 if len(movie_words) == 2 and self.correctYear([nzb['name']], movie['library']['year'], 0):
                     return True
 
+        log.info("Wrong: %s, undetermined naming. Looking for '%s (%s)'" % (nzb['name'], movie['library']['titles'][0]['title'], movie['library']['year']))
         return False
 
     def containsOtherQuality(self, name, preferred_quality = {}, single_category = False):

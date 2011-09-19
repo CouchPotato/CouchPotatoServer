@@ -117,7 +117,7 @@ Form.Dropdown = new Class({
   },
   expand: function(e) {
     clearTimeout(this.collapseInterval);
-    var evt = e ? new Event(e).stop() : null;
+    var evt = e ? (e).stop() : null;
     this.open = true;
     this.input.focus();
     this.element.addClass('active').addClass('dropdown-active');

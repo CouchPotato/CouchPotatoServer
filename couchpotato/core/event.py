@@ -8,7 +8,7 @@ log = CPLog(__name__)
 events = {}
 
 
-def addEvent(name, handler):
+def addEvent(name, handler, priority = 0):
 
     if events.get(name):
         e = events[name]
@@ -27,7 +27,7 @@ def addEvent(name, handler):
 
         return h
 
-    e += createHandle
+    e.handle(createHandle, priority = priority)
 
 def removeEvent(name, handler):
     e = events[name]

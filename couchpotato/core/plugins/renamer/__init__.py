@@ -61,20 +61,22 @@ config = [{
             'advanced': True,
             'options': [
                 {
-                    'name': 'trailer_name',
-                    'label': 'Trailer naming',
-                    'default': '<filename>-trailer.<ext>',
+                    'name': 'rename_nfo',
+                    'label': 'Rename .NFO',
+                    'description': 'Rename original .nfo file',
+                    'type': 'bool',
+                    'default': True,
                 },
                 {
                     'name': 'nfo_name',
                     'label': 'NFO naming',
-                    'default': '<filename>.<ext>',
+                    'default': '<filename>.<ext>-orig',
                 },
                 {
-                    'name': 'backdrop_name',
-                    'label': 'Backdrop naming',
-                    'default': '<filename>-backdrop.<ext>',
-                }
+                    'name': 'trailer_name',
+                    'label': 'Trailer naming',
+                    'default': '<filename>-trailer.<ext>',
+                },
             ],
         },
     ],

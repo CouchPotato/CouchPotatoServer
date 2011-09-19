@@ -4,7 +4,9 @@ from couchpotato.core.helpers.variable import getExt
 from couchpotato.core.logger import CPLog
 from couchpotato.environment import Env
 from flask.helpers import send_from_directory
+from libs.multipartpost import MultipartPostHandler
 from urlparse import urlparse
+import cookielib
 import glob
 import math
 import os.path
@@ -73,11 +75,14 @@ class Plugin(object):
         try:
             if not os.path.isdir(path):
                 os.makedirs(path, Env.getPermission('folder'))
+            return True
         except Exception, e:
             log.error('Unable to create folder "%s": %s' % (path, e))
 
+        return False
+
     # http request
-    def urlopen(self, url, timeout = 10, params = {}, headers = {}):
+    def urlopen(self, url, timeout = 10, params = {}, headers = {}, multipart = False):
 
         socket.setdefaulttimeout(timeout)
 
@@ -85,15 +90,24 @@ class Plugin(object):
         self.wait(host)
 
         try:
-            log.info('Opening url: %s, params: %s' % (url, params))
 
-            data = urllib.urlencode(params) if len(params) > 0 else None
-            request = urllib2.Request(url, data, headers)
+            if multipart:
+                log.info('Opening multipart url: %s, params: %s' % (url, params.iterkeys()))
+                request = urllib2.Request(url, params, headers)
 
-            data = urllib2.urlopen(request).read()
+                cookies = cookielib.CookieJar()
+                opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookies), MultipartPostHandler)
+
+                data = opener.open(request).read()
+            else:
+                log.info('Opening url: %s, params: %s' % (url, params))
+                data = urllib.urlencode(params) if len(params) > 0 else None
+                request = urllib2.Request(url, data, headers)
+
+                data = urllib2.urlopen(request).read()
         except IOError, e:
             log.error('Failed opening url, %s: %s' % (url, e))
-            data = ''
+            raise
 
         self.http_last_use[host] = time.time()
 
@@ -111,7 +125,7 @@ class Plugin(object):
             time.sleep(last_use - now + self.http_time_between_calls)
 
     def beforeCall(self, handler):
-        log.debug('Calling %s.%s' % (self.getName(), handler.__name__))
+        #log.debug('Calling %s.%s' % (self.getName(), handler.__name__))
         self.isRunning('%s.%s' % (self.getName(), handler.__name__))
 
     def afterCall(self, handler):
