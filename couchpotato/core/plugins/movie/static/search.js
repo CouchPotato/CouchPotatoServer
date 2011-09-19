@@ -175,8 +175,8 @@ Block.Search.Item = new Class({
 					'click': self.showOptions.bind(self)
 				}
 			}).adopt(
-				self.thumbnail = info.images.posters.length > 0 ? new Element('img.thumbnail', {
-					'src': info.images.posters[0]
+				self.thumbnail = info.images.poster.length > 0 ? new Element('img.thumbnail', {
+					'src': info.images.poster[0]
 				}) : null,
 				new Element('div.info').adopt(
 					self.title = new Element('h2', {
@@ -279,8 +279,8 @@ Block.Search.Item = new Class({
 
 			self.options.adopt(
 				new Element('div').adopt(
-					self.info.images.posters.length > 0 ? new Element('img.thumbnail', {
-						'src': self.info.images.posters[0]
+					self.info.images.poster.length > 0 ? new Element('img.thumbnail', {
+						'src': self.info.images.poster[0]
 					}) : null,
 					self.title_select = new Element('select', {
 						'name': 'title'
