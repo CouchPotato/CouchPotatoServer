@@ -1,6 +1,8 @@
 from couchpotato import get_session
+from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import toUnicode
+from couchpotato.core.helpers.request import jsonified
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Status
@@ -25,6 +27,15 @@ class StatusPlugin(Plugin):
         addEvent('status.get', self.add) # Alias for .add
         addEvent('status.all', self.all)
         addEvent('app.load', self.fill)
+
+        addApiView('status.list', self.list)
+
+    def list(self):
+
+        return jsonified({
+            'success': True,
+            'list': self.all()
+        })
 
     def all(self):
 
