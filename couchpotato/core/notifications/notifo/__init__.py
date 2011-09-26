@@ -9,7 +9,7 @@ config = [{
         {
             'tab': 'notifications',
             'name': 'notifo',
-            'description': '',
+            'description': 'Keep in mind that Notifo service will end soon.',
             'options': [
                 {
                     'name': 'enabled',
