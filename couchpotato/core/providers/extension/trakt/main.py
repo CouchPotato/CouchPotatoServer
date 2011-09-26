@@ -4,7 +4,7 @@ from couchpotato.core.providers.extension.base import ExtensionBase
 class Trakt(ExtensionBase):
 
     includes = ['http://trakt.tv/movie/*', 'http://*.trakt.tv/movie/*']
-    included = ['http://trakt.tv/movie/*/*', 'http://*.trakt.tv/movie/*/*']
+    excludes = ['http://trakt.tv/movie/*/*', 'http://*.trakt.tv/movie/*/*']
 
 #CouchPotato['trakt.tv'] = (function(){
 #

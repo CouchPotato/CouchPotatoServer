@@ -1,16 +1,14 @@
 // ==UserScript==
 // @name        CouchPotato UserScript
-// @description Add movies to your CouchPotato via external sites
+// @description Add movies like a real CouchPotato
 {% for include in includes %}
-// @include     {{include}}
-{% endfor %}
+// @include     {{include}}{% endfor %}
 {% for exclude in excludes %}
-// @exclude     {{exclude}}
-{% endfor %}
+// @exclude     {{exclude}}{% endfor %}
 // ==/UserScript==
 
-var version = '{{version}}';
-var cpLocation = '{{host}}';
+var version = {{version}},
+    cpLocation = '{{host}}';
 
 function create() {
     switch (arguments.length) {
@@ -41,7 +39,7 @@ function create() {
 if (typeof GM_addStyle == 'undefined'){
     GM_addStyle = function(css) {
         var head = document.getElementsByTagName('head')[0], 
-        	style = document.createElement('style');
+            style = document.createElement('style');
         if (!head)
             return;
 
@@ -69,17 +67,17 @@ var osd = function(){
     var navbar, newElement;
 
     var iFrame = create('iframe', {
-		'src': cpLocation + "extension.add_via_url/?url=" + escape(document.location),
-		'frameborder': 0,
-		'scrolling': 'no'
+        'src': cpLocation + "extension.add_via_url/?url=" + escape(document.location),
+        'frameborder': 0,
+        'scrolling': 'no'
     });
 
     var addToText = '<a class="addTo" href="#"></a>';
     var popupId = 'cpPopup';
 
     var popup = create('div', {
-		'id': popupId,
-		'innerHTML': addToText
+        'id': popupId,
+        'innerHTML': addToText
     });
     var addButton = create('a', {
         'innerHTML': '<img src="' + movieImg + '" />Add to CouchPotato',
@@ -94,8 +92,8 @@ var osd = function(){
                     popup.appendChild(addButton);
                 }
             }));
-			popup.appendChild(iFrame)
-		}
+            popup.appendChild(iFrame)
+        }
     });
     popup.appendChild(addButton);
 

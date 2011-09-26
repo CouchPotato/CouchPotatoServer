@@ -29,6 +29,7 @@ class Loader:
             'trailer_provider' : (20, 'couchpotato.core.providers.trailer', os.path.join(providers, 'trailer')),
             'subtitle_provider' : (20, 'couchpotato.core.providers.subtitle', os.path.join(providers, 'subtitle')),
             'metadata_provider' : (25, 'couchpotato.core.providers.metadata', os.path.join(providers, 'metadata')),
+            'extension_provider' : (25, 'couchpotato.core.providers.extension', os.path.join(providers, 'extension')),
         }
 
         for type, tuple in self.paths.iteritems():
