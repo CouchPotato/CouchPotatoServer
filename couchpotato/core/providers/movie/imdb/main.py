@@ -1,6 +1,6 @@
 from couchpotato.core.event import addEvent
 from couchpotato.core.logger import CPLog
-from couchpotato.core.providers.base import MovieProvider
+from couchpotato.core.providers.movie.base import MovieProvider
 from imdb import IMDb
 
 log = CPLog(__name__)

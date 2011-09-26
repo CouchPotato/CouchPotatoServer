@@ -47,10 +47,6 @@ class Provider(Plugin):
         return self.is_available[host]
 
 
-class MovieProvider(Provider):
-    type = 'movie'
-
-
 class YarrProvider(Provider):
 
     cat_ids = []
@@ -103,39 +99,3 @@ class YarrProvider(Provider):
 
     def found(self, new):
         log.info('Found: score(%(score)s): %(name)s' % new)
-
-
-class NZBProvider(YarrProvider):
-    type = 'nzb'
-
-    def __init__(self):
-        super(NZBProvider, self).__init__()
-
-        addEvent('provider.nzb.search', self.search)
-        addEvent('provider.yarr.search', self.search)
-
-        addEvent('provider.nzb.feed', self.feed)
-
-    def download(self, url = '', nzb_id = ''):
-        return self.urlopen(url)
-
-    def feed(self):
-        return []
-
-    def search(self, movie, quality):
-        return []
-
-    def calculateAge(self, unix):
-        return int(time.time() - unix) / 24 / 60 / 60
-
-
-class TorrentProvider(YarrProvider):
-    type = 'torrent'
-
-
-class SubtitleProvider(Provider):
-    type = 'subtitle'
-
-
-class TrailerProvider(Provider):
-    type = 'trailer'

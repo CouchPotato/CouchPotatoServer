@@ -2,10 +2,9 @@ from couchpotato.core.event import fireEvent
 from couchpotato.core.helpers.rss import RSS
 from couchpotato.core.helpers.variable import cleanHost
 from couchpotato.core.logger import CPLog
-from couchpotato.core.providers.base import NZBProvider
+from couchpotato.core.providers.nzb.base import NZBProvider
 from dateutil.parser import parse
 from urllib import urlencode
-from urlparse import urlparse
 import time
 import xml.etree.ElementTree as XMLTree
 

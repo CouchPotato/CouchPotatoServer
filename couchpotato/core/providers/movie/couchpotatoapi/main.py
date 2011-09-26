@@ -3,7 +3,7 @@ from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.request import jsonified, getParams
 from couchpotato.core.logger import CPLog
-from couchpotato.core.providers.base import MovieProvider
+from couchpotato.core.providers.movie.base import MovieProvider
 from couchpotato.core.settings.model import Movie
 from flask.helpers import json
 

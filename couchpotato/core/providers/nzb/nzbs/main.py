@@ -2,7 +2,7 @@ from couchpotato.core.event import fireEvent
 from couchpotato.core.helpers.encoding import simplifyString
 from couchpotato.core.helpers.rss import RSS
 from couchpotato.core.logger import CPLog
-from couchpotato.core.providers.base import NZBProvider
+from couchpotato.core.providers.nzb.base import NZBProvider
 from dateutil.parser import parse
 from urllib import urlencode
 import time

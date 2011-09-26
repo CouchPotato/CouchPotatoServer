@@ -1,5 +1,5 @@
 from couchpotato.core.logger import CPLog
-from couchpotato.core.providers.base import TorrentProvider
+from couchpotato.core.providers.torrent.base import TorrentProvider
 
 log = CPLog(__name__)
 
