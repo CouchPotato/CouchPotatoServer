@@ -238,7 +238,7 @@ var OptionBase = new Class({
 	createLabel: function(){
 		var self = this;
 		return new Element('label', {
-			'text': (self.options.label || self.options.name).capitalize()
+			'text': (self.options.label || self.options.name.replace('_', ' ')).capitalize()
 		})
 	},
 
