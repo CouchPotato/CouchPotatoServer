@@ -93,6 +93,11 @@ def fireEvent(name, *args, **kwargs):
 
                     results = merged
 
+        modified_results = fireEvent('result.modify.%s' % name, results, single = True)
+        if modified_results:
+            log.debug('Return modified results for %s' % name)
+            return modified_results
+
         return results
     except KeyError, e:
         pass
