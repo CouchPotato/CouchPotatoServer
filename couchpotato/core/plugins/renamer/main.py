@@ -119,7 +119,11 @@ class Renamer(Plugin):
                         final_folder_name = self.doReplace(folder_name, replacements)
                         final_file_name = self.doReplace(file_name, replacements)
                         replacements['filename'] = final_file_name[:-(len(getExt(final_file_name)) + 1)]
-                        group['filename'] = replacements['filename']
+
+                        # Group filename without cd extension
+                        replacements['cd'] = ''
+                        replacements['cd_nr'] = ''
+                        group['filename'] = self.doReplace(file_name, replacements)[:-(len(getExt(final_file_name)) + 1)]
 
                         # Meta naming
                         if file_type is 'trailer':
