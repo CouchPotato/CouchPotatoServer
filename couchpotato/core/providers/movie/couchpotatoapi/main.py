@@ -18,7 +18,6 @@ class CouchPotatoApi(MovieProvider):
         addEvent('provider.movie.release_date', self.releaseDate)
         addApiView('movie.suggest', self.suggestView)
 
-
     def releaseDate(self, imdb_id):
 
         data = self.urlopen((self.apiUrl % ('eta')) + (id + '/'))

@@ -1,4 +1,3 @@
-from __future__ import with_statement
 from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import simplifyString, toUnicode
 from couchpotato.core.logger import CPLog
@@ -117,8 +116,6 @@ class TheMovieDb(MovieProvider):
         backdrop = self.getImage(movie, type = 'backdrop')
         poster_original = self.getImage(movie, type = 'poster', size = 'mid')
         backdrop_original = self.getImage(movie, type = 'backdrop', size = 'w1280')
-
-        print poster_original, backdrop_original
 
         # Genres
         try:

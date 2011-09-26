@@ -1,4 +1,3 @@
-from __future__ import with_statement
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import isInt

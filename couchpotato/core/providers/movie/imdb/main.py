@@ -14,7 +14,6 @@ class IMDB(MovieProvider):
 
         self.p = IMDb('http')
 
-
     def search(self):
         print 'search'
 

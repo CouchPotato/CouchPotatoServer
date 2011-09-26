@@ -1,8 +1,6 @@
-from __future__ import with_statement
 from couchpotato.core.downloaders.base import Downloader
 from couchpotato.core.helpers.encoding import toSafeString
 from couchpotato.core.logger import CPLog
-from inspect import isfunction
 import os
 import traceback
 
