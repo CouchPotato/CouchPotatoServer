@@ -1,5 +1,5 @@
+from beautifulsoup import BeautifulSoup
 from couchpotato.core.providers.extension.base import ExtensionBase
-from imdb.parser.http.bsouplxml._bsoup import SoupStrainer, BeautifulSoup
 import re
 
 
