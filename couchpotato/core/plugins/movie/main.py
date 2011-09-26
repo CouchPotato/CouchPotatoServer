@@ -79,7 +79,7 @@ class MoviePlugin(Plugin):
         movies = Env.get('cache').get(cache_key)
 
         if not movies:
-            results = fireEvent('provider.movie.search', q = params.get('q'))
+            results = fireEvent('movie.search', q = params.get('q'), merge = True)
 
             # Combine movie results
             movies = []

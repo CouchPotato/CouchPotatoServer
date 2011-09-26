@@ -60,7 +60,7 @@ class LibraryPlugin(Plugin):
         if library.status_id == done_status.get('id') and not force:
             do_update = False
         else:
-            info = fireEvent('provider.movie.info', merge = True, identifier = identifier)
+            info = fireEvent('movie.info', merge = True, identifier = identifier)
             if not info or len(info) == 0:
                 log.error('Could not update, no movie info to work with: %s' % identifier)
                 return False

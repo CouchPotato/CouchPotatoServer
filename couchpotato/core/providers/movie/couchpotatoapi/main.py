@@ -15,7 +15,7 @@ class CouchPotatoApi(MovieProvider):
     apiUrl = 'http://couchpotatoapp.com/api/%s/'
 
     def __init__(self):
-        addEvent('provider.movie.release_date', self.releaseDate)
+        addEvent('movie.release_date', self.releaseDate)
         addApiView('movie.suggest', self.suggestView)
 
     def releaseDate(self, imdb_id):

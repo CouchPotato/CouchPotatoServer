@@ -14,9 +14,9 @@ class TheMovieDb(MovieProvider):
     imageUrl = 'http://hwcdn.themoviedb.org'
 
     def __init__(self):
-        addEvent('provider.movie.by_hash', self.byHash)
-        addEvent('provider.movie.search', self.search)
-        addEvent('provider.movie.info', self.getInfo)
+        addEvent('movie.by_hash', self.byHash)
+        addEvent('movie.search', self.search)
+        addEvent('movie.info', self.getInfo)
 
         # Use base wrapper
         tmdb.Config.api_key = self.conf('api_key')

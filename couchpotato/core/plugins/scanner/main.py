@@ -318,7 +318,7 @@ class Scanner(Plugin):
         # Search based on OpenSubtitleHash
         if not imdb_id and not group['is_dvd']:
             for file in files['movie']:
-                movie = fireEvent('provider.movie.by_hash', file = file, merge = True)
+                movie = fireEvent('movie.by_hash', file = file, merge = True)
 
                 if len(movie) > 0:
                     imdb_id = movie[0]['imdb']
@@ -330,7 +330,7 @@ class Scanner(Plugin):
 
                 if len(identifier) > 2:
 
-                    movie = fireEvent('provider.movie.search', q = identifier, merge = True, limit = 1)
+                    movie = fireEvent('movie.search', q = identifier, merge = True, limit = 1)
 
                     if len(movie) > 0:
                         imdb_id = movie[0]['imdb']
@@ -339,7 +339,7 @@ class Scanner(Plugin):
                     log.debug('Identifier to short to use for search: %s' % identifier)
 
         if imdb_id:
-            #movie = fireEvent('provider.movie.info', identifier = imdb_id, merge = True)
+            #movie = fireEvent('movie.info', identifier = imdb_id, merge = True)
             #if movie and movie.get('imdb'):
             return fireEvent('library.add', attrs = {
                 'identifier': imdb_id
