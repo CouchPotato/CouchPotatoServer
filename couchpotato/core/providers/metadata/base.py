@@ -32,10 +32,10 @@ class MetaDataBase(Plugin):
                     # Get file content
                     content = getattr(self, 'get' + type.capitalize())(release)
                     if content:
+                        log.debug('Creating %s file: %s' % (type, name))
                         if os.path.isfile(content):
                             shutil.copy2(content, name)
                         else:
-                            log.debug('Creating %s file: %s' % (type, name))
                             self.createFile(name, content)
 
             except Exception, e:
