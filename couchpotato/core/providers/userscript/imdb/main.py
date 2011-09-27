@@ -1,4 +1,5 @@
 from beautifulsoup import BeautifulSoup
+from couchpotato.core.event import fireEvent
 from couchpotato.core.providers.userscript.base import UserscriptBase
 import re
 
@@ -19,27 +20,14 @@ class IMDB(UserscriptBase):
             if 'seasons' in head.lower():
                 return False
 
+        identifier = re.search('(?P<id>tt[0-9{7}]+)', url).group('id')
+        movie = fireEvent('movie.info', identifier = identifier)
+
         return {
             'id': re.search('(?P<id>tt[0-9{7}]+)', url).group('id'),
             'year': self.getYear(html)
         }
 
-    def getYear(self, html):
-
-        headers = html.findAll('h1')
-
-        tv_pattern = '/^\((TV|Video) ([0-9]+)\)$/';
-
-        try:
-            year = headers[0].findAll('a').text
-            return year
-        except:
-            pass
-
-        for head in headers:
-            match = re.search(tv_pattern, head)
-            if match:
-                return match[1]
 
 #CouchPotato['imdb.com'] = (function(){
 #
