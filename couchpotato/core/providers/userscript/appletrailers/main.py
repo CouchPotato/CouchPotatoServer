@@ -1,7 +1,7 @@
-from couchpotato.core.providers.extension.base import ExtensionBase
+from couchpotato.core.providers.userscript.base import UserscriptBase
 
 
-class AppleTrailers(ExtensionBase):
+class AppleTrailers(UserscriptBase):
 
     includes = ['http://trailers.apple.com/trailers/*']
 

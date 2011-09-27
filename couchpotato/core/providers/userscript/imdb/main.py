@@ -1,9 +1,9 @@
 from beautifulsoup import BeautifulSoup
-from couchpotato.core.providers.extension.base import ExtensionBase
+from couchpotato.core.providers.userscript.base import UserscriptBase
 import re
 
 
-class IMDB(ExtensionBase):
+class IMDB(UserscriptBase):
 
     includes = ['http*://*.imdb.com/title/tt*', 'http*://imdb.com/title/tt*']
 

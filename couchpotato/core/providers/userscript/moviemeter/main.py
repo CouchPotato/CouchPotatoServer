@@ -1,7 +1,7 @@
-from couchpotato.core.providers.extension.base import ExtensionBase
+from couchpotato.core.providers.userscript.base import UserscriptBase
 
 
-class MovieMeter(ExtensionBase):
+class MovieMeter(UserscriptBase):
 
     includes = ['http://*.moviemeter.nl/film/*', 'http://moviemeter.nl/film/*']
 

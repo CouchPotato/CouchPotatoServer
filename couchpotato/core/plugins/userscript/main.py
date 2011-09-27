@@ -10,15 +10,15 @@ import os
 class Extension(Plugin):
 
     def __init__(self):
-        addApiView('extension', self.getExtension)
+        addApiView('userscript', self.getExtension)
 
     def getExtension(self):
 
         params = {
-            'includes': fireEvent('extension.get_includes', merge = True),
-            'excludes': fireEvent('extension.get_excludes', merge = True),
+            'includes': fireEvent('userscript.get_includes', merge = True),
+            'excludes': fireEvent('userscript.get_excludes', merge = True),
             'version': self.getVersion(),
-            'host': '%s%sextension.add_via_url/' % (request.host_url.rstrip('/'), url_for('api.index')),
+            'host': '%s%userscript.add_via_url/' % (request.host_url.rstrip('/'), url_for('api.index')),
         }
 
         template = open(os.path.join(os.path.dirname(__file__), 'template.js'), 'r').read()
@@ -26,7 +26,7 @@ class Extension(Plugin):
 
     def getVersion(self):
 
-        versions = fireEvent('extension.get_version')
+        versions = fireEvent('userscript.get_version')
 
         version = 0
         for v in versions:

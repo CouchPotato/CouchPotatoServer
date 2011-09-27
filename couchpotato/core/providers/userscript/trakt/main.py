@@ -1,7 +1,7 @@
-from couchpotato.core.providers.extension.base import ExtensionBase
+from couchpotato.core.providers.userscript.base import UserscriptBase
 
 
-class Trakt(ExtensionBase):
+class Trakt(UserscriptBase):
 
     includes = ['http://trakt.tv/movie/*', 'http://*.trakt.tv/movie/*']
     excludes = ['http://trakt.tv/movie/*/*', 'http://*.trakt.tv/movie/*/*']

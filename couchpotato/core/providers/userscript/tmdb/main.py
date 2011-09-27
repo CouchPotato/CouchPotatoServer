@@ -1,7 +1,7 @@
-from couchpotato.core.providers.extension.base import ExtensionBase
+from couchpotato.core.providers.userscript.base import UserscriptBase
 
 
-class TMDB(ExtensionBase):
+class TMDB(UserscriptBase):
 
     includes = ['http://www.themoviedb.org/movie/*']
 

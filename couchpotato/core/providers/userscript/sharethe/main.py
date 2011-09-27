@@ -1,16 +1,15 @@
-from couchpotato.core.providers.extension.base import ExtensionBase
+from couchpotato.core.providers.userscript.base import UserscriptBase
 
 
-class WHiWA(ExtensionBase):
+class ShareThe(UserscriptBase):
 
-    includes = ['http://whiwa.net/stats/movie/*']
+    includes = ['http://*.sharethe.tv/movies/*', 'http://sharethe.tv/movies/*']
 
-#CouchPotato['whiwa.net'] = (function(){
+#CouchPotato['sharethe.tv'] = (function(){
 #
 #    function isMovie(){
-#        var pattern = /[^/]+\/?$/;
-#        var html = document.getElementsByTagName('h3')[0].innerHTML
-#        var matched = location.href.match(pattern);
+#        var pattern = /movies\/[^/]+\/?$/;
+#        matched = location.href.match(pattern);
 #        return null != matched;
 #    }
 #
@@ -24,7 +23,7 @@ class WHiWA(ExtensionBase):
 #
 #    function getYear(){
 #        var pattern = /(\d+)[^\d]*$/;
-#        var html = document.getElementsByTagName('h3')[0].innerHTML;
+#        var html = document.getElementsByTagName('html')[0].innerHTML;
 #        var year = html.match(pattern)[1];
 #        return year;
 #

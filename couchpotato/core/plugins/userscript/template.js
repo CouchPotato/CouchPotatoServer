@@ -67,7 +67,7 @@ var osd = function(){
     var navbar, newElement;
 
     var iFrame = create('iframe', {
-        'src': cpLocation + "extension.add_via_url/?url=" + escape(document.location),
+        'src': cpLocation + "userscript.add_via_url/?url=" + escape(document.location),
         'frameborder': 0,
         'scrolling': 'no'
     });

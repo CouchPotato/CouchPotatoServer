@@ -1,7 +1,7 @@
-from couchpotato.core.providers.extension.base import ExtensionBase
+from couchpotato.core.providers.userscript.base import UserscriptBase
 
 
-class AlloCine(ExtensionBase):
+class AlloCine(UserscriptBase):
 
     includes = ['http://www.allocine.fr/film/*']
 

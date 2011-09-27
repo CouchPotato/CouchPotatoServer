@@ -5,7 +5,7 @@ from couchpotato.core.plugins.base import Plugin
 log = CPLog(__name__)
 
 
-class ExtensionBase(Plugin):
+class UserscriptBase(Plugin):
 
     version = 1
 
@@ -13,11 +13,11 @@ class ExtensionBase(Plugin):
     excludes = []
 
     def __init__(self):
-        addEvent('extension.add_via_url', self.addViaUrl)
-        addEvent('extension.get_includes', self.getInclude)
-        addEvent('extension.get_excludes', self.getExclude)
+        addEvent('userscript.add_via_url', self.addViaUrl)
+        addEvent('userscript.get_includes', self.getInclude)
+        addEvent('userscript.get_excludes', self.getExclude)
 
-        addEvent('extension.get_version', self.getVersion)
+        addEvent('userscript.get_version', self.getVersion)
 
     def addViaUrl(self):
         pass

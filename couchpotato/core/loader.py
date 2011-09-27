@@ -19,17 +19,17 @@ class Loader:
         providers = os.path.join(root, 'couchpotato', 'core', 'providers')
 
         self.paths = {
-            'core' : (0, 'couchpotato.core._base', os.path.join(core, '_base')),
-            'plugin' : (1, 'couchpotato.core.plugins', os.path.join(core, 'plugins')),
-            'notifications' : (20, 'couchpotato.core.notifications', os.path.join(core, 'notifications')),
-            'downloaders' : (20, 'couchpotato.core.downloaders', os.path.join(core, 'downloaders')),
-            'movie_provider' : (20, 'couchpotato.core.providers.movie', os.path.join(providers, 'movie')),
-            'nzb_provider' : (20, 'couchpotato.core.providers.nzb', os.path.join(providers, 'nzb')),
-            'torrent_provider' : (20, 'couchpotato.core.providers.torrent', os.path.join(providers, 'torrent')),
-            'trailer_provider' : (20, 'couchpotato.core.providers.trailer', os.path.join(providers, 'trailer')),
-            'subtitle_provider' : (20, 'couchpotato.core.providers.subtitle', os.path.join(providers, 'subtitle')),
-            'metadata_provider' : (25, 'couchpotato.core.providers.metadata', os.path.join(providers, 'metadata')),
-            'extension_provider' : (25, 'couchpotato.core.providers.extension', os.path.join(providers, 'extension')),
+            'core': (0, 'couchpotato.core._base', os.path.join(core, '_base')),
+            'plugin': (1, 'couchpotato.core.plugins', os.path.join(core, 'plugins')),
+            'notifications': (20, 'couchpotato.core.notifications', os.path.join(core, 'notifications')),
+            'downloaders': (20, 'couchpotato.core.downloaders', os.path.join(core, 'downloaders')),
+            'movie_provider': (20, 'couchpotato.core.providers.movie', os.path.join(providers, 'movie')),
+            'nzb_provider': (20, 'couchpotato.core.providers.nzb', os.path.join(providers, 'nzb')),
+            'torrent_provider': (20, 'couchpotato.core.providers.torrent', os.path.join(providers, 'torrent')),
+            'trailer_provider': (20, 'couchpotato.core.providers.trailer', os.path.join(providers, 'trailer')),
+            'subtitle_provider': (20, 'couchpotato.core.providers.subtitle', os.path.join(providers, 'subtitle')),
+            'metadata_provider': (25, 'couchpotato.core.providers.metadata', os.path.join(providers, 'metadata')),
+            'userscript_provider': (25, 'couchpotato.core.providers.userscript', os.path.join(providers, 'userscript')),
         }
 
         for type, tuple in self.paths.iteritems():
