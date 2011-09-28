@@ -4,6 +4,7 @@ from couchpotato.core.helpers.variable import getExt
 from couchpotato.core.logger import CPLog
 from couchpotato.environment import Env
 from flask.helpers import send_from_directory
+from flask.templating import render_template_string
 from libs.multipartpost import MultipartPostHandler
 from urlparse import urlparse
 import cookielib
@@ -39,6 +40,11 @@ class Plugin(object):
 
     def getName(self):
         return self.__class__.__name__
+
+    def renderTemplate(self, parent_file, template, **params):
+
+        template = open(os.path.join(os.path.dirname(parent_file), template), 'r').read()
+        return render_template_string(template, **params)
 
     def registerStatic(self, plugin_file, add_to_head = True):
 

@@ -66,7 +66,7 @@ def fireEvent(name, *args, **kwargs):
                 elif r[1]:
                     errorHandler(r[1])
                 else:
-                    log.debug('Assume disabled plugin: %s' % r[2])
+                    log.debug('Assume disabled eventhandler for: %s' % name)
 
         else:
             results = []
