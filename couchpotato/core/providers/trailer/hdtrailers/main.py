@@ -45,7 +45,6 @@ class HDTrailers(TrailerProvider):
         results = {'480p':[], '720p':[], '1080p':[]}
 
         url = "%s?%s" % (self.url['backup'], urlencode({'s':movie}))
-
         data = self.urlopen(url)
 
         try:
@@ -62,7 +61,6 @@ class HDTrailers(TrailerProvider):
                             results[trailer].insert(0, trailer.parent['href'])
                     except:
                         pass
-
 
         except AttributeError:
             log.debug('No trailers found in via alternative.')
@@ -85,10 +83,8 @@ class HDTrailers(TrailerProvider):
                 if 'trailer' in trtext and not 'clip' in trtext and provider in trtext:
                     nr = 0
                     resolutions = tr.findAll('td', attrs = {'class':'bottomTableResolution'})
-                    #sizes = tr.findNext('tr').findAll('td', attrs = {'class':'bottomTableFileSize'})
                     for res in resolutions:
                         results[str(res.a.contents[0])].insert(0, res.a['href'])
-                        #int(sizes[nr].contents[0].replace('MB', ''))
                         nr += 1
 
             return results
