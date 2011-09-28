@@ -1,0 +1,30 @@
+.page.log .nav {
+	display: block;
+	text-align: center;
+	padding: 0;
+	margin: 40px 0 20px;
+	font-size: 20px;
+}
+
+	.page.log .nav li {
+		display: inline;
+		padding: 5px 10px;
+		margin: 0;
+		cursor: pointer;
+	}
+
+		.page.log .nav li:hover:not(.active) {
+			background: rgba(255, 255, 255, 0.1);
+		}
+
+		.page.log .nav li.active {
+			font-weight: bold;
+			cursor: default;
+			font-size: 30px;
+		}
+
+.page.log .loading {
+	text-align: center;
+	font-size: 20px;
+	padding: 50px;
+}

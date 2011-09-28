@@ -16,7 +16,7 @@ Page.Log = new Class({
 		var self = this;
 
 		if(self.log) self.log.destroy();
-		self.log = new Element('div.log', {
+		self.log = new Element('div.container.loading', {
 			'text': 'loading...'
 		}).inject(self.el);
 
@@ -25,17 +25,20 @@ Page.Log = new Class({
 				'nr': nr
 			},
 			'onComplete': function(json){
-				self.log.set('html', '<pre>'+json.log+'</pre>')
+				self.log.set('html', '<pre>'+json.log+'</pre>');
+				self.log.removeClass('loading');
 
 				var nav = new Element('ul.nav').inject(self.log, 'top');
 				for (var i = 0; i < json.total; i++) {
-					p(i, json.total);
 					new Element('li', {
 						'text': i+1,
+						'class': nr == i ? 'active': '',
 						'events': {
-							'click': function(){  self.getLogs(i); }
+							'click': function(e){
+								self.getLogs(e.target.get('text')-1);
+							}
 						}
-					}).inject(nav)
+					}).inject(nav);
 				};
 			}
 		});
