@@ -41,8 +41,9 @@ class LibraryPlugin(Plugin):
             db.commit()
 
         # Update library info
-        if update_after:
-            fireEventAsync('library.update', identifier = l.identifier, default_title = attrs.get('title', ''))
+        if update_after is not False:
+            handle = fireEventAsync if update_after is 'async' else fireEvent
+            handle('library.update', identifier = l.identifier, default_title = attrs.get('title', ''))
 
         return l.to_dict(self.default_dict)
 
