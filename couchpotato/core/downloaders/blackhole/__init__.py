@@ -16,11 +16,19 @@ config = [{
                     'name': 'enabled',
                     'default': 0,
                     'type': 'enabler',
+                    'radio_group': 'nzb,torrent',
                 },
                 {
                     'name': 'directory',
                     'type': 'directory',
                     'description': 'Directory where the .nzb (or .torrent) file is saved to.',
+                },
+                {
+                    'name': 'use_for',
+                    'label': 'Use for',
+                    'default': 'both',
+                    'type': 'dropdown',
+                    'values': [('nzbs & torrents', 'both'), ('nzb', 'nzb'), ('torrent', 'torrent')],
                 },
             ],
         }

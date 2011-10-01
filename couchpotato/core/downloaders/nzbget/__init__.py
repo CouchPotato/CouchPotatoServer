@@ -16,6 +16,7 @@ config = [{
                     'name': 'enabled',
                     'default': 0,
                     'type': 'enabler',
+                    'radio_group': 'nzb',
                 },
                 {
                     'name': 'host',
