@@ -1,0 +1,82 @@
+#!/bin/sh
+#
+# PROVIDE: couchpotato
+# REQUIRE: sabnzbd
+# KEYWORD: shutdown
+#
+# Add the following lines to /etc/rc.conf.local or /etc/rc.conf
+# to enable this service:
+#
+# couchpotato_enable (bool):	Set to NO by default.
+#			Set it to YES to enable it.
+# couchpotato_user:  The user account CouchPotato daemon runs as what
+#			you want it to be. It uses '_sabnzbd' user by
+#			default. Do not sets it as empty or it will run
+#			as root.
+# couchpotato_dir:	Directory where CouchPotato lives.
+#			Default: /usr/local/couchpotato
+# couchpotato_chdir:  Change to this directory before running CouchPotato.
+#     Default is same as couchpotato_dir.
+# couchpotato_pid:  The name of the pidfile to create.
+#     Default is couchpotato.pid in couchpotato_dir.
+
+. /etc/rc.subr
+
+name="couchpotato"
+rcvar=${name}_enable
+
+load_rc_config ${name}
+
+: ${couchpotato_enable:="NO"}
+: ${couchpotato_user:="_sabnzbd"}
+: ${couchpotato_dir:="/usr/local/couchpotato"}
+: ${couchpotato_chdir:="${couchpotato_dir}"}
+: ${couchpotato_pid:="${couchpotato_dir}/couchpotato.pid"}
+
+WGET="/usr/local/bin/wget" # You need wget for this script to safely shutdown CouchPotato.
+HOST="127.0.0.1" # Set CouchPotato address here.
+PORT="8081" # Set CouchPotato port here.
+CPAPI="" # Set CouchPotato API key
+
+status_cmd="${name}_status"
+stop_cmd="${name}_stop"
+
+command="/usr/sbin/daemon"
+command_args="-f -p ${couchpotato_pid} python ${couchpotato_dir}/couchpotato.py ${couchpotato_flags} --quiet"
+
+# Check for wget and refuse to start without it.
+if [ ! -x "${WGET}" ]; then
+  warn "couchpotato not started: You need wget to safely shut down CouchPotato."
+  exit 1
+fi
+
+# Ensure user is root when running this script.
+if [ `id -u` != "0" ]; then
+  echo "Oops, you should be root before running this!"
+  exit 1
+fi
+
+verify_couchpotato_pid() {
+    # Make sure the pid corresponds to the CouchPotato process.
+    pid=`cat ${couchpotato_pid} 2>/dev/null`
+    ps -p ${pid} | grep -q "python ${couchpotato_dir}/couchpotato.py"
+    return $?
+}
+
+# Try to stop CouchPotato cleanly by calling shutdown over http.
+couchpotato_stop() {
+    echo "Stopping $name"
+    verify_couchpotato_pid
+    ${WGET} -O - -q "http://${HOST}:${PORT}/${CPAPI}/app.shutdown/" >/dev/null
+    if [ -n "${pid}" ]; then
+      wait_for_pids ${pid}
+      echo "Stopped"
+    fi
+}
+
+couchpotato_status() {
+    verify_couchpotato_pid && echo "$name is running as ${pid}" || echo "$name is not running"
+}
+
+run_rc_command "$1"
+

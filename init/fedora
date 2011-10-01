@@ -1,0 +1,90 @@
+### BEGIN INIT INFO
+# Provides:          CouchPotato application instance
+# Required-Start:    $all
+# Required-Stop:     $all
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: starts CouchPotato
+# Description:       starts CouchPotato
+### END INIT INFO
+
+# Source function library.
+. /etc/init.d/functions
+
+# Source couchpotato configuration
+if [ -f /etc/sysconfig/couchpotato ]; then
+        . /etc/sysconfig/couchpotato
+fi
+
+prog=couchpotato
+lockfile=/var/lock/subsys/$prog
+
+## Edit user configuation in /etc/sysconfig/couchpotato to change
+## the defaults
+username=${CP_USER-couchpotato}
+homedir=${CP_HOME-/opt/couchpotato}
+datadir=${CP_DATA-~/.couchpotato}
+pidfile=${CP_PIDFILE-/var/run/couchpotato/couchpotato.pid}
+##
+
+pidpath=`dirname ${pidfile}`
+options=" --daemon --pidfile=${pidfile} --datadir=${datadir}"
+
+# create PID directory if not exist and ensure the couchpotato user can write to it
+if [ ! -d $pidpath ]; then
+	mkdir -p $pidpath
+	chown $username $pidpath
+fi
+
+if [ ! -d $datadir ]; then
+	mkdir -p $datadir
+	chown $username $datadir
+fi
+
+start() {
+        # Start daemon.
+        echo -n $"Starting $prog: "
+        daemon --user=${username} --pidfile=${pidfile} python ${homedir}/CouchPotato.py ${options}
+        RETVAL=$?
+        echo
+        [ $RETVAL -eq 0 ] && touch $lockfile
+        return $RETVAL
+}
+
+stop() {
+        echo -n $"Shutting down $prog: "
+        killproc -p ${pidfile} python
+        RETVAL=$?
+        echo
+        [ $RETVAL -eq 0 ] && rm -f $lockfile
+        return $RETVAL
+}
+
+# See how we were called.
+case "$1" in
+  start)
+        start
+        ;;
+  stop)
+        stop
+        ;;
+  status)
+        status $prog
+        ;;
+  restart|force-reload)
+        stop
+        start
+        ;;
+  try-restart|condrestart)
+        if status $prog > /dev/null; then
+            stop
+            start
+        fi
+        ;;
+  reload)
+        exit 3
+        ;;
+  *)
+        echo $"Usage: $0 {start|stop|status|restart|try-restart|force-reload}"
+        exit 2
+esac

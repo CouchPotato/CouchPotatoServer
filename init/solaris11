@@ -1,0 +1,94 @@
+<?xml version="1.0"?>
+<!DOCTYPE service_bundle SYSTEM "/usr/share/lib/xml/dtd/service_bundle.dtd.1">
+<!--
+  Assumes user=couchpotato group=other
+  Assumes /opt/couchpotato is installation directory
+ 
+  See http://www.sun.com/bigadmin/content/selfheal/sdev_intro.jsp for more information
+ 
+  To install (see http://docs.sun.com/app/docs/doc/819-2379/fgour?l=en&a=view for more information)
+    svccfg import couchpotato.smf
+ 
+  To enable/disable
+    svcadm enable couchpotato
+    svcadm disable couchpotato
+ 
+  To check if failures
+    svcs -xv
+ 
+  To check logs
+    tail /var/svc/log/network-couchpotato\:default.log
+-->
+ 
+<service_bundle type='manifest' name='couchpotato'>
+ 
+  <service
+    name='network/couchpotato'
+    type='service'
+    version='1'>
+ 
+    <create_default_instance enabled='false' />
+    <single_instance />
+ 
+   <!--
+      Only start in muti-user mode
+   -->
+   <dependency name='multi-user'
+      grouping='require_all'
+      restart_on='none'
+      type='service'>
+      <service_fmri value='svc:/milestone/multi-user' />
+   </dependency>
+ 
+    <!--
+       Wait for network interfaces to be initialized.
+    -->
+    <dependency name='network'
+        grouping='require_all'
+        restart_on='none'
+        type='service'>
+        <service_fmri value='svc:/milestone/network:default'/>
+    </dependency>
+ 
+    <!--
+       Wait for all local filesystems to be mounted.
+    -->
+    <dependency name='filesystem-local'
+        grouping='require_all'
+        restart_on='none'
+        type='service'>
+        <service_fmri value='svc:/system/filesystem/local:default'/>
+    </dependency>
+ 
+    <!-- execute as user couchpotato -->
+    <method_context>
+        <method_credential user='couchpotato' group='other' />
+    </method_context>
+ 
+    <exec_method
+        type='method'
+        name='start'
+        exec='/opt/couchpotato/CouchPotato.py -d'
+        timeout_seconds='60'>
+    </exec_method>
+ 
+    <exec_method
+        type='method'
+        name='stop'
+        exec=':kill'
+        timeout_seconds='2'>
+    </exec_method>
+ 
+    <template>
+       <common_name>
+          <loctext xml:lang='C'>CouchPotato</loctext>
+       </common_name>
+       <documentation>
+          <doc_link name='couchpotato'
+                    uri='http://www.couchpotatoapp.com/' />
+       </documentation>
+    </template>
+ 
+  </service>
+ 
+</service_bundle>
