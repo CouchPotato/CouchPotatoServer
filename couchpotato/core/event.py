@@ -34,8 +34,14 @@ def removeEvent(name, handler):
     e -= handler
 
 def fireEvent(name, *args, **kwargs):
-    #log.debug('Firing "%s": %s, %s' % (name, args, kwargs))
     try:
+
+        # Fire after event
+        is_after_event = False
+        try:
+            del kwargs['is_after_event']
+            is_after_event = True
+        except: pass
 
         # Return single handler
         single = False
@@ -96,7 +102,10 @@ def fireEvent(name, *args, **kwargs):
         modified_results = fireEvent('result.modify.%s' % name, results, single = True)
         if modified_results:
             log.debug('Return modified results for %s' % name)
-            return modified_results
+            results = modified_results
+
+        if not is_after_event:
+            fireEvent('%s.after' % name, is_after_event = True)
 
         return results
     except KeyError, e:
