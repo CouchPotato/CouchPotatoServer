@@ -24,6 +24,9 @@ class Renamer(Plugin):
 
     def scan(self):
 
+        if self.isDisabled():
+            return
+
         groups = fireEvent('scanner.scan', folder = self.conf('from'), single = True)
         if groups is None: return
 
