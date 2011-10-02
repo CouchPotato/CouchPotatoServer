@@ -31,11 +31,13 @@ config = [{
                     'name': 'folder_name',
                     'label': 'Folder naming',
                     'description': 'Name of the folder',
+                    'default': '<namethe> (<year>)',
                 },
                 {
                     'name': 'file_name',
                     'label': 'File naming',
                     'description': 'Name of the file',
+                    'default': '<thename><cd>.<ext>',
                 },
                 {
                     'advanced': True,
