@@ -68,6 +68,8 @@ class Updater(Plugin):
                 local = self.repo.getHead()
                 remote = branch.getHead()
 
+                log.info('Versions, local:%s, remote:%s' % (local.hash[:8], remote.hash[:8]))
+
                 if local.getDate() < remote.getDate():
                     if self.conf('automatic') and not self.update_failed:
                         self.doUpdate()
