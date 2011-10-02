@@ -5,7 +5,9 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
 from git.repository import LocalRepository
+import os
 import time
+import traceback
 
 log = CPLog(__name__)
 
@@ -83,6 +85,10 @@ class Updater(Plugin):
         try:
             log.info('Updating to latest version');
             self.repo.pull()
+
+            # Delete leftover .pyc files
+            self.deletePyc()
+
             return True
         except Exception, e:
             log.error('Failed updating via GIT: %s' % e)
@@ -90,6 +96,22 @@ class Updater(Plugin):
         self.update_failed = True
 
         return False
+
+    def deletePyc(self):
+
+        for root, dirs, files in os.walk(Env.get('app_dir')):
+
+            pyc_files = filter(lambda filename: filename.endswith(".pyc"), files)
+            py_files = set(filter(lambda filename: filename.endswith(".py"), files))
+            excess_pyc_files = filter(lambda pyc_filename: pyc_filename[:-1] not in py_files, pyc_files)
+
+            for excess_pyc_file in excess_pyc_files:
+                full_path = os.path.join(root, excess_pyc_file)
+                log.debug("Removing old PYC file:", full_path)
+                try:
+                    os.remove(full_path)
+                except:
+                    log.error('Couldn\'t remove %s: %s' % (full_path, traceback.format_exc()))
 
     def isEnabled(self):
         return Plugin.isEnabled(self) and Env.get('uses_git')
