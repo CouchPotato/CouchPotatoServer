@@ -136,6 +136,10 @@ form {
 	border-bottom: 1px solid rgba(0,0,0,0.25);
     cursor: pointer;
 }
+	.button.red { background-color: #ff0000; }
+	.button.green { background-color: #2aa300; }
+	.button.orange { background-color: #ffa200; }
+	.button.yellow { background-color: #ffe400; }
 
 /*** Icons ***/
 .icon {
