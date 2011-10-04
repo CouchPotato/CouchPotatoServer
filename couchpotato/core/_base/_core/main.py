@@ -1,11 +1,13 @@
 from couchpotato.api import addApiView
-from couchpotato.core.event import fireEvent
+from couchpotato.core.event import fireEvent, addEvent
+from couchpotato.core.helpers.variable import cleanHost
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
 from flask import request
 import os
 import time
+import webbrowser
 
 
 log = CPLog(__name__)
@@ -15,6 +17,8 @@ class Core(Plugin):
     def __init__(self):
         addApiView('app.shutdown', self.shutdown)
         addApiView('app.restart', self.restart)
+
+        addEvent('app.load', self.launchBrowser, priority = 100)
 
         self.removeRestartFile()
 
@@ -59,3 +63,22 @@ class Core(Plugin):
 
     def restartFilePath(self):
         return os.path.join(Env.get('app_dir'), 'restart')
+
+    def launchBrowser(self):
+
+        if Env.setting('launch_browser'):
+            log.info('Launching browser')
+
+            host = Env.setting('host')
+            if host == '0.0.0.0':
+                host = 'localhost'
+            port = Env.setting('port')
+
+            url = '%s:%d' % (cleanHost(host).rstrip('/'), int(port))
+            try:
+                webbrowser.open(url, 2, 1)
+            except:
+                try:
+                    webbrowser.open(url, 1, 1)
+                except:
+                    log.error('Could not launch a browser.')
