@@ -40,6 +40,20 @@ Page.Log = new Class({
 						}
 					}).inject(nav);
 				};
+
+				new Element('li', {
+					'text': 'clear',
+					'events': {
+						'click': function(){
+							Api.request('logging.clear', {
+								'onComplete': function(){
+									self.getLogs(0);
+								}
+							});
+
+						}
+					}
+				}).inject(nav)
 			}
 		});
 
