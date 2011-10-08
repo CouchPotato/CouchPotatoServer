@@ -22,7 +22,7 @@ class XBMC(Notification):
         url = 'http://%s/xbmcCmds/xbmcHttp/?%s' % (host, urllib.urlencode(command))
 
         headers = {}
-        if self.password:
+        if self.conf('password'):
             headers = {
                'Authorization': "Basic %s" % base64.encodestring('%s:%s' % (self.conf('username'), self.conf('password')))[:-1]
             }
