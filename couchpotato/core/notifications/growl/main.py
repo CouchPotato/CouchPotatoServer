@@ -1,5 +1,3 @@
-from couchpotato.api import addApiView
-from couchpotato.core.event import addEvent
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
 from couchpotato.core.notifications.growl.growl import GROWL_UDP_PORT, \

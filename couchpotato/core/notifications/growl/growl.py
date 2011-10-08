@@ -63,7 +63,7 @@ class GrowlRegistrationPacket:
             self.data += encoded
         for default in self.defaults:
             self.data += struct.pack("B", default)
-        self.checksum = md5()
+        self.checksum = md5_constructor()
         self.checksum.update(self.data)
         if self.password:
             self.checksum.update(self.password)
