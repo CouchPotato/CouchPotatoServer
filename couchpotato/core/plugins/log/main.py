@@ -18,29 +18,33 @@ class Logging(Plugin):
     def get(self):
 
         nr = int(getParam('nr', 0))
+        current_path = None
 
         total = 1
         for x in range(0, 50):
+
             path = '%s%s' % (Env.get('log_path'), '.%s' % x if x > 0 else '')
+
+            # Check see if the log exists
+            if not os.path.isfile(path):
+                total = x - 1
+                break
 
             # Set current path
             if x is nr:
                 current_path = path
 
-            # Check see if the log exists
-            if not os.path.isfile(path):
-                total = x
-                break
-
-        # Reverse
-        f = open(current_path, 'r')
-        lines = []
-        for line in f.readlines():
-            lines.insert(0, line)
-
         log = ''
-        for line in lines:
-            log += line
+        if current_path:
+            # Reverse
+            f = open(current_path, 'r')
+            lines = []
+            for line in f.readlines():
+                lines.insert(0, line)
+
+            log = ''
+            for line in lines:
+                log += line
 
         return jsonified({
             'success': True,
@@ -53,13 +57,19 @@ class Logging(Plugin):
         for x in range(0, 50):
             path = '%s%s' % (Env.get('log_path'), '.%s' % x if x > 0 else '')
 
-            try:
-                os.remove(path)
-            except:
-                log.error('Couldn\'t delete file "%s": %s', (path, traceback.format_exc()))
-
             if not os.path.isfile(path):
                 break
+
+            try:
+
+                # Create empty file for current logging
+                if x is 0:
+                    self.createFile(path, '')
+                else:
+                    os.remove(path)
+
+            except:
+                log.error('Couldn\'t delete file "%s": %s', (path, traceback.format_exc()))
 
         return jsonified({
             'success': True
