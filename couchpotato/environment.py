@@ -44,6 +44,8 @@ class Env:
         # Set setting
         s = Env.get('settings')
         s.set(section, attr, value)
+        s.save()
+
         return s
 
     @staticmethod
