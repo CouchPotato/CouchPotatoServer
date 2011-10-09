@@ -35,8 +35,8 @@ class Plugin(object):
         addEvent('app.shutdown', self.doShutdown)
         addEvent('plugin.running', self.isRunning)
 
-    def conf(self, attr, default = None):
-        return Env.setting(attr, self.getName().lower(), default = default)
+    def conf(self, attr, value = None, default = None):
+        return Env.setting(attr, self.getName().lower(), value = value, default = default)
 
     def getName(self):
         return self.__class__.__name__
