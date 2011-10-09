@@ -25,6 +25,11 @@ Block.Search = new Class({
 			self.result_container = new Element('div.results_container', {
 				'tween': {
 					'duration': 200
+				},
+				'events': {
+					'mousewheel': function(e){
+						(e).stopPropagation();
+					}
 				}
 			}).adopt(
 				new Element('div.pointer'),
@@ -182,17 +187,18 @@ Block.Search.Item = new Class({
 					self.title = new Element('h2', {
 						'text': info.titles[0]
 					}).adopt(
-						self.year = info.year ? new Element('span', {
+						self.year = info.year ? new Element('span.year', {
 							'text': info.year
 						}) : null
 					),
-					self.tagline = new Element('span', {
-						'text': info.tagline
+					self.tagline = new Element('span.tagline', {
+						'text': info.tagline ? info.tagline : info.plot,
+						'title': info.tagline ? info.tagline : info.plot
 					}),
-					self.director = self.info.director ?  new Element('span', {
+					self.director = self.info.director ?  new Element('span.director', {
 						'text': 'Director:' + info.director
 					}) : null,
-					self.starring = info.actors ? new Element('span', {
+					self.starring = info.actors ? new Element('span.actors', {
 						'text': 'Starring:'
 					}) : null
 				)
