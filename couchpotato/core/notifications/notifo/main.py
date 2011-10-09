@@ -12,14 +12,12 @@ class Notifo(Notification):
 
     url = 'https://api.notifo.com/v1/send_notification'
 
-    def conf(self, attr):
-        return Env.setting(attr, 'notifo')
-
     def notify(self, message = '', data = {}):
         if self.isDisabled(): return
 
         try:
             params = {
+                'label': self.default_title,
                 'msg': toUnicode(message),
             }
 
@@ -28,7 +26,7 @@ class Notifo(Notification):
             }
 
             handle = self.urlopen(self.url, params = params, headers = headers)
-            result = json.load(handle)
+            result = json.loads(handle)
 
             if result['status'] != 'success' or result['response_message'] != 'OK':
                 raise Exception

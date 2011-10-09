@@ -20,8 +20,7 @@ config = [{
                     'name': 'username',
                 },
                 {
-                    'name': 'password',
-                    'type': 'password',
+                    'name': 'api_key',
                 },
             ],
         }
