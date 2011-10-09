@@ -22,7 +22,7 @@ def getOptions(base_path, args):
     parser.add_argument('-d', '--daemon', action = 'store_true',
                         dest = 'daemonize', help = 'Daemonize the app')
     parser.add_argument('-g', '--nogit', action = 'store_true',
-                        dest = 'git', help = 'Running from git')
+                        dest = 'nogit', help = 'Running from git')
 
     options = parser.parse_args(args)
 
@@ -56,7 +56,7 @@ def runCouchPotato(options, base_path, args):
 
 
     # Register environment settings
-    Env.set('uses_git', not options.git)
+    Env.set('uses_git', options.nogit)
     Env.set('app_dir', base_path)
     Env.set('data_dir', data_dir)
     Env.set('log_path', os.path.join(log_dir, 'CouchPotato.log'))
@@ -66,6 +66,7 @@ def runCouchPotato(options, base_path, args):
     Env.set('quiet', options.quiet)
     Env.set('daemonize', options.daemonize)
     Env.set('args', args)
+    Env.set('options', options)
 
     # Determine debug
     debug = options.debug or Env.setting('debug', default = False)

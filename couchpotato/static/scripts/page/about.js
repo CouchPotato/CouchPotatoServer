@@ -25,7 +25,7 @@ var AboutSettingTab = new Class({
 
 			self.createAbout();
 
-		})
+		});
 
 	},
 
@@ -39,6 +39,16 @@ var AboutSettingTab = new Class({
 		self.settings.createGroup({
 			'label': 'About CouchPotato'
 		}).inject(self.content).adopt(
+			new Element('dl.info').adopt(
+				new Element('dt[text=Version]'),
+				new Element('dd', {'text': Updater.info()}),
+				new Element('dt[text=Directories]'),
+				new Element('dd', {'text': App.getOption('app_dir')}),
+				new Element('dd', {'text': App.getOption('data_dir')}),
+				new Element('dt[text=Startup Args]'),
+				new Element('dd', {'text': App.getOption('args')}),
+				new Element('dd', {'html': App.getOption('options')})
+			),
 			new Element('div.shutdown').adopt(
 				new Element('a.button.red', {
 					'text': 'Shutdown',
@@ -92,5 +102,5 @@ var AboutSettingTab = new Class({
 });
 
 window.addEvent('domready', function(){
-	window.About = new AboutSettingTab();
+	new AboutSettingTab();
 });

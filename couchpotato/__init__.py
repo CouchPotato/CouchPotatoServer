@@ -33,7 +33,7 @@ def addView(route, func, static = False):
 @web.route('/')
 @requires_auth
 def index():
-    return render_template('index.html', sep = os.sep, fireEvent = fireEvent)
+    return render_template('index.html', sep = os.sep, fireEvent = fireEvent, env = Env)
 
 @app.errorhandler(404)
 def page_not_found(error):

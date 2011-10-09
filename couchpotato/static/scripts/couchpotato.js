@@ -31,6 +31,10 @@ var CouchPotato = new Class({
 
 		self.c.addEvent('click:relay(a:not([target=_blank]))', self.pushState.bind(self));
 	},
+	
+	getOption: function(name){
+		return this.options[name];
+	},
 
 	pushState: function(e){
 		var self = this;

@@ -61,7 +61,11 @@
 				File.Type.setup({{ fireEvent('file.types', single = True)|tojson|safe }});
 
 				App.setup({
-					'base_url': '{{ request.path }}'
+					'base_url': '{{ request.path }}',
+					'args': '{{ env.get('args') }}',
+					'options': '{{ env.get('options') }}',
+					'app_dir': '{{ env.get('app_dir') }}',
+					'data_dir': '{{ env.get('data_dir') }}'
 				});
 
 				//Wizard.start.delay(100, Wizard);
