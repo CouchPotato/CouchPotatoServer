@@ -37,12 +37,13 @@ class Env:
     @staticmethod
     def setting(attr, section = 'core', value = None, default = ''):
 
+        s = Env.get('settings')
+
         # Return setting
         if value == None:
-            return Env.get('settings').get(attr, default = default, section = section)
+            return s.get(attr, default = default, section = section)
 
         # Set setting
-        s = Env.get('settings')
         s.set(section, attr, value)
         s.save()
 
