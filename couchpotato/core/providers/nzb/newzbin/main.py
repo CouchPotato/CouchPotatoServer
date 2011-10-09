@@ -4,6 +4,7 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.nzb.base import NZBProvider
 from dateutil.parser import parse
 from urllib import urlencode
+import base64
 import time
 import xml.etree.ElementTree as XMLTree
 
@@ -55,19 +56,19 @@ class Newzbin(NZBProvider, RSS):
             'ps_rb_source': str(format_id),
         })
 
-        url = "%s?%s" % (self.url['search'], arguments)
+        url = "%s?%s" % (self.urls['search'], arguments)
         cache_key = str('newzbin.%s.%s.%s' % (movie['library']['identifier'], str(format_id), str(cat_id)))
         single_cat = True
 
         data = self.getCache(cache_key)
         if not data:
-            data = self.urlopen(url, params = {'username': self.conf('username'), 'password': self.conf('password')})
+
+            headers = {
+                'Authorization': "Basic %s" % base64.encodestring('%s:%s' % (self.conf('username'), self.conf('password')))[:-1]
+            }
+
+            data = self.urlopen(url, headers = headers)
             self.setCache(cache_key, data)
-
-            if not data:
-                log.error('Failed to get data from %s.' % url)
-                return results
-
 
         if data:
             try:
@@ -125,7 +126,7 @@ class Newzbin(NZBProvider, RSS):
         try:
             log.info('Download nzb from newzbin, report id: %s ' % nzb_id)
 
-            return self.urlopen(self.url['download'], params = {
+            return self.urlopen(self.urls['download'], params = {
                 'username' : self.conf('username'),
                 'password' : self.conf('password'),
                 'reportid' : nzb_id
