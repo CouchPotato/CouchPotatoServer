@@ -33,7 +33,7 @@ config = [{
             ],
         }, {
             'tab': 'searcher',
-            'name': 'searcher',
+            'name': 'cronjob',
             'label': 'Cronjob',
             'advanced': True,
             'description': 'Cron settings for the searcher see: <a href="http://packages.python.org/APScheduler/cronschedule.html">APScheduler</a> for details.',
