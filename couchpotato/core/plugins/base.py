@@ -106,7 +106,7 @@ class Plugin(object):
 
                 data = opener.open(request).read()
             else:
-                log.info('Opening url: %s, params: %s' % (url, params))
+                log.info('Opening url: %s, params: %s' % (url, len(params) > 0))
                 data = urllib.urlencode(params) if len(params) > 0 else None
                 request = urllib2.Request(url, data, headers)
 
