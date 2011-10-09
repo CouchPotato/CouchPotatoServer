@@ -22,12 +22,6 @@ class Downloader(Plugin):
 
         return ''
 
-    def isDisabled(self):
-        return not self.isEnabled()
-
-    def isEnabled(self):
-        return self.conf('enabled', True)
-
     def isCorrectType(self, type):
         is_correct = type in self.type
 
