@@ -16,11 +16,15 @@ config = [{
                     'type': 'enabler',
                 },
                 {
-                    'name': 'username',
+                    'name': 'access_token_key',
                     'advanced': True,
                 },
                 {
-                    'name': 'password',
+                    'name': 'screen_name',
+                    'advanced': True,
+                },
+                {
+                    'name': 'access_token_secret',
                     'advanced': True,
                 },
             ],
