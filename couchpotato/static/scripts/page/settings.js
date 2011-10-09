@@ -178,7 +178,7 @@ Page.Settings = new Class({
 		var self = this;
 
 		var group_el = new Element('fieldset', {
-			'class': group.advanced ? 'inlineLabels advanced' : 'inlineLabels'
+			'class': (group.advanced ? 'inlineLabels advanced' : 'inlineLabels') + ' group_' + (group.name || '')
 		}).adopt(
 			new Element('h2', {
 				'text': (group.label || group.name).capitalize()

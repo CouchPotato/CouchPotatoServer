@@ -58,7 +58,7 @@ var QualityBase = new Class({
 	 */
 	createProfiles: function(){
 		var self = this;
-		
+
 		var non_core_profiles = Object.filter(self.profiles, function(profile){ return !profile.isCore() });
 		var count = Object.getLength(non_core_profiles);
 
@@ -167,11 +167,12 @@ var QualityBase = new Class({
 		var group = self.settings.createGroup({
 			'label': 'Sizes',
 			'description': 'Edit the minimal and maximum sizes (in MB) for each quality.',
-			'advanced': true
+			'advanced': true,
+			'name': 'sizes'
 		}).inject(self.content)
 
 
-		new Element('div.item.head').adopt(
+		new Element('div.item.head.ctrlHolder').adopt(
 			new Element('span.label', {'text': 'Quality'}),
 			new Element('span.min', {'text': 'Min'}),
 			new Element('span.max', {'text': 'Max'})
@@ -180,10 +181,42 @@ var QualityBase = new Class({
 		Object.each(self.qualities, function(quality){
 			new Element('div.ctrlHolder.item').adopt(
 				new Element('span.label', {'text': quality.label}),
-				new Element('input.min', {'value': quality.size_min}),
-				new Element('input.max', {'value': quality.size_max})
+				new Element('input.min.inlay[type=text]', {
+					'value': quality.size_min,
+					'events': {
+						'keyup': function(e){
+							self.changeSize(quality.identifier, 'size_min', e.target.get('value'))
+						}
+					}
+				}),
+				new Element('input.max.inlay[type=text]', {
+					'value': quality.size_max,
+					'events': {
+						'keyup': function(e){
+							self.changeSize(quality.identifier, 'size_max', e.target.get('value'))
+						}
+					}
+				})
 			).inject(group)
 		});
+
+	},
+
+	size_timer: {},
+	changeSize: function(identifier, type, value){
+		var self = this;
+
+		if(self.size_timer[identifier + type]) clearTimeout(self.size_timer[identifier + type]);
+
+		self.size_timer[identifier + type] = (function(){
+			Api.request('quality.size.save', {
+				'data': {
+					'identifier': identifier,
+					'value_type': type,
+					'value': value
+				}
+			});
+		}).delay(300)
 
 	}
 

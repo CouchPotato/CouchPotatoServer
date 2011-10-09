@@ -1,6 +1,9 @@
 from couchpotato import get_session
+from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import toUnicode
+from couchpotato.core.helpers.request import jsonified, getParams
+from couchpotato.core.helpers.variable import mergeDicts
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Quality, Profile, ProfileType
@@ -32,6 +35,8 @@ class QualityPlugin(Plugin):
         addEvent('quality.single', self.single)
         addEvent('quality.guess', self.guess)
 
+        addApiView('quality.size.save', self.saveSize)
+
         addEvent('app.initialize', self.fill, priority = 10)
 
     def all(self):
@@ -42,7 +47,7 @@ class QualityPlugin(Plugin):
 
         temp = []
         for quality in qualities:
-            q = dict(self.getQuality(quality.identifier), **quality.to_dict())
+            q = mergeDicts(self.getQuality(quality.identifier), quality.to_dict())
             temp.append(q)
 
         return temp
@@ -63,6 +68,21 @@ class QualityPlugin(Plugin):
         for q in self.qualities:
             if identifier == q.get('identifier'):
                 return q
+
+    def saveSize(self):
+
+        params = getParams()
+
+        db = get_session()
+        quality = db.query(Quality).filter_by(identifier = params.get('identifier')).first()
+
+        if quality:
+            setattr(quality, params.get('value_type'), params.get('value'))
+            db.commit()
+
+        return jsonified({
+            'success': True
+        })
 
     def fill(self):
 
