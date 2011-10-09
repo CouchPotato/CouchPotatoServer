@@ -10,7 +10,7 @@ var NotificationBase = new Class({
 		// Listener
 		App.addEvent('load', self.request.bind(self));
 		self.addEvent('notification', self.notify.bind(self))
-		
+
 		// Add test buttons to settings page
 		App.addEvent('load', self.addTestButtons.bind(self));
 
@@ -39,7 +39,7 @@ var NotificationBase = new Class({
 			App.fireEvent(result.type, result.data)
 		})
 	},
-	
+
 	addTestButtons: function(){
 		var self = this;
 
@@ -49,26 +49,48 @@ var NotificationBase = new Class({
 		})
 
 	},
-	
+
 	addTestButton: function(fieldset, plugin_name){
 		var self = this;
-		
-		var name = fieldset.getElement('h2').get('text');
-		
+
 		new Element('.ctrlHolder.test_button').adopt(
 			new Element('a.button', {
-				'text': 'Test '+name,
+				'text': self.testButtonName(fieldset),
 				'events': {
 					'click': function(){
+						var button = fieldset.getElement('.test_button .button');
+							button.set('text', 'Sending notification');
+
 						Api.request('notify.'+plugin_name+'.test', {
 							'onComplete': function(json){
-								alert(json.success)
+
+								button.set('text', self.testButtonName(fieldset));
+
+								if(json.success){
+									var message = new Element('span.success', {
+										'text': 'Notification successful'
+									}).inject(button, 'after')
+								}
+								else {
+									var message = new Element('span.failed', {
+										'text': 'Notification failed. Check logs for details.'
+									}).inject(button, 'after')
+								}
+
+								(function(){
+									message.destroy();
+								}).delay(3000)
 							}
 						});
 					}
 				}
 			})
 		).inject(fieldset);
+	},
+
+	testButtonName: function(fieldset){
+		var name = fieldset.getElement('h2').get('text');
+		return 'Test '+name;
 	}
 
 });
