@@ -55,7 +55,7 @@ var NotificationBase = new Class({
 		
 		var name = fieldset.getElement('h2').get('text');
 		
-		new Element('.ctrlHolder').adopt(
+		new Element('.ctrlHolder.test_button').adopt(
 			new Element('a.button', {
 				'text': 'Test '+name,
 				'events': {
