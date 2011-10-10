@@ -36,15 +36,8 @@ class Logging(Plugin):
 
         log = ''
         if current_path:
-            # Reverse
             f = open(current_path, 'r')
-            lines = []
-            for line in f.readlines():
-                lines.insert(0, line)
-
-            log = ''
-            for line in lines:
-                log += line
+            log = f.read()
 
         return jsonified({
             'success': True,

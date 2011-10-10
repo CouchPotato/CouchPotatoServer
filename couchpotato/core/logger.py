@@ -11,9 +11,7 @@ class CPLog():
         self.logger = logging.getLogger()
 
         try:
-            from couchpotato.environment import Env
-            if Env.doDebug():
-                import color_logs
+            import color_logs
         except:
             pass
 

@@ -25,8 +25,10 @@ Page.Log = new Class({
 				'nr': nr
 			},
 			'onComplete': function(json){
-				self.log.set('html', '<pre>'+json.log+'</pre>');
+				self.log.set('html', self.addColors(json.log));
 				self.log.removeClass('loading');
+
+				new Fx.Scroll(window, {'duration': 0}).toBottom();
 
 				var nav = new Element('ul.nav').inject(self.log, 'top');
 				for (var i = 0; i < json.total; i++) {
@@ -57,6 +59,17 @@ Page.Log = new Class({
 			}
 		});
 
+	},
+
+	addColors: function(text){
+		var self = this;
+
+		text = text.replace(/\u001b\[31m\u001b\[31m/gi, '</span><span class="error">')
+		text = text.replace(/\u001b\[36m\u001b\[36m/gi, '</span><span class="debug">')
+		text = text.replace(/\u001b\[0m\u001b\[0m\n/gi, '</span><span class="time">')
+		text = text.replace(/\u001b\[0m\u001b\[0m/gi, '</span><span>')
+
+		return '<span class="time">' + text + '</span>';
 	}
 
 })
