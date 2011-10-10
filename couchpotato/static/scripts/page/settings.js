@@ -593,7 +593,7 @@ Option.Directory = new Class({
 			self.input.set('text', self.initial_directory);
 
 		self.browser.hide()
-		self.el.removeEvent('outerClick', self.hideBrowser.bind(self))
+		self.el.removeEvents('outerClick')
 
 	},
 
