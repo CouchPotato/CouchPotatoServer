@@ -1,3 +1,4 @@
+import color_logs
 import logging
 import re
 
@@ -7,13 +8,11 @@ class CPLog():
     replace_private = ['api', 'apikey', 'api_key', 'password', 'username', 'h']
 
     def __init__(self, context = ''):
+        if context.endswith('.main'):
+            context = context[:-5]
+
         self.context = context
         self.logger = logging.getLogger()
-
-        try:
-            import color_logs
-        except:
-            pass
 
     def info(self, msg):
         self.logger.info(self.addContext(msg))
