@@ -27,6 +27,11 @@ class Renamer(Plugin):
         if self.isDisabled():
             return
 
+        # Check to see if the "to" folder is inside the "from" folder.
+        if self.conf('from') in self.conf('to'):
+            log.error('The "to" can\'t be inside of the "from" folder. You\'ll get an infinite loop.')
+            return
+
         groups = fireEvent('scanner.scan', folder = self.conf('from'), single = True)
         if groups is None: return
 
