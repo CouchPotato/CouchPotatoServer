@@ -10,6 +10,12 @@ class Blackhole(Downloader):
 
     type = ['nzb', 'torrent']
 
+    def createFileExtension(self, data = {}, content):
+        if "DOCTYPE nzb" not in content:
+           if data.get('type') == 'nzb':
+             return 'rar'
+        return data.get('type')
+
     def download(self, data = {}, movie = {}):
 
         if self.isDisabled() or not self.isCorrectType(data.get('type') or not self.conf('use_for') in ['both', data.get('type')]):
@@ -20,15 +26,21 @@ class Blackhole(Downloader):
         if not directory or not os.path.isdir(directory):
             log.error('No directory set for blackhole %s download.' % data.get('type'))
         else:
-            fullPath = os.path.join(directory, '%s%s.%s' % (toSafeString(data.get('name')), self.cpTag(movie) , data.get('type')))
-
-            try:
-                if not os.path.isfile(fullPath):
-                    log.info('Downloading %s to %s.' % (data.get('type'), fullPath))
-
                     try:
                         file = data.get('download')(url = data.get('url'), nzb_id = data.get('id'))
+                        if "no nzb" in file:
+                            log.error('No nzb available!')
+
+                        fileExtension = createFileExtension(data, file)
+                        fullPath = os.path.join(directory, '%s%s.%s' % (toSafeString(data.get('name')), self.cpTag(movie) , fileExtension)
                         
+                        try:
+                           if not os.path.isfile(fullPath):
+                               log.info('Downloading %s to %s.' % (data.get('type'), fullPath))
+                        except:
+                               log.error('Failed to download to blackhole %s' % traceback.format_exc())
+                               pass
+
                         with open(fullPath, 'wb') as f:
                             f.write(file)
                     except:
@@ -39,8 +51,4 @@ class Blackhole(Downloader):
                 else:
                     log.info('File %s already exists.' % fullPath)
                     return True
-            except:
-                log.error('Failed to download to blackhole %s' % traceback.format_exc())
-                pass
-
         return False

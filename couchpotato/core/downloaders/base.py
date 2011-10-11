@@ -16,6 +16,9 @@ class Downloader(Plugin):
     def download(self, data = {}):
         pass
 
+    def createFileExtension(self, data = {}, content):
+        pass
+
     def cpTag(self, movie):
         if Env.setting('enabled', 'renamer'):
             return '.cp(' + movie['library'].get('identifier') + ')' if movie['library'].get('identifier') else ''

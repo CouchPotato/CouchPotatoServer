@@ -2,4 +2,3 @@
 /logs/*.log
 /_source/
 /_data/
-*.pyc
