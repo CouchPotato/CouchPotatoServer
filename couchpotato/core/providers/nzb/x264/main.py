@@ -70,11 +70,11 @@ class X264(NZBProvider, RSS):
 
     def download(self, url = '', nzb_id = ''):
         try:
-            log.info('Download nzb from #alt.binaries.hdtv.x264, report id: %s ' % nzb_id)
+            log.info('Downloading nzb from #alt.binaries.hdtv.x264, request id: %s ' % nzb_id)
 
             return self.urlopen(self.urls['download'] % nzb_id)
         except Exception, e:
-            log.error('Failed downloading from #alt.binaries.hdtv.x264, check credit: %s' % e)
+            log.error('Failed downloading from #alt.binaries.hdtv.x264: %s' % e)
             return False
 
     def getFormatId(self, format):
