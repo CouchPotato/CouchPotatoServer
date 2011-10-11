@@ -44,13 +44,16 @@ class Sabnzbd(Downloader):
 
         nzb_file = data.get('download')(url = data.get('url'), nzb_id = data.get('id'))
 
+        # If it's a .rar, it adds the .rar extension, otherwise it stays .nzb
+        nzb_filename = self.createFileName(data, nzb_file, movie)
+
         if pp:
             params['script'] = pp_script_fn
 
         url = cleanHost(self.conf('host')) + "api?" + urlencode(params)
 
         try:
-            data = self.urlopen(url, params = {"nzbfile": (params['nzbname'] + ".nzb", nzb_file)}, multipart = True)
+            data = self.urlopen(url, params = {"nzbfile": (nzb_filename, nzb_file)}, multipart = True)
         except Exception:
             log.error("Unable to connect to SAB: %s" % traceback.format_exc())
             return False
