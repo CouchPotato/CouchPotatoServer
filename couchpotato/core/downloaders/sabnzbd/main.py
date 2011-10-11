@@ -44,6 +44,10 @@ class Sabnzbd(Downloader):
 
         nzb_file = data.get('download')(url = data.get('url'), nzb_id = data.get('id'))
 
+        if "no nzb" in nzb_file:
+            log.error('No nzb available!')
+            return False
+
         # If it's a .rar, it adds the .rar extension, otherwise it stays .nzb
         nzb_filename = self.createFileName(data, nzb_file, movie)
 
