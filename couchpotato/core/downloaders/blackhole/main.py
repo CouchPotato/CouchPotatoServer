@@ -28,17 +28,7 @@ class Blackhole(Downloader):
 
                     try:
                         file = data.get('download')(url = data.get('url'), nzb_id = data.get('id'))
-
-                        # error handling for nzbs that aren't available
-                        if "no nzb" in file:
-                            log.error('No nzb available!')
-                            return False
-
-                        # some providers provide nzbs that are rarred, save these with the proper extension
-                        if "DOCTYPE nzb" not in file:
-                            if data.get('type') == 'nzb':
-                                fullPath = os.path.join(directory, '%s%s.%s' % (toSafeString(data.get('name')), self.cpTag(movie) , 'rar'))
-
+                        
                         with open(fullPath, 'wb') as f:
                             f.write(file)
                     except:
