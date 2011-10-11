@@ -10,12 +10,6 @@ class Blackhole(Downloader):
 
     type = ['nzb', 'torrent']
 
-    def createFileExtension(self, data = {}, content):
-        if "DOCTYPE nzb" not in content:
-           if data.get('type') == 'nzb':
-             return 'rar'
-        return data.get('type')
-
     def download(self, data = {}, movie = {}):
 
         if self.isDisabled() or not self.isCorrectType(data.get('type') or not self.conf('use_for') in ['both', data.get('type')]):
@@ -31,12 +25,15 @@ class Blackhole(Downloader):
                         if "no nzb" in file:
                             log.error('No nzb available!')
 
-                        fileExtension = createFileExtension(data, file)
-                        fullPath = os.path.join(directory, '%s%s.%s' % (toSafeString(data.get('name')), self.cpTag(movie) , fileExtension)
+                        fullPath = self.createFileName(directory, data, file, movie)
                         
                         try:
                            if not os.path.isfile(fullPath):
                                log.info('Downloading %s to %s.' % (data.get('type'), fullPath))
+                           else:
+                               log.info('File %s already exists.' % fullPath)
+                               return True
+
                         except:
                                log.error('Failed to download to blackhole %s' % traceback.format_exc())
                                pass
@@ -44,11 +41,6 @@ class Blackhole(Downloader):
                         with open(fullPath, 'wb') as f:
                             f.write(file)
                     except:
-                        log.debug('Failed download file: %s' % data.get('name'))
+                        log.debug('Failed to download file: %s' % data.get('name'))
                         return False
-
-                    return True
-                else:
-                    log.info('File %s already exists.' % fullPath)
-                    return True
         return False
