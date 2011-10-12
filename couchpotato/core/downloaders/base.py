@@ -2,6 +2,8 @@ from couchpotato.core.event import addEvent
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
+from couchpotato.core.helpers.encoding import toSafeString
+import os
 
 log = CPLog(__name__)
 
@@ -15,6 +17,12 @@ class Downloader(Plugin):
 
     def download(self, data = {}):
         pass
+
+    def createFileName(self, data, file, movie):
+        if "DOCTYPE nzb" not in file:
+           if data.get('type') == 'nzb':
+             return os.path.join('%s%s.%s' % (toSafeString(data.get('name')), self.cpTag(movie) , 'rar'))
+        return os.path.join('%s%s.%s' % (toSafeString(data.get('name')), self.cpTag(movie) , data.get('type')))
 
     def cpTag(self, movie):
         if Env.setting('enabled', 'renamer'):

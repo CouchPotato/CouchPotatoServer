@@ -11,36 +11,37 @@ class Blackhole(Downloader):
     type = ['nzb', 'torrent']
 
     def download(self, data = {}, movie = {}):
-
         if self.isDisabled() or not self.isCorrectType(data.get('type') or not self.conf('use_for') in ['both', data.get('type')]):
             return
 
         directory = self.conf('directory')
-
         if not directory or not os.path.isdir(directory):
             log.error('No directory set for blackhole %s download.' % data.get('type'))
         else:
-            fullPath = os.path.join(directory, '%s%s.%s' % (toSafeString(data.get('name')), self.cpTag(movie) , data.get('type')))
-
             try:
-                if not os.path.isfile(fullPath):
-                    log.info('Downloading %s to %s.' % (data.get('type'), fullPath))
+                file = data.get('download')(url = data.get('url'), nzb_id = data.get('id'))
 
-                    try:
-                        file = data.get('download')(url = data.get('url'), nzb_id = data.get('id'))
+                if len(file) < 50:
+                    log.error('No nzb available!')
+                    return False
 
+                fullPath = os.path.join(directory, self.createFileName(data, file, movie))
+
+                try:
+                    if not os.path.isfile(fullPath):
+                        log.info('Downloading %s to %s.' % (data.get('type'), fullPath))
                         with open(fullPath, 'wb') as f:
                             f.write(file)
-                    except:
-                        log.debug('Failed download file: %s' % data.get('name'))
-                        return False
+                        return True
+                    else:
+                        log.info('File %s already exists.' % fullPath)
+                        return True
 
-                    return True
-                else:
-                    log.info('File %s already exists.' % fullPath)
-                    return True
+                except:
+                    log.error('Failed to download to blackhole %s' % traceback.format_exc())
+                    pass
+
             except:
-                log.error('Failed to download to blackhole %s' % traceback.format_exc())
-                pass
-
+                log.debug('Failed to download file: %s' % data.get('name'))
+                return False
         return False
