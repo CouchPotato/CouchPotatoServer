@@ -27,6 +27,10 @@ config = [{
                     'name': 'access_token_secret',
                     'advanced': True,
                 },
+                {
+                    'name': 'mention',
+                    'description': 'Add a mention to this user to the tweet.',
+                },
             ],
         }
     ],

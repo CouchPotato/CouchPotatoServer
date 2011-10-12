@@ -36,6 +36,10 @@ class Twitter(Notification):
 
         api = Api(self.consumer_key, self.consumer_secret, self.conf('access_token_key'), self.conf('access_token_secret'))
 
+        mention = self.conf('mention')
+        if mention:
+            message = '%s @%s' % (message, mention.lstrip('@'))
+
         try:
             api.PostUpdate('[%s] %s' % (self.default_title, message))
         except Exception, e:
