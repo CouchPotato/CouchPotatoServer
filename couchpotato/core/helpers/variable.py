@@ -43,6 +43,22 @@ def cleanHost(host):
 
     return host
 
+def getImdb(txt):
+
+    if os.path.isfile(txt):
+        output = open(txt, 'r')
+        txt = output.read()
+        output.close()
+
+    try:
+        m = re.search('(?P<id>tt[0-9{7}]+)', txt)
+        id = m.group('id')
+        if id:  return id
+    except AttributeError:
+        pass
+
+    return False
+
 def tryInt(s):
     try: return int(s)
     except: return s

@@ -1,7 +1,7 @@
 from couchpotato import get_session
 from couchpotato.core.event import fireEvent, addEvent
 from couchpotato.core.helpers.encoding import toUnicode, simplifyString
-from couchpotato.core.helpers.variable import getExt
+from couchpotato.core.helpers.variable import getExt, getImdb
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import File
@@ -298,7 +298,7 @@ class Scanner(Plugin):
         if not imdb_id:
             try:
                 for nfo_file in files['nfo']:
-                    imdb_id = self.getImdb(nfo_file)
+                    imdb_id = getImdb(nfo_file)
                     if imdb_id: break
             except:
                 pass
@@ -352,22 +352,6 @@ class Scanner(Plugin):
 
         try:
             m = re.search('(cp\((?P<id>tt[0-9{7}]+)\))', string.lower())
-            id = m.group('id')
-            if id:  return id
-        except AttributeError:
-            pass
-
-        return False
-
-    def getImdb(self, txt):
-
-        if os.path.isfile(txt):
-            output = open(txt, 'r')
-            txt = output.read()
-            output.close()
-
-        try:
-            m = re.search('(?P<id>tt[0-9{7}]+)', txt)
             id = m.group('id')
             if id:  return id
         except AttributeError:
