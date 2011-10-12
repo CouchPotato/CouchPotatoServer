@@ -1,15 +1,15 @@
-from .main import X264
+from .main import Moovee
 
 def start():
-    return X264()
+    return Moovee()
 
 config = [{
-    'name': 'x264',
+    'name': 'moovee',
     'groups': [
         {
             'tab': 'providers',
-            'name': '#alt.binaries.hdtv.x264',
-            'description': 'HD movies only',
+            'name': '#alt.binaries.moovee',
+            'description': 'SD movies only',
             'options': [
                 {
                     'name': 'enabled',
