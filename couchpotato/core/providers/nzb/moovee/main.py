@@ -2,6 +2,7 @@ from couchpotato.core.event import fireEvent
 from couchpotato.core.helpers.rss import RSS
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.nzb.base import NZBProvider
+from dateutil.parser import parse
 from urllib import quote_plus
 import re
 import time
@@ -30,14 +31,13 @@ class Moovee(NZBProvider, RSS):
         match = re.compile(self.urls['regex'], re.DOTALL).finditer(data)
 
         for nzb in match:
-            
             new = {
                 'id': nzb.group('reqid'),
                 'name': nzb.group('title'),
                 'type': 'nzb',
                 'provider': self.getName(),
-                'age': self.calculateAge(time.mktime(time.strptime(nzb.group('age'), '%Y-%m-%d %H:%M:%S'))),
-                'size': 9999,
+                'age': self.calculateAge(time.mktime(parse(nzb.group('age')).timetuple())),
+                'size': None,
                 'url': self.urls['download'] % (nzb.group('reqid')),
                 'download': self.download,
                 'detail_url': '',
@@ -63,3 +63,9 @@ class Moovee(NZBProvider, RSS):
         except Exception, e:
             log.error('Failed downloading from #alt.binaries.moovee: %s' % e)
             return False
+
+    def belongsTo(self, url, host = None):
+        match = re.match('http://85\.214\.105\.230/get_nzb\.php\?id=[0-9]*&section=moovee', url)
+        if match:
+            return self
+        return
