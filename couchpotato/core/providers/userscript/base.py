@@ -1,4 +1,5 @@
 from couchpotato.core.event import addEvent, fireEvent
+from couchpotato.core.helpers.variable import getImdb
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from urlparse import urlparse
@@ -42,7 +43,11 @@ class UserscriptBase(Plugin):
         return
 
     def getMovie(self, url):
-        return None
+        data = self.urlopen(url)
+        return self.getInfo(getImdb(data))
+
+    def getInfo(self, identifier):
+        return fireEvent('movie.info', identifier = identifier, merge = True)
 
     def getInclude(self):
         return self.includes

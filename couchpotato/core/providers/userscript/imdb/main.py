@@ -21,6 +21,4 @@ class IMDB(UserscriptBase):
                 return 'IMDB url is a TV Show'
 
         identifier = re.search('(?P<id>tt[0-9{7}]+)', url).group('id')
-        movie = fireEvent('movie.info', identifier = identifier, merge = True)
-
-        return movie
+        return fireEvent('movie.info', identifier = identifier, merge = True)
