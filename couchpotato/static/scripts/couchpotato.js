@@ -117,37 +117,6 @@ var CouchPotato = new Class({
 });
 window.App = new CouchPotato();
 
-var ApiClass = new Class({
-
-	setup: function(options){
-		var self = this
-
-		self.options = options;
-	},
-
-	request: function(type, options){
-		var self = this;
-
-		var r_type = self.options.is_remote ? 'JSONP' : 'JSON';
-		return new Request[r_type](Object.merge({
-			'callbackKey': 'json_callback',
-			'method': 'get',
-			'url': self.createUrl(type),
-		}, options)).send()
-	},
-
-	createUrl: function(action, params){
-		return this.options.url + (action || 'default') + '/' + (params ? '?'+Object.toQueryString(params) : '')
-	},
-
-	getOption: function(name){
-		return this.options[name]
-	}
-
-});
-window.Api = new ApiClass()
-
-
 var Route = new Class({
 
 	defaults: {},
