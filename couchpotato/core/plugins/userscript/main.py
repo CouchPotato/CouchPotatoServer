@@ -50,4 +50,4 @@ class Extension(Plugin):
             log.error('Failed adding movie via url: %s' % url)
             params['error'] = params['movie'] if params['movie'] else 'Failed getting movie info'
 
-        return self.renderTemplate(__file__, 'template.js', **params)
+        return jsonified(params)

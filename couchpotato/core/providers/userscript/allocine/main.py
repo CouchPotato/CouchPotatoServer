@@ -1,5 +1,4 @@
 from beautifulsoup import BeautifulSoup
-from couchpotato.core.event import fireEvent
 from couchpotato.core.providers.userscript.base import UserscriptBase
 
 class AlloCine(UserscriptBase):
@@ -20,8 +19,4 @@ class AlloCine(UserscriptBase):
         name = split[0][:-5].strip()
         year = split[0][-4:]
 
-        result = self.search(name, year)
-        if result:
-            movie = fireEvent('movie.info', identifier = result.get('imdb'), merge = True)
-
-            return movie
+        return self.search(name, year)
