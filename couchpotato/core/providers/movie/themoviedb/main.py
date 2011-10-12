@@ -13,6 +13,7 @@ class TheMovieDb(MovieProvider):
         addEvent('movie.by_hash', self.byHash)
         addEvent('movie.search', self.search)
         addEvent('movie.info', self.getInfo)
+        addEvent('movie.info_by_tmdb', self.getInfoByTMDBId)
 
         # Use base wrapper
         tmdb.Config.api_key = self.conf('api_key')
@@ -87,7 +88,7 @@ class TheMovieDb(MovieProvider):
     def getInfo(self, identifier = None):
 
         cache_key = 'tmdb.cache.%s' % identifier
-        result = None #self.getCache(cache_key)
+        result = self.getCache(cache_key)
 
         if not result:
             result = {}
@@ -101,6 +102,27 @@ class TheMovieDb(MovieProvider):
 
             if movie:
                 result = self.parseMovie(movie[0])
+                self.setCache(cache_key, result)
+
+        return result
+
+    def getInfoByTMDBId(self, id = None):
+
+        cache_key = 'tmdb.cache.%s' % id
+        result = self.getCache(cache_key)
+
+        if not result:
+            result = {}
+            movie = None
+
+            try:
+                log.debug('Getting info: %s' % cache_key)
+                movie = tmdb.getMovieInfo(id = id)
+            except:
+                pass
+
+            if movie:
+                result = self.parseMovie(movie)
                 self.setCache(cache_key, result)
 
         return result
