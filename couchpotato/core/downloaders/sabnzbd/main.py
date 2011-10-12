@@ -44,7 +44,7 @@ class Sabnzbd(Downloader):
 
         nzb_file = data.get('download')(url = data.get('url'), nzb_id = data.get('id'))
 
-        if "no nzb" in nzb_file:
+        if len(nzb_file) < 50:
             log.error('No nzb available!')
             return False
 
