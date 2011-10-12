@@ -1,5 +1,4 @@
 from couchpotato.core.downloaders.base import Downloader
-from couchpotato.core.helpers.encoding import toSafeString
 from couchpotato.core.logger import CPLog
 import os
 import traceback

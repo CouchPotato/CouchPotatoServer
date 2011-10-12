@@ -19,10 +19,10 @@ class Downloader(Plugin):
         pass
 
     def createFileName(self, data, file, movie):
-        if "DOCTYPE nzb" not in file:
-           if data.get('type') == 'nzb':
-             return os.path.join('%s%s.%s' % (toSafeString(data.get('name')), self.cpTag(movie) , 'rar'))
-        return os.path.join('%s%s.%s' % (toSafeString(data.get('name')), self.cpTag(movie) , data.get('type')))
+        name = os.path.join('%s%s' % (toSafeString(data.get('name')), self.cpTag(movie)))
+        if data.get('type') == 'nzb' and "DOCTYPE nzb" not in file:
+            return '%s.%s' % (name, 'rar')
+        return '%s.%s' % (name, data.get('type'))
 
     def cpTag(self, movie):
         if Env.setting('enabled', 'renamer'):
