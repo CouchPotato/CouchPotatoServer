@@ -21,8 +21,12 @@ class UserscriptBase(Plugin):
         addEvent('userscript.get_movie_via_url', self.belongsTo)
 
     def search(self, name, year = None):
-        movie = fireEvent('movie.search', q = '%s %s' % (name, year), limit = 1)
-        return movie
+        movie = fireEvent('movie.search', q = '%s %s' % (name, year), limit = 1, merge = True)
+
+        if len(movie) > 0:
+            return movie[0]
+        else:
+            return None
 
     def belongsTo(self, url):
 
