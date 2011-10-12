@@ -39,6 +39,10 @@ class Extension(Plugin):
         return version
 
     def addViaUrl(self):
+        url = getParam('url')
+        return self.renderTemplate(__file__, 'iframe.html', url = url)
+
+    def getViaUrl(self):
 
         url = getParam('url')
 
