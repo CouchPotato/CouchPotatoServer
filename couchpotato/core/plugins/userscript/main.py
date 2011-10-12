@@ -1,3 +1,4 @@
+from couchpotato import index
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent
 from couchpotato.core.helpers.request import getParam, jsonified
@@ -10,12 +11,12 @@ from flask.helpers import url_for
 log = CPLog(__name__)
 
 
-class Extension(Plugin):
+class Userscript(Plugin):
 
     def __init__(self):
-        addApiView('userscript', self.getExtension)
-
-        addApiView('userscript.add_via_url', self.addViaUrl)
+        addApiView('userscript.get', self.getExtension)
+        addApiView('userscript', self.iFrame)
+        addApiView('userscript.add_via_url', self.getViaUrl)
 
     def getExtension(self):
 
@@ -38,9 +39,8 @@ class Extension(Plugin):
 
         return version
 
-    def addViaUrl(self):
-        url = getParam('url')
-        return self.renderTemplate(__file__, 'iframe.html', url = url)
+    def iFrame(self):
+        return index()
 
     def getViaUrl(self):
 

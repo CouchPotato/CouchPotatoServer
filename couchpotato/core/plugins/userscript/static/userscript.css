@@ -1,0 +1,14 @@
+.page.userscript {
+	position: absolute;
+	width: 100%;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+}
+
+	.page.userscript .frame.loading {
+		text-align: center;
+		font-size: 20px;
+		padding: 20px;
+	}

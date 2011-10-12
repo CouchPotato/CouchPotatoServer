@@ -31,7 +31,7 @@ var CouchPotato = new Class({
 
 		self.c.addEvent('click:relay(a:not([target=_blank]))', self.pushState.bind(self));
 	},
-	
+
 	getOption: function(name){
 		return this.options[name];
 	},
@@ -48,8 +48,10 @@ var CouchPotato = new Class({
 	createLayout: function(){
 		var self = this;
 
+		self.block.header = new Block();
+
 		self.c.adopt(
-			self.header = new Element('div.header').adopt(
+			$(self.block.header).addClass('header').adopt(
 				new Element('div').adopt(
 					self.block.navigation = new Block.Navigation(self, {}),
 					self.block.search = new Block.Search(self, {})
@@ -70,8 +72,15 @@ var CouchPotato = new Class({
 			$(pg).inject(self.content);
 		});
 
-		self.fireEvent('load')
+		self.load_timer = (function(){
+			self.fireEvent('load');
+		}).delay(1000);
 
+	},
+	
+	stopLoadTimer: function(){
+		if(this.load_timer)
+			clearInterval(this.load_timer);
 	},
 
 	openPage: function(url) {
@@ -132,7 +141,8 @@ var Route = new Class({
 	parse: function(url_string){
 		var self = this;
 
-		var current = History.getPath().replace(/^\/+|\/+$/g, '')
+		var path = History.getPath().replace(Api.getOption('url'), '/') //Remove API front
+		var current = path.replace(/^\/+|\/+$/g, '')
 		var url = current.split('/')
 
 		self.page = (url.length > 0) ? url.shift() : self.defaults.page

@@ -7,6 +7,7 @@ var PageBase = new Class({
 	},
 
 	has_tab: true,
+	name: '',
 
 	initialize: function(options) {
 		var self = this;

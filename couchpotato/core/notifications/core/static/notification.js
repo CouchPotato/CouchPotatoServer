@@ -8,7 +8,7 @@ var NotificationBase = new Class({
 		self.setOptions(options);
 
 		// Listener
-		App.addEvent('load', self.request.bind(self));
+		App.addEvent('load', self.startInterval.bind(self));
 		self.addEvent('notification', self.notify.bind(self))
 
 		// Add test buttons to settings page
@@ -16,15 +16,25 @@ var NotificationBase = new Class({
 
 	},
 
-	request: function(){
+	startInterval: function(){
 		var self = this;
 
-		Api.request('core_notifier.listener', {
+		self.request = Api.request('core_notifier.listener', {
 			'initialDelay': 100,
     		'delay': 3000,
     		'onComplete': self.processData.bind(self)
-		}).startTimer()
+		})
 
+		self.request.startTimer()
+
+	},
+
+	startTimer: function(){
+		this.request.startTimer()
+	},
+
+	stopTimer: function(){
+		this.request.stopTimer()
 	},
 
 	notify: function(data){

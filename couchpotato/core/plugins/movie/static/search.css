@@ -1,4 +1,4 @@
-/* @override 
+/* @override
 	http://localhost:5000/static/movie_plugin/search.css
 	http://192.168.1.20:5000/static/movie_plugin/search.css
 	http://127.0.0.1:5000/static/movie_plugin/search.css
@@ -8,8 +8,8 @@
 	display: inline-block;
 	width: 25%;
 }
-	
-	.search_form input { 
+
+	.search_form input {
 		padding-right: 25px;
 		padding: 4px;
 		margin: 0;
@@ -26,18 +26,18 @@
 			background: url('../images/checks.png') right -36px no-repeat;
 			cursor: pointer;
 		}
-		
+
 	.search_form .results_container {
 		position: absolute;
 		background: #5c697b;
 		margin: 6px 0 0 -246px;
 		width: 470px;
 		min-height: 140px;
-		
+
 		border-radius: 3px;
 		-webkit-border-radius: 3px;
 		-moz-border-radius: 3px;
-		
+
 		box-shadow: 0 0 50px rgba(0,0,0,0.55);
 		-moz-box-shadow: 0 0 50px rgba(0,0,0,0.55);
 		-webkit-box-shadow: 0 0 50px rgba(0,0,0,0.55);
@@ -45,7 +45,7 @@
 	.search_form .spinner {
 		background: rgba(0,0,0,0.8) url('../images/spinner.gif') no-repeat center 70px;
 	}
-	
+
 		.search_form .pointer {
 			border-right: 10px solid transparent;
 			border-left: 10px solid transparent;
@@ -56,19 +56,19 @@
 			left: 50%;
 			margin: -9px 0 0 110px;
 		}
-		
+
 	.search_form .results {
 		max-height: 550px;
 		overflow-x: hidden;
 		padding: 10px 0;
 	}
-		
-	.search_form .results .movie {
+
+	.movie_result {
 		overflow: hidden;
 		min-height: 140px;
 	}
-	
-		.search_form .results .movie .options {
+
+		.movie_result .options {
 			height: 139px;
 			border: 1px solid transparent;
 			border-width: 1px 0;
@@ -79,38 +79,38 @@
 			-moz-box-shadow: inset 0 1px 8px rgba(0,0,0,0.25);
 			-webkit-box-shadow: inset 0 1px 8px rgba(0,0,0,0.25);
 		}
-	
-			.search_form .results .movie .options > div {
+
+			.movie_result .options > div {
 				padding: 0 15px;
 				border: 0;
 			}
-			
-			.search_form .results .movie .options .thumbnail {
+
+			.movie_result .options .thumbnail {
 				vertical-align: middle;
 			}
-			
-			.search_form .results .movie .options select {
+
+			.movie_result .options select {
 				vertical-align: middle;
 				display: inline-block;
 				margin-right: 10px;
 			}
-				.search_form .results .movie .options select[name=title] { width: 180px; }
-				.search_form .results .movie .options select[name=profile] { width: 90px; }
-			
-			.search_form .results .movie .options .button {
+				.movie_result .options select[name=title] { width: 180px; }
+				.movie_result .options select[name=profile] { width: 90px; }
+
+			.movie_result .options .button {
 				vertical-align: middle;
 				display: inline-block;
 			}
-			
-			.search_form .results .movie .options .message {
+
+			.movie_result .options .message {
 				height: 100%;
 				line-height: 140px;
 				font-size: 20px;
 				text-align: center;
 				color: #fff;
 			}
-		
-		.search_form .results .movie .data {
+
+		.movie_result .data {
 			padding: 0 15px;
 			width: 440px;
 			position: relative;
@@ -120,19 +120,19 @@
 			min-height: 140px;
 			background: #5c697b;
 			cursor: pointer;
-			
+
 			border-bottom: 1px solid #333;
 			border-top: 1px solid rgba(255,255,255, 0.15);
 		}
 
-			.search_form .results .movie:last-child .data { border-bottom: 0; }
-	
-			.search_form .results .movie .thumbnail {
+			.movie_result:last-child .data { border-bottom: 0; }
+
+			.movie_result .thumbnail {
 				width: 17%;
 				display: inline-block;
 				margin: 15px 3% 15px 0;
 				vertical-align: top;
-		
+
 				border-radius: 3px;
 				-moz-border-radius: 3px;
 				-webkit-border-radius: 3px;
@@ -140,32 +140,32 @@
 				-moz-box-shadow: 0 0 3px rgba(0,0,0,0.35);
 				-webkit-box-shadow: 0 0 3px rgba(0,0,0,0.35);
 			}
-		
-			.search_form .results .movie .info {
+
+			.movie_result .info {
 				width: 74%;
 				display: inline-block;
 				vertical-align: top;
 				padding: 15px 0;
 			}
-		
-			.search_form .results .movie .info .tagline {
+
+			.movie_result .info .tagline {
 				max-height: 70px;
 				overflow: hidden;
 				display: inline-block;
 			}
 
-			.search_form .results .movie .add +.info {
+			.movie_result .add +.info {
 				margin-left: 20%;
 			}
-		
-				.search_form .results .movie .info h2 {
+
+				.movie_result .info h2 {
 					margin: 0;
 				}
-		
-				.search_form .results .movie .info h2 span {
+
+				.movie_result .info h2 span {
 					padding: 0 5px;
 					content: ")";
 				}
-				
-				.search_form .results .movie .info h2 span:before { content: "("; }
-				.search_form .results .movie .info h2 span:after { content: ")"; }
+
+				.movie_result .info h2 span:before { content: "("; }
+				.movie_result .info h2 span:after { content: ")"; }

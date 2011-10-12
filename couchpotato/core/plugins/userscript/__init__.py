@@ -1,6 +1,6 @@
-from .main import Extension
+from .main import Userscript
 
 def start():
-    return Extension()
+    return Userscript()
 
 config = []

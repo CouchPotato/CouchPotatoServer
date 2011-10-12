@@ -11,6 +11,7 @@ var BlockBase = new Class({
 		self.page = parent;
 
 		self.create();
+
 	},
 	
 	create: function(){
@@ -20,6 +21,14 @@ var BlockBase = new Class({
 	getParent: function(){
 		return this.page
 	},
+	
+	hide: function(){
+		this.el.hide();
+	},
+	
+	show: function(){
+		this.el.show();
+	},
 
 	toElement: function(){
 		return this.el
@@ -27,4 +36,4 @@ var BlockBase = new Class({
 
 });
 
-var Block = {}
+var Block = BlockBase

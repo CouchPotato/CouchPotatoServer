@@ -167,7 +167,7 @@ Block.Search.Item = new Class({
 
 		var info = self.info;
 
-		self.el = new Element('div.movie', {
+		self.el = new Element('div.movie_result', {
 			'id': info.imdb
 		}).adopt(
 			self.options = new Element('div.options.inlay'),

@@ -1,45 +1,46 @@
 <!doctype html>
 <html>
 	<head>
-		<link rel="stylesheet" href="{{ url_for('.static', filename='style/main.css') }}" type="text/css">
-		<link rel="stylesheet" href="{{ url_for('.static', filename='style/uniform.generic.css') }}" type="text/css">
-		<link rel="stylesheet" href="{{ url_for('.static', filename='style/uniform.css') }}" type="text/css">
+		<link rel="stylesheet" href="{{ url_for('web.static', filename='style/main.css') }}" type="text/css">
+		<link rel="stylesheet" href="{{ url_for('web.static', filename='style/uniform.generic.css') }}" type="text/css">
+		<link rel="stylesheet" href="{{ url_for('web.static', filename='style/uniform.css') }}" type="text/css">
 
-		<link rel="stylesheet" href="{{ url_for('.static', filename='style/page/settings.css') }}" type="text/css">
-		<link rel="stylesheet" href="{{ url_for('.static', filename='style/page/wanted.css') }}" type="text/css">
+		<link rel="stylesheet" href="{{ url_for('web.static', filename='style/page/settings.css') }}" type="text/css">
+		<link rel="stylesheet" href="{{ url_for('web.static', filename='style/page/wanted.css') }}" type="text/css">
 
-		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/library/mootools.js') }}"></script>
-		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/library/mootools_more.js') }}"></script>
+		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/library/mootools.js') }}"></script>
+		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/library/mootools_more.js') }}"></script>
 
-		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/library/templated.js') }}"></script>
-		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/library/uniform.js') }}"></script>
-		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/library/form_replacement/form_check.js') }}"></script>
-		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/library/form_replacement/form_radio.js') }}"></script>
-		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/library/form_replacement/form_dropdown.js') }}"></script>
-		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/library/form_replacement/form_selectoption.js') }}"></script>
-		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/library/question.js') }}"></script>
+		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/library/templated.js') }}"></script>
+		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/library/uniform.js') }}"></script>
+		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/library/form_replacement/form_check.js') }}"></script>
+		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/library/form_replacement/form_radio.js') }}"></script>
+		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/library/form_replacement/form_dropdown.js') }}"></script>
+		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/library/form_replacement/form_selectoption.js') }}"></script>
+		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/library/question.js') }}"></script>
 		
-		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/couchpotato.js') }}"></script>
-		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/library/history.js') }}"></script>
-		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/page.js') }}"></script>
+		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/couchpotato.js') }}"></script>
+		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/api.js') }}"></script>
+		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/library/history.js') }}"></script>
+		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/page.js') }}"></script>
 
-		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/block.js') }}"></script>
-		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/block/navigation.js') }}"></script>
-		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/block/footer.js') }}"></script>
+		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/block.js') }}"></script>
+		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/block/navigation.js') }}"></script>
+		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/block/footer.js') }}"></script>
 
 		{% for url in fireEvent('clientscript.get_scripts', as_html = True, single = True) %}
 		<script type="text/javascript" src="{{ url_for('web.index') }}{{ url }}"></script>{% endfor %}
 		{% for url in fireEvent('clientscript.get_styles', as_html = True, single = True) %}
 		<link rel="stylesheet" href="{{ url_for('web.index') }}{{ url }}" type="text/css">{% endfor %}
 
-		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/page/wanted.js') }}"></script>
-		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/page/settings.js') }}"></script>
-		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/page/about.js') }}"></script>
-		<!--<script type="text/javascript" src="{{ url_for('.static', filename='scripts/page/soon.js') }}"></script>
-		<script type="text/javascript" src="{{ url_for('.static', filename='scripts/page/manage.js') }}"></script>-->
+		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/page/wanted.js') }}"></script>
+		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/page/settings.js') }}"></script>
+		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/page/about.js') }}"></script>
+		<!--<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/page/soon.js') }}"></script>
+		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/page/manage.js') }}"></script>-->
 
-		<link href="{{ url_for('.static', filename='images/favicon.ico') }}" rel="icon" type="image/x-icon" />
-		<link rel="apple-touch-icon" href="{{ url_for('.static', filename='images/homescreen.png') }}" />
+		<link href="{{ url_for('web.static', filename='images/favicon.ico') }}" rel="icon" type="image/x-icon" />
+		<link rel="apple-touch-icon" href="{{ url_for('web.static', filename='images/homescreen.png') }}" />
 
 		<script type="text/javascript">
 			window.addEvent('domready', function() {
