@@ -21,7 +21,7 @@ class Blackhole(Downloader):
             try:
                 file = data.get('download')(url = data.get('url'), nzb_id = data.get('id'))
 
-                if "no nzb" in file:
+                if len(file) < 50:
                     log.error('No nzb available!')
                     return False
 
@@ -34,8 +34,8 @@ class Blackhole(Downloader):
                             f.write(file)
                         return True
                     else:
-                    log.info('File %s already exists.' % fullPath)
-                    return True
+                        log.info('File %s already exists.' % fullPath)
+                        return True
 
                 except:
                     log.error('Failed to download to blackhole %s' % traceback.format_exc())
