@@ -1,6 +1,7 @@
 from couchpotato import get_session
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import simplifyString
+from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.variable import md5
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
@@ -197,6 +198,10 @@ class Searcher(Plugin):
                 if len(movie_words) == 2 and self.correctYear([nzb['name']], movie['library']['year'], 0):
                     return True
 
+        # Get the nfo and see if it contains the proper imdb url
+        if self.checkNFO(nzb['name'], movie['library']['identifier']):
+            return True
+
         log.info("Wrong: %s, undetermined naming. Looking for '%s (%s)'" % (nzb['name'], movie['library']['titles'][0]['title'], movie['library']['year']))
         return False
 
@@ -248,3 +253,10 @@ class Searcher(Plugin):
         movie_words = re.split('\W+', simplifyString(movie_name))
 
         return len(list(set(check_words) & set(movie_words))) == len(movie_words)
+
+    def checkNFO(self, releasename, imdbId):
+        nfo = self.urlopen('http://www.srrdb.com/showfile.php?release='+releasename)
+        nfo = nfo.decode('iso-8859-1').encode('ascii', 'ignore')
+        if 'imdb.com/title/' + imdbId in nfo:
+            return True 
+        return False
