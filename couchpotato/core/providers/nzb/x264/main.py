@@ -16,7 +16,7 @@ class X264(NZBProvider, RSS):
     urls = {
         'download': 'http://85.214.105.230/get_nzb.php?id=%s&section=hd',
         'search': 'http://85.214.105.230/x264/requests.php?release=%s&status=FILLED&age=700&sort=ID',
-        'regex': '<tr class="req_filled"><td class="reqid">(?P<id>.*?)</td><td class="release">(?P<title>.*?)</td>.+?<td class="age">(?P<age>\d+)d.+?</td>',
+        'regex': '<tr class="req_filled"><td class="reqid">(?P<id>.*?)</td><td class="release">(?P<title>.*?)</td>.+?<td class="age">(?P<age>.*?)</td>',
     }
 
     def search(self, movie, quality):
@@ -33,8 +33,10 @@ class X264(NZBProvider, RSS):
 
         for nzb in match:
             age = nzb.group('age')
-            if not age:
+            if "d" not in age:
                 age = 1
+            else:
+                age = re.sub('d.*','', age)
             new = {
                 'id': nzb.group('id'),
                 'name': nzb.group('title'),
