@@ -1,23 +1,22 @@
 from couchpotato.core.event import fireEvent
-from couchpotato.core.helpers.rss import RSS
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.nzb.base import NZBProvider
 from urllib import quote_plus
-from dateutil.parser import parse
+import math
 import re
-import time
 
 log = CPLog(__name__)
 
 
-class X264(NZBProvider, RSS):
+class X264(NZBProvider):
 
     urls = {
         'download': 'http://85.214.105.230/get_nzb.php?id=%s&section=hd',
         'search': 'http://85.214.105.230/x264/requests.php?release=%s&status=FILLED&age=700&sort=ID',
-        'regex': '<tr class="req_filled"><td class="reqid">(?P<id>.*?)</td><td class="release">(?P<title>.*?)</td>.+?<td class="age">(?P<age>\d+)d.+?</td>',
     }
+
+    regex = '<tr class="req_filled"><td class="reqid">(?P<id>.*?)</td><td class="release">(?P<title>.*?)</td>.+?<td class="age">(?P<age>.*?)</td>'
 
     def search(self, movie, quality):
 
@@ -25,16 +24,28 @@ class X264(NZBProvider, RSS):
         if self.isDisabled() or not self.isAvailable(self.urls['search']):
             return results
 
-        url = self.urls['search'] % quote_plus(movie['library']['titles'][0]['title'] + ' ' + quality.get('identifier'))
-        log.info('Searching: %s' % url)
+        q = '%s %s' % (movie['library']['titles'][0]['title'], quality.get('identifier'))
+        url = self.urls['search'] % quote_plus(q)
 
-        data = self.urlopen(url)
-        match = re.compile(self.urls['regex'], re.DOTALL).finditer(data)
+        cache_key = 'x264.%s' % q
+        data = self.getCache(cache_key)
+        if not data:
+            data = self.urlopen(url)
+            self.setCache(cache_key, data)
+
+            if not data:
+                log.error('Failed to get data from %s.' % url)
+                return results
+
+        match = re.compile(self.regex, re.DOTALL).finditer(data)
 
         for nzb in match:
-            age = nzb.group('age')
-            if not age:
+            try:
+                age_match = re.match('((?P<day>\d+)d)', nzb.group('age'))
+                age = age_match.group('day')
+            except:
                 age = 1
+
             new = {
                 'id': nzb.group('id'),
                 'name': nzb.group('title'),
@@ -48,6 +59,8 @@ class X264(NZBProvider, RSS):
                 'description': '',
                 'check_nzb': False,
             }
+
+            print new['name']
 
             new['score'] = fireEvent('score.calculate', new, movie, single = True)
             is_correct_movie = fireEvent('searcher.correct_movie',

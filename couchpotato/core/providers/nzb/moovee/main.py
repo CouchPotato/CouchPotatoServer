@@ -1,5 +1,4 @@
 from couchpotato.core.event import fireEvent
-from couchpotato.core.helpers.rss import RSS
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.nzb.base import NZBProvider
 from dateutil.parser import parse
@@ -10,13 +9,14 @@ import time
 log = CPLog(__name__)
 
 
-class Moovee(NZBProvider, RSS):
+class Moovee(NZBProvider):
 
     urls = {
         'download': 'http://85.214.105.230/get_nzb.php?id=%s&section=moovee',
         'search': 'http://abmoovee.allfilled.com/search.php?q=%s&Search=Search',
-        'regex': '<td class="cell_reqid">(?P<reqid>.*?)</td>.+?<td class="cell_request">(?P<title>.*?)</td>.+?<td class="cell_statuschange">(?P<age>.*?)</td>',
     }
+
+    regex = '<td class="cell_reqid">(?P<reqid>.*?)</td>.+?<td class="cell_request">(?P<title>.*?)</td>.+?<td class="cell_statuschange">(?P<age>.*?)</td>'
 
     def search(self, movie, quality):
 
@@ -24,10 +24,19 @@ class Moovee(NZBProvider, RSS):
         if self.isDisabled() or not self.isAvailable(self.urls['search']):
             return results
 
-        url = self.urls['search'] % quote_plus(movie['library']['titles'][0]['title'] + ' ' + quality.get('identifier'))
-        log.info('Searching: %s' % url)
+        q = '%s %s' % (movie['library']['titles'][0]['title'], quality.get('identifier'))
+        url = self.urls['search'] % quote_plus(q)
 
-        data = self.urlopen(url)
+        cache_key = 'moovee.%s' % q
+        data = self.getCache(cache_key)
+        if not data:
+            data = self.urlopen(url)
+            self.setCache(cache_key, data)
+
+            if not data:
+                log.error('Failed to get data from %s.' % url)
+                return results
+
         match = re.compile(self.urls['regex'], re.DOTALL).finditer(data)
 
         for nzb in match:
