@@ -24,7 +24,7 @@ class Userscript(Plugin):
             'includes': fireEvent('userscript.get_includes', merge = True),
             'excludes': fireEvent('userscript.get_excludes', merge = True),
             'version': self.getVersion(),
-            'host': '%s%suserscript.add_via_url/' % (request.host_url.rstrip('/'), url_for('api.index')),
+            'host': '%s%suserscript/' % (request.host_url.rstrip('/'), url_for('api.index')),
         }
 
         return self.renderTemplate(__file__, 'template.js', **params)

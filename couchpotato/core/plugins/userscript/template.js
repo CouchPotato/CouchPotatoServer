@@ -1,6 +1,8 @@
 // ==UserScript==
 // @name        CouchPotato UserScript
 // @description Add movies like a real CouchPotato
+
+// @include     {{host}}*
 {% for include in includes %}
 // @include     {{include}}{% endfor %}
 {% for exclude in excludes %}
