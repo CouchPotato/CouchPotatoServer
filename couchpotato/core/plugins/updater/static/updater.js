@@ -1,4 +1,6 @@
 var UpdaterBase = new Class({
+	
+	Implements: [Events],
 
 	initialize: function(){
 		var self = this;
@@ -18,6 +20,9 @@ var UpdaterBase = new Class({
 		self.timer = setTimeout(function(){
 			Api.request('updater.info', {
 				'onComplete': function(json){
+					self.json = json;
+					self.fireEvent('loaded', [json]);
+
 					if(json.update_version){
 						self.createMessage(json);
 					}
@@ -29,6 +34,10 @@ var UpdaterBase = new Class({
 			})
 		}, (timeout || 0))
 
+	},
+	
+	getInfo: function(){
+		return this.json;
 	},
 
 	createMessage: function(data){

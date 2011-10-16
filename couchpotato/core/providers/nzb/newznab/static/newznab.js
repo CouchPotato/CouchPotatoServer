@@ -30,7 +30,7 @@ var MultipleNewznab = new Class({
 					self.values[nr][name] = value.trim();
 				});
 
-				self.inputs[name].getParent().hide()
+				self.inputs[name].getParent().addClass('hide')
 				self.inputs[name].addEvent('change', self.addEmpty.bind(self))
 			});
 

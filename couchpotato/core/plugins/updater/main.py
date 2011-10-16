@@ -39,7 +39,7 @@ class Updater(Plugin):
             'repo_name': self.repo_name,
             'last_check': self.last_check,
             'update_version': self.update_version,
-            'version': self.getVersion(),
+            'version': self.getVersion()
         })
 
     def getVersion(self):
@@ -48,7 +48,10 @@ class Updater(Plugin):
             try:
                 output = self.repo.getHead() # Yes, please
                 log.debug('Git version output: %s' % output.hash)
-                self.version = output.hash
+                self.version = {
+                    'hash': output.hash[:8],
+                    'date': output.getDate(),
+                }
             except Exception, e:
                 log.error('Failed using GIT updater, running from source, you need to have GIT installed. %s' % e)
                 return 'No GIT'

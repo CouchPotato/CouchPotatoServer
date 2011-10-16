@@ -31,11 +31,13 @@ var NotificationBase = new Class({
 	},
 
 	startTimer: function(){
-		this.request.startTimer()
+		if(this.request)
+			this.request.startTimer()
 	},
 
 	stopTimer: function(){
-		this.request.stopTimer()
+		if(this.request)
+			this.request.stopTimer()
 	},
 
 	notify: function(data){

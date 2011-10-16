@@ -1,6 +1,7 @@
 /* @override 
 	http://localhost:5000/static/style/page/settings.css
 	http://192.168.1.20:5000/static/style/page/settings.css
+	http://127.0.0.1:5000/static/style/page/settings.css
 */
 
 .page.settings:after {
@@ -293,14 +294,11 @@
 		.page.settings .directory_list .actions:last-child > .save {
 			background: #9dc156;
 		}
-		
-	.page.settings .section_newznab {
-		
-	}
 	
 	.page.settings .section_newznab .head {
 		margin: 0 0 0 60px;
 	}
+		.page.settings .disabled .head { display: none; }
 		.page.settings .section_newznab .head abbr {
 			display: inline-block;
 			font-weight: bold;
@@ -316,6 +314,7 @@
 		padding-top: 2px;
 		padding-bottom: 3px;
 	}
+	.page.settings .section_newznab .ctrlHolder.hide { display: none; }
 		
 	.page.settings .section_newznab .ctrlHolder > * {
 		margin: 0 10px 0 0;
@@ -332,3 +331,71 @@
 	.page.settings .section_newznab .ctrlHolder.is_empty .delete, .page.settings .section_newznab .ctrlHolder.is_empty .use {
 		visibility: hidden;
 }
+
+	.page.settings .tab_about .usenet {
+		padding: 20px 30px 0;
+		font-size: 17px;
+	}
+
+		.page.settings .tab_about .usenet a {
+			padding: 0 5px;
+		}
+
+		.page.settings .tab_about .usenet ul {
+			float: left;
+			width: 50%;
+			margin: 10px 0;
+			padding: 0;
+		}
+
+			.page.settings .tab_about .usenet li {
+				background: url('../../images/icon.check.png') no-repeat left center;
+				padding: 0 0 0 25px;
+			}
+
+		.page.settings .tab_about .donate {
+			float: left;
+			width: 42%;
+			text-align: center;
+			font-size: 17px;
+			padding: 0 0 0 4%;
+			margin: 20px 0 0;
+			border-left: 1px solid #333;
+			box-shadow: -1px 0 0 rgba(255,255,255, 0.15);
+			-moz-box-shadow: -1px 0 0 rgba(255,255,255, 0.15);
+			-webkit-box-shadow: -1px 0 0 rgba(255,255,255, 0.15);
+		}
+			.page.settings .tab_about .donate form {
+				padding: 10px 0 0;
+			}
+			
+	.page.settings .tab_about .info {
+		padding: 20px 30px;
+		margin: 0;
+		overflow: hidden;
+	}
+
+		.page.settings .tab_about .info dt {
+			clear: both;
+			float: left;
+			width: 17%;
+			font-weight: bold;
+		}
+		
+		.page.settings .tab_about .info dd {
+			float: right;
+			width: 80%;
+			padding: 0;
+			margin: 0;
+			font-style: italic;
+		}
+			
+	.page.settings .tab_about .group_actions > div {
+		padding: 30px;
+		text-align: center;
+	}
+			
+		.page.settings .tab_about .group_actions a {
+			margin: 0 10px;
+			font-size: 20px;
+		}

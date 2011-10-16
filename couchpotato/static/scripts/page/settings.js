@@ -15,8 +15,8 @@ Page.Settings = new Class({
 	},
 
 	open: function(action, params){
-		var self = this
-		self.action = action;
+		var self = this;
+		self.action = action == 'index' ? self.default_action : action;
 		self.params = params;
 
 		if(!self.data)
@@ -32,7 +32,7 @@ Page.Settings = new Class({
 		if(self.current)
 			self.toggleTab(self.current, true);
 
-		var tab = self.toggleTab(action)
+		var tab = self.toggleTab(action);
 		self.current = tab == self.tabs.general ? 'general' : action;
 
 	},
@@ -166,7 +166,7 @@ Page.Settings = new Class({
 
 		self.tabs[tab_name] = Object.merge(self.tabs[tab_name], {
 			'tab': tab_el,
-			'content': new Element('div.tab_content').inject(self.containers),
+			'content': new Element('div.tab_content.tab_'+tab_name).inject(self.containers),
 			'groups': {}
 		})
 
