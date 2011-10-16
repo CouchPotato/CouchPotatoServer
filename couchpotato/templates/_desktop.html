@@ -18,7 +18,7 @@
 		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/library/form_replacement/form_dropdown.js') }}"></script>
 		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/library/form_replacement/form_selectoption.js') }}"></script>
 		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/library/question.js') }}"></script>
-		
+
 		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/couchpotato.js') }}"></script>
 		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/api.js') }}"></script>
 		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/library/history.js') }}"></script>
@@ -66,7 +66,8 @@
 					'args': '{{ env.get('args') }}',
 					'options': '{{ env.get('options') }}',
 					'app_dir': '{{ env.get('app_dir') }}',
-					'data_dir': '{{ env.get('data_dir') }}'
+					'data_dir': '{{ env.get('data_dir') }}',
+					'userscript_version': {{ fireEvent('userscript.get_version', single = True)|safe }}
 				});
 
 				//Wizard.start.delay(100, Wizard);

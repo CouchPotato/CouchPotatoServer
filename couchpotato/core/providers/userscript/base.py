@@ -17,8 +17,7 @@ class UserscriptBase(Plugin):
     def __init__(self):
         addEvent('userscript.get_includes', self.getInclude)
         addEvent('userscript.get_excludes', self.getExclude)
-        addEvent('userscript.get_version', self.getVersion)
-
+        addEvent('userscript.get_provider_version', self.getVersion)
         addEvent('userscript.get_movie_via_url', self.belongsTo)
 
     def search(self, name, year = None):

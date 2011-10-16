@@ -4,6 +4,10 @@ var UpdaterBase = new Class({
 		var self = this;
 
 		App.addEvent('load', self.info.bind(self, 1000))
+		App.addEvent('unload', function(){
+			if(self.timer)
+				clearTimeout(self.timer);
+		});
 	},
 
 	info: function(timeout){

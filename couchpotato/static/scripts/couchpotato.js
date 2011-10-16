@@ -29,7 +29,7 @@ var CouchPotato = new Class({
 		else
 			self.openPage(window.location.pathname);
 
-		self.c.addEvent('click:relay(a:not([target=_blank]))', self.pushState.bind(self));
+		self.c.addEvent('click:relay(a:not([target=_blank]):not([normalhref=true]))', self.pushState.bind(self));
 	},
 
 	getOption: function(name){
@@ -72,15 +72,8 @@ var CouchPotato = new Class({
 			$(pg).inject(self.content);
 		});
 
-		self.load_timer = (function(){
-			self.fireEvent('load');
-		}).delay(1000);
+		self.fireEvent('load');
 
-	},
-	
-	stopLoadTimer: function(){
-		if(this.load_timer)
-			clearInterval(this.load_timer);
 	},
 
 	openPage: function(url) {

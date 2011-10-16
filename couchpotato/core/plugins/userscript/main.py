@@ -1,12 +1,12 @@
 from couchpotato import index
 from couchpotato.api import addApiView
-from couchpotato.core.event import fireEvent
+from couchpotato.core.event import fireEvent, addEvent
 from couchpotato.core.helpers.request import getParam, jsonified
 from couchpotato.core.helpers.variable import isDict
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from flask.globals import request
-from flask.helpers import url_for
+from flask.helpers import url_for, make_response
 
 log = CPLog(__name__)
 
@@ -18,20 +18,26 @@ class Userscript(Plugin):
         addApiView('userscript', self.iFrame)
         addApiView('userscript.add_via_url', self.getViaUrl)
 
+        addEvent('userscript.get_version', self.getVersion)
+
     def getExtension(self):
 
         params = {
             'includes': fireEvent('userscript.get_includes', merge = True),
             'excludes': fireEvent('userscript.get_excludes', merge = True),
             'version': self.getVersion(),
-            'host': '%s%suserscript/' % (request.host_url.rstrip('/'), url_for('api.index')),
+            'api': '%suserscript/' % url_for('api.index').lstrip('/'),
+            'host': request.host_url,
         }
 
-        return self.renderTemplate(__file__, 'template.js', **params)
+        response = make_response(self.renderTemplate(__file__, 'template.js', **params))
+        response.headers['Content-Type'] = 'text/javascript'
+        return response
+        return
 
     def getVersion(self):
 
-        versions = fireEvent('userscript.get_version')
+        versions = fireEvent('userscript.get_provider_version')
 
         version = 0
         for v in versions:

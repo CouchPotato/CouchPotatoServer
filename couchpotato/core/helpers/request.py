@@ -2,6 +2,7 @@ from couchpotato.core.helpers.variable import natcmp
 from flask.globals import current_app
 from flask.helpers import json
 from libs.werkzeug.urls import url_decode
+from urllib import unquote_plus
 import flask
 import re
 
@@ -24,7 +25,7 @@ def getParams():
 
             for item in nested:
                 if item is nested[-1]:
-                    current[item] = value
+                    current[item] = unquote_plus(value)
                 else:
                     try:
                         current[item]
@@ -33,7 +34,7 @@ def getParams():
 
                     current = current[item]
         else:
-            temp[param] = value
+            temp[param] = unquote_plus(value)
 
     return dictToList(temp)
 
@@ -54,7 +55,10 @@ def dictToList(params):
     return new
 
 def getParam(attr, default = None):
-    return getattr(flask.request, 'args').get(attr, default)
+    try:
+        return unquote_plus(getattr(flask.request, 'args').get(attr, default))
+    except:
+        return None
 
 def padded_jsonify(callback, *args, **kwargs):
     content = str(callback) + '(' + json.dumps(dict(*args, **kwargs)) + ')'

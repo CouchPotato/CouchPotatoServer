@@ -9,6 +9,7 @@ var NotificationBase = new Class({
 
 		// Listener
 		App.addEvent('load', self.startInterval.bind(self));
+		App.addEvent('unload', self.stopTimer.bind(self));
 		self.addEvent('notification', self.notify.bind(self))
 
 		// Add test buttons to settings page

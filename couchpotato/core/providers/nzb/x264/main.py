@@ -60,8 +60,6 @@ class X264(NZBProvider):
                 'check_nzb': False,
             }
 
-            print new['name']
-
             new['score'] = fireEvent('score.calculate', new, movie, single = True)
             is_correct_movie = fireEvent('searcher.correct_movie',
                                                 nzb = new, movie = movie, quality = quality,
