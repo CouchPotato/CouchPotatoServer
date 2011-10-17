@@ -1,4 +1,3 @@
-import color_logs
 import logging
 import re
 

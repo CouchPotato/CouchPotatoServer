@@ -37,7 +37,7 @@ class Moovee(NZBProvider):
                 log.error('Failed to get data from %s.' % url)
                 return results
 
-        match = re.compile(self.urls['regex'], re.DOTALL).finditer(data)
+        match = re.compile(self.regex, re.DOTALL).finditer(data)
 
         for nzb in match:
             new = {

@@ -96,7 +96,8 @@ def runCouchPotato(options, base_path, args):
         server_log = logging.getLogger('werkzeug')
         server_log.disabled = True
 
-        # Start logging
+        # Start logging & enable colors
+        import color_logs
         from couchpotato.core.logger import CPLog
         log = CPLog(__name__)
         log.debug('Started with options %s' % options)

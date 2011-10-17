@@ -64,10 +64,10 @@ Page.Log = new Class({
 	addColors: function(text){
 		var self = this;
 
-		text = text.replace(/\u001b\[31m\u001b\[31m/gi, '</span><span class="error">')
-		text = text.replace(/\u001b\[36m\u001b\[36m/gi, '</span><span class="debug">')
-		text = text.replace(/\u001b\[0m\u001b\[0m\n/gi, '</span><span class="time">')
-		text = text.replace(/\u001b\[0m\u001b\[0m/gi, '</span><span>')
+		text = text.replace(/\u001b\[31m/gi, '</span><span class="error">')
+		text = text.replace(/\u001b\[36m/gi, '</span><span class="debug">')
+		text = text.replace(/\u001b\[0m\n/gi, '</span><span class="time">')
+		text = text.replace(/\u001b\[0m/gi, '</span><span>')
 
 		return '<span class="time">' + text + '</span>';
 	}
