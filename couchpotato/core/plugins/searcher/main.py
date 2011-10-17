@@ -114,7 +114,6 @@ class Searcher(Plugin):
     def download(self, data, movie):
 
         snatched_status = fireEvent('status.get', 'snatched', single = True)
-
         successful = fireEvent('download', data = data, movie = movie, single = True)
 
         if successful:
@@ -256,5 +255,11 @@ class Searcher(Plugin):
         return len(list(set(check_words) - set(movie_words))) == 0
 
     def checkNFO(self, check_name, imdb_id):
-        nfo = self.urlopen('http://www.srrdb.com/showfile.php?release=%s' % check_name)
+        cache_key = 'srrdb.com %s' % check_name
+
+        nfo = self.getCache(cache_key)
+        if not nfo:
+            nfo = self.urlopen('http://www.srrdb.com/showfile.php?release=%s' % check_name)
+            self.setCache(cache_key, nfo)
+
         return getImdb(nfo) == imdb_id
