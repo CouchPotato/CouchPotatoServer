@@ -136,7 +136,7 @@ class QualityPlugin(Plugin):
     def guess(self, files, extra = {}, loose = False):
 
         for file in files:
-            size = (os.path.getsize(file) / 1024 / 1024)
+            size = (os.path.getsize(file) / 1024 / 1024) if os.path.isfile(file) else 0
             words = re.split('\W+', file.lower())
 
             for quality in self.all():

@@ -4,7 +4,7 @@ from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.variable import getExt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.core.settings.model import Library, Movie
+from couchpotato.core.settings.model import Library
 import os.path
 import re
 import shutil
@@ -14,6 +14,8 @@ log = CPLog(__name__)
 
 
 class Renamer(Plugin):
+
+    renaming_started = False
 
     def __init__(self):
 
@@ -27,6 +29,10 @@ class Renamer(Plugin):
         if self.isDisabled():
             return
 
+        if self.renaming_started is True:
+            log.error('Renamer is disabled to avoid infinite looping of the same error.')
+            return
+
         # Check to see if the "to" folder is inside the "from" folder.
         if self.conf('from') in self.conf('to'):
             log.error('The "to" can\'t be inside of the "from" folder. You\'ll get an infinite loop.')
@@ -35,11 +41,12 @@ class Renamer(Plugin):
         groups = fireEvent('scanner.scan', folder = self.conf('from'), single = True)
         if groups is None: return
 
+        self.renaming_started = True
+
         destination = self.conf('to')
         folder_name = self.conf('folder_name')
         file_name = self.conf('file_name')
         trailer_name = self.conf('trailer_name')
-        backdrop_name = self.conf('fanart_name')
         nfo_name = self.conf('nfo_name')
         separator = self.conf('separator')
 
@@ -47,6 +54,8 @@ class Renamer(Plugin):
 
             group = groups[group_identifier]
             rename_files = {}
+            remove_files = []
+            remove_releases = []
 
             # Add _UNKNOWN_ if no library item is connected
             if not group['library']:
@@ -159,7 +168,10 @@ class Renamer(Plugin):
 
                         # Do rename others
                         else:
-                            rename_files[file] = os.path.join(destination, final_folder_name, final_file_name)
+                            if self.conf('move_leftover') and file_type is 'leftover':
+                                rename_files[file] = os.path.join(destination, final_folder_name, os.path.basename(file))
+                            else:
+                                rename_files[file] = os.path.join(destination, final_folder_name, final_file_name)
 
                         # Check for extra subtitle files
                         if file_type is 'subtitle':
@@ -203,19 +215,21 @@ class Renamer(Plugin):
                     # Go over current movie releases
                     for release in movie.releases:
 
-                        # This is where CP removes older, lesser quality releases
-                        if release.quality.order > group['meta_data']['quality']['order']:
-                            log.info('Removing older release for %s, with quality %s' % (movie.library.titles[0].title, release.quality.label))
-
-                            for file in release.files:
-                                log.info('Removing (not really) "%s"' % file.path)
-
                         # When a release already exists
-                        elif release.status_id is done_status.get('id'):
+                        if release.status_id is done_status.get('id'):
 
+                            # This is where CP removes older, lesser quality releases
+                            if release.quality.order > group['meta_data']['quality']['order']:
+                                log.info('Removing lesser quality %s for %s.' % (movie.library.titles[0].title, release.quality.label))
+                                for file in release.files:
+                                    remove_files.append(file)
+                                remove_releases.append(release)
                             # Same quality, but still downloaded, so maybe repack/proper/unrated/directors cut etc
-                            if release.quality.order is group['meta_data']['quality']['order']:
+                            elif release.quality.order is group['meta_data']['quality']['order']:
                                 log.info('Same quality release already exists for %s, with quality %s. Assuming repack.' % (movie.library.titles[0].title, release.quality.label))
+                                for file in release.files:
+                                    remove_files.append(file)
+                                remove_releases.append(release)
 
                             # Downloaded a lower quality, rename the newly downloaded files/folder to exclude them from scan
                             else:
@@ -237,26 +251,39 @@ class Renamer(Plugin):
 
                                 break
 
+                # Remove leftover files
+                if self.conf('cleanup') and not self.conf('move_leftover'):
+                    log.debug('Removing leftover files')
+                    for file in group['files']['leftover']:
+                        remove_files.append(file)
+
             # Rename all files marked
             for src in rename_files:
                 if rename_files[src]:
-
                     dst = rename_files[src]
-
                     log.info('Renaming "%s" to "%s"' % (src, dst))
 
-                    path = os.path.dirname(dst)
-
                     # Create dir
-                    self.makeDir(path)
+                    self.makeDir(os.path.dirname(dst))
 
                     try:
-                        pass
-                        #shutil.move(src, dst)
+                        self.moveFile(src, dst)
                     except:
                         log.error('Failed moving the file "%s" : %s' % (os.path.basename(src), traceback.format_exc()))
 
-                #print rename_me, rename_files[rename_me]
+            # Remove files
+            for src in remove_files:
+                log.info('Removing "%s"' % src)
+
+            # Remove matching releases
+            for release in remove_releases:
+                log.info('Removing release %s' % release)
+
+            # Add this release to the library
+            if not group['destination_dir'] is destination:
+                fireEventAsync('scanner.to_library', folder = group['destination_dir'])
+            else:
+                log.error('Single destination folder not fully supported yet.')
 
             # Search for trailers etc
             fireEventAsync('renamer.after', group)
@@ -269,12 +296,14 @@ class Renamer(Plugin):
             if self.shuttingDown():
                 break
 
-    def moveFile(self, old, dest, suppress = True):
+        self.renaming_started = False
+
+    def moveFile(self, old, dest):
         try:
             shutil.move(old, dest)
         except:
             log.error("Couldn't move file '%s' to '%s': %s" % (old, dest, traceback.format_exc()))
-            return False
+            raise Exception
 
         return True
 

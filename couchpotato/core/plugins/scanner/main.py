@@ -69,14 +69,16 @@ class Scanner(Plugin):
 
     def __init__(self):
 
-        #addEvent('app.load', self.scanLibrary)
         addEvent('scanner.create_file_identifier', self.createStringIdentifier)
 
         addEvent('scanner.scan', self.scan)
+        addEvent('scanner.to_library', self.scanToLibrary)
+        addEvent('scanner.name_year', self.getReleaseNameYear)
 
-    def scanLibrary(self):
+    def scanToLibrary(self, folder = None, files = []):
 
-        folder = '/Volumes/Media/Test/'
+        if not os.path.isdir(folder):
+            return
 
         groups = self.scan(folder = folder)
 
@@ -223,7 +225,8 @@ class Scanner(Plugin):
 
             # Leftover "sorted" files
             for type in group['files']:
-                group['files']['leftover'] -= set(group['files'][type])
+                if not type is 'leftover':
+                    group['files']['leftover'] -= set(group['files'][type])
 
             # Delete the unsorted list
             del group['unsorted_files']
@@ -463,11 +466,16 @@ class Scanner(Plugin):
         # groups, release tags, scenename cleaner, regex isn't correct
         identifier = re.sub(self.clean, '::', simplifyString(identifier))
 
+        # Year
         year = self.findYear(identifier)
         if year:
             identifier = '%s %s' % (identifier.split(year)[0].strip(), year)
         else:
             identifier = identifier.split('::')[0]
+
+        # Quality
+        quality = fireEvent('quality.guess', [file_path], single = True)
+        identifier += ' %s' % quality.get('identifier', '')
 
         # Remove duplicates
         out = []
@@ -530,3 +538,29 @@ class Scanner(Plugin):
             return matches.group('year')
 
         return ''
+
+    def getReleaseNameYear(self, release_name):
+        cleaned = ' '.join(re.split('\W+', simplifyString(release_name)))
+        cleaned = re.sub(self.clean, ' ', cleaned)
+        year = self.findYear(cleaned)
+
+        if year: # Split name on year
+            try:
+                movie_name = cleaned.split(year).pop(0).strip()
+                return {
+                    'name': movie_name,
+                    'year': year,
+                }
+            except:
+                pass
+        else: # Split name on multiple spaces
+            try:
+                movie_name = cleaned.split('  ').pop(0).strip()
+                return {
+                    'name': movie_name,
+                    'year': year,
+                }
+            except:
+                pass
+
+        return {}

@@ -194,7 +194,7 @@ class Searcher(Plugin):
                     return True
 
                 # if no IMDB link, at least check year
-                if len(movie_words) == 2 and self.correctYear([nzb['name']], movie['library']['year'], 0):
+                if len(movie_words) <= 2 and self.correctYear([nzb['name']], movie['library']['year'], 0):
                     return True
 
         log.info("Wrong: %s, undetermined naming. Looking for '%s (%s)'" % (nzb['name'], movie['library']['titles'][0]['title'], movie['library']['year']))
@@ -244,7 +244,9 @@ class Searcher(Plugin):
 
     def correctName(self, check_name, movie_name):
 
-        check_words = re.split('\W+', simplifyString(check_name))
+        check_movie = fireEvent('scanner.name_year', check_name, single = True)
+
+        check_words = re.split('\W+', check_movie.get('name', ''))
         movie_words = re.split('\W+', simplifyString(movie_name))
 
-        return len(list(set(check_words) & set(movie_words))) == len(movie_words)
+        return len(list(set(check_words) - set(movie_words))) == 0

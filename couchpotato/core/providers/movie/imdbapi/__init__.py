@@ -1,6 +1,6 @@
-from .main import IMDB
+from .main import IMDBAPI
 
 def start():
-    return IMDB()
+    return IMDBAPI()
 
 config = []

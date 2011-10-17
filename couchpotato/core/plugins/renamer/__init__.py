@@ -30,7 +30,7 @@ config = [{
                 {
                     'name': 'folder_name',
                     'label': 'Folder naming',
-                    'description': 'Name of the folder',
+                    'description': 'Name of the folder. Keep empty for no folder.',
                     'default': '<namethe> (<year>)',
                 },
                 {
@@ -38,6 +38,19 @@ config = [{
                     'label': 'File naming',
                     'description': 'Name of the file',
                     'default': '<thename><cd>.<ext>',
+                },
+                {
+                    'name': 'cleanup',
+                    'type': 'bool',
+                    'description': 'Cleanup leftover files after successful rename.',
+                    'default': False,
+                },
+                {
+                    'name': 'move_leftover',
+                    'type': 'bool',
+                    'description': 'Move all leftover file after renaming, to the movie folder.',
+                    'default': False,
+                    'advanced': True,
                 },
                 {
                     'advanced': True,
@@ -72,7 +85,7 @@ config = [{
                 {
                     'name': 'nfo_name',
                     'label': 'NFO naming',
-                    'default': '<filename>.<ext>-orig',
+                    'default': '<filename>.orig.<ext>',
                 },
                 {
                     'name': 'trailer_name',
