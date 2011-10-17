@@ -10,7 +10,7 @@ class Blackhole(Downloader):
     type = ['nzb', 'torrent']
 
     def download(self, data = {}, movie = {}):
-        if self.isDisabled() or not self.isCorrectType(data.get('type') or not self.conf('use_for') in ['both', data.get('type')]):
+        if self.isDisabled() or (not self.isCorrectType(data.get('type')) or (not self.conf('use_for') in ['both', data.get('type')])):
             return
 
         directory = self.conf('directory')
