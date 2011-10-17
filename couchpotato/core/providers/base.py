@@ -17,16 +17,6 @@ class Provider(Plugin):
     last_available_check = {}
     is_available = {}
 
-    def getCache(self, cache_key):
-        cache = Env.get('cache').get(cache_key)
-        if cache:
-            log.debug('Getting cache %s' % cache_key)
-            return cache
-
-    def setCache(self, cache_key, value, timeout = 300):
-        log.debug('Setting cache %s' % cache_key)
-        Env.get('cache').set(cache_key, value, timeout)
-
     def isAvailable(self, test_url):
 
         if Env.get('debug'): return True
