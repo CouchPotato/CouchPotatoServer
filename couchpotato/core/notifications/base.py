@@ -12,7 +12,7 @@ class Notification(Plugin):
     default_title = 'CouchPotato'
     test_message = 'ZOMG Lazors Pewpewpew!'
 
-    listen_to = ['movie.downloaded', 'movie.snatched']
+    listen_to = ['movie.downloaded', 'movie.snatched', 'updater.available']
     dont_listen_to = []
 
     def __init__(self):

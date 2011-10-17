@@ -19,6 +19,12 @@ config = [{
                     'type': 'enabler',
                 },
                 {
+                    'name': 'notification',
+                    'type': 'bool',
+                    'default': True,
+                    'description': 'Send a notification if an update is available.',
+                },
+                {
                     'name': 'automatic',
                     'default': True,
                     'type': 'bool',

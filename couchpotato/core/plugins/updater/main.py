@@ -78,6 +78,7 @@ class Updater(Plugin):
                         self.doUpdate()
                     else:
                         self.update_version = remote.hash
+                        fireEvent('updater.available', message = 'A new update is available', data = self.getVersion())
 
         self.last_check = time.time()
 
