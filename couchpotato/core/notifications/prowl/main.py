@@ -17,7 +17,6 @@ class Prowl(Notification):
         data = {
             'apikey': self.conf('api_key'),
             'application': self.default_title,
-            'event': self.default_title,
             'description': toUnicode(message),
             'priority': self.conf('priority'),
         }
