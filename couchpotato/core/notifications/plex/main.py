@@ -1,3 +1,4 @@
+from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.variable import cleanHost
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
@@ -9,7 +10,10 @@ log = CPLog(__name__)
 
 class Plex(Notification):
 
-    def notify(self, message = '', data = {}):
+    def __init__(self):
+        addEvent('renamer.after', self.addToLibrary)
+
+    def addToLibrary(self, group = {}):
         if self.isDisabled(): return
 
         log.info('Sending notification to Plex')

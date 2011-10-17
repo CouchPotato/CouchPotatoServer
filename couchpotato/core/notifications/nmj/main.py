@@ -1,4 +1,5 @@
 from couchpotato.api import addApiView
+from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.request import getParams, jsonified
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
@@ -18,12 +19,9 @@ log = CPLog(__name__)
 class NMJ(Notification):
 
     def __init__(self):
-        super(NMJ, self).__init__()
+        addEvent('renamer.after', self.addToLibrary)
 
         addApiView('notify.nmj.auto_config', self.autoConfig)
-
-    def conf(self, attr):
-        return Env.setting(attr, 'nmj')
 
     def autoConfig(self):
 
@@ -72,7 +70,7 @@ class NMJ(Notification):
             'mount': mount,
         })
 
-    def notify(self, message = '', data = {}):
+    def addToLibrary(self, group = {}):
         if self.isDisabled(): return
 
         host = self.conf('host')

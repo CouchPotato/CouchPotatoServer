@@ -1,7 +1,6 @@
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
-from couchpotato.environment import Env
 from flask.helpers import json
 import base64
 

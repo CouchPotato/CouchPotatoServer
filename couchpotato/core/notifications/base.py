@@ -1,5 +1,5 @@
 from couchpotato.api import addApiView
-from couchpotato.core.event import addEvent
+from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.request import jsonified
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
@@ -23,7 +23,14 @@ class Notification(Plugin):
         # Attach listeners
         for listener in self.listen_to:
             if not listener in self.dont_listen_to:
-                addEvent(listener, self.notify)
+
+                # Add on snatch default
+                def notify(message, data):
+                    if not self.conf('on_snatch', default = 1) and listener == 'movie.snatched':
+                        return
+                    return self.notify(message, data)
+
+                addEvent(listener, notify)
 
     def notify(self, message = '', data = {}):
         pass

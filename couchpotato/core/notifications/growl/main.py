@@ -2,7 +2,6 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
 from couchpotato.core.notifications.growl.growl import GROWL_UDP_PORT, \
     GrowlRegistrationPacket, GrowlNotificationPacket
-from couchpotato.environment import Env
 from socket import AF_INET, SOCK_DGRAM, socket
 
 log = CPLog(__name__)
@@ -10,10 +9,7 @@ log = CPLog(__name__)
 
 class Growl(Notification):
 
-    def conf(self, attr):
-        return Env.setting(attr, 'growl')
-
-    def notify(self, message = '', data = {}):
+    def notify(self, type = '', message = '', data = {}):
         if self.isDisabled(): return
 
         hosts = [x.strip() for x in self.conf('host').split(",")]
