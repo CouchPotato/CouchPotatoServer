@@ -72,10 +72,19 @@ class Scanner(Plugin):
         addEvent('scanner.create_file_identifier', self.createStringIdentifier)
 
         addEvent('scanner.scan', self.scan)
-        addEvent('scanner.to_library', self.scanToLibrary)
+        addEvent('scanner.files', self.scanToFilesLibrary)
+        addEvent('scanner.folder', self.scanToFolderLibrary)
         addEvent('scanner.name_year', self.getReleaseNameYear)
 
-    def scanToLibrary(self, folder = None, files = []):
+    def scanToFilesLibrary(self, folder = None, files = None):
+
+        groups = self.scan(folder = folder, files = files)
+
+        for group in groups.itervalues():
+            if group['library']:
+                fireEvent('release.add', group = group)
+
+    def scanToFolderLibrary(self, folder = None):
 
         if not os.path.isdir(folder):
             return
@@ -115,7 +124,7 @@ class Scanner(Plugin):
         db.remove()
 
 
-    def scan(self, folder = None):
+    def scan(self, folder = None, files = []):
 
         if not folder or not os.path.isdir(folder):
             log.error('Folder doesn\'t exists: %s' % folder)
@@ -124,30 +133,35 @@ class Scanner(Plugin):
         # Get movie "master" files
         movie_files = {}
         leftovers = []
-        for root, dirs, files in os.walk(folder):
-            for filename in files:
 
-                file_path = os.path.join(root, filename)
+        # Scan all files of the folder if no files are set
+        if len(files) == 0:
+            files = []
+            for root, dirs, walk_files in os.walk(folder):
+                for filename in walk_files:
+                    files.append(os.path.join(root, filename))
 
-                # Remove ignored files
-                if not self.keepFile(file_path):
-                    continue
+        for file_path in files:
 
-                is_dvd_file = self.isDVDFile(file_path)
-                if os.path.getsize(file_path) > self.minimal_filesize['media'] or is_dvd_file: # Minimal 300MB files or is DVD file
+            # Remove ignored files
+            if not self.keepFile(file_path):
+                continue
 
-                    identifier = self.createStringIdentifier(file_path, folder, exclude_filename = is_dvd_file)
+            is_dvd_file = self.isDVDFile(file_path)
+            if os.path.getsize(file_path) > self.minimal_filesize['media'] or is_dvd_file: # Minimal 300MB files or is DVD file
 
-                    if not movie_files.get(identifier):
-                        movie_files[identifier] = {
-                            'unsorted_files': [],
-                            'identifiers': [],
-                            'is_dvd': is_dvd_file,
-                        }
+                identifier = self.createStringIdentifier(file_path, folder, exclude_filename = is_dvd_file)
 
-                    movie_files[identifier]['unsorted_files'].append(file_path)
-                else:
-                    leftovers.append(file_path)
+                if not movie_files.get(identifier):
+                    movie_files[identifier] = {
+                        'unsorted_files': [],
+                        'identifiers': [],
+                        'is_dvd': is_dvd_file,
+                    }
+
+                movie_files[identifier]['unsorted_files'].append(file_path)
+            else:
+                leftovers.append(file_path)
 
         # Sort reverse, this prevents "Iron man 2" from getting grouped with "Iron man" as the "Iron Man 2"
         # files will be grouped first.

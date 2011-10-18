@@ -280,10 +280,7 @@ class Renamer(Plugin):
                 log.info('Removing release %s' % release)
 
             # Add this release to the library
-            if not group['destination_dir'] is destination:
-                fireEventAsync('scanner.to_library', folder = group['destination_dir'])
-            else:
-                log.error('Single destination folder not fully supported yet.')
+            fireEvent('scanner.files', folder = destination, files = rename_files)
 
             # Search for trailers etc
             fireEventAsync('renamer.after', group)
