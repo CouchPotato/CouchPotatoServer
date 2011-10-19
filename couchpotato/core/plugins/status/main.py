@@ -25,6 +25,7 @@ class StatusPlugin(Plugin):
     def __init__(self):
         addEvent('status.add', self.add)
         addEvent('status.get', self.add) # Alias for .add
+        addEvent('status.get_by_id', self.getById)
         addEvent('status.all', self.all)
         addEvent('app.load', self.fill)
 
@@ -36,6 +37,11 @@ class StatusPlugin(Plugin):
             'success': True,
             'list': self.all()
         })
+
+    def getById(self, id):
+        db = get_session()
+        status = db.query(Status).filter_by(id = id).first()
+        return status.to_dict()
 
     def all(self):
 
