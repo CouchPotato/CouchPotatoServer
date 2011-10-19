@@ -1,6 +1,6 @@
 from couchpotato import get_session
 from couchpotato.api import addApiView
-from couchpotato.core.event import fireEvent, fireEventAsync
+from couchpotato.core.event import fireEvent, fireEventAsync, addEvent
 from couchpotato.core.helpers.request import getParams, jsonified
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Movie
@@ -27,6 +27,15 @@ class MoviePlugin(Plugin):
         addApiView('movie.add', self.add)
         addApiView('movie.edit', self.edit)
         addApiView('movie.delete', self.delete)
+
+        addEvent('movie.get', self.get)
+
+    def get(self, movie_id):
+
+        db = get_session()
+        m = db.query(Movie).filter_by(movie_id = movie_id).first()
+
+        return m.to_dict(self.default_dict)
 
     def list(self):
 
