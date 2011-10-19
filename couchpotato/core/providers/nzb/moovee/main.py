@@ -21,7 +21,7 @@ class Moovee(NZBProvider):
     def search(self, movie, quality):
 
         results = []
-        if self.isDisabled() or not self.isAvailable(self.urls['search']):
+        if self.isDisabled() or not self.isAvailable(self.urls['search']) or quality.get('hd', False):
             return results
 
         q = '%s %s' % (movie['library']['titles'][0]['title'], quality.get('identifier'))

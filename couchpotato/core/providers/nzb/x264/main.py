@@ -3,7 +3,6 @@ from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.nzb.base import NZBProvider
 from urllib import quote_plus
-import math
 import re
 
 log = CPLog(__name__)
@@ -21,7 +20,7 @@ class X264(NZBProvider):
     def search(self, movie, quality):
 
         results = []
-        if self.isDisabled() or not self.isAvailable(self.urls['search']):
+        if self.isDisabled() or not self.isAvailable(self.urls['search']) or not quality.get('hd', False):
             return results
 
         q = '%s %s' % (movie['library']['titles'][0]['title'], quality.get('identifier'))
