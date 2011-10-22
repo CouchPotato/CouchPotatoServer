@@ -104,8 +104,8 @@ class Updater(Plugin):
             self.deletePyc()
 
             return True
-        except Exception, e:
-            log.error('Failed updating via GIT: %s' % e)
+        except:
+            log.error('Failed updating via GIT: %s' % traceback.format_exc())
 
         self.update_failed = True
 
@@ -115,13 +115,13 @@ class Updater(Plugin):
 
         for root, dirs, files in os.walk(Env.get('app_dir')):
 
-            pyc_files = filter(lambda filename: filename.endswith(".pyc"), files)
-            py_files = set(filter(lambda filename: filename.endswith(".py"), files))
+            pyc_files = filter(lambda filename: filename.endswith('.pyc'), files)
+            py_files = set(filter(lambda filename: filename.endswith('.py'), files))
             excess_pyc_files = filter(lambda pyc_filename: pyc_filename[:-1] not in py_files, pyc_files)
 
             for excess_pyc_file in excess_pyc_files:
                 full_path = os.path.join(root, excess_pyc_file)
-                log.debug("Removing old PYC file:" % full_path)
+                log.debug('Removing old PYC file: %s' % full_path)
                 try:
                     os.remove(full_path)
                 except:
