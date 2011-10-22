@@ -124,8 +124,9 @@ class Searcher(Plugin):
             rls.status_id = snatched_status.get('id')
             db.commit()
 
-            log.info('Snatched "%s" successfully.' % data.get('name'))
-            fireEvent('movie.snatched', message = 'Downloading of %s successful.' % data.get('name'), data = rls.to_dict())
+            snatch_message = 'Snatched %s' % data.get('name')
+            log.info(snatch_message)
+            fireEvent('movie.snatched', message = snatch_message, data = rls.to_dict())
 
             return True
 

@@ -286,7 +286,7 @@ class Renamer(Plugin):
             fireEventAsync('renamer.after', group)
 
             # Notify on download
-            download_message = 'Downloaded %s (%s) successfully.' % (group['library']['titles'][0]['title'], replacements['quality'])
+            download_message = 'Downloaded %s (%s)' % (group['library']['titles'][0]['title'], replacements['quality'])
             fireEventAsync('movie.downloaded', message = download_message, data = group)
 
             # Break if CP wants to shut down
