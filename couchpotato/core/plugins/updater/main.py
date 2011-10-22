@@ -97,7 +97,10 @@ class Updater(Plugin):
 
     def doUpdate(self):
         try:
-            log.info('Updating to latest version');
+            log.debug('Stashing local changes')
+            self.repo.saveStash()
+
+            log.info('Updating to latest version')
             self.repo.pull()
 
             # Delete leftover .pyc files
