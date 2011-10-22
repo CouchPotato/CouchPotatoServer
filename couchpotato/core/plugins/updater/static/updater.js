@@ -48,7 +48,7 @@ var UpdaterBase = new Class({
 				'text': 'A new version is available'
 			}),
 			new Element('a', {
-				'href': 'https://github.com/'+data.repo_name+'/compare/'+data.version.substr(0, 7)+'...'+data.update_version.substr(0, 7),
+				'href': 'https://github.com/'+data.repo_name+'/compare/'+data.version.hash+'...'+data.update_version.hash,
 				'text': 'see what has changed',
 				'target': '_blank'
 			}),

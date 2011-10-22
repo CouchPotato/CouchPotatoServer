@@ -63,6 +63,10 @@ class Updater(Plugin):
         if self.update_version or self.isDisabled():
             return
 
+        log.info('Checking for new version on github for %s' % self.repo_name)
+        if not Env.setting('development'):
+            self.repo.fetch()
+
         current_branch = self.repo.getCurrentBranch().name
 
         for branch in self.repo.getRemoteByName('origin').getBranches():
@@ -77,7 +81,10 @@ class Updater(Plugin):
                     if self.conf('automatic') and not self.update_failed:
                         self.doUpdate()
                     else:
-                        self.update_version = remote.hash
+                        self.update_version = {
+                            'hash': remote.hash[:8],
+                            'date': remote.getDate(),
+                        }
                         if self.conf('notification'):
                             fireEvent('updater.available', message = 'A new update is available', data = self.getVersion())
 
