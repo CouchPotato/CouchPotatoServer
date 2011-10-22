@@ -56,7 +56,7 @@ def runCouchPotato(options, base_path, args):
 
 
     # Register environment settings
-    Env.set('uses_git', options.nogit)
+    Env.set('uses_git', not options.nogit)
     Env.set('app_dir', base_path)
     Env.set('data_dir', data_dir)
     Env.set('log_path', os.path.join(log_dir, 'CouchPotato.log'))
