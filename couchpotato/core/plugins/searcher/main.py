@@ -66,7 +66,8 @@ class Searcher(Plugin):
             if has_better_quality is 0:
 
                 log.info('Search for %s in %s' % (default_title, type['quality']['label']))
-                results = fireEvent('yarr.search', movie, type['quality'], merge = True)
+                quality = fireEvent('quality.single', identifier = type['quality']['identifier'], single = True)
+                results = fireEvent('yarr.search', movie, quality, merge = True)
                 sorted_results = sorted(results, key = lambda k: k['score'], reverse = True)
 
                 # Add them to this movie releases list
