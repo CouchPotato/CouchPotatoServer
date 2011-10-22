@@ -8,6 +8,8 @@ log = CPLog(__name__)
 
 class XBMC(Notification):
 
+    listen_to = ['movie.downloaded']
+
     def notify(self, message = '', data = {}):
         if self.isDisabled(): return
 
