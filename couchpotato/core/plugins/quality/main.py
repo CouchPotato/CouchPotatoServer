@@ -168,9 +168,10 @@ class QualityPlugin(Plugin):
 
 
         # Try again with loose testing
-        quality = self.guess(files, extra = extra, loose = True)
-        if quality:
-            return quality
+        if not loose:
+            quality = self.guess(files, extra = extra, loose = True)
+            if quality:
+                return quality
 
         log.error('Could not identify quality for: %s' % files)
         return {}
