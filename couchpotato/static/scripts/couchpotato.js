@@ -29,7 +29,7 @@ var CouchPotato = new Class({
 		else
 			self.openPage(window.location.pathname);
 
-		self.c.addEvent('click:relay(a:not([target=_blank]):not([normalhref=true]))', self.pushState.bind(self));
+		self.c.addEvent('click:relay(a[href]:not([target=_blank]):not([normalhref=true]))', self.pushState.bind(self));
 	},
 
 	getOption: function(name){
