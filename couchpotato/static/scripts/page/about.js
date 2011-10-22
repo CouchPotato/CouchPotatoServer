@@ -88,7 +88,7 @@ var AboutSettingTab = new Class({
 				new Element('dd', {'text': App.getOption('app_dir')}),
 				new Element('dd', {'text': App.getOption('data_dir')}),
 				new Element('dt[text=Startup Args]'),
-				new Element('dd', {'text': App.getOption('args')}),
+				new Element('dd', {'html': App.getOption('args')}),
 				new Element('dd', {'html': App.getOption('options')})
 			)
 		);
