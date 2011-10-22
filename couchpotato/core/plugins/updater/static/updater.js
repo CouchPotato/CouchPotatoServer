@@ -1,5 +1,5 @@
 var UpdaterBase = new Class({
-	
+
 	Implements: [Events],
 
 	initialize: function(){
@@ -35,7 +35,7 @@ var UpdaterBase = new Class({
 		}, (timeout || 0))
 
 	},
-	
+
 	getInfo: function(){
 		return this.json;
 	},

@@ -121,7 +121,7 @@ class Updater(Plugin):
 
             for excess_pyc_file in excess_pyc_files:
                 full_path = os.path.join(root, excess_pyc_file)
-                log.debug("Removing old PYC file:", full_path)
+                log.debug("Removing old PYC file:" % full_path)
                 try:
                     os.remove(full_path)
                 except:
