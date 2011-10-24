@@ -47,11 +47,13 @@ var AboutSettingTab = new Class({
 				}),
 				new Element('a', {
 					'href': 'https://usenetserver.com/partners/?a_aid=couchpotato&a_bid=3f357c6f',
+					'target': '_blank',
 					'text': 'UsenetServer'
 				}),
 				new Element('span[text=or]'),
 				new Element('a', {
 					'href': 'http://www.newshosting.com/partners/?a_aid=couchpotato&a_bid=a0b022df',
+					'target': '_blank',
 					'text': 'Newshosting'
 				}),
 				new Element('span', {
@@ -78,7 +80,7 @@ var AboutSettingTab = new Class({
 
 
 		self.settings.createGroup({
-			'label': 'About CouchPotato',
+			'label': 'About This CouchPotato',
 			'name': 'variables'
 		}).inject(self.content).adopt(
 			new Element('dl.info').adopt(
