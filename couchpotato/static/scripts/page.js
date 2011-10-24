@@ -33,13 +33,21 @@ var PageBase = new Class({
 		//p('Opening: ' +self.getName() + ', ' + action + ', ' + Object.toQueryString(params));
 
 		try {
-			self[action+'Action'](params);
+			self.el.empty();
+			var elements = self[action+'Action'](params);
+			self.el.adopt(elements);
+
 			self.fireEvent('opened');
 		}
 		catch (e){
 			self.errorAction(e);
 			self.fireEvent('error');
 		}
+	},
+	
+	openUrl: function(url){
+		if(History.getPath() != url)
+			History.push(url);
 	},
 
 	errorAction: function(e){
