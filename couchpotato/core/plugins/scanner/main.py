@@ -27,7 +27,7 @@ class Scanner(Plugin):
     extensions = {
         'movie': ['mkv', 'wmv', 'avi', 'mpg', 'mpeg', 'mp4', 'm2ts', 'iso', 'img'],
         'dvd': ['vts_*', 'vob'],
-        'nfo': ['nfo', 'nfo-orig', 'txt', 'tag'],
+        'nfo': ['nfo', 'txt', 'tag'],
         'subtitle': ['sub', 'srt', 'ssa', 'ass'],
         'subtitle_extra': ['idx'],
         'trailer': ['mov', 'mp4', 'flv']
@@ -75,6 +75,7 @@ class Scanner(Plugin):
         addEvent('scanner.files', self.scanToFilesLibrary)
         addEvent('scanner.folder', self.scanToFolderLibrary)
         addEvent('scanner.name_year', self.getReleaseNameYear)
+        addEvent('scanner.partnumber', self.getPartNumber)
 
     def scanToFilesLibrary(self, folder = None, files = None):
 

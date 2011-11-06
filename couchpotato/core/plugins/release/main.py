@@ -4,6 +4,7 @@ from couchpotato.core.event import fireEvent, addEvent
 from couchpotato.core.helpers.request import getParam, jsonified
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
+from couchpotato.core.plugins.scanner.main import Scanner
 from couchpotato.core.settings.model import File, Release as Relea, Movie
 from sqlalchemy.sql.expression import and_, or_
 
@@ -40,7 +41,7 @@ class Release(Plugin):
         rel = db.query(Relea).filter(
             or_(
                 Relea.identifier == identifier,
-                and_(Relea.identifier.startswith(group['library']['identifier'], Relea.status_id == snatched_status.get('id')))
+                and_(Relea.identifier.startswith(group['library']['identifier']), Relea.status_id == snatched_status.get('id'))
             )
         ).first()
         if not rel:
@@ -76,7 +77,7 @@ class Release(Plugin):
             properties = {}
 
         # Check database and update/insert if necessary
-        return fireEvent('file.add', path = file, part = self.getPartNumber(file), type = self.file_types[type], properties = properties, single = True)
+        return fireEvent('file.add', path = file, part = fireEvent('scanner.partnumber', file, single = True), type = Scanner.file_types[type], properties = properties, single = True)
 
     def delete(self):
 
