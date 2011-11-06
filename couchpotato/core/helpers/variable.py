@@ -5,13 +5,11 @@ import re
 
 def getDataDir():
 
-    # Windows
-    try:
-        from win32com.shell import shellcon, shell
-        return os.path.join(shell.SHGetFolderPath(0, shellcon.CSIDL_APPDATA, 0, 0), 'CouchPotato')
+    dir = os.path.expanduser("~")
 
-    except ImportError:
-        dir = os.path.expanduser("~")
+    # Windows
+    if os.name == 'nt':
+        return os.path.join(dir, 'CouchPotato')
 
     # OSX
     if 'darwin' in platform.platform().lower():

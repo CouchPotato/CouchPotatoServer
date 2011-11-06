@@ -175,13 +175,13 @@ class TheMovieDb(MovieProvider):
 
     def getImage(self, movie, type = 'poster', size = 'thumb'):
 
-        image = ''
+        image_url = ''
         for image in movie.get('images', []):
             if(image.get('type') == type) and image.get(size):
-                image = image.get(size)
+                image_url = image.get(size)
                 break
 
-        return image
+        return image_url
 
     def getCategory(self, movie, type = 'genre'):
 

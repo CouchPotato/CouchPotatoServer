@@ -193,10 +193,13 @@ class ImagesList(list):
         size = image_et.get("size")
         url = image_et.get("url")
         cur = self.find_by('id', _id)
+
         if len(cur) == 0:
             nimg = Image(_id = _id, _type = _type, size = size, url = url)
             self.append(nimg)
-        elif len(cur) == 1:
+            cur = self.find_by('id', _id)
+
+        if len(cur) == 1:
             cur[0][size] = url
         else:
             raise ValueError("Found more than one poster with id %s, this should never happen" % (_id))
@@ -261,6 +264,9 @@ class MovieDb:
                         cur_images.set(subitem)
                 else:
                     cur_movie[item.tag] = item.text
+
+        print cur_images.posters
+
         cur_movie['images'] = cur_images
         return cur_movie
 
@@ -423,7 +429,7 @@ class tmdb:
 # Shortcuts for imdb lookup method
 # using:
 #   movie = tmdb.imdb("Sin City")
-#   print movie.getRating -> 7.0         
+#   print movie.getRating -> 7.0
 class imdb:
     def __init__(self, id = 0, title = False):
         # get first movie if result=0

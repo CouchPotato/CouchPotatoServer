@@ -53,6 +53,9 @@
 			-webkit-box-shadow: 0 0 10px rgba(0,0,0,0.35);
 			line-height: 0;
 		}
+		.movies .data .poster img, .options .poster img {
+			width: 100%;
+		}
 		
 		.movies .info {
 			float: right;
