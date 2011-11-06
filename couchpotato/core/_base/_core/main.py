@@ -45,7 +45,7 @@ class Core(Plugin):
 
             if brk: break
 
-            time.sleep(1)
+            time.sleep(300)
 
         if restart:
             self.createFile(self.restartFilePath(), 'This is the most suckiest way to register if CP is restarted. Ever...')

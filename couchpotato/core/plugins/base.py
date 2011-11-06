@@ -5,7 +5,7 @@ from couchpotato.core.logger import CPLog
 from couchpotato.environment import Env
 from flask.helpers import send_from_directory
 from flask.templating import render_template_string
-from libs.multipartpost import MultipartPostHandler
+from multipartpost import MultipartPostHandler
 from urlparse import urlparse
 import cookielib
 import glob

@@ -1,6 +1,24 @@
 import hashlib
 import os.path
+import platform
 import re
+
+def getDataDir():
+
+    # Windows
+    try:
+        from win32com.shell import shellcon, shell
+        return os.path.join(shell.SHGetFolderPath(0, shellcon.CSIDL_APPDATA, 0, 0), 'CouchPotato')
+
+    except ImportError:
+        dir = os.path.expanduser("~")
+
+    # OSX
+    if 'darwin' in platform.platform().lower():
+        return os.path.join(dir, 'Library', 'Application Support', 'CouchPotato')
+
+    # Linux
+    return os.path.join(dir, '.couchpotato')
 
 def isDict(object):
     return isinstance(object, dict)

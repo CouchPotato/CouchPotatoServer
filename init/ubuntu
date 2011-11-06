@@ -18,7 +18,7 @@ APP_PATH=/usr/local/sbin/couchpotato
 DAEMON=/usr/bin/python
 
 # startup args
-DAEMON_OPTS=" CouchPotato.py -q"
+DAEMON_OPTS=" CouchPotato.py"
 
 # script name
 NAME=couchpotato

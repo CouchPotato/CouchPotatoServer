@@ -2,6 +2,7 @@ from argparse import ArgumentParser
 from couchpotato import web
 from couchpotato.api import api
 from couchpotato.core.event import fireEventAsync
+from couchpotato.core.helpers.variable import getDataDir
 from daemon import createDaemon
 from logging import handlers
 from werkzeug.contrib.cache import FileSystemCache
@@ -11,17 +12,19 @@ import sys
 
 def getOptions(base_path, args):
 
+    data_dir = getDataDir()
+
     # Options
     parser = ArgumentParser(prog = 'CouchPotato.py')
-    parser.add_argument('-c', '--config_file', default = os.path.join(base_path, '_data', 'settings.conf'),
+    parser.add_argument('--config_file', default = os.path.join(data_dir, 'settings.conf'),
                         dest = 'config_file', help = 'Absolute or ~/ path of the settings file (default ./_data/settings.conf)')
-    parser.add_argument('-t', '--test', '--debug', action = 'store_true',
+    parser.add_argument('--debug', action = 'store_true',
                         dest = 'debug', help = 'Debug mode')
-    parser.add_argument('-q', '--quiet', action = 'store_true',
-                        dest = 'quiet', help = "Don't log to console")
-    parser.add_argument('-d', '--daemon', action = 'store_true',
+    parser.add_argument('--console_log', action = 'store_true',
+                        dest = 'console_log', help = "Log to console")
+    parser.add_argument('--daemon', action = 'store_true',
                         dest = 'daemonize', help = 'Daemonize the app')
-    parser.add_argument('-g', '--nogit', action = 'store_true',
+    parser.add_argument('--nogit', action = 'store_true',
                         dest = 'nogit', help = 'Running from git')
 
     options = parser.parse_args(args)
@@ -41,7 +44,8 @@ def runCouchPotato(options, base_path, args):
     # Create data dir if needed
     data_dir = os.path.expanduser(Env.setting('data_dir'))
     if data_dir == '':
-        data_dir = os.path.join(base_path, '_data')
+        data_dir = getDataDir()
+
     if not os.path.isdir(data_dir):
         os.makedirs(data_dir)
 
@@ -63,7 +67,7 @@ def runCouchPotato(options, base_path, args):
     Env.set('db_path', 'sqlite:///' + os.path.join(data_dir, 'couchpotato.db'))
     Env.set('cache_dir', os.path.join(data_dir, 'cache'))
     Env.set('cache', FileSystemCache(os.path.join(Env.get('cache_dir'), 'python')))
-    Env.set('quiet', options.quiet)
+    Env.set('console_log', options.console_log)
     Env.set('daemonize', options.daemonize)
     Env.set('args', args)
     Env.set('options', options)
@@ -82,7 +86,7 @@ def runCouchPotato(options, base_path, args):
         logger.setLevel(level)
 
         # To screen
-        if debug and not options.quiet and not options.daemonize:
+        if (debug or options.console_log) and not options.daemonize:
             hdlr = logging.StreamHandler(sys.stderr)
             hdlr.setFormatter(formatter)
             logger.addHandler(hdlr)

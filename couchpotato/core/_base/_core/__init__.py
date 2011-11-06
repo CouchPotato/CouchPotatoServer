@@ -69,7 +69,7 @@ config = [{
                 {
                     'name': 'data_dir',
                     'type': 'directory',
-                    'description': 'Where cache/logs/etc are stored. Keep empty for <strong>./_data</strong>.',
+                    'description': 'Where cache/logs/etc are stored. Keep empty for defaults.',
                 },
                 {
                     'name': 'url_base',
