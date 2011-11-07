@@ -27,14 +27,14 @@ class Provider(Plugin):
         if self.last_available_check.get(host) < now - 900:
             self.last_available_check[host] = now
 
-            data = self.urlopen(test_url, 30)
-            if not data:
-                log.error('%s unavailable, trying again in an 15 minutes.' % self.name)
-                self.is_available[host] = False
-            else:
+            try:
+                self.urlopen(test_url, 30)
                 self.is_available[host] = True
+            except:
+                log.error('"%s" unavailable, trying again in an 15 minutes.' % host)
+                self.is_available[host] = False
 
-        return self.is_available[host]
+        return self.is_available.get(host, False)
 
 
 class YarrProvider(Provider):
