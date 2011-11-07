@@ -265,8 +265,6 @@ class MovieDb:
                 else:
                     cur_movie[item.tag] = item.text
 
-        print cur_images.posters
-
         cur_movie['images'] = cur_images
         return cur_movie
 
