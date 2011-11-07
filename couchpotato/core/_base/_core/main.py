@@ -1,3 +1,4 @@
+from couchpotato import app
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, addEvent
 from couchpotato.core.helpers.variable import cleanHost
@@ -5,6 +6,7 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
 from flask import request
+from flask.helpers import url_for
 import os
 import time
 import webbrowser
@@ -14,13 +16,23 @@ log = CPLog(__name__)
 
 class Core(Plugin):
 
+    ignore_restart = ['Core.crappyRestart']
+
     def __init__(self):
         addApiView('app.shutdown', self.shutdown)
         addApiView('app.restart', self.restart)
 
+        addEvent('app.crappy_restart', self.crappyRestart)
         addEvent('app.load', self.launchBrowser, priority = 100)
+        addEvent('app.base_url', self.createBaseUrl)
 
         self.removeRestartFile()
+
+    def crappyRestart(self):
+        ctx = app.test_request_context()
+        ctx.push()
+        self.urlopen('%s%sapp.restart' % (fireEvent('app.base_url', single = True), url_for('api.index')))
+        ctx.pop()
 
     def shutdown(self):
         self.initShutdown()
@@ -39,6 +51,7 @@ class Core(Plugin):
 
             brk = True
             for running in still_running:
+                running = list(set(running) - set(self.ignore_restart))
                 if len(running) > 0:
                     log.info('Waiting on plugins to finish: %s' % running)
                     brk = False
@@ -69,12 +82,7 @@ class Core(Plugin):
         if Env.setting('launch_browser'):
             log.info('Launching browser')
 
-            host = Env.setting('host')
-            if host == '0.0.0.0':
-                host = 'localhost'
-            port = Env.setting('port')
-
-            url = '%s:%d' % (cleanHost(host).rstrip('/'), int(port))
+            url = self.createBaseUrl()
             try:
                 webbrowser.open(url, 2, 1)
             except:
@@ -82,3 +90,11 @@ class Core(Plugin):
                     webbrowser.open(url, 1, 1)
                 except:
                     log.error('Could not launch a browser.')
+
+    def createBaseUrl(self):
+        host = Env.setting('host')
+        if host == '0.0.0.0':
+            host = 'localhost'
+        port = Env.setting('port')
+
+        return '%s:%d' % (cleanHost(host).rstrip('/'), int(port))

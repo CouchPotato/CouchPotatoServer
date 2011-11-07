@@ -79,7 +79,8 @@ class Updater(Plugin):
 
                 if local.getDate() < remote.getDate():
                     if self.conf('automatic') and not self.update_failed:
-                        self.doUpdate()
+                        if self.doUpdate():
+                            fireEvent('app.crappy_restart')
                     else:
                         self.update_version = {
                             'hash': remote.hash[:8],
