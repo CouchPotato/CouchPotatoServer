@@ -58,8 +58,7 @@ class Sabnzbd(Downloader):
 
         try:
             data = self.urlopen(url, params = {"nzbfile": (nzb_filename, nzb_file)}, multipart = True)
-        except Exception:
-            log.error("Unable to connect to SAB: %s" % traceback.format_exc())
+        except:
             return False
 
         result = data.strip()
