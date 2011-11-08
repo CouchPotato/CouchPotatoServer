@@ -20,7 +20,10 @@ def addEvent(name, handler, priority = 0):
         try:
             parent = handler.im_self
             parent.beforeCall(handler)
-            h = handler(*args, **kwargs)
+            try:
+                h = handler(*args, **kwargs)
+            except:
+                log.error('Error in event %s, that wasn\'nt caught: %s' % (name, traceback.format_exc()))
             parent.afterCall(handler)
         except:
             h = handler(*args, **kwargs)
