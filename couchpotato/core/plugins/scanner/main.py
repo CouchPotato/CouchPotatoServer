@@ -1,7 +1,7 @@
 from couchpotato import get_session
 from couchpotato.core.event import fireEvent, addEvent
 from couchpotato.core.helpers.encoding import toUnicode, simplifyString
-from couchpotato.core.helpers.variable import getExt, getImdb
+from couchpotato.core.helpers.variable import getExt, getImdb, tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import File
@@ -38,6 +38,7 @@ class Scanner(Plugin):
         'nfo': ('nfo', 'nfo'),
         'movie': ('video', 'movie'),
         'backdrop': ('image', 'backdrop'),
+        'leftover': ('leftover', 'leftover'),
     }
 
     codecs = {
@@ -196,11 +197,13 @@ class Scanner(Plugin):
             # Check if movie is fresh and maybe still unpacking, ignore files new then 1 minute
             file_too_new = False
             for file in group['unsorted_files']:
-                if os.path.getmtime(file) > time.time() - 60:
-                    file_too_new = True
+                file_time = os.path.getmtime(file)
+                if file_time > time.time() - 60:
+                    file_too_new = tryInt(time.time() - file_time)
+                    break
 
             if file_too_new:
-                log.info('Files seem to be still unpacking or just unpacked, ignoring for now: %s' % identifier)
+                log.info('Files seem to be still unpacking or just unpacked (%s), ignoring for now: %s' % (file_time, identifier))
                 delete_identifier.append(identifier)
                 continue
 

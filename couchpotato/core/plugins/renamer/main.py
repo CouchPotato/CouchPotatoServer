@@ -280,7 +280,7 @@ class Renamer(Plugin):
                 log.info('Removing release %s' % release)
 
             # Add this release to the library
-            fireEvent('scanner.files', folder = destination, files = rename_files)
+            fireEvent('scanner.files', folder = destination, files = [x for x in rename_files.itervalues()])
 
             # Search for trailers etc
             fireEventAsync('renamer.after', group)

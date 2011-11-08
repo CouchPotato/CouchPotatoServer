@@ -7,6 +7,11 @@ import traceback
 log = CPLog(__name__)
 events = {}
 
+def runHandler(name, handler, *args, **kwargs):
+    try:
+        return handler(*args, **kwargs)
+    except:
+        log.error('Error in event "%s", that wasn\'nt caught: %s' % (name, traceback.format_exc()))
 
 def addEvent(name, handler, priority = 0):
 
@@ -20,13 +25,10 @@ def addEvent(name, handler, priority = 0):
         try:
             parent = handler.im_self
             parent.beforeCall(handler)
-            try:
-                h = handler(*args, **kwargs)
-            except:
-                log.error('Error in event %s, that wasn\'nt caught: %s' % (name, traceback.format_exc()))
+            h = runHandler(name, handler, *args, **kwargs)
             parent.afterCall(handler)
         except:
-            h = handler(*args, **kwargs)
+            h = runHandler(name, handler, *args, **kwargs)
 
         return h
 
