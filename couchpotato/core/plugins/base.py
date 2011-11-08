@@ -169,6 +169,7 @@ class Plugin(object):
     def setCache(self, cache_key, value, timeout = 300):
         log.debug('Setting cache %s' % cache_key)
         Env.get('cache').set(cache_key, value, timeout)
+        return value
 
     def isDisabled(self):
         return not self.isEnabled()
