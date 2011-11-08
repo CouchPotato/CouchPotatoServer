@@ -3,7 +3,7 @@ from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.request import jsonified, getParams
-from couchpotato.core.helpers.variable import mergeDicts
+from couchpotato.core.helpers.variable import mergeDicts, md5
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Quality, Profile, ProfileType
@@ -135,6 +135,11 @@ class QualityPlugin(Plugin):
 
     def guess(self, files, extra = {}, loose = False):
 
+        # Create hash for cache
+        hash = md5(str(files))
+        cached = self.getCache(hash)
+        if cached: return cached
+
         for file in files:
             size = (os.path.getsize(file) / 1024 / 1024) if os.path.isfile(file) else 0
             words = re.split('\W+', file.lower())
@@ -144,34 +149,34 @@ class QualityPlugin(Plugin):
                 # Check tags
                 if quality['identifier'] in words:
                     log.debug('Found via identifier "%s" in %s' % (quality['identifier'], file))
-                    return quality
+                    return self.setCache(hash, quality)
 
                 if list(set(quality.get('alternative', [])) & set(words)):
                     log.debug('Found %s via alt %s in %s' % (quality['identifier'], quality.get('alternative'), file))
-                    return quality
+                    return self.setCache(hash, quality)
 
                 if list(set(quality.get('tags', [])) & set(words)):
                     log.debug('Found %s via tag %s in %s' % (quality['identifier'], quality.get('tags'), file))
-                    return quality
+                    return self.setCache(hash, quality)
 
                 # Check on unreliable stuff
                 if loose:
                     # Check extension + filesize
                     if list(set(quality.get('ext', [])) & set(words)) and size >= quality['size_min'] and size <= quality['size_max']:
                         log.debug('Found %s via ext %s in %s' % (quality['identifier'], quality.get('ext'), words))
-                        return quality
+                        return self.setCache(hash, quality)
 
                     # Last check on resolution only
                     if quality.get('width', 480) == extra.get('resolution_width', 0):
                         log.debug('Found %s via resolution_width: %s == %s' % (quality['identifier'], quality.get('width', 480), extra.get('resolution_width', 0)))
-                        return quality
+                        return self.setCache(hash, quality)
 
 
         # Try again with loose testing
         if not loose:
             quality = self.guess(files, extra = extra, loose = True)
             if quality:
-                return quality
+                return self.setCache(hash, quality)
 
         log.error('Could not identify quality for: %s' % files)
-        return {}
+        return self.setCache(hash, quality)
