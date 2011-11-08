@@ -14,6 +14,7 @@ import os.path
 import re
 import socket
 import time
+import traceback
 import urllib
 import urllib2
 
@@ -98,7 +99,7 @@ class Plugin(object):
         try:
 
             if multipart:
-                log.info('Opening multipart url: %s, params: %s' % (url, params.iterkeys()))
+                log.info('Opening multipart url: %s, params: %s' % (url, [x for x in params.iterkeys()]))
                 request = urllib2.Request(url, params, headers)
 
                 cookies = cookielib.CookieJar()
@@ -106,13 +107,13 @@ class Plugin(object):
 
                 data = opener.open(request).read()
             else:
-                log.info('Opening url: %s, params: %s' % (url, len(params) > 0))
+                log.info('Opening url: %s, params: %s' % (url, [x for x in params.iterkeys()]))
                 data = urllib.urlencode(params) if len(params) > 0 else None
                 request = urllib2.Request(url, data, headers)
 
                 data = urllib2.urlopen(request).read()
-        except IOError, e:
-            log.error('Failed opening url, %s: %s' % (url, e))
+        except IOError:
+            log.error('Failed opening url: %s' % (traceback.format_exc(1)))
             raise
 
         self.http_last_use[host] = time.time()
