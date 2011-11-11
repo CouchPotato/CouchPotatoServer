@@ -147,6 +147,7 @@ var CouchPotato = new Class({
 		if(!self.mask){
 			var body = $(document.body);
 			self.mask = new Spinner(document.body, {
+				'destroyOnHide': true,
 				'message': new Element('div').adopt(
 					new Element('h1', {'text': 'Unavailable.'}),
 					new Element('div', {'text': message || 'Something must have crashed.. check the logs ;)'})
