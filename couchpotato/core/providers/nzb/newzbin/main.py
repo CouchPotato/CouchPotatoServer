@@ -66,9 +66,11 @@ class Newzbin(NZBProvider, RSS):
             headers = {
                 'Authorization': "Basic %s" % base64.encodestring('%s:%s' % (self.conf('username'), self.conf('password')))[:-1]
             }
-
-            data = self.urlopen(url, headers = headers)
-            self.setCache(cache_key, data)
+            try:
+                data = self.urlopen(url, headers = headers)
+                self.setCache(cache_key, data)
+            except:
+                return results
 
         if data:
             try:

@@ -29,7 +29,9 @@ class XBMC(Notification):
                'Authorization': "Basic %s" % base64.encodestring('%s:%s' % (self.conf('username'), self.conf('password')))[:-1]
             }
 
-        if not self.urlopen(url, headers = headers):
+        try:
+            self.urlopen(url, headers = headers)
+        except:
             log.error("Couldn't sent command to XBMC")
             return False
 

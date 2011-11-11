@@ -160,11 +160,19 @@ class Plugin(object):
                 log.error("Something went wrong when finishing the plugin function. Could not find the 'is_running' key")
 
 
-    def getCache(self, cache_key):
+    def getCache(self, cache_key, url = None):
         cache = Env.get('cache').get(cache_key)
         if cache:
             log.debug('Getting cache %s' % cache_key)
             return cache
+
+        if url:
+            try:
+                data = self.urlopen(url)
+                self.setCache(cache_key, data)
+                return data
+            except:
+                pass
 
     def setCache(self, cache_key, value, timeout = 300):
         log.debug('Setting cache %s' % cache_key)

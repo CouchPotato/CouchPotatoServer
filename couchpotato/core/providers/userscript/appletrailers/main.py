@@ -8,7 +8,10 @@ class AppleTrailers(UserscriptBase):
 
     def getMovie(self, url):
 
-        data = self.urlopen(url)
+        try:
+            data = self.urlopen(url)
+        except:
+            return
 
         name = re.search("trailerTitle.*=.*\'(?P<name>.*)\';", data)
         name = name.group('name').decode('string_escape')

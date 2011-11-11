@@ -79,9 +79,9 @@ class NMJ(Notification):
 
         if self.mount:
             log.debug('Try to mount network drive via url: %s' % (mount))
-            data = self.urlopen(mount)
-            if not data:
-                log.error('Warning: Couldn\'t contact popcorn hour on host %s' % host)
+            try:
+                data = self.urlopen(mount)
+            except:
                 return False
 
         params = {
@@ -94,9 +94,9 @@ class NMJ(Notification):
         UPDATE_URL = 'http://%(host)s:8008/metadata_database?%(params)s'
         updateUrl = UPDATE_URL % {'host': host, 'params': params}
 
-        response = self.urlopen(updateUrl)
-        if not response:
-            log.error('Warning: Couldn\'t contact Popcorn Hour on host %s' % host)
+        try:
+            response = self.urlopen(updateUrl)
+        except:
             return False
 
         try:

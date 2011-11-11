@@ -3,6 +3,7 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
 from flask.helpers import json
 import base64
+import traceback
 
 log = CPLog(__name__)
 
@@ -30,8 +31,8 @@ class Notifo(Notification):
             if result['status'] != 'success' or result['response_message'] != 'OK':
                 raise Exception
 
-        except Exception, e:
-            log.error('Notification failed: %s' % e)
+        except:
+            log.error('Notification failed: %s' % traceback.format_exc())
             return False
 
         log.info('Notifo notification successful.')

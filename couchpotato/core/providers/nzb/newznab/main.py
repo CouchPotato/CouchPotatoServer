@@ -100,15 +100,7 @@ class Newznab(NZBProvider, RSS):
     def createItems(self, url, cache_key, host, single_cat = False, movie = None, quality = None, for_feed = False):
         results = []
 
-        data = self.getCache(cache_key)
-        if not data:
-            data = self.urlopen(url)
-            self.setCache(cache_key, data)
-
-            if not data:
-                log.error('Failed to get data from %s.' % url)
-                return results
-
+        data = self.getCache(cache_key, url)
         if data:
             try:
                 try:

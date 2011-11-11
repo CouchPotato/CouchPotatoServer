@@ -28,39 +28,32 @@ class Moovee(NZBProvider):
         url = self.urls['search'] % quote_plus(q)
 
         cache_key = 'moovee.%s' % q
-        data = self.getCache(cache_key)
-        if not data:
-            data = self.urlopen(url)
-            self.setCache(cache_key, data)
+        data = self.getCache(cache_key, url)
+        if data:
+            match = re.compile(self.regex, re.DOTALL).finditer(data)
 
-            if not data:
-                log.error('Failed to get data from %s.' % url)
-                return results
+            for nzb in match:
+                new = {
+                    'id': nzb.group('reqid'),
+                    'name': nzb.group('title'),
+                    'type': 'nzb',
+                    'provider': self.getName(),
+                    'age': self.calculateAge(time.mktime(parse(nzb.group('age')).timetuple())),
+                    'size': None,
+                    'url': self.urls['download'] % (nzb.group('reqid')),
+                    'download': self.download,
+                    'detail_url': '',
+                    'description': '',
+                    'check_nzb': False,
+                }
 
-        match = re.compile(self.regex, re.DOTALL).finditer(data)
-
-        for nzb in match:
-            new = {
-                'id': nzb.group('reqid'),
-                'name': nzb.group('title'),
-                'type': 'nzb',
-                'provider': self.getName(),
-                'age': self.calculateAge(time.mktime(parse(nzb.group('age')).timetuple())),
-                'size': None,
-                'url': self.urls['download'] % (nzb.group('reqid')),
-                'download': self.download,
-                'detail_url': '',
-                'description': '',
-                'check_nzb': False,
-            }
-
-            new['score'] = fireEvent('score.calculate', new, movie, single = True)
-            is_correct_movie = fireEvent('searcher.correct_movie',
-                                                nzb = new, movie = movie, quality = quality,
-                                                imdb_results = False, single_category = False, single = True)
-            if is_correct_movie:
-                results.append(new)
-                self.found(new)
+                new['score'] = fireEvent('score.calculate', new, movie, single = True)
+                is_correct_movie = fireEvent('searcher.correct_movie',
+                                                    nzb = new, movie = movie, quality = quality,
+                                                    imdb_results = False, single_category = False, single = True)
+                if is_correct_movie:
+                    results.append(new)
+                    self.found(new)
 
         return results
 

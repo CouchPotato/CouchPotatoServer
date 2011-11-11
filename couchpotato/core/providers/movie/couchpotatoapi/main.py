@@ -20,9 +20,8 @@ class CouchPotatoApi(MovieProvider):
 
     def releaseDate(self, imdb_id):
 
-        data = self.urlopen((self.apiUrl % ('eta')) + (id + '/'))
-
         try:
+            data = self.urlopen((self.apiUrl % ('eta')) + (id + '/'))
             dates = json.loads(data)
             log.info('Found ETA for %s: %s' % (imdb_id, dates))
         except Exception, e:
@@ -31,10 +30,8 @@ class CouchPotatoApi(MovieProvider):
         return dates
 
     def suggest(self, movies = [], ignore = []):
-
-        data = self.urlopen((self.apiUrl % ('suggest')) + ','.join(movies) + '/' + ','.join(ignore) + '/')
-
         try:
+            data = self.urlopen((self.apiUrl % ('suggest')) + ','.join(movies) + '/' + ','.join(ignore) + '/')
             suggestions = json.loads(data)
             log.info('Found Suggestions for %s' % (suggestions))
         except Exception, e:

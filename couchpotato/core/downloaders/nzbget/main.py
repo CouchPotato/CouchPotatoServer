@@ -3,6 +3,7 @@ from couchpotato.core.downloaders.base import Downloader
 from couchpotato.core.logger import CPLog
 from inspect import isfunction
 import socket
+import traceback
 import xmlrpclib
 
 log = CPLog(__name__)
@@ -48,8 +49,8 @@ class NZBGet(Downloader):
             else:
                 log.info('Downloading: %s' % data.get('url'))
                 file = self.urlopen(data.get('url'))
-        except Exception, e:
-            log.error('Unable to get NZB file: %s' % e)
+        except:
+            log.error('Unable to get NZB file: %s' % traceback.format_exc())
             return False
 
         if rpc.append(nzb_name, self.conf('category'), False, standard_b64encode(file.strip())):

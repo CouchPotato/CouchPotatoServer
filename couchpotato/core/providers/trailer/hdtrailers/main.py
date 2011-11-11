@@ -21,7 +21,10 @@ class HDTrailers(TrailerProvider):
         movie_name = movie['library']['titles'][0]['title']
 
         url = self.url['api'] % self.movieUrlName(movie_name)
-        data = self.urlopen(url)
+        try:
+            data = self.urlopen(url)
+        except:
+            return {}
 
         p480 = []
         p720 = []
@@ -45,7 +48,10 @@ class HDTrailers(TrailerProvider):
         results = {'480p':[], '720p':[], '1080p':[]}
 
         url = "%s?%s" % (self.url['backup'], urlencode({'s':movie}))
-        data = self.urlopen(url)
+        try:
+            data = self.urlopen(url)
+        except:
+            return results
 
         try:
             tables = SoupStrainer('div')

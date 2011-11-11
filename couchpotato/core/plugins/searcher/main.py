@@ -261,7 +261,10 @@ class Searcher(Plugin):
 
         nfo = self.getCache(cache_key)
         if not nfo:
-            nfo = self.urlopen('http://www.srrdb.com/showfile.php?release=%s' % check_name)
-            self.setCache(cache_key, nfo)
+            try:
+                nfo = self.urlopen('http://www.srrdb.com/showfile.php?release=%s' % check_name)
+                self.setCache(cache_key, nfo)
+            except:
+                pass
 
         return getImdb(nfo) == imdb_id

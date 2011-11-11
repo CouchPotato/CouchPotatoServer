@@ -42,7 +42,10 @@ class UserscriptBase(Plugin):
         return
 
     def getMovie(self, url):
-        data = self.urlopen(url)
+        try:
+            data = self.urlopen(url)
+        except:
+            data = ''
         return self.getInfo(getImdb(data))
 
     def getInfo(self, identifier):

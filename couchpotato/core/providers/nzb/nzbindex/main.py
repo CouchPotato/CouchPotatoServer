@@ -37,15 +37,7 @@ class NzbIndex(NZBProvider, RSS):
 
         cache_key = 'nzbindex.%s.%s' % (movie['library'].get('identifier'), quality.get('identifier'))
 
-        data = self.getCache(cache_key)
-        if not data:
-            data = self.urlopen(url)
-            self.setCache(cache_key, data)
-
-            if not data:
-                log.error('Failed to get data from %s.' % url)
-                return results
-
+        data = self.getCache(cache_key, url)
         if data:
             try:
                 try:

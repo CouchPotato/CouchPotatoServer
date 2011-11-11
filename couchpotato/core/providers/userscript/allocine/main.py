@@ -10,7 +10,10 @@ class AlloCine(UserscriptBase):
         if not 'fichefilm_gen_cfilm' in url:
             return 'Url isn\'t from a movie'
 
-        data = self.urlopen(url)
+        try:
+            data = self.urlopen(url)
+        except:
+            return
 
         html = BeautifulSoup(data)
         title = html.find('title').contents[0].strip()

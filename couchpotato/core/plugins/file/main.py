@@ -34,9 +34,9 @@ class FileManager(Plugin):
 
     def download(self, url = '', dest = None, overwrite = False):
 
-        file = self.urlopen(url)
-        if not file:
-            log.error('File is empty, don\'t download')
+        try:
+            file = self.urlopen(url)
+        except:
             return False
 
         if not dest: # to Cache
