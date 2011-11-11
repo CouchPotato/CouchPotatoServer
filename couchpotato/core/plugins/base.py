@@ -113,7 +113,7 @@ class Plugin(object):
 
                 data = urllib2.urlopen(request).read()
         except IOError:
-            log.error('Failed opening url: %s' % (traceback.format_exc(1)))
+            log.error('Failed opening url: %s %s' % (url, traceback.format_exc(1)))
             raise
 
         self.http_last_use[host] = time.time()

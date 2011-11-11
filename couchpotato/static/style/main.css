@@ -112,8 +112,9 @@ form {
 	margin:0;
 }
 
-.spinner{
-	background: #4e5969 url('../images/spinner.gif') no-repeat center;
+body > .spinner, .mask{
+	background: rgba(0,0,0, 0.9);
+	z-index: 100;
 }
 
 .button {
@@ -378,11 +379,6 @@ form {
 	    rgb(55,62,74) 0%,
 	    rgb(73,83,98) 100%
 	);
-}
-
-.mask {
-	background: rgba(0,0,0, 0.7);
-	z-index: 100;
 }
 
 .question {

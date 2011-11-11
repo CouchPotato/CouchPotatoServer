@@ -1,6 +1,7 @@
 from couchpotato import app
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, addEvent
+from couchpotato.core.helpers.request import jsonified
 from couchpotato.core.helpers.variable import cleanHost
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
@@ -21,12 +22,18 @@ class Core(Plugin):
     def __init__(self):
         addApiView('app.shutdown', self.shutdown)
         addApiView('app.restart', self.restart)
+        addApiView('app.available', self.available)
 
         addEvent('app.crappy_restart', self.crappyRestart)
         addEvent('app.load', self.launchBrowser, priority = 100)
         addEvent('app.base_url', self.createBaseUrl)
 
         self.removeRestartFile()
+
+    def available(self):
+        return jsonified({
+            'succes': True
+        })
 
     def crappyRestart(self):
         ctx = app.test_request_context()

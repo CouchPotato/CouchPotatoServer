@@ -109,11 +109,56 @@ var CouchPotato = new Class({
 	},
 
 	shutdown: function(){
-		Api.request('app.shutdown');
+		var self = this;
+
+		self.blockPage('You have shutdown. This is what suppose to happen ;)');
+		Api.request('app.shutdown', {
+			'onComplete': self.blockPage.bind(self)
+		});
+		self.checkAvailable();
 	},
 
 	restart: function(){
+		var self = this;
+
+		self.blockPage('Restarting... please wait. If this takes to long, something must have gone wrong.');
 		Api.request('app.restart');
+		self.checkAvailable();
+	},
+
+	checkAvailable: function(){
+		var self = this;
+
+		Api.request('app.available', {
+			'onFailure': function(){
+				self.checkAvailable.delay(1000, self);
+				self.fireEvent('unload');
+			},
+			'onSuccess': function(){
+				self.unBlockPage();
+				self.fireEvent('load');
+			}
+		});
+	},
+
+	blockPage: function(message){
+		var self = this;
+
+		if(!self.mask){
+			var body = $(document.body);
+			self.mask = new Spinner(document.body, {
+				'message': new Element('div').adopt(
+					new Element('h1', {'text': 'Unavailable.'}),
+					new Element('div', {'text': message || 'Something must have crashed.. check the logs ;)'})
+				)
+			});
+		}
+		self.mask.show();
+	},
+
+	unBlockPage: function(){
+		var self = this;
+		self.mask.hide();
 	}
 
 });

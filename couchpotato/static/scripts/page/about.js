@@ -95,8 +95,8 @@ var AboutSettingTab = new Class({
 			)
 		);
 
-		self.fillVersion(Updater.getInfo());
-		Updater.addEvent('loaded', self.fillVersion.bind(self))
+		if(!self.fillVersion(Updater.getInfo()))
+			Updater.addEvent('loaded', self.fillVersion.bind(self))
 
 		self.settings.createGroup({
 			'name': 'actions'
