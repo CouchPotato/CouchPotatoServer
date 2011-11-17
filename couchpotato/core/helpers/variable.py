@@ -67,10 +67,9 @@ def getImdb(txt):
         output.close()
 
     try:
-        m = re.search('(?P<id>tt[0-9{7}]+)', txt)
-        id = m.group('id')
-        if id:  return id
-    except AttributeError:
+        id = re.findall('imdb\.com\/title\/tt(\d{7})', txt)[0]
+        return id
+    except IndexError:
         pass
 
     return False
