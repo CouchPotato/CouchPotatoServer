@@ -53,21 +53,21 @@
 		min-height: 300px;
 	}	
 
-		.page.settings .advanced { 
+		.page .advanced { 
 			display: none;
 			color: #edc07f;
 		}
-		.page.settings.show_advanced .advanced { display: block; }
+		.page.show_advanced .advanced { display: block; }
 		
 		.page.settings .tab_content {
 			display: none;
 		}
 		.page.settings .tab_content.active { display: block; }
 
-		.page.settings fieldset {
+		.page fieldset {
 			padding: 10px 0;
 		}
-			.page.settings fieldset h2 {
+			.page fieldset h2 {
 				font-weight: normal;
 				font-size: 25px;
 				padding:  0 9px 10px 30px;
@@ -78,15 +78,15 @@
 				-moz-box-shadow: 0 1px 0px rgba(255,255,255, 0.15);
 				-webkit-box-shadow: 0 1px 0px rgba(255,255,255, 0.15);
 			}
-			.page.settings fieldset h2 .hint {
+			.page fieldset h2 .hint {
 				font-size: 12px;
 				margin-left: 10px;
 			}
 			
-			.page.settings fieldset.disabled .ctrlHolder {
+			.page fieldset.disabled .ctrlHolder {
 				display: none;
 			}
-			.page.settings fieldset .ctrlHolder:first-child {
+			.page fieldset .ctrlHolder:first-child {
 				display: block;
 				padding: 0;
 				width: auto;
@@ -97,26 +97,28 @@
 				width: 20px;
 			}
 
-	.page.settings .ctrlHolder {
+	.page .ctrlHolder {
 		line-height: 25px;
 		padding: 10px 10px 10px 30px;
 		font-size: 14px;
 		border: 0;
 	}
-		.page.settings .ctrlHolder.save_success:not(:first-child) {
+		.page .ctrlHolder.save_success:not(:first-child) {
 			background: url('../../images/icon.check.png') no-repeat 7px center;
 		}
-		.page.settings .ctrlHolder:last-child { border: none; }
-		.page.settings .ctrlHolder:hover { background-color: rgba(255,255,255,0.05); }
-		.page.settings .ctrlHolder.focused { background-color: rgba(255,255,255,0.2); }
-		.page.settings .ctrlHolder.focused:first-child, .page.settings .ctrlHolder:first-child{ background-color: transparent; }
+		.page .ctrlHolder:last-child { border: none; }
+		.page .ctrlHolder:hover { background-color: rgba(255,255,255,0.05); }
+		.page .ctrlHolder.focused { background-color: rgba(255,255,255,0.2); }
+		.page .ctrlHolder.focused:first-child, .page .ctrlHolder:first-child{ background-color: transparent; }
 
-		.page.settings .ctrlHolder .formHint {
-			float: right;
+		.page .ctrlHolder .formHint {
 			width: 47%;
 			margin: -18px 0;
 			padding: 0;
-			color: #fff;
+			color: #fff !important;
+			display: inline-block;
+			vertical-align: middle;
+			padding-left: 2%;
 		}
 		
 			.check {
@@ -135,7 +137,7 @@
 				display: none;
 			}
 
-			.page.settings .check + .formHint {
+			.page .check + .formHint {
 				float: none;
 				width: auto;
 				display: inline-block;
@@ -144,16 +146,16 @@
 				vertical-align: middle;
 			}
 	
-		.page.settings .ctrlHolder label {
+		.page .ctrlHolder label {
 			font-weight: bold;
 			width: 20%;
 			margin: 0;
 			padding: 6px 0 0;
 		}
 		
-		.page.settings .xsmall { width: 20px !important; text-align: center; }
+		.page .xsmall { width: 20px !important; text-align: center; }
 
-	.page.settings input[type=text], .page.settings input[type=password] {
+	.page input[type=text], .page input[type=password] {
 		padding: 5px 3px;
 		margin: 0;
 		width: 30%;
@@ -162,25 +164,25 @@
 		-webkit-border-radius: 3px;
 		-moz-border-radius: 3px;
 	}
-		.page.settings .input.xsmall { width: 5% }
-		.page.settings .input.small { width: 10% }
-		.page.settings .input.medium { width: 15% }
-		.page.settings .input.large { width: 25% }
-		.page.settings .input.xlarge { width: 30% }
+		.page .input.xsmall { width: 5% }
+		.page .input.small { width: 10% }
+		.page .input.medium { width: 15% }
+		.page .input.large { width: 25% }
+		.page .input.xlarge { width: 30% }
 		
-	.page.settings .advanced_toggle {
+	.page .advanced_toggle {
 		clear: both;
 		display: block;
 		text-align: right;
 		height: 20px;
 		margin: 0;
 	}
-		.page.settings .advanced_toggle span { padding: 0 5px; }
-		.page.settings.show_advanced .advanced_toggle { 
+		.page .advanced_toggle span { padding: 0 5px; }
+		.page.show_advanced .advanced_toggle { 
 			color: #edc07f;
 		}
 	
-	.page.settings .directory {
+	.page .directory {
 		display: inline-block;
 		padding: 0 4% 0 4px;
 		font-size: 13px;
@@ -191,7 +193,7 @@
 		overflow: hidden;
 		vertical-align: top;
 	}
-		.page.settings .directory > span {
+		.page .directory > span {
 			height: 25px;
 			display: inline-block;
 			float: right;
@@ -200,11 +202,11 @@
 			cursor: pointer;
 		}
 	
-	.page.settings .directory_list {
+	.page .directory_list {
 		z-index: 2;
 		position: absolute;
-		width: 360px;
-		margin: -2px 0 20px 60px;
+		width: 450px;
+		margin: 28px 0 20px -4px;
 		background: #5c697b;
 		border-radius: 3px;
 		-webkit-border-radius: 3px;
@@ -214,54 +216,55 @@
 		-webkit-box-shadow: 0 0 50px rgba(0,0,0,0.55);
 	}
 	
-		.page.settings .directory_list .pointer {
-			border-right: 10px solid transparent;
-			border-left: 10px solid transparent;
-			border-bottom: 10px solid #5c697b;
+		.page .directory_list .pointer {
+			border-right: 6px solid transparent;
+			border-left: 6px solid transparent;
+			border-bottom: 6px solid #5c697b;
 			display: block;
 			position: absolute;
 			width: 0px;
-			margin: -9px 0 0 48.5%;
+			margin: -6px 0 0 38%;
 		}
 	
-	.page.settings .directory_list ul {
+	.page .directory_list ul {
 		width: 92%;
 		height: 300px;
 		overflow: auto;
 		margin: 0 4%;
+		font-size: 16px;
 	}
 	
-		.page.settings .directory_list li {
-			padding: 0 10px;
+		.page .directory_list li {
+			padding: 4px 10px;
 			cursor: pointer;
-			margin: 0;
+			margin: 0 !important;
 			border-top: 1px solid rgba(255,255,255,0.1);
 			background: url('../../images/right.arrow.png') no-repeat 98% center;
 		}
-		.page.settings .directory_list li:last-child {
+		.page .directory_list li:last-child {
 			border-bottom: 1px solid rgba(255,255,255,0.1);
 		}
 		
-			.page.settings .directory_list li:hover {
+			.page .directory_list li:hover {
 				background-color: #515c68;
 			}
 	
-	.page.settings .directory_list .actions {
+	.page .directory_list .actions {
 		clear: both;
 		padding: 4% 4% 2%;
 		min-height: 25px;
 	}
 		
-		.page.settings .directory_list .actions label {
+		.page .directory_list .actions label {
 			float: right;
 			width: auto;
 			padding: 0;
 		}
-			.page.settings .directory_list .actions .inlay {
+			.page .directory_list .actions .inlay {
 				margin: -2px 0 0 7px;
 			}
 			
-		.page.settings .directory_list .actions .back {
+		.page .directory_list .actions .back {
 			font-weight: bold;
 			width: 160px;
 			display: inline-block;
@@ -270,57 +273,204 @@
 			vertical-align: top;
 		}
 	
-	.page.settings .directory_list .actions:last-child {
+	.page .directory_list .actions:last-child {
 		float: right;
 		padding: 4%;
 	}
 
-		.page.settings .directory_list .actions:last-child > span {
+		.page .directory_list .actions:last-child > span {
 			padding: 0 5px;
 			text-shadow: none;
 		}
 		
-		.page.settings .directory_list .actions:last-child > .clear {
+		.page .directory_list .actions:last-child > .clear {
 			left: -90%;
 			position: relative;
 	background-color: #af3128;
 }
 		
-		.page.settings .directory_list .actions:last-child > .cancel {
+		.page .directory_list .actions:last-child > .cancel {
 			font-weight: bold;
 			color: #ddd;
 		}
 		
-		.page.settings .directory_list .actions:last-child > .save {
+		.page .directory_list .actions:last-child > .save {
 			background: #9dc156;
 		}
+			
+	.page .tag_input select {
+		width: 20%;
+		display: inline-block;
+	}
+			
+		.page .tag_input .selection {
+			border-radius: 0 10px 10px 0;
+			-moz-border-radius: 0 10px 10px 0;
+			-webkit-border-radius: 0 10px 10px 0;
+			height: 26px;
+		}
+		
+	.page .tag_input > input {
+		display: none;
+	}
+
+	.page .tag_input > ul {
+		list-style: none;
+		line-height: 20px;
+		padding: 3px 0;
+		border-radius: 3px;
+		-moz-border-radius: 3px;
+		-webkit-border-radius: 3px;
+		cursor: text;
+		width: 31%;
+		margin: 0 !important;
+	}
+		.page .tag_input:hover > ul {
+			width: 50%;
+			border-radius: 3px 0 0 3px;
+			-moz-border-radius: 3px 0 0 3px;
+			-webkit-border-radius: 3px 0 0 3px;
+		}
+		.page .tag_input:hover .formHint { display: none; }
+		
+		.page .tag_input > ul > li {
+			display: inline-block;
+			min-height: 20px;
+			min-width: 2px;
+			font-size: 12px;
+			padding: 0;
+			margin: 0 !important;
+			border-width: 0;
+			background: 0;
+		}
+		.page .tag_input > ul > li:first-child { min-width: 4px; }
+			.page .tag_input li.choice {
+				cursor: -moz-grab;
+				cursor: -webkit-grab;
+				cursor: grab;
+				padding: 0;
+				border-radius: 2px;
+				-moz-border-radius: 2px;
+				-webkit-border-radius: 2px;
+			}
+			.page .tag_input > ul:hover > li.choice {
+				background: url('../images/checks.png') no-repeat 94% -53px, -webkit-gradient(
+				    linear,
+				    left bottom,
+				    left top,
+				    color-stop(0, rgba(255,255,255,0.1)),
+				    color-stop(1, rgba(255,255,255,0.3))
+				);
+				background: url('../images/checks.png') no-repeat 94% -53px, -moz-linear-gradient(
+				    center top,
+				    rgba(255,255,255,0.3) 0%,
+				    rgba(255,255,255,0.1) 100%
+				);
+			}
+			.page .tag_input > ul > li.choice:hover {
+				background: url('../images/checks.png') no-repeat 94% -53px, -webkit-gradient(
+				    linear,
+				    left bottom,
+				    left top,
+				    color-stop(0, #406db8),
+				    color-stop(1, #5b9bd1)
+				);
+				background: url('../images/checks.png') no-repeat 94% -53px, -moz-linear-gradient(
+				    center top,
+				    #5b9bd1 0%,
+				    #406db8 100%
+				);
+			}
+			
+			.page .tag_input .select {
+				display: none;
+			}
+				.page .tag_input:hover .select { display: inline-block; }
+			
+			.page .tag_input li input {
+				background: 0;
+				border: 0;
+				color: #fff;
+				outline-width: 0;
+				padding: 0;
+				min-width: 2px;
+			}
+			.page .tag_input li:first-child input {
+				padding-left: 2px;
+				min-width: 0;
+			}
+			
+			.page .tag_input li:not(.choice) span {
+				white-space: pre;
+				position: absolute;
+				top: -9999px;
+			}
+		
+			.page .tag_input .delete {
+				display: none;
+				height: 10px;
+				width: 16px;
+				position: absolute;
+				margin: -9px 0 0 -16px;
+				border-radius: 30px 30px 0 0;
+				-webkit-border-radius: 30px 30px 0 0;
+				-moz-border-radius: 30px 30px 0 0;
+				cursor: pointer;
+				background: url('../images/checks.png') no-repeat 94% -53px, -webkit-gradient(
+				    linear,
+				    left bottom,
+				    left top,
+				    color-stop(0, #5b9bd1),
+				    color-stop(1, #5b9bd1)
+				);
+				background: url('../images/checks.png') no-repeat 94% -53px, -moz-linear-gradient(
+				    center top,
+				    #5b9bd1 0%,
+				    #5b9bd1 100%
+				);
+			}
+			.page .tag_input .choice:hover .delete { display: inline-block; }
+			.page .tag_input .choice .delete:hover { 
+				background: url('../images/checks.png') no-repeat 94% -53px, -webkit-gradient(
+				    linear,
+				    left bottom,
+				    left top,
+				    color-stop(0, #cc0000),
+				    color-stop(1, #cc3e00)
+				);
+				background: url('../images/checks.png') no-repeat 94% -53px, -moz-linear-gradient(
+				    center top,
+				    #5b9bd1 0%,
+				    #5b9bd1 100%
+				);
+			}
 	
-	.page.settings .section_newznab .head {
+	.page .section_newznab .head {
 		margin: 0 0 0 60px;
 	}
-		.page.settings .disabled .head { display: none; }
-		.page.settings .section_newznab .head abbr {
+		.page .disabled .head { display: none; }
+		.page .section_newznab .head abbr {
 			display: inline-block;
 			font-weight: bold;
 			border-bottom: 1px dotted #fff;
 			line-height: 140%;
 			cursor: help;
 		}
-		.page.settings .section_newznab .head abbr.host {
+		.page .section_newznab .head abbr.host {
 			margin-right: 197px;
 		}
 		
-	.page.settings .section_newznab .ctrlHolder {
+	.page .section_newznab .ctrlHolder {
 		padding-top: 2px;
 		padding-bottom: 3px;
 	}
-	.page.settings .section_newznab .ctrlHolder.hide { display: none; }
+	.page .section_newznab .ctrlHolder.hide { display: none; }
 		
-	.page.settings .section_newznab .ctrlHolder > * {
+	.page .section_newznab .ctrlHolder > * {
 		margin: 0 10px 0 0;
 	}
 		
-	.page.settings .section_newznab .ctrlHolder .delete {
+	.page .section_newznab .ctrlHolder .delete {
 		display: inline-block;
 		width: 22px;
 		height: 22px;
@@ -328,32 +478,32 @@
 		background-position: left center;
 	}
 	
-	.page.settings .section_newznab .ctrlHolder.is_empty .delete, .page.settings .section_newznab .ctrlHolder.is_empty .use {
+	.page .section_newznab .ctrlHolder.is_empty .delete, .page.settings .section_newznab .ctrlHolder.is_empty .use {
 		visibility: hidden;
 }
 
-	.page.settings .tab_about .usenet {
+	.page .tab_about .usenet {
 		padding: 20px 30px 0;
 		font-size: 17px;
 	}
 
-		.page.settings .tab_about .usenet a {
+		.page .tab_about .usenet a {
 			padding: 0 5px;
 		}
 
-		.page.settings .tab_about .usenet ul {
+		.page .tab_about .usenet ul {
 			float: left;
 			width: 50%;
 			margin: 10px 0;
 			padding: 0;
 		}
 
-			.page.settings .tab_about .usenet li {
+			.page .tab_about .usenet li {
 				background: url('../../images/icon.check.png') no-repeat left center;
 				padding: 0 0 0 25px;
 			}
 
-		.page.settings .tab_about .donate {
+		.page .tab_about .donate {
 			float: left;
 			width: 42%;
 			text-align: center;
@@ -365,24 +515,24 @@
 			-moz-box-shadow: -1px 0 0 rgba(255,255,255, 0.15);
 			-webkit-box-shadow: -1px 0 0 rgba(255,255,255, 0.15);
 		}
-			.page.settings .tab_about .donate form {
+			.page .tab_about .donate form {
 				padding: 10px 0 0;
 			}
 			
-	.page.settings .tab_about .info {
+	.page .tab_about .info {
 		padding: 20px 30px;
 		margin: 0;
 		overflow: hidden;
 	}
 
-		.page.settings .tab_about .info dt {
+		.page .tab_about .info dt {
 			clear: both;
 			float: left;
 			width: 17%;
 			font-weight: bold;
 		}
 		
-		.page.settings .tab_about .info dd {
+		.page .tab_about .info dd {
 			float: right;
 			width: 80%;
 			padding: 0;
@@ -390,12 +540,12 @@
 			font-style: italic;
 		}
 			
-	.page.settings .tab_about .group_actions > div {
+	.page .tab_about .group_actions > div {
 		padding: 30px;
 		text-align: center;
 	}
 			
-		.page.settings .tab_about .group_actions a {
+		.page .tab_about .group_actions a {
 			margin: 0 10px;
 			font-size: 20px;
 		}

@@ -259,6 +259,7 @@ body > .spinner, .mask{
 .select {
 	cursor: pointer;
 	display: inline-block;
+	color: #fff;
 }
 
 	.select .selection {
@@ -303,11 +304,11 @@ body > .spinner, .mask{
 	  	font-weight: bold;
 	}
 	.select .list {
-	  	display: none;
+		display: none;
 	  	background: #282d34;
 	  	border: 1px solid #1f242b;
 		position: absolute;
-		margin: 28px 0 0 0;
+		margin: 25px 0 0 0;
 		box-shadow: 0 1px 2px rgba(0,0,0,0.4);
 		-moz-box-shadow: 0 1px 2px rgba(0,0,0,0.4);
 		-webkit-box-shadow: 0 1px 2px rgba(0,0,0,0.4);
@@ -325,11 +326,15 @@ body > .spinner, .mask{
 				width: 100% !important;
 			}
 				.select .list li {
-					padding: 2px 33px 2px 20px;
+					padding: 0 33px 0 20px;
+					margin: 0 !important;
 					display: block;
+					border-top: 1px solid rgba(255,255,255,0.1);
+					white-space: nowrap;
 				}
 				.select .list li.highlighted {
 				  	background: rgba(255,255,255,0.1);
+				  	border-color: transparent;
 				}
 				
 	.select input { display: none; }

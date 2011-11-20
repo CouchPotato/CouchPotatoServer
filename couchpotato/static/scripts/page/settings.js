@@ -675,3 +675,231 @@ Option.Directory = new Class({
 		return self.input.get('text');
 	}
 });
+
+Option.Choice = new Class({
+	Extends: Option.String,
+
+	afterInject: function(){
+		var self = this;
+
+		self.replaceInput();
+
+		self.select = new Element('select').adopt(
+			new Element('option[text=Add option]')
+		).inject(self.tag_input, 'after');
+
+		var o = self.options.options;
+		Object.each(o.choices, function(label, choice){
+			new Element('option', {
+				'text': label,
+				'value': o.pre + choice + o.post
+			}).inject(self.select);
+		});
+
+		self.select = new Form.Dropdown(self.select, {
+			'onChange': self.addSelection.bind(self)
+		});
+	},
+
+	replaceInput: function(){
+		var self = this;
+		self.initialized = self.initialized ? self.initialized+1 : 1;
+
+		var value = self.getValue();
+		var matches = value.match(/<([^>]*)>/g);
+
+		self.tag_input = new Element('ul.inlay', {
+			'events': {
+				'click': function(e){
+					if(e.target == self.tag_input){
+						var input = self.tag_input.getElement('li:last-child input');
+						input.fireEvent('focus');
+						input.focus();
+					}
+
+					self.el.addEvent('outerClick', function(){
+						self.reset();
+						self.el.removeEvents('outerClick');
+					})
+				}
+			}
+		}).inject(self.input, 'after');
+		self.el.addClass('tag_input');
+
+		var mtches = []
+		if(matches)
+			matches.each(function(match, mnr){
+				var msplit = value.split(match);
+				msplit.each(function(matchsplit, snr){
+					if(msplit.length-1 == snr)
+						value = matchsplit;
+					mtches.append([value == matchsplit ? match : matchsplit]);
+
+					if(matches.length*2 == mtches.length)
+						mtches.append([value]);
+				});
+			});
+
+		mtches.each(self.addTag.bind(self));
+
+		self.addLastTag();
+
+		// Sortable
+		self.sortable = new Sortables(self.tag_input, {
+			'revert': true,
+			'handle': '',
+			'opacity': 0.5,
+			'onComplete': function(){
+				self.setOrder();
+				self.reset();
+			}
+		});
+	},
+
+	addLastTag: function(){
+		if(this.tag_input.getElement('li.choice:last-child'))
+			this.addTag('');
+	},
+
+	addTag: function(tag){
+		var self = this;
+		tag = new Option.Choice.Tag(tag, {
+			'onChange': self.setOrder.bind(self),
+			'onFocus': self.activate.bind(self),
+			'onBlur': function(){
+				self.addLastTag();
+				self.deactivate();
+			}
+		});
+		$(tag).inject(self.tag_input);
+
+		if(self.initialized > 1)
+			tag.setWidth();
+		else
+			(function(){ tag.setWidth(); }).delay(10, self);
+
+		return tag;
+	},
+
+	setOrder: function(){
+		var self = this;
+
+		var value = '';
+		self.tag_input.getElements('li').each(function(el){
+			value += el.getElement('span').get('text');
+		});
+		self.addLastTag();
+
+		self.input.set('value', value);
+		self.input.fireEvent('change');
+	},
+
+	addSelection: function(){
+		var self = this;
+
+		var tag = self.addTag(self.el.getElement('.selection input').get('value'));
+		self.sortable.addItems($(tag));
+		self.setOrder();
+	},
+
+	reset: function(){
+		var self = this;
+
+		self.tag_input.destroy();
+		self.sortable.detach();
+
+		self.replaceInput();
+	},
+
+	activate: function(){
+
+	},
+
+	deactivate: function(){
+
+	}
+
+});
+
+Option.Choice.Tag = new Class({
+
+	Implements: [Options, Events],
+
+	options: {
+		'pre': '<',
+		'post': '>'
+	},
+
+	initialize: function(tag, options){
+		var self = this;
+		self.setOptions(options);
+
+		self.tag = tag;
+		self.is_choice = tag.substr(0, 1) == self.options.pre && tag.substr(-1) == self.options.post;
+
+		self.create();
+	},
+
+	create: function(){
+		var self = this;
+
+		self.el =  new Element('li', {
+			'class': self.is_choice ? 'choice' : '',
+			'events': {
+				'mouseover': !self.is_choice ? self.fireEvent.bind(self, 'focus') : function(){}
+			}
+		}).adopt(
+			self.input = new Element(self.is_choice ? 'span' : 'input', {
+				'text': self.tag,
+				'value': self.tag,
+				'events': {
+					'keyup': self.is_choice ? null : function(){
+						self.setWidth();
+						self.fireEvent('change');
+					},
+					'focus': self.fireEvent.bind(self, 'focus'),
+					'blur': self.fireEvent.bind(self, 'blur')
+				}
+			}),
+			self.span = !self.is_choice ? new Element('span', {
+				'text': self.tag
+			}) : null,
+			self.del_button = new Element('a.delete', {
+				'events': {
+					'click': self.del.bind(self)
+				}
+			})
+		);
+
+		self.addEvent('focus', self.setWidth.bind(self));
+
+	},
+
+	focus: function(){
+		this.input.focus();
+	},
+
+	setWidth: function(){
+		var self = this;
+
+		if(self.span && self.input){
+			self.span.set('text', self.input.get('value'));
+			self.input.setStyle('width', self.span.getSize().x+2);
+		}
+	},
+
+	del: function(){
+		var self = this;
+		self.el.destroy();
+		self.fireEvent('change');
+	},
+
+	getValue: function(){
+		return this.span.get('text');
+	},
+
+	toElement: function(){
+		return this.el;
+	}
+
+});
