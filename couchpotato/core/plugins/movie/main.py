@@ -85,11 +85,11 @@ class MoviePlugin(Plugin):
 
         params = getParams()
         cache_key = '%s/%s' % (__name__, urlencode(params))
-        movies = Env.get('cache').get(cache_key)
+        movies = Env.getValue('cache').get(cache_key)
 
         if not movies:
             movies = fireEvent('movie.search', q = params.get('q'), merge = True)
-            Env.get('cache').set(cache_key, movies)
+            Env.getValue('cache').set(cache_key, movies)
 
         return jsonified({
             'success': True,

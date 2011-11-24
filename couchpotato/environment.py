@@ -1,7 +1,7 @@
 from couchpotato.core.loader import Loader
 from couchpotato.core.settings import Settings
 
-class Env:
+class Env(object):
 
     ''' Environment variables '''
     _uses_git = False
@@ -27,28 +27,28 @@ class Env:
         return Env._debug
 
     @staticmethod
-    def get(attr):
+    def getValue(attr):
         return getattr(Env, '_' + attr)
 
     @staticmethod
-    def set(attr, value):
+    def setValue(attr, value):
         return setattr(Env, '_' + attr, value)
 
     @staticmethod
     def setting(attr, section = 'core', value = None, default = ''):
 
-        s = Env.get('settings')
+        s = Env.getValue('settings')
 
         # Return setting
         if value == None:
-            return s.get(attr, default = default, section = section)
+            return s.getValue(attr, default = default, section = section)
 
         # Set setting
-        s.set(section, attr, value)
+        s.setValue(section, attr, value)
         s.save()
 
         return s
 
     @staticmethod
-    def getPermission(type):
-        return int(Env.get('settings').get('permission_%s' % type, default = 0777))
+    def getPermission(premission_type):
+        return int(Env.getValue('settings').get('permission_%s' % premission_type, default = 0777))

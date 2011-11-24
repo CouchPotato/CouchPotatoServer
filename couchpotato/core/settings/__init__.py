@@ -9,7 +9,7 @@ import time
 import re
 
 
-class Settings():
+class Settings(object):
 
     txt_to_type = {
         'str'    : str,
@@ -26,11 +26,11 @@ class Settings():
         addApiView('settings', self.view)
         addApiView('settings.save', self.saveView)
 
-    def setFile(self, file):
-        self.file = file
+    def setFile(self, filename):
+        self.filename = filename
 
         self.p = ConfigParser.RawConfigParser()
-        self.p.read(file)
+        self.p.read(filename)
 
         from couchpotato.core.logger import CPLog
         self.log = CPLog(__name__)
@@ -58,15 +58,15 @@ class Settings():
         if save:
             self.save(self)
 
-    def set(self, section, option, value):
+    def setValue(self, section, option, value):
         # Makes sure i won't change type!
-        old_value = self.get(option, section, None)
+        old_value = self.getValue(option, section, None)
         if None != old_value:
             value = type(old_value)(value)
         
         return self.p.set(section, option, self.encodeValue(value))
 
-    def get(self, option = '', section = 'core', default = ''):
+    def getValue(self, option = '', section = 'core', default = ''):
         try:
             value = self.p.get(section, option)
             return self.decodeValue(value)
@@ -83,8 +83,8 @@ class Settings():
         return None
     
     def decodeValue(self, value):
-        (type, val) = self.type_re.findall(value)[0]
-        val = self.txt_to_type[type](val)
+        (value_type, val) = self.type_re.findall(value)[0]
+        val = self.txt_to_type[value_type](val)
         return val
 
     def getValues(self):
@@ -97,7 +97,7 @@ class Settings():
         return values
 
     def save(self):
-        with open(self.file, 'wb') as configfile:
+        with open(self.filename, 'wb') as configfile:
             self.p.write(configfile)
 
         self.log.debug('Saved settings')
@@ -108,7 +108,7 @@ class Settings():
 
     def setDefault(self, section, option, value):
         if not self.p.has_option(section, option):
-            self.set(section, option, value)
+            self.setValue(section, option, value)
 
     def addOptions(self, section_name, options):
 
@@ -137,7 +137,7 @@ class Settings():
         option = params.get('name')
         value = params.get('value')
         
-        self.set(section, option, value)
+        self.setValue(section, option, value)
         self.save()
 
         return jsonified({

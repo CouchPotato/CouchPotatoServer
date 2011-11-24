@@ -119,14 +119,14 @@ class Renamer(Plugin):
                     multiple = len(group['files']['movie']) > 1 and not group['is_dvd']
                     cd = 1 if multiple else 0
 
-                    for file in sorted(list(group['files'][file_type])):
+                    for current_file in sorted(list(group['files'][file_type])):
 
                         # Original filename
-                        replacements['original'] = os.path.basename(file)
-                        replacements['original_folder'] = os.path.basename(os.path.dirname(file))
+                        replacements['original'] = os.path.basename(current_file)
+                        replacements['original_folder'] = os.path.basename(os.path.dirname(current_file))
 
                         # Extension
-                        replacements['ext'] = getExt(file)
+                        replacements['ext'] = getExt(current_file)
 
                         # cd #
                         replacements['cd'] = ' cd%d' % cd if cd else ''
@@ -205,8 +205,8 @@ class Renamer(Plugin):
                     # Mark movie "done" onces it found the quality with the finish check
                     try:
                         if movie.status_id == active_status.get('id'):
-                            for type in movie.profile.types:
-                                if type.quality_id == group['meta_data']['quality']['id'] and type.finish:
+                            for profile_type in movie.profile.types:
+                                if profile_type.quality_id == group['meta_data']['quality']['id'] and type.finish:
                                     movie.status_id = done_status.get('id')
                                     db.commit()
                     except Exception, e:
@@ -221,14 +221,14 @@ class Renamer(Plugin):
                             # This is where CP removes older, lesser quality releases
                             if release.quality.order > group['meta_data']['quality']['order']:
                                 log.info('Removing lesser quality %s for %s.' % (movie.library.titles[0].title, release.quality.label))
-                                for file in release.files:
-                                    remove_files.append(file)
+                                for current_file in release.files:
+                                    remove_files.append(current_file)
                                 remove_releases.append(release)
                             # Same quality, but still downloaded, so maybe repack/proper/unrated/directors cut etc
                             elif release.quality.order is group['meta_data']['quality']['order']:
                                 log.info('Same quality release already exists for %s, with quality %s. Assuming repack.' % (movie.library.titles[0].title, release.quality.label))
-                                for file in release.files:
-                                    remove_files.append(file)
+                                for current_file in release.files:
+                                    remove_files.append(current_file)
                                 remove_releases.append(release)
 
                             # Downloaded a lower quality, rename the newly downloaded files/folder to exclude them from scan
@@ -254,8 +254,8 @@ class Renamer(Plugin):
                 # Remove leftover files
                 if self.conf('cleanup') and not self.conf('move_leftover'):
                     log.debug('Removing leftover files')
-                    for file in group['files']['leftover']:
-                        remove_files.append(file)
+                    for current_file in group['files']['leftover']:
+                        remove_files.append(current_file)
 
             # Rename all files marked
             for src in rename_files:

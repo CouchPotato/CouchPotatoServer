@@ -1,7 +1,7 @@
 import logging
 import re
 
-class CPLog():
+class CPLog(object):
 
     context = ''
     replace_private = ['api', 'apikey', 'api_key', 'password', 'username', 'h']

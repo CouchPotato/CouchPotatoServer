@@ -63,10 +63,10 @@
 
 				App.setup({
 					'base_url': '{{ request.path }}',
-					'args': '{{ env.get('args') }}',
-					'options': '{{ env.get('options') }}',
-					'app_dir': '{{ env.get('app_dir') }}',
-					'data_dir': '{{ env.get('data_dir') }}',
+					'args': '{{ env.getValue('args') }}',
+					'options': '{{ env.getValue('options') }}',
+					'app_dir': '{{ env.getValue('app_dir') }}',
+					'data_dir': '{{ env.getValue('data_dir') }}',
 					'userscript_version': {{ fireEvent('userscript.get_version', single = True)|safe }}
 				});
 

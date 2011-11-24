@@ -24,7 +24,7 @@ class Updater(Plugin):
 
     def __init__(self):
 
-        self.repo = LocalRepository(Env.get('app_dir'))
+        self.repo = LocalRepository(Env.getValue('app_dir'))
 
         fireEvent('schedule.interval', 'updater.check', self.check, hours = 6)
 
@@ -117,7 +117,7 @@ class Updater(Plugin):
 
     def deletePyc(self):
 
-        for root, dirs, files in os.walk(Env.get('app_dir')):
+        for root, dirs, files in os.walk(Env.getValue('app_dir')):
 
             pyc_files = filter(lambda filename: filename.endswith('.pyc'), files)
             py_files = set(filter(lambda filename: filename.endswith('.py'), files))
@@ -132,4 +132,4 @@ class Updater(Plugin):
                     log.error('Couldn\'t remove %s: %s' % (full_path, traceback.format_exc()))
 
     def isEnabled(self):
-        return Plugin.isEnabled(self) and Env.get('uses_git')
+        return Plugin.isEnabled(self) and Env.getValue('uses_git')
