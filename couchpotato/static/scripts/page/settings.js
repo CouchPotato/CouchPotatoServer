@@ -4,15 +4,9 @@ Page.Settings = new Class({
 
 	name: 'settings',
 	title: 'Change settings.',
+	wizard_only: false,
 
-	tabs: {
-		'general': {},
-		'searcher': {},
-		'providers': {},
-		'downloaders': {},
-		'notifications': {},
-		'renamer': {}
-	},
+	tabs: {},
 
 	open: function(action, params){
 		var self = this;
@@ -20,9 +14,10 @@ Page.Settings = new Class({
 		self.params = params;
 
 		if(!self.data)
-			self.getData(self.create.bind(self))
-		else
+			self.getData(self.create.bind(self));
+		else {
 			self.openTab(action);
+		}
 	},
 
 	openTab: function(action){
@@ -88,7 +83,7 @@ Page.Settings = new Class({
 	},
 
 	create: function(json){
-		var self = this
+		var self = this;
 
 		self.el.adopt(
 			self.tabs_container = new Element('ul.tabs'),
@@ -108,18 +103,20 @@ Page.Settings = new Class({
 		);
 		self.showAdvanced();
 
-		new Form.Check(self.advanced_toggle)
-
-		// Create tabs
-		Object.each(self.tabs, function(tab, tab_name){
-			self.createTab(tab_name, tab)
-		});
+		new Form.Check(self.advanced_toggle);
 
 		// Add content to tabs
 		Object.each(json.options, function(section, section_name){
 
 			// Add groups to content
 			section.groups.sortBy('order').each(function(group){
+
+				if(self.wizard_only && !group.wizard)
+					return;
+
+				// Create tab
+				if(!self.tabs[group.tab] || !self.tabs[group.tab].groups)
+					self.createTab(group.tab, {});
 
 				// Create the group
 				if(!self.tabs[group.tab].groups[group.name]){
@@ -132,7 +129,7 @@ Page.Settings = new Class({
 				// Add options to group
 				group.options.sortBy('order').each(function(option){
 					var class_name = (option.type || 'string').capitalize();
-					var input = new Option[class_name](self, section_name, option.name, option);
+					var input = new Option[class_name](section_name, option.name, self.getValue(section_name, option.name), option);
 						input.inject(self.tabs[group.tab].groups[group.name]);
 						input.fireEvent('injected');
 				});
@@ -152,7 +149,7 @@ Page.Settings = new Class({
 			return self.tabs[tab_name].tab
 
 		var label = (tab.label || tab.name || tab_name).capitalize()
-		var tab_el = new Element('li').adopt(
+		var tab_el = new Element('li.t_'+tab_name).adopt(
 			new Element('a', {
 				'href': '/'+self.name+'/'+tab_name+'/',
 				'text': label
@@ -202,13 +199,13 @@ var OptionBase = new Class({
 	focused_class : 'focused',
 	save_on_change: true,
 
-	initialize: function(parent, section, name, options){
+	initialize: function(section, name, value, options){
 		var self = this
 		self.setOptions(options)
 
-		self.page = parent;
 		self.section = section;
 		self.name = name;
+		self.value = value;
 
 		self.createBase();
 		self.create();
@@ -316,8 +313,7 @@ var OptionBase = new Class({
 	},
 
 	getSettingValue: function(){
-		var self = this;
-		return self.page.getValue(self.section, self.name);
+		return this.value;
 	},
 
 	inject: function(el, position){
@@ -571,7 +567,7 @@ Option.Directory = new Class({
 						}
 					})
 				)
-			).inject(self.el)
+			).inject(self.input, 'before');
 
 			new Form.Check(self.show_hidden);
 		}

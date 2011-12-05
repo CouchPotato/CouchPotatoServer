@@ -11,6 +11,7 @@ config = [{
             'name': 'transmission',
             'label': 'Transmission',
             'description': 'Send NZBs to your NZBGet installation.',
+            'wizard': True,
             'options': [
                 {
                     'name': 'enabled',

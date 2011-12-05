@@ -10,6 +10,7 @@ config = [{
             'tab': 'providers',
             'name': 'nzbmatrix',
             'label': 'NZBMatrix',
+            'wizard': True,
             'options': [
                 {
                     'name': 'enabled',

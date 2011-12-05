@@ -11,6 +11,7 @@ config = [{
             'name': 'blackhole',
             'label': 'Black hole',
             'description': 'Download the NZB/Torrent to a specific folder.',
+            'wizard': True,
             'options': [
                 {
                     'name': 'enabled',

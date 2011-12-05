@@ -22,13 +22,12 @@ var CouchPotato = new Class({
 		self.createLayout();
 		self.createPages();
 
-		History.addEvent('change', self.openPage.bind(self));
-
 		if(window.location.hash)
 			History.handleInitialState();
 		else
 			self.openPage(window.location.pathname);
 
+		History.addEvent('change', self.openPage.bind(self));
 		self.c.addEvent('click:relay(a[href]:not([target=_blank]):not([normalhref=true]))', self.pushState.bind(self));
 	},
 
@@ -79,6 +78,10 @@ var CouchPotato = new Class({
 	openPage: function(url) {
 		var self = this;
 
+		var current_url = url.replace(/^\/+|\/+$/g, '');
+		if(current_url == self.current_url)
+			return;
+
 		self.route.parse(url);
 		var page_name = self.route.getPage().capitalize();
 		var action = self.route.getAction();
@@ -89,14 +92,15 @@ var CouchPotato = new Class({
 
 		try {
 			var page = self.pages[page_name] || self.pages.Wanted;
-				page.open(action, params);
-				page.show();
+			page.open(action, params);
+			page.show();
 		}
 		catch(e){
-			p("Can't open page:" + url)
+			console.error("Can't open page:" + url, e)
 		}
 
 		self.current_page = page;
+		self.current_url = current_url;
 
 	},
 
@@ -160,6 +164,10 @@ var CouchPotato = new Class({
 	unBlockPage: function(){
 		var self = this;
 		self.mask.hide();
+	},
+
+	createUrl: function(action, params){
+		return this.options.base_url + (action ? action+'/' : '') + (params ? '?'+Object.toQueryString(params) : '')
 	}
 
 });
@@ -315,3 +323,4 @@ function randomString(length, extra) {
 	});
 
 })();
+

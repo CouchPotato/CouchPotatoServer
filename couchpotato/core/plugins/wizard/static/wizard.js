@@ -1,225 +1,242 @@
 Page.Wizard = new Class({
 
-	Extends: PageBase,
+	Extends: Page.Settings,
 
 	name: 'wizard',
 	has_tab: false,
+	wizard_only: true,
 
-	options: {
-		'onOpened': function(){
+	headers: {
+		'general': {
+			'title': 'General',
+			'description': 'If you want to access CP from outside your local network, you better secure it a bit with a username & password.'
+		},
+		'downloaders': {
+			'title': 'What download apps are you using?',
+			'description': 'If you don\'t have any of these listed, you have to use Blackhole. Or drop me a line, maybe I\'ll support your download app.'
+		},
+		'providers': {
+			'title': 'Are you registered at any of these sites?',
+			'description': 'CP uses these sites to search for movies. A few free are enabled by default, but it\'s always better to have a few more.'
+		},
+		'renamer': {
+			'title': 'Move & rename the movies after downloading?',
+			'description': ''
+		},
+		'finish': {
+			'title': 'Finish Up',
+			'description': 'Are you done? Did you fill in everything or as much as possible? Yes, ok gogogo!',
+			'content': new Element('div').adopt(
+				new Element('a.button.green', {
+					'text': 'I\'m ready to start the awesomeness, wow this button is big and green!',
+					'events': {
+						'click': function(e){
+							(e).stop();
+							Api.request('settings.save', {
+								'data': {
+									'section': 'core',
+									'name': 'show_wizard',
+									'value': 0
+								},
+								'useSpinner': true,
+								'spinnerOptions': {
+									'target': self.el
+								},
+								'onComplete': function(){
+									window.location = App.createUrl();
+								}
+							});
+						}
+					}
+				})
+			)
+		}
+	},
+	groups: ['general', 'downloaders', 'searcher', 'providers', 'renamer', 'finish'],
+
+	open: function(action, params){
+		var self = this;
+
+		if(!self.initialized){
 			App.fireEvent('unload');
 			App.getBlock('header').hide();
+
+			self.parent(action, params);
+
+			self.addEvent('create', function(){
+				var mnn = new MultipleNewznab('Wizard');
+				mnn.addSettings();
+
+				self.order();
+			});
+
+			self.initialized = true;
+
+			self.scroll = new Fx.Scroll(document.body, {
+				'transition': 'quint:in:out'
+			});
 		}
+		else
+			(function(){
+				var sc = self.el.getElement('.wgroup_'+action);
+				self.scroll.start(0, sc.getCoordinates().top-80);
+			}).delay(1)
 	},
 
-	initialize: function(options){
+	order: function(){
 		var self = this;
-		self.parent(options);
 
-		// Create steps
-		self.steps = [
-			{'step':'index', 'title': 'Welcome'},
-			{'step':'step1', 'title': 'Security'},
-			{'step':'step2', 'title': 'Downloaders'}
-		]
+		var form = self.el.getElement('.uniForm');
+		var tabs = self.el.getElement('.tabs');
 
-		self.breadcrumbs = new Element('ul').inject(self.el);
-		Object.each(self.steps, function(step, nr){
-			step.el = new Element('li', {
-				'class': (nr == 0 ? 'active ' : '') + 'step_'+step.step,
-				'data-nr': nr,
-				'text': step.title
-			}).inject(self.breadcrumbs)
+		self.groups.each(function(group){
+			if(self.headers[group]){
+				group_container = new Element('.wgroup_'+group, {
+					'styles': {
+						'opacity': 0.2
+					},
+					'tween': {
+						'duration': 350
+					}
+				});
+				group_container.adopt(
+					new Element('h1', {
+						'text': self.headers[group].title
+					}),
+					self.headers[group].description ? new Element('span.description', {
+						'text': self.headers[group].description
+					}) : null,
+					self.headers[group].content ? self.headers[group].content : null
+				).inject(form);
+			}
+
+			var tab_navigation = tabs.getElement('.t_'+group);
+			if(tab_navigation && group_container){
+				tab_navigation.inject(tabs); // Tab navigation
+				self.el.getElement('.tab_'+group).inject(group_container); // Tab content
+			}
+			else {
+				new Element('li.t_'+group).adopt(
+					new Element('a', {
+						'href': App.createUrl('wizard/'+group),
+						'text': group.capitalize()
+					})
+				).inject(tabs);
+			}
 		});
 
-		p(self.steps);
+		// Remove toggle
+		self.el.getElement('.advanced_toggle').destroy();
 
-	},
+		// Hide retention
+		self.el.getElement('.tab_searcher').hide();
+		self.el.getElement('.t_searcher').hide();
 
-	nextStep: function(e){
-		var self = this;
-		(e).stop();
-
-		var next = (self.current_step || 0)+1;
-		var step = self.steps[next];
-		self.breadcrumbs.getElement('.active').removeClass('active');
-		step.el.addClass('active');
-
-		self.openUrl('/'+self.name+'/'+step.step+'/');
-
-		p('nextStep');
-	},
-
-	previousStep: function(){
-		var self = this;
-
-		p('previousStep');
-	},
-
-	stop: function(){
-		var self = this;
-		(e).stop();
-
-		p('close');
-	},
-
-	// Welcome
-	indexAction: function(){
-		var self = this;
-
-		var step = new Page.Wizard.Step('welcome', {
-			'title': 'Welcome to the CouchPotato wizard',
-			'description': 'Before you can start creating that butt-formed hole in you couch, you must complete the following wizard.',
-			'groups': [
-				{
-					'content': new Element('a.button.green', {
-						'text': 'Go to the first step',
-						'events': {
-							'click': self.nextStep.bind(self)
-						}
-					})
-				},
-				{
-					'title': 'Skip wizard',
-					'description': 'You can always activate the wizard from within the settings page',
-					'content': new Element('a.button.orange', {
-						'text': 'I already know how this works, I\'ll fill it in manually, thanks.',
-						'events': {
-							'click': self.stop.bind(self)
-						}
-					})
+		// Add pointer
+		new Element('.tab_wrapper').wraps(tabs).adopt(
+			self.pointer = new Element('.pointer', {
+				'tween': {
+					'transition': 'quint:in:out'
 				}
-			]
+			})
+		);
+
+		// Add nav
+		var minimum = self.el.getSize().y-window.getSize().y;
+		self.groups.each(function(group, nr){
+
+			var g = self.el.getElement('.wgroup_'+group);
+			if(!g || !g.isVisible()) return;
+			var t = self.el.getElement('.t_'+group);
+			if(!t) return;
+
+			var func = function(){
+				var ct = t.getCoordinates();
+				self.pointer.tween('left', ct.left+(ct.width/2)-(self.pointer.getWidth()/2));
+				g.tween('opacity', 1);
+			}
+
+			if(nr == 0)
+				func();
+
+			
+			var ss = new ScrollSpy( {
+				min: function(){
+					var c = g.getCoordinates();
+					var top = c.top-(window.getSize().y/2);
+					return top > minimum ? minimum : top
+				},
+				max: function(){
+					var c = g.getCoordinates();
+					return c.top+(c.height/2)
+				},
+				onEnter: func,
+				onLeave: function(){
+					g.tween('opacity', 0.2)
+				}
+			});
 		});
 
-		return [self.breadcrumbs, step]
-
-	},
-
-	// Username password browser
-	step1Action: function(){
-		var self = this;
-
-		var step = new Page.Wizard.Step('security', {
-			'title': 'Security',
-			'description': 'Before you can start creating that butt-formed hole in you couch, you must complete the following wizard.',
-			'groups': [
-				{
-					'title': 'Fill in your username and password',
-					'description': 'Keep blank if you don\'t want to secure CP.',
-					'fields': ['core.username', 'core.password']
-				},
-				{
-					'title': 'Launch the browser when CP starts',
-					'fields': ['core.launch_browser']
-				}
-			]
-		})
-
-		return [self.breadcrumbs, step]
-	},
-
-	// NZB Torrent, downloaders
-	step2Action: function(){
-		var options = {
-			'title': 'What do you use to download your movies',
-			'answers': [
-				{'name': 'nzb', 'label': 'Usenet'},
-				{'name': 'torrent', 'label': 'Torrents'}
-			]
-		}
 	}
-
-	// NZB show affiliates
-		// NZB: retention
-		// Downloaders
-		// Providers
-			// Automated registration nzb.su via email api
-		// Renamer
-		// Userscript, depending on browser
-		// Extras:
-			// Notifications
-			// Metadata
 
 });
 
-Page.Wizard.Step = new Class({
-
-	Implements: [Options],
-
-	initialize: function(name, options){
-		var self = this;
-		self.setOptions(options);
-
-		self.name = name;
-		self.create();
-
+var ScrollSpy = new Class( {
+	Implements : [ Options, Events ],
+	
+	options : {
+		min : 0,
+		mode : "vertical",
+		max : 0,
+		container : window,
+		onEnter : Function.from(),
+		onLeave : Function.from(),
+		onTick : Function.from()
 	},
+	initialize : function(b) {
+		this.setOptions(b);
+		this.container = $(this.options.container);
+		this.enters = this.leaves = 0;
+		this.timer = 0;
 
-	create: function(){
-		var self = this;
-
-		// Main element
-		self.el = new Element('div.step').addClass(self.name || '');
-
-		self.createTitleDescription(self.options, self.el);
-
-		// Groups
-		if(self.options.groups){
-			self.groups = new Element('div.groups').inject(self.el);
-			self.options.groups.each(self.createGroup.bind(self));
+		if (this.options.max == 0) {
+			var c = this.container.getScrollSize();
+			this.options.max = this.options.mode == "vertical" ? c.y : c.x;
 		}
-
+		this.addListener();
 	},
-
-	createGroup: function(options){
+	addListener : function() {
 		var self = this;
-
-		var group = new Element('div.group').inject(self.groups);
-
-		self.createTitleDescription(options, group);
-
-		// Content
-		if(options.content)
-			options.content.inject(group);
-
-		// Fields
-		if(options.fields)
-			options.fields.each(self.createField.bind(self))
-
-
+		
+		self.inside = false;
+		self.container.addEvent("scroll", function() {
+			if(self.timer) clearTimeout(self.timer);
+			self.timer = self.scrollHandler();
+		});
 	},
-
-	createField: function(field){
-
-	},
-
-	createTitleDescription: function(options, inject_in){
+	
+	scrollHandler: function(){
 		var self = this;
-
-
-		// Title
-		if(options.title)
-			self.title = new Element('div.title', {
-				'text': options.title
-			}).inject(inject_in);
-
-		// Descriptions
-		if(options.description)
-			self.title = new Element('div.description', {
-				'text': options.description
-			}).inject(inject_in);
-
-	},
-
-	toElement: function(){
-		return this.el;
+		
+		var b = self.container.getScroll();
+		var c = self.options.mode == "vertical" ? b.y : b.x;
+		
+		var min = typeOf(self.options.min) == 'function' ? self.options.min() : self.options.min;
+		var max = typeOf(self.options.max) == 'function' ? self.options.max() : self.options.max;
+		
+		if (c >= min && c <= max) {
+			if (!self.inside) {
+				self.inside = true;
+				self.enters++;
+				self.fireEvent("enter", [ b, this.enters ]);
+			}
+			self.fireEvent("tick", [ b, self.inside, self.enters, self.leaves ]);
+		} else {
+			if (self.inside) {
+				self.inside = false;
+				self.leaves++;
+				self.fireEvent("leave", [ b, self.leaves ]);
+			}
+		}
 	}
-
-})
-
-window.addEvent('domready', function(){
-
-	// Check if wizard is enabled
-
 });

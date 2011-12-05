@@ -2,12 +2,14 @@ var MultipleNewznab = new Class({
 
 	input_types: ['use', 'host', 'api_key'],
 
-	initialize: function(){
+	initialize: function(page){
 		var self = this;
 
 		self.items = [];
 		self.values = [];
 		self.inputs = {};
+
+		self.page = page;
 
 		App.addEvent('load', self.addSettings.bind(self))
 
@@ -16,7 +18,7 @@ var MultipleNewznab = new Class({
 	addSettings: function(){
 		var self = this;
 
-		self.settings = App.getPage('Settings')
+		self.settings = App.getPage(self.page || 'Settings')
 		self.settings.addEvent('create', function(){
 
 			self.fieldset = self.settings.tabs.providers.content.getElement('.section_newznab');

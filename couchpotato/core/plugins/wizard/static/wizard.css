@@ -1,0 +1,70 @@
+/* @override http://127.0.0.1:5000/static/wizard/wizard.css */
+
+.page.wizard h1 {
+	padding: 10px 30px;
+	margin: 0;
+	display: block;
+	font-size: 40px;
+	margin-top: 80px;
+}
+
+.page.wizard .description {
+	padding: 10px 30px;
+	font-size: 18px;
+	display: block;
+}
+
+.page.wizard .tab_wrapper {
+	background: #5c697b;
+	padding: 18px 0;
+	font-size: 27px;
+	position: fixed;
+	top: 0;
+	margin: 0;
+	width: 100%;
+	left: 0;
+	z-index: 2;
+
+	box-shadow: 0 0 50px rgba(0,0,0,0.55);
+	-moz-box-shadow: 0 0 50px rgba(0,0,0,0.55);
+	-webkit-box-shadow: 0 0 50px rgba(0,0,0,0.55);
+}
+
+	.page.wizard .tab_wrapper .tabs {
+		text-align: center;
+		padding: 0;
+		margin: 0;
+		display: block;
+	}
+	
+	.page.wizard .tabs li {
+		display: inline-block;
+	}
+		.page.wizard .tabs li a {
+			padding: 20px 30px;
+		}
+		
+	.page.wizard .tab_wrapper .pointer {
+		border-right: 10px solid transparent;
+		border-left: 10px solid transparent;
+		border-top: 10px solid #5c697b;
+		display: block;
+		position: absolute;
+		top: 60px;
+	}
+		
+.page.wizard .tab_content {
+	margin: 20px 0 160px;
+}
+
+.page.wizard .wgroup_finish {
+	height: 300px;
+}
+
+	.page.wizard .button.green {
+		padding: 20px;
+		font-size: 25px;
+		margin: 10px 30px;
+		display: block;
+		text-align: center;
+	}

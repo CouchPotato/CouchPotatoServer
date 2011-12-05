@@ -72,6 +72,7 @@ config = [{
             'tab': 'searcher',
             'name': 'nzb',
             'label': 'NZB',
+            'wizard': True,
             'options': [
                 {
                     'name': 'retention',
