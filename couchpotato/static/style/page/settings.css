@@ -141,7 +141,7 @@
 				float: none;
 				width: auto;
 				display: inline-block;
-				margin-left: 1% !important;
+				padding-left: 1% !important;
 				height: 24px;
 				vertical-align: middle;
 			}

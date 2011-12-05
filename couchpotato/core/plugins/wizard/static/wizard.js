@@ -7,6 +7,10 @@ Page.Wizard = new Class({
 	wizard_only: true,
 
 	headers: {
+		'welcome': {
+			'title': 'Welcome to CouchPotato',
+			'description': 'To get started, fill in each of the following settings as much as your can.'
+		},
 		'general': {
 			'title': 'General',
 			'description': 'If you want to access CP from outside your local network, you better secure it a bit with a username & password.'
@@ -52,7 +56,7 @@ Page.Wizard = new Class({
 			)
 		}
 	},
-	groups: ['general', 'downloaders', 'searcher', 'providers', 'renamer', 'finish'],
+	groups: ['welcome', 'general', 'downloaders', 'searcher', 'providers', 'renamer', 'finish'],
 
 	open: function(action, params){
 		var self = this;
@@ -114,12 +118,13 @@ Page.Wizard = new Class({
 			if(tab_navigation && group_container){
 				tab_navigation.inject(tabs); // Tab navigation
 				self.el.getElement('.tab_'+group).inject(group_container); // Tab content
+				if(self.headers[group]) tab_navigation.getElement('a').set('text', (self.headers[group].label || group).capitalize());
 			}
 			else {
 				new Element('li.t_'+group).adopt(
 					new Element('a', {
 						'href': App.createUrl('wizard/'+group),
-						'text': group.capitalize()
+						'text': (self.headers[group].label || group).capitalize()
 					})
 				).inject(tabs);
 			}
