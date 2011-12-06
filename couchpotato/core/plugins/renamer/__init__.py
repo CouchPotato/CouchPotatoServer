@@ -3,14 +3,33 @@ from couchpotato.core.plugins.renamer.main import Renamer
 def start():
     return Renamer()
 
+rename_options = {
+    'pre': '<',
+    'post': '>',
+    'choices': {
+        'ext': 'Extention (mkv)',
+        'namethe': 'Moviename, The',
+        'thename': 'The Moviename',
+        'year': 'Year (2011)',
+        'first': 'First letter (M)',
+        'dirname': 'Dirname (Moviename.2011.720p-releasegrp)',
+        'quality': 'Quality (720P)',
+        'video': 'Video (x264)',
+        'audio': 'Audio (DTS)',
+        'group': 'Releasegroup name',
+        'source': 'Source media (Bluray)',
+    },
+}
+
 config = [{
     'name': 'renamer',
+    'description': 'Move and rename your downloaded movies to your movie directory.',
     'groups': [
         {
             'tab': 'renamer',
             'name': 'renamer',
-            'label': 'Folders',
-            'description': 'Move and rename your downloaded movies to your movie directory.',
+            'label': 'Enable renaming',
+            'wizard': True,
             'options': [
                 {
                     'name': 'enabled',
@@ -20,24 +39,28 @@ config = [{
                 {
                     'name': 'from',
                     'type': 'directory',
-                    'description': 'Folder where the movies are downloaded to.',
+                    'description': 'Folder where CP searches for movies.',
                 },
                 {
                     'name': 'to',
                     'type': 'directory',
-                    'description': 'Folder where the movies will be moved to.',
+                    'description': 'Folder where the movies should be moved to.',
                 },
                 {
                     'name': 'folder_name',
                     'label': 'Folder naming',
                     'description': 'Name of the folder. Keep empty for no folder.',
                     'default': '<namethe> (<year>)',
+                    'type': 'choice',
+                    'options': rename_options
                 },
                 {
                     'name': 'file_name',
                     'label': 'File naming',
                     'description': 'Name of the file',
                     'default': '<thename><cd>.<ext>',
+                    'type': 'choice',
+                    'options': rename_options
                 },
                 {
                     'name': 'cleanup',
@@ -86,11 +109,15 @@ config = [{
                     'name': 'nfo_name',
                     'label': 'NFO naming',
                     'default': '<filename>.orig.<ext>',
+                    'type': 'choice',
+                    'options': rename_options
                 },
                 {
                     'name': 'trailer_name',
                     'label': 'Trailer naming',
                     'default': '<filename>-trailer.<ext>',
+                    'type': 'choice',
+                    'options': rename_options
                 },
             ],
         },

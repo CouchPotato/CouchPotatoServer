@@ -33,9 +33,11 @@ var PageBase = new Class({
 		//p('Opening: ' +self.getName() + ', ' + action + ', ' + Object.toQueryString(params));
 
 		try {
-			self.el.empty();
 			var elements = self[action+'Action'](params);
-			self.el.adopt(elements);
+			if(elements !== undefined){
+				self.el.empty();
+				self.el.adopt(elements);
+			}
 
 			self.fireEvent('opened');
 		}

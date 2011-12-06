@@ -11,6 +11,7 @@ config = [{
             'name': 'sabnzbd',
             'label': 'Sabnzbd',
             'description': 'Send NZBs to your Sabnzbd installation.',
+            'wizard': True,
             'options': [
                 {
                     'name': 'enabled',

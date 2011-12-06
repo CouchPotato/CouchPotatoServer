@@ -10,6 +10,7 @@ config = [{
             'tab': 'providers',
             'name': 'newznab',
             'description': 'Enable multiple NewzNab providers such as <a href="http://nzb.su" target="_blank">NZB.su</a>',
+            'wizard': True,
             'options': [
                 {
                     'name': 'enabled',

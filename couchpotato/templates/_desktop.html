@@ -28,16 +28,16 @@
 		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/block/navigation.js') }}"></script>
 		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/block/footer.js') }}"></script>
 
-		{% for url in fireEvent('clientscript.get_scripts', as_html = True, single = True) %}
-		<script type="text/javascript" src="{{ url_for('web.index') }}{{ url }}"></script>{% endfor %}
-		{% for url in fireEvent('clientscript.get_styles', as_html = True, single = True) %}
-		<link rel="stylesheet" href="{{ url_for('web.index') }}{{ url }}" type="text/css">{% endfor %}
-
 		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/page/wanted.js') }}"></script>
 		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/page/settings.js') }}"></script>
 		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/page/about.js') }}"></script>
 		<!--<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/page/soon.js') }}"></script>
 		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/page/manage.js') }}"></script>-->
+
+		{% for url in fireEvent('clientscript.get_scripts', as_html = True, single = True) %}
+		<script type="text/javascript" src="{{ url_for('web.index') }}{{ url }}"></script>{% endfor %}
+		{% for url in fireEvent('clientscript.get_styles', as_html = True, single = True) %}
+		<link rel="stylesheet" href="{{ url_for('web.index') }}{{ url }}" type="text/css">{% endfor %}
 
 		<link href="{{ url_for('web.static', filename='images/favicon.ico') }}" rel="icon" type="image/x-icon" />
 		<link rel="apple-touch-icon" href="{{ url_for('web.static', filename='images/homescreen.png') }}" />
@@ -69,9 +69,13 @@
 					'data_dir': '{{ env.getValue('data_dir') }}',
 					'userscript_version': {{ fireEvent('userscript.get_version', single = True)|safe }}
 				});
-
-				//Wizard.start.delay(100, Wizard);
 			})
+
+			{% if env.setting('show_wizard') %}
+				if(!window.location.href.contains('wizard'))
+					window.location = '{{ url_for('web.index') }}wizard/'
+			{% endif %}
+
 		</script>
 		<title>CouchPotato</title>
 	</head>

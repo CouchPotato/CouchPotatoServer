@@ -11,6 +11,7 @@ config = [{
             'tab': 'general',
             'name': 'basics',
             'description': 'Needs restart before changes take effect.',
+            'wizard': True,
             'options': [
                 {
                     'name': 'username',
@@ -30,7 +31,7 @@ config = [{
                 },
                 {
                     'name': 'port',
-                    'default': 5000,
+                    'default': 5050,
                     'type': 'int',
                     'description': 'The port I should listen to.',
                 },
@@ -39,6 +40,7 @@ config = [{
                     'default': 1,
                     'type': 'bool',
                     'description': 'Launch the browser when I start.',
+                    'wizard': True,
                 },
             ],
         },

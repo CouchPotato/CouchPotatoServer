@@ -9,6 +9,7 @@ config = [{
         {
             'tab': 'providers',
             'name': 'newzbin',
+            'wizard': True,
             'options': [
                 {
                     'name': 'enabled',

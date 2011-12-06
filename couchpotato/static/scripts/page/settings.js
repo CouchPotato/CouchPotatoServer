@@ -4,15 +4,9 @@ Page.Settings = new Class({
 
 	name: 'settings',
 	title: 'Change settings.',
+	wizard_only: false,
 
-	tabs: {
-		'general': {},
-		'searcher': {},
-		'providers': {},
-		'downloaders': {},
-		'notifications': {},
-		'renamer': {}
-	},
+	tabs: {},
 
 	open: function(action, params){
 		var self = this;
@@ -20,9 +14,10 @@ Page.Settings = new Class({
 		self.params = params;
 
 		if(!self.data)
-			self.getData(self.create.bind(self))
-		else
+			self.getData(self.create.bind(self));
+		else {
 			self.openTab(action);
+		}
 	},
 
 	openTab: function(action){
@@ -88,7 +83,7 @@ Page.Settings = new Class({
 	},
 
 	create: function(json){
-		var self = this
+		var self = this;
 
 		self.el.adopt(
 			self.tabs_container = new Element('ul.tabs'),
@@ -108,18 +103,20 @@ Page.Settings = new Class({
 		);
 		self.showAdvanced();
 
-		new Form.Check(self.advanced_toggle)
-
-		// Create tabs
-		Object.each(self.tabs, function(tab, tab_name){
-			self.createTab(tab_name, tab)
-		});
+		new Form.Check(self.advanced_toggle);
 
 		// Add content to tabs
 		Object.each(json.options, function(section, section_name){
 
 			// Add groups to content
 			section.groups.sortBy('order').each(function(group){
+
+				if(self.wizard_only && !group.wizard)
+					return;
+
+				// Create tab
+				if(!self.tabs[group.tab] || !self.tabs[group.tab].groups)
+					self.createTab(group.tab, {});
 
 				// Create the group
 				if(!self.tabs[group.tab].groups[group.name]){
@@ -132,7 +129,7 @@ Page.Settings = new Class({
 				// Add options to group
 				group.options.sortBy('order').each(function(option){
 					var class_name = (option.type || 'string').capitalize();
-					var input = new Option[class_name](self, section_name, option.name, option);
+					var input = new Option[class_name](section_name, option.name, self.getValue(section_name, option.name), option);
 						input.inject(self.tabs[group.tab].groups[group.name]);
 						input.fireEvent('injected');
 				});
@@ -152,7 +149,7 @@ Page.Settings = new Class({
 			return self.tabs[tab_name].tab
 
 		var label = (tab.label || tab.name || tab_name).capitalize()
-		var tab_el = new Element('li').adopt(
+		var tab_el = new Element('li.t_'+tab_name).adopt(
 			new Element('a', {
 				'href': '/'+self.name+'/'+tab_name+'/',
 				'text': label
@@ -202,13 +199,13 @@ var OptionBase = new Class({
 	focused_class : 'focused',
 	save_on_change: true,
 
-	initialize: function(parent, section, name, options){
+	initialize: function(section, name, value, options){
 		var self = this
 		self.setOptions(options)
 
-		self.page = parent;
 		self.section = section;
 		self.name = name;
+		self.value = value;
 
 		self.createBase();
 		self.create();
@@ -316,8 +313,7 @@ var OptionBase = new Class({
 	},
 
 	getSettingValue: function(){
-		var self = this;
-		return self.page.getValue(self.section, self.name);
+		return this.value;
 	},
 
 	inject: function(el, position){
@@ -571,7 +567,7 @@ Option.Directory = new Class({
 						}
 					})
 				)
-			).inject(self.el)
+			).inject(self.input, 'before');
 
 			new Form.Check(self.show_hidden);
 		}
@@ -674,4 +670,232 @@ Option.Directory = new Class({
 		var self = this;
 		return self.input.get('text');
 	}
+});
+
+Option.Choice = new Class({
+	Extends: Option.String,
+
+	afterInject: function(){
+		var self = this;
+
+		self.replaceInput();
+
+		self.select = new Element('select').adopt(
+			new Element('option[text=Add option]')
+		).inject(self.tag_input, 'after');
+
+		var o = self.options.options;
+		Object.each(o.choices, function(label, choice){
+			new Element('option', {
+				'text': label,
+				'value': o.pre + choice + o.post
+			}).inject(self.select);
+		});
+
+		self.select = new Form.Dropdown(self.select, {
+			'onChange': self.addSelection.bind(self)
+		});
+	},
+
+	replaceInput: function(){
+		var self = this;
+		self.initialized = self.initialized ? self.initialized+1 : 1;
+
+		var value = self.getValue();
+		var matches = value.match(/<([^>]*)>/g);
+
+		self.tag_input = new Element('ul.inlay', {
+			'events': {
+				'click': function(e){
+					if(e.target == self.tag_input){
+						var input = self.tag_input.getElement('li:last-child input');
+						input.fireEvent('focus');
+						input.focus();
+					}
+
+					self.el.addEvent('outerClick', function(){
+						self.reset();
+						self.el.removeEvents('outerClick');
+					})
+				}
+			}
+		}).inject(self.input, 'after');
+		self.el.addClass('tag_input');
+
+		var mtches = []
+		if(matches)
+			matches.each(function(match, mnr){
+				var msplit = value.split(match);
+				msplit.each(function(matchsplit, snr){
+					if(msplit.length-1 == snr)
+						value = matchsplit;
+					mtches.append([value == matchsplit ? match : matchsplit]);
+
+					if(matches.length*2 == mtches.length)
+						mtches.append([value]);
+				});
+			});
+
+		mtches.each(self.addTag.bind(self));
+
+		self.addLastTag();
+
+		// Sortable
+		self.sortable = new Sortables(self.tag_input, {
+			'revert': true,
+			'handle': '',
+			'opacity': 0.5,
+			'onComplete': function(){
+				self.setOrder();
+				self.reset();
+			}
+		});
+	},
+
+	addLastTag: function(){
+		if(this.tag_input.getElement('li.choice:last-child'))
+			this.addTag('');
+	},
+
+	addTag: function(tag){
+		var self = this;
+		tag = new Option.Choice.Tag(tag, {
+			'onChange': self.setOrder.bind(self),
+			'onFocus': self.activate.bind(self),
+			'onBlur': function(){
+				self.addLastTag();
+				self.deactivate();
+			}
+		});
+		$(tag).inject(self.tag_input);
+
+		if(self.initialized > 1)
+			tag.setWidth();
+		else
+			(function(){ tag.setWidth(); }).delay(10, self);
+
+		return tag;
+	},
+
+	setOrder: function(){
+		var self = this;
+
+		var value = '';
+		self.tag_input.getElements('li').each(function(el){
+			value += el.getElement('span').get('text');
+		});
+		self.addLastTag();
+
+		self.input.set('value', value);
+		self.input.fireEvent('change');
+	},
+
+	addSelection: function(){
+		var self = this;
+
+		var tag = self.addTag(self.el.getElement('.selection input').get('value'));
+		self.sortable.addItems($(tag));
+		self.setOrder();
+	},
+
+	reset: function(){
+		var self = this;
+
+		self.tag_input.destroy();
+		self.sortable.detach();
+
+		self.replaceInput();
+	},
+
+	activate: function(){
+
+	},
+
+	deactivate: function(){
+
+	}
+
+});
+
+Option.Choice.Tag = new Class({
+
+	Implements: [Options, Events],
+
+	options: {
+		'pre': '<',
+		'post': '>'
+	},
+
+	initialize: function(tag, options){
+		var self = this;
+		self.setOptions(options);
+
+		self.tag = tag;
+		self.is_choice = tag.substr(0, 1) == self.options.pre && tag.substr(-1) == self.options.post;
+
+		self.create();
+	},
+
+	create: function(){
+		var self = this;
+
+		self.el =  new Element('li', {
+			'class': self.is_choice ? 'choice' : '',
+			'events': {
+				'mouseover': !self.is_choice ? self.fireEvent.bind(self, 'focus') : function(){}
+			}
+		}).adopt(
+			self.input = new Element(self.is_choice ? 'span' : 'input', {
+				'text': self.tag,
+				'value': self.tag,
+				'events': {
+					'keyup': self.is_choice ? null : function(){
+						self.setWidth();
+						self.fireEvent('change');
+					},
+					'focus': self.fireEvent.bind(self, 'focus'),
+					'blur': self.fireEvent.bind(self, 'blur')
+				}
+			}),
+			self.span = !self.is_choice ? new Element('span', {
+				'text': self.tag
+			}) : null,
+			self.del_button = new Element('a.delete', {
+				'events': {
+					'click': self.del.bind(self)
+				}
+			})
+		);
+
+		self.addEvent('focus', self.setWidth.bind(self));
+
+	},
+
+	focus: function(){
+		this.input.focus();
+	},
+
+	setWidth: function(){
+		var self = this;
+
+		if(self.span && self.input){
+			self.span.set('text', self.input.get('value'));
+			self.input.setStyle('width', self.span.getSize().x+2);
+		}
+	},
+
+	del: function(){
+		var self = this;
+		self.el.destroy();
+		self.fireEvent('change');
+	},
+
+	getValue: function(){
+		return this.span.get('text');
+	},
+
+	toElement: function(){
+		return this.el;
+	}
+
 });
