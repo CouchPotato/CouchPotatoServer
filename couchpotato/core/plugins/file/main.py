@@ -23,27 +23,27 @@ class FileManager(Plugin):
         addEvent('file.download', self.download)
         addEvent('file.types', self.getTypes)
 
-        addApiView('file.cache/<path:file>', self.showImage)
+        addApiView('file.cache/<path:filename>', self.showImage)
 
-    def showImage(self, file = ''):
+    def showImage(self, filename = ''):
 
-        cache_dir = Env.get('cache_dir')
-        filename = file.replace(cache_dir[1:] + '/', '')
+        cache_dir = Env.getValue('cache_dir')
+        filename = filename.replace(cache_dir[1:] + '/', '')
 
         return send_from_directory(cache_dir, filename)
 
     def download(self, url = '', dest = None, overwrite = False):
 
         try:
-            file = self.urlopen(url)
+            filedata = self.urlopen(url)
         except:
             return False
 
         if not dest: # to Cache
-            dest = os.path.join(Env.get('cache_dir'), '%s.%s' % (md5(url), getExt(url)))
+            dest = os.path.join(Env.getValue('cache_dir'), '%s.%s' % (md5(url), getExt(url)))
 
         if overwrite or not os.path.isfile(dest):
-            self.createFile(dest, file)
+            self.createFile(dest, filedata)
 
         return dest
 

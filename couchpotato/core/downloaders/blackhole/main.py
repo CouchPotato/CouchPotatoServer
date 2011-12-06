@@ -18,19 +18,19 @@ class Blackhole(Downloader):
             log.error('No directory set for blackhole %s download.' % data.get('type'))
         else:
             try:
-                file = data.get('download')(url = data.get('url'), nzb_id = data.get('id'))
+                filedata = data.get('download')(url = data.get('url'), nzb_id = data.get('id'))
 
-                if len(file) < 50:
+                if len(filedata) < 50:
                     log.error('No nzb available!')
                     return False
 
-                fullPath = os.path.join(directory, self.createFileName(data, file, movie))
+                fullPath = os.path.join(directory, self.createFileName(data, filedata, movie))
 
                 try:
                     if not os.path.isfile(fullPath):
                         log.info('Downloading %s to %s.' % (data.get('type'), fullPath))
                         with open(fullPath, 'wb') as f:
-                            f.write(file)
+                            f.write(filedata)
                         return True
                     else:
                         log.info('File %s already exists.' % fullPath)

@@ -23,7 +23,7 @@ class Logging(Plugin):
         total = 1
         for x in range(0, 50):
 
-            path = '%s%s' % (Env.get('log_path'), '.%s' % x if x > 0 else '')
+            path = '%s%s' % (Env.getValue('log_path'), '.%s' % x if x > 0 else '')
 
             # Check see if the log exists
             if not os.path.isfile(path):
@@ -48,7 +48,7 @@ class Logging(Plugin):
     def clear(self):
 
         for x in range(0, 50):
-            path = '%s%s' % (Env.get('log_path'), '.%s' % x if x > 0 else '')
+            path = '%s%s' % (Env.getValue('log_path'), '.%s' % x if x > 0 else '')
 
             if not os.path.isfile(path):
                 break

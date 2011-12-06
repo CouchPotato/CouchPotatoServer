@@ -19,7 +19,7 @@ class Provider(Plugin):
 
     def isAvailable(self, test_url):
 
-        if Env.get('debug'): return True
+        if Env.getValue('debug'): return True
 
         now = time.time()
         host = urlparse(test_url).hostname

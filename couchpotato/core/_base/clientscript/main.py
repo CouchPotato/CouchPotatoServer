@@ -47,10 +47,10 @@ class ClientScript(Plugin):
     def registerScript(self, path, position = 'head'):
         self.register(path, 'script', position)
 
-    def register(self, file, type, location):
+    def register(self, filepath, type, location):
 
         if not self.urls[type].get(location):
             self.urls[type][location] = []
 
-        filePath = file
+        filePath = filepath
         self.urls[type][location].append(filePath)

@@ -3,7 +3,7 @@ import xml.etree.ElementTree as XMLTree
 
 log = CPLog(__name__)
 
-class RSS():
+class RSS(object):
 
     def getTextElements(self, xml, path):
         ''' Find elements and return tree'''

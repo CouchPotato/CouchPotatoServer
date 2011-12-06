@@ -111,10 +111,10 @@ class LibraryPlugin(Plugin):
                         continue
 
                     file_path = fireEvent('file.download', url = image, single = True)
-                    file = fireEvent('file.add', path = file_path, type = ('image', type), single = True)
+                    file_obj = fireEvent('file.add', path = file_path, type = ('image', type), single = True)
                     try:
-                        file = db.query(File).filter_by(id = file.get('id')).one()
-                        library.files.append(file)
+                        file_obj = db.query(File).filter_by(id = file_obj.get('id')).one()
+                        library.files.append(file_obj)
                         db.commit()
                     except:
                         log.debug('Failed to attach to library: %s' % traceback.format_exc())

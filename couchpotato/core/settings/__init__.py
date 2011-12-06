@@ -6,11 +6,19 @@ from couchpotato.core.helpers.variable import mergeDicts
 import ConfigParser
 import os.path
 import time
+import re
 
 
-class Settings():
+class Settings(object):
 
-    bool = {'true':True, 'false':False}
+    txt_to_type = {
+        'str'    : str,
+        'unicode': unicode,
+        'int'    : int,
+        'bool'   : bool,
+    }
+    type_re = re.compile("(%s)\((.*)\)$" 
+                         % ("|".join(txt_to_type.keys())))
     options = {}
 
     def __init__(self):
@@ -18,11 +26,11 @@ class Settings():
         addApiView('settings', self.view)
         addApiView('settings.save', self.saveView)
 
-    def setFile(self, file):
-        self.file = file
+    def setFile(self, filename):
+        self.filename = filename
 
         self.p = ConfigParser.RawConfigParser()
-        self.p.read(file)
+        self.p.read(filename)
 
         from couchpotato.core.logger import CPLog
         self.log = CPLog(__name__)
@@ -50,24 +58,34 @@ class Settings():
         if save:
             self.save(self)
 
-    def set(self, section, option, value):
-        return self.p.set(section, option, self.cleanValue(value))
+    def setValue(self, section, option, value):
+        # Makes sure i won't change type!
+        old_value = self.getValue(option, section, None)
+        if None != old_value:
+            value = type(old_value)(value)
+        
+        return self.p.set(section, option, self.encodeValue(value))
 
-    def get(self, option = '', section = 'core', default = ''):
+    def getValue(self, option = '', section = 'core', default = ''):
         try:
             value = self.p.get(section, option)
-            return self.cleanValue(value)
+            return self.decodeValue(value)
         except:
             return default
 
-    def cleanValue(self, value):
-        if(isInt(value)):
-            return int(value)
-
-        if str(value).lower() in self.bool:
-            return self.bool.get(str(value).lower())
-
-        return value.strip()
+    def encodeValue(self, value):
+        if hasattr(value, "strip"):
+            value = value.strip()
+        
+        for type_name, type_cast in self.txt_to_type.iteritems():
+            if type(value) is type_cast:
+                return "%s(%s)" % (type_name, value)
+        return None
+    
+    def decodeValue(self, value):
+        (value_type, val) = self.type_re.findall(value)[0]
+        val = self.txt_to_type[value_type](val)
+        return val
 
     def getValues(self):
         values = {}
@@ -75,11 +93,11 @@ class Settings():
             values[section] = {}
             for option in self.p.items(section):
                 (option_name, option_value) = option
-                values[section][option_name] = self.cleanValue(option_value)
+                values[section][option_name] = self.decodeValue(option_value)
         return values
 
     def save(self):
-        with open(self.file, 'wb') as configfile:
+        with open(self.filename, 'wb') as configfile:
             self.p.write(configfile)
 
         self.log.debug('Saved settings')
@@ -90,7 +108,7 @@ class Settings():
 
     def setDefault(self, section, option, value):
         if not self.p.has_option(section, option):
-            self.p.set(section, option, value)
+            self.setValue(section, option, value)
 
     def addOptions(self, section_name, options):
 
@@ -118,8 +136,8 @@ class Settings():
         section = params.get('section')
         option = params.get('name')
         value = params.get('value')
-
-        self.set(section, option, value)
+        
+        self.setValue(section, option, value)
         self.save()
 
         return jsonified({

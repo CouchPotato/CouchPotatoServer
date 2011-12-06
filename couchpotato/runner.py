@@ -38,7 +38,7 @@ def runCouchPotato(options, base_path, args):
 
     # Load settings
     from couchpotato.environment import Env
-    settings = Env.get('settings')
+    settings = Env.getValue('settings')
     settings.setFile(options.config_file)
 
     # Create data dir if needed
@@ -60,21 +60,21 @@ def runCouchPotato(options, base_path, args):
 
 
     # Register environment settings
-    Env.set('uses_git', not options.nogit)
-    Env.set('app_dir', base_path)
-    Env.set('data_dir', data_dir)
-    Env.set('log_path', os.path.join(log_dir, 'CouchPotato.log'))
-    Env.set('db_path', 'sqlite:///' + os.path.join(data_dir, 'couchpotato.db'))
-    Env.set('cache_dir', os.path.join(data_dir, 'cache'))
-    Env.set('cache', FileSystemCache(os.path.join(Env.get('cache_dir'), 'python')))
-    Env.set('console_log', options.console_log)
-    Env.set('daemonize', options.daemonize)
-    Env.set('args', args)
-    Env.set('options', options)
+    Env.setValue('uses_git', not options.nogit)
+    Env.setValue('app_dir', base_path)
+    Env.setValue('data_dir', data_dir)
+    Env.setValue('log_path', os.path.join(log_dir, 'CouchPotato.log'))
+    Env.setValue('db_path', 'sqlite:///' + os.path.join(data_dir, 'couchpotato.db'))
+    Env.setValue('cache_dir', os.path.join(data_dir, 'cache'))
+    Env.setValue('cache', FileSystemCache(os.path.join(Env.getValue('cache_dir'), 'python')))
+    Env.setValue('console_log', options.console_log)
+    Env.setValue('daemonize', options.daemonize)
+    Env.setValue('args', args)
+    Env.setValue('options', options)
 
     # Determine debug
     debug = options.debug or Env.setting('debug', default = False)
-    Env.set('debug', debug)
+    Env.setValue('debug', debug)
 
     # Only run once when debugging
     if os.environ.get('WERKZEUG_RUN_MAIN') or not debug:
@@ -92,7 +92,7 @@ def runCouchPotato(options, base_path, args):
             logger.addHandler(hdlr)
 
         # To file
-        hdlr2 = handlers.RotatingFileHandler(Env.get('log_path'), 'a', 500000, 10)
+        hdlr2 = handlers.RotatingFileHandler(Env.getValue('log_path'), 'a', 500000, 10)
         hdlr2.setFormatter(formatter)
         logger.addHandler(hdlr2)
 
@@ -108,14 +108,14 @@ def runCouchPotato(options, base_path, args):
 
 
         # Load configs & plugins
-        loader = Env.get('loader')
+        loader = Env.getValue('loader')
         loader.preload(root = base_path)
         loader.run()
 
 
         # Load migrations
         from migrate.versioning.api import version_control, db_version, version, upgrade
-        db = Env.get('db_path')
+        db = Env.getValue('db_path')
         repo = os.path.join(base_path, 'couchpotato', 'core', 'migration')
         logging.getLogger('migrate').setLevel(logging.WARNING) # Disable logging for migration
 

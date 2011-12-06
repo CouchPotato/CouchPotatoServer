@@ -82,7 +82,7 @@ class Core(Plugin):
             pass
 
     def restartFilePath(self):
-        return os.path.join(Env.get('app_dir'), 'restart')
+        return os.path.join(Env.getValue('app_dir'), 'restart')
 
     def launchBrowser(self):
 

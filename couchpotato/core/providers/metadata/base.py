@@ -22,24 +22,24 @@ class MetaDataBase(Plugin):
 
         root = self.getRootName(release)
 
-        for type in ['nfo', 'thumbnail', 'fanart']:
+        for file_type in ['nfo', 'thumbnail', 'fanart']:
             try:
                 # Get file path
-                name = getattr(self, 'get' + type.capitalize() + 'Name')(root)
+                name = getattr(self, 'get' + file_type.capitalize() + 'Name')(root)
 
-                if name and self.conf('meta_' + type):
+                if name and self.conf('meta_' + file_type):
 
                     # Get file content
-                    content = getattr(self, 'get' + type.capitalize())(release)
+                    content = getattr(self, 'get' + file_type.capitalize())(release)
                     if content:
-                        log.debug('Creating %s file: %s' % (type, name))
+                        log.debug('Creating %s file: %s' % (file_type, name))
                         if os.path.isfile(content):
                             shutil.copy2(content, name)
                         else:
                             self.createFile(name, content)
 
             except Exception, e:
-                log.error('Unable to create %s file: %s' % (type, traceback.format_exc()))
+                log.error('Unable to create %s file: %s' % (file_type, traceback.format_exc()))
 
     def getRootName(self, data):
         return
@@ -62,9 +62,9 @@ class MetaDataBase(Plugin):
             if type.get('identifier') == file_type:
                 break
 
-        for file in data['library'].get('files'):
-            if file.get('type_id') is type.get('id'):
-                return file.get('path')
+        for cur_file in data['library'].get('files'):
+            if cur_file.get('type_id') is type.get('id'):
+                return cur_file.get('path')
 
     def getFanart(self, data):
         return self.getThumbnail(data, file_type = 'backdrop_original')
