@@ -2,7 +2,7 @@ from argparse import ArgumentParser
 from couchpotato import web
 from couchpotato.api import api
 from couchpotato.core.event import fireEventAsync
-from couchpotato.core.helpers.variable import getDataDir
+from couchpotato.core.helpers.variable import getDataDir, tryInt
 from daemon import createDaemon
 from logging import handlers
 from werkzeug.contrib.cache import FileSystemCache
@@ -153,7 +153,7 @@ def runCouchPotato(options, base_path, args):
     config = {
         'use_reloader': reloader,
         'host': Env.setting('host', default = '0.0.0.0'),
-        'port': Env.setting('port', default = 5000)
+        'port': tryInt(Env.setting('port', default = 5000))
     }
 
     # Static path
