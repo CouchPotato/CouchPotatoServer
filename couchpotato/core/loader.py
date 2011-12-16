@@ -6,7 +6,7 @@ import traceback
 
 log = CPLog(__name__)
 
-class Loader:
+class Loader(object):
 
     plugins = {}
     providers = {}
@@ -59,8 +59,8 @@ class Loader:
 
     def addFromDir(self, type, priority, module, dir):
 
-        for file in glob.glob(os.path.join(dir, '*')):
-            name = os.path.basename(file)
+        for cur_file in glob.glob(os.path.join(dir, '*')):
+            name = os.path.basename(cur_file)
             if os.path.isdir(os.path.join(dir, name)):
                 module_name = '%s.%s' % (module, name)
                 self.addModule(priority, type, module_name, name)

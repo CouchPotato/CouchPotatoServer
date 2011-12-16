@@ -56,19 +56,19 @@ class Release(Plugin):
 
         # Add each file type
         for type in group['files']:
-            for file in group['files'][type]:
-                added_file = self.saveFile(file, type = type, include_media_info = type is 'movie')
+            for cur_file in group['files'][type]:
+                added_file = self.saveFile(cur_file, type = type, include_media_info = type is 'movie')
                 try:
                     added_file = db.query(File).filter_by(id = added_file.get('id')).one()
                     rel.files.append(added_file)
                     db.commit()
                 except Exception, e:
-                    log.debug('Failed to attach "%s" to release: %s' % (file, e))
+                    log.debug('Failed to attach "%s" to release: %s' % (cur_file, e))
 
         db.remove()
 
 
-    def saveFile(self, file, type = 'unknown', include_media_info = False):
+    def saveFile(self, filepath, type = 'unknown', include_media_info = False):
 
         properties = {}
 
@@ -77,7 +77,7 @@ class Release(Plugin):
             properties = {}
 
         # Check database and update/insert if necessary
-        return fireEvent('file.add', path = file, part = fireEvent('scanner.partnumber', file, single = True), type = Scanner.file_types.get(type), properties = properties, single = True)
+        return fireEvent('file.add', path = filepath, part = fireEvent('scanner.partnumber', file, single = True), type = Scanner.file_types.get(type), properties = properties, single = True)
 
     def delete(self):
 

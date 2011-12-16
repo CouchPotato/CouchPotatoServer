@@ -196,8 +196,8 @@ class Scanner(Plugin):
 
             # Check if movie is fresh and maybe still unpacking, ignore files new then 1 minute
             file_too_new = False
-            for file in group['unsorted_files']:
-                file_time = os.path.getmtime(file)
+            for cur_file in group['unsorted_files']:
+                file_time = os.path.getmtime(cur_file)
                 if file_time > time.time() - 60:
                     file_too_new = tryInt(time.time() - file_time)
                     break
@@ -265,13 +265,13 @@ class Scanner(Plugin):
         data = {}
         files = list(group['files']['movie'])
 
-        for file in files:
-            if os.path.getsize(file) < self.minimal_filesize['media']: continue # Ignore smaller files
+        for cur_file in files:
+            if os.path.getsize(cur_file) < self.minimal_filesize['media']: continue # Ignore smaller files
 
-            meta = self.getMeta(file)
+            meta = self.getMeta(cur_file)
 
             try:
-                data['video'] = self.getCodec(file, self.codecs['video'])
+                data['video'] = self.getCodec(cur_file, self.codecs['video'])
                 data['audio'] = meta['audio stream'][0]['compression']
                 data['resolution_width'] = meta['video stream'][0]['image width']
                 data['resolution_height'] = meta['video stream'][0]['image height']
@@ -286,9 +286,9 @@ class Scanner(Plugin):
 
         data['quality_type'] = 'HD' if data.get('resolution_width', 0) >= 1280 else 'SD'
 
-        file = re.sub('(.cp\(tt[0-9{7}]+\))', '', files[0])
-        data['group'] = self.getGroup(file)
-        data['source'] = self.getSourceMedia(file)
+        filename = re.sub('(.cp\(tt[0-9{7}]+\))', '', files[0])
+        data['group'] = self.getGroup(filename)
+        data['source'] = self.getSourceMedia(filename)
 
         return data
 
@@ -311,8 +311,8 @@ class Scanner(Plugin):
         files = group['files']
 
         # Check for CP(imdb_id) string in the file paths
-        for file in files['movie']:
-            imdb_id = self.getCPImdb(file)
+        for cur_file in files['movie']:
+            imdb_id = self.getCPImdb(cur_file)
             if imdb_id: break
 
         # Check and see if nfo contains the imdb-id
@@ -327,8 +327,8 @@ class Scanner(Plugin):
         # Check if path is already in db
         if not imdb_id:
             db = get_session()
-            for file in files['movie']:
-                f = db.query(File).filter_by(path = toUnicode(file)).first()
+            for cur_file in files['movie']:
+                f = db.query(File).filter_by(path = toUnicode(cur_file)).first()
                 try:
                     imdb_id = f.library[0].identifier
                     break
@@ -338,8 +338,8 @@ class Scanner(Plugin):
 
         # Search based on OpenSubtitleHash
         if not imdb_id and not group['is_dvd']:
-            for file in files['movie']:
-                movie = fireEvent('movie.by_hash', file = file, merge = True)
+            for cur_file in files['movie']:
+                movie = fireEvent('movie.by_hash', file = cur_file, merge = True)
 
                 if len(movie) > 0:
                     imdb_id = movie[0]['imdb']
@@ -437,22 +437,22 @@ class Scanner(Plugin):
 
         return False
 
-    def keepFile(self, file):
+    def keepFile(self, filename):
 
         # ignoredpaths
         for i in self.ignored_in_path:
-            if i in file.lower():
-                log.debug('Ignored "%s" contains "%s".' % (file, i))
+            if i in filename.lower():
+                log.debug('Ignored "%s" contains "%s".' % (filename, i))
                 return False
 
         # Sample file
-        if re.search('(^|[\W_])sample\d*[\W_]', file.lower()):
-            log.debug('Is sample file "%s".' % file)
+        if re.search('(^|[\W_])sample\d*[\W_]', filename.lower()):
+            log.debug('Is sample file "%s".' % filename)
             return False
 
         # Minimal size
-        if self.filesizeBetween(file, self.minimal_filesize['media']):
-            log.debug('File to small: %s' % file)
+        if self.filesizeBetween(filename, self.minimal_filesize['media']):
+            log.debug('File to small: %s' % filename)
             return False
 
         # All is OK

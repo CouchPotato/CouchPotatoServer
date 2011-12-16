@@ -28,7 +28,7 @@ GROWL_TYPE_REGISTRATION = 0
 GROWL_TYPE_NOTIFICATION = 1
 
 
-class GrowlRegistrationPacket:
+class GrowlRegistrationPacket(object):
     """Builds a Growl Network Registration packet.
     Defaults to emulating the command-line growlnotify utility."""
 
@@ -70,7 +70,7 @@ class GrowlRegistrationPacket:
         self.data += self.checksum.digest()
         return self.data
 
-class GrowlNotificationPacket:
+class GrowlNotificationPacket(object):
     """Builds a Growl Network Notification packet.
     Defaults to emulating the command-line growlnotify utility."""
 

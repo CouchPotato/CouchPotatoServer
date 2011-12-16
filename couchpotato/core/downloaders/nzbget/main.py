@@ -42,18 +42,18 @@ class NZBGet(Downloader):
 
         try:
             if isfunction(data.get('download')):
-                file = data.get('download')()
-                if not file:
+                filedata = data.get('download')()
+                if not filedata:
                     log.error('Failed download file: %s' % nzb_name)
                     return False
             else:
                 log.info('Downloading: %s' % data.get('url'))
-                file = self.urlopen(data.get('url'))
+                filedata = self.urlopen(data.get('url'))
         except:
             log.error('Unable to get NZB file: %s' % traceback.format_exc())
             return False
 
-        if rpc.append(nzb_name, self.conf('category'), False, standard_b64encode(file.strip())):
+        if rpc.append(nzb_name, self.conf('category'), False, standard_b64encode(filedata.strip())):
             log.info('NZB sent successfully to NZBGet')
             return True
         else:

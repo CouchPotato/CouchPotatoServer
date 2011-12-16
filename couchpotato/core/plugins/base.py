@@ -57,15 +57,15 @@ class Plugin(object):
         class_name = re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
 
         path = 'static/' + class_name + '/'
-        addView(path + '<path:file>', self.showStatic, static = True)
+        addView(path + '<path:filename>', self.showStatic, static = True)
 
         if add_to_head:
             for f in glob.glob(os.path.join(self.plugin_path, 'static', '*')):
                 fireEvent('register_%s' % ('script' if getExt(f) in 'js' else 'style'), path + os.path.basename(f))
 
-    def showStatic(self, file = ''):
+    def showStatic(self, filename):
         d = os.path.join(self.plugin_path, 'static')
-        return send_from_directory(d, file)
+        return send_from_directory(d, filename)
 
     def createFile(self, path, content):
 
@@ -81,7 +81,7 @@ class Plugin(object):
     def makeDir(self, path):
         try:
             if not os.path.isdir(path):
-                os.makedirs(path, Env.getPermission('folder'))
+                os.makedirs(path, Env.getValuePermission('folder'))
             return True
         except Exception, e:
             log.error('Unable to create folder "%s": %s' % (path, e))
@@ -147,11 +147,11 @@ class Plugin(object):
 
         self.needs_shutdown = value
 
-    def isRunning(self, value = None, bool = True):
+    def isRunning(self, value = None, boolean = True):
         if value is None:
             return self.running
 
-        if bool:
+        if boolean:
             self.running.append(value)
         else:
             try:
@@ -161,7 +161,7 @@ class Plugin(object):
 
 
     def getCache(self, cache_key, url = None):
-        cache = Env.get('cache').get(cache_key)
+        cache = Env.getValue('cache').get(cache_key)
         if cache:
             log.debug('Getting cache %s' % cache_key)
             return cache
@@ -176,7 +176,7 @@ class Plugin(object):
 
     def setCache(self, cache_key, value, timeout = 300):
         log.debug('Setting cache %s' % cache_key)
-        Env.get('cache').set(cache_key, value, timeout)
+        Env.getValue('cache').set(cache_key, value, timeout)
         return value
 
     def isDisabled(self):

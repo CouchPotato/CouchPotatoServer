@@ -137,7 +137,7 @@ var Profile = new Class({
 		var self = this;
 
 		var label = self.el.getElement('.quality_label input').get('value');
-		new Question('Are you sure you want to delete <strong>"'+label+'"</strong>?', 'Items using this profile, will be set to the default quality.', [{
+		var qObj = new Question('Are you sure you want to delete <strong>"'+label+'"</strong>?', 'Items using this profile, will be set to the default quality.', [{
 			'text': 'Delete "'+label+'"',
 			'class': 'delete',
 			'events': {
@@ -152,10 +152,12 @@ var Profile = new Class({
 							'target': self.el
 						},
 						'onComplete': function(json){
-							if(json.success)
+							if(json.success) {
+								qObj.close();
 								self.el.destroy();
-							else
-								alert(json.message)
+							} else {
+								alert(json.message);
+							}
 						}
 					});
 				}

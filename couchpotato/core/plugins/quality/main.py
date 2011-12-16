@@ -140,9 +140,9 @@ class QualityPlugin(Plugin):
         cached = self.getCache(hash)
         if cached: return cached
 
-        for file in files:
-            size = (os.path.getsize(file) / 1024 / 1024) if os.path.isfile(file) else 0
-            words = re.split('\W+', file.lower())
+        for cur_file in files:
+            size = (os.path.getsize(cur_file) / 1024 / 1024) if os.path.isfile(cur_file) else 0
+            words = re.split('\W+', cur_file.lower())
 
             for quality in self.all():
 

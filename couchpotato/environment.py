@@ -1,7 +1,7 @@
 from couchpotato.core.loader import Loader
 from couchpotato.core.settings import Settings
 
-class Env:
+class Env(object):
 
     ''' Environment variables '''
     _uses_git = False
