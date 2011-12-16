@@ -161,7 +161,7 @@ class Plugin(object):
 
 
     def getCache(self, cache_key, url = None):
-        cache = Env.getValue('cache').get(cache_key)
+        cache = Env.get('cache').get(cache_key)
         if cache:
             log.debug('Getting cache %s' % cache_key)
             return cache
@@ -176,7 +176,7 @@ class Plugin(object):
 
     def setCache(self, cache_key, value, timeout = 300):
         log.debug('Setting cache %s' % cache_key)
-        Env.getValue('cache').set(cache_key, value, timeout)
+        Env.get('cache').set(cache_key, value, timeout)
         return value
 
     def isDisabled(self):
