@@ -1,6 +1,6 @@
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent
-from couchpotato.core.helpers.encoding import isInt
+from couchpotato.core.helpers.encoding import isInt, toUnicode
 from couchpotato.core.helpers.request import getParams, jsonified
 from couchpotato.core.helpers.variable import mergeDicts
 import ConfigParser
@@ -10,8 +10,8 @@ import time
 
 class Settings():
 
-    bool = {'true':True, 'false':False}
     options = {}
+    types = {}
 
     def __init__(self):
 
@@ -42,32 +42,44 @@ class Settings():
 
     def registerDefaults(self, section_name, options = {}, save = True):
         self.addSection(section_name)
-        for option, value in options.iteritems():
-            self.setDefault(section_name, option, value)
+        for option_name, option in options.iteritems():
+            self.setDefault(section_name, option_name, option.get('default', ''))
 
-        #self.log.debug('Defaults for "%s": %s' % (section_name, options))
+            if option.get('type'):
+                self.setType(section_name, option_name, option.get('type'))
 
         if save:
             self.save(self)
 
     def set(self, section, option, value):
-        return self.p.set(section, option, self.cleanValue(value))
+        return self.p.set(section, option, value)
 
     def get(self, option = '', section = 'core', default = ''):
         try:
-            value = self.p.get(section, option)
-            return self.cleanValue(value)
+
+            try: type = self.types[section][option]
+            except: type = 'unicode'
+
+            if hasattr(self, 'get%s' % type.capitalize()):
+                return getattr(self, 'get%s' % type.capitalize())(section, option)
+            else:
+                return self.getUnicode(section, option)
+
         except:
             return default
 
-    def cleanValue(self, value):
-        if(isInt(value)):
-            return int(value)
+    def getEnabler(self, section, option):
+        return self.p.getboolean(section, option)
 
-        if str(value).lower() in self.bool:
-            return self.bool.get(str(value).lower())
+    def getBool(self, section, option):
+        return self.p.getboolean(section, option)
 
-        return value.strip()
+    def getInt(self, section, option):
+        return self.p.getint(section, option)
+
+    def getUnicode(self, section, option):
+        value = self.p.get(section, option)
+        return toUnicode(value.strip())
 
     def getValues(self):
         values = {}
@@ -75,7 +87,7 @@ class Settings():
             values[section] = {}
             for option in self.p.items(section):
                 (option_name, option_value) = option
-                values[section][option_name] = self.cleanValue(option_value)
+                values[section][option_name] = self.get(option_name, section)
         return values
 
     def save(self):
@@ -91,6 +103,12 @@ class Settings():
     def setDefault(self, section, option, value):
         if not self.p.has_option(section, option):
             self.p.set(section, option, value)
+
+    def setType(self, section, option, type):
+        if not self.types.get(section):
+            self.types[section] = {}
+
+        self.types[section][option] = type
 
     def addOptions(self, section_name, options):
 
