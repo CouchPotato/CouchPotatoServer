@@ -73,12 +73,12 @@ class Scanner(Plugin):
         addEvent('scanner.create_file_identifier', self.createStringIdentifier)
 
         addEvent('scanner.scan', self.scan)
-        addEvent('scanner.files', self.scanToFilesLibrary)
-        addEvent('scanner.folder', self.scanToFolderLibrary)
+        addEvent('scanner.files', self.scanFilesToLibrary)
+        addEvent('scanner.folder', self.scanFolderToLibrary)
         addEvent('scanner.name_year', self.getReleaseNameYear)
         addEvent('scanner.partnumber', self.getPartNumber)
 
-    def scanToFilesLibrary(self, folder = None, files = None):
+    def scanFilesToLibrary(self, folder = None, files = None):
 
         groups = self.scan(folder = folder, files = files)
 
@@ -86,7 +86,7 @@ class Scanner(Plugin):
             if group['library']:
                 fireEvent('release.add', group = group)
 
-    def scanToFolderLibrary(self, folder = None):
+    def scanFolderToLibrary(self, folder = None):
 
         if not os.path.isdir(folder):
             return
