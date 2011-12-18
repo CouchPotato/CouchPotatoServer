@@ -1,5 +1,5 @@
 from couchpotato.api import addApiView
-from couchpotato.core.event import addEvent
+from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import isInt, toUnicode
 from couchpotato.core.helpers.request import getParams, jsonified
 from couchpotato.core.helpers.variable import mergeDicts
@@ -137,7 +137,10 @@ class Settings():
         option = params.get('name')
         value = params.get('value')
 
-        self.set(section, option, value)
+        # See if a value handler is attached, use that as value
+        new_value = fireEvent('setting.save.%s.%s' % (section, option), value, single = True)
+
+        self.set(section, option, new_value if new_value else value)
         self.save()
 
         return jsonified({

@@ -205,7 +205,7 @@ var OptionBase = new Class({
 
 		self.section = section;
 		self.name = name;
-		self.value = value;
+		self.value = self.previous_value = value;
 
 		self.createBase();
 		self.create();
@@ -414,6 +414,11 @@ Option.Password = new Class({
 
 		self.parent()
 		self.input.set('type', 'password')
+
+		self.input.addEvent('focus', function(){
+			self.input.set('value', '')
+		})
+
 	}
 });
 

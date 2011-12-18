@@ -1,3 +1,4 @@
+from couchpotato.core.helpers.variable import md5
 from couchpotato.environment import Env
 from flask import request, Response
 from functools import wraps
@@ -16,7 +17,7 @@ def requires_auth(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         auth = getattr(request, 'authorization')
-        if Env.setting('username') and (not auth or not check_auth(auth.username, auth.password)):
+        if Env.setting('username') and (not auth or not check_auth(auth.username, md5(auth.password))):
             return authenticate()
 
         return f(*args, **kwargs)

@@ -2,7 +2,7 @@ from couchpotato import app
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, addEvent
 from couchpotato.core.helpers.request import jsonified
-from couchpotato.core.helpers.variable import cleanHost
+from couchpotato.core.helpers.variable import cleanHost, md5
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
@@ -28,7 +28,12 @@ class Core(Plugin):
         addEvent('app.load', self.launchBrowser, priority = 100)
         addEvent('app.base_url', self.createBaseUrl)
 
+        addEvent('setting.save.core.password', self.md5Password)
+
         self.removeRestartFile()
+
+    def md5Password(self, value):
+        return md5(value)
 
     def available(self):
         return jsonified({
