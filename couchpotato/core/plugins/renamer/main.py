@@ -258,6 +258,7 @@ class Renamer(Plugin):
                         remove_files.append(current_file)
 
             # Rename all files marked
+            group['renamed_files'] = []
             for src in rename_files:
                 if rename_files[src]:
                     dst = rename_files[src]
@@ -268,6 +269,7 @@ class Renamer(Plugin):
 
                     try:
                         self.moveFile(src, dst)
+                        group['renamed_files'].append(dst)
                     except:
                         log.error('Failed moving the file "%s" : %s' % (os.path.basename(src), traceback.format_exc()))
 
@@ -278,9 +280,6 @@ class Renamer(Plugin):
             # Remove matching releases
             for release in remove_releases:
                 log.info('Removing release %s' % release)
-
-            # Add this release to the library
-            fireEvent('scanner.files', folder = destination, files = [x for x in rename_files.itervalues()])
 
             # Search for trailers etc
             fireEventAsync('renamer.after', group)

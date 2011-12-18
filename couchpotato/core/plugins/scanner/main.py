@@ -78,6 +78,11 @@ class Scanner(Plugin):
         addEvent('scanner.name_year', self.getReleaseNameYear)
         addEvent('scanner.partnumber', self.getPartNumber)
 
+        def after_rename(group):
+            return self.scanFilesToLibrary(self, folder = group['destination_dir'], files = group['renamed_files'])
+
+        addEvent('rename.after', after_rename)
+
     def scanFilesToLibrary(self, folder = None, files = None):
 
         groups = self.scan(folder = folder, files = files)
