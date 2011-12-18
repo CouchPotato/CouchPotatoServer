@@ -297,6 +297,24 @@
 		.page .directory_list .actions:last-child > .save {
 			background: #9dc156;
 		}
+	
+	
+	.page .multi_directory.is_empty .delete  {
+		visibility: hidden;
+	}
+
+	.page .multi_directory .delete {
+		display: none;
+	}
+	.page .multi_directory:hover .delete {
+		display: inline-block;
+		width: 22px;
+		height: 24px;
+		vertical-align: top;
+		background-position: center;
+		margin-left: 5px;
+	}
+	
 			
 	.page .tag_input select {
 		width: 20%;

@@ -677,6 +677,93 @@ Option.Directory = new Class({
 	}
 });
 
+
+
+Option.Directories = new Class({
+
+	Extends: Option.String,
+
+	directories: [],
+	delimiter: '::',
+
+	afterInject: function(){
+		var self = this;
+
+		self.el.hide();
+
+		self.directories = [];
+		self.getValue().split(self.delimiter).each(function(value){
+			self.addDirectory(value);
+		});
+		self.addDirectory();
+
+	},
+
+	addDirectory: function(value){
+		var self = this;
+
+		var has_empty = false;
+		self.directories.each(function(dir){
+			if(!dir.getValue())
+				has_empty = true;
+		});
+		if(has_empty) return;
+
+		var dir = new Option.Directory(self.section, self.name, value || '', self.options);
+		$(dir).inject(self.el.getParent('fieldset'));
+
+		// Replace some properties
+		dir.save = self.saveItems.bind(self);
+		$(dir).getElement('label').set('text', 'Movie Folder');
+		$(dir).getElement('.formHint').destroy();
+		$(dir).addClass('multi_directory');
+
+		if(!value)
+			$(dir).addClass('is_empty');
+
+		// Add remove button
+		new Element('a.icon.delete', {
+			'events': {
+				'click': self.delItem.bind(self, dir)
+			}
+		}).inject(dir);
+
+		self.directories.include(dir);
+
+	},
+
+	delItem: function(dir){
+		var self = this;
+		self.directories.erase(dir);
+
+		$(dir).destroy();
+
+		self.addDirectory();
+	},
+
+	saveItems: function(){
+		var self = this;
+
+		var dirs = []
+		self.directories.each(function(dir){
+			if(dir.getValue()){
+				$(dir).removeClass('is_empty');
+				dirs.include(dir.getValue());
+			}
+			else
+				$(dir).addClass('is_empty');
+		});
+
+		self.input.set('value', dirs.join(self.delimiter));
+		self.input.fireEvent('change');
+
+		self.addDirectory();
+
+	}
+
+
+});
+
 Option.Choice = new Class({
 	Extends: Option.String,
 
