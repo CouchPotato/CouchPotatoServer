@@ -33,7 +33,7 @@ class Core(Plugin):
         self.removeRestartFile()
 
     def md5Password(self, value):
-        return md5(value)
+        return md5(value) if value else ''
 
     def available(self):
         return jsonified({
