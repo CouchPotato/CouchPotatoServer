@@ -1,4 +1,4 @@
-from beautifulsoup import SoupStrainer, BeautifulSoup
+from BeautifulSoup import SoupStrainer, BeautifulSoup
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.trailer.base import TrailerProvider
 from string import letters, digits
