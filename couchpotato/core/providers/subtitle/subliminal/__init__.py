@@ -1,6 +1,6 @@
-from .main import Subliminal
+from .main import SubliminalProvider
 
 def start():
-    return Subliminal()
+    return SubliminalProvider()
 
 config = []

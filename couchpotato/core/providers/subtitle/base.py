@@ -7,8 +7,7 @@ class SubtitleProvider(Provider):
     type = 'subtitle'
 
     def __init__(self):
-
-        addEvent('renamer.before', self.search)
+        addEvent('subtitle.search', self.search)
 
     def search(self, group):
         pass

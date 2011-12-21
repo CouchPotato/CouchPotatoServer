@@ -21,7 +21,7 @@ class MoviePlugin(Plugin):
 
     def __init__(self):
         addApiView('movie.search', self.search)
-        addApiView('movie.list', self.list)
+        addApiView('movie.list', self.listView)
         addApiView('movie.refresh', self.refresh)
 
         addApiView('movie.add', self.add)
@@ -29,6 +29,7 @@ class MoviePlugin(Plugin):
         addApiView('movie.delete', self.delete)
 
         addEvent('movie.get', self.get)
+        addEvent('movie.list', self.list)
 
     def get(self, movie_id):
 
@@ -37,13 +38,11 @@ class MoviePlugin(Plugin):
 
         return m.to_dict(self.default_dict)
 
-    def list(self):
+    def list(self, status = ['active']):
 
-        params = getParams()
         db = get_session()
 
         # Make a list from string
-        status = params.get('status', ['active'])
         if not isinstance(status, (list, tuple)):
             status = [status]
 
@@ -53,6 +52,14 @@ class MoviePlugin(Plugin):
         for movie in results:
             temp = movie.to_dict(self.default_dict)
             movies.append(temp)
+
+        return movies
+
+    def listView(self):
+
+        params = getParams()
+        status = params.get('status', ['active'])
+        movies = self.list(status)
 
         return jsonified({
             'success': True,
