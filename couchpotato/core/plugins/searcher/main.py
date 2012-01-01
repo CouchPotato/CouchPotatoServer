@@ -263,9 +263,9 @@ class Searcher(Plugin):
         nfo = self.getCache(cache_key)
         if not nfo:
             try:
-                nfo = self.urlopen('http://www.srrdb.com/showfile.php?release=%s' % check_name)
+                nfo = self.urlopen('http://www.srrdb.com/showfile.php?release=%s' % check_name, show_error = False)
                 self.setCache(cache_key, nfo)
             except:
                 pass
 
-        return getImdb(nfo) == imdb_id
+        return nfo and getImdb(nfo) == imdb_id

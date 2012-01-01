@@ -89,7 +89,7 @@ class Plugin(object):
         return False
 
     # http request
-    def urlopen(self, url, timeout = 10, params = {}, headers = {}, multipart = False):
+    def urlopen(self, url, timeout = 10, params = {}, headers = {}, multipart = False, show_error = True):
 
         socket.setdefaulttimeout(timeout)
 
@@ -113,7 +113,8 @@ class Plugin(object):
 
                 data = urllib2.urlopen(request).read()
         except IOError:
-            log.error('Failed opening url: %s %s' % (url, traceback.format_exc(1)))
+            if show_error:
+                log.error('Failed opening url in %s: %s %s' % (self.getName(), url, traceback.format_exc(1)))
             raise
 
         self.http_last_use[host] = time.time()
