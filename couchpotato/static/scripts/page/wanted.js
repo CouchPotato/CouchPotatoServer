@@ -88,7 +88,8 @@ window.addEvent('domready', function(){
 					});
 	
 				}
-				self.movie.slide('in');
+
+				self.movie.slide('in', self.options_container);
 			},
 	
 			save: function(e){
@@ -188,9 +189,9 @@ window.addEvent('domready', function(){
 						})
 					).inject(self.movie, 'top');
 				}
-	
-				self.movie.slide('in');
-	
+
+				self.movie.slide('in', self.delete_container);
+
 			},
 	
 			hideConfirm: function(e){

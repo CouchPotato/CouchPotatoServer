@@ -21,7 +21,8 @@ var Movie = new Class({
 			self.data_container = new Element('div.data.inlay.light', {
 				'tween': {
 					duration: 400,
-					transition: 'quint:in:out'
+					transition: 'quint:in:out',
+					onComplete: self.fireEvent.bind(self, 'slideEnd')
 				}
 			}).adopt(
 				self.thumbnail = File.Select.single('poster', self.data.library.files),
@@ -95,15 +96,21 @@ var Movie = new Class({
 		return 'Unknown movie'
 	},
 
-	slide: function(direction){
+	slide: function(direction, el){
 		var self = this;
 
 		if(direction == 'in'){
 			self.el.addEvent('outerClick', self.slide.bind(self, 'out'))
+			el.show();
 			self.data_container.tween('left', 0, self.getWidth());
 		}
 		else {
 			self.el.removeEvents('outerClick')
+
+			self.addEvent('slideEnd:once', function(){
+				self.el.getElements('> :not(.data)').hide();
+			});
+
 			self.data_container.tween('left', self.getWidth(), 0);
 		}
 	},
@@ -260,7 +267,8 @@ var ReleaseAction = new Class({
 			});
 
 		}
-		self.movie.slide('in');
+
+		self.movie.slide('in', self.options_container);
 	},
 
 	get: function(release, type){
