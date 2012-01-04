@@ -7,10 +7,10 @@ log = CPLog(__name__)
 class ThePirateBay(TorrentProvider):
 
     urls = {
-        'download': 'http://torrents.thepiratebay.org/%s/%s.torrent',
-        'nfo': 'http://thepiratebay.org/torrent/%s',
-        'detail': 'http://thepiratebay.org/torrent/%s',
-        'search': 'http://thepiratebay.org/search/%s/0/7/%d',
+        'download': 'http://torrents.depiraatbaai.be/%s/%s.torrent',
+        'nfo': 'https://depiraatbaai.be/torrent/%s',
+        'detail': 'https://depiraatbaai.be/torrent/%s',
+        'search': 'https://depiraatbaai.be/search/%s/0/7/%d',
     }
 
     cat_ids = [

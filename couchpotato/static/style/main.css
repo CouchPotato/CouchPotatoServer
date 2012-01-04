@@ -155,6 +155,7 @@ body > .spinner, .mask{
 .icon.imdb { background-image: url('../images/icon.imdb.png'); }
 .icon.refresh { background-image: url('../images/icon.refresh.png'); }
 .icon.rating { background-image: url('../images/icon.rating.png'); }
+.icon.files { background-image: url('../images/icon.files.png'); }
 
 /*** Navigation ***/
 .header {

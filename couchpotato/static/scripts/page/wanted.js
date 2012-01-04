@@ -29,27 +29,27 @@ window.addEvent('domready', function(){
 	MovieActions.Wanted = {
 		'IMBD': IMDBAction
 		,'releases': ReleaseAction
-	
+
 		,'Edit': new Class({
-	
+
 			Extends: MovieAction,
-	
+
 			create: function(){
 				var self = this;
-	
+
 				self.el = new Element('a.edit', {
 					'title': 'Refresh the movie info and do a forced search',
 					'events': {
 						'click': self.editMovie.bind(self)
 					}
 				});
-	
+
 			},
-	
+
 			editMovie: function(e){
 				var self = this;
 				(e).stop();
-	
+
 				if(!self.options_container){
 					self.options_container = new Element('div.options').adopt(
 						$(self.movie.thumbnail).clone(),
@@ -72,30 +72,30 @@ window.addEvent('domready', function(){
 							})
 						)
 					).inject(self.movie, 'top');
-	
+
 					Array.each(self.movie.data.library.titles, function(alt){
 						new Element('option', {
 							'text': alt.title
 						}).inject(self.title_select);
 					});
-	
+
 					Object.each(Quality.getActiveProfiles(), function(profile){
 						new Element('option', {
 							'value': profile.id ? profile.id : profile.data.id,
 							'text': profile.label ? profile.label : profile.data.label
 						}).inject(self.profile_select);
-						self.profile_select.set('value', self.movie.profile.get('id'));
+						self.profile_select.set('value', (self.movie.profile || {})['id']);
 					});
-	
+
 				}
 
 				self.movie.slide('in', self.options_container);
 			},
-	
+
 			save: function(e){
 				(e).stop();
 				var self = this;
-	
+
 				Api.request('movie.edit', {
 					'data': {
 						'id': self.movie.get('id'),
@@ -109,63 +109,63 @@ window.addEvent('domready', function(){
 						self.movie.title.set('text', self.title_select.getSelected()[0].get('text'));
 					}
 				});
-	
+
 				self.movie.slide('out');
 			}
-	
+
 		})
-	
+
 		,'Refresh': new Class({
-	
+
 			Extends: MovieAction,
-	
+
 			create: function(){
 				var self = this;
-	
+
 				self.el = new Element('a.refresh', {
 					'title': 'Refresh the movie info and do a forced search',
 					'events': {
-						'click': self.doSearch.bind(self)
+						'click': self.doRefresh.bind(self)
 					}
 				});
-	
+
 			},
-	
-			doSearch: function(e){
+
+			doRefresh: function(e){
 				var self = this;
 				(e).stop();
-	
+
 				Api.request('movie.refresh', {
 					'data': {
 						'id': self.movie.get('id')
 					}
 				});
 			}
-	
+
 		})
-	
+
 		,'Delete': new Class({
-	
+
 			Extends: MovieAction,
-	
+
 			Implements: [Chain],
-	
+
 			create: function(){
 				var self = this;
-	
+
 				self.el = new Element('a.delete', {
 					'title': 'Remove the movie from your wanted list',
 					'events': {
 						'click': self.showConfirm.bind(self)
 					}
 				});
-	
+
 			},
-	
+
 			showConfirm: function(e){
 				var self = this;
 				(e).stop();
-	
+
 				if(!self.delete_container){
 					self.delete_container = new Element('div.delete_container', {
 						'styles': {
@@ -193,20 +193,20 @@ window.addEvent('domready', function(){
 				self.movie.slide('in', self.delete_container);
 
 			},
-	
+
 			hideConfirm: function(e){
 				var self = this;
 				(e).stop();
-	
+
 				self.movie.slide('out');
 			},
-	
+
 			del: function(e){
 				(e).stop();
 				var self = this;
-	
+
 				var movie = $(self.movie);
-	
+
 				self.chain(
 					function(){
 						self.callChain();
@@ -227,17 +227,74 @@ window.addEvent('domready', function(){
 						});
 					}
 				);
-	
+
 				self.callChain();
-	
+
 			}
-	
+
 		})
 	};
-	
+
 	MovieActions.Snatched = {
 		'IMBD': IMDBAction
 		,'Delete': MovieActions.Wanted.Delete
+	};
+
+	MovieActions.Done = {
+		'IMBD': IMDBAction
+		,'Edit': MovieActions.Wanted.Edit
+		,'Files': new Class({
+
+			Extends: MovieAction,
+
+			create: function(){
+				var self = this;
+
+				self.el = new Element('a.files', {
+					'title': 'Available files',
+					'events': {
+						'click': self.showFiles.bind(self)
+					}
+				});
+
+			},
+
+			showFiles: function(e){
+				var self = this;
+				(e).stop();
+
+				if(!self.options_container){
+					self.options_container = new Element('div.options').adopt(
+						$(self.movie.thumbnail).clone(),
+						self.release_container = new Element('div.releases')
+					).inject(self.movie, 'top');
+
+					// Header
+					new Element('div.item.head').adopt(
+						new Element('span.name', {'text': 'File'}),
+						new Element('span.type', {'text': 'Type'}),
+						new Element('span.available', {'text': 'Available'})
+					).inject(self.release_container)
+
+					Array.each(self.movie.data.releases, function(release){
+
+						var rel = new Element('div.release').inject(self.release_container);
+
+						Array.each(release.files, function(file){
+							new Element('div.file').adopt(
+								new Element('span.name', {'text': file.path}),
+								new Element('span.type', {'text': File.Type.get(file.type_id).name}),
+								new Element('span.available', {'text': file.available})
+							).inject(rel)
+						});
+					});
+
+				}
+
+				self.movie.slide('in', self.options_container);
+			},
+
+		})
 	};
 
 })

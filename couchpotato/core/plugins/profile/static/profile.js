@@ -58,7 +58,7 @@ var Profile = new Class({
 
 		if(data.types)
 			Object.each(data.types, self.addType.bind(self))
-			
+
 		self.addType();
 	},
 
@@ -130,6 +130,15 @@ var Profile = new Class({
 		self.sortable.addItems($(t));
 
 		self.types.include(t);
+
+	},
+
+	getTypes: function(){
+		var self = this;
+
+		return self.types.filter(function(type){
+			return type.get('quality_id')
+		});
 
 	},
 
@@ -279,6 +288,10 @@ Profile.Type = new Class({
 			'quality_id': self.qualities.get('value'),
 			'finish': +self.finish.checked
 		}
+	},
+
+	get: function(key){
+		return this.data[key];
 	},
 
 	del: function(){

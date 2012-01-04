@@ -473,7 +473,7 @@ Option.Directory = new Class({
 	Extends: OptionBase,
 
 	type: 'span',
-	browser: '',
+	browser: null,
 	save_on_change: false,
 	use_cache: false,
 

@@ -24,7 +24,7 @@ class Searcher(Plugin):
         # Schedule cronjob
         fireEvent('schedule.cron', 'searcher.all', self.all, day = self.conf('cron_day'), hour = self.conf('cron_hour'), minute = self.conf('cron_minute'))
 
-        if Env.doDebug():
+        if not Env.setting('development'):
             addEvent('app.load', self.all)
 
     def all(self):

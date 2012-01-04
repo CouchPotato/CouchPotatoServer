@@ -65,6 +65,8 @@ class Release(Plugin):
                 except Exception, e:
                     log.debug('Failed to attach "%s" to release: %s' % (cur_file, e))
 
+        fireEvent('movie.restatus', movie.id)
+
         db.remove()
 
 

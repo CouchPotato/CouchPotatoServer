@@ -1,6 +1,6 @@
 from couchpotato import get_session
 from couchpotato.api import addApiView
-from couchpotato.core.event import addEvent, fireEvent
+from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.request import jsonified
 from couchpotato.core.logger import CPLog

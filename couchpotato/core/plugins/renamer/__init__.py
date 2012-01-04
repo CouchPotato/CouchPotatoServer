@@ -28,7 +28,7 @@ config = [{
         {
             'tab': 'renamer',
             'name': 'renamer',
-            'label': 'Enable renaming',
+            'label': 'Rename downloaded movies',
             'wizard': True,
             'options': [
                 {

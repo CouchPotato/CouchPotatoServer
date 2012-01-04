@@ -2,11 +2,14 @@ from couchpotato import get_session
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, fireEventAsync, addEvent
 from couchpotato.core.helpers.request import getParams, jsonified
+from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Movie
 from couchpotato.environment import Env
 from sqlalchemy.sql.expression import or_
 from urllib import urlencode
+
+log = CPLog(__name__)
 
 
 class MoviePlugin(Plugin):
@@ -30,6 +33,7 @@ class MoviePlugin(Plugin):
 
         addEvent('movie.get', self.get)
         addEvent('movie.list', self.list)
+        addEvent('movie.restatus', self.restatus)
 
     def get(self, movie_id):
 
@@ -146,7 +150,7 @@ class MoviePlugin(Plugin):
     def edit(self):
 
         params = getParams()
-        db = get_session();
+        db = get_session()
 
         m = db.query(Movie).filter_by(id = params.get('id')).first()
         m.profile_id = params.get('profile_id')
@@ -156,6 +160,11 @@ class MoviePlugin(Plugin):
             title.default = params.get('default_title').lower() == title.title.lower()
 
         db.commit()
+
+        fireEvent('movie.restatus', m.id)
+
+        movie_dict = m.to_dict(self.default_dict)
+        fireEventAsync('searcher.single', movie_dict)
 
         return jsonified({
             'success': True,
@@ -175,3 +184,28 @@ class MoviePlugin(Plugin):
         return jsonified({
             'success': True,
         })
+
+    def restatus(self, movie_id):
+
+        active_status = fireEvent('status.get', 'active', single = True)
+        done_status = fireEvent('status.get', 'done', single = True)
+
+        db = get_session()
+
+        m = db.query(Movie).filter_by(id = movie_id).first()
+
+        if not m.profile:
+            return
+
+        log.debug('Changing status for %s' % (m.library.titles[0].title))
+
+        move_to_wanted = True
+
+        for t in m.profile.types:
+            for release in m.releases:
+                if t.quality.identifier is release.quality.identifier and (release.status_id is done_status.get('id') and t.finish):
+                    move_to_wanted = False
+
+        m.status_id = active_status.get('id') if move_to_wanted else done_status.get('id')
+
+        db.commit()

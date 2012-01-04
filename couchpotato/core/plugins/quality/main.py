@@ -3,7 +3,7 @@ from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.request import jsonified, getParams
-from couchpotato.core.helpers.variable import mergeDicts, md5
+from couchpotato.core.helpers.variable import mergeDicts, md5, getExt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Quality, Profile, ProfileType
@@ -136,7 +136,7 @@ class QualityPlugin(Plugin):
     def guess(self, files, extra = {}, loose = False):
 
         # Create hash for cache
-        hash = md5(str(files))
+        hash = md5(str([f.replace('.' + getExt(f), '') for f in files]))
         cached = self.getCache(hash)
         if cached: return cached
 
@@ -148,15 +148,15 @@ class QualityPlugin(Plugin):
 
                 # Check tags
                 if quality['identifier'] in words:
-                    log.debug('Found via identifier "%s" in %s' % (quality['identifier'], file))
+                    log.debug('Found via identifier "%s" in %s' % (quality['identifier'], cur_file))
                     return self.setCache(hash, quality)
 
                 if list(set(quality.get('alternative', [])) & set(words)):
-                    log.debug('Found %s via alt %s in %s' % (quality['identifier'], quality.get('alternative'), file))
+                    log.debug('Found %s via alt %s in %s' % (quality['identifier'], quality.get('alternative'), cur_file))
                     return self.setCache(hash, quality)
 
                 if list(set(quality.get('tags', [])) & set(words)):
-                    log.debug('Found %s via tag %s in %s' % (quality['identifier'], quality.get('tags'), file))
+                    log.debug('Found %s via tag %s in %s' % (quality['identifier'], quality.get('tags'), cur_file))
                     return self.setCache(hash, quality)
 
                 # Check on unreliable stuff

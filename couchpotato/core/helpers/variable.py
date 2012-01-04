@@ -67,7 +67,7 @@ def getImdb(txt):
         output.close()
 
     try:
-        id = re.findall('imdb\.com\/title\/(tt\d{7})', txt)[0]
+        id = re.findall('(tt\d{7})', txt)[0]
         return id
     except IndexError:
         pass

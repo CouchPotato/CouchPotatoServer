@@ -34,6 +34,7 @@ class Scanner(Plugin):
     }
     file_types = {
         'subtitle': ('subtitle', 'subtitle'),
+        'subtitle_extra': ('subtitle', 'subtitle_extra'),
         'trailer': ('video', 'trailer'),
         'nfo': ('nfo', 'nfo'),
         'movie': ('video', 'movie'),
@@ -53,7 +54,7 @@ class Scanner(Plugin):
         'hdtv': ['hdtv']
     }
 
-    clean = '[ _\,\.\(\)\[\]\-](french|swedisch|danish|dutch|swesub|spanish|german|ac3|dts|custom|dc|divx|divx5|dsr|dsrip|dutch|dvd|dvdrip|dvdscr|dvdscreener|screener|dvdivx|cam|fragment|fs|hdtv|hdrip|hdtvrip|internal|limited|multisubs|ntsc|ogg|ogm|pal|pdtv|proper|repack|rerip|retail|r3|r5|bd5|se|svcd|swedish|german|read.nfo|nfofix|unrated|ws|telesync|ts|telecine|tc|brrip|bdrip|video_ts|audio_ts|480p|480i|576p|576i|720p|720i|1080p|1080i|hrhd|hrhdtv|hddvd|bluray|x264|h264|xvid|xvidvd|xxx|www.www|cd[1-9]|\[.*\])([ _\,\.\(\)\[\]\-]|$)'
+    clean = '[ _\,\.\(\)\[\]\-](french|swedisch|danish|dutch|swesub|spanish|german|ac3|dts|custom|dc|divx|divx5|dsr|dsrip|dutch|dvd|dvdr|dvdrip|dvdscr|dvdscreener|screener|dvdivx|cam|fragment|fs|hdtv|hdrip|hdtvrip|internal|limited|multisubs|ntsc|ogg|ogm|pal|pdtv|proper|repack|rerip|retail|r3|r5|bd5|se|svcd|swedish|german|read.nfo|nfofix|unrated|ws|telesync|ts|telecine|tc|brrip|bdrip|video_ts|audio_ts|480p|480i|576p|576i|720p|720i|1080p|1080i|hrhd|hrhdtv|hddvd|bluray|x264|h264|xvid|xvidvd|xxx|www.www|cd[1-9]|\[.*\])([ _\,\.\(\)\[\]\-]|$)'
     multipart_regex = [
         '[ _\.-]+cd[ _\.-]*([0-9a-d]+)', #*cd1
         '[ _\.-]+dvd[ _\.-]*([0-9a-d]+)', #*dvd1
@@ -67,6 +68,8 @@ class Scanner(Plugin):
         '([a-z])([0-9]+)(\.....?)$',
         '()([ab])(\.....?)$' #*a.mkv
     ]
+
+    cp_imdb = '(cp\((?P<id>tt[0-9{7}]+)\))'
 
     def __init__(self):
 
@@ -122,12 +125,6 @@ class Scanner(Plugin):
         for identifier in update_after:
             fireEvent('library.update', identifier = identifier)
 
-        # If cleanup option is enabled, remove offline files from database
-        if self.conf('cleanup_offline'):
-            files_in_path = db.query(File).filter(File.path.like(folder + '%%')).filter_by(available = 0)
-            [db.delete(x) for x in files_in_path]
-            db.commit()
-
         db.remove()
 
 
@@ -157,12 +154,17 @@ class Scanner(Plugin):
             is_dvd_file = self.isDVDFile(file_path)
             if os.path.getsize(file_path) > self.minimal_filesize['media'] or is_dvd_file: # Minimal 300MB files or is DVD file
 
+                # Normal identifier
                 identifier = self.createStringIdentifier(file_path, folder, exclude_filename = is_dvd_file)
+
+                # Identifier with quality
+                quality = fireEvent('quality.guess', [file_path], single = True)
+                identifier_with_quality = '%s %s' % (identifier, quality.get('identifier', ''))
 
                 if not movie_files.get(identifier):
                     movie_files[identifier] = {
                         'unsorted_files': [],
-                        'identifiers': [],
+                        'identifiers': [identifier_with_quality, identifier],
                         'is_dvd': is_dvd_file,
                     }
 
@@ -174,24 +176,16 @@ class Scanner(Plugin):
         # files will be grouped first.
         leftovers = set(sorted(leftovers, reverse = True))
 
-        id_handles = [
-            None, # Attach files to group by identifier
-            lambda x: os.path.split(x)[-1], # Attach files via filename of master_file name only
-            os.path.dirname, # Attach files via master_file dirname
-        ]
+        # Create identifiers
+        for identifier, group in movie_files.iteritems():
+            if identifier not in group['identifiers'] and len(identifier) > 0: group['identifiers'].append(identifier)
 
-        # Create identifier based on handle
-        for handler in id_handles:
-            for identifier, group in movie_files.iteritems():
-                identifier = handler(identifier) if handler else identifier
-                if identifier not in group['identifiers'] and len(identifier) > 0: group['identifiers'].append(identifier)
+            # Group the files based on the identifier
+            found_files = self.getGroupFiles(identifier, folder, leftovers)
+            group['unsorted_files'].extend(found_files)
 
-                # Group the files based on the identifier
-                found_files = self.getGroupFiles(identifier, folder, leftovers)
-                group['unsorted_files'].extend(found_files)
-
-                # Remove the found files from the leftover stack
-                leftovers = leftovers - found_files
+            # Remove the found files from the leftover stack
+            leftovers = leftovers - found_files
 
 
         # Determine file types
@@ -213,7 +207,7 @@ class Scanner(Plugin):
                 continue
 
             # Group extra (and easy) files first
-            images = self.getImages(group['unsorted_files'])
+            # images = self.getImages(group['unsorted_files'])
             group['files'] = {
                 'subtitle': self.getSubtitles(group['unsorted_files']),
                 'subtitle_extra': self.getSubtitlesExtras(group['unsorted_files']),
@@ -318,14 +312,18 @@ class Scanner(Plugin):
         # Check for CP(imdb_id) string in the file paths
         for cur_file in files['movie']:
             imdb_id = self.getCPImdb(cur_file)
-            if imdb_id: break
+            if imdb_id:
+                log.debug('Found movie via CP tag: %s' % cur_file)
+                break
 
         # Check and see if nfo contains the imdb-id
         if not imdb_id:
             try:
                 for nfo_file in files['nfo']:
                     imdb_id = getImdb(nfo_file)
-                    if imdb_id: break
+                    if imdb_id:
+                        log.debug('Found movie via nfo file: %s' % nfo_file)
+                        break
             except:
                 pass
 
@@ -336,6 +334,7 @@ class Scanner(Plugin):
                 f = db.query(File).filter_by(path = toUnicode(cur_file)).first()
                 try:
                     imdb_id = f.library[0].identifier
+                    log.debug('Found movie via database: %s' % cur_file)
                     break
                 except:
                     pass
@@ -348,25 +347,25 @@ class Scanner(Plugin):
 
                 if len(movie) > 0:
                     imdb_id = movie[0]['imdb']
-                    if imdb_id: break
+                    if imdb_id:
+                        log.debug('Found movie via OpenSubtitleHash: %s' % cur_file)
+                        break
 
         # Search based on identifiers
         if not imdb_id:
             for identifier in group['identifiers']:
 
                 if len(identifier) > 2:
-
-                    movie = fireEvent('movie.search', q = identifier, merge = True, limit = 1)
+                    movie = fireEvent('movie.search', q = '%(name)s %(year)s' % self.getReleaseNameYear(identifier), merge = True, limit = 1)
 
                     if len(movie) > 0:
                         imdb_id = movie[0]['imdb']
+                        log.debug('Found movie via cp identifier: %s' % cur_file)
                         if imdb_id: break
                 else:
                     log.debug('Identifier to short to use for search: %s' % identifier)
 
         if imdb_id:
-            #movie = fireEvent('movie.info', identifier = imdb_id, merge = True)
-            #if movie and movie.get('imdb'):
             return fireEvent('library.add', attrs = {
                 'identifier': imdb_id
             }, update_after = False, single = True)
@@ -377,13 +376,23 @@ class Scanner(Plugin):
     def getCPImdb(self, string):
 
         try:
-            m = re.search('(cp\((?P<id>tt[0-9{7}]+)\))', string.lower())
+            m = re.search(self.cp_imdb, string.lower())
             id = m.group('id')
             if id:  return id
         except AttributeError:
             pass
 
         return False
+
+    def removeCPImdb(self, name):
+        for regex in self.multipart_regex:
+            try:
+                found = re.sub(regex, '', name)
+                if found != name:
+                    name = found
+            except:
+                pass
+        return name
 
     def getMediaFiles(self, files):
 
@@ -486,6 +495,9 @@ class Scanner(Plugin):
         # multipart
         identifier = self.removeMultipart(identifier)
 
+        # remove cptag
+        identifier = self.removeCPImdb(identifier)
+
         # groups, release tags, scenename cleaner, regex isn't correct
         identifier = re.sub(self.clean, '::', simplifyString(identifier))
 
@@ -495,10 +507,6 @@ class Scanner(Plugin):
             identifier = '%s %s' % (identifier.split(year)[0].strip(), year)
         else:
             identifier = identifier.split('::')[0]
-
-        # Quality
-        quality = fireEvent('quality.guess', [file_path], single = True)
-        identifier += ' %s' % quality.get('identifier', '')
 
         # Remove duplicates
         out = []
@@ -530,7 +538,7 @@ class Scanner(Plugin):
                 return 1
             except:
                 pass
-        return name
+        return 1
 
     def getCodec(self, filename, codecs):
         codecs = map(re.escape, codecs)

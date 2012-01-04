@@ -9,7 +9,7 @@ var Movie = new Class({
 
 		self.data = data;
 
-		self.profile = Quality.getProfile(data.profile_id);
+		self.profile = Quality.getProfile(data.profile_id) || {};
 		self.parent(self, options);
 		self.addEvent('injected', self.afterInject.bind(self))
 	},
@@ -39,26 +39,31 @@ var Movie = new Class({
 					self.description = new Element('div.description', {
 						'text': self.data.library.plot
 					}),
-					self.quality = new Element('div.quality', {
-						'text': self.profile.get('label')+ ':'
-					})
+					self.quality = new Element('div.quality')
 				),
 				self.actions = new Element('div.actions')
 			)
 		);
 
-		self.profile.get('types').each(function(type){
+		// Add profile
+		if(self.profile.data)
+			self.profile.getTypes().each(function(type){
+			
+				var q = self.addQuality(type.quality_id || type.get('quality_id'));
+				if(type.finish || type.get('finish'))
+					q.addClass('finish');
 
-			// Check if quality is snatched
-			var is_snatched = self.data.releases.filter(function(release){
-				return release.quality_id == type.quality_id && release.status.identifier == 'snatched'
-			}).pick();
+			});
 
-			var q = Quality.getQuality(type.quality_id);
-			new Element('span', {
-				'text': q.label,
-				'class': is_snatched ? 'snatched' : ''
-			}).inject(self.quality);
+		// Add done releases
+		Array.each(self.data.releases, function(release){
+
+			var q = self.quality.getElement('.q_'+ release.quality.identifier);
+			if(!q)
+				var q = self.addQuality(release.quality_id)
+				
+			q.addClass(release.status.identifier);
+
 		});
 
 		Object.each(self.options.actions, function(action, key){
@@ -69,6 +74,17 @@ var Movie = new Class({
 
 		if(!self.data.library.rating)
 			self.rating.hide();
+
+	},
+
+	addQuality: function(quality_id){
+		var self = this;
+
+		var q = Quality.getQuality(quality_id);
+		return new Element('span', {
+			'text': q.label,
+			'class': 'q_'+q.identifier
+		}).inject(self.quality);
 
 	},
 
@@ -225,7 +241,7 @@ var ReleaseAction = new Class({
 				$(self.movie.thumbnail).clone(),
 				self.release_container = new Element('div.releases')
 			).inject(self.movie, 'top');
-			
+
 			// Header
 			new Element('div.item.head').adopt(
 				new Element('span.name', {'text': 'Release name'}),
@@ -278,17 +294,17 @@ var ReleaseAction = new Class({
 			return type == info.identifier
 		}).pick() || {}).value
 	},
-	
+
 	download: function(release){
 		var self = this;
-		
+
 		Api.request('release.download', {
 			'data': {
 				'id': release.id
 			}
 		});
 	},
-	
+
 	del: function(release){
 		var self = this;
 
@@ -297,7 +313,7 @@ var ReleaseAction = new Class({
 				'id': release.id
 			}
 		})
-		
+
 	}
 
 });

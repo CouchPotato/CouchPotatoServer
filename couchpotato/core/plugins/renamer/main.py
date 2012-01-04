@@ -1,6 +1,8 @@
 from couchpotato import get_session
+from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
 from couchpotato.core.helpers.encoding import toUnicode
+from couchpotato.core.helpers.request import jsonified
 from couchpotato.core.helpers.variable import getExt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
@@ -19,10 +21,20 @@ class Renamer(Plugin):
 
     def __init__(self):
 
+        addApiView('renamer.scan', self.scanView)
+
         addEvent('renamer.scan', self.scan)
         addEvent('app.load', self.scan)
 
         fireEvent('schedule.interval', 'renamer.scan', self.scan, minutes = self.conf('run_every'))
+
+    def scanView(self):
+
+        fireEvent('renamer.scan')
+
+        return jsonified({
+            'success': True
+        })
 
     def scan(self):
 
@@ -39,7 +51,6 @@ class Renamer(Plugin):
             return
 
         groups = fireEvent('scanner.scan', folder = self.conf('from'), single = True)
-        if groups is None: return
 
         self.renaming_started = True
 

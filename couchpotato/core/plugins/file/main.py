@@ -27,8 +27,8 @@ class FileManager(Plugin):
 
     def showImage(self, filename = ''):
 
-        filename = filename.replace(cache_dir[1:] + '/', '')
         cache_dir = Env.get('cache_dir')
+        filename = filename.replace(cache_dir[1:] + '/', '')
 
         return send_from_directory(cache_dir, filename)
 

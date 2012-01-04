@@ -8,19 +8,26 @@ Page.Manage = new Class({
 	indexAction: function(param){
 		var self = this;
 
+		self.refresh_button = new Element('a.icon.refresh', {
+			'text': 'Refresh',
+			'events':{
+				'click': self.refresh.bind(self)
+			}
+		}).inject(self.el);
+
 		self.list = new MovieList({
 			'status': 'done',
-			'actions': Manage.Action
+			'actions': MovieActions
 		});
 		$(self.list).inject(self.el);
-		
+
+	},
+
+	refresh: function(){
+		var self = this;
+
+		Api.request('manage.update')
+
 	}
 
 });
-
-var Manage = {
-	'Action': {
-		'IMBD': IMDBAction
-	}
-}
-
