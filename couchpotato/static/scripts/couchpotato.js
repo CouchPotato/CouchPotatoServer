@@ -32,7 +32,12 @@ var CouchPotato = new Class({
 	},
 
 	getOption: function(name){
-		return this.options[name];
+		try {
+			return this.options[name];
+		}
+		catch(e){
+			return null
+		}
 	},
 
 	pushState: function(e){

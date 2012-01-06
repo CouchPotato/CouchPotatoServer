@@ -99,8 +99,8 @@ window.addEvent('domready', function(){
 });
 
 window.addEvent('load', function(){
-	var your_version = $(document.body).get('data-userscript_version')
-		latest_version = App.getOption('userscript_version')
+	var your_version = $(document.body).get('data-userscript_version'),
+		latest_version = App.getOption('userscript_version') || '',
 		key = 'cp_version_check',
 		checked_already = Cookie.read(key);
 

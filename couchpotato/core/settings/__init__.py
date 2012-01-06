@@ -54,11 +54,11 @@ class Settings():
     def set(self, section, option, value):
         return self.p.set(section, option, value)
 
-    def get(self, option = '', section = 'core', default = ''):
+    def get(self, option = '', section = 'core', default = '', type = None):
         try:
 
             try: type = self.types[section][option]
-            except: type = 'unicode'
+            except: type = 'unicode' if not type else type
 
             if hasattr(self, 'get%s' % type.capitalize()):
                 return getattr(self, 'get%s' % type.capitalize())(section, option)

@@ -35,13 +35,13 @@ class Env(object):
         return setattr(Env, '_' + attr, value)
 
     @staticmethod
-    def setting(attr, section = 'core', value = None, default = ''):
+    def setting(attr, section = 'core', value = None, default = '', type = None):
 
         s = Env.get('settings')
 
         # Return setting
         if value == None:
-            return s.get(attr, default = default, section = section)
+            return s.get(attr, default = default, section = section, type = type)
 
         # Set setting
         s.set(section, attr, value)

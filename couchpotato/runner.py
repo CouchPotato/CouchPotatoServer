@@ -73,7 +73,7 @@ def runCouchPotato(options, base_path, args):
     Env.set('options', options)
 
     # Determine debug
-    debug = options.debug or Env.setting('debug', default = False)
+    debug = options.debug or Env.setting('debug', default = False, type = 'bool')
     Env.set('debug', debug)
 
     # Only run once when debugging
@@ -146,7 +146,7 @@ def runCouchPotato(options, base_path, args):
     from couchpotato import app
     api_key = Env.setting('api_key')
     url_base = '/' + Env.setting('url_base').lstrip('/') if Env.setting('url_base') else ''
-    reloader = debug and not options.daemonize
+    reloader = debug is True and not options.daemonize
 
     # Basic config
     app.secret_key = api_key
