@@ -2,6 +2,7 @@ from apscheduler.scheduler import Scheduler as Sched
 from couchpotato.core.event import addEvent
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
+import logging
 
 log = CPLog(__name__)
 
@@ -13,6 +14,9 @@ class Scheduler(Plugin):
     started = False
 
     def __init__(self):
+
+        sl = logging.getLogger('apscheduler.scheduler')
+        sl.disabled = True
 
         addEvent('schedule.cron', self.cron)
         addEvent('schedule.interval', self.interval)

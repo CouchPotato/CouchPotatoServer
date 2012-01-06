@@ -24,6 +24,8 @@ def getOptions(base_path, args):
                         dest = 'console_log', help = "Log to console")
     parser.add_argument('--daemon', action = 'store_true',
                         dest = 'daemonize', help = 'Daemonize the app')
+    parser.add_argument('--quiet', action = 'store_true',
+                        dest = 'quiet', help = 'No console logging')
     parser.add_argument('--nogit', action = 'store_true',
                         dest = 'nogit', help = 'Running from git')
 
@@ -69,12 +71,17 @@ def runCouchPotato(options, base_path, args):
     Env.set('cache', FileSystemCache(os.path.join(Env.get('cache_dir'), 'python')))
     Env.set('console_log', options.console_log)
     Env.set('daemonize', options.daemonize)
+    Env.set('quiet', options.quiet)
     Env.set('args', args)
     Env.set('options', options)
 
     # Determine debug
     debug = options.debug or Env.setting('debug', default = False, type = 'bool')
     Env.set('debug', debug)
+
+    # Disable server access log
+    server_log = logging.getLogger('werkzeug')
+    server_log.disabled = True
 
     # Only run once when debugging
     if os.environ.get('WERKZEUG_RUN_MAIN') or not debug:
@@ -86,7 +93,7 @@ def runCouchPotato(options, base_path, args):
         logger.setLevel(level)
 
         # To screen
-        if (debug or options.console_log) and not options.daemonize:
+        if (debug or options.console_log) and not options.daemonize and not options.quiet:
             hdlr = logging.StreamHandler(sys.stderr)
             hdlr.setFormatter(formatter)
             logger.addHandler(hdlr)
@@ -95,10 +102,6 @@ def runCouchPotato(options, base_path, args):
         hdlr2 = handlers.RotatingFileHandler(Env.get('log_path'), 'a', 500000, 10)
         hdlr2.setFormatter(formatter)
         logger.addHandler(hdlr2)
-
-        # Disable server access log
-        server_log = logging.getLogger('werkzeug')
-        server_log.disabled = True
 
         # Start logging & enable colors
         import color_logs
@@ -166,4 +169,6 @@ def runCouchPotato(options, base_path, args):
     app.register_blueprint(api, url_prefix = '%s/%s/' % (url_base, api_key))
 
     # Go go go!
+    try: log.info('Starting server on port %(port)s' % config)
+    except: pass
     app.run(**config)
