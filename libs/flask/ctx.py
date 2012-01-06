@@ -5,7 +5,7 @@
 
     Implements the objects required to keep the context.
 
-    :copyright: (c) 2010 by Armin Ronacher.
+    :copyright: (c) 2011 by Armin Ronacher.
     :license: BSD, see LICENSE for more details.
 """
 
@@ -89,9 +89,13 @@ class RequestContext(object):
         self.flashes = None
         self.session = None
 
+        # indicator if the context was preserved.  Next time another context
+        # is pushed the preserved context is popped.
+        self.preserved = False
+
         self.match_request()
 
-        # Support for deprecated functionality.  This is doing away with
+        # XXX: Support for deprecated functionality.  This is doing away with
         # Flask 1.0
         blueprint = self.request.blueprint
         if blueprint is not None:
@@ -114,6 +118,18 @@ class RequestContext(object):
 
     def push(self):
         """Binds the request context to the current context."""
+        # If an exception ocurrs in debug mode or if context preservation is
+        # activated under exception situations exactly one context stays
+        # on the stack.  The rationale is that you want to access that
+        # information under debug situations.  However if someone forgets to
+        # pop that context again we want to make sure that on the next push
+        # it's invalidated otherwise we run at risk that something leaks
+        # memory.  This is usually only a problem in testsuite since this
+        # functionality is not active in production environments.
+        top = _request_ctx_stack.top
+        if top is not None and top.preserved:
+            top.pop()
+
         _request_ctx_stack.push(self)
 
         # Open the session at the moment that the request context is
@@ -128,8 +144,15 @@ class RequestContext(object):
         also trigger the execution of functions registered by the
         :meth:`~flask.Flask.teardown_request` decorator.
         """
+        self.preserved = False
         self.app.do_teardown_request()
-        _request_ctx_stack.pop()
+        rv = _request_ctx_stack.pop()
+        assert rv is self, 'Popped wrong request context.  (%r instead of %r)' \
+            % (rv, self)
+
+        # get rid of circular dependencies at the end of the request
+        # so that we don't require the GC to be active.
+        rv.request.environ['werkzeug.request'] = None
 
     def __enter__(self):
         self.push()
@@ -141,6 +164,16 @@ class RequestContext(object):
         # access the request object in the interactive shell.  Furthermore
         # the context can be force kept alive for the test client.
         # See flask.testing for how this works.
-        if not self.request.environ.get('flask._preserve_context') and \
-           (tb is None or not self.app.preserve_context_on_exception):
+        if self.request.environ.get('flask._preserve_context') or \
+           (tb is not None and self.app.preserve_context_on_exception):
+            self.preserved = True
+        else:
             self.pop()
+
+    def __repr__(self):
+        return '<%s \'%s\' [%s] of %s>' % (
+            self.__class__.__name__,
+            self.request.url,
+            self.request.method,
+            self.app.name
+        )

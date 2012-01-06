@@ -50,6 +50,14 @@ class ImmutableListMixin(object):
     :private:
     """
 
+    _hash_cache = None
+
+    def __hash__(self):
+        if self._hash_cache is not None:
+            return self._hash_cache
+        rv = self._hash_cache = hash(tuple(self))
+        return rv
+
     def __reduce_ex__(self, protocol):
         return type(self), (list(self),)
 
@@ -107,6 +115,8 @@ class ImmutableDictMixin(object):
 
     :private:
     """
+    _hash_cache = None
+
     @classmethod
     def fromkeys(cls, keys, value=None):
         instance = super(cls, cls).__new__(cls)
@@ -115,6 +125,15 @@ class ImmutableDictMixin(object):
 
     def __reduce_ex__(self, protocol):
         return type(self), (dict(self),)
+
+    def _iter_hashitems(self):
+        return self.iteritems()
+
+    def __hash__(self):
+        if self._hash_cache is not None:
+            return self._hash_cache
+        rv = self._hash_cache = hash(frozenset(self._iter_hashitems()))
+        return rv
 
     def setdefault(self, key, default=None):
         is_immutable(self)
@@ -148,6 +167,9 @@ class ImmutableMultiDictMixin(ImmutableDictMixin):
 
     def __reduce_ex__(self, protocol):
         return type(self), (self.items(multi=True),)
+
+    def _iter_hashitems(self):
+        return self.iteritems(multi=True)
 
     def add(self, key, value):
         is_immutable(self)
@@ -560,6 +582,9 @@ class MultiDict(TypeConversionDict):
             return dict.popitem(self)
         except KeyError, e:
             raise BadRequestKeyError(str(e))
+
+    def __copy__(self):
+        return self.copy()
 
     def __repr__(self):
         return '%s(%r)' % (self.__class__.__name__, self.items(multi=True))
@@ -1032,7 +1057,13 @@ class Headers(object):
         """
         if kw:
             _value = _options_header_vkw(_value, kw)
+        self._validate_value(_value)
         self._list.append((_key, _value))
+
+    def _validate_value(self, value):
+        if isinstance(value, basestring) and ('\n' in value or '\r' in value):
+            raise ValueError('Detected newline in header value.  This is '
+                'a potential security problem')
 
     def add_header(self, _key, _value, **_kw):
         """Add a new header tuple to the list.
@@ -1063,18 +1094,21 @@ class Headers(object):
         """
         if kw:
             _value = _options_header_vkw(_value, kw)
+        self._validate_value(_value)
         if not self._list:
-            return self.add(_key, _value)
-        lc_key = _key.lower()
-        for idx, (old_key, old_value) in enumerate(self._list):
-            if old_key.lower() == lc_key:
+            self._list.append((_key, _value))
+            return
+        listiter = iter(self._list)
+        ikey = _key.lower()
+        for idx, (old_key, old_value) in enumerate(listiter):
+            if old_key.lower() == ikey:
                 # replace first ocurrence
                 self._list[idx] = (_key, _value)
                 break
         else:
-            return self.add(_key, _value)
-        self._list[idx + 1:] = [(k, v) for k, v in self._list[idx + 1:]
-                                if k.lower() != lc_key]
+            self._list.append((_key, _value))
+            return
+        self._list[idx + 1:] = [t for t in listiter if t[0].lower() != ikey]
 
     def setdefault(self, key, value):
         """Returns the value for the key if it is in the dict, otherwise it
@@ -1092,6 +1126,7 @@ class Headers(object):
     def __setitem__(self, key, value):
         """Like :meth:`set` but also supports index/slice based setting."""
         if isinstance(key, (slice, int, long)):
+            self._validate_value(value)
             self._list[key] = value
         else:
             self.set(key, value)
@@ -1102,14 +1137,8 @@ class Headers(object):
 
         :return: list
         """
-        result = []
-        for k, v in self:
-            if isinstance(v, unicode):
-                v = v.encode(charset)
-            else:
-                v = str(v)
-            result.append((k, v))
-        return result
+        return [(k, isinstance(v, unicode) and v.encode(charset) or str(v))
+                for k, v in self]
 
     def copy(self):
         return self.__class__(self._list)
@@ -1133,7 +1162,9 @@ class Headers(object):
 
 
 class ImmutableHeadersMixin(object):
-    """Makes a :class:`Headers` immutable.
+    """Makes a :class:`Headers` immutable.  We do not mark them as
+    hashable though since the only usecase for this datastructure
+    in Werkzeug is a view on a mutable structure.
 
     .. versionadded:: 0.5
 
@@ -1425,6 +1456,9 @@ class ImmutableOrderedMultiDict(ImmutableMultiDictMixin, OrderedMultiDict):
 
     .. versionadded:: 0.6
     """
+
+    def _iter_hashitems(self):
+        return enumerate(self.iteritems(multi=True))
 
     def copy(self):
         """Return a shallow mutable copy of this object.  Keep in mind that
@@ -2045,7 +2079,7 @@ class ETags(object):
         return etag in self._strong
 
     def __nonzero__(self):
-        return bool(self.star_tag or self._strong)
+        return bool(self.star_tag or self._strong or self._weak)
 
     def __str__(self):
         return self.to_header()
@@ -2422,7 +2456,7 @@ class FileStorage(object):
     """
 
     def __init__(self, stream=None, filename=None, name=None,
-                 content_type='application/octet-stream', content_length=-1,
+                 content_type=None, content_length=None,
                  headers=None):
         self.name = name
         self.stream = stream or _empty_stream
@@ -2437,16 +2471,28 @@ class FileStorage(object):
                 filename = None
 
         self.filename = filename
-        self.content_type = content_type
-        self.content_length = content_length
         if headers is None:
             headers = Headers()
         self.headers = headers
+        if content_type is not None:
+            headers['Content-Type'] = content_type
+        if content_length is not None:
+            headers['Content-Length'] = str(content_length)
 
     def _parse_content_type(self):
         if not hasattr(self, '_parsed_content_type'):
             self._parsed_content_type = \
                 parse_options_header(self.content_type)
+
+    @property
+    def content_type(self):
+        """The file's content type.  Usually not available"""
+        return self.headers.get('content-type')
+
+    @property
+    def content_length(self):
+        """The file's content length.  Usually not available"""
+        return int(self.headers.get('content-length') or 0)
 
     @property
     def mimetype(self):

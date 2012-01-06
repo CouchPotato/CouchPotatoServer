@@ -189,10 +189,10 @@ class HTMLBuilder(object):
                     buffer += '>'
                 return buffer
             buffer += '>'
-            
+
             children_as_string = ''.join([unicode(x) for x in children
                                          if x is not None])
-            
+
             if children_as_string:
                 if tag in self._plaintext_elements:
                     children_as_string = escape(children_as_string)
@@ -352,7 +352,6 @@ def redirect(location, code=302):
     :param location: the location the response should redirect to.
     :param code: the redirect status code. defaults to 302.
     """
-    assert code in (201, 301, 302, 303, 305, 307), 'invalid code'
     from werkzeug.wrappers import BaseResponse
     display_location = location
     if isinstance(location, unicode):
@@ -391,6 +390,9 @@ def import_string(import_name, silent=False):
     or with a colon as object delimiter (``xml.sax.saxutils:escape``).
 
     If `silent` is True the return value will be `None` if the import fails.
+
+    For better debugging we recommend the new :func:`import_module`
+    function to be used instead.
 
     :param import_name: the dotted name for the object to import.
     :param silent: if set to `True` import errors are ignored and
@@ -584,7 +586,7 @@ class ImportStringError(ImportError):
             name += (name and '.') + part
             imported = import_string(name, silent=True)
             if imported:
-                tracked.append((name, imported.__file__))
+                tracked.append((name, getattr(imported, '__file__', None)))
             else:
                 track = ['- %r found in %r.' % (n, i) for n, i in tracked]
                 track.append('- %r not found.' % name)

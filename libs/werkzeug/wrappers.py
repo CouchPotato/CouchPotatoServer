@@ -32,7 +32,7 @@ from werkzeug.http import HTTP_STATUS_CODES, \
      parse_if_range_header, parse_cookie, dump_cookie, \
      parse_range_header, parse_content_range_header, dump_header
 from werkzeug.urls import url_decode, iri_to_uri
-from werkzeug.formparser import parse_form_data, default_stream_factory
+from werkzeug.formparser import FormDataParser, default_stream_factory
 from werkzeug.utils import cached_property, environ_property, \
      header_property, get_content_type
 from werkzeug.wsgi import get_current_url, get_host, LimitedStream, \
@@ -167,6 +167,10 @@ class BaseRequest(object):
     #: .. versionadded:: 0.6
     dict_storage_class = ImmutableTypeConversionDict
 
+    #: The form data parser that shoud be used.  Can be replaced to customize
+    #: the form date parsing.
+    form_data_parser_class = FormDataParser
+
     def __init__(self, environ, populate_request=True, shallow=False):
         self.environ = environ
         if populate_request and not shallow:
@@ -246,7 +250,7 @@ class BaseRequest(object):
         return _patch_wrapper(f, lambda *a: f(*a[:-2]+(cls(a[-2]),))(*a[-2:]))
 
     def _get_file_stream(self, total_content_length, content_type, filename=None,
-                         content_length=None):
+                        content_length=None):
         """Called to get a stream for the file upload.
 
         This must provide a file-like class with `read()`, `readline()`
@@ -256,11 +260,6 @@ class BaseRequest(object):
         content length is higher than 500KB.  Because many browsers do not
         provide a content length for the files only the total content
         length matters.
-
-        .. versionchanged:: 0.5
-           Previously this function was not passed any arguments.  In 0.5 older
-           functions not accepting any arguments are still supported for
-           backwards compatibility.
 
         :param total_content_length: the total content length of all the
                                      data in the request combined.  This value
@@ -273,6 +272,29 @@ class BaseRequest(object):
         """
         return default_stream_factory(total_content_length, content_type,
                                       filename, content_length)
+
+    @property
+    def want_form_data_parsed(self):
+        """Returns True if the request method is ``POST``, ``PUT`` or
+        ``PATCH``.  Can be overriden to support other HTTP methods that
+        should carry form data.
+
+        .. versionadded:: 0.8
+        """
+        return self.environ['REQUEST_METHOD'] in ('POST', 'PUT', 'PATCH')
+
+    def make_form_data_parser(self):
+        """Creates the form data parser.  Instanciates the
+        :attr:`form_data_parser_class` with some parameters.
+
+        .. versionadded:: 0.8
+        """
+        return self.form_data_parser_class(self._get_file_stream,
+                                           self.charset,
+                                           self.encoding_errors,
+                                           self.max_form_memory_size,
+                                           self.max_content_length,
+                                           self.parameter_storage_class)
 
     def _load_form_data(self):
         """Method used internally to retrieve submitted data.  After calling
@@ -291,16 +313,9 @@ class BaseRequest(object):
                                'that, set `shallow` to False.')
         data = None
         stream = _empty_stream
-        if self.environ['REQUEST_METHOD'] in ('POST', 'PUT', 'PATCH'):
-            try:
-                data = parse_form_data(self.environ, self._get_file_stream,
-                                       self.charset, self.encoding_errors,
-                                       self.max_form_memory_size,
-                                       self.max_content_length,
-                                       cls=self.parameter_storage_class,
-                                       silent=False)
-            except ValueError, e:
-                self._form_parsing_failed(e)
+        if self.want_form_data_parsed:
+            parser = self.make_form_data_parser()
+            data = parser.parse_from_environ(self.environ)
         else:
             # if we have a content length header we are able to properly
             # guard the incoming stream, no matter what request method is
@@ -318,17 +333,6 @@ class BaseRequest(object):
         # our cached_property non-data descriptor.
         d = self.__dict__
         d['stream'], d['form'], d['files'] = data
-
-    def _form_parsing_failed(self, error):
-        """Called if parsing of form data failed.  This is currently only
-        invoked for failed multipart uploads.  By default this method does
-        nothing.
-
-        :param error: a `ValueError` object with a message why the
-                      parsing failed.
-
-        .. versionadded:: 0.5.1
-        """
 
     @cached_property
     def stream(self):
@@ -601,6 +605,18 @@ class BaseResponse(object):
     #:    your code to the name change.
     implicit_sequence_conversion = True
 
+    #: Should this response object correct the location header to be RFC
+    #: conformant?  This is true by default.
+    #:
+    #: .. versionadded:: 0.8
+    autocorrect_location_header = True
+
+    #: Should this response object automatically set the content-length
+    #: header if possible?  This is true by default.
+    #:
+    #: .. versionadded:: 0.8
+    automatically_set_content_length = True
+
     def __init__(self, response=None, status=None, headers=None,
                  mimetype=None, content_type=None, direct_passthrough=False):
         if isinstance(headers, Headers):
@@ -721,7 +737,7 @@ class BaseResponse(object):
         except KeyError:
             self._status = '%d UNKNOWN' % code
     status_code = property(_get_status_code, _set_status_code,
-                           'The HTTP Status code as number')
+                           doc='The HTTP Status code as number')
     del _get_status_code, _set_status_code
 
     def _get_status(self):
@@ -732,7 +748,7 @@ class BaseResponse(object):
             self._status_code = int(self._status.split(None, 1)[0])
         except ValueError:
             self._status_code = 0
-    status = property(_get_status, _set_status, 'The HTTP Status code')
+    status = property(_get_status, _set_status, doc='The HTTP Status code')
     del _get_status, _set_status
 
     def _get_data(self):
@@ -746,11 +762,13 @@ class BaseResponse(object):
         self._ensure_sequence()
         return ''.join(self.iter_encoded())
     def _set_data(self, value):
-        # if an unicode string is set, it's encoded directly.  this allows
-        # us to guess the content length automatically in `get_wsgi_headers`.
+        # if an unicode string is set, it's encoded directly so that we
+        # can set the content length
         if isinstance(value, unicode):
             value = value.encode(self.charset)
         self.response = [value]
+        if self.automatically_set_content_length:
+            self.headers['Content-Length'] = str(len(value))
     data = property(_get_data, _set_data, doc=_get_data.__doc__)
     del _get_data, _set_data
 
@@ -940,6 +958,7 @@ class BaseResponse(object):
         location = None
         content_location = None
         content_length = None
+        status = self.status_code
 
         # iterate over the headers to find all values in one go.  Because
         # get_wsgi_headers is used each response that gives us a tiny
@@ -955,12 +974,16 @@ class BaseResponse(object):
 
         # make sure the location header is an absolute URL
         if location is not None:
+            old_location = location
             if isinstance(location, unicode):
                 location = iri_to_uri(location)
-            headers['Location'] = urlparse.urljoin(
-                get_current_url(environ, root_only=True),
-                location
-            )
+            if self.autocorrect_location_header:
+                location = urlparse.urljoin(
+                    get_current_url(environ, root_only=True),
+                    location
+                )
+            if location != old_location:
+                headers['Location'] = location
 
         # make sure the content location is a URL
         if content_location is not None and \
@@ -971,9 +994,9 @@ class BaseResponse(object):
         # Also update content_length accordingly so that the automatic
         # content length detection does not trigger in the following
         # code.
-        if 100 <= self.status_code < 200 or self.status_code == 204:
+        if 100 <= status < 200 or status == 204:
             headers['Content-Length'] = content_length = '0'
-        elif self.status_code == 304:
+        elif status == 304:
             remove_entity_headers(headers)
 
         # if we can determine the content length automatically, we
@@ -981,8 +1004,8 @@ class BaseResponse(object):
         # flattening the iterator or encoding of unicode strings in
         # the response.  We however should not do that if we have a 304
         # response.
-        if self.is_sequence and content_length is None and \
-           self.status_code != 304:
+        if self.automatically_set_content_length and \
+           self.is_sequence and content_length is None and status != 304:
             try:
                 content_length = sum(len(str(x)) for x in self.response)
             except UnicodeError:
@@ -1008,8 +1031,9 @@ class BaseResponse(object):
         :param environ: the WSGI environment of the request.
         :return: a response iterable.
         """
+        status = self.status_code
         if environ['REQUEST_METHOD'] == 'HEAD' or \
-           100 <= self.status_code < 200 or self.status_code in (204, 304):
+           100 <= status < 200 or status in (204, 304):
             return ()
         if self.direct_passthrough:
             if __debug__:
@@ -1244,7 +1268,7 @@ class ETagResponseMixin(object):
             # wsgiref.
             if 'date' not in self.headers:
                 self.headers['Date'] = http_date()
-            if 'content-length' in self.headers:
+            if 'content-length' not in self.headers:
                 self.headers['Content-Length'] = len(self.data)
             if not is_resource_modified(environ, self.headers.get('etag'), None,
                                         self.headers.get('last-modified')):

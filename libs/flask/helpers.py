@@ -5,7 +5,7 @@
 
     Implements various helpers.
 
-    :copyright: (c) 2010 by Armin Ronacher.
+    :copyright: (c) 2011 by Armin Ronacher.
     :license: BSD, see LICENSE for more details.
 """
 
@@ -18,6 +18,7 @@ import mimetypes
 from time import time
 from zlib import adler32
 from threading import RLock
+from werkzeug.urls import url_quote
 
 # try to load the best simplejson implementation available.  If JSON
 # is not installed, we add a failing class.
@@ -54,6 +55,7 @@ def _assert_have_json():
     """Helper function that fails if JSON is unavailable."""
     if not json_available:
         raise RuntimeError('simplejson not installed')
+
 
 # figure out if simplejson escapes slashes.  This behaviour was changed
 # from one version to another without reason.
@@ -145,6 +147,13 @@ def make_response(*args):
 
         response = make_response(render_template('not_found.html'), 404)
 
+    The other use case of this function is to force the return value of a
+    view function into a response which is helpful with view
+    decorators::
+
+        response = make_response(view_function())
+        response.headers['X-Parachutes'] = 'parachutes are cool'
+
     Internally this function does the following things:
 
     -   if no arguments are passed, it creates a new response argument
@@ -177,9 +186,14 @@ def url_for(endpoint, **values):
 
     For more information, head over to the :ref:`Quickstart <url-building>`.
 
+    .. versionadded:: 0.9
+       The `_anchor` and `_method` parameters were added.
+
     :param endpoint: the endpoint of the URL (name of the function)
     :param values: the variable arguments of the URL rule
     :param _external: if set to `True`, an absolute URL is generated.
+    :param _anchor: if provided this is added as anchor to the URL.
+    :param _method: if provided this explicitly specifies an HTTP method.
     """
     ctx = _request_ctx_stack.top
     blueprint_name = request.blueprint
@@ -197,8 +211,14 @@ def url_for(endpoint, **values):
         elif endpoint.startswith('.'):
             endpoint = endpoint[1:]
     external = values.pop('_external', False)
+    anchor = values.pop('_anchor', None)
+    method = values.pop('_method', None)
     ctx.app.inject_url_defaults(endpoint, values)
-    return ctx.url_adapter.build(endpoint, values, force_external=external)
+    rv = ctx.url_adapter.build(endpoint, values, method=method,
+                               force_external=external)
+    if anchor is not None:
+        rv += '#' + url_quote(anchor)
+    return rv
 
 
 def get_template_attribute(template_name, attribute):
@@ -477,6 +497,8 @@ def get_root_path(import_name):
         directory = os.path.dirname(sys.modules[import_name].__file__)
         return os.path.abspath(directory)
     except AttributeError:
+        # this is necessary in case we are running from the interactive
+        # python shell.  It will never be used for production code however
         return os.getcwd()
 
 
@@ -492,6 +514,7 @@ def find_package(import_name):
     root_mod = sys.modules[import_name.split('.')[0]]
     package_path = getattr(root_mod, '__file__', None)
     if package_path is None:
+        # support for the interactive python shell
         package_path = os.getcwd()
     else:
         package_path = os.path.abspath(os.path.dirname(package_path))
