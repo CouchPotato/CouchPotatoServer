@@ -18,14 +18,6 @@
 # You should have received a copy of the Lesser GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+__all__ = ['Subliminal']
 
-
-from infos import *
-from languages import *
-from utils import *
-from exceptions import *
-from videos import *
-from tasks import *
-from subtitles import *
-from core import *
-from plugins import *
+from core import Subliminal

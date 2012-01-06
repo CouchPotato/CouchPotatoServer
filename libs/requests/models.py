@@ -7,8 +7,8 @@ requests.models
 This module contains the primary objects that power Requests.
 """
 
+import os
 import urllib
-import zlib
 
 from urlparse import urlparse, urlunparse, urljoin, urlsplit
 from datetime import datetime
@@ -18,16 +18,18 @@ from .structures import CaseInsensitiveDict
 from .status_codes import codes
 from .packages import oreos
 from .auth import HTTPBasicAuth, HTTPProxyAuth
+from .packages.urllib3.response import HTTPResponse
 from .packages.urllib3.exceptions import MaxRetryError
 from .packages.urllib3.exceptions import SSLError as _SSLError
 from .packages.urllib3.exceptions import HTTPError as _HTTPError
 from .packages.urllib3 import connectionpool, poolmanager
 from .packages.urllib3.filepost import encode_multipart_formdata
 from .exceptions import (
-    Timeout, URLRequired, TooManyRedirects, HTTPError, ConnectionError)
+    ConnectionError, HTTPError, RequestException, Timeout, TooManyRedirects,
+    URLRequired, SSLError)
 from .utils import (
     get_encoding_from_headers, stream_decode_response_unicode,
-    decode_gzip, stream_decode_gzip, guess_filename, requote_path)
+    stream_decompress, guess_filename, requote_path)
 
 
 REDIRECT_STATI = (codes.moved, codes.found, codes.other, codes.temporary_moved)
@@ -54,7 +56,8 @@ class Request(object):
         proxies=None,
         hooks=None,
         config=None,
-        _poolmanager=None):
+        _poolmanager=None,
+        verify=None):
 
         #: Float describes the timeout of the request.
         #  (Use socket.setdefaulttimeout() as fallback)
@@ -116,11 +119,15 @@ class Request(object):
         #: Session.
         self.session = None
 
+        #: SSL Verification.
+        self.verify = verify
+
         if headers:
             headers = CaseInsensitiveDict(self.headers)
         else:
             headers = CaseInsensitiveDict()
 
+        # Add configured base headers.
         for (k, v) in self.config.get('base_headers', {}).items():
             if k not in headers:
                 headers[k] = v
@@ -170,6 +177,9 @@ class Request(object):
 
                 # Save cookies in Response.
                 response.cookies = cookies
+
+                # No exceptions were harmed in the making of this request.
+                response.error = getattr(resp, 'error', None)
 
             # Save original response for later.
             response.raw = resp
@@ -237,6 +247,7 @@ class Request(object):
                     timeout=self.timeout,
                     _poolmanager=self._poolmanager,
                     proxies = self.proxies,
+                    verify = self.verify
                 )
 
                 request.send()
@@ -420,6 +431,30 @@ class Request(object):
             else:
                 conn = connectionpool.connection_from_url(url)
 
+        if url.startswith('https') and self.verify:
+
+            cert_loc = None
+
+            # Allow self-specified cert location.
+            if self.verify is not True:
+                cert_loc = self.verify
+
+
+            # Look for configuration.
+            if not cert_loc:
+                cert_loc = os.environ.get('REQUESTS_CA_BUNDLE')
+
+            # Curl compatiblity.
+            if not cert_loc:
+                cert_loc = os.environ.get('CURL_CA_BUNDLE')
+
+            # Use the awesome certifi list.
+            if not cert_loc:
+                cert_loc = __import__('certifi').where()
+
+            conn.cert_reqs = 'CERT_REQUIRED'
+            conn.ca_certs = cert_loc
+
         if not self.sent or anyway:
 
             if self.cookies:
@@ -439,31 +474,42 @@ class Request(object):
                     self.headers['Cookie'] = cookie_header
 
             try:
-                # Send the request.
-                r = conn.urlopen(
-                    method=self.method,
-                    url=self.path_url,
-                    body=body,
-                    headers=self.headers,
-                    redirect=False,
-                    assert_same_host=False,
-                    preload_content=False,
-                    decode_content=False,
-                    retries=self.config.get('max_retries', 0),
-                    timeout=self.timeout,
-                )
-                self.sent = True
+                # The inner try .. except re-raises certain exceptions as
+                # internal exception types; the outer suppresses exceptions
+                # when safe mode is set.
+                try:
+                    # Send the request.
+                    r = conn.urlopen(
+                        method=self.method,
+                        url=self.path_url,
+                        body=body,
+                        headers=self.headers,
+                        redirect=False,
+                        assert_same_host=False,
+                        preload_content=False,
+                        decode_content=True,
+                        retries=self.config.get('max_retries', 0),
+                        timeout=self.timeout,
+                    )
+                    self.sent = True
 
-
-            except MaxRetryError, e:
-                if not self.config.get('safe_mode', False):
+                except MaxRetryError, e:
                     raise ConnectionError(e)
-                else:
-                    r = None
 
-            except (_SSLError, _HTTPError), e:
-                if not self.config.get('safe_mode', False):
+                except (_SSLError, _HTTPError), e:
+                    if self.verify and isinstance(e, _SSLError):
+                        raise SSLError(e)
+
                     raise Timeout('Request timed out.')
+
+            except RequestException, e:
+                if self.config.get('safe_mode', False):
+                    # In safe mode, catch the exception and attach it to
+                    # a blank urllib3.HTTPResponse object.
+                    r = HTTPResponse()
+                    r.error = e
+                else:
+                    raise
 
             self._build_response(r)
 
@@ -478,6 +524,9 @@ class Request(object):
             if prefetch:
                 # Save the response.
                 self.response.content
+            
+            if self.config.get('danger_mode'):
+                self.response.raise_for_status()
 
             return self.sent
 
@@ -567,7 +616,9 @@ class Response(object):
         gen = generate()
 
         if 'gzip' in self.headers.get('content-encoding', ''):
-            gen = stream_decode_gzip(gen)
+            gen = stream_decompress(gen, mode='gzip')
+        elif 'deflate' in self.headers.get('content-encoding', ''):
+            gen = stream_decompress(gen, mode='deflate')
 
         if decode_unicode is None:
             decode_unicode = self.config.get('decode_unicode')
@@ -578,50 +629,25 @@ class Response(object):
         return gen
 
 
-    def iter_lines(self, newlines=None, decode_unicode=None):
+    def iter_lines(self, chunk_size=10 * 1024, decode_unicode=None):
         """Iterates over the response data, one line at a time.  This
         avoids reading the content at once into memory for large
         responses.
-
-        :param newlines: a collection of bytes to seperate lines with.
         """
 
-        if newlines is None:
-            newlines = ('\r', '\n', '\r\n')
+        pending = None
+        for chunk in self.iter_content(chunk_size, decode_unicode=decode_unicode):
+            if pending is not None:
+                chunk = pending + chunk
+            lines = chunk.splitlines(True)
+            for line in lines[:-1]:
+                yield line.rstrip()
+            # Save the last part of the chunk for next iteration, to keep full line together
+            pending = lines[-1]
 
-        if self._content_consumed:
-            raise RuntimeError(
-                'The content for this response was already consumed'
-            )
-
-        def generate():
-            chunk = []
-
-            while 1:
-                c = self.raw.read(1)
-                if not c:
-                    break
-
-                if c in newlines:
-                    yield ''.join(chunk)
-                    chunk = []
-                else:
-                    chunk.append(c)
-
-            self._content_consumed = True
-
-        gen = generate()
-
-        if 'gzip' in self.headers.get('content-encoding', ''):
-            gen = stream_decode_gzip(gen)
-
-        if decode_unicode is None:
-            decode_unicode = self.config.get('decode_unicode')
-
-        if decode_unicode:
-            gen = stream_decode_response_unicode(gen, self)
-
-        return gen
+        # Yield the last line
+        if pending is not None:
+            yield pending.rstrip()
 
 
     @property
@@ -642,13 +668,6 @@ class Response(object):
                 self._content = None
 
         content = self._content
-
-        # Decode GZip'd content.
-        if 'gzip' in self.headers.get('content-encoding', ''):
-            try:
-                content = decode_gzip(self._content)
-            except zlib.error:
-                pass
 
         # Decode unicode content.
         if self.config.get('decode_unicode'):

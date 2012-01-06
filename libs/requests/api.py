@@ -6,28 +6,14 @@ requests.api
 
 This module implements the Requests API.
 
-:copyright: (c) 2011 by Kenneth Reitz.
+:copyright: (c) 2012 by Kenneth Reitz.
 :license: ISC, see LICENSE for more details.
 
 """
 
 from . import sessions
 
-def request(method, url,
-    params=None,
-    data=None,
-    headers=None,
-    cookies=None,
-    files=None,
-    auth=None,
-    timeout=None,
-    allow_redirects=False,
-    proxies=None,
-    hooks=None,
-    return_response=True,
-    prefetch=False,
-    session=None,
-    config=None):
+def request(method, url, **kwargs):
     """Constructs and sends a :class:`Request <Request>`.
     Returns :class:`Response <Response>` object.
 
@@ -45,26 +31,11 @@ def request(method, url,
     :param return_response: (optional) If False, an un-sent Request object will returned.
     :param session: (optional) A :class:`Session` object to be used for the request.
     :param config: (optional) A configuration dictionary.
+    :param verify: (optional) if ``True``, the SSL cert will be verified. A CA_BUNDLE path can also be provided.
     """
 
-    s = session or sessions.session()
-    return s.request(
-        method=method,
-        url=url,
-        params=params,
-        data=data,
-        headers=headers,
-        cookies=cookies,
-        files=files,
-        auth=auth,
-        timeout=timeout,
-        allow_redirects=allow_redirects,
-        proxies=proxies,
-        hooks=hooks,
-        return_response=return_response,
-        config=config,
-        prefetch=prefetch
-    )
+    s = kwargs.get('session') or sessions.session()
+    return s.request(method=method, url=url, **kwargs)
 
 
 

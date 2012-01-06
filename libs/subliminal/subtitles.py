@@ -21,7 +21,7 @@
 __all__ = ['Subtitle', 'EmbeddedSubtitle', 'ExternalSubtitle', 'ResultSubtitle', 'get_subtitle_path']
 
 
-from subliminal.languages import list_languages, convert_language
+from languages import list_languages, convert_language
 import abc
 import os.path
 

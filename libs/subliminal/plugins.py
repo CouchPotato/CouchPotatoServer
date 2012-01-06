@@ -22,8 +22,8 @@ __all__ = ['PluginBase', 'OpenSubtitles', 'BierDopje', 'TheSubDB', 'SubsWiki', '
 
 
 from exceptions import DownloadFailedError, MissingLanguageError, PluginError
-from subliminal.utils import get_keywords, PluginConfig, split_keyword
-from subliminal.videos import Episode, Movie, UnknownVideo
+from utils import get_keywords, PluginConfig, split_keyword
+from videos import Episode, Movie, UnknownVideo
 from subtitles import ResultSubtitle, get_subtitle_path
 import BeautifulSoup
 import abc
