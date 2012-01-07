@@ -6,6 +6,7 @@ from os.path import dirname
 import os
 import sys
 import subprocess
+import time
 
 
 # Root path
@@ -34,6 +35,8 @@ def start():
 
         subprocess.call(args, env = new_environ)
         return os.path.isfile(os.path.join(base_path, 'restart'))
+    except KeyboardInterrupt, e:
+        pass
     except Exception, e:
         log.critical(e)
         return 0
@@ -52,4 +55,7 @@ if __name__ == '__main__':
             if not restart:
                 break
 
+    from couchpotato.core.event import fireEvent
+    fireEvent('app.crappy_shutdown', single = True)
+    time.sleep(1)
     sys.exit()

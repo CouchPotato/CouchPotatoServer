@@ -17,13 +17,14 @@ log = CPLog(__name__)
 
 class Core(Plugin):
 
-    ignore_restart = ['Core.crappyRestart']
+    ignore_restart = ['Core.crappyRestart', 'Core.shutdown']
 
     def __init__(self):
         addApiView('app.shutdown', self.shutdown)
         addApiView('app.restart', self.restart)
         addApiView('app.available', self.available)
 
+        addEvent('app.crappy_shutdown', self.shutdown)
         addEvent('app.crappy_restart', self.crappyRestart)
         addEvent('app.load', self.launchBrowser, priority = 100)
         addEvent('app.base_url', self.createBaseUrl)
@@ -70,7 +71,7 @@ class Core(Plugin):
 
             if brk: break
 
-            time.sleep(300)
+            time.sleep(1)
 
         if restart:
             self.createFile(self.restartFilePath(), 'This is the most suckiest way to register if CP is restarted. Ever...')
