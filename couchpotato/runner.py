@@ -26,8 +26,10 @@ def getOptions(base_path, args):
                         dest = 'daemonize', help = 'Daemonize the app')
     parser.add_argument('--quiet', action = 'store_true',
                         dest = 'quiet', help = 'No console logging')
+    parser.add_argument('--binary', action = 'store_true',
+                        dest = 'binary', help = 'Running from binary build')
     parser.add_argument('--nogit', action = 'store_true',
-                        dest = 'nogit', help = 'Running from git')
+                        dest = 'nogit', help = 'No git available')
 
     options = parser.parse_args(args)
 
@@ -36,12 +38,15 @@ def getOptions(base_path, args):
     return options
 
 
-def runCouchPotato(options, base_path, args):
+def runCouchPotato(options, base_path, args, handle = None):
 
     # Load settings
     from couchpotato.environment import Env
     settings = Env.get('settings')
     settings.setFile(options.config_file)
+
+    if handle:
+        handle(Env)
 
     # Create data dir if needed
     data_dir = os.path.expanduser(Env.setting('data_dir'))
@@ -72,6 +77,7 @@ def runCouchPotato(options, base_path, args):
     Env.set('console_log', options.console_log)
     Env.set('daemonize', options.daemonize)
     Env.set('quiet', options.quiet)
+    Env.set('binary', options.binary)
     Env.set('args', args)
     Env.set('options', options)
 
@@ -84,7 +90,7 @@ def runCouchPotato(options, base_path, args):
     server_log.disabled = True
 
     # Only run once when debugging
-    if os.environ.get('WERKZEUG_RUN_MAIN') or not debug:
+    if os.environ.get('WERKZEUG_RUN_MAIN') or not debug or options.binary:
 
         # Logger
         logger = logging.getLogger()
@@ -149,7 +155,7 @@ def runCouchPotato(options, base_path, args):
     from couchpotato import app
     api_key = Env.setting('api_key')
     url_base = '/' + Env.setting('url_base').lstrip('/') if Env.setting('url_base') else ''
-    reloader = debug is True and not options.daemonize
+    reloader = debug is True and not options.daemonize and not options.binary
 
     # Basic config
     app.secret_key = api_key

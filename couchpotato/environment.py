@@ -1,3 +1,4 @@
+from couchpotato.core.event import fireEvent, addEvent
 from couchpotato.core.loader import Loader
 from couchpotato.core.settings import Settings
 
@@ -52,3 +53,11 @@ class Env(object):
     @staticmethod
     def getPermission(type):
         return int(Env.get('settings').get('permission_%s' % type, default = 0777))
+
+    @staticmethod
+    def fireEvent(*args, **kwargs):
+        return fireEvent(*args, **kwargs)
+
+    @staticmethod
+    def addEvent(*args, **kwargs):
+        return addEvent(*args, **kwargs)
