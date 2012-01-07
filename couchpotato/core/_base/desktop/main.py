@@ -4,7 +4,7 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
 from flask.helpers import url_for
-import urllib
+from urllib import quote
 
 log = CPLog(__name__)
 
@@ -13,7 +13,7 @@ class Desktop(Plugin):
 
     def __init__(self):
 
-        if not Env.get('binary'):
+        if not Env.get('binary_port'):
             return
 
         addEvent('app.load', self.settingsToDesktop)
@@ -27,4 +27,4 @@ class Desktop(Plugin):
         ctx.pop()
 
         url_data = '{"host": "%s", "api": "%s"}' % (base_url, base_url_api)
-        self.urlopen('http://localhost:%s/' % (Env.get('binary_port'), urllib.quote(url_data)))
+        self.urlopen('http://localhost:%s/%s' % (Env.get('binary_port'), quote(url_data)))
