@@ -13,7 +13,7 @@ config = [{
                 {
                     'name': 'enabled',
                     'label': 'Search and download subtitles',
-                    'default': True,
+                    'default': False,
                     'type': 'enabler',
                 },
                 {
