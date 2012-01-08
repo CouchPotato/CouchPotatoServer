@@ -124,6 +124,9 @@ class ProfilePlugin(Plugin):
         }, {
             'label': 'HD',
             'qualities': ['720p', '1080p']
+        }, {
+            'label': 'SD',
+            'qualities': ['dvdrip', 'dvdr']
         }]
 
         # Create default quality profile
