@@ -48,7 +48,7 @@ var Movie = new Class({
 		// Add profile
 		if(self.profile.data)
 			self.profile.getTypes().each(function(type){
-			
+
 				var q = self.addQuality(type.quality_id || type.get('quality_id'));
 				if(type.finish || type.get('finish'))
 					q.addClass('finish');
@@ -61,7 +61,7 @@ var Movie = new Class({
 			var q = self.quality.getElement('.q_'+ release.quality.identifier);
 			if(!q)
 				var q = self.addQuality(release.quality_id)
-				
+
 			q.addClass(release.status.identifier);
 
 		});
@@ -94,7 +94,7 @@ var Movie = new Class({
 		(function(){
 			var height = self.getHeight();
 			self.el.setStyle('height', height);
-		}).delay(1)
+		}).delay(10)
 	},
 
 	getTitle: function(){
@@ -137,7 +137,7 @@ var Movie = new Class({
 		var self = this;
 
 		if(!self.height)
-			self.height = self.data_container.getCoordinates().height;
+			self.height = self.data_container.getSize().y;
 
 		return self.height;
 	},
