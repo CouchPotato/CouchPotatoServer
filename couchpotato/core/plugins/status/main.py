@@ -27,7 +27,7 @@ class StatusPlugin(Plugin):
         addEvent('status.get', self.add) # Alias for .add
         addEvent('status.get_by_id', self.getById)
         addEvent('status.all', self.all)
-        addEvent('app.load', self.fill)
+        addEvent('app.initialize', self.fill)
 
         addApiView('status.list', self.list)
 
@@ -64,7 +64,7 @@ class StatusPlugin(Plugin):
         if not s:
             s = Status(
                 identifier = identifier,
-                label = identifier.capitalize()
+                label = toUnicode(identifier.capitalize())
             )
             db.add(s)
             db.commit()
@@ -87,6 +87,6 @@ class StatusPlugin(Plugin):
                 )
                 db.add(s)
 
-            s.label = label
+            s.label = toUnicode(label)
             db.commit()
 

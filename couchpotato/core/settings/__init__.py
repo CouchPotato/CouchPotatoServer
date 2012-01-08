@@ -3,7 +3,7 @@ from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import isInt, toUnicode
 from couchpotato.core.helpers.request import getParams, jsonified
-from couchpotato.core.helpers.variable import mergeDicts
+from couchpotato.core.helpers.variable import mergeDicts, tryInt
 import ConfigParser
 import os.path
 import time
@@ -19,11 +19,11 @@ class Settings():
         addApiView('settings', self.view)
         addApiView('settings.save', self.saveView)
 
-    def setFile(self, file):
-        self.file = file
+    def setFile(self, config_file):
+        self.file = config_file
 
         self.p = ConfigParser.RawConfigParser()
-        self.p.read(file)
+        self.p.read(config_file)
 
         from couchpotato.core.logger import CPLog
         self.log = CPLog(__name__)
@@ -70,17 +70,23 @@ class Settings():
             return default
 
     def getEnabler(self, section, option):
-        return self.p.getboolean(section, option)
+        return self.getBool(section, option)
 
     def getBool(self, section, option):
-        return self.p.getboolean(section, option)
+        try:
+            return self.p.getboolean(section, option)
+        except:
+            return self.p.get(section, option)
 
     def getInt(self, section, option):
-        return self.p.getint(section, option)
+        try:
+            return self.p.getint(section, option)
+        except:
+            return tryInt(self.p.get(section, option))
 
     def getUnicode(self, section, option):
         value = self.p.get(section, option)
-        return toUnicode(value.strip())
+        return toUnicode(value).strip()
 
     def getValues(self):
         values = {}

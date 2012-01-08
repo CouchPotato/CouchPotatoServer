@@ -14,7 +14,7 @@ class Desktop(Plugin):
         if not Env.get('binary_port'):
             return
 
-        addEvent('app.load', self.settingsToDesktop)
+        addEvent('app.load', self.settingsToDesktop, priority = 2)
 
     def settingsToDesktop(self):
 
