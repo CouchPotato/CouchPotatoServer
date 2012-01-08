@@ -38,7 +38,7 @@ window.addEvent('domready', function(){
 				var self = this;
 
 				self.el = new Element('a.edit', {
-					'title': 'Refresh the movie info and do a forced search',
+					'title': 'Change movie information, like title and quality.',
 					'events': {
 						'click': self.editMovie.bind(self)
 					}
