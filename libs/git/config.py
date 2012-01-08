@@ -28,16 +28,16 @@ class GitConfiguration(object):
     def __init__(self, repo):
         super(GitConfiguration, self).__init__()
         self.repo = repo
-    def setParameter(self, path, value, local=True):
-        self.repo._executeGitCommandAssertSuccess("git config %s \"%s\" \"%s\"" % ("" if local else "--global", path, value))
-    def unsetParameter(self, path, local=True):
+    def setParameter(self, path, value, local = True):
+        self.repo._executeGitCommandAssertSuccess("config %s \"%s\" \"%s\"" % ("" if local else "--global", path, value))
+    def unsetParameter(self, path, local = True):
         try:
-            self.repo._executeGitCommandAssertSuccess("git config --unset %s \"%s\"" % ("" if local else "--global", path))
+            self.repo._executeGitCommandAssertSuccess("config --unset %s \"%s\"" % ("" if local else "--global", path))
         except GitCommandFailedException:
             if self.getParameter(path) is not None:
                 raise
     def getParameter(self, path):
         return self.getDict().get(path, None)
     def getDict(self):
-        return dict(line.strip().split("=",1)
-                    for line in self.repo._getOutputAssertSuccess("git config -l").splitlines())
+        return dict(line.strip().split("=", 1)
+                    for line in self.repo._getOutputAssertSuccess("config -l").splitlines())

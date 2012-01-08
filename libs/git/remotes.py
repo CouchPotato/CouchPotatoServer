@@ -32,20 +32,20 @@ class Remote(ref_container.RefContainer):
         self.name = name
         self.url = url
     def fetch(self):
-        self.repo._executeGitCommandAssertSuccess("git fetch %s" % self.name)
+        self.repo._executeGitCommandAssertSuccess("fetch %s" % self.name)
     def prune(self):
-        self.repo._executeGitCommandAssertSuccess("git remote prune %s" % self.name)
+        self.repo._executeGitCommandAssertSuccess("remote prune %s" % self.name)
     def __eq__(self, other):
         return (type(self) is type(other)) and (self.name == other.name)
     ###################### For compatibility with RefContainer #####################
     def getBranches(self):
         prefix = "%s/" % self.name
         returned = []
-        for line in self.repo._getOutputAssertSuccess("git branch -r").splitlines():
+        for line in self.repo._getOutputAssertSuccess("branch -r").splitlines():
             if self.repo.getGitVersion() >= '1.6.3' and ' -> ' in line:
                 continue
             line = line.strip()
             if line.startswith(prefix):
                 returned.append(branch.RegisteredRemoteBranch(self.repo, self, line[len(prefix):]))
         return returned
-    
+

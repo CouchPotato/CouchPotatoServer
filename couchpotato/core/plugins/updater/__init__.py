@@ -30,6 +30,11 @@ config = [{
                     'type': 'bool',
                     'description': 'Automaticly update when update is available',
                 },
+                {
+                    'name': 'git_command',
+                    'default': 'git',
+                    'advanced': True
+                },
             ],
         },
     ],

@@ -22,24 +22,12 @@
 # ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-from . import exceptions
+from ref import Ref
 
-class RefContainer(object):
-    def getBranches(self):
-        raise NotImplementedError()
-    def getTags(self):
-        raise NotImplementedError()
-    ########################### Looking for specific refs ##########################
-    def _getByName(self, func, name):
-        for ref in func():
-            if ref.name == name:
-                return ref
-        raise exceptions.NonexistentRefException(name)
-    def getBranchByName(self, name):
-        return self._getByName(self.getBranches, name)
-    def hasBranch(self, name):
-        try:
-            self.getBranchByName(name)
-            return True
-        except exceptions.NonexistentRefException:
-            return False
+class Tag(Ref):
+    def __repr__(self):
+        return "<tag %s>" % (self.name,)
+class LocalTag(Tag):
+    pass
+class RemoteTag(Tag):
+    pass

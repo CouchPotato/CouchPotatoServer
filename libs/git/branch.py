@@ -31,8 +31,8 @@ class Branch(Ref):
     def __repr__(self):
         return "<branch %s>" % (self.name,)
 class LocalBranch(Branch):
-    def delete(self, force=True):
-        self.repo._executeGitCommandAssertSuccess("git branch -%s %s" % ("D" if force else "d", self.name,))
+    def delete(self, force = True):
+        self.repo._executeGitCommandAssertSuccess("branch -%s %s" % ("D" if force else "d", self.name,))
     def setRemoteBranch(self, branch):
         if branch is None:
             self.repo.config.unsetParameter('branch.%s.remote' % self.name)
@@ -51,12 +51,12 @@ class LocalBranch(Branch):
         merge = re.sub('^refs/heads/', '', merge)
         remote_branch = remote.getBranchByName(merge)
         return remote_branch
-        
+
 class LocalBranchAlias(LocalBranch):
     def __init__(self, repository, name, dest):
         super(LocalBranchAlias, self).__init__(repository, name)
         self.dest = dest
-        
+
 class RemoteBranch(Branch):
     pass
 class RegisteredRemoteBranch(RemoteBranch):
@@ -69,7 +69,7 @@ class RegisteredRemoteBranch(RemoteBranch):
         """
         Deletes the actual branch on the remote repository!
         """
-        self.repo.push(self.remote, fromBranch="", toBranch=self, force=True)
+        self.repo.push(self.remote, fromBranch = "", toBranch = self, force = True)
     def getNormalizedName(self):
         return "%s/%s" % (self.remote.name, self.name)
     def __repr__(self):

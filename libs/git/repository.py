@@ -22,12 +22,14 @@
 # ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+from collections import Sequence
 import re
 import os
 import subprocess
 import sys
 
 from . import branch
+from . import tag
 from . import commit
 from . import config
 from .files import ModifiedFile
@@ -42,10 +44,16 @@ from .exceptions import CannotFindRepository
 from .exceptions import GitException
 from .exceptions import GitCommandFailedException
 from .exceptions import MergeConflict
+from .exceptions import NonexistentRefException
 
 BRANCH_ALIAS_MARKER = ' -> '
 
 class Repository(ref_container.RefContainer):
+
+    _git_command = None
+    def setCommand(self, command):
+        self._git_command = command
+
     ############################# internal methods #############################
     _loggingEnabled = False
     def _getWorkingDirectory(self):
@@ -57,16 +65,17 @@ class Repository(ref_container.RefContainer):
         self._loggingEnabled = True
     def disableLogging(self):
         self._loggingEnabled = False
-    def _executeGitCommand(self, command, cwd=None):
+    def _executeGitCommand(self, command, cwd = None):
         if cwd is None:
             cwd = self._getWorkingDirectory()
-        command = str(command)
+        command = '%s %s' % (self._git_command, str(command))
+
         self._logGitCommand(command, cwd)
         returned = subprocess.Popen(command,
-                                    shell=True,
-                                    cwd=cwd,
-                                    stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE)
+                                    shell = True,
+                                    cwd = cwd,
+                                    stdout = subprocess.PIPE,
+                                    stderr = subprocess.PIPE)
         returned.wait()
         return returned
     def _executeGitCommandAssertSuccess(self, command, **kwargs):
@@ -90,22 +99,34 @@ class Repository(ref_container.RefContainer):
 
 ############################## remote repositories #############################
 class RemoteRepository(Repository):
-    def __init__(self, url):
+    def __init__(self, url, command = 'git'):
+        self.setCommand(command)
         super(RemoteRepository, self).__init__()
         self.url = url
-    def _getRefs(self, prefix):
-        output = self._executeGitCommandAssertSuccess("git ls-remote %s" % (self.url,))
+    def _getRefs(self, prefix = ''):
+        output = self._executeGitCommandAssertSuccess("ls-remote %s" % (self.url,))
         for output_line in output.stdout:
             commit, refname = output_line.split()
             if refname.startswith(prefix):
-                yield refname[len(prefix):]
+                yield refname[len(prefix):], commit.strip()
     def _getRefsAsClass(self, prefix, cls):
-        return [cls(self, ref) for ref in self._getRefs(prefix)]
+        return [cls(self, ref) for ref, _ in self._getRefs(prefix)]
+    def _getCommitByRefName(self, refname):
+        sha_by_ref = dict(self._getRefs())
+        for prefix in 'refs/tags/', 'refs/heads/':
+            sha = sha_by_ref.get(prefix + refname, None)
+            if sha is not None:
+                return commit.Commit(self, sha)
+        raise NonexistentRefException("Cannot find ref name %r in %s" % (refname, self))
+
     def getBranches(self):
         return self._getRefsAsClass('refs/heads/', branch.RemoteBranch)
+    def getTags(self):
+        return self._getRefsAsClass('refs/tags/', tag.RemoteTag)
 ############################## local repositories ##############################
 class LocalRepository(Repository):
-    def __init__(self, path):
+    def __init__(self, path, command = 'git'):
+        self.setCommand(command)
         super(LocalRepository, self).__init__()
         self.path = path
         self.config = config.GitConfiguration(self)
@@ -117,25 +138,25 @@ class LocalRepository(Repository):
     def _getCommitByHash(self, sha):
         return commit.Commit(self, sha)
     def _getCommitByRefName(self, name):
-        return commit.Commit(self, self._getOutputAssertSuccess("git rev-parse %s" % name).strip())
+        return commit.Commit(self, self._getOutputAssertSuccess("rev-parse %s" % name).strip())
     def _getCommitByPartialHash(self, sha):
         return self._getCommitByRefName(sha)
     def getGitVersion(self):
         if self._version is None:
-            version_output = self._getOutputAssertSuccess("git version")
+            version_output = self._getOutputAssertSuccess("version")
             version_match = re.match(r"git\s+version\s+(\S+)$", version_output, re.I)
             if version_match is None:
                 raise GitException("Cannot extract git version (unfamiliar output format %r?)" % version_output)
             self._version = version_match.group(1)
         return self._version
     ########################### Initializing a repository ##########################
-    def init(self, bare=False):
+    def init(self, bare = False):
         if not os.path.exists(self.path):
             os.mkdir(self.path)
         if not os.path.isdir(self.path):
             raise GitException("Cannot create repository in %s - "
                                "not a directory" % self.path)
-        self._executeGitCommandAssertSuccess("git init %s" % ("--bare" if bare else ""))
+        self._executeGitCommandAssertSuccess("init %s" % ("--bare" if bare else ""))
     def _asURL(self, repo):
         if isinstance(repo, LocalRepository):
             repo = repo.path
@@ -145,11 +166,11 @@ class LocalRepository(Repository):
             raise TypeError("Cannot clone from %r" % (repo,))
         return repo
     def clone(self, repo):
-        self._executeGitCommandAssertSuccess("git clone %s %s" % (self._asURL(repo), self.path), cwd=".")
+        self._executeGitCommandAssertSuccess("clone %s %s" % (self._asURL(repo), self.path), cwd = ".")
     ########################### Querying repository refs ###########################
     def getBranches(self):
         returned = []
-        for git_branch_line in self._executeGitCommandAssertSuccess("git branch").stdout:
+        for git_branch_line in self._executeGitCommandAssertSuccess("branch").stdout:
             if git_branch_line.startswith("*"):
                 git_branch_line = git_branch_line[1:]
             git_branch_line = git_branch_line.strip()
@@ -159,20 +180,25 @@ class LocalRepository(Repository):
             else:
                 returned.append(branch.LocalBranch(self, git_branch_line))
         return returned
+    def getTags(self):
+        returned = []
+        for git_tag_line in self._executeGitCommandAssertSuccess("tag").stdout:
+            returned.append(tag.LocalTag(self, git_tag_line.strip()))
+        return returned
     def _getCommits(self, specs, includeMerges):
-        command = "git log --pretty=format:%%H %s" % specs
+        command = "log --pretty=format:%%H %s" % specs
         if not includeMerges:
             command += " --no-merges"
         for c in self._executeGitCommandAssertSuccess(command).stdout:
             yield commit.Commit(self, c.strip())
-    def getCommits(self, start=None, end="HEAD", includeMerges=True):
+    def getCommits(self, start = None, end = "HEAD", includeMerges = True):
         spec = self._normalizeRefName(start or "")
         spec += ".."
         spec += self._normalizeRefName(end)
-        return list(self._getCommits(spec, includeMerges=includeMerges))
+        return list(self._getCommits(spec, includeMerges = includeMerges))
     def getCurrentBranch(self):
         #todo: improve this method of obtaining current branch
-        for branch_name in self._executeGitCommandAssertSuccess("git branch").stdout:
+        for branch_name in self._executeGitCommandAssertSuccess("branch").stdout:
             branch_name = branch_name.strip()
             if not branch_name.startswith("*"):
                 continue
@@ -183,7 +209,7 @@ class LocalRepository(Repository):
     def getRemotes(self):
         config_dict = self.config.getDict()
         returned = []
-        for line in self._getOutputAssertSuccess("git remote show -n").splitlines():
+        for line in self._getOutputAssertSuccess("remote show -n").splitlines():
             line = line.strip()
             returned.append(remotes.Remote(self, line, config_dict.get('remote.%s.url' % line.strip())))
         return returned
@@ -194,16 +220,16 @@ class LocalRepository(Repository):
             a = a.getHead()
         if isinstance(b, ref.Ref):
             b = b.getHead()
-        returned = self._executeGitCommand("git merge-base %s %s" % (a, b))
+        returned = self._executeGitCommand("merge-base %s %s" % (a, b))
         if returned.returncode == 0:
             return commit.Commit(self, returned.stdout.read().strip())
-        # make sure this is not a misc. error with git 
+        # make sure this is not a misc. error with git
         unused = self.getHead()
         return None
     ################################ Querying Status ###############################
     def containsCommit(self, commit):
         try:
-            self._executeGitCommandAssertSuccess("git log -1 %s" % (commit,))
+            self._executeGitCommandAssertSuccess("log -1 %s" % (commit,))
         except GitException:
             return False
         return True
@@ -212,11 +238,24 @@ class LocalRepository(Repository):
     def _getFiles(self, *flags):
         flags = ["--exclude-standard"] + list(flags)
         return [f.strip()
-                for f in self._getOutputAssertSuccess("git ls-files %s" % (" ".join(flags))).splitlines()]
-    def _getRawDiff(self, *flags):
+                for f in self._getOutputAssertSuccess("ls-files %s" % (" ".join(flags))).splitlines()]
+    def _getRawDiff(self, *flags, **options):
+        match_statuses = options.pop('fileStatuses', None)
+        if match_statuses is not None and not isinstance(match_statuses, Sequence):
+            raise ValueError("matchedStatuses must be a sequence")
+        if options:
+            raise TypeError("Unknown arguments specified: %s" % ", ".join(options))
+
         flags = " ".join(str(f) for f in flags)
-        return [ModifiedFile(line.split()[-1]) for line in
-                self._getOutputAssertSuccess("git diff --raw %s" % flags).splitlines()]
+        modified_files = []
+        for line in self._getOutputAssertSuccess("diff --raw %s" % flags).splitlines():
+            file_status = line.split()[-2]
+            file_name = line.split()[-1]
+            if match_statuses is None or file_status in match_statuses:
+                modified_files.append(ModifiedFile(file_name))
+
+        return modified_files
+
     def getStagedFiles(self):
         if self.isInitialized():
             return self._getRawDiff('--cached')
@@ -225,6 +264,8 @@ class LocalRepository(Repository):
         return self._getFiles()
     def getChangedFiles(self):
         return self._getRawDiff()
+    def getDeletedFiles(self):
+        return self._getRawDiff(fileStatuses = ['D'])
     def getUntrackedFiles(self):
         return self._getFiles("--others")
     def isInitialized(self):
@@ -244,7 +285,14 @@ class LocalRepository(Repository):
         raise NotImplementedError()
     ################################ Staging content ###############################
     def add(self, path):
-        self._executeGitCommandAssertSuccess("git add %s" % quote_for_shell(path))
+        self._executeGitCommandAssertSuccess("add %s" % quote_for_shell(path))
+    def delete(self, path, recursive = False, force = False):
+        flags = ""
+        if recursive:
+            flags += "-r "
+        if force:
+            flags += "-f "
+        self._executeGitCommandAssertSuccess("rm %s%s" % (flags, quote_for_shell(path)))
     def addAll(self):
         return self.add('.')
     ################################## Committing ##################################
@@ -261,31 +309,38 @@ class LocalRepository(Repository):
             if match:
                 return commit.Commit(self, match.group(1))
         return None
-    def commit(self, message, allowEmpty=False):
-        command = "git commit -m %s" % quote_for_shell(message)
+    def commit(self, message, allowEmpty = False, commitAll = False):
+        args = ''
+        if commitAll:
+            args = args + '--all'
+        command = "commit %s -m %s" % (args, quote_for_shell(message))
         if allowEmpty:
             command += " --allow-empty"
         output = self._getOutputAssertSuccess(command)
         return self._deduceNewCommitFromCommitOutput(output)
     ################################ Changing state ################################
-    def createBranch(self, name, startingPoint=None):
-        command = "git branch %s " % name
+    def _createBranchOrTag(self, objname, name, startingPoint, returned_class):
+        command = "%s %s " % (objname, name)
         if startingPoint is not None:
             command += self._normalizeRefName(startingPoint)
         self._executeGitCommandAssertSuccess(command)
-        return branch.LocalBranch(self, name)
-    def checkout(self, thing=None, targetBranch=None, files=()):
+        return returned_class(self, name)
+    def createBranch(self, name, startingPoint = None):
+        return self._createBranchOrTag('branch', name, startingPoint, branch.LocalBranch)
+    def createTag(self, name, startingPoint = None):
+        return self._createBranchOrTag('tag', name, startingPoint, tag.LocalTag)
+    def checkout(self, thing = None, targetBranch = None, files = ()):
         if thing is None:
             thing = ""
-        command = "git checkout %s" % (self._normalizeRefName(thing),)
+        command = "checkout %s" % (self._normalizeRefName(thing),)
         if targetBranch is not None:
             command += " -b %s" % (targetBranch,)
         if files:
             command += " -- %s" % " ".join(files)
         self._executeGitCommandAssertSuccess(command)
-    def mergeMultiple(self, srcs, allowFastForward=True, log=False, message=None):
+    def mergeMultiple(self, srcs, allowFastForward = True, log = False, message = None):
         try:
-            self._executeGitCommandAssertSuccess(CMD("git merge",
+            self._executeGitCommandAssertSuccess(CMD("merge",
                                                      " ".join(self._normalizeRefName(src) for src in srcs),
                                                      "--no-ff" if not allowFastForward else None,
                                                      "--log" if log else None,
@@ -299,18 +354,18 @@ class LocalRepository(Repository):
     def merge(self, src, *args, **kwargs):
         return self.mergeMultiple([src], *args, **kwargs)
     def _reset(self, flag, thing):
-        command = "git reset %s %s" % (
+        command = "reset %s %s" % (
             flag,
             self._normalizeRefName(thing))
         self._executeGitCommandAssertSuccess(command)
-    def resetSoft(self, thing="HEAD"):
+    def resetSoft(self, thing = "HEAD"):
         return self._reset("--soft", thing)
-    def resetHard(self, thing="HEAD"):
+    def resetHard(self, thing = "HEAD"):
         return self._reset("--hard", thing)
-    def resetMixed(self, thing="HEAD"):
+    def resetMixed(self, thing = "HEAD"):
         return self._reset("--mixed", thing)
     def _clean(self, flags):
-        self._executeGitCommandAssertSuccess("git clean -q " + flags)
+        self._executeGitCommandAssertSuccess("clean -q " + flags)
     def cleanIgnoredFiles(self):
         """Cleans files that match the patterns in .gitignore"""
         return self._clean("-f -X")
@@ -318,21 +373,21 @@ class LocalRepository(Repository):
         return self._clean("-f -d")
     ################################# collaboration ################################
     def addRemote(self, name, url):
-        self._executeGitCommandAssertSuccess("git remote add %s %s" % (name, url))
+        self._executeGitCommandAssertSuccess("remote add %s %s" % (name, url))
         return remotes.Remote(self, name, url)
-    def fetch(self, repo=None):
-        command = "git fetch"
+    def fetch(self, repo = None):
+        command = "fetch"
         if repo is not None:
             command += " "
             command += self._asURL(repo)
         self._executeGitCommandAssertSuccess(command)
-    def pull(self, repo=None):
-        command = "git pull"
+    def pull(self, repo = None):
+        command = "pull"
         if repo is not None:
             command += " "
             command += self._asURL(repo)
         self._executeGitCommandAssertSuccess(command)
-    def _getRefspec(self, fromBranch=None, toBranch=None, force=False):
+    def _getRefspec(self, fromBranch = None, toBranch = None, force = False):
         returned = ""
         if fromBranch is not None:
             returned += self._normalizeRefName(fromBranch)
@@ -345,10 +400,10 @@ class LocalRepository(Repository):
         if returned and force:
             returned = "+%s" % returned
         return returned
-    def push(self, remote=None, fromBranch=None, toBranch=None, force=False):
-        command = "git push"
+    def push(self, remote = None, fromBranch = None, toBranch = None, force = False):
+        command = "push"
         #build push arguments
-        refspec = self._getRefspec(toBranch=toBranch, fromBranch=fromBranch, force=force)
+        refspec = self._getRefspec(toBranch = toBranch, fromBranch = fromBranch, force = force)
 
         if refspec and not remote:
             remote = "origin"
@@ -360,24 +415,22 @@ class LocalRepository(Repository):
             remote = remote.path
         if remote is not None and not isinstance(remote, basestring):
             raise TypeError("Invalid type for 'remote' parameter: %s" % (type(remote),))
-        command = "git push %s %s" % (remote if remote is not None else "", refspec)
+        command = "push %s %s" % (remote if remote is not None else "", refspec)
         self._executeGitCommandAssertSuccess(command)
     def rebase(self, src):
-        self._executeGitCommandAssertSuccess("git rebase %s" % self._normalizeRefName(src))
+        self._executeGitCommandAssertSuccess("rebase %s" % self._normalizeRefName(src))
     #################################### Stashes ###################################
-    def saveStash(self, name=None):
-        command = "git stash save"
+    def saveStash(self, name = None):
+        command = "stash save"
         if name is not None:
             command += " %s" % name
         self._executeGitCommandAssertSuccess(command)
-    def popStash(self, arg=None):
-        command = "git stash pop"
+    def popStash(self, arg = None):
+        command = "stash pop"
         if arg is not None:
             command += " %s" % arg
         self._executeGitCommandAssertSuccess(command)
     ################################# Configuration ################################
-    def getConfig(self):
-        return dict(s.split("=",1) for s in self._getOutputAssertSuccess("git config -l"))
 
 ################################### Shortcuts ##################################
 def clone(source, location):
@@ -396,4 +449,4 @@ def find_repository():
         path, path_tail = os.path.split(current_path)
         if not path_tail:
             raise CannotFindRepository("Cannot find repository for %s" % (orig_path,))
-        
+

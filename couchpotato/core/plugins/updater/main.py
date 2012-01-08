@@ -24,7 +24,7 @@ class Updater(Plugin):
 
     def __init__(self):
 
-        self.repo = LocalRepository(Env.get('app_dir'))
+        self.repo = LocalRepository(Env.get('app_dir'), command = self.conf('git_command', default = 'git'))
 
         fireEvent('schedule.interval', 'updater.check', self.check, hours = 6)
 

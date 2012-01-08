@@ -31,9 +31,9 @@ class Ref(object):
         return self.repo._getCommitByRefName(self.name)
     def getNormalizedName(self):
         return self.name
-    def getNewCommits(self, comparedTo, limit=""):
+    def getNewCommits(self, comparedTo, limit = ""):
         returned = []
-        command = "git cherry %s %s %s" % (self.repo._normalizeRefName(comparedTo),
+        command = "cherry %s %s %s" % (self.repo._normalizeRefName(comparedTo),
                                            self.getNormalizedName(),
                                            self.repo._normalizeRefName(limit))
         for line in self.repo._getOutputAssertSuccess(command).splitlines():

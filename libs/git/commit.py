@@ -48,11 +48,11 @@ class Commit(Ref):
             raise TypeError("Comparing %s and %s" % (type(self), type(other)))
         return (self.hash == other.lower())
     def getParents(self):
-        output = self.repo._getOutputAssertSuccess("git rev-list %s --parents -1" % self)
+        output = self.repo._getOutputAssertSuccess("rev-list %s --parents -1" % self)
         return [Commit(self.repo, sha.strip()) for sha in output.split()[1:]]
     def getChange(self):
         returned = []
-        for line in self.repo._getOutputAssertSuccess("git show --pretty=format: --raw %s" % self).splitlines():
+        for line in self.repo._getOutputAssertSuccess("show --pretty=format: --raw %s" % self).splitlines():
             line = line.strip()
             if not line:
                 continue
@@ -62,7 +62,7 @@ class Commit(Ref):
     getChangedFiles = getChange
     ############################ Misc. Commit attributes ###########################
     def _getCommitField(self, field):
-        return self.repo._executeGitCommandAssertSuccess("git log -1 --pretty=format:%s %s" % (field, self)).stdout.read().strip()
+        return self.repo._executeGitCommandAssertSuccess("log -1 --pretty=format:%s %s" % (field, self)).stdout.read().strip()
     def getAuthorName(self):
         return self._getCommitField("%an")
     def getAuthorEmail(self):
