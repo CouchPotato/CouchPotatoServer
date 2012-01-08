@@ -101,7 +101,7 @@ class QualityPlugin(Plugin):
 
             quality.order = order
             quality.identifier = q.get('identifier')
-            quality.label = q.get('label')
+            quality.label = toUnicode(q.get('label'))
             quality.size_min, quality.size_max = q.get('size')
 
             # Create single quality profile
