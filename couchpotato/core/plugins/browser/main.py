@@ -16,7 +16,7 @@ class FileBrowser(Plugin):
     def getDirectories(self, path = '/', show_hidden = True):
 
         # Return driveletters or root if path is empty
-        if path == '/' or not path:
+        if path == '/' or not path or path == '\\':
             if os.name == 'nt':
                 return self.getDriveLetters()
             path = '/'
@@ -25,7 +25,7 @@ class FileBrowser(Plugin):
         for f in os.listdir(path):
             p = os.path.join(path, f)
             if os.path.isdir(p) and ((self.is_hidden(p) and bool(int(show_hidden))) or not self.is_hidden(p)):
-                dirs.append(p + '/')
+                dirs.append(p + os.path.sep)
 
         return dirs
 
@@ -37,7 +37,7 @@ class FileBrowser(Plugin):
         driveletters = []
         for drive in string.ascii_uppercase:
             if win32file.GetDriveType(drive + ":") == win32file.DRIVE_FIXED:
-                driveletters.append(drive + ":")
+                driveletters.append(drive + ":\\")
 
         return driveletters
 
