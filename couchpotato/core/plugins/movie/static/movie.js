@@ -91,8 +91,10 @@ var Movie = new Class({
 	afterInject: function(){
 		var self = this;
 
-		var height = self.getHeight();
-		self.el.setStyle('height', height);
+		(function(){
+			var height = self.getHeight();
+			self.el.setStyle('height', height);
+		}).delay(1)
 	},
 
 	getTitle: function(){
