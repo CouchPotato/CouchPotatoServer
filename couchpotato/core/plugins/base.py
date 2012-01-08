@@ -81,7 +81,7 @@ class Plugin(object):
     def makeDir(self, path):
         try:
             if not os.path.isdir(path):
-                os.makedirs(path, Env.getValuePermission('folder'))
+                os.makedirs(path, Env.getPermission('folder'))
             return True
         except Exception, e:
             log.error('Unable to create folder "%s": %s' % (path, e))

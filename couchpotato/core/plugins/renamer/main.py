@@ -167,28 +167,28 @@ class Renamer(Plugin):
                         if group['is_dvd'] and file_type is 'movie':
                             found = False
                             for top_dir in ['video_ts', 'audio_ts', 'bdmv', 'certificate']:
-                                has_string = file.lower().find(os.path.sep + top_dir + os.path.sep)
+                                has_string = current_file.lower().find(os.path.sep + top_dir + os.path.sep)
                                 if has_string >= 0:
-                                    structure_dir = file[has_string:].lstrip(os.path.sep)
-                                    rename_files[file] = os.path.join(destination, final_folder_name, structure_dir)
+                                    structure_dir = current_file[has_string:].lstrip(os.path.sep)
+                                    rename_files[current_file] = os.path.join(destination, final_folder_name, structure_dir)
                                     found = True
                                     break
 
                             if not found:
-                                log.error('Could not determin dvd structure for: %s' % file)
+                                log.error('Could not determin dvd structure for: %s' % current_file)
 
                         # Do rename others
                         else:
                             if self.conf('move_leftover') and file_type is 'leftover':
-                                rename_files[file] = os.path.join(destination, final_folder_name, os.path.basename(file))
+                                rename_files[current_file] = os.path.join(destination, final_folder_name, os.path.basename(current_file))
                             else:
-                                rename_files[file] = os.path.join(destination, final_folder_name, final_file_name)
+                                rename_files[current_file] = os.path.join(destination, final_folder_name, final_file_name)
 
                         # Check for extra subtitle files
                         if file_type is 'subtitle':
 
                             def test(s):
-                                return file[:-len(replacements['ext'])] in s
+                                return current_file[:-len(replacements['ext'])] in s
 
                             for subtitle_extra in set(filter(test, group['files']['subtitle_extra'])):
                                 replacements['ext'] = getExt(subtitle_extra)
