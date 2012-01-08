@@ -179,4 +179,4 @@ class QualityPlugin(Plugin):
                 return self.setCache(hash, quality)
 
         log.error('Could not identify quality for: %s' % files)
-        return self.setCache(hash, quality)
+        return self.setCache(hash, self.single('dvdrip'))
