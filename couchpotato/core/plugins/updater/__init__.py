@@ -28,7 +28,7 @@ config = [{
                     'name': 'automatic',
                     'default': True,
                     'type': 'bool',
-                    'description': 'Automaticly update when update is available',
+                    'description': 'Automatically update when update is available',
                 },
                 {
                     'name': 'git_command',
