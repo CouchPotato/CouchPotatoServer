@@ -13,7 +13,7 @@ def runHandler(name, handler, *args, **kwargs):
     except:
         log.error('Error in event "%s", that wasn\'nt caught: %s' % (name, traceback.format_exc()))
 
-def addEvent(name, handler, priority = 0):
+def addEvent(name, handler, priority = 100):
 
     if events.get(name):
         e = events[name]

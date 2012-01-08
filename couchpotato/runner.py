@@ -1,14 +1,17 @@
 from argparse import ArgumentParser
 from couchpotato import web
 from couchpotato.api import api
-from couchpotato.core.event import fireEventAsync
+from couchpotato.core.event import fireEventAsync, fireEvent
 from couchpotato.core.helpers.variable import getDataDir, tryInt
 from daemon import createDaemon
 from logging import handlers
 from werkzeug.contrib.cache import FileSystemCache
 import logging
 import os.path
+import socket
 import sys
+import time
+import traceback
 
 def getOptions(base_path, args):
 
@@ -90,6 +93,7 @@ def runCouchPotato(options, base_path, args, handle = None):
     server_log.disabled = True
 
     # Only run once when debugging
+    fire_load = False
     if os.environ.get('WERKZEUG_RUN_MAIN') or not debug or options.binary_port:
 
         # Logger
@@ -146,10 +150,10 @@ def runCouchPotato(options, base_path, args, handle = None):
         from couchpotato.core.settings.model import setup
         setup()
 
-        fireEventAsync('app.load')
-
         if initialize:
-            fireEventAsync('app.initialize')
+            fireEvent('app.initialize')
+
+        fire_load = True
 
     # Create app
     from couchpotato import app
@@ -174,7 +178,16 @@ def runCouchPotato(options, base_path, args, handle = None):
     app.register_blueprint(web, url_prefix = '%s/' % url_base)
     app.register_blueprint(api, url_prefix = '%s/%s/' % (url_base, api_key))
 
-    # Go go go!
+    # Some logging and fire load event
     try: log.info('Starting server on port %(port)s' % config)
     except: pass
-    app.run(**config)
+    if fire_load: fireEventAsync('app.load')
+
+    # Go go go!
+    try:
+        app.run(**config)
+    except (KeyboardInterrupt, SystemExit):
+        raise
+    except:
+        log.error('Failed starting: %s' % traceback.format_exc())
+        raise

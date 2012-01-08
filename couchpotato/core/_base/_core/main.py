@@ -26,7 +26,7 @@ class Core(Plugin):
 
         addEvent('app.crappy_shutdown', self.shutdown)
         addEvent('app.crappy_restart', self.crappyRestart)
-        addEvent('app.load', self.launchBrowser, priority = 100)
+        addEvent('app.load', self.launchBrowser, priority = 1)
         addEvent('app.base_url', self.createBaseUrl)
 
         addEvent('setting.save.core.password', self.md5Password)

@@ -37,7 +37,7 @@ config = [{
                 },
                 {
                     'name': 'launch_browser',
-                    'default': 1,
+                    'default': True,
                     'type': 'bool',
                     'description': 'Launch the browser when I start.',
                     'wizard': True,
