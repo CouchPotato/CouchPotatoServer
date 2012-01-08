@@ -18,6 +18,8 @@ rename_options = {
         'audio': 'Audio (DTS)',
         'group': 'Releasegroup name',
         'source': 'Source media (Bluray)',
+        'original': 'Foldername.2011.720p-releasegrp.mkv',
+        'original_folder': 'Moviename.2011.720p-releasegrp',
     },
 }
 
