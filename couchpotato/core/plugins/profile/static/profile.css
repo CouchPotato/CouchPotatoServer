@@ -25,6 +25,13 @@
 
 	.profile .formHint {
 		width: 250px !important;
+		vertical-align: top !important;
+		margin: 0 !important;
+		padding-left: 3px !important;
+		opacity: 0.1;
+	}
+	.profile:hover .formHint {
+		opacity: 1;
 	}
 
 	.profile .wait_for {
