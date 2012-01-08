@@ -690,7 +690,7 @@ Option.Directories = new Class({
 	afterInject: function(){
 		var self = this;
 
-		self.el.hide();
+		self.el.setStyle('display', 'none');
 
 		self.directories = [];
 		self.getValue().split(self.delimiter).each(function(value){
@@ -711,7 +711,13 @@ Option.Directories = new Class({
 		if(has_empty) return;
 
 		var dir = new Option.Directory(self.section, self.name, value || '', self.options);
-		$(dir).inject(self.el.getParent('fieldset'));
+		
+		var parent = self.el.getParent('fieldset');
+		var dirs = parent.getElements('.multi_directory');
+		if(dirs.length == 0)
+			$(dir).inject(parent)
+		else
+			$(dir).inject(dirs.getLast(), 'after');
 
 		// Replace some properties
 		dir.save = self.saveItems.bind(self);
@@ -738,7 +744,8 @@ Option.Directories = new Class({
 		self.directories.erase(dir);
 
 		$(dir).destroy();
-
+		
+		self.saveItems();
 		self.addDirectory();
 	},
 
