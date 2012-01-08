@@ -9,7 +9,7 @@ config = [{
         {
             'tab': 'renamer',
             'label': 'movie library manager',
-            'description': 'Add multiple movie folders.',
+            'description': 'Add your existing movie folders.',
             'wizard': True,
             'options': [
                 {
