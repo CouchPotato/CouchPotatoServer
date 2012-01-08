@@ -10,7 +10,7 @@ config = [{
             'tab': 'downloaders',
             'name': 'transmission',
             'label': 'Transmission',
-            'description': 'Send NZBs to your NZBGet installation.',
+            'description': 'Send torrents to Transmission.',
             'wizard': True,
             'options': [
                 {
