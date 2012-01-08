@@ -3,7 +3,6 @@ from couchpotato import web
 from couchpotato.api import api
 from couchpotato.core.event import fireEventAsync, fireEvent
 from couchpotato.core.helpers.variable import getDataDir, tryInt
-from daemon import createDaemon
 from logging import handlers
 from werkzeug.contrib.cache import FileSystemCache
 import logging
@@ -25,8 +24,6 @@ def getOptions(base_path, args):
                         dest = 'debug', help = 'Debug mode')
     parser.add_argument('--console_log', action = 'store_true',
                         dest = 'console_log', help = "Log to console")
-    parser.add_argument('--daemon', action = 'store_true',
-                        dest = 'daemonize', help = 'Daemonize the app')
     parser.add_argument('--quiet', action = 'store_true',
                         dest = 'quiet', help = 'No console logging')
     parser.add_argument('--binary_port', default = None,
@@ -63,10 +60,6 @@ def runCouchPotato(options, base_path, args, handle = None):
     log_dir = os.path.join(data_dir, 'logs');
     if not os.path.isdir(log_dir):
         os.mkdir(log_dir)
-
-    # Daemonize app
-    if options.daemonize:
-        createDaemon()
 
 
     # Register environment settings
@@ -186,6 +179,11 @@ def runCouchPotato(options, base_path, args, handle = None):
     # Go go go!
     try:
         app.run(**config)
+    except socket.error:
+        log.error('Something else is running on the same address')
+        time.sleep(3)
+        app.run(**config)
+        log.error('Something else is running on the same address222')
     except (KeyboardInterrupt, SystemExit):
         raise
     except:

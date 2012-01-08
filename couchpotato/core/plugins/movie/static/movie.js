@@ -94,7 +94,7 @@ var Movie = new Class({
 		(function(){
 			var height = self.getHeight();
 			self.el.setStyle('height', height);
-		}).delay(10)
+		}).delay(100)
 	},
 
 	getTitle: function(){

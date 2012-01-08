@@ -20,7 +20,9 @@ log = CPLog(__name__)
 
 # Get options via arg
 from couchpotato.runner import getOptions
+from couchpotato.core.helpers.variable import getDataDir
 options = getOptions(base_path, sys.argv[1:])
+data_dir = getDataDir()
 
 def start():
     try:
@@ -34,7 +36,7 @@ def start():
                     new_environ[key] = value.encode('iso-8859-1')
 
         subprocess.call(args, env = new_environ)
-        return os.path.isfile(os.path.join(base_path, 'restart'))
+        return os.path.isfile(os.path.join(data_dir, 'restart'))
     except KeyboardInterrupt, e:
         pass
     except Exception, e:

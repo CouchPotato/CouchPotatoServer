@@ -10,6 +10,7 @@ from flask import request
 from flask.helpers import url_for
 import os
 import time
+import traceback
 import webbrowser
 
 
@@ -79,7 +80,15 @@ class Core(Plugin):
         try:
             request.environ.get('werkzeug.server.shutdown')()
         except:
-            log.error('Failed shutting down the server')
+            try:
+                ctx = app.test_request_context()
+                ctx.push()
+                request.environ.get('werkzeug.server.shutdown')()
+                ctx.pop()
+            except TypeError:
+                pass
+            except:
+                log.error('Failed shutting down the server: %s' % traceback.format_exc())
 
     def removeRestartFile(self):
         try:
@@ -88,7 +97,7 @@ class Core(Plugin):
             pass
 
     def restartFilePath(self):
-        return os.path.join(Env.get('app_dir'), 'restart')
+        return os.path.join(Env.get('data_dir'), 'restart')
 
     def launchBrowser(self):
 
