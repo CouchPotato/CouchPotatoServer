@@ -71,7 +71,6 @@ def runCouchPotato(options, base_path, args, handle = None):
     Env.set('cache_dir', os.path.join(data_dir, 'cache'))
     Env.set('cache', FileSystemCache(os.path.join(Env.get('cache_dir'), 'python')))
     Env.set('console_log', options.console_log)
-    Env.set('daemonize', options.daemonize)
     Env.set('quiet', options.quiet)
     Env.set('binary_port', options.binary_port)
     Env.set('args', args)
@@ -96,7 +95,7 @@ def runCouchPotato(options, base_path, args, handle = None):
         logger.setLevel(level)
 
         # To screen
-        if (debug or options.console_log) and not options.daemonize and not options.quiet:
+        if (debug or options.console_log) and not options.quiet:
             hdlr = logging.StreamHandler(sys.stderr)
             hdlr.setFormatter(formatter)
             logger.addHandler(hdlr)
@@ -152,7 +151,7 @@ def runCouchPotato(options, base_path, args, handle = None):
     from couchpotato import app
     api_key = Env.setting('api_key')
     url_base = '/' + Env.setting('url_base').lstrip('/') if Env.setting('url_base') else ''
-    reloader = debug is True and not options.daemonize and not options.binary_port
+    reloader = debug is True and not options.binary_port
 
     # Basic config
     app.secret_key = api_key
