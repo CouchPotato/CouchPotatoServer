@@ -7,6 +7,7 @@ Page.Settings = new Class({
 	wizard_only: false,
 
 	tabs: {},
+	current: 'about',
 
 	open: function(action, params){
 		var self = this;
