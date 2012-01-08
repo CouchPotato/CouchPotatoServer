@@ -6,6 +6,7 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import File
 from couchpotato.environment import Env
+import os
 import time
 
 
@@ -43,9 +44,14 @@ class Manage(Plugin):
 
         directories = self.directories()
 
-        log.info('Updating manage library: %s' % directories)
-
         for directory in directories:
+
+            if not os.path.isdir(directory):
+                if len(directory) > 0:
+                    log.error('Directory doesn\'t exist: %s' % directory)
+                continue
+
+            log.info('Updating manage library: %s' % directory)
             fireEvent('scanner.folder', folder = directory)
 
             # If cleanup option is enabled, remove offline files from database
