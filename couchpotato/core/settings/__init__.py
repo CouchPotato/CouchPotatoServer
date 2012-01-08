@@ -1,3 +1,4 @@
+from __future__ import with_statement
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import isInt, toUnicode
