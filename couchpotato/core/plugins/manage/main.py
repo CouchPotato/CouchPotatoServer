@@ -56,6 +56,10 @@ class Manage(Plugin):
                 db.commit()
                 db.remove()
 
+            # Break if CP wants to shut down
+            if self.shuttingDown():
+                break
+
         self.last_update = time.time()
 
     def directories(self):

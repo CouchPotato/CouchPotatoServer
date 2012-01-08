@@ -122,6 +122,10 @@ class Scanner(Plugin):
                 # Add identifier for library update
                 update_after.append(group['library'].get('identifier'))
 
+            # Break if CP wants to shut down
+            if self.shuttingDown():
+                break
+
         for identifier in update_after:
             fireEvent('library.update', identifier = identifier)
 
@@ -252,6 +256,10 @@ class Scanner(Plugin):
             group['library'] = self.determineMovie(group)
             if not group['library']:
                 log.error('Unable to determin movie: %s' % group['identifiers'])
+
+            # Break if CP wants to shut down
+            if self.shuttingDown():
+                break
 
         # Delete still (asuming) unpacking files
         for identifier in delete_identifier:
