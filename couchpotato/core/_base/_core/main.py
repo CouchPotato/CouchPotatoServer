@@ -18,14 +18,14 @@ log = CPLog(__name__)
 
 class Core(Plugin):
 
-    ignore_restart = ['Core.crappyRestart', 'Core.shutdown']
+    ignore_restart = ['Core.crappyRestart', 'Core.crappyShutdown']
 
     def __init__(self):
         addApiView('app.shutdown', self.shutdown)
         addApiView('app.restart', self.restart)
         addApiView('app.available', self.available)
 
-        addEvent('app.crappy_shutdown', self.shutdown)
+        addEvent('app.crappy_shutdown', self.crappyShutdown)
         addEvent('app.crappy_restart', self.crappyRestart)
         addEvent('app.load', self.launchBrowser, priority = 1)
         addEvent('app.base_url', self.createBaseUrl)
@@ -41,6 +41,12 @@ class Core(Plugin):
         return jsonified({
             'succes': True
         })
+
+    def crappyShutdown(self):
+        ctx = app.test_request_context()
+        ctx.push()
+        self.urlopen('%s%sapp.shutdown' % (fireEvent('app.base_url', single = True), url_for('api.index')))
+        ctx.pop()
 
     def crappyRestart(self):
         ctx = app.test_request_context()
@@ -77,18 +83,14 @@ class Core(Plugin):
         if restart:
             self.createFile(self.restartFilePath(), 'This is the most suckiest way to register if CP is restarted. Ever...')
 
+        log.debug('Save to shutdown/restart')
+
         try:
             request.environ.get('werkzeug.server.shutdown')()
         except:
-            try:
-                ctx = app.test_request_context()
-                ctx.push()
-                request.environ.get('werkzeug.server.shutdown')()
-                ctx.pop()
-            except TypeError:
-                pass
-            except:
-                log.error('Failed shutting down the server: %s' % traceback.format_exc())
+            log.error('Failed shutting down the server: %s' % traceback.format_exc())
+
+        fireEvent('app.after_shutdown', restart = restart)
 
     def removeRestartFile(self):
         try:

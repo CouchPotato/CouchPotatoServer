@@ -2,24 +2,31 @@ from couchpotato.core.event import fireEvent, addEvent
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
-from urllib import quote
 
 log = CPLog(__name__)
 
+if Env.get('desktop'):
 
-class Desktop(Plugin):
+    #import os
+    #import sys
+    import wx
 
-    def __init__(self):
+    class Desktop(Plugin):
 
-        if not Env.get('binary_port'):
-            return
+        def __init__(self):
 
-        addEvent('app.load', self.settingsToDesktop, priority = 2)
+            desktop = Env.get('desktop')
+            desktop.setSettings({
+                'url': fireEvent('app.base_url', single = True)
+            })
 
-    def settingsToDesktop(self):
+            def onClose(event):
+                return fireEvent('app.crappy_shutdown')
+            desktop.close_handler = onClose
 
-        base_url = fireEvent('app.base_url', single = True)
-        base_url_api = '%s/%s' % (base_url, Env.setting('api_key'))
+            addEvent('app.after_shutdown', desktop.afterShutdown)
 
-        url_data = '{"host": "%s", "api": "%s"}' % (base_url, base_url_api)
-        self.urlopen('http://localhost:%s/%s' % (Env.get('binary_port'), quote(url_data)))
+else:
+
+    class Desktop(Plugin):
+        pass
