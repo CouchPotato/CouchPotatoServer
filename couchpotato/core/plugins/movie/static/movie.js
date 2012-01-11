@@ -45,13 +45,13 @@ var Movie = new Class({
 			)
 		);
 
-		// Add profile
+                // Add profile
 		if(self.profile.data)
 			self.profile.getTypes().each(function(type){
-
-				var q = self.addQuality(type.quality_id || type.get('quality_id'));
-				if(type.finish || type.get('finish'))
-					q.addClass('finish');
+				if((type.quality_id || type.get('quality_id')) != -1)
+					var q = self.addQuality(type.quality_id || type.get('quality_id'));
+					if(type.finish || type.get('finish'))
+						q.addClass('finish');
 
 			});
 
