@@ -1,4 +1,3 @@
-from couchpotato import app
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, addEvent
 from couchpotato.core.helpers.request import jsonified
@@ -7,7 +6,6 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
 from flask import request
-from flask.helpers import url_for
 import os
 import time
 import traceback
@@ -29,6 +27,7 @@ class Core(Plugin):
         addEvent('app.crappy_restart', self.crappyRestart)
         addEvent('app.load', self.launchBrowser, priority = 1)
         addEvent('app.base_url', self.createBaseUrl)
+        addEvent('app.api_url', self.createApiUrl)
 
         addEvent('setting.save.core.password', self.md5Password)
 
@@ -43,16 +42,10 @@ class Core(Plugin):
         })
 
     def crappyShutdown(self):
-        ctx = app.test_request_context()
-        ctx.push()
-        self.urlopen('%s%sapp.shutdown' % (fireEvent('app.base_url', single = True), url_for('api.index')))
-        ctx.pop()
+        self.urlopen('%sapp.shutdown' % self.createApiUrl())
 
     def crappyRestart(self):
-        ctx = app.test_request_context()
-        ctx.push()
-        self.urlopen('%s%sapp.restart' % (fireEvent('app.base_url', single = True), url_for('api.index')))
-        ctx.pop()
+        self.urlopen('%sapp.restart' % self.createApiUrl())
 
     def shutdown(self):
         self.initShutdown()
@@ -63,6 +56,7 @@ class Core(Plugin):
         return 'restarting'
 
     def initShutdown(self, restart = False):
+        log.info('Shutting down' if not restart else 'Restarting')
 
         fireEvent('app.shutdown')
 
@@ -122,3 +116,7 @@ class Core(Plugin):
         port = Env.setting('port')
 
         return '%s:%d' % (cleanHost(host).rstrip('/'), int(port))
+
+    def createApiUrl(self):
+
+        return '%s/%s/' % (self.createBaseUrl(), Env.setting('api_key'))
