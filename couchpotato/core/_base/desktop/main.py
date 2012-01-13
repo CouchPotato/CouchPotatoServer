@@ -7,24 +7,27 @@ log = CPLog(__name__)
 
 if Env.get('desktop'):
 
-    #import os
-    #import sys
-    import wx
-
     class Desktop(Plugin):
 
         def __init__(self):
 
             desktop = Env.get('desktop')
             desktop.setSettings({
-                'url': fireEvent('app.base_url', single = True)
+                'base_url': fireEvent('app.base_url', single = True),
+                'api_url': fireEvent('app.api_url', single = True),
+                'api': Env.setting('api'),
             })
 
-            def onClose(event):
-                return fireEvent('app.crappy_shutdown')
-            desktop.close_handler = onClose
+            # Events from desktop
+            desktop.addEvents({
+                'onClose': self.onClose,
+            })
 
+            # Events to desktop
             addEvent('app.after_shutdown', desktop.afterShutdown)
+
+        def onClose(self, event):
+            return fireEvent('app.crappy_shutdown', single = True)
 
 else:
 
