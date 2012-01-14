@@ -1,5 +1,5 @@
 from couchpotato.api import addApiView
-from couchpotato.core.helpers.request import jsonified, getParam, getParams
+from couchpotato.core.helpers.request import jsonified, getParam
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
@@ -14,7 +14,6 @@ class Logging(Plugin):
     def __init__(self):
         addApiView('logging.get', self.get)
         addApiView('logging.clear', self.clear)
-        addApiView('logging.log', self.log)
 
     def get(self):
 
@@ -64,24 +63,6 @@ class Logging(Plugin):
 
             except:
                 log.error('Couldn\'t delete file "%s": %s', (path, traceback.format_exc()))
-
-        return jsonified({
-            'success': True
-        })
-
-    def log(self):
-
-        params = getParams()
-
-        try:
-            log_message = 'API log: %s' % params
-            try:
-                getattr(log, params.get('type', 'error'))(log_message)
-            except:
-                log.error(log_message)
-        except:
-            log.error('Couldn\'t log via API: %s' % params)
-
 
         return jsonified({
             'success': True

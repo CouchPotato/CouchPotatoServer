@@ -23,7 +23,7 @@ class X264(NZBProvider):
         if self.isDisabled() or not self.isAvailable(self.urls['search']) or not quality.get('hd', False):
             return results
 
-        q = '%s %s %s' % (movie['library']['titles'][0]['title'], movie['library']['year'], quality.get('identifier'))
+        q = '%s %s' % (movie['library']['titles'][0]['title'], quality.get('identifier'))
         url = self.urls['search'] % quote_plus(q)
 
         cache_key = 'x264.%s' % q
