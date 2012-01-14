@@ -165,20 +165,17 @@ class Searcher(Plugin):
             log.info('Wrong: %s, looking for %s' % (nzb['name'], quality['label']))
             return False
 
-        """
+
         # File to small
-        minSize = q.minimumSize(qualityType)
-        if minSize > item.size:
-            log.info('"%s" is too small to be %s. %sMB instead of the minimal of %sMB.' % (item.name, type['label'], item.size, minSize))
+        if nzb['size'] and preferred_quality['size_min'] > nzb['size']:
+            log.info('"%s" is too small to be %s. %sMB instead of the minimal of %sMB.' % (nzb['name'], preferred_quality['label'], nzb['size'], preferred_quality['size_min']))
             return False
 
         # File to large
-        maxSize = q.maximumSize(qualityType)
-        if maxSize < item.size:
-            log.info('"%s" is too large to be %s. %sMB instead of the maximum of %sMB.' % (item.name, type['label'], item.size, maxSize))
+        if nzb['size'] and preferred_quality.get('size_max') < nzb['size']:
+            log.info('"%s" is too large to be %s. %sMB instead of the maximum of %sMB.' % (nzb['name'], preferred_quality['label'], nzb['size'], preferred_quality['size_max']))
             return False
 
-        """
 
         if imdb_results:
             return True
