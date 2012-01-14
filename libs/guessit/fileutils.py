@@ -18,7 +18,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import ntpath
 import os.path
 
 
@@ -45,7 +44,7 @@ def split_path(path):
     """
     result = []
     while True:
-        head, tail = ntpath.split(path)
+        head, tail = os.path.split(path)
 
         # on Unix systems, the root folder is '/'
         if head == '/' and tail == '':
