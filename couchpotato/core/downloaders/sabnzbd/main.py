@@ -7,7 +7,6 @@ import base64
 import os
 import re
 import traceback
-from couchpotato.core.helpers.encoding import toUnicode
 
 log = CPLog(__name__)
 
