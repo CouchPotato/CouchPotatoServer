@@ -93,6 +93,12 @@ class Plugin(object):
 
         socket.setdefaulttimeout(timeout)
 
+        # Fill in some headers
+        if not headers.get('Referer'):
+            headers['Referer'] = urlparse(url).hostname
+        if not headers.get('User-Agent'):
+            headers['User-Agent'] = ''
+
         host = urlparse(url).hostname
         self.wait(host)
 
