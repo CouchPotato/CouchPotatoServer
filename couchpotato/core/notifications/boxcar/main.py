@@ -12,7 +12,6 @@ class Boxcar(Notification):
 
     def notify(self, message = '', data = {}):
         if self.isDisabled(): return
-        print 'test'
 
         try:
             message = message.strip()
