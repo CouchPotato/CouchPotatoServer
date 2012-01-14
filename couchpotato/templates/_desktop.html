@@ -55,6 +55,8 @@
 				// Catch errors
 				window.onerror = function(message, file, line){
 
+					p(message, file, line);
+
 					Api.request('logging.log', {
 						'data': {
 							'type': 'error',
