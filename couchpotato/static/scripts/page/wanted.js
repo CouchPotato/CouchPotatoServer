@@ -273,7 +273,7 @@ window.addEvent('domready', function(){
 					new Element('div.item.head').adopt(
 						new Element('span.name', {'text': 'File'}),
 						new Element('span.type', {'text': 'Type'}),
-						new Element('span.available', {'text': 'Available'})
+						new Element('span.is_available', {'text': 'Available'})
 					).inject(self.files_container)
 
 					Array.each(self.movie.data.releases, function(release){

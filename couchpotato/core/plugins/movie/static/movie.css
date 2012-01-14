@@ -196,7 +196,7 @@
 							padding: 0 10px;
 						}
 						.movies .options .table .type { width: 120px; }
-						.movies .options .table .available { width: 80px; }
+						.movies .options .table .is_available { width: 80px; }
 						
 						.movies .options .table a {
 							width: 16px !important;
