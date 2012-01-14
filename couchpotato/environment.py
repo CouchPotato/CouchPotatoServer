@@ -14,7 +14,7 @@ class Env(object):
     _args = None
     _quiet = False
     _deamonize = False
-    _version = 0.5
+    _desktop = None
 
     ''' Data paths and directories '''
     _app_dir = ""

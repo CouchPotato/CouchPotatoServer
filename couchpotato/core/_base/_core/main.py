@@ -1,4 +1,3 @@
-from couchpotato import app
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, addEvent
 from couchpotato.core.helpers.request import jsonified
@@ -7,7 +6,6 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
 from flask import request
-from flask.helpers import url_for
 import os
 import time
 import traceback
@@ -18,17 +16,18 @@ log = CPLog(__name__)
 
 class Core(Plugin):
 
-    ignore_restart = ['Core.crappyRestart', 'Core.shutdown']
+    ignore_restart = ['Core.crappyRestart', 'Core.crappyShutdown']
 
     def __init__(self):
         addApiView('app.shutdown', self.shutdown)
         addApiView('app.restart', self.restart)
         addApiView('app.available', self.available)
 
-        addEvent('app.crappy_shutdown', self.shutdown)
+        addEvent('app.crappy_shutdown', self.crappyShutdown)
         addEvent('app.crappy_restart', self.crappyRestart)
         addEvent('app.load', self.launchBrowser, priority = 1)
         addEvent('app.base_url', self.createBaseUrl)
+        addEvent('app.api_url', self.createApiUrl)
 
         addEvent('setting.save.core.password', self.md5Password)
 
@@ -42,11 +41,11 @@ class Core(Plugin):
             'succes': True
         })
 
+    def crappyShutdown(self):
+        self.urlopen('%sapp.shutdown' % self.createApiUrl())
+
     def crappyRestart(self):
-        ctx = app.test_request_context()
-        ctx.push()
-        self.urlopen('%s%sapp.restart' % (fireEvent('app.base_url', single = True), url_for('api.index')))
-        ctx.pop()
+        self.urlopen('%sapp.restart' % self.createApiUrl())
 
     def shutdown(self):
         self.initShutdown()
@@ -57,6 +56,7 @@ class Core(Plugin):
         return 'restarting'
 
     def initShutdown(self, restart = False):
+        log.info('Shutting down' if not restart else 'Restarting')
 
         fireEvent('app.shutdown')
 
@@ -77,18 +77,14 @@ class Core(Plugin):
         if restart:
             self.createFile(self.restartFilePath(), 'This is the most suckiest way to register if CP is restarted. Ever...')
 
+        log.debug('Save to shutdown/restart')
+
         try:
             request.environ.get('werkzeug.server.shutdown')()
         except:
-            try:
-                ctx = app.test_request_context()
-                ctx.push()
-                request.environ.get('werkzeug.server.shutdown')()
-                ctx.pop()
-            except TypeError:
-                pass
-            except:
-                log.error('Failed shutting down the server: %s' % traceback.format_exc())
+            log.error('Failed shutting down the server: %s' % traceback.format_exc())
+
+        fireEvent('app.after_shutdown', restart = restart)
 
     def removeRestartFile(self):
         try:
@@ -120,3 +116,7 @@ class Core(Plugin):
         port = Env.setting('port')
 
         return '%s:%d' % (cleanHost(host).rstrip('/'), int(port))
+
+    def createApiUrl(self):
+
+        return '%s/%s/' % (self.createBaseUrl(), Env.setting('api_key'))
