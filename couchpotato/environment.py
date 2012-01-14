@@ -33,6 +33,14 @@ class Env(object):
         return getattr(Env, '_' + attr)
 
     @staticmethod
+    def all():
+        ret = ''
+        for attr in ['encoding', 'debug', 'args', 'app_dir', 'data_dir', 'desktop', 'options']:
+            ret += '%s=%s ' % (attr, Env.get(attr))
+
+        return ret
+
+    @staticmethod
     def set(attr, value):
         return setattr(Env, '_' + attr, value)
 
