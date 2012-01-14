@@ -1,5 +1,6 @@
 from couchpotato.core.logger import CPLog
 from string import ascii_letters, digits
+import os
 import re
 import unicodedata
 
@@ -19,11 +20,18 @@ def simplifyString(original):
 
 def toUnicode(original, *args):
     try:
-        if type(original) is unicode:
+        if type(original) == str:
+            try:
+                from couchpotato.environment import Env
+                return original.decode(Env.get('encoding'))
+            except UnicodeDecodeError:
+                raise
+        elif type(original) is unicode:
             return original
         else:
             return unicode(original, *args)
     except UnicodeDecodeError:
+        log.error('Unable to decode value: %s... ' % repr(original)[:20])
         ascii_text = str(original).encode('string_escape')
         return unicode(ascii_text)
 
