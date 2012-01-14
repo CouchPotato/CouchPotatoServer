@@ -57,8 +57,9 @@ class Sabnzbd(Downloader):
         url = cleanHost(self.conf('host')) + "api?" + urlencode(params)
 
         try:
-            data = self.urlopen(url, params = {"nzbfile": (nzb_filename, nzb_file)}, multipart = True)
+            data = self.urlopen(url, params = {"nzbfile": (nzb_filename, nzb_file)}, multipart = True, show_error = False)
         except:
+            log.error(traceback.format_exc())
             return False
 
         result = data.strip()
