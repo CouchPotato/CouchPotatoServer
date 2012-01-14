@@ -59,5 +59,5 @@ if __name__ == '__main__':
 
     from couchpotato.core.event import fireEvent
     fireEvent('app.crappy_shutdown', single = True)
-    time.sleep(1)
+    time.sleep(0.1)
     sys.exit()

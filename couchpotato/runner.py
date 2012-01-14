@@ -8,9 +8,7 @@ from werkzeug.contrib.cache import FileSystemCache
 import locale
 import logging
 import os.path
-import socket
 import sys
-import time
 import traceback
 
 def getOptions(base_path, args):
@@ -189,11 +187,6 @@ def runCouchPotato(options, base_path, args, handle = None):
     # Go go go!
     try:
         app.run(**config)
-    except socket.error:
-        log.error('Something else is running on the same address')
-        time.sleep(3)
-        app.run(**config)
-        log.error('Something else is running on the same address222')
     except (KeyboardInterrupt, SystemExit):
         raise
     except:

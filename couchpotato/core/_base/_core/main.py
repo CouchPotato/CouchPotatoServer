@@ -46,6 +46,7 @@ class Core(Plugin):
             self.urlopen('%sapp.shutdown' % self.createApiUrl(), show_error = False)
             return True
         except:
+            self.initShutdown()
             return False
 
     def crappyRestart(self):
@@ -53,6 +54,7 @@ class Core(Plugin):
             self.urlopen('%sapp.restart' % self.createApiUrl(), show_error = False)
             return True
         except:
+            self.initShutdown(restart = True)
             return False
 
     def shutdown(self):
@@ -89,6 +91,8 @@ class Core(Plugin):
 
         try:
             request.environ.get('werkzeug.server.shutdown')()
+        except RuntimeError:
+            pass
         except:
             log.error('Failed shutting down the server: %s' % traceback.format_exc())
 
