@@ -52,22 +52,6 @@
 					'is_remote': false
 				});
 
-				// Catch errors
-				window.onerror = function(message, file, line){
-
-					Api.request('logging.log', {
-						'data': {
-							'type': 'error',
-							'message': Browser.name + ' ' + Browser.version + ': \n' + message,
-							'page': window.location.href,
-							'file': file,
-							'line': line
-						}
-					});
-
-					return true;
-				}
-
 				Quality.setup({
 					'profiles': {{ fireEvent('profile.all', single = True)|tojson|safe }},
 					'qualities': {{ fireEvent('quality.all', single = True)|tojson|safe }}
