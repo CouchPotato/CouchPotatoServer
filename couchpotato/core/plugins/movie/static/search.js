@@ -100,7 +100,7 @@ Block.Search = new Class({
 	list: function(){
 		var self = this;
 
-		if(self.api_request) self.api_request.cancel();
+		if(self.api_request && self.api_request.running) return
 
 		var q = self.q();
 		var cache = self.cache[q];

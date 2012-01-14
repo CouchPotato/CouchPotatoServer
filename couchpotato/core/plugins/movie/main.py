@@ -104,7 +104,7 @@ class MoviePlugin(Plugin):
 
         return jsonified({
             'success': True,
-            'empty': len(movies) == 0,
+            'empty': len(movies) == 0 if movies else 0,
             'movies': movies,
         })
 
