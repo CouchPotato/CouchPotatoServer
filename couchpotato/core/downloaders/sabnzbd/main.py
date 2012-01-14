@@ -7,6 +7,7 @@ import base64
 import os
 import re
 import traceback
+from couchpotato.core.helpers.encoding import toUnicode
 
 log = CPLog(__name__)
 
@@ -34,22 +35,25 @@ class Sabnzbd(Downloader):
         else:
             pp = False
 
-
         params = {
             'apikey': self.conf('api_key'),
             'cat': self.conf('category'),
-            'mode': 'addfile',
+            'mode': 'addurl',
             'nzbname': '%s%s' % (data.get('name'), self.cpTag(movie)),
         }
 
-        nzb_file = data.get('download')(url = data.get('url'), nzb_id = data.get('id'))
+        if data.get('download'):
+            nzb_file = data.get('download')(url = data.get('url'), nzb_id = data.get('id'))
 
-        if len(nzb_file) < 50:
-            log.error('No nzb available!')
-            return False
+            if len(nzb_file) < 50:
+                log.error('No nzb available!')
+                return False
 
-        # If it's a .rar, it adds the .rar extension, otherwise it stays .nzb
-        nzb_filename = self.createFileName(data, nzb_file, movie)
+            # If it's a .rar, it adds the .rar extension, otherwise it stays .nzb
+            nzb_filename = self.createFileName(data, nzb_file, movie)
+            params['mode'] = 'addfile'
+        else:
+            params['name'] = data.get('url')
 
         if pp:
             params['script'] = pp_script_fn
@@ -57,7 +61,10 @@ class Sabnzbd(Downloader):
         url = cleanHost(self.conf('host')) + "api?" + urlencode(params)
 
         try:
-            data = self.urlopen(url, params = {"nzbfile": (nzb_filename, nzb_file)}, multipart = True, show_error = False)
+            if params.get('mode') is 'addfile':
+                data = self.urlopen(url, params = {"nzbfile": (nzb_filename, nzb_file)}, multipart = True, show_error = False)
+            else:
+                data = self.urlopen(url, show_error = False)
         except:
             log.error(traceback.format_exc())
             return False

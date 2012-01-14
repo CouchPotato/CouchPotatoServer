@@ -46,7 +46,6 @@ class X264(NZBProvider):
                     'age': tryInt(age),
                     'size': None,
                     'url': self.urls['download'] % (nzb.group('id')),
-                    'download': self.download,
                     'detail_url': '',
                     'description': '',
                     'check_nzb': False,
@@ -61,15 +60,6 @@ class X264(NZBProvider):
                     self.found(new)
 
         return results
-
-    def download(self, url = '', nzb_id = ''):
-        try:
-            log.info('Downloading nzb from #alt.binaries.hdtv.x264, request id: %s ' % nzb_id)
-            return self.urlopen(self.urls['download'] % nzb_id)
-
-        except Exception, e:
-            log.error('Failed downloading from #alt.binaries.hdtv.x264: %s' % e)
-            return False
 
     def belongsTo(self, url, host = None):
         match = re.match('http://85\.214\.105\.230/get_nzb\.php\?id=[0-9]*&section=hd', url)
