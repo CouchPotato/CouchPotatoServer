@@ -20,13 +20,7 @@ def simplifyString(original):
 
 def toUnicode(original, *args):
     try:
-        if type(original) == str:
-            try:
-                from couchpotato.environment import Env
-                return original.decode(Env.get('encoding'))
-            except UnicodeDecodeError:
-                raise
-        elif type(original) is unicode:
+        if type(original) is unicode:
             return original
         else:
             return unicode(original, *args)
@@ -35,6 +29,15 @@ def toUnicode(original, *args):
         ascii_text = str(original).encode('string_escape')
         return unicode(ascii_text)
 
+def ek(original, *args):
+    if type(original) in [str, unicode]:
+        try:
+            from couchpotato.environment import Env
+            return original.decode(Env.get('encoding'))
+        except UnicodeDecodeError:
+            return toUnicode(original, *args)
+
+    return original
 
 def isInt(value):
     try:
