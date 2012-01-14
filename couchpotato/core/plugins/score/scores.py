@@ -52,3 +52,7 @@ def nameRatioScore(nzb_name, movie_name):
 
     left_over = set(nzb_words) - set(movie_words)
     return 10 - len(left_over)
+
+
+def sizeScore(size):
+    return 0 if size else -20
