@@ -154,24 +154,24 @@
 			padding: 2%;
 		}
 		
-			.movies .options .releases {
+			.movies .options .table {
 				height: 157px;
 				overflow: auto;
 				margin: -20px -20px -20px 110px;
 				padding: 15px 0 5px;
 			}
-				.movies .options .releases .item {
+				.movies .options .table .item {
 					border-bottom: 1px solid rgba(255,255,255,0.1);
 				}
-				.movies .options .releases .item:last-child { border: 0; }
-				.movies .options .releases .item:nth-child(even) { 
+				.movies .options .table .item:last-child { border: 0; }
+				.movies .options .table .item:nth-child(even) { 
 					background: rgba(255,255,255,0.05);
 				}
-				.movies .options .releases .item:not(.head):hover { 
+				.movies .options .table .item:not(.head):hover { 
 					background: rgba(255,255,255,0.03);
 				}
 				
-					.movies .options .releases .item > * {
+					.movies .options .table .item > * {
 						display: inline-block;
 						padding: 0 5px;
 						width: 50px;
@@ -183,29 +183,31 @@
 						vertical-align: top;
 						border-left: 1px solid rgba(255, 255, 255, 0.1);
 					}
-						.movies .options .releases .item > *:first-child {
+						.movies .options .table .item > *:first-child {
 							border: 0;
 						}
-						.movies .options .releases .provider {
+						.movies .options .table .provider {
 							width: 120px;
 						}
-						.movies .options .releases .name {
+						.movies .options .table .name {
 							width: 360px;
 							overflow: hidden;
 							text-align: left;
 							padding: 0 10px;
 						}
+						.movies .options .table .type { width: 120px; }
+						.movies .options .table .available { width: 80px; }
 						
-						.movies .options .releases a {
+						.movies .options .table a {
 							width: 16px !important;
 							height: 16px;
 							opacity: 0.8;
 						}
-						.movies .options .releases a:hover {
+						.movies .options .table a:hover {
 							opacity: 1;
 						}
 
-				.movies .options .releases .head > * {
+				.movies .options .table .head > * {
 					font-weight: bold;
 					font-size: 14px;
 					padding-top: 4px;

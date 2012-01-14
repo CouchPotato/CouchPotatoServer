@@ -266,7 +266,7 @@ window.addEvent('domready', function(){
 				if(!self.options_container){
 					self.options_container = new Element('div.options').adopt(
 						$(self.movie.thumbnail).clone(),
-						self.release_container = new Element('div.releases')
+						self.files_container = new Element('div.files.table')
 					).inject(self.movie, 'top');
 
 					// Header
@@ -274,11 +274,11 @@ window.addEvent('domready', function(){
 						new Element('span.name', {'text': 'File'}),
 						new Element('span.type', {'text': 'Type'}),
 						new Element('span.available', {'text': 'Available'})
-					).inject(self.release_container)
+					).inject(self.files_container)
 
 					Array.each(self.movie.data.releases, function(release){
 
-						var rel = new Element('div.release').inject(self.release_container);
+						var rel = new Element('div.release').inject(self.files_container);
 
 						Array.each(release.files, function(file){
 							new Element('div.file').adopt(

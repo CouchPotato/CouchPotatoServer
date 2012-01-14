@@ -241,7 +241,7 @@ var ReleaseAction = new Class({
 		if(!self.options_container){
 			self.options_container = new Element('div.options').adopt(
 				$(self.movie.thumbnail).clone(),
-				self.release_container = new Element('div.releases')
+				self.release_container = new Element('div.releases.table')
 			).inject(self.movie, 'top');
 
 			// Header
