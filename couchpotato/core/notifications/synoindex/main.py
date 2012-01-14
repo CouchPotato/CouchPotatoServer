@@ -19,7 +19,7 @@ class Synoindex(Notification):
         try:
             p = subprocess.Popen(command, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
             out = p.communicate()
-            log.info('Result from synoindex: %s' % out)
+            log.info('Result from synoindex: %s' % str(out))
             return True
         except OSError, e:
             log.error('Unable to run synoindex: %s' % e)
