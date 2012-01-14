@@ -1,6 +1,6 @@
 from couchpotato import get_session
 from couchpotato.api import addApiView
-from couchpotato.core.event import addEvent, fireEvent
+from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.variable import md5, getExt
 from couchpotato.core.logger import CPLog
@@ -10,8 +10,6 @@ from couchpotato.environment import Env
 from flask.helpers import send_from_directory
 from sqlalchemy.sql.expression import or_
 import os.path
-import traceback
-import urllib2
 
 log = CPLog(__name__)
 
@@ -28,7 +26,7 @@ class FileManager(Plugin):
     def showImage(self, filename = ''):
 
         cache_dir = Env.get('cache_dir')
-        filename = filename.replace(cache_dir[1:] + '/', '')
+        filename = os.path.basename(filename)
 
         return send_from_directory(cache_dir, filename)
 
