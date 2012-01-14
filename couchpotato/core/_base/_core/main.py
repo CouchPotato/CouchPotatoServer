@@ -42,10 +42,18 @@ class Core(Plugin):
         })
 
     def crappyShutdown(self):
-        self.urlopen('%sapp.shutdown' % self.createApiUrl())
+        try:
+            self.urlopen('%sapp.shutdown' % self.createApiUrl(), show_error = False)
+            return True
+        except:
+            return False
 
     def crappyRestart(self):
-        self.urlopen('%sapp.restart' % self.createApiUrl())
+        try:
+            self.urlopen('%sapp.restart' % self.createApiUrl(), show_error = False)
+            return True
+        except:
+            return False
 
     def shutdown(self):
         self.initShutdown()
