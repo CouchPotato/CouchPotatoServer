@@ -69,12 +69,12 @@ class Plugin(object):
         d = os.path.join(self.plugin_path, 'static')
         return send_from_directory(d, filename)
 
-    def createFile(self, path, content):
+    def createFile(self, path, content, binary = False):
 
         self.makeDir(os.path.dirname(path))
 
         try:
-            f = open(path, 'w')
+            f = open(path, 'w' if not binary else 'wb')
             f.write(content)
             f.close()
         except Exception, e:

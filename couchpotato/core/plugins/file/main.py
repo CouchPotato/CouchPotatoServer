@@ -41,7 +41,7 @@ class FileManager(Plugin):
             dest = os.path.join(Env.get('cache_dir'), '%s.%s' % (md5(url), getExt(url)))
 
         if overwrite or not os.path.isfile(dest):
-            self.createFile(dest, filedata)
+            self.createFile(dest, filedata, binary = True)
 
         return dest
 
