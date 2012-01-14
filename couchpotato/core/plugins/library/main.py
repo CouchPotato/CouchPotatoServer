@@ -1,5 +1,6 @@
 from couchpotato import get_session
 from couchpotato.core.event import addEvent, fireEventAsync, fireEvent
+from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Library, LibraryTitle, File, \
@@ -26,13 +27,13 @@ class LibraryPlugin(Plugin):
             l = Library(
                 year = attrs.get('year'),
                 identifier = attrs.get('identifier'),
-                plot = attrs.get('plot'),
-                tagline = attrs.get('tagline'),
+                plot = toUnicode(attrs.get('plot')),
+                tagline = toUnicode(attrs.get('tagline')),
                 status_id = status.get('id')
             )
 
             title = LibraryTitle(
-                title = attrs.get('title')
+                title = toUnicode(attrs.get('title'))
             )
 
             l.titles.append(title)
@@ -68,8 +69,8 @@ class LibraryPlugin(Plugin):
 
         # Main info
         if do_update:
-            library.plot = info.get('plot', '')
-            library.tagline = info.get('tagline', '')
+            library.plot = toUnicode(info.get('plot', ''))
+            library.tagline = toUnicode(info.get('tagline', ''))
             library.year = info.get('year', 0)
             library.status_id = done_status.get('id')
             db.commit()
@@ -82,7 +83,7 @@ class LibraryPlugin(Plugin):
             log.debug('Adding titles: %s' % titles)
             for title in titles:
                 t = LibraryTitle(
-                    title = title,
+                    title = toUnicode(title),
                     default = title.lower() == default_title.lower()
                 )
                 library.titles.append(t)
@@ -97,7 +98,7 @@ class LibraryPlugin(Plugin):
             log.debug('Adding genres: %s' % genres)
             for genre in genres:
                 g = LibraryGenre(
-                    name = genre
+                    name = toUnicode(genre)
                 )
                 library.genres.append(g)
 

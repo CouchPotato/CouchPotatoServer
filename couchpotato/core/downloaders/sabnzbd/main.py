@@ -1,6 +1,7 @@
 from couchpotato.core.downloaders.base import Downloader
 from couchpotato.core.helpers.variable import cleanHost
 from couchpotato.core.logger import CPLog
+from inspect import isfunction
 from tempfile import mkstemp
 from urllib import urlencode
 import base64
@@ -41,7 +42,7 @@ class Sabnzbd(Downloader):
             'nzbname': '%s%s' % (data.get('name'), self.cpTag(movie)),
         }
 
-        if data.get('download'):
+        if isfunction(data.get('download')):
             nzb_file = data.get('download')(url = data.get('url'), nzb_id = data.get('id'))
 
             if len(nzb_file) < 50:

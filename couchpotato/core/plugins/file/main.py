@@ -48,12 +48,12 @@ class FileManager(Plugin):
     def add(self, path = '', part = 1, type = (), available = 1, properties = {}):
         db = get_session()
 
-        f = db.query(File).filter(or_(File.path == toUnicode(path), File.path == path)).first()
+        f = db.query(File).filter(File.path == toUnicode(path)).first()
         if not f:
             f = File()
             db.add(f)
 
-        f.path = path
+        f.path = toUnicode(path)
         f.part = part
         f.available = available
         f.type_id = self.getType(type).id

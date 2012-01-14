@@ -43,7 +43,7 @@ class ProfilePlugin(Plugin):
             p = Profile()
             db.add(p)
 
-        p.label = params.get('label')
+        p.label = toUnicode(params.get('label'))
         p.order = params.get('order', p.order if p.order else 0)
         p.core = params.get('core', False)
 

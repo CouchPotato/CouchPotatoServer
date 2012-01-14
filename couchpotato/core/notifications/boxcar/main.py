@@ -32,4 +32,4 @@ class Boxcar(Notification):
         return True
 
     def isEnabled(self):
-        return super(Boxcar, self) and self.conf('email')
+        return super(Boxcar, self).isEnabled() and self.conf('email')
