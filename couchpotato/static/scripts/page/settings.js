@@ -23,7 +23,7 @@ Page.Settings = new Class({
 
 	openTab: function(action){
 		var self = this;
-		var action = action || self.action;
+		var action = (action == 'index' ? 'about' : action) || self.action;
 
 		if(self.current)
 			self.toggleTab(self.current, true);
@@ -711,7 +711,7 @@ Option.Directories = new Class({
 		if(has_empty) return;
 
 		var dir = new Option.Directory(self.section, self.name, value || '', self.options);
-		
+
 		var parent = self.el.getParent('fieldset');
 		var dirs = parent.getElements('.multi_directory');
 		if(dirs.length == 0)
@@ -744,7 +744,7 @@ Option.Directories = new Class({
 		self.directories.erase(dir);
 
 		$(dir).destroy();
-		
+
 		self.saveItems();
 		self.addDirectory();
 	},
