@@ -24,7 +24,7 @@ var Profile = new Class({
 		var data = self.data;
 
 		self.el = new Element('div.profile').adopt(
-			new Element('span.delete.icon', {
+			self.delete_button = new Element('span.delete.icon', {
 				'events': {
 					'click': self.del.bind(self)
 				}
@@ -58,6 +58,8 @@ var Profile = new Class({
 
 		if(data.types)
 			Object.each(data.types, self.addType.bind(self))
+		else
+			self.delete_button.hide();
 
 		self.addType();
 	},
@@ -71,7 +73,10 @@ var Profile = new Class({
 			self.addType();
 
 			var data = self.getData();
-			if(data.types.length < 2) return;
+			if(data.types.length < 2)
+				return;
+			else
+				self.delete_button.show();
 
 			Api.request('profile.save', {
 				'data': self.getData(),
