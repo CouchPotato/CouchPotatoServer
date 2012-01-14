@@ -5,6 +5,7 @@ from couchpotato.core.event import fireEventAsync, fireEvent
 from couchpotato.core.helpers.variable import getDataDir, tryInt
 from logging import handlers
 from werkzeug.contrib.cache import FileSystemCache
+import locale
 import logging
 import os.path
 import socket
@@ -61,8 +62,18 @@ def runCouchPotato(options, base_path, args, handle = None):
     if not os.path.isdir(log_dir):
         os.mkdir(log_dir)
 
+    try:
+        locale.setlocale(locale.LC_ALL, "")
+        encoding = locale.getpreferredencoding()
+    except (locale.Error, IOError):
+        pass
+
+    # for OSes that are poorly configured I'll just force UTF-8
+    if not encoding or encoding in ('ANSI_X3.4-1968', 'US-ASCII', 'ASCII'):
+        encoding = 'UTF-8'
 
     # Register environment settings
+    Env.set('encoding', encoding)
     Env.set('uses_git', not options.nogit)
     Env.set('app_dir', base_path)
     Env.set('data_dir', data_dir)

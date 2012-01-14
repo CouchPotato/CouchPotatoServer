@@ -5,6 +5,7 @@ from couchpotato.core.settings import Settings
 class Env(object):
 
     ''' Environment variables '''
+    _encoding = ''
     _uses_git = False
     _debug = False
     _settings = Settings()
