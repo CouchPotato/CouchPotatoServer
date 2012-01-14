@@ -26,6 +26,8 @@ def getOptions(base_path, args):
                         dest = 'console_log', help = "Log to console")
     parser.add_argument('--quiet', action = 'store_true',
                         dest = 'quiet', help = 'No console logging')
+    parser.add_argument('--binary_port', default = None,
+                        dest = 'binary_port', help = 'Running from binary build')
     parser.add_argument('--nogit', action = 'store_true',
                         dest = 'nogit', help = 'No git available')
 
@@ -36,12 +38,15 @@ def getOptions(base_path, args):
     return options
 
 
-def runCouchPotato(options, base_path, args, desktop = None):
+def runCouchPotato(options, base_path, args, handle = None):
 
     # Load settings
     from couchpotato.environment import Env
     settings = Env.get('settings')
     settings.setFile(options.config_file)
+
+    if handle:
+        handle(Env)
 
     # Create data dir if needed
     data_dir = os.path.expanduser(Env.setting('data_dir'))
@@ -67,7 +72,7 @@ def runCouchPotato(options, base_path, args, desktop = None):
     Env.set('cache', FileSystemCache(os.path.join(Env.get('cache_dir'), 'python')))
     Env.set('console_log', options.console_log)
     Env.set('quiet', options.quiet)
-    Env.set('desktop', desktop)
+    Env.set('binary_port', options.binary_port)
     Env.set('args', args)
     Env.set('options', options)
 
@@ -81,7 +86,7 @@ def runCouchPotato(options, base_path, args, desktop = None):
 
     # Only run once when debugging
     fire_load = False
-    if os.environ.get('WERKZEUG_RUN_MAIN') or not debug or Env.get('desktop'):
+    if os.environ.get('WERKZEUG_RUN_MAIN') or not debug or options.binary_port:
 
         # Logger
         logger = logging.getLogger()
@@ -146,7 +151,7 @@ def runCouchPotato(options, base_path, args, desktop = None):
     from couchpotato import app
     api_key = Env.setting('api_key')
     url_base = '/' + Env.setting('url_base').lstrip('/') if Env.setting('url_base') else ''
-    reloader = debug is True and not Env.get('desktop')
+    reloader = debug is True and not options.binary_port
 
     # Basic config
     app.secret_key = api_key
