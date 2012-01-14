@@ -193,7 +193,7 @@ var Route = new Class({
 	parse: function(url_string){
 		var self = this;
 
-		var path = History.getPath().replace(Api.getOption('url'), '/') //Remove API front
+		var path = History.getPath().replace(App.getOption('base_url'), '/')
 		var current = path.replace(/^\/+|\/+$/g, '')
 		var url = current.split('/')
 

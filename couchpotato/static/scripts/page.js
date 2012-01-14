@@ -21,7 +21,7 @@ var PageBase = new Class({
 		if(self.has_tab){
 			var nav = App.getBlock('navigation');
 			self.tab = nav.addTab({
-				'href': '/'+self.name,
+				'href': App.createUrl(self.name),
 				'title': self.title,
 				'text': self.name.capitalize()
 			});

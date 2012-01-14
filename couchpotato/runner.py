@@ -173,7 +173,7 @@ def runCouchPotato(options, base_path, args, handle = None):
     }
 
     # Static path
-    web.add_url_rule(url_base + '/static/<path:filename>',
+    web.add_url_rule('static/<path:filename>',
                       endpoint = 'static',
                       view_func = app.send_static_file)
 

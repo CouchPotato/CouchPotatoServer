@@ -152,7 +152,7 @@ Page.Settings = new Class({
 		var label = (tab.label || tab.name || tab_name).capitalize()
 		var tab_el = new Element('li.t_'+tab_name).adopt(
 			new Element('a', {
-				'href': '/'+self.name+'/'+tab_name+'/',
+				'href': App.createUrl(self.name+'/'+tab_name),
 				'text': label
 			}).adopt()
 		).inject(self.tabs_container);
