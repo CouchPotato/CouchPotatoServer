@@ -16,16 +16,8 @@ config = [{
                     'type': 'enabler',
                 },
                 {
-                    'name': 'host',
-                    'default': 'localhost',
-                },
-                {
-                    'name': 'password',
-                    'type': 'password',
-                },
-                {
                     'name': 'on_snatch',
-                    'default': 0,
+                    'default': False,
                     'type': 'bool',
                     'advanced': True,
                     'description': 'Also send message when movie is snatched.',

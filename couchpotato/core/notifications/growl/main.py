@@ -1,31 +1,46 @@
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
-from couchpotato.core.notifications.growl.growl import GROWL_UDP_PORT, \
-    GrowlRegistrationPacket, GrowlNotificationPacket
-from socket import AF_INET, SOCK_DGRAM, socket
+from gntp import notifier
+import logging
 
 log = CPLog(__name__)
 
 
 class Growl(Notification):
 
+    def __init__(self):
+        super(Growl, self).__init__()
+
+        logger = logging.getLogger('gntp.notifier')
+        logger.disabled = True
+
+        try:
+            self.growl = notifier.GrowlNotifier(
+                applicationName = 'CouchPotato',
+                notifications = ["Updates"],
+                defaultNotifications = ["Updates"],
+                applicationIcon = 'http://couchpotatoapp.com/media/images/couch.png',
+            )
+            self.growl.register()
+        except:
+            pass
+
     def notify(self, type = '', message = '', data = {}):
         if self.isDisabled(): return
 
-        hosts = [x.strip() for x in self.conf('host').split(",")]
-        password = self.conf('password')
-
-        for curHost in hosts:
-            addr = (curHost, GROWL_UDP_PORT)
-
-            s = socket(AF_INET, SOCK_DGRAM)
-            p = GrowlRegistrationPacket(password = password)
-            p.addNotification()
-            s.sendto(p.payload(), addr)
-
-            # send notification
-            p = GrowlNotificationPacket(title = self.default_title, description = message, priority = 0, sticky = False, password = password)
-            s.sendto(p.payload(), addr)
-            s.close()
+        try:
+            self.growl.notify(
+                noteType = "Updates",
+                title = self.default_title,
+                description = message,
+                sticky = False,
+                priority = 1,
+            )
 
             log.info('Growl notifications sent.')
+            return True
+        except:
+            log.error('Failed growl notification.')
+
+        return False
+
