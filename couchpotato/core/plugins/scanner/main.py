@@ -180,16 +180,36 @@ class Scanner(Plugin):
         # files will be grouped first.
         leftovers = set(sorted(leftovers, reverse = True))
 
-        # Create identifiers
+
+        # Group files minus extension
         for identifier, group in movie_files.iteritems():
             if identifier not in group['identifiers'] and len(identifier) > 0: group['identifiers'].append(identifier)
 
-            # Group the files based on the identifier
+            log.debug('Grouping files for: %s' % identifier)
+
+            for file_path in group['unsorted_files']:
+                wo_ext = file_path[:-(len(getExt(file_path)) + 1)]
+                found_files = set([i for i in leftovers if wo_ext in i])
+                group['unsorted_files'].extend(found_files)
+                leftovers = leftovers - found_files
+
+            # Break if CP wants to shut down
+            if self.shuttingDown():
+                break
+
+        # Group the files based on the identifier
+        for identifier, group in movie_files.iteritems():
+            log.debug('Grouping files for: %s' % identifier)
+
             found_files = self.getGroupFiles(identifier, folder, leftovers)
             group['unsorted_files'].extend(found_files)
 
             # Remove the found files from the leftover stack
             leftovers = leftovers - found_files
+
+            # Break if CP wants to shut down
+            if self.shuttingDown():
+                break
 
 
         # Determine file types
@@ -490,7 +510,7 @@ class Scanner(Plugin):
         return False
 
     def getGroupFiles(self, identifier, folder, file_pile):
-        return set(filter(lambda s:identifier in self.createStringIdentifier(s, folder), file_pile))
+        return set([i for i in file_pile if identifier in self.createStringIdentifier(i, folder)])
 
     def createStringIdentifier(self, file_path, folder = '', exclude_filename = False):
 
