@@ -94,7 +94,7 @@ def runCouchPotato(options, base_path, args, desktop = None):
 
     # Only run once when debugging
     fire_load = False
-    if os.environ.get('WERKZEUG_RUN_MAIN') or not debug or Env.get('desktop'):
+    if os.environ.get('WERKZEUG_RUN_MAIN') or not debug or Env.get('desktop') or options.daemon:
 
         # Logger
         logger = logging.getLogger()
@@ -103,7 +103,7 @@ def runCouchPotato(options, base_path, args, desktop = None):
         logger.setLevel(level)
 
         # To screen
-        if (debug or options.console_log) and not options.quiet:
+        if (debug or options.console_log) and not options.quiet and not options.daemon:
             hdlr = logging.StreamHandler(sys.stderr)
             hdlr.setFormatter(formatter)
             logger.addHandler(hdlr)
@@ -159,7 +159,7 @@ def runCouchPotato(options, base_path, args, desktop = None):
     from couchpotato import app
     api_key = Env.setting('api_key')
     url_base = '/' + Env.setting('url_base').lstrip('/') if Env.setting('url_base') else ''
-    reloader = debug is True and not Env.get('desktop')
+    reloader = debug is True and not Env.get('desktop') and not options.daemon
 
     # Basic config
     app.secret_key = api_key
