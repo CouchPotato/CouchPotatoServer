@@ -27,6 +27,10 @@ def getOptions(base_path, args):
                         dest = 'quiet', help = 'No console logging')
     parser.add_argument('--nogit', action = 'store_true',
                         dest = 'nogit', help = 'No git available')
+    parser.add_argument('--daemon', action = 'store_true',
+                        dest = 'daemon', help = 'Daemonize the app')
+    parser.add_argument('--pid_file', default = os.path.join(data_dir, 'couchpotato.pid'),
+                        dest = 'pid_file', help = 'Path to pidfile needed for daemon')
 
     options = parser.parse_args(args)
 

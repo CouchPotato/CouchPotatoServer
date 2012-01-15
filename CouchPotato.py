@@ -1,7 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
-'''Wrapper for the command line interface.'''
-
 from os.path import dirname
 import os
 import sys
@@ -44,8 +41,7 @@ def start():
         return 0
 
 from couchpotato.runner import runCouchPotato
-if __name__ == '__main__':
-
+def main():
     if os.environ.get('cp_main', 'false') == 'true':
         try:
             runCouchPotato(options, base_path, sys.argv[1:])
@@ -61,3 +57,16 @@ if __name__ == '__main__':
     fireEvent('app.crappy_shutdown', single = True)
     time.sleep(0.1)
     sys.exit()
+
+from daemon import Daemon
+class CouchDaemon(Daemon):
+    def run(self):
+        os.environ['cp_main'] = 'true'
+        main()
+
+if __name__ == '__main__':
+    if options.daemon and options.pid_file:
+        daemon = CouchDaemon(options.pid_file)
+        daemon.start()
+    else:
+        main()
