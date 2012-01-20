@@ -84,7 +84,7 @@ class LibraryPlugin(Plugin):
             for title in titles:
                 t = LibraryTitle(
                     title = toUnicode(title),
-                    default = title.lower() == default_title.lower()
+                    default = title.lower() == default_title.lower() or (default_title is '' and titles[0] == title)
                 )
                 library.titles.append(t)
 
