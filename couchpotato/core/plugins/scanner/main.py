@@ -10,6 +10,7 @@ from flask.helpers import json
 import os
 import re
 import subprocess
+import sys
 import time
 import traceback
 
@@ -335,7 +336,7 @@ class Scanner(Plugin):
         lib_dir = os.path.join(Env.get('app_dir'), 'libs')
         script = os.path.join(lib_dir, 'getmeta.py')
 
-        p = subprocess.Popen(["python", script, filename], stdout = subprocess.PIPE, stderr = subprocess.PIPE, cwd = lib_dir)
+        p = subprocess.Popen([sys.executable, script, filename], stdout = subprocess.PIPE, stderr = subprocess.PIPE, cwd = lib_dir)
         z = p.communicate()[0]
 
         try:
