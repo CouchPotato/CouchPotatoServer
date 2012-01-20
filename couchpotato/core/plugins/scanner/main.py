@@ -71,6 +71,8 @@ class Scanner(Plugin):
 
     cp_imdb = '(cp\((?P<id>tt[0-9{7}]+)\))'
 
+    path_identifiers = {} # bind identifier to filepath
+
     def __init__(self):
 
         addEvent('scanner.create_file_identifier', self.createStringIdentifier)
@@ -114,7 +116,6 @@ class Scanner(Plugin):
 
             # Save to DB
             if group['library']:
-                #library = db.query(Library).filter_by(id = library.get('id')).one()
 
                 # Add release
                 fireEvent('release.add', group = group)
@@ -197,11 +198,22 @@ class Scanner(Plugin):
             if self.shuttingDown():
                 break
 
+
+        # Create identifiers for all leftover files
+        for file_path in leftovers:
+            identifier = self.createStringIdentifier(file_path, folder)
+
+            if not self.path_identifiers.get(identifier):
+                self.path_identifiers[identifier] = []
+
+            self.path_identifiers[identifier].append(file_path)
+
+
         # Group the files based on the identifier
         for identifier, group in movie_files.iteritems():
             log.debug('Grouping files for: %s' % identifier)
 
-            found_files = self.getGroupFiles(identifier, folder, leftovers)
+            found_files = set(self.path_identifiers.get(identifier, []))
             group['unsorted_files'].extend(found_files)
 
             # Remove the found files from the leftover stack
@@ -508,9 +520,6 @@ class Scanner(Plugin):
             log.error('Couldn\'t get filesize of %s.' % file)
 
         return False
-
-    def getGroupFiles(self, identifier, folder, file_pile):
-        return set([i for i in file_pile if identifier in self.createStringIdentifier(i, folder)])
 
     def createStringIdentifier(self, file_path, folder = '', exclude_filename = False):
 
