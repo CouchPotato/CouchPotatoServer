@@ -72,9 +72,9 @@ class FileManager(Plugin):
         ft = db.query(FileType).filter_by(identifier = identifier).first()
         if not ft:
             ft = FileType(
-                type = type,
+                type = toUnicode(type),
                 identifier = identifier,
-                name = identifier[0].capitalize() + identifier[1:]
+                name = toUnicode(identifier[0].capitalize() + identifier[1:])
             )
 
             db.add(ft)
