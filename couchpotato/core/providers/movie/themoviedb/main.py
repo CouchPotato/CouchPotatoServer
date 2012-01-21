@@ -131,9 +131,9 @@ class TheMovieDb(MovieProvider):
 
         # Images
         poster = self.getImage(movie, type = 'poster')
-        backdrop = self.getImage(movie, type = 'backdrop')
-        poster_original = self.getImage(movie, type = 'poster', size = 'mid')
-        backdrop_original = self.getImage(movie, type = 'backdrop', size = 'w1280')
+        backdrop = None #self.getImage(movie, type = 'backdrop')
+        poster_original = None #self.getImage(movie, type = 'poster', size = 'mid')
+        backdrop_original = None #self.getImage(movie, type = 'backdrop', size = 'w1280')
 
         # Genres
         try:
