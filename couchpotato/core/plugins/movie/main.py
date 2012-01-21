@@ -1,12 +1,15 @@
 from couchpotato import get_session
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, fireEventAsync, addEvent
+from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.request import getParams, jsonified
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.core.settings.model import Movie
+from couchpotato.core.settings.model import Movie, Library, LibraryTitle
 from couchpotato.environment import Env
-from sqlalchemy.sql.expression import or_
+from sqlalchemy.orm import joinedload_all
+from sqlalchemy.sql.expression import or_, asc, func
+from string import ascii_letters, digits
 from urllib import urlencode
 
 log = CPLog(__name__)
@@ -42,7 +45,7 @@ class MoviePlugin(Plugin):
 
         return m.to_dict(self.default_dict)
 
-    def list(self, status = ['active']):
+    def list(self, status = ['active'], limit_offset = None, starts_with = None, search = None):
 
         db = get_session()
 
@@ -50,7 +53,44 @@ class MoviePlugin(Plugin):
         if not isinstance(status, (list, tuple)):
             status = [status]
 
-        results = db.query(Movie).filter(or_(*[Movie.status.has(identifier = s) for s in status])).all()
+
+        q = db.query(Movie) \
+            .join(Movie.library, Library.titles) \
+            .options(joinedload_all('releases.status')) \
+            .options(joinedload_all('releases.quality')) \
+            .options(joinedload_all('releases.files')) \
+            .options(joinedload_all('releases.info')) \
+            .options(joinedload_all('library.titles')) \
+            .options(joinedload_all('library.files')) \
+            .options(joinedload_all('status')) \
+            .options(joinedload_all('files')) \
+            .filter(LibraryTitle.default == True) \
+            .filter(or_(*[Movie.status.has(identifier = s) for s in status]))
+
+        filter_or = []
+        if starts_with:
+            if starts_with in ascii_letters:
+                filter_or.append(LibraryTitle.title.startswith(toUnicode(starts_with)))
+            else:
+                for letter in ('!-=+,.?' + digits):
+                    filter_or.append(LibraryTitle.title.startswith(toUnicode(letter)))
+
+        if search:
+            filter_or.append(LibraryTitle.title.like('%%' + search + '%%'))
+
+        if filter_or:
+            q = q.filter(or_(*filter_or))
+
+        q = q.order_by(asc(func.lower(LibraryTitle.title)))
+
+        if limit_offset:
+            splt = limit_offset.split(',')
+            limit = splt[0]
+            offset = 0 if len(splt) is 1 else splt[1]
+            q = q.limit(limit).offset(offset)
+
+
+        results = q.all()
 
         movies = []
         for movie in results:
@@ -63,7 +103,11 @@ class MoviePlugin(Plugin):
 
         params = getParams()
         status = params.get('status', ['active'])
-        movies = self.list(status)
+        limit_offset = params.get('limit_offset', None)
+        starts_with = params.get('starts_with', None)
+        search = params.get('search', None)
+
+        movies = self.list(status = status, limit_offset = limit_offset, starts_with = starts_with, search = search)
 
         return jsonified({
             'success': True,
