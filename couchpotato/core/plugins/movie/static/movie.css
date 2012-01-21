@@ -21,11 +21,10 @@
 		.movies .movie:hover { 
 			border-color: #ddd #fff #fff #ddd;
 		}
-		.movies .movie:hover .data { 
-		}
 		.movies .data {
-			padding: 2%;
-			width: 83%;
+			padding: 20px;
+			height: 140px;
+			width: 800px;
 			position: relative;
 			float: right;
 
@@ -36,16 +35,19 @@
 		}
 		.movies .poster {
 			float: left;
-			width: 13%;
+			width: 120px;
 			line-height: 0;
 			overflow: hidden;
+			height: 180px;
+			
+			border-radius: 4px 0 0 4px;
+			-moz-border-radius: 4px 0 0 4px;
+			-webkit-border-radius: 4px 0 0 4px;
+			
 		}
 		.movies .poster img, .options .poster img {
 			width: 101%;
-			height: 176px;
-		}
-		
-		.movies .info {
+			height: 101%;
 		}
 		
 			.movies .info .title {
@@ -82,9 +84,6 @@
 				.movies .data:hover .description {
 					overflow: auto;
 				}
-		
-		.movies .data .quality {
-		}
 		
 		.movies .data .quality span {
 			padding: 0 5px;
@@ -138,12 +137,11 @@
 				
 			.movies .options {
 				position: absolute;
-				width: 83%;
-				margin-left: 15%;
+				margin-left: 120px;
 			}
 			
 			.movies .options .form {
-				margin-top: 70px;
+				margin: 70px 20px 0;
 				float: left;
 				font-size: 20px;
 			}
@@ -153,9 +151,8 @@
 			}
 		
 			.movies .options .table {
-				height: 176px;
+				height: 180px;
 				overflow: auto;
-				margin: 0 -2%;
 			}
 				.movies .options .table .item {
 					border-bottom: 1px solid rgba(255,255,255,0.1);
@@ -192,7 +189,7 @@
 							text-align: left;
 							padding: 0 10px;
 						}
-						.movies .options .table.files .name { width: 570px; }
+						.movies .options .table.files .name { width: 598px; }
 						.movies .options .table .type { width: 120px; }
 						.movies .options .table .is_available { width: 80px; }
 						
