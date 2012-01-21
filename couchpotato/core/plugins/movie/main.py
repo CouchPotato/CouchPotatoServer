@@ -29,6 +29,7 @@ class MoviePlugin(Plugin):
         addApiView('movie.search', self.search)
         addApiView('movie.list', self.listView)
         addApiView('movie.refresh', self.refresh)
+        addApiView('movie.available_chars', self.charView)
 
         addApiView('movie.add', self.add)
         addApiView('movie.edit', self.edit)
@@ -72,7 +73,7 @@ class MoviePlugin(Plugin):
             if starts_with in ascii_letters:
                 filter_or.append(LibraryTitle.title.startswith(toUnicode(starts_with)))
             else:
-                for letter in ('!-=+,.?' + digits):
+                for letter in ('()!-=+,.?' + digits):
                     filter_or.append(LibraryTitle.title.startswith(toUnicode(letter)))
 
         if search:
@@ -99,6 +100,32 @@ class MoviePlugin(Plugin):
 
         return movies
 
+    def availableChars(self, status = ['active']):
+
+        chars = ''
+
+        db = get_session()
+
+        # Make a list from string
+        if not isinstance(status, (list, tuple)):
+            status = [status]
+
+        q = db.query(Movie) \
+            .join(Movie.library, Library.titles) \
+            .options(joinedload_all('library.titles')) \
+            .filter(LibraryTitle.default == True) \
+            .filter(or_(*[Movie.status.has(identifier = s) for s in status]))
+
+        results = q.all()
+
+        for movie in results:
+            char = movie.library.titles[0].title[0].lower()
+            char = char if char in ascii_letters else '#'
+            if char not in chars:
+                chars += char
+
+        return chars
+
     def listView(self):
 
         params = getParams()
@@ -113,6 +140,18 @@ class MoviePlugin(Plugin):
             'success': True,
             'empty': len(movies) == 0,
             'movies': movies,
+        })
+
+    def charView(self):
+
+        params = getParams()
+        status = params.get('status', ['active'])
+        chars = self.availableChars(status)
+
+        return jsonified({
+            'success': True,
+            'empty': len(chars) == 0,
+            'chars': chars,
         })
 
     def refresh(self):
