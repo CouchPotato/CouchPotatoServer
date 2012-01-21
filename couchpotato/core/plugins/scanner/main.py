@@ -120,16 +120,11 @@ class Scanner(Plugin):
 
                 # Add release
                 fireEvent('release.add', group = group)
-
-                # Add identifier for library update
-                update_after.append(group['library'].get('identifier'))
+                fireEvent('library.update', identifier = group['library'].get('identifier'))
 
             # Break if CP wants to shut down
             if self.shuttingDown():
                 break
-
-        for identifier in update_after:
-            fireEvent('library.update', identifier = identifier)
 
         db.remove()
 
