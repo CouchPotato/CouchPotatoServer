@@ -18,6 +18,7 @@ Page.Manage = new Class({
 
 			self.list = new MovieList({
 				'status': 'done',
+				'navigation': true,
 				'actions': MovieActions
 			});
 			$(self.list).inject(self.el);

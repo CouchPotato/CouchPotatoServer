@@ -214,6 +214,16 @@
 					padding-bottom: 4px;
 					height: auto;
 				}
+				
+		.movies .load_more {
+			display: block;
+			padding: 10px;
+			text-align: center;
+			font-size: 20px;
+		}
+			.movies .load_more.loading {
+				opacity: .5;
+			}
 		
 .movies .alph_nav ul {
 	list-style: none;
