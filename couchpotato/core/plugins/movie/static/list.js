@@ -100,6 +100,7 @@ var MovieList = new Class({
 				}
 			}),
 			self.search_input = new Element('input.inlay', {
+				'placeholder': 'Search',
 				'events': {
 					'keyup': self.search.bind(self),
 					'change': self.search.bind(self)
@@ -114,7 +115,7 @@ var MovieList = new Class({
 
 		// All
 		self.letters['all'] = new Element('li.letter_all.active', {
-			'text': 'all',
+			'text': 'ALL',
 		}).inject(self.alpha);
 
 		// Chars
@@ -124,6 +125,20 @@ var MovieList = new Class({
 				'class': 'letter_'+c,
 				'data-letter': c
 			}).inject(self.alpha);
+		});
+
+		// Get available chars and highlight
+		Api.request('movie.available_chars', {
+			'data': Object.merge({
+				'status': self.options.status
+			}, self.filter),
+			'onComplete': function(json){
+
+				json.chars.split('').each(function(c){
+					self.letters[c.capitalize()].addClass('available')
+				})
+
+			}
 		});
 
 	},

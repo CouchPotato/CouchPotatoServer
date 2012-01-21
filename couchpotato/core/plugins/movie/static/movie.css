@@ -9,13 +9,14 @@
 }
 
 	.movies .movie {
-		overflow: hidden;
 		position: relative;
 
 		border-radius: 4px;
 		-moz-border-radius: 4px;
 		-webkit-border-radius: 4px;
 		margin: 10px 0;
+		
+		overflow: hidden;
 	}
 		.movies .movie:hover { 
 			border-color: #ddd #fff #fff #ddd;
@@ -24,42 +25,27 @@
 		}
 		.movies .data {
 			padding: 2%;
-			position: absolute;
-			width: 96.1%;
-			top: 0;
-			left: 0;
+			width: 83%;
+			position: relative;
+			float: right;
 
-			border-radius: 4px;
-			-moz-border-radius: 4px;
-			-webkit-border-radius: 4px;
-		}
-			.movies .data:after {
-			    content: "";
-			    display: block;
-			    height: 0;
-			    clear: both;
-			    visibility: hidden;
-			}
-		.movies .data .poster, .options .poster {
+			border-radius: 0;
+			-moz-border-radius: 0;
+			-webkit-border-radius: 0;
 			overflow: hidden;
-			float: left;
-			max-width: 10%;
-			margin: 0 2% 0 0;
-			border-radius:3px;
-			-moz-border-radius: 3px;
-			-webkit-border-radius: 3px;
-			box-shadow: 0 0 10px rgba(0,0,0,0.35);
-			-moz-box-shadow: 0 0 10px rgba(0,0,0,0.35);
-			-webkit-box-shadow: 0 0 10px rgba(0,0,0,0.35);
-			line-height: 0;
 		}
-		.movies .data .poster img, .options .poster img {
-			width: 100%;
+		.movies .poster {
+			float: left;
+			width: 13%;
+			line-height: 0;
+			overflow: hidden;
+		}
+		.movies .poster img, .options .poster img {
+			width: 101%;
+			height: 176px;
 		}
 		
 		.movies .info {
-			float: right;
-			width: 88%;
 		}
 		
 			.movies .info .title {
@@ -90,22 +76,30 @@
 			
 			.movies .info .description {
 				clear: both;
-				width: 95%;
+				height: 80px;
+				overflow: hidden;
 			}
-			
+				.movies .data:hover .description {
+					overflow: auto;
+				}
+		
+		.movies .data .quality {
+		}
+		
 		.movies .data .quality span {
-			padding: 5px;
+			padding: 0 5px;
 			font-weight: bold;
 		}
+			.movies .data .quality span:first-child {padding-left: 0;}
 		
 		.movies .data .quality .available { color: orange; }
 		.movies .data .quality .snatched { color: lightgreen; }
 			
 		.movies .data .actions {
-			position: absolute;
-			right: 15px;
-			bottom: 15px;
 			line-height: 0;
+			clear: both;
+			float: right;
+			margin-top: -25px;
 		}
 			.movies .data:hover .action { opacity: 0.6; } 
 			.movies .data:hover .action:hover { opacity: 1; } 
@@ -124,7 +118,9 @@
 			clear: both;
 			text-align: center;
 			font-size: 20px;
-			position: relative;
+			position: absolute;
+			padding: 70px 0 0;
+			width: 100%;
 		}
 			.movies .delete_container .cancel {
 			}
@@ -139,26 +135,27 @@
 				color: #fff;
 				background-color: #d32917;
 			}
+				
+			.movies .options {
+				position: absolute;
+				width: 83%;
+				margin-left: 15%;
+			}
 			
-		.movies .options .form {
-			margin-top: -2%;
-			float: left;
-			font-size: 20px;
-		}
-		
-		.movies .options .form select {
-			margin-right: 20px;
-		}
+			.movies .options .form {
+				margin-top: 70px;
+				float: left;
+				font-size: 20px;
+			}
 			
-		.movies .options {
-			padding: 2%;
-		}
+			.movies .options .form select {
+				margin-right: 20px;
+			}
 		
 			.movies .options .table {
-				height: 157px;
+				height: 176px;
 				overflow: auto;
-				margin: -20px -20px -20px 110px;
-				padding: 15px 0 5px;
+				margin: 0 -2%;
 			}
 				.movies .options .table .item {
 					border-bottom: 1px solid rgba(255,255,255,0.1);
@@ -195,6 +192,7 @@
 							text-align: left;
 							padding: 0 10px;
 						}
+						.movies .options .table.files .name { width: 570px; }
 						.movies .options .table .type { width: 120px; }
 						.movies .options .table .is_available { width: 80px; }
 						
@@ -224,13 +222,16 @@
 			.movies .load_more.loading {
 				opacity: .5;
 			}
-		
+
+.movies .alph_nav {
+	overflow: hidden;
+}
+	
 .movies .alph_nav ul {
 	list-style: none;
-	padding: 0;
+	padding: 0 0 1px;
 	margin: 0;
-	
-	display: inline-block;
+	float: left;
 }
 
 	.movies .alph_nav li {
@@ -241,13 +242,22 @@
 		line-height: 26px;
 		text-align: center;
 		cursor: pointer;
-		margin: 0 -1px 0 0;
 		color: #666;
+		border: 1px solid transparent;
 	}
-		.movies .alph_nav li.active {
+		.movies .alph_nav li:first-child {
+			width: 34px;
+		}
+		.movies .alph_nav li.active, .movies .alph_nav li:hover {
+			font-weight: bolder;
 			color: #fff;
 		}
-	
-		.movies .alph_nav li:hover, .movies .alph_nav li.onlay {
-			font-weight: bold;
+		.movies .alph_nav li.available {
+			color: #fff;
 		}
+		
+	.movies .alph_nav input {
+		padding: 6px 5px;
+		margin: 0;
+		float: right;
+	}

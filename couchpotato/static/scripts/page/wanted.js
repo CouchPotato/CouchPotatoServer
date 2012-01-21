@@ -52,12 +52,7 @@ window.addEvent('domready', function(){
 
 				if(!self.options_container){
 					self.options_container = new Element('div.options').adopt(
-						$(self.movie.thumbnail).clone(),
-						new Element('div.form', {
-							'styles': {
-								'line-height': self.movie.getHeight()
-							}
-						}).adopt(
+						new Element('div.form').adopt(
 							self.title_select = new Element('select', {
 								'name': 'title'
 							}),
@@ -167,11 +162,7 @@ window.addEvent('domready', function(){
 				(e).stop();
 
 				if(!self.delete_container){
-					self.delete_container = new Element('div.delete_container', {
-						'styles': {
-							'line-height': self.movie.getHeight()
-						}
-					}).adopt(
+					self.delete_container = new Element('div.delete_container').adopt(
 						new Element('a.cancel', {
 							'text': 'Cancel',
 							'events': {
@@ -265,7 +256,6 @@ window.addEvent('domready', function(){
 
 				if(!self.options_container){
 					self.options_container = new Element('div.options').adopt(
-						$(self.movie.thumbnail).clone(),
 						self.files_container = new Element('div.files.table')
 					).inject(self.movie, 'top');
 
@@ -281,7 +271,7 @@ window.addEvent('domready', function(){
 						var rel = new Element('div.release').inject(self.files_container);
 
 						Array.each(release.files, function(file){
-							new Element('div.file').adopt(
+							new Element('div.file.item').adopt(
 								new Element('span.name', {'text': file.path}),
 								new Element('span.type', {'text': File.Type.get(file.type_id).name}),
 								new Element('span.available', {'text': file.available})

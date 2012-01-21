@@ -11,13 +11,13 @@ var Movie = new Class({
 
 		self.profile = Quality.getProfile(data.profile_id) || {};
 		self.parent(self, options);
-		self.addEvent('injected', self.afterInject.bind(self))
 	},
 
 	create: function(){
 		var self = this;
 
 		self.el = new Element('div.movie.inlay').adopt(
+			self.thumbnail = File.Select.single('poster', self.data.library.files),
 			self.data_container = new Element('div.data.inlay.light', {
 				'tween': {
 					duration: 400,
@@ -25,7 +25,6 @@ var Movie = new Class({
 					onComplete: self.fireEvent.bind(self, 'slideEnd')
 				}
 			}).adopt(
-				self.thumbnail = File.Select.single('poster', self.data.library.files),
 				self.info_container = new Element('div.info').adopt(
 					self.title = new Element('div.title', {
 						'text': self.getTitle()
@@ -88,15 +87,6 @@ var Movie = new Class({
 
 	},
 
-	afterInject: function(){
-		var self = this;
-
-		(function(){
-			var height = self.getHeight();
-			self.el.setStyle('height', height);
-		}).delay(100)
-	},
-
 	getTitle: function(){
 		var self = this;
 
@@ -120,35 +110,17 @@ var Movie = new Class({
 		if(direction == 'in'){
 			self.el.addEvent('outerClick', self.slide.bind(self, 'out'))
 			el.show();
-			self.data_container.tween('left', 0, self.getWidth());
+			self.data_container.tween('right', 0, -840);
 		}
 		else {
 			self.el.removeEvents('outerClick')
 
 			self.addEvent('slideEnd:once', function(){
-				self.el.getElements('> :not(.data)').hide();
+				self.el.getElements('> :not(.data):not(.poster)').hide();
 			});
 
-			self.data_container.tween('left', self.getWidth(), 0);
+			self.data_container.tween('right', -840, 0);
 		}
-	},
-
-	getHeight: function(){
-		var self = this;
-
-		if(!self.height)
-			self.height = self.data_container.getSize().y;
-
-		return self.height;
-	},
-
-	getWidth: function(){
-		var self = this;
-
-		if(!self.width)
-			self.width = self.data_container.getCoordinates().width;
-
-		return self.width;
 	},
 
 	get: function(attr){
@@ -240,7 +212,6 @@ var ReleaseAction = new Class({
 
 		if(!self.options_container){
 			self.options_container = new Element('div.options').adopt(
-				$(self.movie.thumbnail).clone(),
 				self.release_container = new Element('div.releases.table')
 			).inject(self.movie, 'top');
 
