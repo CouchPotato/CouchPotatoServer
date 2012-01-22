@@ -106,7 +106,7 @@ var Profile = new Class({
 		}
 
 		Array.each(self.type_container.getElements('.type'), function(type){
-			if(!type.hasClass('deleted'))
+			if(!type.hasClass('deleted') && type.getElement('select').get('value') > 0)
 				data.types.include({
 					'quality_id': type.getElement('select').get('value'),
 					'finish': +type.getElement('input[type=checkbox]').checked
