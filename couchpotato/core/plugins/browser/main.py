@@ -36,7 +36,7 @@ class FileBrowser(Plugin):
 
         driveletters = []
         for drive in string.ascii_uppercase:
-            if win32file.GetDriveType(drive + ":") == win32file.DRIVE_FIXED:
+            if win32file.GetDriveType(drive + ":") in [win32file.DRIVE_FIXED, win32file.DRIVE_REMOTE]:
                 driveletters.append(drive + ":\\")
 
         return driveletters
