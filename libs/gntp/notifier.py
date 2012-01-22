@@ -186,6 +186,7 @@ class GrowlNotifier(object):
 		logger.debug('To : %s:%s <%s>\n%s', self.hostname, self.port, packet.__class__, data)
 
 		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		s.settimeout(3)
 		s.connect((self.hostname, self.port))
 		s.send(data.encode('utf8', 'replace'))
 		recv_data = s.recv(1024)
