@@ -114,7 +114,7 @@ var MovieList = new Class({
 		).inject(self.el, 'top');
 
 		// All
-		self.letters['all'] = new Element('li.letter_all.active', {
+		self.letters['all'] = new Element('li.letter_all.available.active', {
 			'text': 'ALL',
 		}).inject(self.alpha);
 
