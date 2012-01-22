@@ -7,8 +7,6 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import FileType, File
 from couchpotato.environment import Env
-from flask.helpers import send_from_directory
-from sqlalchemy.sql.expression import or_
 import os.path
 
 log = CPLog(__name__)
@@ -21,13 +19,14 @@ class FileManager(Plugin):
         addEvent('file.download', self.download)
         addEvent('file.types', self.getTypes)
 
-        addApiView('file.cache/<path:filename>', self.showImage)
+        addApiView('file.cache/<path:filename>', self.showCacheFile, static = True)
 
-    def showImage(self, filename = ''):
+    def showCacheFile(self, filename = ''):
 
         cache_dir = Env.get('cache_dir')
         filename = os.path.basename(filename)
 
+        from flask.helpers import send_from_directory
         return send_from_directory(cache_dir, filename)
 
     def download(self, url = '', dest = None, overwrite = False):

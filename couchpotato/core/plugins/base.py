@@ -3,7 +3,6 @@ from couchpotato.core.event import fireEvent, addEvent
 from couchpotato.core.helpers.variable import getExt
 from couchpotato.core.logger import CPLog
 from couchpotato.environment import Env
-from flask.helpers import send_from_directory
 from flask.templating import render_template_string
 from multipartpost import MultipartPostHandler
 from urlparse import urlparse
@@ -67,6 +66,8 @@ class Plugin(object):
 
     def showStatic(self, filename):
         d = os.path.join(self.plugin_path, 'static')
+
+        from flask.helpers import send_from_directory
         return send_from_directory(d, filename)
 
     def createFile(self, path, content, binary = False):
