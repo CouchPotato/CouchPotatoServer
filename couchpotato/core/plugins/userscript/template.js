@@ -3,9 +3,9 @@
 // @description Add movies like a real CouchPotato
 // @version 	{{version}}
 
-// @include     {{host}}*
+// @match       {{host}}*
 {% for include in includes %}
-// @include     {{include}}{% endfor %}
+// @match       {{include}}{% endfor %}
 {% for exclude in excludes %}
 // @exclude     {{exclude}}{% endfor %}
 // @exclude     {{host}}{{api.rstrip('/')}}*
