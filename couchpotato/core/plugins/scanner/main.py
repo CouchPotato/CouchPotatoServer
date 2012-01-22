@@ -234,7 +234,7 @@ class Scanner(Plugin):
                     break
 
             if file_too_new:
-                log.info('Files seem to be still unpacking or just unpacked (%s), ignoring for now: %s' % (file_time, identifier))
+                log.info('Files seem to be still unpacking or just unpacked (created on %s), ignoring for now: %s' % (time.ctime(file_time), identifier))
                 delete_identifier.append(identifier)
                 continue
 
