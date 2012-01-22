@@ -4,7 +4,7 @@ from flask.blueprints import Blueprint
 api = Blueprint('api', __name__)
 
 def addApiView(route, func, static = False):
-    api.add_url_rule(route + ('' if static else '/'), endpoint = route.replace('.', '_') if route else 'index', view_func = func)
+    api.add_url_rule(route + ('' if static else '/'), endpoint = route.replace('.', '-') if route else 'index', view_func = func)
 
 """ Api view """
 def index():
