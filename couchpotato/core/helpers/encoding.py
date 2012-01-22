@@ -1,6 +1,5 @@
 from couchpotato.core.logger import CPLog
 from string import ascii_letters, digits
-import os
 import re
 import unicodedata
 
@@ -12,9 +11,9 @@ def toSafeString(original):
     cleanedFilename = unicodedata.normalize('NFKD', toUnicode(original)).encode('ASCII', 'ignore')
     return ''.join(c for c in cleanedFilename if c in valid_chars)
 
-
 def simplifyString(original):
-    string = toSafeString(' '.join(re.split('\W+', original.lower())))
+    string = stripAccents(original.lower())
+    string = toSafeString(' '.join(re.split('\W+', string)))
     split = re.split('\W+', string.lower())
     return toUnicode(' '.join(split))
 
@@ -45,3 +44,6 @@ def isInt(value):
         return True
     except ValueError:
         return False
+
+def stripAccents(s):
+    return ''.join((c for c in unicodedata.normalize('NFD', s) if unicodedata.category(c) != 'Mn'))
