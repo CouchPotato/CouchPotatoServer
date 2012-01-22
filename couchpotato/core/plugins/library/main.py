@@ -1,10 +1,11 @@
 from couchpotato import get_session
 from couchpotato.core.event import addEvent, fireEventAsync, fireEvent
-from couchpotato.core.helpers.encoding import toUnicode
+from couchpotato.core.helpers.encoding import toUnicode, simplifyString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Library, LibraryTitle, File, \
     LibraryGenre
+from string import ascii_letters
 import traceback
 
 log = CPLog(__name__)
@@ -33,7 +34,8 @@ class LibraryPlugin(Plugin):
             )
 
             title = LibraryTitle(
-                title = toUnicode(attrs.get('title'))
+                title = toUnicode(attrs.get('title')),
+                simple_title = self.simplifyTitle(attrs.get('title'))
             )
 
             l.titles.append(title)
@@ -84,6 +86,7 @@ class LibraryPlugin(Plugin):
             for title in titles:
                 t = LibraryTitle(
                     title = toUnicode(title),
+                    simple_title = self.simplifyTitle(title),
                     default = title.lower() == default_title.lower() or (default_title is '' and titles[0] == title)
                 )
                 library.titles.append(t)
@@ -125,3 +128,16 @@ class LibraryPlugin(Plugin):
         fireEvent('library.update_finish', data = library_dict)
 
         return library_dict
+
+    def simplifyTitle(self, title):
+
+        title = toUnicode(title)
+        nr_prefix = '' if title[0] in ascii_letters else '#'
+        title = simplifyString(title)
+
+        for prefix in ['the ']:
+            if prefix == title[:len(prefix)]:
+                title = title[len(prefix):]
+                break
+
+        return nr_prefix + title
