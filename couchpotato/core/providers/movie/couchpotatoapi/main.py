@@ -12,7 +12,7 @@ log = CPLog(__name__)
 
 class CouchPotatoApi(MovieProvider):
 
-    apiUrl = 'http://couchpotatoapp.com/api/%s/'
+    apiUrl = 'http://couchpota.to/api/%s/'
 
     def __init__(self):
         addEvent('movie.release_date', self.releaseDate)

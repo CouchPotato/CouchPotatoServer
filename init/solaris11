@@ -85,7 +85,7 @@
        </common_name>
        <documentation>
           <doc_link name='couchpotato'
-                    uri='http://www.couchpotatoapp.com/' />
+                    uri='http://couchpota.to/' />
        </documentation>
     </template>
  
