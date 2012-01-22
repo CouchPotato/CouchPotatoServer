@@ -17,12 +17,14 @@ var File = new Class({
 
 	createImage: function(){
 		var self = this;
+		
+		var file_name = self.data.path.replace(/^.*[\\\/]/, '');
 
 		self.el = new Element('div', {
 			'class': 'type_image ' + self.type.identifier
 		}).adopt(
 			new Element('img', {
-				'src': Api.createUrl('file.cache') + self.data.path.substring(1) + '/'
+				'src': Api.createUrl('file.cache') + file_name
 			})
 		)
 	},
