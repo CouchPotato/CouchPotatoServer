@@ -19,7 +19,6 @@ class Growl(Notification):
                 applicationName = 'CouchPotato',
                 notifications = ["Updates"],
                 defaultNotifications = ["Updates"],
-                applicationIcon = 'http://couchpotatoapp.com/media/images/couch.png',
                 applicationIcon = 'http://couchpota.to/media/images/couch.png',
             )
             self.growl.register()
