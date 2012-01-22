@@ -8,8 +8,8 @@ from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Movie, Library, LibraryTitle
 from couchpotato.environment import Env
 from sqlalchemy.orm import joinedload_all
-from sqlalchemy.sql.expression import or_, asc, func
-from string import ascii_letters, digits
+from sqlalchemy.sql.expression import or_, asc, not_
+from string import ascii_lowercase
 from urllib import urlencode
 
 log = CPLog(__name__)
@@ -70,19 +70,22 @@ class MoviePlugin(Plugin):
 
         filter_or = []
         if starts_with:
-            if starts_with in ascii_letters:
-                filter_or.append(LibraryTitle.title.startswith(toUnicode(starts_with)))
+            starts_with = toUnicode(starts_with.lower())
+            if starts_with in ascii_lowercase:
+                filter_or.append(LibraryTitle.simple_title.startswith(starts_with))
             else:
-                for letter in ('()!-=+,.?' + digits):
-                    filter_or.append(LibraryTitle.title.startswith(toUnicode(letter)))
+                ignore = []
+                for letter in ascii_lowercase:
+                    ignore.append(LibraryTitle.simple_title.startswith(toUnicode(letter)))
+                filter_or.append(not_(or_(*ignore)))
 
         if search:
-            filter_or.append(LibraryTitle.title.like('%%' + search + '%%'))
+            filter_or.append(LibraryTitle.simple_title.like('%%' + search + '%%'))
 
         if filter_or:
             q = q.filter(or_(*filter_or))
 
-        q = q.order_by(asc(func.lower(LibraryTitle.title)))
+        q = q.order_by(asc(LibraryTitle.simple_title))
 
         if limit_offset:
             splt = limit_offset.split(',')
@@ -119,8 +122,8 @@ class MoviePlugin(Plugin):
         results = q.all()
 
         for movie in results:
-            char = movie.library.titles[0].title[0].lower()
-            char = char if char in ascii_letters else '#'
+            char = movie.library.titles[0].simple_title[0]
+            char = char if char in ascii_lowercase else '#'
             if char not in chars:
                 chars += char
 
