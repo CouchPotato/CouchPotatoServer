@@ -63,6 +63,7 @@ class LibraryTitle(Entity):
     using_options(order_by = '-default')
 
     title = Field(Unicode)
+    simple_title = Field(Unicode)
     default = Field(Boolean)
 
     language = OneToMany('Language')
