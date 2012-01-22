@@ -13,7 +13,7 @@
 // ==/UserScript==
 
 var version = {{version}},
-    host = '{{host}}';
+    host = '{{host}}',
     api = '{{api}}';
 
 function create() {

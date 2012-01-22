@@ -5,8 +5,10 @@ from couchpotato.core.helpers.request import getParam, jsonified
 from couchpotato.core.helpers.variable import isDict
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
+from couchpotato.environment import Env
 from flask.globals import request
-from flask.helpers import url_for, make_response
+from flask.helpers import url_for
+import os
 
 log = CPLog(__name__)
 
@@ -14,13 +16,13 @@ log = CPLog(__name__)
 class Userscript(Plugin):
 
     def __init__(self):
-        addApiView('userscript.get', self.getExtension)
+        addApiView('userscript.get/<path:filename>', self.getUserScript, static = True)
         addApiView('userscript', self.iFrame)
         addApiView('userscript.add_via_url', self.getViaUrl)
 
         addEvent('userscript.get_version', self.getVersion)
 
-    def getExtension(self):
+    def getUserScript(self, filename = ''):
 
         params = {
             'includes': fireEvent('userscript.get_includes', merge = True),
@@ -30,10 +32,11 @@ class Userscript(Plugin):
             'host': request.host_url,
         }
 
-        response = make_response(self.renderTemplate(__file__, 'template.js', **params))
-        response.headers['Content-Type'] = 'text/javascript'
-        return response
-        return
+        script = self.renderTemplate(__file__, 'template.js', **params)
+        self.createFile(os.path.join(Env.get('cache_dir'), 'couchpotato.user.js'), script)
+
+        from flask.helpers import send_from_directory
+        return send_from_directory(Env.get('cache_dir'), 'couchpotato.user.js')
 
     def getVersion(self):
 
