@@ -113,11 +113,16 @@ class Newznab(NZBProvider, RSS):
                 results = []
                 for nzb in nzbs:
 
+                    date = ''
+                    size = 0
                     for item in nzb:
                         if item.attrib.get('name') == 'size':
                             size = item.attrib.get('value')
                         elif item.attrib.get('name') == 'usenetdate':
                             date = item.attrib.get('value')
+
+                    if date is '': log.info('Date not parsed properly or not available for %s: %s' % (host, self.getTextElement(nzb, "title")))
+                    if size is 0: log.info('Size not parsed properly or not available for %s: %s' % (host, self.getTextElement(nzb, "title")))
 
                     id = self.getTextElement(nzb, "guid").split('/')[-1:].pop()
                     new = {
