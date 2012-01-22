@@ -112,6 +112,9 @@ class Newznab(NZBProvider, RSS):
 
                 results = []
                 for nzb in nzbs:
+                    
+                    # Quick fix for empty usenetdate
+                    date = ''
 
                     for item in nzb:
                         if item.attrib.get('name') == 'size':
