@@ -193,7 +193,10 @@ class Event(object):
                         self.lock.release()
 
                     if not self.asynchronous:
-                        self.queue.task_done()
+                        try:
+                            self.queue.task_done()
+                        except ValueError:
+                            pass
 
                     if self.queue.empty():
                         raise Queue.Empty
