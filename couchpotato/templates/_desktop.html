@@ -81,7 +81,7 @@
 				File.Type.setup({{ fireEvent('file.types', single = True)|tojson|safe }});
 
 				App.setup({
-					'base_url': {{ request.path|tojson|safe }},
+					'base_url': {{ url_for('web.index')|tojson|safe }},
 					'args': {{ env.get('args')|tojson|safe }},
 					'options': "{{ env.get('options')|safe }}",
 					'app_dir': {{ env.get('app_dir')|tojson|safe }},
