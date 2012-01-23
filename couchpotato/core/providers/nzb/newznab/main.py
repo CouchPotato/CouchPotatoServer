@@ -112,6 +112,9 @@ class Newznab(NZBProvider, RSS):
 
                 results = []
                 for nzb in nzbs:
+                    
+                    # Quick fix for empty usenetdate
+                    date = ''
 
                     date = ''
                     size = 0
