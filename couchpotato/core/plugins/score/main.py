@@ -19,7 +19,7 @@ class Score(Plugin):
         score = nameScore(toUnicode(nzb['name']), movie['library']['year'])
 
         for movie_title in movie['library']['titles']:
-            score += nameRatioScore(nzb['name'], movie_title['title'])
+            score += nameRatioScore(toUnicode(nzb['name']), toUnicode(movie_title['title']))
 
         score += sizeScore(nzb['size'])
 
