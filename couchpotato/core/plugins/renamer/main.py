@@ -136,7 +136,7 @@ class Renamer(Plugin):
                     for current_file in sorted(list(group['files'][file_type])):
 
                         # Original filename
-                        replacements['original'] = os.path.basename(current_file)
+                        replacements['original'] = os.path.splitext(os.path.basename(current_file))[0]
                         replacements['original_folder'] = os.path.basename(os.path.dirname(current_file))
 
                         # Extension
