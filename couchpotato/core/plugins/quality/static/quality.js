@@ -8,20 +8,22 @@ var QualityBase = new Class({
 
 		self.qualities = data.qualities;
 
-		self.profiles = {}
-		Object.each(data.profiles, self.createProfilesClass.bind(self));
+		self.profiles = []
+		Array.each(data.profiles, self.createProfilesClass.bind(self));
 
 		App.addEvent('load', self.addSettings.bind(self))
 
 	},
 
 	getProfile: function(id){
-		return this.profiles[id]
+		return this.profiles.filter(function(profile){
+			return profile.data.id == id
+		}).pick()
 	},
 
 	// Hide items when getting profiles
 	getActiveProfiles: function(){
-		return Object.filter(this.profiles, function(profile){
+		return Array.filter(this.profiles, function(profile){
 			return !profile.data.hide
 		});
 	},
@@ -59,8 +61,8 @@ var QualityBase = new Class({
 	createProfiles: function(){
 		var self = this;
 
-		var non_core_profiles = Object.filter(self.profiles, function(profile){ return !profile.isCore() });
-		var count = Object.getLength(non_core_profiles);
+		var non_core_profiles = Array.filter(self.profiles, function(profile){ return !profile.isCore() });
+		var count = non_core_profiles.length;
 
 		self.settings.createGroup({
 			'label': 'Quality Profiles',
@@ -79,7 +81,7 @@ var QualityBase = new Class({
 		);
 
 		// Add profiles, that aren't part of the core (for editing)
-		Object.each(non_core_profiles, function(profile){
+		Array.each(non_core_profiles, function(profile){
 			$(profile).inject(self.profile_container)
 		});
 
@@ -89,8 +91,10 @@ var QualityBase = new Class({
 		var self = this;
 
 		var data = data || {'id': randomString()}
-
-		return self.profiles[data.id] = new Profile(data);
+		var profile = new Profile(data)
+		self.profiles.include(profile)
+		
+		return profile;
 	},
 
 	createProfileOrdering: function(){
@@ -109,7 +113,7 @@ var QualityBase = new Class({
 			)
 		).inject(self.content)
 
-		Object.each(self.profiles, function(profile){
+		Array.each(self.profiles, function(profile){
 			var check;
 			new Element('li', {'data-id': profile.data.id}).adopt(
 				check = new Element('input.inlay[type=checkbox]', {
@@ -178,7 +182,7 @@ var QualityBase = new Class({
 			new Element('span.max', {'text': 'Max'})
 		).inject(group)
 
-		Object.each(self.qualities, function(quality){
+		Array.each(self.qualities, function(quality){
 			new Element('div.ctrlHolder.item').adopt(
 				new Element('span.label', {'text': quality.label}),
 				new Element('input.min.inlay[type=text]', {
