@@ -12,14 +12,13 @@ rename_options = {
         'thename': 'The Moviename',
         'year': 'Year (2011)',
         'first': 'First letter (M)',
-        'dirname': 'Dirname (Moviename.2011.720p-releasegrp)',
         'quality': 'Quality (720P)',
         'video': 'Video (x264)',
         'audio': 'Audio (DTS)',
         'group': 'Releasegroup name',
         'source': 'Source media (Bluray)',
-        'original': 'Original file name',
-        'original_folder': 'Original folder name',
+        'original': 'Original filename',
+        'original_folder': 'Original foldername',
     },
 }
 

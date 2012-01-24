@@ -70,13 +70,14 @@ class Scanner(Plugin):
         '()([ab])(\.....?)$' #*a.mkv
     ]
 
-    cp_imdb = '(cp\((?P<id>tt[0-9{7}]+)\))'
+    cp_imdb = '(\.cp\((?P<id>tt[0-9{7}]+)\))'
 
     path_identifiers = {} # bind identifier to filepath
 
     def __init__(self):
 
         addEvent('scanner.create_file_identifier', self.createStringIdentifier)
+        addEvent('scanner.remove_cptag', self.removeCPTag)
 
         addEvent('scanner.scan', self.scan)
         addEvent('scanner.files', self.scanFilesToLibrary)
@@ -420,14 +421,11 @@ class Scanner(Plugin):
 
         return False
 
-    def removeCPImdb(self, name):
-        for regex in self.multipart_regex:
-            try:
-                found = re.sub(regex, '', name)
-                if found != name:
-                    name = found
-            except:
-                pass
+    def removeCPTag(self, name):
+        try:
+            return re.sub(self.cp_imdb, '', name)
+        except:
+            pass
         return name
 
     def getMediaFiles(self, files):
@@ -529,7 +527,7 @@ class Scanner(Plugin):
         identifier = self.removeMultipart(identifier)
 
         # remove cptag
-        identifier = self.removeCPImdb(identifier)
+        identifier = self.removeCPTag(identifier)
 
         # groups, release tags, scenename cleaner, regex isn't correct
         identifier = re.sub(self.clean, '::', simplifyString(identifier))

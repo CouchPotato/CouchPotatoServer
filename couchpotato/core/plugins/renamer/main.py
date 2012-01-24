@@ -108,7 +108,6 @@ class Renamer(Plugin):
                      'thename': movie_name.strip(),
                      'year': library['year'],
                      'first': name_the[0].upper(),
-                     'dirname': group['dirname'],
                      'quality': group['meta_data']['quality']['label'],
                      'quality_type': group['meta_data']['quality_type'],
                      'video': group['meta_data'].get('video'),
@@ -138,7 +137,7 @@ class Renamer(Plugin):
 
                         # Original filename
                         replacements['original'] = os.path.splitext(os.path.basename(current_file))[0]
-                        replacements['original_folder'] = os.path.basename(os.path.dirname(current_file))
+                        replacements['original_folder'] = fireEvent('scanner.remove_cptag', group['dirname'], single = True)
 
                         # Extension
                         replacements['ext'] = getExt(current_file)
