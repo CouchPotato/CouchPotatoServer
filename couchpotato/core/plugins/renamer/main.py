@@ -7,6 +7,7 @@ from couchpotato.core.helpers.variable import getExt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Library
+from couchpotato.environment import Env
 import os.path
 import re
 import shutil
@@ -311,6 +312,12 @@ class Renamer(Plugin):
     def moveFile(self, old, dest):
         try:
             shutil.move(old, dest)
+
+            try:
+                os.chmod(dest, Env.getPermission('folder'))
+            except:
+                log.error('Failed setting permissions for file: %s' % dest)
+
         except:
             log.error("Couldn't move file '%s' to '%s': %s" % (old, dest, traceback.format_exc()))
             raise Exception
