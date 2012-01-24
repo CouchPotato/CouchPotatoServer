@@ -1,6 +1,6 @@
 from couchpotato import get_session
 from couchpotato.core.event import addEvent, fireEvent
-from couchpotato.core.helpers.encoding import simplifyString
+from couchpotato.core.helpers.encoding import simplifyString, toUnicode
 from couchpotato.core.helpers.variable import md5, getImdb
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
@@ -92,7 +92,7 @@ class Searcher(Plugin):
 
                                 rls_info = ReleaseInfo(
                                     identifier = info,
-                                    value = nzb[info]
+                                    value = toUnicode(nzb[info])
                                 )
                                 rls.info.append(rls_info)
                                 db.commit()
