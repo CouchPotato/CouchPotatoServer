@@ -84,6 +84,12 @@ class Settings():
         except:
             return tryInt(self.p.get(section, option))
 
+    def getFloat(self, section, option):
+        try:
+            return self.p.getfloat(section, option)
+        except:
+            return tryInt(self.p.get(section, option))
+
     def getUnicode(self, section, option):
         value = self.p.get(section, option)
         return toUnicode(value).strip()

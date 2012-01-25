@@ -469,6 +469,10 @@ Option.Int = new Class({
 	Extends: Option.String
 });
 
+Option.Float = new Class({
+	Extends: Option.Int
+});
+
 Option.Directory = new Class({
 
 	Extends: OptionBase,
