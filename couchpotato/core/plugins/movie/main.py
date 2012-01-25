@@ -213,7 +213,7 @@ class MoviePlugin(Plugin):
                 profile_id = params.get('profile_id', default_profile.get('id'))
             )
             db.add(m)
-            fireEvent('library.update', identifier = params.get('imdb_id'), default_title = params.get('title', ''))
+            fireEvent('library.update', params.get('identifier'), default_title = params.get('title', ''))
         elif force_readd:
             # Clean snatched history
             for release in m.releases:
