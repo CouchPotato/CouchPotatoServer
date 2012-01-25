@@ -14,8 +14,8 @@ log = CPLog(__name__)
 class Newzbin(NZBProvider, RSS):
 
     urls = {
-        'download': 'http://www.newzbin.com/api/dnzb/',
-        'search': 'https://www.newzbin.com/search/',
+        'download': 'http://www.newzbin2.es/api/dnzb/',
+        'search': 'https://www.newzbin2.es/search/',
     }
 
     format_ids = {
@@ -86,7 +86,7 @@ class Newzbin(NZBProvider, RSS):
                     title = self.getTextElement(nzb, "title")
                     if 'error' in title.lower(): continue
 
-                    REPORT_NS = 'http://www.newzbin.com/DTD/2007/feeds/report/';
+                    REPORT_NS = 'http://www.newzbin2.es/DTD/2007/feeds/report/';
 
                     # Add attributes to name
                     for attr in nzb.find('{%s}attributes' % REPORT_NS):
@@ -120,7 +120,7 @@ class Newzbin(NZBProvider, RSS):
 
                 return results
             except SyntaxError:
-                log.error('Failed to parse XML response from newzbin.com')
+                log.error('Failed to parse XML response from newzbin')
 
         return results
 
