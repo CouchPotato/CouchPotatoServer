@@ -31,10 +31,11 @@ class MoviePlugin(Plugin):
         addApiView('movie.refresh', self.refresh)
         addApiView('movie.available_chars', self.charView)
 
-        addApiView('movie.add', self.add)
+        addApiView('movie.add', self.addView)
         addApiView('movie.edit', self.edit)
         addApiView('movie.delete', self.delete)
 
+        addEvent('movie.add', self.add)
         addEvent('movie.get', self.get)
         addEvent('movie.list', self.list)
         addEvent('movie.restatus', self.restatus)
@@ -194,38 +195,52 @@ class MoviePlugin(Plugin):
             'movies': movies,
         })
 
-    def add(self):
+    def add(self, params = {}, force_readd = True):
 
-        params = getParams()
-        db = get_session();
-
-        library = fireEvent('library.add', single = True, attrs = params)
+        library = fireEvent('library.add', single = True, attrs = params, update_after = False)
 
         # Status
         status_active = fireEvent('status.add', 'active', single = True)
         status_snatched = fireEvent('status.add', 'snatched', single = True)
 
+        default_profile = fireEvent('profile.default', single = True)
+
+        db = get_session()
         m = db.query(Movie).filter_by(library_id = library.get('id')).first()
         if not m:
             m = Movie(
                 library_id = library.get('id'),
-                profile_id = params.get('profile_id')
+                profile_id = params.get('profile_id', default_profile.get('id'))
             )
             db.add(m)
-        else:
+            fireEvent('library.update', identifier = params.get('imdb_id'), default_title = params.get('title', ''))
+        elif force_readd:
             # Clean snatched history
             for release in m.releases:
                 if release.status_id == status_snatched.get('id'):
                     release.delete()
 
-            m.profile_id = params.get('profile_id')
+            m.profile_id = params.get('profile_id', default_profile.get('id'))
+        else:
+            log.debug('Movie already exists, not updating: %s' % params)
 
-        m.status_id = status_active.get('id')
-        db.commit()
+        if force_readd:
+            m.status_id = status_active.get('id')
+            db.commit()
 
         movie_dict = m.to_dict(self.default_dict)
 
-        fireEventAsync('searcher.single', movie_dict)
+        if force_readd:
+            fireEventAsync('searcher.single', movie_dict)
+
+        return movie_dict
+
+
+    def addView(self):
+
+        params = getParams()
+
+        movie_dict = self.add(params)
 
         return jsonified({
             'success': True,
