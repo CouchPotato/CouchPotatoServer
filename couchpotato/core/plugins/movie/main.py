@@ -8,7 +8,7 @@ from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Movie, Library, LibraryTitle
 from couchpotato.environment import Env
 from sqlalchemy.orm import joinedload_all
-from sqlalchemy.sql.expression import or_, asc, not_
+from sqlalchemy.sql.expression import func, or_, asc, not_
 from string import ascii_lowercase
 from urllib import urlencode
 
@@ -93,7 +93,6 @@ class MoviePlugin(Plugin):
             limit = splt[0]
             offset = 0 if len(splt) is 1 else splt[1]
             q = q.limit(limit).offset(offset)
-
 
         results = q.all()
 
