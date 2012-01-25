@@ -207,6 +207,7 @@ class MoviePlugin(Plugin):
 
         db = get_session()
         m = db.query(Movie).filter_by(library_id = library.get('id')).first()
+        do_search = False
         if not m:
             m = Movie(
                 library_id = library.get('id'),
@@ -214,6 +215,7 @@ class MoviePlugin(Plugin):
             )
             db.add(m)
             fireEvent('library.update', params.get('identifier'), default_title = params.get('title', ''))
+            do_search = True
         elif force_readd:
             # Clean snatched history
             for release in m.releases:
@@ -226,11 +228,12 @@ class MoviePlugin(Plugin):
 
         if force_readd:
             m.status_id = status_active.get('id')
-            db.commit()
+
+        db.commit()
 
         movie_dict = m.to_dict(self.default_dict)
 
-        if force_readd:
+        if force_readd or do_search:
             fireEventAsync('searcher.single', movie_dict)
 
         return movie_dict
