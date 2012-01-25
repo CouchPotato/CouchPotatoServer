@@ -16,21 +16,21 @@ class Loader(object):
     def preload(self, root = ''):
 
         core = os.path.join(root, 'couchpotato', 'core')
-        providers = os.path.join(root, 'couchpotato', 'core', 'providers')
 
         self.paths = {
             'core': (0, 'couchpotato.core._base', os.path.join(core, '_base')),
             'plugin': (1, 'couchpotato.core.plugins', os.path.join(core, 'plugins')),
             'notifications': (20, 'couchpotato.core.notifications', os.path.join(core, 'notifications')),
             'downloaders': (20, 'couchpotato.core.downloaders', os.path.join(core, 'downloaders')),
-            'movie_provider': (20, 'couchpotato.core.providers.movie', os.path.join(providers, 'movie')),
-            'nzb_provider': (20, 'couchpotato.core.providers.nzb', os.path.join(providers, 'nzb')),
-            'torrent_provider': (20, 'couchpotato.core.providers.torrent', os.path.join(providers, 'torrent')),
-            'trailer_provider': (20, 'couchpotato.core.providers.trailer', os.path.join(providers, 'trailer')),
-            'subtitle_provider': (20, 'couchpotato.core.providers.subtitle', os.path.join(providers, 'subtitle')),
-            'metadata_provider': (25, 'couchpotato.core.providers.metadata', os.path.join(providers, 'metadata')),
-            'userscript_provider': (25, 'couchpotato.core.providers.userscript', os.path.join(providers, 'userscript')),
         }
+
+        # Add providers to loader
+        provider_dir = os.path.join(root, 'couchpotato', 'core', 'providers')
+        for provider in os.listdir(provider_dir):
+            path = os.path.join(provider_dir, provider)
+            if os.path.isdir(path):
+                self.paths[provider + '_provider'] = (25, 'couchpotato.core.providers.' + provider, path)
+
 
         for type, tuple in self.paths.iteritems():
             priority, module, dir = tuple
