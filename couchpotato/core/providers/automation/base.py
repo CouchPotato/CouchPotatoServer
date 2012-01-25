@@ -1,6 +1,7 @@
-from couchpotato.core.event import addEvent
+from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
+from couchpotato.environment import Env
 import time
 
 log = CPLog(__name__)
@@ -26,6 +27,29 @@ class Automation(Plugin):
 
         return self.getIMDBids()
 
+    def search(self, name, year = None):
+        result = fireEvent('movie.search', q = '%s %s' % (name, year if year else ''), limit = 1, merge = True)
+
+        if len(result) > 0:
+            return result[0].get('imdb')
+        else:
+            return None
+
+    def isMinimal(self, identifier):
+
+        movie = fireEvent('movie.info', identifier = identifier, merge = True)
+
+        for minimal_type in ['year', 'rating', 'votes']:
+            type_value = movie.get(minimal_type, 0)
+            type_min = self.getMinimal(minimal_type)
+            if type_value < type_min:
+                log.info('%s to low for %s, need %s has %s' % (minimal_type, identifier, type_min, type_value))
+                return False
+
+        return True
+
+    def getMinimal(self, min_type):
+        return Env.setting(min_type, 'automation')
 
     def getIMDBids(self):
         return []
