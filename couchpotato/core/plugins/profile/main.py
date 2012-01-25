@@ -12,8 +12,11 @@ log = CPLog(__name__)
 
 class ProfilePlugin(Plugin):
 
+    to_dict = {'types': {}}
+
     def __init__(self):
         addEvent('profile.all', self.all)
+        addEvent('profile.default', self.default)
 
         addApiView('profile.save', self.save)
         addApiView('profile.save_order', self.saveOrder)
@@ -28,7 +31,7 @@ class ProfilePlugin(Plugin):
 
         temp = []
         for profile in profiles:
-            temp.append(profile.to_dict(deep = {'types': {}}))
+            temp.append(profile.to_dict(self.to_dict))
 
         return temp
 
@@ -64,12 +67,19 @@ class ProfilePlugin(Plugin):
 
         db.commit()
 
-        profile_dict = p.to_dict(deep = {'types': {}})
+        profile_dict = p.to_dict(self.to_dict)
 
         return jsonified({
             'success': True,
             'profile': profile_dict
         })
+
+    def default(self):
+
+        db = get_session()
+        default = db.query(Profile).first()
+
+        return default.to_dict(self.to_dict)
 
     def saveOrder(self):
 
