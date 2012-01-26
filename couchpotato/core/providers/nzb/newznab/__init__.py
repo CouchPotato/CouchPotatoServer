@@ -23,13 +23,15 @@ config = [{
                 {
                     'name': 'host',
                     'default': 'nzb.su',
-                    'description': 'The hostname of your newznab provider'
+                    'description': 'The hostname of your newznab provider',
                 },
                 {
                     'name': 'api_key',
                     'default': '',
                     'label': 'Api Key',
                     'description': 'Can be found on your profile page',
+                    'type': 'combined',
+                    'combine': ['use', 'host', 'api_key'],
                 },
             ],
         },

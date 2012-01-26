@@ -10,24 +10,24 @@ config = [{
             'tab': 'automation',
             'name': 'automation',
             'label': 'Automation',
-            'description': 'Enable automatic movie adding',
+            'description': 'Minimal movie requirements',
             'options': [
                 {
                     'name': 'year',
                     'default': 2011,
-                    'Label': 'Minimal year',
+                    'Label': 'Year',
                     'type': 'int',
                 },
                 {
                     'name': 'votes',
                     'default': 1000,
-                    'Label': 'Minimal votes',
+                    'Label': 'Votes',
                     'type': 'int',
                 },
                 {
                     'name': 'rating',
                     'default': 6.0,
-                    'Label': 'Minimal rating',
+                    'Label': 'Rating',
                     'type': 'float',
                 },
             ],

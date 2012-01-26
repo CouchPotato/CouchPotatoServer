@@ -1003,3 +1003,165 @@ Option.Choice.Tag = new Class({
 	}
 
 });
+
+Option.Combined = new Class({
+
+	Extends: Option.String,
+
+	afterInject: function(){
+		var self = this;
+
+		self.fieldset = self.input.getParent('fieldset');
+		self.combined_list = new Element('div.combined_table').inject(self.fieldset.getElement('h2'), 'after');
+		self.values = {}
+		self.inputs = {}
+		self.items = []
+
+		self.options.combine.each(function(name){
+
+			self.inputs[name] = self.fieldset.getElement('input[name='+self.section+'['+name+']]');
+			var values = self.inputs[name].get('value').split(',');
+
+			values.each(function(value, nr){
+				if (!self.values[nr]) self.values[nr] = {};
+				self.values[nr][name] = value.trim();
+			});
+
+			self.inputs[name].getParent('.ctrlHolder').hide();
+			self.inputs[name].addEvent('change', self.addEmpty.bind(self))
+
+		});
+
+		var head = new Element('div.head').inject(self.combined_list)
+
+		Object.each(self.inputs, function(input, name){
+			new Element('abbr', {
+				'class': name,
+				'text': input.getPrevious().get('text'),
+				//'title': input.getNext().get('text')
+			}).inject(head)
+		})
+
+
+		Object.each(self.values, function(item, nr){
+			self.createItem(item);
+		});
+
+		self.addEmpty();
+
+	},
+
+	add_empty_timeout: 0,
+	addEmpty: function(){
+		var self = this;
+
+		if(self.add_empty_timeout) clearTimeout(self.add_empty_timeout);
+
+		var has_empty = 0;
+		self.items.each(function(ctrl_holder){
+			var empty_count = 0;
+			self.options.combine.each(function(name){
+				var input = ctrl_holder.getElement('input.'+name)
+				if(input.get('value') == '' || input.get('type') == 'checkbox')
+					empty_count++
+			});
+			has_empty += (empty_count == self.options.combine.length) ? 1 : 0;
+			ctrl_holder[(empty_count == self.options.combine.length) ? 'addClass' : 'removeClass']('is_empty');
+		});
+		if(has_empty > 0) return;
+
+		self.add_empty_timeout = setTimeout(function(){
+			self.createItem(false, null);
+		}, 10);
+	},
+
+	createItem: function(values){
+		var self = this;
+
+		var item = new Element('div.ctrlHolder').inject(self.combined_list),
+			value_count = 0,
+			value_empty = 0;
+
+		self.options.combine.each(function(name){
+			var value = values[name] || ''
+
+			if(name.indexOf('use') != -1){
+				var checkbox = new Element('input[type=checkbox].inlay.'+name, {
+					'checked': +value,
+					'events': {
+						'click': self.saveCombined.bind(self),
+						'change': self.saveCombined.bind(self)
+					}
+				}).inject(item);
+
+				new Form.Check(checkbox);
+			}
+			else {
+				value_count++;
+				new Element('input[type=text].inlay.'+name, {
+					'value': value,
+					'placeholder': name,
+					'events': {
+						'keyup': self.saveCombined.bind(self),
+						'change': self.saveCombined.bind(self)
+					}
+				}).inject(item);
+
+				if(!value)
+					value_empty++;
+			}
+
+
+		});
+
+		item[value_empty == value_count ? 'addClass' : 'removeClass']('is_empty');
+
+		new Element('a.icon.delete', {
+			'events': {
+				'click': self.deleteCombinedItem.bind(self)
+			}
+		}).inject(item)
+
+		self.items.include(item);
+
+
+	},
+
+	saveCombined: function(){
+		var self = this;
+
+
+		var temp = {}
+		self.items.each(function(item, nr){
+			self.options.combine.each(function(name){
+				var input = item.getElement('input.'+name);
+				if(item.hasClass('is_empty')) return;
+
+				if(!temp[name]) temp[name] = [];
+				temp[name][nr] = input.get('type') == 'checkbox' ? +input.get('checked') : input.get('value').trim();
+
+			})
+		});
+
+		self.options.combine.each(function(name){
+			self.inputs[name].set('value', (temp[name] || []).join(','));
+			self.inputs[name].fireEvent('change');
+		});
+
+		self.addEmpty()
+
+	},
+
+	deleteCombinedItem: function(e){
+		var self = this;
+		(e).stop();
+
+		var item = e.target.getParent();
+
+		self.items.erase(item);
+		item.destroy();
+
+		self.saveCombined();
+	}
+
+});

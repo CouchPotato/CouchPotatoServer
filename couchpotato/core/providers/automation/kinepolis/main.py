@@ -35,7 +35,7 @@ class Kinepolis(Automation, RSS):
                 result = self.search(title)
 
                 if result:
-                    if self.isMinimal(result):
+                    if not self.conf('automation_use_requirements') or self.isMinimal(result):
                         movies.append(result)
 
         return movies

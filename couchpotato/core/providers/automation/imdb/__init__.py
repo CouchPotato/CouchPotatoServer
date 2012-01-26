@@ -10,7 +10,7 @@ config = [{
             'tab': 'automation',
             'name': 'imdb_automation',
             'label': 'IMDB',
-            'description': 'Enable automatic movie adding of IMDB watchlists',
+            'description': 'From any public IMDB watchlists',
             'options': [
                 {
                     'name': 'automation_enabled',
@@ -18,7 +18,14 @@ config = [{
                     'type': 'enabler',
                 },
                 {
+                    'name': 'automation_urls_use',
+                    'label': 'Use',
+                },
+                {
                     'name': 'automation_urls',
+                    'label': 'url',
+                    'type': 'combined',
+                    'combine': ['automation_urls_use', 'automation_urls'],
                 },
             ],
         },

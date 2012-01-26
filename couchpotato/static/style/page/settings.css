@@ -86,7 +86,7 @@
 			.page fieldset.disabled .ctrlHolder {
 				display: none;
 			}
-			.page fieldset .ctrlHolder:first-child {
+			.page fieldset > .ctrlHolder:first-child {
 				display: block;
 				padding: 0;
 				width: auto;
@@ -454,40 +454,46 @@
 				margin-top: -13px;
 			}
 	
-	.page .section_newznab .head {
+	.page .combined_table .head {
 		margin: 0 0 0 60px;
 	}
 		.page .disabled .head { display: none; }
-		.page .section_newznab .head abbr {
+		.page .combined_table .head abbr {
 			display: inline-block;
 			font-weight: bold;
 			border-bottom: 1px dotted #fff;
 			line-height: 140%;
 			cursor: help;
 		}
-		.page .section_newznab .head abbr.host {
+		.page .combined_table .head abbr.use, .page .combined_table .head abbr.automation_urls_use {
+			display: none;
+		}
+		.page .combined_table .head abbr.host {
 			margin-right: 197px;
 		}
 		
-	.page .section_newznab .ctrlHolder {
+	.page .combined_table .ctrlHolder {
 		padding-top: 2px;
 		padding-bottom: 3px;
 	}
-	.page .section_newznab .ctrlHolder.hide { display: none; }
+	.page .combined_table .ctrlHolder.hide { display: none; }
 		
-	.page .section_newznab .ctrlHolder > * {
+	.page .combined_table .ctrlHolder > * {
 		margin: 0 10px 0 0;
 	}
 		
-	.page .section_newznab .ctrlHolder .delete {
-		display: inline-block;
+	.page .combined_table .ctrlHolder .delete {
+		display: none;
 		width: 22px;
 		height: 22px;
 		vertical-align: middle;
 		background-position: left center;
 	}
+	.page .combined_table .ctrlHolder:hover .delete {
+		display: inline-block;
+	}
 	
-	.page .section_newznab .ctrlHolder.is_empty .delete, .page.settings .section_newznab .ctrlHolder.is_empty .use {
+	.page .combined_table .ctrlHolder.is_empty .delete, .page.settings .combined_table .ctrlHolder.is_empty .check {
 		visibility: hidden;
 }
 
