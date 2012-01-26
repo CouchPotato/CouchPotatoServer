@@ -1,5 +1,5 @@
 from couchpotato.api import addApiView
-from couchpotato.core.event import addEvent, fireEvent
+from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
 from couchpotato.core.helpers.request import jsonified
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
@@ -16,7 +16,6 @@ class Updater(Plugin):
 
     repo_name = 'RuudBurger/CouchPotatoServer'
 
-    running = False
     version = None
     update_failed = False
     update_version = None
@@ -80,7 +79,7 @@ class Updater(Plugin):
                 if local.getDate() < remote.getDate():
                     if self.conf('automatic') and not self.update_failed:
                         if self.doUpdate():
-                            fireEvent('app.crappy_restart')
+                            fireEventAsync('app.crappy_restart')
                     else:
                         self.update_version = {
                             'hash': remote.hash[:8],
@@ -132,4 +131,4 @@ class Updater(Plugin):
                     log.error('Couldn\'t remove %s: %s' % (full_path, traceback.format_exc()))
 
     def isEnabled(self):
-        return Plugin.isEnabled(self) and Env.get('uses_git')
+        return super(Updater, self).isEnabled() and Env.get('uses_git')
