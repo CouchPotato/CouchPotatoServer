@@ -17,9 +17,6 @@ config = [{
                     'default': False,
                     'type': 'enabler',
                 },
-                {
-                    'name': 'automation_urls',
-                },
             ],
         },
     ],
