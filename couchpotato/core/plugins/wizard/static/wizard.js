@@ -68,9 +68,6 @@ Page.Wizard = new Class({
 			self.parent(action, params);
 
 			self.addEvent('create', function(){
-				var mnn = new MultipleNewznab('Wizard');
-				mnn.addSettings();
-
 				self.order();
 			});
 
