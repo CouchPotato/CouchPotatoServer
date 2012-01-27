@@ -125,7 +125,7 @@ class Searcher(Plugin):
             rls.status_id = snatched_status.get('id')
             db.commit()
 
-            snatch_message = 'Snatched %s' % data.get('name')
+            snatch_message = 'Snatched "%s": %s (%s) in %s' % (data.get('name'), movie['library']['titles'][0]['title'], movie['library']['year'], rls.quality.label)
             log.info(snatch_message)
             fireEvent('movie.snatched', message = snatch_message, data = rls.to_dict())
 
