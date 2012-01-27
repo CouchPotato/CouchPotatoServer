@@ -61,18 +61,20 @@ class Scheduler(Plugin):
                 log.error("Failed adding interval cronjob: %s" % e)
 
         # Start it
+        log.debug('Starting scheduler')
         self.sched.start()
         self.started = True
+        log.debug('Scheduler started')
 
     def doShutdown(self):
         super(Scheduler, self).doShutdown()
         self.stop()
 
     def stop(self):
-        log.debug('Stopping scheduler')
         if self.started:
+            log.debug('Stopping scheduler')
             self.sched.shutdown()
-        log.debug('Scheduler stopped')
+            log.debug('Scheduler stopped')
         self.started = False
 
     def cron(self, identifier = '', handle = None, day = '*', hour = '*', minute = '*'):
