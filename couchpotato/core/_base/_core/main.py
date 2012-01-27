@@ -11,12 +11,15 @@ import time
 import traceback
 import webbrowser
 
+if os.name == 'nt':
+    import getppid
+
 
 log = CPLog(__name__)
 
 class Core(Plugin):
 
-    ignore_restart = ['Core.crappyRestart', 'Core.crappyShutdown']
+    ignore_restart = ['Core.crappyRestart', 'Core.crappyShutdown', 'Core.monitorParent']
     shutdown_started = False
 
     def __init__(self):
@@ -27,12 +30,26 @@ class Core(Plugin):
         addEvent('app.crappy_shutdown', self.crappyShutdown)
         addEvent('app.crappy_restart', self.crappyRestart)
         addEvent('app.load', self.launchBrowser, priority = 1)
+        addEvent('app.load', self.monitorParent)
         addEvent('app.base_url', self.createBaseUrl)
         addEvent('app.api_url', self.createApiUrl)
 
         addEvent('setting.save.core.password', self.md5Password)
 
         self.removeRestartFile()
+
+    def monitorParent(self):
+        while 1:
+            if os.name == 'nt':
+                if os.getppid(os.getpid()) <= 1:
+                    break
+            else:
+                if os.getppid() <= 1:
+                    break
+            time.sleep(1)
+
+        log.info('Starterscript has shutdown, shutdown subprocess')
+        fireEvent('app.crappy_shutdown')
 
     def md5Password(self, value):
         return md5(value) if value else ''

@@ -23,7 +23,7 @@ data_dir = getDataDir()
 
 def start():
     try:
-        args = [sys.executable] + [os.path.join(os.environ['PWD'], __file__)] + sys.argv[1:]
+        args = [sys.executable] + [os.path.join(base_path, __file__)] + sys.argv[1:]
         new_environ = os.environ.copy()
         new_environ['cp_main'] = 'true'
 
