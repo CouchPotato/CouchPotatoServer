@@ -17,6 +17,7 @@ log = CPLog(__name__)
 class Core(Plugin):
 
     ignore_restart = ['Core.crappyRestart', 'Core.crappyShutdown']
+    shutdown_started = False
 
     def __init__(self):
         addApiView('app.shutdown', self.shutdown)
@@ -42,6 +43,8 @@ class Core(Plugin):
         })
 
     def crappyShutdown(self):
+        if self.shutdown_started: return
+
         try:
             self.urlopen('%sapp.shutdown' % self.createApiUrl(), show_error = False)
             return True
@@ -50,6 +53,8 @@ class Core(Plugin):
             return False
 
     def crappyRestart(self):
+        if self.shutdown_started: return
+
         try:
             self.urlopen('%sapp.restart' % self.createApiUrl(), show_error = False)
             return True
@@ -67,6 +72,7 @@ class Core(Plugin):
 
     def initShutdown(self, restart = False):
         log.info('Shutting down' if not restart else 'Restarting')
+        self.shutdown_started = True
         fireEvent('app.shutdown')
         log.debug('Every plugin got shutdown event')
 
