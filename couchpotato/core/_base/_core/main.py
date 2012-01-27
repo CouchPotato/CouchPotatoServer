@@ -70,17 +70,20 @@ class Core(Plugin):
 
         fireEvent('app.shutdown')
 
-        while 1:
+        loop = True
+        while loop:
             still_running = fireEvent('plugin.running')
 
-            brk = True
+            if len(still_running) == 0:
+                break
+
+            log.debug('Still running: %s' % still_running)
             for running in still_running:
                 running = list(set(running) - set(self.ignore_restart))
                 if len(running) > 0:
                     log.info('Waiting on plugins to finish: %s' % running)
-                    brk = False
-
-            if brk: break
+                else:
+                    loop = False
 
             time.sleep(1)
 
