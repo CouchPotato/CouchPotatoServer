@@ -23,7 +23,7 @@ data_dir = getDataDir()
 
 def start():
     try:
-        args = [sys.executable] + sys.argv
+        args = [sys.executable] + [os.path.join(os.environ['PWD'], __file__)] + sys.argv[1:]
         new_environ = os.environ.copy()
         new_environ['cp_main'] = 'true'
 
@@ -55,18 +55,15 @@ def main():
 
     from couchpotato.core.event import fireEvent
     fireEvent('app.crappy_shutdown', single = True)
-    time.sleep(0.1)
+    time.sleep(1)
     sys.exit()
 
-from daemon import Daemon
-class CouchDaemon(Daemon):
-    def run(self):
-        os.environ['cp_main'] = 'true'
-        main()
 
 if __name__ == '__main__':
-    if options.daemon and options.pid_file:
-        daemon = CouchDaemon(options.pid_file)
-        daemon.start()
-    else:
-        main()
+
+    if options.daemon and options.pid_file and not os.environ.get('cp_main'):
+        from daemon import Daemon
+        daemon = Daemon(options.pid_file)
+        daemon.daemonize()
+
+    main()
