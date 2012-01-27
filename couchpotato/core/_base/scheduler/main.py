@@ -24,7 +24,6 @@ class Scheduler(Plugin):
         addEvent('schedule.restart', self.start)
 
         addEvent('app.load', self.start)
-        addEvent('app.shutdown', self.stop)
 
         self.sched = Sched(misfire_grace_time = 60)
 
@@ -65,11 +64,15 @@ class Scheduler(Plugin):
         self.sched.start()
         self.started = True
 
-    def stop(self):
+    def doShutdown(self):
+        super(Scheduler, self).doShutdown()
+        self.stop()
 
+    def stop(self):
+        log.debug('Stopping scheduler')
         if self.started:
             self.sched.shutdown()
-
+        log.debug('Scheduler stopped')
         self.started = False
 
     def cron(self, identifier = '', handle = None, day = '*', hour = '*', minute = '*'):
