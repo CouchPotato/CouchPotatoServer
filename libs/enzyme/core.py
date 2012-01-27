@@ -64,7 +64,7 @@ class Media(object):
     _keys = MEDIACORE
     table_mapping = {}
 
-    def __init__(self, hash=None):
+    def __init__(self, hash = None):
         if hash is not None:
             # create Media based on dict
             for key, value in hash.items():
@@ -253,7 +253,7 @@ class Media(object):
         """
         return hasattr(self, key)
 
-    def get(self, attr, default=None):
+    def get(self, attr, default = None):
         """
         Returns the given attribute. If the attribute is not set by
         the parser return 'default'.
@@ -315,7 +315,7 @@ class Tag(object):
     Tag values are strings (for binary data), unicode objects, or datetime
     objects for tags that represent dates or times.
     """
-    def __init__(self, value=None, langcode='und', binary=False):
+    def __init__(self, value = None, langcode = 'und', binary = False):
         super(Tag, self).__init__()
         self.value = value
         self.langcode = langcode
@@ -363,7 +363,7 @@ class Tags(dict, Tag):
     The attribute RATING has a value (PG), but it also has a child tag
     COUNTRY that specifies the country code the rating belongs to.
     """
-    def __init__(self, value=None, langcode='und', binary=False):
+    def __init__(self, value = None, langcode = 'und', binary = False):
         super(Tags, self).__init__()
         self.value = value
         self.langcode = langcode
@@ -410,7 +410,7 @@ class Chapter(Media):
     """
     _keys = ['enabled', 'name', 'pos', 'id']
 
-    def __init__(self, name=None, pos=0):
+    def __init__(self, name = None, pos = 0):
         Media.__init__(self)
         self.name = name
         self.pos = pos
@@ -424,7 +424,7 @@ class Subtitle(Media):
     _keys = ['enabled', 'default', 'langcode', 'language', 'trackno', 'title',
              'id', 'codec']
 
-    def __init__(self, language=None):
+    def __init__(self, language = None):
         Media.__init__(self)
         self.language = language
 

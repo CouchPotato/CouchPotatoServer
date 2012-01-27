@@ -3,6 +3,7 @@
 #
 # GuessIt - A library for guessing information from filenames
 # Copyright (c) 2011 Nicolas Wack <wackou@gmail.com>
+# Copyright (c) 2011 Ricard Marxer <ricardmp@gmail.com>
 #
 # GuessIt is free software; you can redistribute it and/or modify it under
 # the terms of the Lesser GNU General Public License as published by
@@ -22,7 +23,8 @@ from guessit import fileutils, textutils
 from guessit.guess import Guess, merge_similar_guesses, merge_all, choose_int, choose_string
 from guessit.date import search_date, search_year
 from guessit.language import search_language
-from guessit.patterns import video_exts, subtitle_exts, sep, deleted, video_rexps, websites, episode_rexps, weak_episode_rexps, non_episode_title, properties, canonical_form
+from guessit.filetype import guess_filetype
+from guessit.patterns import video_exts, subtitle_exts, sep, deleted, video_rexps, websites, episode_rexps, weak_episode_rexps, non_episode_title, find_properties, canonical_form, unlikely_series
 from guessit.matchtree import get_group, find_group, leftover_valid_groups, tree_to_string
 from guessit.textutils import find_first_level_groups, split_on_groups, blank_region, clean_string, to_utf8
 from guessit.fileutils import split_path_components
@@ -31,6 +33,7 @@ import os.path
 import re
 import copy
 import logging
+import mimetypes
 
 log = logging.getLogger("guessit.matcher")
 
@@ -148,22 +151,11 @@ def guess_groups(string, result, filetype):
 
 
     # common well-defined words and regexps
-    clow = current.lower()
     confidence = 1.0 # for all of them
-    for prop, values in properties.items():
-        for value in values:
-            pos = clow.find(value.lower())
-            if pos != -1:
-                end = pos + len(value)
-                # make sure our word is always surrounded by separators
-                if clow[pos-1] not in sep or clow[end] not in sep:
-                    # note: sep is a regexp, but in this case using it as
-                    #       a sequence achieves the same goal
-                    continue
+    for prop, value, pos, end in find_properties(current):
+        guess = guessed({ prop: value }, confidence = confidence)
+        current = update_found(current, guess, (pos, end))
 
-                guess = guessed({ prop: value }, confidence = confidence)
-                current = update_found(current, guess, (pos, end))
-                clow = current.lower()
 
     # weak guesses for episode number, only run it if we don't have an estimate already
     if filetype in ('episode', 'episodesubtitle'):
@@ -341,9 +333,10 @@ class IterativeMatcher(object):
          resolution when they arise.
         """
 
-        if filetype not in ('autodetect', 'subtitle', 'movie', 'moviesubtitle',
+        if filetype not in ('autodetect', 'subtitle', 'video',
+                            'movie', 'moviesubtitle',
                             'episode', 'episodesubtitle'):
-            raise ValueError, "filetype needs to be one of ('autodetect', 'subtitle', 'movie', 'moviesubtitle', 'episode', 'episodesubtitle')"
+            raise ValueError, "filetype needs to be one of ('autodetect', 'subtitle', 'video', 'movie', 'moviesubtitle', 'episode', 'episodesubtitle')"
         if not isinstance(filename, unicode):
             log.debug('WARNING: given filename to matcher is not unicode...')
 
@@ -368,43 +361,21 @@ class IterativeMatcher(object):
         # 1- first split our path into dirs + basename + ext
         match_tree = split_path_components(filename)
 
-        fileext = match_tree.pop(-1)[1:].lower()
-        if fileext in subtitle_exts:
-            if 'movie' in filetype:
-                filetype = 'moviesubtitle'
-            elif 'episode' in filetype:
-                filetype = 'episodesubtitle'
-            else:
-                filetype = 'subtitle'
-            extguess = guessed({ 'container': fileext }, confidence = 1.0)
-        elif fileext in video_exts:
-            extguess = guessed({ 'container': fileext }, confidence = 1.0)
-        else:
-            extguess = guessed({ 'extension':  fileext}, confidence = 1.0)
-
-        # TODO: depending on the extension, we could already grab some info and maybe specialized
-        #       guessers, eg: a lang parser for idx files, an automatic detection of the language
-        #       for srt files, a video metadata extractor for avi, mkv, ...
-
-        # if we are on autodetect, try to do it now so we can tell the
-        # guess_groups function what type of info it should be looking for
-        if filetype in ('autodetect', 'subtitle'):
-            for rexp, confidence, span_adjust in episode_rexps:
-                match = re.search(rexp, filename, re.IGNORECASE)
-                if match:
-                    if filetype == 'autodetect':
-                        filetype = 'episode'
-                    elif filetype == 'subtitle':
-                        filetype = 'episodesubtitle'
-                    break
-
-            # if no episode info found, assume it's a movie
-            if filetype == 'autodetect':
-                filetype = 'movie'
-            elif filetype == 'subtitle':
-                filetype = 'moviesubtitle'
-
+        # try to detect the file type
+        filetype, other = guess_filetype(filename, filetype)
         guessed({ 'type': filetype }, confidence = 1.0)
+        extguess = guessed(other, confidence = 1.0)
+
+        # guess the mimetype of the filename
+        # TODO: handle other mimetypes not found on the default type_maps
+        # mimetypes.types_map['.srt']='text/subtitle'
+        mime, _ = mimetypes.guess_type(filename, strict=False)
+        if mime is not None:
+            guessed({ 'mimetype': mime }, confidence = 1.0)
+
+        # remove the extension from the match tree, as all indices relative
+        # the the filename groups assume the basename is the last one
+        fileext = match_tree.pop(-1)[1:].lower()
 
 
         # 2- split each of those into explicit groups, if any
@@ -453,8 +424,14 @@ class IterativeMatcher(object):
                 if len(previous) == 1:
                     guess = guessed({ 'series': previous[0][0] }, confidence = 0.5)
                     leftover = update_found(leftover, previous[0][1], guess)
-
-
+            
+            # reduce the confidence of unlikely series
+            for guess in result:
+                if 'series' in guess:
+                  if guess['series'].lower() in unlikely_series:
+                      guess.set_confidence('series', guess.confidence('series') * 0.5)
+            
+            
         elif filetype in ('movie', 'moviesubtitle'):
             leftover_all = leftover_valid_groups(match_tree)
 

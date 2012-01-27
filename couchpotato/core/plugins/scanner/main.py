@@ -5,14 +5,16 @@ from couchpotato.core.helpers.variable import getExt, getImdb, tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import File
-from couchpotato.environment import Env
-from flask.helpers import json
+from enzyme.exceptions import NoParserError
+import enzyme
+import logging
 import os
 import re
-import subprocess
-import sys
 import time
 import traceback
+
+enzyme_logger = logging.getLogger('enzyme')
+enzyme_logger.setLevel(logging.INFO)
 
 log = CPLog(__name__)
 
@@ -307,11 +309,12 @@ class Scanner(Plugin):
             meta = self.getMeta(cur_file)
 
             try:
-                data['video'] = self.getCodec(cur_file, self.codecs['video'])
-                data['audio'] = meta['audio stream'][0]['compression']
-                data['resolution_width'] = meta['video stream'][0]['image width']
-                data['resolution_height'] = meta['video stream'][0]['image height']
+                data['video'] = meta.get('video', self.getCodec(cur_file, self.codecs['video']))
+                data['audio'] = meta.get('audio', self.getCodec(cur_file, self.codecs['audio']))
+                data['resolution_width'] = meta.get('resolution_width', 720)
+                data['resolution_height'] = meta.get('resolution_height', 480)
             except:
+                log.debug('Error parsing metadata: %s %s' % (cur_file, traceback.format_exc()))
                 pass
 
             if data.get('audio'): break
@@ -329,17 +332,20 @@ class Scanner(Plugin):
         return data
 
     def getMeta(self, filename):
-        lib_dir = os.path.join(Env.get('app_dir'), 'libs')
-        script = os.path.join(lib_dir, 'getmeta.py')
-
-        p = subprocess.Popen([sys.executable, script, filename], stdout = subprocess.PIPE, stderr = subprocess.PIPE, cwd = lib_dir)
-        z = p.communicate()[0]
 
         try:
-            meta = json.loads(z)
-            return meta
-        except Exception:
-            log.error('Couldn\'t get metadata from file: %s' % traceback.format_exc())
+
+            p = enzyme.parse(filename)
+            return {
+                'video': p.video[0].codec,
+                'audio': p.audio[0].codec,
+                'resolution_width': p.video[0].width,
+                'resolution_height': p.video[0].height,
+            }
+        except NoParserError:
+            log.debug('No parser found for %s' % filename)
+
+        return {}
 
     def determineMovie(self, group):
         imdb_id = None

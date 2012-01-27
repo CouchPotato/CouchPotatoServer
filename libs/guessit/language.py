@@ -33,7 +33,8 @@ log = logging.getLogger('guessit.language')
 # "An alpha-3 (bibliographic) code, an alpha-3 (terminologic) code (when given),
 # an alpha-2 code (when given), an English name, and a French name of a language
 # are all separated by pipe (|) characters."
-language_matrix = [ l.strip().decode('utf-8').split('|') for l in open(fileutils.file_in_same_dir(__file__, 'ISO-639-2_utf-8.txt')) ]
+language_matrix = [ l.strip().decode('utf-8').split('|')
+                    for l in fileutils.load_file_in_same_dir(__file__, 'ISO-639-2_utf-8.txt').split('\n') ]
 
 lng3        = frozenset(filter(bool, (l[0] for l in language_matrix)))
 lng3term    = frozenset(filter(bool, (l[1] for l in language_matrix)))

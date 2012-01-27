@@ -3,6 +3,7 @@
 #
 # GuessIt - A library for guessing information from filenames
 # Copyright (c) 2011 Nicolas Wack <wackou@gmail.com>
+# Copyright (c) 2011 Ricard Marxer <ricardmp@gmail.com>
 #
 # GuessIt is free software; you can redistribute it and/or modify it under
 # the terms of the Lesser GNU General Public License as published by
@@ -19,9 +20,9 @@
 #
 
 
-subtitle_exts = [ 'srt', 'idx', 'sub' ]
+subtitle_exts = [ 'srt', 'idx', 'sub', 'ssa', 'txt' ]
 
-video_exts = [ 'avi', 'mkv', 'mpg', 'mp4', 'mov', 'ogg', 'ogm', 'ogv', 'wmv' ]
+video_exts = [ 'avi', 'mkv', 'mpg', 'mp4', 'm4v', 'mov', 'ogg', 'ogm', 'ogv', 'wmv', 'divx' ]
 
 # separator character regexp
 sep = r'[][)(}{+ \._-]' # regexp art, hehe :D
@@ -34,6 +35,9 @@ episode_rexps = [ # ... Season 2 ...
                   (r'season (?P<season>[0-9]+)', 1.0, (0, 0)),
                   (r'saison (?P<season>[0-9]+)', 1.0, (0, 0)),
 
+                  # ... s02-x01 ...
+                  (r's(?P<season>[0-9]{1,2})-x(?P<bonusNumber>[0-9]{1,2})[^0-9]', 1.0, (0, -1)),
+
                   # ... s02e13 ...
                   (r'[Ss](?P<season>[0-9]{1,2}).{,3}[EeXx](?P<episodeNumber>[0-9]{1,2})[^0-9]', 1.0, (0, -1)),
 
@@ -41,7 +45,7 @@ episode_rexps = [ # ... Season 2 ...
                   (r'[^0-9](?P<season>[0-9]{1,2})[x\.](?P<episodeNumber>[0-9]{2})[^0-9]', 0.8, (1, -1)),
 
                   # ... s02 ...
-                  (sep + r's(?P<season>[0-9]{1,2})' + sep + '?', 0.6, (0, 0)),
+                  (sep + r's(?P<season>[0-9]{1,2})' + sep + '?', 0.6, (1, -1)),
 
                   # v2 or v3 for some mangas which have multiples rips
                   (sep + r'(?P<episodeNumber>[0-9]{1,3})v[23]' + sep, 0.6, (0, 0)),
@@ -77,11 +81,11 @@ video_rexps = [ # cd number
 
 websites = [ 'tvu.org.ru', 'emule-island.com', 'UsaBit.com', 'www.divx-overnet.com', 'sharethefiles.com' ]
 
-properties = { 'format': [ 'DVDRip', 'HD-DVD', 'HDDVD', 'HDDVDRip', 'BluRay', 'Blu-ray', 'BDRip', 'BRRip',
-                           'HDRip', 'DVD', 'DVDivX', 'HDTV', 'DVB', 'WEBRip', 'DVDSCR', 'Screener', 'VHS',
-                           'VIDEO_TS' ],
+unlikely_series = ['series']
 
-               'container': [ 'avi', 'mkv', 'ogv', 'ogm', 'wmv', 'mp4', 'mov' ],
+properties = { 'format': [ 'DVDRip', 'HD-DVD', 'HDDVD', 'HDDVDRip', 'BluRay', 'Blu-ray', 'BDRip', 'BRRip',
+                           'HDRip', 'DVD', 'DVDivX', 'HDTV', 'DVB', 'DVBRip', 'PDTV', 'WEBRip',
+                           'DVDSCR', 'Screener', 'VHS', 'VIDEO_TS' ],
 
                'screenSize': [ '720p', '720' ],
 
@@ -106,10 +110,29 @@ properties = { 'format': [ 'DVDRip', 'HD-DVD', 'HDDVD', 'HDDVDRip', 'BluRay', 'B
                           ],
                }
 
+def find_properties(filename):
+    result = []
+    clow = filename.lower()
+    for prop, values in properties.items():
+        for value in values:
+            pos = clow.find(value.lower())
+            if pos != -1:
+                end = pos + len(value)
+                # make sure our word is always surrounded by separators
+                if ((pos > 0 and clow[pos-1] not in sep) or
+                    (end < len(clow) and clow[end] not in sep)):
+                    # note: sep is a regexp, but in this case using it as
+                    #       a sequence achieves the same goal
+                    continue
+
+                result.append((prop, value, pos, end))
+    return result
+
 
 property_synonyms = { 'DVD': [ 'DVDRip', 'VIDEO_TS' ],
                       'HD-DVD': [ 'HDDVD', 'HDDVDRip' ],
                       'BluRay': [ 'BDRip', 'BRRip', 'Blu-ray' ],
+                      'DVB': [ 'DVBRip', 'PDTV' ],
                       'Screener': [ 'DVDSCR' ],
                       'DivX': [ 'DVDivX' ],
                       'h264': [ 'x264' ],
@@ -123,6 +146,10 @@ property_synonyms = { 'DVD': [ 'DVDRip', 'VIDEO_TS' ],
 
 
 reverse_synonyms = {}
+for prop, values in properties.items():
+    for value in values:
+        reverse_synonyms[value.lower()] = value
+
 for canonical, synonyms in property_synonyms.items():
     for synonym in synonyms:
         reverse_synonyms[synonym.lower()] = canonical

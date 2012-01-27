@@ -18,7 +18,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+import ntpath
 import os.path
+import zipfile
 
 
 def split_path(path):
@@ -44,7 +46,7 @@ def split_path(path):
     """
     result = []
     while True:
-        head, tail = os.path.split(path)
+        head, tail = ntpath.split(path)
 
         # on Unix systems, the root folder is '/'
         if head == '/' and tail == '':
@@ -81,3 +83,16 @@ def file_in_same_dir(ref_file, desired_file):
 
     """
     return os.path.join(*(split_path(ref_file)[:-1] + [ desired_file ]))
+
+
+def load_file_in_same_dir(ref_file, filename):
+    """Load a given file. Works even when the file is contained inside a zip."""
+    path = split_path(ref_file)[:-1] + [ filename ]
+
+    for i, p in enumerate(path):
+        if p.endswith('.zip'):
+            zfilename = os.path.join(*path[:i+1])
+            zfile = zipfile.ZipFile(zfilename)
+            return zfile.read('/'.join(path[i+1:]))
+
+    return open(os.path.join(*path)).read()

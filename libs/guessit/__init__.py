@@ -18,7 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-__version__ = '0.2'
+__version__ = '0.3-dev'
 __all__ = [ 'Guess', 'Language',
             'guess_file_info', 'guess_video_info',
             'guess_movie_info', 'guess_episode_info' ]
@@ -51,6 +51,9 @@ def guess_file_info(filename, filetype, info = [ 'filename' ]):
     """
     result = []
     hashers = []
+
+    if isinstance(info, basestring):
+        info = [ info ]
 
     for infotype in info:
         if infotype == 'filename':
