@@ -67,17 +67,18 @@ class Core(Plugin):
 
     def initShutdown(self, restart = False):
         log.info('Shutting down' if not restart else 'Restarting')
-
         fireEvent('app.shutdown')
+        log.debug('Every plugin got shutdown event')
 
         loop = True
         while loop:
+            log.debug('Asking who is running')
             still_running = fireEvent('plugin.running')
+            log.debug('Still running: %s' % still_running)
 
             if len(still_running) == 0:
                 break
 
-            log.debug('Still running: %s' % still_running)
             for running in still_running:
                 running = list(set(running) - set(self.ignore_restart))
                 if len(running) > 0:
