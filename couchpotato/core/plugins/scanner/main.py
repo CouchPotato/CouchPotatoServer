@@ -5,7 +5,7 @@ from couchpotato.core.helpers.variable import getExt, getImdb, tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import File
-from enzyme.exceptions import NoParserError
+from enzyme.exceptions import NoParserError, ParseError
 import enzyme
 import logging
 import os
@@ -115,8 +115,11 @@ class Scanner(Plugin):
         files_in_path.update({'available': 0}, synchronize_session = False)
         db.commit()
 
-        update_after = []
-        for group in groups.itervalues():
+        while True and not self.shuttingDown():
+            try:
+                identifier, group = groups.popitem()
+            except:
+                break
 
             # Save to DB
             if group['library']:
@@ -124,10 +127,6 @@ class Scanner(Plugin):
                 # Add release
                 fireEvent('release.add', group = group)
                 fireEvent('library.update', identifier = group['library'].get('identifier'))
-
-            # Break if CP wants to shut down
-            if self.shuttingDown():
-                break
 
         db.remove()
 
@@ -175,6 +174,13 @@ class Scanner(Plugin):
                 movie_files[identifier]['unsorted_files'].append(file_path)
             else:
                 leftovers.append(file_path)
+
+            # Break if CP wants to shut down
+            if self.shuttingDown():
+                break
+
+        # Cleanup
+        del files
 
         # Sort reverse, this prevents "Iron man 2" from getting grouped with "Iron man" as the "Iron Man 2"
         # files will be grouped first.
@@ -224,9 +230,12 @@ class Scanner(Plugin):
 
 
         # Determine file types
-        delete_identifier = []
-        for identifier in movie_files:
-            group = movie_files[identifier]
+        processed_movies = {}
+        while True and not self.shuttingDown():
+            try:
+                identifier, group = movie_files.popitem()
+            except:
+                break
 
             # Check if movie is fresh and maybe still unpacking, ignore files new then 1 minute
             file_too_new = False
@@ -238,7 +247,6 @@ class Scanner(Plugin):
 
             if file_too_new:
                 log.info('Files seem to be still unpacking or just unpacked (created on %s), ignoring for now: %s' % (time.ctime(file_time), identifier))
-                delete_identifier.append(identifier)
                 continue
 
             # Group extra (and easy) files first
@@ -288,15 +296,13 @@ class Scanner(Plugin):
             if not group['library']:
                 log.error('Unable to determin movie: %s' % group['identifiers'])
 
-            # Break if CP wants to shut down
-            if self.shuttingDown():
-                break
+            processed_movies[identifier] = group
 
-        # Delete still (asuming) unpacking files
-        for identifier in delete_identifier:
-            del movie_files[identifier]
 
-        return movie_files
+        # Clean up
+        self.path_identifiers = {}
+
+        return processed_movies
 
     def getMetaData(self, group):
 
@@ -342,6 +348,8 @@ class Scanner(Plugin):
                 'resolution_width': p.video[0].width,
                 'resolution_height': p.video[0].height,
             }
+        except ParseError:
+            log.debug('Failed to parse meta for %s' % filename)
         except NoParserError:
             log.debug('No parser found for %s' % filename)
 
