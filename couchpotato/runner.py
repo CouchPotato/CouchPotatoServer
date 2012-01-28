@@ -5,11 +5,13 @@ from couchpotato.core.event import fireEventAsync, fireEvent
 from couchpotato.core.helpers.variable import getDataDir, tryInt
 from logging import handlers
 from werkzeug.contrib.cache import FileSystemCache
+import atexit
 import locale
 import logging
 import os.path
 import sys
 import traceback
+import time
 
 def getOptions(base_path, args):
 
@@ -37,6 +39,11 @@ def getOptions(base_path, args):
     options.config_file = os.path.expanduser(options.config_file)
 
     return options
+
+
+def cleanup():
+    fireEvent('app.crappy_shutdown', single = True)
+    time.sleep(1)
 
 
 def runCouchPotato(options, base_path, args, desktop = None):
@@ -87,6 +94,9 @@ def runCouchPotato(options, base_path, args, desktop = None):
     # Determine debug
     debug = options.debug or Env.setting('debug', default = False, type = 'bool')
     Env.set('debug', debug)
+
+    if not Env.setting('development'):
+        atexit.register(cleanup)
 
     # Disable server access log
     server_log = logging.getLogger('werkzeug')

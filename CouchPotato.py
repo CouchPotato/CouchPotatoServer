@@ -1,11 +1,9 @@
 #!/usr/bin/env python
 from os.path import dirname
 from signal import signal, SIGTERM
-import atexit
 import os
 import subprocess
 import sys
-import time
 
 
 # Root path
@@ -57,11 +55,6 @@ def main():
 
     sys.exit()
 
-def cleanup():
-    from couchpotato.core.event import fireEvent
-    fireEvent('app.crappy_shutdown', single = True)
-    time.sleep(1)
-
 if __name__ == '__main__':
 
     signal(SIGTERM, lambda signum, stack_frame: sys.exit(1))
@@ -71,5 +64,4 @@ if __name__ == '__main__':
         daemon = Daemon(options.pid_file)
         daemon.daemonize()
 
-    atexit.register(cleanup)
     main()
