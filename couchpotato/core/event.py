@@ -12,7 +12,7 @@ def runHandler(name, handler, *args, **kwargs):
         return handler(*args, **kwargs)
     except:
         from couchpotato.environment import Env
-        log.error('Error in event "%s", that wasn\'nt caught: %s%s' % (name, traceback.format_exc(), Env.all()))
+        log.error('Error in event "%s", that wasn\'t caught: %s%s' % (name, traceback.format_exc(), Env.all()))
 
 def addEvent(name, handler, priority = 100):
 
