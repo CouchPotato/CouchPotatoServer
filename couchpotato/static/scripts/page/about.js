@@ -85,7 +85,12 @@ var AboutSettingTab = new Class({
 		}).inject(self.content).adopt(
 			new Element('dl.info').adopt(
 				new Element('dt[text=Version]'),
-				self.version_text = new Element('dd', {'text': 'Getting version...'}),
+				self.version_text = new Element('dd', {
+					'text': 'Getting version...',
+					'events': {
+						'click': self.checkForUpdate.bind(self)
+					}
+				}),
 				new Element('dt[text=Directories]'),
 				new Element('dd', {'text': App.getOption('app_dir')}),
 				new Element('dd', {'text': App.getOption('data_dir')}),
@@ -124,6 +129,14 @@ var AboutSettingTab = new Class({
 		var self = this;
 		var date = new Date(json.version.date * 1000);
 		self.version_text.set('text', json.version.hash + ' ('+date.toUTCString()+')');
+	},
+
+	checkForUpdate: function(){
+		var self = this;
+
+		Updater.check(function(json){
+			self.fillVersion(json)
+		})
 	}
 
 });

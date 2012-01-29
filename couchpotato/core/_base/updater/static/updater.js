@@ -12,6 +12,15 @@ var UpdaterBase = new Class({
 		});
 	},
 
+	check: function(onComplete){
+		var self = this;
+
+		Api.request('updater.check', {
+			'onComplete': onComplete || Function.from()
+		})
+
+	},
+
 	info: function(timeout){
 		var self = this;
 

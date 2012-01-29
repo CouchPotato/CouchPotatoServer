@@ -31,6 +31,7 @@ class Updater(Plugin):
 
         addApiView('updater.info', self.getInfo)
         addApiView('updater.update', self.doUpdateView)
+        addApiView('updater.check', self.checkView)
 
     def getInfo(self):
 
@@ -89,6 +90,10 @@ class Updater(Plugin):
                             fireEvent('updater.available', message = 'A new update is available', data = self.getVersion())
 
         self.last_check = time.time()
+
+    def checkView(self):
+        self.check()
+        return self.getInfo()
 
     def doUpdateView(self):
         return jsonified({
