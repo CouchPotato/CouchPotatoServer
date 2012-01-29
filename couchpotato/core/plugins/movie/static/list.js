@@ -193,6 +193,7 @@ var MovieList = new Class({
 	getMovies: function(){
 		var self = this;
 
+		if(self.scrollspy) self.scrollspy.stop();
 		self.load_more.set('text', 'loading...');
 		Api.request('movie.list', {
 			'data': Object.merge({
@@ -203,6 +204,7 @@ var MovieList = new Class({
 				self.store(json.movies);
 				self.addMovies(json.movies);
 				self.load_more.set('text', 'load more movies');
+				if(self.scrollspy) self.scrollspy.start();
 			}
 		});
 	},
