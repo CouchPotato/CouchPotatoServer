@@ -220,7 +220,7 @@ class Renamer(Plugin):
                     try:
                         if movie.status_id == active_status.get('id'):
                             for profile_type in movie.profile.types:
-                                if profile_type.quality_id == group['meta_data']['quality']['id'] and type.finish:
+                                if profile_type.quality_id == group['meta_data']['quality']['id'] and profile_type.finish:
                                     movie.status_id = done_status.get('id')
                                     db.commit()
                     except Exception, e:
