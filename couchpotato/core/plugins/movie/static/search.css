@@ -126,6 +126,11 @@
 		}
 
 			.movie_result:last-child .data { border-bottom: 0; }
+			
+			.movie_result .in_wanted, .movie_result .in_library {
+				position: absolute;
+				margin-top: 105px;
+			}
 
 			.movie_result .thumbnail {
 				width: 17%;

@@ -291,6 +291,12 @@ Block.Search.Item = new Class({
 					self.info.images.poster.length > 0 ? new Element('img.thumbnail', {
 						'src': self.info.images.poster[0]
 					}) : null,
+					self.info.in_wanted ? new Element('span.in_wanted', {
+						'text': 'Already in wanted list: ' + self.info.in_wanted.label
+					}) : null,
+					self.info.in_library ? new Element('span.in_library', {
+						'text': 'Already in library: ' + self.info.in_library.label
+					}) : null,
 					self.title_select = new Element('select', {
 						'name': 'title'
 					}),
