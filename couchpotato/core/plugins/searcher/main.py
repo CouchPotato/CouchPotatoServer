@@ -104,6 +104,7 @@ class Searcher(Plugin):
                     return self.download(data = nzb, movie = movie)
             else:
                 log.info('Better quality (%s) already available or snatched for %s' % (type['quality']['label'], default_title))
+                fireEvent('movie.restatus', movie['id'])
                 break
 
             # Break if CP wants to shut down
@@ -125,9 +126,32 @@ class Searcher(Plugin):
             rls.status_id = snatched_status.get('id')
             db.commit()
 
-            snatch_message = 'Snatched "%s": %s (%s) in %s' % (data.get('name'), movie['library']['titles'][0]['title'], movie['library']['year'], rls.quality.label)
+            log_movie = '%s (%s) in %s' % (movie['library']['titles'][0]['title'], movie['library']['year'], rls.quality.label)
+            snatch_message = 'Snatched "%s": %s' % (data.get('name'), log_movie)
             log.info(snatch_message)
             fireEvent('movie.snatched', message = snatch_message, data = rls.to_dict())
+
+
+            # If renamer isn't used, mark movie done
+            if not Env.setting('enabled', 'renamer'):
+                active_status = fireEvent('status.get', 'active', single = True)
+                done_status = fireEvent('status.get', 'done', single = True)
+                try:
+                    if movie['status_id'] == active_status.get('id'):
+                        for profile_type in movie['profile']['types']:
+                            if profile_type['quality_id'] == rls.quality.id and profile_type['finish']:
+                                log.info('Renamer disabled, marking movie as finished: %s' % log_movie)
+
+                                # Mark release done
+                                rls.status_id = done_status.get('id')
+                                db.commit()
+
+                                # Mark movie done
+                                mvie = db.query(Movie).filter_by(id = movie['id']).first()
+                                mvie.status_id = done_status.get('id')
+                                db.commit()
+                except Exception, e:
+                    log.error('Failed marking movie finished: %s %s' % (e, traceback.format_exc()))
 
             return True
 
