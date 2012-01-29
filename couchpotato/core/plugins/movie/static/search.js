@@ -138,6 +138,9 @@ Block.Search = new Class({
 			self.movies[movie.imdb || 'r-'+Math.floor(Math.random()*10000)] = m
 
 		});
+		
+		if(q != self.q())
+			self.list()
 
 	},
 
