@@ -5,18 +5,18 @@ import re
 
 def getDataDir():
 
-    dir = os.path.expanduser("~")
-
     # Windows
     if os.name == 'nt':
-        return os.path.join(dir, 'CouchPotato')
+        return os.path.join(os.environ['APPDATA'], 'CouchPotato')
+
+    user_dir = os.path.expanduser('~')
 
     # OSX
     if 'darwin' in platform.platform().lower():
-        return os.path.join(dir, 'Library', 'Application Support', 'CouchPotato')
+        return os.path.join(user_dir, 'Library', 'Application Support', 'CouchPotato')
 
     # Linux
-    return os.path.join(dir, '.couchpotato')
+    return os.path.join(user_dir, '.couchpotato')
 
 def isDict(object):
     return isinstance(object, dict)
