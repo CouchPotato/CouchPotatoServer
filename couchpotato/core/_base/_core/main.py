@@ -19,7 +19,7 @@ log = CPLog(__name__)
 
 class Core(Plugin):
 
-    ignore_restart = ['Core.crappyRestart', 'Core.crappyShutdown', 'Core.monitorParent']
+    ignore_restart = ['Core.crappyRestart', 'Core.crappyShutdown']
     shutdown_started = False
 
     def __init__(self):
@@ -39,17 +39,22 @@ class Core(Plugin):
         self.removeRestartFile()
 
     def monitorParent(self):
-        while 1:
+
+        do_shutdown = False
+        while 1 and not self.shuttingDown():
             if os.name == 'nt':
                 if os.getppid(os.getpid()) <= 1:
+                    do_shutdown = True
                     break
             else:
                 if os.getppid() <= 1:
+                    do_shutdown = True
                     break
             time.sleep(1)
 
-        log.info('Starterscript has shutdown, shutdown subprocess')
-        fireEvent('app.crappy_shutdown')
+        if do_shutdown:
+            log.info('Starterscript has shutdown, shutdown subprocess')
+            fireEvent('app.crappy_shutdown')
 
     def md5Password(self, value):
         return md5(value) if value else ''
