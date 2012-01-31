@@ -33,6 +33,8 @@ class Newzbin(NZBProvider, RSS):
     ]
     cat_backup_id = -1
 
+    http_time_between_calls = 3 # Seconds
+
     def search(self, movie, quality):
 
         results = []

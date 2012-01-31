@@ -52,21 +52,21 @@ class Searcher(Plugin):
 
         available_status = fireEvent('status.get', 'available', single = True)
 
-        for type in movie['profile']['types']:
+        default_title = movie['library']['titles'][0]['title']
+        for quality_type in movie['profile']['types']:
 
             has_better_quality = 0
-            default_title = movie['library']['titles'][0]['title']
 
             # See if beter quality is available
             for release in movie['releases']:
-                if release['quality']['order'] <= type['quality']['order'] and release['status_id'] is not available_status.get('id'):
+                if release['quality']['order'] <= quality_type['quality']['order'] and release['status_id'] is not available_status.get('id'):
                     has_better_quality += 1
 
             # Don't search for quality lower then already available.
             if has_better_quality is 0:
 
-                log.info('Search for %s in %s' % (default_title, type['quality']['label']))
-                quality = fireEvent('quality.single', identifier = type['quality']['identifier'], single = True)
+                log.info('Search for %s in %s' % (default_title, quality_type['quality']['label']))
+                quality = fireEvent('quality.single', identifier = quality_type['quality']['identifier'], single = True)
                 results = fireEvent('yarr.search', movie, quality, merge = True)
                 sorted_results = sorted(results, key = lambda k: k['score'], reverse = True)
 
@@ -79,7 +79,7 @@ class Searcher(Plugin):
                         rls = Release(
                             identifier = md5(nzb['url']),
                             movie_id = movie.get('id'),
-                            quality_id = type.get('quality_id'),
+                            quality_id = quality_type.get('quality_id'),
                             status_id = available_status.get('id')
                         )
                         db.add(rls)
@@ -103,7 +103,7 @@ class Searcher(Plugin):
                 for nzb in sorted_results:
                     return self.download(data = nzb, movie = movie)
             else:
-                log.info('Better quality (%s) already available or snatched for %s' % (type['quality']['label'], default_title))
+                log.info('Better quality (%s) already available or snatched for %s' % (quality_type['quality']['label'], default_title))
                 fireEvent('movie.restatus', movie['id'])
                 break
 

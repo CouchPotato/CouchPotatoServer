@@ -18,7 +18,7 @@ class NzbIndex(NZBProvider, RSS):
         'api': 'http://www.nzbindex.nl/rss/', #http://www.nzbindex.nl/rss/?q=due+date+720p&age=1000&sort=agedesc&minsize=3500&maxsize=10000
     }
 
-    time_between_searches = 1 # Seconds
+    http_time_between_calls = 1 # Seconds
 
     def search(self, movie, quality):
 

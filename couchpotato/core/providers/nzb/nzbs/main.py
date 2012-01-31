@@ -27,7 +27,7 @@ class Nzbs(NZBProvider, RSS):
     ]
     cat_backup_id = 't2'
 
-    time_between_searches = 3 # Seconds
+    http_time_between_calls = 3 # Seconds
 
     def search(self, movie, quality):
 

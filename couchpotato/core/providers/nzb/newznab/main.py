@@ -25,7 +25,7 @@ class Newznab(NZBProvider, RSS):
     ]
     cat_backup_id = 2000
 
-    time_between_searches = 1 # Seconds
+    http_time_between_calls = 1 # Seconds
 
     def feed(self):
 

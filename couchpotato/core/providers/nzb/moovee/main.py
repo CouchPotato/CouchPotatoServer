@@ -18,6 +18,8 @@ class Moovee(NZBProvider):
 
     regex = '<td class="cell_reqid">(?P<reqid>.*?)</td>.+?<td class="cell_request">(?P<title>.*?)</td>.+?<td class="cell_statuschange">(?P<age>.*?)</td>'
 
+    http_time_between_calls = 2 # Seconds
+
     def search(self, movie, quality):
 
         results = []

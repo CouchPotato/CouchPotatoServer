@@ -17,6 +17,8 @@ class X264(NZBProvider):
 
     regex = '<tr class="req_filled"><td class="reqid">(?P<id>.*?)</td><td class="release">(?P<title>.*?)</td>.+?<td class="age">(?P<age>.*?)</td>'
 
+    http_time_between_calls = 2 # Seconds
+
     def search(self, movie, quality):
 
         results = []
