@@ -4,6 +4,7 @@ from signal import signal, SIGTERM
 import os
 import subprocess
 import sys
+import time
 
 
 # Root path
@@ -52,6 +53,10 @@ def main():
             restart = start()
             if not restart:
                 break
+
+    from couchpotato.core.event import fireEvent
+    fireEvent('app.crappy_shutdown', single = True)
+    time.sleep(1)
 
     sys.exit()
 

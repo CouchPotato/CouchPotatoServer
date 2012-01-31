@@ -60,8 +60,6 @@ class Core(Plugin):
         })
 
     def crappyShutdown(self):
-        if self.shutdown_started: return
-
         try:
             self.urlopen('%sapp.shutdown' % self.createApiUrl(), show_error = False)
             return True
@@ -70,8 +68,6 @@ class Core(Plugin):
             return False
 
     def crappyRestart(self):
-        if self.shutdown_started: return
-
         try:
             self.urlopen('%sapp.restart' % self.createApiUrl(), show_error = False)
             return True
@@ -88,26 +84,30 @@ class Core(Plugin):
         return 'restarting'
 
     def initShutdown(self, restart = False):
+        if self.shutdown_started:
+            log.info('Already shutting down')
+
         log.info('Shutting down' if not restart else 'Restarting')
+
         self.shutdown_started = True
+
         fireEvent('app.shutdown')
         log.debug('Every plugin got shutdown event')
 
         loop = True
         while loop:
             log.debug('Asking who is running')
-            still_running = fireEvent('plugin.running')
+            still_running = fireEvent('plugin.running', merge = True)
             log.debug('Still running: %s' % still_running)
 
             if len(still_running) == 0:
                 break
 
-            for running in still_running:
-                running = list(set(running) - set(self.ignore_restart))
-                if len(running) > 0:
-                    log.info('Waiting on plugins to finish: %s' % running)
-                else:
-                    loop = False
+            running = list(set(still_running) - set(self.ignore_restart))
+            if len(running) > 0:
+                log.info('Waiting on plugins to finish: %s' % running)
+            else:
+                loop = False
 
             time.sleep(1)
 

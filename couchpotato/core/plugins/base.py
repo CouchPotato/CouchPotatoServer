@@ -25,8 +25,7 @@ class Plugin(object):
     enabled_option = 'enabled'
     auto_register_static = True
 
-    needs_shutdown = False
-    running = []
+    _needs_shutdown = False
 
     http_last_use = {}
     http_time_between_calls = 0
@@ -143,7 +142,6 @@ class Plugin(object):
             time.sleep(last_use - now + self.http_time_between_calls)
 
     def beforeCall(self, handler):
-        #log.debug('Calling %s.%s' % (self.getName(), handler.__name__))
         self.isRunning('%s.%s' % (self.getName(), handler.__name__))
 
     def afterCall(self, handler):
@@ -154,19 +152,23 @@ class Plugin(object):
 
     def shuttingDown(self, value = None):
         if value is None:
-            return self.needs_shutdown
+            return self._needs_shutdown
 
-        self.needs_shutdown = value
+        self._needs_shutdown = value
 
     def isRunning(self, value = None, boolean = True):
+
+        if not hasattr(self, '_running'):
+            self._running = []
+
         if value is None:
-            return self.running
+            return self._running
 
         if boolean:
-            self.running.append(value)
+            self._running.append(value)
         else:
             try:
-                self.running.remove(value)
+                self._running.remove(value)
             except:
                 log.error("Something went wrong when finishing the plugin function. Could not find the 'is_running' key")
 
