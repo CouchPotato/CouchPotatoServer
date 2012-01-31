@@ -86,7 +86,7 @@ var UserscriptSettingTab = new Class({
 			new Element('a', {
 				'text': 'Install userscript',
 				'href': Api.createUrl('userscript.get')+'couchpotato.user.js',
-				'normalhref': true
+				'target': '_self'
 			})
 		);
 

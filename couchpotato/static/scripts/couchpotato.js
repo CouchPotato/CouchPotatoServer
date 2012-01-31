@@ -28,7 +28,7 @@ var CouchPotato = new Class({
 			self.openPage(window.location.pathname);
 
 		History.addEvent('change', self.openPage.bind(self));
-		self.c.addEvent('click:relay(a[href]:not([target=_blank]):not([normalhref=true]))', self.pushState.bind(self));
+		self.c.addEvent('click:relay(a[href^=/]:not([target]))', self.pushState.bind(self));
 	},
 
 	getOption: function(name){
@@ -42,11 +42,12 @@ var CouchPotato = new Class({
 
 	pushState: function(e){
 		var self = this;
-		(e).stop();
-
-		var url = e.target.get('href');
-		if(History.getPath() != url)
-			History.push(url);
+		if((!e.meta && Browser.Platform.mac) || (!e.control && !Browser.Platform.mac)){
+			(e).stop();
+			var url = e.target.get('href');
+			if(History.getPath() != url)
+				History.push(url);
+		}
 	},
 
 	createLayout: function(){
