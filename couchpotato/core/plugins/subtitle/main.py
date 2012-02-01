@@ -11,7 +11,7 @@ class Subtitle(Plugin):
 
     def __init__(self):
 
-        addEvent('renamer.before', self.searchSingle)
+        #addEvent('renamer.before', self.searchSingle)
 
     def searchLibrary(self):
 
@@ -40,6 +40,8 @@ class Subtitle(Plugin):
 
 
     def searchSingle(self, group):
+
+        if self.isDisabled(): return
 
         subtitles = fireEvent('subtitle.search', files = group['files']['movie'], languages = self.getLanguages(), merge = True)
 
