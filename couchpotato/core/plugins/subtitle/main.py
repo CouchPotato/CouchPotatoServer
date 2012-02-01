@@ -10,7 +10,7 @@ log = CPLog(__name__)
 class Subtitle(Plugin):
 
     def __init__(self):
-
+        pass
         #addEvent('renamer.before', self.searchSingle)
 
     def searchLibrary(self):
