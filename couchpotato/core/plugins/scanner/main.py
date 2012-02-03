@@ -151,7 +151,10 @@ class Scanner(Plugin):
         for file_path in files:
 
             # Remove ignored files
-            if not self.keepFile(file_path):
+            if self.isSampleFile(file_path):
+                leftovers.append(file_path)
+                continue
+            elif not self.keepFile(file_path):
                 continue
 
             is_dvd_file = self.isDVDFile(file_path)
@@ -442,10 +445,13 @@ class Scanner(Plugin):
             pass
         return name
 
+    def getSamples(self, files):
+        return set(filter(lambda s: self.isSampleFile(s), files))
+
     def getMediaFiles(self, files):
 
         def test(s):
-            return self.filesizeBetween(s, 300, 100000) and getExt(s.lower()) in self.extensions['movie']
+            return self.filesizeBetween(s, 300, 100000) and getExt(s.lower()) in self.extensions['movie'] and not self.isSampleFile(s)
 
         return set(filter(test, files))
 
@@ -488,13 +494,13 @@ class Scanner(Plugin):
         return images
 
 
-    def isDVDFile(self, file):
+    def isDVDFile(self, file_name):
 
-        if list(set(file.lower().split(os.path.sep)) & set(['video_ts', 'audio_ts'])):
+        if list(set(file_name.lower().split(os.path.sep)) & set(['video_ts', 'audio_ts'])):
             return True
 
         for needle in ['vts_', 'video_ts', 'audio_ts', 'bdmv', 'certificate']:
-            if needle in file.lower():
+            if needle in file_name.lower():
                 return True
 
         return False
@@ -508,7 +514,7 @@ class Scanner(Plugin):
                 return False
 
         # Sample file
-        if re.search('(^|[\W_])sample\d*[\W_]', filename.lower()):
+        if self.isSampleFile(filename):
             log.debug('Is sample file "%s".' % filename)
             return False
 
@@ -520,6 +526,8 @@ class Scanner(Plugin):
         # All is OK
         return True
 
+    def isSampleFile(self, filename):
+        return re.search('(^|[\W_])sample\d*[\W_]', filename.lower())
 
     def filesizeBetween(self, file, min = 0, max = 100000):
         try:
