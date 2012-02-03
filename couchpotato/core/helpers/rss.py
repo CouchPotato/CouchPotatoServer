@@ -19,13 +19,21 @@ class RSS(object):
 
     def getElements(self, xml, path):
 
-        elements = []
+        elements = None
         try:
             elements = xml.findall(path)
         except:
             pass
 
         return elements
+
+    def getElement(self, xml, path):
+        ''' Find element and return text'''
+
+        try:
+            return xml.find(path)
+        except:
+            return
 
     def getTextElement(self, xml, path):
         ''' Find element and return text'''
