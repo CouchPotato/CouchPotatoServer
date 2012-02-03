@@ -10,7 +10,6 @@ config = [{
             'tab': 'providers',
             'name': 'nzbindex',
             'description': 'Free provider, but less accurate.',
-            'advanced': True,
             'options': [
                 {
                     'name': 'enabled',
