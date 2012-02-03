@@ -92,7 +92,7 @@ class Mysterbin(NZBProvider):
                     except:
                         pass
 
-                return []
+                return results
             except AttributeError:
                 log.debug('No search results found.')
 
