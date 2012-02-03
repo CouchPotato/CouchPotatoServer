@@ -292,7 +292,7 @@ class Searcher(Plugin):
         return False
 
     def checkNFO(self, check_name, imdb_id):
-        cache_key = 'srrdb.com %s' % check_name
+        cache_key = 'srrdb.com %s' % simplifyString(check_name)
 
         nfo = self.getCache(cache_key)
         if not nfo:
