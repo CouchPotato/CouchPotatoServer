@@ -169,7 +169,7 @@ def runCouchPotato(options, base_path, args, desktop = None):
     from couchpotato import app
     api_key = Env.setting('api_key')
     url_base = '/' + Env.setting('url_base').lstrip('/') if Env.setting('url_base') else ''
-    reloader = debug is True and not Env.get('desktop') and not options.daemon
+    reloader = debug is True and Env.setting('development') and not Env.get('desktop') and not options.daemon
 
     # Basic config
     app.secret_key = api_key
