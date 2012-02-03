@@ -7,6 +7,7 @@ from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
 from flask import request
 import os
+import thread
 import time
 import traceback
 import webbrowser
@@ -40,21 +41,24 @@ class Core(Plugin):
 
     def monitorParent(self):
 
-        do_shutdown = False
-        while 1 and not self.shuttingDown():
-            if os.name == 'nt':
-                if os.getppid(os.getpid()) <= 1:
-                    do_shutdown = True
-                    break
-            else:
-                if os.getppid() <= 1:
-                    do_shutdown = True
-                    break
-            time.sleep(1)
+        def looping():
+            do_shutdown = False
+            while 1 and not self.shuttingDown():
+                if os.name == 'nt':
+                    if os.getppid(os.getpid()) <= 1:
+                        do_shutdown = True
+                        break
+                else:
+                    if os.getppid() <= 1:
+                        do_shutdown = True
+                        break
+                time.sleep(1)
 
-        if do_shutdown:
-            log.info('Starterscript has shutdown, shutdown subprocess')
-            fireEvent('app.crappy_shutdown')
+            if do_shutdown:
+                log.info('Starterscript has shutdown, shutdown subprocess')
+                fireEvent('app.crappy_shutdown')
+
+        thread.start_new_thread(looping, ())
 
     def md5Password(self, value):
         return md5(value) if value else ''

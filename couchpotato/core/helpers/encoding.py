@@ -22,11 +22,17 @@ def toUnicode(original, *args):
         if type(original) is unicode:
             return original
         else:
-            return unicode(original, *args)
+            try:
+                return unicode(original, *args)
+            except:
+                try:
+                    return ek(original, *args)
+                except:
+                    raise
     except UnicodeDecodeError:
         log.error('Unable to decode value: %s... ' % repr(original)[:20])
         ascii_text = str(original).encode('string_escape')
-        return unicode(ascii_text)
+        return toUnicode(ascii_text)
 
 def ek(original, *args):
     if type(original) in [str, unicode]:
@@ -34,7 +40,7 @@ def ek(original, *args):
             from couchpotato.environment import Env
             return original.decode(Env.get('encoding'))
         except UnicodeDecodeError:
-            return toUnicode(original, *args)
+            raise
 
     return original
 

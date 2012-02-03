@@ -1,6 +1,6 @@
 from couchpotato import get_session
 from couchpotato.core.event import fireEvent, addEvent
-from couchpotato.core.helpers.encoding import toUnicode, simplifyString, ek
+from couchpotato.core.helpers.encoding import toUnicode, simplifyString
 from couchpotato.core.helpers.variable import getExt, getImdb, tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
@@ -144,7 +144,7 @@ class Scanner(Plugin):
         # Scan all files of the folder if no files are set
         if len(files) == 0:
             files = []
-            for root, dirs, walk_files in os.walk(ek(folder)):
+            for root, dirs, walk_files in os.walk(toUnicode(folder)):
                 for filename in walk_files:
                     files.append(os.path.join(root, filename))
 
