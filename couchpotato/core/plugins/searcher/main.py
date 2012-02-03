@@ -271,12 +271,25 @@ class Searcher(Plugin):
 
     def correctName(self, check_name, movie_name):
 
-        check_movie = fireEvent('scanner.name_year', check_name, single = True)
+        check_names = [check_name]
+        try:
+            check_names.append(re.search(r'([\'"])[^\1]*\1', check_name).group(0))
+        except:
+            pass
 
-        check_words = re.split('\W+', check_movie.get('name', ''))
-        movie_words = re.split('\W+', simplifyString(movie_name))
+        for check_name in check_names:
+            check_movie = fireEvent('scanner.name_year', check_name, single = True)
 
-        return len(list(set(check_words) - set(movie_words))) == 0
+            try:
+                check_words = re.split('\W+', check_movie.get('name', ''))
+                movie_words = re.split('\W+', simplifyString(movie_name))
+
+                if len(list(set(check_words) - set(movie_words))) == 0:
+                    return True
+            except:
+                pass
+
+        return False
 
     def checkNFO(self, check_name, imdb_id):
         cache_key = 'srrdb.com %s' % check_name
