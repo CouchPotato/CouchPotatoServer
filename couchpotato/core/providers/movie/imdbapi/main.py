@@ -16,6 +16,8 @@ class IMDBAPI(MovieProvider):
         'info': 'http://www.imdbapi.com/?i=%s&tomatoes=true',
     }
 
+    http_time_between_calls = 0
+
     def __init__(self):
         addEvent('movie.search', self.search)
         addEvent('movie.info', self.getInfo)
@@ -60,7 +62,7 @@ class IMDBAPI(MovieProvider):
                     'imdb': (tryFloat(movie.get('Rating', 0)), tryInt(movie.get('Votes', ''))),
                     'rotten': (tryFloat(movie.get('tomatoRating', 0)), tryInt(movie.get('tomatoReviews', 0))),
                 },
-                'imdb': movie.get('ID', ''),
+                'imdb': str(movie.get('ID', '')),
                 'runtime': movie.get('Runtime', ''),
                 'released': movie.get('Released', ''),
                 'year': movie.get('Year', ''),

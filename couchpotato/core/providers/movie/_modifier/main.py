@@ -4,6 +4,7 @@ from couchpotato.core.helpers.variable import mergeDicts
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Library
+import time
 import traceback
 
 log = CPLog(__name__)
@@ -18,23 +19,20 @@ class MovieResultModifier(Plugin):
     def combineOnIMDB(self, results):
 
         temp = {}
-        unique = 1
+        order = []
 
         # Combine on imdb id
         for item in results:
-            imdb = item.get('imdb')
-            if imdb:
-                if not temp.get(imdb):
-                    temp[imdb] = self.getLibraryTags(imdb)
+            imdb = item.get('imdb', 'random-%s' % time.time())
+            if not temp.get(imdb):
+                temp[imdb] = self.getLibraryTags(imdb)
+                order.append(imdb)
 
-                # Merge dicts
-                temp[imdb] = mergeDicts(temp[imdb], item)
-            else:
-                temp[unique] = item
-                unique += 1
+            # Merge dicts
+            temp[imdb] = mergeDicts(temp[imdb], item)
 
         # Make it a list again
-        temp_list = [temp[x] for x in temp]
+        temp_list = [temp[x] for x in order]
 
         return temp_list
 
