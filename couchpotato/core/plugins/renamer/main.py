@@ -182,8 +182,9 @@ class Renamer(Plugin):
 
                         # Do rename others
                         else:
-                            if self.conf('move_leftover') and file_type is 'leftover':
-                                rename_files[current_file] = os.path.join(destination, final_folder_name, os.path.basename(current_file))
+                            if file_type is 'leftover':
+                                if self.conf('move_leftover'):
+                                    rename_files[current_file] = os.path.join(destination, final_folder_name, os.path.basename(current_file))
                             else:
                                 rename_files[current_file] = os.path.join(destination, final_folder_name, final_file_name)
 
