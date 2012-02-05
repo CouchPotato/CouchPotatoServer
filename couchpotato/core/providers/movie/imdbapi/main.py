@@ -1,7 +1,10 @@
-from couchpotato.core.event import addEvent
-from couchpotato.core.helpers.encoding import simplifyString, toUnicode
+from couchpotato.core.event import addEvent, fireEvent
+from couchpotato.core.helpers.variable import tryInt, tryFloat
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.movie.base import MovieProvider
+from urllib import urlencode
+import json
+import traceback
 
 log = CPLog(__name__)
 
@@ -9,106 +12,64 @@ log = CPLog(__name__)
 class IMDBAPI(MovieProvider):
 
     urls = {
-        'search': 'http://www.imdbapi.com/?t=%s',
+        'search': 'http://www.imdbapi.com/?%s',
         'info': 'http://www.imdbapi.com/?i=%s&tomatoes=true',
     }
 
     def __init__(self):
-        pass
-        #addEvent('movie.search', self.search)
-        #addEvent('movie.info', self.getInfo)
+        addEvent('movie.search', self.search)
+        addEvent('movie.info', self.getInfo)
 
     def search(self, q, limit = 12):
 
-        search_string = simplifyString(q)
-        cache_key = 'imdbapi.cache.%s.%s' % (search_string, limit)
-        results = self.getCache(cache_key)
+        name_year = fireEvent('scanner.name_year', q, single = True)
 
-        if not results:
-            log.debug('Searching for movie: %s' % q)
-            raw = self.urlopen()
+        cache_key = 'imdbapi.cache.%s' % q
+        cached = self.getCache(cache_key, self.urls['search'] % urlencode({'t': name_year.get('name'), 'y': name_year.get('year')}))
 
-            results = []
-            if raw:
-                try:
-                    nr = 0
-                    for movie in raw:
+        result = self.parseMovie(cached)
+        log.info('Found: %s' % result['titles'][0] + ' (' + str(result['year']) + ')')
 
-                        results.append(self.parseMovie(movie))
-
-                        nr += 1
-                        if nr == limit:
-                            break
-
-                    log.info('Found: %s' % [result['titles'][0] + ' (' + str(result['year']) + ')' for result in results])
-
-                    self.setCache(cache_key, results)
-                    return results
-                except SyntaxError, e:
-                    log.error('Failed to parse XML response: %s' % e)
-                    return False
-
-        return results
+        return [result]
 
     def getInfo(self, identifier = None):
 
-        cache_key = 'tmdb.cache.%s' % identifier
-        result = None #self.getCache(cache_key)
+        cache_key = 'imdbapi.cache.%s' % identifier
+        cached = self.getCache(cache_key, self.urls['info'] % identifier)
 
-        if not result:
-            result = {}
-            movie = None
-
-            raw = self.urlopen()
-
-            if movie:
-                result = self.parseMovie(movie[0])
-                self.setCache(cache_key, result)
+        result = self.parseMovie(cached)
+        log.info('Found: %s' % result['titles'][0] + ' (' + str(result['year']) + ')')
 
         return result
 
     def parseMovie(self, movie):
 
-        # Images
-        poster = self.getImage(movie, type = 'poster')
-        backdrop = self.getImage(movie, type = 'backdrop')
-        poster_original = self.getImage(movie, type = 'poster', size = 'mid')
-        backdrop_original = self.getImage(movie, type = 'backdrop', size = 'w1280')
-
-        # Genres
+        movie_data = {}
         try:
-            genres = self.getCategory(movie, 'genre')
+
+            if isinstance(movie, (str, unicode)):
+                movie = json.loads(movie)
+
+            movie_data = {
+                'titles': [movie.get('Title', '')],
+                'original_title': movie.get('Title', ''),
+                'images': {
+                    'poster': [movie.get('Poster', '')],
+                },
+                'rating': {
+                    'imdb': (tryFloat(movie.get('Rating', 0)), tryInt(movie.get('Votes', ''))),
+                    'rotten': (tryFloat(movie.get('tomatoRating', 0)), tryInt(movie.get('tomatoReviews', 0))),
+                },
+                'imdb': movie.get('ID', ''),
+                'runtime': movie.get('Runtime', ''),
+                'released': movie.get('Released', ''),
+                'year': movie.get('Year', ''),
+                'plot': movie.get('Plot', ''),
+                'genres': movie.get('Genre').split(','),
+                'director': movie.get('Director', ''),
+                'actors': movie.get('Actors', '').split(','),
+            }
         except:
-            genres = []
-
-        # 1900 is the same as None
-        year = str(movie.get('released', 'none'))[:4]
-        if year == '1900' or year.lower() == 'none':
-            year = None
-
-        movie_data = {
-            'id': int(movie.get('id', 0)),
-            'titles': [toUnicode(movie.get('name'))],
-            'original_title': movie.get('original_name'),
-            'images': {
-                'poster': [poster],
-                'backdrop': [backdrop],
-                'poster_original': [poster_original],
-                'backdrop_original': [backdrop_original],
-            },
-            'imdb': movie.get('imdb_id'),
-            'runtime': movie.get('runtime'),
-            'released': movie.get('released'),
-            'year': year,
-            'plot': movie.get('overview', ''),
-            'tagline': '',
-            'genres': genres,
-        }
-
-        # Add alternative names
-        for alt in ['original_name', 'alternative_name']:
-            alt_name = toUnicode(movie.get(alt))
-            if alt_name and not alt_name in movie_data['titles'] and alt_name.lower() != 'none' and alt_name != None:
-                movie_data['titles'].append(alt_name)
+            log.error('Failed parsing IMDB API json: %s' % traceback.format_exc())
 
         return movie_data
