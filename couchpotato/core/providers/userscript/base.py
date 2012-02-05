@@ -32,8 +32,9 @@ class UserscriptBase(Plugin):
     def belongsTo(self, url):
 
         host = urlparse(url).hostname
-        if host.startswith('www.'):
-            host = host[4:]
+        host_split = host.split('.')
+        if len(host_split) > 2:
+            host = host[len(host_split[0]):]
 
         for include in self.includes:
             if host in include:
