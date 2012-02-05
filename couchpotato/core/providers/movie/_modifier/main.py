@@ -68,4 +68,6 @@ class MovieResultModifier(Plugin):
         return temp
 
     def checkLibrary(self, result):
-        return mergeDicts(result, self.getLibraryTags(result['imdb']))
+        if result and result.get('imdb'):
+            return mergeDicts(result, self.getLibraryTags(result['imdb']))
+        return result
