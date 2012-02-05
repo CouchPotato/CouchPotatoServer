@@ -1,81 +1,57 @@
 from couchpotato.core.event import addEvent
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.movie.base import MovieProvider
-from imdb import IMDb
+from imdb import IMDb, helpers
+from imdb._logging import setLevel
+import time
 
 log = CPLog(__name__)
 
 
 class IMDB(MovieProvider):
 
+    info_list = ('main', 'plot', 'release dates', 'taglines', 'synopsis')
+
     def __init__(self):
 
         #addEvent('movie.search', self.search)
+        #addEvent('movie.info', self.getInfo)
 
         self.p = IMDb('http')
+        setLevel('warn')
 
-    def search(self):
-        print 'search'
-
-    def conf(self, option):
-        return self.config.get('IMDB', option)
-
-    def find(self, q, limit = 8, alternative = True):
-        ''' Find movie by name '''
-
-        log.info('IMDB - Searching for movie: %s' % q)
+    def search(self, q, limit = 12):
 
         r = self.p.search_movie(q)
-
-        return self.toResults(r, limit)
-
-    def toResults(self, r, limit = 8, one = False):
-        results = []
-
-        if one:
-            new = self.feedItem()
-            new.imdb = 'tt' + r.movieID
-            new.name = self.toSaveString(r['title'])
-            try:
-                new.year = r['year']
-            except:
-                new.year = ''
-
-            return new
-        else :
-            nr = 0
-            for movie in r:
-                results.append(self.toResults(movie, one = True))
-                nr += 1
-                if nr == limit:
-                    break
-
-            return results
-
-    def findById(self, id):
-        ''' Find movie by TheMovieDB ID '''
+        print '==' * 80
 
         return []
 
+    def getInfo(self, identifier = None):
 
-    def findByImdbId(self, id, details = False):
-        ''' Find movie by IMDB ID '''
+        m = self.p.get_movie(identifier.replace('tt', ''), info = self.info_list)
 
-        log.info('IMDB - Searching for movie: %s' % str(id))
+        poster = m['cover url']
+        poster_original = helpers.fullSizeCoverURL(m)
 
-        r = self.p.get_movie(id.replace('tt', ''))
+        movie_data = {
+            'id': identifier,
+            'titles': [m['title']],
+            'original_title': m['title'],
+            'rating': {
+                'imdb': (m.get('rating'), m.get('votes')),
+            },
+            'images': {
+                'poster': [poster] if poster else [],
+                'poster_original': [poster_original] if poster_original else [],
+            },
+            'imdb': identifier,
+            'runtime': m.get('runtime')[0].split(':')[1],
+            'released': m.get('release dates')[0].split('::')[1],
+            'year': m['year'],
+            'plot': m.get('synopsis', ''),
+            'tagline': m.get('taglines', '')[0],
+            'genres': m.get('genres', []),
+        }
 
-        if not details:
-            return self.toResults(r, one = True)
-        else:
-            self.p.update(r)
-            self.p.update(r, info = 'release dates')
-            self.p.update(r, info = 'taglines')
-            return r
-
-    def get_IMDb_instance(self):
-        return IMDb('http')
-
-
-    def findReleaseDate(self, movie):
-        pass
+        return movie_data
