@@ -3,16 +3,16 @@ from couchpotato.core.event import addEvent, fireEventAsync, fireEvent
 from couchpotato.core.helpers.encoding import toUnicode, simplifyString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.core.settings.model import Library, LibraryTitle, File, \
-    LibraryGenre
+from couchpotato.core.settings.model import Library, LibraryTitle, File
 from string import ascii_letters
+import json
 import traceback
 
 log = CPLog(__name__)
 
 class LibraryPlugin(Plugin):
 
-    default_dict = {'titles': {}, 'files':{}, 'info':{}, 'genres':{}}
+    default_dict = {'titles': {}, 'files':{}}
 
     def __init__(self):
         addEvent('library.add', self.add)
@@ -75,6 +75,7 @@ class LibraryPlugin(Plugin):
             library.tagline = toUnicode(info.get('tagline', ''))
             library.year = info.get('year', 0)
             library.status_id = done_status.get('id')
+            library.info = toUnicode(json.dumps(info))
             db.commit()
 
             # Titles
@@ -90,20 +91,6 @@ class LibraryPlugin(Plugin):
                     default = title.lower() == default_title.lower() or (default_title is '' and titles[0] == title)
                 )
                 library.titles.append(t)
-
-            db.commit()
-
-            # Genres
-            [db.delete(genre) for genre in library.genres]
-            db.commit()
-
-            genres = info.get('genres', [])
-            log.debug('Adding genres: %s' % genres)
-            for genre in genres:
-                g = LibraryGenre(
-                    name = toUnicode(genre)
-                )
-                library.genres.append(g)
 
             db.commit()
 

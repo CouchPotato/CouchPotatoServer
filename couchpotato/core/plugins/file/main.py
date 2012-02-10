@@ -31,17 +31,18 @@ class FileManager(Plugin):
 
     def download(self, url = '', dest = None, overwrite = False):
 
+        if not dest: # to Cache
+            dest = os.path.join(Env.get('cache_dir'), '%s.%s' % (md5(url), getExt(url)))
+
+        if not overwrite and os.path.isfile(dest):
+            return dest
+
         try:
             filedata = self.urlopen(url)
         except:
             return False
 
-        if not dest: # to Cache
-            dest = os.path.join(Env.get('cache_dir'), '%s.%s' % (md5(url), getExt(url)))
-
-        if overwrite or not os.path.isfile(dest):
-            self.createFile(dest, filedata, binary = True)
-
+        self.createFile(dest, filedata, binary = True)
         return dest
 
     def add(self, path = '', part = 1, type = (), available = 1, properties = {}):

@@ -4,6 +4,7 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.movie.base import MovieProvider
 from urllib import urlencode
 import json
+import re
 import traceback
 
 log = CPLog(__name__)
@@ -63,7 +64,7 @@ class IMDBAPI(MovieProvider):
                     'rotten': (tryFloat(movie.get('tomatoRating', 0)), tryInt(movie.get('tomatoReviews', 0))),
                 },
                 'imdb': str(movie.get('ID', '')),
-                'runtime': movie.get('Runtime', ''),
+                'runtime': self.runtimeToMinutes(movie.get('Runtime', '')),
                 'released': movie.get('Released', ''),
                 'year': movie.get('Year', ''),
                 'plot': movie.get('Plot', ''),
@@ -75,3 +76,14 @@ class IMDBAPI(MovieProvider):
             log.error('Failed parsing IMDB API json: %s' % traceback.format_exc())
 
         return movie_data
+
+    def runtimeToMinutes(self, runtime_str):
+        runtime = 0
+
+        regex = '(\d*.?\d+).(hr|hrs|mins|min)+'
+        matches = re.findall(regex, runtime_str)
+        for match in matches:
+            nr, size = match
+            runtime += tryInt(nr) * (60 if 'hr' in str(size) else 1)
+
+        return runtime

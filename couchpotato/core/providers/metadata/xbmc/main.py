@@ -1,9 +1,13 @@
 from couchpotato.core.helpers.encoding import toUnicode
+from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.metadata.base import MetaDataBase
 from xml.etree.ElementTree import Element, SubElement, tostring
 import os
 import re
+import traceback
 import xml.dom.minidom
+
+log = CPLog(__name__)
 
 class XBMC(MetaDataBase):
 
@@ -19,10 +23,8 @@ class XBMC(MetaDataBase):
     def getNfoName(self, root):
         return '%s.nfo' % root
 
-    def getNfo(self, data):
+    def getNfo(self, movie_info = {}, data = {}):
         nfoxml = Element('movie')
-
-        types = ['rating', 'year', 'votes', 'rating', 'mpaa', 'originaltitle:original_title', 'outline:plot', 'premiered:released']
 
         # Title
         try:
@@ -41,11 +43,12 @@ class XBMC(MetaDataBase):
         # Runtime
         try:
             runtime = SubElement(nfoxml, 'runtime')
-            runtime.text = '%s min' % data['library']['runtime']
+            runtime.text = '%s min' % movie_info.get('runtime')
         except:
             pass
 
         # Other values
+        types = ['rating', 'year', 'mpaa', 'originaltitle:original_title', 'outline', 'plot', 'tagline', 'premiered:released']
         for type in types:
 
             if ':' in type:
@@ -56,14 +59,32 @@ class XBMC(MetaDataBase):
             try:
                 if data['library'].get(type):
                     el = SubElement(nfoxml, name)
-                    el.text = toUnicode(data['library'].get(type, ''))
+                    el.text = toUnicode(movie_info.get(type, ''))
             except:
                 pass
 
+        # Rating
+        for rating_type in ['imdb', 'rotten', 'tmdb']:
+            try:
+                r, v = movie_info['rating'][rating_type]
+                rating = SubElement(nfoxml, 'rating')
+                rating.text = str(r)
+                votes = SubElement(nfoxml, 'votes')
+                votes.text = str(v)
+                break
+            except:
+                log.error('Failed adding rating info from %s: %s' % (rating_type, traceback.format_exc()))
+
         # Genre
-        for genre in data['library'].get('genres', []):
+        for genre in movie_info.get('genres', []):
             genres = SubElement(nfoxml, 'genre')
-            genres.text = genre.get('name')
+            genres.text = toUnicode(genre)
+
+        # Actors
+        for actor in movie_info.get('actors', []):
+            actors = SubElement(nfoxml, 'actor')
+            name = SubElement(actors, 'name')
+            name.text = toUnicode(actor)
 
 
         # Clean up the xml and return it

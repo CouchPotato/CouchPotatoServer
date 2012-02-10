@@ -1,9 +1,8 @@
 from elixir.entity import Entity
 from elixir.fields import Field
-from elixir.options import options_defaults
-from elixir.relationships import OneToMany, ManyToOne
-from elixir.options import using_options
-from elixir.relationships import ManyToMany
+from elixir.options import options_defaults, using_options
+from elixir.relationships import ManyToMany, OneToMany, ManyToOne
+from libs.elixir.relationships import OneToOne
 from sqlalchemy.types import Integer, Unicode, UnicodeText, Boolean, Float, \
     String
 
@@ -40,22 +39,12 @@ class Library(Entity):
 
     plot = Field(UnicodeText)
     tagline = Field(UnicodeText(255))
+    info = Field(UnicodeText)
 
     status = ManyToOne('Status')
     movies = OneToMany('Movie')
     titles = OneToMany('LibraryTitle')
-    genres = ManyToMany('LibraryGenre')
     files = ManyToMany('File')
-    info = OneToMany('LibraryInfo')
-
-
-class LibraryInfo(Entity):
-    """"""
-
-    identifier = Field(String(50))
-    value = Field(Unicode(255), nullable = False)
-
-    library = ManyToOne('Library')
 
 
 class LibraryTitle(Entity):
@@ -68,14 +57,6 @@ class LibraryTitle(Entity):
 
     language = OneToMany('Language')
     libraries = ManyToOne('Library')
-
-
-class LibraryGenre(Entity):
-    """"""
-
-    name = Field(Unicode)
-
-    libraries = ManyToMany('Library')
 
 
 class Language(Entity):

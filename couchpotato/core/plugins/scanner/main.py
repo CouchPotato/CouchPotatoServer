@@ -100,7 +100,7 @@ class Scanner(Plugin):
             if group['library']:
                 fireEvent('release.add', group = group)
 
-    def scanFolderToLibrary(self, folder = None):
+    def scanFolderToLibrary(self, folder = None, newer_as = None):
 
         if not os.path.isdir(folder):
             return
@@ -322,6 +322,7 @@ class Scanner(Plugin):
                 data['audio'] = meta.get('audio', self.getCodec(cur_file, self.codecs['audio']))
                 data['resolution_width'] = meta.get('resolution_width', 720)
                 data['resolution_height'] = meta.get('resolution_height', 480)
+                data['aspect'] = meta.get('resolution_width', 720) / meta.get('resolution_height', 480)
             except:
                 log.debug('Error parsing metadata: %s %s' % (cur_file, traceback.format_exc()))
                 pass
@@ -348,8 +349,8 @@ class Scanner(Plugin):
             return {
                 'video': p.video[0].codec,
                 'audio': p.audio[0].codec,
-                'resolution_width': p.video[0].width,
-                'resolution_height': p.video[0].height,
+                'resolution_width': tryInt(p.video[0].width),
+                'resolution_height': tryInt(p.video[0].height),
             }
         except ParseError:
             log.debug('Failed to parse meta for %s' % filename)

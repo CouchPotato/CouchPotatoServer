@@ -8,7 +8,7 @@ from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Movie, Library, LibraryTitle
 from couchpotato.environment import Env
 from sqlalchemy.orm import joinedload_all
-from sqlalchemy.sql.expression import func, or_, asc, not_
+from sqlalchemy.sql.expression import or_, asc, not_
 from string import ascii_lowercase
 from urllib import urlencode
 
@@ -43,7 +43,7 @@ class MoviePlugin(Plugin):
     def get(self, movie_id):
 
         db = get_session()
-        m = db.query(Movie).filter_by(movie_id = movie_id).first()
+        m = db.query(Movie).filter_by(id = movie_id).first()
 
         return m.to_dict(self.default_dict)
 

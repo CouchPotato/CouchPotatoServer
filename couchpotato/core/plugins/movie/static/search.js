@@ -211,7 +211,7 @@ Block.Search.Item = new Class({
 		if(info.actors){
 			Object.each(info.actors, function(actor){
 				new Element('span', {
-					'text': actor.name
+					'text': actor
 				}).inject(self.starring)
 			})
 		}
