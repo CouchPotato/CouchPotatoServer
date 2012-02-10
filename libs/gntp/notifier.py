@@ -24,12 +24,17 @@ logger = logging.getLogger(__name__)
 
 def mini(description, applicationName = 'PythonMini', noteType = "Message",
 			title = "Mini Message", applicationIcon = None, hostname = 'localhost',
-			password = None, port = 23053, sticky = False, priority = None):
+			password = None, port = 23053, sticky = False, priority = None,
+			callback = None):
 	"""Single notification function
 
 	Simple notification function in one line. Has only one required parameter
 	and attempts to use reasonable defaults for everything else
 	:param string description: Notification message
+
+	.. warning::
+			For now, only URL callbacks are supported. In the future, the
+			callback argument will also support a function
 	"""
 	growl = GrowlNotifier(
 		applicationName = applicationName,
@@ -50,6 +55,7 @@ def mini(description, applicationName = 'PythonMini', noteType = "Message",
 		icon = applicationIcon,
 		sticky = sticky,
 		priority = priority,
+		callback = callback,
 	)
 
 
@@ -66,6 +72,7 @@ class GrowlNotifier(object):
 	"""
 
 	passwordHash = 'MD5'
+	socketTimeout = 3
 
 	def __init__(self, applicationName = 'Python GNTP', notifications = [],
 			defaultNotifications = None, applicationIcon = None, hostname = 'localhost',
@@ -112,7 +119,8 @@ class GrowlNotifier(object):
 		self.register_hook(register)
 		return self._send('register', register)
 
-	def notify(self, noteType, title, description, icon = None, sticky = False, priority = None):
+	def notify(self, noteType, title, description, icon = None, sticky = False,
+			priority = None, callback = None):
 		"""Send a GNTP notifications
 
 		.. warning::
@@ -124,6 +132,11 @@ class GrowlNotifier(object):
 		:param string icon: Icon URL path
 		:param boolean sticky: Sticky notification
 		:param integer priority: Message priority level from -2 to 2
+		:param string callback:  URL callback
+
+		.. warning::
+			For now, only URL callbacks are supported. In the future, the
+			callback argument will also support a function
 		"""
 		logger.info('Sending notification [%s] to %s:%s', noteType, self.hostname, self.port)
 		assert noteType in self.notifications
@@ -141,6 +154,8 @@ class GrowlNotifier(object):
 			notice.add_header('Notification-Icon', self._checkIcon(icon))
 		if description:
 			notice.add_header('Notification-Text', description)
+		if callback:
+			notice.add_header('Notification-Callback-Target', callback)
 
 		self.add_origin_info(notice)
 		self.notify_hook(notice)
@@ -186,7 +201,7 @@ class GrowlNotifier(object):
 		logger.debug('To : %s:%s <%s>\n%s', self.hostname, self.port, packet.__class__, data)
 
 		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		s.settimeout(3)
+		s.settimeout(self.socketTimeout)
 		s.connect((self.hostname, self.port))
 		s.send(data.encode('utf8', 'replace'))
 		recv_data = s.recv(1024)
