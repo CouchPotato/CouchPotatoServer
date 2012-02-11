@@ -415,7 +415,7 @@ class Scanner(Plugin):
 
                     if len(movie) > 0:
                         imdb_id = movie[0]['imdb']
-                        log.debug('Found movie via cp identifier: %s' % cur_file)
+                        log.debug('Found movie via search: %s' % cur_file)
                         if imdb_id: break
                 else:
                     log.debug('Identifier to short to use for search: %s' % identifier)
