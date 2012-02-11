@@ -1,6 +1,7 @@
 """
 This module contains the expressions applicable for CronTrigger's fields.
 """
+
 from calendar import monthrange
 import re
 
@@ -8,6 +9,7 @@ from apscheduler.util import asint
 
 __all__ = ('AllExpression', 'RangeExpression', 'WeekdayRangeExpression',
            'WeekdayPositionExpression')
+
 
 WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
 
@@ -64,7 +66,7 @@ class RangeExpression(AllExpression):
         start = field.get_value(date)
         minval = field.get_min(date)
         maxval = field.get_max(date)
-        
+
         # Apply range limits
         minval = max(minval, self.first)
         if self.last is not None:
@@ -85,7 +87,7 @@ class RangeExpression(AllExpression):
             range = '%d-%d' % (self.first, self.last)
         else:
             range = str(self.first)
-        
+
         if self.step:
             return '%s/%d' % (range, self.step)
         return range

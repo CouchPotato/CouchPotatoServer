@@ -15,8 +15,7 @@ class Scheduler(Plugin):
 
     def __init__(self):
 
-        sl = logging.getLogger('apscheduler.scheduler')
-        sl.disabled = True
+        logging.getLogger('apscheduler').setLevel(logging.WARNING)
 
         addEvent('schedule.cron', self.cron)
         addEvent('schedule.interval', self.interval)
@@ -55,7 +54,7 @@ class Scheduler(Plugin):
             try:
                 self.remove(identifier)
                 interval = self.intervals[identifier]
-                job = self.sched.add_interval_job(interval['handle'], hours = interval['hours'], minutes = interval['minutes'], seconds = interval['seconds'], repeat = interval['repeat'])
+                job = self.sched.add_interval_job(interval['handle'], hours = interval['hours'], minutes = interval['minutes'], seconds = interval['seconds'])
                 interval['job'] = job
             except ValueError, e:
                 log.error("Failed adding interval cronjob: %s" % e)
@@ -88,13 +87,12 @@ class Scheduler(Plugin):
             'minute': minute,
         }
 
-    def interval(self, identifier = '', handle = None, hours = 0, minutes = 0, seconds = 0, repeat = 0):
-        log.info('Scheduling %s, interval: hours = %s, minutes = %s, seconds = %s, repeat = %s' % (identifier, hours, minutes, seconds, repeat))
+    def interval(self, identifier = '', handle = None, hours = 0, minutes = 0, seconds = 0):
+        log.info('Scheduling %s, interval: hours = %s, minutes = %s, seconds = %s' % (identifier, hours, minutes, seconds))
 
         self.remove(identifier)
         self.intervals[identifier] = {
             'handle': handle,
-            'repeat': repeat,
             'hours': hours,
             'minutes': minutes,
             'seconds': seconds,
