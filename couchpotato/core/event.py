@@ -66,11 +66,19 @@ def fireEvent(name, *args, **kwargs):
             merge = True
         except: pass
 
+        # Merge items
+        in_order = False
+        try:
+            del kwargs['in_order']
+            in_order = True
+        except: pass
+
         e = events[name]
-        e.lock.acquire()
+        if not in_order: e.lock.acquire()
         e.asynchronous = False
+        e.in_order = in_order
         result = e(*args, **kwargs)
-        e.lock.release()
+        if not in_order: e.lock.release()
 
         if single and not merge:
             results = None

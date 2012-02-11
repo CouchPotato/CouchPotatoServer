@@ -16,7 +16,6 @@ import Queue
 import hashlib
 import sys
 import threading
-import time
 
 class Event(object):
     """
@@ -96,6 +95,7 @@ class Event(object):
                 (None, None, handler), ...      # asynchronous execution
             )
         """
+        self.in_order = False
         self.asynchronous = asynch
         self.exc_info = exc_info
         self.lock = lock
@@ -181,6 +181,9 @@ class Event(object):
                 h_ = self.queue.get()
                 handler, memoize, timeout = self.handlers[h_]
 
+                if self.lock and self.in_order:
+                    self.lock.acquire()
+
                 try:
                     r = self._memoize(memoize, timeout, handler, *args, **kwargs)
                     if not self.asynchronous:
@@ -196,6 +199,9 @@ class Event(object):
 
                     if not self.asynchronous:
                         self.queue.task_done()
+
+                    if self.lock and self.in_order:
+                        self.lock.release()
 
                     if self.queue.empty():
                         raise Queue.Empty

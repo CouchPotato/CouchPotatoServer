@@ -161,7 +161,7 @@ def runCouchPotato(options, base_path, args, desktop = None):
         setup()
 
         if initialize:
-            fireEvent('app.initialize')
+            fireEvent('app.initialize', in_order = True)
 
         fire_load = True
 
