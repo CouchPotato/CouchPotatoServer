@@ -5,6 +5,7 @@ from couchpotato.core.helpers.variable import getExt, getImdb, tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import File
+from couchpotato.environment import Env
 from enzyme.exceptions import NoParserError, ParseError
 import enzyme
 import logging
@@ -143,10 +144,21 @@ class Scanner(Plugin):
 
         # Scan all files of the folder if no files are set
         if len(files) == 0:
-            files = []
-            for root, dirs, walk_files in os.walk(toUnicode(folder)):
-                for filename in walk_files:
-                    files.append(os.path.join(root, filename))
+            try:
+                files = []
+                for root, dirs, walk_files in os.walk(toUnicode(folder)):
+                    for filename in walk_files:
+                        files.append(os.path.join(root, filename))
+            except:
+                try:
+                    files = []
+                    folder = toUnicode(folder).encode(Env.get('encoding'))
+                    log.info('Trying to convert unicode to str path: %s, %s' % (folder, type(folder)))
+                    for root, dirs, walk_files in os.walk(folder):
+                        for filename in walk_files:
+                            files.append(os.path.join(root, filename))
+                except:
+                    log.error('Failed getting files from %s: %s' % (folder, traceback.format_exc()))
 
         for file_path in files:
 
@@ -287,9 +299,9 @@ class Scanner(Plugin):
                 break
 
             # Leftover "sorted" files
-            for type in group['files']:
-                if not type is 'leftover':
-                    group['files']['leftover'] -= set(group['files'][type])
+            for file_type in group['files']:
+                if not file_type is 'leftover':
+                    group['files']['leftover'] -= set(group['files'][file_type])
 
             # Delete the unsorted list
             del group['unsorted_files']
