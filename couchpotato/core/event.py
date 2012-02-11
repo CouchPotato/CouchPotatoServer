@@ -2,6 +2,7 @@ from axl.axel import Event
 from couchpotato.core.helpers.variable import mergeDicts
 from couchpotato.core.logger import CPLog
 import threading
+import time
 import traceback
 
 log = CPLog(__name__)
@@ -25,15 +26,17 @@ def addEvent(name, handler, priority = 100):
 
         try:
             parent = handler.im_self
-            parent.beforeCall(handler)
+            bc = hasattr(parent, 'beforeCall')
+            if bc: parent.beforeCall(handler)
             h = runHandler(name, handler, *args, **kwargs)
-            parent.afterCall(handler)
+            ac = hasattr(parent, 'afterCall')
+            if ac: parent.afterCall(handler)
         except:
             h = runHandler(name, handler, *args, **kwargs)
 
         return h
 
-    e.handle(createHandle, priority = priority)
+    e.handle(handler, priority = priority)
 
 def removeEvent(name, handler):
     e = events[name]
@@ -64,8 +67,10 @@ def fireEvent(name, *args, **kwargs):
         except: pass
 
         e = events[name]
+        e.lock.acquire()
         e.asynchronous = False
         result = e(*args, **kwargs)
+        e.lock.release()
 
         if single and not merge:
             results = None
@@ -123,10 +128,11 @@ def fireEventAsync(name, *args, **kwargs):
     #log.debug('Async "%s": %s, %s' % (name, args, kwargs))
     try:
         e = events[name]
+        e.lock.acquire()
         e.asynchronous = True
         e.error_handler = errorHandler
-
         e(*args, **kwargs)
+        e.lock.release()
         return True
     except Exception, e:
         log.error('%s: %s' % (name, e))

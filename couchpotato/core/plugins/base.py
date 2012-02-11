@@ -54,7 +54,7 @@ class Plugin(object):
         s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', self.__class__.__name__)
         class_name = re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
 
-        path = 'static/' + class_name + '/'
+        path = '%s/static/%s/' % (Env.setting('api_key'), class_name)
         addView(path + '<path:filename>', self.showStatic, static = True)
 
         if add_to_head:
@@ -94,8 +94,6 @@ class Plugin(object):
     # http request
     def urlopen(self, url, timeout = 10, params = {}, headers = {}, multipart = False, show_error = True):
 
-        socket.setdefaulttimeout(timeout)
-
         # Fill in some headers
         if not headers.get('Referer'):
             headers['Referer'] = urlparse(url).hostname
@@ -114,13 +112,13 @@ class Plugin(object):
                 cookies = cookielib.CookieJar()
                 opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookies), MultipartPostHandler)
 
-                data = opener.open(request).read()
+                data = opener.open(request, timeout = timeout).read()
             else:
                 log.info('Opening url: %s, params: %s' % (url, [x for x in params.iterkeys()]))
                 data = urllib.urlencode(params) if len(params) > 0 else None
                 request = urllib2.Request(url, data, headers)
 
-                data = urllib2.urlopen(request).read()
+                data = urllib2.urlopen(request, timeout = timeout).read()
         except IOError:
             if show_error:
                 log.error('Failed opening url in %s: %s %s' % (self.getName(), url, traceback.format_exc(1)))

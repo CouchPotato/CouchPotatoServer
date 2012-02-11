@@ -1,7 +1,11 @@
+from couchpotato.core.event import fireEvent
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
 from gntp import notifier
 import logging
+import thread
+import time
+import traceback
 
 log = CPLog(__name__)
 
@@ -15,13 +19,19 @@ class Growl(Notification):
         logger.disabled = True
 
         try:
-            self.growl = notifier.GrowlNotifier(
-                applicationName = 'CouchPotato',
-                notifications = ["Updates"],
-                defaultNotifications = ["Updates"],
-                applicationIcon = 'http://couchpota.to/media/images/couch.png',
-            )
-            self.growl.register()
+            def startGrowl():
+                time.sleep(2)
+                try:
+                    self.growl = notifier.GrowlNotifier(
+                        applicationName = 'CouchPotato',
+                        notifications = ["Updates"],
+                        defaultNotifications = ["Updates"],
+                        applicationIcon = '%s/static/images/couch.png' % fireEvent('app.api_url', single = True),
+                    )
+                    self.growl.register()
+                except:
+                    log.error('Failed register of growl: %s' % traceback.format_exc())
+            thread.start_new_thread(startGrowl, ())
         except:
             pass
 

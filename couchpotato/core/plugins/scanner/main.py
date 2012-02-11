@@ -528,7 +528,9 @@ class Scanner(Plugin):
         return True
 
     def isSampleFile(self, filename):
-        return re.search('(^|[\W_])sample\d*[\W_]', filename.lower())
+        is_sample = re.search('(^|[\W_])sample\d*[\W_]', filename.lower())
+        if is_sample: log.debug('Is sample file: %s' % filename)
+        return is_sample
 
     def filesizeBetween(self, file, min = 0, max = 100000):
         try:

@@ -16,18 +16,18 @@ log = CPLog(__name__)
 class Searcher(Plugin):
 
     def __init__(self):
-        addEvent('searcher.all', self.all)
+        addEvent('searcher.all', self.all_movies)
         addEvent('searcher.single', self.single)
         addEvent('searcher.correct_movie', self.correctMovie)
         addEvent('searcher.download', self.download)
 
         # Schedule cronjob
-        fireEvent('schedule.cron', 'searcher.all', self.all, day = self.conf('cron_day'), hour = self.conf('cron_hour'), minute = self.conf('cron_minute'))
+        fireEvent('schedule.cron', 'searcher.all', self.all_movies, day = self.conf('cron_day'), hour = self.conf('cron_hour'), minute = self.conf('cron_minute'))
 
         if not Env.setting('development'):
-            addEvent('app.load', self.all)
+            addEvent('app.load', self.all_movies)
 
-    def all(self):
+    def all_movies(self):
 
         db = get_session()
 

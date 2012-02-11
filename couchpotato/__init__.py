@@ -15,7 +15,7 @@ import os
 
 log = CPLog(__name__)
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder = 'nope')
 web = Blueprint('web', __name__)
 
 

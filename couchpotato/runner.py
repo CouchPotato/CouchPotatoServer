@@ -10,8 +10,8 @@ import locale
 import logging
 import os.path
 import sys
-import traceback
 import time
+import traceback
 
 def getOptions(base_path, args):
 
@@ -180,7 +180,8 @@ def runCouchPotato(options, base_path, args, desktop = None):
     }
 
     # Static path
-    web.add_url_rule('static/<path:filename>',
+    app.static_folder = os.path.join(base_path, 'couchpotato', 'static')
+    web.add_url_rule('%s/static/<path:filename>' % api_key,
                       endpoint = 'static',
                       view_func = app.send_static_file)
 

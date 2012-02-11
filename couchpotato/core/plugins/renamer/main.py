@@ -290,11 +290,11 @@ class Renamer(Plugin):
 
             # Remove files
             for src in remove_files:
-                log.info('Removing "%s"' % src)
+                log.info('(fake) Removing "%s"' % src)
 
             # Remove matching releases
             for release in remove_releases:
-                log.info('Removing release %s' % release)
+                log.info('(fake) Removing release %s' % release)
 
             # Search for trailers etc
             fireEventAsync('renamer.after', group)

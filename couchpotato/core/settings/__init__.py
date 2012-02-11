@@ -9,7 +9,7 @@ import os.path
 import time
 
 
-class Settings():
+class Settings(object):
 
     options = {}
     types = {}

@@ -70,7 +70,7 @@ class Core(Plugin):
 
     def crappyShutdown(self):
         try:
-            self.urlopen('%sapp.shutdown' % self.createApiUrl(), show_error = False)
+            self.urlopen('%s/app.shutdown' % self.createApiUrl(), show_error = False)
             return True
         except:
             self.initShutdown()
@@ -78,7 +78,7 @@ class Core(Plugin):
 
     def crappyRestart(self):
         try:
-            self.urlopen('%sapp.restart' % self.createApiUrl(), show_error = False)
+            self.urlopen('%s/app.restart' % self.createApiUrl(), show_error = False)
             return True
         except:
             self.initShutdown(restart = True)
@@ -163,8 +163,7 @@ class Core(Plugin):
             host = 'localhost'
         port = Env.setting('port')
 
-        return '%s:%d' % (cleanHost(host).rstrip('/'), int(port))
+        return '%s:%d%s' % (cleanHost(host).rstrip('/'), int(port), '/' + Env.setting('url_base').lstrip('/') if Env.setting('url_base') else '')
 
     def createApiUrl(self):
-
-        return '%s/%s/' % (self.createBaseUrl(), Env.setting('api_key'))
+        return '%s/%s' % (self.createBaseUrl(), Env.setting('api_key'))
