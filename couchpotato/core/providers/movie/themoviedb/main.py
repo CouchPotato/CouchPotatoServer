@@ -130,10 +130,10 @@ class TheMovieDb(MovieProvider):
     def parseMovie(self, movie):
 
         # Images
-        poster = self.getImage(movie, type = 'poster')
-        backdrop = self.getImage(movie, type = 'backdrop')
-        poster_original = self.getImage(movie, type = 'poster', size = 'mid')
-        backdrop_original = self.getImage(movie, type = 'backdrop', size = 'w1280')
+        poster = self.getImage(movie, type = 'poster', size = 'cover')
+        backdrop = self.getImage(movie, type = 'backdrop', size = 'w1280')
+        poster_original = self.getImage(movie, type = 'poster', size = 'original')
+        backdrop_original = self.getImage(movie, type = 'backdrop', size = 'original')
 
         # Genres
         try:
@@ -173,7 +173,7 @@ class TheMovieDb(MovieProvider):
 
         return movie_data
 
-    def getImage(self, movie, type = 'poster', size = 'thumb'):
+    def getImage(self, movie, type = 'poster', size = 'cover'):
 
         image_url = ''
         for image in movie.get('images', []):
