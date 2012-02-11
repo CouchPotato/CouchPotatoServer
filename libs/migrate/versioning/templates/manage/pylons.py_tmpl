@@ -26,4 +26,5 @@ conf_dict = ConfigLoader(conf_path).parser._sections['app:main']
 
 # migrate supports passing url as an existing Engine instance (since 0.6.0)
 # usage: migrate -c path/to/config.ini COMMANDS
-main(url=engine_from_config(conf_dict), repository=migrations.__path__[0],{{ defaults }})
+if __name__ == '__main__':
+    main(url=engine_from_config(conf_dict), repository=migrations.__path__[0],{{ defaults }})

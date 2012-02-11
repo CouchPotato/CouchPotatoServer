@@ -1,12 +1,14 @@
 # sql/util.py
-# Copyright (C) 2005-2011 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2012 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 
-from sqlalchemy import exc, schema, topological, util, sql, types as sqltypes
+from sqlalchemy import exc, schema, util, sql, types as sqltypes
+from sqlalchemy.util import topological
 from sqlalchemy.sql import expression, operators, visitors
 from itertools import chain
+from collections import deque
 
 """Utility functions that build upon SQL and Schema constructs."""
 
@@ -98,6 +100,25 @@ def find_columns(clause):
     visitors.traverse(clause, {}, {'column':cols.add})
     return cols
 
+def unwrap_order_by(clause):
+    """Break up an 'order by' expression into individual column-expressions,
+    without DESC/ASC/NULLS FIRST/NULLS LAST"""
+
+    cols = util.column_set()
+    stack = deque([clause])
+    while stack:
+        t = stack.popleft()
+        if isinstance(t, expression.ColumnElement) and \
+            (
+                not isinstance(t, expression._UnaryExpression) or \
+                not operators.is_ordering_modifier(t.modifier)
+            ): 
+            cols.add(t)
+        else:
+            for c in t.get_children():
+                stack.append(c)
+    return cols
+
 def clause_is_present(clause, search):
     """Given a target clause and a second to search within, return True
     if the target is plainly present in the search without any
@@ -131,13 +152,7 @@ def bind_values(clause):
 
     v = []
     def visit_bindparam(bind):
-        value = bind.value
-
-        # evaluate callables
-        if callable(value):
-            value = value()
-
-        v.append(value)
+        v.append(bind.effective_value)
 
     visitors.traverse(clause, {}, {'bindparam':visit_bindparam})
     return v
@@ -148,6 +163,28 @@ def _quote_ddl_expr(element):
         return "'%s'" % element
     else:
         return repr(element)
+
+class _repr_params(object):
+    """A string view of bound parameters, truncating
+    display to the given number of 'multi' parameter sets.
+    
+    """
+    def __init__(self, params, batches):
+        self.params = params
+        self.batches = batches
+
+    def __repr__(self):
+        if isinstance(self.params, (list, tuple)) and \
+            len(self.params) > self.batches and \
+            isinstance(self.params[0], (list, dict, tuple)):
+            return ' '.join((
+                        repr(self.params[:self.batches - 2])[0:-1],
+                        " ... displaying %i of %i total bound parameter sets ... " % (self.batches, len(self.params)),
+                        repr(self.params[-2:])[1:]
+                    ))
+        else:
+            return repr(self.params)
+
 
 def expression_as_ddl(clause):
     """Given a SQL expression, convert for usage in DDL, such as 
@@ -173,19 +210,20 @@ def adapt_criterion_to_null(crit, nulls):
     """given criterion containing bind params, convert selected elements to IS NULL."""
 
     def visit_binary(binary):
-        if isinstance(binary.left, expression._BindParamClause) and binary.left.key in nulls:
+        if isinstance(binary.left, expression._BindParamClause) \
+            and binary.left._identifying_key in nulls:
             # reverse order if the NULL is on the left side
             binary.left = binary.right
             binary.right = expression.null()
             binary.operator = operators.is_
             binary.negate = operators.isnot
-        elif isinstance(binary.right, expression._BindParamClause) and binary.right.key in nulls:
+        elif isinstance(binary.right, expression._BindParamClause) \
+            and binary.right._identifying_key in nulls:
             binary.right = expression.null()
             binary.operator = operators.is_
             binary.negate = operators.isnot
 
     return visitors.cloned_traverse(crit, {}, {'binary':visit_binary})
-
 
 def join_condition(a, b, ignore_nonexistent_tables=False, a_subset=None):
     """create a join condition between two tables or selectables.
@@ -202,11 +240,9 @@ def join_condition(a, b, ignore_nonexistent_tables=False, a_subset=None):
     between the two selectables.   If there are multiple ways
     to join, or no way to join, an error is raised.
 
-    :param ignore_nonexistent_tables: This flag will cause the
-    function to silently skip over foreign key resolution errors
-    due to nonexistent tables - the assumption is that these
-    tables have not yet been defined within an initialization process
-    and are not significant to the operation.
+    :param ignore_nonexistent_tables:  Deprecated - this
+    flag is no longer used.  Only resolution errors regarding
+    the two given tables are propagated.
 
     :param a_subset: An optional expression that is a sub-component
     of ``a``.  An attempt will be made to join to just this sub-component
@@ -222,27 +258,33 @@ def join_condition(a, b, ignore_nonexistent_tables=False, a_subset=None):
     for left in (a_subset, a):
         if left is None:
             continue
-        for fk in b.foreign_keys:
+        for fk in sorted(
+                    b.foreign_keys, 
+                    key=lambda fk:fk.parent._creation_order):
             try:
                 col = fk.get_referent(left)
-            except exc.NoReferencedTableError:
-                if ignore_nonexistent_tables:
-                    continue
-                else:
+            except exc.NoReferenceError, nrte:
+                if nrte.table_name == left.name:
                     raise
+                else:
+                    continue
 
             if col is not None:
                 crit.append(col == fk.parent)
                 constraints.add(fk.constraint)
         if left is not b:
-            for fk in left.foreign_keys:
+            for fk in sorted(
+                        left.foreign_keys, 
+                        key=lambda fk:fk.parent._creation_order):
                 try:
                     col = fk.get_referent(b)
-                except exc.NoReferencedTableError:
-                    if ignore_nonexistent_tables:
-                        continue
-                    else:
+                except exc.NoReferenceError, nrte:
+                    if nrte.table_name == b.name:
                         raise
+                    else:
+                        # this is totally covered.  can't get
+                        # coverage to mark it.
+                        continue
 
                 if col is not None:
                     crit.append(col == fk.parent)
@@ -252,7 +294,8 @@ def join_condition(a, b, ignore_nonexistent_tables=False, a_subset=None):
 
     if len(crit) == 0:
         if isinstance(b, expression._FromGrouping):
-            hint = " Perhaps you meant to convert the right side to a subquery using alias()?"
+            hint = " Perhaps you meant to convert the right side to a "\
+                                "subquery using alias()?"
         else:
             hint = ""
         raise exc.ArgumentError(
@@ -334,7 +377,7 @@ class Annotated(object):
             # detect immutable, don't change anything
             return self
         else:
-            # update the clone with any changes that have occured
+            # update the clone with any changes that have occurred
             # to this object's __dict__.
             clone.__dict__.update(self.__dict__)
             return Annotated(clone, self._annotations)
@@ -342,8 +385,12 @@ class Annotated(object):
     def __hash__(self):
         return hash(self.__element)
 
-    def __cmp__(self, other):
-        return cmp(hash(self.__element), hash(other))
+    def __eq__(self, other):
+        if isinstance(self.__element, expression.ColumnOperators):
+            return self.__element.__class__.__eq__(self, other)
+        else:
+            return hash(other) == hash(self)
+
 
 # hard-generate Annotated subclasses.  this technique
 # is used instead of on-the-fly types (i.e. type.__new__())
@@ -390,6 +437,17 @@ def _deep_deannotate(element):
         element = clone(element)
     return element
 
+def _shallow_annotate(element, annotations): 
+    """Annotate the given ClauseElement and copy its internals so that 
+    internal objects refer to the new annotated object. 
+
+    Basically used to apply a "dont traverse" annotation to a  
+    selectable, without digging throughout the whole 
+    structure wasting time. 
+    """ 
+    element = element._annotate(annotations) 
+    element._copy_internals() 
+    return element 
 
 def splice_joins(left, right, stop_on=None):
     if left is None:
@@ -611,21 +669,27 @@ class ClauseAdapter(visitors.ReplacingCloningVisitor):
       s.c.col1 == table2.c.col1
 
     """
-    def __init__(self, selectable, equivalents=None, include=None, exclude=None):
-        self.__traverse_options__ = {'column_collections':False, 'stop_on':[selectable]}
+    def __init__(self, selectable, equivalents=None, include=None, exclude=None, adapt_on_names=False):
+        self.__traverse_options__ = {'stop_on':[selectable]}
         self.selectable = selectable
         self.include = include
         self.exclude = exclude
         self.equivalents = util.column_dict(equivalents or {})
+        self.adapt_on_names = adapt_on_names
 
     def _corresponding_column(self, col, require_embedded, _seen=util.EMPTY_SET):
-        newcol = self.selectable.corresponding_column(col, require_embedded=require_embedded)
-
+        newcol = self.selectable.corresponding_column(
+                                    col, 
+                                    require_embedded=require_embedded)
         if newcol is None and col in self.equivalents and col not in _seen:
             for equiv in self.equivalents[col]:
-                newcol = self._corresponding_column(equiv, require_embedded=require_embedded, _seen=_seen.union([col]))
+                newcol = self._corresponding_column(equiv, 
+                                require_embedded=require_embedded, 
+                                _seen=_seen.union([col]))
                 if newcol is not None:
                     return newcol
+        if self.adapt_on_names and newcol is None:
+            newcol = self.selectable.c.get(col.name)
         return newcol
 
     def replace(self, col):

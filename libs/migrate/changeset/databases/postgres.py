@@ -3,14 +3,10 @@
 
    .. _`PostgreSQL`: http://www.postgresql.org/
 """
-from migrate.changeset import ansisql, SQLA_06
+from migrate.changeset import ansisql
 
-if not SQLA_06:
-    from sqlalchemy.databases import postgres as sa_base
-    PGSchemaGenerator = sa_base.PGSchemaGenerator
-else:
-    from sqlalchemy.databases import postgresql as sa_base
-    PGSchemaGenerator = sa_base.PGDDLCompiler
+from sqlalchemy.databases import postgresql as sa_base
+PGSchemaGenerator = sa_base.PGDDLCompiler
 
 
 class PGColumnGenerator(PGSchemaGenerator, ansisql.ANSIColumnGenerator):

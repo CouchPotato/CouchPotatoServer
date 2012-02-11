@@ -1,5 +1,5 @@
 # orm/sync.py
-# Copyright (C) 2005-2011 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2012 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -8,28 +8,37 @@
 between instances based on join conditions.
 """
 
-from sqlalchemy.orm import exc, util as mapperutil
+from sqlalchemy.orm import exc, util as mapperutil, attributes
 
 def populate(source, source_mapper, dest, dest_mapper, 
                         synchronize_pairs, uowcommit, flag_cascaded_pks):
+    source_dict = source.dict
+    dest_dict = dest.dict
+
     for l, r in synchronize_pairs:
         try:
-            value = source_mapper._get_state_attr_by_column(source, source.dict, l)
+            # inline of source_mapper._get_state_attr_by_column
+            prop = source_mapper._columntoproperty[l]
+            value = source.manager[prop.key].impl.get(source, source_dict, 
+                                                    attributes.PASSIVE_OFF)
         except exc.UnmappedColumnError:
             _raise_col_to_prop(False, source_mapper, l, dest_mapper, r)
 
         try:
-            dest_mapper._set_state_attr_by_column(dest, dest.dict, r, value)
+            # inline of dest_mapper._set_state_attr_by_column
+            prop = dest_mapper._columntoproperty[r]
+            dest.manager[prop.key].impl.set(dest, dest_dict, value, None)
         except exc.UnmappedColumnError:
             _raise_col_to_prop(True, source_mapper, l, dest_mapper, r)
 
-        # techically the "r.primary_key" check isn't
+        # technically the "r.primary_key" check isn't
         # needed here, but we check for this condition to limit
         # how often this logic is invoked for memory/performance
         # reasons, since we only need this info for a primary key
         # destination.
-        if l.primary_key and r.primary_key and \
-                    r.references(l) and flag_cascaded_pks:
+        if flag_cascaded_pks and l.primary_key and \
+                    r.primary_key and \
+                    r.references(l):
             uowcommit.attributes[("pk_cascaded", dest, r)] = True
 
 def clear(dest, dest_mapper, synchronize_pairs):
@@ -74,7 +83,8 @@ def source_modified(uowcommit, source, source_mapper, synchronize_pairs):
             prop = source_mapper._columntoproperty[l]
         except exc.UnmappedColumnError:
             _raise_col_to_prop(False, source_mapper, l, None, r)
-        history = uowcommit.get_attribute_history(source, prop.key, passive=True)
+        history = uowcommit.get_attribute_history(source, prop.key, 
+                                        attributes.PASSIVE_NO_INITIALIZE)
         return bool(history.deleted)
     else:
         return False
@@ -85,7 +95,7 @@ def _raise_col_to_prop(isdest, source_mapper, source_column, dest_mapper, dest_c
                                 "Can't execute sync rule for destination column '%s'; "
                                 "mapper '%s' does not map this column.  Try using an explicit"
                                 " `foreign_keys` collection which does not include this column "
-                                "(or use a viewonly=True relation)." % (dest_column, source_mapper)
+                                "(or use a viewonly=True relation)." % (dest_column, dest_mapper)
                                 )
     else:
         raise exc.UnmappedColumnError(

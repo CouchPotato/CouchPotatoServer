@@ -1,5 +1,5 @@
 # engine/url.py
-# Copyright (C) 2005-2011 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2012 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -12,8 +12,8 @@ with a string argument; alternatively, the URL is a public-facing construct whic
 be used directly and is also accepted directly by ``create_engine()``.
 """
 
-import re, cgi, sys, urllib
-from sqlalchemy import exc
+import re, urllib
+from sqlalchemy import exc, util
 
 
 class URL(object):
@@ -104,7 +104,14 @@ class URL(object):
 
             module = __import__('sqlalchemy.dialects.%s' % (dialect, )).dialects
             module = getattr(module, dialect)
-            module = getattr(module, driver)
+            if hasattr(module, driver):
+                module = getattr(module, driver)
+            else:
+                module = self._load_entry_point()
+                if module is None:
+                    raise exc.ArgumentError(
+                        "Could not determine dialect for '%s'." % 
+                        self.drivername)
 
             return module.dialect
         except ImportError:
@@ -112,7 +119,8 @@ class URL(object):
             if module is not None:
                 return module
             else:
-                raise
+                raise exc.ArgumentError(
+                    "Could not determine dialect for '%s'." % self.drivername)
 
     def _load_entry_point(self):
         """attempt to load this url's dialect from entry points, or return None
@@ -127,7 +135,7 @@ class URL(object):
             return None
 
         for res in pkg_resources.iter_entry_points('sqlalchemy.dialects'):
-            if res.name == self.drivername:
+            if res.name == self.drivername.replace("+", "."):
                 return res.load()
         else:
             return None
@@ -192,7 +200,7 @@ def _parse_rfc1738_args(name):
         if components['database'] is not None:
             tokens = components['database'].split('?', 2)
             components['database'] = tokens[0]
-            query = (len(tokens) > 1 and dict(cgi.parse_qsl(tokens[1]))) or None
+            query = (len(tokens) > 1 and dict(util.parse_qsl(tokens[1]))) or None
             # Py2K
             if query is not None:
                 query = dict((k.encode('ascii'), query[k]) for k in query)
@@ -214,7 +222,7 @@ def _parse_keyvalue_args(name):
     m = re.match( r'(\w+)://(.*)', name)
     if m is not None:
         (name, args) = m.group(1, 2)
-        opts = dict( cgi.parse_qsl( args ) )
+        opts = dict( util.parse_qsl( args ) )
         return URL(name, *opts)
     else:
         return None

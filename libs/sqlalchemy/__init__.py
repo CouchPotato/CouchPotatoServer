@@ -1,5 +1,5 @@
 # sqlalchemy/__init__.py
-# Copyright (C) 2005-2011 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2012 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -8,7 +8,6 @@ import inspect
 import sys
 
 import sqlalchemy.exc as exceptions
-sys.modules['sqlalchemy.exceptions'] = exceptions
 
 from sqlalchemy.sql import (
     alias,
@@ -39,6 +38,7 @@ from sqlalchemy.sql import (
     or_,
     outerjoin,
     outparam,
+    over,
     select,
     subquery,
     text,
@@ -75,6 +75,7 @@ from sqlalchemy.types import (
     NUMERIC,
     Numeric,
     PickleType,
+    REAL,
     SMALLINT,
     SmallInteger,
     String,
@@ -83,6 +84,7 @@ from sqlalchemy.types import (
     TIMESTAMP,
     Text,
     Time,
+    TypeDecorator,
     Unicode,
     UnicodeText,
     VARCHAR,
@@ -115,6 +117,9 @@ from sqlalchemy.engine import create_engine, engine_from_config
 __all__ = sorted(name for name, obj in locals().items()
                  if not (name.startswith('_') or inspect.ismodule(obj)))
 
-__version__ = '0.6.6'
+__version__ = '0.7.5'
 
 del inspect, sys
+
+from sqlalchemy import util as _sa_util
+_sa_util.importlater.resolve_all()

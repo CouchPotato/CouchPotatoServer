@@ -1,5 +1,5 @@
 # orm/exc.py
-# Copyright (C) 2005-2011 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2012 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -7,7 +7,7 @@
 """SQLAlchemy ORM exceptions."""
 
 import sqlalchemy as sa
-
+orm_util = sa.util.importlater('sqlalchemy.orm', 'util')
 
 NO_STATE = (AttributeError, KeyError)
 """Exception types that may be raised by instrumentation implementations."""
@@ -15,7 +15,7 @@ NO_STATE = (AttributeError, KeyError)
 class StaleDataError(sa.exc.SQLAlchemyError):
     """An operation encountered database state that is unaccounted for.
 
-    Two conditions cause this to happen:
+    Conditions which cause this to happen include:
 
     * A flush may have attempted to update or delete rows
       and an unexpected number of rows were matched during 
@@ -27,6 +27,12 @@ class StaleDataError(sa.exc.SQLAlchemyError):
     * A mapped object with version_id_col was refreshed, 
       and the version number coming back from the database does
       not match that of the object itself.
+      
+    * A object is detached from its parent object, however
+      the object was previously attached to a different parent
+      identity which was garbage collected, and a decision
+      cannot be made if the new parent was really the most
+      recent "parent" (new in 0.7.4).
 
     """
 
@@ -39,6 +45,9 @@ class FlushError(sa.exc.SQLAlchemyError):
 
 class UnmappedError(sa.exc.InvalidRequestError):
     """Base for exceptions that involve expected mappings not present."""
+
+class ObjectDereferencedError(sa.exc.SQLAlchemyError):
+    """An operation cannot complete due to an object being garbage collected."""
 
 class DetachedInstanceError(sa.exc.SQLAlchemyError):
     """An attempt to access unloaded attributes on a 
@@ -63,6 +72,8 @@ class UnmappedInstanceError(UnmappedError):
                         'required?' % _safe_cls_name(obj))
         UnmappedError.__init__(self, msg)
 
+    def __reduce__(self):
+        return self.__class__, (None, self.args[0])
 
 class UnmappedClassError(UnmappedError):
     """An mapping operation was requested for an unknown class."""
@@ -72,10 +83,37 @@ class UnmappedClassError(UnmappedError):
             msg = _default_unmapped(cls)
         UnmappedError.__init__(self, msg)
 
+    def __reduce__(self):
+        return self.__class__, (None, self.args[0])
 
 class ObjectDeletedError(sa.exc.InvalidRequestError):
-    """An refresh() operation failed to re-retrieve an object's row."""
+    """A refresh operation failed to retrieve the database
+    row corresponding to an object's known primary key identity.
+    
+    A refresh operation proceeds when an expired attribute is 
+    accessed on an object, or when :meth:`.Query.get` is
+    used to retrieve an object which is, upon retrieval, detected
+    as expired.   A SELECT is emitted for the target row
+    based on primary key; if no row is returned, this
+    exception is raised.
+    
+    The true meaning of this exception is simply that 
+    no row exists for the primary key identifier associated
+    with a persistent object.   The row may have been 
+    deleted, or in some cases the primary key updated
+    to a new value, outside of the ORM's management of the target
+    object.   
+    
+    """
+    def __init__(self, state, msg=None):
+        if not msg:
+            msg = "Instance '%s' has been deleted, or its "\
+             "row is otherwise not present." % orm_util.state_str(state)
 
+        sa.exc.InvalidRequestError.__init__(self, msg)
+
+    def __reduce__(self):
+        return self.__class__, (None, self.args[0])
 
 class UnmappedColumnError(sa.exc.InvalidRequestError):
     """Mapping operation was requested on an unknown column."""

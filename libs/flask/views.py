@@ -3,7 +3,7 @@
     flask.views
     ~~~~~~~~~~~
 
-    This module provides class based views inspired by the ones in Django.
+    This module provides class-based views inspired by the ones in Django.
 
     :copyright: (c) 2011 by Armin Ronacher.
     :license: BSD, see LICENSE for more details.
@@ -12,7 +12,7 @@ from .globals import request
 
 
 http_method_funcs = frozenset(['get', 'post', 'head', 'options',
-                               'delete', 'put', 'trace'])
+                               'delete', 'put', 'trace', 'patch'])
 
 
 class View(object):
@@ -50,7 +50,7 @@ class View(object):
     #: A for which methods this pluggable view can handle.
     methods = None
 
-    #: The canonical way to decorate class based views is to decorate the
+    #: The canonical way to decorate class-based views is to decorate the
     #: return value of as_view().  However since this moves parts of the
     #: logic from the class declaration to the place where it's hooked
     #: into the routing system.
@@ -70,10 +70,10 @@ class View(object):
 
     @classmethod
     def as_view(cls, name, *class_args, **class_kwargs):
-        """Converts the class into an actual view function that can be
-        used with the routing system.  What it does internally is generating
-        a function on the fly that will instanciate the :class:`View`
-        on each request and call the :meth:`dispatch_request` method on it.
+        """Converts the class into an actual view function that can be used
+        with the routing system.  Internally this generates a function on the
+        fly which will instantiate the :class:`View` on each request and call
+        the :meth:`dispatch_request` method on it.
 
         The arguments passed to :meth:`as_view` are forwarded to the
         constructor of the class.
@@ -89,8 +89,8 @@ class View(object):
                 view = decorator(view)
 
         # we attach the view class to the view function for two reasons:
-        # first of all it allows us to easily figure out what class based
-        # view this thing came from, secondly it's also used for instanciating
+        # first of all it allows us to easily figure out what class-based
+        # view this thing came from, secondly it's also used for instantiating
         # the view class so you can actually replace it with something else
         # for testing purposes and debugging.
         view.view_class = cls
@@ -120,7 +120,7 @@ class MethodViewType(type):
 
 
 class MethodView(View):
-    """Like a regular class based view but that dispatches requests to
+    """Like a regular class-based view but that dispatches requests to
     particular methods.  For instance if you implement a method called
     :meth:`get` it means you will response to ``'GET'`` requests and
     the :meth:`dispatch_request` implementation will automatically
@@ -146,5 +146,5 @@ class MethodView(View):
         # retry with GET
         if meth is None and request.method == 'HEAD':
             meth = getattr(self, 'get', None)
-        assert meth is not None, 'Not implemented method %r' % request.method
+        assert meth is not None, 'Unimplemented method %r' % request.method
         return meth(*args, **kwargs)

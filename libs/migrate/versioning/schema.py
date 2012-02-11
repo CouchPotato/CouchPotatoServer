@@ -11,6 +11,7 @@ from sqlalchemy import exceptions as sa_exceptions
 from sqlalchemy.sql import bindparam
 
 from migrate import exceptions
+from migrate.changeset import SQLA_07
 from migrate.versioning import genmodel, schemadiff
 from migrate.versioning.repository import Repository
 from migrate.versioning.util import load_model
@@ -57,14 +58,20 @@ class ControlledSchema(object):
         """
         Remove version control from a database.
         """
-        try:
-            self.table.drop()
-        except (sa_exceptions.SQLError):
-            raise exceptions.DatabaseNotControlledError(str(self.table))
+        if SQLA_07:
+            try:
+                self.table.drop()
+            except sa_exceptions.DatabaseError:
+                raise exceptions.DatabaseNotControlledError(str(self.table))
+        else:
+            try:
+                self.table.drop()
+            except (sa_exceptions.SQLError):
+                raise exceptions.DatabaseNotControlledError(str(self.table))
 
     def changeset(self, version=None):
         """API to Changeset creation.
-        
+
         Uses self.version for start version and engine.name
         to get database name.
         """
@@ -110,7 +117,7 @@ class ControlledSchema(object):
         diff = schemadiff.getDiffOfModelAgainstDatabase(
             model, self.engine, excludeTables=[self.repository.version_table]
             )
-        genmodel.ModelGenerator(diff,self.engine).applyModel()
+        genmodel.ModelGenerator(diff,self.engine).runB2A()
 
         self.update_repository_table(self.version, int(self.repository.latest))
 
@@ -210,4 +217,4 @@ class ControlledSchema(object):
         diff = schemadiff.getDiffOfModelAgainstDatabase(
             MetaData(), engine, excludeTables=[repository.version_table]
             )
-        return genmodel.ModelGenerator(diff, engine, declarative).toPython()
+        return genmodel.ModelGenerator(diff, engine, declarative).genBDefinition()

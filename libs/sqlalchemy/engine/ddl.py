@@ -21,35 +21,63 @@ class SchemaGenerator(DDLBase):
         self.tables = tables and set(tables) or None
         self.preparer = dialect.identifier_preparer
         self.dialect = dialect
+        self.memo = {}
 
-    def _can_create(self, table):
+    def _can_create_table(self, table):
         self.dialect.validate_identifier(table.name)
         if table.schema:
             self.dialect.validate_identifier(table.schema)
-        return not self.checkfirst or not self.dialect.has_table(self.connection, table.name, schema=table.schema)
+        return not self.checkfirst or \
+                not self.dialect.has_table(self.connection, 
+                                    table.name, schema=table.schema)
+
+    def _can_create_sequence(self, sequence):
+        return self.dialect.supports_sequences and \
+            (
+                (not self.dialect.sequences_optional or
+                 not sequence.optional) and
+                 (
+                 not self.checkfirst or
+                 not self.dialect.has_sequence(
+                            self.connection, 
+                            sequence.name, 
+                            schema=sequence.schema)
+                 )
+            )
 
     def visit_metadata(self, metadata):
         if self.tables:
             tables = self.tables
         else:
             tables = metadata.tables.values()
-        collection = [t for t in sql_util.sort_tables(tables) if self._can_create(t)]
+        collection = [t for t in sql_util.sort_tables(tables) 
+                        if self._can_create_table(t)]
+        seq_coll = [s for s in metadata._sequences.values() 
+                        if s.column is None and self._can_create_sequence(s)]
 
-        for listener in metadata.ddl_listeners['before-create']:
-            listener('before-create', metadata, self.connection, tables=collection)
+        metadata.dispatch.before_create(metadata, self.connection,
+                                    tables=collection,
+                                    checkfirst=self.checkfirst,
+                                            _ddl_runner=self)
+
+        for seq in seq_coll:
+            self.traverse_single(seq, create_ok=True)
 
         for table in collection:
             self.traverse_single(table, create_ok=True)
 
-        for listener in metadata.ddl_listeners['after-create']:
-            listener('after-create', metadata, self.connection, tables=collection)
+        metadata.dispatch.after_create(metadata, self.connection,
+                                    tables=collection,
+                                    checkfirst=self.checkfirst,
+                                            _ddl_runner=self)
 
     def visit_table(self, table, create_ok=False):
-        if not create_ok and not self._can_create(table):
+        if not create_ok and not self._can_create_table(table):
             return
 
-        for listener in table.ddl_listeners['before-create']:
-            listener('before-create', table, self.connection)
+        table.dispatch.before_create(table, self.connection,
+                                        checkfirst=self.checkfirst,
+                                            _ddl_runner=self)
 
         for column in table.columns:
             if column.default is not None:
@@ -61,16 +89,14 @@ class SchemaGenerator(DDLBase):
             for index in table.indexes:
                 self.traverse_single(index)
 
-        for listener in table.ddl_listeners['after-create']:
-            listener('after-create', table, self.connection)
+        table.dispatch.after_create(table, self.connection,
+                                        checkfirst=self.checkfirst,
+                                            _ddl_runner=self)
 
-    def visit_sequence(self, sequence):
-        if self.dialect.supports_sequences:
-            if ((not self.dialect.sequences_optional or
-                 not sequence.optional) and
-                (not self.checkfirst or
-                 not self.dialect.has_sequence(self.connection, sequence.name, schema=sequence.schema))):
-                self.connection.execute(schema.CreateSequence(sequence))
+    def visit_sequence(self, sequence, create_ok=False):
+        if not create_ok and not self._can_create_sequence(sequence):
+            return 
+        self.connection.execute(schema.CreateSequence(sequence))
 
     def visit_index(self, index):
         self.connection.execute(schema.CreateIndex(index))
@@ -83,38 +109,62 @@ class SchemaDropper(DDLBase):
         self.tables = tables
         self.preparer = dialect.identifier_preparer
         self.dialect = dialect
+        self.memo = {}
 
     def visit_metadata(self, metadata):
         if self.tables:
             tables = self.tables
         else:
             tables = metadata.tables.values()
-        collection = [t for t in reversed(sql_util.sort_tables(tables)) if self._can_drop(t)]
+        collection = [t for t in reversed(sql_util.sort_tables(tables)) 
+                                if self._can_drop_table(t)]
+        seq_coll = [s for s in metadata._sequences.values() 
+                                if s.column is None and self._can_drop_sequence(s)]
 
-        for listener in metadata.ddl_listeners['before-drop']:
-            listener('before-drop', metadata, self.connection, tables=collection)
+        metadata.dispatch.before_drop(metadata, self.connection,
+                                            tables=collection,
+                                            checkfirst=self.checkfirst,
+                                            _ddl_runner=self)
 
         for table in collection:
             self.traverse_single(table, drop_ok=True)
 
-        for listener in metadata.ddl_listeners['after-drop']:
-            listener('after-drop', metadata, self.connection, tables=collection)
+        for seq in seq_coll:
+            self.traverse_single(seq, drop_ok=True)
 
-    def _can_drop(self, table):
+        metadata.dispatch.after_drop(metadata, self.connection,
+                                            tables=collection,
+                                            checkfirst=self.checkfirst,
+                                            _ddl_runner=self)
+
+    def _can_drop_table(self, table):
         self.dialect.validate_identifier(table.name)
         if table.schema:
             self.dialect.validate_identifier(table.schema)
-        return not self.checkfirst or self.dialect.has_table(self.connection, table.name, schema=table.schema)
+        return not self.checkfirst or self.dialect.has_table(self.connection, 
+                                            table.name, schema=table.schema)
+
+    def _can_drop_sequence(self, sequence):
+        return self.dialect.supports_sequences and \
+            ((not self.dialect.sequences_optional or
+                 not sequence.optional) and
+                (not self.checkfirst or
+                 self.dialect.has_sequence(
+                                self.connection, 
+                                sequence.name, 
+                                schema=sequence.schema))
+            )
 
     def visit_index(self, index):
         self.connection.execute(schema.DropIndex(index))
 
     def visit_table(self, table, drop_ok=False):
-        if not drop_ok and not self._can_drop(table):
+        if not drop_ok and not self._can_drop_table(table):
             return
 
-        for listener in table.ddl_listeners['before-drop']:
-            listener('before-drop', table, self.connection)
+        table.dispatch.before_drop(table, self.connection,
+                                    checkfirst=self.checkfirst,
+                                            _ddl_runner=self)
 
         for column in table.columns:
             if column.default is not None:
@@ -122,13 +172,11 @@ class SchemaDropper(DDLBase):
 
         self.connection.execute(schema.DropTable(table))
 
-        for listener in table.ddl_listeners['after-drop']:
-            listener('after-drop', table, self.connection)
+        table.dispatch.after_drop(table, self.connection,
+                                        checkfirst=self.checkfirst,
+                                            _ddl_runner=self)
 
-    def visit_sequence(self, sequence):
-        if self.dialect.supports_sequences:
-            if ((not self.dialect.sequences_optional or
-                 not sequence.optional) and
-                (not self.checkfirst or
-                 self.dialect.has_sequence(self.connection, sequence.name, schema=sequence.schema))):
-                self.connection.execute(schema.DropSequence(sequence))
+    def visit_sequence(self, sequence, drop_ok=False):
+        if not drop_ok and not self._can_drop_sequence(sequence):
+            return
+        self.connection.execute(schema.DropSequence(sequence))

@@ -664,7 +664,7 @@ class Flask(_PackageBoundObject):
         # existing views.
         context.update(orig_ctx)
 
-    def run(self, host='127.0.0.1', port=5000, debug=None, **options):
+    def run(self, host=None, port=None, debug=None, **options):
         """Runs the application on a local development server.  If the
         :attr:`debug` flag is set the server will automatically reload
         for code changes and show a debugger in case an exception happened.
@@ -684,9 +684,10 @@ class Flask(_PackageBoundObject):
            won't catch any exceptions because there won't be any to
            catch.
 
-        :param host: the hostname to listen on.  set this to ``'0.0.0.0'``
-                     to have the server available externally as well.
-        :param port: the port of the webserver
+        :param host: the hostname to listen on. Set this to ``'0.0.0.0'`` to
+                     have the server available externally as well. Defaults to
+                     ``'127.0.0.1'``.
+        :param port: the port of the webserver. Defaults to ``5000``.
         :param debug: if given, enable or disable debug mode.
                       See :attr:`debug`.
         :param options: the options to be forwarded to the underlying
@@ -695,6 +696,10 @@ class Flask(_PackageBoundObject):
                         information.
         """
         from werkzeug.serving import run_simple
+        if host is None:
+            host = '127.0.0.1'
+        if port is None:
+            port = 5000
         if debug is not None:
             self.debug = bool(debug)
         options.setdefault('use_reloader', self.debug)
@@ -710,6 +715,17 @@ class Flask(_PackageBoundObject):
     def test_client(self, use_cookies=True):
         """Creates a test client for this application.  For information
         about unit testing head over to :ref:`testing`.
+
+        Note that if you are testing for assertions or exceptions in your
+        application code, you must set ``app.testing = True`` in order for the
+        exceptions to propagate to the test client.  Otherwise, the exception
+        will be handled by the application (not visible to the test client) and
+        the only indication of an AssertionError or other exception will be a
+        500 status code response to the test client.  See the :attr:`testing`
+        attribute.  For example::
+
+            app.testing = True
+            client = app.test_client()
 
         The test client can be used in a `with` block to defer the closing down
         of the context until the end of the `with` block.  This is useful if
@@ -1018,9 +1034,19 @@ class Flask(_PackageBoundObject):
                      function name will be used.
         """
         def decorator(f):
-            self.jinja_env.filters[name or f.__name__] = f
+            self.add_template_filter(f, name=name)
             return f
         return decorator
+
+    @setupmethod
+    def add_template_filter(self, f, name=None):
+        """Register a custom template filter.  Works exactly like the
+        :meth:`template_filter` decorator.
+
+        :param name: the optional name of the filter, otherwise the
+                     function name will be used.
+        """
+        self.jinja_env.filters[name or f.__name__] = f
 
     @setupmethod
     def before_request(self, f):
@@ -1105,7 +1131,7 @@ class Flask(_PackageBoundObject):
         registered error handlers and fall back to returning the
         exception as response.
 
-        .. versionadded: 0.3
+        .. versionadded:: 0.3
         """
         handlers = self.error_handler_spec.get(request.blueprint)
         if handlers and e.code in handlers:
@@ -1174,7 +1200,7 @@ class Flask(_PackageBoundObject):
         for a 500 internal server error is used.  If no such handler
         exists, a default 500 internal server error message is displayed.
 
-        .. versionadded: 0.3
+        .. versionadded:: 0.3
         """
         exc_type, exc_value, tb = sys.exc_info()
 

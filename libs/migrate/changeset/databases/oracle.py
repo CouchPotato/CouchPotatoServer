@@ -5,13 +5,10 @@ import sqlalchemy as sa
 from sqlalchemy.databases import oracle as sa_base
 
 from migrate import exceptions
-from migrate.changeset import ansisql, SQLA_06
+from migrate.changeset import ansisql
 
 
-if not SQLA_06:
-    OracleSchemaGenerator = sa_base.OracleSchemaGenerator
-else:
-    OracleSchemaGenerator = sa_base.OracleDDLCompiler
+OracleSchemaGenerator = sa_base.OracleDDLCompiler
 
 
 class OracleColumnGenerator(OracleSchemaGenerator, ansisql.ANSIColumnGenerator):

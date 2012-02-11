@@ -7,19 +7,21 @@ requests.auth
 This module contains the authentication handlers for Requests.
 """
 
+from __future__ import unicode_literals
+
 import time
 import hashlib
 
 from base64 import b64encode
-from urlparse import urlparse
-
+from .compat import urlparse, str, bytes
 from .utils import randombytes, parse_dict_header
 
 
 
 def _basic_auth_str(username, password):
     """Returns a Basic Auth string."""
-    return 'Basic %s' % b64encode('%s:%s' % (username, password))
+
+    return 'Basic ' + b64encode(("%s:%s" % (username, password)).encode('utf-8')).strip().decode('utf-8')
 
 
 class AuthBase(object):
@@ -32,8 +34,8 @@ class AuthBase(object):
 class HTTPBasicAuth(AuthBase):
     """Attaches HTTP Basic Authentication to the given Request object."""
     def __init__(self, username, password):
-        self.username = str(username)
-        self.password = str(password)
+        self.username = username
+        self.password = password
 
     def __call__(self, r):
         r.headers['Authorization'] = _basic_auth_str(self.username, self.password)
@@ -74,9 +76,17 @@ class HTTPDigestAuth(AuthBase):
             algorithm = algorithm.upper()
             # lambdas assume digest modules are imported at the top level
             if algorithm == 'MD5':
-                H = lambda x: hashlib.md5(x).hexdigest()
+                def h(x):
+                    if isinstance(x, str):
+                        x = x.encode('utf-8')
+                    return hashlib.md5(x).hexdigest()
+                H = h
             elif algorithm == 'SHA':
-                H = lambda x: hashlib.sha1(x).hexdigest()
+                def h(x):
+                    if isinstance(x, str):
+                        x = x.encode('utf-8')
+                    return hashlib.sha1(x).hexdigest()
+                H = h
             # XXX MD5-sess
             KD = lambda s, d: H("%s:%s" % (s, d))
 
@@ -86,7 +96,9 @@ class HTTPDigestAuth(AuthBase):
             # XXX not implemented yet
             entdig = None
             p_parsed = urlparse(r.request.url)
-            path = p_parsed.path + p_parsed.query
+            path = p_parsed.path
+            if p_parsed.query:
+                path += '?' + p_parsed.query
 
             A1 = '%s:%s:%s' % (self.username, realm, self.password)
             A2 = '%s:%s' % (r.request.method, path)
@@ -99,10 +111,12 @@ class HTTPDigestAuth(AuthBase):
                     last_nonce = nonce
 
                 ncvalue = '%08x' % nonce_count
-                cnonce = (hashlib.sha1("%s:%s:%s:%s" % (
-                    nonce_count, nonce, time.ctime(), randombytes(8)))
-                    .hexdigest()[:16]
-                )
+                s = str(nonce_count).encode('utf-8')
+                s += nonce.encode('utf-8')
+                s += time.ctime().encode('utf-8')
+                s += randombytes(8)
+
+                cnonce = (hashlib.sha1(s).hexdigest()[:16])
                 noncebit = "%s:%s:%s:%s:%s" % (nonce, ncvalue, cnonce, qop, H(A2))
                 respdig = KD(H(A1), noncebit)
             elif qop is None:
@@ -132,5 +146,5 @@ class HTTPDigestAuth(AuthBase):
         return r
 
     def __call__(self, r):
-        r.hooks['response'] = self.handle_401
+        r.register_hook('response', self.handle_401)
         return r

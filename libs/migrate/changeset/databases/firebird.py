@@ -4,13 +4,10 @@
 from sqlalchemy.databases import firebird as sa_base
 from sqlalchemy.schema import PrimaryKeyConstraint
 from migrate import exceptions
-from migrate.changeset import ansisql, SQLA_06
+from migrate.changeset import ansisql
 
 
-if SQLA_06:
-    FBSchemaGenerator = sa_base.FBDDLCompiler
-else:
-    FBSchemaGenerator = sa_base.FBSchemaGenerator
+FBSchemaGenerator = sa_base.FBDDLCompiler
 
 class FBColumnGenerator(FBSchemaGenerator, ansisql.ANSIColumnGenerator):
     """Firebird column generator implementation."""
@@ -41,10 +38,7 @@ class FBColumnDropper(ansisql.ANSIColumnDropper):
                 # is deleted!
                 continue
 
-            if SQLA_06:
-                should_drop = column.name in cons.columns
-            else:
-                should_drop = cons.contains_column(column) and cons.name
+            should_drop = column.name in cons.columns
             if should_drop:
                 self.start_alter_table(column)
                 self.append("DROP CONSTRAINT ")

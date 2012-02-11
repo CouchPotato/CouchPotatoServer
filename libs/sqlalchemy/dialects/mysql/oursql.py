@@ -1,5 +1,5 @@
 # mysql/oursql.py
-# Copyright (C) 2005-2011 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2012 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -17,8 +17,8 @@ Connect string format::
 
     mysql+oursql://<user>:<password>@<host>[:<port>]/<dbname>
 
-Character Sets
---------------
+Unicode
+-------
 
 oursql defaults to using ``utf8`` as the connection charset, but other
 encodings may be used instead. Like the MySQL-Python driver, unicode support
@@ -64,8 +64,6 @@ class MySQLExecutionContext_oursql(MySQLExecutionContext):
 
 class MySQLDialect_oursql(MySQLDialect):
     driver = 'oursql'
-# Py3K
-#    description_encoding = None
 # Py2K
     supports_unicode_binds = True
     supports_unicode_statements = True
@@ -107,6 +105,7 @@ class MySQLDialect_oursql(MySQLDialect):
 # Py3K
 #        charset = self._connection_charset
 #        arg = connection.connection._escape_string(xid.encode(charset)).decode(charset)
+        arg = "'%s'" % arg
         connection.execution_options(_oursql_plain_query=True).execute(query % arg)
 
     # Because mysql is bad, these methods have to be 
@@ -115,23 +114,23 @@ class MySQLDialect_oursql(MySQLDialect):
     # the parameterized query API, or refuse to be parameterized
     # in the first place.
     def do_begin_twophase(self, connection, xid):
-        self._xa_query(connection, 'XA BEGIN "%s"', xid)
+        self._xa_query(connection, 'XA BEGIN %s', xid)
 
     def do_prepare_twophase(self, connection, xid):
-        self._xa_query(connection, 'XA END "%s"', xid)
-        self._xa_query(connection, 'XA PREPARE "%s"', xid)
+        self._xa_query(connection, 'XA END %s', xid)
+        self._xa_query(connection, 'XA PREPARE %s', xid)
 
     def do_rollback_twophase(self, connection, xid, is_prepared=True,
                              recover=False):
         if not is_prepared:
-            self._xa_query(connection, 'XA END "%s"', xid)
-        self._xa_query(connection, 'XA ROLLBACK "%s"', xid)
+            self._xa_query(connection, 'XA END %s', xid)
+        self._xa_query(connection, 'XA ROLLBACK %s', xid)
 
     def do_commit_twophase(self, connection, xid, is_prepared=True,
                            recover=False):
         if not is_prepared:
             self.do_prepare_twophase(connection, xid)
-        self._xa_query(connection, 'XA COMMIT "%s"', xid)
+        self._xa_query(connection, 'XA COMMIT %s', xid)
 
     # Q: why didn't we need all these "plain_query" overrides earlier ?
     # am i on a newer/older version of OurSQL ?
@@ -195,7 +194,7 @@ class MySQLDialect_oursql(MySQLDialect):
                                 execution_options(_oursql_plain_query=True),
                                 table, charset, full_name)
 
-    def is_disconnect(self, e):
+    def is_disconnect(self, e, connection, cursor):
         if isinstance(e, self.dbapi.ProgrammingError):
             return e.errno is None and 'cursor' not in e.args[1] and e.args[1].endswith('closed')
         else:
@@ -221,6 +220,16 @@ class MySQLDialect_oursql(MySQLDialect):
         # FOUND_ROWS must be set in CLIENT_FLAGS to enable
         # supports_sane_rowcount.
         opts.setdefault('found_rows', True)
+
+        ssl = {}
+        for key in ['ssl_ca', 'ssl_key', 'ssl_cert', 
+                        'ssl_capath', 'ssl_cipher']:
+            if key in opts:
+                ssl[key[4:]] = opts[key]
+                util.coerce_kw_type(ssl, key[4:], str)
+                del opts[key]
+        if ssl:
+            opts['ssl'] = ssl
 
         return [[], opts]
 

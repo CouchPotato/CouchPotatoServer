@@ -4,7 +4,6 @@
 from sqlalchemy import schema
 
 from migrate.exceptions import *
-from migrate.changeset import SQLA_06
 
 class ConstraintChangeset(object):
     """Base class for Constraint classes."""
@@ -165,8 +164,6 @@ class CheckConstraint(ConstraintChangeset, schema.CheckConstraint):
         table = kwargs.pop('table', table)
         schema.CheckConstraint.__init__(self, sqltext, *args, **kwargs)
         if table is not None:
-            if not SQLA_06:
-                self.table = table
             self._set_parent(table)
         self.colnames = colnames
 

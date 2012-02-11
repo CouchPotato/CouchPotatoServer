@@ -1,5 +1,5 @@
 # oracle/base.py
-# Copyright (C) 2005-2011 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2012 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -21,6 +21,8 @@ affect the behavior of the dialect regardless of driver in use.
   to ``True``.  If ``False``, Oracle-8 compatible constructs are used for joins.
 
 * *optimize_limits* - defaults to ``False``. see the section on LIMIT/OFFSET.
+
+* *use_binds_for_limits* - defaults to ``True``.  see the section on LIMIT/OFFSET.
 
 Auto Increment Behavior
 -----------------------
@@ -74,13 +76,27 @@ requires NLS_LANG to be set.
 LIMIT/OFFSET Support
 --------------------
 
-Oracle has no support for the LIMIT or OFFSET keywords.  Whereas previous versions of SQLAlchemy
-used the "ROW NUMBER OVER..." construct to simulate LIMIT/OFFSET, SQLAlchemy 0.5 now uses 
-a wrapped subquery approach in conjunction with ROWNUM.  The exact methodology is taken from
-http://www.oracle.com/technology/oramag/oracle/06-sep/o56asktom.html .  Note that the 
-"FIRST ROWS()" optimization keyword mentioned is not used by default, as the user community felt
-this was stepping into the bounds of optimization that is better left on the DBA side, but this
-prefix can be added by enabling the optimize_limits=True flag on create_engine().
+Oracle has no support for the LIMIT or OFFSET keywords.  SQLAlchemy uses 
+a wrapped subquery approach in conjunction with ROWNUM.  The exact methodology 
+is taken from
+http://www.oracle.com/technology/oramag/oracle/06-sep/o56asktom.html .  
+
+There are two options which affect its behavior:
+
+* the "FIRST ROWS()" optimization keyword is not used by default.  To enable the usage of this
+  optimization directive, specify ``optimize_limits=True`` to :func:`.create_engine`.
+* the values passed for the limit/offset are sent as bound parameters.   Some users have observed
+  that Oracle produces a poor query plan when the values are sent as binds and not
+  rendered literally.   To render the limit/offset values literally within the SQL 
+  statement, specify ``use_binds_for_limits=False`` to :func:`.create_engine`.
+
+Some users have reported better performance when the entirely different approach of a 
+window query is used, i.e. ROW_NUMBER() OVER (ORDER BY), to provide LIMIT/OFFSET (note 
+that the majority of users don't observe this).  To suit this case the 
+method used for LIMIT/OFFSET can be replaced entirely.  See the recipe at 
+http://www.sqlalchemy.org/trac/wiki/UsageRecipes/WindowFunctionsByDefault
+which installs a select compiler that overrides the generation of limit/offset with
+a window function.
 
 ON UPDATE CASCADE
 -----------------
@@ -133,24 +149,30 @@ from sqlalchemy import types as sqltypes
 from sqlalchemy.types import VARCHAR, NVARCHAR, CHAR, DATE, DATETIME, \
                 BLOB, CLOB, TIMESTAMP, FLOAT
 
-RESERVED_WORDS = set('SHARE RAW DROP BETWEEN FROM DESC OPTION PRIOR LONG THEN '
-                     'DEFAULT ALTER IS INTO MINUS INTEGER NUMBER GRANT IDENTIFIED '
-                     'ALL TO ORDER ON FLOAT DATE HAVING CLUSTER NOWAIT RESOURCE ANY '
-                     'TABLE INDEX FOR UPDATE WHERE CHECK SMALLINT WITH DELETE BY ASC '
-                     'REVOKE LIKE SIZE RENAME NOCOMPRESS NULL GROUP VALUES AS IN VIEW '
-                     'EXCLUSIVE COMPRESS SYNONYM SELECT INSERT EXISTS NOT TRIGGER '
-                     'ELSE CREATE INTERSECT PCTFREE DISTINCT USER CONNECT SET MODE '
-                     'OF UNIQUE VARCHAR2 VARCHAR LOCK OR CHAR DECIMAL UNION PUBLIC '
-                     'AND START UID COMMENT'.split()) 
+RESERVED_WORDS = \
+    set('SHARE RAW DROP BETWEEN FROM DESC OPTION PRIOR LONG THEN '\
+        'DEFAULT ALTER IS INTO MINUS INTEGER NUMBER GRANT IDENTIFIED '\
+        'ALL TO ORDER ON FLOAT DATE HAVING CLUSTER NOWAIT RESOURCE '\
+        'ANY TABLE INDEX FOR UPDATE WHERE CHECK SMALLINT WITH DELETE '\
+        'BY ASC REVOKE LIKE SIZE RENAME NOCOMPRESS NULL GROUP VALUES '\
+        'AS IN VIEW EXCLUSIVE COMPRESS SYNONYM SELECT INSERT EXISTS '\
+        'NOT TRIGGER ELSE CREATE INTERSECT PCTFREE DISTINCT USER '\
+        'CONNECT SET MODE OF UNIQUE VARCHAR2 VARCHAR LOCK OR CHAR '\
+        'DECIMAL UNION PUBLIC AND START UID COMMENT CURRENT'.split())
 
-class RAW(sqltypes.LargeBinary):
-    pass
+NO_ARG_FNS = set('UID CURRENT_DATE SYSDATE USER '
+                'CURRENT_TIME CURRENT_TIMESTAMP'.split())
+
+class RAW(sqltypes._Binary):
+    __visit_name__ = 'RAW'
 OracleRaw = RAW
 
 class NCLOB(sqltypes.Text):
     __visit_name__ = 'NCLOB'
 
-VARCHAR2 = VARCHAR
+class VARCHAR2(VARCHAR):
+    __visit_name__ = 'VARCHAR2'
+
 NVARCHAR2 = NVARCHAR
 
 class NUMBER(sqltypes.Numeric, sqltypes.Integer):
@@ -216,10 +238,6 @@ class INTERVAL(sqltypes.TypeEngine):
         return INTERVAL(day_precision=interval.day_precision,
                         second_precision=interval.second_precision)
 
-    def adapt(self, impltype):
-        return impltype(day_precision=self.day_precision, 
-                        second_precision=self.second_precision)
-
     @property
     def _type_affinity(self):
         return sqltypes.Interval
@@ -277,9 +295,9 @@ class OracleTypeCompiler(compiler.GenericTypeCompiler):
 
     def visit_unicode(self, type_):
         if self.dialect._supports_nchar:
-            return self.visit_NVARCHAR(type_)
+            return self.visit_NVARCHAR2(type_)
         else:
-            return self.visit_VARCHAR(type_)
+            return self.visit_VARCHAR2(type_)
 
     def visit_INTERVAL(self, type_):
         return "INTERVAL DAY%s TO SECOND%s" % (
@@ -317,14 +335,27 @@ class OracleTypeCompiler(compiler.GenericTypeCompiler):
         else:
             return "%(name)s(%(precision)s, %(scale)s)" % {'name':name,'precision': precision, 'scale' : scale}
 
-    def visit_VARCHAR(self, type_):
-        if self.dialect._supports_char_length:
-            return "VARCHAR(%(length)s CHAR)" % {'length' : type_.length}
-        else:
-            return "VARCHAR(%(length)s)" % {'length' : type_.length}
+    def visit_string(self, type_): 
+        return self.visit_VARCHAR2(type_)
 
-    def visit_NVARCHAR(self, type_):
-        return "NVARCHAR2(%(length)s)" % {'length' : type_.length}
+    def visit_VARCHAR2(self, type_):
+        return self._visit_varchar(type_, '', '2')
+
+    def visit_NVARCHAR2(self, type_):
+        return self._visit_varchar(type_, 'N', '2')
+    visit_NVARCHAR = visit_NVARCHAR2
+
+    def visit_VARCHAR(self, type_):
+        return self._visit_varchar(type_, '', '')
+
+    def _visit_varchar(self, type_, n, num):
+        if not n and self.dialect._supports_char_length:
+            return "VARCHAR%(two)s(%(length)s CHAR)" % {
+                                                    'length' : type_.length, 
+                                                    'two':num}
+        else:
+            return "%(n)sVARCHAR%(two)s(%(length)s)" % {'length' : type_.length, 
+                                                        'two':num, 'n':n}
 
     def visit_text(self, type_):
         return self.visit_CLOB(type_)
@@ -345,7 +376,10 @@ class OracleTypeCompiler(compiler.GenericTypeCompiler):
         return self.visit_SMALLINT(type_)
 
     def visit_RAW(self, type_):
-        return "RAW(%(length)s)" % {'length' : type_.length}
+        if type_.length:
+            return "RAW(%(length)s)" % {'length' : type_.length}
+        else:
+            return "RAW"
 
     def visit_ROWID(self, type_):
         return "ROWID"
@@ -364,9 +398,9 @@ class OracleCompiler(compiler.SQLCompiler):
     )
 
     def __init__(self, *args, **kwargs):
-        super(OracleCompiler, self).__init__(*args, **kwargs)
         self.__wheres = {}
         self._quoted_bind_names = {}
+        super(OracleCompiler, self).__init__(*args, **kwargs)
 
     def visit_mod(self, binary, **kw):
         return "mod(%s, %s)" % (self.process(binary.left), self.process(binary.right))
@@ -386,13 +420,14 @@ class OracleCompiler(compiler.SQLCompiler):
         )
 
     def function_argspec(self, fn, **kw):
-        if len(fn.clauses) > 0:
+        if len(fn.clauses) > 0 or fn.name.upper() not in NO_ARG_FNS:
             return compiler.SQLCompiler.function_argspec(self, fn, **kw)
         else:
             return ""
 
     def default_from(self):
-        """Called when a ``SELECT`` statement has no froms, and no ``FROM`` clause is to be appended.
+        """Called when a ``SELECT`` statement has no froms, 
+        and no ``FROM`` clause is to be appended.
 
         The Oracle compiler tacks a "FROM DUAL" to the statement.
         """
@@ -523,6 +558,8 @@ class OracleCompiler(compiler.SQLCompiler):
                     max_row = select._limit
                     if select._offset is not None:
                         max_row += select._offset
+                    if not self.dialect.use_binds_for_limits:
+                        max_row = sql.literal_column("%d" % max_row)
                     limitselect.append_whereclause(
                             sql.literal_column("ROWNUM")<=max_row)
 
@@ -541,8 +578,11 @@ class OracleCompiler(compiler.SQLCompiler):
                     offsetselect._oracle_visit = True
                     offsetselect._is_wrapper = True
 
+                    offset_value = select._offset
+                    if not self.dialect.use_binds_for_limits:
+                        offset_value = sql.literal_column("%d" % offset_value)
                     offsetselect.append_whereclause(
-                             sql.literal_column("ora_rn")>select._offset)
+                             sql.literal_column("ora_rn")>offset_value)
 
                     offsetselect.for_update = select.for_update
                     select = offsetselect
@@ -597,10 +637,10 @@ class OracleIdentifierPreparer(compiler.IdentifierPreparer):
 
 
 class OracleExecutionContext(default.DefaultExecutionContext):
-    def fire_sequence(self, seq):
-        return int(self._execute_scalar("SELECT " + 
+    def fire_sequence(self, seq, type_):
+        return self._execute_scalar("SELECT " + 
                     self.dialect.identifier_preparer.format_sequence(seq) + 
-                    ".nextval FROM DUAL"))
+                    ".nextval FROM DUAL", type_)
 
 class OracleDialect(default.DefaultDialect):
     name = 'oracle'
@@ -634,10 +674,12 @@ class OracleDialect(default.DefaultDialect):
     def __init__(self, 
                 use_ansi=True, 
                 optimize_limits=False, 
+                use_binds_for_limits=True,
                 **kwargs):
         default.DefaultDialect.__init__(self, **kwargs)
         self.use_ansi = use_ansi
         self.optimize_limits = optimize_limits
+        self.use_binds_for_limits = use_binds_for_limits
 
     def initialize(self, connection):
         super(OracleDialect, self).initialize(connection)
@@ -861,6 +903,7 @@ class OracleDialect(default.DefaultDialect):
                 'type': coltype,
                 'nullable': nullable,
                 'default': default,
+                'autoincrement':default is None
             }
             if orig_colname.lower() == orig_colname:
                 cdict['quote'] = True

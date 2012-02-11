@@ -25,7 +25,7 @@ class PythonScript(base.BaseScript):
     @classmethod
     def create(cls, path, **opts):
         """Create an empty migration script at specified path
-        
+
         :returns: :class:`PythonScript instance <migrate.versioning.script.py.PythonScript>`"""
         cls.require_notfound(path)
 
@@ -38,7 +38,7 @@ class PythonScript(base.BaseScript):
     def make_update_script_for_model(cls, engine, oldmodel,
                                      model, repository, **opts):
         """Create a migration script based on difference between two SA models.
-        
+
         :param repository: path to migrate repository
         :param oldmodel: dotted.module.name:SAClass or SAClass object
         :param model: dotted.module.name:SAClass or SAClass object
@@ -50,7 +50,7 @@ class PythonScript(base.BaseScript):
         :returns: Upgrade / Downgrade script
         :rtype: string
         """
-        
+
         if isinstance(repository, basestring):
             # oh dear, an import cycle!
             from migrate.versioning.repository import Repository
@@ -61,12 +61,12 @@ class PythonScript(base.BaseScript):
 
         # Compute differences.
         diff = schemadiff.getDiffOfModelAgainstModel(
-            oldmodel,
             model,
+            oldmodel,
             excludeTables=[repository.version_table])
         # TODO: diff can be False (there is no difference?)
         decls, upgradeCommands, downgradeCommands = \
-            genmodel.ModelGenerator(diff,engine).toUpgradeDowngradePython()
+            genmodel.ModelGenerator(diff,engine).genB2AMigration()
 
         # Store differences into file.
         src = Template(opts.pop('templates_path', None)).get_script(opts.pop('templates_theme', None))
@@ -86,7 +86,7 @@ class PythonScript(base.BaseScript):
     @classmethod
     def verify_module(cls, path):
         """Ensure path is a valid script
-        
+
         :param path: Script location
         :type path: string
         :raises: :exc:`InvalidScriptError <migrate.exceptions.InvalidScriptError>`
@@ -101,7 +101,7 @@ class PythonScript(base.BaseScript):
         return module
 
     def preview_sql(self, url, step, **args):
-        """Mocks SQLAlchemy Engine to store all executed calls in a string 
+        """Mocks SQLAlchemy Engine to store all executed calls in a string
         and runs :meth:`PythonScript.run <migrate.versioning.script.py.PythonScript.run>`
 
         :returns: SQL file
@@ -119,7 +119,7 @@ class PythonScript(base.BaseScript):
         return go(url, step, **args)
 
     def run(self, engine, step):
-        """Core method of Script file. 
+        """Core method of Script file.
         Exectues :func:`update` or :func:`downgrade` functions
 
         :param engine: SQLAlchemy Engine

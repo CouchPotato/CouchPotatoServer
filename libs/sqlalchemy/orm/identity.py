@@ -1,12 +1,10 @@
 # orm/identity.py
-# Copyright (C) 2005-2011 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2012 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 
 import weakref
-
-from sqlalchemy import util as base_util
 from sqlalchemy.orm import attributes
 
 
@@ -20,9 +18,6 @@ class IdentityMap(dict):
         raise NotImplementedError()
 
     def add(self, state):
-        raise NotImplementedError()
-
-    def remove(self, state):
         raise NotImplementedError()
 
     def update(self, dict):
@@ -83,7 +78,6 @@ class IdentityMap(dict):
 class WeakInstanceDict(IdentityMap):
     def __init__(self):
         IdentityMap.__init__(self)
-        self._remove_mutex = base_util.threading.Lock()
 
     def __getitem__(self, key):
         state = dict.__getitem__(self, key)
@@ -123,33 +117,25 @@ class WeakInstanceDict(IdentityMap):
         self._manage_incoming_state(state)
 
     def add(self, state):
-        if state.key in self:
-            if dict.__getitem__(self, state.key) is not state:
-                raise AssertionError("A conflicting state is already "
-                                    "present in the identity map for key %r" 
-                                    % (state.key, ))
-        else:
-            dict.__setitem__(self, state.key, state)
-            self._manage_incoming_state(state)
-
-    def remove_key(self, key):
-        state = dict.__getitem__(self, key)
-        self.remove(state)
-
-    def remove(self, state):
-        self._remove_mutex.acquire()
-        try:
-            if dict.pop(self, state.key) is not state:
-                raise AssertionError("State %s is not present in this identity map" % state)
-        finally:
-            self._remove_mutex.release()
-
-        self._manage_removed_state(state)
-
-    def discard(self, state):
-        if self.contains_state(state):
-            dict.__delitem__(self, state.key)
-            self._manage_removed_state(state)
+        key = state.key
+        # inline of self.__contains__
+        if dict.__contains__(self, key):
+            try:
+                existing_state = dict.__getitem__(self, key)
+                if existing_state is not state:
+                    o = existing_state.obj()
+                    if o is None:
+                        o = existing_state._is_really_none()
+                    if o is not None:
+                        raise AssertionError("A conflicting state is already "
+                                        "present in the identity map for key %r" 
+                                        % (key, ))
+                else:
+                    return
+            except KeyError:
+                pass
+        dict.__setitem__(self, key, state)
+        self._manage_incoming_state(state)
 
     def get(self, key, default=None):
         state = dict.get(self, key, default)
@@ -158,58 +144,57 @@ class WeakInstanceDict(IdentityMap):
         o = state.obj()
         if o is None:
             o = state._is_really_none()
-        if o is None:
-            return default
+            if o is None:
+                return default
         return o
 
+    def _items(self):
+        values = self.all_states()
+        result = []
+        for state in values:
+            value = state.obj()
+            if value is not None:
+                result.append((state.key, value))
+        return result
 
-    def items(self):
+    def _values(self):
+        values = self.all_states()
+        result = []
+        for state in values:
+            value = state.obj()
+            if value is not None:
+                result.append(value)
+
+        return result
+
+    # Py3K
+    #def items(self):
+    #    return iter(self._items())
+    #
+    #def values(self):
+    #    return iter(self._values())
     # Py2K
-        return list(self.iteritems())
-
+    items = _items
     def iteritems(self):
-    # end Py2K
-        self._remove_mutex.acquire()
-        try:
-            result = []
-            for state in dict.values(self):
-                value = state.obj()
-                if value is not None:
-                    result.append((state.key, value))
+        return iter(self.items())
 
-            return iter(result)
-        finally:
-            self._remove_mutex.release()
-
-    def values(self):
-    # Py2K
-        return list(self.itervalues())
-
+    values = _values
     def itervalues(self):
+        return iter(self.values())
     # end Py2K
-        self._remove_mutex.acquire()
-        try:
-            result = []
-            for state in dict.values(self):
-                value = state.obj()
-                if value is not None:
-                    result.append(value)
-
-            return iter(result)
-        finally:
-            self._remove_mutex.release()
 
     def all_states(self):
-        self._remove_mutex.acquire()
-        try:
-            # Py3K
-            # return list(dict.values(self))
+        # Py3K
+        # return list(dict.values(self))
+        # Py2K
+        return dict.values(self)
+        # end Py2K
 
-            # Py2K
-            return dict.values(self)
-            # end Py2K
-        finally:
-            self._remove_mutex.release()
+    def discard(self, state):
+        st = dict.get(self, state.key, None)
+        if st is state:
+            dict.pop(self, state.key, None)
+            self._manage_removed_state(state)
 
     def prune(self):
         return 0
@@ -235,25 +220,22 @@ class StrongInstanceDict(IdentityMap):
 
     def add(self, state):
         if state.key in self:
-            if attributes.instance_state(dict.__getitem__(self, state.key)) is not state:
-                raise AssertionError("A conflicting state is already present in the identity map for key %r" % (state.key, ))
+            if attributes.instance_state(dict.__getitem__(self,
+                    state.key)) is not state:
+                raise AssertionError('A conflicting state is already '
+                        'present in the identity map for key %r'
+                        % (state.key, ))
         else:
             dict.__setitem__(self, state.key, state.obj())
             self._manage_incoming_state(state)
 
-    def remove(self, state):
-        if attributes.instance_state(dict.pop(self, state.key)) is not state:
-            raise AssertionError("State %s is not present in this identity map" % state)
-        self._manage_removed_state(state)
-
     def discard(self, state):
-        if self.contains_state(state):
-            dict.__delitem__(self, state.key)
-            self._manage_removed_state(state)
-
-    def remove_key(self, key):
-        state = attributes.instance_state(dict.__getitem__(self, key))
-        self.remove(state)
+        obj = dict.get(self, state.key, None)
+        if obj is not None:
+            st = attributes.instance_state(obj)
+            if st is state:
+                dict.pop(self, state.key, None)
+                self._manage_removed_state(state)
 
     def prune(self):
         """prune unreferenced, non-dirty states."""

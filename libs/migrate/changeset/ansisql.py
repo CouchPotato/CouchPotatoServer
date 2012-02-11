@@ -17,23 +17,19 @@ from sqlalchemy.schema import (ForeignKeyConstraint,
                                Index)
 
 from migrate import exceptions
-from migrate.changeset import constraint, SQLA_06
+from migrate.changeset import constraint
 
-if not SQLA_06:
-    from sqlalchemy.sql.compiler import SchemaGenerator, SchemaDropper
-else:
-    from sqlalchemy.schema import AddConstraint, DropConstraint
-    from sqlalchemy.sql.compiler import DDLCompiler
-    SchemaGenerator = SchemaDropper = DDLCompiler
+from sqlalchemy.schema import AddConstraint, DropConstraint
+from sqlalchemy.sql.compiler import DDLCompiler
+SchemaGenerator = SchemaDropper = DDLCompiler
 
 
 class AlterTableVisitor(SchemaVisitor):
     """Common operations for ``ALTER TABLE`` statements."""
 
-    if SQLA_06:
-        # engine.Compiler looks for .statement
-        # when it spawns off a new compiler
-        statement = ClauseElement()
+    # engine.Compiler looks for .statement
+    # when it spawns off a new compiler
+    statement = ClauseElement()
 
     def append(self, s):
         """Append content to the SchemaIterator's query buffer."""
@@ -116,16 +112,15 @@ class ANSIColumnGenerator(AlterTableVisitor, SchemaGenerator):
         # SA bounds FK constraints to table, add manually
         for fk in column.foreign_keys:
             self.add_foreignkey(fk.constraint)
-
+        
         # add primary key constraint if needed
         if column.primary_key_name:
             cons = constraint.PrimaryKeyConstraint(column,
                                                    name=column.primary_key_name)
             cons.create()
 
-    if SQLA_06:
-        def add_foreignkey(self, fk):
-            self.connection.execute(AddConstraint(fk))
+    def add_foreignkey(self, fk):
+        self.connection.execute(AddConstraint(fk))
 
 class ANSIColumnDropper(AlterTableVisitor, SchemaDropper):
     """Extends ANSI SQL dropper for column dropping (``ALTER TABLE
@@ -232,10 +227,7 @@ class ANSISchemaChanger(AlterTableVisitor, SchemaGenerator):
 
     def _visit_column_type(self, table, column, delta):
         type_ = delta['type']
-        if SQLA_06:
-            type_text = str(type_.compile(dialect=self.dialect))
-        else:
-            type_text = type_.dialect_impl(self.dialect).get_col_spec()
+        type_text = str(type_.compile(dialect=self.dialect))
         self.append("TYPE %s" % type_text)
 
     def _visit_column_name(self, table, column, delta):
@@ -279,75 +271,17 @@ class ANSIConstraintCommon(AlterTableVisitor):
     def visit_migrate_unique_constraint(self, *p, **k):
         self._visit_constraint(*p, **k)
 
-if SQLA_06:
-    class ANSIConstraintGenerator(ANSIConstraintCommon, SchemaGenerator):
-        def _visit_constraint(self, constraint):
-            constraint.name = self.get_constraint_name(constraint)
-            self.append(self.process(AddConstraint(constraint)))
-            self.execute()
+class ANSIConstraintGenerator(ANSIConstraintCommon, SchemaGenerator):
+    def _visit_constraint(self, constraint):
+        constraint.name = self.get_constraint_name(constraint)
+        self.append(self.process(AddConstraint(constraint)))
+        self.execute()
 
-    class ANSIConstraintDropper(ANSIConstraintCommon, SchemaDropper):
-        def _visit_constraint(self, constraint):
-            constraint.name = self.get_constraint_name(constraint)
-            self.append(self.process(DropConstraint(constraint, cascade=constraint.cascade)))
-            self.execute()
-
-else:
-    class ANSIConstraintGenerator(ANSIConstraintCommon, SchemaGenerator):
-
-        def get_constraint_specification(self, cons, **kwargs):
-            """Constaint SQL generators.
-        
-            We cannot use SA visitors because they append comma.
-            """
-        
-            if isinstance(cons, PrimaryKeyConstraint):
-                if cons.name is not None:
-                    self.append("CONSTRAINT %s " % self.preparer.format_constraint(cons))
-                self.append("PRIMARY KEY ")
-                self.append("(%s)" % ', '.join(self.preparer.quote(c.name, c.quote)
-                                               for c in cons))
-                self.define_constraint_deferrability(cons)
-            elif isinstance(cons, ForeignKeyConstraint):
-                self.define_foreign_key(cons)
-            elif isinstance(cons, CheckConstraint):
-                if cons.name is not None:
-                    self.append("CONSTRAINT %s " %
-                                self.preparer.format_constraint(cons))
-                self.append("CHECK (%s)" % cons.sqltext)
-                self.define_constraint_deferrability(cons)
-            elif isinstance(cons, UniqueConstraint):
-                if cons.name is not None:
-                    self.append("CONSTRAINT %s " %
-                                self.preparer.format_constraint(cons))
-                self.append("UNIQUE (%s)" % \
-                    (', '.join(self.preparer.quote(c.name, c.quote) for c in cons)))
-                self.define_constraint_deferrability(cons)
-            else:
-                raise exceptions.InvalidConstraintError(cons)
-
-        def _visit_constraint(self, constraint):
-        
-            table = self.start_alter_table(constraint)
-            constraint.name = self.get_constraint_name(constraint)
-            self.append("ADD ")
-            self.get_constraint_specification(constraint)
-            self.execute()
-    
-
-    class ANSIConstraintDropper(ANSIConstraintCommon, SchemaDropper):
-
-        def _visit_constraint(self, constraint):
-            self.start_alter_table(constraint)
-            self.append("DROP CONSTRAINT ")
-            constraint.name = self.get_constraint_name(constraint)
-            self.append(self.preparer.format_constraint(constraint))
-            if constraint.cascade:
-                self.cascade_constraint(constraint)
-            self.execute()
-
-        def cascade_constraint(self, constraint):
-            self.append(" CASCADE")
+class ANSIConstraintDropper(ANSIConstraintCommon, SchemaDropper):
+    def _visit_constraint(self, constraint):
+        constraint.name = self.get_constraint_name(constraint)
+        self.append(self.process(DropConstraint(constraint, cascade=constraint.cascade)))
+        self.execute()
 
 
 class ANSIDialect(DefaultDialect):

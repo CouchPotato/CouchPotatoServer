@@ -1,5 +1,5 @@
 # informix/informixdb.py
-# Copyright (C) 2005-2011 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2012 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -62,7 +62,7 @@ class InformixDialect_informixdb(InformixDialect):
         v = VERSION_RE.split(connection.connection.dbms_version)
         return (int(v[1]), int(v[2]), v[3])
 
-    def is_disconnect(self, e):
+    def is_disconnect(self, e, connection, cursor):
         if isinstance(e, self.dbapi.OperationalError):
             return 'closed the connection' in str(e) \
                     or 'connection not open' in str(e)

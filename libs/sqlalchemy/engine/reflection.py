@@ -1,5 +1,5 @@
 # engine/reflection.py
-# Copyright (C) 2005-2011 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2012 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -27,6 +27,7 @@ methods such as get_table_names, get_columns, etc.
 import sqlalchemy
 from sqlalchemy import exc, sql
 from sqlalchemy import util
+from sqlalchemy.util import topological
 from sqlalchemy.types import TypeEngine
 from sqlalchemy import schema as sa_schema
 
@@ -80,10 +81,6 @@ class Inspector(object):
         :meth:`Inspector.from_engine`
 
         """
-
-        # ensure initialized
-        bind.connect()
-
         # this might not be a connection, it could be an engine.
         self.bind = bind
 
@@ -92,6 +89,11 @@ class Inspector(object):
             self.engine = bind.engine
         else:
             self.engine = bind
+
+        if self.engine is bind:
+            # if engine, ensure initialized
+            bind.connect().close()
+
         self.dialect = self.engine.dialect
         self.info_cache = {}
 
@@ -149,27 +151,19 @@ class Inspector(object):
 
         if hasattr(self.dialect, 'get_table_names'):
             tnames = self.dialect.get_table_names(self.bind,
-            schema,
-                                                    info_cache=self.info_cache)
+            schema, info_cache=self.info_cache)
         else:
             tnames = self.engine.table_names(schema)
         if order_by == 'foreign_key':
-            ordered_tnames = tnames[:]
-            # Order based on foreign key dependencies.
+            import random
+            random.shuffle(tnames)
+
+            tuples = []
             for tname in tnames:
-                table_pos = tnames.index(tname)
-                fkeys = self.get_foreign_keys(tname, schema)
-                for fkey in fkeys:
-                    rtable = fkey['referred_table']
-                    if rtable in ordered_tnames:
-                        ref_pos = ordered_tnames.index(rtable)
-                        # Make sure it's lower in the list than anything it
-                        # references.
-                        if table_pos > ref_pos:
-                            ordered_tnames.pop(table_pos) # rtable moves up 1
-                            # insert just below rtable
-                            ordered_tnames.index(ref_pos, tname)
-            tnames = ordered_tnames
+                for fkey in self.get_foreign_keys(tname, schema):
+                    if tname != fkey['referred_table']:
+                        tuples.append((tname, fkey['referred_table']))
+            tnames = list(topological.sort(tuples, tnames))
         return tnames
 
     def get_table_options(self, table_name, schema=None, **kw):
@@ -323,7 +317,7 @@ class Inspector(object):
                                             info_cache=self.info_cache, **kw)
         return indexes
 
-    def reflecttable(self, table, include_columns):
+    def reflecttable(self, table, include_columns, exclude_columns=None):
         """Given a Table object, load its internal constructs based on introspection.
 
         This is the underlying method used by most dialects to produce 
@@ -344,12 +338,6 @@ class Inspector(object):
 
         """
         dialect = self.bind.dialect
-
-        # MySQL dialect does this.  Applicable with other dialects?
-        if hasattr(dialect, '_connection_charset') \
-                                        and hasattr(dialect, '_adjust_casing'):
-            charset = dialect._connection_charset
-            dialect._adjust_casing(table)
 
         # table attributes we might need.
         reflection_options = dict(
@@ -381,24 +369,31 @@ class Inspector(object):
         found_table = False
         for col_d in self.get_columns(table_name, schema, **tblkw):
             found_table = True
+            table.dispatch.column_reflect(table, col_d)
+
             name = col_d['name']
             if include_columns and name not in include_columns:
+                continue
+            if exclude_columns and name in exclude_columns:
                 continue
 
             coltype = col_d['type']
             col_kw = {
                 'nullable':col_d['nullable'],
             }
-            if 'autoincrement' in col_d:
-                col_kw['autoincrement'] = col_d['autoincrement']
-            if 'quote' in col_d:
-                col_kw['quote'] = col_d['quote']
+            for k in ('autoincrement', 'quote', 'info', 'key'):
+                if k in col_d:
+                    col_kw[k] = col_d[k]
 
             colargs = []
             if col_d.get('default') is not None:
                 # the "default" value is assumed to be a literal SQL expression,
                 # so is wrapped in text() so that no quoting occurs on re-issuance.
-                colargs.append(sa_schema.DefaultClause(sql.text(col_d['default'])))
+                colargs.append(
+                    sa_schema.DefaultClause(
+                        sql.text(col_d['default']), _reflected=True
+                    )
+                )
 
             if 'sequence' in col_d:
                 # TODO: mssql, maxdb and sybase are using this.

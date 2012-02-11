@@ -11,7 +11,7 @@ from sqlalchemy.schema import ForeignKeyConstraint
 from sqlalchemy.schema import UniqueConstraint
 
 from migrate.exceptions import *
-from migrate.changeset import SQLA_06
+from migrate.changeset import SQLA_07
 from migrate.changeset.databases.visitor import (get_engine_visitor,
                                                  run_single_visitor)
 
@@ -349,10 +349,7 @@ class ColumnDelta(DictMixin, sqlalchemy.schema.SchemaItem):
     def process_column(self, column):
         """Processes default values for column"""
         # XXX: this is a snippet from SA processing of positional parameters
-        if not SQLA_06 and column.args:
-            toinit = list(column.args)
-        else:
-            toinit = list()
+        toinit = list()
 
         if column.server_default is not None:
             if isinstance(column.server_default, sqlalchemy.FetchedValue):
@@ -367,9 +364,6 @@ class ColumnDelta(DictMixin, sqlalchemy.schema.SchemaItem):
                                             for_update=True))
         if toinit:
             column._init_items(*toinit)
-            
-        if not SQLA_06:
-            column.args = []
 
     def _get_table(self):
         return getattr(self, '_table', None)
@@ -469,14 +463,18 @@ class ChangesetTable(object):
         self._set_parent(self.metadata)
 
     def _meta_key(self):
+        """Get the meta key for this table."""
         return sqlalchemy.schema._get_table_key(self.name, self.schema)
 
     def deregister(self):
         """Remove this table from its metadata"""
-        key = self._meta_key()
-        meta = self.metadata
-        if key in meta.tables:
-            del meta.tables[key]
+        if SQLA_07:
+            self.metadata._remove_table(self.name, self.schema)
+        else:
+            key = self._meta_key()
+            meta = self.metadata
+            if key in meta.tables:
+                del meta.tables[key]
 
 
 class ChangesetColumn(object):
@@ -555,7 +553,10 @@ populated with defaults
 
     def add_to_table(self, table):
         if table is not None  and self.table is None:
-            self._set_parent(table)
+            if SQLA_07:
+                table.append_column(self)
+            else:
+                self._set_parent(table)
 
     def _col_name_in_constraint(self,cons,name):
         return False
@@ -590,7 +591,10 @@ populated with defaults
         table.constraints = table.constraints - to_drop
         
         if table.c.contains_column(self):
-            table.c.remove(self)
+            if SQLA_07:
+                table._columns.remove(self)
+            else:
+                table.c.remove(self)
 
     # TODO: this is fixed in 0.6
     def copy_fixed(self, **kw):

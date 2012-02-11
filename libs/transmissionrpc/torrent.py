@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2008-2010 Erik Svensson <erik.public@gmail.com>
+# Copyright (c) 2008-2011 Erik Svensson <erik.public@gmail.com>
 # Licensed under the MIT license.
 
 import sys, datetime
 
-from transmissionrpc.constants import STATUS, PRIORITY
+from transmissionrpc.constants import PRIORITY
 from transmissionrpc.utils import format_timedelta
 
 class Torrent(object):
     """
-    Torrent is a class holding the data raceived from Transmission regarding a bittorrent transfer.
-    All fetched torrent fields are accessable through this class using attributes.
+    Torrent is a class holding the data received from Transmission regarding a bittorrent transfer.
+    All fetched torrent fields are accessible through this class using attributes.
     This class has a few convenience properties using the torrent data.
     """
 
@@ -22,7 +22,7 @@ class Torrent(object):
         self.client = client
 
     def _getNameString(self, codec=None):
-        if codec == None:
+        if codec is None:
             codec = sys.getdefaultencoding()
         name = None
         # try to find name
@@ -50,13 +50,47 @@ class Torrent(object):
             return 'Torrent \"%s\"' % (name)
         else:
             return 'Torrent'
-    
+
     def __copy__(self):
         return Torrent(self.client, self.fields)
 
+    def _rpc_version(self):
+        if self.client:
+            return self.client.rpc_version
+        return 2
+    
+    def _status_old(self, code):
+        mapping = {
+            (1<<0): 'check pending',
+            (1<<1): 'checking',
+            (1<<2): 'downloading',
+            (1<<3): 'seeding',
+            (1<<4): 'stopped',
+        }
+        return mapping[code]
+    
+    def _status_new(self, code):
+        mapping = {
+            0: 'stopped',
+            1: 'check pending',
+            2: 'checking',
+            3: 'download pending',
+            4: 'downloading',
+            5: 'seed pending',
+            6: 'seeding',
+        }
+        return mapping[code]
+    
+    def _status(self):
+        code = self.fields['status']
+        if self._rpc_version() >= 14:
+            return self._status_new(code)
+        else:
+            return self._status_old(code)
+
     def update(self, other):
         """
-        Update the torrent data from a Transmission JSON-RPC arguments dictinary
+        Update the torrent data from a Transmission JSON-RPC arguments dictionary
         """
         fields = None
         if isinstance(other, dict):
@@ -70,31 +104,30 @@ class Torrent(object):
 
     def files(self):
         """
-    	Get list of files for this torrent.
+        Get list of files for this torrent.
 
-    	This function returns a dictionary with file information for each file.
-    	The file information is has following fields:
-    	::
+        This function returns a dictionary with file information for each file.
+        The file information is has following fields:
+        ::
 
-    		{
-    			<file id>: {
-    				'name': <file name>,
-    				'size': <file size in bytes>,
-    				'completed': <bytes completed>,
-    				'priority': <priority ('high'|'normal'|'low')>,
-    				'selected': <selected for download>
-    			}
-
-    			...
-    		}
+            {
+                <file id>: {
+                    'name': <file name>,
+                    'size': <file size in bytes>,
+                    'completed': <bytes completed>,
+                    'priority': <priority ('high'|'normal'|'low')>,
+                    'selected': <selected for download>
+                }
+                ...
+            }
         """
         result = {}
         if 'files' in self.fields:
-            indicies = xrange(len(self.fields['files']))
+            indices = xrange(len(self.fields['files']))
             files = self.fields['files']
             priorities = self.fields['priorities']
             wanted = self.fields['wanted']
-            for item in zip(indicies, files, priorities, wanted):
+            for item in zip(indices, files, priorities, wanted):
                 selected = True if item[3] else False
                 priority = PRIORITY[item[2]]
                 result[item[0]] = {
@@ -115,10 +148,10 @@ class Torrent(object):
     def status(self):
         """
         Returns the torrent status. Is either one of 'check pending', 'checking',
-    	'downloading', 'seeding' or 'stopped'. The first two is related to
-    	verification.
-    	"""
-        return STATUS[self.fields['status']]
+        'downloading', 'seeding' or 'stopped'. The first two is related to
+        verification.
+        """
+        return self._status()
 
     @property
     def progress(self):
@@ -131,10 +164,7 @@ class Torrent(object):
     @property
     def ratio(self):
         """Get the upload/download ratio."""
-        try:
-            return self.fields['uploadedEver'] / float(self.fields['downloadedEver'])
-        except ZeroDivisionError:
-            return 0.0
+        return float(self.fields['uploadRatio'])
 
     @property
     def eta(self):
@@ -167,12 +197,12 @@ class Torrent(object):
 
     def format_eta(self):
         """
-    	Returns the attribute *eta* formatted as a string.
+        Returns the attribute *eta* formatted as a string.
 
-    	* If eta is -1 the result is 'not available'
-    	* If eta is -2 the result is 'unknown'
-    	* Otherwise eta is formatted as <days> <hours>:<minutes>:<seconds>.
-    	"""
+        * If eta is -1 the result is 'not available'
+        * If eta is -2 the result is 'unknown'
+        * Otherwise eta is formatted as <days> <hours>:<minutes>:<seconds>.
+        """
         eta = self.fields['eta']
         if eta == -1:
             return 'not available'
@@ -180,7 +210,7 @@ class Torrent(object):
             return 'unknown'
         else:
             return format_timedelta(self.eta)
-    
+
     @property
     def priority(self):
         """

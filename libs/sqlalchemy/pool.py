@@ -1,5 +1,5 @@
 # sqlalchemy/pool.py
-# Copyright (C) 2005-2011 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2012 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -16,11 +16,12 @@ regular DB-API connect() methods to be transparently managed by a
 SQLAlchemy connection pool.
 """
 
-import weakref, time, threading
+import weakref, time, traceback
 
-from sqlalchemy import exc, log
-from sqlalchemy import queue as sqla_queue
-from sqlalchemy.util import threading, pickle, as_interface, memoized_property
+from sqlalchemy import exc, log, event, events, interfaces, util
+from sqlalchemy.util import queue as sqla_queue
+from sqlalchemy.util import threading, memoized_property, \
+    chop_traceback
 
 proxies = {}
 
@@ -36,7 +37,7 @@ def manage(module, **params):
     :param module: a DB-API 2.0 database module
 
     :param poolclass: the class used by the pool module to provide
-      pooling.  Defaults to :class:`QueuePool`.
+      pooling.  Defaults to :class:`.QueuePool`.
 
     :param \*\*params: will be passed through to *poolclass*
 
@@ -56,6 +57,7 @@ def clear_managers():
         manager.close()
     proxies.clear()
 
+
 class Pool(log.Identified):
     """Abstract base class for connection pools."""
 
@@ -63,7 +65,10 @@ class Pool(log.Identified):
                     creator, recycle=-1, echo=None, 
                     use_threadlocal=False,
                     logging_name=None,
-                    reset_on_return=True, listeners=None):
+                    reset_on_return=True, 
+                    listeners=None,
+                    events=None,
+                    _dispatch=None):
         """
         Construct a Pool.
 
@@ -101,11 +106,18 @@ class Pool(log.Identified):
           ROLLBACK to release locks and transaction resources.
           Disable at your own peril.  Defaults to True.
 
-        :param listeners: A list of
+        :param events: a list of 2-tuples, each of the form
+         ``(callable, target)`` which will be passed to event.listen()
+         upon construction.   Provided here so that event listeners
+         can be assigned via ``create_engine`` before dialect-level
+         listeners are applied.
+
+        :param listeners: Deprecated.  A list of
           :class:`~sqlalchemy.interfaces.PoolListener`-like objects or
           dictionaries of callables that receive events when DB-API
           connections are created, checked out and checked in to the
-          pool.
+          pool.  This has been superseded by 
+          :func:`~sqlalchemy.event.listen`.
 
         """
         if logging_name:
@@ -113,22 +125,37 @@ class Pool(log.Identified):
         else:
             self._orig_logging_name = None
 
-        self.logger = log.instance_logger(self, echoflag=echo)
+        log.instance_logger(self, echoflag=echo)
         self._threadconns = threading.local()
         self._creator = creator
         self._recycle = recycle
         self._use_threadlocal = use_threadlocal
         self._reset_on_return = reset_on_return
         self.echo = echo
-        self.listeners = []
-        self._on_connect = []
-        self._on_first_connect = []
-        self._on_checkout = []
-        self._on_checkin = []
-
+        if _dispatch:
+            self.dispatch._update(_dispatch, only_propagate=False)
+        if events:
+            for fn, target in events:
+                event.listen(self, target, fn)
         if listeners:
+            util.warn_deprecated(
+                        "The 'listeners' argument to Pool (and "
+                        "create_engine()) is deprecated.  Use event.listen().")
             for l in listeners:
                 self.add_listener(l)
+
+    dispatch = event.dispatcher(events.PoolEvents)
+
+    @util.deprecated(2.7, "Pool.add_listener is deprecated.  Use event.listen()")
+    def add_listener(self, listener):
+        """Add a :class:`.PoolListener`-like object to this pool.
+
+        ``listener`` may be an object that implements some or all of
+        PoolListener, or a dictionary of callables containing implementations
+        of some or all of the named methods in PoolListener.
+
+        """
+        interfaces.PoolListener._adapt_listener(self, listener)
 
     def unique_connection(self):
         """Produce a DBAPI connection that is not referenced by any
@@ -141,7 +168,7 @@ class Pool(log.Identified):
 
         return _ConnectionFairy(self).checkout()
 
-    def create_connection(self):
+    def _create_connection(self):
         """Called by subclasses to create a new ConnectionRecord."""
 
         return _ConnectionRecord(self)
@@ -162,9 +189,10 @@ class Pool(log.Identified):
         """Dispose of this pool.
 
         This method leaves the possibility of checked-out connections
-        remaining open, It is advised to not reuse the pool once dispose()
-        is called, and to instead use a new pool constructed by the
-        recreate() method.
+        remaining open, as it only affects connections that are
+        idle in the pool.
+        
+        See also the :meth:`Pool.recreate` method.
 
         """
 
@@ -192,32 +220,26 @@ class Pool(log.Identified):
         self._threadconns.current = weakref.ref(agent)
         return agent.checkout()
 
-    def return_conn(self, record):
+    def _return_conn(self, record):
         """Given a _ConnectionRecord, return it to the :class:`.Pool`.
 
         This method is called when an instrumented DBAPI connection
         has its ``close()`` method called.
 
         """
-        if self._use_threadlocal and hasattr(self._threadconns, "current"):
-            del self._threadconns.current
-        self.do_return_conn(record)
+        if self._use_threadlocal:
+            try:
+                del self._threadconns.current
+            except AttributeError:
+                pass
+        self._do_return_conn(record)
 
-    def get(self):
-        """Return a non-instrumented DBAPI connection from this :class:`.Pool`.
-
-        This is called by ConnectionRecord in order to get its DBAPI 
-        resource.
-
-        """
-        return self.do_get()
-
-    def do_get(self):
+    def _do_get(self):
         """Implementation for :meth:`get`, supplied by subclasses."""
 
         raise NotImplementedError()
 
-    def do_return_conn(self, conn):
+    def _do_return_conn(self, conn):
         """Implementation for :meth:`return_conn`, supplied by subclasses."""
 
         raise NotImplementedError()
@@ -225,40 +247,17 @@ class Pool(log.Identified):
     def status(self):
         raise NotImplementedError()
 
-    def add_listener(self, listener):
-        """Add a ``PoolListener``-like object to this pool.
-
-        ``listener`` may be an object that implements some or all of
-        PoolListener, or a dictionary of callables containing implementations
-        of some or all of the named methods in PoolListener.
-
-        """
-
-        listener = as_interface(listener,
-            methods=('connect', 'first_connect', 'checkout', 'checkin'))
-
-        self.listeners.append(listener)
-        if hasattr(listener, 'connect'):
-            self._on_connect.append(listener)
-        if hasattr(listener, 'first_connect'):
-            self._on_first_connect.append(listener)
-        if hasattr(listener, 'checkout'):
-            self._on_checkout.append(listener)
-        if hasattr(listener, 'checkin'):
-            self._on_checkin.append(listener)
 
 class _ConnectionRecord(object):
+    finalize_callback = None
+
     def __init__(self, pool):
         self.__pool = pool
         self.connection = self.__connect()
         self.info = {}
-        ls = pool.__dict__.pop('_on_first_connect', None)
-        if ls is not None:
-            for l in ls:
-                l.first_connect(self.connection, self)
-        if pool._on_connect:
-            for l in pool._on_connect:
-                l.connect(self.connection, self)
+
+        pool.dispatch.first_connect.exec_once(self.connection, self)
+        pool.dispatch.connect(self.connection, self)
 
     def close(self):
         if self.connection is not None:
@@ -286,9 +285,8 @@ class _ConnectionRecord(object):
         if self.connection is None:
             self.connection = self.__connect()
             self.info.clear()
-            if self.__pool._on_connect:
-                for l in self.__pool._on_connect:
-                    l.connect(self.connection, self)
+            if self.__pool.dispatch.connect:
+                self.__pool.dispatch.connect(self.connection, self)
         elif self.__pool._recycle > -1 and \
                 time.time() - self.starttime > self.__pool._recycle:
             self.__pool.logger.info(
@@ -297,9 +295,8 @@ class _ConnectionRecord(object):
             self.__close()
             self.connection = self.__connect()
             self.info.clear()
-            if self.__pool._on_connect:
-                for l in self.__pool._on_connect:
-                    l.connect(self.connection, self)
+            if self.__pool.dispatch.connect:
+                self.__pool.dispatch.connect(self.connection, self)
         return self.connection
 
     def __close(self):
@@ -324,12 +321,11 @@ class _ConnectionRecord(object):
             raise
 
 
-def _finalize_fairy(connection, connection_record, pool, ref=None):
+def _finalize_fairy(connection, connection_record, pool, ref, echo):
     _refs.discard(connection_record)
 
     if ref is not None and \
-                (connection_record.fairy is not ref or 
-                isinstance(pool, AssertionPool)):
+                connection_record.fairy is not ref:
         return
 
     if connection is not None:
@@ -347,11 +343,15 @@ def _finalize_fairy(connection, connection_record, pool, ref=None):
 
     if connection_record is not None:
         connection_record.fairy = None
-        pool.logger.debug("Connection %r being returned to pool", connection)
-        if pool._on_checkin:
-            for l in pool._on_checkin:
-                l.checkin(connection, connection_record)
-        pool.return_conn(connection_record)
+        if echo:
+            pool.logger.debug("Connection %r being returned to pool", 
+                                    connection)
+        if connection_record.finalize_callback:
+            connection_record.finalize_callback(connection)
+            del connection_record.finalize_callback 
+        if pool.dispatch.checkin:
+            pool.dispatch.checkin(connection, connection_record)
+        pool._return_conn(connection_record)
 
 _refs = set()
 
@@ -360,17 +360,19 @@ class _ConnectionFairy(object):
     support."""
 
     __slots__ = '_pool', '__counter', 'connection', \
-                '_connection_record', '__weakref__', '_detached_info'
+                '_connection_record', '__weakref__', \
+                '_detached_info', '_echo'
 
     def __init__(self, pool):
         self._pool = pool
         self.__counter = 0
+        self._echo = _echo = pool._should_log_debug()
         try:
-            rec = self._connection_record = pool.get()
+            rec = self._connection_record = pool._do_get()
             conn = self.connection = self._connection_record.get_connection()
             rec.fairy = weakref.ref(
                             self, 
-                            lambda ref:_finalize_fairy(conn, rec, pool, ref)
+                            lambda ref:_finalize_fairy and _finalize_fairy(conn, rec, pool, ref, _echo)
                         )
             _refs.add(rec)
         except:
@@ -378,7 +380,8 @@ class _ConnectionFairy(object):
             self.connection = None 
             self._connection_record = None
             raise
-        self._pool.logger.debug("Connection %r checked out from pool" %
+        if self._echo:
+            self._pool.logger.debug("Connection %r checked out from pool" %
                        self.connection)
 
     @property
@@ -419,12 +422,7 @@ class _ConnectionFairy(object):
         self._close()
 
     def cursor(self, *args, **kwargs):
-        try:
-            c = self.connection.cursor(*args, **kwargs)
-            return _CursorFairy(self, c)
-        except Exception, e:
-            self.invalidate(e=e)
-            raise
+        return self.connection.cursor(*args, **kwargs)
 
     def __getattr__(self, key):
         return getattr(self.connection, key)
@@ -434,15 +432,16 @@ class _ConnectionFairy(object):
             raise exc.InvalidRequestError("This connection is closed")
         self.__counter += 1
 
-        if not self._pool._on_checkout or self.__counter != 1:
+        if not self._pool.dispatch.checkout or self.__counter != 1:
             return self
 
         # Pool listeners can trigger a reconnection on checkout
         attempts = 2
         while attempts > 0:
             try:
-                for l in self._pool._on_checkout:
-                    l.checkout(self.connection, self._connection_record, self)
+                self._pool.dispatch.checkout(self.connection, 
+                                            self._connection_record,
+                                            self)
                 return self
             except exc.DisconnectionError, e:
                 self._pool.logger.info(
@@ -472,7 +471,7 @@ class _ConnectionFairy(object):
             _refs.remove(self._connection_record)
             self._connection_record.fairy = None
             self._connection_record.connection = None
-            self._pool.do_return_conn(self._connection_record)
+            self._pool._do_return_conn(self._connection_record)
             self._detached_info = \
               self._connection_record.info.copy()
             self._connection_record = None
@@ -483,45 +482,10 @@ class _ConnectionFairy(object):
             self._close()
 
     def _close(self):
-        _finalize_fairy(self.connection, self._connection_record, self._pool)
+        _finalize_fairy(self.connection, self._connection_record, 
+                            self._pool, None, self._echo)
         self.connection = None
         self._connection_record = None
-
-class _CursorFairy(object):
-    __slots__ = '_parent', 'cursor', 'execute'
-
-    def __init__(self, parent, cursor):
-        self._parent = parent
-        self.cursor = cursor
-        self.execute = cursor.execute
-
-    def invalidate(self, e=None):
-        self._parent.invalidate(e=e)
-
-    def __iter__(self):
-        return iter(self.cursor)
-
-    def close(self):
-        try:
-            self.cursor.close()
-        except Exception, e:
-            try:
-                ex_text = str(e)
-            except TypeError:
-                ex_text = repr(e)
-            self._parent._logger.warn("Error closing cursor: %s", ex_text)
-
-            if isinstance(e, (SystemExit, KeyboardInterrupt)):
-                raise
-
-    def __setattr__(self, key, value):
-        if key in self.__slots__:
-            object.__setattr__(self, key, value)
-        else:
-            setattr(self.cursor, key, value)
-
-    def __getattr__(self, key):
-        return getattr(self.cursor, key)
 
 class SingletonThreadPool(Pool):
     """A Pool that maintains one connection per thread.
@@ -529,14 +493,14 @@ class SingletonThreadPool(Pool):
     Maintains one connection per each thread, never moving a connection to a
     thread other than the one which it was created in.
 
-    This is used for SQLite, which both does not handle multithreading by
-    default, and also requires a singleton connection if a :memory: database
-    is being used.
-
-    Options are the same as those of :class:`Pool`, as well as:
+    Options are the same as those of :class:`.Pool`, as well as:
 
     :param pool_size: The number of threads in which to maintain connections 
         at once.  Defaults to five.
+
+    :class:`.SingletonThreadPool` is used by the SQLite dialect
+    automatically when a memory-based database is used.
+    See :ref:`sqlite_toplevel`.
 
     """
 
@@ -549,13 +513,13 @@ class SingletonThreadPool(Pool):
 
     def recreate(self):
         self.logger.info("Pool recreating")
-        return SingletonThreadPool(self._creator, 
+        return self.__class__(self._creator, 
             pool_size=self.size, 
             recycle=self._recycle, 
             echo=self.echo, 
             logging_name=self._orig_logging_name,
             use_threadlocal=self._use_threadlocal, 
-            listeners=self.listeners)
+            _dispatch=self.dispatch)
 
     def dispose(self):
         """Dispose of this pool."""
@@ -572,39 +536,39 @@ class SingletonThreadPool(Pool):
 
         self._all_conns.clear()
 
-    def dispose_local(self):
-        if hasattr(self._conn, 'current'):
-            conn = self._conn.current()
-            self._all_conns.discard(conn)
-            del self._conn.current
-
-    def cleanup(self):
+    def _cleanup(self):
         while len(self._all_conns) > self.size:
-            self._all_conns.pop()
+            c = self._all_conns.pop()
+            c.close()
 
     def status(self):
         return "SingletonThreadPool id:%d size: %d" % \
                             (id(self), len(self._all_conns))
 
-    def do_return_conn(self, conn):
+    def _do_return_conn(self, conn):
         pass
 
-    def do_get(self):
+    def _do_get(self):
         try:
             c = self._conn.current()
             if c:
                 return c
         except AttributeError:
             pass
-        c = self.create_connection()
+        c = self._create_connection()
         self._conn.current = weakref.ref(c)
         self._all_conns.add(c)
         if len(self._all_conns) > self.size:
-            self.cleanup()
+            self._cleanup()
         return c
 
 class QueuePool(Pool):
-    """A Pool that imposes a limit on the number of open connections."""
+    """A :class:`.Pool` that imposes a limit on the number of open connections.
+
+    :class:`.QueuePool` is the default pooling implementation used for 
+    all :class:`.Engine` objects, unless the SQLite dialect is in use.
+
+    """
 
     def __init__(self, creator, pool_size=5, max_overflow=10, timeout=30,
                  **kw):
@@ -682,18 +646,19 @@ class QueuePool(Pool):
 
     def recreate(self):
         self.logger.info("Pool recreating")
-        return QueuePool(self._creator, pool_size=self._pool.maxsize, 
+        return self.__class__(self._creator, pool_size=self._pool.maxsize, 
                           max_overflow=self._max_overflow,
                           timeout=self._timeout, 
                           recycle=self._recycle, echo=self.echo, 
                           logging_name=self._orig_logging_name,
                           use_threadlocal=self._use_threadlocal,
-                          listeners=self.listeners)
+                          _dispatch=self.dispatch)
 
-    def do_return_conn(self, conn):
+    def _do_return_conn(self, conn):
         try:
             self._pool.put(conn, False)
         except sqla_queue.Full:
+            conn.close()
             if self._overflow_lock is None:
                 self._overflow -= 1
             else:
@@ -703,7 +668,7 @@ class QueuePool(Pool):
                 finally:
                     self._overflow_lock.release()
 
-    def do_get(self):
+    def _do_get(self):
         try:
             wait = self._max_overflow > -1 and \
                         self._overflow >= self._max_overflow
@@ -712,7 +677,7 @@ class QueuePool(Pool):
             if self._max_overflow > -1 and \
                         self._overflow >= self._max_overflow:
                 if not wait:
-                    return self.do_get()
+                    return self._do_get()
                 else:
                     raise exc.TimeoutError(
                             "QueuePool limit of size %d overflow %d reached, "
@@ -726,10 +691,10 @@ class QueuePool(Pool):
                         self._overflow >= self._max_overflow:
                 if self._overflow_lock is not None:
                     self._overflow_lock.release()
-                return self.do_get()
+                return self._do_get()
 
             try:
-                con = self.create_connection()
+                con = self._create_connection()
                 self._overflow += 1
             finally:
                 if self._overflow_lock is not None:
@@ -777,29 +742,30 @@ class NullPool(Pool):
     invalidation are not supported by this Pool implementation, since
     no connections are held persistently.
 
+    :class:`.NullPool` is used by the SQlite dilalect automatically
+    when a file-based database is used (as of SQLAlchemy 0.7).
+    See :ref:`sqlite_toplevel`.
+
     """
 
     def status(self):
         return "NullPool"
 
-    def do_return_conn(self, conn):
+    def _do_return_conn(self, conn):
         conn.close()
 
-    def do_return_invalid(self, conn):
-        pass
-
-    def do_get(self):
-        return self.create_connection()
+    def _do_get(self):
+        return self._create_connection()
 
     def recreate(self):
         self.logger.info("Pool recreating")
 
-        return NullPool(self._creator, 
+        return self.__class__(self._creator, 
             recycle=self._recycle, 
             echo=self.echo, 
             logging_name=self._orig_logging_name,
             use_threadlocal=self._use_threadlocal, 
-            listeners=self.listeners)
+            _dispatch=self.dispatch)
 
     def dispose(self):
         pass
@@ -839,47 +805,45 @@ class StaticPool(Pool):
                               reset_on_return=self._reset_on_return,
                               echo=self.echo,
                               logging_name=self._orig_logging_name,
-                              listeners=self.listeners)
+                              _dispatch=self.dispatch)
 
-    def create_connection(self):
+    def _create_connection(self):
         return self._conn
 
-    def do_return_conn(self, conn):
+    def _do_return_conn(self, conn):
         pass
 
-    def do_return_invalid(self, conn):
-        pass
-
-    def do_get(self):
+    def _do_get(self):
         return self.connection
 
 class AssertionPool(Pool):
-    """A Pool that allows at most one checked out connection at any given
+    """A :class:`.Pool` that allows at most one checked out connection at any given
     time.
 
     This will raise an exception if more than one connection is checked out
     at a time.  Useful for debugging code that is using more connections
     than desired.
+    
+    :class:`.AssertionPool` also logs a traceback of where
+    the original connection was checked out, and reports
+    this in the assertion error raised (new in 0.7).
 
     """
-
     def __init__(self, *args, **kw):
         self._conn = None
         self._checked_out = False
+        self._store_traceback = kw.pop('store_traceback', True)
+        self._checkout_traceback = None
         Pool.__init__(self, *args, **kw)
 
     def status(self):
         return "AssertionPool"
 
-    def do_return_conn(self, conn):
+    def _do_return_conn(self, conn):
         if not self._checked_out:
             raise AssertionError("connection is not checked out")
         self._checked_out = False
         assert conn is self._conn
-
-    def do_return_invalid(self, conn):
-        self._conn = None
-        self._checked_out = False
 
     def dispose(self):
         self._checked_out = False
@@ -888,18 +852,25 @@ class AssertionPool(Pool):
 
     def recreate(self):
         self.logger.info("Pool recreating")
-        return AssertionPool(self._creator, echo=self.echo, 
+        return self.__class__(self._creator, echo=self.echo, 
                             logging_name=self._orig_logging_name,
-                            listeners=self.listeners)
+                            _dispatch=self.dispatch)
 
-    def do_get(self):
+    def _do_get(self):
         if self._checked_out:
-            raise AssertionError("connection is already checked out")
+            if self._checkout_traceback:
+                suffix = ' at:\n%s' % ''.join(
+                    chop_traceback(self._checkout_traceback))
+            else:
+                suffix = ''
+            raise AssertionError("connection is already checked out" + suffix)
 
         if not self._conn:
-            self._conn = self.create_connection()
+            self._conn = self._create_connection()
 
         self._checked_out = True
+        if self._store_traceback:
+            self._checkout_traceback = traceback.format_stack()
         return self._conn
 
 class _DBProxy(object):
@@ -947,6 +918,7 @@ class _DBProxy(object):
             self._create_pool_mutex.acquire()
             try:
                 if key not in self.pools:
+                    kw.pop('sa_pool_key', None)
                     pool = self.poolclass(lambda: 
                                 self.module.connect(*args, **kw), **self.kw)
                     self.pools[key] = pool
@@ -982,4 +954,10 @@ class _DBProxy(object):
             pass
 
     def _serialize(self, *args, **kw):
-        return pickle.dumps([args, kw])
+        if "sa_pool_key" in kw:
+            return kw['sa_pool_key']
+
+        return tuple(
+            list(args) + 
+            [(k, kw[k]) for k in sorted(kw)]
+        )

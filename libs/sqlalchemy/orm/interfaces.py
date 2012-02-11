@@ -1,26 +1,30 @@
 # orm/interfaces.py
-# Copyright (C) 2005-2011 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2012 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 
 """
 
-Semi-private module containing various base classes used throughout the ORM.
+Contains various base classes used throughout the ORM.
 
-Defines the extension classes :class:`MapperExtension`,
-:class:`SessionExtension`, and :class:`AttributeExtension` as
-well as other user-subclassable extension objects.
+Defines the now deprecated ORM extension classes as well
+as ORM internals.
+
+Other than the deprecated extensions, this module and the
+classes within should be considered mostly private.
 
 """
 
 from itertools import chain
 
-import sqlalchemy.exceptions as sa_exc
-from sqlalchemy import log, util
-from sqlalchemy.sql import expression
+from sqlalchemy import exc as sa_exc
+from sqlalchemy import util
+from sqlalchemy.sql import operators
+deque = __import__('collections').deque
 
-class_mapper = None
+mapperutil = util.importlater('sqlalchemy.orm', 'util')
+
 collections = None
 
 __all__ = (
@@ -48,373 +52,22 @@ ONETOMANY = util.symbol('ONETOMANY')
 MANYTOONE = util.symbol('MANYTOONE')
 MANYTOMANY = util.symbol('MANYTOMANY')
 
-class MapperExtension(object):
-    """Base implementation for customizing ``Mapper`` behavior.
+from deprecated_interfaces import AttributeExtension, SessionExtension, \
+    MapperExtension
 
-    New extension classes subclass ``MapperExtension`` and are specified
-    using the ``extension`` mapper() argument, which is a single
-    ``MapperExtension`` or a list of such.   A single mapper
-    can maintain a chain of ``MapperExtension`` objects.  When a
-    particular mapping event occurs, the corresponding method 
-    on each ``MapperExtension`` is invoked serially, and each method
-    has the ability to halt the chain from proceeding further.
-
-    Each ``MapperExtension`` method returns the symbol
-    EXT_CONTINUE by default.   This symbol generally means "move
-    to the next ``MapperExtension`` for processing".  For methods
-    that return objects like translated rows or new object
-    instances, EXT_CONTINUE means the result of the method
-    should be ignored.   In some cases it's required for a 
-    default mapper activity to be performed, such as adding a 
-    new instance to a result list.
-
-    The symbol EXT_STOP has significance within a chain
-    of ``MapperExtension`` objects that the chain will be stopped
-    when this symbol is returned.  Like EXT_CONTINUE, it also
-    has additional significance in some cases that a default
-    mapper activity will not be performed.
-
-    """
-
-    def instrument_class(self, mapper, class_):
-        """Receive a class when the mapper is first constructed, and has
-        applied instrumentation to the mapped class.
-
-        The return value is only significant within the ``MapperExtension`` 
-        chain; the parent mapper's behavior isn't modified by this method.
-
-        """
-        return EXT_CONTINUE
-
-    def init_instance(self, mapper, class_, oldinit, instance, args, kwargs):
-        """Receive an instance when it's constructor is called.
-
-        This method is only called during a userland construction of 
-        an object.  It is not called when an object is loaded from the
-        database.
-
-        The return value is only significant within the ``MapperExtension`` 
-        chain; the parent mapper's behavior isn't modified by this method.
-
-        """
-        return EXT_CONTINUE
-
-    def init_failed(self, mapper, class_, oldinit, instance, args, kwargs):
-        """Receive an instance when it's constructor has been called, 
-        and raised an exception.
-
-        This method is only called during a userland construction of 
-        an object.  It is not called when an object is loaded from the
-        database.
-
-        The return value is only significant within the ``MapperExtension`` 
-        chain; the parent mapper's behavior isn't modified by this method.
-
-        """
-        return EXT_CONTINUE
-
-    def translate_row(self, mapper, context, row):
-        """Perform pre-processing on the given result row and return a
-        new row instance.
-
-        This is called when the mapper first receives a row, before
-        the object identity or the instance itself has been derived
-        from that row.   The given row may or may not be a 
-        ``RowProxy`` object - it will always be a dictionary-like
-        object which contains mapped columns as keys.  The 
-        returned object should also be a dictionary-like object
-        which recognizes mapped columns as keys.
-
-        If the ultimate return value is EXT_CONTINUE, the row
-        is not translated.
-
-        """
-        return EXT_CONTINUE
-
-    def create_instance(self, mapper, selectcontext, row, class_):
-        """Receive a row when a new object instance is about to be
-        created from that row.
-
-        The method can choose to create the instance itself, or it can return
-        EXT_CONTINUE to indicate normal object creation should take place.
-
-        mapper
-          The mapper doing the operation
-
-        selectcontext
-          The QueryContext generated from the Query.
-
-        row
-          The result row from the database
-
-        class\_
-          The class we are mapping.
-
-        return value
-          A new object instance, or EXT_CONTINUE
-
-        """
-        return EXT_CONTINUE
-
-    def append_result(self, mapper, selectcontext, row, instance, 
-                        result, **flags):
-        """Receive an object instance before that instance is appended
-        to a result list.
-
-        If this method returns EXT_CONTINUE, result appending will proceed
-        normally.  if this method returns any other value or None,
-        result appending will not proceed for this instance, giving
-        this extension an opportunity to do the appending itself, if
-        desired.
-
-        mapper
-          The mapper doing the operation.
-
-        selectcontext
-          The QueryContext generated from the Query.
-
-        row
-          The result row from the database.
-
-        instance
-          The object instance to be appended to the result.
-
-        result
-          List to which results are being appended.
-
-        \**flags
-          extra information about the row, same as criterion in
-          ``create_row_processor()`` method of
-          :class:`~sqlalchemy.orm.interfaces.MapperProperty`
-        """
-
-        return EXT_CONTINUE
-
-    def populate_instance(self, mapper, selectcontext, row, 
-                            instance, **flags):
-        """Receive an instance before that instance has
-        its attributes populated.
-
-        This usually corresponds to a newly loaded instance but may
-        also correspond to an already-loaded instance which has
-        unloaded attributes to be populated.  The method may be called
-        many times for a single instance, as multiple result rows are
-        used to populate eagerly loaded collections.
-
-        If this method returns EXT_CONTINUE, instance population will
-        proceed normally.  If any other value or None is returned,
-        instance population will not proceed, giving this extension an
-        opportunity to populate the instance itself, if desired.
-
-        As of 0.5, most usages of this hook are obsolete.  For a
-        generic "object has been newly created from a row" hook, use
-        ``reconstruct_instance()``, or the ``@orm.reconstructor``
-        decorator.
-
-        """
-        return EXT_CONTINUE
-
-    def reconstruct_instance(self, mapper, instance):
-        """Receive an object instance after it has been created via
-        ``__new__``, and after initial attribute population has
-        occurred.
-
-        This typically occurs when the instance is created based on
-        incoming result rows, and is only called once for that
-        instance's lifetime.
-
-        Note that during a result-row load, this method is called upon
-        the first row received for this instance.  Note that some 
-        attributes and collections may or may not be loaded or even 
-        initialized, depending on what's present in the result rows.
-
-        The return value is only significant within the ``MapperExtension`` 
-        chain; the parent mapper's behavior isn't modified by this method.
-
-        """
-        return EXT_CONTINUE
-
-    def before_insert(self, mapper, connection, instance):
-        """Receive an object instance before that instance is inserted
-        into its table.
-
-        This is a good place to set up primary key values and such
-        that aren't handled otherwise.
-
-        Column-based attributes can be modified within this method
-        which will result in the new value being inserted.  However
-        *no* changes to the overall flush plan can be made, and 
-        manipulation of the ``Session`` will not have the desired effect.
-        To manipulate the ``Session`` within an extension, use 
-        ``SessionExtension``.
-
-        The return value is only significant within the ``MapperExtension`` 
-        chain; the parent mapper's behavior isn't modified by this method.
-
-        """
-
-        return EXT_CONTINUE
-
-    def after_insert(self, mapper, connection, instance):
-        """Receive an object instance after that instance is inserted.
-
-        The return value is only significant within the ``MapperExtension`` 
-        chain; the parent mapper's behavior isn't modified by this method.
-
-        """
-
-        return EXT_CONTINUE
-
-    def before_update(self, mapper, connection, instance):
-        """Receive an object instance before that instance is updated.
-
-        Note that this method is called for all instances that are marked as
-        "dirty", even those which have no net changes to their column-based
-        attributes. An object is marked as dirty when any of its column-based
-        attributes have a "set attribute" operation called or when any of its
-        collections are modified. If, at update time, no column-based
-        attributes have any net changes, no UPDATE statement will be issued.
-        This means that an instance being sent to before_update is *not* a
-        guarantee that an UPDATE statement will be issued (although you can
-        affect the outcome here).
-
-        To detect if the column-based attributes on the object have net
-        changes, and will therefore generate an UPDATE statement, use
-        ``object_session(instance).is_modified(instance,
-        include_collections=False)``.
-
-        Column-based attributes can be modified within this method
-        which will result in the new value being updated.  However
-        *no* changes to the overall flush plan can be made, and 
-        manipulation of the ``Session`` will not have the desired effect.
-        To manipulate the ``Session`` within an extension, use 
-        ``SessionExtension``.
-
-        The return value is only significant within the ``MapperExtension`` 
-        chain; the parent mapper's behavior isn't modified by this method.
-
-        """
-
-        return EXT_CONTINUE
-
-    def after_update(self, mapper, connection, instance):
-        """Receive an object instance after that instance is updated.
-
-        The return value is only significant within the ``MapperExtension`` 
-        chain; the parent mapper's behavior isn't modified by this method.
-
-        """
-
-        return EXT_CONTINUE
-
-    def before_delete(self, mapper, connection, instance):
-        """Receive an object instance before that instance is deleted.
-
-        Note that *no* changes to the overall flush plan can be made
-        here; and manipulation of the ``Session`` will not have the
-        desired effect. To manipulate the ``Session`` within an
-        extension, use ``SessionExtension``.
-
-        The return value is only significant within the ``MapperExtension`` 
-        chain; the parent mapper's behavior isn't modified by this method.
-
-        """
-
-        return EXT_CONTINUE
-
-    def after_delete(self, mapper, connection, instance):
-        """Receive an object instance after that instance is deleted.
-
-        The return value is only significant within the ``MapperExtension``
-        chain; the parent mapper's behavior isn't modified by this method.
-
-        """
-
-        return EXT_CONTINUE
-
-class SessionExtension(object):
-
-    """An extension hook object for Sessions.  Subclasses may be
-    installed into a Session (or sessionmaker) using the ``extension``
-    keyword argument. """
-
-    def before_commit(self, session):
-        """Execute right before commit is called.
-
-        Note that this may not be per-flush if a longer running
-        transaction is ongoing."""
-
-    def after_commit(self, session):
-        """Execute after a commit has occured.
-
-        Note that this may not be per-flush if a longer running
-        transaction is ongoing."""
-
-    def after_rollback(self, session):
-        """Execute after a rollback has occured.
-
-        Note that this may not be per-flush if a longer running
-        transaction is ongoing."""
-
-    def before_flush( self, session, flush_context, instances):
-        """Execute before flush process has started.
-
-        `instances` is an optional list of objects which were passed to
-        the ``flush()`` method. """
-
-    def after_flush(self, session, flush_context):
-        """Execute after flush has completed, but before commit has been
-        called.
-
-        Note that the session's state is still in pre-flush, i.e. 'new',
-        'dirty', and 'deleted' lists still show pre-flush state as well
-        as the history settings on instance attributes."""
-
-    def after_flush_postexec(self, session, flush_context):
-        """Execute after flush has completed, and after the post-exec
-        state occurs.
-
-        This will be when the 'new', 'dirty', and 'deleted' lists are in
-        their final state.  An actual commit() may or may not have
-        occured, depending on whether or not the flush started its own
-        transaction or participated in a larger transaction. """
-
-    def after_begin( self, session, transaction, connection):
-        """Execute after a transaction is begun on a connection
-
-        `transaction` is the SessionTransaction. This method is called
-        after an engine level transaction is begun on a connection. """
-
-    def after_attach(self, session, instance):
-        """Execute after an instance is attached to a session.
-
-        This is called after an add, delete or merge. """
-
-    def after_bulk_update( self, session, query, query_context, result):
-        """Execute after a bulk update operation to the session.
-
-        This is called after a session.query(...).update()
-
-        `query` is the query object that this update operation was
-        called on. `query_context` was the query context object.
-        `result` is the result object returned from the bulk operation.
-        """
-
-    def after_bulk_delete( self, session, query, query_context, result):
-        """Execute after a bulk delete operation to the session.
-
-        This is called after a session.query(...).delete()
-
-        `query` is the query object that this delete operation was
-        called on. `query_context` was the query context object.
-        `result` is the result object returned from the bulk operation.
-        """
 
 class MapperProperty(object):
     """Manage the relationship of a ``Mapper`` to a single class
     attribute, as well as that attribute as it appears on individual
     instances of the class, including attribute instrumentation,
     attribute access, loading behavior, and dependency calculations.
+    
+    The most common occurrences of :class:`.MapperProperty` are the
+    mapped :class:`.Column`, which is represented in a mapping as 
+    an instance of :class:`.ColumnProperty`,
+    and a reference to another class produced by :func:`.relationship`,
+    represented in the mapping as an instance of :class:`.RelationshipProperty`.
+    
     """
 
     cascade = ()
@@ -424,7 +77,7 @@ class MapperProperty(object):
 
     """
 
-    def setup(self, context, entity, path, adapter, **kwargs):
+    def setup(self, context, entity, path, reduced_path, adapter, **kwargs):
         """Called by Query for the purposes of constructing a SQL statement.
 
         Each MapperProperty associated with the target mapper processes the
@@ -434,12 +87,12 @@ class MapperProperty(object):
 
         pass
 
-    def create_row_processor(self, selectcontext, path, mapper, row, adapter):
+    def create_row_processor(self, context, path, reduced_path, 
+                                            mapper, row, adapter):
         """Return a 3-tuple consisting of three row processing functions.
 
         """
-
-        raise NotImplementedError()
+        return None, None, None
 
     def cascade_iterator(self, type_, state, visited_instances=None,
                             halt_on=None):
@@ -519,9 +172,9 @@ class MapperProperty(object):
         """Merge the attribute represented by this ``MapperProperty``
         from source to destination object"""
 
-        raise NotImplementedError()
+        pass
 
-    def compare(self, operator, value):
+    def compare(self, operator, value, **kw):
         """Return a compare operation for the columns represented by
         this ``MapperProperty`` to the given value, which may be a
         column value or an instance.  'operator' is an operator from
@@ -533,13 +186,13 @@ class MapperProperty(object):
 
         return operator(self.comparator, value)
 
-class PropComparator(expression.ColumnOperators):
+class PropComparator(operators.ColumnOperators):
     """Defines comparison operations for MapperProperty objects.
 
     User-defined subclasses of :class:`.PropComparator` may be created. The
     built-in Python comparison and math operator methods, such as
     ``__eq__()``, ``__lt__()``, ``__add__()``, can be overridden to provide
-    new operator behaivor. The custom :class:`.PropComparator` is passed to
+    new operator behavior. The custom :class:`.PropComparator` is passed to
     the mapper property via the ``comparator_factory`` argument. In each case,
     the appropriate subclass of :class:`.PropComparator` should be used::
 
@@ -598,8 +251,7 @@ class PropComparator(expression.ColumnOperators):
             query.join(Company.employees.of_type(Engineer)).\\
                filter(Engineer.name=='foo')
 
-        \class_
-            a class or mapper indicating that criterion will be against
+        :param \class_: a class or mapper indicating that criterion will be against
             this specific subclass.
 
 
@@ -611,13 +263,16 @@ class PropComparator(expression.ColumnOperators):
         """Return true if this collection contains any member that meets the
         given criterion.
 
-        criterion
-          an optional ClauseElement formulated against the member class' table
-          or attributes.
+        The usual implementation of ``any()`` is 
+        :meth:`.RelationshipProperty.Comparator.any`.
 
-        \**kwargs
-          key/value pairs corresponding to member class attribute names which
-          will be compared via equality to the corresponding values.
+        :param criterion: an optional ClauseElement formulated against the 
+          member class' table or attributes.
+
+        :param \**kwargs: key/value pairs corresponding to member class attribute 
+          names which will be compared via equality to the corresponding
+          values.
+
         """
 
         return self.operate(PropComparator.any_op, criterion, **kwargs)
@@ -626,13 +281,16 @@ class PropComparator(expression.ColumnOperators):
         """Return true if this element references a member which meets the
         given criterion.
 
-        criterion
-          an optional ClauseElement formulated against the member class' table
-          or attributes.
+        The usual implementation of ``has()`` is 
+        :meth:`.RelationshipProperty.Comparator.has`.
 
-        \**kwargs
-          key/value pairs corresponding to member class attribute names which
-          will be compared via equality to the corresponding values.
+        :param criterion: an optional ClauseElement formulated against the 
+          member class' table or attributes.
+
+        :param \**kwargs: key/value pairs corresponding to member class attribute 
+          names which will be compared via equality to the corresponding
+          values.
+
         """
 
         return self.operate(PropComparator.has_op, criterion, **kwargs)
@@ -648,38 +306,47 @@ class StrategizedProperty(MapperProperty):
 
     """
 
-    def _get_context_strategy(self, context, path):
-        cls = context.attributes.get(('loaderstrategy',
-                _reduce_path(path)), None)
+    strategy_wildcard_key = None
+
+    def _get_context_strategy(self, context, reduced_path):
+        key = ('loaderstrategy', reduced_path)
+        cls = None
+        if key in context.attributes:
+            cls = context.attributes[key]
+        elif self.strategy_wildcard_key:
+            key = ('loaderstrategy', (self.strategy_wildcard_key,))
+            if key in context.attributes:
+                cls = context.attributes[key]
+
         if cls:
             try:
-                return self.__all_strategies[cls]
+                return self._strategies[cls]
             except KeyError:
                 return self.__init_strategy(cls)
-        else:
-            return self.strategy
+        return self.strategy
 
     def _get_strategy(self, cls):
         try:
-            return self.__all_strategies[cls]
+            return self._strategies[cls]
         except KeyError:
             return self.__init_strategy(cls)
 
     def __init_strategy(self, cls):
-        self.__all_strategies[cls] = strategy = cls(self)
-        strategy.init()
+        self._strategies[cls] = strategy = cls(self)
         return strategy
 
-    def setup(self, context, entity, path, adapter, **kwargs):
-        self._get_context_strategy(context, path + (self.key,)).\
-                    setup_query(context, entity, path, adapter, **kwargs)
+    def setup(self, context, entity, path, reduced_path, adapter, **kwargs):
+        self._get_context_strategy(context, reduced_path + (self.key,)).\
+                    setup_query(context, entity, path, 
+                                    reduced_path, adapter, **kwargs)
 
-    def create_row_processor(self, context, path, mapper, row, adapter):
-        return self._get_context_strategy(context, path + (self.key,)).\
-                    create_row_processor(context, path, mapper, row, adapter)
+    def create_row_processor(self, context, path, reduced_path, mapper, row, adapter):
+        return self._get_context_strategy(context, reduced_path + (self.key,)).\
+                    create_row_processor(context, path, 
+                                    reduced_path, mapper, row, adapter)
 
     def do_init(self):
-        self.__all_strategies = {}
+        self._strategies = {}
         self.strategy = self.__init_strategy(self.strategy_class)
 
     def post_instrument_class(self, mapper):
@@ -706,11 +373,7 @@ def deserialize_path(path):
     if path is None:
         return None
 
-    global class_mapper
-    if class_mapper is None:
-        from sqlalchemy.orm import class_mapper
-
-    p = tuple(chain(*[(class_mapper(cls), key) for cls, key in path]))
+    p = tuple(chain(*[(mapperutil.class_mapper(cls), key) for cls, key in path]))
     if p and p[-1] is None:
         p = p[0:-1]
     return p
@@ -735,22 +398,10 @@ class MapperOption(object):
 
         self.process_query(query)
 
-class ExtensionOption(MapperOption):
-
-    """a MapperOption that applies a MapperExtension to a query
-    operation."""
-
-    def __init__(self, ext):
-        self.ext = ext
-
-    def process_query(self, query):
-        entity = query._generate_mapper_zero()
-        entity.extension = entity.extension.copy()
-        entity.extension.push(self.ext)
-
 class PropertyOption(MapperOption):
     """A MapperOption that is applied to a property off the mapper or
-    one of its child mappers, identified by a dot-separated key. """
+    one of its child mappers, identified by a dot-separated key
+    or list of class-bound attributes. """
 
     def __init__(self, key, mapper=None):
         self.key = key
@@ -791,14 +442,12 @@ class PropertyOption(MapperOption):
         state['key'] = tuple(ret)
         self.__dict__ = state
 
-    def _find_entity( self, query, mapper, raiseerr):
-        from sqlalchemy.orm.util import _class_to_mapper, \
-            _is_aliased_class
-        if _is_aliased_class(mapper):
+    def _find_entity_prop_comparator(self, query, token, mapper, raiseerr):
+        if mapperutil._is_aliased_class(mapper):
             searchfor = mapper
             isa = False
         else:
-            searchfor = _class_to_mapper(mapper)
+            searchfor = mapperutil._class_to_mapper(mapper)
             isa = True
         for ent in query._mapper_entities:
             if searchfor is ent.path_entity or isa \
@@ -806,9 +455,36 @@ class PropertyOption(MapperOption):
                 return ent
         else:
             if raiseerr:
-                raise sa_exc.ArgumentError("Can't find entity %s in "
-                        "Query.  Current list: %r" % (searchfor,
-                        [str(m.path_entity) for m in query._entities]))
+                if not list(query._mapper_entities):
+                    raise sa_exc.ArgumentError(
+                        "Query has only expression-based entities - "
+                        "can't find property named '%s'."
+                         % (token, )
+                    )
+                else:
+                    raise sa_exc.ArgumentError(
+                        "Can't find property '%s' on any entity "
+                        "specified in this Query.  Note the full path " 
+                        "from root (%s) to target entity must be specified." 
+                        % (token, ",".join(str(x) for 
+                            x in query._mapper_entities))
+                    )
+            else:
+                return None
+
+    def _find_entity_basestring(self, query, token, raiseerr):
+        for ent in query._mapper_entities:
+            # return only the first _MapperEntity when searching
+            # based on string prop name.   Ideally object
+            # attributes are used to specify more exactly.
+            return ent
+        else:
+            if raiseerr:
+                raise sa_exc.ArgumentError(
+                    "Query has only expression-based entities - "
+                    "can't find property named '%s'."
+                     % (token, )
+                )
             else:
                 return None
 
@@ -818,114 +494,112 @@ class PropertyOption(MapperOption):
         l = []
         mappers = []
 
-        # _current_path implies we're in a secondary load with an
-        # existing path
-
+        # _current_path implies we're in a 
+        # secondary load with an existing path
         current_path = list(query._current_path)
-        tokens = []
-        for key in util.to_list(self.key):
-            if isinstance(key, basestring):
-                tokens += key.split('.')
-            else:
-                tokens += [key]
-        for token in tokens:
+
+        tokens = deque(self.key)
+        while tokens:
+            token = tokens.popleft()
             if isinstance(token, basestring):
+                # wildcard token
+                if token.endswith(':*'):
+                    return [(token,)], []
+                sub_tokens = token.split(".", 1)
+                token = sub_tokens[0]
+                tokens.extendleft(sub_tokens[1:])
+
+                # exhaust current_path before
+                # matching tokens to entities
+                if current_path:
+                    if current_path[1] == token:
+                        current_path = current_path[2:]
+                        continue
+                    else:
+                        return [], []
+
                 if not entity:
-                    if current_path:
-                        if current_path[1] == token:
-                            current_path = current_path[2:]
-                            continue
-                    entity = query._entity_zero()
+                    entity = self._find_entity_basestring(
+                                        query, 
+                                        token, 
+                                        raiseerr)
+                    if entity is None:
+                        return [], []
                     path_element = entity.path_entity
                     mapper = entity.mapper
                 mappers.append(mapper)
-                prop = mapper.get_property(token,
-                        resolve_synonyms=True, raiseerr=raiseerr)
-                key = token
+                if hasattr(mapper.class_, token):
+                    prop = getattr(mapper.class_, token).property
+                else:
+                    if raiseerr:
+                        raise sa_exc.ArgumentError(
+                            "Can't find property named '%s' on the "
+                            "mapped entity %s in this Query. " % (
+                                token, mapper)
+                        )
+                    else:
+                        return [], []
             elif isinstance(token, PropComparator):
                 prop = token.property
+
+                # exhaust current_path before
+                # matching tokens to entities
+                if current_path:
+                    if current_path[0:2] == \
+                            [token.parententity, prop.key]:
+                        current_path = current_path[2:]
+                        continue
+                    else:
+                        return [], []
+
                 if not entity:
-                    if current_path:
-                        if current_path[0:2] == [token.parententity,
-                                prop.key]:
-                            current_path = current_path[2:]
-                            continue
-                    entity = self._find_entity(query,
-                            token.parententity, raiseerr)
+                    entity = self._find_entity_prop_comparator(
+                                            query,
+                                            prop.key, 
+                                            token.parententity, 
+                                            raiseerr)
                     if not entity:
                         return [], []
                     path_element = entity.path_entity
                     mapper = entity.mapper
                 mappers.append(prop.parent)
-                key = prop.key
             else:
-                raise sa_exc.ArgumentError('mapper option expects '
-                        'string key or list of attributes')
-            if prop is None:
-                return [], []
+                raise sa_exc.ArgumentError(
+                        "mapper option expects "
+                        "string key or list of attributes")
+            assert prop is not None
+            if raiseerr and not prop.parent.common_parent(mapper):
+                raise sa_exc.ArgumentError("Attribute '%s' does not "
+                            "link from element '%s'" % (token, path_element))
+
             path = build_path(path_element, prop.key, path)
+
             l.append(path)
             if getattr(token, '_of_type', None):
                 path_element = mapper = token._of_type
             else:
                 path_element = mapper = getattr(prop, 'mapper', None)
-            if path_element:
-                path_element = path_element
+                if mapper is None and tokens:
+                    raise sa_exc.ArgumentError(
+                        "Attribute '%s' of entity '%s' does not "
+                        "refer to a mapped entity" %
+                        (token, entity)
+                    )
 
         if current_path:
+            # ran out of tokens before 
+            # current_path was exhausted.
+            assert not tokens
             return [], []
+
         return l, mappers
-
-class AttributeExtension(object):
-    """An event handler for individual attribute change events.
-
-    AttributeExtension is assembled within the descriptors associated
-    with a mapped class.
-
-    """
-
-    active_history = True
-    """indicates that the set() method would like to receive the 'old' value,
-    even if it means firing lazy callables.
-
-    Note that ``active_history`` can also be set directly via
-    :func:`.column_property` and :func:`.relationship`.
-
-    """
-
-    def append(self, state, value, initiator):
-        """Receive a collection append event.
-
-        The returned value will be used as the actual value to be
-        appended.
-
-        """
-        return value
-
-    def remove(self, state, value, initiator):
-        """Receive a remove event.
-
-        No return value is defined.
-
-        """
-        pass
-
-    def set(self, state, value, oldvalue, initiator):
-        """Receive a set event.
-
-        The returned value will be used as the actual value to be
-        set.
-
-        """
-        return value
-
 
 class StrategizedOption(PropertyOption):
     """A MapperOption that affects which LoaderStrategy will be used
     for an operation by a StrategizedProperty.
     """
 
-    is_chained = False
+    chained = False
 
     def process_query_property(self, query, paths, mappers):
 
@@ -935,7 +609,7 @@ class StrategizedOption(PropertyOption):
         # "(Person, 'machines')" in the path due to the mechanics of how
         # the eager strategy builds up the path
 
-        if self.is_chained:
+        if self.chained:
             for path in paths:
                 query._attributes[('loaderstrategy',
                                   _reduce_path(path))] = \
@@ -953,13 +627,13 @@ def _reduce_path(path):
 
     This is used to allow more open ended selection of loader strategies, i.e.
     Mapper -> prop1 -> Subclass -> prop2, where Subclass is a sub-mapper
-    of the mapper referened by Mapper.prop1.
+    of the mapper referenced by Mapper.prop1.
 
     """
     return tuple([i % 2 != 0 and 
-                    path[i] or 
-                    getattr(path[i], 'base_mapper', path[i]) 
-                    for i in xrange(len(path))])
+                    element or 
+                    getattr(element, 'base_mapper', element) 
+                    for i, element in enumerate(path)])
 
 class LoaderStrategy(object):
     """Describe the loading behavior of a StrategizedProperty object.
@@ -975,22 +649,25 @@ class LoaderStrategy(object):
 
     * it processes the ``QueryContext`` at statement construction time,
       where it can modify the SQL statement that is being produced.
-      simple column attributes may add their represented column to the
+      Simple column attributes may add their represented column to the
       list of selected columns, *eager loading* properties may add
       ``LEFT OUTER JOIN`` clauses to the statement.
 
-    * it processes the ``SelectionContext`` at row-processing time.  This
-      includes straight population of attributes corresponding to rows,
-      setting instance-level lazyloader callables on newly
-      constructed instances, and appending child items to scalar/collection
-      attributes in response to eagerly-loaded relations.
-    """
+    * It produces "row processor" functions at result fetching time.
+      These "row processor" functions populate a particular attribute
+      on a particular mapped instance.
 
+    """
     def __init__(self, parent):
         self.parent_property = parent
         self.is_class_level = False
         self.parent = self.parent_property.parent
         self.key = self.parent_property.key
+        # TODO: there's no particular reason we need
+        # the separate .init() method at this point.
+        # It's possible someone has written their
+        # own LS object.
+        self.init()
 
     def init(self):
         raise NotImplementedError("LoaderStrategy")
@@ -998,10 +675,10 @@ class LoaderStrategy(object):
     def init_class_attribute(self, mapper):
         pass
 
-    def setup_query(self, context, entity, path, adapter, **kwargs):
+    def setup_query(self, context, entity, path, reduced_path, adapter, **kwargs):
         pass
 
-    def create_row_processor(self, selectcontext, path, mapper, 
+    def create_row_processor(self, context, path, reduced_path, mapper, 
                                 row, adapter):
         """Return row processing functions which fulfill the contract
         specified by MapperProperty.create_row_processor.
@@ -1009,7 +686,7 @@ class LoaderStrategy(object):
         StrategizedProperty delegates its create_row_processor method
         directly to this method. """
 
-        raise NotImplementedError()
+        return None, None, None
 
     def __str__(self):
         return str(self.parent_property)
@@ -1027,6 +704,18 @@ class LoaderStrategy(object):
 
 class InstrumentationManager(object):
     """User-defined class instrumentation extension.
+
+    :class:`.InstrumentationManager` can be subclassed in order
+    to change
+    how class instrumentation proceeds. This class exists for
+    the purposes of integration with other object management
+    frameworks which would like to entirely modify the
+    instrumentation methodology of the ORM, and is not intended
+    for regular usage.  For interception of class instrumentation
+    events, see :class:`.InstrumentationEvents`.
+
+    For an example of :class:`.InstrumentationManager`, see the
+    example :ref:`examples_instrumentation`.
 
     The API for this class should be considered as semi-stable,
     and may change slightly with new releases.
@@ -1085,7 +774,7 @@ class InstrumentationManager(object):
         setattr(instance, '_default_state', state)
 
     def remove_state(self, class_, instance):
-        delattr(instance, '_default_state', state)
+        delattr(instance, '_default_state')
 
     def state_getter(self, class_):
         return lambda instance: getattr(instance, '_default_state')

@@ -13,6 +13,8 @@ typedef int Py_ssize_t;
 #define PY_SSIZE_T_MAX INT_MAX
 #define PY_SSIZE_T_MIN INT_MIN
 typedef Py_ssize_t (*lenfunc)(PyObject *);
+#define PyInt_FromSsize_t(x) PyInt_FromLong(x) 
+typedef intargfunc ssizeargfunc; 
 #endif
 
 
@@ -276,7 +278,7 @@ BaseRowProxy_subscript(BaseRowProxy *self, PyObject *key)
                 return NULL;
         }
 
-        indexobject = PyTuple_GetItem(record, 1);
+        indexobject = PyTuple_GetItem(record, 2);
         if (indexobject == NULL)
             return NULL;
 
@@ -296,7 +298,7 @@ BaseRowProxy_subscript(BaseRowProxy *self, PyObject *key)
                 return NULL;
 
             PyErr_Format(exception,
-                    "Ambiguous column name '%s' in result set! "
+                    "Ambiguous column name '%.200s' in result set! "
                     "try 'use_labels' option on select statement.", cstr_key);
             return NULL;
         }

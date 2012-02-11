@@ -59,7 +59,7 @@ class BlueprintSetupState(object):
         self.url_defaults = dict(self.blueprint.url_values_defaults)
         self.url_defaults.update(self.options.get('url_defaults', ()))
 
-    def add_url_rule(self, rule, endpoint = None, view_func = None, **options):
+    def add_url_rule(self, rule, endpoint=None, view_func=None, **options):
         """A helper method to register a rule (and optionally a view function)
         to the application.  The endpoint is automatically prefixed with the
         blueprint's name.
@@ -73,7 +73,7 @@ class BlueprintSetupState(object):
         if 'defaults' in options:
             defaults = dict(defaults, **options.pop('defaults'))
         self.app.add_url_rule(rule, '%s.%s' % (self.blueprint.name, endpoint),
-                              view_func, defaults = defaults, **options)
+                              view_func, defaults=defaults, **options)
 
 
 class Blueprint(_PackageBoundObject):
@@ -89,9 +89,9 @@ class Blueprint(_PackageBoundObject):
     warn_on_modifications = False
     _got_registered_once = False
 
-    def __init__(self, name, import_name, static_folder = None,
-                 static_url_path = None, template_folder = None,
-                 url_prefix = None, subdomain = None, url_defaults = None):
+    def __init__(self, name, import_name, static_folder=None,
+                 static_url_path=None, template_folder=None,
+                 url_prefix=None, subdomain=None, url_defaults=None):
         _PackageBoundObject.__init__(self, import_name, template_folder)
         self.name = name
         self.url_prefix = url_prefix
@@ -128,14 +128,14 @@ class Blueprint(_PackageBoundObject):
                 func(state)
         return self.record(update_wrapper(wrapper, func))
 
-    def make_setup_state(self, app, options, first_registration = False):
+    def make_setup_state(self, app, options, first_registration=False):
         """Creates an instance of :meth:`~flask.blueprints.BlueprintSetupState`
         object that is later passed to the register callback functions.
         Subclasses can override this to return a subclass of the setup state.
         """
         return BlueprintSetupState(self, app, options, first_registration)
 
-    def register(self, app, options, first_registration = False):
+    def register(self, app, options, first_registration=False):
         """Called by :meth:`Flask.register_blueprint` to register a blueprint
         on the application.  This can be overridden to customize the register
         behavior.  Keyword arguments from
@@ -146,8 +146,8 @@ class Blueprint(_PackageBoundObject):
         state = self.make_setup_state(app, options, first_registration)
         if self.has_static_folder:
             state.add_url_rule(self.static_url_path + '/<path:filename>',
-                               view_func = self.send_static_file,
-                               endpoint = 'static')
+                               view_func=self.send_static_file,
+                               endpoint='static')
 
         for deferred in self.deferred_functions:
             deferred(state)
@@ -162,7 +162,7 @@ class Blueprint(_PackageBoundObject):
             return f
         return decorator
 
-    def add_url_rule(self, rule, endpoint = None, view_func = None, **options):
+    def add_url_rule(self, rule, endpoint=None, view_func=None, **options):
         """Like :meth:`Flask.add_url_rule` but for a blueprint.  The endpoint for
         the :func:`url_for` function is prefixed with the name of the blueprint.
         """
@@ -184,6 +184,30 @@ class Blueprint(_PackageBoundObject):
             self.record_once(register_endpoint)
             return f
         return decorator
+
+    def app_template_filter(self, name=None):
+        """Register a custom template filter, available application wide.  Like
+        :meth:`Flask.template_filter` but for a blueprint.
+
+        :param name: the optional name of the filter, otherwise the
+                     function name will be used.
+        """
+        def decorator(f):
+            self.add_app_template_filter(f, name=name)
+            return f
+        return decorator
+
+    def add_app_template_filter(self, f, name=None):
+        """Register a custom template filter, available application wide.  Like
+        :meth:`Flask.add_template_filter` but for a blueprint.  Works exactly
+        like the :meth:`app_template_filter` decorator.
+
+        :param name: the optional name of the filter, otherwise the
+                     function name will be used.
+        """
+        def register_template(state):
+            state.app.jinja_env.filters[name or f.__name__] = f
+        self.record_once(register_template)
 
     def before_request(self, f):
         """Like :meth:`Flask.before_request` but for a blueprint.  This function

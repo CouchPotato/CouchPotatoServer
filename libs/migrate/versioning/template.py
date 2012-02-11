@@ -38,7 +38,6 @@ class Template(pathed.Pathed):
     if `path` is not provided.
     """
     pkg = 'migrate.versioning.templates'
-    _manage = 'manage.py_tmpl'
 
     def __new__(cls, path=None):
         if path is None:

@@ -1,5 +1,5 @@
 # sql/visitors.py
-# Copyright (C) 2005-2011 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2012 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -19,7 +19,7 @@ use a non-visitor traversal system.
 For many examples of how the visit system is used, see the 
 sqlalchemy.sql.util and the sqlalchemy.sql.compiler modules.
 For an introduction to clause adaption, see
-http://techspot.zzzeek.org/?p=19 .
+http://techspot.zzzeek.org/2008/01/23/expression-transformations/
 
 """
 
@@ -44,21 +44,24 @@ class VisitableType(type):
             super(VisitableType, cls).__init__(clsname, bases, clsdict)
             return
 
-        # set up an optimized visit dispatch function
-        # for use by the compiler
-        if '__visit_name__' in cls.__dict__:
-            visit_name = cls.__visit_name__
-            if isinstance(visit_name, str):
-                getter = operator.attrgetter("visit_%s" % visit_name)
-                def _compiler_dispatch(self, visitor, **kw):
-                    return getter(visitor)(self, **kw)
-            else:
-                def _compiler_dispatch(self, visitor, **kw):
-                    return getattr(visitor, 'visit_%s' % self.__visit_name__)(self, **kw)
-
-            cls._compiler_dispatch = _compiler_dispatch
+        _generate_dispatch(cls)
 
         super(VisitableType, cls).__init__(clsname, bases, clsdict)
+
+def _generate_dispatch(cls):
+    # set up an optimized visit dispatch function
+    # for use by the compiler
+    if '__visit_name__' in cls.__dict__:
+        visit_name = cls.__visit_name__
+        if isinstance(visit_name, str):
+            getter = operator.attrgetter("visit_%s" % visit_name)
+            def _compiler_dispatch(self, visitor, **kw):
+                return getter(visitor)(self, **kw)
+        else:
+            def _compiler_dispatch(self, visitor, **kw):
+                return getattr(visitor, 'visit_%s' % self.__visit_name__)(self, **kw)
+
+        cls._compiler_dispatch = _compiler_dispatch
 
 class Visitable(object):
     """Base class for visitable objects, applies the
@@ -209,55 +212,51 @@ def traverse_depthfirst(obj, opts, visitors):
     return traverse_using(iterate_depthfirst(obj, opts), obj, visitors)
 
 def cloned_traverse(obj, opts, visitors):
-    """clone the given expression structure, allowing modifications by visitors."""
-
-    cloned = util.column_dict()
-
-    def clone(element):
-        if element not in cloned:
-            cloned[element] = element._clone()
-        return cloned[element]
-
-    obj = clone(obj)
-    stack = [obj]
-
-    while stack:
-        t = stack.pop()
-        if t in cloned:
-            continue
-        t._copy_internals(clone=clone)
-
-        meth = visitors.get(t.__visit_name__, None)
-        if meth:
-            meth(t)
-
-        for c in t.get_children(**opts):
-            stack.append(c)
-    return obj
-
-def replacement_traverse(obj, opts, replace):
-    """clone the given expression structure, allowing element replacement by a given replacement function."""
+    """clone the given expression structure, allowing 
+    modifications by visitors."""
 
     cloned = util.column_dict()
     stop_on = util.column_set(opts.get('stop_on', []))
 
-    def clone(element):
-        newelem = replace(element)
-        if newelem is not None:
-            stop_on.add(newelem)
-            return newelem
+    def clone(elem):
+        if elem in stop_on:
+            return elem
+        else:
+            if elem not in cloned:
+                cloned[elem] = newelem = elem._clone()
+                newelem._copy_internals(clone=clone)
+                meth = visitors.get(newelem.__visit_name__, None)
+                if meth:
+                    meth(newelem)
+            return cloned[elem]
 
-        if element not in cloned:
-            cloned[element] = element._clone()
-        return cloned[element]
+    if obj is not None:
+        obj = clone(obj)
+    return obj
 
-    obj = clone(obj)
-    stack = [obj]
-    while stack:
-        t = stack.pop()
-        if t in stop_on:
-            continue
-        t._copy_internals(clone=clone)
-        for c in t.get_children(**opts):
-            stack.append(c)
+
+def replacement_traverse(obj, opts, replace):
+    """clone the given expression structure, allowing element 
+    replacement by a given replacement function."""
+
+    cloned = util.column_dict()
+    stop_on = util.column_set(opts.get('stop_on', []))
+
+    def clone(elem, **kw):
+        if elem in stop_on or \
+            'no_replacement_traverse' in elem._annotations:
+            return elem
+        else:
+            newelem = replace(elem)
+            if newelem is not None:
+                stop_on.add(newelem)
+                return newelem
+            else:
+                if elem not in cloned:
+                    cloned[elem] = newelem = elem._clone()
+                    newelem._copy_internals(clone=clone, **kw)
+                return cloned[elem]
+
+    if obj is not None:
+        obj = clone(obj, **opts)
     return obj

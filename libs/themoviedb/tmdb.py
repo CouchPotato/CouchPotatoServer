@@ -8,34 +8,37 @@
 """An interface to the themoviedb.org API"""
 
 __author__ = "doganaydin"
-__version__ = "0.2"
+__version__ = "0.5"
 
-class Config:
 
-    lang = 'en'
-    api_key = 'API_KEY'
-    urls = {
-        'movie.search': "http://api.themoviedb.org/2.1/Movie.search/%(lang)s/xml/%(apikey)s/%%s",
-        'movie.getInfo': "http://api.themoviedb.org/2.1/Movie.getInfo/%(lang)s/xml/%(apikey)s/%%s",
-        'media.getInfo': "http://api.themoviedb.org/2.1/Media.getInfo/%(lang)s/xml/%(apikey)s/%%s/%%s",
-        'imdb.lookUp': "http://api.themoviedb.org/2.1/Movie.imdbLookup/%(lang)s/xml/%(apikey)s/%%s",
-    }
+config = {}
 
-    @staticmethod
-    def getUrl(type):
-        return Config.urls[type] % {'lang': Config.lang, 'apikey': Config.api_key}
-
+def configure(api_key):
+    config['apikey'] = api_key
+    config['urls'] = {}
+    config['urls']['movie.search'] = "http://api.themoviedb.org/2.1/Movie.search/en/xml/%(apikey)s/%%s" % (config)
+    config['urls']['movie.getInfo'] = "http://api.themoviedb.org/2.1/Movie.getInfo/en/xml/%(apikey)s/%%s" % (config)
+    config['urls']['media.getInfo'] = "http://api.themoviedb.org/2.1/Media.getInfo/en/xml/%(apikey)s/%%s/%%s" % (config)
+    config['urls']['imdb.lookUp'] = "http://api.themoviedb.org/2.1/Movie.imdbLookup/en/xml/%(apikey)s/%%s" % (config)
+    config['urls']['movie.browse'] = "http://api.themoviedb.org/2.1/Movie.browse/en-US/xml/%(apikey)s?%%s" % (config)
 
 import os, struct, urllib, urllib2, xml.etree.cElementTree as ElementTree
 
 class TmdBaseError(Exception):
     pass
+
 class TmdNoResults(TmdBaseError):
     pass
+
 class TmdHttpError(TmdBaseError):
     pass
+
 class TmdXmlError(TmdBaseError):
     pass
+
+class TmdConfigError(TmdBaseError):
+    pass
+
 def opensubtitleHashFile(name):
     """Hashes a file using OpenSubtitle's method.
     > In natural language it calculates: size + 64bit chksum of the first and
@@ -52,7 +55,7 @@ def opensubtitleHashFile(name):
     fhash = filesize
 
     if filesize < 65536 * 2:
-        raise ValueError("File size must be larger than %s bytes (is %s)" % (65536 * 2, filesize))
+       raise ValueError("File size must be larger than %s bytes (is %s)" % (65536 * 2, filesize))
 
     for x in range(65536 / bytesize):
         buf = f.read(bytesize)
@@ -193,13 +196,10 @@ class ImagesList(list):
         size = image_et.get("size")
         url = image_et.get("url")
         cur = self.find_by('id', _id)
-
         if len(cur) == 0:
             nimg = Image(_id = _id, _type = _type, size = size, url = url)
             self.append(nimg)
-            cur = self.find_by('id', _id)
-
-        if len(cur) == 1:
+        elif len(cur) == 1:
             cur[0][size] = url
         else:
             raise ValueError("Found more than one poster with id %s, this should never happen" % (_id))
@@ -264,7 +264,6 @@ class MovieDb:
                         cur_images.set(subitem)
                 else:
                     cur_movie[item.tag] = item.text
-
         cur_movie['images'] = cur_images
         return cur_movie
 
@@ -314,7 +313,7 @@ class MovieDb:
         Returns SearchResults (a list) containing all matches (Movie instances)
         """
         title = urllib.quote(title.encode("utf-8"))
-        url = Config.getUrl('movie.search') % (title)
+        url = config['urls']['movie.search'] % (title)
         etree = XmlHandler(url).getEt()
         search_results = SearchResults()
         for cur_result in etree.find("movies").findall("movie"):
@@ -326,7 +325,7 @@ class MovieDb:
         """Returns movie info by it's TheMovieDb ID.
         Returns a Movie instance
         """
-        url = Config.getUrl('movie.getInfo') % (id)
+        url = config['urls']['movie.getInfo'] % (id)
         etree = XmlHandler(url).getEt()
         moviesTree = etree.find("movies").findall("movie")
 
@@ -338,7 +337,7 @@ class MovieDb:
         """Used to retrieve specific information about a movie but instead of
         passing a TMDb ID, you pass a file hash and filesize in bytes
         """
-        url = Config.getUrl('media.getInfo') % (hash, size)
+        url = config['urls']['media.getInfo'] % (hash, size)
         etree = XmlHandler(url).getEt()
         moviesTree = etree.find("movies").findall("movie")
         if len(moviesTree) == 0:
@@ -346,23 +345,140 @@ class MovieDb:
         return [self._parseMovie(x) for x in moviesTree]
 
     def imdbLookup(self, id = 0, title = False):
+        if not config.get('apikey'):
+            raise TmdConfigError("API Key not set")
         if id > 0:
-            url = Config.getUrl('imdb.lookUp') % (id)
+            url = config['urls']['imdb.lookUp'] % (id)
         else:
             _imdb_id = self.search(title)[0]["imdb_id"]
-            url = Config.getUrl('imdb.lookUp') % (_imdb_id)
+            url = config['urls']['imdb.lookUp'] % (_imdb_id)
         etree = XmlHandler(url).getEt()
         lookup_results = SearchResults()
         for cur_lookup in etree.find("movies").findall("movie"):
-            cur_movie = self._parseMovie(cur_lookup)
+            cur_movie = self._parseSearchResults(cur_lookup)
             lookup_results.append(cur_movie)
         return lookup_results
+
+class Browse:
+
+    def __init__(self, params = {}):
+        """
+            tmdb.Browse(params)
+            default params = {"order_by":"release","order":"desc"}
+            params = {"query":"some query","release_max":"1991",...}
+            all posible parameters = http://api.themoviedb.org/2.1/methods/Movie.browse    
+        """
+        if "order_by" not in params:
+            params.update({"order_by":"release"})
+        if "order" not in params:
+            params.update({"order":"desc"})
+
+        self.params = urllib.urlencode(params)
+        self.movie = self.look(self.params)
+
+    def look(self, look_for):
+        url = config['urls']['movie.browse'] % (look_for)
+        etree = XmlHandler(url).getEt()
+        look_results = SearchResults()
+        for cur_lookup in etree.find("movies").findall("movie"):
+            cur_movie = self._parseSearchResults(cur_lookup)
+            look_results.append(cur_movie)
+        return look_results
+
+    def _parseSearchResults(self, movie_element):
+        cur_movie = MovieResult()
+        cur_images = ImagesList()
+        for item in movie_element.getchildren():
+                if item.tag.lower() == "images":
+                    for subitem in item.getchildren():
+                        cur_images.set(subitem)
+                else:
+                    cur_movie[item.tag] = item.text
+        cur_movie['images'] = cur_images
+        return cur_movie
+
+    def getTotal(self):
+        return len(self.movie)
+
+    def getRating(self, i):
+        return self.movie[i]["rating"]
+
+    def getVotes(self, i):
+        return self.movie[i]["votes"]
+
+    def getName(self, i):
+        return self.movie[i]["name"]
+
+    def getLanguage(self, i):
+        return self.movie[i]["language"]
+
+    def getCertification(self, i):
+        return self.movie[i]["certification"]
+
+    def getUrl(self, i):
+        return self.movie[i]["url"]
+
+    def getOverview(self, i):
+        return self.movie[i]["overview"]
+
+    def getPopularity(self, i):
+        return self.movie[i]["popularity"]
+
+    def getOriginalName(self, i):
+        return self.movie[i]["original_name"]
+
+    def getLastModified(self, i):
+        return self.movie[i]["last_modified_at"]
+
+    def getImdbId(self, i):
+        return self.movie[i]["imdb_id"]
+
+    def getReleased(self, i):
+        return self.movie[i]["released"]
+
+    def getScore(self, i):
+        return self.movie[i]["score"]
+
+    def getAdult(self, i):
+        return self.movie[i]["adult"]
+
+    def getVersion(self, i):
+        return self.movie[i]["version"]
+
+    def getTranslated(self, i):
+        return self.movie[i]["translated"]
+
+    def getType(self, i):
+        return self.movie[i]["type"]
+
+    def getId(self, i):
+        return self.movie[i]["id"]
+
+    def getAlternativeName(self, i):
+        return self.movie[i]["alternative_name"]
+
+    def getPoster(self, i, size):
+        if size == "thumb" or size == "t":
+            return self.movie[i]["images"][0]["thumb"]
+        elif size == "cover" or size == "c":
+            return self.movie[i]["images"][0]["cover"]
+        else:
+            return self.movie[i]["images"][0]["mid"]
+
+    def getBackdrop(self, i, size):
+        if size == "poster" or size == "p":
+            return self.movie[i]["images"][1]["poster"]
+        else:
+            return self.movie[i]["images"][1]["thumb"]
+
+
 
 # Shortcuts for tmdb search method
 # using:
 #   movie = tmdb.tmdb("Sin City")
 #   print movie.getRating -> 7.0
 class tmdb:
+
     def __init__(self, name):
         """Convenience wrapper for MovieDb.search - so you can do..
         >>> import tmdb
@@ -371,45 +487,68 @@ class tmdb:
         <Search results: [<MovieResult: Fight Club (1999-09-16)>]>
         """
         mdb = MovieDb()
-        self.movie = mdb.search(name)[int(result)]
+        self.movie = mdb.search(name)
+
+    def getTotal(self):
+        return len(self.movie)
+
     def getRating(self, i):
         return self.movie[i]["rating"]
+
     def getVotes(self, i):
         return self.movie[i]["votes"]
+
     def getName(self, i):
         return self.movie[i]["name"]
+
     def getLanguage(self, i):
         return self.movie[i]["language"]
+
     def getCertification(self, i):
         return self.movie[i]["certification"]
+
     def getUrl(self, i):
         return self.movie[i]["url"]
+
     def getOverview(self, i):
         return self.movie[i]["overview"]
+
     def getPopularity(self, i):
         return self.movie[i]["popularity"]
+
     def getOriginalName(self, i):
         return self.movie[i]["original_name"]
+
     def getLastModified(self, i):
         return self.movie[i]["last_modified_at"]
+
     def getImdbId(self, i):
         return self.movie[i]["imdb_id"]
+
     def getReleased(self, i):
         return self.movie[i]["released"]
+
     def getScore(self, i):
         return self.movie[i]["score"]
+
     def getAdult(self, i):
         return self.movie[i]["adult"]
+
     def getVersion(self, i):
         return self.movie[i]["version"]
+
     def getTranslated(self, i):
         return self.movie[i]["translated"]
+
     def getType(self, i):
         return self.movie[i]["type"]
+
     def getId(self, i):
         return self.movie[i]["id"]
+
     def getAlternativeName(self, i):
         return self.movie[i]["alternative_name"]
+
     def getPoster(self, i, size):
         if size == "thumb" or size == "t":
             return self.movie[i]["images"][0]["thumb"]
@@ -427,8 +566,9 @@ class tmdb:
 # Shortcuts for imdb lookup method
 # using:
 #   movie = tmdb.imdb("Sin City")
-#   print movie.getRating -> 7.0
+#   print movie.getRating -> 7.0         
 class imdb:
+
     def __init__(self, id = 0, title = False):
         # get first movie if result=0
         """Convenience wrapper for MovieDb.search - so you can do..
@@ -441,11 +581,16 @@ class imdb:
         self.title = title
         self.mdb = MovieDb()
         self.movie = self.mdb.imdbLookup(self.id, self.title)
+
+    def getTotal(self):
+        return len(self.movie)
+
     def getRuntime(self, i):
         return self.movie[i]["runtime"]
+
     def getCategories(self):
         from xml.dom.minidom import parse
-        adres = Config.getUrl('imdb.lookUp') % self.getImdbId()
+        adres = config['urls']['imdb.lookUp'] % self.getImdbId()
         d = parse(urllib2.urlopen(adres))
         s = d.getElementsByTagName("categories")
         ds = []
@@ -453,42 +598,61 @@ class imdb:
             if i % 2 > 0:
                 ds.append(s[0].childNodes[i].getAttribute("name"))
         return ds
+
     def getRating(self, i):
         return self.movie[i]["rating"]
+
     def getVotes(self, i):
         return self.movie[i]["votes"]
+
     def getName(self, i):
         return self.movie[i]["name"]
+
     def getLanguage(self, i):
         return self.movie[i]["language"]
+
     def getCertification(self, i):
         return self.movie[i]["certification"]
+
     def getUrl(self, i):
         return self.movie[i]["url"]
+
     def getOverview(self, i):
         return self.movie[i]["overview"]
+
     def getPopularity(self, i):
         return self.movie[i]["popularity"]
+
     def getOriginalName(self, i):
         return self.movie[i]["original_name"]
+
     def getLastModified(self, i):
         return self.movie[i]["last_modified_at"]
+
     def getImdbId(self, i):
         return self.movie[i]["imdb_id"]
+
     def getReleased(self, i):
         return self.movie[i]["released"]
+
     def getAdult(self, i):
         return self.movie[i]["adult"]
+
     def getVersion(self, i):
         return self.movie[i]["version"]
+
     def getTranslated(self, i):
         return self.movie[i]["translated"]
+
     def getType(self, i):
         return self.movie[i]["type"]
+
     def getId(self, i):
         return self.movie[i]["id"]
+
     def getAlternativeName(self, i):
         return self.movie[i]["alternative_name"]
+
     def getPoster(self, i, size):
         poster = []
         if size == "thumb" or size == "t":
@@ -502,6 +666,7 @@ class imdb:
                 poster.append(a[_size])
         return poster
         del poster
+
     def getBackdrop(self, i, size):
         backdrop = []
         if size == "thumb" or size == "t":
@@ -524,6 +689,7 @@ def imdbLookup(id = 0, title = False):
     """
     mdb = MovieDb()
     return mdb.imdbLookup(id, title)
+
 def search(name):
     """Convenience wrapper for MovieDb.search - so you can do..
     >>> import tmdb
@@ -532,6 +698,7 @@ def search(name):
     """
     mdb = MovieDb()
     return mdb.search(name)
+
 def getMovieInfo(id):
     """Convenience wrapper for MovieDb.search - so you can do..
     >>> import tmdb
@@ -554,5 +721,20 @@ def mediaGetInfo(hash, size):
 def searchByHashingFile(filename):
     """Searches for the specified file using the OpenSubtitle hashing method
     """
-    return mediaGetInfo(opensubtitleHashFile(filename), os.path.getsize(filename))
+    return mediaGetInfo(opensubtitleHashFile(filename), os.path.size(filename))
 
+def main():
+    results = search("Fight Club")
+    searchResult = results[0]
+    movie = getMovieInfo(searchResult['id'])
+    print movie['name']
+
+    print "Producers:"
+    for prodr in movie['cast']['producer']:
+        print " " * 4, prodr['name']
+    print movie['images']
+    for genreName in movie['categories']['genre']:
+        print "%s (%s)" % (genreName, movie['categories']['genre'][genreName])
+
+if __name__ == '__main__':
+    main()

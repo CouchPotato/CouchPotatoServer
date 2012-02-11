@@ -1,5 +1,5 @@
 # orm/unitofwork.py
-# Copyright (C) 2005-2011 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2012 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -12,46 +12,45 @@ organizes them in order of dependency, and executes.
 
 """
 
-from sqlalchemy import util, topological
+from sqlalchemy import util, event
+from sqlalchemy.util import topological
 from sqlalchemy.orm import attributes, interfaces
 from sqlalchemy.orm import util as mapperutil
-from sqlalchemy.orm.util import _state_mapper
 session = util.importlater("sqlalchemy.orm", "session")
 
-class UOWEventHandler(interfaces.AttributeExtension):
-    """An event handler added to all relationship attributes which handles
-    session cascade operations.
+def track_cascade_events(descriptor, prop):
+    """Establish event listeners on object attributes which handle
+    cascade-on-set/append.
+
     """
+    key = prop.key
 
-    active_history = False
-
-    def __init__(self, key):
-        self.key = key
-
-    def append(self, state, item, initiator):
+    def append(state, item, initiator):
         # process "save_update" cascade rules for when 
         # an instance is appended to the list of another instance
 
         sess = session._state_session(state)
         if sess:
-            prop = _state_mapper(state).get_property(self.key)
+            prop = state.manager.mapper._props[key]
+            item_state = attributes.instance_state(item)
             if prop.cascade.save_update and \
-                (prop.cascade_backrefs or self.key == initiator.key) and \
-                item not in sess:
-                sess.add(item)
+                (prop.cascade_backrefs or key == initiator.key) and \
+                not sess._contains_state(item_state):
+                sess._save_or_update_state(item_state)
         return item
 
-    def remove(self, state, item, initiator):
+    def remove(state, item, initiator):
         sess = session._state_session(state)
         if sess:
-            prop = _state_mapper(state).get_property(self.key)
+            prop = state.manager.mapper._props[key]
             # expunge pending orphans
+            item_state = attributes.instance_state(item)
             if prop.cascade.delete_orphan and \
-                item in sess.new and \
-                prop.mapper._is_orphan(attributes.instance_state(item)):
+                item_state in sess._new and \
+                prop.mapper._is_orphan(item_state):
                     sess.expunge(item)
 
-    def set(self, state, newvalue, oldvalue, initiator):
+    def set_(state, newvalue, oldvalue, initiator):
         # process "save_update" cascade rules for when an instance 
         # is attached to another instance
         if oldvalue is newvalue:
@@ -59,23 +58,33 @@ class UOWEventHandler(interfaces.AttributeExtension):
 
         sess = session._state_session(state)
         if sess:
-            prop = _state_mapper(state).get_property(self.key)
-            if newvalue is not None and \
-                prop.cascade.save_update and \
-                (prop.cascade_backrefs or self.key == initiator.key) and \
-                newvalue not in sess:
-                sess.add(newvalue)
-            if prop.cascade.delete_orphan and \
-                oldvalue in sess.new and \
-                prop.mapper._is_orphan(attributes.instance_state(oldvalue)):
-                sess.expunge(oldvalue)
+            prop = state.manager.mapper._props[key]
+            if newvalue is not None:
+                newvalue_state = attributes.instance_state(newvalue)
+                if prop.cascade.save_update and \
+                    (prop.cascade_backrefs or key == initiator.key) and \
+                    not sess._contains_state(newvalue_state):
+                    sess._save_or_update_state(newvalue_state)
+
+            if oldvalue is not None and \
+                oldvalue is not attributes.PASSIVE_NO_RESULT and \
+                prop.cascade.delete_orphan:
+                # possible to reach here with attributes.NEVER_SET ?
+                oldvalue_state = attributes.instance_state(oldvalue)
+
+                if oldvalue_state in sess._new and \
+                    prop.mapper._is_orphan(oldvalue_state):
+                    sess.expunge(oldvalue)
         return newvalue
+
+    event.listen(descriptor, 'append', append, raw=True, retval=True)
+    event.listen(descriptor, 'remove', remove, raw=True, retval=True)
+    event.listen(descriptor, 'set', set_, raw=True, retval=True)
 
 
 class UOWTransaction(object):
     def __init__(self, session):
         self.session = session
-        self.mapper_flush_opts = session._mapper_flush_opts
 
         # dictionary used by external actors to 
         # store arbitrary state information.
@@ -143,7 +152,8 @@ class UOWTransaction(object):
 
         self.states[state] = (isdelete, True)
 
-    def get_attribute_history(self, state, key, passive=attributes.PASSIVE_NO_INITIALIZE):
+    def get_attribute_history(self, state, key, 
+                            passive=attributes.PASSIVE_NO_INITIALIZE):
         """facade to attributes.get_state_history(), including caching of results."""
 
         hashkey = ("history", state, key)
@@ -151,21 +161,33 @@ class UOWTransaction(object):
         # cache the objects, not the states; the strong reference here
         # prevents newly loaded objects from being dereferenced during the
         # flush process
-        if hashkey in self.attributes:
-            (history, cached_passive) = self.attributes[hashkey]
-            # if the cached lookup was "passive" and now we want non-passive, do a non-passive
-            # lookup and re-cache
-            if cached_passive and not passive:
-                history = state.get_history(key, passive=False)
-                self.attributes[hashkey] = (history, passive)
-        else:
-            history = state.get_history(key, passive=passive)
-            self.attributes[hashkey] = (history, passive)
 
-        if not history or not state.get_impl(key).uses_objects:
-            return history
+        if hashkey in self.attributes:
+            history, state_history, cached_passive = self.attributes[hashkey]
+            # if the cached lookup was "passive" and now 
+            # we want non-passive, do a non-passive lookup and re-cache
+            if cached_passive is not attributes.PASSIVE_OFF \
+                and passive is attributes.PASSIVE_OFF:
+                impl = state.manager[key].impl
+                history = impl.get_history(state, state.dict, 
+                                    attributes.PASSIVE_OFF)
+                if history and impl.uses_objects:
+                    state_history = history.as_state()
+                else:
+                    state_history = history
+                self.attributes[hashkey] = (history, state_history, passive)
         else:
-            return history.as_state()
+            impl = state.manager[key].impl
+            # TODO: store the history as (state, object) tuples
+            # so we don't have to keep converting here
+            history = impl.get_history(state, state.dict, passive)
+            if history and impl.uses_objects:
+                state_history = history.as_state()
+            else:
+                state_history = history
+            self.attributes[hashkey] = (history, state_history, passive)
+
+        return state_history
 
     def has_dep(self, processor):
         return (processor, True) in self.presort_actions
@@ -176,12 +198,17 @@ class UOWTransaction(object):
             self.presort_actions[key] = Preprocess(processor, fromparent)
 
     def register_object(self, state, isdelete=False, 
-                            listonly=False, cancel_delete=False):
+                            listonly=False, cancel_delete=False,
+                            operation=None, prop=None):
         if not self.session._contains_state(state):
-            return
+            if not state.deleted and operation is not None:
+                util.warn("Object of type %s not in session, %s operation "
+                            "along '%s' will not proceed" % 
+                            (mapperutil.state_class_str(state), operation, prop))
+            return False
 
         if state not in self.states:
-            mapper = _state_mapper(state)
+            mapper = state.manager.mapper
 
             if mapper not in self.mappers:
                 mapper._per_mapper_flush_actions(self)
@@ -191,6 +218,7 @@ class UOWTransaction(object):
         else:
             if not listonly and (isdelete or cancel_delete):
                 self.states[state] = (isdelete, False)
+        return True
 
     def issue_post_update(self, state, post_update_cols):
         mapper = state.manager.mapper.base_mapper
@@ -283,9 +311,10 @@ class UOWTransaction(object):
 
         #sort = topological.sort(self.dependencies, postsort_actions)
         #print "--------------"
-        #print self.dependencies
-        #print list(sort)
-        #print "COUNT OF POSTSORT ACTIONS", len(postsort_actions)
+        #print "\ndependencies:", self.dependencies
+        #print "\ncycles:", self.cycles
+        #print "\nsort:", list(sort)
+        #print "\nCOUNT OF POSTSORT ACTIONS", len(postsort_actions)
 
         # execute
         if self.cycles:

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2008-2010 Erik Svensson <erik.public@gmail.com>
+# Copyright (c) 2008-2011 Erik Svensson <erik.public@gmail.com>
 # Licensed under the MIT license.
 
 import socket, datetime, logging
@@ -28,18 +28,21 @@ def format_speed(size):
 
 def format_timedelta(delta):
     """
-    Format datetime.timedelta into <days> <hours>:<mminutes>:<seconds>.
+    Format datetime.timedelta into <days> <hours>:<minutes>:<seconds>.
     """
     minutes, seconds = divmod(delta.seconds, 60)
     hours, minutes = divmod(minutes, 60)
     return '%d %02d:%02d:%02d' % (delta.days, hours, minutes, seconds)
 
-def format_timestamp(timestamp):
+def format_timestamp(timestamp, utc=False):
     """
     Format unix timestamp into ISO date format.
     """
     if timestamp > 0:
-        dt_timestamp = datetime.datetime.fromtimestamp(timestamp)
+        if utc:
+            dt_timestamp = datetime.datetime.utcfromtimestamp(timestamp)
+        else:
+            dt_timestamp = datetime.datetime.fromtimestamp(timestamp)
         return dt_timestamp.isoformat(' ')
     else:
         return '-'
@@ -175,7 +178,7 @@ def add_stdout_logger(level='debug'):
     Add a stdout target for the transmissionrpc logging.
     """
     levels = {'debug': logging.DEBUG, 'info': logging.INFO, 'warning': logging.WARNING, 'error': logging.ERROR}
-    
+
     trpc_logger = logging.getLogger('transmissionrpc')
     loghandler = logging.StreamHandler()
     if level in levels.keys():

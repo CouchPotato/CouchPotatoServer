@@ -1,5 +1,5 @@
 # sqlite/base.py
-# Copyright (C) 2005-2011 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2012 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -16,7 +16,7 @@ SQLite does not have built-in DATE, TIME, or DATETIME types, and pysqlite does n
 out of the box functionality for translating values between Python `datetime` objects
 and a SQLite-supported format.  SQLAlchemy's own :class:`~sqlalchemy.types.DateTime`
 and related types provide date formatting and parsing functionality when SQlite is used.
-The implementation classes are :class:`DATETIME`, :class:`DATE` and :class:`TIME`.
+The implementation classes are :class:`~.sqlite.DATETIME`, :class:`~.sqlite.DATE` and :class:`~.sqlite.TIME`.
 These types represent dates and times as ISO formatted strings, which also nicely
 support ordering.   There's no reliance on typical "libc" internals for these functions
 so historical dates are fully supported.
@@ -46,41 +46,74 @@ to the Table construct::
 Transaction Isolation Level
 ---------------------------
 
-:func:`create_engine` accepts an ``isolation_level`` parameter which results in 
+:func:`.create_engine` accepts an ``isolation_level`` parameter which results in 
 the command ``PRAGMA read_uncommitted <level>`` being invoked for every new 
 connection.   Valid values for this parameter are ``SERIALIZABLE`` and 
 ``READ UNCOMMITTED`` corresponding to a value of 0 and 1, respectively.
+See the section :ref:`pysqlite_serializable` for an important workaround
+when using serializable isolation with Pysqlite.
 
 """
 
-import datetime, re, time
+import datetime, re
 
-from sqlalchemy import schema as sa_schema
-from sqlalchemy import sql, exc, pool, DefaultClause
-from sqlalchemy.engine import default
-from sqlalchemy.engine import reflection
+from sqlalchemy import sql, exc
+from sqlalchemy.engine import default, base, reflection
 from sqlalchemy import types as sqltypes
 from sqlalchemy import util
-from sqlalchemy.sql import compiler, functions as sql_functions
-from sqlalchemy.util import NoneType
+from sqlalchemy.sql import compiler
 from sqlalchemy import processors
 
 from sqlalchemy.types import BLOB, BOOLEAN, CHAR, DATE, DATETIME, DECIMAL,\
-                            FLOAT, INTEGER, NUMERIC, SMALLINT, TEXT, TIME,\
-                            TIMESTAMP, VARCHAR
-
+    FLOAT, REAL, INTEGER, NUMERIC, SMALLINT, TEXT, TIME, TIMESTAMP, VARCHAR
 
 class _DateTimeMixin(object):
     _reg = None
     _storage_format = None
 
-    def __init__(self, storage_format=None, regexp=None, **kwargs):
+    def __init__(self, storage_format=None, regexp=None, **kw):
+        super(_DateTimeMixin, self).__init__(**kw)
         if regexp is not None:
             self._reg = re.compile(regexp)
         if storage_format is not None:
             self._storage_format = storage_format
 
 class DATETIME(_DateTimeMixin, sqltypes.DateTime):
+    """Represent a Python datetime object in SQLite using a string.
+    
+    The default string storage format is::
+    
+        "%04d-%02d-%02d %02d:%02d:%02d.%06d" % (value.year, 
+                                value.month, value.day,
+                                value.hour, value.minute, 
+                                value.second, value.microsecond)
+    
+    e.g.::
+    
+        2011-03-15 12:05:57.10558
+    
+    The storage format can be customized to some degree using the 
+    ``storage_format`` and ``regexp`` parameters, such as::
+        
+        import re
+        from sqlalchemy.dialects.sqlite import DATETIME
+        
+        dt = DATETIME(
+                storage_format="%04d/%02d/%02d %02d-%02d-%02d-%06d",
+                regexp=re.compile("(\d+)/(\d+)/(\d+) (\d+)-(\d+)-(\d+)(?:-(\d+))?")
+            )
+    
+    :param storage_format: format string which will be appled to the 
+     tuple ``(value.year, value.month, value.day, value.hour,
+     value.minute, value.second, value.microsecond)``, given a
+     Python datetime.datetime() object.
+    
+    :param regexp: regular expression which will be applied to 
+     incoming result rows. The resulting match object is appled to
+     the Python datetime() constructor via ``*map(int,
+     match_obj.groups(0))``.
+    """
+
     _storage_format = "%04d-%02d-%02d %02d:%02d:%02d.%06d"
 
     def bind_processor(self, dialect):
@@ -110,6 +143,38 @@ class DATETIME(_DateTimeMixin, sqltypes.DateTime):
             return processors.str_to_datetime
 
 class DATE(_DateTimeMixin, sqltypes.Date):
+    """Represent a Python date object in SQLite using a string.
+
+    The default string storage format is::
+    
+        "%04d-%02d-%02d" % (value.year, value.month, value.day)
+    
+    e.g.::
+    
+        2011-03-15
+    
+    The storage format can be customized to some degree using the 
+    ``storage_format`` and ``regexp`` parameters, such as::
+    
+        import re
+        from sqlalchemy.dialects.sqlite import DATE
+
+        d = DATE(
+                storage_format="%02d/%02d/%02d",
+                regexp=re.compile("(\d+)/(\d+)/(\d+)")
+            )
+    
+    :param storage_format: format string which will be appled to the 
+     tuple ``(value.year, value.month, value.day)``,
+     given a Python datetime.date() object.
+    
+    :param regexp: regular expression which will be applied to 
+     incoming result rows. The resulting match object is appled to
+     the Python date() constructor via ``*map(int,
+     match_obj.groups(0))``.
+     
+    """
+
     _storage_format = "%04d-%02d-%02d"
 
     def bind_processor(self, dialect):
@@ -133,6 +198,40 @@ class DATE(_DateTimeMixin, sqltypes.Date):
             return processors.str_to_date
 
 class TIME(_DateTimeMixin, sqltypes.Time):
+    """Represent a Python time object in SQLite using a string.
+    
+    The default string storage format is::
+    
+        "%02d:%02d:%02d.%06d" % (value.hour, value.minute, 
+                                value.second,
+                                 value.microsecond)
+    
+    e.g.::
+    
+        12:05:57.10558
+    
+    The storage format can be customized to some degree using the 
+    ``storage_format`` and ``regexp`` parameters, such as::
+    
+        import re
+        from sqlalchemy.dialects.sqlite import TIME
+
+        t = TIME(
+                storage_format="%02d-%02d-%02d-%06d",
+                regexp=re.compile("(\d+)-(\d+)-(\d+)-(?:-(\d+))?")
+            )
+    
+    :param storage_format: format string which will be appled 
+     to the tuple ``(value.hour, value.minute, value.second,
+     value.microsecond)``, given a Python datetime.time() object.
+    
+    :param regexp: regular expression which will be applied to 
+     incoming result rows. The resulting match object is appled to
+     the Python time() constructor via ``*map(int,
+     match_obj.groups(0))``.
+
+    """
+
     _storage_format = "%02d:%02d:%02d.%06d"
 
     def bind_processor(self, dialect):
@@ -174,7 +273,7 @@ ischema_names = {
     'INT': sqltypes.INTEGER,
     'INTEGER': sqltypes.INTEGER,
     'NUMERIC': sqltypes.NUMERIC,
-    'REAL': sqltypes.Numeric,
+    'REAL': sqltypes.REAL,
     'SMALLINT': sqltypes.SMALLINT,
     'TEXT': sqltypes.TEXT,
     'TIME': sqltypes.TIME,
@@ -203,6 +302,12 @@ class SQLiteCompiler(compiler.SQLCompiler):
     def visit_now_func(self, fn, **kw):
         return "CURRENT_TIMESTAMP"
 
+    def visit_true(self, expr, **kw):
+        return '1'
+
+    def visit_false(self, expr, **kw):
+        return '0'
+
     def visit_char_length_func(self, fn, **kw):
         return "length%s" % self.function_argspec(fn)
 
@@ -217,19 +322,19 @@ class SQLiteCompiler(compiler.SQLCompiler):
             return "CAST(STRFTIME('%s', %s) AS INTEGER)" % (
                 self.extract_map[extract.field], self.process(extract.expr, **kw))
         except KeyError:
-            raise exc.ArgumentError(
+            raise exc.CompileError(
                 "%s is not a valid extract argument." % extract.field)
 
     def limit_clause(self, select):
         text = ""
         if select._limit is not None:
-            text +=  " \n LIMIT " + str(select._limit)
+            text +=  "\n LIMIT " + self.process(sql.literal(select._limit))
         if select._offset is not None:
             if select._limit is None:
-                text += " \n LIMIT -1"
-            text += " OFFSET " + str(select._offset)
+                text += "\n LIMIT " + self.process(sql.literal(-1))
+            text += " OFFSET " + self.process(sql.literal(select._offset))
         else:
-            text += " OFFSET 0"
+            text += " OFFSET " + self.process(sql.literal(0))
         return text
 
     def for_update_clause(self, select):
@@ -251,7 +356,7 @@ class SQLiteDDLCompiler(compiler.DDLCompiler):
         if column.primary_key and \
              column.table.kwargs.get('sqlite_autoincrement', False) and \
              len(column.table.primary_key.columns) == 1 and \
-             isinstance(column.type, sqltypes.Integer) and \
+             issubclass(column.type._type_affinity, sqltypes.Integer) and \
              not column.foreign_keys:
              colspec += " PRIMARY KEY AUTOINCREMENT"
 
@@ -265,7 +370,7 @@ class SQLiteDDLCompiler(compiler.DDLCompiler):
             c = list(constraint)[0]
             if c.primary_key and \
                 c.table.kwargs.get('sqlite_autoincrement', False) and \
-                isinstance(c.type, sqltypes.Integer) and \
+                issubclass(c.type._type_affinity, sqltypes.Integer) and \
                 not c.foreign_keys:
                 return None
  
@@ -336,6 +441,20 @@ class SQLiteIdentifierPreparer(compiler.IdentifierPreparer):
             result = self.quote_schema(index.table.schema, index.table.quote_schema) + "." + result
         return result
 
+class SQLiteExecutionContext(default.DefaultExecutionContext):
+    def get_result_proxy(self):
+        rp = base.ResultProxy(self)
+        if rp._metadata:
+            # adjust for dotted column names.  SQLite
+            # in the case of UNION may store col names as 
+            # "tablename.colname"
+            # in cursor.description
+            for colname in rp._metadata.keys:
+                if "." in colname:
+                    trunc_col = colname.split(".")[1]
+                    rp._metadata._set_keymap_synonym(trunc_col, colname)
+        return rp
+
 class SQLiteDialect(default.DefaultDialect):
     name = 'sqlite'
     supports_alter = False
@@ -353,17 +472,13 @@ class SQLiteDialect(default.DefaultDialect):
     ischema_names = ischema_names
     colspecs = colspecs
     isolation_level = None
+    execution_ctx_cls = SQLiteExecutionContext
 
     supports_cast = True
     supports_default_values = True
 
     def __init__(self, isolation_level=None, native_datetime=False, **kwargs):
         default.DefaultDialect.__init__(self, **kwargs)
-        if isolation_level and isolation_level not in ('SERIALIZABLE',
-                'READ UNCOMMITTED'):
-            raise exc.ArgumentError("Invalid value for isolation_level. "
-                "Valid isolation levels for sqlite are 'SERIALIZABLE' and "
-                "'READ UNCOMMITTED'.")
         self.isolation_level = isolation_level
 
         # this flag used by pysqlite dialect, and perhaps others in the
@@ -378,18 +493,49 @@ class SQLiteDialect(default.DefaultDialect):
             self.supports_cast = \
                                 self.dbapi.sqlite_version_info >= (3, 2, 3)
 
+    _isolation_lookup = {
+        'READ UNCOMMITTED':1,
+        'SERIALIZABLE':0
+    }
+    def set_isolation_level(self, connection, level):
+        try:
+            isolation_level = self._isolation_lookup[level.replace('_', ' ')]
+        except KeyError:
+            raise exc.ArgumentError(
+                "Invalid value '%s' for isolation_level. "
+                "Valid isolation levels for %s are %s" % 
+                (level, self.name, ", ".join(self._isolation_lookup))
+                ) 
+        cursor = connection.cursor()
+        cursor.execute("PRAGMA read_uncommitted = %d" % isolation_level)
+        cursor.close()
+
+    def get_isolation_level(self, connection):
+        cursor = connection.cursor()
+        cursor.execute('PRAGMA read_uncommitted')
+        res = cursor.fetchone()
+        if res:
+            value = res[0]
+        else: 
+            # http://www.sqlite.org/changes.html#version_3_3_3
+            # "Optional READ UNCOMMITTED isolation (instead of the 
+            # default isolation level of SERIALIZABLE) and 
+            # table level locking when database connections 
+            # share a common cache.""
+            # pre-SQLite 3.3.0 default to 0
+            value = 0
+        cursor.close()
+        if value == 0:
+            return "SERIALIZABLE"
+        elif value == 1:
+            return "READ UNCOMMITTED"
+        else:
+            assert False, "Unknown isolation level %s" % value
 
     def on_connect(self):
         if self.isolation_level is not None:
-            if self.isolation_level == 'READ UNCOMMITTED':
-                isolation_level = 1
-            else:
-                isolation_level = 0
-
             def connect(conn):
-                cursor = conn.cursor()
-                cursor.execute("PRAGMA read_uncommitted = %d" % isolation_level)
-                cursor.close()
+                self.set_isolation_level(conn, self.isolation_level)
             return connect
         else:
             return None
@@ -410,7 +556,6 @@ class SQLiteDialect(default.DefaultDialect):
                      "WHERE type='table' ORDER BY name")
                 rs = connection.execute(s)
             except exc.DBAPIError:
-                raise
                 s = ("SELECT name FROM sqlite_master "
                      "WHERE type='table' ORDER BY name")
                 rs = connection.execute(s)
@@ -429,7 +574,7 @@ class SQLiteDialect(default.DefaultDialect):
 
         # consume remaining rows, to work around
         # http://www.sqlite.org/cvstrac/tktview?tn=1884
-        while cursor.fetchone() is not None:
+        while not cursor.closed and cursor.fetchone() is not None:
             pass
 
         return (row is not None)
@@ -450,7 +595,6 @@ class SQLiteDialect(default.DefaultDialect):
                      "WHERE type='view' ORDER BY name")
                 rs = connection.execute(s)
             except exc.DBAPIError:
-                raise
                 s = ("SELECT name FROM sqlite_master "
                      "WHERE type='view' ORDER BY name")
                 rs = connection.execute(s)
@@ -475,7 +619,6 @@ class SQLiteDialect(default.DefaultDialect):
                      "AND type='view'") % view_name
                 rs = connection.execute(s)
             except exc.DBAPIError:
-                raise
                 s = ("SELECT sql FROM sqlite_master WHERE name = '%s' "
                      "AND type='view'") % view_name
                 rs = connection.execute(s)
@@ -492,17 +635,19 @@ class SQLiteDialect(default.DefaultDialect):
         else:
             pragma = "PRAGMA "
         qtable = quote(table_name)
-        c = _pragma_cursor(connection.execute("%stable_info(%s)" % (pragma, qtable)))
+        c = _pragma_cursor(
+                    connection.execute("%stable_info(%s)" % 
+                    (pragma, qtable)))
         found_table = False
         columns = []
         while True:
             row = c.fetchone()
             if row is None:
                 break
-            (name, type_, nullable, default, has_default, primary_key) = (row[1], row[2].upper(), not row[3], row[4], row[4] is not None, row[5])
+            (name, type_, nullable, default, has_default, primary_key) = \
+                (row[1], row[2].upper(), not row[3], 
+                row[4], row[4] is not None, row[5])
             name = re.sub(r'^\"|\"$', '', name)
-            if default:
-                default = re.sub(r"^\'|\'$", '', default)
             match = re.match(r'(\w+)(\(.*?\))?', type_)
             if match:
                 coltype = match.group(1)
@@ -512,19 +657,20 @@ class SQLiteDialect(default.DefaultDialect):
                 args = ''
             try:
                 coltype = self.ischema_names[coltype]
+                if args is not None:
+                    args = re.findall(r'(\d+)', args)
+                    coltype = coltype(*[int(a) for a in args])
             except KeyError:
                 util.warn("Did not recognize type '%s' of column '%s'" %
                           (coltype, name))
-                coltype = sqltypes.NullType
-            if args is not None:
-                args = re.findall(r'(\d+)', args)
-                coltype = coltype(*[int(a) for a in args])
+                coltype = sqltypes.NullType()
 
             columns.append({
                 'name' : name,
                 'type' : coltype,
                 'nullable' : nullable,
                 'default' : default,
+                'autoincrement':default is None,
                 'primary_key': primary_key
             })
         return columns
@@ -553,22 +699,26 @@ class SQLiteDialect(default.DefaultDialect):
             row = c.fetchone()
             if row is None:
                 break
-            (constraint_name, rtbl, lcol, rcol) = (row[0], row[2], row[3], row[4])
+            (numerical_id, rtbl, lcol, rcol) = (row[0], row[2], row[3], row[4])
+            # sqlite won't return rcol if the table
+            # was created with REFERENCES <tablename>, no col
+            if rcol is None:
+                rcol = lcol
             rtbl = re.sub(r'^\"|\"$', '', rtbl)
             lcol = re.sub(r'^\"|\"$', '', lcol)
             rcol = re.sub(r'^\"|\"$', '', rcol)
             try:
-                fk = fks[constraint_name]
+                fk = fks[numerical_id]
             except KeyError:
                 fk = {
-                    'name' : constraint_name,
+                    'name' : None,
                     'constrained_columns' : [],
                     'referred_schema' : None,
                     'referred_table' : rtbl,
                     'referred_columns' : []
                 }
                 fkeys.append(fk)
-                fks[constraint_name] = fk
+                fks[numerical_id] = fk
 
             # look up the table based on the given table's engine, not 'self',
             # since it could be a ProxyEngine
@@ -612,7 +762,8 @@ class SQLiteDialect(default.DefaultDialect):
 
 
 def _pragma_cursor(cursor):
-    """work around SQLite issue whereby cursor.description is blank when PRAGMA returns no rows."""
+    """work around SQLite issue whereby cursor.description 
+    is blank when PRAGMA returns no rows."""
 
     if cursor.closed:
         cursor.fetchone = lambda: None

@@ -1,5 +1,5 @@
 # orm/dynamic.py
-# Copyright (C) 2005-2011 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2012 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -35,9 +35,6 @@ class DynaLoader(strategies.AbstractRelationshipLoader):
             query_class=self.parent_property.query_class
         )
 
-    def create_row_processor(self, selectcontext, path, mapper, row, adapter):
-        return None, None, None
-
 log.class_logger(DynaLoader)
 
 class DynamicAttributeImpl(attributes.AttributeImpl):
@@ -46,9 +43,10 @@ class DynamicAttributeImpl(attributes.AttributeImpl):
     supports_population = False
 
     def __init__(self, class_, key, typecallable,
-                     target_mapper, order_by, query_class=None, **kwargs):
+                     dispatch,
+                     target_mapper, order_by, query_class=None, **kw):
         super(DynamicAttributeImpl, self).\
-                    __init__(class_, key, typecallable, **kwargs)
+                    __init__(class_, key, typecallable, dispatch, **kw)
         self.target_mapper = target_mapper
         self.order_by = order_by
         if not query_class:
@@ -58,41 +56,41 @@ class DynamicAttributeImpl(attributes.AttributeImpl):
         else:
             self.query_class = mixin_user_query(query_class)
 
-    def get(self, state, dict_, passive=False):
-        if passive:
+    def get(self, state, dict_, passive=attributes.PASSIVE_OFF):
+        if passive is not attributes.PASSIVE_OFF:
             return self._get_collection_history(state,
-                    passive=True).added_items
+                    attributes.PASSIVE_NO_INITIALIZE).added_items
         else:
             return self.query_class(self, state)
 
-    def get_collection(self, state, dict_, user_data=None, passive=True):
-        if passive:
+    def get_collection(self, state, dict_, user_data=None, 
+                            passive=attributes.PASSIVE_NO_INITIALIZE):
+        if passive is not attributes.PASSIVE_OFF:
             return self._get_collection_history(state,
-                    passive=passive).added_items
+                    passive).added_items
         else:
-            history = self._get_collection_history(state,
-                    passive=passive)
+            history = self._get_collection_history(state, passive)
             return history.added_items + history.unchanged_items
 
     def fire_append_event(self, state, dict_, value, initiator):
         collection_history = self._modified_event(state, dict_)
         collection_history.added_items.append(value)
 
-        for ext in self.extensions:
-            ext.append(state, value, initiator or self)
+        for fn in self.dispatch.append:
+            value = fn(state, value, initiator or self)
 
         if self.trackparent and value is not None:
-            self.sethasparent(attributes.instance_state(value), True)
+            self.sethasparent(attributes.instance_state(value), state, True)
 
     def fire_remove_event(self, state, dict_, value, initiator):
         collection_history = self._modified_event(state, dict_)
         collection_history.deleted_items.append(value)
 
         if self.trackparent and value is not None:
-            self.sethasparent(attributes.instance_state(value), False)
+            self.sethasparent(attributes.instance_state(value), state, False)
 
-        for ext in self.extensions:
-            ext.remove(state, value, initiator or self)
+        for fn in self.dispatch.remove:
+            fn(state, value, initiator or self)
 
     def _modified_event(self, state, dict_):
 
@@ -100,22 +98,24 @@ class DynamicAttributeImpl(attributes.AttributeImpl):
             state.committed_state[self.key] = CollectionHistory(self, state)
 
         state.modified_event(dict_, 
-                                self, 
-                                False, 
-                                attributes.NEVER_SET, 
-                                passive=attributes.PASSIVE_NO_INITIALIZE)
+                                self,
+                                attributes.NEVER_SET)
 
-        # this is a hack to allow the _base.ComparableEntity fixture
+        # this is a hack to allow the fixtures.ComparableEntity fixture
         # to work
         dict_[self.key] = True
         return state.committed_state[self.key]
 
     def set(self, state, dict_, value, initiator,
-                        passive=attributes.PASSIVE_OFF):
+                        passive=attributes.PASSIVE_OFF, 
+                        check_old=None, pop=False):
         if initiator and initiator.parent_token is self.parent_token:
             return
 
+        if pop and value is None:
+            return
         self._set_iterable(state, dict_, value)
+
 
     def _set_iterable(self, state, dict_, iterable, adapter=None):
         collection_history = self._modified_event(state, dict_)
@@ -136,27 +136,37 @@ class DynamicAttributeImpl(attributes.AttributeImpl):
         raise NotImplementedError("Dynamic attributes don't support "
                                   "collection population.")
 
-    def get_history(self, state, dict_, passive=False):
+    def get_history(self, state, dict_, passive=attributes.PASSIVE_OFF):
         c = self._get_collection_history(state, passive)
         return attributes.History(c.added_items, c.unchanged_items,
                                   c.deleted_items)
 
-    def _get_collection_history(self, state, passive=False):
+    def get_all_pending(self, state, dict_):
+        c = self._get_collection_history(state, True)
+        return [
+                (attributes.instance_state(x), x) 
+                for x in 
+                c.added_items + c.unchanged_items + c.deleted_items
+            ]
+
+    def _get_collection_history(self, state, passive=attributes.PASSIVE_OFF):
         if self.key in state.committed_state:
             c = state.committed_state[self.key]
         else:
             c = CollectionHistory(self, state)
 
-        if not passive:
+        if passive is attributes.PASSIVE_OFF:
             return CollectionHistory(self, state, apply_to=c)
         else:
             return c
 
-    def append(self, state, dict_, value, initiator, passive=False):
+    def append(self, state, dict_, value, initiator, 
+                            passive=attributes.PASSIVE_OFF):
         if initiator is not self:
             self.fire_append_event(state, dict_, value, initiator)
 
-    def remove(self, state, dict_, value, initiator, passive=False):
+    def remove(self, state, dict_, value, initiator, 
+                            passive=attributes.PASSIVE_OFF):
         if initiator is not self:
             self.fire_remove_event(state, dict_, value, initiator)
 
@@ -192,7 +202,7 @@ class AppenderMixin(object):
         self.attr = attr
 
         mapper = object_mapper(instance)
-        prop = mapper.get_property(self.attr.key, resolve_synonyms=True)
+        prop = mapper._props[self.attr.key]
         self._criterion = prop.compare(
                             operators.eq, 
                             instance, 
@@ -221,7 +231,7 @@ class AppenderMixin(object):
         if sess is None:
             return iter(self.attr._get_collection_history(
                 attributes.instance_state(self.instance),
-                passive=True).added_items)
+                attributes.PASSIVE_NO_INITIALIZE).added_items)
         else:
             return iter(self._clone(sess))
 
@@ -230,7 +240,8 @@ class AppenderMixin(object):
         if sess is None:
             return self.attr._get_collection_history(
                 attributes.instance_state(self.instance),
-                passive=True).added_items.__getitem__(index)
+                attributes.PASSIVE_NO_INITIALIZE).added_items.\
+                    __getitem__(index)
         else:
             return self._clone(sess).__getitem__(index)
 
@@ -239,7 +250,7 @@ class AppenderMixin(object):
         if sess is None:
             return len(self.attr._get_collection_history(
                 attributes.instance_state(self.instance),
-                passive=True).added_items)
+                attributes.PASSIVE_NO_INITIALIZE).added_items)
         else:
             return self._clone(sess).count()
 

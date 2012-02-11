@@ -1,5 +1,5 @@
 # engine/threadlocal.py
-# Copyright (C) 2005-2011 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2012 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -11,7 +11,7 @@ with :func:`~sqlalchemy.engine.create_engine`.  This module is semi-private and 
 invoked automatically when the threadlocal engine strategy is used.
 """
 
-from sqlalchemy import util
+from sqlalchemy import util, event
 from sqlalchemy.engine import base
 import weakref
 
@@ -36,16 +36,12 @@ class TLConnection(base.Connection):
 class TLEngine(base.Engine):
     """An Engine that includes support for thread-local managed transactions."""
 
+    _tl_connection_cls = TLConnection
 
     def __init__(self, *args, **kwargs):
         super(TLEngine, self).__init__(*args, **kwargs)
         self._connections = util.threading.local()
-        proxy = kwargs.get('proxy')
-        if proxy:
-            self.TLConnection = base._proxy_connection_cls(
-                                        TLConnection, proxy)
-        else:
-            self.TLConnection = TLConnection
+
 
     def contextual_connect(self, **kw):
         if not hasattr(self._connections, 'conn'):
@@ -56,7 +52,7 @@ class TLEngine(base.Engine):
         if connection is None or connection.closed:
             # guards against pool-level reapers, if desired.
             # or not connection.connection.is_valid:
-            connection = self.TLConnection(self, self.pool.connect(), **kw)
+            connection = self._tl_connection_cls(self, self.pool.connect(), **kw)
             self._connections.conn = conn = weakref.ref(connection)
 
         return connection._increment_connect()

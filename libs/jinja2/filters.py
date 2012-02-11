@@ -13,7 +13,8 @@ import math
 from random import choice
 from operator import itemgetter
 from itertools import imap, groupby
-from jinja2.utils import Markup, escape, pformat, urlize, soft_unicode
+from jinja2.utils import Markup, escape, pformat, urlize, soft_unicode, \
+     unicode_urlencode
 from jinja2.runtime import Undefined
 from jinja2.exceptions import FilterArgumentError
 
@@ -68,6 +69,26 @@ def do_forceescape(value):
     if hasattr(value, '__html__'):
         value = value.__html__()
     return escape(unicode(value))
+
+
+def do_urlencode(value):
+    """Escape strings for use in URLs (uses UTF-8 encoding).  It accepts both
+    dictionaries and regular strings as well as pairwise iterables.
+
+    .. versionadded:: 2.7
+    """
+    itemiter = None
+    if isinstance(value, dict):
+        itemiter = value.iteritems()
+    elif not isinstance(value, basestring):
+        try:
+            itemiter = iter(value)
+        except TypeError:
+            pass
+    if itemiter is None:
+        return unicode_urlencode(value)
+    return u'&'.join(unicode_urlencode(k) + '=' +
+                     unicode_urlencode(v) for k, v in itemiter)
 
 
 @evalcontextfilter
@@ -797,5 +818,6 @@ FILTERS = {
     'round':                do_round,
     'groupby':              do_groupby,
     'safe':                 do_mark_safe,
-    'xmlattr':              do_xmlattr
+    'xmlattr':              do_xmlattr,
+    'urlencode':            do_urlencode
 }

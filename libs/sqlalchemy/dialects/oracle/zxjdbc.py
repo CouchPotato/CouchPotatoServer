@@ -1,5 +1,5 @@
 # oracle/zxjdbc.py
-# Copyright (C) 2005-2011 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2012 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -21,6 +21,7 @@ from sqlalchemy.connectors.zxJDBC import ZxJDBCConnector
 from sqlalchemy.dialects.oracle.base import OracleCompiler, OracleDialect, OracleExecutionContext
 from sqlalchemy.engine import base, default
 from sqlalchemy.sql import expression
+import collections
 
 SQLException = zxJDBC = None
 
@@ -115,7 +116,7 @@ class OracleExecutionContext_zxjdbc(OracleExecutionContext):
         return base.ResultProxy(self)
 
     def create_cursor(self):
-        cursor = self._connection.connection.cursor()
+        cursor = self._dbapi_connection.cursor()
         cursor.datahandler = self.dialect.DataHandler(cursor.datahandler)
         return cursor
 
@@ -138,7 +139,7 @@ class ReturningResultProxy(base.FullyBufferedResultProxy):
         return ret
 
     def _buffer_rows(self):
-        return [self._returning_row]
+        return collections.deque([self._returning_row])
 
 
 class ReturningParam(object):

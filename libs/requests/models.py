@@ -8,15 +8,12 @@ This module contains the primary objects that power Requests.
 """
 
 import os
-import urllib
-
-from urlparse import urlparse, urlunparse, urljoin, urlsplit
 from datetime import datetime
 
-from .hooks import dispatch_hook
+from .hooks import dispatch_hook, HOOKS
 from .structures import CaseInsensitiveDict
 from .status_codes import codes
-from .packages import oreos
+
 from .auth import HTTPBasicAuth, HTTPProxyAuth
 from .packages.urllib3.response import HTTPResponse
 from .packages.urllib3.exceptions import MaxRetryError
@@ -29,8 +26,15 @@ from .exceptions import (
     URLRequired, SSLError)
 from .utils import (
     get_encoding_from_headers, stream_decode_response_unicode,
-    stream_decompress, guess_filename, requote_path)
+    stream_decompress, guess_filename, requote_path, dict_from_string)
 
+from .compat import urlparse, urlunparse, urljoin, urlsplit, urlencode, quote, unquote, str, bytes, SimpleCookie, is_py3, is_py2
+
+# Import chardet if it is available.
+try:
+    import chardet
+except ImportError:
+    pass
 
 REDIRECT_STATI = (codes.moved, codes.found, codes.other, codes.temporary_moved)
 
@@ -57,13 +61,19 @@ class Request(object):
         hooks=None,
         config=None,
         _poolmanager=None,
-        verify=None):
+        verify=None,
+        session=None):
 
         #: Float describes the timeout of the request.
         #  (Use socket.setdefaulttimeout() as fallback)
         self.timeout = timeout
 
         #: Request URL.
+
+        # if isinstance(url, str):
+            # url = url.encode('utf-8')
+            # print(dir(url))
+
         self.url = url
 
         #: Dictionary of HTTP Headers to attach to the :class:`Request <Request>`.
@@ -82,7 +92,6 @@ class Request(object):
         #: Dictionary or byte of querystring data to attach to the
         #: :class:`Request <Request>`.
         self.params = None
-        self.params = dict(params or [])
 
         #: True if :class:`Request <Request>` is part of a redirect chain (disables history
         #: and HTTPError storage).
@@ -114,10 +123,18 @@ class Request(object):
         self.sent = False
 
         #: Event-handling hooks.
-        self.hooks = hooks
+        self.hooks = {}
+
+        for event in HOOKS:
+            self.hooks[event] = []
+
+        hooks = hooks or {}
+
+        for (k, v) in list(hooks.items()):
+            self.register_hook(event=k, hook=v)
 
         #: Session.
-        self.session = None
+        self.session = session
 
         #: SSL Verification.
         self.verify = verify
@@ -128,7 +145,7 @@ class Request(object):
             headers = CaseInsensitiveDict()
 
         # Add configured base headers.
-        for (k, v) in self.config.get('base_headers', {}).items():
+        for (k, v) in list(self.config.get('base_headers', {}).items()):
             if k not in headers:
                 headers[k] = v
 
@@ -144,7 +161,7 @@ class Request(object):
         return '<Request [%s]>' % (self.method)
 
 
-    def _build_response(self, resp, is_error=False):
+    def _build_response(self, resp):
         """Build internal :class:`Response <Response>` object
         from given response.
         """
@@ -173,7 +190,7 @@ class Request(object):
                 # Add new cookies from the server.
                 if 'set-cookie' in response.headers:
                     cookie_header = response.headers['set-cookie']
-                    cookies = oreos.dict_from_string(cookie_header)
+                    cookies = dict_from_string(cookie_header)
 
                 # Save cookies in Response.
                 response.cookies = cookies
@@ -183,10 +200,6 @@ class Request(object):
 
             # Save original response for later.
             response.raw = resp
-
-            if is_error:
-                response.error = resp
-
             response.url = self.full_url
 
             return response
@@ -247,7 +260,8 @@ class Request(object):
                     timeout=self.timeout,
                     _poolmanager=self._poolmanager,
                     proxies = self.proxies,
-                    verify = self.verify
+                    verify = self.verify,
+                    session = self.session
                 )
 
                 request.send()
@@ -274,16 +288,17 @@ class Request(object):
         returns it twice.
         """
 
-        if hasattr(data, '__iter__'):
+        if hasattr(data, '__iter__') and not isinstance(data, str):
             data = dict(data)
+
 
         if hasattr(data, 'items'):
             result = []
-            for k, vs in data.items():
+            for k, vs in list(data.items()):
                 for v in isinstance(vs, list) and vs or [vs]:
-                    result.append((k.encode('utf-8') if isinstance(k, unicode) else k,
-                                   v.encode('utf-8') if isinstance(v, unicode) else v))
-            return result, urllib.urlencode(result, doseq=True)
+                    result.append((k.encode('utf-8') if isinstance(k, str) else k,
+                                   v.encode('utf-8') if isinstance(v, str) else v))
+            return result, urlencode(result, doseq=True)
         else:
             return data, data
 
@@ -294,20 +309,27 @@ class Request(object):
         if not self.url:
             raise URLRequired()
 
+        url = self.url
+
         # Support for unicode domain names and paths.
-        scheme, netloc, path, params, query, fragment = urlparse(self.url)
+        scheme, netloc, path, params, query, fragment = urlparse(url)
+
 
         if not scheme:
-            raise ValueError()
+            raise ValueError("Invalid URL %r: No schema supplied" % url)
 
-        netloc = netloc.encode('idna')
+        netloc = netloc.encode('idna').decode('utf-8')
 
-        if isinstance(path, unicode):
-            path = path.encode('utf-8')
+        if is_py2:
+            if isinstance(path, str):
+                path = path.encode('utf-8')
 
-        path = requote_path(path)
+            path = requote_path(path)
 
-        url = str(urlunparse([ scheme, netloc, path, params, query, fragment ]))
+        # print([ scheme, netloc, path, params, query, fragment ])
+        # print('---------------------')
+
+        url = (urlunparse([ scheme, netloc, path, params, query, fragment ]))
 
         if self._enc_params:
             if urlparse(url).query:
@@ -332,6 +354,10 @@ class Request(object):
         path = p.path
         if not path:
             path = '/'
+
+        # if is_py3:
+        path = quote(path.encode('utf-8'))
+
         url.append(path)
 
         query = p.query
@@ -339,8 +365,15 @@ class Request(object):
             url.append('?')
             url.append(query)
 
+        # print(url)
+
         return ''.join(url)
 
+
+    def register_hook(self, event, hook):
+        """Properly register a hook."""
+
+        return self.hooks[event].append(hook)
 
 
     def send(self, anyway=False, prefetch=False):
@@ -369,14 +402,14 @@ class Request(object):
 
         # Multi-part file uploads.
         if self.files:
-            if not isinstance(self.data, basestring):
+            if not isinstance(self.data, str):
 
                 try:
                     fields = self.data.copy()
                 except AttributeError:
                     fields = dict(self.data)
 
-                for (k, v) in self.files.items():
+                for (k, v) in list(self.files.items()):
                     # support for explicit filename
                     if isinstance(v, (tuple, list)):
                         fn, fp = v
@@ -393,7 +426,7 @@ class Request(object):
             if self.data:
 
                 body = self._enc_data
-                if isinstance(self.data, basestring):
+                if isinstance(self.data, str):
                     content_type = None
                 else:
                     content_type = 'application/x-www-form-urlencoded'
@@ -454,6 +487,9 @@ class Request(object):
 
             conn.cert_reqs = 'CERT_REQUIRED'
             conn.ca_certs = cert_loc
+        else:
+            conn.cert_reqs = 'CERT_NONE'
+            conn.ca_certs = None
 
         if not self.sent or anyway:
 
@@ -463,8 +499,8 @@ class Request(object):
                 if 'cookie' not in self.headers:
 
                     # Simple cookie with our dict.
-                    c = oreos.monkeys.SimpleCookie()
-                    for (k, v) in self.cookies.items():
+                    c = SimpleCookie()
+                    for (k, v) in list(self.cookies.items()):
                         c[k] = v
 
                     # Turn it into a header.
@@ -493,16 +529,16 @@ class Request(object):
                     )
                     self.sent = True
 
-                except MaxRetryError, e:
+                except MaxRetryError as e:
                     raise ConnectionError(e)
 
-                except (_SSLError, _HTTPError), e:
+                except (_SSLError, _HTTPError) as e:
                     if self.verify and isinstance(e, _SSLError):
                         raise SSLError(e)
 
                     raise Timeout('Request timed out.')
 
-            except RequestException, e:
+            except RequestException as e:
                 if self.config.get('safe_mode', False):
                     # In safe mode, catch the exception and attach it to
                     # a blank urllib3.HTTPResponse object.
@@ -524,7 +560,7 @@ class Request(object):
             if prefetch:
                 # Save the response.
                 self.response.content
-            
+
             if self.config.get('danger_mode'):
                 self.response.raise_for_status()
 
@@ -581,6 +617,10 @@ class Response(object):
     def __repr__(self):
         return '<Response [%s]>' % (self.status_code)
 
+    def __bool__(self):
+        """Returns true if :attr:`status_code` is 'OK'."""
+        return self.ok
+
     def __nonzero__(self):
         """Returns true if :attr:`status_code` is 'OK'."""
         return self.ok
@@ -594,7 +634,7 @@ class Response(object):
         return True
 
 
-    def iter_content(self, chunk_size=10 * 1024, decode_unicode=None):
+    def iter_content(self, chunk_size=10 * 1024, decode_unicode=False):
         """Iterates over the response data.  This avoids reading the content
         at once into memory for large responses.  The chunk size is the number
         of bytes it should read into memory.  This is not necessarily the
@@ -613,15 +653,40 @@ class Response(object):
                 yield chunk
             self._content_consumed = True
 
-        gen = generate()
+        def generate_chunked():
+            resp = self.raw._original_response
+            fp = resp.fp
+            if resp.chunk_left is not None:
+                pending_bytes = resp.chunk_left
+                while pending_bytes:
+                    chunk = fp.read(min(chunk_size, pending_bytes))
+                    pending_bytes-=len(chunk)
+                    yield chunk
+                fp.read(2) # throw away crlf
+            while 1:
+                #XXX correct line size? (httplib has 64kb, seems insane)
+                pending_bytes = fp.readline(40).strip()
+                pending_bytes = int(pending_bytes, 16)
+                if pending_bytes == 0:
+                    break
+                while pending_bytes:
+                    chunk = fp.read(min(chunk_size, pending_bytes))
+                    pending_bytes-=len(chunk)
+                    yield chunk
+                fp.read(2) # throw away crlf
+            self._content_consumed = True
+            fp.close()
+
+
+        if getattr(getattr(self.raw, '_original_response', None), 'chunked', False):
+            gen = generate_chunked()
+        else:
+            gen = generate()
 
         if 'gzip' in self.headers.get('content-encoding', ''):
             gen = stream_decompress(gen, mode='gzip')
         elif 'deflate' in self.headers.get('content-encoding', ''):
             gen = stream_decompress(gen, mode='deflate')
-
-        if decode_unicode is None:
-            decode_unicode = self.config.get('decode_unicode')
 
         if decode_unicode:
             gen = stream_decode_response_unicode(gen, self)
@@ -635,15 +700,29 @@ class Response(object):
         responses.
         """
 
+        #TODO: why rstrip by default
         pending = None
+
         for chunk in self.iter_content(chunk_size, decode_unicode=decode_unicode):
+
             if pending is not None:
                 chunk = pending + chunk
             lines = chunk.splitlines(True)
+
             for line in lines[:-1]:
                 yield line.rstrip()
+
             # Save the last part of the chunk for next iteration, to keep full line together
-            pending = lines[-1]
+            # lines may be empty for the last chunk of a chunked response
+
+            if lines:
+                pending = lines[-1]
+                #if pending is a complete line, give it baack
+                if pending[-1] == '\n':
+                    yield pending.rstrip()
+                    pending = None
+            else:
+                pending = None
 
         # Yield the last line
         if pending is not None:
@@ -652,9 +731,7 @@ class Response(object):
 
     @property
     def content(self):
-        """Content of the response, in bytes or unicode
-        (if available).
-        """
+        """Content of the response, in bytes."""
 
         if self._content is None:
             # Read the contents.
@@ -667,26 +744,45 @@ class Response(object):
             except AttributeError:
                 self._content = None
 
-        content = self._content
+        self._content_consumed = True
+        return self._content
 
-        # Decode unicode content.
-        if self.config.get('decode_unicode'):
 
-            # Try charset from content-type
+    @property
+    def text(self):
+        """Content of the response, in unicode.
 
-            if self.encoding:
-                try:
-                    content = unicode(content, self.encoding)
-                except UnicodeError:
-                    pass
+        if Response.encoding is None and chardet module is available, encoding
+        will be guessed.
+        """
 
-            # Fall back:
+        # Try charset from content-type
+        content = None
+        encoding = self.encoding
+
+        # Fallback to auto-detected encoding if chardet is available.
+        if self.encoding is None:
             try:
-                content = unicode(content, self.encoding, errors='replace')
-            except TypeError:
+                detected = chardet.detect(self.content) or {}
+                encoding = detected.get('encoding')
+
+            # Trust that chardet isn't available or something went terribly wrong.
+            except Exception:
                 pass
 
-        self._content_consumed = True
+        # Decode unicode from given encoding.
+        try:
+            content = str(self.content, encoding)
+        except (UnicodeError, TypeError):
+            pass
+
+        # Try to fall back:
+        if not content:
+            try:
+                content = str(content, encoding, errors='replace')
+            except (UnicodeError, TypeError):
+                pass
+
         return content
 
 

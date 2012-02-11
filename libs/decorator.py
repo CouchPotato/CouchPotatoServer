@@ -28,7 +28,7 @@ Decorator module, see http://pypi.python.org/pypi/decorator
 for the documentation.
 """
 
-__version__ = '3.3.0'
+__version__ = '3.3.2'
 
 __all__ = ["decorator", "FunctionMaker", "partial"]
 
@@ -127,6 +127,7 @@ class FunctionMaker(object):
         func.__doc__ = getattr(self, 'doc', None)
         func.__dict__ = getattr(self, 'dict', {})
         func.func_defaults = getattr(self, 'defaults', ())
+        func.__kwdefaults__ = getattr(self, 'kwonlydefaults', None)
         callermodule = sys._getframe(3).f_globals.get('__name__', '?')
         func.__module__ = getattr(self, 'module', callermodule)
         func.__dict__.update(kw)
@@ -193,7 +194,7 @@ def decorator(caller, func=None):
         evaldict['_func_'] = func
         return FunctionMaker.create(
             func, "return _call_(_func_, %(shortsignature)s)",
-            evaldict, undecorated=func)
+            evaldict, undecorated=func, __wrapped__=func)
     else: # returns a decorator
         if isinstance(caller, partial):
             return partial(decorator, caller)
@@ -205,5 +206,5 @@ def decorator(caller, func=None):
         return FunctionMaker.create(
             '%s(%s)' % (caller.__name__, first), 
             'return decorator(_call_, %s)' % first,
-            evaldict, undecorated=caller,
+            evaldict, undecorated=caller, __wrapped__=caller,
             doc=caller.__doc__, module=caller.__module__)

@@ -1,5 +1,5 @@
 # oracle/cx_oracle.py
-# Copyright (C) 2005-2011 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2012 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -50,6 +50,8 @@ Unicode
 cx_oracle 5 fully supports Python unicode objects.   SQLAlchemy will pass
 all unicode strings directly to cx_oracle, and additionally uses an output
 handler so that all string based result values are returned as unicode as well.
+Generally, the ``NLS_LANG`` environment variable determines the nature
+of the encoding to be used.
 
 Note that this behavior is disabled when Oracle 8 is detected, as it has been 
 observed that issues remain when passing Python unicodes to cx_oracle with Oracle 8.
@@ -127,7 +129,8 @@ from sqlalchemy.engine import base
 from sqlalchemy import types as sqltypes, util, exc, processors
 from datetime import datetime
 import random
-from decimal import Decimal
+import collections
+from sqlalchemy.util.compat import decimal
 import re
 
 class _OracleNumeric(sqltypes.Numeric):
@@ -154,10 +157,10 @@ class _OracleNumeric(sqltypes.Numeric):
                 def to_decimal(value):
                     if value is None:
                         return None
-                    elif isinstance(value, Decimal):
+                    elif isinstance(value, decimal.Decimal):
                         return value
                     else:
-                        return Decimal(fstring % value)
+                        return decimal.Decimal(fstring % value)
                 return to_decimal
             else:
                 if self.precision is None and self.scale is None:
@@ -293,10 +296,15 @@ class OracleExecutionContext_cx_oracle(OracleExecutionContext):
         quoted_bind_names = \
             getattr(self.compiled, '_quoted_bind_names', None)
         if quoted_bind_names:
-            if not self.dialect.supports_unicode_binds:
+            if not self.dialect.supports_unicode_statements:
+                # if DBAPI doesn't accept unicode statements, 
+                # keys in self.parameters would have been encoded
+                # here.  so convert names in quoted_bind_names
+                # to encoded as well.
                 quoted_bind_names = \
                                 dict(
-                                    (fromname, toname.encode(self.dialect.encoding)) 
+                                    (fromname.encode(self.dialect.encoding), 
+                                    toname.encode(self.dialect.encoding)) 
                                     for fromname, toname in 
                                     quoted_bind_names.items()
                                 )
@@ -333,7 +341,7 @@ class OracleExecutionContext_cx_oracle(OracleExecutionContext):
                                                         self.out_parameters[name]
 
     def create_cursor(self):
-        c = self._connection.connection.cursor()
+        c = self._dbapi_connection.cursor()
         if self.dialect.arraysize:
             c.arraysize = self.dialect.arraysize
 
@@ -423,8 +431,8 @@ class ReturningResultProxy(base.FullyBufferedResultProxy):
         return ret
 
     def _buffer_rows(self):
-        return [tuple(self._returning_params["ret_%d" % i] 
-                    for i, c in enumerate(self._returning_params))]
+        return collections.deque([tuple(self._returning_params["ret_%d" % i] 
+                    for i, c in enumerate(self._returning_params))])
 
 class OracleDialect_cx_oracle(OracleDialect):
     execution_ctx_cls = OracleExecutionContext_cx_oracle
@@ -575,15 +583,15 @@ class OracleDialect_cx_oracle(OracleDialect):
             self._detect_decimal = \
                 lambda value: _detect_decimal(value.replace(char, '.'))
             self._to_decimal = \
-                lambda value: Decimal(value.replace(char, '.'))
+                lambda value: decimal.Decimal(value.replace(char, '.'))
 
     def _detect_decimal(self, value):
         if "." in value:
-            return Decimal(value)
+            return decimal.Decimal(value)
         else:
             return int(value)
 
-    _to_decimal = Decimal
+    _to_decimal = decimal.Decimal
 
     def on_connect(self):
         if self.cx_oracle_ver < (5,):
@@ -679,11 +687,20 @@ class OracleDialect_cx_oracle(OracleDialect):
                         for x in connection.connection.version.split('.')
                     )
 
-    def is_disconnect(self, e):
+    def is_disconnect(self, e, connection, cursor):
+        error, = e.args
         if isinstance(e, self.dbapi.InterfaceError):
             return "not connected" in str(e)
+        elif hasattr(error, 'code'):
+            # ORA-00028: your session has been killed
+            # ORA-03114: not connected to ORACLE
+            # ORA-03113: end-of-file on communication channel
+            # ORA-03135: connection lost contact
+            # ORA-01033: ORACLE initialization or shutdown in progress
+            # TODO: Others ?
+            return error.code in (28, 3114, 3113, 3135, 1033)
         else:
-            return "ORA-03114" in str(e) or "ORA-03113" in str(e)
+            return False
 
     def create_xid(self):
         """create a two-phase transaction ID.

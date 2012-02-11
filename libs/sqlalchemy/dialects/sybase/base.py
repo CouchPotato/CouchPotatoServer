@@ -271,6 +271,8 @@ class SybaseSQLCompiler(compiler.SQLCompiler):
 
     def get_select_precolumns(self, select):
         s = select._distinct and "DISTINCT " or ""
+        # TODO: don't think Sybase supports
+        # bind params for FIRST / TOP
         if select._limit:
             #if select._limit == 1:
                 #s += "FIRST "
@@ -319,7 +321,7 @@ class SybaseDDLCompiler(compiler.DDLCompiler):
                         self.dialect.type_compiler.process(column.type)
 
         if column.table is None:
-            raise exc.InvalidRequestError(
+            raise exc.CompileError(
                         "The Sybase dialect requires Table-bound "
                        "columns in order to generate DDL")
         seq_col = column.table._autoincrement_column

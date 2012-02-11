@@ -1,5 +1,5 @@
-# sqlalchemy/topological.py
-# Copyright (C) 2005-2011 the SQLAlchemy authors and contributors <see AUTHORS file>
+# util/topological.py
+# Copyright (C) 2005-2012 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -28,7 +28,7 @@ def sort_as_subsets(tuples, allitems):
 
         if not output:
             raise CircularDependencyError(
-                    "Circular dependency detected",
+                    "Circular dependency detected.",
                     find_cycles(tuples, allitems), 
                     _gen_edges(edges)
                 )
@@ -48,17 +48,26 @@ def sort(tuples, allitems):
 
 def find_cycles(tuples, allitems):
     # straight from gvr with some mods
-    todo = set(allitems)
 
     edges = util.defaultdict(set)
     for parent, child in tuples:
         edges[parent].add(child)
+    nodes_to_test = set(edges)
 
     output = set()
 
-    while todo:
-        node = todo.pop()
+    # we'd like to find all nodes that are 
+    # involved in cycles, so we do the full
+    # pass through the whole thing for each
+    # node in the original list.
+
+    # we can go just through parent edge nodes.
+    # if a node is only a child and never a parent,
+    # by definition it can't be part of a cycle.  same
+    # if it's not in the edges at all.
+    for node in nodes_to_test:
         stack = [node]
+        todo = nodes_to_test.difference(stack)
         while stack:
             top = stack[-1]
             for node in edges[top]:

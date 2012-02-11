@@ -1,5 +1,5 @@
 # connectors/pyodbc.py
-# Copyright (C) 2005-2011 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2012 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -10,7 +10,6 @@ from sqlalchemy.util import asbool
 import sys
 import re
 import urllib
-import decimal
 
 class PyODBCConnector(Connector):
     driver='pyodbc'
@@ -29,6 +28,14 @@ class PyODBCConnector(Connector):
     # will be set to True after initialize()
     # if the freetds.so is detected
     freetds = False
+
+    # will be set to the string version of
+    # the FreeTDS driver if freetds is detected
+    freetds_driver_version = None
+
+    # will be set to True after initialize()
+    # if the libessqlsrv.so is detected
+    easysoft = False
 
     @classmethod
     def dbapi(cls):
@@ -82,7 +89,7 @@ class PyODBCConnector(Connector):
             connectors.extend(['%s=%s' % (k,v) for k,v in keys.iteritems()])
         return [[";".join (connectors)], connect_args]
 
-    def is_disconnect(self, e):
+    def is_disconnect(self, e, connection, cursor):
         if isinstance(e, self.dbapi.ProgrammingError):
             return "The cursor's connection has been closed." in str(e) or \
                             'Attempt to use a closed connection.' in str(e)
@@ -99,19 +106,42 @@ class PyODBCConnector(Connector):
 
         dbapi_con = connection.connection
 
-        self.freetds = bool(re.match(r".*libtdsodbc.*\.so", 
-                            dbapi_con.getinfo(pyodbc.SQL_DRIVER_NAME)
+        _sql_driver_name = dbapi_con.getinfo(pyodbc.SQL_DRIVER_NAME)
+        self.freetds = bool(re.match(r".*libtdsodbc.*\.so", _sql_driver_name
                             ))
+        self.easysoft = bool(re.match(r".*libessqlsrv.*\.so", _sql_driver_name
+                            ))
+
+        if self.freetds:
+            self.freetds_driver_version = dbapi_con.getinfo(pyodbc.SQL_DRIVER_VER)
 
         # the "Py2K only" part here is theoretical.
         # have not tried pyodbc + python3.1 yet.
         # Py2K
-        self.supports_unicode_statements = not self.freetds
-        self.supports_unicode_binds = not self.freetds
+        self.supports_unicode_statements = not self.freetds and not self.easysoft
+        self.supports_unicode_binds =  (not self.freetds or 
+                                            self.freetds_driver_version >= '0.91') and not self.easysoft
         # end Py2K
 
         # run other initialization which asks for user name, etc.
         super(PyODBCConnector, self).initialize(connection)
+
+    def _dbapi_version(self):
+        if not self.dbapi:
+            return ()
+        return self._parse_dbapi_version(self.dbapi.version)
+
+    def _parse_dbapi_version(self, vers):
+        m = re.match(
+                r'(?:py.*-)?([\d\.]+)(?:-(\w+))?',
+                vers
+            )
+        if not m:
+            return ()
+        vers = tuple([int(x) for x in m.group(1).split(".")])
+        if m.group(2):
+            vers += (m.group(2),)
+        return vers
 
     def _get_server_version_info(self, connection):
         dbapi_con = connection.connection

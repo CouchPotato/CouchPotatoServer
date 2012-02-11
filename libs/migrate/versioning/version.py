@@ -8,6 +8,7 @@ import logging
 
 from migrate import exceptions
 from migrate.versioning import pathed, script
+from datetime import datetime
 
 
 log = logging.getLogger(__name__)
@@ -88,9 +89,15 @@ class Collection(pathed.Pathed):
         """:returns: Latest version in Collection"""
         return max([VerNum(0)] + self.versions.keys())
 
+    def _next_ver_num(self, use_timestamp_numbering):
+        if use_timestamp_numbering == True:
+            return VerNum(int(datetime.utcnow().strftime('%Y%m%d%H%M%S')))
+        else:
+            return self.latest + 1
+
     def create_new_python_version(self, description, **k):
         """Create Python files for new version"""
-        ver = self.latest + 1
+        ver = self._next_ver_num(k.pop('use_timestamp_numbering', False))
         extra = str_to_filename(description)
 
         if extra:
@@ -105,14 +112,22 @@ class Collection(pathed.Pathed):
         script.PythonScript.create(filepath, **k)
         self.versions[ver] = Version(ver, self.path, [filename])
         
-    def create_new_sql_version(self, database, **k):
+    def create_new_sql_version(self, database, description, **k):
         """Create SQL files for new version"""
-        ver = self.latest + 1
+        ver = self._next_ver_num(k.pop('use_timestamp_numbering', False))
         self.versions[ver] = Version(ver, self.path, [])
+
+        extra = str_to_filename(description)
+
+        if extra:
+            if extra == '_':
+                extra = ''
+            elif not extra.startswith('_'):
+                extra = '_%s' % extra
 
         # Create new files.
         for op in ('upgrade', 'downgrade'):
-            filename = '%03d_%s_%s.sql' % (ver, database, op)
+            filename = '%03d%s_%s_%s.sql' % (ver, extra, database, op)
             filepath = self._version_path(filename)
             script.SqlScript.create(filepath, **k)
             self.versions[ver].add_script(filepath)
@@ -176,18 +191,26 @@ class Version(object):
         elif path.endswith(Extensions.sql):
             self._add_script_sql(path)
 
-    SQL_FILENAME = re.compile(r'^(\d+)_([^_]+)_([^_]+).sql')
+    SQL_FILENAME = re.compile(r'^.*\.sql')
 
     def _add_script_sql(self, path):
         basename = os.path.basename(path)
         match = self.SQL_FILENAME.match(basename)
-
+        
         if match:
-            version, dbms, op = match.group(1), match.group(2), match.group(3)
+            basename = basename.replace('.sql', '')
+            parts = basename.split('_')
+            if len(parts) < 3:
+                raise exceptions.ScriptError(
+                    "Invalid SQL script name %s " % basename + \
+                    "(needs to be ###_description_database_operation.sql)")
+            version = parts[0]
+            op = parts[-1]
+            dbms = parts[-2]
         else:
             raise exceptions.ScriptError(
                 "Invalid SQL script name %s " % basename + \
-                "(needs to be ###_database_operation.sql)")
+                "(needs to be ###_description_database_operation.sql)")
 
         # File the script into a dictionary
         self.sql.setdefault(dbms, {})[op] = script.SqlScript(path)

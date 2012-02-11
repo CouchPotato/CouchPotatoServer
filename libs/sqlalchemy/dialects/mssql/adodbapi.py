@@ -1,5 +1,5 @@
 # mssql/adodbapi.py
-# Copyright (C) 2005-2011 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2012 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -8,6 +8,7 @@
 The adodbapi dialect is not implemented for 0.6 at this time.
 
 """
+import datetime
 from sqlalchemy import types as sqltypes, util
 from sqlalchemy.dialects.mssql.base import MSDateTime, MSDialect
 import sys
@@ -61,7 +62,7 @@ class MSDialect_adodbapi(MSDialect):
             connectors.append("Integrated Security=SSPI")
         return [[";".join (connectors)], {}]
 
-    def is_disconnect(self, e):
+    def is_disconnect(self, e, connection, cursor):
         return isinstance(e, self.dbapi.adodbapi.DatabaseError) and \
                             "'connection failure'" in str(e)
 

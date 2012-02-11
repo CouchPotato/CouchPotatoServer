@@ -1,15 +1,26 @@
 # sqlalchemy/interfaces.py
-# Copyright (C) 2007-2011 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2007-2012 the SQLAlchemy authors and contributors <see AUTHORS file>
 # Copyright (C) 2007 Jason Kirtland jek@discorporate.us
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 
-"""Interfaces and abstract types."""
+"""Interfaces and abstract types.
 
+This module is **deprecated** and is superseded by the
+event system.
+
+"""
+
+from sqlalchemy import event, util
 
 class PoolListener(object):
-    """Hooks into the lifecycle of connections in a ``Pool``.
+    """Hooks into the lifecycle of connections in a :class:`.Pool`.
+
+    .. note:: 
+    
+       :class:`.PoolListener` is deprecated.   Please
+       refer to :class:`.PoolEvents`.
 
     Usage::
 
@@ -59,6 +70,25 @@ class PoolListener(object):
     providing implementations for the hooks you'll be using.
 
     """
+
+    @classmethod
+    def _adapt_listener(cls, self, listener):
+        """Adapt a :class:`.PoolListener` to individual
+        :class:`event.Dispatch` events.
+
+        """
+
+        listener = util.as_interface(listener, methods=('connect',
+                                'first_connect', 'checkout', 'checkin'))
+        if hasattr(listener, 'connect'):
+            event.listen(self, 'connect', listener.connect)
+        if hasattr(listener, 'first_connect'):
+            event.listen(self, 'first_connect', listener.first_connect)
+        if hasattr(listener, 'checkout'):
+            event.listen(self, 'checkout', listener.checkout)
+        if hasattr(listener, 'checkin'):
+            event.listen(self, 'checkin', listener.checkin)
+
 
     def connect(self, dbapi_con, con_record):
         """Called once for each new DB-API connection or Pool's ``creator()``.
@@ -121,6 +151,11 @@ class PoolListener(object):
 class ConnectionProxy(object):
     """Allows interception of statement execution by Connections.
 
+    .. note:: 
+    
+       :class:`.ConnectionProxy` is deprecated.   Please
+       refer to :class:`.ConnectionEvents`.
+
     Either or both of the ``execute()`` and ``cursor_execute()``
     may be implemented to intercept compiled statement and
     cursor level executions, e.g.::
@@ -144,8 +179,76 @@ class ConnectionProxy(object):
         e = create_engine('someurl://', proxy=MyProxy())
 
     """
+
+    @classmethod
+    def _adapt_listener(cls, self, listener):
+
+        def adapt_execute(conn, clauseelement, multiparams, params):
+
+            def execute_wrapper(clauseelement, *multiparams, **params):
+                return clauseelement, multiparams, params
+
+            return listener.execute(conn, execute_wrapper,
+                                    clauseelement, *multiparams,
+                                    **params)
+
+        event.listen(self, 'before_execute', adapt_execute)
+
+        def adapt_cursor_execute(conn, cursor, statement, 
+                                parameters,context, executemany, ):
+
+            def execute_wrapper(
+                cursor,
+                statement,
+                parameters,
+                context,
+                ):
+                return statement, parameters
+
+            return listener.cursor_execute(
+                execute_wrapper,
+                cursor,
+                statement,
+                parameters,
+                context,
+                executemany,
+                )
+
+        event.listen(self, 'before_cursor_execute', adapt_cursor_execute)
+
+        def do_nothing_callback(*arg, **kw):
+            pass
+
+        def adapt_listener(fn):
+
+            def go(conn, *arg, **kw):
+                fn(conn, do_nothing_callback, *arg, **kw)
+
+            return util.update_wrapper(go, fn)
+
+        event.listen(self, 'begin', adapt_listener(listener.begin))
+        event.listen(self, 'rollback',
+                     adapt_listener(listener.rollback))
+        event.listen(self, 'commit', adapt_listener(listener.commit))
+        event.listen(self, 'savepoint',
+                     adapt_listener(listener.savepoint))
+        event.listen(self, 'rollback_savepoint',
+                     adapt_listener(listener.rollback_savepoint))
+        event.listen(self, 'release_savepoint',
+                     adapt_listener(listener.release_savepoint))
+        event.listen(self, 'begin_twophase',
+                     adapt_listener(listener.begin_twophase))
+        event.listen(self, 'prepare_twophase',
+                     adapt_listener(listener.prepare_twophase))
+        event.listen(self, 'rollback_twophase',
+                     adapt_listener(listener.rollback_twophase))
+        event.listen(self, 'commit_twophase',
+                     adapt_listener(listener.commit_twophase))
+
+
     def execute(self, conn, execute, clauseelement, *multiparams, **params):
         """Intercept high level execute() events."""
+
 
         return execute(clauseelement, *multiparams, **params)
 

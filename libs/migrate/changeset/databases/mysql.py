@@ -6,13 +6,10 @@ from sqlalchemy.databases import mysql as sa_base
 from sqlalchemy import types as sqltypes
 
 from migrate import exceptions
-from migrate.changeset import ansisql, SQLA_06
+from migrate.changeset import ansisql
 
 
-if not SQLA_06:
-    MySQLSchemaGenerator = sa_base.MySQLSchemaGenerator
-else:
-    MySQLSchemaGenerator = sa_base.MySQLDDLCompiler
+MySQLSchemaGenerator = sa_base.MySQLDDLCompiler
 
 class MySQLColumnGenerator(MySQLSchemaGenerator, ansisql.ANSIColumnGenerator):
     pass
@@ -53,37 +50,11 @@ class MySQLSchemaChanger(MySQLSchemaGenerator, ansisql.ANSISchemaChanger):
 class MySQLConstraintGenerator(ansisql.ANSIConstraintGenerator):
     pass
 
-if SQLA_06:
-    class MySQLConstraintDropper(MySQLSchemaGenerator, ansisql.ANSIConstraintDropper):
-        def visit_migrate_check_constraint(self, *p, **k):
-            raise exceptions.NotSupportedError("MySQL does not support CHECK"
-                " constraints, use triggers instead.")
 
-else:
-    class MySQLConstraintDropper(ansisql.ANSIConstraintDropper):
-
-        def visit_migrate_primary_key_constraint(self, constraint):
-            self.start_alter_table(constraint)
-            self.append("DROP PRIMARY KEY")
-            self.execute()
-
-        def visit_migrate_foreign_key_constraint(self, constraint):
-            self.start_alter_table(constraint)
-            self.append("DROP FOREIGN KEY ")
-            constraint.name = self.get_constraint_name(constraint)
-            self.append(self.preparer.format_constraint(constraint))
-            self.execute()
-
-        def visit_migrate_check_constraint(self, *p, **k):
-            raise exceptions.NotSupportedError("MySQL does not support CHECK"
-                " constraints, use triggers instead.")
-
-        def visit_migrate_unique_constraint(self, constraint, *p, **k):
-            self.start_alter_table(constraint)
-            self.append('DROP INDEX ')
-            constraint.name = self.get_constraint_name(constraint)
-            self.append(self.preparer.format_constraint(constraint))
-            self.execute()
+class MySQLConstraintDropper(MySQLSchemaGenerator, ansisql.ANSIConstraintDropper):
+    def visit_migrate_check_constraint(self, *p, **k):
+        raise exceptions.NotSupportedError("MySQL does not support CHECK"
+            " constraints, use triggers instead.")
 
 
 class MySQLDialect(ansisql.ANSIDialect):

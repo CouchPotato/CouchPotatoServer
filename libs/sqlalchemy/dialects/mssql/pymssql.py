@@ -1,5 +1,5 @@
 # mssql/pymssql.py
-# Copyright (C) 2005-2011 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2012 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -41,7 +41,6 @@ Please consult the pymssql documentation for further information.
 from sqlalchemy.dialects.mssql.base import MSDialect
 from sqlalchemy import types as sqltypes, util, processors
 import re
-import decimal
 
 class _MSNumeric_pymssql(sqltypes.Numeric):
     def result_processor(self, dialect, type_):
@@ -52,7 +51,6 @@ class _MSNumeric_pymssql(sqltypes.Numeric):
 
 class MSDialect_pymssql(MSDialect):
     supports_sane_rowcount = False
-    max_identifier_length = 30
     driver = 'pymssql'
 
     colspecs = util.update_copy(
@@ -96,7 +94,7 @@ class MSDialect_pymssql(MSDialect):
             opts['host'] = "%s:%s" % (opts['host'], port)
         return [[], opts]
 
-    def is_disconnect(self, e):
+    def is_disconnect(self, e, connection, cursor):
         for msg in (
             "Error 10054",
             "Not connected to any MS SQL server",

@@ -9,9 +9,9 @@
 """
 Support for the Microsoft Access database.
 
-This dialect is *not* ported to SQLAlchemy 0.6.
+This dialect is *not* ported to SQLAlchemy 0.6 or 0.7.
 
-This dialect is *not* tested on SQLAlchemy 0.6.
+This dialect is *not* tested on SQLAlchemy 0.6 or 0.7.
 
 
 """
@@ -51,15 +51,10 @@ class AcSmallInteger(types.SmallInteger):
         return "SMALLINT"
 
 class AcDateTime(types.DateTime):
-    def __init__(self, *a, **kw):
-        super(AcDateTime, self).__init__(False)
-
     def get_col_spec(self):
         return "DATETIME"
 
 class AcDate(types.Date):
-    def __init__(self, *a, **kw):
-        super(AcDate, self).__init__(False)
 
     def get_col_spec(self):
         return "DATETIME"

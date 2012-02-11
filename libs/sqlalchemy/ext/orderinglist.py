@@ -1,5 +1,5 @@
 # ext/orderinglist.py
-# Copyright (C) 2005-2011 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2012 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -73,7 +73,9 @@ Use the ``ordering_list`` function to set up the ``collection_class`` on relatio
 (as in the mapper example above).  This implementation depends on the list
 starting in the proper order, so be SURE to put an order_by on your relationship.
 
-.. warning:: ``ordering_list`` only provides limited functionality when a primary
+.. warning:: 
+
+  ``ordering_list`` only provides limited functionality when a primary
   key column or unique column is the target of the sort.  Since changing the order of 
   entries often means that two rows must trade values, this is not possible when 
   the value is constrained by a primary key or unique constraint, since one of the rows

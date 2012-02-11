@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2010 Erik Svensson <erik.public@gmail.com>
+# Copyright (c) 2011 Erik Svensson <erik.public@gmail.com>
 # Licensed under the MIT license.
 
 import sys, httplib, urllib2
@@ -14,17 +14,17 @@ class HTTPHandler(object):
         """
         Transmission use basic authentication in earlier versions and digest
         authentication in later versions.
-        
+
          * uri, the authentication realm URI.
          * login, the authentication login.
          * password, the authentication password.
         """
         raise NotImplementedError("Bad HTTPHandler, failed to implement set_authentication.")
-    
+
     def request(self, url, query, headers, timeout):
         """
         Implement a HTTP POST request here.
-        
+
          * url, The URL to request.
          * query, The query data to send. This is a JSON data string.
          * headers, a dictionary of headers to send.
@@ -56,12 +56,12 @@ class DefaultHTTPHandler(HTTPHandler):
             else:
                 response = urllib2.urlopen(request)
         except urllib2.HTTPError, error:
-            if error.fp == None:
+            if error.fp is None:
                 raise HTTPHandlerError(error.filename, error.code, error.msg, dict(error.hdrs))
             else:
                 raise HTTPHandlerError(error.filename, error.code, error.msg, dict(error.hdrs), error.read())
         except urllib2.URLError, error:
-            # urllib2.URLError documentation is absymal!
+            # urllib2.URLError documentation is horrendous!
             # Try to get the tuple arguments of URLError
             if hasattr(error.reason, 'args') and isinstance(error.reason.args, tuple) and len(error.reason.args) == 2:
                 raise HTTPHandlerError(httpcode=error.reason.args[0], httpmsg=error.reason.args[1])

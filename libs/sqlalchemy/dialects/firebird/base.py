@@ -1,5 +1,5 @@
 # firebird/base.py
-# Copyright (C) 2005-2011 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2012 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -244,6 +244,10 @@ class FBCompiler(sql.compiler.SQLCompiler):
     visit_char_length_func = visit_length_func
 
     def function_argspec(self, func, **kw):
+        # TODO: this probably will need to be
+        # narrowed to a fixed list, some no-arg functions
+        # may require parens - see similar example in the oracle
+        # dialect
         if func.clauses is not None and len(func.clauses):
             return self.process(func.clause_expr)
         else:
@@ -263,9 +267,9 @@ class FBCompiler(sql.compiler.SQLCompiler):
 
         result = ""
         if select._limit:
-            result += "FIRST %d "  % select._limit
+            result += "FIRST %s "  % self.process(sql.literal(select._limit))
         if select._offset:
-            result +="SKIP %d "  %  select._offset
+            result +="SKIP %s "  %  self.process(sql.literal(select._offset))
         if select._distinct:
             result += "DISTINCT "
         return result
@@ -331,12 +335,13 @@ class FBIdentifierPreparer(sql.compiler.IdentifierPreparer):
 
 
 class FBExecutionContext(default.DefaultExecutionContext):
-    def fire_sequence(self, seq):
+    def fire_sequence(self, seq, type_):
         """Get the next value from the sequence using ``gen_id()``."""
 
         return self._execute_scalar(
                 "SELECT gen_id(%s, 1) FROM rdb$database" % 
-                self.dialect.identifier_preparer.format_sequence(seq)
+                self.dialect.identifier_preparer.format_sequence(seq),
+                type_
                 )
 
 
@@ -357,7 +362,6 @@ class FBDialect(default.DefaultDialect):
     requires_name_normalize = True
     supports_empty_insert = False
 
-
     statement_compiler = FBCompiler
     ddl_compiler = FBDDLCompiler
     preparer = FBIdentifierPreparer
@@ -374,7 +378,13 @@ class FBDialect(default.DefaultDialect):
 
     def initialize(self, connection):
         super(FBDialect, self).initialize(connection)
-        self._version_two = self.server_version_info > (2, )
+        self._version_two = ('firebird' in self.server_version_info and \
+                                self.server_version_info >= (2, )
+                            ) or \
+                            ('interbase' in self.server_version_info and \
+                                self.server_version_info >= (6, )
+                            )
+
         if not self._version_two:
             # TODO: whatever other pre < 2.0 stuff goes here
             self.ischema_names = ischema_names.copy()
@@ -382,8 +392,9 @@ class FBDialect(default.DefaultDialect):
             self.colspecs = {
                 sqltypes.DateTime: sqltypes.DATE
             }
-        else:
-            self.implicit_returning = True
+
+        self.implicit_returning = self._version_two  and \
+                            self.__dict__.get('implicit_returning', True)
 
     def normalize_name(self, name):
         # Remove trailing spaces: FB uses a CHAR() type,
@@ -509,7 +520,7 @@ class FBDialect(default.DefaultDialect):
     def get_columns(self, connection, table_name, schema=None, **kw):
         # Query to extract the details of all the fields of the given table
         tblqry = """
-        SELECT DISTINCT r.rdb$field_name AS fname,
+        SELECT r.rdb$field_name AS fname,
                         r.rdb$null_flag AS null_flag,
                         t.rdb$type_name AS ftype,
                         f.rdb$field_sub_type AS stype,
@@ -585,7 +596,8 @@ class FBDialect(default.DefaultDialect):
                 'name' : name,
                 'type' : coltype,
                 'nullable' :  not bool(row['null_flag']),
-                'default' : defvalue
+                'default' : defvalue,
+                'autoincrement':defvalue is None
             }
 
             if orig_colname.lower() == orig_colname:

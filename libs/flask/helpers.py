@@ -11,8 +11,10 @@
 
 from __future__ import with_statement
 
+import imp
 import os
 import sys
+import pkgutil
 import posixpath
 import mimetypes
 from time import time
@@ -249,7 +251,7 @@ def flash(message, category='message'):
     flashed message from the session and to display it to the user,
     the template has to call :func:`get_flashed_messages`.
 
-    .. versionchanged: 0.3
+    .. versionchanged:: 0.3
        `category` parameter added.
 
     :param message: the message to be flashed.
@@ -262,30 +264,40 @@ def flash(message, category='message'):
     session.setdefault('_flashes', []).append((category, message))
 
 
-def get_flashed_messages(with_categories=False):
+def get_flashed_messages(with_categories=False, category_filter=[]):
     """Pulls all flashed messages from the session and returns them.
     Further calls in the same request to the function will return
     the same messages.  By default just the messages are returned,
     but when `with_categories` is set to `True`, the return value will
     be a list of tuples in the form ``(category, message)`` instead.
 
-    Example usage:
+    Filter the flashed messages to one or more categories by providing those
+    categories in `category_filter`.  This allows rendering categories in
+    separate html blocks.  The `with_categories` and `category_filter`
+    arguments are distinct:
 
-    .. sourcecode:: html+jinja
+    * `with_categories` controls whether categories are returned with message
+      text (`True` gives a tuple, where `False` gives just the message text).
+    * `category_filter` filters the messages down to only those matching the
+      provided categories.
 
-        {% for category, msg in get_flashed_messages(with_categories=true) %}
-          <p class=flash-{{ category }}>{{ msg }}
-        {% endfor %}
+    See :ref:`message-flashing-pattern` for examples.
 
     .. versionchanged:: 0.3
        `with_categories` parameter added.
 
+    .. versionchanged:: 0.9
+        `category_filter` parameter added.
+
     :param with_categories: set to `True` to also receive categories.
+    :param category_filter: whitelist of categories to limit return values
     """
     flashes = _request_ctx_stack.top.flashes
     if flashes is None:
         _request_ctx_stack.top.flashes = flashes = session.pop('_flashes') \
             if '_flashes' in session else []
+    if category_filter:
+        flashes = filter(lambda f: f[0] in category_filter, flashes)
     if not with_categories:
         return [x[1] for x in flashes]
     return flashes
@@ -492,14 +504,19 @@ def get_root_path(import_name):
 
     Not to be confused with the package path returned by :func:`find_package`.
     """
-    __import__(import_name)
-    try:
-        directory = os.path.dirname(sys.modules[import_name].__file__)
-        return os.path.abspath(directory)
-    except AttributeError:
-        # this is necessary in case we are running from the interactive
-        # python shell.  It will never be used for production code however
+    loader = pkgutil.get_loader(import_name)
+    if loader is None or import_name == '__main__':
+        # import name is not found, or interactive/main module
         return os.getcwd()
+    # For .egg, zipimporter does not have get_filename until Python 2.7.
+    if hasattr(loader, 'get_filename'):
+        filepath = loader.get_filename(import_name)
+    else:
+        # Fall back to imports.
+        __import__(import_name)
+        filepath = sys.modules[import_name].__file__
+    # filepath is import_name.py for a module, or __init__.py for a package.
+    return os.path.dirname(os.path.abspath(filepath))
 
 
 def find_package(import_name):
@@ -510,25 +527,34 @@ def find_package(import_name):
     import the module.  The prefix is the path below which a UNIX like
     folder structure exists (lib, share etc.).
     """
-    __import__(import_name)
-    root_mod = sys.modules[import_name.split('.')[0]]
-    package_path = getattr(root_mod, '__file__', None)
-    if package_path is None:
-        # support for the interactive python shell
+    root_mod_name = import_name.split('.')[0]
+    loader = pkgutil.get_loader(root_mod_name)
+    if loader is None or import_name == '__main__':
+        # import name is not found, or interactive/main module
         package_path = os.getcwd()
     else:
-        package_path = os.path.abspath(os.path.dirname(package_path))
-    if hasattr(root_mod, '__path__'):
-        package_path = os.path.dirname(package_path)
+        # For .egg, zipimporter does not have get_filename until Python 2.7.
+        if hasattr(loader, 'get_filename'):
+            filename = loader.get_filename(root_mod_name)
+        elif hasattr(loader, 'archive'):
+            # zipimporter's loader.archive points to the .egg or .zip
+            # archive filename is dropped in call to dirname below.
+            filename = loader.archive
+        else:
+            # At least one loader is missing both get_filename and archive:
+            # Google App Engine's HardenedModulesHook
+            #
+            # Fall back to imports.
+            __import__(import_name)
+            filename = sys.modules[import_name].__file__
+        package_path = os.path.abspath(os.path.dirname(filename))
+        # package_path ends with __init__.py for a package
+        if loader.is_package(root_mod_name):
+            package_path = os.path.dirname(package_path)
 
-    # leave the egg wrapper folder or the actual .egg on the filesystem
-    test_package_path = package_path
-    if os.path.basename(test_package_path).endswith('.egg'):
-        test_package_path = os.path.dirname(test_package_path)
-
-    site_parent, site_folder = os.path.split(test_package_path)
+    site_parent, site_folder = os.path.split(package_path)
     py_prefix = os.path.abspath(sys.prefix)
-    if test_package_path.startswith(py_prefix):
+    if package_path.startswith(py_prefix):
         return py_prefix, package_path
     elif site_folder.lower() == 'site-packages':
         parent, folder = os.path.split(site_parent)

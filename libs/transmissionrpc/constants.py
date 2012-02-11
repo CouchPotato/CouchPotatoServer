@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2008-2010 Erik Svensson <erik.public@gmail.com>
+# Copyright (c) 2008-2011 Erik Svensson <erik.public@gmail.com>
 # Licensed under the MIT license.
 
 import logging
@@ -17,20 +17,6 @@ def mirror_dict(source):
 DEFAULT_PORT = 9091
 
 DEFAULT_TIMEOUT = 30.0
-
-TR_STATUS_CHECK_WAIT   = (1<<0)
-TR_STATUS_CHECK        = (1<<1)
-TR_STATUS_DOWNLOAD     = (1<<2)
-TR_STATUS_SEED         = (1<<3)
-TR_STATUS_STOPPED      = (1<<4)
-
-STATUS = mirror_dict({
-    'check pending' : TR_STATUS_CHECK_WAIT,
-    'checking'      : TR_STATUS_CHECK,
-    'downloading'   : TR_STATUS_DOWNLOAD,
-    'seeding'       : TR_STATUS_SEED,
-    'stopped'       : TR_STATUS_STOPPED,
-})
 
 TR_PRI_LOW    = -1
 TR_PRI_NORMAL =  0
@@ -103,6 +89,7 @@ TORRENT_ARGS = {
         'id':                           ('number', 1, None, None, None, ''),
         'isFinished':                   ('boolean', 9, None, None, None, ''),
         'isPrivate':                    ('boolean', 1, None, None, None, ''),
+        'isStalled':                    ('boolean', 14, None, None, None, ''),
         'lastAnnounceTime':             ('number', 1, 7, None, None, ''),
         'lastScrapeTime':               ('number', 1, 7, None, None, ''),
         'leechers':                     ('number', 1, 7, None, None, ''),
@@ -119,13 +106,14 @@ TORRENT_ARGS = {
         'peersConnected':               ('number', 1, None, None, None, ''),
         'peersFrom':                    ('object', 1, None, None, None, ''),
         'peersGettingFromUs':           ('number', 1, None, None, None, ''),
-        'peersKnown':                   ('number', 1, None, None, None, ''),
+        'peersKnown':                   ('number', 1, 13, None, None, ''),
         'peersSendingToUs':             ('number', 1, None, None, None, ''),
         'percentDone':                  ('double', 5, None, None, None, ''),
         'pieces':                       ('string', 5, None, None, None, ''),
         'pieceCount':                   ('number', 1, None, None, None, ''),
         'pieceSize':                    ('number', 1, None, None, None, ''),
         'priorities':                   ('array', 1, None, None, None, ''),
+        'queuePosition':                ('number', 14, None, None, None, ''),
         'rateDownload':                 ('number', 1, None, None, None, ''),
         'rateUpload':                   ('number', 1, None, None, None, ''),
         'recheckProgress':              ('double', 1, None, None, None, ''),
@@ -161,11 +149,12 @@ TORRENT_ARGS = {
         'files-wanted':                 ('array', 1, None, None, None, "A list of file id's that should be downloaded."),
         'files-unwanted':               ('array', 1, None, None, None, "A list of file id's that shouldn't be downloaded."),
         'honorsSessionLimits':          ('boolean', 5, None, None, None, "Enables or disables the transfer to honour the upload limit set in the session."),
-        'ids':                          ('array', 1, None, None, None, 'Local download location.'),
+        'location':                     ('array', 1, None, None, None, 'Local download location.'),
         'peer-limit':                   ('number', 1, None, None, None, 'The peer limit for the torrents.'),
         'priority-high':                ('array', 1, None, None, None, "A list of file id's that should have high priority."),
         'priority-low':                 ('array', 1, None, None, None, "A list of file id's that should have normal priority."),
         'priority-normal':              ('array', 1, None, None, None, "A list of file id's that should have low priority."),
+        'queuePosition':                ('number', 14, None, None, None, 'Position of this transfer in its queue.'),
         'seedIdleLimit':                ('number', 10, None, None, None, 'Seed inactivity limit in minutes.'),
         'seedIdleMode':                 ('number', 10, None, None, None, 'Seed inactivity mode. 0 = Use session limit, 1 = Use transfer limit, 2 = Disable limit.'),
         'seedRatioLimit':               ('double', 5, None, None, None, 'Seeding ratio.'),
@@ -183,7 +172,8 @@ TORRENT_ARGS = {
     'add': {
         'bandwidthPriority':            ('number', 8, None, None, None, 'Priority for this transfer.'),
         'download-dir':                 ('string', 1, None, None, None, 'The directory where the downloaded contents will be saved in.'),
-        'filename':                     ('string', 1, None, None, None, "A filepath or URL to a torrent file or a magnet link."),
+        'cookies':                      ('string', 13, None, None, None, 'One or more HTTP cookie(s).'),
+        'filename':                     ('string', 1, None, None, None, "A file path or URL to a torrent file or a magnet link."),
         'files-wanted':                 ('array', 1, None, None, None, "A list of file id's that should be downloaded."),
         'files-unwanted':               ('array', 1, None, None, None, "A list of file id's that shouldn't be downloaded."),
         'metainfo':                     ('string', 1, None, None, None, 'The content of a torrent file, base64 encoded.'),
@@ -212,6 +202,9 @@ SESSION_ARGS = {
         "config-dir":                   ('string', 8, None, None, None, ''),
         "dht-enabled":                  ('boolean', 6, None, None, None, ''),
         "download-dir":                 ('string', 1, None, None, None, ''),
+        "download-dir-free-space":      ('number', 12, None, None, None, ''),
+        "download-queue-size":          ('number', 14, None, None, None, ''),
+        "download-queue-enabled":       ('boolean', 14, None, None, None, ''),
         "encryption":                   ('string', 1, None, None, None, ''),
         "idle-seeding-limit":           ('number', 10, None, None, None, ''),
         "idle-seeding-limit-enabled":   ('boolean', 10, None, None, None, ''),
@@ -227,6 +220,8 @@ SESSION_ARGS = {
         "peer-port":                    ('number', 5, None, None, None, ''),
         "peer-port-random-on-start":    ('boolean', 5, None, None, None, ''),
         "port-forwarding-enabled":      ('boolean', 1, None, None, None, ''),
+        "queue-stalled-minutes":        ('number', 14, None, None, None, ''),
+        "queue-stalled-enabled":        ('boolean', 14, None, None, None, ''),
         "rename-partial-files":         ('boolean', 8, None, None, None, ''),
         "rpc-version":                  ('number', 4, None, None, None, ''),
         "rpc-version-minimum":          ('number', 4, None, None, None, ''),
@@ -234,6 +229,8 @@ SESSION_ARGS = {
         "script-torrent-done-filename": ('string', 9, None, None, None, ''),
         "seedRatioLimit":               ('double', 5, None, None, None, ''),
         "seedRatioLimited":             ('boolean', 5, None, None, None, ''),
+        "seed-queue-size":              ('number', 14, None, None, None, ''),
+        "seed-queue-enabled":           ('boolean', 14, None, None, None, ''),
         "speed-limit-down":             ('number', 1, None, None, None, ''),
         "speed-limit-down-enabled":     ('boolean', 1, None, None, None, ''),
         "speed-limit-up":               ('number', 1, None, None, None, ''),
@@ -241,6 +238,7 @@ SESSION_ARGS = {
         "start-added-torrents":         ('boolean', 9, None, None, None, ''),
         "trash-original-torrent-files": ('boolean', 9, None, None, None, ''),
         'units':                        ('object', 10, None, None, None, ''),
+        'utp-enabled':                  ('boolean', 13, None, None, None, ''),
         "version":                      ('string', 3, None, None, None, ''),
     },
     'set': {
@@ -252,10 +250,12 @@ SESSION_ARGS = {
         "alt-speed-time-day":           ('number', 5, None, None, None, 'Enables alternate speeds scheduling these days.'),
         "alt-speed-up":                 ('number', 5, None, None, None, 'Alternate session upload speed limit (in Kib/s).'),
         "blocklist-enabled":            ('boolean', 5, None, None, None, 'Enables the block list'),
-        "blocklist-url":                ('string', 11, None, None, None, 'Location of the blocklist. Updated with blocklist-update.'),
+        "blocklist-url":                ('string', 11, None, None, None, 'Location of the block list. Updated with blocklist-update.'),
         "cache-size-mb":                ('number', 10, None, None, None, 'The maximum size of the disk cache in MB'),
         "dht-enabled":                  ('boolean', 6, None, None, None, 'Enables DHT.'),
         "download-dir":                 ('string', 1, None, None, None, 'Set the session download directory.'),
+        "download-queue-size":          ('number', 14, None, None, None, 'Number of parallel downloads.'),
+        "download-queue-enabled":       ('boolean', 14, None, None, None, 'Enable parallel download restriction.'),
         "encryption":                   ('string', 1, None, None, None, 'Set the session encryption mode, one of ``required``, ``preferred`` or ``tolerated``.'),
         "idle-seeding-limit":           ('number', 10, None, None, None, 'The default seed inactivity limit in minutes.'),
         "idle-seeding-limit-enabled":   ('boolean', 10, None, None, None, 'Enables the default seed inactivity limit'),
@@ -272,8 +272,12 @@ SESSION_ARGS = {
         "peer-port-random-on-start":    ('boolean', 5, None, None, None, 'Enables randomized peer port on start of Transmission.'),
         "port-forwarding-enabled":      ('boolean', 1, None, None, None, 'Enables port forwarding.'),
         "rename-partial-files":         ('boolean', 8, None, None, None, 'Appends ".part" to incomplete files'),
+        "queue-stalled-minutes":        ('number', 14, None, None, None, 'Number of minutes of idle that marks a transfer as stalled.'),
+        "queue-stalled-enabled":        ('boolean', 14, None, None, None, 'Enable tracking of stalled transfers.'),
         "script-torrent-done-enabled":  ('boolean', 9, None, None, None, 'Whether or not to call the "done" script.'),
         "script-torrent-done-filename": ('string', 9, None, None, None, 'Filename of the script to run when the transfer is done.'),
+        "seed-queue-size":              ('number', 14, None, None, None, 'Number of parallel uploads.'),
+        "seed-queue-enabled":           ('boolean', 14, None, None, None, 'Enable parallel upload restriction.'),
         "seedRatioLimit":               ('double', 5, None, None, None, 'Seed ratio limit. 1.0 means 1:1 download and upload ratio.'),
         "seedRatioLimited":             ('boolean', 5, None, None, None, 'Enables seed ration limit.'),
         "speed-limit-down":             ('number', 1, None, None, None, 'Download speed limit (in Kib/s).'),
@@ -282,5 +286,6 @@ SESSION_ARGS = {
         "speed-limit-up-enabled":       ('boolean', 1, None, None, None, 'Enables upload speed limiting.'),
         "start-added-torrents":         ('boolean', 9, None, None, None, 'Added torrents will be started right away.'),
         "trash-original-torrent-files": ('boolean', 9, None, None, None, 'The .torrent file of added torrents will be deleted.'),
+        'utp-enabled':                  ('boolean', 13, None, None, None, 'Enables Micro Transport Protocol (UTP).'),
     },
 }

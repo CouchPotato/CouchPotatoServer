@@ -1,10 +1,24 @@
 # ext/sqlsoup.py
-# Copyright (C) 2005-2011 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2012 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 
 """
+
+.. note:: 
+
+   SQLSoup is now its own project.  Documentation
+   and project status are available at:
+   
+   http://pypi.python.org/pypi/sqlsoup
+
+   http://readthedocs.org/docs/sqlsoup
+   
+   SQLSoup will no longer be included with SQLAlchemy as of 
+   version 0.8.
+
+
 Introduction
 ============
 
@@ -152,7 +166,7 @@ construction rules apply here as to the select methods::
 You can similarly update multiple rows at once. This will change the
 book_id to 1 in all loans whose book_id is 2::
 
-    >>> db.loans.update(db.loans.book_id==2, book_id=1)
+    >>> db.loans.filter_by(db.loans.book_id==2).update({'book_id':1})
     >>> db.loans.filter_by(book_id=1).all()
     [MappedLoans(book_id=1,user_name=u'Joe Student',
         loan_date=datetime.datetime(2006, 7, 12, 0, 0))]
@@ -245,8 +259,10 @@ Advanced Use
 Sessions, Transations and Application Integration
 -------------------------------------------------
 
-**Note:** please read and understand this section thoroughly
-before using SqlSoup in any web application.
+.. note::
+
+   Please read and understand this section thoroughly
+   before using SqlSoup in any web application.
 
 SqlSoup uses a ScopedSession to provide thread-local sessions.
 You can get a reference to the current one like this::
@@ -365,9 +381,9 @@ from sqlalchemy import schema, sql, util
 from sqlalchemy.engine.base import Engine
 from sqlalchemy.orm import scoped_session, sessionmaker, mapper, \
                             class_mapper, relationship, session,\
-                            object_session
+                            object_session, attributes
 from sqlalchemy.orm.interfaces import MapperExtension, EXT_CONTINUE
-from sqlalchemy.exceptions import SQLAlchemyError, InvalidRequestError, ArgumentError
+from sqlalchemy.exc import SQLAlchemyError, InvalidRequestError, ArgumentError
 from sqlalchemy.sql import expression
 
 
@@ -390,7 +406,8 @@ class AutoAdd(MapperExtension):
 
     def init_instance(self, mapper, class_, oldinit, instance, args, kwargs):
         session = self.scoped_session()
-        session._save_without_cascade(instance)
+        state = attributes.instance_state(instance)
+        session._save_impl(state)
         return EXT_CONTINUE
 
     def init_failed(self, mapper, class_, oldinit, instance, args, kwargs):
@@ -619,7 +636,7 @@ class SqlSoup(object):
         self.session.expunge_all()
 
     def map_to(self, attrname, tablename=None, selectable=None, 
-                    schema=None, base=None, mapper_args=util.frozendict()):
+                    schema=None, base=None, mapper_args=util.immutabledict()):
         """Configure a mapping to the given attrname.
 
         This is the "master" method that can be used to create any 

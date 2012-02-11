@@ -1,5 +1,5 @@
 # sybase/pyodbc.py
-# Copyright (C) 2005-2011 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2012 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -37,8 +37,8 @@ Currently *not* supported are::
 from sqlalchemy.dialects.sybase.base import SybaseDialect,\
                                             SybaseExecutionContext
 from sqlalchemy.connectors.pyodbc import PyODBCConnector
-import decimal
 from sqlalchemy import types as sqltypes, util, processors
+from sqlalchemy.util.compat import decimal
 
 class _SybNumeric_pyodbc(sqltypes.Numeric):
     """Turns Decimals with adjusted() < -6 into floats.

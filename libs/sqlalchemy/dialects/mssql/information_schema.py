@@ -1,12 +1,12 @@
 # mssql/information_schema.py
-# Copyright (C) 2005-2011 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2012 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 
 # TODO: should be using the sys. catalog with SQL Server, not information schema
 
-from sqlalchemy import Table, MetaData, Column, ForeignKey
+from sqlalchemy import Table, MetaData, Column
 from sqlalchemy.types import String, Unicode, Integer, TypeDecorator
 
 ischema = MetaData()

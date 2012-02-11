@@ -1,5 +1,5 @@
 # orm/collections.py
-# Copyright (C) 2005-2011 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2012 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -108,9 +108,8 @@ import operator
 import sys
 import weakref
 
-import sqlalchemy.exceptions as sa_exc
 from sqlalchemy.sql import expression
-from sqlalchemy import schema, util
+from sqlalchemy import schema, util, exc as sa_exc
 
 
 __all__ = ['collection', 'collection_adapter',
@@ -123,7 +122,7 @@ __instrumentation_mutex = util.threading.Lock()
 def column_mapped_collection(mapping_spec):
     """A dictionary-based collection type with column-based keying.
 
-    Returns a MappedCollection factory with a keying function generated
+    Returns a :class:`.MappedCollection` factory with a keying function generated
     from mapping_spec, which may be a Column or a sequence of Columns.
 
     The key value must be immutable for the lifetime of the object.  You
@@ -154,8 +153,9 @@ def column_mapped_collection(mapping_spec):
 def attribute_mapped_collection(attr_name):
     """A dictionary-based collection type with attribute-based keying.
 
-    Returns a MappedCollection factory with a keying based on the
-    'attr_name' attribute of entities in the collection.
+    Returns a :class:`.MappedCollection` factory with a keying based on the
+    'attr_name' attribute of entities in the collection, where ``attr_name``
+    is the string name of the attribute.
 
     The key value must be immutable for the lifetime of the object.  You
     can not, for example, map on foreign key values if those key values will
@@ -169,7 +169,7 @@ def attribute_mapped_collection(attr_name):
 def mapped_collection(keyfunc):
     """A dictionary-based collection type with arbitrary keying.
 
-    Returns a MappedCollection factory with a keying function generated
+    Returns a :class:`.MappedCollection` factory with a keying function generated
     from keyfunc, a callable that takes an entity and returns a key value.
 
     The key value must be immutable for the lifetime of the object.  You
@@ -186,7 +186,7 @@ class collection(object):
     The decorators fall into two groups: annotations and interception recipes.
 
     The annotating decorators (appender, remover, iterator,
-    internally_instrumented, on_link) indicate the method's purpose and take no
+    internally_instrumented, link) indicate the method's purpose and take no
     arguments.  They are not written with parens::
 
         @collection.appender
@@ -200,10 +200,6 @@ class collection(object):
 
         @collection.removes_return()
         def popitem(self): ...
-
-    Decorators can be specified in long-hand for Python 2.3, or with
-    the class-level dict attribute '__instrumentation__'- see the source
-    for details.
 
     """
     # Bundled as a class solely for ease of use: packaging, doc strings,
@@ -315,7 +311,7 @@ class collection(object):
         return fn
 
     @staticmethod
-    def on_link(fn):
+    def link(fn):
         """Tag the method as a the "linked to attribute" event handler.
 
         This optional event handler will be called when the collection class
@@ -325,7 +321,7 @@ class collection(object):
         that has been linked, or None if unlinking.
 
         """
-        setattr(fn, '_sa_instrument_role', 'on_link')
+        setattr(fn, '_sa_instrument_role', 'link')
         return fn
 
     @staticmethod
@@ -474,8 +470,11 @@ class CollectionAdapter(object):
     to the underlying Python collection, and emits add/remove events for
     entities entering or leaving the collection.
 
-    The ORM uses an CollectionAdapter exclusively for interaction with
+    The ORM uses :class:`.CollectionAdapter` exclusively for interaction with
     entity collections.
+
+    The usage of getattr()/setattr() is currently to allow injection
+    of custom methods, such as to unwrap Zope security proxies.
 
     """
     def __init__(self, attr, owner_state, data):
@@ -559,6 +558,12 @@ class CollectionAdapter(object):
         """Add or restore an entity to the collection, firing no events."""
         getattr(self._data(), '_sa_appender')(item, _sa_initiator=False)
 
+    def append_multiple_without_event(self, items):
+        """Add or restore an entity to the collection, firing no events."""
+        appender = getattr(self._data(), '_sa_appender')
+        for item in items:
+            appender(item, _sa_initiator=False)
+
     def remove_with_event(self, item, initiator=None):
         """Remove an entity from the collection, firing mutation events."""
         getattr(self._data(), '_sa_remover')(item, _sa_initiator=initiator)
@@ -569,13 +574,17 @@ class CollectionAdapter(object):
 
     def clear_with_event(self, initiator=None):
         """Empty the collection, firing a mutation event for each entity."""
+
+        remover = getattr(self._data(), '_sa_remover')
         for item in list(self):
-            self.remove_with_event(item, initiator)
+            remover(item, _sa_initiator=initiator)
 
     def clear_without_event(self):
         """Empty the collection, firing no events."""
+
+        remover = getattr(self._data(), '_sa_remover')
         for item in list(self):
-            self.remove_without_event(item)
+            remover(item, _sa_initiator=False)
 
     def __iter__(self):
         """Iterate over entities in the collection."""
@@ -651,14 +660,11 @@ def bulk_replace(values, existing_adapter, new_adapter):
     instances in ``existing_adapter`` not present in ``values`` will have
     remove events fired upon them.
 
-    values
-      An iterable of collection member instances
+    :param values: An iterable of collection member instances
 
-    existing_adapter
-      A CollectionAdapter of instances to be replaced
+    :param existing_adapter: A :class:`.CollectionAdapter` of instances to be replaced
 
-    new_adapter
-      An empty CollectionAdapter to load with ``values``
+    :param new_adapter: An empty :class:`.CollectionAdapter` to load with ``values``
 
 
     """
@@ -788,7 +794,7 @@ def _instrument_class(cls):
         if hasattr(method, '_sa_instrument_role'):
             role = method._sa_instrument_role
             assert role in ('appender', 'remover', 'iterator',
-                            'on_link', 'converter')
+                            'link', 'converter')
             roles[role] = name
 
         # transfer instrumentation requests from decorated function
@@ -1160,7 +1166,7 @@ def _dict_decorators():
     l.pop('Unspecified')
     return l
 
-if util.py3k:
+if util.py3k_warning:
     _set_binop_bases = (set, frozenset)
 else:
     import sets

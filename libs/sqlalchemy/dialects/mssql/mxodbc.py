@@ -1,5 +1,5 @@
 # mssql/mxodbc.py
-# Copyright (C) 2005-2011 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2012 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -51,15 +51,11 @@ of ``False`` will uncondtionally use string-escaped parameters.
 
 """
 
-import re
-import sys
 
 from sqlalchemy import types as sqltypes
-from sqlalchemy import util
 from sqlalchemy.connectors.mxodbc import MxODBCConnector
 from sqlalchemy.dialects.mssql.pyodbc import MSExecutionContext_pyodbc
-from sqlalchemy.dialects.mssql.base import (MSExecutionContext, MSDialect, 
-                                            MSSQLCompiler,
+from sqlalchemy.dialects.mssql.base import (MSDialect, 
                                             MSSQLStrictCompiler,
                                             _MSDateTime, _MSDate, TIME)
 

@@ -16,7 +16,7 @@ class TheMovieDb(MovieProvider):
         addEvent('movie.info_by_tmdb', self.getInfoByTMDBId)
 
         # Use base wrapper
-        tmdb.Config.api_key = self.conf('api_key')
+        tmdb.configure(self.conf('api_key'))
 
     def byHash(self, file):
         ''' Find movie by hash '''

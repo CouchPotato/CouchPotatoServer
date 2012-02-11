@@ -56,7 +56,7 @@ class Subliminal(object):
     def __init__(self, cache_dir=None, workers=None, multi=False, force=False,
                  max_depth=None, filemode=None, sort_order=None, plugins=None, languages=None):
         self.multi = multi
-        self.sort_order = sort_order or [LANGUAGE_INDEX, PLUGIN_INDEX, PLUGIN_CONFIDENCE]
+        self.sort_order = sort_order or [LANGUAGE_INDEX, PLUGIN_INDEX, PLUGIN_CONFIDENCE, MATCHING_CONFIDENCE]
         self.force = force
         self.max_depth = max_depth or 3
         self.taskQueue = Queue.PriorityQueue()

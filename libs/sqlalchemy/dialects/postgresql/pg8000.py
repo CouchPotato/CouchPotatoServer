@@ -1,5 +1,5 @@
 # postgresql/pg8000.py
-# Copyright (C) 2005-2011 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2012 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -27,10 +27,8 @@ Passing data from/to the Interval type is not supported as of
 yet.
 
 """
-import decimal
-
-from sqlalchemy.engine import default
 from sqlalchemy import util, exc
+from sqlalchemy.util.compat import decimal
 from sqlalchemy import processors
 from sqlalchemy import types as sqltypes
 from sqlalchemy.dialects.postgresql.base import PGDialect, \
@@ -57,6 +55,11 @@ class _PGNumeric(sqltypes.Numeric):
             else:
                 raise exc.InvalidRequestError(
                             "Unknown PG numeric type: %d" % coltype)
+
+
+class _PGNumericNoBind(_PGNumeric):
+    def bind_processor(self, dialect):
+        return None
 
 class PGExecutionContext_pg8000(PGExecutionContext):
     pass
@@ -91,11 +94,13 @@ class PGDialect_pg8000(PGDialect):
     execution_ctx_cls = PGExecutionContext_pg8000
     statement_compiler = PGCompiler_pg8000
     preparer = PGIdentifierPreparer_pg8000
+    description_encoding = 'use_encoding'
 
     colspecs = util.update_copy(
         PGDialect.colspecs,
         {
-            sqltypes.Numeric : _PGNumeric,
+            sqltypes.Numeric : _PGNumericNoBind,
+            sqltypes.Float : _PGNumeric
         }
     )
 
@@ -110,7 +115,7 @@ class PGDialect_pg8000(PGDialect):
         opts.update(url.query)
         return ([], opts)
 
-    def is_disconnect(self, e):
+    def is_disconnect(self, e, connection, cursor):
         return "connection is closed" in str(e)
 
 dialect = PGDialect_pg8000

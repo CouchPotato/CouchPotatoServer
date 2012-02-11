@@ -66,13 +66,24 @@ str_to_datetime(PyObject *self, PyObject *arg)
 {
     const char *str;
     unsigned int year, month, day, hour, minute, second, microsecond = 0;
+    PyObject *err_repr;
 
     if (arg == Py_None)
         Py_RETURN_NONE;
 
     str = PyString_AsString(arg);
-    if (str == NULL)
+    if (str == NULL) {
+        err_repr = PyObject_Repr(arg);
+        if (err_repr == NULL)
+            return NULL;
+        PyErr_Format(
+                PyExc_ValueError,
+                "Couldn't parse datetime string '%.200s' "
+                "- value is not a string.",
+                PyString_AsString(err_repr));
+        Py_DECREF(err_repr);
         return NULL;
+    }
 
     /* microseconds are optional */
     /*
@@ -82,7 +93,14 @@ str_to_datetime(PyObject *self, PyObject *arg)
     */
     if (sscanf(str, "%4u-%2u-%2u %2u:%2u:%2u.%6u", &year, &month, &day,
                &hour, &minute, &second, &microsecond) < 6) {
-        PyErr_SetString(PyExc_ValueError, "Couldn't parse datetime string.");
+        err_repr = PyObject_Repr(arg);
+        if (err_repr == NULL)
+            return NULL;
+        PyErr_Format(
+                PyExc_ValueError,
+                "Couldn't parse datetime string: %.200s",
+                PyString_AsString(err_repr));
+        Py_DECREF(err_repr);
         return NULL;
     }
     return PyDateTime_FromDateAndTime(year, month, day,
@@ -94,13 +112,23 @@ str_to_time(PyObject *self, PyObject *arg)
 {
     const char *str;
     unsigned int hour, minute, second, microsecond = 0;
+    PyObject *err_repr;
 
     if (arg == Py_None)
         Py_RETURN_NONE;
 
     str = PyString_AsString(arg);
-    if (str == NULL)
+    if (str == NULL) {
+        err_repr = PyObject_Repr(arg);
+        if (err_repr == NULL)
+            return NULL;
+        PyErr_Format(
+                PyExc_ValueError,
+                "Couldn't parse time string '%.200s' - value is not a string.",
+                PyString_AsString(err_repr));
+        Py_DECREF(err_repr);
         return NULL;
+    }
 
     /* microseconds are optional */
     /*
@@ -110,7 +138,14 @@ str_to_time(PyObject *self, PyObject *arg)
     */
     if (sscanf(str, "%2u:%2u:%2u.%6u", &hour, &minute, &second,
                &microsecond) < 3) {
-        PyErr_SetString(PyExc_ValueError, "Couldn't parse time string.");
+        err_repr = PyObject_Repr(arg);
+        if (err_repr == NULL)
+            return NULL;
+        PyErr_Format(
+                PyExc_ValueError,
+                "Couldn't parse time string: %.200s",
+                PyString_AsString(err_repr));
+        Py_DECREF(err_repr);
         return NULL;
     }
     return PyTime_FromTime(hour, minute, second, microsecond);
@@ -121,16 +156,33 @@ str_to_date(PyObject *self, PyObject *arg)
 {
     const char *str;
     unsigned int year, month, day;
+    PyObject *err_repr;
 
     if (arg == Py_None)
         Py_RETURN_NONE;
 
     str = PyString_AsString(arg);
-    if (str == NULL)
+    if (str == NULL) {
+        err_repr = PyObject_Repr(arg);
+        if (err_repr == NULL)
+            return NULL;
+        PyErr_Format(
+                PyExc_ValueError,
+                "Couldn't parse date string '%.200s' - value is not a string.",
+                PyString_AsString(err_repr));
+        Py_DECREF(err_repr);
         return NULL;
+    }
 
     if (sscanf(str, "%4u-%2u-%2u", &year, &month, &day) != 3) {
-        PyErr_SetString(PyExc_ValueError, "Couldn't parse date string.");
+        err_repr = PyObject_Repr(arg);
+        if (err_repr == NULL)
+            return NULL;
+        PyErr_Format(
+                PyExc_ValueError,
+                "Couldn't parse date string: %.200s",
+                PyString_AsString(err_repr));
+        Py_DECREF(err_repr);
         return NULL;
     }
     return PyDate_FromDate(year, month, day);
