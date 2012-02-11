@@ -91,7 +91,7 @@ class Settings(object):
             return tryInt(self.p.get(section, option))
 
     def getUnicode(self, section, option):
-        value = self.p.get(section, option)
+        value = self.p.get(section, option).decode('unicode_escape')
         return toUnicode(value).strip()
 
     def getValues(self):
@@ -153,7 +153,7 @@ class Settings(object):
         # See if a value handler is attached, use that as value
         new_value = fireEvent('setting.save.%s.%s' % (section, option), value, single = True)
 
-        self.set(section, option, new_value if new_value else value)
+        self.set(section, option, (new_value if new_value else value).encode('unicode_escape'))
         self.save()
 
         return jsonified({
