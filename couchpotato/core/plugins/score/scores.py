@@ -18,7 +18,7 @@ name_scores = [
     'imbt:1', 'cocain:1', 'vomit:1', 'fico:1', 'arrow:1', 'pukka:1', 'prism:1', 'devise:1', 'esir:1', 'ctrlhd:1',
     'metis:1', 'diamond:1', 'wiki:1', 'cbgb:1', 'crossbow:1', 'sinners:1', 'amiable:1', 'refined:1', 'twizted:1', 'felony:1', 'hubris:1', 'machd:1',
     # Extras
-    'extras:-40',
+    'extras:-40', 'trilogy:-40',
 ]
 
 def nameScore(name, year):
