@@ -99,8 +99,7 @@ def runCouchPotato(options, base_path, args, desktop = None):
         atexit.register(cleanup)
 
     # Disable server access log
-    server_log = logging.getLogger('werkzeug')
-    server_log.disabled = True
+    logging.getLogger('werkzeug').setLevel(logging.WARNING)
 
     # Only run once when debugging
     fire_load = False

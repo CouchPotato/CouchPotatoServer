@@ -15,8 +15,7 @@ class Growl(Notification):
     def __init__(self):
         super(Growl, self).__init__()
 
-        logger = logging.getLogger('gntp.notifier')
-        logger.disabled = True
+        logging.getLogger('gntp').setLevel(logging.WARNING)
 
         try:
             def startGrowl():
