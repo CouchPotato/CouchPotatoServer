@@ -6,6 +6,7 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
 from flask import request
+from uuid import uuid4
 import os
 import thread
 import time
@@ -36,6 +37,7 @@ class Core(Plugin):
         addEvent('app.api_url', self.createApiUrl)
 
         addEvent('setting.save.core.password', self.md5Password)
+        addEvent('setting.save.core.api_key', self.checkApikey)
 
         self.removeRestartFile()
 
@@ -62,6 +64,9 @@ class Core(Plugin):
 
     def md5Password(self, value):
         return md5(value) if value else ''
+
+    def checkApikey(self, value):
+        return value if value and len(value) > 3 else uuid4().hex
 
     def available(self):
         return jsonified({
