@@ -73,10 +73,7 @@
 				padding:  0 9px 10px 30px;
 				margin: 0;
 				border-bottom: 1px solid #333;
-				
 				box-shadow: 0 1px 0px rgba(255,255,255, 0.15);
-				-moz-box-shadow: 0 1px 0px rgba(255,255,255, 0.15);
-				-webkit-box-shadow: 0 1px 0px rgba(255,255,255, 0.15);
 			}
 			.page fieldset h2 .hint {
 				font-size: 12px;
@@ -159,10 +156,7 @@
 		padding: 5px 3px;
 		margin: 0;
 		width: 30%;
-
 		border-radius: 3px;
-		-webkit-border-radius: 3px;
-		-moz-border-radius: 3px;
 	}
 		.page .input.xsmall { width: 5% }
 		.page .input.small { width: 10% }
@@ -209,11 +203,7 @@
 		margin: 28px 0 20px -4px;
 		background: #5c697b;
 		border-radius: 3px;
-		-webkit-border-radius: 3px;
-		-moz-border-radius: 3px;
 		box-shadow: 0 0 50px rgba(0,0,0,0.55);
-		-moz-box-shadow: 0 0 50px rgba(0,0,0,0.55);
-		-webkit-box-shadow: 0 0 50px rgba(0,0,0,0.55);
 	}
 	
 		.page .directory_list .pointer {
@@ -323,8 +313,6 @@
 			
 		.page .tag_input .selection {
 			border-radius: 0 10px 10px 0;
-			-moz-border-radius: 0 10px 10px 0;
-			-webkit-border-radius: 0 10px 10px 0;
 			height: 26px;
 		}
 		
@@ -337,8 +325,6 @@
 		line-height: 20px;
 		padding: 3px 0;
 		border-radius: 3px;
-		-moz-border-radius: 3px;
-		-webkit-border-radius: 3px;
 		cursor: text;
 		width: 31%;
 		margin: 0 !important;
@@ -346,8 +332,6 @@
 		.page .tag_input:hover > ul {
 			width: 50%;
 			border-radius: 3px 0 0 3px;
-			-moz-border-radius: 3px 0 0 3px;
-			-webkit-border-radius: 3px 0 0 3px;
 		}
 		.page .tag_input:hover .formHint { display: none; }
 		
@@ -368,8 +352,6 @@
 				cursor: grab;
 				padding: 0;
 				border-radius: 2px;
-				-moz-border-radius: 2px;
-				-webkit-border-radius: 2px;
 			}
 			.page .tag_input > ul:hover > li.choice {
 				background: url('../images/checks.png') no-repeat 94% -53px, -webkit-gradient(
@@ -431,8 +413,6 @@
 				position: absolute;
 				margin: -9px 0 0 -16px;
 				border-radius: 30px 30px 0 0;
-				-webkit-border-radius: 30px 30px 0 0;
-				-moz-border-radius: 30px 30px 0 0;
 				cursor: pointer;
 				background: url('../../images/icon.delete.png') no-repeat center 2px, -webkit-gradient(
 				    linear,
@@ -527,8 +507,6 @@
 			margin: 20px 0 0;
 			border-left: 1px solid #333;
 			box-shadow: -1px 0 0 rgba(255,255,255, 0.15);
-			-moz-box-shadow: -1px 0 0 rgba(255,255,255, 0.15);
-			-webkit-box-shadow: -1px 0 0 rgba(255,255,255, 0.15);
 		}
 			.page .tab_about .donate form {
 				padding: 10px 0 0;

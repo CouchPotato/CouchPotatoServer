@@ -24,10 +24,7 @@
 	width: 100%;
 	left: 0;
 	z-index: 2;
-
 	box-shadow: 0 0 50px rgba(0,0,0,0.55);
-	-moz-box-shadow: 0 0 50px rgba(0,0,0,0.55);
-	-webkit-box-shadow: 0 0 50px rgba(0,0,0,0.55);
 }
 
 	.page.wizard .tab_wrapper .tabs {

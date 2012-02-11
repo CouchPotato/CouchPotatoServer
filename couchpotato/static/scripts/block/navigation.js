@@ -19,7 +19,7 @@ Block.Navigation = new Class({
 				}
 			})
 		)
-		
+
 		new ScrollSpy({
 			min: 400,
 			onLeave: function(){
@@ -29,7 +29,7 @@ Block.Navigation = new Class({
 				self.backtotop.fade('in')
 			}
 		})
-	
+
 	},
 
 	addTab: function(tab){

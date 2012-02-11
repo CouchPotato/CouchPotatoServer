@@ -2,6 +2,7 @@
 	http://localhost:5000/static/style/main.css
 	http://192.168.1.20:5000/static/style/main.css
 	http://127.0.0.1:5000/static/style/main.css
+	http://127.0.0.1:5000/v2/_api_/static/style/main.css
 */
 
 html {
@@ -28,9 +29,6 @@ body {
 
 pre {
 	white-space: pre-wrap;
-	white-space: -moz-pre-wrap;
-	white-space: -pre-wrap;
-	white-space: -o-pre-wrap;
 	word-wrap: break-word;
 }
 
@@ -102,9 +100,7 @@ a:hover { color: #f3f3f3; }
 	right: 0;
 	padding: 10px 10px 10px 40px;
 	background: #f7f7f7 url('../images/toTop.gif') no-repeat 10px center;
-	border-radius: 5px 0 0 0; 
-	-moz-border-radius: 5px 0 0 0; 
-	-webkit-border-radius: 5px 0 0 0; 
+	border-radius: 5px 0 0 0;  
 }
 	
 form {
@@ -124,14 +120,7 @@ body > .spinner, .mask{
     text-decoration: none;
     font-weight: bold;
     line-height: 1;
-    
     border-radius: 5px;
-    -moz-border-radius: 5px;
-    -webkit-border-radius: 5px;
-    
-	box-shadow: 0 1px 3px rgba(0,0,0,0.5);
-	-moz-box-shadow: 0 1px 3px rgba(0,0,0,0.5);
-	-webkit-box-shadow: 0 1px 3px rgba(0,0,0,0.5);
 	box-shadow: 0 1px 3px rgba(0,0,0,0.5);
 	text-shadow: 0 -1px 1px rgba(0,0,0,0.25);
 	border-bottom: 1px solid rgba(0,0,0,0.25);
@@ -162,9 +151,6 @@ body > .spinner, .mask{
 	background: #4e5969;
 	padding:10px;
 	height: 60px;
-	box-shadow:  0 0 30px rgba(0,0,0,0.1);
-	-moz-box-shadow:  0 0 30px rgba(0,0,0,0.1);
-	-webkit-box-shadow:  0 0 30px rgba(0,0,0,0.1);
 	position: fixed;
 	width: 99%;
 	z-index: 2;
@@ -236,10 +222,7 @@ body > .spinner, .mask{
 			margin: -10px 0 0 -40px;
 			background: #4e5969;
 			padding: 5px 0;
-			
 		    border-radius: 0 0 5px 5px;
-		    -moz-border-radius: 0 0 5px 5px;
-		    -webkit-border-radius: 0 0 5px 5px;
 		    color: rgba(255,255,255,.4);
 		    text-shadow: none;
 		    font-weight: normal;
@@ -253,14 +236,8 @@ body > .spinner, .mask{
 		padding: 15px 0 20px;
 		background: #ff6134;
 		font-size: 26px;
-
 	    border-radius: 0 0 5px 5px;
-	    -moz-border-radius: 0 0 5px 5px;
-	    -webkit-border-radius: 0 0 5px 5px;
-
 		box-shadow: 0 2px 1px rgba(0,0,0, 0.3);
-		-moz-box-shadow:  0 2px 1px rgba(0,0,0, 0.3);
-		-webkit-box-shadow: 0 2px 1px rgba(0,0,0, 0.3);
 	}
 
 		.header .message a {
@@ -293,14 +270,9 @@ body > .spinner, .mask{
 	.select .selection {
 		display: inline-block;
 		padding: 0 30px 0 20px;
-		
 		border-radius:30px;
-		-moz-border-radius: 30px;
-		-webkit-border-radius: 30px;
 		
 		box-shadow: 0 1px 1px rgba(0,0,0,0.35), inset 0 1px 0px rgba(255,255,255,0.20);
-		-moz-box-shadow: 0 1px 1px rgba(0,0,0,0.35), inset 0 1px 0px rgba(255,255,255,0.20);
-		-webkit-box-shadow: 0 1px 1px rgba(0,0,0,0.35), inset 0 1px 0px rgba(255,255,255,0.20);
 		
 		background: url('../images/checks.png') no-repeat 94% -53px, -webkit-gradient(
 		    linear,
@@ -322,8 +294,6 @@ body > .spinner, .mask{
 			border-right: 1px solid rgba(0,0,0,0.2);
 			
 			box-shadow: 1px 0 0 rgba(255,255,255,0.15);
-			-moz-box-shadow: 1px 0 0 rgba(255,255,255,0.15);
-			-webkit-box-shadow: 1px 0 0 rgba(255,255,255,0.15);
 		}
 
 	.select .menu {
@@ -338,12 +308,7 @@ body > .spinner, .mask{
 		position: absolute;
 		margin: 25px 0 0 0;
 		box-shadow: 0 1px 2px rgba(0,0,0,0.4);
-		-moz-box-shadow: 0 1px 2px rgba(0,0,0,0.4);
-		-webkit-box-shadow: 0 1px 2px rgba(0,0,0,0.4);
 		border-radius:3px;
-		-moz-border-radius: 3px;
-		-webkit-border-radius: 3px;
-		
 		z-index: 3;
 	}
 		.select.active .list { 
@@ -371,20 +336,14 @@ body > .spinner, .mask{
 	color: #fff;
 	border: 0;
 	border-radius:3px;
-	-moz-border-radius: 3px;
-	-webkit-border-radius: 3px;
 	background: #282d34;
 	box-shadow: inset 0 1px 8px rgba(0,0,0,0.25), 0 1px 0px rgba(255,255,255,0.25);
-	-moz-box-shadow: inset 0 1px 8px rgba(0,0,0,0.25), 0 1px 0px rgba(255,255,255,0.25);
-	-webkit-box-shadow: inset 0 1px 8px rgba(0,0,0,0.25), 0 1px 0px rgba(255,255,255,0.25);
 }
 
 	.inlay.light {
 		background: #47515f;
 		outline: none;
 		box-shadow: inset 0 1px 8px rgba(0,0,0,0.05), 0 1px 0px rgba(255,255,255,0.15);
-		-moz-box-shadow: inset 0 1px 8px rgba(0,0,0,0.05), 0 1px 0px rgba(255,255,255,0.15);
-		-webkit-box-shadow: inset 0 1px 8px rgba(0,0,0,0.05), 0 1px 0px rgba(255,255,255,0.15);
 	}
 	
 	.inlay:focus {
@@ -394,12 +353,8 @@ body > .spinner, .mask{
 
 .onlay, .inlay .selected, .inlay > li:hover, .inlay > li.active {
 	border-radius:3px;
-	-moz-border-radius: 3px;
-	-webkit-border-radius: 3px;
 	border: 1px solid #252930;
 	box-shadow: inset 0 1px 0px rgba(255,255,255,0.20), 0 0 3px rgba(0,0,0, 0.2);
-	-moz-box-shadow: inset 0 1px 0px rgba(255,255,255,0.20), 0 0 3px rgba(0,0,0, 0.2);
-	-webkit-box-shadow: inset 0 1px 0px rgba(255,255,255,0.20), 0 0 3px rgba(0,0,0, 0.2);
 	background-image: -webkit-gradient(
 	    linear,
 	    left bottom,
@@ -423,14 +378,8 @@ body > .spinner, .mask{
 	z-index:101;
 	text-align: center;
 	background: #5c697b;
-	
 	border-radius: 3px;
-	-webkit-border-radius: 3px;
-	-moz-border-radius: 3px;
-	
 	box-shadow: 0 0 50px rgba(0,0,0,0.55);
-	-moz-box-shadow: 0 0 50px rgba(0,0,0,0.55);
-	-webkit-box-shadow: 0 0 50px rgba(0,0,0,0.55);
 }
 
 	.question h3 {

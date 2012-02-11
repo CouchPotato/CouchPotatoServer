@@ -10,10 +10,7 @@
 
 	.movies .movie {
 		position: relative;
-
 		border-radius: 4px;
-		-moz-border-radius: 4px;
-		-webkit-border-radius: 4px;
 		margin: 10px 0;
 		
 		overflow: hidden;
@@ -39,10 +36,7 @@
 			line-height: 0;
 			overflow: hidden;
 			height: 180px;
-			
 			border-radius: 4px 0 0 4px;
-			-moz-border-radius: 4px 0 0 4px;
-			-webkit-border-radius: 4px 0 0 4px;
 			
 		}
 		.movies .poster img, .options .poster img {
@@ -172,7 +166,6 @@
 						min-height: 24px;
 						white-space: nowrap;
 						text-overflow: ellipsis;
-						-moz-text-overflow: ellipsis;
 						text-align: center;
 						vertical-align: top;
 						border-left: 1px solid rgba(255, 255, 255, 0.1);
@@ -229,14 +222,7 @@
 	padding: 0 0 1px;
 	margin: 0;
 	float: left;
-	
-	-webkit-user-select: none;
-	-khtml-user-select: none;
-	-moz-user-select: none;
-	-ms-user-select: none;
-	-o-user-select: none;
 	user-select: none;
-	
 }
 
 	.movies .alph_nav li {
