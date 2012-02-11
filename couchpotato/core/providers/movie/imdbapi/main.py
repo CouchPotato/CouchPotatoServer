@@ -69,8 +69,8 @@ class IMDBAPI(MovieProvider):
                 'year': movie.get('Year', ''),
                 'plot': movie.get('Plot', ''),
                 'genres': movie.get('Genre').split(','),
-                'director': movie.get('Director', '').split(','),
-                'writer': movie.get('Writer', '').split(','),
+                'directors': movie.get('Director', '').split(','),
+                'writers': movie.get('Writer', '').split(','),
                 'actors': movie.get('Actors', '').split(','),
             }
         except:
