@@ -532,6 +532,7 @@
 			margin: 0;
 			font-style: italic;
 		}
+		.page .tab_about .info dd.version { cursor: pointer; }
 			
 	.page .tab_about .group_actions > div {
 		padding: 30px;

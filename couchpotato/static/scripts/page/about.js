@@ -85,10 +85,16 @@ var AboutSettingTab = new Class({
 		}).inject(self.content).adopt(
 			new Element('dl.info').adopt(
 				new Element('dt[text=Version]'),
-				self.version_text = new Element('dd', {
+				self.version_text = new Element('dd.version', {
 					'text': 'Getting version...',
 					'events': {
-						'click': self.checkForUpdate.bind(self)
+						'click': self.checkForUpdate.bind(self),
+						'mouseenter': function(){
+							this.set('text', 'Check for updates')
+						},
+						'mouseleave': function(){
+							self.fillVersion(Updater.getInfo())
+						}
 					}
 				}),
 				new Element('dt[text=Directories]'),
@@ -137,6 +143,9 @@ var AboutSettingTab = new Class({
 		Updater.check(function(json){
 			self.fillVersion(json)
 		})
+
+		App.blockPage('Please wait. If this takes to long, something must have gone wrong.', 'Checking for updates');
+		App.checkAvailable(3000);
 	}
 
 });

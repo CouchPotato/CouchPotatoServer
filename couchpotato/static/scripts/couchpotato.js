@@ -135,7 +135,7 @@ var CouchPotato = new Class({
 		Api.request('app.shutdown', {
 			'onComplete': self.blockPage.bind(self)
 		});
-		self.checkAvailable();
+		self.checkAvailable(1000);
 	},
 
 	restart: function(){
@@ -143,32 +143,36 @@ var CouchPotato = new Class({
 
 		self.blockPage('Restarting... please wait. If this takes to long, something must have gone wrong.');
 		Api.request('app.restart');
-		self.checkAvailable();
+		self.checkAvailable(1000);
 	},
 
-	checkAvailable: function(){
+	checkAvailable: function(delay){
 		var self = this;
 
-		Api.request('app.available', {
-			'onFailure': function(){
-				self.checkAvailable.delay(1000, self);
-				self.fireEvent('unload');
-			},
-			'onSuccess': function(){
-				self.unBlockPage();
-				self.fireEvent('load');
-			}
-		});
+		(function(){
+			
+			Api.request('app.available', {
+				'onFailure': function(){
+					self.checkAvailable.delay(1000, self);
+					self.fireEvent('unload');
+				},
+				'onSuccess': function(){
+					self.unBlockPage();
+					self.fireEvent('load');
+				}
+			});
+		
+		}).delay(delay || 0)
 	},
 
-	blockPage: function(message){
+	blockPage: function(message, title){
 		var self = this;
 
 		if(!self.mask){
 			var body = $(document.body);
 			self.mask = new Spinner(document.body, {
 				'message': new Element('div').adopt(
-					new Element('h1', {'text': 'Unavailable.'}),
+					new Element('h1', {'text': title || 'Unavailable'}),
 					new Element('div', {'text': message || 'Something must have crashed.. check the logs ;)'})
 				)
 			});
