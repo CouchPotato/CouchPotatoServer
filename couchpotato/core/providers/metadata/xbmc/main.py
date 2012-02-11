@@ -86,6 +86,16 @@ class XBMC(MetaDataBase):
             name = SubElement(actors, 'name')
             name.text = toUnicode(actor)
 
+        # Directors
+        for director in movie_info.get('directors', []):
+            director = SubElement(nfoxml, 'director')
+            director.text = toUnicode(director)
+
+        # Writers
+        for writer in movie_info.get('writers', []):
+            writers = SubElement(nfoxml, 'credits')
+            writers.text = toUnicode(writer)
+
 
         # Clean up the xml and return it
         nfoxml = xml.dom.minidom.parseString(tostring(nfoxml))
