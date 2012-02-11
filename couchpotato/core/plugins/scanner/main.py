@@ -280,6 +280,8 @@ class Scanner(Plugin):
                 group['files']['movie'] = self.getDVDFiles(group['unsorted_files'])
             else:
                 group['files']['movie'] = self.getMediaFiles(group['unsorted_files'])
+
+            log.debug('Getting metadata for %s' % identifier)
             group['meta_data'] = self.getMetaData(group)
 
             # Get parent dir from movie files

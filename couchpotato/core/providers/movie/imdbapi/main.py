@@ -68,7 +68,7 @@ class IMDBAPI(MovieProvider):
                 'released': movie.get('Released', ''),
                 'year': movie.get('Year', ''),
                 'plot': movie.get('Plot', ''),
-                'genres': movie.get('Genre').split(','),
+                'genres': movie.get('Genre', '').split(','),
                 'directors': movie.get('Director', '').split(','),
                 'writers': movie.get('Writer', '').split(','),
                 'actors': movie.get('Actors', '').split(','),
