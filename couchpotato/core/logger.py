@@ -34,15 +34,17 @@ class CPLog(object):
         except:
             pass
 
-        for replace in self.replace_private:
-            msg = re.sub('(%s=)[^\&]+' % replace, '%s=xxx' % replace, msg)
+        from couchpotato.environment import Env
+        if not Env.setting('development'):
 
-        # Replace api key
-        try:
-            from couchpotato.environment import Env
-            api_key = Env.setting('api_key')
-            msg = msg.replace(api_key, 'API_KEY')
-        except:
-            pass
+            for replace in self.replace_private:
+                msg = re.sub('(%s=)[^\&]+' % replace, '%s=xxx' % replace, msg)
+
+            # Replace api key
+            try:
+                api_key = Env.setting('api_key')
+                msg = msg.replace(api_key, 'API_KEY')
+            except:
+                pass
 
         return msg
