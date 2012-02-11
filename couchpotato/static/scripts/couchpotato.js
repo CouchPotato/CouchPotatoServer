@@ -65,6 +65,16 @@ var CouchPotato = new Class({
 			self.content = new Element('div.content'),
 			self.block.footer = new Block.Footer(self, {})
 		);
+		
+		new ScrollSpy({
+			min: 10,
+			onLeave: function(){
+				$(self.block.header).removeClass('with_shadow')
+			},
+			onEnter: function(){
+				$(self.block.header).addClass('with_shadow')
+			}
+		})
 	},
 
 	createPages: function(){

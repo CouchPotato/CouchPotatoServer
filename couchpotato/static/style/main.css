@@ -168,7 +168,12 @@ body > .spinner, .mask{
 	position: fixed;
 	width: 99%;
 	z-index: 2;
+	box-shadow:  0 0 5px rgba(0,0,0,0.1);
+	transition: box-shadow .4s cubic-bezier(0.9,0,0.1,1);
 }
+	.header.with_shadow {
+		box-shadow:  0 0 50px rgba(0,0,0,0.3);
+	}
 
 .header > div {
 	width: 960px;
