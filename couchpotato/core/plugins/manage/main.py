@@ -23,7 +23,7 @@ class Manage(Plugin):
         addEvent('manage.update', self.updateLibrary)
         addApiView('manage.update', self.updateLibraryView)
 
-        if not Env.setting('development'):
+        if not Env.get('dev'):
             addEvent('app.load', self.updateLibrary)
 
     def updateLibraryView(self):

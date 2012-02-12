@@ -64,7 +64,7 @@ class Updater(Plugin):
             return
 
         log.info('Checking for new version on github for %s' % self.repo_name)
-        if not Env.setting('development'):
+        if not Env.get('dev'):
             self.repo.fetch()
 
         current_branch = self.repo.getCurrentBranch().name

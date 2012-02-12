@@ -8,6 +8,7 @@ class Env(object):
     _encoding = ''
     _uses_git = False
     _debug = False
+    _dev = False
     _settings = Settings()
     _loader = Loader()
     _cache = None

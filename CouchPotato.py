@@ -15,7 +15,7 @@ sys.path.insert(0, os.path.join(base_path, 'libs'))
 
 class Loader(object):
 
-    do_restart = True
+    do_restart = False
 
     def __init__(self):
 
@@ -50,6 +50,8 @@ class Loader(object):
         try:
             from couchpotato.runner import runCouchPotato
             runCouchPotato(self.options, base_path, sys.argv[1:])
+        except KeyboardInterrupt:
+            pass
         except Exception, e:
             self.log.critical(e)
 

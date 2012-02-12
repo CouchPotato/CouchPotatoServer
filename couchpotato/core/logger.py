@@ -35,7 +35,7 @@ class CPLog(object):
             pass
 
         from couchpotato.environment import Env
-        if not Env.setting('development'):
+        if not Env.get('dev'):
 
             for replace in self.replace_private:
                 msg = re.sub('(%s=)[^\&]+' % replace, '%s=xxx' % replace, msg)
