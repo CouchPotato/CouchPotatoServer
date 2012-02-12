@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 from os.path import dirname
-from signal import signal, SIGTERM
 import os
+import signal
 import subprocess
 import sys
-import time
 
 
 # Root path
@@ -13,60 +12,69 @@ base_path = dirname(os.path.abspath(__file__))
 # Insert local directories into path
 sys.path.insert(0, os.path.join(base_path, 'libs'))
 
-from couchpotato.core.logger import CPLog
-log = CPLog(__name__)
 
-# Get options via arg
-from couchpotato.runner import getOptions
-from couchpotato.core.helpers.variable import getDataDir
-options = getOptions(base_path, sys.argv[1:])
-data_dir = getDataDir()
+class Loader(object):
 
-def start():
-    try:
-        args = [sys.executable] + [os.path.join(base_path, __file__)] + sys.argv[1:]
-        new_environ = os.environ.copy()
-        new_environ['cp_main'] = 'true'
+    do_restart = True
 
-        if os.name == 'nt':
-            for key, value in new_environ.iteritems():
-                if isinstance(value, unicode):
-                    new_environ[key] = value.encode('iso-8859-1')
+    def __init__(self):
 
-        subprocess.call(args, env = new_environ)
-        return os.path.isfile(os.path.join(data_dir, 'restart'))
-    except KeyboardInterrupt, e:
-        pass
-    except Exception, e:
-        log.critical(e)
-        return 0
+        from couchpotato.core.logger import CPLog
+        self.log = CPLog(__name__)
 
-from couchpotato.runner import runCouchPotato
-def main():
-    if os.environ.get('cp_main', 'false') == 'true':
+        # Get options via arg
+        from couchpotato.runner import getOptions
+        from couchpotato.core.helpers.variable import getDataDir
+        self.options = getOptions(base_path, sys.argv[1:])
+        self.data_dir = getDataDir()
+
+    def addSignals(self):
+
+        signal.signal(signal.SIGINT, self.onExit)
+        signal.signal(signal.SIGTERM, lambda signum, stack_frame: sys.exit(1))
+
+        from couchpotato.core.event import addEvent
+        addEvent('app.after_shutdown', self.afterShutdown)
+
+    def afterShutdown(self, restart):
+        self.do_restart = restart
+
+    def onExit(self, signal, frame):
+        from couchpotato.core.event import fireEvent
+        fireEvent('app.crappy_shutdown', single = True)
+
+    def run(self):
+
+        self.addSignals()
+
         try:
-            runCouchPotato(options, base_path, sys.argv[1:])
+            from couchpotato.runner import runCouchPotato
+            runCouchPotato(self.options, base_path, sys.argv[1:])
         except Exception, e:
-            log.critical(e)
-    else:
-        while 1:
-            restart = start()
-            if not restart:
-                break
+            self.log.critical(e)
 
-    from couchpotato.core.event import fireEvent
-    fireEvent('app.crappy_shutdown', single = True)
-    time.sleep(1)
+        if self.do_restart:
+            self.restart()
 
-    sys.exit()
+        sys.exit(0)
+
+    def restart(self):
+        try:
+            args = [sys.executable] + [os.path.join(base_path, __file__)] + sys.argv[1:]
+            subprocess.Popen(args)
+        except Exception, e:
+            self.log.critical(e)
+            return 0
+
+    def daemonize(self):
+
+        if self.options.daemon and  self.options.pid_file:
+            from daemon import Daemon
+            daemon = Daemon(self.options.pid_file)
+            daemon.daemonize()
+
 
 if __name__ == '__main__':
-
-    signal(SIGTERM, lambda signum, stack_frame: sys.exit(1))
-
-    if options.daemon and options.pid_file and not os.environ.get('cp_main'):
-        from daemon import Daemon
-        daemon = Daemon(options.pid_file)
-        daemon.daemonize()
-
-    main()
+    l = Loader()
+    l.daemonize()
+    l.run()
