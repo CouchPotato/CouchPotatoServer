@@ -3,8 +3,6 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
 from gntp import notifier
 import logging
-import thread
-import time
 import traceback
 
 log = CPLog(__name__)
@@ -12,30 +10,34 @@ log = CPLog(__name__)
 
 class Growl(Notification):
 
+    registered = False
+
     def __init__(self):
         super(Growl, self).__init__()
 
         logging.getLogger('gntp').setLevel(logging.WARNING)
 
+        if self.isEnabled():
+            self.register()
+
+    def register(self):
+        if self.registered: return
         try:
-            def startGrowl():
-                time.sleep(2)
-                try:
-                    self.growl = notifier.GrowlNotifier(
-                        applicationName = 'CouchPotato',
-                        notifications = ["Updates"],
-                        defaultNotifications = ["Updates"],
-                        applicationIcon = '%s/static/images/couch.png' % fireEvent('app.api_url', single = True),
-                    )
-                    self.growl.register()
-                except:
-                    log.error('Failed register of growl: %s' % traceback.format_exc())
-            thread.start_new_thread(startGrowl, ())
+            self.growl = notifier.GrowlNotifier(
+                applicationName = 'CouchPotato',
+                notifications = ["Updates"],
+                defaultNotifications = ["Updates"],
+                applicationIcon = '%s/static/images/couch.png' % fireEvent('app.api_url', single = True),
+            )
+            self.growl.register()
+            self.registered = True
         except:
-            pass
+            log.error('Failed register of growl: %s' % traceback.format_exc())
 
     def notify(self, type = '', message = '', data = {}):
         if self.isDisabled(): return
+
+        self.register()
 
         try:
             self.growl.notify(
