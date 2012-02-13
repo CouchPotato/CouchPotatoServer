@@ -14,13 +14,14 @@
 
 ############### EDIT ME ##################
 # path to app
-APP_PATH=/usr/local/sbin/couchpotato
+APP_PATH=/usr/local/sbin/CouchPotatoServer/
 
 # path to python bin
 DAEMON=/usr/bin/python
 
-# startup args
-DAEMON_OPTS=" CouchPotato.py"
+# Path to store PID file
+PID_FILE=/var/run/couchpotato/server.pid
+PID_PATH=$(dirname $PID_FILE)
 
 # script name
 NAME=couchpotato
@@ -31,7 +32,8 @@ DESC=CouchPotato
 # user
 RUN_AS=root
 
-PID_FILE=/var/run/couchpotato.pid
+# startup args
+DAEMON_OPTS=" CouchPotato.py --daemon --pid_file=${PID_FILE}"
 
 ############### END EDIT ME ##################
 
@@ -42,18 +44,19 @@ set -e
 case "$1" in
   start)
         echo "Starting $DESC"
-        start-stop-daemon -d $APP_PATH -c $RUN_AS --start --background --pidfile $PID_FILE  --make-pidfile --exec $DAEMON -- $DAEMON_OPTS
+        rm -rf $PID_PATH || return 1
+        install -d --mode=0755 -o $RUN_AS -g $RUN_AS $PID_PATH || return 1
+        start-stop-daemon -d $APP_PATH -c $RUN_AS --start --pidfile $PID_FILE --exec $DAEMON -- $DAEMON_OPTS
         ;;
   stop)
         echo "Stopping $DESC"
-        start-stop-daemon --stop --pidfile $PID_FILE
+        start-stop-daemon --stop --pidfile $PID_FILE --retry 15
         ;;
 
   restart|force-reload)
         echo "Restarting $DESC"
-        start-stop-daemon --stop --pidfile $PID_FILE
-        sleep 15
-        start-stop-daemon -d $APP_PATH -c $RUN_AS --start --background --pidfile $PID_FILE  --make-pidfile --exec $DAEMON -- $DAEMON_OPTS
+        start-stop-daemon --stop --pidfile $PID_FILE --retry 15
+        start-stop-daemon -d $APP_PATH -c $RUN_AS --start --pidfile $PID_FILE --exec $DAEMON -- $DAEMON_OPTS
         ;;
   *)
         N=/etc/init.d/$NAME
