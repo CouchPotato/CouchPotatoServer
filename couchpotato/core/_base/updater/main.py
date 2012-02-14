@@ -135,5 +135,13 @@ class Updater(Plugin):
                 except:
                     log.error('Couldn\'t remove %s: %s' % (full_path, traceback.format_exc()))
 
+            for dir_name in dirs:
+                full_path = os.path.join(root, dir_name)
+                if len(os.listdir(full_path)) == 0:
+                    try:
+                        os.rmdir(full_path)
+                    except:
+                        log.error('Couldn\'t remove empty directory %s: %s' % (full_path, traceback.format_exc()))
+
     def isEnabled(self):
         return super(Updater, self).isEnabled() and Env.get('uses_git')
