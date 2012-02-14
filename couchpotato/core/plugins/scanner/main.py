@@ -284,6 +284,10 @@ class Scanner(Plugin):
             else:
                 group['files']['movie'] = self.getMediaFiles(group['unsorted_files'])
 
+            if len(group['files']['movie']) == 0:
+                log.error('Couldn\t find any movie files for %s' % identifier)
+                continue
+
             log.debug('Getting metadata for %s' % identifier)
             group['meta_data'] = self.getMetaData(group)
 
