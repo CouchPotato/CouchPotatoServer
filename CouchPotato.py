@@ -62,6 +62,9 @@ class Loader(object):
 
     def restart(self):
         try:
+            # remove old pidfile first
+            if self.runAsDaemon():
+                self.daemon.delpid()
             args = [sys.executable] + [os.path.join(base_path, __file__)] + sys.argv[1:]
             subprocess.Popen(args)
         except Exception, e:
@@ -70,10 +73,13 @@ class Loader(object):
 
     def daemonize(self):
 
-        if self.options.daemon and  self.options.pid_file:
+        if self.runAsDaemon():
             from daemon import Daemon
-            daemon = Daemon(self.options.pid_file)
-            daemon.daemonize()
+            self.daemon = Daemon(self.options.pid_file)
+            self.daemon.daemonize()
+
+    def runAsDaemon(self):
+        return self.options.daemon and  self.options.pid_file
 
 
 if __name__ == '__main__':
