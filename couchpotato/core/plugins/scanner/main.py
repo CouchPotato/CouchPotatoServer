@@ -29,7 +29,8 @@ class Scanner(Plugin):
     ignored_in_path = ['_unpack', '_failed_', '_unknown_', '_exists_', '.appledouble', '.appledb', '.appledesktop', os.path.sep + '._', '.ds_store', 'cp.cpnfo'] #unpacking, smb-crap, hidden files
     ignore_names = ['extract', 'extracting', 'extracted', 'movie', 'movies', 'film', 'films', 'download', 'downloads', 'video_ts', 'audio_ts', 'bdmv', 'certificate']
     extensions = {
-        'movie': ['mkv', 'wmv', 'avi', 'mpg', 'mpeg', 'mp4', 'm2ts', 'iso', 'img'],
+        'movie': ['mkv', 'wmv', 'avi', 'mpg', 'mpeg', 'mp4', 'm2ts', 'iso', 'img', 'mdf'],
+        'movie_extra': ['mds'],
         'dvd': ['vts_*', 'vob'],
         'nfo': ['nfo', 'txt', 'tag'],
         'subtitle': ['sub', 'srt', 'ssa', 'ass'],
@@ -42,6 +43,7 @@ class Scanner(Plugin):
         'trailer': ('video', 'trailer'),
         'nfo': ('nfo', 'nfo'),
         'movie': ('video', 'movie'),
+        'movie': ('movie', 'movie_extra'),
         'backdrop': ('image', 'backdrop'),
         'leftover': ('leftover', 'leftover'),
     }
@@ -267,6 +269,7 @@ class Scanner(Plugin):
             # Group extra (and easy) files first
             # images = self.getImages(group['unsorted_files'])
             group['files'] = {
+                'movie_extra': self.getMovieExtras(group['unsorted_files']),
                 'subtitle': self.getSubtitles(group['unsorted_files']),
                 'subtitle_extra': self.getSubtitlesExtras(group['unsorted_files']),
                 'nfo': self.getNfo(group['unsorted_files']),
@@ -469,6 +472,9 @@ class Scanner(Plugin):
             return self.filesizeBetween(s, 300, 100000) and getExt(s.lower()) in self.extensions['movie'] and not self.isSampleFile(s)
 
         return set(filter(test, files))
+
+    def getMovieExtras(self, files):
+        return set(filter(lambda s: getExt(s.lower()) in self.extensions['movie_extra'], files))
 
     def getDVDFiles(self, files):
         def test(s):

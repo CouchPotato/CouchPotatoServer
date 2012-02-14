@@ -3,12 +3,12 @@ from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.request import jsonified
-from couchpotato.core.helpers.variable import getExt
+from couchpotato.core.helpers.variable import getExt, mergeDicts
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Library
 from couchpotato.environment import Env
-import os.path
+import os
 import re
 import shutil
 import traceback
@@ -190,19 +190,30 @@ class Renamer(Plugin):
 
                         # Check for extra subtitle files
                         if file_type is 'subtitle':
-
-                            def test(s):
-                                return current_file[:-len(replacements['ext'])] in s
-
-                            for subtitle_extra in set(filter(test, group['files']['subtitle_extra'])):
-                                replacements['ext'] = getExt(subtitle_extra)
-
-                                final_folder_name = self.doReplace(folder_name, replacements)
-                                final_file_name = self.doReplace(file_name, replacements)
-                                rename_files[subtitle_extra] = os.path.join(destination, final_folder_name, final_file_name)
+                            rename_extras = self.getRenameExtras(
+                                extra_type = 'subtitle_extra',
+                                replacements = replacements,
+                                folder_name = folder_name,
+                                file_name = file_name,
+                                destination = destination,
+                                group = group,
+                                current_file = current_file
+                            )
+                            rename_files = mergeDicts(rename_files, rename_extras)
 
                         # Filename without cd etc
                         if file_type is 'movie':
+                            rename_extras = self.getRenameExtras(
+                                extra_type = 'movie_extra',
+                                replacements = replacements,
+                                folder_name = folder_name,
+                                file_name = file_name,
+                                destination = destination,
+                                group = group,
+                                current_file = current_file
+                            )
+                            rename_files = mergeDicts(rename_files, rename_extras)
+
                             group['destination_dir'] = os.path.join(destination, final_folder_name)
 
                         if multiple:
@@ -308,6 +319,22 @@ class Renamer(Plugin):
                 break
 
         self.renaming_started = False
+
+    def getRenameExtras(self, extra_type = '', replacements = {}, folder_name = '', file_name = '', destination = '', group = {}, current_file = ''):
+
+        rename_files = {}
+
+        def test(s):
+            return current_file[:-len(replacements['ext'])] in s
+
+        for extra in set(filter(test, group['files'][extra_type])):
+            replacements['ext'] = getExt(extra)
+
+            final_folder_name = self.doReplace(folder_name, replacements)
+            final_file_name = self.doReplace(file_name, replacements)
+            rename_files[extra] = os.path.join(destination, final_folder_name, final_file_name)
+
+        return rename_files
 
     def moveFile(self, old, dest):
         try:
