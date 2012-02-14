@@ -16,6 +16,9 @@
 # path to app
 APP_PATH=/usr/local/sbin/CouchPotatoServer/
 
+# user
+RUN_AS=YOUR_USERNAME_HERE
+
 # path to python bin
 DAEMON=/usr/bin/python
 
@@ -28,9 +31,6 @@ NAME=couchpotato
 
 # app name
 DESC=CouchPotato
-
-# user
-RUN_AS=root
 
 # startup args
 DAEMON_OPTS=" CouchPotato.py --daemon --pid_file=${PID_FILE}"
@@ -46,7 +46,7 @@ case "$1" in
         echo "Starting $DESC"
         rm -rf $PID_PATH || return 1
         install -d --mode=0755 -o $RUN_AS -g $RUN_AS $PID_PATH || return 1
-        start-stop-daemon -d $APP_PATH -c $RUN_AS --start --pidfile $PID_FILE --exec $DAEMON -- $DAEMON_OPTS
+        start-stop-daemon -d $APP_PATH -c $RUN_AS --start --background --pidfile $PID_FILE --exec $DAEMON -- $DAEMON_OPTS
         ;;
   stop)
         echo "Stopping $DESC"
@@ -56,7 +56,7 @@ case "$1" in
   restart|force-reload)
         echo "Restarting $DESC"
         start-stop-daemon --stop --pidfile $PID_FILE --retry 15
-        start-stop-daemon -d $APP_PATH -c $RUN_AS --start --pidfile $PID_FILE --exec $DAEMON -- $DAEMON_OPTS
+        start-stop-daemon -d $APP_PATH -c $RUN_AS --start --background --pidfile $PID_FILE --exec $DAEMON -- $DAEMON_OPTS
         ;;
   *)
         N=/etc/init.d/$NAME
