@@ -32,9 +32,9 @@ class Loader(object):
                 self.paths[provider + '_provider'] = (25, 'couchpotato.core.providers.' + provider, path)
 
 
-        for type, tuple in self.paths.iteritems():
-            priority, module, dir = tuple
-            self.addFromDir(type, priority, module, dir)
+        for plugin_type, plugin_tuple in self.paths.iteritems():
+            priority, module, dir_name = plugin_tuple
+            self.addFromDir(plugin_type, priority, module, dir_name)
 
     def run(self):
         did_save = 0
@@ -59,13 +59,13 @@ class Loader(object):
         if did_save:
             fireEvent('settings.save')
 
-    def addFromDir(self, type, priority, module, dir):
+    def addFromDir(self, plugin_type, priority, module, dir_name):
 
-        for cur_file in glob.glob(os.path.join(dir, '*')):
+        for cur_file in glob.glob(os.path.join(dir_name, '*')):
             name = os.path.basename(cur_file)
-            if os.path.isdir(os.path.join(dir, name)):
+            if os.path.isdir(os.path.join(dir_name, name)):
                 module_name = '%s.%s' % (module, name)
-                self.addModule(priority, type, module_name, name)
+                self.addModule(priority, plugin_type, module_name, name)
 
     def loadSettings(self, module, name, save = True):
         try:
@@ -77,7 +77,7 @@ class Loader(object):
                         options[option['name']] = option
                 fireEvent('settings.register', section_name = section['name'], options = options, save = save)
             return True
-        except Exception, e:
+        except:
             log.debug("Failed loading settings for '%s': %s" % (name, traceback.format_exc()))
             return False
 
@@ -94,7 +94,7 @@ class Loader(object):
             log.error("Failed loading plugin '%s': %s" % (module.__file__, traceback.format_exc()))
             return False
 
-    def addModule(self, priority, type, module, name):
+    def addModule(self, priority, plugin_type, module, name):
 
         if not self.modules.get(priority):
             self.modules[priority] = {}
@@ -102,7 +102,7 @@ class Loader(object):
         self.modules[priority][module] = {
             'priority': priority,
             'module': module,
-            'type': type,
+            'type': plugin_type,
             'name': name,
         }
 
