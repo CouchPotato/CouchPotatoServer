@@ -4,6 +4,7 @@ import os
 import signal
 import subprocess
 import sys
+import traceback
 
 
 # Root path
@@ -50,39 +51,46 @@ class Loader(object):
         try:
             from couchpotato.runner import runCouchPotato
             runCouchPotato(self.options, base_path, sys.argv[1:])
-        except KeyboardInterrupt:
+        except (KeyboardInterrupt, SystemExit):
             pass
-        except Exception, e:
-            self.log.critical(e)
+        except:
+            self.log.error(traceback.format_exc())
 
         if self.do_restart:
             self.restart()
 
-        sys.exit(0)
-
     def restart(self):
         try:
             # remove old pidfile first
-            if self.runAsDaemon():
-                self.daemon.delpid()
+            try:
+                if self.runAsDaemon():
+                    self.daemon.delpid()
+            except:
+                self.log.error(traceback.format_exc())
+
             args = [sys.executable] + [os.path.join(base_path, __file__)] + sys.argv[1:]
             subprocess.Popen(args)
-        except Exception, e:
-            self.log.critical(e)
-            return 0
+        except:
+            self.log.error(traceback.format_exc())
 
     def daemonize(self):
 
         if self.runAsDaemon():
-            from daemon import Daemon
-            self.daemon = Daemon(self.options.pid_file)
-            self.daemon.daemonize()
+            try:
+                from daemon import Daemon
+                self.daemon = Daemon(self.options.pid_file)
+                self.daemon.daemonize()
+            except:
+                self.log.error(traceback.format_exc())
 
     def runAsDaemon(self):
         return self.options.daemon and  self.options.pid_file
 
 
 if __name__ == '__main__':
-    l = Loader()
-    l.daemonize()
-    l.run()
+    try:
+        l = Loader()
+        l.daemonize()
+        l.run()
+    except:
+        pass
