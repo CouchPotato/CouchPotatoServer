@@ -43,7 +43,8 @@ class CPLog(object):
             # Replace api key
             try:
                 api_key = Env.setting('api_key')
-                msg = msg.replace(api_key, 'API_KEY')
+                if api_key:
+                    msg = msg.replace(api_key, 'API_KEY')
             except:
                 pass
 
