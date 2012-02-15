@@ -55,7 +55,7 @@ class Loader(object):
         fireEvent('app.crappy_shutdown', single = True)
 
     def run(self):
-        print 'running' * 20
+
         self.addSignals()
 
         try:
