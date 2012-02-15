@@ -33,8 +33,9 @@ class IMDBAPI(MovieProvider):
         if cached:
             result = self.parseMovie(cached)
             log.info('Found: %s' % result['titles'][0] + ' (' + str(result['year']) + ')')
+            return [result]
 
-        return [result]
+        return []
 
     def getInfo(self, identifier = None):
 
@@ -44,8 +45,9 @@ class IMDBAPI(MovieProvider):
         if cached:
             result = self.parseMovie(cached)
             log.info('Found: %s' % result['titles'][0] + ' (' + str(result['year']) + ')')
+            return result
 
-        return result
+        return {}
 
     def parseMovie(self, movie):
 

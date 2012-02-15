@@ -45,7 +45,8 @@ class FileManager(Plugin):
         self.createFile(dest, filedata, binary = True)
         return dest
 
-    def add(self, path = '', part = 1, type = (), available = 1, properties = {}):
+    def add(self, path = '', part = 1, type_tuple = (), available = 1, properties = {}):
+        type_id = self.getType(type_tuple).get('id')
         db = get_session()
 
         f = db.query(File).filter(File.path == toUnicode(path)).first()
@@ -56,7 +57,7 @@ class FileManager(Plugin):
         f.path = toUnicode(path)
         f.part = part
         f.available = available
-        f.type_id = self.getType(type).id
+        f.type_id = type_id
 
         db.commit()
 
@@ -64,23 +65,24 @@ class FileManager(Plugin):
 
         return file_dict
 
-    def getType(self, type):
+    def getType(self, type_tuple):
 
         db = get_session()
-        type, identifier = type
+        type_type, type_identifier = type_tuple
 
-        ft = db.query(FileType).filter_by(identifier = identifier).first()
+        ft = db.query(FileType).filter_by(identifier = type_identifier).first()
         if not ft:
             ft = FileType(
-                type = toUnicode(type),
-                identifier = identifier,
-                name = toUnicode(identifier[0].capitalize() + identifier[1:])
+                type = toUnicode(type_type),
+                identifier = type_identifier,
+                name = toUnicode(type_identifier[0].capitalize() + type_identifier[1:])
             )
-
             db.add(ft)
             db.commit()
 
-        return ft
+        type_dict = ft.to_dict()
+        db.remove()
+        return type_dict
 
     def getTypes(self):
 
@@ -89,7 +91,7 @@ class FileManager(Plugin):
         results = db.query(FileType).all()
 
         types = []
-        for type in results:
-            types.append(type.to_dict())
+        for type_object in results:
+            types.append(type_object.to_dict())
 
         return types

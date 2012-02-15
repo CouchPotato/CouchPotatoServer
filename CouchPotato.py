@@ -33,7 +33,7 @@ class Loader(object):
         self.log = CPLog(__name__)
 
         formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s', '%H:%M:%S')
-        hdlr = handlers.RotatingFileHandler(os.path.join(self.data_dir, 'logs', 'error.log'), 'a', 500000, 10)
+        hdlr = handlers.RotatingFileHandler(os.path.join(self.data_dir, 'error.log'), 'a', 500000, 10)
         hdlr.setLevel(logging.CRITICAL)
         hdlr.setFormatter(formatter)
         self.log.logger.addHandler(hdlr)
