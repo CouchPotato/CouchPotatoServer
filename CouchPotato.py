@@ -32,12 +32,11 @@ class Loader(object):
         from couchpotato.core.logger import CPLog
         self.log = CPLog(__name__)
 
-        if self.options.daemon:
-            formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s', '%H:%M:%S')
-            hdlr = handlers.RotatingFileHandler(os.path.join(self.data_dir, 'logs', 'error.log'), 'a', 500000, 10)
-            hdlr.setLevel(logging.CRITICAL)
-            hdlr.setFormatter(formatter)
-            self.log.logger.addHandler(hdlr)
+        formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s', '%H:%M:%S')
+        hdlr = handlers.RotatingFileHandler(os.path.join(self.data_dir, 'logs', 'error.log'), 'a', 500000, 10)
+        hdlr.setLevel(logging.CRITICAL)
+        hdlr.setFormatter(formatter)
+        self.log.logger.addHandler(hdlr)
 
     def addSignals(self):
 
@@ -61,8 +60,11 @@ class Loader(object):
         try:
             from couchpotato.runner import runCouchPotato
             runCouchPotato(self.options, base_path, sys.argv[1:])
-        except (KeyboardInterrupt, SystemExit):
+        except KeyboardInterrupt:
             pass
+        except SystemExit, e:
+            if str(e) is '3':
+                raise
         except:
             self.log.critical(traceback.format_exc())
 
@@ -105,6 +107,6 @@ if __name__ == '__main__':
         l.daemonize()
         l.run()
     except SystemExit:
-        pass
+        raise
     except:
         l.log.critical(traceback.format_exc())
