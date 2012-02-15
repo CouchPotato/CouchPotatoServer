@@ -1,5 +1,7 @@
 #!/usr/bin/env python
+from logging import handlers
 from os.path import dirname
+import logging
 import os
 import signal
 import subprocess
@@ -20,14 +22,22 @@ class Loader(object):
 
     def __init__(self):
 
-        from couchpotato.core.logger import CPLog
-        self.log = CPLog(__name__)
-
         # Get options via arg
         from couchpotato.runner import getOptions
         from couchpotato.core.helpers.variable import getDataDir
         self.options = getOptions(base_path, sys.argv[1:])
         self.data_dir = getDataDir()
+
+        # Logging
+        from couchpotato.core.logger import CPLog
+        self.log = CPLog(__name__)
+
+        if self.options.daemon:
+            formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s', '%H:%M:%S')
+            hdlr = handlers.RotatingFileHandler(os.path.join(self.data_dir, 'logs', 'error.log'), 'a', 500000, 10)
+            hdlr.setLevel(logging.CRITICAL)
+            hdlr.setFormatter(formatter)
+            self.log.logger.addHandler(hdlr)
 
     def addSignals(self):
 
@@ -45,7 +55,7 @@ class Loader(object):
         fireEvent('app.crappy_shutdown', single = True)
 
     def run(self):
-
+        print 'running' * 20
         self.addSignals()
 
         try:
@@ -54,7 +64,7 @@ class Loader(object):
         except (KeyboardInterrupt, SystemExit):
             pass
         except:
-            self.log.error(traceback.format_exc())
+            self.log.critical(traceback.format_exc())
 
         if self.do_restart:
             self.restart()
@@ -66,12 +76,12 @@ class Loader(object):
                 if self.runAsDaemon():
                     self.daemon.delpid()
             except:
-                self.log.error(traceback.format_exc())
+                self.log.critical(traceback.format_exc())
 
             args = [sys.executable] + [os.path.join(base_path, __file__)] + sys.argv[1:]
             subprocess.Popen(args)
         except:
-            self.log.error(traceback.format_exc())
+            self.log.critical(traceback.format_exc())
 
     def daemonize(self):
 
@@ -80,8 +90,10 @@ class Loader(object):
                 from daemon import Daemon
                 self.daemon = Daemon(self.options.pid_file)
                 self.daemon.daemonize()
+            except SystemExit:
+                raise
             except:
-                self.log.error(traceback.format_exc())
+                self.log.critical(traceback.format_exc())
 
     def runAsDaemon(self):
         return self.options.daemon and  self.options.pid_file
@@ -92,5 +104,7 @@ if __name__ == '__main__':
         l = Loader()
         l.daemonize()
         l.run()
-    except:
+    except SystemExit:
         pass
+    except:
+        l.log.critical(traceback.format_exc())
