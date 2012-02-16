@@ -109,4 +109,7 @@ if __name__ == '__main__':
     except SystemExit:
         raise
     except:
-        l.log.critical(traceback.format_exc())
+        try:
+            l.log.critical(traceback.format_exc())
+        except:
+            print traceback.format_exc()
