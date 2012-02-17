@@ -15,6 +15,19 @@ base_path = dirname(os.path.abspath(__file__))
 # Insert local directories into path
 sys.path.insert(0, os.path.join(base_path, 'libs'))
 
+from couchpotato.core.helpers.variable import getDataDir
+data_dir = getDataDir()
+
+# Logging
+from couchpotato.core.logger import CPLog
+log = CPLog(__name__)
+
+formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s', '%H:%M:%S')
+hdlr = handlers.RotatingFileHandler(os.path.join(data_dir, 'error.log'), 'a', 500000, 10)
+hdlr.setLevel(logging.CRITICAL)
+hdlr.setFormatter(formatter)
+log.logger.addHandler(hdlr)
+
 
 class Loader(object):
 
@@ -24,19 +37,7 @@ class Loader(object):
 
         # Get options via arg
         from couchpotato.runner import getOptions
-        from couchpotato.core.helpers.variable import getDataDir
         self.options = getOptions(base_path, sys.argv[1:])
-        self.data_dir = getDataDir()
-
-        # Logging
-        from couchpotato.core.logger import CPLog
-        self.log = CPLog(__name__)
-
-        formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s', '%H:%M:%S')
-        hdlr = handlers.RotatingFileHandler(os.path.join(self.data_dir, 'error.log'), 'a', 500000, 10)
-        hdlr.setLevel(logging.CRITICAL)
-        hdlr.setFormatter(formatter)
-        self.log.logger.addHandler(hdlr)
 
     def addSignals(self):
 
@@ -60,13 +61,11 @@ class Loader(object):
         try:
             from couchpotato.runner import runCouchPotato
             runCouchPotato(self.options, base_path, sys.argv[1:])
-        except KeyboardInterrupt:
-            pass
-        except SystemExit, e:
-            if str(e) is '3':
+        except SystemExit as errno:
+            if errno is 3:
                 raise
         except:
-            self.log.critical(traceback.format_exc())
+            raise
 
         if self.do_restart:
             self.restart()
@@ -78,12 +77,12 @@ class Loader(object):
                 if self.runAsDaemon():
                     self.daemon.delpid()
             except:
-                self.log.critical(traceback.format_exc())
+                log.critical(traceback.format_exc())
 
             args = [sys.executable] + [os.path.join(base_path, __file__)] + sys.argv[1:]
             subprocess.Popen(args)
         except:
-            self.log.critical(traceback.format_exc())
+            log.critical(traceback.format_exc())
 
     def daemonize(self):
 
@@ -95,7 +94,7 @@ class Loader(object):
             except SystemExit:
                 raise
             except:
-                self.log.critical(traceback.format_exc())
+                log.critical(traceback.format_exc())
 
     def runAsDaemon(self):
         return self.options.daemon and  self.options.pid_file
@@ -106,10 +105,10 @@ if __name__ == '__main__':
         l = Loader()
         l.daemonize()
         l.run()
+    except KeyboardInterrupt:
+        pass
     except SystemExit:
         raise
-    except:
-        try:
-            l.log.critical(traceback.format_exc())
-        except:
-            pass
+    except Exception as (errno, msg):
+        if errno != 4:
+            log.critical(traceback.format_exc())
