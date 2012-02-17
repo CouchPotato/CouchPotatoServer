@@ -11,6 +11,7 @@ import logging
 import os.path
 import sys
 import time
+import warnings
 
 def getOptions(base_path, args):
 
@@ -132,6 +133,10 @@ def runCouchPotato(options, base_path, args, desktop = None):
         from couchpotato.core.logger import CPLog
         log = CPLog(__name__)
         log.debug('Started with options %s' % options)
+
+        def customwarn(message, category, filename, lineno, file = None, line = None):
+            log.warning('%s %s %s line:%s' % (category, message, filename, lineno))
+        warnings.showwarning = customwarn
 
 
         # Load configs & plugins

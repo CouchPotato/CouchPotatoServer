@@ -22,6 +22,9 @@ class CPLog(object):
     def error(self, msg):
         self.logger.error(self.addContext(msg))
 
+    def warning(self, msg):
+        self.logger.warning(self.addContext(msg))
+
     def critical(self, msg):
         self.logger.critical(self.addContext(msg), exc_info = 1)
 
