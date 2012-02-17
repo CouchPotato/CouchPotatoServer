@@ -29,6 +29,7 @@ config = [{
                 },
                 {
                     'name': 'password',
+                    'type': 'password',
                 },
                 {
                     'name': 'paused',
@@ -43,6 +44,7 @@ config = [{
                 {
                     'name': 'ratio',
                     'default': 10,
+                    'type': 'int',
                     'advanced': True,
                     'description': 'Stop transfer when reaching ratio',
                 },

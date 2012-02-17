@@ -3,6 +3,7 @@
 # Licensed under the MIT license.
 
 import socket, datetime, logging
+from collections import namedtuple
 import transmissionrpc.constants as constants
 from transmissionrpc.constants import LOGGER
 
@@ -186,3 +187,5 @@ def add_stdout_logger(level='debug'):
         trpc_logger.setLevel(loglevel)
         loghandler.setLevel(loglevel)
     trpc_logger.addHandler(loghandler)
+
+Field = namedtuple('Field', ['value', 'dirty'])

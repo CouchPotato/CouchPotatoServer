@@ -42,6 +42,6 @@ class Blackhole(Downloader):
                     pass
 
             except:
-                log.debug('Failed to download file: %s' % data.get('name'))
+                log.debug('Failed to download file %s: %s' % (data.get('name'), traceback.format_exc()))
                 return False
         return False

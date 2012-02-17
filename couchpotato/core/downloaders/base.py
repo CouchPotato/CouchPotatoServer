@@ -1,8 +1,8 @@
 from couchpotato.core.event import addEvent
+from couchpotato.core.helpers.encoding import toSafeString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
-from couchpotato.core.helpers.encoding import toSafeString
 import os
 
 log = CPLog(__name__)

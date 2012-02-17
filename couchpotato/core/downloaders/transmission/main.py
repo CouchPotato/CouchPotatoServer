@@ -1,3 +1,4 @@
+from base64 import b64encode
 from couchpotato.core.downloaders.base import Downloader
 from couchpotato.core.helpers.encoding import isInt
 from couchpotato.core.logger import CPLog
@@ -17,7 +18,6 @@ class Transmission(Downloader):
 
         log.info('Sending "%s" to Transmission.' % data.get('name'))
 
-
         # Load host from config and split out port.
         host = self.conf('host').split(':')
         if not isInt(host[1]):
@@ -26,24 +26,21 @@ class Transmission(Downloader):
 
         # Set parameters for Transmission
         params = {
-            'paused': self.conf('paused', 0),
-            'download_dir': self.conf('directory', None)
-        }
-        change_params = {
-            'seedRatioLimit': self.conf('ratio'),
-            'seedRatioMode': 1 if self.conf('ratio') else 0
+            'paused': self.conf('paused', default = 0),
+            'download_dir': self.conf('directory', default = None)
         }
 
         try:
             tc = transmissionrpc.Client(host[0], port = host[1], user = self.conf('username'), password = self.conf('password'))
-            tr_id = tc.add_uri(data.get('url'), **params)
+            filedata = data.get('download')(url = data.get('url'), nzb_id = data.get('id'))
+            torrent = tc.add_torrent(b64encode(filedata), **params)
 
             # Change settings of added torrents
-            for item in tr_id:
-                try:
-                    tc.change(item, timeout = None, **change_params)
-                except transmissionrpc.TransmissionError, e:
-                    log.error('Failed to change settings for transfer in transmission: %s' % e)
+            try:
+                torrent.seed_ratio_limit = self.conf('ratio')
+                torrent.seed_ratio_mode = 'single' if self.conf('ratio') else 'global'
+            except transmissionrpc.TransmissionError, e:
+                log.error('Failed to change settings for transfer in transmission: %s' % e)
 
             return True
 

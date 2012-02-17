@@ -15,9 +15,9 @@ class TransmissionError(Exception):
     def __str__(self):
         if self.original:
             original_name = type(self.original).__name__
-            return '%s Original exception: %s, "%s"' % (self.message, original_name, str(self.original))
+            return '%s Original exception: %s, "%s"' % (self._message, original_name, str(self.original))
         else:
-            return self.message
+            return self._message
 
 class HTTPHandlerError(Exception):
     """

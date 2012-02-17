@@ -3,7 +3,7 @@ from couchpotato.core.helpers.variable import mergeDicts
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 import json
-import os.path
+import os
 import shutil
 import traceback
 
