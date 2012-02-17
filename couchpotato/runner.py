@@ -46,25 +46,7 @@ def cleanup():
     time.sleep(1)
 
 
-def runCouchPotato(options, base_path, args, desktop = None):
-
-    # Load settings
-    from couchpotato.environment import Env
-    settings = Env.get('settings')
-    settings.setFile(options.config_file)
-
-    # Create data dir if needed
-    data_dir = os.path.expanduser(Env.setting('data_dir'))
-    if data_dir == '':
-        data_dir = getDataDir()
-
-    if not os.path.isdir(data_dir):
-        os.makedirs(data_dir)
-
-    # Create logging dir
-    log_dir = os.path.join(data_dir, 'logs');
-    if not os.path.isdir(log_dir):
-        os.mkdir(log_dir)
+def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, Env = None, desktop = None):
 
     try:
         locale.setlocale(locale.LC_ALL, "")
