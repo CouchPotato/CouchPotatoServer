@@ -65,7 +65,7 @@ elif sys.platform == "darwin":
 
 # Common
 NAME = "CouchPotato"
-APP = [bdist_esky.Executable("CouchPotato.py", gui_only = True, icon = exeICON,)]
+APP = [bdist_esky.Executable("Desktop.py", name = NAME, gui_only = True, icon = exeICON,)]
 DATA_FILES = ['icon.ico']
 ESKY_OPTIONS = dict(
     freezer_module = FREEZER,

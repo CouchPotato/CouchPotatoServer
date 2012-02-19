@@ -1,167 +1,127 @@
-from threading import Thread
-from wx.lib.softwareupdate import SoftwareUpdate
+#!/usr/bin/env python
+from logging import handlers
+from os.path import dirname
+import logging
 import os
+import signal
+import subprocess
 import sys
-import webbrowser
-import wx
-
-
-# Include proper dirs
-if hasattr(sys, 'frozen'):
-    import libs
-    base_path = os.path.dirname(os.path.dirname(os.path.abspath(libs.__file__)))
-    print base_path
-else:
-    base_path = os.path.dirname(os.path.abspath(__file__))
-
-lib_dir = os.path.join(base_path, 'libs')
-
-sys.path.insert(0, base_path)
-sys.path.insert(0, lib_dir)
-
-# Get options via arg
-from couchpotato.runner import getOptions
-from couchpotato.runner import runCouchPotato
-
-
-class TaskBarIcon(wx.TaskBarIcon):
-
-    TBMENU_OPEN = wx.NewId()
-    TBMENU_SETTINGS = wx.NewId()
-    TBMENU_ABOUT = wx.ID_ABOUT
-    TBMENU_EXIT = wx.ID_EXIT
-
-    def __init__(self, frame):
-        wx.TaskBarIcon.__init__(self)
-        self.frame = frame
-
-        icon = wx.Icon('icon.ico', wx.BITMAP_TYPE_ANY)
-        self.SetIcon(icon)
-
-        self.Bind(wx.EVT_TASKBAR_LEFT_DCLICK, self.onTaskBarActivate)
-
-        self.Bind(wx.EVT_MENU, self.onOpen, id = self.TBMENU_OPEN)
-        self.Bind(wx.EVT_MENU, self.onSettings, id = self.TBMENU_SETTINGS)
-        self.Bind(wx.EVT_MENU, self.onAbout, id = self.TBMENU_ABOUT)
-        self.Bind(wx.EVT_MENU, self.onTaskBarClose, id = self.TBMENU_EXIT)
-
-
-    def CreatePopupMenu(self):
-        menu = wx.Menu()
-        menu.Append(self.TBMENU_OPEN, "Open")
-        menu.Append(self.TBMENU_SETTINGS, "Settings")
-        menu.Append(self.TBMENU_ABOUT, "About")
-        menu.Append(self.TBMENU_EXIT, "Close")
-        return menu
-
-    def onOpen(self, event):
-        url = self.frame.parent.getSetting('base_url')
-        webbrowser.open(url)
-
-    def onSettings(self, event):
-        url = self.frame.parent.getSetting('base_url') + '/settings/'
-        webbrowser.open(url)
-
-    def onAbout(self, event):
-        print 'onAbout'
-
-    def onTaskBarActivate(self, evt):
-        if not self.frame.IsShown():
-            self.frame.Show(True)
-        self.frame.Raise()
-
-    def onTaskBarClose(self, evt):
-        wx.CallAfter(self.frame.Close)
-
-    def makeIcon(self, img):
-        if "wxMSW" in wx.PlatformInfo:
-            img = img.Scale(16, 16)
-        elif "wxGTK" in wx.PlatformInfo:
-            img = img.Scale(22, 22)
-
-        icon = wx.IconFromBitmap(img.CopyFromBitmap())
-        return icon
-
-
-class MainFrame(wx.Frame):
-
-    def __init__(self, parent):
-        wx.Frame.__init__(self, None)
-
-        self.parent = parent
-        self.tbicon = TaskBarIcon(self)
-
-
-class WorkerThread(Thread):
-
-    def __init__(self, desktop):
-        Thread.__init__(self)
-        self._desktop = desktop
-
-        self.start()
-
-    def run(self):
-
-        args = ['--nogit', '--console_log']#, '--quiet']
-        options = getOptions(base_path, args)
-
-        try:
-            runCouchPotato(options, base_path, args, desktop = self._desktop)
-        except KeyboardInterrupt, e:
-            raise
-        except Exception, e:
-            raise
-        finally:
-            pass
-
-
-class CouchPotatoApp(wx.App, SoftwareUpdate):
-
-    settings = {}
-    events = {}
-    restart = False
-
-    def OnInit(self):
-
-        # Updater
-        base_url = 'http://couchpotatoapp.com/updates/'
-        self.InitUpdates(base_url, base_url + 'changelog.txt',
-                         icon = wx.Icon('icon.ico'))
-
-        self.frame = MainFrame(self)
-        self.frame.Bind(wx.EVT_CLOSE, self.onClose)
-
-        # CouchPotato thread
-        self.worker = WorkerThread(self)
-
-        return True
-
-    def setSettings(self, settings = {}):
-        self.settings = settings
-
-    def getSetting(self, name):
-        return self.settings.get(name)
-
-    def addEvents(self, events = {}):
-        for name in events.iterkeys():
-            self.events[name] = events[name]
-
-    def onClose(self, event):
-        onClose = self.events.get('onClose')
-        if self.events.get('onClose'):
-            onClose(event)
-        else:
-            self.afterShutdown()
-
-    def afterShutdown(self, restart = False):
-        self.frame.Destroy()
-        self.restart = restart
-
-
+import traceback
+ 
+ 
+# Root path
+base_path = dirname(os.path.abspath(__file__))
+ 
+# Insert local directories into path
+sys.path.insert(0, os.path.join(base_path, 'libs'))
+ 
+from couchpotato.environment import Env
+from couchpotato.core.helpers.variable import getDataDir
+ 
+class Loader(object):
+ 
+    do_restart = False
+ 
+    def __init__(self):
+ 
+        # Get options via arg
+        from couchpotato.runner import getOptions
+        self.options = getOptions(base_path, sys.argv[1:])
+ 
+        # Load settings
+        settings = Env.get('settings')
+        settings.setFile(self.options.config_file)
+ 
+        # Create data dir if needed
+        self.data_dir = os.path.expanduser(Env.setting('data_dir'))
+        if self.data_dir == '':
+            self.data_dir = getDataDir()
+ 
+        if not os.path.isdir(self.data_dir):
+            os.makedirs(self.data_dir)
+ 
+        # Create logging dir
+        self.log_dir = os.path.join(self.data_dir, 'logs');
+        if not os.path.isdir(self.log_dir):
+            os.mkdir(self.log_dir)
+ 
+        # Logging
+        from couchpotato.core.logger import CPLog
+        self.log = CPLog(__name__)
+ 
+        formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s', '%H:%M:%S')
+        hdlr = handlers.RotatingFileHandler(os.path.join(self.log_dir, 'error.log'), 'a', 500000, 10)
+        hdlr.setLevel(logging.CRITICAL)
+        hdlr.setFormatter(formatter)
+        self.log.logger.addHandler(hdlr)
+ 
+    def addSignals(self):
+ 
+        signal.signal(signal.SIGINT, self.onExit)
+        signal.signal(signal.SIGTERM, lambda signum, stack_frame: sys.exit(1))
+ 
+        from couchpotato.core.event import addEvent
+        addEvent('app.after_shutdown', self.afterShutdown)
+ 
+    def afterShutdown(self, restart):
+        self.do_restart = restart
+ 
+    def onExit(self, signal, frame):
+        from couchpotato.core.event import fireEvent
+        fireEvent('app.crappy_shutdown', single = True)
+ 
+    def run(self):
+ 
+        self.addSignals()
+ 
+        from couchpotato.runner import runCouchPotato
+        runCouchPotato(self.options, base_path, sys.argv[1:], data_dir = self.data_dir, log_dir = self.log_dir, Env = Env)
+ 
+        if self.do_restart:
+            self.restart()
+ 
+    def restart(self):
+        try:
+            # remove old pidfile first
+            try:
+                if self.runAsDaemon():
+                    self.daemon.delpid()
+            except:
+                self.log.critical(traceback.format_exc())
+ 
+            args = [sys.executable] + [os.path.join(base_path, __file__)] + sys.argv[1:]
+            subprocess.Popen(args)
+        except:
+            self.log.critical(traceback.format_exc())
+ 
+    def daemonize(self):
+ 
+        if self.runAsDaemon():
+            try:
+                from daemon import Daemon
+                self.daemon = Daemon(self.options.pid_file)
+                self.daemon.daemonize()
+            except SystemExit:
+                raise
+            except:
+                self.log.critical(traceback.format_exc())
+ 
+    def runAsDaemon(self):
+        return self.options.daemon and  self.options.pid_file
+ 
+ 
 if __name__ == '__main__':
-    app = CouchPotatoApp(redirect = False)
-    app.MainLoop()
-
-    #path = os.path.join(sys.path[0].decode(sys.getfilesystemencoding()), sys.argv[0])
-    #if app.restart:
-    #    wx.Process.Open(sys.executable + ' ' + path)
+    try:
+        l = Loader()
+        l.daemonize()
+        l.run()
+    except KeyboardInterrupt:
+        pass
+    except SystemExit:
+        raise
+    except Exception as (nr, msg):
+        if nr != 4:
+            try:
+                l.log.critical(traceback.format_exc())
+            except:
+                print traceback.format_exc()
