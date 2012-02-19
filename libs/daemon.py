@@ -64,7 +64,8 @@ class Daemon():
         file(self.pidfile, 'w+').write("%s\n" % pid)
 
     def delpid(self):
-        os.remove(self.pidfile)
+        if os.path.exists(self.pidfile):
+            os.remove(self.pidfile)
 
     def start(self):
         """
@@ -112,8 +113,7 @@ class Daemon():
         except OSError, err:
             err = str(err)
             if err.find("No such process") > 0:
-                if os.path.exists(self.pidfile):
-                    os.remove(self.pidfile)
+                self.delpid()
             else:
                 print str(err)
                 sys.exit(1)

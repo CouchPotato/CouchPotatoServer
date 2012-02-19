@@ -11,7 +11,7 @@ import logging
 import os.path
 import sys
 import time
-import traceback
+import warnings
 
 def getOptions(base_path, args):
 
@@ -46,25 +46,7 @@ def cleanup():
     time.sleep(1)
 
 
-def runCouchPotato(options, base_path, args, desktop = None):
-
-    # Load settings
-    from couchpotato.environment import Env
-    settings = Env.get('settings')
-    settings.setFile(options.config_file)
-
-    # Create data dir if needed
-    data_dir = os.path.expanduser(Env.setting('data_dir'))
-    if data_dir == '':
-        data_dir = getDataDir()
-
-    if not os.path.isdir(data_dir):
-        os.makedirs(data_dir)
-
-    # Create logging dir
-    log_dir = os.path.join(data_dir, 'logs');
-    if not os.path.isdir(log_dir):
-        os.mkdir(log_dir)
+def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, Env = None, desktop = None):
 
     try:
         locale.setlocale(locale.LC_ALL, "")
@@ -95,15 +77,21 @@ def runCouchPotato(options, base_path, args, desktop = None):
     debug = options.debug or Env.setting('debug', default = False, type = 'bool')
     Env.set('debug', debug)
 
-    if not Env.setting('development'):
+    # Development
+    development = Env.setting('development', default = False, type = 'bool')
+    Env.set('dev', development)
+    if not development:
         atexit.register(cleanup)
+
+    # Use reloader
+    reloader = debug is True and development and not Env.get('desktop') and not options.daemon
 
     # Disable server access log
     logging.getLogger('werkzeug').setLevel(logging.WARNING)
 
     # Only run once when debugging
     fire_load = False
-    if os.environ.get('WERKZEUG_RUN_MAIN') or not debug or Env.get('desktop') or options.daemon:
+    if os.environ.get('WERKZEUG_RUN_MAIN') or not reloader:
 
         # Logger
         logger = logging.getLogger()
@@ -127,6 +115,10 @@ def runCouchPotato(options, base_path, args, desktop = None):
         from couchpotato.core.logger import CPLog
         log = CPLog(__name__)
         log.debug('Started with options %s' % options)
+
+        def customwarn(message, category, filename, lineno, file = None, line = None):
+            log.warning('%s %s %s line:%s' % (category, message, filename, lineno))
+        warnings.showwarning = customwarn
 
 
         # Load configs & plugins
@@ -168,7 +160,6 @@ def runCouchPotato(options, base_path, args, desktop = None):
     from couchpotato import app
     api_key = Env.setting('api_key')
     url_base = '/' + Env.setting('url_base').lstrip('/') if Env.setting('url_base') else ''
-    reloader = debug is True and Env.setting('development') and not Env.get('desktop') and not options.daemon
 
     # Basic config
     app.secret_key = api_key
@@ -194,10 +185,4 @@ def runCouchPotato(options, base_path, args, desktop = None):
     if fire_load: fireEventAsync('app.load')
 
     # Go go go!
-    try:
-        app.run(**config)
-    except (KeyboardInterrupt, SystemExit):
-        raise
-    except:
-        log.error('Failed starting: %s' % traceback.format_exc())
-        raise
+    app.run(**config)

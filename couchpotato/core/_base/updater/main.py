@@ -64,7 +64,7 @@ class Updater(Plugin):
             return
 
         log.info('Checking for new version on github for %s' % self.repo_name)
-        if not Env.setting('development'):
+        if not Env.get('dev'):
             self.repo.fetch()
 
         current_branch = self.repo.getCurrentBranch().name
@@ -134,6 +134,14 @@ class Updater(Plugin):
                     os.remove(full_path)
                 except:
                     log.error('Couldn\'t remove %s: %s' % (full_path, traceback.format_exc()))
+
+            for dir_name in dirs:
+                full_path = os.path.join(root, dir_name)
+                if len(os.listdir(full_path)) == 0:
+                    try:
+                        os.rmdir(full_path)
+                    except:
+                        log.error('Couldn\'t remove empty directory %s: %s' % (full_path, traceback.format_exc()))
 
     def isEnabled(self):
         return super(Updater, self).isEnabled() and Env.get('uses_git')

@@ -48,6 +48,20 @@ class YarrProvider(Provider):
     def __init__(self):
         addEvent('provider.belongs_to', self.belongsTo)
 
+        addEvent('%s.search' % self.type, self.search)
+        addEvent('yarr.search', self.search)
+
+        addEvent('nzb.feed', self.feed)
+
+    def download(self, url = '', nzb_id = ''):
+        return self.urlopen(url)
+
+    def feed(self):
+        return []
+
+    def search(self, movie, quality):
+        return []
+
     def belongsTo(self, url, host = None):
         try:
             hostname = urlparse(url).hostname

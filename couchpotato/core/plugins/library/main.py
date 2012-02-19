@@ -102,7 +102,7 @@ class LibraryPlugin(Plugin):
                         continue
 
                     file_path = fireEvent('file.download', url = image, single = True)
-                    file_obj = fireEvent('file.add', path = file_path, type = ('image', type), single = True)
+                    file_obj = fireEvent('file.add', path = file_path, type_tuple = ('image', type), single = True)
                     try:
                         file_obj = db.query(File).filter_by(id = file_obj.get('id')).one()
                         library.files.append(file_obj)

@@ -20,6 +20,7 @@ class NZBMatrix(NZBProvider, RSS):
     }
 
     cat_ids = [
+        ([50], ['bd50']),
         ([42, 53], ['720p', '1080p']),
         ([2], ['cam', 'ts', 'dvdrip', 'tc', 'r5', 'scr']),
         ([54], ['brrip']),

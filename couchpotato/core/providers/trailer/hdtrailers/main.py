@@ -1,4 +1,5 @@
 from BeautifulSoup import SoupStrainer, BeautifulSoup
+from couchpotato.core.helpers.variable import mergeDicts
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.trailer.base import TrailerProvider
 from string import letters, digits
@@ -16,47 +17,40 @@ class HDTrailers(TrailerProvider):
     }
     providers = ['apple.ico', 'yahoo.ico', 'moviefone.ico', 'myspace.ico', 'favicon.ico']
 
-    def find(self, movie):
+    def search(self, group):
 
-        movie_name = movie['library']['titles'][0]['title']
+        movie_name = group['library']['titles'][0]['title']
 
-        url = self.url['api'] % self.movieUrlName(movie_name)
-        try:
-            data = self.urlopen(url)
-        except:
-            return {}
+        url = self.urls['api'] % self.movieUrlName(movie_name)
+        data = self.getCache('hdtrailers.%s' % group['library']['identifier'], url)
 
-        p480 = []
-        p720 = []
-        p1080 = []
+        result_data = {}
+
         did_alternative = False
         for provider in self.providers:
             results = self.findByProvider(data, provider)
 
             # Find alternative
             if results.get('404') and not did_alternative:
-                results = self.findViaAlternative(movie_name)
+                results = self.findViaAlternative(group)
                 did_alternative = True
 
-            p480.extend(results.get('480p'))
-            p720.extend(results.get('720p'))
-            p1080.extend(results.get('1080p'))
+            result_data = mergeDicts(result_data, results)
 
-        return {'480p':p480, '720p':p720, '1080p':p1080}
+        return result_data
 
-    def findViaAlternative(self, movie):
+    def findViaAlternative(self, group):
         results = {'480p':[], '720p':[], '1080p':[]}
 
-        url = "%s?%s" % (self.url['backup'], urlencode({'s':movie}))
-        try:
-            data = self.urlopen(url)
-        except:
-            return results
+        movie_name = group['library']['titles'][0]['title']
+
+        url = "%s?%s" % (self.url['backup'], urlencode({'s':movie_name}))
+        data = self.getCache('hdtrailers.alt.%s' % group['library']['identifier'], url)
 
         try:
             tables = SoupStrainer('div')
             html = BeautifulSoup(data, parseOnlyThese = tables)
-            result_table = html.findAll('h2', text = re.compile(movie))
+            result_table = html.findAll('h2', text = re.compile(movie_name))
 
             for h2 in result_table:
                 if 'trailer' in h2.lower():
@@ -88,6 +82,8 @@ class HDTrailers(TrailerProvider):
                     break
                 if 'trailer' in trtext and not 'clip' in trtext and provider in trtext:
                     nr = 0
+                    if 'trailer' not in tr.find('span', 'standardTrailerName').text.lower():
+                        continue
                     resolutions = tr.findAll('td', attrs = {'class':'bottomTableResolution'})
                     for res in resolutions:
                         results[str(res.a.contents[0])].insert(0, res.a['href'])

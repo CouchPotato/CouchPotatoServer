@@ -10,7 +10,7 @@ class Automation(Plugin):
 
     def __init__(self):
 
-        if not Env.setting('development'):
+        if not Env.get('dev'):
             addEvent('app.load', self.addMovies)
 
     def addMovies(self):

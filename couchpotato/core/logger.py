@@ -22,6 +22,9 @@ class CPLog(object):
     def error(self, msg):
         self.logger.error(self.addContext(msg))
 
+    def warning(self, msg):
+        self.logger.warning(self.addContext(msg))
+
     def critical(self, msg):
         self.logger.critical(self.addContext(msg), exc_info = 1)
 
@@ -35,7 +38,7 @@ class CPLog(object):
             pass
 
         from couchpotato.environment import Env
-        if not Env.setting('development'):
+        if not Env.get('dev'):
 
             for replace in self.replace_private:
                 msg = re.sub('(%s=)[^\&]+' % replace, '%s=xxx' % replace, msg)
@@ -43,7 +46,8 @@ class CPLog(object):
             # Replace api key
             try:
                 api_key = Env.setting('api_key')
-                msg = msg.replace(api_key, 'API_KEY')
+                if api_key:
+                    msg = msg.replace(api_key, 'API_KEY')
             except:
                 pass
 

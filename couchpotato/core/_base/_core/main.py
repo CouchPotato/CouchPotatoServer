@@ -8,7 +8,6 @@ from couchpotato.environment import Env
 from flask import request
 from uuid import uuid4
 import os
-import thread
 import time
 import traceback
 import webbrowser
@@ -32,7 +31,6 @@ class Core(Plugin):
         addEvent('app.crappy_shutdown', self.crappyShutdown)
         addEvent('app.crappy_restart', self.crappyRestart)
         addEvent('app.load', self.launchBrowser, priority = 1)
-        addEvent('app.load', self.monitorParent)
         addEvent('app.base_url', self.createBaseUrl)
         addEvent('app.api_url', self.createApiUrl)
 
@@ -40,27 +38,6 @@ class Core(Plugin):
         addEvent('setting.save.core.api_key', self.checkApikey)
 
         self.removeRestartFile()
-
-    def monitorParent(self):
-
-        def looping():
-            do_shutdown = False
-            while 1 and not self.shuttingDown():
-                if os.name == 'nt':
-                    if os.getppid(os.getpid()) <= 1:
-                        do_shutdown = True
-                        break
-                else:
-                    if os.getppid() <= 1:
-                        do_shutdown = True
-                        break
-                time.sleep(1)
-
-            if do_shutdown:
-                log.info('Starterscript has shutdown, shutdown subprocess')
-                fireEvent('app.crappy_shutdown')
-
-        thread.start_new_thread(looping, ())
 
     def md5Password(self, value):
         return md5(value) if value else ''

@@ -79,7 +79,7 @@ class Release(Plugin):
             properties = {}
 
         # Check database and update/insert if necessary
-        return fireEvent('file.add', path = filepath, part = fireEvent('scanner.partnumber', file, single = True), type = Scanner.file_types.get(type), properties = properties, single = True)
+        return fireEvent('file.add', path = filepath, part = fireEvent('scanner.partnumber', file, single = True), type_tuple = Scanner.file_types.get(type), properties = properties, single = True)
 
     def delete(self):
 

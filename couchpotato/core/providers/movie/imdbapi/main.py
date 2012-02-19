@@ -30,20 +30,24 @@ class IMDBAPI(MovieProvider):
         cache_key = 'imdbapi.cache.%s' % q
         cached = self.getCache(cache_key, self.urls['search'] % urlencode({'t': name_year.get('name'), 'y': name_year.get('year')}))
 
-        result = self.parseMovie(cached)
-        log.info('Found: %s' % result['titles'][0] + ' (' + str(result['year']) + ')')
+        if cached:
+            result = self.parseMovie(cached)
+            log.info('Found: %s' % result['titles'][0] + ' (' + str(result['year']) + ')')
+            return [result]
 
-        return [result]
+        return []
 
     def getInfo(self, identifier = None):
 
         cache_key = 'imdbapi.cache.%s' % identifier
         cached = self.getCache(cache_key, self.urls['info'] % identifier)
 
-        result = self.parseMovie(cached)
-        log.info('Found: %s' % result['titles'][0] + ' (' + str(result['year']) + ')')
+        if cached:
+            result = self.parseMovie(cached)
+            log.info('Found: %s' % result['titles'][0] + ' (' + str(result['year']) + ')')
+            return result
 
-        return result
+        return {}
 
     def parseMovie(self, movie):
 

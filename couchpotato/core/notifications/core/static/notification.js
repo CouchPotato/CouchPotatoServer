@@ -23,7 +23,7 @@ var NotificationBase = new Class({
 		self.request = Api.request('core_notifier.listener', {
 			'initialDelay': 100,
     		'delay': 3000,
-    		'onComplete': self.processData.bind(self)
+    		'onSuccess': self.processData.bind(self)
 		})
 
 		self.request.startTimer()

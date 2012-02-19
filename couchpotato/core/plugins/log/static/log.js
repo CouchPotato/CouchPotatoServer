@@ -66,6 +66,7 @@ Page.Log = new Class({
 
 		text = text.replace(/\u001b\[31m/gi, '</span><span class="error">')
 		text = text.replace(/\u001b\[36m/gi, '</span><span class="debug">')
+		text = text.replace(/\u001b\[33m/gi, '</span><span class="debug">')
 		text = text.replace(/\u001b\[0m\n/gi, '</span><span class="time">')
 		text = text.replace(/\u001b\[0m/gi, '</span><span>')
 

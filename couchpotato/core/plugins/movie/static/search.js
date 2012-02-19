@@ -183,7 +183,7 @@ Block.Search.Item = new Class({
 					'click': self.showOptions.bind(self)
 				}
 			}).adopt(
-				self.thumbnail = info.images.poster.length > 0 ? new Element('img.thumbnail', {
+				self.thumbnail = info.images && info.images.poster.length > 0 ? new Element('img.thumbnail', {
 					'src': info.images.poster[0]
 				}) : null,
 				new Element('div.info').adopt(
@@ -288,7 +288,7 @@ Block.Search.Item = new Class({
 
 			self.options.adopt(
 				new Element('div').adopt(
-					self.info.images.poster.length > 0 ? new Element('img.thumbnail', {
+					self.info.images && self.info.images.poster.length > 0 ? new Element('img.thumbnail', {
 						'src': self.info.images.poster[0]
 					}) : null,
 					self.info.in_wanted ? new Element('span.in_wanted', {

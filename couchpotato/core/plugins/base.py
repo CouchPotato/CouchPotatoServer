@@ -174,7 +174,7 @@ class Plugin(object):
     def getCache(self, cache_key, url = None, timeout = 300):
         cache = Env.get('cache').get(cache_key)
         if cache:
-            if not Env.setting('development'): log.debug('Getting cache %s' % cache_key)
+            if not Env.get('dev'): log.debug('Getting cache %s' % cache_key)
             return cache
 
         if url:
