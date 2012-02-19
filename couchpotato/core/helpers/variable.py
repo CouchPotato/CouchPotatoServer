@@ -34,6 +34,8 @@ def mergeDicts(a, b):
             else:
                 if isDict(current_src[key]) and isDict(current_dst[key]):
                     stack.append((current_dst[key], current_src[key]))
+                elif isinstance(current_src[key], list) and isinstance(current_dst[key], list):
+                    current_dst[key].extend(current_src[key])
                 else:
                     current_dst[key] = current_src[key]
     return dst
