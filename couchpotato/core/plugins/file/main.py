@@ -29,7 +29,7 @@ class FileManager(Plugin):
         from flask.helpers import send_from_directory
         return send_from_directory(cache_dir, filename)
 
-    def download(self, url = '', dest = None, overwrite = False):
+    def download(self, url = '', dest = None, overwrite = False, urlopen_kwargs = {}):
 
         if not dest: # to Cache
             dest = os.path.join(Env.get('cache_dir'), '%s.%s' % (md5(url), getExt(url)))
@@ -38,7 +38,7 @@ class FileManager(Plugin):
             return dest
 
         try:
-            filedata = self.urlopen(url)
+            filedata = self.urlopen(url, **urlopen_kwargs)
         except:
             return False
 
