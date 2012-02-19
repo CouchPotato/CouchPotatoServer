@@ -6,7 +6,7 @@ from couchpotato.core.helpers.request import jsonified
 from couchpotato.core.helpers.variable import getExt, mergeDicts
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.core.settings.model import Library
+from couchpotato.core.settings.model import Library, File
 from couchpotato.environment import Env
 import os
 import re
@@ -123,6 +123,9 @@ class Renamer(Plugin):
                     # Move nfo depending on settings
                     if file_type is 'nfo' and not self.conf('rename_nfo'):
                         log.debug('Skipping, renaming of %s disabled' % file_type)
+                        if self.conf('clean_up'):
+                            for current_file in group['files'][file_type]:
+                                remove_files.append(current_file)
                         continue
 
                     # Subtitle extra
@@ -301,11 +304,15 @@ class Renamer(Plugin):
 
             # Remove files
             for src in remove_files:
+
+                if isinstance(src, File):
+                    src = src.path
+
                 log.info('(fake) Removing "%s"' % src)
 
             # Remove matching releases
             for release in remove_releases:
-                log.info('(fake) Removing release %s' % release)
+                log.info('(fake) Removing release %s' % release.identifier)
 
             # Search for trailers etc
             fireEventAsync('renamer.after', group)
