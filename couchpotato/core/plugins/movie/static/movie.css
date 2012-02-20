@@ -5,7 +5,7 @@
 */
 
 .movies {
-	padding: 20px 0;
+	padding: 50px 0 20px;
 }
 
 	.movies .movie {
@@ -215,7 +215,20 @@
 
 .movies .alph_nav {
 	overflow: hidden;
+	transition: box-shadow .4s linear;
+	position: fixed;
+	z-index: 2;
+	top: 0;
+	padding: 100px 7px 7px;
+	margin: -7px;
+	width: 960px;
 }
+
+	.movies .alph_nav.float {
+		box-shadow:  0 0 10px rgba(0,0,0,0.4);
+		border-radius: 4px;
+		background: #4e5969;
+	}
 	
 .movies .alph_nav ul {
 	list-style: none;

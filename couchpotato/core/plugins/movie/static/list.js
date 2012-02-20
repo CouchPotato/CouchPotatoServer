@@ -141,6 +141,16 @@ var MovieList = new Class({
 			}
 		});
 
+		self.nav_scrollspy = new ScrollSpy({
+			min: 10,
+			onEnter: function(){
+				self.navigation.addClass('float')
+			},
+			onLeave: function(){
+				self.navigation.removeClass('float')
+			}
+		});
+
 	},
 
 	reset: function(){
@@ -211,8 +221,8 @@ var MovieList = new Class({
 
 	loadMore: function(){
 		var self = this;
-
-		self.getMovies()
+		if(self.offset >= self.options.limit)
+			self.getMovies()
 	},
 
 	store: function(movies){

@@ -153,12 +153,12 @@ body > .spinner, .mask{
 	height: 60px;
 	position: fixed;
 	width: 99%;
-	z-index: 2;
-	box-shadow:  0 0 5px rgba(0,0,0,0.1);
+	z-index: 5;
+	box-shadow:  0 0 5px rgba(0,0,0,0.05);
 	transition: box-shadow .4s cubic-bezier(0.9,0,0.1,1);
 }
 	.header.with_shadow {
-		box-shadow:  0 0 50px rgba(0,0,0,0.3);
+		box-shadow:  0 0 20px rgba(0,0,0,0.3);
 	}
 
 .header > div {
