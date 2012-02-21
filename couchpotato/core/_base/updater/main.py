@@ -33,15 +33,12 @@ class Updater(Plugin):
             'desc': 'Get updater information',
             'return': {
                 'type': 'object',
-                'example': """
-                    {
-                        'repo_name': "Name of used repository",
-                        'last_check': "last checked for update",
-                        'update_version': "available update version or empty",
-                        'version': current_cp_version
-                    }
-                """
-            }
+                'example': """{
+        'repo_name': "Name of used repository",
+        'last_check': "last checked for update",
+        'update_version': "available update version or empty",
+        'version': current_cp_version
+}"""}
         })
         addApiView('updater.update', self.doUpdateView)
         addApiView('updater.check', self.checkView, docs = {

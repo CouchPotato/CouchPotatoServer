@@ -1,3 +1,4 @@
+
 html {
 	font-size: 12px;
 	line-height: 1.5;
@@ -5,15 +6,22 @@ html {
 	font-size: 14px;
 }
 
+* {
+	margin: 0;
+	padding: 0;
+	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+	box-sizing: border-box;
+}
+
 h1, h2, h3, h4, h5 {
 	clear: both;
-	padding: 0;
-	margin: 0;
 	font-size: 14px;
 }
 
 h1 {
 	font-size: 25px;
+	padding: 20px 40px;
 }
 
 h2 {
@@ -21,18 +29,23 @@ h2 {
 }
 
 pre {
-	background: #ccc;
+	background: #eee;
 	font-family: monospace;
 	margin: 0;
-	padding: 2%;
-	width: 96%;
+	padding: 10px;
+	width: 100%;
 	display: block;
+	font-size: 12px;
 }
 
-.api {
-	margin-bottom: 20px;
+.api, .missing {
 	overflow: hidden;
+	border-bottom: 1px solid #eee;
+	padding: 40px;
 }
+	.api:hover {
+		color: #000;
+	}
 
 	.api .description {
 		color: #333;
@@ -40,7 +53,7 @@ pre {
 	}
 
 	.api .params {
-		background: #f5f5f5;
+		background: #fafafa;
 		width: 100%;
 	}
 		.api h3 {
@@ -53,6 +66,14 @@ pre {
 			float: left;
 			width: 700px;
 		}
+
+			.api .params td, .api .params th {
+				padding: 3px 5px;
+				border-bottom: 1px solid #eee;
+			}
+			.api .params tr:last-child td, .api .params tr:last-child th {
+				border: 0;
+			}
 
 			.api .params .param {
 				vertical-align: top;
@@ -67,6 +88,7 @@ pre {
 					font-style: italic;
 					margin-right: 10px;
 					width: 100px;
+					color: #666;
 				}
 
 		.api .return {

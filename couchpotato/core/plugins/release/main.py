@@ -16,8 +16,18 @@ class Release(Plugin):
     def __init__(self):
         addEvent('release.add', self.add)
 
-        addApiView('release.download', self.download)
-        addApiView('release.delete', self.delete)
+        addApiView('release.download', self.download, docs = {
+            'desc': 'Send a release manually to the downloaders',
+            'params': {
+                'id': {'type': 'id', 'desc': 'ID of the release object in release-table'}
+            }
+        })
+        addApiView('release.delete', self.delete, docs = {
+            'desc': 'Check for available update',
+            'params': {
+                'id': {'type': 'id', 'desc': 'ID of the release object in release-table'}
+            }
+        })
 
     def add(self, group):
         db = get_session()

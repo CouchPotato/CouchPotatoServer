@@ -58,10 +58,28 @@ class MoviePlugin(Plugin):
             }
         })
         addApiView('movie.available_chars', self.charView)
-
-        addApiView('movie.add', self.addView)
-        addApiView('movie.edit', self.edit)
-        addApiView('movie.delete', self.delete)
+        addApiView('movie.add', self.addView, docs = {
+            'desc': 'Add new movie to the wanted list',
+            'params': {
+                'identifier': {'desc': 'IMDB id of the movie your want to add.'},
+                'profile_id': {'desc': 'ID of quality profile you want the add the movie in. If empty will use the default profile.'},
+                'title': {'desc': 'Movie title to use for searches. Has to be one of the titles returned by movie.search.'},
+            }
+        })
+        addApiView('movie.edit', self.edit, docs = {
+            'desc': 'Add new movie to the wanted list',
+            'params': {
+                'id': {'desc': 'Movie ID you want to edit'},
+                'profile_id': {'desc': 'ID of quality profile you want the edit the movie to.'},
+                'default_title': {'desc': 'Movie title to use for searches. Has to be one of the titles returned by movie.search.'},
+            }
+        })
+        addApiView('movie.delete', self.delete, docs = {
+            'desc': 'Delete a movie from the wanted list',
+            'params': {
+                'id': {'desc': 'Movie ID you want to delete'},
+            }
+        })
 
         addEvent('movie.add', self.add)
         addEvent('movie.get', self.get)

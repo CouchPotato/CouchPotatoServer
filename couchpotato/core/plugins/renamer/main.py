@@ -22,7 +22,9 @@ class Renamer(Plugin):
 
     def __init__(self):
 
-        addApiView('renamer.scan', self.scanView)
+        addApiView('renamer.scan', self.scanView, docs = {
+            'desc': 'For the renamer to check for new files to rename',
+        })
 
         addEvent('renamer.scan', self.scan)
         addEvent('app.load', self.scan)
@@ -31,7 +33,7 @@ class Renamer(Plugin):
 
     def scanView(self):
 
-        fireEvent('renamer.scan')
+        fireEventAsync('renamer.scan')
 
         return jsonified({
             'success': True

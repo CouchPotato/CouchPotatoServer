@@ -6,7 +6,7 @@
 	</head>
 	<body>
 
-		<h1>API</h1>
+		<h1>CouchPotato API Documentation</h1>
 		{% for route in routes %}
 			{% if api_docs.get(route) %}
 			<div class="api">
@@ -15,7 +15,7 @@
 
 				{% if api_docs[route].get('params') %}
 				<h3>Params</h3>
-				<table class="params">
+				<table class="params" cellspacing="0" cellpadding="0">
 				{% for param in api_docs[route]['params'] %}
 					<tr class="param">
 						<th>{{param}}</th>
@@ -42,8 +42,10 @@
 			{% endif %}
 		{% endfor %}
 
-		<h1>Missing documentation</h1>
-		<div class="missing">{{', '.join(api_docs_missing)}}</div>
+		<div class="missing">
+			<h1>Missing documentation</h1>
+			{{', '.join(api_docs_missing)}}
+		</div>
 
 	</body>
 </html>
