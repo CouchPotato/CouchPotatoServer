@@ -21,7 +21,12 @@ class Manage(Plugin):
         fireEvent('scheduler.interval', identifier = 'manage.update_library', handle = self.updateLibrary, hours = 2)
 
         addEvent('manage.update', self.updateLibrary)
-        addApiView('manage.update', self.updateLibraryView)
+        addApiView('manage.update', self.updateLibraryView, docs = {
+            'desc': 'Update the library by scanning for new movies',
+            'params': {
+                'full': {'desc': 'Do a full update or just recently changed/added movies.'},
+            }
+        })
 
         if not Env.get('dev'):
             addEvent('app.load', self.updateLibrary)

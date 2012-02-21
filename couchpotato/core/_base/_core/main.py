@@ -24,9 +24,17 @@ class Core(Plugin):
     shutdown_started = False
 
     def __init__(self):
-        addApiView('app.shutdown', self.shutdown)
-        addApiView('app.restart', self.restart)
-        addApiView('app.available', self.available)
+        addApiView('app.shutdown', self.shutdown, docs = {
+            'desc': 'Shutdown the app.',
+            'return': {'type': 'string: shutdown'}
+        })
+        addApiView('app.restart', self.restart, docs = {
+            'desc': 'Restart the app.',
+            'return': {'type': 'string: restart'}
+        })
+        addApiView('app.available', self.available, docs = {
+            'desc': 'Check if app available.'
+        })
 
         addEvent('app.crappy_shutdown', self.crappyShutdown)
         addEvent('app.crappy_restart', self.crappyRestart)

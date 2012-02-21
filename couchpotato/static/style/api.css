@@ -1,0 +1,75 @@
+html {
+	font-size: 12px;
+	line-height: 1.5;
+	font-family: "Helvetica Neue", Helvetica, Arial, Geneva, sans-serif;
+	font-size: 14px;
+}
+
+h1, h2, h3, h4, h5 {
+	clear: both;
+	padding: 0;
+	margin: 0;
+	font-size: 14px;
+}
+
+h1 {
+	font-size: 25px;
+}
+
+h2 {
+	font-size: 20px;
+}
+
+pre {
+	background: #ccc;
+	font-family: monospace;
+	margin: 0;
+	padding: 2%;
+	width: 96%;
+	display: block;
+}
+
+.api {
+	margin-bottom: 20px;
+	overflow: hidden;
+}
+
+	.api .description {
+		color: #333;
+		padding: 0 0 5px;
+	}
+
+	.api .params {
+		background: #f5f5f5;
+		width: 100%;
+	}
+		.api h3 {
+			clear: both;
+			float: left;
+			width: 100px;
+		}
+
+		.api .params {
+			float: left;
+			width: 700px;
+		}
+
+			.api .params .param {
+				vertical-align: top;
+			}
+
+				.api .params .param th {
+					text-align: left;
+					width: 100px;
+				}
+
+				.api .param .type {
+					font-style: italic;
+					margin-right: 10px;
+					width: 100px;
+				}
+
+		.api .return {
+			float: left;
+			width: 700px;
+		}

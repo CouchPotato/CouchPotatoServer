@@ -1,0 +1,49 @@
+<!doctype html>
+<html>
+	<head>
+		<link rel="stylesheet" href="{{ url_for('web.static', filename='style/api.css') }}" type="text/css">
+		<title>API documentation</title>
+	</head>
+	<body>
+
+		<h1>API</h1>
+		{% for route in routes %}
+			{% if api_docs.get(route) %}
+			<div class="api">
+				<h2>{{route}}</h2>
+				<div class="description">{{api_docs[route].get('desc', '')}}</div>
+
+				{% if api_docs[route].get('params') %}
+				<h3>Params</h3>
+				<table class="params">
+				{% for param in api_docs[route]['params'] %}
+					<tr class="param">
+						<th>{{param}}</th>
+						<td class="type">{{ api_docs[route]['params'][param].get('type', 'string') }}</td>
+						<td class="description">{{ api_docs[route]['params'][param]['desc'] }}</td>
+					</tr>
+				{% endfor %}
+				</table>
+				{% endif %}
+
+				{% if api_docs[route].get('return') %}
+				<h3>Return</h3>
+				<div class="return">
+					<div class="type">{{ api_docs[route]['return'].get('type', '{"success": True}') }}</div>
+					{% if api_docs[route]['return'].get('example') %}
+					<div class="example">
+						<h4>Example</h4>
+						<pre>{{ api_docs[route]['return'].get('example', '')|safe }}</pre>
+					</div>
+					{% endif %}
+				</div>
+				{% endif %}
+			</div>
+			{% endif %}
+		{% endfor %}
+
+		<h1>Missing documentation</h1>
+		<div class="missing">{{', '.join(api_docs_missing)}}</div>
+
+	</body>
+</html>

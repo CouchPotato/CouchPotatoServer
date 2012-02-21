@@ -26,9 +26,37 @@ class MoviePlugin(Plugin):
     }
 
     def __init__(self):
-        addApiView('movie.search', self.search)
-        addApiView('movie.list', self.listView)
-        addApiView('movie.refresh', self.refresh)
+        addApiView('movie.search', self.search, docs = {
+            'desc': 'Search the movie providers for a movie',
+            'params': {
+                'q': {'desc': 'The (partial) movie name you want to search for'},
+            },
+            'return': {'type': 'object', 'example': """{
+    'success': True,
+    'empty': bool, any movies returned or not,
+    'movies': array, movies found,
+}"""}
+        })
+        addApiView('movie.list', self.listView, docs = {
+            'desc': 'List movies in wanted list',
+            'params': {
+                'status': {'type': 'array or csv', 'desc': 'Filter movie by status. Example:"active,done"'},
+                'limit_offset': {'desc': 'Limit the movie list. Examples: "50", "50,30"'},
+                'starts_with': {'desc': 'Starts with these characters. Example: "a" returns all movies starting with the letter "a"'},
+                'search': {'desc': 'Search movie title'},
+            },
+            'return': {'type': 'object', 'example': """{
+    'success': True,
+    'empty': bool, any movies returned or not,
+    'movies': array, movies found,
+}"""}
+        })
+        addApiView('movie.refresh', self.refresh, docs = {
+            'desc': 'Refresh a movie by id',
+            'params': {
+                'id': {'desc': 'The id of the movie that needs to be refreshed'},
+            }
+        })
         addApiView('movie.available_chars', self.charView)
 
         addApiView('movie.add', self.addView)

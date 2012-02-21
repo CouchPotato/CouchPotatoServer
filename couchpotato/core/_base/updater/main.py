@@ -29,9 +29,25 @@ class Updater(Plugin):
 
         addEvent('app.load', self.check)
 
-        addApiView('updater.info', self.getInfo)
+        addApiView('updater.info', self.getInfo, docs = {
+            'desc': 'Get updater information',
+            'return': {
+                'type': 'object',
+                'example': """
+                    {
+                        'repo_name': "Name of used repository",
+                        'last_check': "last checked for update",
+                        'update_version': "available update version or empty",
+                        'version': current_cp_version
+                    }
+                """
+            }
+        })
         addApiView('updater.update', self.doUpdateView)
-        addApiView('updater.check', self.checkView)
+        addApiView('updater.check', self.checkView, docs = {
+            'desc': 'Check for available update',
+            'return': {'type': 'see updater.info'}
+        })
 
     def getInfo(self):
 

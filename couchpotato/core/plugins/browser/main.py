@@ -11,7 +11,18 @@ if os.name == 'nt':
 class FileBrowser(Plugin):
 
     def __init__(self):
-        addApiView('directory.list', self.view)
+        addApiView('directory.list', self.view, docs = {
+            'desc': 'Return the directory list of a given directory',
+            'params': {
+                'path': {'desc': 'The directory to scan'},
+                'show_hidden': {'desc': 'Also show hidden files'}
+            },
+            'return': {'type': 'object', 'example': """{
+    'is_root': bool, //is top most folder
+    'empty': bool, //directory is empty
+    'dirs': array, //directory names
+}"""}
+        })
 
     def getDirectories(self, path = '/', show_hidden = True):
 
