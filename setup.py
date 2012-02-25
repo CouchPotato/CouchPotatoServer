@@ -12,7 +12,17 @@ lib_dir = os.path.join(base_path, 'libs')
 sys.path.insert(0, base_path)
 sys.path.insert(0, lib_dir)
 
+def getDataFiles(dirs):
+    data_files = []
+    for directory in dirs:
+        for root, dirs, files in os.walk(directory):
+            print files
+            if files:
+                for filename in files:
+                    if filename[:-4] is not '.pyc':
+                        data_files.append((root, [os.path.join(root, filename)]))
 
+    return data_files
 
 # Windows
 if sys.platform == "win32":
@@ -21,7 +31,6 @@ if sys.platform == "win32":
     FREEZER = 'py2exe'
     FREEZER_OPTIONS = dict(
         compressed = 0,
-        optimize = 0,
         bundle_files = 3,
         dll_excludes = [
             'MSVCP90.dll',
@@ -37,8 +46,10 @@ if sys.platform == "win32":
             'xml.dom',
             'xml.dom.minidom',
         ],
+        skip_archive = 1,
     )
     exeICON = 'icon.ico'
+    DATA_FILES = getDataFiles([r'.\\couchpotato', r'.\\libs'])
 
 
 # OSX
@@ -62,17 +73,16 @@ elif sys.platform == "darwin":
         ],
     )
     exeICON = None
+    DATA_FILES = ['icon.ico']
 
 # Common
 NAME = "CouchPotato"
-APP = [bdist_esky.Executable("Desktop.py", name = NAME, gui_only = True, icon = exeICON,)]
-DATA_FILES = ['icon.ico']
+APP = [bdist_esky.Executable("Desktop.py", name = NAME, icon = exeICON,)]
 ESKY_OPTIONS = dict(
     freezer_module = FREEZER,
     freezer_options = FREEZER_OPTIONS,
     bundle_msvcrt = True,
 )
-
 
 # Build the app and the esky bundle
 setup(
