@@ -25,7 +25,7 @@ class Settings(object):
             "groups" : [{
                 "description" : "SD movies only",
                 "name" : "#alt.binaries.moovee",
-                "options" : [{ 
+                "options" : [{
                     "default" : false,
                     "name" : "enabled",
                     "type" : "enabler"
@@ -161,7 +161,6 @@ class Settings(object):
         if not self.options.get(section_name):
             self.options[section_name] = options
         else:
-            options['groups'] = self.options[section_name].get('groups') + options.get('groups')
             self.options[section_name] = mergeDicts(self.options[section_name], options)
 
     def getOptions(self):
@@ -169,7 +168,6 @@ class Settings(object):
 
 
     def view(self):
-
         return jsonified({
             'options': self.getOptions(),
             'values': self.getValues()
