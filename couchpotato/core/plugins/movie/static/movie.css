@@ -90,11 +90,11 @@
 				float: left;
 				width: 50%;
 				transition: all 0.2s linear;
-				overflow: hidden;
 			}
 				.movies .list_view .info .title, .movies .mass_edit_view .info .title {
 					font-size: 16px;
 					font-weight: normal;
+					text-overflow: ellipsis;
 				}
 			
 			.movies .info .year {
