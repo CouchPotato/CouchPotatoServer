@@ -130,7 +130,9 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
         # Load migrations
         initialize = True
         db = Env.get('db_path')
-        if os.path.isfile(db):
+        if os.path.isfile(db.replace('sqlite:///', '')):
+            initialize = False
+
             from migrate.versioning.api import version_control, db_version, version, upgrade
             repo = os.path.join(base_path, 'couchpotato', 'core', 'migration')
             logging.getLogger('migrate').setLevel(logging.WARNING) # Disable logging for migration
@@ -138,7 +140,6 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
             latest_db_version = version(repo)
             try:
                 current_db_version = db_version(db, repo)
-                initialize = False
             except:
                 version_control(db, repo, version = latest_db_version)
                 current_db_version = db_version(db, repo)
