@@ -26,6 +26,12 @@ body {
 	#clean {
 		background: transparent !important;
 	}
+	
+* {
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+}
 
 pre {
 	white-space: pre-wrap;
@@ -150,9 +156,10 @@ body > .spinner, .mask{
 .header {
 	background: #4e5969;
 	padding:10px;
-	height: 60px;
+	height: 80px;
 	position: fixed;
-	width: 99%;
+	margin: 0;
+	width: 100%;
 	z-index: 5;
 	box-shadow:  0 0 5px rgba(0,0,0,0.05);
 	transition: box-shadow .4s cubic-bezier(0.9,0,0.1,1);

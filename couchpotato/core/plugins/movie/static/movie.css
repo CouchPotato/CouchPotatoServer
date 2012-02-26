@@ -20,8 +20,8 @@
 		}
 		.movies .data {
 			padding: 20px;
-			height: 140px;
-			width: 800px;
+			height: 180px;
+			width: 840px;
 			position: relative;
 			float: right;
 
@@ -101,8 +101,8 @@
 				background-repeat: no-repeat;
 				background-position: center;
 				display: inline-block;
-				width: 20px;
-				height: 20px;
+				width: 26px;
+				height: 26px;
 				padding: 3px;
 				opacity: 0;
 			}
@@ -132,6 +132,7 @@
 			.movies .options {
 				position: absolute;
 				margin-left: 120px;
+				width: 840px;
 			}
 			
 			.movies .options .form {
@@ -162,7 +163,7 @@
 					.movies .options .table .item > * {
 						display: inline-block;
 						padding: 0 5px;
-						width: 50px;
+						width: 60px;
 						min-height: 24px;
 						white-space: nowrap;
 						text-overflow: ellipsis;
@@ -174,10 +175,10 @@
 							border: 0;
 						}
 						.movies .options .table .provider {
-							width: 120px;
+							width: 130px;
 						}
 						.movies .options .table .name {
-							width: 360px;
+							width: 370px;
 							overflow: hidden;
 							text-align: left;
 							padding: 0 10px;
@@ -187,8 +188,8 @@
 						.movies .options .table .is_available { width: 80px; }
 						
 						.movies .options .table a {
-							width: 16px !important;
-							height: 16px;
+							width: 30px !important;
+							height: 20px;
 							opacity: 0.8;
 						}
 						.movies .options .table a:hover {
@@ -241,7 +242,7 @@
 	.movies .alph_nav li {
 		display: inline-block;
 		vertical-align: top;
-		width: 24px;
+		width: 23px;
 		height: 24px;
 		line-height: 26px;
 		text-align: center;
