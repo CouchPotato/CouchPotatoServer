@@ -71,7 +71,7 @@ class NZBClub(NZBProvider, RSS):
                         'age': self.calculateAge(int(time.mktime(parse(date).timetuple()))),
                         'size': tryInt(size) / 1024 / 1024,
                         'url': enclosure['url'],
-                        'download': enclosure['url'],
+                        'download': enclosure['url'].replace(' ', '_'),
                         'detail_url': self.getTextElement(nzb, "link"),
                         'description': description,
                     }
