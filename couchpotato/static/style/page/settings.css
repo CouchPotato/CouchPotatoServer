@@ -117,22 +117,6 @@
 			vertical-align: middle;
 			padding-left: 2%;
 		}
-		
-			.check {
-				display: inline-block;
-				vertical-align: middle;
-				height: 16px;
-				width: 16px;
-				cursor: pointer;
-			}
-				.check.highlighted { background-color: #424c59; }
-				.check.checked {
-					background-image: url('../../images/checks.png');
-					background-position: -2px 0;
-}
-			.check input {
-				display: none;
-			}
 
 			.page .check + .formHint {
 				float: none;
@@ -354,28 +338,28 @@
 				border-radius: 2px;
 			}
 			.page .tag_input > ul:hover > li.choice {
-				background: url('../images/checks.png') no-repeat 94% -53px, -webkit-gradient(
+				background: url('../images/sprite.png') no-repeat 94% -53px, -webkit-gradient(
 				    linear,
 				    left bottom,
 				    left top,
 				    color-stop(0, rgba(255,255,255,0.1)),
 				    color-stop(1, rgba(255,255,255,0.3))
 				);
-				background: url('../images/checks.png') no-repeat 94% -53px, -moz-linear-gradient(
+				background: url('../images/sprite.png') no-repeat 94% -53px, -moz-linear-gradient(
 				    center top,
 				    rgba(255,255,255,0.3) 0%,
 				    rgba(255,255,255,0.1) 100%
 				);
 			}
 			.page .tag_input > ul > li.choice:hover {
-				background: url('../images/checks.png') no-repeat 94% -53px, -webkit-gradient(
+				background: url('../images/sprite.png') no-repeat 94% -53px, -webkit-gradient(
 				    linear,
 				    left bottom,
 				    left top,
 				    color-stop(0, #406db8),
 				    color-stop(1, #5b9bd1)
 				);
-				background: url('../images/checks.png') no-repeat 94% -53px, -moz-linear-gradient(
+				background: url('../images/sprite.png') no-repeat 94% -53px, -moz-linear-gradient(
 				    center top,
 				    #5b9bd1 0%,
 				    #406db8 100%

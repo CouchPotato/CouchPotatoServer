@@ -258,15 +258,14 @@ body > .spinner, .mask{
 	height: 16px;
 	width: 16px;
 	cursor: pointer;
+	background: url('../images/sprite.png') no-repeat -200px;
 }
 	.check.highlighted { background-color: #424c59; }
-	.check.checked {
-		background-image: url('../images/checks.png');
-		background-position: -2px 0;
-}
-.check input {
-	display: none !important;
-}
+	.check.checked { background-position: -2px 0; }
+	.check.indeterminate { background-position: -1px -119px; }
+	.check input {
+		display: none !important;
+	}
 
 .select {
 	cursor: pointer;
@@ -281,14 +280,14 @@ body > .spinner, .mask{
 		
 		box-shadow: 0 1px 1px rgba(0,0,0,0.35), inset 0 1px 0px rgba(255,255,255,0.20);
 		
-		background: url('../images/checks.png') no-repeat 94% -53px, -webkit-gradient(
+		background: url('../images/sprite.png') no-repeat 94% -53px, -webkit-gradient(
 		    linear,
 		    left bottom,
 		    left top,
 		    color-stop(0, #406db8),
 		    color-stop(1, #5b9bd1)
 		);
-		background: url('../images/checks.png') no-repeat 94% -53px, -moz-linear-gradient(
+		background: url('../images/sprite.png') no-repeat 94% -53px, -moz-linear-gradient(
 		    center top,
 		    #5b9bd1 0%,
 		    #406db8 100%
