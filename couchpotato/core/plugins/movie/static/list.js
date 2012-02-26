@@ -342,7 +342,7 @@ var MovieList = new Class({
 
 	getSavedView: function(){
 		var self = this;
-		return Cookie.read(self.options.identifier+'_view') || 'thumb';
+		return Cookie.read(self.options.identifier+'_view') || 'thumbs';
 	},
 
 	search: function(){

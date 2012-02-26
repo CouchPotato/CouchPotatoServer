@@ -8,7 +8,7 @@ var Movie = new Class({
 		var self = this;
 
 		self.data = data;
-		self.view = options.view || 'thumb';
+		self.view = options.view || 'thumbs';
 
 		self.profile = Quality.getProfile(data.profile_id) || {};
 		self.parent(self, options);
@@ -120,7 +120,7 @@ var Movie = new Class({
 
 		if(direction == 'in'){
 			self.temp_view = self.view;
-			self.changeView('thumb')
+			self.changeView('thumbs')
 
 			self.el.addEvent('outerClick', function(){
 				self.changeView(self.temp_view)
