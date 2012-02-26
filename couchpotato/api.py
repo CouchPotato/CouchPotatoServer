@@ -1,5 +1,7 @@
 from flask.blueprints import Blueprint
+from flask.helpers import url_for
 from flask.templating import render_template
+from werkzeug.utils import redirect
 
 api = Blueprint('api', __name__)
 api_docs = {}
@@ -14,17 +16,7 @@ def addApiView(route, func, static = False, docs = None):
 
 """ Api view """
 def index():
-
-    from couchpotato import app
-    routes = []
-    for route, x in sorted(app.view_functions.iteritems()):
-        if route[0:4] == 'api.':
-            routes += [route[4:].replace('::', '.')]
-
-    if api_docs.get(''):
-        del api_docs['']
-        del api_docs_missing['']
-    return render_template('api.html', routes = sorted(routes), api_docs = api_docs, api_docs_missing = sorted(api_docs_missing))
+    index_url = url_for('web.index')
+    return redirect(index_url + 'docs/')
 
 addApiView('', index)
-addApiView('default', index)

@@ -1,3 +1,4 @@
+from couchpotato.api import api_docs, api_docs_missing
 from couchpotato.core.auth import requires_auth
 from couchpotato.core.event import fireEvent
 from couchpotato.core.logger import CPLog
@@ -34,6 +35,21 @@ def addView(route, func, static = False):
 @requires_auth
 def index():
     return render_template('index.html', sep = os.sep, fireEvent = fireEvent, env = Env)
+
+""" Api view """
+@web.route('docs/')
+@requires_auth
+def apiDocs():
+    from couchpotato import app
+    routes = []
+    for route, x in sorted(app.view_functions.iteritems()):
+        if route[0:4] == 'api.':
+            routes += [route[4:].replace('::', '.')]
+
+    if api_docs.get(''):
+        del api_docs['']
+        del api_docs_missing['']
+    return render_template('api.html', routes = sorted(routes), api_docs = api_docs, api_docs_missing = sorted(api_docs_missing))
 
 @app.errorhandler(404)
 def page_not_found(error):
