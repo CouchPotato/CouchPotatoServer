@@ -12,8 +12,8 @@ Page.Wanted = new Class({
 
 			// Wanted movies
 			self.wanted = new MovieList({
+				'identifier': 'wanted',
 				'status': 'active',
-				'navigation': true,
 				'actions': MovieActions
 			});
 			$(self.wanted).inject(self.el);
