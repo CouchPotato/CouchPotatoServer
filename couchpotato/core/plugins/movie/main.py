@@ -69,7 +69,7 @@ class MoviePlugin(Plugin):
         addApiView('movie.edit', self.edit, docs = {
             'desc': 'Add new movie to the wanted list',
             'params': {
-                'id': {'desc': 'Movie ID you want to edit'},
+                'id': {'desc': 'Movie ID(s) you want to edit.', 'type': 'int (comma separated)'},
                 'profile_id': {'desc': 'ID of quality profile you want the edit the movie to.'},
                 'default_title': {'desc': 'Movie title to use for searches. Has to be one of the titles returned by movie.search.'},
             }
@@ -77,7 +77,7 @@ class MoviePlugin(Plugin):
         addApiView('movie.delete', self.delete, docs = {
             'desc': 'Delete a movie from the wanted list',
             'params': {
-                'id': {'desc': 'Movie ID you want to delete'},
+                'id': {'desc': 'Movie ID(s) you want to delete.', 'type': 'int (comma separated)'},
             }
         })
 
@@ -301,19 +301,23 @@ class MoviePlugin(Plugin):
         params = getParams()
         db = get_session()
 
-        m = db.query(Movie).filter_by(id = params.get('id')).first()
-        m.profile_id = params.get('profile_id')
+        ids = params.get('id').split(',')
+        for movie_id in ids:
 
-        # Default title
-        for title in m.library.titles:
-            title.default = params.get('default_title').lower() == title.title.lower()
+            m = db.query(Movie).filter_by(id = movie_id).first()
+            m.profile_id = params.get('profile_id')
 
-        db.commit()
+            # Default title
+            if params.get('default_title'):
+                for title in m.library.titles:
+                    title.default = params.get('default_title').lower() == title.title.lower()
 
-        fireEvent('movie.restatus', m.id)
+            db.commit()
 
-        movie_dict = m.to_dict(self.default_dict)
-        fireEventAsync('searcher.single', movie_dict)
+            fireEvent('movie.restatus', m.id)
+
+            movie_dict = m.to_dict(self.default_dict)
+            fireEventAsync('searcher.single', movie_dict)
 
         return jsonified({
             'success': True,
@@ -326,9 +330,11 @@ class MoviePlugin(Plugin):
 
         status = fireEvent('status.add', 'deleted', single = True)
 
-        movie = db.query(Movie).filter_by(id = params.get('id')).first()
-        movie.status_id = status.get('id')
-        db.commit()
+        ids = params.get('id').split(',')
+        for movie_id in ids:
+            movie = db.query(Movie).filter_by(id = movie_id).first()
+            movie.status_id = status.get('id')
+            db.commit()
 
         return jsonified({
             'success': True,

@@ -5,31 +5,61 @@
 */
 
 .movies {
-	padding: 50px 0 20px;
+	padding: 60px 0 20px;
 }
+
+	.movies.mass_edit_list {
+		padding-top: 90px;
+	}
 
 	.movies .movie {
 		position: relative;
 		border-radius: 4px;
 		margin: 10px 0;
-		
 		overflow: hidden;
+		width: 100%;
+		transition: all 0.2s linear;
 	}
-		.movies .movie:hover { 
-			border-color: #ddd #fff #fff #ddd;
+		.movies .movie.list_view, .movies .movie.mass_edit_view {
+			margin: 1px 0;
+			border-radius: 0;
+			background: no-repeat;
+			box-shadow: none;
+			border-bottom: 1px solid rgba(255,255,255,0.05);
 		}
+		.movies .movie.list_view:hover, .movies .movie.mass_edit_view:hover {
+			background: rgba(255,255,255,0.03);
+		}
+		
 		.movies .data {
 			padding: 20px;
 			height: 180px;
 			width: 840px;
 			position: relative;
 			float: right;
-
 			border-radius: 0;
-			-moz-border-radius: 0;
-			-webkit-border-radius: 0;
 			overflow: hidden;
+			transition: all 0.2s linear;
 		}
+			.movies .list_view .data, .movies .mass_edit_view .data {
+				height: 30px;
+				padding: 3px 10px;
+				width: 938px;
+				box-shadow: none;
+				border: 0;
+				background: none;
+			}
+			
+		.movies .movie .check {
+			display: none;
+		}
+		
+			.movies.mass_edit_list .movie .check {
+				float: left;
+				display: block;
+				margin: 7px 0 0 5px;
+			}
+
 		.movies .poster {
 			float: left;
 			width: 120px;
@@ -37,8 +67,17 @@
 			overflow: hidden;
 			height: 180px;
 			border-radius: 4px 0 0 4px;
+			transition: all 0.2s linear;
 			
 		}
+			.movies .list_view .poster, .movies .mass_edit_view .poster { 
+				width: 20px;
+				height: 30px;
+			}
+			.movies.mass_edit_list .poster {
+				display: none;
+			}
+		
 		.movies .poster img, .options .poster img {
 			width: 101%;
 			height: 101%;
@@ -49,8 +88,14 @@
 				font-weight: bold;
 				margin-bottom: 10px;
 				float: left;
-				width: 80%;
+				width: 50%;
+				transition: all 0.2s linear;
+				overflow: hidden;
 			}
+				.movies .list_view .info .title, .movies .mass_edit_view .info .title {
+					font-size: 16px;
+					font-weight: normal;
+				}
 			
 			.movies .info .year {
 				font-size: 30px;
@@ -59,7 +104,12 @@
 				color: #bbb;
 				width: 10%;
 				text-align: right;
+				transition: all 0.2s linear;
 			}
+				.movies .list_view .info .year, .movies .mass_edit_view .info .year {
+					font-size: 16px;
+					width: 6%;
+				}
 			
 			.movies .info .rating {
 				font-size: 30px;
@@ -78,12 +128,20 @@
 				.movies .data:hover .description {
 					overflow: auto;
 				}
-		
+				.movies .list_view .info .description, .movies .mass_edit_view .info .description {
+					display: none;
+				}
+
 		.movies .data .quality span {
 			padding: 0 5px;
 			font-weight: bold;
 		}
 			.movies .data .quality span:first-child {padding-left: 0;}
+			.movies .list_view .data .quality, .movies .mass_edit_view .data .quality {
+				text-align: right;
+				float: right;
+				width: 35%;
+			}
 		
 		.movies .data .quality .available { color: orange; }
 		.movies .data .quality .snatched { color: lightgreen; }
@@ -95,7 +153,10 @@
 			margin-top: -25px;
 		}
 			.movies .data:hover .action { opacity: 0.6; } 
-			.movies .data:hover .action:hover { opacity: 1; } 
+			.movies .data:hover .action:hover { opacity: 1; }
+			.movies.mass_edit_list .data .actions {
+				display: none;
+			}
 		
 			.movies .data .action {
 				background-repeat: no-repeat;
@@ -106,6 +167,11 @@
 				padding: 3px;
 				opacity: 0;
 			}
+		
+		.movies .list_view .data:hover .actions, .movies .mass_edit_view .data:hover .actions {
+			margin: -35px -7px 0 0;
+			background: #4e5969;
+		}
 			
 		.movies .delete_container {
 			clear: both;
@@ -183,9 +249,9 @@
 							text-align: left;
 							padding: 0 10px;
 						}
-						.movies .options .table.files .name { width: 598px; }
-						.movies .options .table .type { width: 120px; }
-						.movies .options .table .is_available { width: 80px; }
+						.movies .options .table.files .name { width: 608px; }
+						.movies .options .table .type { width: 130px; }
+						.movies .options .table .is_available { width: 90px; }
 						
 						.movies .options .table a {
 							width: 30px !important;
@@ -220,17 +286,18 @@
 	position: fixed;
 	z-index: 2;
 	top: 0;
-	padding: 100px 7px 7px;
-	margin: -7px;
-	width: 960px;
+	padding: 100px 60px 7px;
+	width: 1082px;
+	margin: 0 -60px;
+	box-shadow:  0 20px 20px -22px rgba(0,0,0,0.1);
 }
 
 	.movies .alph_nav.float {
-		box-shadow:  0 0 10px rgba(0,0,0,0.4);
-		border-radius: 4px;
+		box-shadow:  0 30px 30px -32px rgba(0,0,0,0.5);
+		border-radius: 0;
 		background: #4e5969;
 	}
-	
+
 .movies .alph_nav ul {
 	list-style: none;
 	padding: 0 0 1px;
@@ -250,7 +317,7 @@
 		color: #666;
 		border: 1px solid transparent;
 	}
-		.movies .alph_nav li:first-child {
+		.movies .alph_nav .numbers li:first-child {
 			width: 34px;
 		}
 		.movies .alph_nav li.active, .movies .alph_nav li:hover {
@@ -265,4 +332,91 @@
 		padding: 6px 5px;
 		margin: 0;
 		float: right;
+		width: 155px;
+		height: 25px;
+		float: right;
 	}
+	
+	.movies .alph_nav .actions {
+		margin: 0 32px 0 0;
+		-moz-user-select: none;
+	}
+		.movies .alph_nav .actions li { 
+			border-radius: 1px;
+			width: auto;
+		}
+		.movies .alph_nav .actions li.active { 
+			background: none;
+			border: 1px solid transparent;
+			box-shadow: none;
+		}
+		.movies .alph_nav .actions li span {
+			display: block;
+			background: url('../images/sprite.png') no-repeat;
+			width: 25px;
+			height: 100%;
+		}
+		
+			.movies .alph_nav .actions li.mass_edit span {
+				background-position: 3px 3px;
+			}
+			
+			.movies .alph_nav .actions li.list span {
+				background-position: 3px -95px;
+			}
+			
+			.movies .alph_nav .actions li.thumbs span {
+				background-position: 3px -74px;
+			}
+
+		.movies .alph_nav .actions li:first-child {
+			border-radius: 3px 0 0 3px;
+		}
+		.movies .alph_nav .actions li:last-child {
+			border-radius: 0 3px 3px 0;
+		}
+	
+	.movies .alph_nav .mass_edit_form {
+		clear: both;
+		text-align: center;
+		display: none;
+	}
+		.movies.mass_edit_list .mass_edit_form {
+			display: block;
+		}
+			.movies.mass_edit_list .mass_edit_form .select {
+				float: left;
+				margin: 5px 0 0 5px;
+				font-size: 14px;
+			}
+				.movies.mass_edit_list .mass_edit_form .select span {
+					vertical-align: middle;
+					opacity: 0.7;
+				}
+				.movies.mass_edit_list .mass_edit_form .select .count {
+					font-weight: bold;
+					margin: 0 3px 0 10px;
+				}
+				
+		.movies .alph_nav .mass_edit_form .quality {
+			float: left;
+			padding: 8px 0 0;
+			margin: 0 0 0 16px;
+		}
+			.movies .alph_nav .mass_edit_form .quality select {
+				width: 120px;
+				margin-right: 5px;
+			}
+			.movies .alph_nav .mass_edit_form .button {
+				padding: 3px 7px;
+			}
+				
+		.movies .alph_nav .mass_edit_form .delete {
+			float: left;
+			padding: 8px 0 0 8px;
+		}
+				
+			.movies .alph_nav .mass_edit_form .delete span {
+				margin: 0 10px 0 0;
+			}
+		

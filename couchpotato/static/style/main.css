@@ -161,11 +161,11 @@ body > .spinner, .mask{
 	margin: 0;
 	width: 100%;
 	z-index: 5;
-	box-shadow:  0 0 5px rgba(0,0,0,0.05);
+	box-shadow: 0 20px 30px -30px rgba(0,0,0,0.05);
 	transition: box-shadow .4s cubic-bezier(0.9,0,0.1,1);
 }
 	.header.with_shadow {
-		box-shadow:  0 0 20px rgba(0,0,0,0.3);
+		box-shadow: 0 20px 30px -30px rgba(0,0,0,0.3);
 	}
 
 .header > div {
@@ -342,22 +342,22 @@ body > .spinner, .mask{
 	color: #fff;
 	border: 0;
 	border-radius:3px;
-	background: #282d34;
+	background-color: #282d34;
 	box-shadow: inset 0 1px 8px rgba(0,0,0,0.25), 0 1px 0px rgba(255,255,255,0.25);
 }
 
 	.inlay.light {
-		background: #47515f;
+		background-color: #47515f;
 		outline: none;
 		box-shadow: inset 0 1px 8px rgba(0,0,0,0.05), 0 1px 0px rgba(255,255,255,0.15);
 	}
 	
 	.inlay:focus {
-		background: #3a4350;
+		background-color: #3a4350;
 		outline: none;
 	}
 
-.onlay, .inlay .selected, .inlay > li:hover, .inlay > li.active {
+.onlay, .inlay .selected, .inlay:not(.reversed) > li:hover, .inlay > li.active, .inlay.reversed > li {
 	border-radius:3px;
 	border: 1px solid #252930;
 	box-shadow: inset 0 1px 0px rgba(255,255,255,0.20), 0 0 3px rgba(0,0,0, 0.2);

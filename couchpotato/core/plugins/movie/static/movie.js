@@ -8,6 +8,7 @@ var Movie = new Class({
 		var self = this;
 
 		self.data = data;
+		self.view = options.view || 'thumb';
 
 		self.profile = Quality.getProfile(data.profile_id) || {};
 		self.parent(self, options);
@@ -17,6 +18,13 @@ var Movie = new Class({
 		var self = this;
 
 		self.el = new Element('div.movie.inlay').adopt(
+			self.select_checkbox = new Element('input[type=checkbox].inlay', {
+				'events': {
+					'change': function(){
+						self.fireEvent('select')
+					}
+				}
+			}),
 			self.thumbnail = File.Select.single('poster', self.data.library.files),
 			self.data_container = new Element('div.data.inlay.light', {
 				'tween': {
@@ -43,6 +51,9 @@ var Movie = new Class({
 				self.actions = new Element('div.actions')
 			)
 		);
+
+		self.changeView(self.view);
+		self.select_checkbox_class = new Form.Check(self.select_checkbox);
 
 		// Add profile
 		if(self.profile.data)
@@ -108,7 +119,13 @@ var Movie = new Class({
 		var self = this;
 
 		if(direction == 'in'){
-			self.el.addEvent('outerClick', self.slide.bind(self, 'out'))
+			self.temp_view = self.view;
+			self.changeView('thumb')
+
+			self.el.addEvent('outerClick', function(){
+				self.changeView(self.temp_view)
+				self.slide('out')
+			})
 			el.show();
 			self.data_container.tween('right', 0, -840);
 		}
@@ -123,8 +140,27 @@ var Movie = new Class({
 		}
 	},
 
+	changeView: function(new_view){
+		var self = this;
+
+		self.el
+			.removeClass(self.view+'_view')
+			.addClass(new_view+'_view')
+
+		self.view = new_view;
+	},
+
 	get: function(attr){
 		return this.data[attr] || this.data.library[attr]
+	},
+
+	select: function(bool){
+		var self = this;
+		self.select_checkbox_class[bool ? 'check' : 'uncheck']()
+	},
+
+	isSelected: function(){
+		return this.select_checkbox.get('checked');
 	}
 
 });
