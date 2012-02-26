@@ -42,7 +42,7 @@
 	float: left;
 	width: 86%;
 	line-height: 150%;
-	padding: 3px 1%;
+	padding: 3px 0;
 	border-top: 1px solid rgba(255, 255, 255, 0.2);
 	font-size: 11px;
 	font-family: Lucida Console, Monaco, Nimbus Mono L;
@@ -56,7 +56,7 @@
 
 	.page.log .container .time {
 		clear: both;
-		width: 11%;
+		width: 14%;
 		color: lightgrey;
 		padding: 3px 0;
 	}
