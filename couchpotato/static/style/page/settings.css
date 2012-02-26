@@ -28,10 +28,10 @@
 		    right top,
 		    40% 4%,
 		    color-stop(0, rgba(0,0,0, 0.3)),
-		    color-stop(0.9, rgba(0,0,0, 0))
+		    color-stop(1, rgba(0,0,0, 0))
 		);
 		background-image: -moz-linear-gradient(
-		    30% 0% 16deg,
+		    10% 0% 16deg,
 		    rgba(0,0,0,0) 0%,
 		    rgba(0,0,0,0.3) 100%
 		);
