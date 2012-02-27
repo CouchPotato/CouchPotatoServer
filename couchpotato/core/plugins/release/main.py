@@ -23,7 +23,13 @@ class Release(Plugin):
             }
         })
         addApiView('release.delete', self.delete, docs = {
-            'desc': 'Check for available update',
+            'desc': 'Delete releases',
+            'params': {
+                'id': {'type': 'id', 'desc': 'ID of the release object in release-table'}
+            }
+        })
+        addApiView('release.ignore', self.ignore, docs = {
+            'desc': 'Toggle ignore, for bad or wrong releases',
             'params': {
                 'id': {'type': 'id', 'desc': 'ID of the release object in release-table'}
             }
@@ -99,6 +105,22 @@ class Release(Plugin):
         rel = db.query(Relea).filter_by(id = id).first()
         if rel:
             rel.delete()
+            db.commit()
+
+        return jsonified({
+            'success': True
+        })
+
+    def ignore(self):
+
+        db = get_session()
+        id = getParam('id')
+
+        rel = db.query(Relea).filter_by(id = id).first()
+        if rel:
+            ignored_status = fireEvent('status.get', 'ignored', single = True)
+            available_status = fireEvent('status.get', 'available', single = True)
+            rel.status_id = available_status.get('id') if rel.status_id is ignored_status.get('id') else ignored_status.get('id')
             db.commit()
 
         return jsonified({

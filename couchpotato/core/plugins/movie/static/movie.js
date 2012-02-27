@@ -46,7 +46,13 @@ var Movie = new Class({
 					self.description = new Element('div.description', {
 						'text': self.data.library.plot
 					}),
-					self.quality = new Element('div.quality')
+					self.quality = new Element('div.quality', {
+						'events': {
+							'click': function(e){
+								self.el.getElement('.actions .releases').fireEvent('click', [e])
+							}
+						}
+					})
 				),
 				self.actions = new Element('div.actions')
 			)
@@ -69,10 +75,11 @@ var Movie = new Class({
 		Array.each(self.data.releases, function(release){
 
 			var q = self.quality.getElement('.q_'+ release.quality.identifier);
-			if(!q)
+			if(!q && release.status.identifier == 'snatched')
 				var q = self.addQuality(release.quality_id)
 
-			q.addClass(release.status.identifier);
+			if (q)
+				q.addClass(release.status.identifier);
 
 		});
 
@@ -283,8 +290,8 @@ var ReleaseAction = new Class({
 						'events': {
 							'click': function(e){
 								(e).stop();
-								self.del(release);
-								this.getParent('.item').destroy();
+								self.ignore(release);
+								this.getParent('.item').toggleClass('ignored')
 							}
 						}
 					})
@@ -314,10 +321,10 @@ var ReleaseAction = new Class({
 		});
 	},
 
-	del: function(release){
+	ignore: function(release){
 		var self = this;
 
-		Api.request('release.delete', {
+		Api.request('release.ignore', {
 			'data': {
 				'id': release.id
 			}

@@ -272,6 +272,13 @@ class MoviePlugin(Plugin):
 
         db.commit()
 
+        # Remove releases
+        available_status = fireEvent('status.get', 'available', single = True)
+        for rel in m.releases:
+            if rel.status_id is available_status.get('id'):
+                db.delete(rel)
+                db.commit()
+
         movie_dict = m.to_dict(self.default_dict)
 
         if force_readd or do_search:
@@ -297,11 +304,19 @@ class MoviePlugin(Plugin):
         params = getParams()
         db = get_session()
 
+        available_status = fireEvent('status.get', 'available', single = True)
+
         ids = params.get('id').split(',')
         for movie_id in ids:
 
             m = db.query(Movie).filter_by(id = movie_id).first()
             m.profile_id = params.get('profile_id')
+
+            # Remove releases
+            for rel in m.releases:
+                if rel.status_id is available_status.get('id'):
+                    db.delete(rel)
+                    db.commit()
 
             # Default title
             if params.get('default_title'):
