@@ -98,7 +98,7 @@ class Plugin(object):
         if not headers.get('Referer'):
             headers['Referer'] = urlparse(url).hostname
         if not headers.get('User-Agent'):
-            headers['User-Agent'] = ''
+            headers['User-Agent'] = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.7; rv:10.0.2) Gecko/20100101 Firefox/10.0.2'
 
         host = urlparse(url).hostname
         self.wait(host)
