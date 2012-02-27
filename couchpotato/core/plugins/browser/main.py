@@ -38,7 +38,7 @@ class FileBrowser(Plugin):
             if os.path.isdir(p) and ((self.is_hidden(p) and bool(int(show_hidden))) or not self.is_hidden(p)):
                 dirs.append(p + os.path.sep)
 
-        return dirs
+        return sorted(dirs)
 
     def getFiles(self):
         pass
