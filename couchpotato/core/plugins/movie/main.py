@@ -104,10 +104,6 @@ class MoviePlugin(Plugin):
 
         q = db.query(Movie) \
             .join(Movie.library, Library.titles) \
-            .options(joinedload_all('releases.status')) \
-            .options(joinedload_all('releases.quality')) \
-            .options(joinedload_all('releases.files')) \
-            .options(joinedload_all('releases.info')) \
             .options(joinedload_all('library.titles')) \
             .options(joinedload_all('library.files')) \
             .options(joinedload_all('status')) \
