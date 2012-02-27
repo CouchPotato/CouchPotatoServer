@@ -115,11 +115,17 @@ var Movie = new Class({
 		}).pop()
 
 		if(title)
-			return  title.title
+			return self.getUnprefixedTitle(title.title)
 		else if(titles.length > 0)
-			return titles[0].title
+			return self.getUnprefixedTitle(titles[0].title)
 
 		return 'Unknown movie'
+	},
+	
+	getUnprefixedTitle: function(t){
+		if(t.substr(0, 4).toLowerCase() == 'the ')
+			t = t.substr(4) + ', The';
+		return t;
 	},
 
 	slide: function(direction, el){
