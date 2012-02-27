@@ -43,7 +43,7 @@ class Scanner(Plugin):
         'trailer': ('video', 'trailer'),
         'nfo': ('nfo', 'nfo'),
         'movie': ('video', 'movie'),
-        'movie': ('movie', 'movie_extra'),
+        'movie_extra': ('movie', 'movie_extra'),
         'backdrop': ('image', 'backdrop'),
         'leftover': ('leftover', 'leftover'),
     }
