@@ -34,7 +34,7 @@ class Library(Entity):
     """"""
 
     year = Field(Integer)
-    identifier = Field(String(20))
+    identifier = Field(String(20), index = True)
     rating = Field(Float)
 
     plot = Field(UnicodeText)
@@ -52,8 +52,8 @@ class LibraryTitle(Entity):
     using_options(order_by = '-default')
 
     title = Field(Unicode)
-    simple_title = Field(Unicode)
-    default = Field(Boolean)
+    simple_title = Field(Unicode, index = True)
+    default = Field(Boolean, index = True)
 
     language = OneToMany('Language')
     libraries = ManyToOne('Library')
@@ -62,7 +62,7 @@ class LibraryTitle(Entity):
 class Language(Entity):
     """"""
 
-    identifier = Field(String(20))
+    identifier = Field(String(20), index = True)
     label = Field(Unicode)
 
     titles = ManyToOne('LibraryTitle')
@@ -72,7 +72,7 @@ class Release(Entity):
     """Logically groups all files that belong to a certain release, such as
     parts of a movie, subtitles."""
 
-    identifier = Field(String(100))
+    identifier = Field(String(100), index = True)
 
     movie = ManyToOne('Movie')
     status = ManyToOne('Status')
@@ -85,7 +85,7 @@ class Release(Entity):
 class ReleaseInfo(Entity):
     """Properties that can be bound to a file for off-line usage"""
 
-    identifier = Field(String(50))
+    identifier = Field(String(50), index = True)
     value = Field(Unicode(255), nullable = False)
 
     release = ManyToOne('Release')
@@ -107,7 +107,7 @@ class Quality(Entity):
 
     identifier = Field(String(20), unique = True)
     label = Field(Unicode(20))
-    order = Field(Integer)
+    order = Field(Integer, index = True)
 
     size_min = Field(Integer)
     size_max = Field(Integer)
@@ -121,7 +121,7 @@ class Profile(Entity):
     using_options(order_by = 'order')
 
     label = Field(Unicode(50))
-    order = Field(Integer)
+    order = Field(Integer, index = True)
     core = Field(Boolean)
     hide = Field(Boolean)
 
@@ -133,7 +133,7 @@ class ProfileType(Entity):
     """"""
     using_options(order_by = 'order')
 
-    order = Field(Integer)
+    order = Field(Integer, index = True)
     finish = Field(Boolean)
     wait_for = Field(Integer)
 
@@ -170,7 +170,7 @@ class FileType(Entity):
 class FileProperty(Entity):
     """Properties that can be bound to a file for off-line usage"""
 
-    identifier = Field(String(20))
+    identifier = Field(String(20), index = True)
     value = Field(Unicode(255), nullable = False)
 
     file = ManyToOne('File')
