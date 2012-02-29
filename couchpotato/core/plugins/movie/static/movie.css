@@ -344,7 +344,7 @@
 		cursor: pointer;
 		color: rgba(255,255,255,0.2);
 		border: 1px solid transparent;
-		-webkit-transition: all 0.1s ease-in-out;
+		transition: all 0.1s ease-in-out;
 		text-shadow: none;
 	}
 		.movies .alph_nav .numbers li:first-child {
