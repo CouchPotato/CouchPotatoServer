@@ -310,7 +310,6 @@
 			}
 
 .movies .alph_nav {
-	overflow: hidden;
 	transition: box-shadow .4s linear;
 	position: fixed;
 	z-index: 2;
@@ -359,15 +358,14 @@
 		
 	.movies .alph_nav input {
 		padding: 6px 5px;
-		margin: 0;
-		float: right;
+		margin: 0 0 0 6px;
+		float: left;
 		width: 155px;
 		height: 25px;
-		float: right;
 	}
 	
 	.movies .alph_nav .actions {
-		margin: 0 32px 0 0;
+		margin: 0 6px 0 0;
 		-moz-user-select: none;
 	}
 		.movies .alph_nav .actions li { 
@@ -448,4 +446,64 @@
 			.movies .alph_nav .mass_edit_form .delete span {
 				margin: 0 10px 0 0;
 			}
+	
+	.movies .alph_nav .menu {
+		float: right;
+	}
+	
+		.movies .alph_nav .menu > a {
+			display: block;
+			background: url('../images/sprite.png') no-repeat center -137px;
+			height: 25px;
+			width: 25px;
+			border: 1px solid rgba(0,0,0,0.3);
+		}
 		
+		.movies .alph_nav .menu ul:before {
+			content: ' ';
+			height: 0;
+			position: absolute;
+			width: 0;
+			border: 6px solid transparent;
+			border-bottom-color: rgba(0,0,0,0.8);
+			margin: -16px 0 0 147px;
+		}
+		
+		.movies .alph_nav .menu ul {
+			display: none;
+			border: 1px solid #333;
+			background: rgba(0,0,0,0.8);
+			border-radius: 3px;
+			padding: 4px;
+			position: absolute;
+			z-index: 9;
+			margin: 32px 0 0 -145px;
+			width: 185px;
+			box-shadow: 0 10px 20px -10px rgba(0,0,0,0.4);
+		}
+			.movies .alph_nav .menu ul.show {
+				display: block;
+			}
+			.movies .alph_nav .menu ul li {
+				width: 100%;
+				height: auto;
+			}
+			
+				.movies .alph_nav .menu ul li a {
+					display: block;
+					border-bottom: 1px solid rgba(255,255,255,0.2);
+					padding: 0 10px;
+					box-shadow: none;
+					font-weight: normal;
+					font-size: 11px;
+					text-transform: uppercase;
+					letter-spacing: 1px;
+				}
+			
+				.movies .alph_nav .menu ul li:last-child a {
+					border: none;
+					color: #fff;
+				}
+				.movies .alph_nav .menu ul li a:hover {
+					background: rgba(255,255,255,0.1);
+				}

@@ -307,13 +307,24 @@ body > .spinner, .mask{
 		overflow: hidden;
 	  	font-weight: bold;
 	}
+	
+	.select .list:before {
+		content: ' ';
+		height: 0;
+		position: absolute;
+		width: 0;
+		border: 6px solid transparent;
+		border-bottom-color: #282d34;
+		margin: -11px 0 0 70px;
+	}
+	
 	.select .list {
 		display: none;
 	  	background: #282d34;
 	  	border: 1px solid #1f242b;
 		position: absolute;
-		margin: 25px 0 0 0;
-		box-shadow: 0 1px 2px rgba(0,0,0,0.4);
+		margin: 30px 0 0 0;
+		box-shadow: 0 20px 20px -10px rgba(0,0,0,0.4);
 		border-radius:3px;
 		z-index: 3;
 	}
@@ -373,6 +384,12 @@ body > .spinner, .mask{
 	    rgb(55,62,74) 0%,
 	    rgb(73,83,98) 100%
 	);
+}
+.onlay:active, .inlay.reversed > li:active {
+	color: #fff;
+	border: 1px solid transparent;
+	background-color: #282d34;
+	box-shadow: inset 0 1px 8px rgba(0,0,0,0.25), 0 1px 0px rgba(255,255,255,0.25);
 }
 
 .question {
