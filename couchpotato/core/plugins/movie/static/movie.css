@@ -337,23 +337,28 @@
 	.movies .alph_nav li {
 		display: inline-block;
 		vertical-align: top;
-		width: 23px;
+		width: 22px;
 		height: 24px;
 		line-height: 26px;
 		text-align: center;
 		cursor: pointer;
-		color: #666;
+		color: rgba(255,255,255,0.2);
 		border: 1px solid transparent;
+		-webkit-transition: all 0.1s ease-in-out;
+		text-shadow: none;
 	}
 		.movies .alph_nav .numbers li:first-child {
-			width: 34px;
-		}
-		.movies .alph_nav li.active, .movies .alph_nav li:hover {
-			font-weight: bolder;
-			color: #fff;
+			width: 44px;
 		}
 		.movies .alph_nav li.available {
+			color: rgba(255,255,255,0.8);
+			font-weight: bolder;
+			
+		}
+		.movies .alph_nav li.active.available, .movies .alph_nav li.available:hover {
 			color: #fff;
+			font-size: 24px;
+			line-height: 24px;
 		}
 		
 	.movies .alph_nav input {

@@ -100,7 +100,7 @@ var MovieList = new Class({
 
 		self.navigation = new Element('div.alph_nav').adopt(
 			self.navigation_actions = new Element('ul.inlay.actions.reversed'),
-			self.navigation_alpha = new Element('ul.inlay.numbers', {
+			self.navigation_alpha = new Element('ul.numbers', {
 				'events': {
 					'click:relay(li)': function(e, el){
 						self.movie_list.empty()
