@@ -20,6 +20,7 @@ class StatusPlugin(Plugin):
         'wanted': 'Wanted',
         'snatched': 'Snatched',
         'deleted': 'Deleted',
+        'ignored': 'Ignored',
     }
 
     def __init__(self):

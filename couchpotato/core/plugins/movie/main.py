@@ -101,15 +101,11 @@ class MoviePlugin(Plugin):
         if not isinstance(status, (list, tuple)):
             status = [status]
 
-
         q = db.query(Movie) \
             .join(Movie.library, Library.titles) \
-            .options(joinedload_all('library.titles')) \
-            .options(joinedload_all('library.files')) \
-            .options(joinedload_all('status')) \
-            .options(joinedload_all('files')) \
             .filter(LibraryTitle.default == True) \
-            .filter(or_(*[Movie.status.has(identifier = s) for s in status]))
+            .filter(or_(*[Movie.status.has(identifier = s) for s in status])) \
+            .group_by(Movie.id)
 
         filter_or = []
         if starts_with:
@@ -130,17 +126,32 @@ class MoviePlugin(Plugin):
 
         q = q.order_by(asc(LibraryTitle.simple_title))
 
+        q = q.subquery()
+        q2 = db.query(Movie).join((q, q.c.id == Movie.id)) \
+            .options(joinedload_all('releases')) \
+            .options(joinedload_all('profile.types')) \
+            .options(joinedload_all('library.titles')) \
+            .options(joinedload_all('library.files')) \
+            .options(joinedload_all('status')) \
+            .options(joinedload_all('files')) \
+
+
         if limit_offset:
             splt = limit_offset.split(',')
             limit = splt[0]
             offset = 0 if len(splt) is 1 else splt[1]
-            q = q.limit(limit).offset(offset)
+            q2 = q2.limit(limit).offset(offset)
 
-        results = q.all()
 
+        results = q2.all()
         movies = []
         for movie in results:
-            temp = movie.to_dict(self.default_dict)
+            temp = movie.to_dict({
+                'profile': {'types': {}},
+                'releases': {'files':{}, 'info': {}},
+                'library': {'titles': {}, 'files':{}},
+                'files': {},
+            })
             movies.append(temp)
 
         return movies
@@ -159,7 +170,8 @@ class MoviePlugin(Plugin):
             .join(Movie.library, Library.titles) \
             .options(joinedload_all('library.titles')) \
             .filter(LibraryTitle.default == True) \
-            .filter(or_(*[Movie.status.has(identifier = s) for s in status]))
+            .filter(or_(*[Movie.status.has(identifier = s) for s in status])) \
+            .group_by(Movie.id)
 
         results = q.all()
 

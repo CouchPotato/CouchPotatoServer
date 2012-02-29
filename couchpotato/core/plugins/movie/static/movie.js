@@ -74,12 +74,13 @@ var Movie = new Class({
 		// Add done releases
 		Array.each(self.data.releases, function(release){
 
-			var q = self.quality.getElement('.q_'+ release.quality.identifier);
-			if(!q && release.status.identifier == 'snatched')
-				var q = self.addQuality(release.quality_id)
+			var q = self.quality.getElement('.q_id'+ release.quality_id),
+				status = Status.get(release.status_id);
 
+			if(!q && status.identifier == 'snatched')
+				var q = self.addQuality(release.quality_id)
 			if (q)
-				q.addClass(release.status.identifier);
+				q.addClass(status.identifier);
 
 		});
 
@@ -100,7 +101,7 @@ var Movie = new Class({
 		var q = Quality.getQuality(quality_id);
 		return new Element('span', {
 			'text': q.label,
-			'class': 'q_'+q.identifier
+			'class': 'q_'+q.identifier + 'q_id' + q.quality_id
 		}).inject(self.quality);
 
 	},
@@ -121,7 +122,7 @@ var Movie = new Class({
 
 		return 'Unknown movie'
 	},
-	
+
 	getUnprefixedTitle: function(t){
 		if(t.substr(0, 4).toLowerCase() == 'the ')
 			t = t.substr(4) + ', The';
@@ -275,11 +276,15 @@ var ReleaseAction = new Class({
 			).inject(self.release_container)
 
 			Array.each(self.movie.data.releases, function(release){
+
+				var status = Status.get(release.status_id),
+					quality = Quality.getProfile(release.quality_id)
+
 				new Element('div', {
-					'class': 'item ' + release.status.identifier
+					'class': 'item ' + status.identifier
 				}).adopt(
 					new Element('span.name', {'text': self.get(release, 'name'), 'title': self.get(release, 'name')}),
-					new Element('span.quality', {'text': release.quality.label}),
+					new Element('span.quality', {'text': quality.label}),
 					new Element('span.size', {'text': (self.get(release, 'size') || 'unknown')}),
 					new Element('span.age', {'text': self.get(release, 'age')}),
 					new Element('span.score', {'text': self.get(release, 'score')}),

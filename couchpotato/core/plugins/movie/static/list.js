@@ -69,17 +69,18 @@ var MovieList = new Class({
 			self.scrollspy.stop();
 		}
 
-		Object.each(movies, function(info){
+		Object.each(movies, function(movie){
 
 			// Attach proper actions
-			var a = self.options.actions
-			var actions = a[info.status.identifier.capitalize()] || a.Wanted || {};
+			var a = self.options.actions,
+				status = Status.get(movie.status_id);
+			var actions = a[status.identifier.capitalize()] || a.Wanted || {};
 
 			var m = new Movie(self, {
 				'actions': actions,
 				'view': self.current_view,
 				'onSelect': self.calculateSelected.bind(self)
-			}, info);
+			}, movie);
 			$(m).inject(self.movie_list);
 			m.fireEvent('injected');
 
