@@ -7,8 +7,10 @@ config = [{
     'name': 'trailer',
     'groups': [
         {
-            'tab': 'metadata',
+            'tab': 'renamer',
+            'subtab': 'trailer',
             'name': 'trailer',
+            'label': 'Download trailer after rename',
             'options': [
                 {
                     'name': 'enabled',

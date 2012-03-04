@@ -6,6 +6,7 @@ def start():
 
 config = [{
     'name': 'core',
+    'order': 1,
     'groups': [
         {
             'tab': 'general',

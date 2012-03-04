@@ -7,7 +7,8 @@ config = [{
     'name': 'newzbin',
     'groups': [
         {
-            'tab': 'providers',
+            'tab': 'searcher',
+            'subtab': 'providers',
             'name': 'newzbin',
             'wizard': True,
             'options': [

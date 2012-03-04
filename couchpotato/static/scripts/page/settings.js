@@ -8,6 +8,21 @@ Page.Settings = new Class({
 
 	tabs: {},
 	current: 'about',
+	has_tab: false,
+	
+	initialize: function(options){
+		var self = this;
+		self.parent(options);
+		
+		// Add to more menu
+		if(self.name == 'settings')
+			App.getBlock('more').addLink(new Element('a', {
+				'href': App.createUrl(self.name),
+				'text': self.name.capitalize(),
+				'title': self.title
+			}), 'top')
+		
+	},
 
 	open: function(action, params){
 		var self = this;
@@ -40,8 +55,26 @@ Page.Settings = new Class({
 		var c = 'active';
 
 		var t = self.tabs[tab_name] || self.tabs[self.action] || self.tabs.general;
+
+		// Subtab
+		var subtab = null
+		Object.each(self.params, function(param, subtab_name){
+			subtab = subtab_name;
+		})
+
+		self.el.getElements('li.'+c+' , .tab_content.'+c).each(function(active){
+			active.removeClass(c);
+		});
+
+		if (t.subtabs[subtab]){
+			t.tab[a](c);
+			t.subtabs[subtab].tab[a](c);
+			t.subtabs[subtab].content[a](c);
+		}
+		else {
 			t.tab[a](c);
 			t.content[a](c);
+		}
 
 		return t
 	},
@@ -107,10 +140,20 @@ Page.Settings = new Class({
 		new Form.Check(self.advanced_toggle);
 
 		// Add content to tabs
+		var options = [];
 		Object.each(json.options, function(section, section_name){
+			section['section_name'] = section_name;
+			options.include(section);
+		})
+
+		options.sort(function(a, b){
+			return (a.order || 100) - (b.order || 100)
+		}).each(function(section){
+			var section_name = section.section_name;
 
 			// Add groups to content
 			section.groups.sortBy('order').each(function(group){
+				if(group.hidden) return;
 
 				if(self.wizard_only && !group.wizard)
 					return;
@@ -118,17 +161,28 @@ Page.Settings = new Class({
 				// Create tab
 				if(!self.tabs[group.tab] || !self.tabs[group.tab].groups)
 					self.createTab(group.tab, {});
+				var content_container = self.tabs[group.tab].content
+
+				// Create subtab
+				if(group.subtab){
+					if (!self.tabs[group.tab].subtabs[group.subtab])
+						self.createSubTab(group.subtab, {}, self.tabs[group.tab], group.tab);
+					var content_container = self.tabs[group.tab].subtabs[group.subtab].content
+				}
 
 				// Create the group
 				if(!self.tabs[group.tab].groups[group.name]){
 					var group_el = self.createGroup(group)
-						.inject(self.tabs[group.tab].content)
+						.inject(content_container)
 						.addClass('section_'+section_name);
 					self.tabs[group.tab].groups[group.name] = group_el
 				}
 
 				// Add options to group
-				group.options.sortBy('order').each(function(option){
+				group.options.sort(function(a, b){
+					return (a.order || 100) - (b.order || 100)
+				}).each(function(option){
+					if(option.hidden) return;
 					var class_name = (option.type || 'string').capitalize();
 					var input = new Option[class_name](section_name, option.name, self.getValue(section_name, option.name), option);
 						input.inject(self.tabs[group.tab].groups[group.name]);
@@ -164,6 +218,7 @@ Page.Settings = new Class({
 
 		self.tabs[tab_name] = Object.merge(self.tabs[tab_name], {
 			'tab': tab_el,
+			'subtabs': {},
 			'content': new Element('div.tab_content.tab_'+tab_name).inject(self.containers),
 			'groups': {}
 		})
@@ -172,11 +227,43 @@ Page.Settings = new Class({
 
 	},
 
+	createSubTab: function(tab_name, tab, parent_tab, parent_tab_name){
+		var self = this;
+
+		if(parent_tab.subtabs[tab_name])
+			return parent_tab.subtabs[tab_name]
+
+		if(!parent_tab.subtabs_el)
+			parent_tab.subtabs_el = new Element('ul.subtabs').inject(parent_tab.tab);
+
+		var label = (tab.label || tab.name || tab_name).capitalize()
+		var tab_el = new Element('li.t_'+tab_name).adopt(
+			new Element('a', {
+				'href': App.createUrl(self.name+'/'+parent_tab_name+'/'+tab_name),
+				'text': label
+			}).adopt()
+		).inject(parent_tab.subtabs_el);
+
+		if(!parent_tab.subtabs[tab_name])
+			parent_tab.subtabs[tab_name] = {
+				'label': label
+			}
+
+		parent_tab.subtabs[tab_name] = Object.merge(parent_tab.subtabs[tab_name], {
+			'tab': tab_el,
+			'content': new Element('div.tab_content.tab_'+tab_name).inject(self.containers),
+			'groups': {}
+		});
+
+		return parent_tab.subtabs[tab_name]
+
+	},
+
 	createGroup: function(group){
 		var self = this;
 
 		var group_el = new Element('fieldset', {
-			'class': (group.advanced ? 'inlineLabels advanced' : 'inlineLabels') + ' group_' + (group.name || '')
+			'class': (group.advanced ? 'inlineLabels advanced' : 'inlineLabels') + ' group_' + (group.name || '') + ' subtab_' + (group.subtab || '')
 		}).adopt(
 			new Element('h2', {
 				'text': (group.label || group.name).capitalize()

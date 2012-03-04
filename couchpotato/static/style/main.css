@@ -175,7 +175,7 @@ body > .spinner, .mask{
 }
 	.header .navigation {
 		display: inline-block;
-		width: 75%;
+		width: 66.7%;
 	}
 	.header .navigation ul {
 		margin: 0;
@@ -196,10 +196,12 @@ body > .spinner, .mask{
 		}
 			.header .navigation li:first-child a { padding-left: 10px; }
 			.header .navigation li a.logLink { font-size: 13px; padding: 23px 20px 15px; }
-			.header .navigation li a#showConfig { 
-				background: url('../../media/images/gear.png') no-repeat center;
-				height: 35px;
-				width: 10px;
+			.header .navigation li.tab_settings {
+			}
+			.header .navigation li.tab_settings a { 
+				background: url('../images/gear.png') no-repeat center;
+				width: 35px;
+				text-indent: -1000px;
 			}
 
 			.header .navigation li span {
@@ -235,6 +237,14 @@ body > .spinner, .mask{
 		    font-weight: normal;
 		}
 			.header:hover .navigation .backtotop { color: #fff; }
+	
+	.header .more_menu {
+		float: right;
+		margin-top: 20px;
+	}
+		
+		.header .more_menu .red { color: red; }
+		.header .more_menu .orange { color: orange; }
 	
 	.header .message.update {
 		text-align: center;
@@ -436,3 +446,70 @@ body > .spinner, .mask{
 			margin-top: 20px;
 			background-color: #4c5766;
 		}
+
+
+	.more_menu > a {
+		display: block;
+		background: url('../images/sprite.png') no-repeat center -137px;
+		height: 25px;
+		width: 25px;
+		border: 1px solid rgba(0,0,0,0.3);
+	}
+	
+	.more_menu ul {
+		display: none;
+		border: 1px solid #333;
+		background: rgba(0,0,0,0.8);
+		border-radius: 3px;
+		padding: 4px !important;
+		position: absolute;
+		z-index: 9;
+		margin: 32px 0 0 -145px;
+		width: 185px;
+		box-shadow: 0 10px 20px -10px rgba(0,0,0,0.4);
+		list-style: none;
+		text-align: center;
+	}
+	
+		.more_menu ul:before {
+			content: ' ';
+			height: 0;
+			position: relative;
+			width: 0;
+			border: 6px solid transparent;
+			border-bottom-color: rgba(0,0,0,0.8);
+			display: block;
+			top: -16px;
+			left: 146px;
+		}
+		.more_menu ul.show {
+			display: block;
+		}
+		.more_menu ul li {
+			width: 100%;
+			height: auto;
+		}
+		
+			.more_menu ul li a {
+				display: block;
+				border-bottom: 1px solid rgba(255,255,255,0.2);
+				box-shadow: none;
+				font-weight: normal;
+				font-size: 11px;
+				text-transform: uppercase;
+				letter-spacing: 1px;
+				padding: 3px 0;
+				color: #fff;
+			}
+			
+			.more_menu ul li:first-child {
+				margin-top: -12px;
+			}
+		
+			.more_menu ul li:last-child a {
+				border: none;
+				color: #fff;
+			}
+			.more_menu ul li a:hover {
+				background: rgba(255,255,255,0.1);
+			}

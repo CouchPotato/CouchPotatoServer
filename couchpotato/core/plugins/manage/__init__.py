@@ -7,10 +7,9 @@ config = [{
     'name': 'manage',
     'groups': [
         {
-            'tab': 'renamer',
+            'tab': 'manage',
             'label': 'movie library manager',
             'description': 'Add your existing movie folders.',
-            'wizard': True,
             'options': [
                 {
                     'name': 'enabled',

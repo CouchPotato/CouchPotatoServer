@@ -116,7 +116,7 @@ var MovieList = new Class({
 					'change': self.search.bind(self)
 				}
 			}),
-			self.navigation_menu = new Element('div.menu').adopt(
+			self.navigation_menu = new Element('div.more_menu').adopt(
 				self.navigation_menu_ul = new Element('ul'),
 				self.navigation_menu_toggle = new Element('a.button.onlay', {
 					'events': {

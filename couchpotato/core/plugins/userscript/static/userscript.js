@@ -62,33 +62,17 @@ var UserscriptSettingTab = new Class({
 
 		self.settings = App.getPage('Settings')
 		self.settings.addEvent('create', function(){
-			var tab = self.settings.createTab('userscript', {
-				'label': 'Userscript',
-				'name': 'userscript'
-			});
 
-			self.tab = tab.tab;
-			self.content = tab.content;
-
-			self.createUserscript();
-
+			self.settings.createGroup({
+				'label': 'Install the Userscript'
+			}).inject(self.settings.tabs.automation.content, 'top').adopt(
+				new Element('a', {
+					'text': 'Install userscript',
+					'href': Api.createUrl('userscript.get')+'couchpotato.user.js',
+					'target': '_self'
+				})
+			);
 		});
-
-	},
-
-	createUserscript: function(){
-		var self = this;
-
-
-		self.settings.createGroup({
-			'label': 'Install the Userscript'
-		}).inject(self.content).adopt(
-			new Element('a', {
-				'text': 'Install userscript',
-				'href': Api.createUrl('userscript.get')+'couchpotato.user.js',
-				'target': '_self'
-			})
-		);
 
 	}
 

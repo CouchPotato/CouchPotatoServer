@@ -29,7 +29,7 @@ Page.Wizard = new Class({
 		},
 		'finish': {
 			'title': 'Finish Up',
-			'description': 'Are you done? Did you fill in everything or as much as possible? Yes, ok gogogo!',
+			'description': 'Are you done? Did you fill in everything as much as possible? Yes, ok gogogo!',
 			'content': new Element('div').adopt(
 				new Element('a.button.green', {
 					'text': 'I\'m ready to start the awesomeness, wow this button is big and green!',
@@ -115,7 +115,14 @@ Page.Wizard = new Class({
 			if(tab_navigation && group_container){
 				tab_navigation.inject(tabs); // Tab navigation
 				self.el.getElement('.tab_'+group).inject(group_container); // Tab content
-				if(self.headers[group]) tab_navigation.getElement('a').set('text', (self.headers[group].label || group).capitalize());
+				if(self.headers[group]){
+					var a = tab_navigation.getElement('a');
+						a.set('text', (self.headers[group].label || group).capitalize());
+						var url_split = a.get('href').split('wizard')[1].split('/');
+						if(url_split.length > 3)
+							a.set('href', a.get('href').replace(url_split[url_split.length-3]+'/', ''));
+
+				}
 			}
 			else {
 				new Element('li.t_'+group).adopt(
@@ -161,7 +168,7 @@ Page.Wizard = new Class({
 			if(nr == 0)
 				func();
 
-			
+
 			var ss = new ScrollSpy( {
 				min: function(){
 					var c = g.getCoordinates();

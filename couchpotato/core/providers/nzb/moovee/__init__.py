@@ -7,7 +7,8 @@ config = [{
     'name': 'moovee',
     'groups': [
         {
-            'tab': 'providers',
+            'tab': 'searcher',
+            'subtab': 'providers',
             'name': '#alt.binaries.moovee',
             'description': 'SD movies only',
             'options': [

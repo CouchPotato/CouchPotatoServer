@@ -59,13 +59,14 @@ var CouchPotato = new Class({
 			$(self.block.header).addClass('header').adopt(
 				new Element('div').adopt(
 					self.block.navigation = new Block.Navigation(self, {}),
-					self.block.search = new Block.Search(self, {})
+					self.block.search = new Block.Search(self, {}),
+					self.block.more = new Block.More(self, {})
 				)
 			),
 			self.content = new Element('div.content'),
 			self.block.footer = new Block.Footer(self, {})
 		);
-		
+
 		new ScrollSpy({
 			min: 10,
 			onLeave: function(){
@@ -108,7 +109,7 @@ var CouchPotato = new Class({
 
 		try {
 			var page = self.pages[page_name] || self.pages.Wanted;
-			page.open(action, params);
+			page.open(action, params, current_url);
 			page.show();
 		}
 		catch(e){
@@ -150,7 +151,7 @@ var CouchPotato = new Class({
 		var self = this;
 
 		(function(){
-			
+
 			Api.request('app.available', {
 				'onFailure': function(){
 					self.checkAvailable.delay(1000, self);
@@ -161,7 +162,7 @@ var CouchPotato = new Class({
 					self.fireEvent('load');
 				}
 			});
-		
+
 		}).delay(delay || 0)
 	},
 
@@ -214,7 +215,7 @@ var Route = new Class({
 		self.page = (url.length > 0) ? url.shift() : self.defaults.page
 		self.action = (url.length > 0) ? url.shift() : self.defaults.action
 
-		self.params = self.defaults.params
+		self.params = Object.merge({}, self.defaults.params);
 		if(url.length > 1){
 			var key
 			url.each(function(el, nr){
@@ -225,6 +226,9 @@ var Route = new Class({
 					key = null
 				}
 			})
+		}
+		else if(url.length == 1){
+			self.params[url] = true;
 		}
 
 		return self

@@ -5,6 +5,7 @@ def start():
 
 config = [{
     'name': 'blackhole',
+    'order': 30,
     'groups': [
         {
             'tab': 'downloaders',

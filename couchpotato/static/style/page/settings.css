@@ -16,7 +16,7 @@
 	.page.settings .tabs {
 		float: left;
 		width: 20%;
-		font-size: 25px;
+		font-size: 20px;
 		text-align: right;
 		list-style: none;
 		padding: 40px 0;
@@ -39,11 +39,41 @@
 		.page.settings .tabs a {
 			display: block;
 			padding: 11px 15px;
-			color: #fff;
+			font-weight: normal;
+			transition: all 0.1s ease-in-out;
+			color: rgba(255, 255, 255, 0.8);
 		}
-		.page.settings .tabs .active a {
-			background: #4e5969;
+			.page.settings .tabs a:hover, .page.settings .tabs .active a {
+				background: rgb(78, 89, 105);
+				font-weight: bold;
+				font-size: 25px;
+				color: #fff;
+			}
+			
+		.page.settings .tabs .subtabs {
+			list-style: none;
+			padding: 0;
+			overflow: hidden;
+			transition: all 1s ease-in-out;
+			max-height: 0;
 		}
+			.page.settings .tabs > .active .subtabs {
+				max-height: 300px;
+			}
+			
+			.page.settings .tabs .subtabs a {
+				font-size: 15px;
+				padding: 1px 15px;
+				font-weight: normal;
+				color: rgba(255, 255, 255, 0.8);
+				background: rgba(78, 89, 105, 0.4);
+			}
+			
+				.page.settings .tabs .subtabs .active a {
+					font-weight: bold;
+					color: #fff;
+					background: rgb(78, 89, 105);
+				}
 
 	
 	.page.settings .containers {

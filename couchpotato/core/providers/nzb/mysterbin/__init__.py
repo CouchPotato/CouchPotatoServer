@@ -7,7 +7,8 @@ config = [{
     'name': 'mysterbin',
     'groups': [
         {
-            'tab': 'providers',
+            'tab': 'searcher',
+            'subtab': 'providers',
             'name': 'Mysterbin',
             'description': '',
             'options': [

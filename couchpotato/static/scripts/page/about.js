@@ -39,6 +39,36 @@ var AboutSettingTab = new Class({
 			one_day = 1000*60*60*24;
 
 		self.settings.createGroup({
+			'label': 'About This CouchPotato',
+			'name': 'variables'
+		}).inject(self.content).adopt(
+			new Element('dl.info').adopt(
+				new Element('dt[text=Version]'),
+				self.version_text = new Element('dd.version', {
+					'text': 'Getting version...',
+					'events': {
+						'click': self.checkForUpdate.bind(self),
+						'mouseenter': function(){
+							this.set('text', 'Check for updates')
+						},
+						'mouseleave': function(){
+							self.fillVersion(Updater.getInfo())
+						}
+					}
+				}),
+				new Element('dt[text=Directories]'),
+				new Element('dd', {'text': App.getOption('app_dir')}),
+				new Element('dd', {'text': App.getOption('data_dir')}),
+				new Element('dt[text=Startup Args]'),
+				new Element('dd', {'html': App.getOption('args')}),
+				new Element('dd', {'html': App.getOption('options')})
+			)
+		);
+
+		if(!self.fillVersion(Updater.getInfo()))
+			Updater.addEvent('loaded', self.fillVersion.bind(self))
+
+		self.settings.createGroup({
 			'name': 'Help Support CouchPotato'
 		}).inject(self.content).adopt(
 			new Element('div.usenet').adopt(
@@ -76,56 +106,6 @@ var AboutSettingTab = new Class({
 					'<input type="image" src="https://www.paypal.com/en_US/i/btn/btn_donate_LG.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">' +
 				'</form>'
 			})
-		);
-
-
-		self.settings.createGroup({
-			'label': 'About This CouchPotato',
-			'name': 'variables'
-		}).inject(self.content).adopt(
-			new Element('dl.info').adopt(
-				new Element('dt[text=Version]'),
-				self.version_text = new Element('dd.version', {
-					'text': 'Getting version...',
-					'events': {
-						'click': self.checkForUpdate.bind(self),
-						'mouseenter': function(){
-							this.set('text', 'Check for updates')
-						},
-						'mouseleave': function(){
-							self.fillVersion(Updater.getInfo())
-						}
-					}
-				}),
-				new Element('dt[text=Directories]'),
-				new Element('dd', {'text': App.getOption('app_dir')}),
-				new Element('dd', {'text': App.getOption('data_dir')}),
-				new Element('dt[text=Startup Args]'),
-				new Element('dd', {'html': App.getOption('args')}),
-				new Element('dd', {'html': App.getOption('options')})
-			)
-		);
-
-		if(!self.fillVersion(Updater.getInfo()))
-			Updater.addEvent('loaded', self.fillVersion.bind(self))
-
-		self.settings.createGroup({
-			'name': 'actions'
-		}).inject(self.content).adopt(
-			new Element('div').adopt(
-				new Element('a.button.red', {
-					'text': 'Shutdown',
-					'events': {
-						'click': App.shutdown.bind(App)
-					}
-				}),
-				new Element('a.button.orange', {
-					'text': 'Restart',
-					'events': {
-						'click': App.restart.bind(App)
-					}
-				})
-			)
 		);
 
 	},
