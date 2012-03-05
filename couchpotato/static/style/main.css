@@ -234,11 +234,11 @@ body > .spinner, .mask{
 		margin-top: 20px;
 	}
 		.header .more_menu ul {
-			width: 100px;
-			margin-left: -60px;
+			width: 150px;
+			margin-left: -110px;
 		}
 		.header .more_menu ul:before {
-			margin-left: -84px;
+			margin-left: -34px;
 		}
 		
 		.header .more_menu .red { color: red; }

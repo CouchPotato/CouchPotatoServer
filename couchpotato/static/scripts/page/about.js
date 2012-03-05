@@ -47,7 +47,9 @@ var AboutSettingTab = new Class({
 				self.version_text = new Element('dd.version', {
 					'text': 'Getting version...',
 					'events': {
-						'click': self.checkForUpdate.bind(self),
+						'click': App.checkForUpdate.bind(App, function(json){
+							self.fillVersion(json)
+						}),
 						'mouseenter': function(){
 							this.set('text', 'Check for updates')
 						},
@@ -117,17 +119,6 @@ var AboutSettingTab = new Class({
 		var self = this;
 		var date = new Date(json.version.date * 1000);
 		self.version_text.set('text', json.version.hash + ' ('+date.toUTCString()+')');
-	},
-
-	checkForUpdate: function(){
-		var self = this;
-
-		Updater.check(function(json){
-			self.fillVersion(json)
-		})
-
-		App.blockPage('Please wait. If this takes to long, something must have gone wrong.', 'Checking for updates');
-		App.checkAvailable(3000);
 	}
 
 });

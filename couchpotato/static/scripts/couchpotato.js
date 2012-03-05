@@ -67,6 +67,13 @@ var CouchPotato = new Class({
 			self.block.footer = new Block.Footer(self, {})
 		);
 
+		self.block.more.addLink(new Element('a', {
+			'text': 'Check for updates',
+			'events': {
+				'click': self.checkForUpdate.bind(self)
+			}
+		}))
+
 		new ScrollSpy({
 			min: 10,
 			onLeave: function(){
@@ -145,6 +152,15 @@ var CouchPotato = new Class({
 		self.blockPage('Restarting... please wait. If this takes to long, something must have gone wrong.');
 		Api.request('app.restart');
 		self.checkAvailable(1000);
+	},
+
+	checkForUpdate: function(func){
+		var self = this;
+
+		Updater.check(func)
+
+		self.blockPage('Please wait. If this takes to long, something must have gone wrong.', 'Checking for updates');
+		self.checkAvailable(3000);
 	},
 
 	checkAvailable: function(delay){
