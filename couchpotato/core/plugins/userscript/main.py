@@ -15,6 +15,8 @@ log = CPLog(__name__)
 
 class Userscript(Plugin):
 
+    version = 1
+
     def __init__(self):
         addApiView('userscript.get/<path:filename>', self.getUserScript, static = True)
         addApiView('userscript', self.iFrame)
@@ -42,7 +44,7 @@ class Userscript(Plugin):
 
         versions = fireEvent('userscript.get_provider_version')
 
-        version = 0
+        version = self.version
         for v in versions:
             version += v
 

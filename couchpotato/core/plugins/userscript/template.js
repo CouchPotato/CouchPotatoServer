@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        CouchPotato UserScript
 // @description Add movies like a real CouchPotato
-// @version 	{{version}}
+// @version     {{version}}
 
 // @match       {{host}}*
 {% for include in includes %}
@@ -72,8 +72,12 @@ var close_img = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8
 var osd = function(){
     var navbar, newElement;
 
+    var createApiUrl = function(url){
+        return host + api + "?url=" + escape(url)
+    };
+
     var iframe = create('iframe', {
-        'src': host + api + "?url=" + escape(document.location.href),
+        'src': createApiUrl(document.location.href),
         'frameborder': 0,
         'scrolling': 'no'
     });
@@ -85,6 +89,16 @@ var osd = function(){
         'innerHTML': '<img src="' + cp_icon + '" />',
         'id': 'add_to',
         'onclick': function(){
+
+            // Try and get imdb url
+            try {
+                var regex = new RegExp(/tt(\d+)/);
+                var imdb_id = document.body.innerHTML.match(regex)[0];
+                if (imdb_id)
+                    iframe.setAttribute('src', createApiUrl('http://imdb.com/title/'+imdb_id+'/'))
+            }
+            catch(e){}
+
             popup.innerHTML = '';
             popup.appendChild(create('a', {
                 'innerHTML': '<img src="' + close_img + '" />',
@@ -103,10 +117,10 @@ var osd = function(){
 };
 
 var setVersion = function(){
-	document.body.setAttribute('data-userscript_version', version)
+    document.body.setAttribute('data-userscript_version', version)
 };
 
 if(document.location.href.indexOf(host) == -1)
-	osd();
+    osd();
 else
-	setVersion();
+    setVersion();
