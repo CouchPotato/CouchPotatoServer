@@ -121,11 +121,11 @@ var MovieList = new Class({
 				self.navigation_menu_toggle = new Element('a.button.onlay', {
 					'events': {
 						'click': function(){
-							self.navigation_menu_ul.toggleClass('show')
+							self.navigation_menu.toggleClass('show')
 							
-							if(self.navigation_menu_ul.hasClass('show'))
+							if(self.navigation_menu.hasClass('show'))
 								this.addEvent('outerClick', function(){
-									self.navigation_menu_ul.removeClass('show')
+									self.navigation_menu.removeClass('show')
 									this.removeEvents('outerClick');
 								})
 							else

@@ -2,7 +2,7 @@ Page.Log = new Class({
 
 	Extends: PageBase,
 
-	name: 'logs',
+	name: 'log',
 	title: 'Show recent logs.',
 	has_tab: false,
 	

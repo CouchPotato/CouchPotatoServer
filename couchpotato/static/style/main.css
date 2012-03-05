@@ -195,15 +195,6 @@ body > .spinner, .mask{
 			padding: 15px;
 		}
 			.header .navigation li:first-child a { padding-left: 10px; }
-			.header .navigation li a.logLink { font-size: 13px; padding: 23px 20px 15px; }
-			.header .navigation li.tab_settings {
-			}
-			.header .navigation li.tab_settings a { 
-				background: url('../images/gear.png') no-repeat center;
-				width: 35px;
-				text-indent: -1000px;
-			}
-
 			.header .navigation li span {
 				display: block;
 				margin-top: 5px;
@@ -242,6 +233,13 @@ body > .spinner, .mask{
 		float: right;
 		margin-top: 20px;
 	}
+		.header .more_menu ul {
+			width: 100px;
+			margin-left: -60px;
+		}
+		.header .more_menu ul:before {
+			margin-left: -84px;
+		}
 		
 		.header .more_menu .red { color: red; }
 		.header .more_menu .orange { color: orange; }
@@ -454,6 +452,10 @@ body > .spinner, .mask{
 		height: 25px;
 		width: 25px;
 		border: 1px solid rgba(0,0,0,0.3);
+		transition: all 0.3s ease-in-out;
+	}
+	.more_menu.show > a, .more_menu > a:hover {
+		background-color: #406db8;
 	}
 	
 	.more_menu ul {
@@ -482,7 +484,7 @@ body > .spinner, .mask{
 			top: -16px;
 			left: 146px;
 		}
-		.more_menu ul.show {
+		.more_menu.show ul {
 			display: block;
 		}
 		.more_menu ul li {

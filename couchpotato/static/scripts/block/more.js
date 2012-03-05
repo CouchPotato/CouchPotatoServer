@@ -27,11 +27,11 @@ Block.More = new Class({
 			new Element('a.button.onlay', {
 				'events': {
 					'click': function(){
-						self.more_option_ul.toggleClass('show')
+						self.el.toggleClass('show')
 
-						if(self.more_option_ul.hasClass('show'))
+						if(self.el.hasClass('show'))
 							this.addEvent('outerClick', function(){
-								self.more_option_ul.removeClass('show')
+								self.el.removeClass('show')
 								this.removeEvents('outerClick');
 							})
 						else
