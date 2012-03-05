@@ -56,6 +56,8 @@ var AboutSettingTab = new Class({
 						}
 					}
 				}),
+				new Element('dt[text=ID]'),
+				new Element('dd', {'text': App.getOption('pid')}),
 				new Element('dt[text=Directories]'),
 				new Element('dd', {'text': App.getOption('app_dir')}),
 				new Element('dd', {'text': App.getOption('data_dir')}),

@@ -88,6 +88,7 @@
 					'options': "{{ env.get('options')|safe }}",
 					'app_dir': {{ env.get('app_dir')|tojson|safe }},
 					'data_dir': {{ env.get('data_dir')|tojson|safe }},
+					'pid': {{ env.getPid()|tojson|safe }},
 					'userscript_version': {{ fireEvent('userscript.get_version', single = True)|tojson|safe }}
 				});
 			})

@@ -1,6 +1,7 @@
 from couchpotato.core.event import fireEvent, addEvent
 from couchpotato.core.loader import Loader
 from couchpotato.core.settings import Settings
+import os
 
 class Env(object):
 
@@ -71,3 +72,14 @@ class Env(object):
     @staticmethod
     def addEvent(*args, **kwargs):
         return addEvent(*args, **kwargs)
+
+    @staticmethod
+    def getPid():
+        try:
+            try:
+                parent = os.getppid()
+            except:
+                parent = None
+            return '%d %s' % (os.getpid(), '(%d)' % parent if parent else '')
+        except:
+            return 0
