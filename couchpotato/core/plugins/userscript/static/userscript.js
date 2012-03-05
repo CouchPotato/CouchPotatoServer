@@ -90,7 +90,7 @@ window.addEvent('load', function(){
 
 	if(your_version && your_version < latest_version && checked_already < latest_version){
 		if(confirm("Update to the latest Userscript?\nYour version: " + your_version + ', new version: ' + latest_version )){
-			document.location = Api.getOption('url')+'userscript.get/?couchpotato.user.js';
+			document.location = Api.getOption('url')+'userscript.get/couchpotato.user.js';
 		}
 		Cookie.write(key, latest_version, {duration: 100});
 	}
