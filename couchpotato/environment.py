@@ -80,6 +80,6 @@ class Env(object):
                 parent = os.getppid()
             except:
                 parent = None
-            return '%d %s' % (os.getpid(), '(%d)' % parent if parent else '')
+            return '%d %s' % (os.getpid(), '(%d)' % parent if parent and parent > 1 else '')
         except:
             return 0
