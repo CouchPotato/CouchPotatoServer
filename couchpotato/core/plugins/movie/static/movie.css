@@ -43,7 +43,7 @@
 		}
 			.movies .list_view .data, .movies .mass_edit_view .data {
 				height: 30px;
-				padding: 3px 10px;
+				padding: 3px 0 3px 10px;
 				width: 938px;
 				box-shadow: none;
 				border: 0;

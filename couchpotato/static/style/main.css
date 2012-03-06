@@ -454,7 +454,7 @@ body > .spinner, .mask{
 		border: 1px solid rgba(0,0,0,0.3);
 		transition: all 0.3s ease-in-out;
 	}
-	.more_menu.show > a, .more_menu > a:hover {
+	.more_menu.show > a:not(:active), .more_menu > a:hover:not(:active) {
 		background-color: #406db8;
 	}
 	
