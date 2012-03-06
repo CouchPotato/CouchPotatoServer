@@ -348,7 +348,8 @@
 		text-shadow: none;
 	}
 		.movies .alph_nav .numbers li:first-child {
-			width: 44px;
+			width: 43px;
+			margin-left: 7px;
 		}
 		.movies .alph_nav li.available {
 			color: rgba(255,255,255,0.8);
