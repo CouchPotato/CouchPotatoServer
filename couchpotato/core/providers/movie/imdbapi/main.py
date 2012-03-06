@@ -14,7 +14,7 @@ class IMDBAPI(MovieProvider):
 
     urls = {
         'search': 'http://www.imdbapi.com/?%s',
-        'info': 'http://www.imdbapi.com/?i=%s&tomatoes=true',
+        'info': 'http://www.imdbapi.com/?i=%s',
     }
 
     http_time_between_calls = 0
