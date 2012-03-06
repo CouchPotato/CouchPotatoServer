@@ -84,7 +84,7 @@
 		}
 		
 	.search_form .spinner {
-		background: rgba(0,0,0,0.8) url('../images/spinner.gif') no-repeat center 70px;
+		background: rgba(92,105,123,0.7) url('../images/spinner.gif') no-repeat 345px 10px;
 	}
 
 	.search_form .results {
