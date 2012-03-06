@@ -27,14 +27,14 @@ def nameScore(name, year):
     score = 0
     name = name.lower()
 
-    #give points for the cool stuff
+    # give points for the cool stuff
     for value in name_scores:
         v = value.split(':')
         add = int(v.pop())
         if v.pop() in name:
             score = score + add
 
-    #points if the year is correct
+    # points if the year is correct
     if str(year) in name:
         score = score + 5
 
@@ -58,3 +58,24 @@ def nameRatioScore(nzb_name, movie_name):
 
 def sizeScore(size):
     return 0 if size else -20
+
+
+def providerScore(provider):
+    if provider in ['NZBMatrix', 'Nzbs', 'Newzbin']:
+        return 30
+
+    if provider in ['Newznab', 'Moovee', 'X264']:
+        return 10
+
+    return 0
+
+
+def duplicateScore(nzb_name, movie_name):
+
+    nzb_words = re.split('\W+', simplifyString(nzb_name))
+    movie_words = re.split('\W+', simplifyString(movie_name))
+
+    # minus for duplicates
+    duplicates = [x for i, x in enumerate(nzb_words) if nzb_words[i:].count(x) > 1]
+
+    return len(list(set(duplicates) - set(movie_words))) * -4
