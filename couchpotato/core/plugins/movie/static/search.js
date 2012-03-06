@@ -10,11 +10,22 @@ Block.Search = new Class({
 		self.el = new Element('div.search_form').adopt(
 			new Element('div.input').adopt(
 				self.input = new Element('input.inlay', {
-					'placeholder': 'Search for new movies',
+					'placeholder': 'Search & add a new movie',
 					'events': {
 						'keyup': self.keyup.bind(self),
-						'focus': self.hideResults.bind(self, false)
+						'focus': function(){
+							self.el.addClass('focused')
+						},
+						'blur': function(){
+							self.el.removeClass('focused')
+						}
 					}
+				}),
+				new Element('span.enter', {
+					'events': {
+						'click': self.keyup.bind(self)
+					},
+					'text':'Enter'
 				}),
 				new Element('a', {
 					'events': {
@@ -32,9 +43,8 @@ Block.Search = new Class({
 					}
 				}
 			}).adopt(
-				new Element('div.pointer'),
 				self.results = new Element('div.results')
-			).hide()
+			)
 		);
 
 		self.spinner = new Spinner(self.result_container);
@@ -50,6 +60,7 @@ Block.Search = new Class({
 
 		self.movies = []
 		self.results.empty()
+		self.el.removeClass('filled')
 	},
 
 	hideResults: function(bool){
@@ -57,7 +68,7 @@ Block.Search = new Class({
 
 		if(self.hidden == bool) return;
 
-		self.result_container[bool ? 'hide' : 'show']();
+		self.el[bool ? 'removeClass' : 'addClass']('shown');
 
 		if(bool){
 			History.removeEvent('change', self.hideResults.bind(self, !bool));
@@ -74,16 +85,14 @@ Block.Search = new Class({
 	keyup: function(e){
 		var self = this;
 
-		if(['up', 'down'].indexOf(e.key) > -1){
-			p('select item')
-		}
-		else if(self.q() != self.last_q) {
+		self.el[self.q() ? 'addClass' : 'removeClass']('filled')
+
+		if(self.q() != self.last_q && (['enter'].indexOf(e.key) > -1 || e.type == 'click'))
 			self.autocomplete()
-		}
 
 	},
 
-	autocomplete: function(delay){
+	autocomplete: function(){
 		var self = this;
 
 		if(!self.q()){
@@ -91,10 +100,7 @@ Block.Search = new Class({
 			return
 		}
 
-		self.spinner.show()
-
-		if(self.autocomplete_timer) clearTimeout(self.autocomplete_timer)
-		self.autocomplete_timer = self.list.delay((delay || 300), self)
+		self.list()
 	},
 
 	list: function(){
@@ -108,6 +114,7 @@ Block.Search = new Class({
 		self.hideResults(false)
 
 		if(!cache){
+			self.spinner.show()
 			self.api_request = Api.request('movie.search', {
 				'data': {
 					'q': q
@@ -138,9 +145,15 @@ Block.Search = new Class({
 			self.movies[movie.imdb || 'r-'+Math.floor(Math.random()*10000)] = m
 
 		});
-		
+
 		if(q != self.q())
 			self.list()
+			
+		// Calculate result heights
+		var w = window.getSize(),
+			rc = self.result_container.getCoordinates();
+			
+		self.results.setStyle('max-height', (w.y - rc.top - 50) + 'px')
 
 	},
 
@@ -293,10 +306,9 @@ Block.Search.Item = new Class({
 					}) : null,
 					self.info.in_wanted ? new Element('span.in_wanted', {
 						'text': 'Already in wanted list: ' + self.info.in_wanted.label
-					}) : null,
-					self.info.in_library ? new Element('span.in_library', {
+					}) : (self.info.in_library ? new Element('span.in_library', {
 						'text': 'Already in library: ' + self.info.in_library.label
-					}) : null,
+					}) : null),
 					self.title_select = new Element('select', {
 						'name': 'title'
 					}),

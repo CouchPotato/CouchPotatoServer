@@ -14,59 +14,93 @@
 		margin: 0;
 		font-size: 14px;
 		width: 100%;
+		height: 24px;
 	}
+	
+		.search_form .input .enter {
+			background: #369545 url('../images/sprite.png') right -188px no-repeat;
+			padding: 0 20px 0 4px;
+			border-radius: 2px;
+			text-transform: uppercase;
+			font-size: 10px;
+			margin-left: -78px;
+			display: inline-block;
+			opacity: 0;
+			position: relative;
+			top: -2px;
+			cursor: pointer;
+			vertical-align: middle;
+			visibility: hidden;
+		}
+			.search_form.focused .input .enter {
+				visibility: visible;
+			}
+			.search_form.focused.filled .input .enter {
+				opacity: 1;
+			}
+		
 		.search_form .input a  {
 			width:  17px;
 			height: 20px;
 			display: inline-block;
-			margin: 0 0 -5px -20px;
+			margin: -2px 0 0 2px;
 			top: 4px;
 			right: 5px;
-			background: url('../images/sprite.png') right -36px no-repeat;
+			background: url('../images/sprite.png') left -37px no-repeat;
 			cursor: pointer;
+			opacity: 0;
+			transition: all 0.2s ease-in-out;
+			vertical-align: middle;
+		}
+		
+		.search_form.filled .input a {
+			opacity: 1;
 		}
 
 	.search_form .results_container {
 		position: absolute;
 		background: #5c697b;
-		margin: 6px 0 0 -246px;
+		margin: 6px 0 0 -230px;
 		width: 470px;
 		min-height: 140px;
-
 		border-radius: 3px;
-		-webkit-border-radius: 3px;
-		-moz-border-radius: 3px;
-
-		box-shadow: 0 0 50px rgba(0,0,0,0.55);
+		box-shadow: 0 20px 20px -10px rgba(0,0,0,0.55);
+		display: none;
 	}
+		.search_form.shown.filled .results_container {
+			display: block;
+		}
+		
+		.search_form .results_container:before {
+			content: ' ';
+			height: 0;
+			position: relative;
+			width: 0;
+			border: 10px solid transparent;
+			border-bottom-color: #5c697b;
+			display: block;
+			top: -20px;
+			left: 346px;
+		}
+		
 	.search_form .spinner {
 		background: rgba(0,0,0,0.8) url('../images/spinner.gif') no-repeat center 70px;
 	}
-
-		.search_form .pointer {
-			border-right: 10px solid transparent;
-			border-left: 10px solid transparent;
-			border-bottom: 10px solid #5c697b;
-			display: block;
-			position: absolute;
-			width: 0px;
-			left: 50%;
-			margin: -9px 0 0 110px;
-		}
 
 	.search_form .results {
 		max-height: 570px;
 		overflow-x: hidden;
 		padding: 10px 0;
+		margin-top: -18px;
 	}
 
 	.movie_result {
 		overflow: hidden;
-		min-height: 140px;
+		height: 140px;
 	}
 
 		.movie_result .options {
-			height: 139px;
+			height: 140px;
 			border: 1px solid transparent;
 			border-width: 1px 0;
 			border-radius: 0;
@@ -107,10 +141,9 @@
 			padding: 0 15px;
 			width: 470px;
 			position: relative;
-			min-height: 100px;
+			height: 140px;
 			top: 0;
-			margin: -143px 0 0 0;
-			min-height: 140px;
+			margin: -140px 0 0 0;
 			background: #5c697b;
 			cursor: pointer;
 
@@ -139,6 +172,8 @@
 				display: inline-block;
 				vertical-align: top;
 				padding: 15px 0;
+				height: 120px;
+				overflow: hidden;
 			}
 
 			.movie_result .info .tagline {
