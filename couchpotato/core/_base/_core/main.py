@@ -12,11 +12,8 @@ import time
 import traceback
 import webbrowser
 
-if os.name == 'nt':
-    import getppid
-
-
 log = CPLog(__name__)
+
 
 class Core(Plugin):
 
