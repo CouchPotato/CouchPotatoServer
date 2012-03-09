@@ -65,9 +65,9 @@ class Env(object):
     def getPermission(setting_type):
         perm = Env.get('settings').get('permission_%s' % setting_type, default = '0777')
         if perm[0] == '0':
-            return oct(int(perm, 8))
+            return int(perm, 8)
         else:
-            return oct(int(perm))
+            return int(perm)
 
     @staticmethod
     def fireEvent(*args, **kwargs):
