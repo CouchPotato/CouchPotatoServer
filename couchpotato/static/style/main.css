@@ -84,7 +84,7 @@ a:hover { color: #f3f3f3; }
 
 .content {
 	clear:both;
-	padding: 80px 10px 10px;
+	padding: 80px 0 10px;
 }
 
 .footer {
@@ -117,7 +117,16 @@ form {
 body > .spinner, .mask{
 	background: rgba(0,0,0, 0.9);
 	z-index: 100;
+	text-align: center;
 }
+	body > .mask {
+		position: fixed;
+		top: 0;
+		left: 0;
+		height: 100%;
+		width: 100%;
+		padding: 200px;
+	}
 
 .button {
     background: #5082bc url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAyCAYAAACd+7GKAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAClJREFUeNpi/v//vwMTAwPDfzjBgMpFI/7hFSOT9Y8qRuF3JLoHAQIMAHYtMmRA+CugAAAAAElFTkSuQmCC") repeat-x;
@@ -155,7 +164,7 @@ body > .spinner, .mask{
 /*** Navigation ***/
 .header {
 	background: #4e5969;
-	padding:10px;
+	padding: 10px 0;
 	height: 80px;
 	position: fixed;
 	margin: 0;
@@ -175,7 +184,7 @@ body > .spinner, .mask{
 }
 	.header .navigation {
 		display: inline-block;
-		width: 66.7%;
+		width: 67.2%;
 	}
 	.header .navigation ul {
 		margin: 0;

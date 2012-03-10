@@ -82,10 +82,6 @@
 			top: -20px;
 			left: 346px;
 		}
-		
-	.search_form .spinner {
-		background: rgba(92,105,123,0.7) url('../images/spinner.gif') no-repeat 345px 10px;
-	}
 
 	.search_form .results {
 		max-height: 570px;
@@ -197,3 +193,7 @@
 
 				.movie_result .info h2 span:before { content: "("; }
 				.movie_result .info h2 span:after { content: ")"; }
+
+.search_form .mask {
+	border-radius: 3px;
+}

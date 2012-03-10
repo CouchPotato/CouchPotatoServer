@@ -47,7 +47,7 @@ Block.Search = new Class({
 			)
 		);
 
-		self.spinner = new Spinner(self.result_container);
+		self.mask = new Element('div.mask').inject(self.result_container).fade('hide');
 
 	},
 
@@ -111,10 +111,14 @@ Block.Search = new Class({
 		var q = self.q();
 		var cache = self.cache[q];
 
-		self.hideResults(false)
+		self.hideResults(false);
 
 		if(!cache){
-			self.spinner.show()
+			self.positionMask().fade('in');
+
+			if(!self.spinner)
+				self.spinner = createSpinner(self.mask);
+
 			self.api_request = Api.request('movie.search', {
 				'data': {
 					'q': q
@@ -132,7 +136,7 @@ Block.Search = new Class({
 	fill: function(q, json){
 		var self = this;
 
-		self.spinner.hide();
+		self.positionMask()
 		self.cache[q] = json
 
 		self.movies = {}
@@ -148,13 +152,27 @@ Block.Search = new Class({
 
 		if(q != self.q())
 			self.list()
-			
+
 		// Calculate result heights
 		var w = window.getSize(),
 			rc = self.result_container.getCoordinates();
-			
-		self.results.setStyle('max-height', (w.y - rc.top - 50) + 'px')
 
+		self.results.setStyle('max-height', (w.y - rc.top - 50) + 'px')
+		self.mask.hide()
+
+	},
+
+	positionMask: function(){
+		var self = this;
+
+		var s = self.result_container.getSize()
+
+		return self.mask.setStyles({
+			'width': s.x,
+			'height': s.y
+		}).position({
+			'relativeTo': self.result_container
+		})
 	},
 
 	loading: function(bool){
@@ -273,8 +291,6 @@ Block.Search.Item = new Class({
 				'title': self.title_select.get('value'),
 				'profile_id': self.profile_select.get('value')
 			},
-			'useSpinner': true,
-			'spinnerTarget': self.options,
 			'onComplete': function(){
 				self.options.empty();
 				self.options.adopt(

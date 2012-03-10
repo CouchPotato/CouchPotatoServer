@@ -185,21 +185,24 @@ var CouchPotato = new Class({
 	blockPage: function(message, title){
 		var self = this;
 
-		if(!self.mask){
-			var body = $(document.body);
-			self.mask = new Spinner(document.body, {
-				'message': new Element('div').adopt(
-					new Element('h1', {'text': title || 'Unavailable'}),
-					new Element('div', {'text': message || 'Something must have crashed.. check the logs ;)'})
-				)
-			});
-		}
-		self.mask.show();
+		var body = $(document.body);
+		self.mask = new Element('div.mask').adopt(
+			new Element('div').adopt(
+				new Element('h1', {'text': title || 'Unavailable'}),
+				new Element('div', {'text': message || 'Something must have crashed.. check the logs ;)'})
+			)
+		).fade('hide').inject(document.body).fade('in');
+
+		createSpinner(self.mask, {
+			'top': -50
+		});
 	},
 
 	unBlockPage: function(){
 		var self = this;
-		self.mask.hide();
+		self.mask.get('tween').start('opacity', 0).chain(function(){
+			this.element.destroy()
+		});
 	},
 
 	createUrl: function(action, params){
@@ -363,3 +366,22 @@ function randomString(length, extra) {
 
 })();
 
+var createSpinner = function(target, options){
+	var opts = Object.merge({
+		lines: 12,
+		length: 5,
+		width: 4,
+		radius: 9,
+		color: '#fff',
+		speed: 1.9,
+		trail: 53,
+		shadow: false,
+		hwaccel: true,
+		className: 'spinner',
+		zIndex: 2e9,
+		top: 'auto',
+		left: 'auto'
+	}, options);
+
+	return new Spinner(opts).spin(target);
+}

@@ -88,7 +88,7 @@
 				font-weight: bold;
 				margin-bottom: 10px;
 				float: left;
-				width: 50%;
+				width: 90%;
 				transition: all 0.2s linear;
 			}
 				.movies .list_view .info .title, .movies .mass_edit_view .info .title {
