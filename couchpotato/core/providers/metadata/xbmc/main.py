@@ -48,7 +48,7 @@ class XBMC(MetaDataBase):
             pass
 
         # Other values
-        types = ['rating', 'year', 'mpaa', 'originaltitle:original_title', 'outline', 'plot', 'tagline', 'premiered:released']
+        types = ['year', 'mpaa', 'originaltitle:original_title', 'outline', 'plot', 'tagline', 'premiered:released']
         for type in types:
 
             if ':' in type:
@@ -73,7 +73,7 @@ class XBMC(MetaDataBase):
                 votes.text = str(v)
                 break
             except:
-                log.error('Failed adding rating info from %s: %s' % (rating_type, traceback.format_exc()))
+                log.debug('Failed adding rating info from %s: %s' % (rating_type, traceback.format_exc()))
 
         # Genre
         for genre in movie_info.get('genres', []):
@@ -87,9 +87,9 @@ class XBMC(MetaDataBase):
             name.text = toUnicode(actor)
 
         # Directors
-        for director in movie_info.get('directors', []):
+        for director_name in movie_info.get('directors', []):
             director = SubElement(nfoxml, 'director')
-            director.text = toUnicode(director)
+            director.text = toUnicode(director_name)
 
         # Writers
         for writer in movie_info.get('writers', []):
