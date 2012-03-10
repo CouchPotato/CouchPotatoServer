@@ -8,6 +8,7 @@ from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
 from flask.globals import request
 from flask.helpers import url_for
+from flask.templating import render_template
 import os
 
 log = CPLog(__name__)
@@ -51,7 +52,7 @@ class Userscript(Plugin):
         return version
 
     def iFrame(self):
-        return index()
+        return render_template('index.html', sep = os.sep, fireEvent = fireEvent, env = Env)
 
     def getViaUrl(self):
 
