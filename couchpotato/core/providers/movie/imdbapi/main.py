@@ -47,8 +47,9 @@ class IMDBAPI(MovieProvider):
 
         if cached:
             result = self.parseMovie(cached)
-            log.info('Found: %s' % result['titles'][0] + ' (' + str(result['year']) + ')')
-            return result
+            if result.get('titles') and len(result.get('titles')) > 0:
+                log.info('Found: %s' % result['titles'][0] + ' (' + str(result['year']) + ')')
+                return result
 
         return {}
 
@@ -59,6 +60,11 @@ class IMDBAPI(MovieProvider):
 
             if isinstance(movie, (str, unicode)):
                 movie = json.loads(movie)
+
+            tmp_movie = movie.copy()
+            for key in tmp_movie:
+                if tmp_movie.get(key).lower() == 'n/a':
+                    del movie[key]
 
             movie_data = {
                 'titles': [movie.get('Title', '')],
