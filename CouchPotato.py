@@ -85,7 +85,8 @@ class Loader(object):
             # remove old pidfile first
             try:
                 if self.runAsDaemon():
-                    self.daemon.stop()
+                    try: self.daemon.stop()
+                    except: pass
                     self.daemon.delpid()
             except:
                 self.log.critical(traceback.format_exc())

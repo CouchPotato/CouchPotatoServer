@@ -56,6 +56,9 @@ class Core(Plugin):
         })
 
     def crappyShutdown(self):
+        if self.shutdown_started:
+            return
+
         try:
             self.urlopen('%s/app.shutdown' % self.createApiUrl(), show_error = False)
             return True
@@ -64,6 +67,9 @@ class Core(Plugin):
             return False
 
     def crappyRestart(self):
+        if self.shutdown_started:
+            return
+
         try:
             self.urlopen('%s/app.restart' % self.createApiUrl(), show_error = False)
             return True
@@ -82,6 +88,7 @@ class Core(Plugin):
     def initShutdown(self, restart = False):
         if self.shutdown_started:
             log.info('Already shutting down')
+            return
 
         log.info('Shutting down' if not restart else 'Restarting')
 

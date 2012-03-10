@@ -186,4 +186,26 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     if fire_load: fireEventAsync('app.load')
 
     # Go go go!
-    app.run(**config)
+    try_restart = True
+    restart_tries = 5
+    while try_restart:
+        try:
+            app.run(**config)
+        except Exception, e:
+            try:
+                nr, msg = e
+                if nr == 48:
+                    log.info('Already in use, try %s more time after few seconds' % restart_tries)
+                    time.sleep(1)
+                    restart_tries -= 1
+
+                    if restart_tries > 0:
+                        continue
+                    else:
+                        return
+            except:
+                pass
+
+            raise
+
+        try_restart = False
