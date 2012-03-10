@@ -32,8 +32,11 @@ class IMDBAPI(MovieProvider):
 
         if cached:
             result = self.parseMovie(cached)
-            log.info('Found: %s' % result['titles'][0] + ' (' + str(result['year']) + ')')
-            return [result]
+            if result.get('titles') and len(result.get('titles')) > 0:
+                log.info('Found: %s' % result['titles'][0] + ' (' + str(result['year']) + ')')
+                return [result]
+
+            return []
 
         return []
 
@@ -61,7 +64,7 @@ class IMDBAPI(MovieProvider):
                 'titles': [movie.get('Title', '')],
                 'original_title': movie.get('Title', ''),
                 'images': {
-                    'poster': [movie.get('Poster', '')],
+                    'poster': [movie.get('Poster', '')] if movie.get('Poster') and len(movie.get('Poster', '')) > 4 else [],
                 },
                 'rating': {
                     'imdb': (tryFloat(movie.get('Rating', 0)), tryInt(movie.get('Votes', ''))),
