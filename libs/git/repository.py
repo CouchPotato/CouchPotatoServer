@@ -144,7 +144,7 @@ class LocalRepository(Repository):
     def getGitVersion(self):
         if self._version is None:
             version_output = self._getOutputAssertSuccess("version")
-            version_match = re.match(r"git\s+version\s+(\S+)$", version_output, re.I)
+            version_match = re.match(r"git\s+version\s+(\S+)[\s\(]?", version_output, re.I)
             if version_match is None:
                 raise GitException("Cannot extract git version (unfamiliar output format %r?)" % version_output)
             self._version = version_match.group(1)
