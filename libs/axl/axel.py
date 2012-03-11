@@ -141,7 +141,7 @@ class Event(object):
     def fire(self, *args, **kwargs):
         """ Stores all registered handlers in a queue for processing """
         self.queue = Queue.Queue()
-        self.result = []
+        self.result = {}
 
         if self.handlers:
 
@@ -158,12 +158,12 @@ class Event(object):
 
                 if self.asynchronous:
                     handler_, memoize, timeout = self.handlers[handler]
-                    self.result.append((None, None, handler_))
+                    self.result[handler] = (None, None, handler_)
 
             if not self.asynchronous:
                 self.queue.join()
 
-        return tuple(self.result) or None
+        return self.result or None
 
     def count(self):
         """ Returns the count of registered handlers """
@@ -187,12 +187,12 @@ class Event(object):
                 try:
                     r = self._memoize(memoize, timeout, handler, *args, **kwargs)
                     if not self.asynchronous:
-                        self.result.append(tuple(r))
+                        self.result[h_] = tuple(r)
 
                 except Exception:
                     if not self.asynchronous:
-                        self.result.append((False, self._error(sys.exc_info()),
-                                            handler))
+                        self.result[h_] = (False, self._error(sys.exc_info()),
+                                            handler)
                     else:
                         self.error_handler(sys.exc_info())
                 finally:
