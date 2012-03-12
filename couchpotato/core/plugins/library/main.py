@@ -5,7 +5,6 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Library, LibraryTitle, File
 from string import ascii_letters
-import json
 import traceback
 
 log = CPLog(__name__)
@@ -75,7 +74,7 @@ class LibraryPlugin(Plugin):
             library.tagline = toUnicode(info.get('tagline', ''))
             library.year = info.get('year', 0)
             library.status_id = done_status.get('id')
-            library.info = toUnicode(json.dumps(info))
+            library.info = info
             db.commit()
 
             # Titles
