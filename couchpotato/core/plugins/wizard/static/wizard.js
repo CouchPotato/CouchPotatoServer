@@ -35,7 +35,7 @@ Page.Wizard = new Class({
 					'text': 'I\'m ready to start the awesomeness, wow this button is big and green!',
 					'events': {
 						'click': function(e){
-							(e).stop();
+							(e).preventDefault();
 							Api.request('settings.save', {
 								'data': {
 									'section': 'core',

@@ -43,7 +43,7 @@ var CouchPotato = new Class({
 	pushState: function(e){
 		var self = this;
 		if((!e.meta && Browser.Platform.mac) || (!e.control && !Browser.Platform.mac)){
-			(e).stop();
+			(e).preventDefault();
 			var url = e.target.get('href');
 			if(History.getPath() != url)
 				History.push(url);
@@ -60,19 +60,34 @@ var CouchPotato = new Class({
 				new Element('div').adopt(
 					self.block.navigation = new Block.Navigation(self, {}),
 					self.block.search = new Block.Search(self, {}),
-					self.block.more = new Block.More(self, {})
+					self.block.more = new Block.Menu(self, {})
 				)
 			),
 			self.content = new Element('div.content'),
 			self.block.footer = new Block.Footer(self, {})
 		);
 
-		self.block.more.addLink(new Element('a', {
+		[new Element('a.orange', {
+			'text': 'Restart',
+			'events': {
+				'click': App.restart.bind(App)
+			}
+		}),
+		new Element('a.red', {
+			'text': 'Shutdown',
+			'events': {
+				'click': App.shutdown.bind(App)
+			}
+		}),
+		new Element('a', {
 			'text': 'Check for updates',
 			'events': {
 				'click': self.checkForUpdate.bind(self)
 			}
-		}))
+		})].each(function(a){
+			self.block.more.addLink(a)
+		})
+
 
 		new ScrollSpy({
 			min: 10,
@@ -207,6 +222,13 @@ var CouchPotato = new Class({
 
 	createUrl: function(action, params){
 		return this.options.base_url + (action ? action+'/' : '') + (params ? '?'+Object.toQueryString(params) : '')
+	},
+
+	notify: function(options){
+		return this.growl.notify({
+            title: "this scrolls away",
+            text: "test - hello there. mouseover to pause away action"
+        });
 	}
 
 });

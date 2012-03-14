@@ -116,25 +116,7 @@ var MovieList = new Class({
 					'change': self.search.bind(self)
 				}
 			}),
-			self.navigation_menu = new Element('div.more_menu').adopt(
-				self.navigation_menu_ul = new Element('ul'),
-				self.navigation_menu_toggle = new Element('a.button.onlay', {
-					'events': {
-						'click': function(){
-							self.navigation_menu.toggleClass('show')
-							
-							if(self.navigation_menu.hasClass('show'))
-								this.addEvent('outerClick', function(){
-									self.navigation_menu.removeClass('show')
-									this.removeEvents('outerClick');
-								})
-							else
-								this.removeEvents('outerClick');
-							
-						}
-					}
-				})
-			),
+			self.navigation_menu = new Block.Menu(self),
 			self.mass_edit_form = new Element('div.mass_edit_form').adopt(
 				new Element('span.select').adopt(
 					self.mass_edit_select = new Element('input[type=checkbox].inlay', {
@@ -222,7 +204,7 @@ var MovieList = new Class({
 		// Add menu or hide
 		if (self.options.menu.length > 0)
 			self.options.menu.each(function(menu_item){
-				self.navigation_menu_ul.adopt(new Element('li').adopt(menu_item));
+				self.navigation_menu.addLink(menu_item);
 			})
 		else
 			self.navigation_menu.hide()
@@ -268,7 +250,7 @@ var MovieList = new Class({
 			'class': 'delete',
 			'events': {
 				'click': function(e){
-					(e).stop();
+					(e).preventDefault();
 					Api.request('movie.delete', {
 						'data': {
 							'id': ids.join(',')

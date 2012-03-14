@@ -53,7 +53,7 @@ Block.Search = new Class({
 
 	clear: function(e){
 		var self = this;
-		(e).stop();
+		(e).preventDefault();
 
 		self.input.set('value', '');
 		self.input.focus()
@@ -283,7 +283,7 @@ Block.Search.Item = new Class({
 
 	add: function(e){
 		var self = this;
-		(e).stop();
+		(e).preventDefault();
 
 		Api.request('movie.add', {
 			'data': {

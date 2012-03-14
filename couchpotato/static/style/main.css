@@ -1,10 +1,3 @@
-/* @override 
-	http://localhost:5000/static/style/main.css
-	http://192.168.1.20:5000/static/style/main.css
-	http://127.0.0.1:5000/static/style/main.css
-	http://127.0.0.1:5000/v2/_api_/static/style/main.css
-*/
-
 html {
 	color: #fff;
 	font-size: 12px;
@@ -184,6 +177,7 @@ body > .spinner, .mask{
 }
 	.header .navigation {
 		display: inline-block;
+		vertical-align: middle;
 		width: 67.2%;
 	}
 	.header .navigation ul {
@@ -239,8 +233,7 @@ body > .spinner, .mask{
 			.header:hover .navigation .backtotop { color: #fff; }
 	
 	.header .more_menu {
-		float: right;
-		margin-top: 20px;
+		margin-left: 12px;
 	}
 		.header .more_menu ul {
 			width: 150px;
@@ -252,6 +245,51 @@ body > .spinner, .mask{
 		
 		.header .more_menu .red { color: red; }
 		.header .more_menu .orange { color: orange; }
+		
+	.badge {
+		position: absolute;
+		width: 14px;
+		height: 14px;
+		text-align: center;
+		line-height: 14px;
+		border-radius: 50%;
+		font-size: 8px;
+		margin: -5px 0 0 15px;
+		box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 0 3px rgba(0,0,0,.7);
+		background: -webkit-gradient(linear, left bottom, left top, from(rgba(255,255,255,.3)), to(rgba(255,255,255,.1)));
+		background: -moz-linear-gradient(center bottom, rgba(255,255,255,.3) 0%, rgba(255,255,255,.1) 100%);
+		background-color: #1b79b8;
+		text-shadow: none;
+	}
+		
+	.header .notification_menu ul {
+		width: 300px;
+		margin-left: -260px;
+		text-align: left;
+	}
+		.header .notification_menu ul:before {
+			left: 296px;
+		}
+		
+		.header .notification_menu > a {
+			background-position: center -209px;
+		}
+		
+		.header .notification_menu li > span {
+			padding: 5px;
+			display: block;
+			border-bottom: 1px solid rgba(0,0,0,0.2);
+		}
+			.header .notification_menu li .added {
+				display: block;
+				font-size: 10px;
+				color: #aaa;
+				text-align: ;
+			}
+			
+			.header .notification_menu li .more {
+				text-align: center;
+			}
 	
 	.header .message.update {
 		text-align: center;
@@ -454,6 +492,10 @@ body > .spinner, .mask{
 			background-color: #4c5766;
 		}
 
+	.more_menu {
+		display: inline-block;
+		vertical-align: middle;
+	}
 
 	.more_menu > a {
 		display: block;
@@ -470,16 +512,30 @@ body > .spinner, .mask{
 	.more_menu ul {
 		display: none;
 		border: 1px solid #333;
-		background: rgba(0,0,0,0.8);
+		background: rgba(255,255,255,0.98);
 		border-radius: 3px;
 		padding: 4px !important;
 		position: absolute;
 		z-index: 9;
 		margin: 32px 0 0 -145px;
 		width: 185px;
-		box-shadow: 0 10px 20px -10px rgba(0,0,0,0.4);
+		box-shadow: 0 10px 10px -5px rgba(0,0,0,0.4);
 		list-style: none;
 		text-align: center;
+		color: #000;
+		text-shadow: none;
+		background-image: -webkit-gradient(
+		    linear,
+		    left bottom,
+		    right top,
+		    color-stop(0, rgb(200,200,200)),
+		    color-stop(1, rgb(255,255,255))
+		);
+		background-image: -moz-linear-gradient(
+		    left bottom,
+		    rgb(200,200,200) 0%,
+		    rgb(255,255,255) 100%
+		);
 	}
 	
 		.more_menu ul:before {
@@ -488,7 +544,7 @@ body > .spinner, .mask{
 			position: relative;
 			width: 0;
 			border: 6px solid transparent;
-			border-bottom-color: rgba(0,0,0,0.8);
+			border-bottom-color: #fff;
 			display: block;
 			top: -16px;
 			left: 146px;
@@ -510,7 +566,7 @@ body > .spinner, .mask{
 				text-transform: uppercase;
 				letter-spacing: 1px;
 				padding: 3px 0;
-				color: #fff;
+				color: #000;
 			}
 			
 			.more_menu ul li:first-child {
@@ -519,8 +575,7 @@ body > .spinner, .mask{
 		
 			.more_menu ul li:last-child a {
 				border: none;
-				color: #fff;
 			}
 			.more_menu ul li a:hover {
-				background: rgba(255,255,255,0.1);
+				background: rgba(0,0,0,0.05);
 			}

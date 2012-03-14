@@ -156,7 +156,7 @@ var Profile = new Class({
 			'class': 'delete',
 			'events': {
 				'click': function(e){
-					(e).stop();
+					(e).preventDefault();
 					Api.request('profile.delete', {
 						'data': {
 							'id': self.data.id

@@ -1,9 +1,3 @@
-/* @override 
-	http://localhost:5000/static/style/page/settings.css
-	http://192.168.1.20:5000/static/style/page/settings.css
-	http://127.0.0.1:5000/static/style/page/settings.css
-*/
-
 .page.settings:after {
 	content: ".";
 	display: block;

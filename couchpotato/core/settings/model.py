@@ -7,6 +7,7 @@ from libs.elixir.relationships import OneToOne
 from sqlalchemy.types import Integer, Unicode, UnicodeText, Boolean, Float, \
     String, TypeDecorator
 import json
+import time
 
 options_defaults["shortnames"] = True
 
@@ -33,7 +34,7 @@ class Movie(Entity):
     The files belonging to the movie object are global for the whole movie
     such as trailers, nfo, thumbnails"""
 
-    last_edit = Field(Integer)
+    last_edit = Field(Integer, default = lambda: int(time.time()))
 
     library = ManyToOne('Library')
     status = ManyToOne('Status')
@@ -191,8 +192,8 @@ class History(Entity):
     """History of actions that are connected to a certain release,
     such as, renamed to, downloaded, deleted, download subtitles etc"""
 
-    added = Field(Integer)
-    message = Field(UnicodeText())
+    added = Field(Integer, default = lambda: int(time.time()))
+    message = Field(UnicodeText)
     type = Field(Unicode(50))
 
     release = ManyToOne('Release')
@@ -205,6 +206,15 @@ class RenameHistory(Entity):
     new = Field(Unicode(255))
 
     file = ManyToOne('File')
+
+
+class Notification(Entity):
+    using_options(order_by = 'added')
+
+    added = Field(Integer, default = lambda: int(time.time()))
+    read = Field(Boolean, default = False)
+    message = Field(Unicode(255))
+    data = Field(JsonType)
 
 
 class Folder(Entity):

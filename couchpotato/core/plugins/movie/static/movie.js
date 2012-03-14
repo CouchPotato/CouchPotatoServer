@@ -230,7 +230,7 @@ var IMDBAction = new Class({
 
 	gotoIMDB: function(e){
 		var self = this;
-		(e).stop();
+		(e).preventDefault();
 
 		window.open('http://www.imdb.com/title/'+self.id+'/');
 	}
@@ -258,7 +258,7 @@ var ReleaseAction = new Class({
 
 	show: function(e){
 		var self = this;
-		(e).stop();
+		(e).preventDefault();
 
 		if(!self.options_container){
 			self.options_container = new Element('div.options').adopt(
@@ -292,7 +292,7 @@ var ReleaseAction = new Class({
 					new Element('a.download.icon', {
 						'events': {
 							'click': function(e){
-								(e).stop();
+								(e).preventDefault();
 								self.download(release);
 							}
 						}
@@ -300,7 +300,7 @@ var ReleaseAction = new Class({
 					new Element('a.delete.icon', {
 						'events': {
 							'click': function(e){
-								(e).stop();
+								(e).preventDefault();
 								self.ignore(release);
 								this.getParent('.item').toggleClass('ignored')
 							}

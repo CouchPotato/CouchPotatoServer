@@ -628,7 +628,7 @@ Option.Directory = new Class({
 				self.dir_list = new Element('ul', {
 					'events': {
 						'click:relay(li)': function(e, el){
-							(e).stop();
+							(e).preventDefault();
 							self.selectDirectory(el.get('data-value'))
 						},
 						'mousewheel': function(e){
@@ -678,7 +678,7 @@ Option.Directory = new Class({
 
 	hideBrowser: function(e, save){
 		var self = this;
-		(e).stop();
+		(e).preventDefault();
 
 		if(save)
 			self.save()
@@ -1241,7 +1241,7 @@ Option.Combined = new Class({
 
 	deleteCombinedItem: function(e){
 		var self = this;
-		(e).stop();
+		(e).preventDefault();
 
 		var item = e.target.getParent();
 
