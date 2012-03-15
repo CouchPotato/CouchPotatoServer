@@ -33,6 +33,19 @@ class CoreNotifier(Notification):
                 'id': {'desc': 'Notification id you want to mark as read.', 'type': 'int (comma separated)'},
             },
         })
+
+        addApiView('notification.list', self.listView, docs = {
+            'desc': 'Get list of notifications',
+            'params': {
+                'limit_offset': {'desc': 'Limit and offset the notification list. Examples: "50" or "50,30"'},
+            },
+            'return': {'type': 'object', 'example': """{
+    'success': True,
+    'empty': bool, any notification returned or not,
+    'notifications': array, notifications found,
+}"""}
+        })
+
         addApiView('notification.listener', self.listener)
 
         self.registerEvents()
@@ -55,6 +68,32 @@ class CoreNotifier(Notification):
 
         return jsonified({
             'success': True
+        })
+
+    def listView(self):
+
+        db = get_session()
+        limit_offset = getParam('limit_offset', None)
+
+        q = db.query(Notif)
+
+        if limit_offset:
+            splt = limit_offset.split(',')
+            limit = splt[0]
+            offset = 0 if len(splt) is 1 else splt[1]
+            q = q.limit(limit).offset(offset)
+
+        results = q.all()
+        notifications = []
+        for n in results:
+            ndict = n.to_dict()
+            ndict['type'] = 'notification'
+            notifications.append(ndict)
+
+        return jsonified({
+            'success': True,
+            'empty': len(notifications) == 0,
+            'notifications': notifications
         })
 
     def notify(self, message = '', data = {}):
@@ -93,7 +132,10 @@ class CoreNotifier(Notification):
         # Get unread
         if getParam('init'):
             db = get_session()
-            notifications = db.query(Notif).filter_by(read = False).all()
+
+            notifications = db.query(Notif) \
+                .filter(or_(Notif.read == False, Notif.added > (time.time() - 259200))) \
+                .all()
             for n in notifications:
                 ndict = n.to_dict()
                 ndict['type'] = 'notification'

@@ -235,11 +235,11 @@ body > .spinner, .mask{
 	.header .more_menu {
 		margin-left: 12px;
 	}
-		.header .more_menu ul {
+		.header .more_menu .wrapper {
 			width: 150px;
 			margin-left: -110px;
 		}
-		.header .more_menu ul:before {
+		.header .more_menu .wrapper:before {
 			margin-left: -34px;
 		}
 		
@@ -262,13 +262,19 @@ body > .spinner, .mask{
 		text-shadow: none;
 	}
 		
-	.header .notification_menu ul {
+	.header .notification_menu .wrapper {
 		width: 300px;
 		margin-left: -260px;
 		text-align: left;
 	}
-		.header .notification_menu ul:before {
+		
+		.header .notification_menu .wrapper:before {
 			left: 296px;
+		}
+		
+		.header .notification_menu ul {
+			max-height: 300px;
+			overflow: auto;
 		}
 		
 		.header .notification_menu > a {
@@ -280,6 +286,8 @@ body > .spinner, .mask{
 			display: block;
 			border-bottom: 1px solid rgba(0,0,0,0.2);
 		}
+			.header .notification_menu li > span { color: #777; }
+			.header .notification_menu li:last-child > span { border: 0; }
 			.header .notification_menu li .added {
 				display: block;
 				font-size: 10px;
@@ -509,7 +517,7 @@ body > .spinner, .mask{
 		background-color: #406db8;
 	}
 	
-	.more_menu ul {
+	.more_menu .wrapper {
 		display: none;
 		border: 1px solid #333;
 		background: rgba(255,255,255,0.98);
@@ -520,7 +528,6 @@ body > .spinner, .mask{
 		margin: 32px 0 0 -145px;
 		width: 185px;
 		box-shadow: 0 10px 10px -5px rgba(0,0,0,0.4);
-		list-style: none;
 		text-align: center;
 		color: #000;
 		text-shadow: none;
@@ -538,7 +545,7 @@ body > .spinner, .mask{
 		);
 	}
 	
-		.more_menu ul:before {
+		.more_menu .wrapper:before {
 			content: ' ';
 			height: 0;
 			position: relative;
@@ -549,15 +556,22 @@ body > .spinner, .mask{
 			top: -16px;
 			left: 146px;
 		}
-		.more_menu.show ul {
+		.more_menu.show .wrapper {
 			display: block;
 		}
-		.more_menu ul li {
+		
+		.more_menu ul {
+			padding: 0;
+			margin: -12px 0 0 0;
+			list-style: none;
+		}
+		
+		.more_menu .wrapper li {
 			width: 100%;
 			height: auto;
 		}
 		
-			.more_menu ul li a {
+			.more_menu .wrapper li a {
 				display: block;
 				border-bottom: 1px solid rgba(255,255,255,0.2);
 				box-shadow: none;
@@ -568,14 +582,10 @@ body > .spinner, .mask{
 				padding: 3px 0;
 				color: #000;
 			}
-			
-			.more_menu ul li:first-child {
-				margin-top: -12px;
-			}
 		
-			.more_menu ul li:last-child a {
+			.more_menu .wrapper li:last-child a {
 				border: none;
 			}
-			.more_menu ul li a:hover {
+			.more_menu .wrapper li a:hover {
 				background: rgba(0,0,0,0.05);
 			}

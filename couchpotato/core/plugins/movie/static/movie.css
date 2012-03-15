@@ -89,6 +89,7 @@
 					font-size: 16px;
 					font-weight: normal;
 					text-overflow: ellipsis;
+					width: 64%;
 				}
 			
 			.movies .info .year {
@@ -125,12 +126,22 @@
 				.movies .list_view .info .description, .movies .mass_edit_view .info .description {
 					display: none;
 				}
-
+		
+		.movies .data .quality {
+			display: block;
+			min-height: 20px;
+			vertical-align: mid;
+		}
+		
 		.movies .data .quality span {
 			padding: 2px 3px;
 			font-weight: bold;
 			opacity: 0.5;
 			font-size: 10px;
+			height: 16px;
+			line-height: 12px;
+			vertical-align: middle;
+			display: inline-block;
 			text-transform: uppercase;
 			text-shadow: none;
 			font-weight: normal;
@@ -141,7 +152,7 @@
 			.movies .list_view .data .quality, .movies .mass_edit_view .data .quality {
 				text-align: right;
 				float: right;
-				width: 35%;
+				width: 30%;
 			}
 			
 		.movies .data .quality .available, .movies .data .quality .snatched {
@@ -152,6 +163,10 @@
 		
 		.movies .data .quality .available { background-color: #578bc3; }
 		.movies .data .quality .snatched { background-color: #369545; }
+		.movies .data .quality .done {
+			background-color: #369545;
+			opacity: 1;
+		}
 		.movies .data .quality .finish { 
 			background-image: url('../images/sprite.png');
 			background-repeat:  no-repeat;
@@ -183,7 +198,7 @@
 			}
 		
 		.movies .list_view .data:hover .actions, .movies .mass_edit_view .data:hover .actions {
-			margin: -35px -7px 0 0;
+			margin: -34px 2px 0 0;
 			background: #4e5969;
 		}
 			
@@ -272,7 +287,7 @@
 							text-align: left;
 							padding: 0 10px;
 						}
-						.movies .options .table.files .name { width: 608px; }
+						.movies .options .table.files .name { width: 605px; }
 						.movies .options .table .type { width: 130px; }
 						.movies .options .table .is_available { width: 90px; }
 						

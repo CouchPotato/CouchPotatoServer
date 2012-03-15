@@ -49,7 +49,9 @@ var Movie = new Class({
 					self.quality = new Element('div.quality', {
 						'events': {
 							'click': function(e){
-								self.el.getElement('.actions .releases').fireEvent('click', [e])
+								var releases = self.el.getElement('.actions .releases');
+									if(releases)
+										releases.fireEvent('click', [e])
 							}
 						}
 					})
@@ -101,7 +103,7 @@ var Movie = new Class({
 		var q = Quality.getQuality(quality_id);
 		return new Element('span', {
 			'text': q.label,
-			'class': 'q_'+q.identifier + 'q_id' + q.quality_id
+			'class': 'q_'+q.identifier + ' q_id' + q.id
 		}).inject(self.quality);
 
 	},

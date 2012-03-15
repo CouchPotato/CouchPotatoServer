@@ -26,10 +26,10 @@ var NotificationBase = new Class({
 			$(App.block.notification).inject(App.getBlock('search'), 'after');
 			self.badge = new Element('div.badge').inject(App.block.notification, 'top').hide();
 
-			App.getBlock('notification').addLink(new Element('a.more', {
+			/* App.getBlock('notification').addLink(new Element('a.more', {
 				'href': App.createUrl('notifications'),
-				'text': 'See more notifications'
-			}));
+				'text': 'Show older notifications'
+			})); */
 		})
 
 	},
@@ -41,7 +41,7 @@ var NotificationBase = new Class({
 			added.setTime(result.added*1000)
 
 		result.el = App.getBlock('notification').addLink(
-			new Element('span').adopt(
+			new Element('span.'+(result.read ? 'read' : '' )).adopt(
 				new Element('span.message', {'text': result.message}),
 				new Element('span.added', {'text': added.timeDiffInWords(), 'title': added})
 			)
@@ -50,11 +50,6 @@ var NotificationBase = new Class({
 
 		if(!result.read)
 			self.setBadge(self.notifications.filter(function(n){ return !n.read}).length)
-
-		if(self.notifications.length >= 5){
-			var n = self.notifications[self.notifications.length-5];
-				n.el.destroy();
-		}
 
 	},
 
@@ -76,14 +71,15 @@ var NotificationBase = new Class({
 			ids.include(n.id)
 		})
 
-		Api.request('notification.markread', {
-			'data': {
-				'ids': ids.join(',')
-			},
-			'onSuccess': function(){
-				self.setBadge('')
-			}
-		})
+		if(ids.length > 0)
+			Api.request('notification.markread', {
+				'data': {
+					'ids': ids.join(',')
+				},
+				'onSuccess': function(){
+					self.setBadge('')
+				}
+			})
 
 	},
 

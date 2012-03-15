@@ -41,7 +41,7 @@ class MoviePlugin(Plugin):
             'desc': 'List movies in wanted list',
             'params': {
                 'status': {'type': 'array or csv', 'desc': 'Filter movie by status. Example:"active,done"'},
-                'limit_offset': {'desc': 'Limit the movie list. Examples: "50", "50,30"'},
+                'limit_offset': {'desc': 'Limit and offset the movie list. Examples: "50" or "50,30"'},
                 'starts_with': {'desc': 'Starts with these characters. Example: "a" returns all movies starting with the letter "a"'},
                 'search': {'desc': 'Search movie title'},
             },

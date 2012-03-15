@@ -12,7 +12,9 @@ Block.Menu = new Class({
 		self.el = new Element('div', {
 			'class': 'more_menu '+self.options['class']
 		}).adopt(
-			self.more_option_ul = new Element('ul'),
+			self.wrapper = new Element('div.wrapper').adopt(
+				self.more_option_ul = new Element('ul')
+			),
 			new Element('a.button.onlay', {
 				'events': {
 					'click': function(){
