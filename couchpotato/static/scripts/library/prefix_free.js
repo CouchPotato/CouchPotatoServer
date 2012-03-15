@@ -13,8 +13,8 @@ if(!window.addEventListener) {
 var self = window.StyleFix = {
 	link: function(link) {
 		try {
-			// Ignore stylesheets with data-noprefix attribute as well as alternate stylesheets
-			if(link.rel !== 'stylesheet' || link.hasAttribute('data-noprefix')) {
+			// Ignore stylesheets with data-noprefix attribute as well as alternate stylesheets and data URIs
+			if(link.rel !== 'stylesheet' || link.hasAttribute('data-noprefix') || link.href.substr(0,5) == 'data:') {
 				return;
 			}
 		}
