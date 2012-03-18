@@ -51,6 +51,7 @@
 				new Uniform();
 
 				Api.setup({
+					'host': {{ fireEvent('app.api_url', single = True)|tojson|safe }},
 					'url': {{ url_for('api.index')|tojson|safe }},
 					'path_sep': {{ sep|tojson|safe }},
 					'is_remote': false

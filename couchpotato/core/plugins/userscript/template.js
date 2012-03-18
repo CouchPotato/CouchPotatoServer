@@ -85,35 +85,42 @@ var osd = function(){
     var popup = create('div', {
         'id': 'cp_popup'
     });
+
+    var onclick = function(){
+
+        // Try and get imdb url
+        try {
+            var regex = new RegExp(/tt(\d+)/);
+            var imdb_id = document.body.innerHTML.match(regex)[0];
+            if (imdb_id)
+                iframe.setAttribute('src', createApiUrl('http://imdb.com/title/'+imdb_id+'/'))
+        }
+        catch(e){}
+
+        popup.innerHTML = '';
+        popup.appendChild(create('a', {
+            'innerHTML': '<img src="' + close_img + '" />',
+            'id': 'close_button',
+            'onclick': function(){
+                popup.innerHTML = '';
+                popup.appendChild(add_button);
+            }
+        }));
+        popup.appendChild(iframe)
+    }
+
     var add_button = create('a', {
         'innerHTML': '<img src="' + cp_icon + '" />',
         'id': 'add_to',
-        'onclick': function(){
-
-            // Try and get imdb url
-            try {
-                var regex = new RegExp(/tt(\d+)/);
-                var imdb_id = document.body.innerHTML.match(regex)[0];
-                if (imdb_id)
-                    iframe.setAttribute('src', createApiUrl('http://imdb.com/title/'+imdb_id+'/'))
-            }
-            catch(e){}
-
-            popup.innerHTML = '';
-            popup.appendChild(create('a', {
-                'innerHTML': '<img src="' + close_img + '" />',
-                'id': 'close_button',
-                'onclick': function(){
-                    popup.innerHTML = '';
-                    popup.appendChild(add_button);
-                }
-            }));
-            popup.appendChild(iframe)
-        }
+        'onclick': onclick
     });
     popup.appendChild(add_button);
 
     document.body.parentNode.insertBefore(popup, document.body);
+
+    // Auto fold open
+    if(document.body.getAttribute('cp_auto_open'))
+    	onclick()
 };
 
 var setVersion = function(){

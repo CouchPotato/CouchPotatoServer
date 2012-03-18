@@ -63,15 +63,48 @@ var UserscriptSettingTab = new Class({
 		self.settings = App.getPage('Settings')
 		self.settings.addEvent('create', function(){
 
+			// See if userscript can be installed
+			var userscript = false;
+			try {
+				if(Components.interfaces.gmIGreasemonkeyService)
+					userscript = true
+			}
+			catch(e){
+				userscript = Browser.chrome === true;
+			}
+
 			self.settings.createGroup({
-				'label': 'Install the Userscript'
+				'name': 'userscript',
+				'label': 'Install the bookmarklet' + (userscript ? ' or userscript' : ''),
+				'description': 'Easily add movies via imdb.com, appletrailers and more'
 			}).inject(self.settings.tabs.automation.content, 'top').adopt(
-				new Element('a', {
+				(userscript ? [new Element('a.userscript.button', {
 					'text': 'Install userscript',
 					'href': Api.createUrl('userscript.get')+'couchpotato.user.js',
 					'target': '_self'
-				})
-			);
+				}), new Element('span.or[text=or]')] : null),
+				new Element('span.bookmarklet').adopt(
+					new Element('a.button.green', {
+						'text': '+CouchPotato',
+						'href': "javascript:void((function(){var e=document.createElement('script');e.setAttribute('type','text/javascript');e.setAttribute('charset','UTF-8');e.setAttribute('src','" +
+								Api.getOption('host') + '/userscript.bookmark/' +
+						 		"?r='+Math.random()*99999999);document.body.appendChild(e)})());",
+						'target': '',
+						'events': {
+							'click': function(e){
+								(e).stop()
+								alert('Drag it to your bookmark ;)')
+							}
+						}
+					}),
+					new Element('span', {
+						'text': '⇽ Drag this to your bookmarks'
+					})
+				)
+			).setStyles({
+				'background-image': "url('"+Api.createUrl('static/userscript/userscript.png')+"')"
+			});
+
 		});
 
 	}

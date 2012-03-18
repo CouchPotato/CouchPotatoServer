@@ -1,3 +1,6 @@
+/* @override 
+	http://127.0.0.1:5000/_api_/static/style/page/settings.css */
+
 .page.settings:after {
 	content: ".";
 	display: block;
@@ -550,4 +553,41 @@
 		.page .tab_about .group_actions a {
 			margin: 0 10px;
 			font-size: 20px;
+		}
+
+.group_userscript {
+	background:  center bottom no-repeat;
+	min-height: 360px;
+	font-size: 20px;
+	font-weight: normal;
+}
+	
+	.group_userscript h2 .hint {
+		display: block;
+		margin: 0 !important;
+	}
+	
+	.group_userscript .userscript {
+		float: left;
+		margin: 14px 0 0 25px;
+		height: 36px;
+		line-height: 25px;
+	}
+	
+	.group_userscript .or {
+		float: left;
+		margin: 20px 10px;
+	}
+			
+	.group_userscript .bookmarklet {
+		display: block;
+		display: block;
+		float: left;
+		padding: 20px 15px 0 0 ;
+		border-radius: 5px;
+	}
+		
+		.group_userscript .bookmarklet span {
+			margin-left: 10px;
+			display: inline-block;	
 		}

@@ -22,8 +22,19 @@ class Userscript(Plugin):
         addApiView('userscript.get/<path:filename>', self.getUserScript, static = True)
         addApiView('userscript', self.iFrame)
         addApiView('userscript.add_via_url', self.getViaUrl)
+        addApiView('userscript.bookmark', self.bookmark)
 
         addEvent('userscript.get_version', self.getVersion)
+
+    def bookmark(self):
+
+        params = {
+            'includes': fireEvent('userscript.get_includes', merge = True),
+            'excludes': fireEvent('userscript.get_excludes', merge = True),
+            'host': fireEvent('app.api_url', single = True)
+        }
+
+        return self.renderTemplate(__file__, 'bookmark.js', **params)
 
     def getUserScript(self, filename = ''):
 
