@@ -72,6 +72,8 @@ var UserscriptSettingTab = new Class({
 			catch(e){
 				userscript = Browser.chrome === true;
 			}
+			
+			var host_url = window.location.protocol + '//' + window.location.host;
 
 			self.settings.createGroup({
 				'name': 'userscript',
@@ -87,8 +89,9 @@ var UserscriptSettingTab = new Class({
 					new Element('a.button.green', {
 						'text': '+CouchPotato',
 						'href': "javascript:void((function(){var e=document.createElement('script');e.setAttribute('type','text/javascript');e.setAttribute('charset','UTF-8');e.setAttribute('src','" +
-								window.location.protocol + '//' + window.location.host + Api.createUrl('userscript.bookmark') +
-						 		"?r='+Math.random()*99999999);document.body.appendChild(e)})());",
+								host_url + Api.createUrl('userscript.bookmark') +
+								"?host="+ encodeURI(host_url + Api.createUrl('userscript.get')) +
+						 		"&r='+Math.random()*99999999);document.body.appendChild(e)})());",
 						'target': '',
 						'events': {
 							'click': function(e){

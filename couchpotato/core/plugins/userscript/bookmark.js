@@ -34,7 +34,7 @@ var addUserscript = function() {
 	var e = document.createElement('script');
 	e.setAttribute('type', 'text/javascript');
 	e.setAttribute('charset', 'UTF-8');
-	e.setAttribute('src', '{{host}}/userscript.get/couchpotato.js?r=' + Math.random() * 99999999);
+	e.setAttribute('src', '{{host}}couchpotato.js?r=' + Math.random() * 99999999);
 	document.body.appendChild(e)
 }
 if(isCorrectUrl())

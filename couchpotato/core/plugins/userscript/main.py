@@ -31,7 +31,7 @@ class Userscript(Plugin):
         params = {
             'includes': fireEvent('userscript.get_includes', merge = True),
             'excludes': fireEvent('userscript.get_excludes', merge = True),
-            'host': fireEvent('app.api_url', single = True)
+            'host': getParam('host', None),
         }
 
         return self.renderTemplate(__file__, 'bookmark.js', **params)
