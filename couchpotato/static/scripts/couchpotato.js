@@ -70,13 +70,13 @@ var CouchPotato = new Class({
 		[new Element('a.orange', {
 			'text': 'Restart',
 			'events': {
-				'click': App.restart.bind(App)
+				'click': self.restart.bind(self)
 			}
 		}),
 		new Element('a.red', {
 			'text': 'Shutdown',
 			'events': {
-				'click': App.shutdown.bind(App)
+				'click': self.shutdown.bind(self)
 			}
 		}),
 		new Element('a', {
