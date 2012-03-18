@@ -87,7 +87,7 @@ var UserscriptSettingTab = new Class({
 					new Element('a.button.green', {
 						'text': '+CouchPotato',
 						'href': "javascript:void((function(){var e=document.createElement('script');e.setAttribute('type','text/javascript');e.setAttribute('charset','UTF-8');e.setAttribute('src','" +
-								Api.getOption('host') + '/userscript.bookmark/' +
+								window.location.protocol + '//' + window.location.host + Api.createUrl('userscript.bookmark') +
 						 		"?r='+Math.random()*99999999);document.body.appendChild(e)})());",
 						'target': '',
 						'events': {
