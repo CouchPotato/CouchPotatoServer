@@ -18,9 +18,12 @@ class Downloader(Plugin):
     def download(self, data = {}):
         pass
 
-    def createFileName(self, data, filename, movie):
-        name = os.path.join('%s%s' % (toSafeString(data.get('name')), self.cpTag(movie)))
-        if data.get('type') == 'nzb' and "DOCTYPE nzb" not in filename:
+    def createNzbName(self, data, movie):
+        return '%s%s' % (toSafeString(data.get('name')), self.cpTag(movie))
+
+    def createFileName(self, data, filedata, movie):
+        name = os.path.join(self.createNzbName(data, movie))
+        if data.get('type') == 'nzb' and "DOCTYPE nzb" not in filedata:
             return '%s.%s' % (name, 'rar')
         return '%s.%s' % (name, data.get('type'))
 

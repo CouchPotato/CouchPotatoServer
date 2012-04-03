@@ -22,7 +22,7 @@ class NZBGet(Downloader):
         log.info('Sending "%s" to NZBGet.' % data.get('name'))
 
         url = self.url % {'host': self.conf('host'), 'password': self.conf('password')}
-        nzb_name = data.get('name') + '.nzb'
+        nzb_name = '%s.nzb' % self.createNzbName(data, movie)
 
         rpc = xmlrpclib.ServerProxy(url)
         try:
