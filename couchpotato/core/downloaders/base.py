@@ -33,10 +33,10 @@ class Downloader(Plugin):
 
         return ''
 
-    def isCorrectType(self, type):
-        is_correct = type in self.type
+    def isCorrectType(self, item_type):
+        is_correct = item_type in self.type
 
         if not is_correct:
             log.debug("Downloader doesn't support this type")
 
-        return bool
+        return is_correct
