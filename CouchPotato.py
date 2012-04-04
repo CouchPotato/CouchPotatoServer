@@ -4,6 +4,7 @@ from os.path import dirname
 import logging
 import os
 import signal
+import socket
 import subprocess
 import sys
 import traceback
@@ -121,9 +122,20 @@ if __name__ == '__main__':
         pass
     except SystemExit:
         raise
-    except Exception as (nr, msg):
+    except socket.error as (nr, msg):
+        # log when socket receives SIGINT, but continue.
+        # previous code would have skipped over other types of IO errors too.
         if nr != 4:
             try:
                 l.log.critical(traceback.format_exc())
             except:
                 print traceback.format_exc()
+            raise
+    except:
+        try:
+            # if this fails we will have two tracebacks
+            # one for failing to log, and one for the exception that got us here.
+            l.log.critical(traceback.format_exc())
+        except:
+            print traceback.format_exc()
+        raise
