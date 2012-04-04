@@ -84,6 +84,8 @@ class LibraryPlugin(Plugin):
             titles = info.get('titles', [])
             log.debug('Adding titles: %s' % titles)
             for title in titles:
+                if not title:
+                    continue
                 t = LibraryTitle(
                     title = toUnicode(title),
                     simple_title = self.simplifyTitle(title),

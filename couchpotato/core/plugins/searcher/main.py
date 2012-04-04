@@ -33,13 +33,19 @@ class Searcher(Plugin):
         ).all()
 
         for movie in movies:
-
-            self.single(movie.to_dict({
+            movie_dict = movie.to_dict({
                 'profile': {'types': {'quality': {}}},
                 'releases': {'status': {}, 'quality': {}},
                 'library': {'titles': {}, 'files':{}},
                 'files': {}
-            }))
+            })
+
+            try:
+                self.single(movie_dict)
+            except IndexError:
+                fireEvent('library.update', movie_dict['library']['identifier'], force = True)
+            except:
+                log.error('Search failed for %s: %s' % (movie_dict['library']['identifier'], traceback.format_exc()))
 
             # Break if CP wants to shut down
             if self.shuttingDown():

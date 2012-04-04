@@ -61,13 +61,16 @@ class IMDBAPI(MovieProvider):
             if isinstance(movie, (str, unicode)):
                 movie = json.loads(movie)
 
+            if movie.get('Response') == 'Parse Error':
+                return movie_data
+
             tmp_movie = movie.copy()
             for key in tmp_movie:
                 if tmp_movie.get(key).lower() == 'n/a':
                     del movie[key]
 
             movie_data = {
-                'titles': [movie.get('Title', '')],
+                'titles': [movie.get('Title')] if movie.get('Title') else [],
                 'original_title': movie.get('Title', ''),
                 'images': {
                     'poster': [movie.get('Poster', '')] if movie.get('Poster') and len(movie.get('Poster', '')) > 4 else [],
