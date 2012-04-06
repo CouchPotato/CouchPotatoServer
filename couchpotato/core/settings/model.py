@@ -3,7 +3,6 @@ from elixir.entity import Entity
 from elixir.fields import Field
 from elixir.options import options_defaults, using_options
 from elixir.relationships import ManyToMany, OneToMany, ManyToOne
-from libs.elixir.relationships import OneToOne
 from sqlalchemy.types import Integer, Unicode, UnicodeText, Boolean, Float, \
     String, TypeDecorator
 import json
@@ -18,12 +17,18 @@ options_defaults["shortnames"] = True
 # http://elixir.ematia.de/trac/wiki/Recipes/MultipleDatabasesOneMetadata
 __session__ = None
 
+class SetEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, set):
+            return list(obj)
+        return json.JSONEncoder.default(self, obj)
+
 
 class JsonType(TypeDecorator):
     impl = UnicodeText
 
     def process_bind_param(self, value, dialect):
-        return toUnicode(json.dumps(value))
+        return toUnicode(json.dumps(value, cls = SetEncoder))
 
     def process_result_value(self, value, dialect):
         return json.loads(value if value else '{}')
