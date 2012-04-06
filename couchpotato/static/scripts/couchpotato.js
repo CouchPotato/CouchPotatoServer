@@ -161,10 +161,10 @@ var CouchPotato = new Class({
 		self.checkAvailable(1000);
 	},
 
-	restart: function(){
+	restart: function(message, title){
 		var self = this;
 
-		self.blockPage('Restarting... please wait. If this takes to long, something must have gone wrong.');
+		self.blockPage(message || 'Restarting... please wait. If this takes to long, something must have gone wrong.', title);
 		Api.request('app.restart');
 		self.checkAvailable(1000);
 	},
