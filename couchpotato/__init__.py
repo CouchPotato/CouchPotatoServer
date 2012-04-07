@@ -49,7 +49,7 @@ def apiDocs():
     if api_docs.get(''):
         del api_docs['']
         del api_docs_missing['']
-    return render_template('api.html', routes = sorted(routes), api_docs = api_docs, api_docs_missing = sorted(api_docs_missing))
+    return render_template('api.html', fireEvent = fireEvent, routes = sorted(routes), api_docs = api_docs, api_docs_missing = sorted(api_docs_missing))
 
 @app.errorhandler(404)
 def page_not_found(error):

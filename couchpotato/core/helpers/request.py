@@ -70,7 +70,7 @@ def jsonify(mimetype, *args, **kwargs):
 
 def jsonified(*args, **kwargs):
     from couchpotato.environment import Env
-    callback = getParam('json_callback', None)
+    callback = getParam('callback_func', None)
     if callback:
         return padded_jsonify(callback, *args, **kwargs)
     else:

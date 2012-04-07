@@ -7,6 +7,19 @@
 	<body>
 
 		<h1>CouchPotato API Documentation</h1>
+		<div class="api">
+			You can access the API via <pre>{{ fireEvent('app.api_url', single = True)|safe }}/</pre>
+			To see it in action, have a look at the webinterface with Firebug (on firefox) or the development tools included in Chrome. 
+			All the data that you see there are from the API.
+			<br />
+			<br />
+			A normal API call:
+			<pre><a href="{{ fireEvent('app.api_url', single = True)|safe }}/updater.info/">{{ fireEvent('app.api_url', single = True)|safe }}/updater.info/</a></pre>
+			<br />
+			You can also use the API over another domain using JSONP, the callback function should be in 'callback_func'
+			<pre><a href="{{ fireEvent('app.api_url', single = True)|safe }}/updater.info/?callback_func=myfunction">{{ fireEvent('app.api_url', single = True)|safe }}/updater.info/?callback_func=myfunction</a></pre>
+		</div>
+		
 		{% for route in routes %}
 			{% if api_docs.get(route) %}
 			<div class="api">
