@@ -286,7 +286,7 @@ var ReleaseAction = new Class({
 					'class': 'item ' + status.identifier
 				}).adopt(
 					new Element('span.name', {'text': self.get(release, 'name'), 'title': self.get(release, 'name')}),
-					new Element('span.quality', {'text': quality.label}),
+					new Element('span.quality', {'text': quality.get('label')}),
 					new Element('span.size', {'text': (self.get(release, 'size') || 'unknown')}),
 					new Element('span.age', {'text': self.get(release, 'age')}),
 					new Element('span.score', {'text': self.get(release, 'score')}),
