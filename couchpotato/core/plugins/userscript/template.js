@@ -90,7 +90,7 @@ var osd = function(){
 
         // Try and get imdb url
         try {
-            var regex = new RegExp(/tt(\d+)/);
+            var regex = new RegExp(/tt(\d{7})/);
             var imdb_id = document.body.innerHTML.match(regex)[0];
             if (imdb_id)
                 iframe.setAttribute('src', createApiUrl('http://imdb.com/title/'+imdb_id+'/'))
