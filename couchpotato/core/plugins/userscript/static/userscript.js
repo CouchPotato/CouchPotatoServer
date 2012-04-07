@@ -82,7 +82,7 @@ var UserscriptSettingTab = new Class({
 			}).inject(self.settings.tabs.automation.content, 'top').adopt(
 				(userscript ? [new Element('a.userscript.button', {
 					'text': 'Install userscript',
-					'href': Api.createUrl('userscript.get')+'couchpotato.user.js',
+					'href': Api.createUrl('userscript.get')+randomString()+'/couchpotato.user.js',
 					'target': '_self'
 				}), new Element('span.or[text=or]')] : null),
 				new Element('span.bookmarklet').adopt(
@@ -90,7 +90,7 @@ var UserscriptSettingTab = new Class({
 						'text': '+CouchPotato',
 						'href': "javascript:void((function(){var e=document.createElement('script');e.setAttribute('type','text/javascript');e.setAttribute('charset','UTF-8');e.setAttribute('src','" +
 								host_url + Api.createUrl('userscript.bookmark') +
-								"?host="+ encodeURI(host_url + Api.createUrl('userscript.get')) +
+								"?host="+ encodeURI(host_url + Api.createUrl('userscript.get')+randomString()+'/') +
 						 		"&r='+Math.random()*99999999);document.body.appendChild(e)})());",
 						'target': '',
 						'events': {
@@ -126,7 +126,7 @@ window.addEvent('load', function(){
 
 	if(your_version && your_version < latest_version && checked_already < latest_version){
 		if(confirm("Update to the latest Userscript?\nYour version: " + your_version + ', new version: ' + latest_version )){
-			document.location = Api.getOption('url')+'userscript.get/couchpotato.user.js';
+			document.location = Api.createUrl('userscript.get')+randomString()+'/couchpotato.user.js';
 		}
 		Cookie.write(key, latest_version, {duration: 100});
 	}

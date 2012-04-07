@@ -1,4 +1,3 @@
-from couchpotato import index
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, addEvent
 from couchpotato.core.helpers.request import getParam, jsonified
@@ -19,7 +18,7 @@ class Userscript(Plugin):
     version = 2
 
     def __init__(self):
-        addApiView('userscript.get/<path:filename>', self.getUserScript, static = True)
+        addApiView('userscript.get/<random>/<path:filename>', self.getUserScript, static = True)
         addApiView('userscript', self.iFrame)
         addApiView('userscript.add_via_url', self.getViaUrl)
         addApiView('userscript.bookmark', self.bookmark)
@@ -36,7 +35,7 @@ class Userscript(Plugin):
 
         return self.renderTemplate(__file__, 'bookmark.js', **params)
 
-    def getUserScript(self, filename = ''):
+    def getUserScript(self, random = '', filename = ''):
 
         params = {
             'includes': fireEvent('userscript.get_includes', merge = True),
