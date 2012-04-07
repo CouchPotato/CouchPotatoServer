@@ -8,9 +8,7 @@ log = CPLog(__name__)
 class NotifyMyWP(Notification):
 
     def notify(self, message = '', data = {}):
-
-        if self.isDisabled():
-            return
+        if self.isDisabled(): return
 
         keys = self.conf('api_key').split(',')
         p = PyNMWP(keys, self.conf('dev_key'))
@@ -20,5 +18,6 @@ class NotifyMyWP(Notification):
         for key in keys:
             if not response[key]['Code'] == u'200':
                 log.error('Could not send notification to NotifyMyWindowsPhone (%s). %s' % (key, response[key]['message']))
+                return False
 
         return response
