@@ -1,6 +1,3 @@
-/* @override 
-	http://127.0.0.1:5000/_api_/static/style/page/settings.css */
-
 .page.settings:after {
 	content: ".";
 	display: block;
@@ -19,7 +16,7 @@
 		padding: 40px 0;
 		margin: 0;
 		min-height: 470px;
-		
+
 		background-image: -webkit-gradient(
 		    linear,
 		    right top,
@@ -46,7 +43,7 @@
 				font-size: 25px;
 				color: #fff;
 			}
-			
+
 		.page.settings .tabs .subtabs {
 			list-style: none;
 			padding: 0;
@@ -57,7 +54,7 @@
 			.page.settings .tabs > .active .subtabs {
 				max-height: 300px;
 			}
-			
+
 			.page.settings .tabs .subtabs a {
 				font-size: 15px;
 				padding: 1px 15px;
@@ -65,27 +62,27 @@
 				color: rgba(255, 255, 255, 0.8);
 				background: rgba(78, 89, 105, 0.4);
 			}
-			
+
 				.page.settings .tabs .subtabs .active a {
 					font-weight: bold;
 					color: #fff;
 					background: rgb(78, 89, 105);
 				}
 
-	
+
 	.page.settings .containers {
 		width: 80%;
 		float: left;
 		padding: 20px 2%;
 		min-height: 300px;
-	}	
+	}
 
-		.page .advanced { 
+		.page .advanced {
 			display: none;
 			color: #edc07f;
 		}
 		.page.show_advanced .advanced { display: block; }
-		
+
 		.page.settings .tab_content {
 			display: none;
 		}
@@ -106,7 +103,7 @@
 				font-size: 12px;
 				margin-left: 10px;
 			}
-			
+
 			.page fieldset.disabled .ctrlHolder {
 				display: none;
 			}
@@ -153,14 +150,14 @@
 				height: 24px;
 				vertical-align: middle;
 			}
-	
+
 		.page .ctrlHolder label {
 			font-weight: bold;
 			width: 20%;
 			margin: 0;
 			padding: 6px 0 0;
 		}
-		
+
 		.page .xsmall { width: 20px !important; text-align: center; }
 
 	.page input[type=text], .page input[type=password] {
@@ -174,7 +171,7 @@
 		.page .input.medium { width: 15% }
 		.page .input.large { width: 25% }
 		.page .input.xlarge { width: 30% }
-		
+
 	.page .advanced_toggle {
 		clear: both;
 		display: block;
@@ -183,10 +180,10 @@
 		margin: 0;
 	}
 		.page .advanced_toggle span { padding: 0 5px; }
-		.page.show_advanced .advanced_toggle { 
+		.page.show_advanced .advanced_toggle {
 			color: #edc07f;
 		}
-	
+
 	.page .directory {
 		display: inline-block;
 		padding: 0 4% 0 4px;
@@ -206,7 +203,7 @@
 			white-space: nowrap;
 			cursor: pointer;
 		}
-	
+
 	.page .directory_list {
 		z-index: 2;
 		position: absolute;
@@ -216,7 +213,7 @@
 		border-radius: 3px;
 		box-shadow: 0 0 50px rgba(0,0,0,0.55);
 	}
-	
+
 		.page .directory_list .pointer {
 			border-right: 6px solid transparent;
 			border-left: 6px solid transparent;
@@ -226,7 +223,7 @@
 			width: 0px;
 			margin: -6px 0 0 38%;
 		}
-	
+
 	.page .directory_list ul {
 		width: 92%;
 		height: 300px;
@@ -234,7 +231,7 @@
 		margin: 0 4%;
 		font-size: 16px;
 	}
-	
+
 		.page .directory_list li {
 			padding: 4px 10px;
 			cursor: pointer;
@@ -245,17 +242,17 @@
 		.page .directory_list li:last-child {
 			border-bottom: 1px solid rgba(255,255,255,0.1);
 		}
-		
+
 			.page .directory_list li:hover {
 				background-color: #515c68;
 			}
-	
+
 	.page .directory_list .actions {
 		clear: both;
 		padding: 4% 4% 2%;
 		min-height: 25px;
 	}
-		
+
 		.page .directory_list .actions label {
 			float: right;
 			width: auto;
@@ -264,7 +261,7 @@
 			.page .directory_list .actions .inlay {
 				margin: -2px 0 0 7px;
 			}
-			
+
 		.page .directory_list .actions .back {
 			font-weight: bold;
 			width: 160px;
@@ -273,7 +270,7 @@
 			line-height: 120%;
 			vertical-align: top;
 		}
-	
+
 	.page .directory_list .actions:last-child {
 		float: right;
 		padding: 4%;
@@ -283,23 +280,23 @@
 			padding: 0 5px;
 			text-shadow: none;
 		}
-		
+
 		.page .directory_list .actions:last-child > .clear {
 			left: -90%;
 			position: relative;
 	background-color: #af3128;
 }
-		
+
 		.page .directory_list .actions:last-child > .cancel {
 			font-weight: bold;
 			color: #ddd;
 		}
-		
+
 		.page .directory_list .actions:last-child > .save {
 			background: #9dc156;
 		}
-	
-	
+
+
 	.page .multi_directory.is_empty .delete  {
 		visibility: hidden;
 	}
@@ -315,18 +312,18 @@
 		background-position: center;
 		margin-left: 5px;
 	}
-	
-			
+
+
 	.page .tag_input select {
 		width: 20%;
 		display: inline-block;
 	}
-			
+
 		.page .tag_input .selection {
 			border-radius: 0 10px 10px 0;
 			height: 26px;
 		}
-		
+
 	.page .tag_input > input {
 		display: none;
 	}
@@ -345,7 +342,7 @@
 			border-radius: 3px 0 0 3px;
 		}
 		.page .tag_input:hover .formHint { display: none; }
-		
+
 		.page .tag_input > ul > li {
 			display: inline-block;
 			min-height: 20px;
@@ -392,12 +389,12 @@
 				    #406db8 100%
 				);
 			}
-			
+
 			.page .tag_input .select {
 				display: none;
 			}
 				.page .tag_input:hover .select { display: inline-block; }
-			
+
 			.page .tag_input li input {
 				background: 0;
 				border: 0;
@@ -410,13 +407,13 @@
 				padding-left: 2px;
 				min-width: 0;
 			}
-			
+
 			.page .tag_input li:not(.choice) span {
 				white-space: pre;
 				position: absolute;
 				top: -9999px;
 			}
-		
+
 			.page .tag_input .delete {
 				display: none;
 				height: 10px;
@@ -440,11 +437,11 @@
 				background-size: 65%;
 			}
 			.page .tag_input .choice:hover .delete { display: inline-block; }
-			.page .tag_input .choice .delete:hover { 
+			.page .tag_input .choice .delete:hover {
 				height: 14px;
 				margin-top: -13px;
 			}
-	
+
 	.page .combined_table .head {
 		margin: 0 0 0 60px;
 	}
@@ -462,17 +459,17 @@
 		.page .combined_table .head abbr.host {
 			margin-right: 197px;
 		}
-		
+
 	.page .combined_table .ctrlHolder {
 		padding-top: 2px;
 		padding-bottom: 3px;
 	}
 	.page .combined_table .ctrlHolder.hide { display: none; }
-		
+
 	.page .combined_table .ctrlHolder > * {
 		margin: 0 10px 0 0;
 	}
-		
+
 	.page .combined_table .ctrlHolder .delete {
 		display: none;
 		width: 22px;
@@ -483,7 +480,7 @@
 	.page .combined_table .ctrlHolder:hover .delete {
 		display: inline-block;
 	}
-	
+
 	.page .combined_table .ctrlHolder.is_empty .delete, .page.settings .combined_table .ctrlHolder.is_empty .check {
 		visibility: hidden;
 }
@@ -522,7 +519,7 @@
 			.page .tab_about .donate form {
 				padding: 10px 0 0;
 			}
-			
+
 	.page .tab_about .info {
 		padding: 20px 30px;
 		margin: 0;
@@ -535,7 +532,7 @@
 			width: 17%;
 			font-weight: bold;
 		}
-		
+
 		.page .tab_about .info dd {
 			float: right;
 			width: 80%;
@@ -544,12 +541,12 @@
 			font-style: italic;
 		}
 		.page .tab_about .info dd.version { cursor: pointer; }
-			
+
 	.page .tab_about .group_actions > div {
 		padding: 30px;
 		text-align: center;
 	}
-			
+
 		.page .tab_about .group_actions a {
 			margin: 0 10px;
 			font-size: 20px;
@@ -561,24 +558,24 @@
 	font-size: 20px;
 	font-weight: normal;
 }
-	
+
 	.group_userscript h2 .hint {
 		display: block;
 		margin: 0 !important;
 	}
-	
+
 	.group_userscript .userscript {
 		float: left;
 		margin: 14px 0 0 25px;
 		height: 36px;
 		line-height: 25px;
 	}
-	
+
 	.group_userscript .or {
 		float: left;
 		margin: 20px 10px;
 	}
-			
+
 	.group_userscript .bookmarklet {
 		display: block;
 		display: block;
@@ -586,8 +583,8 @@
 		padding: 20px 15px 0 0 ;
 		border-radius: 5px;
 	}
-		
+
 		.group_userscript .bookmarklet span {
 			margin-left: 10px;
-			display: inline-block;	
+			display: inline-block;
 		}

@@ -31,14 +31,14 @@
 		margin: 0;
 		display: block;
 	}
-	
+
 	.page.wizard .tabs li {
 		display: inline-block;
 	}
 		.page.wizard .tabs li a {
 			padding: 20px 30px;
 		}
-		
+
 	.page.wizard .tab_wrapper .pointer {
 		border-right: 10px solid transparent;
 		border-left: 10px solid transparent;
@@ -47,7 +47,7 @@
 		position: absolute;
 		top: 60px;
 	}
-		
+
 .page.wizard .tab_content {
 	margin: 20px 0 160px;
 }

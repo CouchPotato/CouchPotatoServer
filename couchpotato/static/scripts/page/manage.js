@@ -16,7 +16,7 @@ Page.Manage = new Class({
 					'click': self.refresh.bind(self, true)
 				}
 			});
-			
+
 			self.refresh_quick = new Element('a', {
 				'title': 'Just scan for recently changed',
 				'text': 'Quick library scan',

@@ -72,7 +72,7 @@ var UserscriptSettingTab = new Class({
 			catch(e){
 				userscript = Browser.chrome === true;
 			}
-			
+
 			var host_url = window.location.protocol + '//' + window.location.host;
 
 			self.settings.createGroup({

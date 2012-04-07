@@ -46,7 +46,7 @@ var PageBase = new Class({
 			self.fireEvent('error');
 		}
 	},
-	
+
 	openUrl: function(url){
 		if(History.getPath() != url)
 			History.push(url);
@@ -59,15 +59,15 @@ var PageBase = new Class({
 	getName: function(){
 		return this.name
 	},
-	
+
 	show: function(){
 		this.el.addClass('active');
 	},
-	
+
 	hide: function(){
 		this.el.removeClass('active');
 	},
-	
+
 	toElement: function(){
 		return this.el
 	}

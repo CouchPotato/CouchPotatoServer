@@ -2,7 +2,7 @@ var File = new Class({
 
 	initialize: function(file){
 		var self = this;
-		
+
 		if(!file){
 			self.el = new Element('div');
 			return
@@ -17,7 +17,7 @@ var File = new Class({
 
 	createImage: function(){
 		var self = this;
-		
+
 		var file_name = self.data.path.replace(/^.*[\\\/]/, '');
 
 		self.el = new Element('div', {

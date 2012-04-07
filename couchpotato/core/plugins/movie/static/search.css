@@ -14,7 +14,7 @@
 		.search_form input:focus {
 			padding-right: 83px;
 		}
-	
+
 		.search_form .input .enter {
 			background: #369545 url('../images/sprite.png') right -188px no-repeat;
 			padding: 0 20px 0 4px;
@@ -36,7 +36,7 @@
 			.search_form.focused.filled .input .enter {
 				opacity: 1;
 			}
-		
+
 		.search_form .input a  {
 			width:  17px;
 			height: 20px;
@@ -50,7 +50,7 @@
 			transition: all 0.2s ease-in-out;
 			vertical-align: middle;
 		}
-		
+
 		.search_form.filled .input a {
 			opacity: 1;
 		}
@@ -68,7 +68,7 @@
 		.search_form.shown.filled .results_container {
 			display: block;
 		}
-		
+
 		.search_form .results_container:before {
 			content: ' ';
 			height: 0;
@@ -146,7 +146,7 @@
 		}
 
 			.movie_result:last-child .data { border-bottom: 0; }
-			
+
 			.movie_result .in_wanted, .movie_result .in_library {
 				position: absolute;
 				margin-top: 105px;

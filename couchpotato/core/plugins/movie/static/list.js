@@ -200,7 +200,7 @@ var MovieList = new Class({
 
 			}
 		});
-		
+
 		// Add menu or hide
 		if (self.options.menu.length > 0)
 			self.options.menu.each(function(menu_item){

@@ -7,13 +7,13 @@ var BlockBase = new Class({
 	initialize: function(parent, options){
 		var self = this;
 		self.setOptions(options);
-		
+
 		self.page = parent;
 
 		self.create();
 
 	},
-	
+
 	create: function(){
 		this.el = new Element('div.block');
 	},
@@ -21,11 +21,11 @@ var BlockBase = new Class({
 	getParent: function(){
 		return this.page
 	},
-	
+
 	hide: function(){
 		this.el.hide();
 	},
-	
+
 	show: function(){
 		this.el.show();
 	},

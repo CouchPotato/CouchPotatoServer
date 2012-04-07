@@ -9,11 +9,11 @@ Page.Settings = new Class({
 	tabs: {},
 	current: 'about',
 	has_tab: false,
-	
+
 	initialize: function(options){
 		var self = this;
 		self.parent(options);
-		
+
 		// Add to more menu
 		if(self.name == 'settings')
 			App.getBlock('more').addLink(new Element('a', {
@@ -21,7 +21,7 @@ Page.Settings = new Class({
 				'text': self.name.capitalize(),
 				'title': self.title
 			}), 'top')
-		
+
 	},
 
 	open: function(action, params){

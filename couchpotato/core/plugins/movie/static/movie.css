@@ -24,7 +24,7 @@
 		.movies .movie.list_view:hover, .movies .movie.mass_edit_view:hover {
 			background: rgba(255,255,255,0.03);
 		}
-		
+
 		.movies .data {
 			padding: 20px;
 			height: 180px;
@@ -43,11 +43,11 @@
 				border: 0;
 				background: none;
 			}
-			
+
 		.movies .movie .check {
 			display: none;
 		}
-		
+
 			.movies.mass_edit_list .movie .check {
 				float: left;
 				display: block;
@@ -62,21 +62,21 @@
 			height: 180px;
 			border-radius: 4px 0 0 4px;
 			transition: all 0.2s linear;
-			
+
 		}
-			.movies .list_view .poster, .movies .mass_edit_view .poster { 
+			.movies .list_view .poster, .movies .mass_edit_view .poster {
 				width: 20px;
 				height: 30px;
 			}
 			.movies.mass_edit_list .poster {
 				display: none;
 			}
-		
+
 		.movies .poster img, .options .poster img {
 			width: 101%;
 			height: 101%;
 		}
-		
+
 			.movies .info .title {
 				font-size: 30px;
 				font-weight: bold;
@@ -91,7 +91,7 @@
 					text-overflow: ellipsis;
 					width: 64%;
 				}
-			
+
 			.movies .info .year {
 				font-size: 30px;
 				margin-bottom: 10px;
@@ -105,7 +105,7 @@
 					font-size: 16px;
 					width: 6%;
 				}
-			
+
 			.movies .info .rating {
 				font-size: 30px;
 				margin-bottom: 10px;
@@ -114,7 +114,7 @@
 				width: 5%;
 				padding: 0 0 0 3%;
 			}
-			
+
 			.movies .info .description {
 				clear: both;
 				height: 80px;
@@ -126,13 +126,13 @@
 				.movies .list_view .info .description, .movies .mass_edit_view .info .description {
 					display: none;
 				}
-		
+
 		.movies .data .quality {
 			display: block;
 			min-height: 20px;
 			vertical-align: mid;
 		}
-		
+
 		.movies .data .quality span {
 			padding: 2px 3px;
 			font-weight: bold;
@@ -154,39 +154,39 @@
 				float: right;
 				width: 30%;
 			}
-			
+
 		.movies .data .quality .available, .movies .data .quality .snatched {
 			opacity: 1;
 			box-shadow: 1px 1px 0 rgba(0,0,0,0.2);
 			cursor: pointer;
 		}
-		
+
 		.movies .data .quality .available { background-color: #578bc3; }
 		.movies .data .quality .snatched { background-color: #369545; }
 		.movies .data .quality .done {
 			background-color: #369545;
 			opacity: 1;
 		}
-		.movies .data .quality .finish { 
+		.movies .data .quality .finish {
 			background-image: url('../images/sprite.png');
 			background-repeat:  no-repeat;
 			background-position: 0 2px;
 			padding-left: 14px;
 			background-size: 14px
 		}
-			
+
 		.movies .data .actions {
 			line-height: 0;
 			clear: both;
 			float: right;
 			margin-top: -25px;
 		}
-			.movies .data:hover .action { opacity: 0.6; } 
+			.movies .data:hover .action { opacity: 0.6; }
 			.movies .data:hover .action:hover { opacity: 1; }
 			.movies.mass_edit_list .data .actions {
 				display: none;
 			}
-		
+
 			.movies .data .action {
 				background-repeat: no-repeat;
 				background-position: center;
@@ -196,12 +196,12 @@
 				padding: 3px;
 				opacity: 0;
 			}
-		
+
 		.movies .list_view .data:hover .actions, .movies .mass_edit_view .data:hover .actions {
 			margin: -34px 2px 0 0;
 			background: #4e5969;
 		}
-			
+
 		.movies .delete_container {
 			clear: both;
 			text-align: center;
@@ -223,23 +223,23 @@
 				color: #fff;
 				background-color: #d32917;
 			}
-				
+
 			.movies .options {
 				position: absolute;
 				margin-left: 120px;
 				width: 840px;
 			}
-			
+
 			.movies .options .form {
 				margin: 70px 20px 0;
 				float: left;
 				font-size: 20px;
 			}
-			
+
 			.movies .options .form select {
 				margin-right: 20px;
 			}
-		
+
 			.movies .options .table {
 				height: 180px;
 				overflow: auto;
@@ -255,15 +255,15 @@
 					.movies .options .table .item.ignored .delete {
 						background-image: url('../images/icon.undo.png');
 					}
-					
+
 				.movies .options .table .item:last-child { border: 0; }
-				.movies .options .table .item:nth-child(even) { 
+				.movies .options .table .item:nth-child(even) {
 					background: rgba(255,255,255,0.05);
 				}
-				.movies .options .table .item:not(.head):hover { 
+				.movies .options .table .item:not(.head):hover {
 					background: rgba(255,255,255,0.03);
 				}
-				
+
 					.movies .options .table .item > * {
 						display: inline-block;
 						padding: 0 5px;
@@ -290,7 +290,7 @@
 						.movies .options .table.files .name { width: 605px; }
 						.movies .options .table .type { width: 130px; }
 						.movies .options .table .is_available { width: 90px; }
-						
+
 						.movies .options .table a {
 							width: 30px !important;
 							height: 20px;
@@ -307,7 +307,7 @@
 					padding-bottom: 4px;
 					height: auto;
 				}
-				
+
 		.movies .load_more {
 			display: block;
 			padding: 10px;
@@ -363,14 +363,14 @@
 		.movies .alph_nav li.available {
 			color: rgba(255,255,255,0.8);
 			font-weight: bolder;
-			
+
 		}
 		.movies .alph_nav li.active.available, .movies .alph_nav li.available:hover {
 			color: #fff;
 			font-size: 24px;
 			line-height: 24px;
 		}
-		
+
 	.movies .alph_nav input {
 		padding: 6px 5px;
 		margin: 0 0 0 6px;
@@ -378,16 +378,16 @@
 		width: 155px;
 		height: 25px;
 	}
-	
+
 	.movies .alph_nav .actions {
 		margin: 0 6px 0 0;
 		-moz-user-select: none;
 	}
-		.movies .alph_nav .actions li { 
+		.movies .alph_nav .actions li {
 			border-radius: 1px;
 			width: auto;
 		}
-		.movies .alph_nav .actions li.active { 
+		.movies .alph_nav .actions li.active {
 			background: none;
 			border: 1px solid transparent;
 			box-shadow: none;
@@ -398,15 +398,15 @@
 			width: 25px;
 			height: 100%;
 		}
-		
+
 			.movies .alph_nav .actions li.mass_edit span {
 				background-position: 3px 3px;
 			}
-			
+
 			.movies .alph_nav .actions li.list span {
 				background-position: 3px -95px;
 			}
-			
+
 			.movies .alph_nav .actions li.thumbs span {
 				background-position: 3px -74px;
 			}
@@ -417,7 +417,7 @@
 		.movies .alph_nav .actions li:last-child {
 			border-radius: 0 3px 3px 0;
 		}
-	
+
 	.movies .alph_nav .mass_edit_form {
 		clear: both;
 		text-align: center;
@@ -439,7 +439,7 @@
 					font-weight: bold;
 					margin: 0 3px 0 10px;
 				}
-				
+
 		.movies .alph_nav .mass_edit_form .quality {
 			float: left;
 			padding: 8px 0 0;
@@ -452,21 +452,20 @@
 			.movies .alph_nav .mass_edit_form .button {
 				padding: 3px 7px;
 			}
-				
+
 		.movies .alph_nav .mass_edit_form .delete {
 			float: left;
 			padding: 8px 0 0 8px;
 		}
-				
+
 			.movies .alph_nav .mass_edit_form .delete span {
 				margin: 0 10px 0 0;
 			}
-	
+
 	.movies .alph_nav .more_menu {
 		margin-left: 48px;
 	}
-	
+
 		.movies .alph_nav .more_menu > a {
 			background-position: center -157px;
 		}
-	

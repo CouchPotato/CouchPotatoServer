@@ -93,7 +93,7 @@ var QualityBase = new Class({
 		var data = data || {'id': randomString()}
 		var profile = new Profile(data)
 		self.profiles.include(profile)
-		
+
 		return profile;
 	},
 
