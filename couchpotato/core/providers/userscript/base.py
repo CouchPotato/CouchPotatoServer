@@ -1,5 +1,6 @@
 from couchpotato.core.event import addEvent, fireEvent
-from couchpotato.core.helpers.variable import getImdb
+from couchpotato.core.helpers.encoding import simplifyString
+from couchpotato.core.helpers.variable import getImdb, md5
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from urlparse import urlparse
@@ -42,9 +43,12 @@ class UserscriptBase(Plugin):
 
         return
 
+    def getUrl(self, url):
+        return self.getCache(md5(simplifyString(url)), url = url)
+
     def getMovie(self, url):
         try:
-            data = self.urlopen(url)
+            data = self.getUrl(url)
         except:
             data = ''
         return self.getInfo(getImdb(data))

@@ -9,7 +9,7 @@ class RottenTomatoes(UserscriptBase):
     def getMovie(self, url):
 
         try:
-            data = self.urlopen(url)
+            data = self.getUrl(url)
         except:
             return
 
