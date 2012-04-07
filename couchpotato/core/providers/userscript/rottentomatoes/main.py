@@ -4,7 +4,7 @@ from couchpotato.core.providers.userscript.base import UserscriptBase
 
 class RottenTomatoes(UserscriptBase):
 
-    includes = ['http*://www.rottentomatoes.com/m/*']
+    includes = ['*://www.rottentomatoes.com/m/*']
 
     def getMovie(self, url):
 
