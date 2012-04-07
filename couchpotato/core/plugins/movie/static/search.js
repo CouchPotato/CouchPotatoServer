@@ -285,6 +285,8 @@ Block.Search.Item = new Class({
 		var self = this;
 		(e).preventDefault();
 
+		self.loadingMask();
+
 		Api.request('movie.add', {
 			'data': {
 				'identifier': self.info.imdb,
@@ -355,6 +357,25 @@ Block.Search.Item = new Class({
 
 			self.options.addClass('set');
 		}
+
+	},
+
+	loadingMask: function(){
+		var self = this;
+
+		var s = self.options.getSize();
+
+		self.mask = new Element('span.mask', {
+			'styles': {
+				'width': s.x,
+				'height': s.y
+			}
+		}).inject(self.options).fade('hide').position({
+			'relativeTo': self.options
+		})
+
+		createSpinner(self.mask)
+		self.mask.fade('in')
 
 	},
 
