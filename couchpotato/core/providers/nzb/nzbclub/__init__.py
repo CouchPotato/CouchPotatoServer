@@ -7,7 +7,8 @@ config = [{
     'name': 'nzbclub',
     'groups': [
         {
-            'tab': 'providers',
+            'tab': 'searcher',
+            'subtab': 'providers',
             'name': 'NZBClub',
             'description': '',
             'options': [

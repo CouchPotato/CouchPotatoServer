@@ -3,7 +3,7 @@ from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.plugins.score.scores import nameScore, nameRatioScore, \
-    sizeScore
+    sizeScore, providerScore, duplicateScore
 
 log = CPLog(__name__)
 
@@ -30,5 +30,11 @@ class Score(Plugin):
                 score += nzb.get('leechers') / 10
             except:
                 pass
+
+        # Provider score
+        score += providerScore(nzb['provider'])
+
+        # Duplicates in name
+        score += duplicateScore(nzb['name'], movie['library']['titles'][0]['title'])
 
         return score

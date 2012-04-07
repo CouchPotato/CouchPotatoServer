@@ -22,7 +22,9 @@ class Renamer(Plugin):
 
     def __init__(self):
 
-        addApiView('renamer.scan', self.scanView)
+        addApiView('renamer.scan', self.scanView, docs = {
+            'desc': 'For the renamer to check for new files to rename',
+        })
 
         addEvent('renamer.scan', self.scan)
         addEvent('app.load', self.scan)
@@ -31,7 +33,7 @@ class Renamer(Plugin):
 
     def scanView(self):
 
-        fireEvent('renamer.scan')
+        fireEventAsync('renamer.scan')
 
         return jsonified({
             'success': True
@@ -64,6 +66,8 @@ class Renamer(Plugin):
         trailer_name = self.conf('trailer_name')
         nfo_name = self.conf('nfo_name')
         separator = self.conf('separator')
+
+        db = get_session()
 
         for group_identifier in groups:
 
@@ -123,7 +127,7 @@ class Renamer(Plugin):
                     # Move nfo depending on settings
                     if file_type is 'nfo' and not self.conf('rename_nfo'):
                         log.debug('Skipping, renaming of %s disabled' % file_type)
-                        if self.conf('clean_up'):
+                        if self.conf('cleanup'):
                             for current_file in group['files'][file_type]:
                                 remove_files.append(current_file)
                         continue
@@ -223,7 +227,6 @@ class Renamer(Plugin):
                             cd += 1
 
                 # Before renaming, remove the lower quality files
-                db = get_session()
 
                 library = db.query(Library).filter_by(identifier = group['library']['identifier']).first()
                 done_status = fireEvent('status.get', 'done', single = True)
@@ -308,11 +311,26 @@ class Renamer(Plugin):
                 if isinstance(src, File):
                     src = src.path
 
-                log.info('(fake) Removing "%s"' % src)
+                log.info('Removing "%s"' % src)
+                try:
+                    os.remove(src)
+                except:
+                    log.error('Failed removing %s: %s', (src, traceback.format_exc()))
 
             # Remove matching releases
             for release in remove_releases:
-                log.info('(fake) Removing release %s' % release.identifier)
+                log.debug('Removing release %s' % release.identifier)
+                try:
+                    db.delete(release)
+                except:
+                    log.error('Failed removing %s: %s', (release.identifier, traceback.format_exc()))
+
+            if group['dirname'] and group['parentdir']:
+                try:
+                    log.info('Deleting folder: %s' % group['parentdir'])
+                    self.deleteEmptyFolder(group['parentdir'])
+                except:
+                    log.error('Failed removing %s: %s', (group['parentdir'], traceback.format_exc()))
 
             # Search for trailers etc
             fireEventAsync('renamer.after', group)
@@ -378,3 +396,20 @@ class Renamer(Plugin):
 
     def replaceDoubles(self, string):
         return string.replace('  ', ' ').replace(' .', '.')
+
+    def deleteEmptyFolder(self, folder):
+
+        for root, dirs, files in os.walk(folder):
+
+            for dir_name in dirs:
+                full_path = os.path.join(root, dir_name)
+                if len(os.listdir(full_path)) == 0:
+                    try:
+                        os.rmdir(full_path)
+                    except:
+                        log.error('Couldn\'t remove empty directory %s: %s' % (full_path, traceback.format_exc()))
+
+        try:
+            os.rmdir(folder)
+        except:
+            log.error('Couldn\'t remove empty directory %s: %s' % (folder, traceback.format_exc()))

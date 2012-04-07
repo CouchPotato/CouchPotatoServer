@@ -24,6 +24,7 @@ rename_options = {
 
 config = [{
     'name': 'renamer',
+    'order': 40,
     'description': 'Move and rename your downloaded movies to your movie directory.',
     'groups': [
         {

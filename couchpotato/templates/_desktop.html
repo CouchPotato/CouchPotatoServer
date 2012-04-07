@@ -10,9 +10,9 @@
 
 		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/library/mootools.js') }}"></script>
 		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/library/mootools_more.js') }}"></script>
+		{% if not env.get('dev') %}
 		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/library/prefix_free.js') }}"></script>
-
-		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/library/templated.js') }}"></script>
+		{% endif %}
 		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/library/uniform.js') }}"></script>
 		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/library/form_replacement/form_check.js') }}"></script>
 		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/library/form_replacement/form_radio.js') }}"></script>
@@ -20,6 +20,7 @@
 		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/library/form_replacement/form_selectoption.js') }}"></script>
 		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/library/question.js') }}"></script>
 		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/library/scrollspy.js') }}"></script>
+		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/library/spin.js') }}"></script>
 
 		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/couchpotato.js') }}"></script>
 		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/api.js') }}"></script>
@@ -29,6 +30,7 @@
 		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/block.js') }}"></script>
 		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/block/navigation.js') }}"></script>
 		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/block/footer.js') }}"></script>
+		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/block/menu.js') }}"></script>
 
 		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/page/wanted.js') }}"></script>
 		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/page/settings.js') }}"></script>
@@ -49,6 +51,7 @@
 				new Uniform();
 
 				Api.setup({
+					'host': {{ fireEvent('app.api_url', single = True)|tojson|safe }},
 					'url': {{ url_for('api.index')|tojson|safe }},
 					'path_sep': {{ sep|tojson|safe }},
 					'is_remote': false
@@ -87,6 +90,7 @@
 					'options': "{{ env.get('options')|safe }}",
 					'app_dir': {{ env.get('app_dir')|tojson|safe }},
 					'data_dir': {{ env.get('data_dir')|tojson|safe }},
+					'pid': {{ env.getPid()|tojson|safe }},
 					'userscript_version': {{ fireEvent('userscript.get_version', single = True)|tojson|safe }}
 				});
 			})

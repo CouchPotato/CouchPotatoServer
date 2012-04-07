@@ -3,8 +3,9 @@ var MovieList = new Class({
 	Implements: [Options],
 
 	options: {
-		navigation: false,
-		limit: 50
+		navigation: true,
+		limit: 50,
+		menu: []
 	},
 
 	movies: [],
@@ -69,17 +70,22 @@ var MovieList = new Class({
 			self.scrollspy.stop();
 		}
 
-		Object.each(movies, function(info){
+		Object.each(movies, function(movie){
 
 			// Attach proper actions
-			var a = self.options.actions
-			var actions = a[info.status.identifier.capitalize()] || a.Wanted || {};
+			var a = self.options.actions,
+				status = Status.get(movie.status_id);
+			var actions = a[status.identifier.capitalize()] || a.Wanted || {};
 
 			var m = new Movie(self, {
-				'actions': actions
-			}, info);
+				'actions': actions,
+				'view': self.current_view,
+				'onSelect': self.calculateSelected.bind(self)
+			}, movie);
 			$(m).inject(self.movie_list);
 			m.fireEvent('injected');
+
+			self.movies.include(m)
 
 		});
 
@@ -89,8 +95,12 @@ var MovieList = new Class({
 		var self = this;
 		var chars = '#ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
+		self.current_view = self.getSavedView();
+		self.el.addClass(self.current_view+'_list')
+
 		self.navigation = new Element('div.alph_nav').adopt(
-			self.alpha = new Element('ul.inlay', {
+			self.navigation_actions = new Element('ul.inlay.actions.reversed'),
+			self.navigation_alpha = new Element('ul.numbers', {
 				'events': {
 					'click:relay(li)': function(e, el){
 						self.movie_list.empty()
@@ -99,24 +109,74 @@ var MovieList = new Class({
 					}
 				}
 			}),
-			self.search_input = new Element('input.inlay', {
+			self.navigation_search_input = new Element('input.inlay', {
 				'placeholder': 'Search',
 				'events': {
 					'keyup': self.search.bind(self),
 					'change': self.search.bind(self)
 				}
-			})/*,
-			self.view = new Element('ul.inlay').adopt(
-				new Element('li.list'),
-				new Element('li.thumbnails'),
-				new Element('li.text')
-			)*/
+			}),
+			self.navigation_menu = new Block.Menu(self),
+			self.mass_edit_form = new Element('div.mass_edit_form').adopt(
+				new Element('span.select').adopt(
+					self.mass_edit_select = new Element('input[type=checkbox].inlay', {
+						'events': {
+							'change': self.massEditToggleAll.bind(self)
+						}
+					}),
+					self.mass_edit_selected = new Element('span.count', {'text': 0}),
+					self.mass_edit_selected_label = new Element('span', {'text': 'selected'})
+				),
+				new Element('div.quality').adopt(
+					self.mass_edit_quality = new Element('select'),
+					new Element('a.button.orange', {
+						'text': 'Change quality',
+						'events': {
+							'click': self.changeQualitySelected.bind(self)
+						}
+					})
+				),
+				new Element('div.delete').adopt(
+					new Element('span[text=or]'),
+					new Element('a.button.red', {
+						'text': 'Delete',
+						'events': {
+							'click': self.deleteSelected.bind(self)
+						}
+					})
+				)
+			)
 		).inject(self.el, 'top');
+
+		// Mass edit
+		self.mass_edit_select_class = new Form.Check(self.mass_edit_select);
+		Quality.getActiveProfiles().each(function(profile){
+			new Element('option', {
+				'value': profile.id ? profile.id : profile.data.id,
+				'text': profile.label ? profile.label : profile.data.label
+			}).inject(self.mass_edit_quality)
+		});
+
+		// Actions
+		['mass_edit', 'thumbs', 'list'].each(function(view){
+			self.navigation_actions.adopt(
+				new Element('li.'+view+(self.current_view == view ? '.active' : '')+'[data-view='+view+']', {
+					'events': {
+						'click': function(e){
+							var a = 'active';
+							self.navigation_actions.getElements('.'+a).removeClass(a);
+							self.changeView(this.get('data-view'));
+							this.addClass(a);
+						}
+					}
+				}).adopt(new Element('span'))
+			)
+		});
 
 		// All
 		self.letters['all'] = new Element('li.letter_all.available.active', {
 			'text': 'ALL',
-		}).inject(self.alpha);
+		}).inject(self.navigation_alpha);
 
 		// Chars
 		chars.split('').each(function(c){
@@ -124,7 +184,7 @@ var MovieList = new Class({
 				'text': c,
 				'class': 'letter_'+c,
 				'data-letter': c
-			}).inject(self.alpha);
+			}).inject(self.navigation_alpha);
 		});
 
 		// Get available chars and highlight
@@ -141,12 +201,126 @@ var MovieList = new Class({
 			}
 		});
 
+		// Add menu or hide
+		if (self.options.menu.length > 0)
+			self.options.menu.each(function(menu_item){
+				self.navigation_menu.addLink(menu_item);
+			})
+		else
+			self.navigation_menu.hide()
+
+		self.nav_scrollspy = new ScrollSpy({
+			min: 10,
+			onEnter: function(){
+				self.navigation.addClass('float')
+			},
+			onLeave: function(){
+				self.navigation.removeClass('float')
+			}
+		});
+
+	},
+
+	calculateSelected: function(){
+		var self = this;
+
+		var selected = 0,
+			movies = self.movies.length;
+		self.movies.each(function(movie){
+			selected += movie.isSelected() ? 1 : 0
+		})
+
+		var indeterminate = selected > 0 && selected < movies,
+			checked = selected == movies && selected > 0;
+
+		self.mass_edit_select.set('indeterminate', indeterminate)
+
+		self.mass_edit_select_class[checked ? 'check' : 'uncheck']()
+		self.mass_edit_select_class.element[indeterminate ? 'addClass' : 'removeClass']('indeterminate')
+
+		self.mass_edit_selected.set('text', selected);
+	},
+
+	deleteSelected: function(){
+		var self = this;
+		var ids = self.getSelectedMovies()
+
+		var qObj = new Question('Are you sure you want to delete the selected movies?', 'Items using this profile, will be set to the default quality.', [{
+			'text': 'Yes, delete them',
+			'class': 'delete',
+			'events': {
+				'click': function(e){
+					(e).preventDefault();
+					Api.request('movie.delete', {
+						'data': {
+							'id': ids.join(',')
+						},
+						'onSuccess': function(){
+							qObj.close();
+
+							self.movies.each(function(movie){
+								if (movie.isSelected()){
+									$(movie).destroy()
+									self.movies.erase(movie)
+								}
+							});
+
+							self.calculateSelected()
+						}
+					});
+
+				}
+			}
+		}, {
+			'text': 'Cancel',
+			'cancel': true
+		}]);
+
+	},
+
+	changeQualitySelected: function(){
+		var self = this;
+		var ids = self.getSelectedMovies()
+
+		Api.request('movie.edit', {
+			'data': {
+				'id': ids.join(','),
+				'profile_id': self.mass_edit_quality.get('value')
+			},
+			'onSuccess': self.search.bind(self)
+		});
+	},
+
+	getSelectedMovies: function(){
+		var self = this;
+
+		var ids = []
+		self.movies.each(function(movie){
+			if (movie.isSelected())
+				ids.include(movie.get('id'))
+		});
+
+		return ids
+	},
+
+	massEditToggleAll: function(){
+		var self = this;
+
+		var select = self.mass_edit_select.get('checked');
+
+		self.movies.each(function(movie){
+			movie.select(select)
+		});
+
+		self.calculateSelected()
 	},
 
 	reset: function(){
 		var self = this;
 
-		self.navigation.getElements('.active').removeClass('active')
+		self.movies = []
+		self.calculateSelected()
+		self.navigation_alpha.getElements('.active').removeClass('active')
 		self.offset = 0;
 		self.load_more.show();
 		self.scrollspy.start();
@@ -162,12 +336,32 @@ var MovieList = new Class({
 
 	},
 
+	changeView: function(new_view){
+		var self = this;
+
+		self.movies.each(function(movie){
+			movie.changeView(new_view)
+		});
+
+		self.el
+			.removeClass(self.current_view+'_list')
+			.addClass(new_view+'_list')
+
+		self.current_view = new_view;
+		Cookie.write(self.options.identifier+'_view', new_view, {duration: 1000});
+	},
+
+	getSavedView: function(){
+		var self = this;
+		return Cookie.read(self.options.identifier+'_view') || 'thumbs';
+	},
+
 	search: function(){
 		var self = this;
 
 		if(self.search_timer) clearTimeout(self.search_timer);
 		self.search_timer = (function(){
-			var search_value = self.search_input.get('value');
+			var search_value = self.navigation_search_input.get('value');
 			if (search_value == self.last_search_value) return
 
 			self.reset()
@@ -211,8 +405,8 @@ var MovieList = new Class({
 
 	loadMore: function(){
 		var self = this;
-
-		self.getMovies()
+		if(self.offset >= self.options.limit)
+			self.getMovies()
 	},
 
 	store: function(movies){

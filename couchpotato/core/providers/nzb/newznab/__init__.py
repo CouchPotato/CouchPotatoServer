@@ -7,7 +7,8 @@ config = [{
     'name': 'newznab',
     'groups': [
         {
-            'tab': 'providers',
+            'tab': 'searcher',
+            'subtab': 'providers',
             'name': 'newznab',
             'description': 'Enable multiple NewzNab providers such as <a href="http://nzb.su" target="_blank">NZB.su</a>',
             'wizard': True,

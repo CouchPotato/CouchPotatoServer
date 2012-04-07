@@ -23,14 +23,15 @@ class Notification(Plugin):
         # Attach listeners
         for listener in self.listen_to:
             if not listener in self.dont_listen_to:
+                addEvent(listener, self.createNotifyHandler(listener))
 
-                # Add on snatch default
-                def notify(message, data):
-                    if not self.conf('on_snatch', default = 1) and listener == 'movie.snatched':
-                        return
-                    return self.notify(message = message, data = data)
+    def createNotifyHandler(self, listener):
+        def notify(message, data):
+            if not self.conf('on_snatch', default = True) and listener == 'movie.snatched':
+                return
+            return self.notify(message = message, data = data)
 
-                addEvent(listener, notify)
+        return notify
 
     def notify(self, message = '', data = {}):
         pass

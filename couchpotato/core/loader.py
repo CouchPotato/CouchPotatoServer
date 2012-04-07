@@ -51,8 +51,13 @@ class Loader(object):
                     did_save += self.loadSettings(m, module_name, save = False)
 
                     self.loadPlugins(m, plugin.get('name'))
-                except ImportError:
-                    log.debug('Import error, remove the empty folder: %s' % plugin.get('module'))
+                except ImportError as e:
+                    # todo:: subclass ImportError for missing requirements.
+                    if (e.message.lower().startswith("missing")):
+                        log.error(e.message)
+                        pass
+                    # todo:: this needs to be more descriptive.
+                    log.error('Import error, remove the empty folder: %s' % plugin.get('module'))
                 except:
                     log.error('Can\'t import %s: %s' % (module_name, traceback.format_exc()))
 

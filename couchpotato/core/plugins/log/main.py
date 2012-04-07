@@ -12,9 +12,27 @@ log = CPLog(__name__)
 class Logging(Plugin):
 
     def __init__(self):
-        addApiView('logging.get', self.get)
-        addApiView('logging.clear', self.clear)
-        addApiView('logging.log', self.log)
+        addApiView('logging.get', self.get, docs = {
+            'desc': 'Get the full log file by number',
+            'params': {
+                'nr': {'desc': 'Number of the log to get.'}
+            },
+            'return': {'type': 'object', 'example': """{
+    'success': True,
+    'log': string, //Log file
+    'total': int, //Total log files available
+}"""}
+        })
+        addApiView('logging.clear', self.clear, docs = {
+            'desc': 'Remove all the log files'
+        })
+        addApiView('logging.log', self.log, docs = {
+            'desc': 'Get the full log file by number',
+            'params': {
+                'type': {'desc': 'Type of logging, default "error"'},
+                '**kwargs': {'type':'object', 'desc': 'All other params will be printed in the log string.'},
+            }
+        })
 
     def get(self):
 

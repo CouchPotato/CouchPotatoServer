@@ -30,7 +30,7 @@ class XBMC(Notification):
             }
 
         try:
-            self.urlopen(url, headers = headers)
+            self.urlopen(url, headers = headers, show_error = False)
         except:
             log.error("Couldn't sent command to XBMC")
             return False

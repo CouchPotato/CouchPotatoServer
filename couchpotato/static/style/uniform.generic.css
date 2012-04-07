@@ -1,11 +1,11 @@
 /* ------------------------------------------------------------------------------
-   
+
    UNI-FORM DEFAULT by DRAGAN BABIC                         (v2) | Wed, 31 Mar 10
-   
+
    ------------------------------------------------------------------------------
-   
+
    Copyright (c) 2010, Dragan Babic
-   
+
    Permission is hereby granted, free of charge, to any person
    obtaining a copy of this software and associated documentation
    files (the "Software"), to deal in the Software without
@@ -14,10 +14,10 @@
    copies of the Software, and to permit persons to whom the
    Software is furnished to do so, subject to the following
    conditions:
-   
+
    The above copyright notice and this permission notice shall be
    included in all copies or substantial portions of the Software.
-   
+
    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
    OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -26,18 +26,18 @@
    WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
    OTHER DEALINGS IN THE SOFTWARE.
-   
+
    ------------------------------------------------------------------------------ */
 
 .uniForm{}
-    
+
     .uniForm legend{ font-weight: bold; font-size: 100%; margin: 0; padding: 1.5em 0; }
-  
+
     .uniForm .ctrlHolder{ padding: 1em; border-bottom: 1px solid #efefef; }
     .uniForm .ctrlHolder.focused{ background: #fffcdf; }
-    
+
     .uniForm .inlineLabels .noLabel{}
-    
+
     .uniForm .buttonHolder{ background: #efefef; text-align: right; margin: 1.5em 0 0 0; padding: 1.5em;
                             /* CSS3 */
                             border-radius:         4px;
@@ -51,21 +51,21 @@
       .uniForm .buttonHolder .primaryAction:active{ position: relative; top: 1px; }
       .uniForm .secondaryAction            { text-align: left; }
       .uniForm button.secondaryAction      { background: transparent; border: none; color: #777; margin: 1.25em 0 0 0; padding: 0; }
-      
+
         .uniForm .inlineLabels label em,
         .uniForm .inlineLabels .label em{ font-style: normal; font-weight: bold; }
         .uniForm label small{ font-size: .75em; color: #777; }
-        
+
       .uniForm .textInput,
       .uniForm textarea    { padding: 4px 2px; border: 1px solid #aaa; background: #fff; }
       .uniForm textarea    { height: 12em; }
       .uniForm select      {}
       .uniForm .fileUpload {}
-      
+
       .uniForm ul{}
         .uniForm li{}
           .uniForm ul li label{ font-size: .85em; }
-            
+
             .uniForm .small {}
             .uniForm .medium{}
             .uniForm .large {} /* Large is default and should match the value you set for .textInput, textarea or select */
@@ -73,15 +73,15 @@
             .uniForm .small,
             .uniForm .medium,
             .uniForm .auto{}
-      
+
       /* Get rid of the 'glow' effect in WebKit, optional */
       .uniForm .ctrlHolder .textInput:focus,
       .uniForm .ctrlHolder textarea:focus{ outline: none; }
-      
+
       .uniForm .formHint                    { font-size: .85em; color: #777; }
       .uniForm .inlineLabels .formHint      { padding-top: .5em; }
       .uniForm .ctrlHolder.focused .formHint{ color: #333; }
-      
+
 /* ----------------------------------------------------------------------------- */
 /* ############################### Messages #################################### */
 /* ----------------------------------------------------------------------------- */
@@ -105,7 +105,7 @@
                                 -o-border-radius:      4px;
                                 -khtml-border-radius:  4px;
                               }
-  
+
   .uniForm .ctrlHolder.error,
   .uniForm .ctrlHolder.focused.error{ background: #ffdfdf; border: 1px solid #f3afb5;
                                       /* CSS3 */
@@ -118,7 +118,7 @@
     .uniForm .ctrlHolder.error input.error,
     .uniForm .ctrlHolder.error select.error,
     .uniForm .ctrlHolder.error textarea.error{ color: #af4c4c; margin: 0 0 6px 0; padding: 4px; }
-  
+
   /* Success messages at the top of the form */
   .uniForm #okMsg{ background: #c8ffbf; border: 1px solid #a2ef95; margin: 0 0 1.5em 0; padding: 0 1.5em; text-align: center;
                    /* CSS3 */

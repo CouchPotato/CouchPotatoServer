@@ -1,21 +1,22 @@
-from couchpotato.core.helpers.request import jsonified
 from flask.blueprints import Blueprint
+from flask.helpers import url_for
+from flask.templating import render_template
+from werkzeug.utils import redirect
 
 api = Blueprint('api', __name__)
+api_docs = {}
+api_docs_missing = []
 
-def addApiView(route, func, static = False):
-    api.add_url_rule(route + ('' if static else '/'), endpoint = route.replace('.', '-') if route else 'index', view_func = func)
+def addApiView(route, func, static = False, docs = None):
+    api.add_url_rule(route + ('' if static else '/'), endpoint = route.replace('.', '::') if route else 'index', view_func = func)
+    if docs:
+        api_docs[route[4:] if route[0:4] == 'api.' else route] = docs
+    else:
+        api_docs_missing.append(route)
 
 """ Api view """
 def index():
-    from couchpotato import app
-
-    routes = []
-    for route, x in sorted(app.view_functions.iteritems()):
-        if route[0:4] == 'api.':
-            routes += [route[4:]]
-
-    return jsonified({'routes': routes})
+    index_url = url_for('web.index')
+    return redirect(index_url + 'docs/')
 
 addApiView('', index)
-addApiView('default', index)

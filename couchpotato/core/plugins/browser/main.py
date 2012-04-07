@@ -6,12 +6,31 @@ import os
 import string
 
 if os.name == 'nt':
-    import win32file
+    import imp
+    try:
+        imp.find_module('win32file')
+    except:
+        # todo:: subclass ImportError for missing dependencies, vs. broken plugins?
+        raise ImportError("Missing the win32file module, which is a part of the prerequisite \
+            pywin32 package. You can get it from http://sourceforge.net/projects/pywin32/files/pywin32/");
+    else:
+        import win32file
 
 class FileBrowser(Plugin):
 
     def __init__(self):
-        addApiView('directory.list', self.view)
+        addApiView('directory.list', self.view, docs = {
+            'desc': 'Return the directory list of a given directory',
+            'params': {
+                'path': {'desc': 'The directory to scan'},
+                'show_hidden': {'desc': 'Also show hidden files'}
+            },
+            'return': {'type': 'object', 'example': """{
+    'is_root': bool, //is top most folder
+    'empty': bool, //directory is empty
+    'dirs': array, //directory names
+}"""}
+        })
 
     def getDirectories(self, path = '/', show_hidden = True):
 
@@ -27,7 +46,7 @@ class FileBrowser(Plugin):
             if os.path.isdir(p) and ((self.is_hidden(p) and bool(int(show_hidden))) or not self.is_hidden(p)):
                 dirs.append(p + os.path.sep)
 
-        return dirs
+        return sorted(dirs)
 
     def getFiles(self):
         pass

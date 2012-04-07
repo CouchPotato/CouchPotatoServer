@@ -1,7 +1,5 @@
-/* @override http://127.0.0.1:5000/static/quality_plugin/quality.css */
-
 .group_sizes {
-	
+
 }
 
 	.group_sizes .head {
@@ -17,7 +15,7 @@
 		.group_sizes .label {
 			max-width: 120px;
 		}
-	
+
 		.group_sizes .min, .group_sizes .max {
 			text-align: center;
 			width: 50px;

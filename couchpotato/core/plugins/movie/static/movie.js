@@ -8,6 +8,7 @@ var Movie = new Class({
 		var self = this;
 
 		self.data = data;
+		self.view = options.view || 'thumbs';
 
 		self.profile = Quality.getProfile(data.profile_id) || {};
 		self.parent(self, options);
@@ -17,6 +18,13 @@ var Movie = new Class({
 		var self = this;
 
 		self.el = new Element('div.movie.inlay').adopt(
+			self.select_checkbox = new Element('input[type=checkbox].inlay', {
+				'events': {
+					'change': function(){
+						self.fireEvent('select')
+					}
+				}
+			}),
 			self.thumbnail = File.Select.single('poster', self.data.library.files),
 			self.data_container = new Element('div.data.inlay.light', {
 				'tween': {
@@ -38,11 +46,22 @@ var Movie = new Class({
 					self.description = new Element('div.description', {
 						'text': self.data.library.plot
 					}),
-					self.quality = new Element('div.quality')
+					self.quality = new Element('div.quality', {
+						'events': {
+							'click': function(e){
+								var releases = self.el.getElement('.actions .releases');
+									if(releases)
+										releases.fireEvent('click', [e])
+							}
+						}
+					})
 				),
 				self.actions = new Element('div.actions')
 			)
 		);
+
+		self.changeView(self.view);
+		self.select_checkbox_class = new Form.Check(self.select_checkbox);
 
 		// Add profile
 		if(self.profile.data)
@@ -57,11 +76,13 @@ var Movie = new Class({
 		// Add done releases
 		Array.each(self.data.releases, function(release){
 
-			var q = self.quality.getElement('.q_'+ release.quality.identifier);
-			if(!q)
-				var q = self.addQuality(release.quality_id)
+			var q = self.quality.getElement('.q_id'+ release.quality_id),
+				status = Status.get(release.status_id);
 
-			q.addClass(release.status.identifier);
+			if(!q && status.identifier == 'snatched')
+				var q = self.addQuality(release.quality_id)
+			if (q)
+				q.addClass(status.identifier);
 
 		});
 
@@ -82,7 +103,7 @@ var Movie = new Class({
 		var q = Quality.getQuality(quality_id);
 		return new Element('span', {
 			'text': q.label,
-			'class': 'q_'+q.identifier
+			'class': 'q_'+q.identifier + ' q_id' + q.id
 		}).inject(self.quality);
 
 	},
@@ -97,18 +118,30 @@ var Movie = new Class({
 		}).pop()
 
 		if(title)
-			return  title.title
+			return self.getUnprefixedTitle(title.title)
 		else if(titles.length > 0)
-			return titles[0].title
+			return self.getUnprefixedTitle(titles[0].title)
 
 		return 'Unknown movie'
+	},
+
+	getUnprefixedTitle: function(t){
+		if(t.substr(0, 4).toLowerCase() == 'the ')
+			t = t.substr(4) + ', The';
+		return t;
 	},
 
 	slide: function(direction, el){
 		var self = this;
 
 		if(direction == 'in'){
-			self.el.addEvent('outerClick', self.slide.bind(self, 'out'))
+			self.temp_view = self.view;
+			self.changeView('thumbs')
+
+			self.el.addEvent('outerClick', function(){
+				self.changeView(self.temp_view)
+				self.slide('out')
+			})
 			el.show();
 			self.data_container.tween('right', 0, -840);
 		}
@@ -123,8 +156,27 @@ var Movie = new Class({
 		}
 	},
 
+	changeView: function(new_view){
+		var self = this;
+
+		self.el
+			.removeClass(self.view+'_view')
+			.addClass(new_view+'_view')
+
+		self.view = new_view;
+	},
+
 	get: function(attr){
 		return this.data[attr] || this.data.library[attr]
+	},
+
+	select: function(bool){
+		var self = this;
+		self.select_checkbox_class[bool ? 'check' : 'uncheck']()
+	},
+
+	isSelected: function(){
+		return this.select_checkbox.get('checked');
 	}
 
 });
@@ -180,7 +232,7 @@ var IMDBAction = new Class({
 
 	gotoIMDB: function(e){
 		var self = this;
-		(e).stop();
+		(e).preventDefault();
 
 		window.open('http://www.imdb.com/title/'+self.id+'/');
 	}
@@ -208,7 +260,7 @@ var ReleaseAction = new Class({
 
 	show: function(e){
 		var self = this;
-		(e).stop();
+		(e).preventDefault();
 
 		if(!self.options_container){
 			self.options_container = new Element('div.options').adopt(
@@ -226,11 +278,15 @@ var ReleaseAction = new Class({
 			).inject(self.release_container)
 
 			Array.each(self.movie.data.releases, function(release){
+
+				var status = Status.get(release.status_id),
+					quality = Quality.getProfile(release.quality_id)
+
 				new Element('div', {
-					'class': 'item ' + release.status.identifier
+					'class': 'item ' + status.identifier
 				}).adopt(
 					new Element('span.name', {'text': self.get(release, 'name'), 'title': self.get(release, 'name')}),
-					new Element('span.quality', {'text': release.quality.label}),
+					new Element('span.quality', {'text': quality.get('label')}),
 					new Element('span.size', {'text': (self.get(release, 'size') || 'unknown')}),
 					new Element('span.age', {'text': self.get(release, 'age')}),
 					new Element('span.score', {'text': self.get(release, 'score')}),
@@ -238,7 +294,7 @@ var ReleaseAction = new Class({
 					new Element('a.download.icon', {
 						'events': {
 							'click': function(e){
-								(e).stop();
+								(e).preventDefault();
 								self.download(release);
 							}
 						}
@@ -246,9 +302,9 @@ var ReleaseAction = new Class({
 					new Element('a.delete.icon', {
 						'events': {
 							'click': function(e){
-								(e).stop();
-								self.del(release);
-								this.getParent('.item').destroy();
+								(e).preventDefault();
+								self.ignore(release);
+								this.getParent('.item').toggleClass('ignored')
 							}
 						}
 					})
@@ -278,10 +334,10 @@ var ReleaseAction = new Class({
 		});
 	},
 
-	del: function(release){
+	ignore: function(release){
 		var self = this;
 
-		Api.request('release.delete', {
+		Api.request('release.ignore', {
 			'data': {
 				'id': release.id
 			}

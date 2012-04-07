@@ -10,7 +10,7 @@ config = [{
             'tab': 'providers',
             'name': 'tmdb',
             'label': 'TheMovieDB',
-            'advanced': True,
+            'hidden': True,
             'description': 'Used for all calls to TheMovieDB.',
             'options': [
                 {

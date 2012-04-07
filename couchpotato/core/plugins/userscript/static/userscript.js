@@ -62,33 +62,53 @@ var UserscriptSettingTab = new Class({
 
 		self.settings = App.getPage('Settings')
 		self.settings.addEvent('create', function(){
-			var tab = self.settings.createTab('userscript', {
-				'label': 'Userscript',
-				'name': 'userscript'
+
+			// See if userscript can be installed
+			var userscript = false;
+			try {
+				if(Components.interfaces.gmIGreasemonkeyService)
+					userscript = true
+			}
+			catch(e){
+				userscript = Browser.chrome === true;
+			}
+
+			var host_url = window.location.protocol + '//' + window.location.host;
+
+			self.settings.createGroup({
+				'name': 'userscript',
+				'label': 'Install the bookmarklet' + (userscript ? ' or userscript' : ''),
+				'description': 'Easily add movies via imdb.com, appletrailers and more'
+			}).inject(self.settings.tabs.automation.content, 'top').adopt(
+				(userscript ? [new Element('a.userscript.button', {
+					'text': 'Install userscript',
+					'href': Api.createUrl('userscript.get')+randomString()+'/couchpotato.user.js',
+					'target': '_self'
+				}), new Element('span.or[text=or]')] : null),
+				new Element('span.bookmarklet').adopt(
+					new Element('a.button.green', {
+						'text': '+CouchPotato',
+						'href': "javascript:void((function(){var e=document.createElement('script');e.setAttribute('type','text/javascript');e.setAttribute('charset','UTF-8');e.setAttribute('src','" +
+								host_url + Api.createUrl('userscript.bookmark') +
+								"?host="+ encodeURI(host_url + Api.createUrl('userscript.get')+randomString()+'/') +
+						 		"&r='+Math.random()*99999999);document.body.appendChild(e)})());",
+						'target': '',
+						'events': {
+							'click': function(e){
+								(e).stop()
+								alert('Drag it to your bookmark ;)')
+							}
+						}
+					}),
+					new Element('span', {
+						'text': '⇽ Drag this to your bookmarks'
+					})
+				)
+			).setStyles({
+				'background-image': "url('"+Api.createUrl('static/userscript/userscript.png')+"')"
 			});
 
-			self.tab = tab.tab;
-			self.content = tab.content;
-
-			self.createUserscript();
-
 		});
-
-	},
-
-	createUserscript: function(){
-		var self = this;
-
-
-		self.settings.createGroup({
-			'label': 'Install the Userscript'
-		}).inject(self.content).adopt(
-			new Element('a', {
-				'text': 'Install userscript',
-				'href': Api.createUrl('userscript.get')+'couchpotato.user.js',
-				'target': '_self'
-			})
-		);
 
 	}
 
@@ -106,7 +126,7 @@ window.addEvent('load', function(){
 
 	if(your_version && your_version < latest_version && checked_already < latest_version){
 		if(confirm("Update to the latest Userscript?\nYour version: " + your_version + ', new version: ' + latest_version )){
-			document.location = Api.getOption('url')+'userscript.get/?couchpotato.user.js';
+			document.location = Api.createUrl('userscript.get')+randomString()+'/couchpotato.user.js';
 		}
 		Cookie.write(key, latest_version, {duration: 100});
 	}

@@ -10,19 +10,86 @@ var NotificationBase = new Class({
 		// Listener
 		App.addEvent('load', self.startInterval.bind(self));
 		App.addEvent('unload', self.stopTimer.bind(self));
-		self.addEvent('notification', self.notify.bind(self))
+		App.addEvent('notification', self.notify.bind(self));
 
 		// Add test buttons to settings page
 		App.addEvent('load', self.addTestButtons.bind(self));
+
+		// Notification bar
+		self.notifications = []
+		App.addEvent('load', function(){
+
+			App.block.notification = new Block.Menu(self, {
+				'class': 'notification_menu',
+				'onOpen': self.markAsRead.bind(self)
+			})
+			$(App.block.notification).inject(App.getBlock('search'), 'after');
+			self.badge = new Element('div.badge').inject(App.block.notification, 'top').hide();
+
+			/* App.getBlock('notification').addLink(new Element('a.more', {
+				'href': App.createUrl('notifications'),
+				'text': 'Show older notifications'
+			})); */
+		})
+
+	},
+
+	notify: function(result){
+		var self = this;
+
+		var added = new Date();
+			added.setTime(result.added*1000)
+
+		result.el = App.getBlock('notification').addLink(
+			new Element('span.'+(result.read ? 'read' : '' )).adopt(
+				new Element('span.message', {'text': result.message}),
+				new Element('span.added', {'text': added.timeDiffInWords(), 'title': added})
+			)
+		, 'top');
+		self.notifications.include(result);
+
+		if(!result.read)
+			self.setBadge(self.notifications.filter(function(n){ return !n.read}).length)
+
+	},
+
+	setBadge: function(value){
+		var self = this;
+		self.badge.set('text', value)
+		self.badge[value ? 'show' : 'hide']()
+	},
+
+	markAsRead: function(){
+		var self = this;
+
+		var rn = self.notifications.filter(function(n){
+			return !n.read
+		})
+
+		var ids = []
+		rn.each(function(n){
+			ids.include(n.id)
+		})
+
+		if(ids.length > 0)
+			Api.request('notification.markread', {
+				'data': {
+					'ids': ids.join(',')
+				},
+				'onSuccess': function(){
+					self.setBadge('')
+				}
+			})
 
 	},
 
 	startInterval: function(){
 		var self = this;
 
-		self.request = Api.request('core_notifier.listener', {
+		self.request = Api.request('notification.listener', {
 			'initialDelay': 100,
     		'delay': 3000,
+    		'data': {'init':true},
     		'onSuccess': self.processData.bind(self)
 		})
 
@@ -40,16 +107,12 @@ var NotificationBase = new Class({
 			this.request.stopTimer()
 	},
 
-	notify: function(data){
-		var self = this;
-
-	},
-
 	processData: function(json){
 		var self = this;
 
+		self.request.options.data = {}
 		Array.each(json.result, function(result){
-			App.fireEvent(result.type, result.data)
+			App.fireEvent(result.type, result)
 		})
 	},
 

@@ -20,6 +20,7 @@ class StatusPlugin(Plugin):
         'wanted': 'Wanted',
         'snatched': 'Snatched',
         'deleted': 'Deleted',
+        'ignored': 'Ignored',
     }
 
     def __init__(self):
@@ -29,7 +30,13 @@ class StatusPlugin(Plugin):
         addEvent('status.all', self.all)
         addEvent('app.initialize', self.fill)
 
-        addApiView('status.list', self.list)
+        addApiView('status.list', self.list, docs = {
+            'desc': 'Check for available update',
+            'return': {'type': 'object', 'example': """{
+            'success': True,
+            'list': array, statuses
+}"""}
+        })
 
     def list(self):
 

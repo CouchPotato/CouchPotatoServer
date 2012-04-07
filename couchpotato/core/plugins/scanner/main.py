@@ -43,7 +43,7 @@ class Scanner(Plugin):
         'trailer': ('video', 'trailer'),
         'nfo': ('nfo', 'nfo'),
         'movie': ('video', 'movie'),
-        'movie': ('movie', 'movie_extra'),
+        'movie_extra': ('movie', 'movie_extra'),
         'backdrop': ('image', 'backdrop'),
         'leftover': ('leftover', 'leftover'),
     }
@@ -365,7 +365,6 @@ class Scanner(Plugin):
     def getMeta(self, filename):
 
         try:
-
             p = enzyme.parse(filename)
             return {
                 'video': p.video[0].codec,
@@ -377,6 +376,8 @@ class Scanner(Plugin):
             log.debug('Failed to parse meta for %s' % filename)
         except NoParserError:
             log.debug('No parser found for %s' % filename)
+        except:
+            log.debug('Failed parsing %s' % filename)
 
         return {}
 

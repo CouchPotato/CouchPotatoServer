@@ -7,7 +7,8 @@ config = [{
     'name': 'nzbmatrix',
     'groups': [
         {
-            'tab': 'providers',
+            'tab': 'searcher',
+            'subtab': 'providers',
             'name': 'nzbmatrix',
             'label': 'NZBMatrix',
             'wizard': True,

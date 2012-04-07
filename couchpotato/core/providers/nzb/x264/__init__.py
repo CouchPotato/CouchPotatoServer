@@ -7,7 +7,8 @@ config = [{
     'name': 'x264',
     'groups': [
         {
-            'tab': 'providers',
+            'tab': 'searcher',
+            'subtab': 'providers',
             'name': '#alt.binaries.hdtv.x264',
             'description': 'HD movies only',
             'options': [

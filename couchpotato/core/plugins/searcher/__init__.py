@@ -6,6 +6,7 @@ def start():
 
 config = [{
     'name': 'searcher',
+    'order': 20,
     'groups': [
         {
             'tab': 'searcher',

@@ -1,6 +1,7 @@
 from couchpotato.core.event import fireEvent, addEvent
 from couchpotato.core.loader import Loader
 from couchpotato.core.settings import Settings
+import os
 
 class Env(object):
 
@@ -61,8 +62,12 @@ class Env(object):
         return s
 
     @staticmethod
-    def getPermission(type):
-        return int(Env.get('settings').get('permission_%s' % type, default = 0777))
+    def getPermission(setting_type):
+        perm = Env.get('settings').get('permission_%s' % setting_type, default = '0777')
+        if perm[0] == '0':
+            return int(perm, 8)
+        else:
+            return int(perm)
 
     @staticmethod
     def fireEvent(*args, **kwargs):
@@ -71,3 +76,14 @@ class Env(object):
     @staticmethod
     def addEvent(*args, **kwargs):
         return addEvent(*args, **kwargs)
+
+    @staticmethod
+    def getPid():
+        try:
+            try:
+                parent = os.getppid()
+            except:
+                parent = None
+            return '%d %s' % (os.getpid(), '(%d)' % parent if parent and parent > 1 else '')
+        except:
+            return 0

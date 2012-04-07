@@ -2,7 +2,6 @@ from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.variable import mergeDicts
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-import json
 import os
 import shutil
 import traceback
@@ -31,11 +30,7 @@ class MetaDataBase(Plugin):
 
         root = self.getRootName(release)
 
-        try:
-            movie_info = json.loads(release['library'].get('info'))
-        except:
-            log.error('Failed to parse movie info: %s' % traceback.format_exc())
-            movie_info = {}
+        movie_info = release['library'].get('info')
 
         for file_type in ['nfo', 'thumbnail', 'fanart']:
             try:

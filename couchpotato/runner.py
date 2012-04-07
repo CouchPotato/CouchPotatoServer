@@ -128,24 +128,25 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
 
 
         # Load migrations
-        from migrate.versioning.api import version_control, db_version, version, upgrade
-        db = Env.get('db_path')
-        repo = os.path.join(base_path, 'couchpotato', 'core', 'migration')
-        logging.getLogger('migrate').setLevel(logging.WARNING) # Disable logging for migration
-
-        latest_db_version = version(repo)
-
         initialize = True
-        try:
-            current_db_version = db_version(db, repo)
+        db = Env.get('db_path')
+        if os.path.isfile(db.replace('sqlite:///', '')):
             initialize = False
-        except:
-            version_control(db, repo, version = latest_db_version)
-            current_db_version = db_version(db, repo)
 
-        if current_db_version < latest_db_version and not debug:
-            log.info('Doing database upgrade. From %d to %d' % (current_db_version, latest_db_version))
-            upgrade(db, repo)
+            from migrate.versioning.api import version_control, db_version, version, upgrade
+            repo = os.path.join(base_path, 'couchpotato', 'core', 'migration')
+            logging.getLogger('migrate').setLevel(logging.WARNING) # Disable logging for migration
+
+            latest_db_version = version(repo)
+            try:
+                current_db_version = db_version(db, repo)
+            except:
+                version_control(db, repo, version = latest_db_version)
+                current_db_version = db_version(db, repo)
+
+            if current_db_version < latest_db_version and not debug:
+                log.info('Doing database upgrade. From %d to %d' % (current_db_version, latest_db_version))
+                upgrade(db, repo)
 
         # Configure Database
         from couchpotato.core.settings.model import setup
@@ -185,4 +186,26 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     if fire_load: fireEventAsync('app.load')
 
     # Go go go!
-    app.run(**config)
+    try_restart = True
+    restart_tries = 5
+    while try_restart:
+        try:
+            app.run(**config)
+        except Exception, e:
+            try:
+                nr, msg = e
+                if nr == 48:
+                    log.info('Already in use, try %s more time after few seconds' % restart_tries)
+                    time.sleep(1)
+                    restart_tries -= 1
+
+                    if restart_tries > 0:
+                        continue
+                    else:
+                        return
+            except:
+                pass
+
+            raise
+
+        try_restart = False

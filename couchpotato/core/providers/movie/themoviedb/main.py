@@ -11,8 +11,8 @@ class TheMovieDb(MovieProvider):
 
     def __init__(self):
         addEvent('movie.by_hash', self.byHash)
-        addEvent('movie.search', self.search)
-        addEvent('movie.info', self.getInfo)
+        addEvent('movie.search', self.search, priority = 1)
+        addEvent('movie.info', self.getInfo, priority = 1)
         addEvent('movie.info_by_tmdb', self.getInfoByTMDBId)
 
         # Use base wrapper
@@ -131,7 +131,7 @@ class TheMovieDb(MovieProvider):
 
         # Images
         poster = self.getImage(movie, type = 'poster', size = 'cover')
-        backdrop = self.getImage(movie, type = 'backdrop', size = 'w1280')
+        #backdrop = self.getImage(movie, type = 'backdrop', size = 'w1280')
         poster_original = self.getImage(movie, type = 'poster', size = 'original')
         backdrop_original = self.getImage(movie, type = 'backdrop', size = 'original')
 
@@ -152,7 +152,7 @@ class TheMovieDb(MovieProvider):
             'original_title': movie.get('original_name'),
             'images': {
                 'poster': [poster] if poster else [],
-                'backdrop': [backdrop] if backdrop else [],
+                #'backdrop': [backdrop] if backdrop else [],
                 'poster_original': [poster_original] if poster_original else [],
                 'backdrop_original': [backdrop_original] if backdrop_original else [],
             },

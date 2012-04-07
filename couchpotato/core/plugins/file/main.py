@@ -19,7 +19,13 @@ class FileManager(Plugin):
         addEvent('file.download', self.download)
         addEvent('file.types', self.getTypes)
 
-        addApiView('file.cache/<path:filename>', self.showCacheFile, static = True)
+        addApiView('file.cache/<path:filename>', self.showCacheFile, static = True, docs = {
+            'desc': 'Return a file from the cp_data/cache directory',
+            'params': {
+                'filename': {'desc': 'path/filename of the wanted file'}
+            },
+            'return': {'type': 'file'}
+        })
 
     def showCacheFile(self, filename = ''):
 

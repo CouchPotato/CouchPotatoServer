@@ -7,7 +7,8 @@ config = [{
     'name': 'sonyps3',
     'groups': [
         {
-            'tab': 'metadata',
+            'tab': 'renamer',
+            'subtab': 'metadata',
             'name': 'sonyps3_metadata',
             'label': 'Sony PS3',
             'description': 'Enable metadata your Playstation 3 can understand',

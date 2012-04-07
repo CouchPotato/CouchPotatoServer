@@ -10,11 +10,22 @@ Block.Search = new Class({
 		self.el = new Element('div.search_form').adopt(
 			new Element('div.input').adopt(
 				self.input = new Element('input.inlay', {
-					'placeholder': 'Search for new movies',
+					'placeholder': 'Search & add a new movie',
 					'events': {
 						'keyup': self.keyup.bind(self),
-						'focus': self.hideResults.bind(self, false)
+						'focus': function(){
+							self.el.addClass('focused')
+						},
+						'blur': function(){
+							self.el.removeClass('focused')
+						}
 					}
+				}),
+				new Element('span.enter', {
+					'events': {
+						'click': self.keyup.bind(self)
+					},
+					'text':'Enter'
 				}),
 				new Element('a', {
 					'events': {
@@ -32,24 +43,24 @@ Block.Search = new Class({
 					}
 				}
 			}).adopt(
-				new Element('div.pointer'),
 				self.results = new Element('div.results')
-			).hide()
+			)
 		);
 
-		self.spinner = new Spinner(self.result_container);
+		self.mask = new Element('div.mask').inject(self.result_container).fade('hide');
 
 	},
 
 	clear: function(e){
 		var self = this;
-		(e).stop();
+		(e).preventDefault();
 
 		self.input.set('value', '');
 		self.input.focus()
 
 		self.movies = []
 		self.results.empty()
+		self.el.removeClass('filled')
 	},
 
 	hideResults: function(bool){
@@ -57,7 +68,7 @@ Block.Search = new Class({
 
 		if(self.hidden == bool) return;
 
-		self.result_container[bool ? 'hide' : 'show']();
+		self.el[bool ? 'removeClass' : 'addClass']('shown');
 
 		if(bool){
 			History.removeEvent('change', self.hideResults.bind(self, !bool));
@@ -74,16 +85,14 @@ Block.Search = new Class({
 	keyup: function(e){
 		var self = this;
 
-		if(['up', 'down'].indexOf(e.key) > -1){
-			p('select item')
-		}
-		else if(self.q() != self.last_q) {
+		self.el[self.q() ? 'addClass' : 'removeClass']('filled')
+
+		if(self.q() != self.last_q && (['enter'].indexOf(e.key) > -1 || e.type == 'click'))
 			self.autocomplete()
-		}
 
 	},
 
-	autocomplete: function(delay){
+	autocomplete: function(){
 		var self = this;
 
 		if(!self.q()){
@@ -91,10 +100,7 @@ Block.Search = new Class({
 			return
 		}
 
-		self.spinner.show()
-
-		if(self.autocomplete_timer) clearTimeout(self.autocomplete_timer)
-		self.autocomplete_timer = self.list.delay((delay || 300), self)
+		self.list()
 	},
 
 	list: function(){
@@ -105,9 +111,14 @@ Block.Search = new Class({
 		var q = self.q();
 		var cache = self.cache[q];
 
-		self.hideResults(false)
+		self.hideResults(false);
 
 		if(!cache){
+			self.positionMask().fade('in');
+
+			if(!self.spinner)
+				self.spinner = createSpinner(self.mask);
+
 			self.api_request = Api.request('movie.search', {
 				'data': {
 					'q': q
@@ -125,7 +136,7 @@ Block.Search = new Class({
 	fill: function(q, json){
 		var self = this;
 
-		self.spinner.hide();
+		self.positionMask()
 		self.cache[q] = json
 
 		self.movies = {}
@@ -138,10 +149,30 @@ Block.Search = new Class({
 			self.movies[movie.imdb || 'r-'+Math.floor(Math.random()*10000)] = m
 
 		});
-		
+
 		if(q != self.q())
 			self.list()
 
+		// Calculate result heights
+		var w = window.getSize(),
+			rc = self.result_container.getCoordinates();
+
+		self.results.setStyle('max-height', (w.y - rc.top - 50) + 'px')
+		self.mask.hide()
+
+	},
+
+	positionMask: function(){
+		var self = this;
+
+		var s = self.result_container.getSize()
+
+		return self.mask.setStyles({
+			'width': s.x,
+			'height': s.y
+		}).position({
+			'relativeTo': self.result_container
+		})
 	},
 
 	loading: function(bool){
@@ -252,7 +283,9 @@ Block.Search.Item = new Class({
 
 	add: function(e){
 		var self = this;
-		(e).stop();
+		(e).preventDefault();
+
+		self.loadingMask();
 
 		Api.request('movie.add', {
 			'data': {
@@ -260,8 +293,6 @@ Block.Search.Item = new Class({
 				'title': self.title_select.get('value'),
 				'profile_id': self.profile_select.get('value')
 			},
-			'useSpinner': true,
-			'spinnerTarget': self.options,
 			'onComplete': function(){
 				self.options.empty();
 				self.options.adopt(
@@ -293,10 +324,9 @@ Block.Search.Item = new Class({
 					}) : null,
 					self.info.in_wanted ? new Element('span.in_wanted', {
 						'text': 'Already in wanted list: ' + self.info.in_wanted.label
-					}) : null,
-					self.info.in_library ? new Element('span.in_library', {
+					}) : (self.info.in_library ? new Element('span.in_library', {
 						'text': 'Already in library: ' + self.info.in_library.label
-					}) : null,
+					}) : null),
 					self.title_select = new Element('select', {
 						'name': 'title'
 					}),
@@ -318,7 +348,7 @@ Block.Search.Item = new Class({
 				}).inject(self.title_select)
 			})
 
-			Object.each(Quality.getActiveProfiles(), function(profile){
+			Quality.getActiveProfiles().each(function(profile){
 				new Element('option', {
 					'value': profile.id ? profile.id : profile.data.id,
 					'text': profile.label ? profile.label : profile.data.label
@@ -327,6 +357,25 @@ Block.Search.Item = new Class({
 
 			self.options.addClass('set');
 		}
+
+	},
+
+	loadingMask: function(){
+		var self = this;
+
+		var s = self.options.getSize();
+
+		self.mask = new Element('span.mask', {
+			'styles': {
+				'width': s.x,
+				'height': s.y
+			}
+		}).inject(self.options).fade('hide').position({
+			'relativeTo': self.options
+		})
+
+		createSpinner(self.mask)
+		self.mask.fade('in')
 
 	},
 

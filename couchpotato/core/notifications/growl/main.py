@@ -34,7 +34,7 @@ class Growl(Notification):
         except:
             log.error('Failed register of growl: %s' % traceback.format_exc())
 
-    def notify(self, type = '', message = '', data = {}):
+    def notify(self, message = '', data = {}):
         if self.isDisabled(): return
 
         self.register()

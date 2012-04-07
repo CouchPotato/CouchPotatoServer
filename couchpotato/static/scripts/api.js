@@ -11,7 +11,7 @@ var ApiClass = new Class({
 
 		var r_type = self.options.is_remote ? 'JSONP' : 'JSON';
 		return new Request[r_type](Object.merge({
-			'callbackKey': 'json_callback',
+			'callbackKey': 'callback_func',
 			'method': 'get',
 			'url': self.createUrl(type),
 		}, options)).send()

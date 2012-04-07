@@ -59,9 +59,7 @@ class NZBClub(NZBProvider, RSS):
                     size = enclosure['length']
                     date = self.getTextElement(nzb, "pubDate")
 
-                    description = ''
-                    if 'nfo files' in self.getTextElement(nzb, "description"):
-                        description = toUnicode(self.getCache('nzbclub.%s' % nzbclub_id, self.getTextElement(nzb, "link"), timeout = 25920000))
+                    description = toUnicode(self.getCache('nzbclub.%s' % nzbclub_id, self.getTextElement(nzb, "link"), timeout = 25920000))
 
                     new = {
                         'id': nzbclub_id,
@@ -71,11 +69,15 @@ class NZBClub(NZBProvider, RSS):
                         'age': self.calculateAge(int(time.mktime(parse(date).timetuple()))),
                         'size': tryInt(size) / 1024 / 1024,
                         'url': enclosure['url'],
-                        'download': enclosure['url'],
+                        'download': enclosure['url'].replace(' ', '_'),
                         'detail_url': self.getTextElement(nzb, "link"),
                         'description': description,
                     }
                     new['score'] = fireEvent('score.calculate', new, movie, single = True)
+
+                    if 'ARCHIVE inside ARCHIVE' in description:
+                        log.info('Wrong: Seems to be passworded files: %s' % new['name'])
+                        continue
 
                     is_correct_movie = fireEvent('searcher.correct_movie',
                                                  nzb = new, movie = movie, quality = quality,

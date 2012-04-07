@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        CouchPotato UserScript
 // @description Add movies like a real CouchPotato
-// @version 	{{version}}
+// @version     {{version}}
 
 // @match       {{host}}*
 {% for include in includes %}
@@ -57,7 +57,7 @@ if (typeof GM_addStyle == 'undefined'){
 
 // Styles
 GM_addStyle('\
-    #cp_popup { font-family: "Helvetica Neue", Helvetica, Arial, Geneva, sans-serif; -moz-border-radius-topleft: 6px; -moz-border-radius-bottomleft: 6px; -webkit-border-top-left-radius: 6px; -webkit-border-bottom-left-radius: 6px; -moz-box-shadow: 0 0 20px rgba(0,0,0,0.5); -webkit-box-shadow: 0 0 20px rgba(0,0,0,0.5); position:fixed; z-index:9999; bottom:0; right:0; font-size:15px; margin: 20px 0; display: block; background:#4E5969; } \
+    #cp_popup { font-family: "Helvetica Neue", Helvetica, Arial, Geneva, sans-serif; -moz-border-radius: 6px 0px 0px 6px; -webkit-border-radius: 6px 0px 0px 6px; border-radius: 6px 0px 0px 6px; -moz-box-shadow: 0 0 20px rgba(0,0,0,0.5); -webkit-box-shadow: 0 0 20px rgba(0,0,0,0.5); box-shadow: 0 0 20px rgba(0,0,0,0.5); position:fixed; z-index:9999; bottom:0; right:0; font-size:15px; margin: 20px 0; display: block; background:#4E5969; } \
     #cp_popup:hover {  } \
     #cp_popup a#add_to { cursor:pointer; text-align:center; text-decoration:none; color: #000; display:block; padding:5px 0 5px 5px; } \
     #cp_popup a#close_button { cursor:pointer; float: right; padding:120px 10px 10px; } \
@@ -72,8 +72,12 @@ var close_img = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8
 var osd = function(){
     var navbar, newElement;
 
+    var createApiUrl = function(url){
+        return host + api + "?url=" + escape(url)
+    };
+
     var iframe = create('iframe', {
-        'src': host + api + "?url=" + escape(document.location.href),
+        'src': createApiUrl(document.location.href),
         'frameborder': 0,
         'scrolling': 'no'
     });
@@ -81,32 +85,49 @@ var osd = function(){
     var popup = create('div', {
         'id': 'cp_popup'
     });
+
+    var onclick = function(){
+
+        // Try and get imdb url
+        try {
+            var regex = new RegExp(/tt(\d{7})/);
+            var imdb_id = document.body.innerHTML.match(regex)[0];
+            if (imdb_id)
+                iframe.setAttribute('src', createApiUrl('http://imdb.com/title/'+imdb_id+'/'))
+        }
+        catch(e){}
+
+        popup.innerHTML = '';
+        popup.appendChild(create('a', {
+            'innerHTML': '<img src="' + close_img + '" />',
+            'id': 'close_button',
+            'onclick': function(){
+                popup.innerHTML = '';
+                popup.appendChild(add_button);
+            }
+        }));
+        popup.appendChild(iframe)
+    }
+
     var add_button = create('a', {
         'innerHTML': '<img src="' + cp_icon + '" />',
         'id': 'add_to',
-        'onclick': function(){
-            popup.innerHTML = '';
-            popup.appendChild(create('a', {
-                'innerHTML': '<img src="' + close_img + '" />',
-                'id': 'close_button',
-                'onclick': function(){
-                    popup.innerHTML = '';
-                    popup.appendChild(add_button);
-                }
-            }));
-            popup.appendChild(iframe)
-        }
+        'onclick': onclick
     });
     popup.appendChild(add_button);
 
     document.body.parentNode.insertBefore(popup, document.body);
+
+    // Auto fold open
+    if(document.body.getAttribute('cp_auto_open'))
+    	onclick()
 };
 
 var setVersion = function(){
-	document.body.setAttribute('data-userscript_version', version)
+    document.body.setAttribute('data-userscript_version', version)
 };
 
 if(document.location.href.indexOf(host) == -1)
-	osd();
+    osd();
 else
-	setVersion();
+    setVersion();

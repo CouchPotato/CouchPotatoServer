@@ -12,8 +12,8 @@ Page.Wanted = new Class({
 
 			// Wanted movies
 			self.wanted = new MovieList({
+				'identifier': 'wanted',
 				'status': 'active',
-				'navigation': true,
 				'actions': MovieActions
 			});
 			$(self.wanted).inject(self.el);
@@ -49,7 +49,7 @@ window.addEvent('domready', function(){
 
 			editMovie: function(e){
 				var self = this;
-				(e).stop();
+				(e).preventDefault();
 
 				if(!self.options_container){
 					self.options_container = new Element('div.options').adopt(
@@ -75,7 +75,7 @@ window.addEvent('domready', function(){
 						}).inject(self.title_select);
 					});
 
-					Object.each(Quality.getActiveProfiles(), function(profile){
+					Quality.getActiveProfiles().each(function(profile){
 						new Element('option', {
 							'value': profile.id ? profile.id : profile.data.id,
 							'text': profile.label ? profile.label : profile.data.label
@@ -89,7 +89,7 @@ window.addEvent('domready', function(){
 			},
 
 			save: function(e){
-				(e).stop();
+				(e).preventDefault();
 				var self = this;
 
 				Api.request('movie.edit', {
@@ -129,7 +129,7 @@ window.addEvent('domready', function(){
 
 			doRefresh: function(e){
 				var self = this;
-				(e).stop();
+				(e).preventDefault();
 
 				Api.request('movie.refresh', {
 					'data': {
@@ -160,7 +160,7 @@ window.addEvent('domready', function(){
 
 			showConfirm: function(e){
 				var self = this;
-				(e).stop();
+				(e).preventDefault();
 
 				if(!self.delete_container){
 					self.delete_container = new Element('div.delete_container').adopt(
@@ -188,13 +188,13 @@ window.addEvent('domready', function(){
 
 			hideConfirm: function(e){
 				var self = this;
-				(e).stop();
+				(e).preventDefault();
 
 				self.movie.slide('out');
 			},
 
 			del: function(e){
-				(e).stop();
+				(e).preventDefault();
 				var self = this;
 
 				var movie = $(self.movie);
@@ -253,7 +253,7 @@ window.addEvent('domready', function(){
 
 			showFiles: function(e){
 				var self = this;
-				(e).stop();
+				(e).preventDefault();
 
 				if(!self.options_container){
 					self.options_container = new Element('div.options').adopt(

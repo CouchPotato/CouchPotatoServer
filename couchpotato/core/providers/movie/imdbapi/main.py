@@ -14,7 +14,7 @@ class IMDBAPI(MovieProvider):
 
     urls = {
         'search': 'http://www.imdbapi.com/?%s',
-        'info': 'http://www.imdbapi.com/?i=%s&tomatoes=true',
+        'info': 'http://www.imdbapi.com/?i=%s',
     }
 
     http_time_between_calls = 0
@@ -32,8 +32,11 @@ class IMDBAPI(MovieProvider):
 
         if cached:
             result = self.parseMovie(cached)
-            log.info('Found: %s' % result['titles'][0] + ' (' + str(result['year']) + ')')
-            return [result]
+            if result.get('titles') and len(result.get('titles')) > 0:
+                log.info('Found: %s' % result['titles'][0] + ' (' + str(result['year']) + ')')
+                return [result]
+
+            return []
 
         return []
 
@@ -44,8 +47,9 @@ class IMDBAPI(MovieProvider):
 
         if cached:
             result = self.parseMovie(cached)
-            log.info('Found: %s' % result['titles'][0] + ' (' + str(result['year']) + ')')
-            return result
+            if result.get('titles') and len(result.get('titles')) > 0:
+                log.info('Found: %s' % result['titles'][0] + ' (' + str(result['year']) + ')')
+                return result
 
         return {}
 
@@ -57,11 +61,19 @@ class IMDBAPI(MovieProvider):
             if isinstance(movie, (str, unicode)):
                 movie = json.loads(movie)
 
+            if movie.get('Response') == 'Parse Error':
+                return movie_data
+
+            tmp_movie = movie.copy()
+            for key in tmp_movie:
+                if tmp_movie.get(key).lower() == 'n/a':
+                    del movie[key]
+
             movie_data = {
-                'titles': [movie.get('Title', '')],
+                'titles': [movie.get('Title')] if movie.get('Title') else [],
                 'original_title': movie.get('Title', ''),
                 'images': {
-                    'poster': [movie.get('Poster', '')],
+                    'poster': [movie.get('Poster', '')] if movie.get('Poster') and len(movie.get('Poster', '')) > 4 else [],
                 },
                 'rating': {
                     'imdb': (tryFloat(movie.get('Rating', 0)), tryInt(movie.get('Votes', ''))),

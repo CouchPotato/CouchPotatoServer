@@ -43,7 +43,7 @@ var CouchPotato = new Class({
 	pushState: function(e){
 		var self = this;
 		if((!e.meta && Browser.Platform.mac) || (!e.control && !Browser.Platform.mac)){
-			(e).stop();
+			(e).preventDefault();
 			var url = e.target.get('href');
 			if(History.getPath() != url)
 				History.push(url);
@@ -59,13 +59,36 @@ var CouchPotato = new Class({
 			$(self.block.header).addClass('header').adopt(
 				new Element('div').adopt(
 					self.block.navigation = new Block.Navigation(self, {}),
-					self.block.search = new Block.Search(self, {})
+					self.block.search = new Block.Search(self, {}),
+					self.block.more = new Block.Menu(self, {})
 				)
 			),
 			self.content = new Element('div.content'),
 			self.block.footer = new Block.Footer(self, {})
 		);
-		
+
+		[new Element('a.orange', {
+			'text': 'Restart',
+			'events': {
+				'click': self.restart.bind(self)
+			}
+		}),
+		new Element('a.red', {
+			'text': 'Shutdown',
+			'events': {
+				'click': self.shutdown.bind(self)
+			}
+		}),
+		new Element('a', {
+			'text': 'Check for updates',
+			'events': {
+				'click': self.checkForUpdate.bind(self)
+			}
+		})].each(function(a){
+			self.block.more.addLink(a)
+		})
+
+
 		new ScrollSpy({
 			min: 10,
 			onLeave: function(){
@@ -108,7 +131,7 @@ var CouchPotato = new Class({
 
 		try {
 			var page = self.pages[page_name] || self.pages.Wanted;
-			page.open(action, params);
+			page.open(action, params, current_url);
 			page.show();
 		}
 		catch(e){
@@ -138,19 +161,28 @@ var CouchPotato = new Class({
 		self.checkAvailable(1000);
 	},
 
-	restart: function(){
+	restart: function(message, title){
 		var self = this;
 
-		self.blockPage('Restarting... please wait. If this takes to long, something must have gone wrong.');
+		self.blockPage(message || 'Restarting... please wait. If this takes to long, something must have gone wrong.', title);
 		Api.request('app.restart');
 		self.checkAvailable(1000);
+	},
+
+	checkForUpdate: function(func){
+		var self = this;
+
+		Updater.check(func)
+
+		self.blockPage('Please wait. If this takes to long, something must have gone wrong.', 'Checking for updates');
+		self.checkAvailable(3000);
 	},
 
 	checkAvailable: function(delay){
 		var self = this;
 
 		(function(){
-			
+
 			Api.request('app.available', {
 				'onFailure': function(){
 					self.checkAvailable.delay(1000, self);
@@ -161,32 +193,42 @@ var CouchPotato = new Class({
 					self.fireEvent('load');
 				}
 			});
-		
+
 		}).delay(delay || 0)
 	},
 
 	blockPage: function(message, title){
 		var self = this;
 
-		if(!self.mask){
-			var body = $(document.body);
-			self.mask = new Spinner(document.body, {
-				'message': new Element('div').adopt(
-					new Element('h1', {'text': title || 'Unavailable'}),
-					new Element('div', {'text': message || 'Something must have crashed.. check the logs ;)'})
-				)
-			});
-		}
-		self.mask.show();
+		var body = $(document.body);
+		self.mask = new Element('div.mask').adopt(
+			new Element('div').adopt(
+				new Element('h1', {'text': title || 'Unavailable'}),
+				new Element('div', {'text': message || 'Something must have crashed.. check the logs ;)'})
+			)
+		).fade('hide').inject(document.body).fade('in');
+
+		createSpinner(self.mask, {
+			'top': -50
+		});
 	},
 
 	unBlockPage: function(){
 		var self = this;
-		self.mask.hide();
+		self.mask.get('tween').start('opacity', 0).chain(function(){
+			this.element.destroy()
+		});
 	},
 
 	createUrl: function(action, params){
 		return this.options.base_url + (action ? action+'/' : '') + (params ? '?'+Object.toQueryString(params) : '')
+	},
+
+	notify: function(options){
+		return this.growl.notify({
+            title: "this scrolls away",
+            text: "test - hello there. mouseover to pause away action"
+        });
 	}
 
 });
@@ -214,7 +256,7 @@ var Route = new Class({
 		self.page = (url.length > 0) ? url.shift() : self.defaults.page
 		self.action = (url.length > 0) ? url.shift() : self.defaults.action
 
-		self.params = self.defaults.params
+		self.params = Object.merge({}, self.defaults.params);
 		if(url.length > 1){
 			var key
 			url.each(function(el, nr){
@@ -225,6 +267,9 @@ var Route = new Class({
 					key = null
 				}
 			})
+		}
+		else if(url.length == 1){
+			self.params[url] = true;
 		}
 
 		return self
@@ -343,3 +388,22 @@ function randomString(length, extra) {
 
 })();
 
+var createSpinner = function(target, options){
+	var opts = Object.merge({
+		lines: 12,
+		length: 5,
+		width: 4,
+		radius: 9,
+		color: '#fff',
+		speed: 1.9,
+		trail: 53,
+		shadow: false,
+		hwaccel: true,
+		className: 'spinner',
+		zIndex: 2e9,
+		top: 'auto',
+		left: 'auto'
+	}, options);
+
+	return new Spinner(opts).spin(target);
+}

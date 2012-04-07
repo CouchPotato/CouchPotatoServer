@@ -7,7 +7,8 @@ config = [{
     'name': 'kickasstorrents',
     'groups': [
         {
-            'tab': 'providers',
+            'tab': 'searcher',
+            'subtab': 'providers',
             'name': 'KickAssTorrents',
             'options': [
                 {

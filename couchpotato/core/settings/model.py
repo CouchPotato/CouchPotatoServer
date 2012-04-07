@@ -1,10 +1,12 @@
+from couchpotato.core.helpers.encoding import toUnicode
 from elixir.entity import Entity
 from elixir.fields import Field
 from elixir.options import options_defaults, using_options
 from elixir.relationships import ManyToMany, OneToMany, ManyToOne
-from libs.elixir.relationships import OneToOne
 from sqlalchemy.types import Integer, Unicode, UnicodeText, Boolean, Float, \
-    String
+    String, TypeDecorator
+import json
+import time
 
 options_defaults["shortnames"] = True
 
@@ -15,13 +17,29 @@ options_defaults["shortnames"] = True
 # http://elixir.ematia.de/trac/wiki/Recipes/MultipleDatabasesOneMetadata
 __session__ = None
 
+class SetEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, set):
+            return list(obj)
+        return json.JSONEncoder.default(self, obj)
+
+
+class JsonType(TypeDecorator):
+    impl = UnicodeText
+
+    def process_bind_param(self, value, dialect):
+        return toUnicode(json.dumps(value, cls = SetEncoder))
+
+    def process_result_value(self, value, dialect):
+        return json.loads(value if value else '{}')
+
 
 class Movie(Entity):
     """Movie Resource a movie could have multiple releases
     The files belonging to the movie object are global for the whole movie
     such as trailers, nfo, thumbnails"""
 
-    last_edit = Field(Integer)
+    last_edit = Field(Integer, default = lambda: int(time.time()))
 
     library = ManyToOne('Library')
     status = ManyToOne('Status')
@@ -34,12 +52,11 @@ class Library(Entity):
     """"""
 
     year = Field(Integer)
-    identifier = Field(String(20))
-    rating = Field(Float)
+    identifier = Field(String(20), index = True)
 
     plot = Field(UnicodeText)
     tagline = Field(UnicodeText(255))
-    info = Field(UnicodeText)
+    info = Field(JsonType)
 
     status = ManyToOne('Status')
     movies = OneToMany('Movie')
@@ -52,8 +69,8 @@ class LibraryTitle(Entity):
     using_options(order_by = '-default')
 
     title = Field(Unicode)
-    simple_title = Field(Unicode)
-    default = Field(Boolean)
+    simple_title = Field(Unicode, index = True)
+    default = Field(Boolean, index = True)
 
     language = OneToMany('Language')
     libraries = ManyToOne('Library')
@@ -62,7 +79,7 @@ class LibraryTitle(Entity):
 class Language(Entity):
     """"""
 
-    identifier = Field(String(20))
+    identifier = Field(String(20), index = True)
     label = Field(Unicode)
 
     titles = ManyToOne('LibraryTitle')
@@ -72,7 +89,7 @@ class Release(Entity):
     """Logically groups all files that belong to a certain release, such as
     parts of a movie, subtitles."""
 
-    identifier = Field(String(100))
+    identifier = Field(String(100), index = True)
 
     movie = ManyToOne('Movie')
     status = ManyToOne('Status')
@@ -85,7 +102,7 @@ class Release(Entity):
 class ReleaseInfo(Entity):
     """Properties that can be bound to a file for off-line usage"""
 
-    identifier = Field(String(50))
+    identifier = Field(String(50), index = True)
     value = Field(Unicode(255), nullable = False)
 
     release = ManyToOne('Release')
@@ -107,7 +124,7 @@ class Quality(Entity):
 
     identifier = Field(String(20), unique = True)
     label = Field(Unicode(20))
-    order = Field(Integer)
+    order = Field(Integer, index = True)
 
     size_min = Field(Integer)
     size_max = Field(Integer)
@@ -121,7 +138,7 @@ class Profile(Entity):
     using_options(order_by = 'order')
 
     label = Field(Unicode(50))
-    order = Field(Integer)
+    order = Field(Integer, index = True)
     core = Field(Boolean)
     hide = Field(Boolean)
 
@@ -133,7 +150,7 @@ class ProfileType(Entity):
     """"""
     using_options(order_by = 'order')
 
-    order = Field(Integer)
+    order = Field(Integer, index = True)
     finish = Field(Boolean)
     wait_for = Field(Integer)
 
@@ -170,7 +187,7 @@ class FileType(Entity):
 class FileProperty(Entity):
     """Properties that can be bound to a file for off-line usage"""
 
-    identifier = Field(String(20))
+    identifier = Field(String(20), index = True)
     value = Field(Unicode(255), nullable = False)
 
     file = ManyToOne('File')
@@ -180,8 +197,8 @@ class History(Entity):
     """History of actions that are connected to a certain release,
     such as, renamed to, downloaded, deleted, download subtitles etc"""
 
-    added = Field(Integer)
-    message = Field(UnicodeText())
+    added = Field(Integer, default = lambda: int(time.time()))
+    message = Field(UnicodeText)
     type = Field(Unicode(50))
 
     release = ManyToOne('Release')
@@ -194,6 +211,15 @@ class RenameHistory(Entity):
     new = Field(Unicode(255))
 
     file = ManyToOne('File')
+
+
+class Notification(Entity):
+    using_options(order_by = 'added')
+
+    added = Field(Integer, default = lambda: int(time.time()))
+    read = Field(Boolean, default = False)
+    message = Field(Unicode(255))
+    data = Field(JsonType)
 
 
 class Folder(Entity):

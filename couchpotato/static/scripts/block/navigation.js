@@ -35,7 +35,7 @@ Block.Navigation = new Class({
 	addTab: function(tab){
 		var self = this
 
-		return new Element('li').adopt(
+		return new Element('li.tab_'+(tab.text.toLowerCase() || 'unknown')).adopt(
 			new Element('a', tab)
 		).inject(self.nav)
 

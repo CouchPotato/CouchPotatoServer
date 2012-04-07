@@ -39,10 +39,10 @@ var QualityBase = new Class({
 
 		self.settings = App.getPage('Settings')
 		self.settings.addEvent('create', function(){
-			var tab = self.settings.createTab('profile', {
+			var tab = self.settings.createSubTab('profile', {
 				'label': 'Quality',
 				'name': 'profile'
-			});
+			}, self.settings.tabs.searcher ,'searcher');
 
 			self.tab = tab.tab;
 			self.content = tab.content;
@@ -93,7 +93,7 @@ var QualityBase = new Class({
 		var data = data || {'id': randomString()}
 		var profile = new Profile(data)
 		self.profiles.include(profile)
-		
+
 		return profile;
 	},
 

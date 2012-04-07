@@ -5,6 +5,7 @@ def start():
 
 config = [{
     'name': 'automation',
+    'order': 30,
     'groups': [
         {
             'tab': 'automation',

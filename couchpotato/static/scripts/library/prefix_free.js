@@ -1,2 +1,419 @@
-// StyleFix 1.0.1 & PrefixFree 1.0.4 / by Lea Verou / MIT license
-(function(){function b(a,b){return[].slice.call((b||document).querySelectorAll(a))}if(!window.addEventListener)return;var a=window.StyleFix={link:function(b){try{if(b.rel!=="stylesheet"||!b.sheet.cssRules||b.hasAttribute("data-noprefix"))return}catch(c){return}var d=b.href||b.getAttribute("data-href"),e=d.replace(/[^\/]+$/,""),f=b.parentNode,g=new XMLHttpRequest;g.open("GET",d),g.onreadystatechange=function(){if(g.readyState===4){var c=g.responseText;if(c&&b.parentNode){c=a.fix(c,!0,b),e&&(c=c.replace(/url\((?:'|")?(.+?)(?:'|")?\)/gi,function(a,b){return/^([a-z]{3,10}:|\/|#)/i.test(b)?a:'url("'+e+b+'")'}),c=c.replace(RegExp("\\b(behavior:\\s*?url\\('?\"?)"+e,"gi"),"$1"));var d=document.createElement("style");d.textContent=c,d.media=b.media,d.disabled=b.disabled,d.setAttribute("data-href",b.getAttribute("href")),f.insertBefore(d,b),f.removeChild(b)}}},g.send(null),b.setAttribute("data-inprogress","")},styleElement:function(b){var c=b.disabled;b.textContent=a.fix(b.textContent,!0,b),b.disabled=c},styleAttribute:function(b){var c=b.getAttribute("style");c=a.fix(c,!1,b),b.setAttribute("style",c)},process:function(){b('link[rel="stylesheet"]:not([data-inprogress])').forEach(StyleFix.link),b("style").forEach(StyleFix.styleElement),b("[style]").forEach(StyleFix.styleAttribute)},register:function(b,c){(a.fixers=a.fixers||[]).splice(c===undefined?a.fixers.length:c,0,b)},fix:function(b,c){for(var d=0;d<a.fixers.length;d++)b=a.fixers[d](b,c)||b;return b},camelCase:function(a){return a.replace(/-([a-z])/g,function(a,b){return b.toUpperCase()}).replace("-","")},deCamelCase:function(a){return a.replace(/[A-Z]/g,function(a){return"-"+a.toLowerCase()})}};(function(){setTimeout(function(){b('link[rel="stylesheet"]').forEach(StyleFix.link)},10),document.addEventListener("DOMContentLoaded",StyleFix.process,!1)})()})(),function(a,b){if(!window.StyleFix||!window.getComputedStyle)return;var c=window.PrefixFree={prefixCSS:function(a,b){function e(b,d,e,f){b=c[b];if(b.length){var g=RegExp(d+"("+b.join("|")+")"+e,"gi");a=a.replace(g,f)}}var d=c.prefix;e("functions","(\\s|:|,)","\\s*\\(","$1"+d+"$2("),e("keywords","(\\s|:)","(\\s|;|\\}|$)","$1"+d+"$2$3"),e("properties","(^|\\{|\\s|;)","\\s*:","$1"+d+"$2:");if(c.properties.length){var f=RegExp("\\b("+c.properties.join("|")+")(?!:)","gi");e("valueProperties","\\b",":(.+?);",function(a){return a.replace(f,d+"$1")})}return b&&(e("selectors","","\\b",c.prefixSelector),e("atrules","@","\\b","@"+d+"$1")),a=a.replace(RegExp("-"+d,"g"),"-"),a},prefixSelector:function(a){return a.replace(/^:{1,2}/,function(a){return a+c.prefix})},prefixProperty:function(a,b){var d=c.prefix+a;return b?StyleFix.camelCase(d):d}};(function(){var a={},b=[],d={},e=getComputedStyle(document.documentElement,null),f=document.createElement("div").style,g=function(c){if(c.charAt(0)==="-"){b.push(c);var d=c.split("-"),e=d[1];a[e]=++a[e]||1;while(d.length>3){d.pop();var f=d.join("-");h(f)&&b.indexOf(f)===-1&&b.push(f)}}},h=function(a){return StyleFix.camelCase(a)in f};if(e.length>0)for(var i=0;i<e.length;i++)g(e[i]);else for(var j in e)g(StyleFix.deCamelCase(j));var k={uses:0};for(var l in a){var m=a[l];k.uses<m&&(k={prefix:l,uses:m})}c.prefix="-"+k.prefix+"-",c.Prefix=StyleFix.camelCase(c.prefix),c.properties=[];for(var i=0;i<b.length;i++){var j=b[i];if(j.indexOf(c.prefix)===0){var n=j.slice(c.prefix.length);h(n)||c.properties.push(n)}}c.Prefix=="Ms"&&!("transform"in f)&&!("MsTransform"in f)&&"msTransform"in f&&c.properties.push("transform","transform-origin"),c.properties.sort()})(),function(){function e(a,b){return d[b]="",d[b]=a,!!d[b]}var a={"linear-gradient":{property:"backgroundImage",params:"red, teal"},calc:{property:"width",params:"1px + 5%"},element:{property:"backgroundImage",params:"#foo"}};a["repeating-linear-gradient"]=a["repeating-radial-gradient"]=a["radial-gradient"]=a["linear-gradient"];var b={initial:"color","zoom-in":"cursor","zoom-out":"cursor",box:"display",flexbox:"display","inline-flexbox":"display"};c.functions=[],c.keywords=[];var d=document.createElement("div").style;for(var f in a){var g=a[f],h=g.property,i=f+"("+g.params+")";!e(i,h)&&e(c.prefix+i,h)&&c.functions.push(f)}for(var j in b){var h=b[j];!e(j,h)&&e(c.prefix+j,h)&&c.keywords.push(j)}}(),function(){function f(a){return e.textContent=a+"{}",!!e.sheet.cssRules.length}var b={":read-only":null,":read-write":null,":any-link":null,"::selection":null},d={keyframes:"name",viewport:null,document:'regexp(".")'};c.selectors=[],c.atrules=[];var e=a.appendChild(document.createElement("style"));for(var g in b){var h=g+(b[g]?"("+b[g]+")":"");!f(h)&&f(c.prefixSelector(h))&&c.selectors.push(g)}for(var i in d){var h=i+" "+(d[i]||"");!f("@"+h)&&f("@"+c.prefix+h)&&c.atrules.push(i)}a.removeChild(e)}(),c.valueProperties=["transition","transition-property"],a.className+=" "+c.prefix,StyleFix.register(c.prefixCSS)}(document.documentElement);
+/**
+ * StyleFix 1.0.2
+ * @author Lea Verou
+ * MIT license
+ */
+
+(function(){
+
+if(!window.addEventListener) {
+	return;
+}
+
+var self = window.StyleFix = {
+	link: function(link) {
+		try {
+			// Ignore stylesheets with data-noprefix attribute as well as alternate stylesheets
+			if(link.rel !== 'stylesheet' || link.hasAttribute('data-noprefix')) {
+				return;
+			}
+		}
+		catch(e) {
+			return;
+		}
+
+		var url = link.href || link.getAttribute('data-href'),
+		    base = url.replace(/[^\/]+$/, ''),
+		    parent = link.parentNode,
+		    xhr = new XMLHttpRequest();
+		
+		xhr.open('GET', url);
+
+		xhr.onreadystatechange = function() {
+			if(xhr.readyState === 4) {
+				var css = xhr.responseText;
+				
+				if(css && link.parentNode) {
+					css = self.fix(css, true, link);
+					
+					// Convert relative URLs to absolute, if needed
+					if(base) {
+						css = css.replace(/url\(((?:"|')?)(.+?)\1\)/gi, function($0, quote, url) {
+							if(!/^([a-z]{3,10}:|\/|#)/i.test(url)) { // If url not absolute & not a hash
+								// May contain sequences like /../ and /./ but those DO work
+								return 'url("' + base + url + '")';
+							}
+							
+							return $0;						
+						});
+
+						// behavior URLs shoudn’t be converted (Issue #19)
+						css = css.replace(RegExp('\\b(behavior:\\s*?url\\(\'?"?)' + base, 'gi'), '$1');
+					}
+					
+					var style = document.createElement('style');
+					style.textContent = css;
+					style.media = link.media;
+					style.disabled = link.disabled;
+					style.setAttribute('data-href', link.getAttribute('href'));
+					
+					parent.insertBefore(style, link);
+					parent.removeChild(link);
+				}
+			}
+		};
+		
+		xhr.send(null);
+		
+		link.setAttribute('data-inprogress', '');
+	},
+
+	styleElement: function(style) {
+		var disabled = style.disabled;
+		
+		style.textContent = self.fix(style.textContent, true, style);
+		
+		style.disabled = disabled;
+	},
+
+	styleAttribute: function(element) {
+		var css = element.getAttribute('style');
+		
+		css = self.fix(css, false, element);
+		
+		element.setAttribute('style', css);
+	},
+	
+	process: function() {
+		// Linked stylesheets
+		$('link[rel="stylesheet"]:not([data-inprogress])').forEach(StyleFix.link);
+		
+		// Inline stylesheets
+		$('style').forEach(StyleFix.styleElement);
+		
+		// Inline styles
+		$('[style]').forEach(StyleFix.styleAttribute);
+	},
+	
+	register: function(fixer, index) {
+		(self.fixers = self.fixers || [])
+			.splice(index === undefined? self.fixers.length : index, 0, fixer);
+	},
+	
+	fix: function(css, raw) {
+		for(var i=0; i<self.fixers.length; i++) {
+			css = self.fixers[i](css, raw) || css;
+		}
+		
+		return css;
+	},
+	
+	camelCase: function(str) {
+		return str.replace(/-([a-z])/g, function($0, $1) { return $1.toUpperCase(); }).replace('-','');
+	},
+	
+	deCamelCase: function(str) {
+		return str.replace(/[A-Z]/g, function($0) { return '-' + $0.toLowerCase() });
+	}
+};
+
+/**************************************
+ * Process styles
+ **************************************/
+(function(){
+	setTimeout(function(){
+		$('link[rel="stylesheet"]').forEach(StyleFix.link);
+	}, 10);
+	
+	document.addEventListener('DOMContentLoaded', StyleFix.process, false);
+})();
+
+function $(expr, con) {
+	return [].slice.call((con || document).querySelectorAll(expr));
+}
+
+})();
+
+/**
+ * PrefixFree 1.0.4
+ * @author Lea Verou
+ * MIT license
+ */
+(function(root, undefined){
+
+if(!window.StyleFix || !window.getComputedStyle) {
+	return;
+}
+
+var self = window.PrefixFree = {
+	prefixCSS: function(css, raw) {
+		var prefix = self.prefix;
+		
+		function fix(what, before, after, replacement) {
+			what = self[what];
+			
+			if(what.length) {
+				var regex = RegExp(before + '(' + what.join('|') + ')' + after, 'gi');
+
+				css = css.replace(regex, replacement);
+			}
+		}
+		
+		fix('functions', '(\\s|:|,)', '\\s*\\(', '$1' + prefix + '$2(');
+		fix('keywords', '(\\s|:)', '(\\s|;|\\}|$)', '$1' + prefix + '$2$3');
+		fix('properties', '(^|\\{|\\s|;)', '\\s*:', '$1' + prefix + '$2:');
+		
+		// Prefix properties *inside* values (issue #8)
+		if (self.properties.length) {
+			var regex = RegExp('\\b(' + self.properties.join('|') + ')(?!:)', 'gi');
+			
+			fix('valueProperties', '\\b', ':(.+?);', function($0) {
+				return $0.replace(regex, prefix + "$1")
+			});
+		}
+		
+		if(raw) {
+			fix('selectors', '', '\\b', self.prefixSelector);
+			fix('atrules', '@', '\\b', '@' + prefix + '$1');
+		}
+		
+		// Fix double prefixing
+		css = css.replace(RegExp('-' + prefix, 'g'), '-');
+		
+		return css;
+	},
+	
+	// Warning: prefixXXX functions prefix no matter what, even if the XXX is supported prefix-less
+	prefixSelector: function(selector) {
+		return selector.replace(/^:{1,2}/, function($0) { return $0 + self.prefix })
+	},
+	
+	prefixProperty: function(property, camelCase) {
+		var prefixed = self.prefix + property;
+		
+		return camelCase? StyleFix.camelCase(prefixed) : prefixed;
+	}
+};
+
+/**************************************
+ * Properties
+ **************************************/
+(function() {
+	var prefixes = {},
+		properties = [],
+		shorthands = {},
+		style = getComputedStyle(document.documentElement, null),
+		dummy = document.createElement('div').style;
+	
+	// Why are we doing this instead of iterating over properties in a .style object? Cause Webkit won't iterate over those.
+	var iterate = function(property) {
+		if(property.charAt(0) === '-') {
+			properties.push(property);
+			
+			var parts = property.split('-'),
+				prefix = parts[1];
+				
+			// Count prefix uses
+			prefixes[prefix] = ++prefixes[prefix] || 1;
+			
+			// This helps determining shorthands
+			while(parts.length > 3) {
+				parts.pop();
+				
+				var shorthand = parts.join('-');
+
+				if(supported(shorthand) && properties.indexOf(shorthand) === -1) {
+					properties.push(shorthand);
+				}
+			}
+		}
+	},
+	supported = function(property) {
+		return StyleFix.camelCase(property) in dummy;
+	}
+	
+	// Some browsers have numerical indices for the properties, some don't
+	if(style.length > 0) {
+		for(var i=0; i<style.length; i++) {
+			iterate(style[i])
+		}
+	}
+	else {
+		for(var property in style) {
+			iterate(StyleFix.deCamelCase(property));
+		}
+	}
+
+	// Find most frequently used prefix
+	var highest = {uses:0};
+	for(var prefix in prefixes) {
+		var uses = prefixes[prefix];
+
+		if(highest.uses < uses) {
+			highest = {prefix: prefix, uses: uses};
+		}
+	}
+	
+	self.prefix = '-' + highest.prefix + '-';
+	self.Prefix = StyleFix.camelCase(self.prefix);
+	
+	self.properties = [];
+
+	// Get properties ONLY supported with a prefix
+	for(var i=0; i<properties.length; i++) {
+		var property = properties[i];
+		
+		if(property.indexOf(self.prefix) === 0) { // we might have multiple prefixes, like Opera
+			var unprefixed = property.slice(self.prefix.length);
+			
+			if(!supported(unprefixed)) {
+				self.properties.push(unprefixed);
+			}
+		}
+	}
+	
+	// IE fix
+	if(self.Prefix == 'Ms' 
+	  && !('transform' in dummy) 
+	  && !('MsTransform' in dummy) 
+	  && ('msTransform' in dummy)) {
+		self.properties.push('transform', 'transform-origin');	
+	}
+	
+	self.properties.sort();
+})();
+
+/**************************************
+ * Values
+ **************************************/
+(function() {
+// Values that might need prefixing
+var functions = {
+	'linear-gradient': {
+		property: 'backgroundImage',
+		params: 'red, teal'
+	},
+	'calc': {
+		property: 'width',
+		params: '1px + 5%'
+	},
+	'element': {
+		property: 'backgroundImage',
+		params: '#foo'
+	}
+};
+
+
+functions['repeating-linear-gradient'] =
+functions['repeating-radial-gradient'] =
+functions['radial-gradient'] =
+functions['linear-gradient'];
+
+var keywords = {
+	'initial': 'color',
+	'zoom-in': 'cursor',
+	'zoom-out': 'cursor',
+	'box': 'display',
+	'flexbox': 'display',
+	'inline-flexbox': 'display'
+};
+
+self.functions = [];
+self.keywords = [];
+
+var style = document.createElement('div').style;
+
+function supported(value, property) {
+	style[property] = '';
+	style[property] = value;
+
+	return !!style[property];
+}
+
+for (var func in functions) {
+	var test = functions[func],
+		property = test.property,
+		value = func + '(' + test.params + ')';
+	
+	if (!supported(value, property)
+	  && supported(self.prefix + value, property)) {
+		// It's supported, but with a prefix
+		self.functions.push(func);
+	}
+}
+
+for (var keyword in keywords) {
+	var property = keywords[keyword];
+
+	if (!supported(keyword, property)
+	  && supported(self.prefix + keyword, property)) {
+		// It's supported, but with a prefix
+		self.keywords.push(keyword);
+	}
+}
+
+})();
+
+/**************************************
+ * Selectors and @-rules
+ **************************************/
+(function() {
+
+var 
+selectors = {
+	':read-only': null,
+	':read-write': null,
+	':any-link': null,
+	'::selection': null
+},
+
+atrules = {
+	'keyframes': 'name',
+	'viewport': null,
+	'document': 'regexp(".")'
+};
+
+self.selectors = [];
+self.atrules = [];
+
+var style = root.appendChild(document.createElement('style'));
+
+function supported(selector) {
+	style.textContent = selector + '{}';  // Safari 4 has issues with style.innerHTML
+	
+	return !!style.sheet.cssRules.length;
+}
+
+for(var selector in selectors) {
+	var test = selector + (selectors[selector]? '(' + selectors[selector] + ')' : '');
+		
+	if(!supported(test) && supported(self.prefixSelector(test))) {
+		self.selectors.push(selector);
+	}
+}
+
+for(var atrule in atrules) {
+	var test = atrule + ' ' + (atrules[atrule] || '');
+	
+	if(!supported('@' + test) && supported('@' + self.prefix + test)) {
+		self.atrules.push(atrule);
+	}
+}
+
+root.removeChild(style);
+
+})();
+
+// Properties that accept properties as their value
+self.valueProperties = [
+	'transition',
+	'transition-property'
+]
+
+// Add class for current prefix
+root.className += ' ' + self.prefix;
+
+StyleFix.register(self.prefixCSS);
+
+
+})(document.documentElement);

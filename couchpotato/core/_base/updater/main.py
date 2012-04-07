@@ -5,6 +5,7 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
 from git.repository import LocalRepository
+from datetime import datetime
 import os
 import time
 import traceback
@@ -29,18 +30,34 @@ class Updater(Plugin):
 
         addEvent('app.load', self.check)
 
-        addApiView('updater.info', self.getInfo)
+        addApiView('updater.info', self.getInfo, docs = {
+            'desc': 'Get updater information',
+            'return': {
+                'type': 'object',
+                'example': """{
+        'repo_name': "Name of used repository",
+        'last_check': "last checked for update",
+        'update_version': "available update version or empty",
+        'version': current_cp_version
+}"""}
+        })
         addApiView('updater.update', self.doUpdateView)
-        addApiView('updater.check', self.checkView)
+        addApiView('updater.check', self.checkView, docs = {
+            'desc': 'Check for available update',
+            'return': {'type': 'see updater.info'}
+        })
 
     def getInfo(self):
 
-        return jsonified({
+        return jsonified(self.info())
+
+    def info(self):
+        return {
             'repo_name': self.repo_name,
             'last_check': self.last_check,
             'update_version': self.update_version,
             'version': self.getVersion()
-        })
+        }
 
     def getVersion(self):
 
@@ -78,14 +95,14 @@ class Updater(Plugin):
                 log.info('Versions, local:%s, remote:%s' % (local.hash[:8], remote.hash[:8]))
 
                 if local.getDate() < remote.getDate():
+                    self.update_version = {
+                        'hash': remote.hash[:8],
+                        'date': remote.getDate(),
+                    }
                     if self.conf('automatic') and not self.update_failed:
                         if self.doUpdate():
                             fireEventAsync('app.crappy_restart')
                     else:
-                        self.update_version = {
-                            'hash': remote.hash[:8],
-                            'date': remote.getDate(),
-                        }
                         if self.conf('notification'):
                             fireEvent('updater.available', message = 'A new update is available', data = self.getVersion())
 
@@ -106,10 +123,15 @@ class Updater(Plugin):
             self.repo.saveStash()
 
             log.info('Updating to latest version')
+            info = self.info()
             self.repo.pull()
 
             # Delete leftover .pyc files
             self.deletePyc()
+
+            # Notify before returning and restarting
+            version_date = datetime.fromtimestamp(info['update_version']['date'])
+            fireEvent('updater.updated', 'Updated to a new version with hash "%s", this version is from %s' % (info['update_version']['hash'], version_date), data = info)
 
             return True
         except:

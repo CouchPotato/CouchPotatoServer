@@ -18,9 +18,12 @@ class Downloader(Plugin):
     def download(self, data = {}):
         pass
 
-    def createFileName(self, data, filename, movie):
-        name = os.path.join('%s%s' % (toSafeString(data.get('name')), self.cpTag(movie)))
-        if data.get('type') == 'nzb' and "DOCTYPE nzb" not in filename:
+    def createNzbName(self, data, movie):
+        return '%s%s' % (toSafeString(data.get('name')), self.cpTag(movie))
+
+    def createFileName(self, data, filedata, movie):
+        name = os.path.join(self.createNzbName(data, movie))
+        if data.get('type') == 'nzb' and "DOCTYPE nzb" not in filedata:
             return '%s.%s' % (name, 'rar')
         return '%s.%s' % (name, data.get('type'))
 
@@ -30,10 +33,10 @@ class Downloader(Plugin):
 
         return ''
 
-    def isCorrectType(self, type):
-        is_correct = type in self.type
+    def isCorrectType(self, item_type):
+        is_correct = item_type in self.type
 
         if not is_correct:
             log.debug("Downloader doesn't support this type")
 
-        return bool
+        return is_correct

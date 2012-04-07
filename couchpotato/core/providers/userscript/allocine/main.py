@@ -11,7 +11,7 @@ class AlloCine(UserscriptBase):
             return 'Url isn\'t from a movie'
 
         try:
-            data = self.urlopen(url)
+            data = self.getUrl(url)
         except:
             return
 

@@ -12,11 +12,8 @@ import time
 import traceback
 import webbrowser
 
-if os.name == 'nt':
-    import getppid
-
-
 log = CPLog(__name__)
+
 
 class Core(Plugin):
 
@@ -24,9 +21,17 @@ class Core(Plugin):
     shutdown_started = False
 
     def __init__(self):
-        addApiView('app.shutdown', self.shutdown)
-        addApiView('app.restart', self.restart)
-        addApiView('app.available', self.available)
+        addApiView('app.shutdown', self.shutdown, docs = {
+            'desc': 'Shutdown the app.',
+            'return': {'type': 'string: shutdown'}
+        })
+        addApiView('app.restart', self.restart, docs = {
+            'desc': 'Restart the app.',
+            'return': {'type': 'string: restart'}
+        })
+        addApiView('app.available', self.available, docs = {
+            'desc': 'Check if app available.'
+        })
 
         addEvent('app.crappy_shutdown', self.crappyShutdown)
         addEvent('app.crappy_restart', self.crappyRestart)
@@ -51,6 +56,9 @@ class Core(Plugin):
         })
 
     def crappyShutdown(self):
+        if self.shutdown_started:
+            return
+
         try:
             self.urlopen('%s/app.shutdown' % self.createApiUrl(), show_error = False)
             return True
@@ -59,6 +67,9 @@ class Core(Plugin):
             return False
 
     def crappyRestart(self):
+        if self.shutdown_started:
+            return
+
         try:
             self.urlopen('%s/app.restart' % self.createApiUrl(), show_error = False)
             return True
@@ -77,6 +88,7 @@ class Core(Plugin):
     def initShutdown(self, restart = False):
         if self.shutdown_started:
             log.info('Already shutting down')
+            return
 
         log.info('Shutting down' if not restart else 'Restarting')
 

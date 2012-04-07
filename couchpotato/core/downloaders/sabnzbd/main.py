@@ -39,7 +39,7 @@ class Sabnzbd(Downloader):
             'apikey': self.conf('api_key'),
             'cat': self.conf('category'),
             'mode': 'addurl',
-            'nzbname': '%s%s' % (data.get('name'), self.cpTag(movie)),
+            'nzbname': self.createNzbName(data, movie),
         }
 
         if isfunction(data.get('download')):

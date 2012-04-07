@@ -1,8 +1,7 @@
 from axl.axel import Event
-from couchpotato.core.helpers.variable import mergeDicts
+from couchpotato.core.helpers.variable import mergeDicts, natcmp
 from couchpotato.core.logger import CPLog
 import threading
-import time
 import traceback
 
 log = CPLog(__name__)
@@ -36,7 +35,7 @@ def addEvent(name, handler, priority = 100):
 
         return h
 
-    e.handle(handler, priority = priority)
+    e.handle(createHandle, priority = priority)
 
 def removeEvent(name, handler):
     e = events[name]
@@ -84,7 +83,8 @@ def fireEvent(name, *args, **kwargs):
             results = None
 
             # Loop over results, stop when first not None result is found.
-            for r in result:
+            for r_key in sorted(result.iterkeys(), cmp = natcmp):
+                r = result[r_key]
                 if r[0] is True and r[1] is not None:
                     results = r[1]
                     break
@@ -95,7 +95,8 @@ def fireEvent(name, *args, **kwargs):
 
         else:
             results = []
-            for r in result:
+            for r_key in sorted(result.iterkeys(), cmp = natcmp):
+                r = result[r_key]
                 if r[0] == True and r[1]:
                     results.append(r[1])
                 elif r[1]:

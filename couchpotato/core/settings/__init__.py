@@ -16,8 +16,41 @@ class Settings(object):
 
     def __init__(self):
 
-        addApiView('settings', self.view)
-        addApiView('settings.save', self.saveView)
+        addApiView('settings', self.view, docs = {
+            'desc': 'Return the options and its values of settings.conf. Including the default values and group ordering used on the settings page.',
+            'return': {'type': 'object', 'example': """{
+    // objects like in __init__.py of plugin
+    "options": {
+        "moovee" : {
+            "groups" : [{
+                "description" : "SD movies only",
+                "name" : "#alt.binaries.moovee",
+                "options" : [{
+                    "default" : false,
+                    "name" : "enabled",
+                    "type" : "enabler"
+                }],
+                "tab" : "providers"
+            }],
+            "name" : "moovee"
+        }
+    },
+    // object structured like settings.conf
+    "values": {
+        "moovee": {
+            "enabled": false
+        }
+    }
+}"""}
+        })
+        addApiView('settings.save', self.saveView, docs = {
+            'desc': 'Save setting to config file (settings.conf)',
+            'params': {
+                'section': {'desc': 'The section name in settings.conf'},
+                'option': {'desc': 'The option name'},
+                'value': {'desc': 'The value you want to save'},
+            }
+        })
 
     def setFile(self, config_file):
         self.file = config_file
@@ -128,7 +161,6 @@ class Settings(object):
         if not self.options.get(section_name):
             self.options[section_name] = options
         else:
-            options['groups'] = self.options[section_name].get('groups') + options.get('groups')
             self.options[section_name] = mergeDicts(self.options[section_name], options)
 
     def getOptions(self):
@@ -136,7 +168,6 @@ class Settings(object):
 
 
     def view(self):
-
         return jsonified({
             'options': self.getOptions(),
             'values': self.getValues()

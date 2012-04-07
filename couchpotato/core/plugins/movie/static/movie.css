@@ -1,35 +1,59 @@
-/* @override 
-	http://localhost:5000/static/movie_plugin/movie.css
-	http://192.168.1.20:5000/static/movie_plugin/movie.css
-	http://127.0.0.1:5000/static/movie_plugin/movie.css
-*/
-
 .movies {
-	padding: 20px 0;
+	padding: 60px 0 20px;
 }
+
+	.movies.mass_edit_list {
+		padding-top: 90px;
+	}
 
 	.movies .movie {
 		position: relative;
 		border-radius: 4px;
 		margin: 10px 0;
-		
 		overflow: hidden;
+		width: 100%;
+		transition: all 0.2s linear;
 	}
-		.movies .movie:hover { 
-			border-color: #ddd #fff #fff #ddd;
+		.movies .movie.list_view, .movies .movie.mass_edit_view {
+			margin: 1px 0;
+			border-radius: 0;
+			background: no-repeat;
+			box-shadow: none;
+			border-bottom: 1px solid rgba(255,255,255,0.05);
 		}
+		.movies .movie.list_view:hover, .movies .movie.mass_edit_view:hover {
+			background: rgba(255,255,255,0.03);
+		}
+
 		.movies .data {
 			padding: 20px;
-			height: 140px;
-			width: 800px;
+			height: 180px;
+			width: 840px;
 			position: relative;
 			float: right;
-
 			border-radius: 0;
-			-moz-border-radius: 0;
-			-webkit-border-radius: 0;
 			overflow: hidden;
+			transition: all 0.2s linear;
 		}
+			.movies .list_view .data, .movies .mass_edit_view .data {
+				height: 30px;
+				padding: 3px 0 3px 10px;
+				width: 938px;
+				box-shadow: none;
+				border: 0;
+				background: none;
+			}
+
+		.movies .movie .check {
+			display: none;
+		}
+
+			.movies.mass_edit_list .movie .check {
+				float: left;
+				display: block;
+				margin: 7px 0 0 5px;
+			}
+
 		.movies .poster {
 			float: left;
 			width: 120px;
@@ -37,21 +61,37 @@
 			overflow: hidden;
 			height: 180px;
 			border-radius: 4px 0 0 4px;
-			
+			transition: all 0.2s linear;
+
 		}
+			.movies .list_view .poster, .movies .mass_edit_view .poster {
+				width: 20px;
+				height: 30px;
+			}
+			.movies.mass_edit_list .poster {
+				display: none;
+			}
+
 		.movies .poster img, .options .poster img {
 			width: 101%;
 			height: 101%;
 		}
-		
+
 			.movies .info .title {
 				font-size: 30px;
 				font-weight: bold;
 				margin-bottom: 10px;
 				float: left;
-				width: 80%;
+				width: 90%;
+				transition: all 0.2s linear;
 			}
-			
+				.movies .list_view .info .title, .movies .mass_edit_view .info .title {
+					font-size: 16px;
+					font-weight: normal;
+					text-overflow: ellipsis;
+					width: 64%;
+				}
+
 			.movies .info .year {
 				font-size: 30px;
 				margin-bottom: 10px;
@@ -59,8 +99,13 @@
 				color: #bbb;
 				width: 10%;
 				text-align: right;
+				transition: all 0.2s linear;
 			}
-			
+				.movies .list_view .info .year, .movies .mass_edit_view .info .year {
+					font-size: 16px;
+					width: 6%;
+				}
+
 			.movies .info .rating {
 				font-size: 30px;
 				margin-bottom: 10px;
@@ -69,7 +114,7 @@
 				width: 5%;
 				padding: 0 0 0 3%;
 			}
-			
+
 			.movies .info .description {
 				clear: both;
 				height: 80px;
@@ -78,35 +123,85 @@
 				.movies .data:hover .description {
 					overflow: auto;
 				}
-		
-		.movies .data .quality span {
-			padding: 0 5px;
-			font-weight: bold;
+				.movies .list_view .info .description, .movies .mass_edit_view .info .description {
+					display: none;
+				}
+
+		.movies .data .quality {
+			display: block;
+			min-height: 20px;
+			vertical-align: mid;
 		}
-			.movies .data .quality span:first-child {padding-left: 0;}
-		
-		.movies .data .quality .available { color: orange; }
-		.movies .data .quality .snatched { color: lightgreen; }
-			
+
+		.movies .data .quality span {
+			padding: 2px 3px;
+			font-weight: bold;
+			opacity: 0.5;
+			font-size: 10px;
+			height: 16px;
+			line-height: 12px;
+			vertical-align: middle;
+			display: inline-block;
+			text-transform: uppercase;
+			text-shadow: none;
+			font-weight: normal;
+			margin: 0 2px;
+			border-radius: 2px;
+			background-color: rgba(255,255,255,0.1);
+		}
+			.movies .list_view .data .quality, .movies .mass_edit_view .data .quality {
+				text-align: right;
+				float: right;
+				width: 30%;
+			}
+
+		.movies .data .quality .available, .movies .data .quality .snatched {
+			opacity: 1;
+			box-shadow: 1px 1px 0 rgba(0,0,0,0.2);
+			cursor: pointer;
+		}
+
+		.movies .data .quality .available { background-color: #578bc3; }
+		.movies .data .quality .snatched { background-color: #369545; }
+		.movies .data .quality .done {
+			background-color: #369545;
+			opacity: 1;
+		}
+		.movies .data .quality .finish {
+			background-image: url('../images/sprite.png');
+			background-repeat:  no-repeat;
+			background-position: 0 2px;
+			padding-left: 14px;
+			background-size: 14px
+		}
+
 		.movies .data .actions {
 			line-height: 0;
 			clear: both;
 			float: right;
 			margin-top: -25px;
 		}
-			.movies .data:hover .action { opacity: 0.6; } 
-			.movies .data:hover .action:hover { opacity: 1; } 
-		
+			.movies .data:hover .action { opacity: 0.6; }
+			.movies .data:hover .action:hover { opacity: 1; }
+			.movies.mass_edit_list .data .actions {
+				display: none;
+			}
+
 			.movies .data .action {
 				background-repeat: no-repeat;
 				background-position: center;
 				display: inline-block;
-				width: 20px;
-				height: 20px;
+				width: 26px;
+				height: 26px;
 				padding: 3px;
 				opacity: 0;
 			}
-			
+
+		.movies .list_view .data:hover .actions, .movies .mass_edit_view .data:hover .actions {
+			margin: -34px 2px 0 0;
+			background: #4e5969;
+		}
+
 		.movies .delete_container {
 			clear: both;
 			text-align: center;
@@ -128,22 +223,23 @@
 				color: #fff;
 				background-color: #d32917;
 			}
-				
+
 			.movies .options {
 				position: absolute;
 				margin-left: 120px;
+				width: 840px;
 			}
-			
+
 			.movies .options .form {
 				margin: 70px 20px 0;
 				float: left;
 				font-size: 20px;
 			}
-			
+
 			.movies .options .form select {
 				margin-right: 20px;
 			}
-		
+
 			.movies .options .table {
 				height: 180px;
 				overflow: auto;
@@ -151,18 +247,27 @@
 				.movies .options .table .item {
 					border-bottom: 1px solid rgba(255,255,255,0.1);
 				}
+					.movies .options .table .item.ignored span {
+						text-decoration: line-through;
+						color: rgba(255,255,255,0.4);
+						text-shadow: none;
+					}
+					.movies .options .table .item.ignored .delete {
+						background-image: url('../images/icon.undo.png');
+					}
+
 				.movies .options .table .item:last-child { border: 0; }
-				.movies .options .table .item:nth-child(even) { 
+				.movies .options .table .item:nth-child(even) {
 					background: rgba(255,255,255,0.05);
 				}
-				.movies .options .table .item:not(.head):hover { 
+				.movies .options .table .item:not(.head):hover {
 					background: rgba(255,255,255,0.03);
 				}
-				
+
 					.movies .options .table .item > * {
 						display: inline-block;
 						padding: 0 5px;
-						width: 50px;
+						width: 60px;
 						min-height: 24px;
 						white-space: nowrap;
 						text-overflow: ellipsis;
@@ -174,21 +279,21 @@
 							border: 0;
 						}
 						.movies .options .table .provider {
-							width: 120px;
+							width: 130px;
 						}
 						.movies .options .table .name {
-							width: 360px;
+							width: 370px;
 							overflow: hidden;
 							text-align: left;
 							padding: 0 10px;
 						}
-						.movies .options .table.files .name { width: 598px; }
-						.movies .options .table .type { width: 120px; }
-						.movies .options .table .is_available { width: 80px; }
-						
+						.movies .options .table.files .name { width: 605px; }
+						.movies .options .table .type { width: 130px; }
+						.movies .options .table .is_available { width: 90px; }
+
 						.movies .options .table a {
-							width: 16px !important;
-							height: 16px;
+							width: 30px !important;
+							height: 20px;
 							opacity: 0.8;
 						}
 						.movies .options .table a:hover {
@@ -202,7 +307,7 @@
 					padding-bottom: 4px;
 					height: auto;
 				}
-				
+
 		.movies .load_more {
 			display: block;
 			padding: 10px;
@@ -214,10 +319,23 @@
 			}
 
 .movies .alph_nav {
-	overflow: hidden;
+	transition: box-shadow .4s linear;
+	position: fixed;
+	z-index: 2;
+	top: 0;
+	padding: 100px 60px 7px;
+	width: 1080px;
+	margin: 0 -60px;
+	box-shadow:  0 20px 20px -22px rgba(0,0,0,0.1);
 }
-	
-.movies .alph_nav ul {
+
+	.movies .alph_nav.float {
+		box-shadow:  0 30px 30px -32px rgba(0,0,0,0.5);
+		border-radius: 0;
+		background: #4e5969;
+	}
+
+.movies .alph_nav ul.numbers, .movies .alph_nav ul.actions {
 	list-style: none;
 	padding: 0 0 1px;
 	margin: 0;
@@ -225,30 +343,129 @@
 	user-select: none;
 }
 
-	.movies .alph_nav li {
+	.movies .alph_nav .numbers li, .movies .alph_nav .actions li {
 		display: inline-block;
 		vertical-align: top;
-		width: 24px;
+		width: 22px;
 		height: 24px;
 		line-height: 26px;
 		text-align: center;
 		cursor: pointer;
-		color: #666;
+		color: rgba(255,255,255,0.2);
 		border: 1px solid transparent;
+		transition: all 0.1s ease-in-out;
+		text-shadow: none;
 	}
-		.movies .alph_nav li:first-child {
-			width: 34px;
-		}
-		.movies .alph_nav li.active, .movies .alph_nav li:hover {
-			font-weight: bolder;
-			color: #fff;
+		.movies .alph_nav .numbers li:first-child {
+			width: 43px;
+			margin-left: 7px;
 		}
 		.movies .alph_nav li.available {
-			color: #fff;
+			color: rgba(255,255,255,0.8);
+			font-weight: bolder;
+
 		}
-		
+		.movies .alph_nav li.active.available, .movies .alph_nav li.available:hover {
+			color: #fff;
+			font-size: 24px;
+			line-height: 24px;
+		}
+
 	.movies .alph_nav input {
 		padding: 6px 5px;
-		margin: 0;
-		float: right;
+		margin: 0 0 0 6px;
+		float: left;
+		width: 155px;
+		height: 25px;
 	}
+
+	.movies .alph_nav .actions {
+		margin: 0 6px 0 0;
+		-moz-user-select: none;
+	}
+		.movies .alph_nav .actions li {
+			border-radius: 1px;
+			width: auto;
+		}
+		.movies .alph_nav .actions li.active {
+			background: none;
+			border: 1px solid transparent;
+			box-shadow: none;
+		}
+		.movies .alph_nav .actions li span {
+			display: block;
+			background: url('../images/sprite.png') no-repeat;
+			width: 25px;
+			height: 100%;
+		}
+
+			.movies .alph_nav .actions li.mass_edit span {
+				background-position: 3px 3px;
+			}
+
+			.movies .alph_nav .actions li.list span {
+				background-position: 3px -95px;
+			}
+
+			.movies .alph_nav .actions li.thumbs span {
+				background-position: 3px -74px;
+			}
+
+		.movies .alph_nav .actions li:first-child {
+			border-radius: 3px 0 0 3px;
+		}
+		.movies .alph_nav .actions li:last-child {
+			border-radius: 0 3px 3px 0;
+		}
+
+	.movies .alph_nav .mass_edit_form {
+		clear: both;
+		text-align: center;
+		display: none;
+	}
+		.movies.mass_edit_list .mass_edit_form {
+			display: block;
+		}
+			.movies.mass_edit_list .mass_edit_form .select {
+				float: left;
+				margin: 5px 0 0 5px;
+				font-size: 14px;
+			}
+				.movies.mass_edit_list .mass_edit_form .select span {
+					vertical-align: middle;
+					opacity: 0.7;
+				}
+				.movies.mass_edit_list .mass_edit_form .select .count {
+					font-weight: bold;
+					margin: 0 3px 0 10px;
+				}
+
+		.movies .alph_nav .mass_edit_form .quality {
+			float: left;
+			padding: 8px 0 0;
+			margin: 0 0 0 16px;
+		}
+			.movies .alph_nav .mass_edit_form .quality select {
+				width: 120px;
+				margin-right: 5px;
+			}
+			.movies .alph_nav .mass_edit_form .button {
+				padding: 3px 7px;
+			}
+
+		.movies .alph_nav .mass_edit_form .delete {
+			float: left;
+			padding: 8px 0 0 8px;
+		}
+
+			.movies .alph_nav .mass_edit_form .delete span {
+				margin: 0 10px 0 0;
+			}
+
+	.movies .alph_nav .more_menu {
+		margin-left: 48px;
+	}
+
+		.movies .alph_nav .more_menu > a {
+			background-position: center -157px;
+		}

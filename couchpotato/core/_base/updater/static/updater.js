@@ -76,32 +76,10 @@ var UpdaterBase = new Class({
 
 		Api.request('updater.update', {
 			'onComplete': function(json){
-
 				if(json.success){
-					App.restart();
-
-					$(document.body).set('spin', {
-						'message': 'Updating'
-					});
-					$(document.body).spin();
-
-					var checks = 0;
-					var interval = 0;
-					interval = setInterval(function(){
-						Api.request('', {
-							'onSuccess': function(){
-								if(checks > 2){
-									clearInterval(interval);
-									$(document.body).unspin();
-									self.info();
-								}
-							}
-						});
-						checks++;
-					}, 500)
-
+					App.restart('Please wait while CouchPotato is being updated with more awesome stuff.', 'Updating');
+					App.checkAvailable.delay(500, App);
 				}
-
 			}
 		});
 	}

@@ -20,8 +20,10 @@ class Newznab(NZBProvider, RSS):
     }
 
     cat_ids = [
+        ([2010], ['dvdr']),
         ([2030], ['cam', 'ts', 'dvdrip', 'tc', 'r5', 'scr']),
         ([2040], ['720p', '1080p']),
+        ([2050], ['bd50']),
     ]
     cat_backup_id = 2000
 

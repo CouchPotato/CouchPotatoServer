@@ -6,6 +6,7 @@ def start():
 
 config = [{
     'name': 'core',
+    'order': 1,
     'groups': [
         {
             'tab': 'general',
@@ -54,7 +55,7 @@ config = [{
                     'name': 'api_key',
                     'default': uuid4().hex,
                     'readonly': 1,
-                    'description': "This is top-secret! Don't share this!",
+                    'description': 'Let 3rd party app do stuff. <a target="_self" href="/docs/">Docs</a>',
                 },
                 {
                     'name': 'debug',
@@ -80,13 +81,13 @@ config = [{
                 },
                 {
                     'name': 'permission_folder',
-                    'default': 0755,
+                    'default': '0755',
                     'label': 'Folder CHMOD',
-                    'description': 'Permission (decimal) for creating/copying folders. 0755 => 593, 0777 => 511',
+                    'description': 'Can be either decimal (493) or octal (leading zero: 0755)',
                 },
                 {
                     'name': 'permission_file',
-                    'default': 0755,
+                    'default': '0755',
                     'label': 'File CHMOD',
                     'description': 'Same as Folder CHMOD but for files',
                 },
