@@ -3,6 +3,7 @@ from .main import SonyPS3
 def start():
     return SonyPS3()
 
+"""
 config = [{
     'name': 'sonyps3',
     'groups': [
@@ -27,3 +28,4 @@ config = [{
         },
     ],
 }]
+"""

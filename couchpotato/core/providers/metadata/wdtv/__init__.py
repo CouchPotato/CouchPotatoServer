@@ -2,7 +2,7 @@ from .main import WDTV
 
 def start():
     return WDTV()
-
+"""
 config = [{
     'name': 'wdtv',
     'groups': [
@@ -27,3 +27,4 @@ config = [{
         },
     ],
 }]
+"""
