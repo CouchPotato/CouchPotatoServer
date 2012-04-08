@@ -50,11 +50,11 @@ def split_path(path):
 
         # on Unix systems, the root folder is '/'
         if head == '/' and tail == '':
-            return [ '/' ] + result
+            return ['/'] + result
 
         # on Windows, the root folder is a drive letter (eg: 'C:\')
         if len(head) == 3 and head[1:] == ':\\' and tail == '':
-            return [ head ] + result
+            return [head] + result
 
         if head == '' and tail == '':
             return result
@@ -64,15 +64,8 @@ def split_path(path):
             path = head
             continue
 
-        result = [ tail ] + result
+        result = [tail] + result
         path = head
-
-
-def split_path_components(filename):
-    """Returns the filename split into [ dir*, basename, ext ]."""
-    result = split_path(filename)
-    basename = result.pop(-1)
-    return result + list(os.path.splitext(basename))
 
 
 def file_in_same_dir(ref_file, desired_file):
@@ -82,17 +75,17 @@ def file_in_same_dir(ref_file, desired_file):
     '~/smewt/smewt.settings'
 
     """
-    return os.path.join(*(split_path(ref_file)[:-1] + [ desired_file ]))
+    return os.path.join(*(split_path(ref_file)[:-1] + [desired_file]))
 
 
 def load_file_in_same_dir(ref_file, filename):
     """Load a given file. Works even when the file is contained inside a zip."""
-    path = split_path(ref_file)[:-1] + [ filename ]
+    path = split_path(ref_file)[:-1] + [filename]
 
     for i, p in enumerate(path):
         if p.endswith('.zip'):
-            zfilename = os.path.join(*path[:i+1])
+            zfilename = os.path.join(*path[:i + 1])
             zfile = zipfile.ZipFile(zfilename)
-            return zfile.read('/'.join(path[i+1:]))
+            return zfile.read('/'.join(path[i + 1:]))
 
     return open(os.path.join(*path)).read()

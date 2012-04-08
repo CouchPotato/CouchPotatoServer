@@ -15,9 +15,54 @@ import os
 import random
 import re
 import zlib
+from netrc import netrc, NetrcParseError
 
 from .compat import parse_http_list as _parse_list_header
-from .compat import quote, unquote, cookielib, SimpleCookie, is_py2
+from .compat import quote, cookielib, SimpleCookie, is_py2, urlparse
+from .compat import basestring, bytes, str
+
+
+NETRC_FILES = ('.netrc', '_netrc')
+
+
+def dict_to_sequence(d):
+    """Returns an internal sequence dictionary update."""
+
+    if hasattr(d, 'items'):
+        d = d.items()
+
+    return d
+
+
+def get_netrc_auth(url):
+    """Returns the Requests tuple auth for a given url from netrc."""
+
+    locations = (os.path.expanduser('~/{0}'.format(f)) for f in NETRC_FILES)
+    netrc_path = None
+
+    for loc in locations:
+        if os.path.exists(loc) and not netrc_path:
+            netrc_path = loc
+
+    # Abort early if there isn't one.
+    if netrc_path is None:
+        return netrc_path
+
+    ri = urlparse(url)
+
+    # Strip port numbers from netloc
+    host = ri.netloc.split(':')[0]
+
+    try:
+        _netrc = netrc(netrc_path).authenticators(host)
+        if _netrc:
+            # Return with login / password
+            login_i = (0 if _netrc[0] else 1)
+            return (_netrc[login_i], _netrc[2])
+    except (NetrcParseError, IOError, AttributeError):
+        # If there was a parsing error or a permissions issue reading the file,
+        # we'll just skip netrc auth
+        pass
 
 
 def dict_from_string(s):
@@ -25,19 +70,25 @@ def dict_from_string(s):
 
     cookies = dict()
 
-    c = SimpleCookie()
-    c.load(s)
+    try:
+        c = SimpleCookie()
+        c.load(s)
 
-    for k,v in list(c.items()):
-        cookies.update({k: v.value})
+        for k, v in list(c.items()):
+            cookies.update({k: v.value})
+    # This stuff is not to be trusted.
+    except Exception:
+        pass
 
     return cookies
+
 
 def guess_filename(obj):
     """Tries to guess the filename of the given object."""
     name = getattr(obj, 'name', None)
     if name and name[0] != '<' and name[-1] != '>':
         return name
+
 
 # From mitsuhiko/werkzeug (used with permission).
 def parse_list_header(value):
@@ -145,8 +196,14 @@ def header_expand(headers):
 
     if isinstance(headers, dict):
         headers = list(headers.items())
-
+    elif isinstance(headers, basestring):
+        return headers
     elif isinstance(headers, str):
+        # As discussed in https://github.com/kennethreitz/requests/issues/400
+        # latin-1 is the most conservative encoding used on the web. Anyone
+        # who needs more can encode to a byte-string before calling
+        return headers.encode("latin-1")
+    elif headers is None:
         return headers
 
     for i, (value, params) in enumerate(headers):
@@ -164,16 +221,14 @@ def header_expand(headers):
 
             collector.append('; '.join(_params))
 
-            if not len(headers) == i+1:
+            if not len(headers) == i + 1:
                 collector.append(', ')
-
 
     # Remove trailing separators.
     if collector[-1] in (', ', '; '):
         del collector[-1]
 
     return ''.join(collector)
-
 
 
 def randombytes(n):
@@ -286,23 +341,6 @@ def get_encoding_from_headers(headers):
         return 'ISO-8859-1'
 
 
-def unicode_from_html(content):
-    """Attempts to decode an HTML string into unicode.
-    If unsuccessful, the original content is returned.
-    """
-
-    encodings = get_encodings_from_content(content)
-
-    for encoding in encodings:
-
-        try:
-            return str(content, encoding)
-        except (UnicodeError, TypeError):
-            pass
-
-        return content
-
-
 def stream_decode_response_unicode(iterator, r):
     """Stream decodes a iterator."""
 
@@ -354,15 +392,6 @@ def get_unicode_from_response(r):
         return r.content
 
 
-def decode_gzip(content):
-    """Return gzip-decoded string.
-
-    :param content: bytestring to gzip-decode.
-    """
-
-    return zlib.decompress(content, 16 + zlib.MAX_WBITS)
-
-
 def stream_decompress(iterator, mode='gzip'):
     """
     Stream decodes an iterator over compressed data
@@ -390,18 +419,53 @@ def stream_decompress(iterator, mode='gzip'):
             yield chunk
     else:
         # Make sure everything has been returned from the decompression object
-        buf = dec.decompress('')
+        buf = dec.decompress(bytes())
         rv = buf + dec.flush()
         if rv:
             yield rv
 
 
-def requote_path(path):
-    """Re-quote the given URL path component.
+def stream_untransfer(gen, resp):
+    if 'gzip' in resp.headers.get('content-encoding', ''):
+        gen = stream_decompress(gen, mode='gzip')
+    elif 'deflate' in resp.headers.get('content-encoding', ''):
+        gen = stream_decompress(gen, mode='deflate')
 
-    This function passes the given path through an unquote/quote cycle to
+    return gen
+
+
+# The unreserved URI characters (RFC 3986)
+UNRESERVED_SET = frozenset(
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+    + "0123456789-._~")
+
+
+def unquote_unreserved(uri):
+    """Un-escape any percent-escape sequences in a URI that are unreserved
+    characters.
+    This leaves all reserved, illegal and non-ASCII bytes encoded.
+    """
+    parts = uri.split('%')
+    for i in range(1, len(parts)):
+        h = parts[i][0:2]
+        if len(h) == 2:
+            c = chr(int(h, 16))
+            if c in UNRESERVED_SET:
+                parts[i] = c + parts[i][2:]
+            else:
+                parts[i] = '%' + parts[i]
+        else:
+            parts[i] = '%' + parts[i]
+    return ''.join(parts)
+
+
+def requote_uri(uri):
+    """Re-quote the given URI.
+
+    This function passes the given URI through an unquote/quote cycle to
     ensure that it is fully and consistently quoted.
     """
-    parts = path.split(b"/")
-    parts = (quote(unquote(part), safe=b"") for part in parts)
-    return b"/".join(parts)
+    # Unquote only the unreserved characters
+    # Then quote only illegal characters (do not quote reserved, unreserved,
+    # or '%')
+    return quote(unquote_unreserved(uri), safe="!#$%&'()*+,/:;=?@[]~")

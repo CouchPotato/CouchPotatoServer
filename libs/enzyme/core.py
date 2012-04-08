@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # enzyme - Video metadata parser
-# Copyright (C) 2011 Antoine Bertin <diaoulael@gmail.com>
-# Copyright (C) 2003-2006 Thomas Schueppel <stain@acm.org>
-# Copyright (C) 2003-2006 Dirk Meyer <dischi@freevo.org>
+# Copyright 2011-2012 Antoine Bertin <diaoulael@gmail.com>
+# Copyright 2003-2006 Thomas Schueppel <stain@acm.org>
+# Copyright 2003-2006 Dirk Meyer <dischi@freevo.org>
 #
 # This file is part of enzyme.
 #
@@ -17,21 +17,14 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
-
-
+# along with enzyme.  If not, see <http://www.gnu.org/licenses/>.
 import re
 import logging
 import fourcc
 import language
-from exceptions import *
 from strutils import str_to_unicode, unicode_to_str
 
 UNPRINTABLE_KEYS = ['thumbnail', 'url', 'codec_private']
-EXTENSION_DEVICE = 'device'
-EXTENSION_DIRECTORY = 'directory'
-EXTENSION_STREAM = 'stream'
 MEDIACORE = ['title', 'caption', 'comment', 'size', 'type', 'subtype', 'timestamp',
              'keywords', 'country', 'language', 'langcode', 'url', 'artist',
              'mime', 'datetime', 'tags', 'hash']
@@ -52,8 +45,6 @@ log = logging.getLogger(__name__)
 
 
 class Media(object):
-    media = None
-
     """
     Media is the base class to all Media Metadata Containers. It defines
     the basic structures that handle metadata. Media and its derivates
@@ -61,10 +52,11 @@ class Media(object):
     Specific derivates contain additional keys to the dublin core set that is
     defined in Media.
     """
+    media = None
     _keys = MEDIACORE
     table_mapping = {}
 
-    def __init__(self, hash = None):
+    def __init__(self, hash=None):
         if hash is not None:
             # create Media based on dict
             for key, value in hash.items():
@@ -139,20 +131,21 @@ class Media(object):
                 result += '|    ' + re.sub(r'\n(.)', r'\n|    \1', unicode(item))
 
         # print tables
-        if log.level >= 10:
-            for name, table in self.tables.items():
-                result += '+-- Table %s\n' % str(name)
-                for key, value in table.items():
-                    try:
-                        value = unicode(value)
-                        if len(value) > 50:
-                            value = u'<unprintable data, size=%d>' % len(value)
-                    except (UnicodeDecodeError, TypeError), e:
-                        try:
-                            value = u'<unprintable data, size=%d>' % len(value)
-                        except AttributeError:
-                            value = u'<unprintable data>'
-                    result += u'|    | %s: %s\n' % (unicode(key), value)
+        #FIXME: WTH?
+#        if log.level >= 10:
+#            for name, table in self.tables.items():
+#                result += '+-- Table %s\n' % str(name)
+#                for key, value in table.items():
+#                    try:
+#                        value = unicode(value)
+#                        if len(value) > 50:
+#                            value = u'<unprintable data, size=%d>' % len(value)
+#                    except (UnicodeDecodeError, TypeError):
+#                        try:
+#                            value = u'<unprintable data, size=%d>' % len(value)
+#                        except AttributeError:
+#                            value = u'<unprintable data>'
+#                    result += u'|    | %s: %s\n' % (unicode(key), value)
         return result
 
     def __str__(self):
@@ -253,7 +246,7 @@ class Media(object):
         """
         return hasattr(self, key)
 
-    def get(self, attr, default = None):
+    def get(self, attr, default=None):
         """
         Returns the given attribute. If the attribute is not set by
         the parser return 'default'.
@@ -315,7 +308,7 @@ class Tag(object):
     Tag values are strings (for binary data), unicode objects, or datetime
     objects for tags that represent dates or times.
     """
-    def __init__(self, value = None, langcode = 'und', binary = False):
+    def __init__(self, value=None, langcode='und', binary=False):
         super(Tag, self).__init__()
         self.value = value
         self.langcode = langcode
@@ -363,7 +356,7 @@ class Tags(dict, Tag):
     The attribute RATING has a value (PG), but it also has a child tag
     COUNTRY that specifies the country code the rating belongs to.
     """
-    def __init__(self, value = None, langcode = 'und', binary = False):
+    def __init__(self, value=None, langcode='und', binary=False):
         super(Tags, self).__init__()
         self.value = value
         self.langcode = langcode
@@ -410,7 +403,7 @@ class Chapter(Media):
     """
     _keys = ['enabled', 'name', 'pos', 'id']
 
-    def __init__(self, name = None, pos = 0):
+    def __init__(self, name=None, pos=0):
         Media.__init__(self)
         self.name = name
         self.pos = pos
@@ -424,7 +417,7 @@ class Subtitle(Media):
     _keys = ['enabled', 'default', 'langcode', 'language', 'trackno', 'title',
              'id', 'codec']
 
-    def __init__(self, language = None):
+    def __init__(self, language=None):
         Media.__init__(self)
         self.language = language
 

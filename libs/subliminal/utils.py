@@ -1,44 +1,35 @@
 # -*- coding: utf-8 -*-
+# Copyright 2011-2012 Antoine Bertin <diaoulael@gmail.com>
 #
-# Subliminal - Subtitles, faster than your thoughts
-# Copyright (c) 2011 Antoine Bertin <diaoulael@gmail.com>
+# This file is part of subliminal.
 #
-# This file is part of Subliminal.
-#
-# Subliminal is free software; you can redistribute it and/or modify it under
-# the terms of the Lesser GNU General Public License as published by
+# subliminal is free software; you can redistribute it and/or modify it under
+# the terms of the GNU Lesser General Public License as published by
 # the Free Software Foundation; either version 3 of the License, or
 # (at your option) any later version.
 #
-# Subliminal is distributed in the hope that it will be useful,
+# subliminal is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# Lesser GNU General Public License for more details.
+# GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the Lesser GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
-__all__ = ['PluginConfig', 'get_keywords', 'split_keyword', 'NullHandler']
-
-
-import logging
+# You should have received a copy of the GNU Lesser General Public License
+# along with subliminal.  If not, see <http://www.gnu.org/licenses/>.
 import re
-try:
-    from logging import NullHandler
-except ImportError:
-    class NullHandler(logging.Handler):
-        def emit(self, record):
-            pass
 
 
-class PluginConfig(object):
-    def __init__(self, multi=None, cache_dir=None, filemode=None):
-        self.multi = multi
-        self.cache_dir = cache_dir
-        self.filemode = filemode
+__all__ = ['get_keywords', 'split_keyword', 'to_unicode']
 
 
 def get_keywords(guess):
+    """Retrieve keywords from guessed informations
+
+    :param guess: guessed informations
+    :type guess: :class:`guessit.guess.Guess`
+    :return: lower case alphanumeric keywords
+    :rtype: set
+
+    """
     keywords = set()
     for k in ['releaseGroup', 'screenSize', 'videoCodec', 'format']:
         if k in guess:
@@ -47,5 +38,27 @@ def get_keywords(guess):
 
 
 def split_keyword(keyword):
+    """Split a keyword in multiple ones on any non-alphanumeric character
+
+    :param string keyword: keyword
+    :return: keywords
+    :rtype: set
+
+    """
     split = set(re.findall(r'\w+', keyword))
     return split
+
+
+def to_unicode(data):
+    """Convert a basestring to unicode
+
+    :param basestring data: data to decode
+    :return: data as unicode
+    :rtype: unicode
+
+    """
+    if not isinstance(data, basestring):
+        raise ValueError('Basestring expected')
+    if isinstance(data, unicode):
+        return data
+    return unicode(data, 'utf-8', 'replace')

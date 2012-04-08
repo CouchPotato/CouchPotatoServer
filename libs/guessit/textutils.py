@@ -18,47 +18,59 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from guessit.patterns import sep, deleted
+from guessit.patterns import sep
 import copy
 
 # string-related functions
 
+
 def strip_brackets(s):
     if not s:
         return s
-    if s[0] == '[' and s[-1] == ']': return s[1:-1]
-    if s[0] == '(' and s[-1] == ')': return s[1:-1]
-    if s[0] == '{' and s[-1] == '}': return s[1:-1]
+
+    if ((s[0] == '[' and s[-1] == ']') or
+        (s[0] == '(' and s[-1] == ')') or
+        (s[0] == '{' and s[-1] == '}')):
+        return s[1:-1]
+
     return s
 
 
 def clean_string(s):
-    for c in sep:
+    for c in sep[:-2]: # do not remove dashes ('-')
         s = s.replace(c, ' ')
     parts = s.split()
-    return ' '.join(p for p in parts if p != '')
+    result = ' '.join(p for p in parts if p != '')
+
+    # now also remove dashes on the outer part of the string
+    while result and result[0] in sep:
+        result = result[1:]
+    while result and result[-1] in sep:
+        result = result[:-1]
+
+    return result
 
 
 def str_replace(string, pos, c):
     return string[:pos] + c + string[pos+1:]
 
-def blank_region(string, region, blank_sep = deleted):
+
+def str_fill(string, region, c):
     start, end = region
-    return string[:start] + blank_sep * (end - start) + string[end:]
+    return string[:start] + c * (end - start) + string[end:]
 
-
-def between(s, left, right):
-    return s.split(left)[1].split(right)[0]
 
 def to_utf8(o):
-    '''converts all unicode strings found in the given object to utf-8 strings'''
+    """Convert all unicode strings found in the given object to utf-8
+    strings."""
 
     if isinstance(o, unicode):
         return o.encode('utf-8')
     elif isinstance(o, list):
         return [ to_utf8(i) for i in o ]
     elif isinstance(o, dict):
-        result = copy.deepcopy(o) # need to do it like that to handle Guess instances correctly
+        # need to do it like that to handle Guess instances correctly
+        result = copy.deepcopy(o)
         for key, value in o.items():
             result[to_utf8(key)] = to_utf8(value)
         return result
@@ -68,8 +80,10 @@ def to_utf8(o):
 
 
 def levenshtein(a, b):
-    if not a: return len(b)
-    if not b: return len(a)
+    if not a:
+        return len(b)
+    if not b:
+        return len(a)
 
     m = len(a)
     n = len(b)
@@ -160,14 +174,13 @@ def split_on_groups(string, groups):
     if boundaries[-1] != len(string):
         boundaries.append(len(string))
 
-    groups = [ string[start:end] for start, end in zip(boundaries[:-1], boundaries[1:]) ]
+    groups = [ string[start:end] for start, end in zip(boundaries[:-1],
+                                                       boundaries[1:]) ]
 
-    return filter(bool, groups) # return only non-empty groups
+    return [ g for g in groups if g ] # return only non-empty groups
 
 
-
-
-def find_first_level_groups(string, enclosing, blank_sep = None):
+def find_first_level_groups(string, enclosing, blank_sep=None):
     """Return a list of groups that could be split because of explicit grouping.
     The groups are delimited by the given enclosing characters.
 
@@ -203,8 +216,3 @@ def find_first_level_groups(string, enclosing, blank_sep = None):
             string = str_replace(string, end-1, blank_sep)
 
     return split_on_groups(string, groups)
-
-
-
-
-

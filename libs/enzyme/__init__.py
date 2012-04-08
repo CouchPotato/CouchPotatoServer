@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # enzyme - Video metadata parser
-# Copyright (C) 2011 Antoine Bertin <diaoulael@gmail.com>
-# Copyright (C) 2003-2006 Thomas Schueppel <stain@acm.org>
-# Copyright (C) 2003-2006 Dirk Meyer <dischi@freevo.org>
+# Copyright 2011-2012 Antoine Bertin <diaoulael@gmail.com>
+# Copyright 2003-2006 Thomas Schueppel <stain@acm.org>
+# Copyright 2003-2006 Dirk Meyer <dischi@freevo.org>
 #
 # This file is part of enzyme.
 #
@@ -17,13 +17,12 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
-
+# along with enzyme.  If not, see <http://www.gnu.org/licenses/>.
 import mimetypes
 import os
 import sys
 from exceptions import *
+
 
 PARSERS = [('asf', ['video/asf'], ['asf', 'wmv', 'wma']),
            ('flv', ['video/flv'], ['flv']),
@@ -32,10 +31,18 @@ PARSERS = [('asf', ['video/asf'], ['asf', 'wmv', 'wma']),
            ('mpeg', ['video/mpeg'], ['mpeg', 'mpg', 'mp4', 'ts']),
            ('ogm', ['application/ogg'], ['ogm', 'ogg', 'ogv']),
            ('real', ['video/real'], ['rm', 'ra', 'ram']),
-           ('riff', ['video/avi'], ['wav', 'avi'])]
+           ('riff', ['video/avi'], ['wav', 'avi'])
+]
 
 
 def parse(path):
+    """Parse metadata of the given video
+
+    :param string path: path to the video file to parse
+    :return: a parser corresponding to the video's mimetype or extension
+    :rtype: :class:`~enzyme.core.AVContainer`
+
+    """
     if not os.path.isfile(path):
         raise ValueError('Invalid path')
     extension = os.path.splitext(path)[1][1:]
@@ -47,7 +54,7 @@ def parse(path):
             parser_mime = parser_name
         if extension in parser_extensions:
             parser_ext = parser_name
-    parser =  parser_mime or parser_ext
+    parser = parser_mime or parser_ext
     if not parser:
         raise NoParserError()
     mod = __import__(parser, globals=globals(), locals=locals(), fromlist=[], level=-1)

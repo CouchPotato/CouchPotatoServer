@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # enzyme - Video metadata parser
-# Copyright (C) 2011 Antoine Bertin <diaoulael@gmail.com>
-# Copyright (C) 2003-2006 Dirk Meyer <dischi@freevo.org>
+# Copyright 2011-2012 Antoine Bertin <diaoulael@gmail.com>
+# Copyright 2003-2006 Dirk Meyer <dischi@freevo.org>
 #
 # This file is part of enzyme.
 #
@@ -16,10 +16,7 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
-
-
+# along with enzyme.  If not, see <http://www.gnu.org/licenses/>.
 import string
 import re
 import struct

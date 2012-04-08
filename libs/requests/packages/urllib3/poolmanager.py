@@ -39,11 +39,11 @@ class PoolManager(RequestMethods):
 
     Example: ::
 
-        >>> manager = PoolManager()
+        >>> manager = PoolManager(num_pools=2)
         >>> r = manager.urlopen("http://google.com/")
         >>> r = manager.urlopen("http://google.com/mail")
         >>> r = manager.urlopen("http://yahoo.com/")
-        >>> len(r.pools)
+        >>> len(manager.pools)
         2
 
     """
@@ -117,9 +117,19 @@ class ProxyManager(RequestMethods):
     def __init__(self, proxy_pool):
         self.proxy_pool = proxy_pool
 
+    def _set_proxy_headers(self, headers=None):
+        headers = headers or {}
+
+        # Same headers are curl passes for --proxy1.0
+        headers['Accept'] = '*/*'
+        headers['Proxy-Connection'] = 'Keep-Alive'
+
+        return headers
+
     def urlopen(self, method, url, **kw):
         "Same as HTTP(S)ConnectionPool.urlopen, ``url`` must be absolute."
         kw['assert_same_host'] = False
+        kw['headers'] = self._set_proxy_headers(kw.get('headers'))
         return self.proxy_pool.urlopen(method, url, **kw)
 
 

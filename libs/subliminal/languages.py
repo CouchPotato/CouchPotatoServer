@@ -1,29 +1,34 @@
 # -*- coding: utf-8 -*-
+# Copyright 2011-2012 Antoine Bertin <diaoulael@gmail.com>
 #
-# Subliminal - Subtitles, faster than your thoughts
-# Copyright (c) 2011 Antoine Bertin <diaoulael@gmail.com>
+# This file is part of subliminal.
 #
-# This file is part of Subliminal.
-#
-# Subliminal is free software; you can redistribute it and/or modify it under
-# the terms of the Lesser GNU General Public License as published by
+# subliminal is free software; you can redistribute it and/or modify it under
+# the terms of the GNU Lesser General Public License as published by
 # the Free Software Foundation; either version 3 of the License, or
 # (at your option) any later version.
 #
-# Subliminal is distributed in the hope that it will be useful,
+# subliminal is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# Lesser GNU General Public License for more details.
+# GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the Lesser GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
+# You should have received a copy of the GNU Lesser General Public License
+# along with subliminal.  If not, see <http://www.gnu.org/licenses/>.
 __all__ = ['convert_language', 'list_languages', 'LANGUAGES']
 
 
 def convert_language(language, to_iso, from_iso=None):
-    # if no from_iso is given, try to guess it
-    if from_iso == None:
+    """Convert a language into another format
+
+    :param string language: language
+    :param int to_iso: convert language to ISO-639-x
+    :param int from_iso: convert language from ISO-639-x
+    :return: converted language
+    :rtype: string
+
+    """
+    if from_iso == None:  # if no from_iso is given, try to guess it
         if language.startswith(language[:1].upper()):
             from_iso = 0
         elif len(language) == 2:
@@ -43,10 +48,17 @@ def convert_language(language, to_iso, from_iso=None):
 
 
 def list_languages(iso):
+    """List languages in the given ISO-639-x format
+
+    :param int iso: ISO-639-x format to list
+    :return: languages in the requested format
+    :rtype: list
+
+    """
     return [l[iso] for l in LANGUAGES if l[iso]]
 
-# ISO-639-2 languages list from http://www.loc.gov/standards/iso639-2/ISO-639-2_utf-8.txt
-# + ('Brazilian', 'po', 'pob')
+#: ISO-639-2 languages list from http://www.loc.gov/standards/iso639-2/ISO-639-2_utf-8.txt
+#: + ('Brazilian', 'po', 'pob')
 LANGUAGES = [('Afar', 'aa', 'aar'),
              ('Abkhazian', 'ab', 'abk'),
              ('Achinese', '', 'ace'),

@@ -40,7 +40,7 @@ def merge_kwargs(local_kwarg, default_kwarg):
     kwargs.update(local_kwarg)
 
     # Remove keys that are set to None.
-    for (k,v) in list(local_kwarg.items()):
+    for (k, v) in list(local_kwarg.items()):
         if v is None:
             del kwargs[k]
 
@@ -52,7 +52,7 @@ class Session(object):
 
     __attrs__ = [
         'headers', 'cookies', 'auth', 'timeout', 'proxies', 'hooks',
-        'params', 'config']
+        'params', 'config', 'verify', 'cert']
 
 
     def __init__(self,
@@ -64,7 +64,9 @@ class Session(object):
         hooks=None,
         params=None,
         config=None,
-        verify=True):
+        prefetch=False,
+        verify=True,
+        cert=None):
 
         self.headers = headers or {}
         self.cookies = cookies or {}
@@ -74,15 +76,14 @@ class Session(object):
         self.hooks = hooks or {}
         self.params = params or {}
         self.config = config or {}
+        self.prefetch = prefetch
         self.verify = verify
+        self.cert = cert
 
         for (k, v) in list(defaults.items()):
             self.config.setdefault(k, v)
 
-        self.poolmanager = PoolManager(
-            num_pools=self.config.get('pool_connections'),
-            maxsize=self.config.get('pool_maxsize')
-        )
+        self.init_poolmanager()
 
         # Set up a CookieJar to be used by default
         self.cookies = {}
@@ -90,6 +91,12 @@ class Session(object):
         # Add passed cookies in.
         if cookies is not None:
             self.cookies.update(cookies)
+
+    def init_poolmanager(self):
+        self.poolmanager = PoolManager(
+            num_pools=self.config.get('pool_connections'),
+            maxsize=self.config.get('pool_maxsize')
+        )
 
     def __repr__(self):
         return '<requests-client at 0x%x>' % (id(self))
@@ -108,13 +115,14 @@ class Session(object):
         files=None,
         auth=None,
         timeout=None,
-        allow_redirects=False,
+        allow_redirects=True,
         proxies=None,
         hooks=None,
         return_response=True,
         config=None,
         prefetch=False,
-        verify=None):
+        verify=None,
+        cert=None):
 
         """Constructs and sends a :class:`Request <Request>`.
         Returns :class:`Response <Response>` object.
@@ -128,12 +136,13 @@ class Session(object):
         :param files: (optional) Dictionary of 'filename': file-like-objects for multipart encoding upload.
         :param auth: (optional) Auth tuple to enable Basic/Digest/Custom HTTP Auth.
         :param timeout: (optional) Float describing the timeout of the request.
-        :param allow_redirects: (optional) Boolean. Set to True if POST/PUT/DELETE redirect following is allowed.
+        :param allow_redirects: (optional) Boolean. Set to True by default.
         :param proxies: (optional) Dictionary mapping protocol to the URL of the proxy.
         :param return_response: (optional) If False, an un-sent Request object will returned.
         :param config: (optional) A configuration dictionary.
         :param prefetch: (optional) if ``True``, the response content will be immediately downloaded.
         :param verify: (optional) if ``True``, the SSL cert will be verified. A CA_BUNDLE path can also be provided.
+        :param cert: (optional) if String, path to ssl client cert file (.pem). If Tuple, ('cert', 'key') pair.
         """
 
         method = str(method).upper()
@@ -145,9 +154,7 @@ class Session(object):
         headers = {} if headers is None else headers
         params = {} if params is None else params
         hooks = {} if hooks is None else hooks
-
-        if verify is None:
-            verify = self.verify
+        prefetch = self.prefetch or prefetch
 
         # use session's hooks as defaults
         for key, cb in list(self.hooks.items()):
@@ -173,6 +180,7 @@ class Session(object):
             proxies=proxies,
             config=config,
             verify=verify,
+            cert=cert,
             _poolmanager=self.poolmanager
         )
 
@@ -210,7 +218,7 @@ class Session(object):
         """Sends a GET request. Returns :class:`Response` object.
 
         :param url: URL for the new :class:`Request` object.
-        :param **kwargs: Optional arguments that ``request`` takes.
+        :param \*\*kwargs: Optional arguments that ``request`` takes.
         """
 
         kwargs.setdefault('allow_redirects', True)
@@ -221,7 +229,7 @@ class Session(object):
         """Sends a OPTIONS request. Returns :class:`Response` object.
 
         :param url: URL for the new :class:`Request` object.
-        :param **kwargs: Optional arguments that ``request`` takes.
+        :param \*\*kwargs: Optional arguments that ``request`` takes.
         """
 
         kwargs.setdefault('allow_redirects', True)
@@ -232,10 +240,10 @@ class Session(object):
         """Sends a HEAD request. Returns :class:`Response` object.
 
         :param url: URL for the new :class:`Request` object.
-        :param **kwargs: Optional arguments that ``request`` takes.
+        :param \*\*kwargs: Optional arguments that ``request`` takes.
         """
 
-        kwargs.setdefault('allow_redirects', True)
+        kwargs.setdefault('allow_redirects', False)
         return self.request('head', url, **kwargs)
 
 
@@ -244,7 +252,7 @@ class Session(object):
 
         :param url: URL for the new :class:`Request` object.
         :param data: (optional) Dictionary or bytes to send in the body of the :class:`Request`.
-        :param **kwargs: Optional arguments that ``request`` takes.
+        :param \*\*kwargs: Optional arguments that ``request`` takes.
         """
 
         return self.request('post', url, data=data, **kwargs)
@@ -255,7 +263,7 @@ class Session(object):
 
         :param url: URL for the new :class:`Request` object.
         :param data: (optional) Dictionary or bytes to send in the body of the :class:`Request`.
-        :param **kwargs: Optional arguments that ``request`` takes.
+        :param \*\*kwargs: Optional arguments that ``request`` takes.
         """
 
         return self.request('put', url, data=data, **kwargs)
@@ -266,7 +274,7 @@ class Session(object):
 
         :param url: URL for the new :class:`Request` object.
         :param data: (optional) Dictionary or bytes to send in the body of the :class:`Request`.
-        :param **kwargs: Optional arguments that ``request`` takes.
+        :param \*\*kwargs: Optional arguments that ``request`` takes.
         """
 
         return self.request('patch', url,  data=data, **kwargs)
@@ -276,10 +284,19 @@ class Session(object):
         """Sends a DELETE request. Returns :class:`Response` object.
 
         :param url: URL for the new :class:`Request` object.
-        :param **kwargs: Optional arguments that ``request`` takes.
+        :param \*\*kwargs: Optional arguments that ``request`` takes.
         """
 
         return self.request('delete', url, **kwargs)
+
+    def __getstate__(self):
+        return dict((attr, getattr(self, attr, None)) for attr in self.__attrs__)
+
+    def __setstate__(self, state):
+        for attr, value in state.items():
+            setattr(self, attr, value)
+
+        self.init_poolmanager()
 
 
 def session(**kwargs):
