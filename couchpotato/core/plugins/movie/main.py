@@ -264,7 +264,8 @@ class MoviePlugin(Plugin):
         if not m:
             m = Movie(
                 library_id = library.get('id'),
-                profile_id = params.get('profile_id', default_profile.get('id'))
+                profile_id = params.get('profile_id', default_profile.get('id')),
+                status_id = status_active.get('id'),
             )
             db.add(m)
             fireEvent('library.update', params.get('identifier'), default_title = params.get('title', ''))
