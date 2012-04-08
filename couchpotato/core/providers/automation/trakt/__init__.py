@@ -10,7 +10,7 @@ config = [{
             'tab': 'automation',
             'name': 'trakt_automation',
             'label': 'Trakt',
-            'description': 'from watchlist',
+            'description': 'import movies from your own watchlist',
             'options': [
                 {
                     'name': 'automation_enabled',
