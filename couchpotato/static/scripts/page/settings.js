@@ -574,7 +574,7 @@ Option.Directory = new Class({
 
 		self.el.adopt(
 			self.createLabel(),
-			new Element('span.directory.inlay', {
+			self.directory_inlay = new Element('span.directory.inlay', {
 				'events': {
 					'click': self.showBrowser.bind(self)
 				}
@@ -664,7 +664,7 @@ Option.Directory = new Class({
 						}
 					})
 				)
-			).inject(self.input, 'before');
+			).inject(self.directory_inlay, 'before');
 
 			new Form.Check(self.show_hidden);
 		}
