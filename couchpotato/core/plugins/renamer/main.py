@@ -192,11 +192,16 @@ class Renamer(Plugin):
                             if file_type is 'leftover':
                                 if self.conf('move_leftover'):
                                     rename_files[current_file] = os.path.join(destination, final_folder_name, os.path.basename(current_file))
-                            else:
+                            elif file_type not in ['subtitle']:
                                 rename_files[current_file] = os.path.join(destination, final_folder_name, final_file_name)
 
                         # Check for extra subtitle files
                         if file_type is 'subtitle':
+
+                            # rename subtitles with or without language
+                            #rename_files[current_file] = os.path.join(destination, final_folder_name, final_file_name)
+                            sub_langs = group['subtitle_language'].get(current_file)
+
                             rename_extras = self.getRenameExtras(
                                 extra_type = 'subtitle_extra',
                                 replacements = replacements,
@@ -206,6 +211,14 @@ class Renamer(Plugin):
                                 group = group,
                                 current_file = current_file
                             )
+
+                            # Don't add language if multiple languages in 1 file
+                            if len(sub_langs) > 1:
+                                rename_files[current_file] = os.path.join(destination, final_folder_name, final_file_name)
+                            elif len(sub_langs) == 1:
+                                sub_name = final_file_name.replace(replacements['ext'], '%s.%s' % (sub_langs[0], replacements['ext']))
+                                rename_files[current_file] = os.path.join(destination, final_folder_name, sub_name)
+
                             rename_files = mergeDicts(rename_files, rename_extras)
 
                         # Filename without cd etc
