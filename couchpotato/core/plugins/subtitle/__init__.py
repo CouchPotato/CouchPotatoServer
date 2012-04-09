@@ -20,14 +20,14 @@ config = [{
                 },
                 {
                     'name': 'languages',
-                    'description': 'The languages you want to download the sub',
+                    'description': 'Comma separated, 2 letter country code. Example: en, nl',
                 },
-                {
-                    'name': 'automatic',
-                    'default': True,
-                    'type': 'bool',
-                    'description': 'Automaticly search & download for movies in library',
-                },
+#                {
+#                    'name': 'automatic',
+#                    'default': True,
+#                    'type': 'bool',
+#                    'description': 'Automaticly search & download for movies in library',
+#                },
             ],
         },
     ],
