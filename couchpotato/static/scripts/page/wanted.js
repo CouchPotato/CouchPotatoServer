@@ -150,7 +150,7 @@ window.addEvent('domready', function(){
 				var self = this;
 
 				self.el = new Element('a.delete', {
-					'title': 'Remove the movie from your wanted list',
+					'title': 'Remove the movie from this CP list',
 					'events': {
 						'click': self.showConfirm.bind(self)
 					}
@@ -286,6 +286,7 @@ window.addEvent('domready', function(){
 			},
 
 		})
+		,'Delete': MovieActions.Wanted.Delete
 	};
 
 })
