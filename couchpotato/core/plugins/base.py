@@ -29,6 +29,8 @@ class Plugin(object):
 
     http_last_use = {}
     http_time_between_calls = 0
+    http_failed_request = {}
+    http_failed_disabled = {}
 
     def registerPlugin(self):
         addEvent('app.shutdown', self.doShutdown)
@@ -101,6 +103,16 @@ class Plugin(object):
             headers['User-Agent'] = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.7; rv:10.0.2) Gecko/20100101 Firefox/10.0.2'
 
         host = urlparse(url).hostname
+
+        # Don't try for failed requests
+        if self.http_failed_disabled.get(host, 0) > 0:
+            if self.http_failed_disabled[host] > (time.time() - 900):
+                log.info('Disabled calls to %s for 15 minutes because so many failed requests.' % host)
+                raise Exception
+            else:
+                del self.http_failed_request[host]
+                del self.http_failed_disabled[host]
+
         self.wait(host)
 
         try:
@@ -122,6 +134,21 @@ class Plugin(object):
         except IOError:
             if show_error:
                 log.error('Failed opening url in %s: %s %s' % (self.getName(), url, traceback.format_exc(1)))
+
+            # Save failed requests by hosts
+            try:
+                if not self.http_failed_request.get(host):
+                    self.http_failed_request[host] = 1
+                else:
+                    self.http_failed_request[host] += 1
+
+                    # Disable temporarily
+                    if self.http_failed_request[host] > 5:
+                        self.http_failed_disabled[host] = time.time()
+
+            except:
+                log.debug('Failed logging failed requests for %s: %s' % (url, traceback.format_exc()))
+
             raise
 
         self.http_last_use[host] = time.time()
