@@ -69,6 +69,8 @@ class IMDBAPI(MovieProvider):
                 if tmp_movie.get(key).lower() == 'n/a':
                     del movie[key]
 
+            year = tryInt(movie.get('Year', ''))
+
             movie_data = {
                 'titles': [movie.get('Title')] if movie.get('Title') else [],
                 'original_title': movie.get('Title', ''),
@@ -82,7 +84,7 @@ class IMDBAPI(MovieProvider):
                 'imdb': str(movie.get('ID', '')),
                 'runtime': self.runtimeToMinutes(movie.get('Runtime', '')),
                 'released': movie.get('Released', ''),
-                'year': movie.get('Year', ''),
+                'year': year if isinstance(year, (int)) else None,
                 'plot': movie.get('Plot', ''),
                 'genres': movie.get('Genre', '').split(','),
                 'directors': movie.get('Director', '').split(','),
