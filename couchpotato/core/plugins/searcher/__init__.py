@@ -77,7 +77,7 @@ config = [{
             'options': [
                 {
                     'name': 'retention',
-                    'default': 350,
+                    'default': 1000,
                     'type': 'int',
                     'unit': 'days'
                 },

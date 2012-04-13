@@ -19,16 +19,16 @@ config = [{
                 },
                 {
                     'name': 'use',
-                    'default': '0'
+                    'default': '0,0,0'
                 },
                 {
                     'name': 'host',
-                    'default': 'nzb.su',
+                    'default': 'nzb.su,dognzb.cr,beta.nzbs.org',
                     'description': 'The hostname of your newznab provider',
                 },
                 {
                     'name': 'api_key',
-                    'default': '',
+                    'default': ',,',
                     'label': 'Api Key',
                     'description': 'Can be found on your profile page',
                     'type': 'combined',
