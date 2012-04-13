@@ -85,7 +85,6 @@ class Newznab(NZBProvider, RSS):
             'imdbid': movie['library']['identifier'].replace('tt', ''),
             'cat': cat_id[0],
             'apikey': host['api_key'],
-            't': self.urls['search'],
             'extended': 1
         })
         url = "%s&%s" % (self.getUrl(host['host'], self.urls['search']), arguments)
@@ -121,8 +120,8 @@ class Newznab(NZBProvider, RSS):
                         elif item.attrib.get('name') == 'usenetdate':
                             date = item.attrib.get('value')
 
-                    if date is '': log.info('Date not parsed properly or not available for %s: %s' % (host, self.getTextElement(nzb, "title")))
-                    if size is 0: log.info('Size not parsed properly or not available for %s: %s' % (host, self.getTextElement(nzb, "title")))
+                    if date is '': log.info('Date not parsed properly or not available for %s: %s' % (host['host'], self.getTextElement(nzb, "title")))
+                    if size is 0: log.info('Size not parsed properly or not available for %s: %s' % (host['host'], self.getTextElement(nzb, "title")))
 
                     id = self.getTextElement(nzb, "guid").split('/')[-1:].pop()
                     new = {
