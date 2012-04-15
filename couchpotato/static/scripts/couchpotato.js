@@ -190,7 +190,6 @@ var CouchPotato = new Class({
 				},
 				'onSuccess': function(){
 					self.unBlockPage();
-					self.fireEvent('load');
 				}
 			});
 
