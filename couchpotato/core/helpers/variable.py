@@ -36,9 +36,17 @@ def mergeDicts(a, b):
                     stack.append((current_dst[key], current_src[key]))
                 elif isinstance(current_src[key], list) and isinstance(current_dst[key], list):
                     current_dst[key].extend(current_src[key])
+                    current_dst[key] = removeListDuplicates(current_dst[key])
                 else:
                     current_dst[key] = current_src[key]
     return dst
+
+def removeListDuplicates(seq):
+    checked = []
+    for e in seq:
+        if e not in checked:
+            checked.append(e)
+    return checked
 
 def flattenList(l):
     if isinstance(l, list):
