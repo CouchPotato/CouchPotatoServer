@@ -44,8 +44,8 @@ class Movie(Entity):
     library = ManyToOne('Library')
     status = ManyToOne('Status')
     profile = ManyToOne('Profile')
-    releases = OneToMany('Release')
-    files = ManyToMany('File')
+    releases = OneToMany('Release', cascade = 'all, delete-orphan')
+    files = ManyToMany('File', cascade = 'all, delete-orphan', single_parent = True)
 
 
 class Library(Entity):
@@ -59,9 +59,9 @@ class Library(Entity):
     info = Field(JsonType)
 
     status = ManyToOne('Status')
-    movies = OneToMany('Movie')
-    titles = OneToMany('LibraryTitle')
-    files = ManyToMany('File')
+    movies = OneToMany('Movie', cascade = 'all, delete-orphan')
+    titles = OneToMany('LibraryTitle', cascade = 'all, delete-orphan')
+    files = ManyToMany('File', cascade = 'all, delete-orphan', single_parent = True)
 
 
 class LibraryTitle(Entity):
@@ -94,9 +94,9 @@ class Release(Entity):
     movie = ManyToOne('Movie')
     status = ManyToOne('Status')
     quality = ManyToOne('Quality')
-    files = ManyToMany('File')
-    history = OneToMany('History')
-    info = OneToMany('ReleaseInfo')
+    files = ManyToMany('File', cascade = 'all, delete-orphan', single_parent = True)
+    history = OneToMany('History', cascade = 'all, delete-orphan')
+    info = OneToMany('ReleaseInfo', cascade = 'all, delete-orphan')
 
 
 class ReleaseInfo(Entity):
@@ -227,6 +227,12 @@ class Folder(Entity):
 
     path = Field(Unicode(255))
     label = Field(Unicode(255))
+
+
+class Properties(Entity):
+
+    identifier = Field(String(50), index = True)
+    value = Field(Unicode(255), nullable = False)
 
 
 def setup():
