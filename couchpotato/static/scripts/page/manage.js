@@ -38,7 +38,6 @@ Page.Manage = new Class({
 
 	refresh: function(full){
 		var self = this;
-		p(full)
 
 		Api.request('manage.update', {
 			'data': {

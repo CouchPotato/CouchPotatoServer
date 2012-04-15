@@ -13,7 +13,6 @@ body {
 	background: #4e5969;
 	overflow-y: scroll;
 	height: 100%;
-	text-align: justify;
 }
 	body.noscroll { overflow: hidden; }
 
