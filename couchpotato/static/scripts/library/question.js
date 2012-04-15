@@ -18,13 +18,7 @@ var Question = new Class( {
 	createMask : function() {
 		var self = this
 
-		$(document.body).mask( {
-			'hideOnClick' : true,
-			'destroyOnHide' : true,
-			'onHide' : function() {
-				self.container.destroy();
-			}
-		}).show();
+		self.mask = new Element('div.mask').fade('hide').inject(document.body).fade('in');
 	},
 
 	createQuestion : function() {
@@ -71,7 +65,11 @@ var Question = new Class( {
 	},
 
 	close : function() {
-		$(document.body).get('mask').destroy();
+		var self = this;
+		self.mask.fade('out');
+		(function(){self.mask.destroy()}).delay(1000);
+		
+		this.container.destroy();
 	},
 
 	toElement : function() {
