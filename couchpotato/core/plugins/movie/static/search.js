@@ -158,7 +158,7 @@ Block.Search = new Class({
 			rc = self.result_container.getCoordinates();
 
 		self.results.setStyle('max-height', (w.y - rc.top - 50) + 'px')
-		self.mask.hide()
+		self.mask.fade('out')
 
 	},
 
