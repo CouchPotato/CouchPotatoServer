@@ -379,18 +379,17 @@ class MoviePlugin(Plugin):
 
         m = db.query(Movie).filter_by(id = movie_id).first()
 
-        if not m.profile:
-            return
-
         log.debug('Changing status for %s' % (m.library.titles[0].title))
+        if not m.profile:
+            m.status_id = done_status.get('id')
+        else:
+            move_to_wanted = True
 
-        move_to_wanted = True
+            for t in m.profile.types:
+                for release in m.releases:
+                    if t.quality.identifier is release.quality.identifier and (release.status_id is done_status.get('id') and t.finish):
+                        move_to_wanted = False
 
-        for t in m.profile.types:
-            for release in m.releases:
-                if t.quality.identifier is release.quality.identifier and (release.status_id is done_status.get('id') and t.finish):
-                    move_to_wanted = False
-
-        m.status_id = active_status.get('id') if move_to_wanted else done_status.get('id')
+            m.status_id = active_status.get('id') if move_to_wanted else done_status.get('id')
 
         db.commit()
