@@ -62,6 +62,14 @@ class Env(object):
         return s
 
     @staticmethod
+    def prop(identifier, value = None):
+        s = Env.get('settings')
+        if value == None:
+            return s.getProperty(identifier)
+
+        s.setProperty(identifier, value)
+
+    @staticmethod
     def getPermission(setting_type):
         perm = Env.get('settings').get('permission_%s' % setting_type, default = '0777')
         if perm[0] == '0':
