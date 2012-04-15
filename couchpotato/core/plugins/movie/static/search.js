@@ -367,12 +367,13 @@ Block.Search.Item = new Class({
 
 		self.mask = new Element('span.mask', {
 			'styles': {
+				'position': 'relative',
 				'width': s.x,
-				'height': s.y
+				'height': s.y,
+				'top': -s.y,
+				'display': 'block'
 			}
-		}).inject(self.options).fade('hide').position({
-			'relativeTo': self.options
-		})
+		}).inject(self.options).fade('hide')
 
 		createSpinner(self.mask)
 		self.mask.fade('in')
