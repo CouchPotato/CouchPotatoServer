@@ -61,7 +61,7 @@ window.addEvent('domready', function(){
 								'name': 'profile'
 							}),
 							new Element('a.button.edit', {
-								'text': 'Save',
+								'text': 'Save & Search',
 								'events': {
 									'click': self.save.bind(self)
 								}
