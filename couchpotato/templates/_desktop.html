@@ -66,8 +66,8 @@
 						'data': {
 							'type': 'error',
 							'message': Browser.name + ' ' + Browser.version + ': \n' + message,
-							'page': window.location.href,
-							'file': file,
+							'page': window.location.href.replace(window.location.host, 'HOST'),
+							'file': file.replace(window.location.host, 'HOST'),
 							'line': line
 						}
 					});
