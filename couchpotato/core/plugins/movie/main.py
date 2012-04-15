@@ -74,7 +74,7 @@ class MoviePlugin(Plugin):
                 'default_title': {'desc': 'Movie title to use for searches. Has to be one of the titles returned by movie.search.'},
             }
         })
-        addApiView('movie.delete', self.delete, docs = {
+        addApiView('movie.delete', self.deleteView, docs = {
             'desc': 'Delete a movie from the wanted list',
             'params': {
                 'id': {'desc': 'Movie ID(s) you want to delete.', 'type': 'int (comma separated)'},
@@ -82,6 +82,7 @@ class MoviePlugin(Plugin):
         })
 
         addEvent('movie.add', self.add)
+        addEvent('movie.delete', self.delete)
         addEvent('movie.get', self.get)
         addEvent('movie.list', self.list)
         addEvent('movie.restatus', self.restatus)
@@ -347,22 +348,27 @@ class MoviePlugin(Plugin):
             'success': True,
         })
 
-    def delete(self):
+    def deleteView(self):
 
         params = getParams()
-        db = get_session()
-
-        status = fireEvent('status.add', 'deleted', single = True)
 
         ids = params.get('id').split(',')
         for movie_id in ids:
-            movie = db.query(Movie).filter_by(id = movie_id).first()
-            movie.status_id = status.get('id')
-            db.commit()
+            self.delete(movie_id)
 
         return jsonified({
             'success': True,
         })
+
+    def delete(self, movie_id):
+
+        db = get_session()
+
+        movie = db.query(Movie).filter_by(id = movie_id).first()
+        db.delete(movie)
+        db.commit()
+
+        return True
 
     def restatus(self, movie_id):
 
