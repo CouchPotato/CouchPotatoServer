@@ -21,8 +21,22 @@ class ProfilePlugin(Plugin):
         addApiView('profile.save', self.save)
         addApiView('profile.save_order', self.saveOrder)
         addApiView('profile.delete', self.delete)
+        addApiView('profile.list', self.allView, docs = {
+            'desc': 'List all available profiles',
+            'return': {'type': 'object', 'example': """{
+            'success': True,
+            'list': array, profiles
+}"""}
+        })
 
         addEvent('app.initialize', self.fill, priority = 90)
+
+    def allView(self):
+
+        return jsonified({
+            'success': True,
+            'list': self.all()
+        })
 
     def all(self):
 

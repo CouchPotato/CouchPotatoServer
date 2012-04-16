@@ -36,8 +36,22 @@ class QualityPlugin(Plugin):
         addEvent('quality.guess', self.guess)
 
         addApiView('quality.size.save', self.saveSize)
+        addApiView('quality.list', self.allView, docs = {
+            'desc': 'List all available qualities',
+            'return': {'type': 'object', 'example': """{
+            'success': True,
+            'list': array, qualities
+}"""}
+        })
 
         addEvent('app.initialize', self.fill, priority = 10)
+
+    def allView(self):
+
+        return jsonified({
+            'success': True,
+            'list': self.all()
+        })
 
     def all(self):
 
