@@ -7,6 +7,7 @@ from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Movie, Release, ReleaseInfo
 from couchpotato.environment import Env
 from sqlalchemy.exc import InterfaceError
+import datetime
 import re
 import traceback
 
@@ -24,6 +25,7 @@ class Searcher(Plugin):
         # Schedule cronjob
         fireEvent('schedule.cron', 'searcher.all', self.all_movies, day = self.conf('cron_day'), hour = self.conf('cron_hour'), minute = self.conf('cron_minute'))
 
+        def test():
     def all_movies(self):
 
         db = get_session()
@@ -188,7 +190,7 @@ class Searcher(Plugin):
         preferred_quality = fireEvent('quality.single', identifier = quality['identifier'], single = True)
 
         # Contains lower quality string
-        if self.containsOtherQuality(nzb['name'], preferred_quality, single_category):
+        if self.containsOtherQuality(nzb, movie_year = movie['library']['year'], preferred_quality = preferred_quality, single_category = single_category):
             log.info('Wrong: %s, looking for %s' % (nzb['name'], quality['label']))
             return False
 
@@ -230,8 +232,10 @@ class Searcher(Plugin):
         log.info("Wrong: %s, undetermined naming. Looking for '%s (%s)'" % (nzb['name'], movie['library']['titles'][0]['title'], movie['library']['year']))
         return False
 
-    def containsOtherQuality(self, name, preferred_quality = {}, single_category = False):
+    def containsOtherQuality(self, nzb, movie_year = None, preferred_quality = {}, single_category = False):
 
+        name = nzb['name']
+        size = nzb.get('size', 0)
         nzb_words = re.split('\W+', simplifyString(name))
 
         qualities = fireEvent('quality.all', single = True)
@@ -245,6 +249,13 @@ class Searcher(Plugin):
             # Alt in words
             if list(set(nzb_words) & set(quality['alternative'])):
                 found[quality['identifier']] = True
+
+        # Hack for older movies that don't contain quality tag
+        if movie_year < datetime.datetime.now().year:
+            if size > 3000: # Assume dvdr
+                return 'dvdr' == preferred_quality['identifier']
+            else: # Assume dvdrip
+                return 'dvdrip' == preferred_quality['identifier']
 
         # Allow other qualities
         for allowed in preferred_quality.get('allow'):
