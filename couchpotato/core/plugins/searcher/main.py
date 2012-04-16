@@ -25,7 +25,6 @@ class Searcher(Plugin):
         # Schedule cronjob
         fireEvent('schedule.cron', 'searcher.all', self.all_movies, day = self.conf('cron_day'), hour = self.conf('cron_hour'), minute = self.conf('cron_minute'))
 
-        def test():
     def all_movies(self):
 
         db = get_session()
