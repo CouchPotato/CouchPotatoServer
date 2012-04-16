@@ -170,12 +170,7 @@ var CouchPotato = new Class({
 			'events': {
 				'click': function(e){
 					(e).preventDefault();
-
-					self.blockPage('You have shutdown. This is what suppose to happen ;)');
-					Api.request('app.shutdown', {
-						'onComplete': self.blockPage.bind(self)
-					});
-					self.checkAvailable(1000);
+					self.shutdown();
 				}
 			}
 		}, {
@@ -201,11 +196,7 @@ var CouchPotato = new Class({
 			'events': {
 				'click': function(e){
 					(e).preventDefault();
-
-					self.blockPage(message || 'Restarting... please wait. If this takes to long, something must have gone wrong.', title);
-					Api.request('app.restart');
-					self.checkAvailable(1000);
-
+					self.restart(message, title);
 				}
 			}
 		}, {
