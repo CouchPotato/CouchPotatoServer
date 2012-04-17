@@ -179,7 +179,7 @@ class Event(object):
         """ Executes all handlers stored in the queue """
         while True:
             try:
-                h_ = self.queue.get()
+                h_ = self.queue.get(timeout = 2)
                 handler, memoize, timeout = self.handlers[h_]
 
                 if self.lock and self.in_order:
