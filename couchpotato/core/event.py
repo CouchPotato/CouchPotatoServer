@@ -43,7 +43,7 @@ def removeEvent(name, handler):
 
 def fireEvent(name, *args, **kwargs):
     if not events.get(name): return
-    log.debug('Firing event %s' % name)
+    #log.debug('Firing event %s' % name)
     try:
 
         # Fire after event
