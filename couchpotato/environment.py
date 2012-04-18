@@ -62,10 +62,11 @@ class Env(object):
         return s
 
     @staticmethod
-    def prop(identifier, value = None):
+    def prop(identifier, value = None, default = None):
         s = Env.get('settings')
         if value == None:
-            return s.getProperty(identifier)
+            v = s.getProperty(identifier)
+            return v if v else default
 
         s.setProperty(identifier, value)
 

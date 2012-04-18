@@ -41,7 +41,7 @@ class Manage(Plugin):
 
 
     def updateLibrary(self, full = True):
-        last_update = float(Env.prop('manage.last_update'))
+        last_update = float(Env.prop('manage.last_update', default = 0))
 
         if self.isDisabled() or (last_update > time.time() - 20):
             return

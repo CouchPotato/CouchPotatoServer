@@ -199,9 +199,8 @@ class Settings(object):
         db = get_session()
         try:
             prop = db.query(Properties).filter_by(identifier = identifier).first()
-            return prop.value
+            return prop.value if prop else None
         except:
-            print traceback.format_exc()
             return None
 
     def setProperty(self, identifier, value = ''):
