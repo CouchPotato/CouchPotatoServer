@@ -131,6 +131,8 @@ class Plugin(object):
                 request = urllib2.Request(url, data, headers)
 
                 data = urllib2.urlopen(request, timeout = timeout).read()
+
+            self.http_failed_request[host] = 0
         except IOError:
             if show_error:
                 log.error('Failed opening url in %s: %s %s' % (self.getName(), url, traceback.format_exc(1)))
