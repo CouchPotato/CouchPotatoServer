@@ -365,8 +365,9 @@ class MoviePlugin(Plugin):
         db = get_session()
 
         movie = db.query(Movie).filter_by(id = movie_id).first()
-        db.delete(movie)
-        db.commit()
+        if movie:
+            db.delete(movie)
+            db.commit()
 
         return True
 
