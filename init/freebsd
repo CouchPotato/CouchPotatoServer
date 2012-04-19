@@ -42,7 +42,7 @@ status_cmd="${name}_status"
 stop_cmd="${name}_stop"
 
 command="/usr/sbin/daemon"
-command_args="-f -p ${couchpotato_pid} python ${couchpotato_dir}/couchpotato.py ${couchpotato_flags}"
+command_args="-f -p ${couchpotato_pid} python ${couchpotato_dir}/CouchPotato.py ${couchpotato_flags}"
 
 # Check for wget and refuse to start without it.
 if [ ! -x "${WGET}" ]; then
