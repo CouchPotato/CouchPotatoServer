@@ -696,12 +696,15 @@ class Scanner(Plugin):
 
         # Use guessit first
         if file_name:
-            guess = guess_movie_info(file_name)
-            if guess.get('title') and guess.get('year'):
-                return {
-                    'name': guess.get('title'),
-                    'year': guess.get('year'),
-                }
+            try:
+                guess = guess_movie_info(file_name)
+                if guess.get('title') and guess.get('year'):
+                    return {
+                        'name': guess.get('title'),
+                        'year': guess.get('year'),
+                    }
+            except:
+                log.debug('Could not detect via guessit "%s": %s' % (file_name, traceback.format_exc()))
 
         # Backup to simple
         cleaned = ' '.join(re.split('\W+', simplifyString(release_name)))
