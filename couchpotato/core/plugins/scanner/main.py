@@ -686,7 +686,7 @@ class Scanner(Plugin):
         return None
 
     def findYear(self, text):
-        matches = re.search('(?P<year>[0-9]{4})', text)
+        matches = re.search('(?P<year>[12]{1}[0-9]{3})', text)
         if matches:
             return matches.group('year')
 
@@ -713,7 +713,7 @@ class Scanner(Plugin):
                 movie_name = cleaned.split(year).pop(0).strip()
                 return {
                     'name': movie_name,
-                    'year': year,
+                    'year': int(year),
                 }
             except:
                 pass
@@ -722,7 +722,7 @@ class Scanner(Plugin):
                 movie_name = cleaned.split('  ').pop(0).strip()
                 return {
                     'name': movie_name,
-                    'year': year,
+                    'year': int(year),
                 }
             except:
                 pass

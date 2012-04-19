@@ -250,7 +250,8 @@ class Searcher(Plugin):
                 found[quality['identifier']] = True
 
         # Hack for older movies that don't contain quality tag
-        if movie_year < datetime.datetime.now().year:
+        year_name = fireEvent('scanner.name_year', name, single = True)
+        if movie_year < datetime.datetime.now().year - 3 and not year_name.get('year', None):
             if size > 3000: # Assume dvdr
                 return 'dvdr' == preferred_quality['identifier']
             else: # Assume dvdrip
