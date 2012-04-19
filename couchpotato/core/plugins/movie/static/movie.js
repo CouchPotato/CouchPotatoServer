@@ -280,7 +280,12 @@ var ReleaseAction = new Class({
 			Array.each(self.movie.data.releases, function(release){
 
 				var status = Status.get(release.status_id),
-					quality = Quality.getProfile(release.quality_id)
+					quality = Quality.getProfile(release.quality_id),
+					info = release.info;
+
+				try {
+					var details_url = info.filter(function(item){ return item.identifier == 'detail_url' }).pick().value;
+				} catch(e){}
 
 				new Element('div', {
 					'class': 'item ' + status.identifier
@@ -291,6 +296,10 @@ var ReleaseAction = new Class({
 					new Element('span.age', {'text': self.get(release, 'age')}),
 					new Element('span.score', {'text': self.get(release, 'score')}),
 					new Element('span.provider', {'text': self.get(release, 'provider')}),
+					details_url ? new Element('a.info.icon', {
+						'href': details_url,
+						'target': '_blank'
+					}) : null,
 					new Element('a.download.icon', {
 						'events': {
 							'click': function(e){

@@ -153,6 +153,7 @@ body > .spinner, .mask{
 .icon.refresh { background-image: url('../images/icon.refresh.png'); }
 .icon.rating { background-image: url('../images/icon.rating.png'); }
 .icon.files { background-image: url('../images/icon.files.png'); }
+.icon.info { background-image: url('../images/icon.info.png'); }
 
 /*** Navigation ***/
 .header {
