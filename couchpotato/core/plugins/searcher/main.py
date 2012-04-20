@@ -73,6 +73,8 @@ class Searcher(Plugin):
                 quality = fireEvent('quality.single', identifier = quality_type['quality']['identifier'], single = True)
                 results = fireEvent('yarr.search', movie, quality, merge = True)
                 sorted_results = sorted(results, key = lambda k: k['score'], reverse = True)
+                if len(sorted_results) == 0:
+                    log.debug('Nothing found for %s in %s' % (default_title, quality_type['quality']['label']))
 
                 # Add them to this movie releases list
                 for nzb in sorted_results:
