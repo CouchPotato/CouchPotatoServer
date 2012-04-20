@@ -68,8 +68,8 @@ class NZBClub(NZBProvider, RSS):
                         'name': toUnicode(self.getTextElement(nzb, "title")),
                         'age': self.calculateAge(int(time.mktime(parse(date).timetuple()))),
                         'size': tryInt(size) / 1024 / 1024,
-                        'url': enclosure['url'],
-                        'download': enclosure['url'].replace(' ', '_'),
+                        'url': enclosure['url'].replace(' ', '_'),
+                        'download': self.download,
                         'detail_url': self.getTextElement(nzb, "link"),
                         'description': description,
                     }
