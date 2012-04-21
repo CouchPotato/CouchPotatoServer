@@ -474,12 +474,15 @@ class Scanner(Plugin):
                 if len(identifier) > 2:
                     try: filename = list(group['files'].get('movie'))[0]
                     except: filename = None
-                    movie = fireEvent('movie.search', q = '%(name)s %(year)s' % self.getReleaseNameYear(identifier, file_name = filename), merge = True, limit = 1)
 
-                    if len(movie) > 0:
-                        imdb_id = movie[0]['imdb']
-                        log.debug('Found movie via search: %s' % cur_file)
-                        if imdb_id: break
+                    name_year = self.getReleaseNameYear(identifier, file_name = filename)
+                    if name_year.get('name') and name_year.get('year'):
+                        movie = fireEvent('movie.search', q = '%(name)s %(year)s' % name_year, merge = True, limit = 1)
+
+                        if len(movie) > 0:
+                            imdb_id = movie[0]['imdb']
+                            log.debug('Found movie via search: %s' % cur_file)
+                            if imdb_id: break
                 else:
                     log.debug('Identifier to short to use for search: %s' % identifier)
 
