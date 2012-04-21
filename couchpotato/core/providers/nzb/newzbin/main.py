@@ -92,8 +92,11 @@ class Newzbin(NZBProvider, RSS):
                     REPORT_NS = 'http://www.newzbin.com/DTD/2007/feeds/report/';
 
                     # Add attributes to name
-                    for attr in nzb.find('{%s}attributes' % REPORT_NS):
-                        title += ' ' + attr.text
+                    try:
+                        for attr in nzb.find('{%s}attributes' % REPORT_NS):
+                            title += ' ' + attr.text
+                    except:
+                        pass
 
                     id = int(self.getTextElement(nzb, '{%s}id' % REPORT_NS))
                     size = str(int(self.getTextElement(nzb, '{%s}size' % REPORT_NS)) / 1024 / 1024) + ' mb'
