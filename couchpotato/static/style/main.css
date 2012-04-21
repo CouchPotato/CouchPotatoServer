@@ -491,7 +491,7 @@ body > .spinner, .mask{
 		width: auto;
 	}
 		.question .answer:hover {
-			background: #f1f1f1;
+			background: #000;
 		}
 
 		.question .answer.delete {

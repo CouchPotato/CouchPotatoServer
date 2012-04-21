@@ -161,16 +161,17 @@ var CouchPotato = new Class({
 		self.checkAvailable(1000);
 	},
 
-	shutdownQA: function(){
+	shutdownQA: function(e){
 		var self = this;
 
-		new Question('Are you sure you want to shutdown CouchPotato?', '', [{
+		var q = new Question('Are you sure you want to shutdown CouchPotato?', '', [{
 			'text': 'Shutdown',
 			'class': 'shutdown red',
 			'events': {
 				'click': function(e){
 					(e).preventDefault();
 					self.shutdown();
+					q.close.delay(100, q);
 				}
 			}
 		}, {
@@ -187,16 +188,17 @@ var CouchPotato = new Class({
 		self.checkAvailable(1000);
 	},
 
-	restartQA: function(message, title){
+	restartQA: function(e, message, title){
 		var self = this;
 
-		new Question('Are you sure you want to restart CouchPotato?', '', [{
+		var q = new Question('Are you sure you want to restart CouchPotato?', '', [{
 			'text': 'Restart',
 			'class': 'restart orange',
 			'events': {
 				'click': function(e){
 					(e).preventDefault();
 					self.restart(message, title);
+					q.close.delay(100, q);
 				}
 			}
 		}, {
