@@ -1,8 +1,8 @@
 from couchpotato.core.event import fireEvent
+from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.nzb.base import NZBProvider
-from urllib import quote_plus
 import re
 
 log = CPLog(__name__)
@@ -26,9 +26,9 @@ class X264(NZBProvider):
             return results
 
         q = '%s %s %s' % (movie['library']['titles'][0]['title'], movie['library']['year'], quality.get('identifier'))
-        url = self.urls['search'] % quote_plus(q)
+        url = self.urls['search'] % tryUrlencode(q)
 
-        cache_key = 'x264.%s' % q
+        cache_key = 'x264.%s.%s' % (movie['library']['identifier'], quality.get('identifier'))
         data = self.getCache(cache_key, url)
         if data:
             match = re.compile(self.regex, re.DOTALL).finditer(data)

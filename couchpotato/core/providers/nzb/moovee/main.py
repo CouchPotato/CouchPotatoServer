@@ -1,8 +1,8 @@
 from couchpotato.core.event import fireEvent
+from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.nzb.base import NZBProvider
 from dateutil.parser import parse
-from urllib import quote_plus
 import re
 import time
 
@@ -27,7 +27,7 @@ class Moovee(NZBProvider):
             return results
 
         q = '%s %s' % (movie['library']['titles'][0]['title'], quality.get('identifier'))
-        url = self.urls['search'] % quote_plus(q)
+        url = self.urls['search'] % tryUrlencode(q)
 
         cache_key = 'moovee.%s' % q
         data = self.getCache(cache_key, url)

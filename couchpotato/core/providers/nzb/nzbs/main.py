@@ -1,10 +1,9 @@
 from couchpotato.core.event import fireEvent
-from couchpotato.core.helpers.encoding import simplifyString
+from couchpotato.core.helpers.encoding import simplifyString, tryUrlencode
 from couchpotato.core.helpers.rss import RSS
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.nzb.base import NZBProvider
 from dateutil.parser import parse
-from urllib import urlencode
 import time
 import xml.etree.ElementTree as XMLTree
 
@@ -36,7 +35,7 @@ class Nzbs(NZBProvider, RSS):
             return results
 
         cat_id = self.getCatId(quality.get('identifier'))
-        arguments = urlencode({
+        arguments = tryUrlencode({
             'action':'search',
             'q': simplifyString(movie['library']['titles'][0]['title']),
             'catid': cat_id[0],

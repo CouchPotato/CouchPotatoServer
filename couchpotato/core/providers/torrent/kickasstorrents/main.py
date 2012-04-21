@@ -36,7 +36,7 @@ class KickAssTorrents(TorrentProvider):
         if self.isDisabled() or not self.isAvailable(self.urls['test']):
             return results
 
-        cache_key = 'kickasstorrents.%s' % movie['library']['identifier']
+        cache_key = 'kickasstorrents.%s.%s' % (movie['library']['identifier'], quality.get('identifier'))
         data = self.getCache(cache_key, self.urls['search'] % (movie['library']['titles'][0]['title'], movie['library']['identifier'].replace('tt', '')))
         if data:
 

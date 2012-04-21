@@ -1,9 +1,9 @@
 from couchpotato.core.downloaders.base import Downloader
+from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.variable import cleanHost
 from couchpotato.core.logger import CPLog
 from inspect import isfunction
 from tempfile import mkstemp
-from urllib import urlencode
 import base64
 import os
 import re
@@ -58,7 +58,7 @@ class Sabnzbd(Downloader):
         if pp:
             params['script'] = pp_script_fn
 
-        url = cleanHost(self.conf('host')) + "api?" + urlencode(params)
+        url = cleanHost(self.conf('host')) + "api?" + tryUrlencode(params)
 
         try:
             if params.get('mode') is 'addfile':

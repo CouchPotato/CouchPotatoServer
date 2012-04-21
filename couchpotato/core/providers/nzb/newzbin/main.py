@@ -1,9 +1,9 @@
 from couchpotato.core.event import fireEvent
+from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.rss import RSS
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.nzb.base import NZBProvider
 from dateutil.parser import parse
-from urllib import urlencode
 import base64
 import time
 import xml.etree.ElementTree as XMLTree
@@ -45,7 +45,7 @@ class Newzbin(NZBProvider, RSS):
         format_id = self.getFormatId(type)
         cat_id = self.getCatId(type)
 
-        arguments = urlencode({
+        arguments = tryUrlencode({
             'searchaction': 'Search',
             'u_url_posts_only': '0',
             'u_show_passworded': '0',

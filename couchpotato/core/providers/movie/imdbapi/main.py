@@ -1,8 +1,8 @@
 from couchpotato.core.event import addEvent, fireEvent
+from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.variable import tryInt, tryFloat
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.movie.base import MovieProvider
-from urllib import urlencode
 import json
 import re
 import traceback
@@ -27,8 +27,11 @@ class IMDBAPI(MovieProvider):
 
         name_year = fireEvent('scanner.name_year', q, single = True)
 
+        if not name_year.get('name'):
+            return []
+
         cache_key = 'imdbapi.cache.%s' % q
-        cached = self.getCache(cache_key, self.urls['search'] % urlencode({'t': name_year.get('name'), 'y': name_year.get('year')}))
+        cached = self.getCache(cache_key, self.urls['search'] % tryUrlencode({'t': name_year.get('name'), 'y': name_year.get('year', '')}))
 
         if cached:
             result = self.parseMovie(cached)

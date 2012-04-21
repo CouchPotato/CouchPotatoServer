@@ -1,6 +1,7 @@
 from couchpotato import get_session
 from couchpotato.core.event import addEvent, fireEventAsync, fireEvent
-from couchpotato.core.helpers.encoding import toUnicode, simplifyString
+from couchpotato.core.helpers.encoding import toUnicode, simplifyString, \
+    tryUrlencode
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Library, LibraryTitle, File
@@ -45,7 +46,7 @@ class LibraryPlugin(Plugin):
         # Update library info
         if update_after is not False:
             handle = fireEventAsync if update_after is 'async' else fireEvent
-            handle('library.update', identifier = l.identifier, default_title = attrs.get('title', ''))
+            handle('library.update', identifier = l.identifier, default_title = toUnicode(attrs.get('title', '')))
 
         return l.to_dict(self.default_dict)
 
@@ -86,10 +87,11 @@ class LibraryPlugin(Plugin):
             for title in titles:
                 if not title:
                     continue
+                title = toUnicode(title)
                 t = LibraryTitle(
-                    title = toUnicode(title),
+                    title = title,
                     simple_title = self.simplifyTitle(title),
-                    default = title.lower() == default_title.lower() or (default_title is '' and titles[0] == title)
+                    default = title.lower() == toUnicode(default_title.lower()) or (toUnicode(default_title) == u'' and toUnicode(titles[0]) == title)
                 )
                 library.titles.append(t)
 

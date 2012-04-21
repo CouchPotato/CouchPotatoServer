@@ -1,12 +1,11 @@
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent
+from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.request import getParams, jsonified
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
-from couchpotato.environment import Env
 import re
 import telnetlib
-import urllib
 
 try:
     import xml.etree.cElementTree as etree
@@ -90,7 +89,7 @@ class NMJ(Notification):
             'arg2': 'background',
             'arg3': '',
         }
-        params = urllib.urlencode(params)
+        params = tryUrlencode(params)
         UPDATE_URL = 'http://%(host)s:8008/metadata_database?%(params)s'
         updateUrl = UPDATE_URL % {'host': host, 'params': params}
 
