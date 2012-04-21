@@ -129,7 +129,8 @@ class Scanner(Plugin):
                 # Add release
                 fireEvent('release.add', group = group)
                 library_item = fireEvent('library.update', identifier = group['library'].get('identifier'), single = True)
-                added_identifier.append(library_item['identifier'])
+                if library_item:
+                    added_identifier.append(library_item['identifier'])
 
         return added_identifier
 

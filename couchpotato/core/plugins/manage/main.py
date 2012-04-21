@@ -56,7 +56,8 @@ class Manage(Plugin):
 
             log.info('Updating manage library: %s' % directory)
             identifiers = fireEvent('scanner.folder', folder = directory, newer_than = last_update, single = True)
-            added_identifiers.extend(identifiers)
+            if identifiers:
+                added_identifiers.extend(identifiers)
 
             # Break if CP wants to shut down
             if self.shuttingDown():
