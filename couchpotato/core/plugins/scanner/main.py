@@ -474,7 +474,9 @@ class Scanner(Plugin):
                 if len(identifier) > 2:
                     try: filename = list(group['files'].get('movie'))[0]
                     except: filename = None
-                    movie = fireEvent('movie.search', q = '%(name)s %(year)s' % self.getReleaseNameYear(identifier, file_name = filename), merge = True, limit = 1)
+                    mdata = self.getReleaseNameYear(identifier, file_name = filename)
+                    if 'name' in mdata:
+                        movie = fireEvent('movie.search', q = '%(name)s %(year)s' % self.getReleaseNameYear(identifier, file_name = filename), merge = True, limit = 1)
 
                     if len(movie) > 0:
                         imdb_id = movie[0]['imdb']
