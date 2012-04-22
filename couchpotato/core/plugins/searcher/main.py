@@ -357,7 +357,7 @@ class Searcher(Plugin):
                     return True
 
                 # Dvd should be released
-                if dates.get('dvd') < now:
+                if dates.get('dvd') > 0 and dates.get('dvd') < now:
                     return True
 
 
