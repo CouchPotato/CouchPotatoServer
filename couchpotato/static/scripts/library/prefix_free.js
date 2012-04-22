@@ -25,20 +25,24 @@ var self = window.StyleFix = {
 		var url = link.href || link.getAttribute('data-href'),
 		    base = url.replace(/[^\/]+$/, ''),
 		    parent = link.parentNode,
-		    xhr = new XMLHttpRequest();
+		    xhr = new XMLHttpRequest(),
+		    process;
 		
-		xhr.open('GET', url);
-
 		xhr.onreadystatechange = function() {
 			if(xhr.readyState === 4) {
+				process();
+			}
+		};
+
+		process = function() {
 				var css = xhr.responseText;
 				
-				if(css && link.parentNode) {
+				if(css && link.parentNode && (!xhr.status || xhr.status < 400 || xhr.status > 600)) {
 					css = self.fix(css, true, link);
 					
 					// Convert relative URLs to absolute, if needed
 					if(base) {
-						css = css.replace(/url\(((?:"|')?)(.+?)\1\)/gi, function($0, quote, url) {
+						css = css.replace(/url\(\s*?((?:"|')?)(.+?)\1\s*?\)/gi, function($0, quote, url) {
 							if(!/^([a-z]{3,10}:|\/|#)/i.test(url)) { // If url not absolute & not a hash
 								// May contain sequences like /../ and /./ but those DO work
 								return 'url("' + base + url + '")';
@@ -60,10 +64,21 @@ var self = window.StyleFix = {
 					parent.insertBefore(style, link);
 					parent.removeChild(link);
 				}
-			}
 		};
-		
-		xhr.send(null);
+
+		try {
+			xhr.open('GET', url);
+			xhr.send(null);
+		} catch (e) {
+			// Fallback to XDomainRequest if available
+			if (typeof XDomainRequest != "undefined") {
+				xhr = new XDomainRequest();
+				xhr.onerror = xhr.onprogress = function() {};
+				xhr.onload = process;
+				xhr.open("GET", url);
+				xhr.send(null);
+			}
+		}
 		
 		link.setAttribute('data-inprogress', '');
 	},
@@ -135,7 +150,7 @@ function $(expr, con) {
 })();
 
 /**
- * PrefixFree 1.0.4
+ * PrefixFree 1.0.5
  * @author Lea Verou
  * MIT license
  */
@@ -300,6 +315,10 @@ var functions = {
 	'element': {
 		property: 'backgroundImage',
 		params: '#foo'
+	},
+	'cross-fade': {
+		property: 'backgroundImage',
+		params: 'url(a.png), url(b.png), 50%'
 	}
 };
 
