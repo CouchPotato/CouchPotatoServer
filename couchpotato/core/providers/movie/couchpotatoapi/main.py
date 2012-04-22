@@ -12,7 +12,8 @@ log = CPLog(__name__)
 
 class CouchPotatoApi(MovieProvider):
 
-    apiUrl = 'http://couchpota.to/api/%s/'
+    api_url = 'http://couchpota.to/api/%s/'
+    http_time_between_calls = 0
 
     def __init__(self):
         #addApiView('movie.suggest', self.suggestView)
@@ -29,7 +30,7 @@ class CouchPotatoApi(MovieProvider):
 
         try:
             headers = {'X-CP-Version': fireEvent('app.version', single = True)}
-            data = self.urlopen((self.apiUrl % ('eta')) + (identifier + '/'), headers = headers)
+            data = self.urlopen((self.api_url % ('eta')) + (identifier + '/'), headers = headers)
             dates = json.loads(data)
             log.debug('Found ETA for %s: %s' % (identifier, dates))
             return dates
@@ -40,7 +41,7 @@ class CouchPotatoApi(MovieProvider):
 
     def suggest(self, movies = [], ignore = []):
         try:
-            data = self.urlopen((self.apiUrl % ('suggest')) + ','.join(movies) + '/' + ','.join(ignore) + '/')
+            data = self.urlopen((self.api_url % ('suggest')) + ','.join(movies) + '/' + ','.join(ignore) + '/')
             suggestions = json.loads(data)
             log.info('Found Suggestions for %s' % (suggestions))
         except Exception, e:
