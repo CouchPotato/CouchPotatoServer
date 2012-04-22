@@ -16,6 +16,8 @@ log = CPLog(__name__)
 
 class Searcher(Plugin):
 
+    in_progress = False
+
     def __init__(self):
         addEvent('searcher.all', self.all_movies)
         addEvent('searcher.single', self.single)
@@ -26,6 +28,12 @@ class Searcher(Plugin):
         fireEvent('schedule.cron', 'searcher.all', self.all_movies, day = self.conf('cron_day'), hour = self.conf('cron_hour'), minute = self.conf('cron_minute'))
 
     def all_movies(self):
+
+        if self.in_progress:
+            log.info('Search already in progress')
+            return
+
+        self.in_progress = True
 
         db = get_session()
 
@@ -51,6 +59,8 @@ class Searcher(Plugin):
             # Break if CP wants to shut down
             if self.shuttingDown():
                 break
+
+        self.in_progress = False
 
     def single(self, movie):
 
