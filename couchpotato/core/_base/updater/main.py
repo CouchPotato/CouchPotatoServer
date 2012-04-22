@@ -28,6 +28,7 @@ class Updater(Plugin):
 
         fireEvent('schedule.interval', 'updater.check', self.check, hours = 6)
         addEvent('app.load', self.check)
+        addEvent('updater.info', self.info)
 
         addApiView('updater.info', self.getInfo, docs = {
             'desc': 'Get updater information',
@@ -56,6 +57,9 @@ class Updater(Plugin):
             else:
                 if self.conf('notification'):
                     fireEvent('updater.available', message = 'A new update is available', data = self.updater.getVersion())
+
+    def info(self):
+        return self.updater.info()
 
     def getInfo(self):
         return jsonified(self.updater.info())
@@ -161,6 +165,7 @@ class GitUpdater(BaseUpdater):
                 self.version = {
                     'hash': output.hash[:8],
                     'date': output.getDate(),
+                    'type': 'git',
                 }
             except Exception, e:
                 log.error('Failed using GIT updater, running from source, you need to have GIT installed. %s' % e)
@@ -320,6 +325,7 @@ class SourceUpdater(BaseUpdater):
             return {
                 'hash': commit['sha'],
                 'date':  int(time.mktime(parse(commit['commit']['committer']['date']).timetuple())),
+                'type': 'source',
             }
         except:
             log.error('Failed getting latest request from github: %s' % traceback.format_exc())
