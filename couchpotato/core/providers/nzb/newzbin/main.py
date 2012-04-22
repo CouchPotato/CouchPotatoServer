@@ -14,7 +14,7 @@ log = CPLog(__name__)
 class Newzbin(NZBProvider, RSS):
 
     urls = {
-        'download': 'http://www.newzbin2.es/api/dnzb/',
+        'download': 'https://www.newzbin2.es/api/dnzb/',
         'search': 'https://www.newzbin2.es/search/',
     }
 

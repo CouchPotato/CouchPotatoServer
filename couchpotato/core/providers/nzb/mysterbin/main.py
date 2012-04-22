@@ -12,9 +12,9 @@ log = CPLog(__name__)
 class Mysterbin(NZBProvider):
 
     urls = {
-        'search': 'http://www.mysterbin.com/advsearch?%s',
-        'download': 'http://www.mysterbin.com/nzb?c=%s',
-        'nfo': 'http://www.mysterbin.com/nfo?c=%s',
+        'search': 'https://www.mysterbin.com/advsearch?%s',
+        'download': 'https://www.mysterbin.com/nzb?c=%s',
+        'nfo': 'https://www.mysterbin.com/nfo?c=%s',
     }
 
     http_time_between_calls = 1 #seconds

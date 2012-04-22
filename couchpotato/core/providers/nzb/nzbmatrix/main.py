@@ -16,7 +16,7 @@ class NZBMatrix(NZBProvider, RSS):
     urls = {
         'download': 'https://api.nzbmatrix.com/v1.1/download.php?id=%s',
         'detail': 'https://nzbmatrix.com/nzb-details.php?id=%s&hit=1',
-        'search': 'http://rss.nzbmatrix.com/rss.php',
+        'search': 'https://rss.nzbmatrix.com/rss.php',
     }
 
     cat_ids = [
