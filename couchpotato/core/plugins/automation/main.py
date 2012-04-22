@@ -10,7 +10,7 @@ class Automation(Plugin):
 
     def __init__(self):
 
-        fireEvent('schedule.interval', 'updater.check', self.addMovies, hours = self.conf('hour', default = 12))
+        fireEvent('schedule.interval', 'automation.add_movies', self.addMovies, hours = self.conf('hour', default = 12))
 
         if not Env.get('dev'):
             addEvent('app.load', self.addMovies)
