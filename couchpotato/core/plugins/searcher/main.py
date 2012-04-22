@@ -9,6 +9,7 @@ from couchpotato.environment import Env
 from sqlalchemy.exc import InterfaceError
 import datetime
 import re
+import time
 import traceback
 
 log = CPLog(__name__)
@@ -26,6 +27,8 @@ class Searcher(Plugin):
 
         # Schedule cronjob
         fireEvent('schedule.cron', 'searcher.all', self.all_movies, day = self.conf('cron_day'), hour = self.conf('cron_hour'), minute = self.conf('cron_minute'))
+
+        addEvent('app.load', self.all_movies)
 
     def all_movies(self):
 
@@ -64,10 +67,15 @@ class Searcher(Plugin):
 
     def single(self, movie):
 
+        pre_releases = fireEvent('quality.pre_releases', single = True)
+        release_dates = fireEvent('library.update_release_date', identifier = movie['library']['identifier'], merge = True)
         available_status = fireEvent('status.get', 'available', single = True)
 
         default_title = movie['library']['titles'][0]['title']
         for quality_type in movie['profile']['types']:
+            if not self.couldBeReleased(quality_type['quality']['identifier'], release_dates, pre_releases):
+                log.info('To early to search for %s, %s' % (quality_type['quality']['identifier'], default_title))
+                continue
 
             has_better_quality = 0
 
@@ -329,3 +337,30 @@ class Searcher(Plugin):
                 pass
 
         return nfo and getImdb(nfo) == imdb_id
+
+    def couldBeReleased(self, wanted_quality, dates, pre_releases):
+
+        now = int(time.time())
+
+        if not dates or (dates.get('theater', 0) == 0 and dates.get('dvd', 0) == 0):
+            return True
+        else:
+            if wanted_quality in pre_releases:
+                # Prerelease 1 week before theaters
+                if dates.get('theater') >= now - 604800 and wanted_quality in pre_releases:
+                    return True
+            else:
+                # 6 weeks after theater release
+                if dates.get('theater') < now - 3628800:
+                    return True
+
+                # 6 weeks before dvd release
+                if dates.get('dvd') > now - 3628800:
+                    return True
+
+                # Dvd should be released
+                if dates.get('dvd') < now:
+                    return True
+
+
+        return False

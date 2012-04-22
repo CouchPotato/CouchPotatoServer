@@ -34,6 +34,7 @@ class QualityPlugin(Plugin):
         addEvent('quality.all', self.all)
         addEvent('quality.single', self.single)
         addEvent('quality.guess', self.guess)
+        addEvent('quality.pre_releases', self.preReleases)
 
         addApiView('quality.size.save', self.saveSize)
         addApiView('quality.list', self.allView, docs = {
@@ -45,6 +46,9 @@ class QualityPlugin(Plugin):
         })
 
         addEvent('app.initialize', self.fill, priority = 10)
+
+    def preReleases(self):
+        return self.pre_releases
 
     def allView(self):
 

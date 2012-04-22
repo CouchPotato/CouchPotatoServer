@@ -2,10 +2,12 @@ from couchpotato import get_session
 from couchpotato.core.event import addEvent, fireEventAsync, fireEvent
 from couchpotato.core.helpers.encoding import toUnicode, simplifyString, \
     tryUrlencode
+from couchpotato.core.helpers.variable import mergeDicts
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Library, LibraryTitle, File
 from string import ascii_letters
+import time
 import traceback
 
 log = CPLog(__name__)
@@ -17,6 +19,8 @@ class LibraryPlugin(Plugin):
     def __init__(self):
         addEvent('library.add', self.add)
         addEvent('library.update', self.update)
+        addEvent('library.update_release_date', self.updateReleaseDates)
+
 
     def add(self, attrs = {}, update_after = True):
 
@@ -118,6 +122,22 @@ class LibraryPlugin(Plugin):
         fireEvent('library.update_finish', data = library_dict)
 
         return library_dict
+
+    def updateReleaseDates(self, identifier):
+
+        db = get_session()
+        library = db.query(Library).filter_by(identifier = identifier).first()
+
+        if library.info.get('release_date', {}).get('expires', 0) < time.time():
+            dates = fireEvent('movie.release_date', identifier = identifier, merge = True)
+            library.info = mergeDicts(library.info, {'release_date': dates})
+            db.commit()
+
+        dates = library.info.get('release_date', {})
+        db.remove()
+
+        return dates
+
 
     def simplifyTitle(self, title):
 
