@@ -9,7 +9,6 @@ config = [{
         {
             'tab': 'notifications',
             'name': 'pushover',
-            'label': 'Pushover',
             'options': [
                 {
                     'name': 'enabled',
@@ -19,10 +18,6 @@ config = [{
                 {
                     'name': 'user_key',
                     'description': 'Register on pushover.net to get one.'
-                },
-                {
-                    'name': 'app_token',
-                    'description': 'You can get one <a href="https://pushover.net/apps/build">here</a>.'
                 },
                 {
                     'name': 'priority',

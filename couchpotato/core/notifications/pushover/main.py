@@ -1,13 +1,14 @@
-from couchpotato.core.helpers.encoding import toUnicode
+from couchpotato.core.helpers.encoding import toUnicode, tryUrlencode
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
 from httplib import HTTPSConnection
-from urllib import urlencode
 
 log = CPLog(__name__)
 
 
 class Pushover(Notification):
+
+    app_token = 'YkxHMYDZp285L265L3IwH3LmzkTaCy'
 
     def notify(self, message = '', data = {}):
         if self.isDisabled(): return
@@ -16,7 +17,7 @@ class Pushover(Notification):
 
         data = {
             'user': self.conf('user_key'),
-            'token': self.conf('app_token'),
+            'token': self.app_token,
             'message': toUnicode(message),
             'priority': self.conf('priority')
         }
@@ -24,7 +25,7 @@ class Pushover(Notification):
         http_handler.request('POST',
             "/1/messages.json",
             headers = {'Content-type': 'application/x-www-form-urlencoded'},
-            body = urlencode(data)
+            body = tryUrlencode(data)
         )
 
         response = http_handler.getresponse()
