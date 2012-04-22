@@ -1,7 +1,6 @@
 import hashlib
 import os.path
 import platform
-import pwd
 import re
 
 def getDataDir():
@@ -10,6 +9,7 @@ def getDataDir():
     if os.name == 'nt':
         return os.path.join(os.environ['APPDATA'], 'CouchPotato')
 
+    import pwd
     os.environ['HOME'] = pwd.getpwuid(os.geteuid()).pw_dir
     user_dir = os.path.expanduser('~')
 
