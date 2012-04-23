@@ -4,6 +4,7 @@ from couchpotato.core.event import fireEvent, fireEventAsync, addEvent
 from couchpotato.core.helpers.encoding import toUnicode, tryUrlencode, \
     simplifyString
 from couchpotato.core.helpers.request import getParams, jsonified, getParam
+from couchpotato.core.helpers.variable import getImdb
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Movie, Library, LibraryTitle
@@ -239,7 +240,11 @@ class MoviePlugin(Plugin):
         movies = Env.get('cache').get(cache_key)
 
         if not movies:
-            movies = fireEvent('movie.search', q = q, merge = True)
+
+            if getImdb(q):
+                movies = [fireEvent('movie.info', identifier = q, merge = True)]
+            else:
+                movies = fireEvent('movie.search', q = q, merge = True)
             Env.get('cache').set(cache_key, movies)
 
         return jsonified({

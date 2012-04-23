@@ -148,6 +148,9 @@ Block.Search = new Class({
 			$(m).inject(self.results)
 			self.movies[movie.imdb || 'r-'+Math.floor(Math.random()*10000)] = m
 
+			if(q == movie.imdb)
+				m.showOptions()
+
 		});
 
 		if(q != self.q())
