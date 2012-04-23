@@ -295,6 +295,7 @@ class SourceUpdater(BaseUpdater):
 
                 log.debug('Source version output: %s' % output)
                 self.version = output
+                self.version['type'] = 'source'
             except Exception, e:
                 log.error('Failed using source updater. %s' % e)
                 return {}
@@ -326,7 +327,6 @@ class SourceUpdater(BaseUpdater):
             return {
                 'hash': commit['sha'],
                 'date':  int(time.mktime(parse(commit['commit']['committer']['date']).timetuple())),
-                'type': 'source',
             }
         except:
             log.error('Failed getting latest request from github: %s' % traceback.format_exc())
