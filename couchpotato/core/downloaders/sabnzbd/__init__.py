@@ -39,6 +39,13 @@ config = [{
                     'type': 'directory',
                     'description': 'Your Post-Processing Script directory, set in Sabnzbd > Config > Directories.',
                 },
+                {
+                    'name': 'manual',
+                    'default': 0,
+                    'type': 'bool',
+                    'advanced': True,
+                    'description': 'Disable this downloader for automated searches, but use it when I manually send a release.',
+                },
             ],
         }
     ],

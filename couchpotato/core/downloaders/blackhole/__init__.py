@@ -32,6 +32,13 @@ config = [{
                     'type': 'dropdown',
                     'values': [('nzbs & torrents', 'both'), ('nzb', 'nzb'), ('torrent', 'torrent')],
                 },
+                {
+                    'name': 'manual',
+                    'default': 0,
+                    'type': 'bool',
+                    'advanced': True,
+                    'description': 'Disable this downloader for automated searches, but use it when I manually send a release.',
+                },
             ],
         }
     ],

@@ -135,10 +135,10 @@ class Searcher(Plugin):
 
         return False
 
-    def download(self, data, movie):
+    def download(self, data, movie, manual = False):
 
         snatched_status = fireEvent('status.get', 'snatched', single = True)
-        successful = fireEvent('download', data = data, movie = movie, single = True)
+        successful = fireEvent('download', data = data, movie = movie, manual = manual, single = True)
 
         if successful:
 
