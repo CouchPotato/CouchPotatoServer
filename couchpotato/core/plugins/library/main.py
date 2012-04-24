@@ -1,7 +1,6 @@
 from couchpotato import get_session
 from couchpotato.core.event import addEvent, fireEventAsync, fireEvent
-from couchpotato.core.helpers.encoding import toUnicode, simplifyString, \
-    tryUrlencode
+from couchpotato.core.helpers.encoding import toUnicode, simplifyString
 from couchpotato.core.helpers.variable import mergeDicts
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
@@ -19,7 +18,7 @@ class LibraryPlugin(Plugin):
     def __init__(self):
         addEvent('library.add', self.add)
         addEvent('library.update', self.update)
-        addEvent('library.update_release_date', self.updateReleaseDates)
+        addEvent('library.update_release_date', self.updateReleaseDate)
 
 
     def add(self, attrs = {}, update_after = True):
@@ -123,7 +122,7 @@ class LibraryPlugin(Plugin):
 
         return library_dict
 
-    def updateReleaseDates(self, identifier):
+    def updateReleaseDate(self, identifier):
 
         db = get_session()
         library = db.query(Library).filter_by(identifier = identifier).first()
