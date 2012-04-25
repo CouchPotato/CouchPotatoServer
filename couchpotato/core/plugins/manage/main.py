@@ -77,6 +77,6 @@ class Manage(Plugin):
 
     def directories(self):
         try:
-            return self.conf('library', default = '').split('::')
+            return [x.strip() for x in self.conf('library', default = '').split('::')]
         except:
             return []

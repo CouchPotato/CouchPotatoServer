@@ -192,13 +192,13 @@ class Searcher(Plugin):
 
         movie_name = simplifyString(nzb['name'])
         nzb_words = re.split('\W+', movie_name)
-        required_words = self.conf('required_words').split(',')
+        required_words = [x.strip() for x in self.conf('required_words').split(',')]
 
         if self.conf('required_words') and not list(set(nzb_words) & set(required_words)):
             log.info("NZB doesn't contain any of the required words.")
             return False
 
-        ignored_words = self.conf('ignored_words').split(',')
+        ignored_words = [x.strip() for x in self.conf('ignored_words').split(',')]
         blacklisted = list(set(nzb_words) & set(ignored_words))
         if self.conf('ignored_words') and blacklisted:
             log.info("Wrong: '%s' blacklisted words: %s" % (nzb['name'], ", ".join(blacklisted)))

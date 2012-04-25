@@ -40,7 +40,7 @@ def nameScore(name, year):
 
     # Contains preferred word
     nzb_words = re.split('\W+', simplifyString(name))
-    preferred_words = Env.setting('preferred_words', section = 'searcher').split(',')
+    preferred_words = [x.strip() for x in Env.setting('preferred_words', section = 'searcher').split(',')]
     for word in preferred_words:
         if word.strip() and word.strip().lower() in nzb_words:
             score = score + 100

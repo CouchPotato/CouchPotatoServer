@@ -139,7 +139,7 @@ class MoviePlugin(Plugin):
 
 
         if limit_offset:
-            splt = limit_offset.split(',')
+            splt = [x.strip() for x in limit_offset.split(',')]
             limit = splt[0]
             offset = 0 if len(splt) is 1 else splt[1]
             q2 = q2.limit(limit).offset(offset)
@@ -324,7 +324,7 @@ class MoviePlugin(Plugin):
 
         available_status = fireEvent('status.get', 'available', single = True)
 
-        ids = params.get('id').split(',')
+        ids = [x.strip() for x in params.get('id').split(',')]
         for movie_id in ids:
 
             m = db.query(Movie).filter_by(id = movie_id).first()
@@ -356,7 +356,7 @@ class MoviePlugin(Plugin):
 
         params = getParams()
 
-        ids = params.get('id').split(',')
+        ids = [x.strip() for x in params.get('id').split(',')]
         for movie_id in ids:
             self.delete(movie_id)
 

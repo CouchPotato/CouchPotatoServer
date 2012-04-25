@@ -157,9 +157,9 @@ class Newznab(NZBProvider, RSS):
 
     def getHosts(self):
 
-        uses = str(self.conf('use')).split(',')
-        hosts = self.conf('host').split(',')
-        api_keys = self.conf('api_key').split(',')
+        uses = [x.strip() for x in str(self.conf('use')).split(',')]
+        hosts = [x.strip() for x in self.conf('host').split(',')]
+        api_keys = [x.strip() for x in self.conf('api_key').split(',')]
 
         list = []
         for nr in range(len(hosts)):
