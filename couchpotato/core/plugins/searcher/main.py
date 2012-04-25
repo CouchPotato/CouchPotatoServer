@@ -123,7 +123,11 @@ class Searcher(Plugin):
 
 
                 for nzb in sorted_results:
-                    return self.download(data = nzb, movie = movie)
+                    downloaded = self.download(data = nzb, movie = movie)
+                    if downloaded:
+                        return True
+                    else:
+                        break
             else:
                 log.info('Better quality (%s) already available or snatched for %s' % (quality_type['quality']['label'], default_title))
                 fireEvent('movie.restatus', movie['id'])
