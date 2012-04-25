@@ -45,4 +45,5 @@ class Downloader(Plugin):
         return not self.isEnabled(manual)
 
     def isEnabled(self, manual):
-        return super(Downloader, self).isEnabled() and ((self.conf('manual', default = False) and manual) or manual is True)
+        d_manual = self.conf('manual', default = False)
+        return super(Downloader, self).isEnabled() and ((d_manual and manual) or (d_manual is False))
