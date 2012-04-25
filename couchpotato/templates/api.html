@@ -18,6 +18,12 @@
 			<br />
 			You can also use the API over another domain using JSONP, the callback function should be in 'callback_func'
 			<pre><a href="{{ fireEvent('app.api_url', single = True)|safe }}/updater.info/?callback_func=myfunction">{{ fireEvent('app.api_url', single = True)|safe }}/updater.info/?callback_func=myfunction</a></pre>
+			<br />
+			<br />
+			Get the API key:
+			<pre><a href="/getkey/?p=md5(password)&amp;u=md5(username)">/getkey/?p=md5(password)&amp;u=md5(username)</a></pre>
+			Will return {"api_key": "XXXXXXXXXX", "success": true}. When username or password is empty you don't need to md5 it.
+			<br />
 		</div>
 		
 		{% for route in routes %}

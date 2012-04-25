@@ -1,6 +1,8 @@
 from couchpotato.api import api_docs, api_docs_missing
 from couchpotato.core.auth import requires_auth
 from couchpotato.core.event import fireEvent
+from couchpotato.core.helpers.request import getParams, jsonified
+from couchpotato.core.helpers.variable import md5
 from couchpotato.core.logger import CPLog
 from couchpotato.environment import Env
 from flask.app import Flask
@@ -50,6 +52,22 @@ def apiDocs():
         del api_docs['']
         del api_docs_missing['']
     return render_template('api.html', fireEvent = fireEvent, routes = sorted(routes), api_docs = api_docs, api_docs_missing = sorted(api_docs_missing))
+
+@web.route('getkey/')
+def getApiKey():
+
+    api = None
+    params = getParams()
+    username = Env.setting('username')
+    password = Env.setting('password')
+
+    if (params.get('u') == md5(username) or not username) and (params.get('p') == password or not password):
+        api = Env.setting('api_key')
+
+    return jsonified({
+        'success': api is not None,
+        'api_key': api
+    })
 
 @app.errorhandler(404)
 def page_not_found(error):
