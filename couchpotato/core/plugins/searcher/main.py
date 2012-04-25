@@ -190,7 +190,8 @@ class Searcher(Plugin):
             log.info('Wrong: Outside retention, age is %s, needs %s or lower: %s' % (nzb['age'], retention, nzb['name']))
             return False
 
-        nzb_words = re.split('\W+', simplifyString(nzb['name']))
+        movie_name = simplifyString(nzb['name'])
+        nzb_words = re.split('\W+', movie_name)
         required_words = self.conf('required_words').split(',')
 
         if self.conf('required_words') and not list(set(nzb_words) & set(required_words)):
@@ -202,6 +203,12 @@ class Searcher(Plugin):
         if self.conf('ignored_words') and blacklisted:
             log.info("Wrong: '%s' blacklisted words: %s" % (nzb['name'], ", ".join(blacklisted)))
             return False
+
+        pron_tags = ['xxx', 'sex', 'anal', 'tits', 'fuck', 'porn', 'orgy', 'milf', 'boobs']
+        for p_tag in pron_tags:
+            if p_tag in movie_name:
+                log.info('Wrong: %s, probably pr0n' % (nzb['name']))
+                return False
 
         #qualities = fireEvent('quality.all', single = True)
         preferred_quality = fireEvent('quality.single', identifier = quality['identifier'], single = True)
@@ -313,10 +320,10 @@ class Searcher(Plugin):
             check_movie = fireEvent('scanner.name_year', check_name, single = True)
 
             try:
-                check_words = re.split('\W+', check_movie.get('name', ''))
-                movie_words = re.split('\W+', simplifyString(movie_name))
+                check_words = filter(None, re.split('\W+', check_movie.get('name', '')))
+                movie_words = filter(None, re.split('\W+', simplifyString(movie_name)))
 
-                if len(list(set(check_words) - set(movie_words))) == 0:
+                if len(check_words) > 0 and len(movie_words) > 0 and len(list(set(check_words) - set(movie_words))) == 0:
                     return True
             except:
                 pass
