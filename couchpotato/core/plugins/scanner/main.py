@@ -263,7 +263,7 @@ class Scanner(Plugin):
                     file_too_new = tryInt(time.time() - file_time)
                     break
 
-            if file_too_new and not Env.get('dev'):
+            if file_too_new:
                 log.info('Files seem to be still unpacking or just unpacked (created on %s), ignoring for now: %s' % (time.ctime(file_time), identifier))
                 continue
 
