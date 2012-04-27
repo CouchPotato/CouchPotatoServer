@@ -328,7 +328,7 @@ class Renamer(Plugin):
                 try:
                     os.remove(src)
                 except:
-                    log.error('Failed removing %s: %s', (src, traceback.format_exc()))
+                    log.error('Failed removing %s: %s' % (src, traceback.format_exc()))
 
             # Remove matching releases
             for release in remove_releases:
@@ -336,14 +336,14 @@ class Renamer(Plugin):
                 try:
                     db.delete(release)
                 except:
-                    log.error('Failed removing %s: %s', (release.identifier, traceback.format_exc()))
+                    log.error('Failed removing %s: %s' % (release.identifier, traceback.format_exc()))
 
             if group['dirname'] and group['parentdir']:
                 try:
                     log.info('Deleting folder: %s' % group['parentdir'])
                     self.deleteEmptyFolder(group['parentdir'])
                 except:
-                    log.error('Failed removing %s: %s', (group['parentdir'], traceback.format_exc()))
+                    log.error('Failed removing %s: %s' % (group['parentdir'], traceback.format_exc()))
 
             # Search for trailers etc
             fireEventAsync('renamer.after', group)
