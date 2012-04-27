@@ -165,6 +165,9 @@ class Scanner(Plugin):
 
         for file_path in files:
 
+            if not os.path.exists(file_path):
+                continue
+
             # Remove ignored files
             if self.isSampleFile(file_path):
                 leftovers.append(file_path)
