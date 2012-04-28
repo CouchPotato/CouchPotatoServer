@@ -270,8 +270,9 @@ var ReleaseAction = new Class({
 			// Header
 			new Element('div.item.head').adopt(
 				new Element('span.name', {'text': 'Release name'}),
+				new Element('span.status', {'text': 'Status'}),
 				new Element('span.quality', {'text': 'Quality'}),
-				new Element('span.size', {'text': 'Size (MB)'}),
+				new Element('span.size', {'text': 'Size'}),
 				new Element('span.age', {'text': 'Age'}),
 				new Element('span.score', {'text': 'Score'}),
 				new Element('span.provider', {'text': 'Provider'})
@@ -288,9 +289,10 @@ var ReleaseAction = new Class({
 				} catch(e){}
 
 				new Element('div', {
-					'class': 'item ' + status.identifier
+					'class': 'item'
 				}).adopt(
 					new Element('span.name', {'text': self.get(release, 'name'), 'title': self.get(release, 'name')}),
+					new Element('span.status', {'text': status.identifier, 'class': 'release_status '+status.identifier}),
 					new Element('span.quality', {'text': quality.get('label')}),
 					new Element('span.size', {'text': (self.get(release, 'size') || 'unknown')}),
 					new Element('span.age', {'text': self.get(release, 'age')}),
