@@ -11,7 +11,7 @@ class NotifyMyAndroid(Notification):
         if self.isDisabled(): return
 
         nma = pynma.PyNMA()
-        keys = self.conf('api_key').split(',')
+        keys = [x.strip() for x in self.conf('api_key').split(',')]
         nma.addkey(keys)
         nma.developerkey(self.conf('dev_key'))
 

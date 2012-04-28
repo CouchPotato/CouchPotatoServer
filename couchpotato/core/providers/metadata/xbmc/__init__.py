@@ -20,18 +20,40 @@ config = [{
                 },
                 {
                     'name': 'meta_nfo',
+                    'label': 'NFO',
                     'default': True,
                     'type': 'bool',
+                },
+                {
+                    'name': 'meta_nfo_name',
+                    'label': 'NFO filename',
+                    'default': '%s.nfo',
+                    'advanced': True,
+                    'description': '<strong>%s</strong> is the rootname of the movie. For example "/path/to/movie cd1.mkv" will be "/path/to/movie"'
                 },
                 {
                     'name': 'meta_fanart',
+                    'label': 'Fanart',
                     'default': True,
                     'type': 'bool',
                 },
                 {
+                    'name': 'meta_fanart_name',
+                    'label': 'Fanart filename',
+                    'default': '%s-fanart.jpg',
+                    'advanced': True,
+                },
+                {
                     'name': 'meta_thumbnail',
+                    'label': 'Thumbnail',
                     'default': True,
                     'type': 'bool',
+                },
+                {
+                    'name': 'meta_thumbnail_name',
+                    'label': 'Thumbnail filename',
+                    'default': '%s.tbn',
+                    'advanced': True,
                 },
             ],
         },

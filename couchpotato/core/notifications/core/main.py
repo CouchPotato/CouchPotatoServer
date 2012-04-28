@@ -56,7 +56,7 @@ class CoreNotifier(Notification):
         addEvent('library.update_finish', lambda data: fireEvent('notify.frontend', type = 'library.update', data = data))
 
     def markAsRead(self):
-        ids = getParam('ids').split(',')
+        ids = [x.strip() for x in getParam('ids').split(',')]
 
         db = get_session()
 
@@ -78,7 +78,7 @@ class CoreNotifier(Notification):
         q = db.query(Notif)
 
         if limit_offset:
-            splt = limit_offset.split(',')
+            splt = [x.strip() for x in limit_offset.split(',')]
             limit = splt[0]
             offset = 0 if len(splt) is 1 else splt[1]
             q = q.limit(limit).offset(offset)

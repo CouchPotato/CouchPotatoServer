@@ -96,7 +96,8 @@ class BaseUpdater(Plugin):
             'last_check': self.last_check,
             'update_version': self.update_version,
             'version': self.getVersion(),
-            'repo_name': '%s/%s' % (self.repo_user, self.repo_name)
+            'repo_name': '%s/%s' % (self.repo_user, self.repo_name),
+            'branch': self.branch,
         }
 
     def check(self):

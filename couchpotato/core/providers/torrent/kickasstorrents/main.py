@@ -17,6 +17,7 @@ class KickAssTorrents(TorrentProvider):
         'test': 'http://www.kat.ph/',
         'detail': 'http://www.kat.ph/%s-t%s.html',
         'search': 'http://www.kat.ph/%s-i%s/',
+        'download': 'http://torcache.net/',
     }
 
     cat_ids = [
@@ -127,7 +128,7 @@ class KickAssTorrents(TorrentProvider):
         return tryInt(age)
 
     def download(self, url = '', nzb_id = ''):
-        compressed_data = super(KickAssTorrents, self).download(url = url, nzb_id = nzb_id)
+        compressed_data = self.urlopen(url = url, headers = {'Referer': 'http://kat.ph/'})
 
         compressedstream = StringIO.StringIO(compressed_data)
         gzipper = gzip.GzipFile(fileobj = compressedstream)

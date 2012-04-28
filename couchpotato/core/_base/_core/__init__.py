@@ -55,7 +55,7 @@ config = [{
                     'name': 'api_key',
                     'default': uuid4().hex,
                     'readonly': 1,
-                    'description': 'Let 3rd party app do stuff. <a target="_self" href="/docs/">Docs</a>',
+                    'description': 'Let 3rd party app do stuff. <a target="_self" href="../../docs/">Docs</a>',
                 },
                 {
                     'name': 'debug',

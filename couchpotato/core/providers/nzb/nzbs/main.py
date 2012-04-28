@@ -13,10 +13,10 @@ log = CPLog(__name__)
 class Nzbs(NZBProvider, RSS):
 
     urls = {
-        'download': 'http://nzbs.org/index.php?action=getnzb&nzbid=%s%s',
-        'nfo': 'http://nzbs.org/index.php?action=view&nzbid=%s&nfo=1',
-        'detail': 'http://nzbs.org/index.php?action=view&nzbid=%s',
-        'api': 'http://nzbs.org/rss.php',
+        'download': 'https://nzbs.org/index.php?action=getnzb&nzbid=%s%s',
+        'nfo': 'https://nzbs.org/index.php?action=view&nzbid=%s&nfo=1',
+        'detail': 'https://nzbs.org/index.php?action=view&nzbid=%s',
+        'api': 'https://nzbs.org/rss.php',
     }
 
     cat_ids = [

@@ -27,6 +27,7 @@ class CouchPotatoApi(MovieProvider):
 
     def getReleaseDate(self, identifier = None):
 
+        if identifier is None: return {}
         try:
             headers = {'X-CP-Version': fireEvent('app.version', single = True)}
             data = self.urlopen((self.api_url % ('eta')) + (identifier + '/'), headers = headers)
