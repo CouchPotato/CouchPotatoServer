@@ -161,26 +161,25 @@ class QualityPlugin(Plugin):
         for cur_file in files:
             size = (os.path.getsize(cur_file) / 1024 / 1024) if os.path.isfile(cur_file) else 0
             words = re.split('\W+', cur_file.lower())
-            safe_cur_file = toSafeString(cur_file)
 
             for quality in self.all():
 
                 # Check tags
                 if quality['identifier'] in words:
-                    log.debug('Found via identifier "%s" in %s' % (quality['identifier'], safe_cur_file))
+                    log.debug('Found via identifier "%s" in %s' % (quality['identifier'], cur_file))
                     return self.setCache(hash, quality)
 
                 if list(set(quality.get('alternative', [])) & set(words)):
-                    log.debug('Found %s via alt %s in %s' % (quality['identifier'], quality.get('alternative'), safe_cur_file))
+                    log.debug('Found %s via alt %s in %s' % (quality['identifier'], quality.get('alternative'), cur_file))
                     return self.setCache(hash, quality)
 
                 for tag in quality.get('tags', []):
                     if isinstance(tag, tuple) and '.'.join(tag) in '.'.join(words):
-                        log.debug('Found %s via tag %s in %s' % (quality['identifier'], quality.get('tags'), safe_cur_file))
+                        log.debug('Found %s via tag %s in %s' % (quality['identifier'], quality.get('tags'), cur_file))
                         return self.setCache(hash, quality)
 
                 if list(set(quality.get('tags', [])) & set(words)):
-                    log.debug('Found %s via tag %s in %s' % (quality['identifier'], quality.get('tags'), safe_cur_file))
+                    log.debug('Found %s via tag %s in %s' % (quality['identifier'], quality.get('tags'), cur_file))
                     return self.setCache(hash, quality)
 
                 # Check on unreliable stuff
