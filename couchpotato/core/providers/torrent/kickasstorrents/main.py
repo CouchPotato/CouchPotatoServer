@@ -17,6 +17,7 @@ class KickAssTorrents(TorrentProvider):
         'test': 'http://www.kat.ph/',
         'detail': 'http://www.kat.ph/%s-t%s.html',
         'search': 'http://www.kat.ph/%s-i%s/',
+        'download': 'http://torcache.net/',
     }
 
     cat_ids = [
