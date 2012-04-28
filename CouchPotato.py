@@ -114,6 +114,7 @@ class Loader(object):
 
 
 if __name__ == '__main__':
+    l = None
     try:
         l = Loader()
         l.daemonize()
@@ -135,7 +136,10 @@ if __name__ == '__main__':
         try:
             # if this fails we will have two tracebacks
             # one for failing to log, and one for the exception that got us here.
-            l.log.critical(traceback.format_exc())
+            if l:
+                l.log.critical(traceback.format_exc())
+            else:
+                print traceback.format_exc()
         except:
             print traceback.format_exc()
         raise

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # enzyme - Video metadata parser
-# Copyright (C) 2011 Antoine Bertin <diaoulael@gmail.com>
-# Copyright (C) 2006-2009 Dirk Meyer <dischi@freevo.org>
-# Copyright (C) 2006-2009 Jason Tackaberry
+# Copyright 2011-2012 Antoine Bertin <diaoulael@gmail.com>
+# Copyright 2006-2009 Dirk Meyer <dischi@freevo.org>
+# Copyright 2006-2009 Jason Tackaberry
 #
 # This file is part of enzyme.
 #
@@ -17,9 +17,7 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
-
+# along with enzyme.  If not, see <http://www.gnu.org/licenses/>.
 __all__ = ['ENCODING', 'str_to_unicode', 'unicode_to_str']
 
 import locale

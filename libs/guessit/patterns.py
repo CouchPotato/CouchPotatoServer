@@ -22,10 +22,13 @@
 
 subtitle_exts = [ 'srt', 'idx', 'sub', 'ssa', 'txt' ]
 
-video_exts = [ 'avi', 'mkv', 'mpg', 'mp4', 'm4v', 'mov', 'ogg', 'ogm', 'ogv', 'wmv', 'divx' ]
+video_exts = [ 'avi', 'mkv', 'mpg', 'mp4', 'm4v', 'mov', 'ogg', 'ogm', 'ogv',
+               'wmv', 'divx' ]
+
+group_delimiters = [ '()', '[]', '{}' ]
 
 # separator character regexp
-sep = r'[][)(}{+ \._-]' # regexp art, hehe :D
+sep = r'[][)(}{+ /\._-]' # regexp art, hehe :D
 
 # character used to represent a deleted char (when matching groups)
 deleted = '_'
@@ -35,28 +38,33 @@ episode_rexps = [ # ... Season 2 ...
                   (r'season (?P<season>[0-9]+)', 1.0, (0, 0)),
                   (r'saison (?P<season>[0-9]+)', 1.0, (0, 0)),
 
-                  # ... s02-x01 ...
-                  (r's(?P<season>[0-9]{1,2})-x(?P<bonusNumber>[0-9]{1,2})[^0-9]', 1.0, (0, -1)),
-
                   # ... s02e13 ...
                   (r'[Ss](?P<season>[0-9]{1,2}).{,3}[EeXx](?P<episodeNumber>[0-9]{1,2})[^0-9]', 1.0, (0, -1)),
 
                   # ... 2x13 ...
-                  (r'[^0-9](?P<season>[0-9]{1,2})[x\.](?P<episodeNumber>[0-9]{2})[^0-9]', 0.8, (1, -1)),
+                  (r'[^0-9](?P<season>[0-9]{1,2})x(?P<episodeNumber>[0-9]{2})[^0-9]', 0.8, (1, -1)),
 
                   # ... s02 ...
-                  (sep + r's(?P<season>[0-9]{1,2})' + sep + '?', 0.6, (1, -1)),
+                  #(sep + r's(?P<season>[0-9]{1,2})' + sep, 0.6, (1, -1)),
+                  (r's(?P<season>[0-9]{1,2})[^0-9]', 0.6, (0, -1)),
 
                   # v2 or v3 for some mangas which have multiples rips
-                  (sep + r'(?P<episodeNumber>[0-9]{1,3})v[23]' + sep, 0.6, (0, 0)),
+                  (r'(?P<episodeNumber>[0-9]{1,3})v[23]' + sep, 0.6, (0, 0)),
+
+                  # ... ep 23 ...
+                  ('ep' + sep + r'(?P<episodeNumber>[0-9]{1,2})[^0-9]', 0.7, (0, -1))
                   ]
 
 
 weak_episode_rexps = [ # ... 213 or 0106 ...
-                       (sep + r'(?P<episodeNumber>[0-9]{1,4})' + sep, 0.3, (1, -1)),
+                       (sep + r'(?P<episodeNumber>[0-9]{1,4})' + sep, (1, -1)),
+
+                       # ... 2x13 ...
+                       (sep + r'[^0-9](?P<season>[0-9]{1,2})\.(?P<episodeNumber>[0-9]{2})[^0-9]' + sep, (1, -1)),
+
                        ]
 
-non_episode_title = [ 'extras' ]
+non_episode_title = [ 'extras', 'rip' ]
 
 
 video_rexps = [ # cd number
@@ -76,7 +84,13 @@ video_rexps = [ # cd number
                 (r'(?P<width>[0-9]{3,4})x(?P<height>[0-9]{3,4})', 0.9, (0, 0)),
 
                 # website
-                (r'(?P<website>www(\.[a-zA-Z0-9]+){2,3})', 0.8, (0, 0))
+                (r'(?P<website>www(\.[a-zA-Z0-9]+){2,3})', 0.8, (0, 0)),
+
+                # bonusNumber: ... x01 ...
+                (r'x(?P<bonusNumber>[0-9]{1,2})', 1.0, (0, 0)),
+
+                # filmNumber: ... f01 ...
+                (r'f(?P<filmNumber>[0-9]{1,2})', 1.0, (0, 0))
                 ]
 
 websites = [ 'tvu.org.ru', 'emule-island.com', 'UsaBit.com', 'www.divx-overnet.com', 'sharethefiles.com' ]
@@ -87,7 +101,7 @@ properties = { 'format': [ 'DVDRip', 'HD-DVD', 'HDDVD', 'HDDVDRip', 'BluRay', 'B
                            'HDRip', 'DVD', 'DVDivX', 'HDTV', 'DVB', 'DVBRip', 'PDTV', 'WEBRip',
                            'DVDSCR', 'Screener', 'VHS', 'VIDEO_TS' ],
 
-               'screenSize': [ '720p', '720' ],
+               'screenSize': [ '720p', '720', '1080p', '1080' ],
 
                'videoCodec': [ 'XviD', 'DivX', 'x264', 'h264', 'Rv10' ],
 
@@ -98,17 +112,17 @@ properties = { 'format': [ 'DVDRip', 'HD-DVD', 'HDDVD', 'HDDVDRip', 'BluRay', 'B
                'releaseGroup': [ 'ESiR', 'WAF', 'SEPTiC', '[XCT]', 'iNT', 'PUKKA',
                                  'CHD', 'ViTE', 'TLF', 'DEiTY', 'FLAiTE',
                                  'MDX', 'GM4F', 'DVL', 'SVD', 'iLUMiNADOS', ' FiNaLe',
-                                 'UnSeeN', 'aXXo', 'KLAXXON', 'NoTV', 'ZeaL', 'LOL' ],
+                                 'UnSeeN', 'aXXo', 'KLAXXON', 'NoTV', 'ZeaL', 'LOL',
+                                 'HDBRiSe' ],
 
                'episodeFormat': [ 'Minisode', 'Minisodes' ],
 
                'other': [ '5ch', 'PROPER', 'REPACK', 'LIMITED', 'DualAudio', 'iNTERNAL', 'Audiofixed', 'R5',
                           'complete', 'classic', # not so sure about these ones, could appear in a title
                           'ws', # widescreen
-                          #'SE', # special edition
-                          # TODO: director's cut
                           ],
                }
+
 
 def find_properties(filename):
     result = []
@@ -119,7 +133,7 @@ def find_properties(filename):
             if pos != -1:
                 end = pos + len(value)
                 # make sure our word is always surrounded by separators
-                if ((pos > 0 and clow[pos-1] not in sep) or
+                if ((pos > 0 and clow[pos - 1] not in sep) or
                     (end < len(clow) and clow[end] not in sep)):
                     # note: sep is a regexp, but in this case using it as
                     #       a sequence achieves the same goal
@@ -137,6 +151,7 @@ property_synonyms = { 'DVD': [ 'DVDRip', 'VIDEO_TS' ],
                       'DivX': [ 'DVDivX' ],
                       'h264': [ 'x264' ],
                       '720p': [ '720' ],
+                      '1080p': [ '1080' ],
                       'AAC': [ 'He-AAC', 'AAC-He' ],
                       'Special Edition': [ 'Special' ],
                       'Collector Edition': [ 'Collector' ],
@@ -145,14 +160,21 @@ property_synonyms = { 'DVD': [ 'DVDRip', 'VIDEO_TS' ],
                       }
 
 
-reverse_synonyms = {}
-for prop, values in properties.items():
-    for value in values:
-        reverse_synonyms[value.lower()] = value
+def revert_synonyms():
+    reverse = {}
 
-for canonical, synonyms in property_synonyms.items():
-    for synonym in synonyms:
-        reverse_synonyms[synonym.lower()] = canonical
+    for _, values in properties.items():
+        for value in values:
+            reverse[value.lower()] = value
+
+    for canonical, synonyms in property_synonyms.items():
+        for synonym in synonyms:
+            reverse[synonym.lower()] = canonical
+
+    return reverse
+
+reverse_synonyms = revert_synonyms()
+
 
 def canonical_form(string):
     return reverse_synonyms.get(string.lower(), string)

@@ -17,6 +17,7 @@ class KickAssTorrents(TorrentProvider):
         'test': 'http://www.kat.ph/',
         'detail': 'http://www.kat.ph/%s-t%s.html',
         'search': 'http://www.kat.ph/%s-i%s/',
+        'download': 'http://torcache.net/',
     }
 
     cat_ids = [
@@ -36,7 +37,7 @@ class KickAssTorrents(TorrentProvider):
         if self.isDisabled() or not self.isAvailable(self.urls['test']):
             return results
 
-        cache_key = 'kickasstorrents.%s' % movie['library']['identifier']
+        cache_key = 'kickasstorrents.%s.%s' % (movie['library']['identifier'], quality.get('identifier'))
         data = self.getCache(cache_key, self.urls['search'] % (movie['library']['titles'][0]['title'], movie['library']['identifier'].replace('tt', '')))
         if data:
 
@@ -127,7 +128,7 @@ class KickAssTorrents(TorrentProvider):
         return tryInt(age)
 
     def download(self, url = '', nzb_id = ''):
-        compressed_data = super(KickAssTorrents, self).download(url = url, nzb_id = nzb_id)
+        compressed_data = self.urlopen(url = url, headers = {'Referer': 'http://kat.ph/'})
 
         compressedstream = StringIO.StringIO(compressed_data)
         gzipper = gzip.GzipFile(fileobj = compressedstream)

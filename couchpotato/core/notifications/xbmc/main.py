@@ -1,7 +1,7 @@
+from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
 import base64
-import urllib
 
 log = CPLog(__name__)
 
@@ -21,7 +21,7 @@ class XBMC(Notification):
 
     def send(self, command, host):
 
-        url = 'http://%s/xbmcCmds/xbmcHttp/?%s' % (host, urllib.urlencode(command))
+        url = 'http://%s/xbmcCmds/xbmcHttp/?%s' % (host, tryUrlencode(command))
 
         headers = {}
         if self.conf('password'):

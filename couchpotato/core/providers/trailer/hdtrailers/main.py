@@ -1,9 +1,9 @@
 from BeautifulSoup import SoupStrainer, BeautifulSoup
+from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.variable import mergeDicts
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.trailer.base import TrailerProvider
 from string import letters, digits
-from urllib import urlencode
 import re
 
 log = CPLog(__name__)
@@ -44,7 +44,7 @@ class HDTrailers(TrailerProvider):
 
         movie_name = group['library']['titles'][0]['title']
 
-        url = "%s?%s" % (self.url['backup'], urlencode({'s':movie_name}))
+        url = "%s?%s" % (self.url['backup'], tryUrlencode({'s':movie_name}))
         data = self.getCache('hdtrailers.alt.%s' % group['library']['identifier'], url)
 
         try:

@@ -19,7 +19,7 @@ def addEvent(name, handler, priority = 100):
     if events.get(name):
         e = events[name]
     else:
-        e = events[name] = Event(threads = 20, exc_info = True, traceback = True, lock = threading.RLock())
+        e = events[name] = Event(name = name, threads = 20, exc_info = True, traceback = True, lock = threading.RLock())
 
     def createHandle(*args, **kwargs):
 
@@ -42,6 +42,8 @@ def removeEvent(name, handler):
     e -= handler
 
 def fireEvent(name, *args, **kwargs):
+    if not events.get(name): return
+    #log.debug('Firing event %s' % name)
     try:
 
         # Fire after event

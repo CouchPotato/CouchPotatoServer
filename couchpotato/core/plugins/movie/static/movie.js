@@ -79,7 +79,7 @@ var Movie = new Class({
 			var q = self.quality.getElement('.q_id'+ release.quality_id),
 				status = Status.get(release.status_id);
 
-			if(!q && status.identifier == 'snatched')
+			if(!q && (status.identifier == 'snatched' || status.identifier == 'done'))
 				var q = self.addQuality(release.quality_id)
 			if (q)
 				q.addClass(status.identifier);
@@ -270,8 +270,9 @@ var ReleaseAction = new Class({
 			// Header
 			new Element('div.item.head').adopt(
 				new Element('span.name', {'text': 'Release name'}),
+				new Element('span.status', {'text': 'Status'}),
 				new Element('span.quality', {'text': 'Quality'}),
-				new Element('span.size', {'text': 'Size (MB)'}),
+				new Element('span.size', {'text': 'Size'}),
 				new Element('span.age', {'text': 'Age'}),
 				new Element('span.score', {'text': 'Score'}),
 				new Element('span.provider', {'text': 'Provider'})
@@ -280,17 +281,27 @@ var ReleaseAction = new Class({
 			Array.each(self.movie.data.releases, function(release){
 
 				var status = Status.get(release.status_id),
-					quality = Quality.getProfile(release.quality_id)
+					quality = Quality.getProfile(release.quality_id),
+					info = release.info;
+
+				try {
+					var details_url = info.filter(function(item){ return item.identifier == 'detail_url' }).pick().value;
+				} catch(e){}
 
 				new Element('div', {
-					'class': 'item ' + status.identifier
+					'class': 'item'
 				}).adopt(
 					new Element('span.name', {'text': self.get(release, 'name'), 'title': self.get(release, 'name')}),
+					new Element('span.status', {'text': status.identifier, 'class': 'release_status '+status.identifier}),
 					new Element('span.quality', {'text': quality.get('label')}),
 					new Element('span.size', {'text': (self.get(release, 'size') || 'unknown')}),
 					new Element('span.age', {'text': self.get(release, 'age')}),
 					new Element('span.score', {'text': self.get(release, 'score')}),
 					new Element('span.provider', {'text': self.get(release, 'provider')}),
+					details_url ? new Element('a.info.icon', {
+						'href': details_url,
+						'target': '_blank'
+					}) : null,
 					new Element('a.download.icon', {
 						'events': {
 							'click': function(e){

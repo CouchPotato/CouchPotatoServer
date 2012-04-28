@@ -11,9 +11,9 @@ class Transmission(Downloader):
 
     type = ['torrent']
 
-    def download(self, data = {}, movie = {}):
+    def download(self, data = {}, movie = {}, manual = False):
 
-        if self.isDisabled() or not self.isCorrectType(data.get('type')):
+        if self.isDisabled(manual) or not self.isCorrectType(data.get('type')):
             return
 
         log.info('Sending "%s" to Transmission.' % data.get('name'))

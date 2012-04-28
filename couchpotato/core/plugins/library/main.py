@@ -1,10 +1,12 @@
 from couchpotato import get_session
 from couchpotato.core.event import addEvent, fireEventAsync, fireEvent
 from couchpotato.core.helpers.encoding import toUnicode, simplifyString
+from couchpotato.core.helpers.variable import mergeDicts
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Library, LibraryTitle, File
 from string import ascii_letters
+import time
 import traceback
 
 log = CPLog(__name__)
@@ -16,6 +18,8 @@ class LibraryPlugin(Plugin):
     def __init__(self):
         addEvent('library.add', self.add)
         addEvent('library.update', self.update)
+        addEvent('library.update_release_date', self.updateReleaseDate)
+
 
     def add(self, attrs = {}, update_after = True):
 
@@ -45,7 +49,7 @@ class LibraryPlugin(Plugin):
         # Update library info
         if update_after is not False:
             handle = fireEventAsync if update_after is 'async' else fireEvent
-            handle('library.update', identifier = l.identifier, default_title = attrs.get('title', ''))
+            handle('library.update', identifier = l.identifier, default_title = toUnicode(attrs.get('title', '')))
 
         return l.to_dict(self.default_dict)
 
@@ -86,10 +90,11 @@ class LibraryPlugin(Plugin):
             for title in titles:
                 if not title:
                     continue
+                title = toUnicode(title)
                 t = LibraryTitle(
-                    title = toUnicode(title),
+                    title = title,
                     simple_title = self.simplifyTitle(title),
-                    default = title.lower() == default_title.lower() or (default_title is '' and titles[0] == title)
+                    default = title.lower() == toUnicode(default_title.lower()) or (toUnicode(default_title) == u'' and toUnicode(titles[0]) == title)
                 )
                 library.titles.append(t)
 
@@ -116,6 +121,22 @@ class LibraryPlugin(Plugin):
         fireEvent('library.update_finish', data = library_dict)
 
         return library_dict
+
+    def updateReleaseDate(self, identifier):
+
+        db = get_session()
+        library = db.query(Library).filter_by(identifier = identifier).first()
+
+        if library.info.get('release_date', {}).get('expires', 0) < time.time():
+            dates = fireEvent('movie.release_date', identifier = identifier, merge = True)
+            library.info = mergeDicts(library.info, {'release_date': dates})
+            db.commit()
+
+        dates = library.info.get('release_date', {})
+        db.remove()
+
+        return dates
+
 
     def simplifyTitle(self, title):
 

@@ -3,6 +3,7 @@ from couchpotato.core.helpers.encoding import simplifyString, toUnicode
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.movie.base import MovieProvider
 from libs.themoviedb import tmdb
+import re
 
 log = CPLog(__name__)
 
@@ -67,8 +68,14 @@ class TheMovieDb(MovieProvider):
             if raw:
                 try:
                     nr = 0
-                    for movie in raw:
 
+                    # Sort on returned score first when year is in q
+                    if re.search('\s\d{4}', q):
+                        movies = sorted(raw, key = lambda k: k['score'], reverse = True)
+                    else:
+                        movies = raw
+
+                    for movie in movies:
                         results.append(self.parseMovie(movie))
 
                         nr += 1

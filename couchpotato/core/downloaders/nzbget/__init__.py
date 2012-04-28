@@ -33,6 +33,13 @@ config = [{
                     'default': 'Movies',
                     'description': 'The category CP places the nzb in. Like <strong>movies</strong> or <strong>couchpotato</strong>',
                 },
+                {
+                    'name': 'manual',
+                    'default': 0,
+                    'type': 'bool',
+                    'advanced': True,
+                    'description': 'Disable this downloader for automated searches, but use it when I manually send a release.',
+                },
             ],
         }
     ],

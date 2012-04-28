@@ -40,3 +40,10 @@ class Downloader(Plugin):
             log.debug("Downloader doesn't support this type")
 
         return is_correct
+
+    def isDisabled(self, manual):
+        return not self.isEnabled(manual)
+
+    def isEnabled(self, manual):
+        d_manual = self.conf('manual', default = False)
+        return super(Downloader, self).isEnabled() and ((d_manual and manual) or (d_manual is False))

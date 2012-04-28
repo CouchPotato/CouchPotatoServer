@@ -1,6 +1,5 @@
 from couchpotato import get_session
-from couchpotato.api import addApiView
-from couchpotato.core.event import addEvent
+from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.request import jsonified, getParams
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.movie.base import MovieProvider
@@ -12,26 +11,37 @@ log = CPLog(__name__)
 
 class CouchPotatoApi(MovieProvider):
 
-    apiUrl = 'http://couchpota.to/api/%s/'
+    api_url = 'http://couchpota.to/api/%s/'
+    http_time_between_calls = 0
 
     def __init__(self):
-        addEvent('movie.release_date', self.releaseDate)
-        addApiView('movie.suggest', self.suggestView)
+        #addApiView('movie.suggest', self.suggestView)
 
-    def releaseDate(self, imdb_id):
+        addEvent('movie.info', self.getInfo)
+        addEvent('movie.release_date', self.getReleaseDate)
 
+    def getInfo(self, identifier = None):
+        return {
+            'release_date': self.getReleaseDate(identifier)
+        }
+
+    def getReleaseDate(self, identifier = None):
+
+        if identifier is None: return {}
         try:
-            data = self.urlopen((self.apiUrl % ('eta')) + (id + '/'))
+            headers = {'X-CP-Version': fireEvent('app.version', single = True)}
+            data = self.urlopen((self.api_url % ('eta')) + (identifier + '/'), headers = headers)
             dates = json.loads(data)
-            log.info('Found ETA for %s: %s' % (imdb_id, dates))
+            log.debug('Found ETA for %s: %s' % (identifier, dates))
+            return dates
         except Exception, e:
-            log.error('Error getting ETA for %s: %s' % (imdb_id, e))
+            log.error('Error getting ETA for %s: %s' % (identifier, e))
 
-        return dates
+        return {}
 
     def suggest(self, movies = [], ignore = []):
         try:
-            data = self.urlopen((self.apiUrl % ('suggest')) + ','.join(movies) + '/' + ','.join(ignore) + '/')
+            data = self.urlopen((self.api_url % ('suggest')) + ','.join(movies) + '/' + ','.join(ignore) + '/')
             suggestions = json.loads(data)
             log.info('Found Suggestions for %s' % (suggestions))
         except Exception, e:

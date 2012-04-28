@@ -1,9 +1,9 @@
 from couchpotato.core.downloaders.base import Downloader
+from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.variable import cleanHost
 from couchpotato.core.logger import CPLog
 from inspect import isfunction
 from tempfile import mkstemp
-from urllib import urlencode
 import base64
 import os
 import re
@@ -15,9 +15,9 @@ class Sabnzbd(Downloader):
 
     type = ['nzb']
 
-    def download(self, data = {}, movie = {}):
+    def download(self, data = {}, movie = {}, manual = False):
 
-        if self.isDisabled() or not self.isCorrectType(data.get('type')):
+        if self.isDisabled(manual) or not self.isCorrectType(data.get('type')):
             return
 
         log.info("Sending '%s' to SABnzbd." % data.get('name'))
@@ -58,7 +58,7 @@ class Sabnzbd(Downloader):
         if pp:
             params['script'] = pp_script_fn
 
-        url = cleanHost(self.conf('host')) + "api?" + urlencode(params)
+        url = cleanHost(self.conf('host')) + "api?" + tryUrlencode(params)
 
         try:
             if params.get('mode') is 'addfile':

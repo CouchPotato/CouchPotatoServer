@@ -3,15 +3,18 @@ from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Library, FileType
+from couchpotato.environment import Env
+import subliminal
 
 log = CPLog(__name__)
 
 
 class Subtitle(Plugin):
 
+    services = ['opensubtitles', 'thesubdb', 'subswiki']
+
     def __init__(self):
-        pass
-        #addEvent('renamer.before', self.searchSingle)
+        addEvent('renamer.before', self.searchSingle)
 
     def searchLibrary(self):
 
@@ -33,20 +36,22 @@ class Subtitle(Plugin):
                         files.append(file.path);
 
                     # get subtitles for those files
-                    subtitles = fireEvent('subtitle.search', files = files, languages = self.getLanguages(), merge = True)
-
-                    # do something with the returned subtitles
-                    print subtitles
-
+                    subliminal.list_subtitles(files, cache_dir = Env.get('cache_dir'), multi = True, languages = self.getLanguages(), services = self.services)
 
     def searchSingle(self, group):
 
         if self.isDisabled(): return
 
-        subtitles = fireEvent('subtitle.search', files = group['files']['movie'], languages = self.getLanguages(), merge = True)
+        available_languages = sum(group['subtitle_language'].itervalues(), [])
+        downloaded = []
+        for lang in self.getLanguages():
+            if lang not in available_languages:
+                download = subliminal.download_subtitles(group['files']['movie'], multi = True, force = False, languages = [lang], services = self.services, cache_dir = Env.get('cache_dir'))
+                downloaded.extend(download)
 
-        # do something with the returned subtitles
-        print subtitles
+        for d_sub in downloaded:
+            group['files']['subtitle'].add(d_sub.path)
+            group['subtitle_language'][d_sub.path] = [d_sub.language]
 
     def getLanguages(self):
-        return self.conf('languages').split(',')
+        return [x.strip() for x in self.conf('languages').split(',')]

@@ -1,10 +1,8 @@
-from couchpotato import get_session
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, addEvent, fireEventAsync
 from couchpotato.core.helpers.request import jsonified, getParams
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.core.settings.model import File
 from couchpotato.environment import Env
 import os
 import time
@@ -13,8 +11,6 @@ import time
 log = CPLog(__name__)
 
 class Manage(Plugin):
-
-    last_update = 0
 
     def __init__(self):
 
@@ -42,12 +38,14 @@ class Manage(Plugin):
         })
 
 
-    def updateLibrary(self, full = False):
+    def updateLibrary(self, full = True):
+        last_update = float(Env.prop('manage.last_update', default = 0))
 
-        if self.isDisabled() or (self.last_update > time.time() - 20):
+        if self.isDisabled() or (last_update > time.time() - 20):
             return
 
         directories = self.directories()
+        added_identifiers = []
 
         for directory in directories:
 
@@ -57,24 +55,28 @@ class Manage(Plugin):
                 continue
 
             log.info('Updating manage library: %s' % directory)
-            fireEvent('scanner.folder', folder = directory)
-
-            # If cleanup option is enabled, remove offline files from database
-            if self.conf('cleanup'):
-                db = get_session()
-                files_in_path = db.query(File).filter(File.path.like(directory + '%%')).filter_by(available = 0).all()
-                [db.delete(x) for x in files_in_path]
-                db.commit()
-                db.remove()
+            identifiers = fireEvent('scanner.folder', folder = directory, newer_than = last_update, single = True)
+            if identifiers:
+                added_identifiers.extend(identifiers)
 
             # Break if CP wants to shut down
             if self.shuttingDown():
                 break
 
-        self.last_update = time.time()
+        # If cleanup option is enabled, remove offline files from database
+        if self.conf('cleanup') and full and not self.shuttingDown():
+
+            # Get movies with done status
+            done_movies = fireEvent('movie.list', status = 'done', single = True)
+
+            for done_movie in done_movies:
+                if done_movie['library']['identifier'] not in added_identifiers:
+                    fireEvent('movie.delete', movie_id = done_movie['id'])
+
+        Env.prop('manage.last_update', time.time())
 
     def directories(self):
         try:
-            return self.conf('library', default = '').split('::')
+            return [x.strip() for x in self.conf('library', default = '').split('::')]
         except:
             return []

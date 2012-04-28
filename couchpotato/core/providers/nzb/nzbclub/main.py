@@ -1,6 +1,5 @@
-from BeautifulSoup import BeautifulSoup, SoupStrainer
 from couchpotato.core.event import fireEvent
-from couchpotato.core.helpers.encoding import toUnicode
+from couchpotato.core.helpers.encoding import toUnicode, tryUrlencode
 from couchpotato.core.helpers.rss import RSS
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
@@ -8,7 +7,6 @@ from couchpotato.core.providers.nzb.base import NZBProvider
 from couchpotato.environment import Env
 from dateutil.parser import parse
 import time
-import urllib
 import xml.etree.ElementTree as XMLTree
 
 log = CPLog(__name__)
@@ -17,7 +15,7 @@ log = CPLog(__name__)
 class NZBClub(NZBProvider, RSS):
 
     urls = {
-        'search': 'http://www.nzbclub.com/nzbfeed.aspx?%s',
+        'search': 'https://www.nzbclub.com/nzbfeed.aspx?%s',
     }
 
     http_time_between_calls = 3 #seconds
@@ -41,8 +39,8 @@ class NZBClub(NZBProvider, RSS):
             'ns': 1,
         }
 
-        cache_key = 'nzbclub.%s' % q
-        data = self.getCache(cache_key, self.urls['search'] % urllib.urlencode(params))
+        cache_key = 'nzbclub.%s.%s' % (movie['library']['identifier'], quality.get('identifier'))
+        data = self.getCache(cache_key, self.urls['search'] % tryUrlencode(params))
         if data:
             try:
                 try:
@@ -68,8 +66,8 @@ class NZBClub(NZBProvider, RSS):
                         'name': toUnicode(self.getTextElement(nzb, "title")),
                         'age': self.calculateAge(int(time.mktime(parse(date).timetuple()))),
                         'size': tryInt(size) / 1024 / 1024,
-                        'url': enclosure['url'],
-                        'download': enclosure['url'].replace(' ', '_'),
+                        'url': enclosure['url'].replace(' ', '_'),
+                        'download': self.download,
                         'detail_url': self.getTextElement(nzb, "link"),
                         'description': description,
                     }

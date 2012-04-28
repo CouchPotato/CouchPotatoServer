@@ -1,23 +1,20 @@
 # -*- coding: utf-8 -*-
+# Copyright 2011-2012 Antoine Bertin <diaoulael@gmail.com>
 #
-# Subliminal - Subtitles, faster than your thoughts
-# Copyright (c) 2011 Antoine Bertin <diaoulael@gmail.com>
+# This file is part of subliminal.
 #
-# This file is part of Subliminal.
-#
-# Subliminal is free software; you can redistribute it and/or modify it under
-# the terms of the Lesser GNU General Public License as published by
+# subliminal is free software; you can redistribute it and/or modify it under
+# the terms of the GNU Lesser General Public License as published by
 # the Free Software Foundation; either version 3 of the License, or
 # (at your option) any later version.
 #
-# Subliminal is distributed in the hope that it will be useful,
+# subliminal is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# Lesser GNU General Public License for more details.
+# GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the Lesser GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
+# You should have received a copy of the GNU Lesser General Public License
+# along with subliminal.  If not, see <http://www.gnu.org/licenses/>.
 __all__ = ['Task', 'ListTask', 'DownloadTask', 'StopTask']
 
 
@@ -27,21 +24,43 @@ class Task(object):
 
 
 class ListTask(Task):
-    """List task to list subtitles"""
-    def __init__(self, video, languages, plugin, config):
+    """List task used by the worker to search for subtitles
+
+    :param video: video to search subtitles for
+    :type video: :class:`~subliminal.videos.Video`
+    :param list languages: languages to search for
+    :param string service: name of the service to use
+    :param config: configuration for the service
+    :type config: :class:`~subliminal.services.ServiceConfig`
+
+    """
+    def __init__(self, video, languages, service, config):
         self.video = video
-        self.plugin = plugin
+        self.service = service
         self.languages = languages
         self.config = config
 
+    def __repr__(self):
+        return 'ListTask(%r, %r, %s, %r)' % (self.video, self.languages, self.service, self.config)
+
 
 class DownloadTask(Task):
-    """Download task to download subtitles"""
+    """Download task used by the worker to download subtitles
+
+    :param video: video to download subtitles for
+    :type video: :class:`~subliminal.videos.Video`
+    :param subtitles: subtitles to download in order of preference
+    :type subtitles: list of :class:`~subliminal.subtitles.Subtitle`
+
+    """
     def __init__(self, video, subtitles):
         self.video = video
         self.subtitles = subtitles
 
+    def __repr__(self):
+        return 'DownloadTask(%r, %r)' % (self.video, self.subtitles)
+
 
 class StopTask(Task):
-    """Stop task to stop workers"""
+    """Stop task that will stop the worker"""
     pass

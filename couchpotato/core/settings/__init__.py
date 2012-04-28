@@ -4,9 +4,11 @@ from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import isInt, toUnicode
 from couchpotato.core.helpers.request import getParams, jsonified
 from couchpotato.core.helpers.variable import mergeDicts, tryInt
+from couchpotato.core.settings.model import Properties
 import ConfigParser
 import os.path
 import time
+import traceback
 
 
 class Settings(object):
@@ -190,3 +192,28 @@ class Settings(object):
         return jsonified({
             'success': True,
         })
+
+    def getProperty(self, identifier):
+        from couchpotato import get_session
+
+        db = get_session()
+        try:
+            prop = db.query(Properties).filter_by(identifier = identifier).first()
+            return prop.value if prop else None
+        except:
+            return None
+
+    def setProperty(self, identifier, value = ''):
+        from couchpotato import get_session
+
+        db = get_session()
+
+        p = db.query(Properties).filter_by(identifier = identifier).first()
+        if not p:
+            p = Properties()
+            db.add(p)
+
+        p.identifier = identifier
+        p.value = toUnicode(value)
+
+        db.commit()

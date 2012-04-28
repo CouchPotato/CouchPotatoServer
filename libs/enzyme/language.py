@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # enzyme - Video metadata parser
-# Copyright (C) 2011 Antoine Bertin <diaoulael@gmail.com>
-# Copyright (C) 2003-2006 Dirk Meyer <dischi@freevo.org>
+# Copyright 2011-2012 Antoine Bertin <diaoulael@gmail.com>
+# Copyright 2003-2006 Dirk Meyer <dischi@freevo.org>
 #
 # This file is part of enzyme.
 #
@@ -16,10 +16,7 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
-
-
+# along with enzyme.  If not, see <http://www.gnu.org/licenses/>.
 import re
 
 __all__ = ['resolve']
@@ -44,7 +41,7 @@ def resolve(code):
         if code in spec[:-1]:
             return code, spec[-1]
 
-    return code, u'Unknown (%s)' % code
+    return code, u'Unknown (%r)' % code
 
 
 # Parsed from http://www.loc.gov/standards/iso639-2/ISO-639-2_utf-8.txt

@@ -8,6 +8,7 @@ from couchpotato.environment import Env
 from flask import request
 from uuid import uuid4
 import os
+import platform
 import time
 import traceback
 import webbrowser
@@ -32,12 +33,16 @@ class Core(Plugin):
         addApiView('app.available', self.available, docs = {
             'desc': 'Check if app available.'
         })
+        addApiView('app.version', self.versionView, docs = {
+            'desc': 'Get version.'
+        })
 
         addEvent('app.crappy_shutdown', self.crappyShutdown)
         addEvent('app.crappy_restart', self.crappyRestart)
         addEvent('app.load', self.launchBrowser, priority = 1)
         addEvent('app.base_url', self.createBaseUrl)
         addEvent('app.api_url', self.createApiUrl)
+        addEvent('app.version', self.version)
 
         addEvent('setting.save.core.password', self.md5Password)
         addEvent('setting.save.core.api_key', self.checkApikey)
@@ -161,3 +166,17 @@ class Core(Plugin):
 
     def createApiUrl(self):
         return '%s/%s' % (self.createBaseUrl(), Env.setting('api_key'))
+
+    def version(self):
+        ver = fireEvent('updater.info', single = True)
+
+        if os.name == 'nt': platf = 'windows'
+        elif 'Darwin' in platform.platform(): platf = 'osx'
+        else: platf = 'linux'
+
+        return '%s - %s-%s - v2' % (platf, ver.get('version')['type'], ver.get('version')['hash'])
+
+    def versionView(self):
+        return jsonified({
+            'version': self.version()
+        })

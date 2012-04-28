@@ -1,8 +1,10 @@
 from couchpotato import get_session
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, fireEventAsync, addEvent
-from couchpotato.core.helpers.encoding import toUnicode
-from couchpotato.core.helpers.request import getParams, jsonified
+from couchpotato.core.helpers.encoding import toUnicode, tryUrlencode, \
+    simplifyString
+from couchpotato.core.helpers.request import getParams, jsonified, getParam
+from couchpotato.core.helpers.variable import getImdb
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Movie, Library, LibraryTitle
@@ -10,7 +12,6 @@ from couchpotato.environment import Env
 from sqlalchemy.orm import joinedload_all
 from sqlalchemy.sql.expression import or_, asc, not_
 from string import ascii_lowercase
-from urllib import urlencode
 
 log = CPLog(__name__)
 
@@ -74,7 +75,7 @@ class MoviePlugin(Plugin):
                 'default_title': {'desc': 'Movie title to use for searches. Has to be one of the titles returned by movie.search.'},
             }
         })
-        addApiView('movie.delete', self.delete, docs = {
+        addApiView('movie.delete', self.deleteView, docs = {
             'desc': 'Delete a movie from the wanted list',
             'params': {
                 'id': {'desc': 'Movie ID(s) you want to delete.', 'type': 'int (comma separated)'},
@@ -82,6 +83,7 @@ class MoviePlugin(Plugin):
         })
 
         addEvent('movie.add', self.add)
+        addEvent('movie.delete', self.delete)
         addEvent('movie.get', self.get)
         addEvent('movie.list', self.list)
         addEvent('movie.restatus', self.restatus)
@@ -137,7 +139,7 @@ class MoviePlugin(Plugin):
 
 
         if limit_offset:
-            splt = limit_offset.split(',')
+            splt = [x.strip() for x in limit_offset.split(',')]
             limit = splt[0]
             offset = 0 if len(splt) is 1 else splt[1]
             q2 = q2.limit(limit).offset(offset)
@@ -224,7 +226,6 @@ class MoviePlugin(Plugin):
             if title.default: default_title = title.title
 
         if movie:
-            #addEvent('library.update.after', )
             fireEventAsync('library.update', identifier = movie.library.identifier, default_title = default_title, force = True)
             fireEventAsync('searcher.single', movie.to_dict(self.default_dict))
 
@@ -234,12 +235,16 @@ class MoviePlugin(Plugin):
 
     def search(self):
 
-        params = getParams()
-        cache_key = '%s/%s' % (__name__, urlencode(params))
+        q = getParam('q')
+        cache_key = u'%s/%s' % (__name__, simplifyString(q))
         movies = Env.get('cache').get(cache_key)
 
         if not movies:
-            movies = fireEvent('movie.search', q = params.get('q'), merge = True)
+
+            if getImdb(q):
+                movies = [fireEvent('movie.info', identifier = q, merge = True)]
+            else:
+                movies = fireEvent('movie.search', q = q, merge = True)
             Env.get('cache').set(cache_key, movies)
 
         return jsonified({
@@ -264,7 +269,8 @@ class MoviePlugin(Plugin):
         if not m:
             m = Movie(
                 library_id = library.get('id'),
-                profile_id = params.get('profile_id', default_profile.get('id'))
+                profile_id = params.get('profile_id', default_profile.get('id')),
+                status_id = status_active.get('id'),
             )
             db.add(m)
             fireEvent('library.update', params.get('identifier'), default_title = params.get('title', ''))
@@ -318,7 +324,7 @@ class MoviePlugin(Plugin):
 
         available_status = fireEvent('status.get', 'available', single = True)
 
-        ids = params.get('id').split(',')
+        ids = [x.strip() for x in params.get('id').split(',')]
         for movie_id in ids:
 
             m = db.query(Movie).filter_by(id = movie_id).first()
@@ -333,7 +339,7 @@ class MoviePlugin(Plugin):
             # Default title
             if params.get('default_title'):
                 for title in m.library.titles:
-                    title.default = params.get('default_title').lower() == title.title.lower()
+                    title.default = toUnicode(params.get('default_title', '')).lower() == toUnicode(title.title).lower()
 
             db.commit()
 
@@ -346,22 +352,28 @@ class MoviePlugin(Plugin):
             'success': True,
         })
 
-    def delete(self):
+    def deleteView(self):
 
         params = getParams()
-        db = get_session()
 
-        status = fireEvent('status.add', 'deleted', single = True)
-
-        ids = params.get('id').split(',')
+        ids = [x.strip() for x in params.get('id').split(',')]
         for movie_id in ids:
-            movie = db.query(Movie).filter_by(id = movie_id).first()
-            movie.status_id = status.get('id')
-            db.commit()
+            self.delete(movie_id)
 
         return jsonified({
             'success': True,
         })
+
+    def delete(self, movie_id):
+
+        db = get_session()
+
+        movie = db.query(Movie).filter_by(id = movie_id).first()
+        if movie:
+            db.delete(movie)
+            db.commit()
+
+        return True
 
     def restatus(self, movie_id):
 
@@ -372,18 +384,17 @@ class MoviePlugin(Plugin):
 
         m = db.query(Movie).filter_by(id = movie_id).first()
 
-        if not m.profile:
-            return
-
         log.debug('Changing status for %s' % (m.library.titles[0].title))
+        if not m.profile:
+            m.status_id = done_status.get('id')
+        else:
+            move_to_wanted = True
 
-        move_to_wanted = True
+            for t in m.profile.types:
+                for release in m.releases:
+                    if t.quality.identifier is release.quality.identifier and (release.status_id is done_status.get('id') and t.finish):
+                        move_to_wanted = False
 
-        for t in m.profile.types:
-            for release in m.releases:
-                if t.quality.identifier is release.quality.identifier and (release.status_id is done_status.get('id') and t.finish):
-                    move_to_wanted = False
-
-        m.status_id = active_status.get('id') if move_to_wanted else done_status.get('id')
+            m.status_id = active_status.get('id') if move_to_wanted else done_status.get('id')
 
         db.commit()

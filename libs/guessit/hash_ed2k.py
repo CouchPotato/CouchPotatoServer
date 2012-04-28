@@ -18,8 +18,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from guessit import Guess
-import hashlib, os.path
+import hashlib
+import os.path
+
 
 def hash_file(filename):
     """Returns the ed2k hash of a given file.
@@ -30,6 +31,7 @@ def hash_file(filename):
     return 'ed2k://|file|%s|%d|%s|/' % (os.path.basename(filename),
                                         os.path.getsize(filename),
                                         hash_filehash(filename).upper())
+
 
 def hash_filehash(filename):
     """Returns the ed2k hash of a given file.
@@ -42,8 +44,10 @@ def hash_filehash(filename):
     def gen(f):
         while True:
             x = f.read(9728000)
-            if x: yield x
-            else: return
+            if x:
+                yield x
+            else:
+                return
 
     def md4_hash(data):
         m = md4()
@@ -55,4 +59,5 @@ def hash_filehash(filename):
         hashes = [md4_hash(data).digest() for data in a]
         if len(hashes) == 1:
             return hashes[0].encode("hex")
-        else: return md4_hash(reduce(lambda a,d: a + d, hashes, "")).hexd
+        else:
+            return md4_hash(reduce(lambda a, d: a + d, hashes, "")).hexd

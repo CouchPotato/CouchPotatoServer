@@ -1,8 +1,7 @@
-from couchpotato.core.helpers.encoding import toUnicode
+from couchpotato.core.helpers.encoding import toUnicode, tryUrlencode
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
 from httplib import HTTPSConnection
-from urllib import urlencode
 
 log = CPLog(__name__)
 
@@ -24,7 +23,7 @@ class Prowl(Notification):
         http_handler.request('POST',
             '/publicapi/add',
             headers = {'Content-type': 'application/x-www-form-urlencoded'},
-            body = urlencode(data)
+            body = tryUrlencode(data)
         )
         response = http_handler.getresponse()
         request_status = response.status

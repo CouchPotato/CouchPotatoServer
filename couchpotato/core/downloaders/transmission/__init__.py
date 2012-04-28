@@ -48,6 +48,13 @@ config = [{
                     'advanced': True,
                     'description': 'Stop transfer when reaching ratio',
                 },
+                {
+                    'name': 'manual',
+                    'default': 0,
+                    'type': 'bool',
+                    'advanced': True,
+                    'description': 'Disable this downloader for automated searches, but use it when I manually send a release.',
+                },
             ],
         }
     ],

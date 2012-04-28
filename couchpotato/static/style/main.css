@@ -13,7 +13,6 @@ body {
 	background: #4e5969;
 	overflow-y: scroll;
 	height: 100%;
-	text-align: justify;
 }
 	body.noscroll { overflow: hidden; }
 
@@ -154,6 +153,7 @@ body > .spinner, .mask{
 .icon.refresh { background-image: url('../images/icon.refresh.png'); }
 .icon.rating { background-image: url('../images/icon.rating.png'); }
 .icon.files { background-image: url('../images/icon.files.png'); }
+.icon.info { background-image: url('../images/icon.info.png'); }
 
 /*** Navigation ***/
 .header {
@@ -305,9 +305,9 @@ body > .spinner, .mask{
 		text-align: center;
 		position: relative;
 		top: -70px;
-		padding: 15px 0 20px;
+		padding: 2px 0;
 		background: #ff6134;
-		font-size: 26px;
+		font-size: 12px;
 	    border-radius: 0 0 5px 5px;
 		box-shadow: 0 2px 1px rgba(0,0,0, 0.3);
 	}
@@ -491,7 +491,7 @@ body > .spinner, .mask{
 		width: auto;
 	}
 		.question .answer:hover {
-			background: #f1f1f1;
+			background: #000;
 		}
 
 		.question .answer.delete {

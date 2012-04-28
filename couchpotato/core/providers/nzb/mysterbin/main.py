@@ -1,11 +1,10 @@
 from BeautifulSoup import BeautifulSoup
 from couchpotato.core.event import fireEvent
-from couchpotato.core.helpers.encoding import toUnicode
+from couchpotato.core.helpers.encoding import toUnicode, tryUrlencode
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.nzb.base import NZBProvider
 from couchpotato.environment import Env
-import urllib
 
 log = CPLog(__name__)
 
@@ -13,9 +12,9 @@ log = CPLog(__name__)
 class Mysterbin(NZBProvider):
 
     urls = {
-        'search': 'http://www.mysterbin.com/advsearch?%s',
-        'download': 'http://www.mysterbin.com/nzb?c=%s',
-        'nfo': 'http://www.mysterbin.com/nfo?c=%s',
+        'search': 'https://www.mysterbin.com/advsearch?%s',
+        'download': 'https://www.mysterbin.com/nzb?c=%s',
+        'nfo': 'https://www.mysterbin.com/nfo?c=%s',
     }
 
     http_time_between_calls = 1 #seconds
@@ -40,8 +39,8 @@ class Mysterbin(NZBProvider):
             'nopasswd': 'on',
         }
 
-        cache_key = 'mysterbin.%s' % q
-        data = self.getCache(cache_key, self.urls['search'] % urllib.urlencode(params))
+        cache_key = 'mysterbin.%s.%s' % (movie['library']['identifier'], quality.get('identifier'))
+        data = self.getCache(cache_key, self.urls['search'] % tryUrlencode(params))
         if data:
 
             try:

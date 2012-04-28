@@ -17,13 +17,13 @@ except ImportError:
     raise RuntimeError('Gevent is required for requests.async.')
 
 # Monkey-patch.
-curious_george.patch_all(thread=False)
+curious_george.patch_all(thread=False, select=False)
 
 from . import api
 
 
 __all__ = (
-    'map',
+    'map', 'imap',
     'get', 'options', 'head', 'post', 'put', 'patch', 'delete', 'request'
 )
 
@@ -46,15 +46,15 @@ def patched(f):
     return wrapped
 
 
-def send(r, pool=None):
-    """Sends the request object using the specified pool. If a pool isn't 
+def send(r, pool=None, prefetch=False):
+    """Sends the request object using the specified pool. If a pool isn't
     specified this method blocks. Pools are useful because you can specify size
     and can hence limit concurrency."""
 
     if pool != None:
-        return pool.spawn(r.send)
+        return pool.spawn(r.send, prefetch=prefetch)
 
-    return gevent.spawn(r.send)
+    return gevent.spawn(r.send, prefetch=prefetch)
 
 
 # Patched requests.api functions.
@@ -79,10 +79,28 @@ def map(requests, prefetch=True, size=None):
     requests = list(requests)
 
     pool = Pool(size) if size else None
-    jobs = [send(r, pool) for r in requests]
+    jobs = [send(r, pool, prefetch=prefetch) for r in requests]
     gevent.joinall(jobs)
 
-    if prefetch:
-        [r.response.content for r in requests]
-
     return [r.response for r in requests]
+
+
+def imap(requests, prefetch=True, size=2):
+    """Concurrently converts a generator object of Requests to
+    a generator of Responses.
+
+    :param requests: a generator of Request objects.
+    :param prefetch: If False, the content will not be downloaded immediately.
+    :param size: Specifies the number of requests to make at a time. default is 2
+    """
+
+    pool = Pool(size)
+
+    def send(r):
+        r.send(prefetch)
+        return r.response
+
+    for r in pool.imap_unordered(send, requests):
+        yield r
+
+    pool.join()

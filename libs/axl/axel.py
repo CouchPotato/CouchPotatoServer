@@ -56,7 +56,7 @@ class Event(object):
     >> None
     """
 
-    def __init__(self, sender = None, asynch = False, exc_info = False,
+    def __init__(self, name = None, sender = None, asynch = False, exc_info = False,
                  lock = None, threads = 3, traceback = False):
         """ Creates an event
 
@@ -96,6 +96,7 @@ class Event(object):
             )
         """
         self.in_order = False
+        self.name = name
         self.asynchronous = asynch
         self.exc_info = exc_info
         self.lock = lock
@@ -178,7 +179,7 @@ class Event(object):
         """ Executes all handlers stored in the queue """
         while True:
             try:
-                h_ = self.queue.get()
+                h_ = self.queue.get(timeout = 2)
                 handler, memoize, timeout = self.handlers[h_]
 
                 if self.lock and self.in_order:

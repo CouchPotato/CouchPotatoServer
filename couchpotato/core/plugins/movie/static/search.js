@@ -148,6 +148,9 @@ Block.Search = new Class({
 			$(m).inject(self.results)
 			self.movies[movie.imdb || 'r-'+Math.floor(Math.random()*10000)] = m
 
+			if(q == movie.imdb)
+				m.showOptions()
+
 		});
 
 		if(q != self.q())
@@ -158,7 +161,7 @@ Block.Search = new Class({
 			rc = self.result_container.getCoordinates();
 
 		self.results.setStyle('max-height', (w.y - rc.top - 50) + 'px')
-		self.mask.hide()
+		self.mask.fade('out')
 
 	},
 
@@ -367,12 +370,13 @@ Block.Search.Item = new Class({
 
 		self.mask = new Element('span.mask', {
 			'styles': {
+				'position': 'relative',
 				'width': s.x,
-				'height': s.y
+				'height': s.y,
+				'top': -s.y,
+				'display': 'block'
 			}
-		}).inject(self.options).fade('hide').position({
-			'relativeTo': self.options
-		})
+		}).inject(self.options).fade('hide')
 
 		createSpinner(self.mask)
 		self.mask.fade('in')

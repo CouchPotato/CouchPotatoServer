@@ -1,10 +1,10 @@
 from couchpotato.core.event import fireEvent
+from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.rss import RSS
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.nzb.base import NZBProvider
 from couchpotato.environment import Env
 from dateutil.parser import parse
-from urllib import urlencode
 import time
 import xml.etree.ElementTree as XMLTree
 
@@ -16,7 +16,7 @@ class NZBMatrix(NZBProvider, RSS):
     urls = {
         'download': 'https://api.nzbmatrix.com/v1.1/download.php?id=%s',
         'detail': 'https://nzbmatrix.com/nzb-details.php?id=%s&hit=1',
-        'search': 'http://rss.nzbmatrix.com/rss.php',
+        'search': 'https://rss.nzbmatrix.com/rss.php',
     }
 
     cat_ids = [
@@ -37,7 +37,7 @@ class NZBMatrix(NZBProvider, RSS):
 
         cat_ids = ','.join(['%s' % x for x in self.getCatId(quality.get('identifier'))])
 
-        arguments = urlencode({
+        arguments = tryUrlencode({
             'term': movie['library']['identifier'],
             'subcat': cat_ids,
             'username': self.conf('username'),

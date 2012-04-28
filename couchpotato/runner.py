@@ -52,7 +52,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
         locale.setlocale(locale.LC_ALL, "")
         encoding = locale.getpreferredencoding()
     except (locale.Error, IOError):
-        pass
+        encoding = None
 
     # for OSes that are poorly configured I'll just force UTF-8
     if not encoding or encoding in ('ANSI_X3.4-1968', 'US-ASCII', 'ASCII'):

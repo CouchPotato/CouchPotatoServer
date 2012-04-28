@@ -21,14 +21,16 @@ from .packages.urllib3.exceptions import SSLError as _SSLError
 from .packages.urllib3.exceptions import HTTPError as _HTTPError
 from .packages.urllib3 import connectionpool, poolmanager
 from .packages.urllib3.filepost import encode_multipart_formdata
+from .defaults import SCHEMAS
 from .exceptions import (
     ConnectionError, HTTPError, RequestException, Timeout, TooManyRedirects,
-    URLRequired, SSLError)
+    URLRequired, SSLError, MissingSchema, InvalidSchema)
 from .utils import (
-    get_encoding_from_headers, stream_decode_response_unicode,
-    stream_decompress, guess_filename, requote_path, dict_from_string)
-
-from .compat import urlparse, urlunparse, urljoin, urlsplit, urlencode, quote, unquote, str, bytes, SimpleCookie, is_py3, is_py2
+    get_encoding_from_headers, stream_untransfer, guess_filename, requote_uri,
+    dict_from_string, stream_decode_response_unicode, get_netrc_auth)
+from .compat import (
+    urlparse, urlunparse, urljoin, urlsplit, urlencode, str, bytes,
+    SimpleCookie, is_py2)
 
 # Import chardet if it is available.
 try:
@@ -37,7 +39,6 @@ except ImportError:
     pass
 
 REDIRECT_STATI = (codes.moved, codes.found, codes.other, codes.temporary_moved)
-
 
 
 class Request(object):
@@ -62,18 +63,17 @@ class Request(object):
         config=None,
         _poolmanager=None,
         verify=None,
-        session=None):
+        session=None,
+        cert=None):
+
+        #: Dictionary of configurations for this request.
+        self.config = dict(config or [])
 
         #: Float describes the timeout of the request.
         #  (Use socket.setdefaulttimeout() as fallback)
         self.timeout = timeout
 
         #: Request URL.
-
-        # if isinstance(url, str):
-            # url = url.encode('utf-8')
-            # print(dir(url))
-
         self.url = url
 
         #: Dictionary of HTTP Headers to attach to the :class:`Request <Request>`.
@@ -103,6 +103,14 @@ class Request(object):
         # Dictionary mapping protocol to the URL of the proxy (e.g. {'http': 'foo.bar:3128'})
         self.proxies = dict(proxies or [])
 
+        # If no proxies are given, allow configuration by environment variables
+        # HTTP_PROXY and HTTPS_PROXY.
+        if not self.proxies and self.config.get('trust_env'):
+          if 'HTTP_PROXY' in os.environ:
+            self.proxies['http'] = os.environ['HTTP_PROXY']
+          if 'HTTPS_PROXY' in os.environ:
+            self.proxies['https'] = os.environ['HTTPS_PROXY']
+
         self.data, self._enc_data = self._encode_params(data)
         self.params, self._enc_params = self._encode_params(params)
 
@@ -115,9 +123,6 @@ class Request(object):
 
         #: CookieJar to attach to :class:`Request <Request>`.
         self.cookies = dict(cookies or [])
-
-        #: Dictionary of configurations for this request.
-        self.config = dict(config or [])
 
         #: True if Request has been sent.
         self.sent = False
@@ -139,6 +144,9 @@ class Request(object):
         #: SSL Verification.
         self.verify = verify
 
+        #: SSL Certificate
+        self.cert = cert
+
         if headers:
             headers = CaseInsensitiveDict(self.headers)
         else:
@@ -152,14 +160,8 @@ class Request(object):
         self.headers = headers
         self._poolmanager = _poolmanager
 
-        # Pre-request hook.
-        r = dispatch_hook('pre_request', hooks, self)
-        self.__dict__.update(r.__dict__)
-
-
     def __repr__(self):
         return '<Request [%s]>' % (self.method)
-
 
     def _build_response(self, resp):
         """Build internal :class:`Response <Response>` object
@@ -200,29 +202,36 @@ class Request(object):
 
             # Save original response for later.
             response.raw = resp
-            response.url = self.full_url
+            if isinstance(self.full_url, bytes):
+                response.url = self.full_url.decode('utf-8')
+            else:
+                response.url = self.full_url
 
             return response
 
         history = []
 
         r = build(resp)
-        cookies = self.cookies
+
         self.cookies.update(r.cookies)
 
         if r.status_code in REDIRECT_STATI and not self.redirect:
 
-            while (
-                ('location' in r.headers) and
-                ((r.status_code is codes.see_other) or (self.allow_redirects))
-            ):
+            while (('location' in r.headers) and
+                   ((r.status_code is codes.see_other) or (self.allow_redirects))):
+
+                r.content  # Consume socket so it can be released
 
                 if not len(history) < self.config.get('max_redirects'):
                     raise TooManyRedirects()
 
+                # Release the connection back into the pool.
+                r.raw.release_conn()
+
                 history.append(r)
 
                 url = r.headers['location']
+                data = self.data
 
                 # Handle redirection without scheme (see: RFC 1808 Section 4)
                 if url.startswith('//'):
@@ -232,13 +241,28 @@ class Request(object):
                 # Facilitate non-RFC2616-compliant 'location' headers
                 # (e.g. '/path/to/resource' instead of 'http://domain.tld/path/to/resource')
                 if not urlparse(url).netloc:
-                    url = urljoin(r.url, url)
+                    url = urljoin(r.url,
+                                  # Compliant with RFC3986, we percent
+                                  # encode the url.
+                                  requote_uri(url))
 
                 # http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.3.4
                 if r.status_code is codes.see_other:
                     method = 'GET'
+                    data = None
                 else:
                     method = self.method
+
+                # Do what the browsers do if strict_mode is off...
+                if (not self.config.get('strict_mode')):
+
+                    if r.status_code in (codes.moved, codes.found) and self.method == 'POST':
+                        method = 'GET'
+                        data = None
+
+                    if (r.status_code == 303) and self.method != 'HEAD':
+                        method = 'GET'
+                        data = None
 
                 # Remove the cookie headers that were sent.
                 headers = self.headers
@@ -254,18 +278,19 @@ class Request(object):
                     method=method,
                     params=self.session.params,
                     auth=self.auth,
-                    cookies=cookies,
+                    cookies=self.cookies,
                     redirect=True,
+                    data=data,
                     config=self.config,
                     timeout=self.timeout,
                     _poolmanager=self._poolmanager,
-                    proxies = self.proxies,
-                    verify = self.verify,
-                    session = self.session
+                    proxies=self.proxies,
+                    verify=self.verify,
+                    session=self.session,
+                    cert=self.cert
                 )
 
                 request.send()
-                cookies.update(request.response.cookies)
                 r = request.response
                 self.cookies.update(r.cookies)
 
@@ -274,7 +299,6 @@ class Request(object):
         self.response = r
         self.response.request = self
         self.response.cookies.update(self.cookies)
-
 
     @staticmethod
     def _encode_params(data):
@@ -288,9 +312,11 @@ class Request(object):
         returns it twice.
         """
 
+        if isinstance(data, bytes):
+            return data, data
+
         if hasattr(data, '__iter__') and not isinstance(data, str):
             data = dict(data)
-
 
         if hasattr(data, 'items'):
             result = []
@@ -314,30 +340,44 @@ class Request(object):
         # Support for unicode domain names and paths.
         scheme, netloc, path, params, query, fragment = urlparse(url)
 
-
         if not scheme:
-            raise ValueError("Invalid URL %r: No schema supplied" % url)
+            raise MissingSchema("Invalid URL %r: No schema supplied" % url)
+
+        if not scheme in SCHEMAS:
+            raise InvalidSchema("Invalid scheme %r" % scheme)
 
         netloc = netloc.encode('idna').decode('utf-8')
 
+        if not path:
+            path = '/'
+
+
         if is_py2:
+            if isinstance(scheme, str):
+                scheme = scheme.encode('utf-8')
+            if isinstance(netloc, str):
+                netloc = netloc.encode('utf-8')
             if isinstance(path, str):
                 path = path.encode('utf-8')
+            if isinstance(params, str):
+                params = params.encode('utf-8')
+            if isinstance(query, str):
+                query = query.encode('utf-8')
+            if isinstance(fragment, str):
+                fragment = fragment.encode('utf-8')
 
-            path = requote_path(path)
-
-        # print([ scheme, netloc, path, params, query, fragment ])
-        # print('---------------------')
-
-        url = (urlunparse([ scheme, netloc, path, params, query, fragment ]))
+        url = (urlunparse([scheme, netloc, path, params, query, fragment]))
 
         if self._enc_params:
             if urlparse(url).query:
-                return '%s&%s' % (url, self._enc_params)
+                url = '%s&%s' % (url, self._enc_params)
             else:
-                return '%s?%s' % (url, self._enc_params)
-        else:
-            return url
+                url = '%s?%s' % (url, self._enc_params)
+
+        if self.config.get('encode_uri', True):
+            url = requote_uri(url)
+
+        return url
 
     @property
     def path_url(self):
@@ -355,9 +395,6 @@ class Request(object):
         if not path:
             path = '/'
 
-        # if is_py3:
-        path = quote(path.encode('utf-8'))
-
         url.append(path)
 
         query = p.query
@@ -365,19 +402,15 @@ class Request(object):
             url.append('?')
             url.append(query)
 
-        # print(url)
-
         return ''.join(url)
-
 
     def register_hook(self, event, hook):
         """Properly register a hook."""
 
         return self.hooks[event].append(hook)
 
-
     def send(self, anyway=False, prefetch=False):
-        """Sends the request. Returns True of successful, false if not.
+        """Sends the request. Returns True of successful, False if not.
         If there was an HTTPError during transmission,
         self.response.status_code will contain the HTTPError code.
 
@@ -435,6 +468,10 @@ class Request(object):
         if (content_type) and (not 'content-type' in self.headers):
             self.headers['Content-Type'] = content_type
 
+        # Use .netrc auth if none was provided.
+        if not self.auth and self.config.get('trust_env'):
+            self.auth = get_netrc_auth(url)
+
         if self.auth:
             if isinstance(self.auth, tuple) and len(self.auth) == 2:
                 # special-case basic HTTP auth
@@ -472,13 +509,12 @@ class Request(object):
             if self.verify is not True:
                 cert_loc = self.verify
 
-
             # Look for configuration.
-            if not cert_loc:
+            if not cert_loc and self.config.get('trust_env'):
                 cert_loc = os.environ.get('REQUESTS_CA_BUNDLE')
 
             # Curl compatiblity.
-            if not cert_loc:
+            if not cert_loc and self.config.get('trust_env'):
                 cert_loc = os.environ.get('CURL_CA_BUNDLE')
 
             # Use the awesome certifi list.
@@ -490,6 +526,13 @@ class Request(object):
         else:
             conn.cert_reqs = 'CERT_NONE'
             conn.ca_certs = None
+
+        if self.cert and self.verify:
+            if len(self.cert) == 2:
+                conn.cert_file = self.cert[0]
+                conn.key_file = self.cert[1]
+            else:
+                conn.cert_file = self.cert
 
         if not self.sent or anyway:
 
@@ -509,6 +552,10 @@ class Request(object):
                     # Attach Cookie header to request.
                     self.headers['Cookie'] = cookie_header
 
+            # Pre-request hook.
+            r = dispatch_hook('pre_request', self.hooks, self)
+            self.__dict__.update(r.__dict__)
+
             try:
                 # The inner try .. except re-raises certain exceptions as
                 # internal exception types; the outer suppresses exceptions
@@ -523,7 +570,7 @@ class Request(object):
                         redirect=False,
                         assert_same_host=False,
                         preload_content=False,
-                        decode_content=True,
+                        decode_content=False,
                         retries=self.config.get('max_retries', 0),
                         timeout=self.timeout,
                     )
@@ -613,7 +660,6 @@ class Response(object):
         #: Dictionary of configurations for this request.
         self.config = {}
 
-
     def __repr__(self):
         return '<Response [%s]>' % (self.status_code)
 
@@ -629,10 +675,9 @@ class Response(object):
     def ok(self):
         try:
             self.raise_for_status()
-        except HTTPError:
+        except RequestException:
             return False
         return True
-
 
     def iter_content(self, chunk_size=10 * 1024, decode_unicode=False):
         """Iterates over the response data.  This avoids reading the content
@@ -653,46 +698,12 @@ class Response(object):
                 yield chunk
             self._content_consumed = True
 
-        def generate_chunked():
-            resp = self.raw._original_response
-            fp = resp.fp
-            if resp.chunk_left is not None:
-                pending_bytes = resp.chunk_left
-                while pending_bytes:
-                    chunk = fp.read(min(chunk_size, pending_bytes))
-                    pending_bytes-=len(chunk)
-                    yield chunk
-                fp.read(2) # throw away crlf
-            while 1:
-                #XXX correct line size? (httplib has 64kb, seems insane)
-                pending_bytes = fp.readline(40).strip()
-                pending_bytes = int(pending_bytes, 16)
-                if pending_bytes == 0:
-                    break
-                while pending_bytes:
-                    chunk = fp.read(min(chunk_size, pending_bytes))
-                    pending_bytes-=len(chunk)
-                    yield chunk
-                fp.read(2) # throw away crlf
-            self._content_consumed = True
-            fp.close()
-
-
-        if getattr(getattr(self.raw, '_original_response', None), 'chunked', False):
-            gen = generate_chunked()
-        else:
-            gen = generate()
-
-        if 'gzip' in self.headers.get('content-encoding', ''):
-            gen = stream_decompress(gen, mode='gzip')
-        elif 'deflate' in self.headers.get('content-encoding', ''):
-            gen = stream_decompress(gen, mode='deflate')
+        gen = stream_untransfer(generate(), self)
 
         if decode_unicode:
             gen = stream_decode_response_unicode(gen, self)
 
         return gen
-
 
     def iter_lines(self, chunk_size=10 * 1024, decode_unicode=None):
         """Iterates over the response data, one line at a time.  This
@@ -700,34 +711,26 @@ class Response(object):
         responses.
         """
 
-        #TODO: why rstrip by default
         pending = None
 
-        for chunk in self.iter_content(chunk_size, decode_unicode=decode_unicode):
+        for chunk in self.iter_content(
+            chunk_size=chunk_size,
+            decode_unicode=decode_unicode):
 
             if pending is not None:
                 chunk = pending + chunk
-            lines = chunk.splitlines(True)
+            lines = chunk.splitlines()
 
-            for line in lines[:-1]:
-                yield line.rstrip()
-
-            # Save the last part of the chunk for next iteration, to keep full line together
-            # lines may be empty for the last chunk of a chunked response
-
-            if lines:
-                pending = lines[-1]
-                #if pending is a complete line, give it baack
-                if pending[-1] == '\n':
-                    yield pending.rstrip()
-                    pending = None
+            if lines[-1][-1] == chunk[-1]:
+                pending = lines.pop()
             else:
                 pending = None
 
-        # Yield the last line
-        if pending is not None:
-            yield pending.rstrip()
+            for line in lines:
+                yield line
 
+        if pending is not None:
+            yield pending
 
     @property
     def content(self):
@@ -740,12 +743,25 @@ class Response(object):
                     raise RuntimeError(
                         'The content for this response was already consumed')
 
-                self._content = self.raw.read()
+                if self.status_code is 0:
+                    self._content = None
+                else:
+                    self._content = bytes().join(self.iter_content()) or bytes()
+
             except AttributeError:
                 self._content = None
 
         self._content_consumed = True
         return self._content
+
+    def _detected_encoding(self):
+        try:
+            detected = chardet.detect(self.content) or {}
+            return detected.get('encoding')
+
+        # Trust that chardet isn't available or something went terribly wrong.
+        except Exception:
+            pass
 
 
     @property
@@ -762,43 +778,40 @@ class Response(object):
 
         # Fallback to auto-detected encoding if chardet is available.
         if self.encoding is None:
-            try:
-                detected = chardet.detect(self.content) or {}
-                encoding = detected.get('encoding')
-
-            # Trust that chardet isn't available or something went terribly wrong.
-            except Exception:
-                pass
+            encoding = self._detected_encoding()
 
         # Decode unicode from given encoding.
         try:
-            content = str(self.content, encoding)
+            content = str(self.content, encoding, errors='replace')
+        except LookupError:
+            # A LookupError is raised if the encoding was not found which could
+            # indicate a misspelling or similar mistake.
+            #
+            # So we try blindly encoding.
+            content = str(self.content, errors='replace')
         except (UnicodeError, TypeError):
             pass
 
-        # Try to fall back:
-        if not content:
-            try:
-                content = str(content, encoding, errors='replace')
-            except (UnicodeError, TypeError):
-                pass
-
         return content
 
-
-    def raise_for_status(self):
+    def raise_for_status(self, allow_redirects=True):
         """Raises stored :class:`HTTPError` or :class:`URLError`, if one occurred."""
 
         if self.error:
             raise self.error
 
-        if (self.status_code >= 300) and (self.status_code < 400):
-            raise HTTPError('%s Redirection' % self.status_code)
+        if (self.status_code >= 300) and (self.status_code < 400) and not allow_redirects:
+            http_error = HTTPError('%s Redirection' % self.status_code)
+            http_error.response = self
+            raise http_error
 
         elif (self.status_code >= 400) and (self.status_code < 500):
-            raise HTTPError('%s Client Error' % self.status_code)
+            http_error = HTTPError('%s Client Error' % self.status_code)
+            http_error.response = self
+            raise http_error
+
 
         elif (self.status_code >= 500) and (self.status_code < 600):
-            raise HTTPError('%s Server Error' % self.status_code)
-
-
+            http_error = HTTPError('%s Server Error' % self.status_code)
+            http_error.response = self
+            raise http_error

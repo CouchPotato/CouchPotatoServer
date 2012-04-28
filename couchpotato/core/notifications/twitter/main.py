@@ -1,4 +1,5 @@
 from couchpotato.api import addApiView
+from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.request import jsonified, getParam
 from couchpotato.core.helpers.variable import cleanHost
 from couchpotato.core.logger import CPLog
@@ -7,7 +8,6 @@ from flask.helpers import url_for
 from pytwitter import Api, parse_qsl
 from werkzeug.utils import redirect
 import oauth2
-import urllib
 
 log = CPLog(__name__)
 
@@ -56,7 +56,7 @@ class Twitter(Notification):
         oauth_consumer = oauth2.Consumer(self.consumer_key, self.consumer_secret)
         oauth_client = oauth2.Client(oauth_consumer)
 
-        resp, content = oauth_client.request(self.urls['request'], 'POST', body = urllib.urlencode({'oauth_callback': callback_url}))
+        resp, content = oauth_client.request(self.urls['request'], 'POST', body = tryUrlencode({'oauth_callback': callback_url}))
 
         if resp['status'] != '200':
             log.error('Invalid response from Twitter requesting temp token: %s' % resp['status'])

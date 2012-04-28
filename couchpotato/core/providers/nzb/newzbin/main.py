@@ -1,9 +1,9 @@
 from couchpotato.core.event import fireEvent
+from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.rss import RSS
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.nzb.base import NZBProvider
 from dateutil.parser import parse
-from urllib import urlencode
 import base64
 import time
 import xml.etree.ElementTree as XMLTree
@@ -14,7 +14,7 @@ log = CPLog(__name__)
 class Newzbin(NZBProvider, RSS):
 
     urls = {
-        'download': 'http://www.newzbin2.es/api/dnzb/',
+        'download': 'https://www.newzbin2.es/api/dnzb/',
         'search': 'https://www.newzbin2.es/search/',
     }
 
@@ -45,7 +45,7 @@ class Newzbin(NZBProvider, RSS):
         format_id = self.getFormatId(type)
         cat_id = self.getCatId(type)
 
-        arguments = urlencode({
+        arguments = tryUrlencode({
             'searchaction': 'Search',
             'u_url_posts_only': '0',
             'u_show_passworded': '0',
@@ -89,11 +89,14 @@ class Newzbin(NZBProvider, RSS):
                     title = self.getTextElement(nzb, "title")
                     if 'error' in title.lower(): continue
 
-                    REPORT_NS = 'http://www.newzbin.com/DTD/2007/feeds/report/';
+                    REPORT_NS = 'http://www.newzbin2.es/DTD/2007/feeds/report/';
 
                     # Add attributes to name
-                    for attr in nzb.find('{%s}attributes' % REPORT_NS):
-                        title += ' ' + attr.text
+                    try:
+                        for attr in nzb.find('{%s}attributes' % REPORT_NS):
+                            title += ' ' + attr.text
+                    except:
+                        pass
 
                     id = int(self.getTextElement(nzb, '{%s}id' % REPORT_NS))
                     size = str(int(self.getTextElement(nzb, '{%s}size' % REPORT_NS)) / 1024 / 1024) + ' mb'

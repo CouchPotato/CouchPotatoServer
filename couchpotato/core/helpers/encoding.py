@@ -1,5 +1,6 @@
 from couchpotato.core.logger import CPLog
 from string import ascii_letters, digits
+from urllib import quote_plus
 import re
 import unicodedata
 
@@ -19,7 +20,7 @@ def simplifyString(original):
 
 def toUnicode(original, *args):
     try:
-        if type(original) is unicode:
+        if isinstance(original, unicode):
             return original
         else:
             try:
@@ -35,7 +36,7 @@ def toUnicode(original, *args):
         return toUnicode(ascii_text)
 
 def ek(original, *args):
-    if type(original) in [str, unicode]:
+    if isinstance(original, (str, unicode)):
         try:
             from couchpotato.environment import Env
             return original.decode(Env.get('encoding'))
@@ -53,3 +54,19 @@ def isInt(value):
 
 def stripAccents(s):
     return ''.join((c for c in unicodedata.normalize('NFD', toUnicode(s)) if unicodedata.category(c) != 'Mn'))
+
+def tryUrlencode(s):
+    new = u''
+    if isinstance(s, (dict)):
+        for key, value in s.iteritems():
+            new += u'&%s=%s' % (key, tryUrlencode(value))
+
+        return new[1:]
+    else:
+        for letter in toUnicode(s):
+            try:
+                new += quote_plus(letter)
+            except:
+                new += letter
+
+    return new

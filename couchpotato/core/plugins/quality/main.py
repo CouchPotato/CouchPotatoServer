@@ -1,7 +1,7 @@
 from couchpotato import get_session
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent
-from couchpotato.core.helpers.encoding import toUnicode
+from couchpotato.core.helpers.encoding import toUnicode, toSafeString
 from couchpotato.core.helpers.request import jsonified, getParams
 from couchpotato.core.helpers.variable import mergeDicts, md5, getExt
 from couchpotato.core.logger import CPLog
@@ -16,9 +16,9 @@ log = CPLog(__name__)
 class QualityPlugin(Plugin):
 
     qualities = [
-        {'identifier': 'bd50', 'hd': True, 'size': (15000, 60000), 'label': 'BR-Disk', 'width': 1920, 'alternative': ['bd25'], 'allow': ['1080p'], 'ext':[], 'tags': ['bdmv', 'certificate', ('complete', 'bluray')]},
+        {'identifier': 'bd50', 'hd': True, 'size': (15000, 60000), 'label': 'BR-Disk', 'alternative': ['bd25'], 'allow': ['1080p'], 'ext':[], 'tags': ['bdmv', 'certificate', ('complete', 'bluray')]},
         {'identifier': '1080p', 'hd': True, 'size': (5000, 20000), 'label': '1080P', 'width': 1920, 'alternative': [], 'allow': [], 'ext':['mkv', 'm2ts']},
-        {'identifier': '720p', 'hd': True, 'size': (3500, 10000), 'label': '720P', 'width': 1280, 'alternative': [], 'allow': [], 'ext':['mkv', 'm2ts']},
+        {'identifier': '720p', 'hd': True, 'size': (3500, 10000), 'label': '720P', 'width': 1280, 'alternative': [], 'allow': [], 'ext':['mkv', 'm2ts', 'ts']},
         {'identifier': 'brrip', 'hd': True, 'size': (700, 7000), 'label': 'BR-Rip', 'alternative': ['bdrip'], 'allow': ['720p'], 'ext':['avi']},
         {'identifier': 'dvdr', 'size': (3000, 10000), 'label': 'DVD-R', 'alternative': [], 'allow': [], 'ext':['iso', 'img'], 'tags': ['pal', 'ntsc', 'video_ts', 'audio_ts']},
         {'identifier': 'dvdrip', 'size': (600, 2400), 'label': 'DVD-Rip', 'alternative': ['dvdrip'], 'allow': [], 'ext':['avi', 'mpg', 'mpeg']},
@@ -34,10 +34,28 @@ class QualityPlugin(Plugin):
         addEvent('quality.all', self.all)
         addEvent('quality.single', self.single)
         addEvent('quality.guess', self.guess)
+        addEvent('quality.pre_releases', self.preReleases)
 
         addApiView('quality.size.save', self.saveSize)
+        addApiView('quality.list', self.allView, docs = {
+            'desc': 'List all available qualities',
+            'return': {'type': 'object', 'example': """{
+            'success': True,
+            'list': array, qualities
+}"""}
+        })
 
         addEvent('app.initialize', self.fill, priority = 10)
+
+    def preReleases(self):
+        return self.pre_releases
+
+    def allView(self):
+
+        return jsonified({
+            'success': True,
+            'list': self.all()
+        })
 
     def all(self):
 
@@ -138,7 +156,7 @@ class QualityPlugin(Plugin):
         # Create hash for cache
         hash = md5(str([f.replace('.' + getExt(f), '') for f in files]))
         cached = self.getCache(hash)
-        if cached: return cached
+        if cached and extra is {}: return cached
 
         for cur_file in files:
             size = (os.path.getsize(cur_file) / 1024 / 1024) if os.path.isfile(cur_file) else 0
@@ -157,6 +175,7 @@ class QualityPlugin(Plugin):
 
                 for tag in quality.get('tags', []):
                     if isinstance(tag, tuple) and '.'.join(tag) in '.'.join(words):
+                        log.debug('Found %s via tag %s in %s' % (quality['identifier'], quality.get('tags'), cur_file))
                         return self.setCache(hash, quality)
 
                 if list(set(quality.get('tags', [])) & set(words)):
@@ -182,5 +201,5 @@ class QualityPlugin(Plugin):
             if quality:
                 return self.setCache(hash, quality)
 
-        log.error('Could not identify quality for: %s' % files)
+        log.debug('Could not identify quality for: %s' % files)
         return self.setCache(hash, self.single('dvdrip'))

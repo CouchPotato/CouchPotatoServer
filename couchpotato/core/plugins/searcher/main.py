@@ -7,13 +7,17 @@ from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Movie, Release, ReleaseInfo
 from couchpotato.environment import Env
 from sqlalchemy.exc import InterfaceError
+import datetime
 import re
+import time
 import traceback
 
 log = CPLog(__name__)
 
 
 class Searcher(Plugin):
+
+    in_progress = False
 
     def __init__(self):
         addEvent('searcher.all', self.all_movies)
@@ -25,6 +29,12 @@ class Searcher(Plugin):
         fireEvent('schedule.cron', 'searcher.all', self.all_movies, day = self.conf('cron_day'), hour = self.conf('cron_hour'), minute = self.conf('cron_minute'))
 
     def all_movies(self):
+
+        if self.in_progress:
+            log.info('Search already in progress')
+            return
+
+        self.in_progress = True
 
         db = get_session()
 
@@ -51,12 +61,19 @@ class Searcher(Plugin):
             if self.shuttingDown():
                 break
 
+        self.in_progress = False
+
     def single(self, movie):
 
+        pre_releases = fireEvent('quality.pre_releases', single = True)
+        release_dates = fireEvent('library.update_release_date', identifier = movie['library']['identifier'], merge = True)
         available_status = fireEvent('status.get', 'available', single = True)
 
         default_title = movie['library']['titles'][0]['title']
         for quality_type in movie['profile']['types']:
+            if not self.couldBeReleased(quality_type['quality']['identifier'], release_dates, pre_releases):
+                log.info('To early to search for %s, %s' % (quality_type['quality']['identifier'], default_title))
+                continue
 
             has_better_quality = 0
 
@@ -72,6 +89,8 @@ class Searcher(Plugin):
                 quality = fireEvent('quality.single', identifier = quality_type['quality']['identifier'], single = True)
                 results = fireEvent('yarr.search', movie, quality, merge = True)
                 sorted_results = sorted(results, key = lambda k: k['score'], reverse = True)
+                if len(sorted_results) == 0:
+                    log.debug('Nothing found for %s in %s' % (default_title, quality_type['quality']['label']))
 
                 # Add them to this movie releases list
                 for nzb in sorted_results:
@@ -104,7 +123,11 @@ class Searcher(Plugin):
 
 
                 for nzb in sorted_results:
-                    return self.download(data = nzb, movie = movie)
+                    downloaded = self.download(data = nzb, movie = movie)
+                    if downloaded:
+                        return True
+                    else:
+                        break
             else:
                 log.info('Better quality (%s) already available or snatched for %s' % (quality_type['quality']['label'], default_title))
                 fireEvent('movie.restatus', movie['id'])
@@ -116,10 +139,10 @@ class Searcher(Plugin):
 
         return False
 
-    def download(self, data, movie):
+    def download(self, data, movie, manual = False):
 
         snatched_status = fireEvent('status.get', 'snatched', single = True)
-        successful = fireEvent('download', data = data, movie = movie, single = True)
+        successful = fireEvent('download', data = data, movie = movie, manual = manual, single = True)
 
         if successful:
 
@@ -171,24 +194,31 @@ class Searcher(Plugin):
             log.info('Wrong: Outside retention, age is %s, needs %s or lower: %s' % (nzb['age'], retention, nzb['name']))
             return False
 
-        nzb_words = re.split('\W+', simplifyString(nzb['name']))
-        required_words = self.conf('required_words').split(',')
+        movie_name = simplifyString(nzb['name'])
+        nzb_words = re.split('\W+', movie_name)
+        required_words = [x.strip() for x in self.conf('required_words').split(',')]
 
         if self.conf('required_words') and not list(set(nzb_words) & set(required_words)):
             log.info("NZB doesn't contain any of the required words.")
             return False
 
-        ignored_words = self.conf('ignored_words').split(',')
+        ignored_words = [x.strip() for x in self.conf('ignored_words').split(',')]
         blacklisted = list(set(nzb_words) & set(ignored_words))
         if self.conf('ignored_words') and blacklisted:
             log.info("Wrong: '%s' blacklisted words: %s" % (nzb['name'], ", ".join(blacklisted)))
             return False
 
+        pron_tags = ['xxx', 'sex', 'anal', 'tits', 'fuck', 'porn', 'orgy', 'milf', 'boobs']
+        for p_tag in pron_tags:
+            if p_tag in movie_name:
+                log.info('Wrong: %s, probably pr0n' % (nzb['name']))
+                return False
+
         #qualities = fireEvent('quality.all', single = True)
         preferred_quality = fireEvent('quality.single', identifier = quality['identifier'], single = True)
 
         # Contains lower quality string
-        if self.containsOtherQuality(nzb['name'], preferred_quality, single_category):
+        if self.containsOtherQuality(nzb, movie_year = movie['library']['year'], preferred_quality = preferred_quality, single_category = single_category):
             log.info('Wrong: %s, looking for %s' % (nzb['name'], quality['label']))
             return False
 
@@ -230,8 +260,10 @@ class Searcher(Plugin):
         log.info("Wrong: %s, undetermined naming. Looking for '%s (%s)'" % (nzb['name'], movie['library']['titles'][0]['title'], movie['library']['year']))
         return False
 
-    def containsOtherQuality(self, name, preferred_quality = {}, single_category = False):
+    def containsOtherQuality(self, nzb, movie_year = None, preferred_quality = {}, single_category = False):
 
+        name = nzb['name']
+        size = nzb.get('size', 0)
         nzb_words = re.split('\W+', simplifyString(name))
 
         qualities = fireEvent('quality.all', single = True)
@@ -245,6 +277,14 @@ class Searcher(Plugin):
             # Alt in words
             if list(set(nzb_words) & set(quality['alternative'])):
                 found[quality['identifier']] = True
+
+        # Hack for older movies that don't contain quality tag
+        year_name = fireEvent('scanner.name_year', name, single = True)
+        if movie_year < datetime.datetime.now().year - 3 and not year_name.get('year', None):
+            if size > 3000: # Assume dvdr
+                return 'dvdr' == preferred_quality['identifier']
+            else: # Assume dvdrip
+                return 'dvdrip' == preferred_quality['identifier']
 
         # Allow other qualities
         for allowed in preferred_quality.get('allow'):
@@ -284,10 +324,10 @@ class Searcher(Plugin):
             check_movie = fireEvent('scanner.name_year', check_name, single = True)
 
             try:
-                check_words = re.split('\W+', check_movie.get('name', ''))
-                movie_words = re.split('\W+', simplifyString(movie_name))
+                check_words = filter(None, re.split('\W+', check_movie.get('name', '')))
+                movie_words = filter(None, re.split('\W+', simplifyString(movie_name)))
 
-                if len(list(set(check_words) - set(movie_words))) == 0:
+                if len(check_words) > 0 and len(movie_words) > 0 and len(list(set(check_words) - set(movie_words))) == 0:
                     return True
             except:
                 pass
@@ -306,3 +346,30 @@ class Searcher(Plugin):
                 pass
 
         return nfo and getImdb(nfo) == imdb_id
+
+    def couldBeReleased(self, wanted_quality, dates, pre_releases):
+
+        now = int(time.time())
+
+        if not dates or (dates.get('theater', 0) == 0 and dates.get('dvd', 0) == 0):
+            return True
+        else:
+            if wanted_quality in pre_releases:
+                # Prerelease 1 week before theaters
+                if dates.get('theater') >= now - 604800 and wanted_quality in pre_releases:
+                    return True
+            else:
+                # 6 weeks after theater release
+                if dates.get('theater') < now - 3628800:
+                    return True
+
+                # 6 weeks before dvd release
+                if dates.get('dvd') > now - 3628800:
+                    return True
+
+                # Dvd should be released
+                if dates.get('dvd') > 0 and dates.get('dvd') < now:
+                    return True
+
+
+        return False

@@ -1,12 +1,11 @@
 from couchpotato.core.event import fireEvent
-from couchpotato.core.helpers.encoding import toUnicode
+from couchpotato.core.helpers.encoding import toUnicode, tryUrlencode
 from couchpotato.core.helpers.rss import RSS
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.nzb.base import NZBProvider
 from couchpotato.environment import Env
 from dateutil.parser import parse
-from urllib import urlencode
 import re
 import time
 import xml.etree.ElementTree as XMLTree
@@ -30,7 +29,7 @@ class NzbIndex(NZBProvider, RSS):
             return results
 
         q = '%s %s %s' % (movie['library']['titles'][0]['title'], movie['library']['year'], quality.get('identifier'))
-        arguments = urlencode({
+        arguments = tryUrlencode({
             'q': q,
             'age': Env.setting('retention', 'nzb'),
             'sort': 'agedesc',
@@ -43,7 +42,7 @@ class NzbIndex(NZBProvider, RSS):
         })
         url = "%s?%s" % (self.urls['api'], arguments)
 
-        cache_key = 'nzbindex.%s' % q
+        cache_key = 'nzbindex.%s.%s' % (movie['library']['identifier'], quality.get('identifier'))
 
         data = self.getCache(cache_key, url)
         if data:

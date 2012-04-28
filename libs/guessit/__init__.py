@@ -18,10 +18,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-__version__ = '0.3-dev'
-__all__ = [ 'Guess', 'Language',
-            'guess_file_info', 'guess_video_info',
-            'guess_movie_info', 'guess_episode_info' ]
+__version__ = '0.3.1'
+__all__ = ['Guess', 'Language',
+           'guess_file_info', 'guess_video_info',
+           'guess_movie_info', 'guess_episode_info']
 
 
 from guessit.guess import Guess, merge_all
@@ -30,6 +30,7 @@ from guessit.matcher import IterativeMatcher
 import logging
 
 log = logging.getLogger("guessit")
+
 
 class NullHandler(logging.Handler):
     def emit(self, record):
@@ -40,9 +41,7 @@ h = NullHandler()
 log.addHandler(h)
 
 
-
-
-def guess_file_info(filename, filetype, info = [ 'filename' ]):
+def guess_file_info(filename, filetype, info=None):
     """info can contain the names of the various plugins, such as 'filename' to
     detect filename info, or 'hash_md5' to get the md5 hash of the file.
 
@@ -52,27 +51,30 @@ def guess_file_info(filename, filetype, info = [ 'filename' ]):
     result = []
     hashers = []
 
+    if info is None:
+        info = ['filename']
+
     if isinstance(info, basestring):
-        info = [ info ]
+        info = [info]
 
     for infotype in info:
         if infotype == 'filename':
-            m = IterativeMatcher(filename, filetype = filetype)
+            m = IterativeMatcher(filename, filetype=filetype)
             result.append(m.matched())
 
         elif infotype == 'hash_mpc':
-            import hash_mpc
+            from guessit.hash_mpc import hash_file
             try:
-                result.append(Guess({ 'hash_mpc': hash_mpc.hash_file(filename) },
-                                    confidence = 1.0))
+                result.append(Guess({'hash_mpc': hash_file(filename)},
+                                    confidence=1.0))
             except Exception, e:
                 log.warning('Could not compute MPC-style hash because: %s' % e)
 
         elif infotype == 'hash_ed2k':
-            import hash_ed2k
+            from guessit.hash_ed2k import hash_file
             try:
-                result.append(Guess({ 'hash_ed2k': hash_ed2k.hash_file(filename) },
-                                    confidence = 1.0))
+                result.append(Guess({'hash_ed2k': hash_file(filename)},
+                                    confidence=1.0))
             except Exception, e:
                 log.warning('Could not compute ed2k hash because: %s' % e)
 
@@ -88,18 +90,6 @@ def guess_file_info(filename, filetype, info = [ 'filename' ]):
         else:
             log.warning('Invalid infotype: %s' % infotype)
 
-
-        """For plugins which depend on some optional library, import them like that:
-
-        if infotype == 'plugin_name':
-            try:
-                import optional_lib
-            except ImportError:
-                raise Exception, 'The plugin module cannot be loaded because the optional_lib lib is missing'
-
-        # do some stuff
-        """
-
     # do all the hashes now, but on a single pass
     if hashers:
         try:
@@ -112,22 +102,21 @@ def guess_file_info(filename, filetype, info = [ 'filename' ]):
                         hasher.update(chunk)
 
             for infotype, hasher in hashers:
-                result.append(Guess({ infotype: hasher.hexdigest() },
-                                    confidence = 1.0))
+                result.append(Guess({infotype: hasher.hexdigest()},
+                                    confidence=1.0))
         except Exception, e:
             log.warning('Could not compute hash because: %s' % e)
-
 
     return merge_all(result)
 
 
-def guess_video_info(filename, info = [ 'filename' ]):
+def guess_video_info(filename, info=None):
     return guess_file_info(filename, 'autodetect', info)
 
-def guess_movie_info(filename, info = [ 'filename' ]):
+
+def guess_movie_info(filename, info=None):
     return guess_file_info(filename, 'movie', info)
 
-def guess_episode_info(filename, info = [ 'filename' ]):
+
+def guess_episode_info(filename, info=None):
     return guess_file_info(filename, 'episode', info)
-
-

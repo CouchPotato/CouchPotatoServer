@@ -279,10 +279,11 @@
 							border: 0;
 						}
 						.movies .options .table .provider {
-							width: 130px;
+							width: 120px;
+							text-overflow: ellipsis;
 						}
 						.movies .options .table .name {
-							width: 370px;
+							width: 350px;
 							overflow: hidden;
 							text-align: left;
 							padding: 0 10px;
@@ -290,6 +291,8 @@
 						.movies .options .table.files .name { width: 605px; }
 						.movies .options .table .type { width: 130px; }
 						.movies .options .table .is_available { width: 90px; }
+						.movies .options .table .age,
+						.movies .options .table .size { width: 40px; }
 
 						.movies .options .table a {
 							width: 30px !important;

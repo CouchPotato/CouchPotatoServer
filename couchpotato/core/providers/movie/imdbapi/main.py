@@ -1,8 +1,8 @@
 from couchpotato.core.event import addEvent, fireEvent
+from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.variable import tryInt, tryFloat
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.movie.base import MovieProvider
-from urllib import urlencode
 import json
 import re
 import traceback
@@ -27,8 +27,11 @@ class IMDBAPI(MovieProvider):
 
         name_year = fireEvent('scanner.name_year', q, single = True)
 
+        if not q or not name_year.get('name'):
+            return []
+
         cache_key = 'imdbapi.cache.%s' % q
-        cached = self.getCache(cache_key, self.urls['search'] % urlencode({'t': name_year.get('name'), 'y': name_year.get('year')}))
+        cached = self.getCache(cache_key, self.urls['search'] % tryUrlencode({'t': name_year.get('name'), 'y': name_year.get('year', '')}))
 
         if cached:
             result = self.parseMovie(cached)
@@ -41,6 +44,9 @@ class IMDBAPI(MovieProvider):
         return []
 
     def getInfo(self, identifier = None):
+
+        if not identifier:
+            return {}
 
         cache_key = 'imdbapi.cache.%s' % identifier
         cached = self.getCache(cache_key, self.urls['info'] % identifier)
@@ -69,6 +75,8 @@ class IMDBAPI(MovieProvider):
                 if tmp_movie.get(key).lower() == 'n/a':
                     del movie[key]
 
+            year = tryInt(movie.get('Year', ''))
+
             movie_data = {
                 'titles': [movie.get('Title')] if movie.get('Title') else [],
                 'original_title': movie.get('Title', ''),
@@ -82,7 +90,7 @@ class IMDBAPI(MovieProvider):
                 'imdb': str(movie.get('ID', '')),
                 'runtime': self.runtimeToMinutes(movie.get('Runtime', '')),
                 'released': movie.get('Released', ''),
-                'year': movie.get('Year', ''),
+                'year': year if isinstance(year, (int)) else None,
                 'plot': movie.get('Plot', ''),
                 'genres': movie.get('Genre', '').split(','),
                 'directors': movie.get('Director', '').split(','),

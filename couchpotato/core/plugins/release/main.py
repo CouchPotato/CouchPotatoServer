@@ -147,7 +147,7 @@ class Release(Plugin):
                 'releases': {'status': {}, 'quality': {}},
                 'library': {'titles': {}, 'files':{}},
                 'files': {}
-            }))
+            }), manual = True)
 
             return jsonified({
                 'success': True

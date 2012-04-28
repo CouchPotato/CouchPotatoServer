@@ -208,7 +208,7 @@
 		z-index: 2;
 		position: absolute;
 		width: 450px;
-		margin: 28px 0 20px -4px;
+		margin: 28px 0 20px 18%;
 		background: #5c697b;
 		border-radius: 3px;
 		box-shadow: 0 0 50px rgba(0,0,0,0.55);
@@ -221,7 +221,7 @@
 			display: block;
 			position: absolute;
 			width: 0px;
-			margin: -6px 0 0 38%;
+			margin: -6px 0 0 22%;
 		}
 
 	.page .directory_list ul {

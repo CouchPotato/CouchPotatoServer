@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # enzyme - Video metadata parser
-# Copyright (C) 2011 Antoine Bertin <diaoulael@gmail.com>
-# Copyright (C) 2003-2006 Thomas Schueppel <stain@acm.org>
-# Copyright (C) 2003-2006 Dirk Meyer <dischi@freevo.org>
+# Copyright 2011-2012 Antoine Bertin <diaoulael@gmail.com>
+# Copyright 2003-2006 Thomas Schueppel <stain@acm.org>
+# Copyright 2003-2006 Dirk Meyer <dischi@freevo.org>
 #
 # This file is part of enzyme.
 #
@@ -17,9 +17,7 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
-
+# along with enzyme.  If not, see <http://www.gnu.org/licenses/>.
 __all__ = ['Parser']
 
 import struct
@@ -27,7 +25,7 @@ import re
 import stat
 import os
 import logging
-from exceptions import *
+from exceptions import ParseError
 import core
 
 # get logging object
@@ -82,7 +80,7 @@ class Ogm(core.AVContainer):
 
         # seek to the end of the stream, to avoid scanning the whole file
         if (os.stat(file.name)[stat.ST_SIZE] > 50000):
-            file.seek(os.stat(file.name)[stat.ST_SIZE]-49000)
+            file.seek(os.stat(file.name)[stat.ST_SIZE] - 49000)
 
         # read the rest of the file into a buffer
         h = file.read()
@@ -147,21 +145,21 @@ class Ogm(core.AVContainer):
             self._appendtable('VORBISCOMMENT', header)
 
 
-    def _parseOGGS(self,file):
+    def _parseOGGS(self, file):
         h = file.read(27)
         if len(h) == 0:
             # Regular File end
             return None, None
         elif len(h) < 27:
-            log.debug("%d Bytes of Garbage found after End." % len(h))
+            log.debug(u'%d Bytes of Garbage found after End.' % len(h))
             return None, None
         if h[:4] != "OggS":
-            log.debug("Invalid Ogg")
+            log.debug(u'Invalid Ogg')
             raise ParseError()
 
         version = ord(h[4])
         if version != 0:
-            log.debug("Unsupported OGG/OGM Version %d." % version)
+            log.debug(u'Unsupported OGG/OGM Version %d' % version)
             return None, None
 
         head = struct.unpack('<BQIIIB', h[5:])
@@ -178,13 +176,13 @@ class Ogm(core.AVContainer):
             h = file.read(1)
             packettype = ord(h[0]) & PACKET_TYPE_BITS
             if packettype == PACKET_TYPE_HEADER:
-                h += file.read(nextlen-1)
+                h += file.read(nextlen - 1)
                 self._parseHeader(h, granulepos)
             elif packettype == PACKED_TYPE_METADATA:
-                h += file.read(nextlen-1)
+                h += file.read(nextlen - 1)
                 self._parseMeta(h)
             else:
-                file.seek(nextlen-1,1)
+                file.seek(nextlen - 1, 1)
         if len(self.all_streams) > serial:
             stream = self.all_streams[serial]
             if hasattr(stream, 'samplerate') and \
@@ -197,27 +195,27 @@ class Ogm(core.AVContainer):
         return granulepos, nextlen + 27 + pageSegCount
 
 
-    def _parseMeta(self,h):
+    def _parseMeta(self, h):
         flags = ord(h[0])
         headerlen = len(h)
         if headerlen >= 7 and h[1:7] == 'vorbis':
             header = {}
             nextlen, self.encoder = self._extractHeaderString(h[7:])
-            numItems = struct.unpack('<I',h[7+nextlen:7+nextlen+4])[0]
-            start = 7+4+nextlen
-            for i in range(numItems):
+            numItems = struct.unpack('<I', h[7 + nextlen:7 + nextlen + 4])[0]
+            start = 7 + 4 + nextlen
+            for _ in range(numItems):
                 (nextlen, s) = self._extractHeaderString(h[start:])
                 start += nextlen
                 if s:
-                    a = re.split('=',s)
-                    header[(a[0]).upper()]=a[1]
+                    a = re.split('=', s)
+                    header[(a[0]).upper()] = a[1]
             # Put Header fields into info fields
             self.type = 'OGG Vorbis'
             self.subtype = ''
             self.all_header.append(header)
 
 
-    def _parseHeader(self,header,granule):
+    def _parseHeader(self, header, granule):
         headerlen = len(header)
         flags = ord(header[0])
 
@@ -225,7 +223,7 @@ class Ogm(core.AVContainer):
             ai = core.AudioStream()
             ai.version, ai.channels, ai.samplerate, bitrate_max, ai.bitrate, \
                         bitrate_min, blocksize, framing = \
-                        struct.unpack('<IBIiiiBB',header[7:7+23])
+                        struct.unpack('<IBIiiiBB', header[7:7 + 23])
             ai.codec = 'Vorbis'
             #ai.granule = granule
             #ai.length = granule / ai.samplerate
@@ -250,12 +248,12 @@ class Ogm(core.AVContainer):
             self.all_streams.append(vi)
 
         elif flags & PACKET_TYPE_BITS == PACKET_TYPE_HEADER and \
-                 headerlen >= struct.calcsize(STREAM_HEADER_VIDEO)+1:
+                 headerlen >= struct.calcsize(STREAM_HEADER_VIDEO) + 1:
             # New Directshow Format
             htype = header[1:9]
 
             if htype[:5] == 'video':
-                sh = header[9:struct.calcsize(STREAM_HEADER_VIDEO)+9]
+                sh = header[9:struct.calcsize(STREAM_HEADER_VIDEO) + 9]
                 streamheader = struct.unpack(STREAM_HEADER_VIDEO, sh)
                 vi = core.VideoStream()
                 (type, ssize, timeunit, samplerate, vi.length, buffersize, \
@@ -270,13 +268,13 @@ class Ogm(core.AVContainer):
                 self.all_streams.append(vi)
 
             elif htype[:5] == 'audio':
-                sha = header[9:struct.calcsize(STREAM_HEADER_AUDIO)+9]
+                sha = header[9:struct.calcsize(STREAM_HEADER_AUDIO) + 9]
                 streamheader = struct.unpack(STREAM_HEADER_AUDIO, sha)
                 ai = core.AudioStream()
                 (type, ssize, timeunit, ai.samplerate, ai.length, buffersize, \
                  ai.bitrate, ai.channels, bloc, ai.bitrate) = streamheader
                 self.samplerate = ai.samplerate
-                log.debug("Samplerate %d" % self.samplerate)
+                log.debug(u'Samplerate %d' % self.samplerate)
                 self.audio.append(ai)
                 self.all_streams.append(ai)
 
@@ -287,15 +285,15 @@ class Ogm(core.AVContainer):
                 self.all_streams.append(subtitle)
 
         else:
-            log.debug("Unknown Header")
+            log.debug(u'Unknown Header')
 
 
-    def _extractHeaderString(self,header):
+    def _extractHeaderString(self, header):
         len = struct.unpack('<I', header[:4])[0]
         try:
-            return (len+4,unicode(header[4:4+len], 'utf-8'))
+            return (len + 4, unicode(header[4:4 + len], 'utf-8'))
         except (KeyError, IndexError, UnicodeDecodeError):
-            return (len+4,None)
+            return (len + 4, None)
 
 
 Parser = Ogm

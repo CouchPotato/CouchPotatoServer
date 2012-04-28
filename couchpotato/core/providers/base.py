@@ -19,7 +19,7 @@ class Provider(Plugin):
 
     def isAvailable(self, test_url):
 
-        if Env.get('debug'): return True
+        if Env.get('dev'): return True
 
         now = time.time()
         host = urlparse(test_url).hostname
@@ -65,9 +65,13 @@ class YarrProvider(Provider):
     def belongsTo(self, url, host = None):
         try:
             hostname = urlparse(url).hostname
-            download_url = host if host else self.urls['download']
-            if hostname in download_url:
+            if host and hostname in host:
                 return self
+            else:
+                for url_type in self.urls:
+                    download_url = self.urls[url_type]
+                    if hostname in download_url:
+                        return self
         except:
             log.debug('Url % s doesn\'t belong to %s' % (url, self.getName()))
 

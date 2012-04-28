@@ -1,50 +1,73 @@
 # -*- coding: utf-8 -*-
+# Copyright 2011-2012 Antoine Bertin <diaoulael@gmail.com>
 #
-# Subliminal - Subtitles, faster than your thoughts
-# Copyright (c) 2011 Antoine Bertin <diaoulael@gmail.com>
+# This file is part of subliminal.
 #
-# This file is part of Subliminal.
-#
-# Subliminal is free software; you can redistribute it and/or modify it under
-# the terms of the Lesser GNU General Public License as published by
+# subliminal is free software; you can redistribute it and/or modify it under
+# the terms of the GNU Lesser General Public License as published by
 # the Free Software Foundation; either version 3 of the License, or
 # (at your option) any later version.
 #
-# Subliminal is distributed in the hope that it will be useful,
+# subliminal is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# Lesser GNU General Public License for more details.
+# GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the Lesser GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
-__all__ = ['Subtitle', 'EmbeddedSubtitle', 'ExternalSubtitle', 'ResultSubtitle', 'get_subtitle_path']
-
-
-from languages import list_languages, convert_language
-import abc
+# You should have received a copy of the GNU Lesser General Public License
+# along with subliminal.  If not, see <http://www.gnu.org/licenses/>.
+from .languages import list_languages, convert_language
 import os.path
 
 
+__all__ = ['Subtitle', 'EmbeddedSubtitle', 'ExternalSubtitle', 'ResultSubtitle', 'get_subtitle_path']
+
+
+#: Subtitles extensions
 EXTENSIONS = ['.srt', '.sub', '.txt']
 
 
 class Subtitle(object):
-    __metaclass__ = abc.ABCMeta
-    """Base class for subtitles"""
+    """Base class for subtitles
 
+    :param string path: path to the subtitle
+    :param string language: language of the subtitle (second element of :class:`~subliminal.languages.LANGUAGES`)
+
+    """
     def __init__(self, path, language):
         self.path = path
         self.language = language
 
     @property
     def exists(self):
+        """Whether the subtitle exists or not"""
         if self.path:
             return os.path.exists(self.path)
         return False
 
+
+class EmbeddedSubtitle(Subtitle):
+    """Subtitle embedded in a container
+
+    :param string path: path to the subtitle
+    :param string language: language of the subtitle (second element of :class:`~subliminal.languages.LANGUAGES`)
+    :param int track_id: id of the subtitle track in the container
+
+    """
+    def __init__(self, path, language, track_id):
+        super(EmbeddedSubtitle, self).__init__(path, language)
+        self.track_id = track_id
+
     @classmethod
-    def fromPath(cls, path):
+    def from_enzyme(cls, path, subtitle):
+        language = convert_language(subtitle.language, 1, 2)
+        return cls(path, language, subtitle.trackno)
+
+
+class ExternalSubtitle(Subtitle):
+    """Subtitle in a file next to the video file"""
+    @classmethod
+    def from_path(cls, path):
+        """Create an :class:`ExternalSubtitle` from path"""
         extension = ''
         for e in EXTENSIONS:
             if path.endswith(e):
@@ -58,25 +81,21 @@ class Subtitle(object):
         return cls(path, language)
 
 
-class EmbeddedSubtitle(Subtitle):
-    def __init__(self, path, language, track_id):
-        super(EmbeddedSubtitle, self).__init__(path, language)
-        self.track_id = track_id
-
-    @classmethod
-    def fromEnzyme(cls, path, subtitle):
-        language = convert_language(subtitle.language, 1, 2)
-        return cls(path, language, subtitle.trackno)
-
-
-class ExternalSubtitle(Subtitle):
-    pass
-
-
 class ResultSubtitle(ExternalSubtitle):
-    def __init__(self, path, language, plugin, link, release=None, confidence=1, keywords=set()):
+    """Subtitle found using :mod:`~subliminal.services`
+
+    :param string path: path to the subtitle
+    :param string language: language of the subtitle (second element of :class:`~subliminal.languages.LANGUAGES`)
+    :param string service: name of the service
+    :param string link: download link for the subtitle
+    :param string release: release name of the video
+    :param float confidence: confidence that the subtitle matches the video according to the service
+    :param set keywords: keywords that describe the subtitle
+
+    """
+    def __init__(self, path, language, service, link, release=None, confidence=1, keywords=set()):
         super(ResultSubtitle, self).__init__(path, language)
-        self.plugin = plugin
+        self.service = service
         self.link = link
         self.release = release
         self.confidence = confidence
@@ -84,19 +103,20 @@ class ResultSubtitle(ExternalSubtitle):
 
     @property
     def single(self):
+        """Whether this is a single subtitle or not. A single subtitle does not have
+        a language indicator in its file name
+
+        :rtype: bool
+
+        """
         extension = os.path.splitext(self.path)[0]
         language = os.path.splitext(self.path[:len(self.path) - len(extension)])[1][1:]
         if not language in list_languages(1):
             return True
         return False
 
-    def convert(self):
-        converted = {'path': self.path, 'plugin': self.plugin, 'language': self.language, 'link': self.link, 'release': self.release,
-                     'confidence': self.confidence, 'keywords': self.keywords}
-        return converted
-
-    def __str__(self):
-        return repr(self.convert())
+    def __repr__(self):
+        return 'ResultSubtitle(%s, %s, %.2f, %s)' % (self.language, self.service, self.confidence, self.release)
 
 
 def get_subtitle_path(video_path, language, multi):

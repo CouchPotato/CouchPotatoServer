@@ -1,5 +1,6 @@
 from couchpotato import addView
 from couchpotato.core.event import fireEvent, addEvent
+from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.variable import getExt
 from couchpotato.core.logger import CPLog
 from couchpotato.environment import Env
@@ -11,10 +12,8 @@ import glob
 import math
 import os.path
 import re
-import socket
 import time
 import traceback
-import urllib
 import urllib2
 
 log = CPLog(__name__)
@@ -29,6 +28,8 @@ class Plugin(object):
 
     http_last_use = {}
     http_time_between_calls = 0
+    http_failed_request = {}
+    http_failed_disabled = {}
 
     def registerPlugin(self):
         addEvent('app.shutdown', self.doShutdown)
@@ -101,8 +102,17 @@ class Plugin(object):
             headers['User-Agent'] = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.7; rv:10.0.2) Gecko/20100101 Firefox/10.0.2'
 
         host = urlparse(url).hostname
-        self.wait(host)
 
+        # Don't try for failed requests
+        if self.http_failed_disabled.get(host, 0) > 0:
+            if self.http_failed_disabled[host] > (time.time() - 900):
+                log.info('Disabled calls to %s for 15 minutes because so many failed requests.' % host)
+                raise Exception
+            else:
+                del self.http_failed_request[host]
+                del self.http_failed_disabled[host]
+
+        self.wait(host)
         try:
 
             if multipart:
@@ -115,13 +125,30 @@ class Plugin(object):
                 data = opener.open(request, timeout = timeout).read()
             else:
                 log.info('Opening url: %s, params: %s' % (url, [x for x in params.iterkeys()]))
-                data = urllib.urlencode(params) if len(params) > 0 else None
+                data = tryUrlencode(params) if len(params) > 0 else None
                 request = urllib2.Request(url, data, headers)
 
                 data = urllib2.urlopen(request, timeout = timeout).read()
+
+            self.http_failed_request[host] = 0
         except IOError:
             if show_error:
                 log.error('Failed opening url in %s: %s %s' % (self.getName(), url, traceback.format_exc(1)))
+
+            # Save failed requests by hosts
+            try:
+                if not self.http_failed_request.get(host):
+                    self.http_failed_request[host] = 1
+                else:
+                    self.http_failed_request[host] += 1
+
+                    # Disable temporarily
+                    if self.http_failed_request[host] > 5:
+                        self.http_failed_disabled[host] = time.time()
+
+            except:
+                log.debug('Failed logging failed requests for %s: %s' % (url, traceback.format_exc()))
+
             raise
 
         self.http_last_use[host] = time.time()
