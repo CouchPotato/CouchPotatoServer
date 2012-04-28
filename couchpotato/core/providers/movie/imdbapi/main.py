@@ -31,7 +31,7 @@ class IMDBAPI(MovieProvider):
             return []
 
         cache_key = 'imdbapi.cache.%s' % q
-        cached = self.getCache(cache_key, self.urls['search'] % tryUrlencode({'t': name_year.get('name'), 'y': name_year.get('year', '')}))
+        cached = self.getCache(cache_key, self.urls['search'] % tryUrlencode({'t': name_year.get('name'), 'y': name_year.get('year', '')}), url_timeout = 3)
 
         if cached:
             result = self.parseMovie(cached)
@@ -49,7 +49,7 @@ class IMDBAPI(MovieProvider):
             return {}
 
         cache_key = 'imdbapi.cache.%s' % identifier
-        cached = self.getCache(cache_key, self.urls['info'] % identifier)
+        cached = self.getCache(cache_key, self.urls['info'] % identifier, url_timeout = 3)
 
         if cached:
             result = self.parseMovie(cached)
