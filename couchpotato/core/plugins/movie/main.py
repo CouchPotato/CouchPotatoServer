@@ -79,6 +79,7 @@ class MoviePlugin(Plugin):
             'desc': 'Delete a movie from the wanted list',
             'params': {
                 'id': {'desc': 'Movie ID(s) you want to delete.', 'type': 'int (comma separated)'},
+                'delete_from': {'desc': 'Delete movie from this page', 'type': 'string: all (default), wanted, manage'},
             }
         })
 
@@ -358,20 +359,45 @@ class MoviePlugin(Plugin):
 
         ids = [x.strip() for x in params.get('id').split(',')]
         for movie_id in ids:
-            self.delete(movie_id)
+            self.delete(movie_id, delete_from = params.get('delete_from', 'all'))
 
         return jsonified({
             'success': True,
         })
 
-    def delete(self, movie_id):
+    def delete(self, movie_id, delete_from = None):
 
         db = get_session()
 
         movie = db.query(Movie).filter_by(id = movie_id).first()
         if movie:
-            db.delete(movie)
-            db.commit()
+            if delete_from == 'all':
+                db.delete(movie)
+                db.commit()
+            else:
+                done_status = fireEvent('status.get', 'done', single = True)
+
+                total_releases = len(movie.releases)
+                total_deleted = 0
+                new_movie_status = None
+                for release in movie.releases:
+                    if delete_from == 'wanted' and release.status_id != done_status.get('id'):
+                        db.delete(release)
+                        total_deleted += 1
+                        new_movie_status = 'done'
+                    elif delete_from == 'manage' and release.status_id == done_status.get('id'):
+                        db.delete(release)
+                        total_deleted += 1
+                        new_movie_status = 'active'
+                db.commit()
+
+                if total_releases == total_deleted:
+                    db.delete(movie)
+                    db.commit()
+                elif new_movie_status:
+                    new_status = fireEvent('status.get', new_movie_status, single = True)
+                    movie.status_id = new_status.get('id')
+                    db.commit()
 
         return True
 

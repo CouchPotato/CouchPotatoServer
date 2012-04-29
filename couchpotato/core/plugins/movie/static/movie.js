@@ -4,11 +4,12 @@ var Movie = new Class({
 
 	action: {},
 
-	initialize: function(self, options, data){
+	initialize: function(list, options, data){
 		var self = this;
 
 		self.data = data;
 		self.view = options.view || 'thumbs';
+		self.list = list;
 
 		self.profile = Quality.getProfile(data.profile_id) || {};
 		self.parent(self, options);
