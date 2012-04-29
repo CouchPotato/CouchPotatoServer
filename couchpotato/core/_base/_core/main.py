@@ -165,7 +165,7 @@ class Core(Plugin):
         return '%s:%d%s' % (cleanHost(host).rstrip('/'), int(port), '/' + Env.setting('url_base').lstrip('/') if Env.setting('url_base') else '')
 
     def createApiUrl(self):
-        return '%s/%s' % (self.createBaseUrl(), Env.setting('api_key'))
+        return '%s/api/%s' % (self.createBaseUrl(), Env.setting('api_key'))
 
     def version(self):
         ver = fireEvent('updater.info', single = True)

@@ -55,7 +55,7 @@ class Plugin(object):
         s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', self.__class__.__name__)
         class_name = re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
 
-        path = '%s/static/%s/' % (Env.setting('api_key'), class_name)
+        path = 'api/%s/static/%s/' % (Env.setting('api_key'), class_name)
         addView(path + '<path:filename>', self.showStatic, static = True)
 
         if add_to_head:

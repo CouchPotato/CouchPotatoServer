@@ -15,6 +15,7 @@ from sqlalchemy.orm import scoped_session
 from sqlalchemy.orm.session import sessionmaker
 from werkzeug.utils import redirect
 import os
+import time
 
 log = CPLog(__name__)
 
@@ -73,5 +74,10 @@ def getApiKey():
 def page_not_found(error):
     index_url = url_for('web.index')
     url = getattr(request, 'path')[len(index_url):]
-    return redirect(index_url + '#' + url)
+
+    if url[:3] != 'api':
+        return redirect(index_url + '#' + url)
+    else:
+        time.sleep(2)
+        return 'Wrong API key used', 404
 

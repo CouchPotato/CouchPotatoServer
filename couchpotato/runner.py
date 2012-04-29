@@ -172,13 +172,13 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
 
     # Static path
     app.static_folder = os.path.join(base_path, 'couchpotato', 'static')
-    web.add_url_rule('%s/static/<path:filename>' % api_key,
+    web.add_url_rule('api/%s/static/<path:filename>' % api_key,
                       endpoint = 'static',
                       view_func = app.send_static_file)
 
     # Register modules
     app.register_blueprint(web, url_prefix = '%s/' % url_base)
-    app.register_blueprint(api, url_prefix = '%s/%s/' % (url_base, api_key))
+    app.register_blueprint(api, url_prefix = '%s/api/%s/' % (url_base, api_key))
 
     # Some logging and fire load event
     try: log.info('Starting server on port %(port)s' % config)
