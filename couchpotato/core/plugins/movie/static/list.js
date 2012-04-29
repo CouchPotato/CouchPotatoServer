@@ -381,6 +381,8 @@ var MovieList = new Class({
 	update: function(){
 		var self = this;
 
+		self.reset();
+		self.movie_list.empty();
 		self.getMovies();
 	},
 
