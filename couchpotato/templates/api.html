@@ -21,7 +21,7 @@
 			<br />
 			<br />
 			Get the API key:
-			<pre><a href="/getkey/?p=md5(password)&amp;u=md5(username)">/getkey/?p=md5(password)&amp;u=md5(username)</a></pre>
+			<pre><a href="{{ url_for('web.index') }}getkey/?p=md5(password)&amp;u=md5(username)">{{ url_for('web.index') }}getkey/?p=md5(password)&amp;u=md5(username)</a></pre>
 			Will return {"api_key": "XXXXXXXXXX", "success": true}. When username or password is empty you don't need to md5 it.
 			<br />
 		</div>
