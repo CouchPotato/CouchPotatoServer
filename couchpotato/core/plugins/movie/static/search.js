@@ -326,9 +326,9 @@ Block.Search.Item = new Class({
 						'src': self.info.images.poster[0]
 					}) : null,
 					self.info.in_wanted ? new Element('span.in_wanted', {
-						'text': 'Already in wanted list: ' + self.info.in_wanted.label
+						'text': 'Already in wanted list: ' + self.info.in_wanted.profile.label
 					}) : (self.info.in_library ? new Element('span.in_library', {
-						'text': 'Already in library: ' + self.info.in_library.label
+						'text': 'Already in library: ' + self.info.in_library.profile.label
 					}) : null),
 					self.title_select = new Element('select', {
 						'name': 'title'
