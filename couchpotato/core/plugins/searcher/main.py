@@ -356,15 +356,15 @@ class Searcher(Plugin):
         else:
             if wanted_quality in pre_releases:
                 # Prerelease 1 week before theaters
-                if dates.get('theater') >= now - 604800 and wanted_quality in pre_releases:
+                if dates.get('theater') - 604800 < now:
                     return True
             else:
                 # 6 weeks after theater release
-                if dates.get('theater') < now - 3628800:
+                if dates.get('theater') + 3628800 < now:
                     return True
 
                 # 6 weeks before dvd release
-                if dates.get('dvd') > now - 3628800:
+                if dates.get('dvd') - 3628800 < now:
                     return True
 
                 # Dvd should be released
