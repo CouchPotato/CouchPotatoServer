@@ -27,7 +27,7 @@ class Logging(Plugin):
             'desc': 'Remove all the log files'
         })
         addApiView('logging.log', self.log, docs = {
-            'desc': 'Get the full log file by number',
+            'desc': 'Log errors',
             'params': {
                 'type': {'desc': 'Type of logging, default "error"'},
                 '**kwargs': {'type':'object', 'desc': 'All other params will be printed in the log string.'},
