@@ -59,7 +59,7 @@ def getParam(attr, default = None):
     try:
         return toUnicode(unquote_plus(getattr(flask.request, 'args').get(attr, default))).encode('utf-8')
     except:
-        return None
+        return default
 
 def padded_jsonify(callback, *args, **kwargs):
     content = str(callback) + '(' + json.dumps(dict(*args, **kwargs)) + ')'
