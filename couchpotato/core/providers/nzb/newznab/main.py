@@ -133,7 +133,7 @@ class Newznab(NZBProvider, RSS):
                         'size': int(size) / 1024 / 1024,
                         'url': (self.getUrl(host['host'], self.urls['download']) % id) + self.getApiExt(host),
                         'download': self.download,
-                        'detail_url': (self.getUrl(host['host'], self.urls['detail']) % id) + self.getApiExt(host),
+                        'detail_url': '%sdetails/%s' % (cleanHost(host['host']), id),
                         'content': self.getTextElement(nzb, "description"),
                     }
 
