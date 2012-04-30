@@ -15,6 +15,8 @@ Block.Search = new Class({
 						'keyup': self.keyup.bind(self),
 						'focus': function(){
 							self.el.addClass('focused')
+							if(this.get('value'))
+								self.hideResults(false)
 						},
 						'blur': function(){
 							self.el.removeClass('focused')
@@ -55,6 +57,7 @@ Block.Search = new Class({
 		var self = this;
 		(e).preventDefault();
 
+		self.last_q = '';
 		self.input.set('value', '');
 		self.input.focus()
 
