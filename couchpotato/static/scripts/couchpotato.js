@@ -117,14 +117,14 @@ var CouchPotato = new Class({
 	openPage: function(url) {
 		var self = this;
 
-		var current_url = url.replace(/^\/+|\/+$/g, '');
-		if(current_url == self.current_url)
-			return;
-
 		self.route.parse();
 		var page_name = self.route.getPage().capitalize();
 		var action = self.route.getAction();
 		var params = self.route.getParams();
+
+		var current_url = self.route.getCurrentUrl();
+		if(current_url == self.current_url)
+			return;
 
 		if(self.current_page)
 			self.current_page.hide()
@@ -287,8 +287,8 @@ var Route = new Class({
 		var self = this;
 
 		var path = History.getPath().replace(Api.getOption('url'), '/').replace(App.getOption('base_url'), '/')
-		var current = path.replace(/^\/+|\/+$/g, '')
-		var url = current.split('/')
+		self.current = path.replace(/^\/+|\/+$/g, '')
+		var url = self.current.split('/')
 
 		self.page = (url.length > 0) ? url.shift() : self.defaults.page
 		self.action = (url.length > 0) ? url.shift() : self.defaults.action
@@ -322,6 +322,10 @@ var Route = new Class({
 
 	getParams: function(){
 		return this.params
+	},
+
+	getCurrentUrl: function(){
+		return this.current
 	},
 
 	get: function(param){
