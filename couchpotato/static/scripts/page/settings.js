@@ -1114,7 +1114,7 @@ Option.Combined = new Class({
 				self.values[nr][name] = value.trim();
 			});
 
-			self.inputs[name].getParent('.ctrlHolder').hide();
+			self.inputs[name].getParent('.ctrlHolder').setStyle('display', 'none');
 			self.inputs[name].addEvent('change', self.addEmpty.bind(self))
 
 		});
