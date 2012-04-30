@@ -23,11 +23,19 @@ class Growl(Notification):
     def register(self):
         if self.registered: return
         try:
+
+            hostname = self.conf('hostname')
+            password = self.conf('password')
+            port = self.conf('port')
+
             self.growl = notifier.GrowlNotifier(
                 applicationName = 'CouchPotato',
                 notifications = ["Updates"],
                 defaultNotifications = ["Updates"],
                 applicationIcon = '%s/static/images/couch.png' % fireEvent('app.api_url', single = True),
+                hostname = hostname if hostname else 'localhost',
+                password = password if password else None,
+                port = port if port else 23053
             )
             self.growl.register()
             self.registered = True
