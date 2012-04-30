@@ -23,11 +23,22 @@ class Logging(Plugin):
     'total': int, //Total log files available
 }"""}
         })
+        addApiView('logging.partial', self.partial, docs = {
+            'desc': 'Get a partial log',
+            'params': {
+                'type': {'desc': 'Type of log', 'type': 'string: all(default), error, info, debug'},
+                'lines': {'desc': 'Number of lines. Last to first. Default 30'},
+            },
+            'return': {'type': 'object', 'example': """{
+    'success': True,
+    'log': string, //Log file
+}"""}
+        })
         addApiView('logging.clear', self.clear, docs = {
             'desc': 'Remove all the log files'
         })
         addApiView('logging.log', self.log, docs = {
-            'desc': 'Get the full log file by number',
+            'desc': 'Log errors',
             'params': {
                 'type': {'desc': 'Type of logging, default "error"'},
                 '**kwargs': {'type':'object', 'desc': 'All other params will be printed in the log string.'},
@@ -62,6 +73,46 @@ class Logging(Plugin):
             'success': True,
             'log': log,
             'total': total,
+        })
+
+    def partial(self):
+
+        log_type = getParam('type', 'all')
+        total_lines = getParam('lines', 30)
+
+        log_lines = []
+
+        for x in range(0, 50):
+
+            path = '%s%s' % (Env.get('log_path'), '.%s' % x if x > 0 else '')
+
+            # Check see if the log exists
+            if not os.path.isfile(path):
+                break
+
+            reversed_lines = []
+            f = open(path, 'r')
+            reversed_lines = f.read().split('[0m\n')
+            reversed_lines.reverse()
+
+            brk = False
+            for line in reversed_lines:
+
+                #print '%s ' % log_type in line.lower()
+                if log_type == 'all' or '%s ' % log_type.upper() in line:
+                    log_lines.append(line)
+
+                if len(log_lines) >= total_lines:
+                    brk = True
+                    break
+
+            if brk:
+                break
+
+        log_lines.reverse()
+        return jsonified({
+            'success': True,
+            'log': '[0m\n'.join(log_lines),
         })
 
     def clear(self):

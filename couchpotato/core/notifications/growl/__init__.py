@@ -22,6 +22,21 @@ config = [{
                     'advanced': True,
                     'description': 'Also send message when movie is snatched.',
                 },
+                {
+                    'name': 'hostname',
+                    'description': 'Notify growl over network. Needs restart.',
+                    'advanced': True,
+                },
+                {
+                    'name': 'port',
+                    'type': 'int',
+                    'advanced': True,
+                },
+                {
+                    'name': 'password',
+                    'type': 'password',
+                    'advanced': True,
+                },
             ],
         }
     ],

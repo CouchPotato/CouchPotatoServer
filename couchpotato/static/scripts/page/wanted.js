@@ -206,7 +206,8 @@ window.addEvent('domready', function(){
 					function(){
 						Api.request('movie.delete', {
 							'data': {
-								'id': self.movie.get('id')
+								'id': self.movie.get('id'),
+								'delete_from': self.movie.list.options.identifier
 							},
 							'onComplete': function(){
 								movie.set('tween', {

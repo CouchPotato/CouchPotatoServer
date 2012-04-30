@@ -180,15 +180,18 @@ class Scanner(Plugin):
 
                 # Normal identifier
                 identifier = self.createStringIdentifier(file_path, folder, exclude_filename = is_dvd_file)
+                identifiers = [identifier]
 
                 # Identifier with quality
                 quality = fireEvent('quality.guess', [file_path], single = True) if not is_dvd_file else {'identifier':'dvdr'}
-                identifier_with_quality = '%s %s' % (identifier, quality.get('identifier', ''))
+                if quality:
+                    identifier_with_quality = '%s %s' % (identifier, quality.get('identifier', ''))
+                    identifiers = [identifier_with_quality, identifier]
 
                 if not movie_files.get(identifier):
                     movie_files[identifier] = {
                         'unsorted_files': [],
-                        'identifiers': [identifier_with_quality, identifier],
+                        'identifiers': identifiers,
                         'is_dvd': is_dvd_file,
                     }
 
@@ -495,7 +498,7 @@ class Scanner(Plugin):
                 'identifier': imdb_id
             }, update_after = False, single = True)
 
-        log.error('No imdb_id found for %s.' % group['identifiers'])
+        log.error('No imdb_id found for %s. Add a NFO file with IMDB id or add the year to the filename.' % group['identifiers'])
         return {}
 
     def getCPImdb(self, string):

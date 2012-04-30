@@ -55,11 +55,11 @@ class MovieResultModifier(Plugin):
 
                 for movie in l.movies:
                     if movie.status_id == active_status['id']:
-                        temp['in_wanted'] = movie.profile.to_dict()
+                        temp['in_wanted'] = fireEvent('movie.get', movie.id, single = True)
 
                     for release in movie.releases:
                         if release.status_id == done_status['id']:
-                            temp['in_library'] = release.quality.to_dict()
+                            temp['in_library'] = fireEvent('movie.get', movie.id, single = True)
         except:
             log.error('Tried getting more info on searched movies: %s' % traceback.format_exc())
 
