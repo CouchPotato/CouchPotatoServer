@@ -41,7 +41,7 @@ class Movie(Entity):
 
     last_edit = Field(Integer, default = lambda: int(time.time()))
 
-    library = ManyToOne('Library')
+    library = ManyToOne('Library', cascade = 'delete, delete-orphan', single_parent = True)
     status = ManyToOne('Status')
     profile = ManyToOne('Profile')
     releases = OneToMany('Release', cascade = 'all, delete-orphan')
