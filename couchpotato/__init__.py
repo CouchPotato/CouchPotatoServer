@@ -78,6 +78,6 @@ def page_not_found(error):
     if url[:3] != 'api':
         return redirect(index_url + '#' + url)
     else:
-        time.sleep(2)
+        time.sleep(0.1)
         return 'Wrong API key used', 404
 
