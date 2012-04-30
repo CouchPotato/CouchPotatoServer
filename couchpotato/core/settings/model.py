@@ -3,8 +3,8 @@ from elixir.entity import Entity
 from elixir.fields import Field
 from elixir.options import options_defaults, using_options
 from elixir.relationships import ManyToMany, OneToMany, ManyToOne
-from sqlalchemy.types import Integer, Unicode, UnicodeText, Boolean, Float, \
-    String, TypeDecorator
+from sqlalchemy.types import Integer, Unicode, UnicodeText, Boolean, String, \
+    TypeDecorator
 import json
 import time
 

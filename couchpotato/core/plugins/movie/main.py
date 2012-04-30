@@ -1,8 +1,7 @@
 from couchpotato import get_session
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, fireEventAsync, addEvent
-from couchpotato.core.helpers.encoding import toUnicode, tryUrlencode, \
-    simplifyString
+from couchpotato.core.helpers.encoding import toUnicode, simplifyString
 from couchpotato.core.helpers.request import getParams, jsonified, getParam
 from couchpotato.core.helpers.variable import getImdb
 from couchpotato.core.logger import CPLog

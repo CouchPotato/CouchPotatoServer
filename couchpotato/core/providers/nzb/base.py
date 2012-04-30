@@ -1,4 +1,3 @@
-from couchpotato.core.event import addEvent
 from couchpotato.core.providers.base import YarrProvider
 import time
 
