@@ -14,14 +14,17 @@ class XBMC(MetaDataBase):
     def getRootName(self, data = {}):
         return os.path.join(data['destination_dir'], data['filename'])
 
-    def getFanartName(self, root):
-        return self.conf('meta_fanart_name') % root
+    def getFanartName(self, name, root):
+        return self.createMetaName(self.conf('meta_fanart_name'), name, root)
 
-    def getThumbnailName(self, root):
-        return self.conf('meta_thumbnail_name') % root
+    def getThumbnailName(self, name, root):
+        return self.createMetaName(self.conf('meta_thumbnail_name'), name, root)
 
-    def getNfoName(self, root):
-        return self.conf('meta_nfo_name') % root
+    def getNfoName(self, name, root):
+        return self.createMetaName(self.conf('meta_nfo_name'), name, root)
+
+    def createMetaName(self, basename, name, root):
+        return os.path.join(root, basename.replace('%s', name))
 
     def getNfo(self, movie_info = {}, data = {}):
         nfoxml = Element('movie')
