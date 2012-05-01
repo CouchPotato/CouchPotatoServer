@@ -32,7 +32,7 @@ class TaskBarIcon(wx.TaskBarIcon):
         wx.TaskBarIcon.__init__(self)
         self.frame = frame
 
-        icon = wx.Icon('icon.ico', wx.BITMAP_TYPE_ANY)
+        icon = wx.Icon('icon.png', wx.BITMAP_TYPE_PNG)
         self.SetIcon(icon)
 
         self.Bind(wx.EVT_TASKBAR_LEFT_DCLICK, self.onTaskBarActivate)
@@ -141,8 +141,8 @@ class CouchPotatoApp(wx.App, SoftwareUpdate):
     def OnInit(self):
 
         # Updater
-        base_url = 'http://localhost/updates/'
-        self.InitUpdates(base_url, base_url + 'changelog.txt',
+        base_url = 'http://couchpota.to/updates/'
+        self.InitUpdates(base_url, base_url + 'changelog.html',
                          icon = wx.Icon('icon.ico'))
 
         self.frame = MainFrame(self)
