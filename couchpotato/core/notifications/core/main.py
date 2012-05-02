@@ -30,7 +30,7 @@ class CoreNotifier(Notification):
         addApiView('notification.markread', self.markAsRead, docs = {
             'desc': 'Mark notifications as read',
             'params': {
-                'id': {'desc': 'Notification id you want to mark as read.', 'type': 'int (comma separated)'},
+                'ids': {'desc': 'Notification id you want to mark as read.', 'type': 'int (comma separated)'},
             },
         })
 
