@@ -1,3 +1,4 @@
+from BeautifulSoup import BeautifulSoup
 from couchpotato.core.event import fireEvent
 from couchpotato.core.helpers.encoding import toUnicode, tryUrlencode
 from couchpotato.core.helpers.rss import RSS
@@ -62,9 +63,11 @@ class NzbIndex(NZBProvider, RSS):
 
                     try:
                         description = self.getTextElement(nzb, "description")
-                        if ' nfo' in description.lower():
-                            nfo_url = re.search('href="(?P<nfo>.+)"', description).group('nfo')
-                            description = toUnicode(self.getCache('nzbindex.%s' % nzbindex_id, nfo_url, timeout = 25920000))
+                        if '/nfo/' in description.lower():
+                            nfo_url = re.search('href=\"(?P<nfo>.+)\" ', description).group('nfo')
+                            full_description = self.getCache('nzbindex.%s' % nzbindex_id, url = nfo_url, cache_timeout = 25920000)
+                            html = BeautifulSoup(full_description)
+                            description = toUnicode(html.find('pre', attrs = {'id':'nfo0'}).text)
                     except:
                         pass
 
