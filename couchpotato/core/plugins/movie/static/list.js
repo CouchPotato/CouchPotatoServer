@@ -253,7 +253,8 @@ var MovieList = new Class({
 					(e).preventDefault();
 					Api.request('movie.delete', {
 						'data': {
-							'id': ids.join(',')
+							'id': ids.join(','),
+							'delete_from': self.options.identifier
 						},
 						'onSuccess': function(){
 							qObj.close();
@@ -381,6 +382,8 @@ var MovieList = new Class({
 	update: function(){
 		var self = this;
 
+		self.reset();
+		self.movie_list.empty();
 		self.getMovies();
 	},
 

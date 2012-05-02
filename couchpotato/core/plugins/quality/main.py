@@ -1,7 +1,7 @@
 from couchpotato import get_session
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent
-from couchpotato.core.helpers.encoding import toUnicode, toSafeString
+from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.request import jsonified, getParams
 from couchpotato.core.helpers.variable import mergeDicts, md5, getExt
 from couchpotato.core.logger import CPLog
@@ -184,14 +184,15 @@ class QualityPlugin(Plugin):
 
                 # Check on unreliable stuff
                 if loose:
-                    # Check extension + filesize
-                    if list(set(quality.get('ext', [])) & set(words)) and size >= quality['size_min'] and size <= quality['size_max']:
-                        log.debug('Found %s via ext %s in %s' % (quality['identifier'], quality.get('ext'), words))
-                        return self.setCache(hash, quality)
 
                     # Last check on resolution only
                     if quality.get('width', 480) == extra.get('resolution_width', 0):
                         log.debug('Found %s via resolution_width: %s == %s' % (quality['identifier'], quality.get('width', 480), extra.get('resolution_width', 0)))
+                        return self.setCache(hash, quality)
+
+                    # Check extension + filesize
+                    if list(set(quality.get('ext', [])) & set(words)) and size >= quality['size_min'] and size <= quality['size_max']:
+                        log.debug('Found %s via ext and filesize %s in %s' % (quality['identifier'], quality.get('ext'), words))
                         return self.setCache(hash, quality)
 
 
@@ -202,4 +203,4 @@ class QualityPlugin(Plugin):
                 return self.setCache(hash, quality)
 
         log.debug('Could not identify quality for: %s' % files)
-        return self.setCache(hash, self.single('dvdrip'))
+        return None

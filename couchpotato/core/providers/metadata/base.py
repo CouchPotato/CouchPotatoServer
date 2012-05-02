@@ -28,14 +28,16 @@ class MetaDataBase(Plugin):
         except:
             log.error('Failed to update movie, before creating metadata: %s' % traceback.format_exc())
 
-        root = self.getRootName(release)
+        root_name = self.getRootName(release)
+        meta_name = os.path.basename(root_name)
+        root = os.path.dirname(root_name)
 
         movie_info = release['library'].get('info')
 
         for file_type in ['nfo', 'thumbnail', 'fanart']:
             try:
                 # Get file path
-                name = getattr(self, 'get' + file_type.capitalize() + 'Name')(root)
+                name = getattr(self, 'get' + file_type.capitalize() + 'Name')(meta_name, root)
 
                 if name and self.conf('meta_' + file_type):
 
@@ -54,13 +56,13 @@ class MetaDataBase(Plugin):
     def getRootName(self, data):
         return
 
-    def getFanartName(self, root):
+    def getFanartName(self, name, root):
         return
 
-    def getThumbnailName(self, root):
+    def getThumbnailName(self, name, root):
         return
 
-    def getNfoName(self, root):
+    def getNfoName(self, name, root):
         return
 
     def getNfo(self, movie_info = {}, data = {}):

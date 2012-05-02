@@ -65,6 +65,8 @@ class Searcher(Plugin):
 
     def single(self, movie):
 
+        db = get_session()
+
         pre_releases = fireEvent('quality.pre_releases', single = True)
         release_dates = fireEvent('library.update_release_date', identifier = movie['library']['identifier'], merge = True)
         available_status = fireEvent('status.get', 'available', single = True)
@@ -94,7 +96,6 @@ class Searcher(Plugin):
 
                 # Add them to this movie releases list
                 for nzb in sorted_results:
-                    db = get_session()
 
                     rls = db.query(Release).filter_by(identifier = md5(nzb['url'])).first()
                     if not rls:
@@ -106,20 +107,23 @@ class Searcher(Plugin):
                         )
                         db.add(rls)
                         db.commit()
+                    else:
+                        [db.delete(info) for info in rls.info]
+                        db.commit()
 
-                        for info in nzb:
-                            try:
-                                if not isinstance(nzb[info], (str, unicode, int, long)):
-                                    continue
+                    for info in nzb:
+                        try:
+                            if not isinstance(nzb[info], (str, unicode, int, long)):
+                                continue
 
-                                rls_info = ReleaseInfo(
-                                    identifier = info,
-                                    value = toUnicode(nzb[info])
-                                )
-                                rls.info.append(rls_info)
-                                db.commit()
-                            except InterfaceError:
-                                log.debug('Couldn\'t add %s to ReleaseInfo: %s' % (info, traceback.format_exc()))
+                            rls_info = ReleaseInfo(
+                                identifier = info,
+                                value = toUnicode(nzb[info])
+                            )
+                            rls.info.append(rls_info)
+                            db.commit()
+                        except InterfaceError:
+                            log.debug('Couldn\'t add %s to ReleaseInfo: %s' % (info, traceback.format_exc()))
 
 
                 for nzb in sorted_results:
@@ -137,6 +141,7 @@ class Searcher(Plugin):
             if self.shuttingDown():
                 break
 
+        db.remove()
         return False
 
     def download(self, data, movie, manual = False):
@@ -356,15 +361,15 @@ class Searcher(Plugin):
         else:
             if wanted_quality in pre_releases:
                 # Prerelease 1 week before theaters
-                if dates.get('theater') >= now - 604800 and wanted_quality in pre_releases:
+                if dates.get('theater') - 604800 < now:
                     return True
             else:
                 # 6 weeks after theater release
-                if dates.get('theater') < now - 3628800:
+                if dates.get('theater') + 3628800 < now:
                     return True
 
                 # 6 weeks before dvd release
-                if dates.get('dvd') > now - 3628800:
+                if dates.get('dvd') - 3628800 < now:
                     return True
 
                 # Dvd should be released

@@ -4,11 +4,12 @@ var Movie = new Class({
 
 	action: {},
 
-	initialize: function(self, options, data){
+	initialize: function(list, options, data){
 		var self = this;
 
 		self.data = data;
 		self.view = options.view || 'thumbs';
+		self.list = list;
 
 		self.profile = Quality.getProfile(data.profile_id) || {};
 		self.parent(self, options);
@@ -35,10 +36,10 @@ var Movie = new Class({
 			}).adopt(
 				self.info_container = new Element('div.info').adopt(
 					self.title = new Element('div.title', {
-						'text': self.getTitle()
+						'text': self.getTitle() || 'n/a'
 					}),
 					self.year = new Element('div.year', {
-						'text': self.data.library.year || 'Unknown'
+						'text': self.data.library.year || 'n/a'
 					}),
 					self.rating = new Element('div.rating.icon', {
 						'text': self.data.library.rating
@@ -294,7 +295,7 @@ var ReleaseAction = new Class({
 					new Element('span.name', {'text': self.get(release, 'name'), 'title': self.get(release, 'name')}),
 					new Element('span.status', {'text': status.identifier, 'class': 'release_status '+status.identifier}),
 					new Element('span.quality', {'text': quality.get('label')}),
-					new Element('span.size', {'text': (self.get(release, 'size') || 'unknown')}),
+					new Element('span.size', {'text': (self.get(release, 'size'))}),
 					new Element('span.age', {'text': self.get(release, 'age')}),
 					new Element('span.score', {'text': self.get(release, 'score')}),
 					new Element('span.provider', {'text': self.get(release, 'provider')}),
@@ -332,7 +333,7 @@ var ReleaseAction = new Class({
 
 		return (release.info.filter(function(info){
 			return type == info.identifier
-		}).pick() || {}).value
+		}).pick() || {}).value || 'n/a'
 	},
 
 	download: function(release){

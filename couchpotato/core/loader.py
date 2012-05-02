@@ -58,6 +58,7 @@ class Loader(object):
                         pass
                     # todo:: this needs to be more descriptive.
                     log.error('Import error, remove the empty folder: %s' % plugin.get('module'))
+                    log.debug('Can\'t import %s: %s' % (module_name, traceback.format_exc()))
                 except:
                     log.error('Can\'t import %s: %s' % (module_name, traceback.format_exc()))
 

@@ -15,6 +15,8 @@ Block.Search = new Class({
 						'keyup': self.keyup.bind(self),
 						'focus': function(){
 							self.el.addClass('focused')
+							if(this.get('value'))
+								self.hideResults(false)
 						},
 						'blur': function(){
 							self.el.removeClass('focused')
@@ -55,6 +57,7 @@ Block.Search = new Class({
 		var self = this;
 		(e).preventDefault();
 
+		self.last_q = '';
 		self.input.set('value', '');
 		self.input.focus()
 
@@ -319,6 +322,13 @@ Block.Search.Item = new Class({
 		var self = this;
 
 		if(!self.options.hasClass('set')){
+			
+			if(self.info.in_library){
+				var in_library = [];
+				self.info.in_library.releases.each(function(release){
+					in_library.include(release.quality.label)
+				});
+			}
 
 			self.options.adopt(
 				new Element('div').adopt(
@@ -326,9 +336,9 @@ Block.Search.Item = new Class({
 						'src': self.info.images.poster[0]
 					}) : null,
 					self.info.in_wanted ? new Element('span.in_wanted', {
-						'text': 'Already in wanted list: ' + self.info.in_wanted.label
-					}) : (self.info.in_library ? new Element('span.in_library', {
-						'text': 'Already in library: ' + self.info.in_library.label
+						'text': 'Already in wanted list: ' + self.info.in_wanted.profile.label
+					}) : (in_library ? new Element('span.in_library', {
+						'text': 'Already in library: ' + in_library.join(', ')
 					}) : null),
 					self.title_select = new Element('select', {
 						'name': 'title'
