@@ -45,6 +45,8 @@ if sys.platform == "win32":
             'xml.etree.cElementTree',
             'xml.dom',
             'xml.dom.minidom',
+            'netrc',
+            'csv',
         ],
         skip_archive = 1,
     )
@@ -70,10 +72,12 @@ elif sys.platform == "darwin":
             'xml.etree.cElementTree',
             'xml.dom',
             'xml.dom.minidom',
+            'netrc',
+            'csv',
         ],
     )
     exeICON = None
-    DATA_FILES = ['icon.ico']
+    DATA_FILES = ['icon.png']
 
 # Common
 NAME = "CouchPotato"
