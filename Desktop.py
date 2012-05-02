@@ -10,7 +10,6 @@ import wx
 if hasattr(sys, 'frozen'):
     import libs
     base_path = os.path.dirname(os.path.dirname(os.path.abspath(libs.__file__)))
-    print base_path
 else:
     base_path = os.path.dirname(os.path.abspath(__file__))
 
@@ -143,7 +142,7 @@ class CouchPotatoApp(wx.App, SoftwareUpdate):
         # Updater
         base_url = 'http://couchpota.to/updates/'
         self.InitUpdates(base_url, base_url + 'changelog.html',
-                         icon = wx.Icon('icon.ico'))
+                         icon = wx.Icon('icon.png'))
 
         self.frame = MainFrame(self)
         self.frame.Bind(wx.EVT_CLOSE, self.onClose)

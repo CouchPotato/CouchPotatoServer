@@ -1,5 +1,5 @@
 #define MyAppName "CouchPotato"
-#define MyAppVer GetFileVersion("./dist/"+MyAppName+".exe")
+#define MyAppVer "0.5"
 
 [Setup]
 AppName={#MyAppName}
@@ -7,14 +7,15 @@ AppVersion={#MyAppVer}
 AppVerName={#MyAppName}
 DefaultDirName={pf}\{#MyAppName}
 DisableProgramGroupPage=yes
-UninstallDisplayIcon={app}\icon.ico
+UninstallDisplayIcon=./icon.ico
+SetupIconFile=./icon.ico
 OutputDir=./dist
 OutputBaseFilename={#MyAppName}-{#MyAppVer}.win32.installer
 AppPublisher=Your Mom
 AppPublisherURL=http://couchpota.to
 
 [Files]
-Source: "./*"; DestDir: "{app}"
+Source: "./dist/{#MyAppName}-{#MyAppVer}.win32/*"; Flags: recursesubdirs; DestDir: "{app}" 
 
 [Icons]
 Name: "{commonprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppName}.exe"
