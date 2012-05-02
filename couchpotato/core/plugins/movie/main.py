@@ -380,13 +380,15 @@ class MoviePlugin(Plugin):
                 total_deleted = 0
                 new_movie_status = None
                 for release in movie.releases:
-                    if delete_from == 'wanted' and release.status_id != done_status.get('id'):
-                        db.delete(release)
-                        total_deleted += 1
+                    if delete_from == 'wanted':
+                        if release.status_id != done_status.get('id'):
+                            db.delete(release)
+                            total_deleted += 1
                         new_movie_status = 'done'
-                    elif delete_from == 'manage' and release.status_id == done_status.get('id'):
-                        db.delete(release)
-                        total_deleted += 1
+                    elif delete_from == 'manage':
+                        if release.status_id == done_status.get('id'):
+                            db.delete(release)
+                            total_deleted += 1
                         new_movie_status = 'active'
                 db.commit()
 
@@ -397,6 +399,8 @@ class MoviePlugin(Plugin):
                     new_status = fireEvent('status.get', new_movie_status, single = True)
                     movie.status_id = new_status.get('id')
                     db.commit()
+                else:
+                    fireEvent('movie.restatus', movie.id, single = True)
 
         return True
 
