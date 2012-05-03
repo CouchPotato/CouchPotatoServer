@@ -51,6 +51,12 @@ class MoviePlugin(Plugin):
     'movies': array, movies found,
 }"""}
         })
+        addApiView('movie.get', self.getView, docs = {
+            'desc': 'Get a movie by id',
+            'params': {
+                'id': {'desc': 'The id of the movie'},
+            }
+        })
         addApiView('movie.refresh', self.refresh, docs = {
             'desc': 'Refresh a movie by id',
             'params': {
@@ -88,12 +94,25 @@ class MoviePlugin(Plugin):
         addEvent('movie.list', self.list)
         addEvent('movie.restatus', self.restatus)
 
+    def getView(self):
+
+        movie_id = getParam('id')
+        movie = self.get(movie_id) if movie_id else None
+
+        return jsonified({
+            'success': movie is not None,
+            'movie': movie,
+        })
+
     def get(self, movie_id):
 
         db = get_session()
         m = db.query(Movie).filter_by(id = movie_id).first()
 
-        return m.to_dict(self.default_dict)
+        if m:
+            return m.to_dict(self.default_dict)
+
+        return None
 
     def list(self, status = ['active'], limit_offset = None, starts_with = None, search = None):
 
