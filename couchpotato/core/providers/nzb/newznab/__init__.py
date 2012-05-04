@@ -10,7 +10,7 @@ config = [{
             'tab': 'searcher',
             'subtab': 'providers',
             'name': 'newznab',
-            'description': 'Enable multiple NewzNab providers such as <a href="http://nzb.su" target="_blank">NZB.su</a>',
+            'description': 'Enable multiple NewzNab providers such as <a href="http://nzb.su" target="_blank">NZB.su</a> and <a href="http://nzbs.org" target="_blank">nzbs.org</a>',
             'wizard': True,
             'options': [
                 {
@@ -23,7 +23,7 @@ config = [{
                 },
                 {
                     'name': 'host',
-                    'default': 'nzb.su,dognzb.cr,beta.nzbs.org',
+                    'default': 'nzb.su,dognzb.cr,nzbs.org',
                     'description': 'The hostname of your newznab provider',
                 },
                 {

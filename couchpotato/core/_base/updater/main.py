@@ -56,7 +56,7 @@ class Updater(Plugin):
                     fireEventAsync('app.crappy_restart')
             else:
                 if self.conf('notification'):
-                    fireEvent('updater.available', message = 'A new update is available', data = self.updater.getVersion())
+                    fireEvent('updater.available', message = 'A new update is available', data = self.updater.info())
 
     def info(self):
         return self.updater.info()
