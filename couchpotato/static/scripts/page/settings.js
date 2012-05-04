@@ -969,6 +969,11 @@ Option.Choice = new Class({
 		});
 		$(tag).inject(self.tag_input);
 
+		if(self.initialized > 1)
+			tag.setWidth();
+		else
+			(function(){ tag.setWidth(); }).delay(10, self);
+
 		self.tags.include(tag);
 
 		return tag;
@@ -1006,7 +1011,7 @@ Option.Choice = new Class({
 		self.replaceInput();
 		self.setAllWidth();
 	},
-	
+
 	setAllWidth: function(){
 		var self = this;
 		self.tags.each(function(tag){
