@@ -188,11 +188,9 @@ class MoviePlugin(Plugin):
             status = [status]
 
         q = db.query(Movie) \
-            .join(Movie.library, Library.titles) \
+            .join(Movie.library, Library.titles, Movie.status) \
             .options(joinedload_all('library.titles')) \
-            .filter(LibraryTitle.default == True) \
-            .filter(or_(*[Movie.status.has(identifier = s) for s in status])) \
-            .group_by(Movie.id)
+            .filter(or_(*[Movie.status.has(identifier = s) for s in status]))
 
         results = q.all()
 
