@@ -22,7 +22,7 @@ from guessit.transfo import SingleNodeGuesser
 import re
 import logging
 
-log = logging.getLogger("guessit.transfo.guess_release_group")
+log = logging.getLogger(__name__)
 
 
 def guess_release_group(string):

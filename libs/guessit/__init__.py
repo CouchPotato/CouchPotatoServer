@@ -18,7 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-__version__ = '0.3.1'
+__version__ = '0.4'
 __all__ = ['Guess', 'Language',
            'guess_file_info', 'guess_video_info',
            'guess_movie_info', 'guess_episode_info']
@@ -29,7 +29,7 @@ from guessit.language import Language
 from guessit.matcher import IterativeMatcher
 import logging
 
-log = logging.getLogger("guessit")
+log = logging.getLogger(__name__)
 
 
 class NullHandler(logging.Handler):

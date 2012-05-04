@@ -21,7 +21,7 @@
 from guessit.patterns import subtitle_exts
 import logging
 
-log = logging.getLogger("guessit.transfo.post_process")
+log = logging.getLogger(__name__)
 
 
 def process(mtree):

@@ -21,7 +21,7 @@
 from guessit import Guess
 import logging
 
-log = logging.getLogger("guessit.transfo.guess_movie_title_from_position")
+log = logging.getLogger(__name__)
 
 
 def process(mtree):

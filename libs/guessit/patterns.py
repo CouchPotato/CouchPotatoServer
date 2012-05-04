@@ -22,8 +22,9 @@
 
 subtitle_exts = [ 'srt', 'idx', 'sub', 'ssa', 'txt' ]
 
-video_exts = [ 'avi', 'mkv', 'mpg', 'mp4', 'm4v', 'mov', 'ogg', 'ogm', 'ogv',
-               'wmv', 'divx' ]
+video_exts = ['3g2', '3gp', '3gp2', 'asf', 'avi', 'divx', 'flv', 'm4v', 'mk2',
+              'mka', 'mkv', 'mov', 'mp4', 'mp4a', 'mpeg', 'mpg', 'ogg', 'ogm',
+              'ogv', 'qt', 'ra', 'ram', 'rm', 'ts', 'wav', 'webm', 'wma', 'wmv']
 
 group_delimiters = [ '()', '[]', '{}' ]
 
@@ -62,6 +63,8 @@ weak_episode_rexps = [ # ... 213 or 0106 ...
                        # ... 2x13 ...
                        (sep + r'[^0-9](?P<season>[0-9]{1,2})\.(?P<episodeNumber>[0-9]{2})[^0-9]' + sep, (1, -1)),
 
+                       # ... e13 ... for a mini-series without a season number
+                       (r'e(?P<episodeNumber>[0-9]{1,4})[^0-9]', (0, -1)),
                        ]
 
 non_episode_title = [ 'extras', 'rip' ]

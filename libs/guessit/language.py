@@ -18,10 +18,18 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from __future__ import unicode_literals
 from guessit import fileutils
+from guessit.country import Country
+import re
 import logging
 
-log = logging.getLogger('guessit.language')
+__all__ = [ 'is_iso_language', 'is_language', 'lang_set', 'Language',
+            'ALL_LANGUAGES', 'ALL_LANGUAGES_NAMES', 'search_language' ]
+
+
+log = logging.getLogger(__name__)
+
 
 # downloaded from http://www.loc.gov/standards/iso639-2/ISO-639-2_utf-8.txt
 #
@@ -30,9 +38,23 @@ log = logging.getLogger('guessit.language')
 # an alpha-2 code (when given), an English name, and a French name of a language
 # are all separated by pipe (|) characters."
 _iso639_contents = fileutils.load_file_in_same_dir(__file__,
-                                                   'ISO-639-2_utf-8.txt')
-language_matrix = [ l.strip().decode('utf-8').split('|')
-                    for l in _iso639_contents.split('\n') ]
+                                                   'ISO-639-2_utf-8.txt').decode('utf-8')
+
+# drop the BOM from the beginning of the file
+_iso639_contents = _iso639_contents[1:]
+
+language_matrix = [ l.strip().split('|')
+                    for l in _iso639_contents.strip().split('\n') ]
+
+language_matrix += [ [ 'unk', '', 'un', 'Unknown', 'inconnu' ] ]
+
+
+# remove unused languages that shadow other common ones with a non-official form
+for lang in language_matrix:
+    if (lang[2] == 'se' or # Northern Sami shadows Swedish
+        lang[2] == 'br'):  # Breton shadows Brazilian
+        language_matrix.remove(lang)
+
 
 lng3        = frozenset(l[0] for l in language_matrix if l[0])
 lng3term    = frozenset(l[1] for l in language_matrix if l[1])
@@ -63,54 +85,126 @@ lng_fr_name_to_lng3 = dict((fr_name.lower(), l[0])
                            for l in language_matrix if l[4]
                            for fr_name in l[4].split('; '))
 
+# contains a list of exceptions: strings that should be parsed as a language
+# but which are not in an ISO form
+lng_exceptions = { 'gr': ('gre', None),
+                   'greek': ('gre', None),
+                   'esp': ('spa', None),
+                   'español': ('spa', None),
+                   'se': ('swe', None),
+                   'po': ('pt', 'br'),
+                   'pob': ('pt', 'br'),
+                   'br': ('pt', 'br'),
+                   'brazilian': ('pt', 'br'),
+                   'català': ('cat', None),
+                   'cz': ('cze', None),
+                   'ua': ('ukr', None),
+                   'cn': ('chi', None),
+                   'chs': ('chi', None),
+                   'jp': ('jpn', None)
+                   }
+
+
+def is_iso_language(language):
+    return language.lower() in lng_all_names
 
 def is_language(language):
-    return language.lower() in lng_all_names
+    return is_iso_language(language) or language in lng_exceptions
+
+def lang_set(languages, strict=False):
+    """Return a set of guessit.Language created from their given string
+    representation.
+
+    if strict is True, then this will raise an exception if any language
+    could not be identified.
+    """
+    return set(Language(l, strict=strict) for l in languages)
 
 
 class Language(object):
     """This class represents a human language.
 
-    You can initialize it with pretty much everything, as it knows conversion
+    You can initialize it with pretty much anything, as it knows conversion
     from ISO-639 2-letter and 3-letter codes, English and French names.
+
+    You can also distinguish languages for specific countries, such as
+    Portuguese and Brazilian Portuguese.
 
     >>> Language('fr')
     Language(French)
 
-    >>> Language('eng').french_name()
+    >>> Language('eng').french_name
     u'anglais'
+
+    >>> Language('pt(br)').country.english_name
+    u'Brazil'
+
+    >>> Language('Español (Latinoamérica)').country.english_name
+    u'Latin America'
+
+    >>> Language('Spanish (Latin America)') == Language('Español (Latinoamérica)')
+    True
+
+    >>> Language('zz', strict=False).english_name
+    u'Unknown'
     """
-    def __init__(self, language):
-        lang = None
-        language = language.lower()
+
+    _with_country_regexp = re.compile('(.*)\((.*)\)')
+
+    def __init__(self, language, country=None, strict=False):
+        language = language.strip().lower()
+        if isinstance(language, str):
+            language = language.decode('utf-8')
+        with_country = Language._with_country_regexp.match(language)
+        if with_country:
+            self.lang = Language(with_country.group(1)).lang
+            self.country = Country(with_country.group(2))
+            return
+
+        self.lang = None
+        self.country = Country(country) if country else None
+
         if len(language) == 2:
-            lang = lng2_to_lng3.get(language)
+            self.lang = lng2_to_lng3.get(language)
         elif len(language) == 3:
-            lang = (language
-                    if language in lng3
-                    else lng3term_to_lng3.get(language))
+            self.lang = (language
+                         if language in lng3
+                         else lng3term_to_lng3.get(language))
         else:
-            lang = (lng_en_name_to_lng3.get(language) or
-                    lng_fr_name_to_lng3.get(language))
+            self.lang = (lng_en_name_to_lng3.get(language) or
+                         lng_fr_name_to_lng3.get(language))
 
-        if lang is None:
-            msg = 'The given string "%s" could not be identified as a language'
-            raise ValueError(msg % language)
+        if self.lang is None and language in lng_exceptions:
+            lang, country = lng_exceptions[language]
+            self.lang = Language(lang).alpha3
+            self.country = Country(country) if country else None
 
-        self.lang = lang
+        msg = 'The given string "%s" could not be identified as a language' % language
 
-    def lng2(self):
+        if self.lang is None and strict:
+            raise ValueError(msg)
+
+        if self.lang is None:
+            log.debug(msg)
+            self.lang = 'unk'
+
+    @property
+    def alpha2(self):
         return lng3_to_lng2[self.lang]
 
-    def lng3(self):
+    @property
+    def alpha3(self):
         return self.lang
 
-    def lng3term(self):
+    @property
+    def alpha3term(self):
         return lng3_to_lng3term[self.lang]
 
+    @property
     def english_name(self):
         return lng3_to_lng_en_name[self.lang]
 
+    @property
     def french_name(self):
         return lng3_to_lng_fr_name[self.lang]
 
@@ -132,15 +226,27 @@ class Language(object):
     def __ne__(self, other):
         return not self == other
 
+    def __nonzero__(self):
+        return self.lang != 'unk'
+
     def __unicode__(self):
-        return lng3_to_lng_en_name[self.lang]
+        if self.country:
+            return '%s(%s)' % (self.english_name, self.country.alpha2)
+        else:
+            return self.english_name
 
     def __str__(self):
         return unicode(self).encode('utf-8')
 
     def __repr__(self):
-        return 'Language(%s)' % self
+        if self.country:
+            return 'Language(%s, country=%s)' % (self.english_name, self.country)
+        else:
+            return 'Language(%s)' % self.english_name
 
+
+ALL_LANGUAGES = frozenset(Language(lng) for lng in lng_all_names) - frozenset([Language('unk')])
+ALL_LANGUAGES_NAMES = lng_all_names
 
 def search_language(string, lang_filter=None):
     """Looks for language patterns, and if found return the language object,
@@ -177,7 +283,7 @@ def search_language(string, lang_filter=None):
     sep = r'[](){} \._-+'
 
     if lang_filter:
-        lang_filter = set(Language(l) for l in lang_filter)
+        lang_filter = lang_set(lang_filter)
 
     slow = ' %s ' % string.lower()
     confidence = 1.0 # for all of them

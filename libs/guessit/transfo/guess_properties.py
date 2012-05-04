@@ -22,7 +22,7 @@ from guessit.transfo import SingleNodeGuesser
 from guessit.patterns import find_properties
 import logging
 
-log = logging.getLogger("guessit.transfo.guess_properties")
+log = logging.getLogger(__name__)
 
 
 def guess_properties(string):

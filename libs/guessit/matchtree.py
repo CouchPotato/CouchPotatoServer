@@ -23,7 +23,7 @@ from guessit.textutils import clean_string, str_fill, to_utf8
 from guessit.patterns import group_delimiters
 import logging
 
-log = logging.getLogger("guessit.matchtree")
+log = logging.getLogger(__name__)
 
 
 class BaseMatchTree(object):

@@ -24,7 +24,7 @@ from guessit.patterns import weak_episode_rexps
 import re
 import logging
 
-log = logging.getLogger("guessit.transfo.guess_weak_episodes_rexps")
+log = logging.getLogger(__name__)
 
 
 def guess_weak_episodes_rexps(string, node):

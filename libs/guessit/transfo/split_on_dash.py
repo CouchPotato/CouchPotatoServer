@@ -22,7 +22,7 @@ from guessit.patterns import sep
 import re
 import logging
 
-log = logging.getLogger("guessit.transfo.split_on_dash")
+log = logging.getLogger(__name__)
 
 
 def process(mtree):

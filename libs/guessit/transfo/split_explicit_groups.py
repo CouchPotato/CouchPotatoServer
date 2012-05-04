@@ -22,7 +22,7 @@ from guessit.textutils import find_first_level_groups
 from guessit.patterns import group_delimiters
 import logging
 
-log = logging.getLogger("guessit.transfo.split_explicit_groups")
+log = logging.getLogger(__name__)
 
 
 def process(mtree):

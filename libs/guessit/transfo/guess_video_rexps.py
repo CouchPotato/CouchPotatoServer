@@ -24,7 +24,7 @@ from guessit.patterns import video_rexps, sep
 import re
 import logging
 
-log = logging.getLogger("guessit.transfo.guess_video_rexps")
+log = logging.getLogger(__name__)
 
 
 def guess_video_rexps(string):
