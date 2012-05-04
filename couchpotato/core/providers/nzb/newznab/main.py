@@ -89,7 +89,7 @@ class Newznab(NZBProvider, RSS):
         cat_id = self.getCatId(quality['identifier'])
         arguments = tryUrlencode({
             'imdbid': movie['library']['identifier'].replace('tt', ''),
-            'cat': cat_id[0],
+            #'cat': cat_id[0],
             'apikey': host['api_key'],
             'extended': 1
         })
