@@ -243,7 +243,7 @@ window.addEvent('domready', function(){
 			create: function(){
 				var self = this;
 
-				self.el = new Element('a.files', {
+				self.el = new Element('a.directory', {
 					'title': 'Available files',
 					'events': {
 						'click': self.showFiles.bind(self)

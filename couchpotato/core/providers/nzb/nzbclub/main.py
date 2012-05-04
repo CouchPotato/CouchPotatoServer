@@ -1,3 +1,4 @@
+from BeautifulSoup import BeautifulSoup
 from couchpotato.core.event import fireEvent
 from couchpotato.core.helpers.encoding import toUnicode, tryUrlencode
 from couchpotato.core.helpers.rss import RSS
@@ -57,7 +58,10 @@ class NZBClub(NZBProvider, RSS):
                     size = enclosure['length']
                     date = self.getTextElement(nzb, "pubDate")
 
-                    description = toUnicode(self.getCache('nzbclub.%s' % nzbclub_id, self.getTextElement(nzb, "link"), timeout = 25920000))
+                    full_description = self.getCache('nzbclub.%s' % nzbclub_id, self.getTextElement(nzb, "link"), cache_timeout = 25920000)
+                    html = BeautifulSoup(full_description)
+                    nfo_pre = html.find('pre', attrs = {'class':'nfo'})
+                    description = toUnicode(nfo_pre.text) if nfo_pre else ''
 
                     new = {
                         'id': nzbclub_id,
@@ -73,7 +77,7 @@ class NZBClub(NZBProvider, RSS):
                     }
                     new['score'] = fireEvent('score.calculate', new, movie, single = True)
 
-                    if 'ARCHIVE inside ARCHIVE' in description:
+                    if 'ARCHIVE inside ARCHIVE' in full_description:
                         log.info('Wrong: Seems to be passworded files: %s' % new['name'])
                         continue
 

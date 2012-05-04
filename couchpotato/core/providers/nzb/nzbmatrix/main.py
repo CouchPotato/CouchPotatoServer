@@ -51,7 +51,7 @@ class NZBMatrix(NZBProvider, RSS):
         cache_key = 'nzbmatrix.%s.%s' % (movie['library'].get('identifier'), cat_ids)
         single_cat = True
 
-        data = self.getCache(cache_key, url)
+        data = self.getCache(cache_key, url, cache_timeout = 1800, headers = {'User-Agent': 'CouchPotato'})
         if data:
             try:
                 try:

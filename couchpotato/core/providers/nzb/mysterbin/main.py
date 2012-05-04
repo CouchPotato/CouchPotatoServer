@@ -67,7 +67,7 @@ class Mysterbin(NZBProvider):
 
                         description = ''
                         if result.find('a', text = 'View NFO'):
-                            description = toUnicode(self.getCache('mysterbin.%s' % myster_id, self.urls['nfo'] % myster_id, timeout = 25920000))
+                            description = toUnicode(self.getCache('mysterbin.%s' % myster_id, self.urls['nfo'] % myster_id, cache_timeout = 25920000))
 
                         new = {
                             'id': myster_id,

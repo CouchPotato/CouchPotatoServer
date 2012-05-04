@@ -186,7 +186,7 @@ class Searcher(Plugin):
 
             return True
 
-        log.error('Tried to download, but none of the downloaders are enabled')
+        log.info('Tried to download, but none of the downloaders are enabled')
         return False
 
     def correctMovie(self, nzb = {}, movie = {}, quality = {}, **kwargs):
