@@ -832,6 +832,14 @@ def tuple_(*expr):
             [(1, 2), (5, 12), (10, 19)]
         )
 
+    .. warning::
+    
+        The composite IN construct is not supported by all backends, 
+        and is currently known to work on Postgresql and MySQL,
+        but not SQLite.   Unsupported backends will raise
+        a subclass of :class:`~sqlalchemy.exc.DBAPIError` when such 
+        an expression is invoked.
+
     """
     return _Tuple(*expr)
 
@@ -1275,14 +1283,48 @@ func = _FunctionGenerator()
 # TODO: use UnaryExpression for this instead ?
 modifier = _FunctionGenerator(group=False)
 
-class _generated_label(unicode):
-    """A unicode subclass used to identify dynamically generated names."""
+class _truncated_label(unicode):
+    """A unicode subclass used to identify symbolic "
+    "names that may require truncation."""
 
-def _escape_for_generated(x):
-    if isinstance(x, _generated_label):
-        return x
+    def apply_map(self, map_):
+        return self
+
+# for backwards compatibility in case
+# someone is re-implementing the 
+# _truncated_identifier() sequence in a custom
+# compiler
+_generated_label = _truncated_label
+
+class _anonymous_label(_truncated_label):
+    """A unicode subclass used to identify anonymously 
+    generated names."""
+
+    def __add__(self, other):
+        return _anonymous_label(
+                    unicode(self) + 
+                    unicode(other))
+
+    def __radd__(self, other):
+        return _anonymous_label(
+                    unicode(other) + 
+                    unicode(self))
+
+    def apply_map(self, map_):
+        return self % map_
+
+def _as_truncated(value):
+    """coerce the given value to :class:`._truncated_label`.
+    
+    Existing :class:`._truncated_label` and 
+    :class:`._anonymous_label` objects are passed
+    unchanged.
+    """
+
+    if isinstance(value, _truncated_label):
+        return value
     else:
-        return x.replace('%', '%%')
+        return _truncated_label(value)
 
 def _string_or_unprintable(element):
     if isinstance(element, basestring):
@@ -1466,6 +1508,7 @@ class ClauseElement(Visitable):
     supports_execution = False
     _from_objects = []
     bind = None
+    _is_clone_of = None
 
     def _clone(self):
         """Create a shallow copy of this ClauseElement.
@@ -1514,7 +1557,7 @@ class ClauseElement(Visitable):
         f = self
         while f is not None:
             s.add(f)
-            f = getattr(f, '_is_clone_of', None)
+            f = f._is_clone_of
         return s
 
     def __getstate__(self):
@@ -2063,6 +2106,8 @@ class ColumnElement(ClauseElement, _CompareMixin):
     foreign_keys = []
     quote = None
     _label = None
+    _key_label = None
+    _alt_names = ()
 
     @property
     def _select_iterable(self):
@@ -2109,9 +2154,14 @@ class ColumnElement(ClauseElement, _CompareMixin):
         else:
             key = name
 
-        co = ColumnClause(name, selectable, type_=getattr(self,
+        co = ColumnClause(_as_truncated(name), 
+                            selectable, 
+                            type_=getattr(self,
                           'type', None))
         co.proxies = [self]
+        if selectable._is_clone_of is not None:
+            co._is_clone_of = \
+                selectable._is_clone_of.columns[key]
         selectable._columns[key] = co
         return co
 
@@ -2157,7 +2207,7 @@ class ColumnElement(ClauseElement, _CompareMixin):
         expressions and function calls.
 
         """
-        return _generated_label('%%(%d %s)s' % (id(self), getattr(self,
+        return _anonymous_label('%%(%d %s)s' % (id(self), getattr(self,
                                 'name', 'anon')))
 
 class ColumnCollection(util.OrderedProperties):
@@ -2420,6 +2470,13 @@ class FromClause(Selectable):
 
         """
 
+        def embedded(expanded_proxy_set, target_set):
+            for t in target_set.difference(expanded_proxy_set):
+                if not set(_expand_cloned([t])
+                            ).intersection(expanded_proxy_set):
+                    return False
+            return True
+
         # dont dig around if the column is locally present
         if self.c.contains_column(column):
             return column
@@ -2427,10 +2484,10 @@ class FromClause(Selectable):
         target_set = column.proxy_set
         cols = self.c
         for c in cols:
-            i = target_set.intersection(itertools.chain(*[p._cloned_set
-                    for p in c.proxy_set]))
+            expanded_proxy_set = set(_expand_cloned(c.proxy_set))
+            i = target_set.intersection(expanded_proxy_set)
             if i and (not require_embedded
-                      or c.proxy_set.issuperset(target_set)):
+                      or embedded(expanded_proxy_set, target_set)):
                 if col is None:
 
                     # no corresponding column yet, pick this one.
@@ -2580,10 +2637,10 @@ class _BindParamClause(ColumnElement):
 
         """
         if unique:
-            self.key = _generated_label('%%(%d %s)s' % (id(self), key
+            self.key = _anonymous_label('%%(%d %s)s' % (id(self), key
                     or 'param'))
         else:
-            self.key = key or _generated_label('%%(%d param)s'
+            self.key = key or _anonymous_label('%%(%d param)s'
                     % id(self))
 
         # identifiying key that won't change across
@@ -2631,14 +2688,14 @@ class _BindParamClause(ColumnElement):
     def _clone(self):
         c = ClauseElement._clone(self)
         if self.unique:
-            c.key = _generated_label('%%(%d %s)s' % (id(c), c._orig_key
+            c.key = _anonymous_label('%%(%d %s)s' % (id(c), c._orig_key
                     or 'param'))
         return c
 
     def _convert_to_unique(self):
         if not self.unique:
             self.unique = True
-            self.key = _generated_label('%%(%d %s)s' % (id(self),
+            self.key = _anonymous_label('%%(%d %s)s' % (id(self),
                     self._orig_key or 'param'))
 
     def compare(self, other, **kw):
@@ -3607,7 +3664,7 @@ class Alias(FromClause):
         if name is None:
             if self.original.named_with_column:
                 name = getattr(self.original, 'name', None)
-            name = _generated_label('%%(%d %s)s' % (id(self), name
+            name = _anonymous_label('%%(%d %s)s' % (id(self), name
                     or 'anon'))
         self.name = name
 
@@ -3661,6 +3718,47 @@ class Alias(FromClause):
     @property
     def bind(self):
         return self.element.bind
+
+class CTE(Alias):
+    """Represent a Common Table Expression.
+    
+    The :class:`.CTE` object is obtained using the
+    :meth:`._SelectBase.cte` method from any selectable.
+    See that method for complete examples.
+    
+    New in 0.7.6.
+
+    """
+    __visit_name__ = 'cte'
+    def __init__(self, selectable, 
+                        name=None, 
+                        recursive=False, 
+                        cte_alias=False):
+        self.recursive = recursive
+        self.cte_alias = cte_alias
+        super(CTE, self).__init__(selectable, name=name)
+
+    def alias(self, name=None):
+        return CTE(
+            self.original,
+            name=name,
+            recursive=self.recursive,
+            cte_alias = self.name
+        )
+
+    def union(self, other):
+        return CTE(
+            self.original.union(other),
+            name=self.name,
+            recursive=self.recursive
+        )
+
+    def union_all(self, other):
+        return CTE(
+            self.original.union_all(other),
+            name=self.name,
+            recursive=self.recursive
+        )
 
 
 class _Grouping(ColumnElement):
@@ -3807,9 +3905,12 @@ class _Label(ColumnElement):
     def __init__(self, name, element, type_=None):
         while isinstance(element, _Label):
             element = element.element
-        self.name = self.key = self._label = name \
-            or _generated_label('%%(%d %s)s' % (id(self),
+        if name:
+            self.name = name
+        else:
+            self.name = _anonymous_label('%%(%d %s)s' % (id(self),
                                 getattr(element, 'name', 'anon')))
+        self.key = self._label = self._key_label = self.name
         self._element = element
         self._type = type_
         self.quote = element.quote
@@ -3957,7 +4058,17 @@ class ColumnClause(_Immutable, ColumnElement):
         # end Py2K
 
     @_memoized_property
+    def _key_label(self):
+        if self.key != self.name:
+            return self._gen_label(self.key)
+        else:
+            return self._label
+
+    @_memoized_property
     def _label(self):
+        return self._gen_label(self.name)
+
+    def _gen_label(self, name):
         t = self.table
         if self.is_literal:
             return None
@@ -3965,11 +4076,9 @@ class ColumnClause(_Immutable, ColumnElement):
         elif t is not None and t.named_with_column:
             if getattr(t, 'schema', None):
                 label = t.schema.replace('.', '_') + "_" + \
-                            _escape_for_generated(t.name) + "_" + \
-                            _escape_for_generated(self.name)
+                            t.name + "_" + name
             else:
-                label = _escape_for_generated(t.name) + "_" + \
-                            _escape_for_generated(self.name)
+                label = t.name + "_" + name
 
             # ensure the label name doesn't conflict with that
             # of an existing column
@@ -3981,10 +4090,10 @@ class ColumnClause(_Immutable, ColumnElement):
                     counter += 1
                 label = _label
 
-            return _generated_label(label)
+            return _as_truncated(label)
 
         else:
-            return self.name
+            return name
 
     def label(self, name):
         # currently, anonymous labels don't occur for 
@@ -4010,12 +4119,15 @@ class ColumnClause(_Immutable, ColumnElement):
         # otherwise its considered to be a label
         is_literal = self.is_literal and (name is None or name == self.name)
         c = self._constructor(
-                    name or self.name, 
+                    _as_truncated(name or self.name), 
                     selectable=selectable, 
                     type_=self.type, 
                     is_literal=is_literal
                 )
         c.proxies = [self]
+        if selectable._is_clone_of is not None:
+            c._is_clone_of = \
+                selectable._is_clone_of.columns[c.name]
 
         if attach:
             selectable._columns[c.name] = c
@@ -4217,6 +4329,125 @@ class _SelectBase(Executable, FromClause):
 
         """
         return self.as_scalar().label(name)
+
+    def cte(self, name=None, recursive=False):
+        """Return a new :class:`.CTE`, or Common Table Expression instance.
+        
+        Common table expressions are a SQL standard whereby SELECT
+        statements can draw upon secondary statements specified along
+        with the primary statement, using a clause called "WITH".
+        Special semantics regarding UNION can also be employed to 
+        allow "recursive" queries, where a SELECT statement can draw 
+        upon the set of rows that have previously been selected.
+        
+        SQLAlchemy detects :class:`.CTE` objects, which are treated
+        similarly to :class:`.Alias` objects, as special elements
+        to be delivered to the FROM clause of the statement as well
+        as to a WITH clause at the top of the statement.
+
+        The :meth:`._SelectBase.cte` method is new in 0.7.6.
+        
+        :param name: name given to the common table expression.  Like
+         :meth:`._FromClause.alias`, the name can be left as ``None``
+         in which case an anonymous symbol will be used at query
+         compile time.
+        :param recursive: if ``True``, will render ``WITH RECURSIVE``.
+         A recursive common table expression is intended to be used in 
+         conjunction with UNION ALL in order to derive rows
+         from those already selected.
+
+        The following examples illustrate two examples from 
+        Postgresql's documentation at
+        http://www.postgresql.org/docs/8.4/static/queries-with.html.
+        
+        Example 1, non recursive::
+        
+            from sqlalchemy import Table, Column, String, Integer, MetaData, \\
+                select, func
+
+            metadata = MetaData()
+
+            orders = Table('orders', metadata,
+                Column('region', String),
+                Column('amount', Integer),
+                Column('product', String),
+                Column('quantity', Integer)
+            )
+
+            regional_sales = select([
+                                orders.c.region, 
+                                func.sum(orders.c.amount).label('total_sales')
+                            ]).group_by(orders.c.region).cte("regional_sales")
+
+
+            top_regions = select([regional_sales.c.region]).\\
+                    where(
+                        regional_sales.c.total_sales > 
+                        select([
+                            func.sum(regional_sales.c.total_sales)/10
+                        ])
+                    ).cte("top_regions")
+
+            statement = select([
+                        orders.c.region, 
+                        orders.c.product, 
+                        func.sum(orders.c.quantity).label("product_units"), 
+                        func.sum(orders.c.amount).label("product_sales")
+                ]).where(orders.c.region.in_(
+                    select([top_regions.c.region])
+                )).group_by(orders.c.region, orders.c.product)
+        
+            result = conn.execute(statement).fetchall()
+            
+        Example 2, WITH RECURSIVE::
+
+            from sqlalchemy import Table, Column, String, Integer, MetaData, \\
+                select, func
+
+            metadata = MetaData()
+
+            parts = Table('parts', metadata,
+                Column('part', String),
+                Column('sub_part', String),
+                Column('quantity', Integer),
+            )
+
+            included_parts = select([
+                                parts.c.sub_part, 
+                                parts.c.part, 
+                                parts.c.quantity]).\\
+                                where(parts.c.part=='our part').\\
+                                cte(recursive=True)
+
+
+            incl_alias = included_parts.alias()
+            parts_alias = parts.alias()
+            included_parts = included_parts.union_all(
+                select([
+                    parts_alias.c.part, 
+                    parts_alias.c.sub_part, 
+                    parts_alias.c.quantity
+                ]).
+                    where(parts_alias.c.part==incl_alias.c.sub_part)
+            )
+
+            statement = select([
+                        included_parts.c.sub_part, 
+                        func.sum(included_parts.c.quantity).label('total_quantity')
+                    ]).\
+                    select_from(included_parts.join(parts,
+                                included_parts.c.part==parts.c.part)).\\
+                    group_by(included_parts.c.sub_part)
+
+            result = conn.execute(statement).fetchall()
+
+        
+        See also:
+        
+        :meth:`.orm.query.Query.cte` - ORM version of :meth:`._SelectBase.cte`.
+
+        """
+        return CTE(self, name=name, recursive=recursive)
 
     @_generative
     @util.deprecated('0.6',
@@ -4602,7 +4833,7 @@ class Select(_SelectBase):
         The text of the hint is rendered in the appropriate
         location for the database backend in use, relative
         to the given :class:`.Table` or :class:`.Alias` passed as the
-        *selectable* argument. The dialect implementation
+        ``selectable`` argument. The dialect implementation
         typically uses Python string substitution syntax
         with the token ``%(name)s`` to render the name of
         the table or alias. E.g. when using Oracle, the
@@ -4999,7 +5230,9 @@ class Select(_SelectBase):
     def _populate_column_collection(self):
         for c in self.inner_columns:
             if hasattr(c, '_make_proxy'):
-                c._make_proxy(self, name=self.use_labels and c._label or None)
+                c._make_proxy(self, 
+                        name=self.use_labels 
+                            and c._label or None)
 
     def self_group(self, against=None):
         """return a 'grouping' construct as per the ClauseElement
@@ -5086,6 +5319,7 @@ class UpdateBase(Executable, ClauseElement):
     _execution_options = \
         Executable._execution_options.union({'autocommit': True})
     kwargs = util.immutabledict()
+    _hints = util.immutabledict()
 
     def _process_colparams(self, parameters):
         if isinstance(parameters, (list, tuple)):
@@ -5165,6 +5399,45 @@ class UpdateBase(Executable, ClauseElement):
 
         """
         self._returning = cols
+
+    @_generative
+    def with_hint(self, text, selectable=None, dialect_name="*"):
+        """Add a table hint for a single table to this 
+        INSERT/UPDATE/DELETE statement.
+
+        .. note::
+
+         :meth:`.UpdateBase.with_hint` currently applies only to 
+         Microsoft SQL Server.  For MySQL INSERT hints, use
+         :meth:`.Insert.prefix_with`.   UPDATE/DELETE hints for 
+         MySQL will be added in a future release.
+         
+        The text of the hint is rendered in the appropriate
+        location for the database backend in use, relative
+        to the :class:`.Table` that is the subject of this
+        statement, or optionally to that of the given 
+        :class:`.Table` passed as the ``selectable`` argument.
+
+        The ``dialect_name`` option will limit the rendering of a particular
+        hint to a particular backend. Such as, to add a hint
+        that only takes effect for SQL Server::
+
+            mytable.insert().with_hint("WITH (PAGLOCK)", dialect_name="mssql")
+
+        New in 0.7.6.
+
+        :param text: Text of the hint.
+        :param selectable: optional :class:`.Table` that specifies
+         an element of the FROM clause within an UPDATE or DELETE
+         to be the subject of the hint - applies only to certain backends.
+        :param dialect_name: defaults to ``*``, if specified as the name
+         of a particular dialect, will apply these hints only when
+         that dialect is in use.
+         """
+        if selectable is None:
+            selectable = self.table
+
+        self._hints = self._hints.union({(selectable, dialect_name):text})
 
 class ValuesBase(UpdateBase):
     """Supplies support for :meth:`.ValuesBase.values` to INSERT and UPDATE constructs."""

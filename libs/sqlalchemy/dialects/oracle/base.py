@@ -158,7 +158,7 @@ RESERVED_WORDS = \
         'AS IN VIEW EXCLUSIVE COMPRESS SYNONYM SELECT INSERT EXISTS '\
         'NOT TRIGGER ELSE CREATE INTERSECT PCTFREE DISTINCT USER '\
         'CONNECT SET MODE OF UNIQUE VARCHAR2 VARCHAR LOCK OR CHAR '\
-        'DECIMAL UNION PUBLIC AND START UID COMMENT CURRENT'.split())
+        'DECIMAL UNION PUBLIC AND START UID COMMENT CURRENT LEVEL'.split())
 
 NO_ARG_FNS = set('UID CURRENT_DATE SYSDATE USER '
                 'CURRENT_TIME CURRENT_TIMESTAMP'.split())
@@ -308,6 +308,9 @@ class OracleTypeCompiler(compiler.GenericTypeCompiler):
                 "(%d)" % type_.second_precision or
                 "",
         )
+
+    def visit_LONG(self, type_):
+        return "LONG"
 
     def visit_TIMESTAMP(self, type_):
         if type_.timezone:
@@ -481,7 +484,7 @@ class OracleCompiler(compiler.SQLCompiler):
         """Oracle doesn't like ``FROM table AS alias``.  Is the AS standard SQL??"""
 
         if asfrom or ashint:
-            alias_name = isinstance(alias.name, expression._generated_label) and \
+            alias_name = isinstance(alias.name, expression._truncated_label) and \
                             self._truncated_identifier("alias", alias.name) or alias.name
 
         if ashint:

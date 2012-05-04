@@ -154,9 +154,10 @@ class _CompileLabel(visitors.Visitable):
     __visit_name__ = 'label'
     __slots__ = 'element', 'name'
 
-    def __init__(self, col, name):
+    def __init__(self, col, name, alt_names=()):
         self.element = col
         self.name = name
+        self._alt_names = alt_names
 
     @property
     def proxy_set(self):
@@ -250,6 +251,10 @@ class SQLCompiler(engine.Compiled):
         # TypeEngine. ResultProxy uses this for type processing and
         # column targeting
         self.result_map = {}
+
+        # collect CTEs to tack on top of a SELECT
+        self.ctes = util.OrderedDict()
+        self.ctes_recursive = False
 
         # true if the paramstyle is positional
         self.positional = dialect.positional
@@ -354,14 +359,16 @@ class SQLCompiler(engine.Compiled):
         # or ORDER BY clause of a select.  dialect-specific compilers
         # can modify this behavior.
         if within_columns_clause and not within_label_clause:
-            if isinstance(label.name, sql._generated_label):
+            if isinstance(label.name, sql._truncated_label):
                 labelname = self._truncated_identifier("colident", label.name)
             else:
                 labelname = label.name
 
             if result_map is not None:
-                result_map[labelname.lower()] = \
-                        (label.name, (label, label.element, labelname),\
+                result_map[labelname.lower()] = (
+                        label.name, 
+                        (label, label.element, labelname, ) + 
+                            label._alt_names,
                         label.type)
 
             return label.element._compiler_dispatch(self, 
@@ -376,17 +383,19 @@ class SQLCompiler(engine.Compiled):
                                     **kw)
 
     def visit_column(self, column, result_map=None, **kwargs):
-        name = column.name
+        name = orig_name = column.name
         if name is None:
             raise exc.CompileError("Cannot compile Column object until "
                                    "it's 'name' is assigned.")
 
         is_literal = column.is_literal
-        if not is_literal and isinstance(name, sql._generated_label):
+        if not is_literal and isinstance(name, sql._truncated_label):
             name = self._truncated_identifier("colident", name)
 
         if result_map is not None:
-            result_map[name.lower()] = (name, (column, ), column.type)
+            result_map[name.lower()] = (orig_name, 
+                                        (column, name, column.key), 
+                                        column.type)
 
         if is_literal:
             name = self.escape_literal_column(name)
@@ -404,7 +413,7 @@ class SQLCompiler(engine.Compiled):
             else:
                 schema_prefix = ''
             tablename = table.name
-            if isinstance(tablename, sql._generated_label):
+            if isinstance(tablename, sql._truncated_label):
                 tablename = self._truncated_identifier("alias", tablename)
 
             return schema_prefix + \
@@ -646,7 +655,8 @@ class SQLCompiler(engine.Compiled):
         if name in self.binds:
             existing = self.binds[name]
             if existing is not bindparam:
-                if existing.unique or bindparam.unique:
+                if (existing.unique or bindparam.unique) and \
+                    not existing.proxy_set.intersection(bindparam.proxy_set):
                     raise exc.CompileError(
                             "Bind parameter '%s' conflicts with "
                             "unique bind parameter of the same name" %
@@ -703,7 +713,7 @@ class SQLCompiler(engine.Compiled):
             return self.bind_names[bindparam]
 
         bind_name = bindparam.key
-        if isinstance(bind_name, sql._generated_label):
+        if isinstance(bind_name, sql._truncated_label):
             bind_name = self._truncated_identifier("bindparam", bind_name)
 
         # add to bind_names for translation
@@ -715,7 +725,7 @@ class SQLCompiler(engine.Compiled):
         if (ident_class, name) in self.truncated_names:
             return self.truncated_names[(ident_class, name)]
 
-        anonname = name % self.anon_map 
+        anonname = name.apply_map(self.anon_map)
 
         if len(anonname) > self.label_length:
             counter = self.truncated_names.get(ident_class, 1)
@@ -744,10 +754,49 @@ class SQLCompiler(engine.Compiled):
         else:
             return self.bindtemplate % {'name':name}
 
+    def visit_cte(self, cte, asfrom=False, ashint=False, 
+                                fromhints=None, **kwargs):
+        if isinstance(cte.name, sql._truncated_label):
+            cte_name = self._truncated_identifier("alias", cte.name)
+        else:
+            cte_name = cte.name
+        if cte.cte_alias:
+            if isinstance(cte.cte_alias, sql._truncated_label):
+                cte_alias = self._truncated_identifier("alias", cte.cte_alias)
+            else:
+                cte_alias = cte.cte_alias
+        if not cte.cte_alias and cte not in self.ctes:
+            if cte.recursive:
+                self.ctes_recursive = True
+            text = self.preparer.format_alias(cte, cte_name)
+            if cte.recursive:
+                if isinstance(cte.original, sql.Select):
+                    col_source = cte.original
+                elif isinstance(cte.original, sql.CompoundSelect):
+                    col_source = cte.original.selects[0]
+                else:
+                    assert False
+                recur_cols = [c.key for c in util.unique_list(col_source.inner_columns)
+                                if c is not None]
+
+                text += "(%s)" % (", ".join(recur_cols))
+            text += " AS \n" + \
+                        cte.original._compiler_dispatch(
+                                self, asfrom=True, **kwargs
+                            )
+            self.ctes[cte] = text
+        if asfrom:
+            if cte.cte_alias:
+                text = self.preparer.format_alias(cte, cte_alias)
+                text += " AS " + cte_name
+            else:
+                return self.preparer.format_alias(cte, cte_name)
+            return text
+
     def visit_alias(self, alias, asfrom=False, ashint=False, 
                                 fromhints=None, **kwargs):
         if asfrom or ashint:
-            if isinstance(alias.name, sql._generated_label):
+            if isinstance(alias.name, sql._truncated_label):
                 alias_name = self._truncated_identifier("alias", alias.name)
             else:
                 alias_name = alias.name
@@ -775,8 +824,14 @@ class SQLCompiler(engine.Compiled):
         if isinstance(column, sql._Label):
             return column
 
-        elif select is not None and select.use_labels and column._label:
-            return _CompileLabel(column, column._label)
+        elif select is not None and \
+                select.use_labels and \
+                column._label:
+            return _CompileLabel(
+                    column, 
+                    column._label, 
+                    alt_names=(column._key_label, )
+                )
 
         elif \
             asfrom and \
@@ -784,7 +839,8 @@ class SQLCompiler(engine.Compiled):
             not column.is_literal and \
             column.table is not None and \
             not isinstance(column.table, sql.Select):
-            return _CompileLabel(column, sql._generated_label(column.name))
+            return _CompileLabel(column, sql._as_truncated(column.name), 
+                                        alt_names=(column.key,))
         elif not isinstance(column, 
                     (sql._UnaryExpression, sql._TextClause)) \
                 and (not hasattr(column, 'name') or \
@@ -797,6 +853,9 @@ class SQLCompiler(engine.Compiled):
         return None
 
     def get_from_hint_text(self, table, text):
+        return None
+
+    def get_crud_hint_text(self, table, text):
         return None
 
     def visit_select(self, select, asfrom=False, parens=True, 
@@ -897,12 +956,27 @@ class SQLCompiler(engine.Compiled):
         if select.for_update:
             text += self.for_update_clause(select)
 
+        if self.ctes and \
+            compound_index==1 and not entry:
+            cte_text = self.get_cte_preamble(self.ctes_recursive) + " "
+            cte_text += ", \n".join(
+                [txt for txt in self.ctes.values()]
+            )
+            cte_text += "\n "
+            text = cte_text + text
+
         self.stack.pop(-1)
 
         if asfrom and parens:
             return "(" + text + ")"
         else:
             return text
+
+    def get_cte_preamble(self, recursive):
+        if recursive:
+            return "WITH RECURSIVE"
+        else:
+            return "WITH"
 
     def get_select_precolumns(self, select):
         """Called when building a ``SELECT`` statement, position is just
@@ -977,11 +1051,25 @@ class SQLCompiler(engine.Compiled):
 
         text = "INSERT"
 
+
         prefixes = [self.process(x) for x in insert_stmt._prefixes]
         if prefixes:
             text += " " + " ".join(prefixes)
 
         text += " INTO " + preparer.format_table(insert_stmt.table)
+
+        if insert_stmt._hints:
+            dialect_hints = dict([
+                (table, hint_text)
+                for (table, dialect), hint_text in 
+                insert_stmt._hints.items()
+                if dialect in ('*', self.dialect.name)
+            ])
+            if insert_stmt.table in dialect_hints:
+                text += " " + self.get_crud_hint_text(
+                                    insert_stmt.table, 
+                                    dialect_hints[insert_stmt.table]
+                                )
 
         if colparams or not supports_default_values:
             text += " (%s)" % ', '.join([preparer.format_column(c[0])
@@ -1014,21 +1102,25 @@ class SQLCompiler(engine.Compiled):
                                             extra_froms, **kw):
         """Provide a hook to override the initial table clause
         in an UPDATE statement.
-        
+
         MySQL overrides this.
 
         """
         return self.preparer.format_table(from_table)
 
-    def update_from_clause(self, update_stmt, from_table, extra_froms, **kw):
+    def update_from_clause(self, update_stmt, 
+                                from_table, extra_froms, 
+                                from_hints,
+                                **kw):
         """Provide a hook to override the generation of an 
         UPDATE..FROM clause.
-        
+
         MySQL overrides this.
 
         """
         return "FROM " + ', '.join(
-                    t._compiler_dispatch(self, asfrom=True, **kw) 
+                    t._compiler_dispatch(self, asfrom=True, 
+                                    fromhints=from_hints, **kw) 
                     for t in extra_froms)
 
     def visit_update(self, update_stmt, **kw):
@@ -1044,6 +1136,21 @@ class SQLCompiler(engine.Compiled):
                                         update_stmt, 
                                         update_stmt.table, 
                                         extra_froms, **kw)
+
+        if update_stmt._hints:
+            dialect_hints = dict([
+                (table, hint_text)
+                for (table, dialect), hint_text in 
+                update_stmt._hints.items()
+                if dialect in ('*', self.dialect.name)
+            ])
+            if update_stmt.table in dialect_hints:
+                text += " " + self.get_crud_hint_text(
+                                    update_stmt.table, 
+                                    dialect_hints[update_stmt.table]
+                                )
+        else:
+            dialect_hints = None
 
         text += ' SET '
         if extra_froms and self.render_table_with_column_in_update_from:
@@ -1067,7 +1174,8 @@ class SQLCompiler(engine.Compiled):
             extra_from_text = self.update_from_clause(
                                         update_stmt, 
                                         update_stmt.table, 
-                                        extra_froms, **kw)
+                                        extra_froms, 
+                                        dialect_hints, **kw)
             if extra_from_text:
                 text += " " + extra_from_text
 
@@ -1133,7 +1241,6 @@ class SQLCompiler(engine.Compiled):
             for k, v in stmt.parameters.iteritems():
                 parameters.setdefault(sql._column_as_key(k), v)
 
-
         # create a list of column assignment clauses as tuples
         values = []
 
@@ -1192,7 +1299,7 @@ class SQLCompiler(engine.Compiled):
         # "defaults", "primary key cols", etc.
         for c in stmt.table.columns:
             if c.key in parameters and c.key not in check_columns:
-                value = parameters[c.key]
+                value = parameters.pop(c.key)
                 if sql._is_literal(value):
                     value = self._create_crud_bind_param(
                                     c, value, required=value is required)
@@ -1288,6 +1395,17 @@ class SQLCompiler(engine.Compiled):
                         self.prefetch.append(c)
                 elif c.server_onupdate is not None:
                     self.postfetch.append(c)
+
+        if parameters and stmt.parameters:
+            check = set(parameters).intersection(
+                sql._column_as_key(k) for k in stmt.parameters
+            ).difference(check_columns)
+            if check:
+                util.warn(
+                    "Unconsumed column names: %s" % 
+                    (", ".join(check))
+                )
+
         return values
 
     def visit_delete(self, delete_stmt):
@@ -1295,6 +1413,21 @@ class SQLCompiler(engine.Compiled):
         self.isdelete = True
 
         text = "DELETE FROM " + self.preparer.format_table(delete_stmt.table)
+
+        if delete_stmt._hints:
+            dialect_hints = dict([
+                (table, hint_text)
+                for (table, dialect), hint_text in 
+                delete_stmt._hints.items()
+                if dialect in ('*', self.dialect.name)
+            ])
+            if delete_stmt.table in dialect_hints:
+                text += " " + self.get_crud_hint_text(
+                                    delete_stmt.table, 
+                                    dialect_hints[delete_stmt.table]
+                                )
+        else:
+            dialect_hints = None
 
         if delete_stmt._returning:
             self.returning = delete_stmt._returning
@@ -1445,7 +1578,7 @@ class DDLCompiler(engine.Compiled):
         return "\nDROP TABLE " + self.preparer.format_table(drop.element)
 
     def _index_identifier(self, ident):
-        if isinstance(ident, sql._generated_label):
+        if isinstance(ident, sql._truncated_label):
             max = self.dialect.max_index_name_length or \
                         self.dialect.max_identifier_length
             if len(ident) > max:

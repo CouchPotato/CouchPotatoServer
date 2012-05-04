@@ -791,6 +791,9 @@ class MSSQLCompiler(compiler.SQLCompiler):
     def get_from_hint_text(self, table, text):
         return text
 
+    def get_crud_hint_text(self, table, text):
+        return text
+
     def limit_clause(self, select):
         # Limit in mssql is after the select keyword
         return ""
@@ -948,6 +951,13 @@ class MSSQLCompiler(compiler.SQLCompiler):
             for c in expression._select_iterables(returning_cols)
         ]
         return 'OUTPUT ' + ', '.join(columns)
+
+    def get_cte_preamble(self, recursive):
+        # SQL Server finds it too inconvenient to accept
+        # an entirely optional, SQL standard specified,
+        # "RECURSIVE" word with their "WITH",
+        # so here we go
+        return "WITH"
 
     def label_select_column(self, select, column, asfrom):
         if isinstance(column, expression.Function):

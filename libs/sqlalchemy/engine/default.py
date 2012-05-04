@@ -44,6 +44,7 @@ class DefaultDialect(base.Dialect):
     postfetch_lastrowid = True
     implicit_returning = False
 
+
     supports_native_enum = False
     supports_native_boolean = False
 
@@ -94,6 +95,10 @@ class DefaultDialect(base.Dialect):
     # if this is True, the methods normalize_name()
     # and denormalize_name() must be provided.
     requires_name_normalize = False
+
+    # a hook for SQLite's translation of 
+    # result column names
+    _translate_colname = None
 
     reflection_options = ()
 
@@ -329,6 +334,9 @@ class DefaultDialect(base.Dialect):
     def do_execute(self, cursor, statement, parameters, context=None):
         cursor.execute(statement, parameters)
 
+    def do_execute_no_params(self, cursor, statement, context=None):
+        cursor.execute(statement)
+
     def is_disconnect(self, e, connection, cursor):
         return False
 
@@ -531,6 +539,10 @@ class DefaultExecutionContext(base.ExecutionContext):
         self.execution_options = connection._execution_options
         self.cursor = self.create_cursor()
         return self
+
+    @util.memoized_property
+    def no_parameters(self):
+        return self.execution_options.get("no_parameters", False)
 
     @util.memoized_property
     def is_crud(self):
