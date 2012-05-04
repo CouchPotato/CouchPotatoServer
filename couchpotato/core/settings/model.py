@@ -240,5 +240,13 @@ def setup():
     from elixir import setup_all, create_all
     from couchpotato import get_engine
 
+    engine = get_engine()
+
     setup_all()
-    create_all(get_engine())
+    create_all(engine)
+
+    try:
+        engine.execute("PRAGMA journal_mode = WAL")
+        engine.execute("PRAGMA temp_store = MEMORY")
+    except:
+        pass
