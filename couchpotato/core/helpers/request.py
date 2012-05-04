@@ -3,7 +3,7 @@ from couchpotato.core.helpers.variable import natcmp
 from flask.globals import current_app
 from flask.helpers import json
 from libs.werkzeug.urls import url_decode
-from urllib import unquote_plus
+from urllib import unquote
 import flask
 import re
 
@@ -26,7 +26,7 @@ def getParams():
 
             for item in nested:
                 if item is nested[-1]:
-                    current[item] = toUnicode(unquote_plus(value)).encode('utf-8')
+                    current[item] = toUnicode(unquote(value)).encode('utf-8')
                 else:
                     try:
                         current[item]
@@ -35,7 +35,7 @@ def getParams():
 
                     current = current[item]
         else:
-            temp[param] = toUnicode(unquote_plus(value)).encode('utf-8')
+            temp[param] = toUnicode(unquote(value)).encode('utf-8')
 
     return dictToList(temp)
 
@@ -57,7 +57,7 @@ def dictToList(params):
 
 def getParam(attr, default = None):
     try:
-        return toUnicode(unquote_plus(getattr(flask.request, 'args').get(attr, default))).encode('utf-8')
+        return toUnicode(unquote(getattr(flask.request, 'args').get(attr, default))).encode('utf-8')
     except:
         return default
 
