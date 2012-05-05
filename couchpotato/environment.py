@@ -5,6 +5,8 @@ import os
 
 class Env(object):
 
+    _appname = 'CouchPotato'
+
     ''' Environment variables '''
     _encoding = ''
     _uses_git = False
@@ -96,3 +98,7 @@ class Env(object):
             return '%d %s' % (os.getpid(), '(%d)' % parent if parent and parent > 1 else '')
         except:
             return 0
+
+    @staticmethod
+    def getIdentifier():
+        return '%s %s' % (Env.get('appname'), fireEvent('app.version', single = True))

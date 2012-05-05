@@ -1,6 +1,7 @@
 from couchpotato.core.event import fireEvent
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
+from couchpotato.environment import Env
 from gntp import notifier
 import logging
 import traceback
@@ -29,7 +30,7 @@ class Growl(Notification):
             port = self.conf('port')
 
             self.growl = notifier.GrowlNotifier(
-                applicationName = 'CouchPotato',
+                applicationName = Env.get('appname'),
                 notifications = ["Updates"],
                 defaultNotifications = ["Updates"],
                 applicationIcon = '%s/static/images/couch.png' % fireEvent('app.api_url', single = True),
