@@ -185,7 +185,7 @@ class Renamer(Plugin):
                                     break
 
                             if not found:
-                                log.error('Could not determin dvd structure for: %s' % current_file)
+                                log.error('Could not determine dvd structure for: %s' % current_file)
 
                         # Do rename others
                         else:

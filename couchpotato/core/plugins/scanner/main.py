@@ -328,7 +328,7 @@ class Scanner(Plugin):
             # Determine movie
             group['library'] = self.determineMovie(group)
             if not group['library']:
-                log.error('Unable to determin movie: %s' % group['identifiers'])
+                log.error('Unable to determine movie: %s' % group['identifiers'])
 
             processed_movies[identifier] = group
 
@@ -482,7 +482,7 @@ class Scanner(Plugin):
                     try: filename = list(group['files'].get('movie'))[0]
                     except: filename = None
 
-                    name_year = self.getReleaseNameYear(identifier, file_name = filename)
+                    name_year = self.getReleaseNameYear(identifier, file_name = filename if not group['is_dvd'] else None)
                     if name_year.get('name') and name_year.get('year'):
                         movie = fireEvent('movie.search', q = '%(name)s %(year)s' % name_year, merge = True, limit = 1)
 
