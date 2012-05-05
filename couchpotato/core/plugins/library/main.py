@@ -68,7 +68,13 @@ class LibraryPlugin(Plugin):
             do_update = False
         else:
             info = fireEvent('movie.info', merge = True, identifier = identifier)
-            del info['in_wanted'], info['in_library'] # Don't need those here
+
+            # Don't need those here
+            try: del info['in_wanted']
+            except: pass
+            try: del info['in_library']
+            except: pass
+
             if not info or len(info) == 0:
                 log.error('Could not update, no movie info to work with: %s' % identifier)
                 return False
