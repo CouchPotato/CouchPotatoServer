@@ -160,7 +160,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
         # Load migrations
         initialize = True
         db = Env.get('db_path')
-        if os.path.isfile(db.replace('sqlite:///', '')):
+        if os.path.isfile(db_path):
             initialize = False
 
             from migrate.versioning.api import version_control, db_version, version, upgrade
