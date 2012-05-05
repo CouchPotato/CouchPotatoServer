@@ -25,6 +25,12 @@ config = [{
                     'name': 'automation_username',
                     'label': 'Username',
                 },
+                {
+                    'name': 'automation_password',
+                    'label': 'Password',
+                    'type': 'password',
+                    'description': 'When you have "Protect my data" checked <a href="http://trakt.tv/settings/account">on trakt</a>.',
+                },
             ],
         },
     ],
