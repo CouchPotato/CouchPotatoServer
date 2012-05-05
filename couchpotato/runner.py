@@ -9,6 +9,7 @@ import atexit
 import locale
 import logging
 import os.path
+import shutil
 import sys
 import time
 import warnings
@@ -58,13 +59,42 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     if not encoding or encoding in ('ANSI_X3.4-1968', 'US-ASCII', 'ASCII'):
         encoding = 'UTF-8'
 
+    # Do db stuff
+    db_path = os.path.join(data_dir, 'couchpotato.db')
+
+    # Backup before start and cleanup old databases
+    new_backup = os.path.join(data_dir, 'db_backup', str(int(time.time())))
+
+    # Create path and copy
+    if not os.path.isdir(new_backup): os.makedirs(new_backup)
+    src_files = [options.config_file, db_path]
+    for src_file in src_files:
+        shutil.copy2(src_file, os.path.join(new_backup, os.path.basename(src_file)))
+
+    # Remove older backups, keep backups 3 days or at least 3
+    backups = []
+    for directory in os.listdir(os.path.dirname(new_backup)):
+        backup = os.path.join(os.path.dirname(new_backup), directory)
+        if os.path.isdir(backup):
+            backups.append(backup)
+
+    total_backups = len(backups)
+    for backup in backups:
+        if total_backups > 3:
+            if int(os.path.basename(directory)) < time.time() - 259200:
+                for src_file in src_files:
+                    os.remove(os.path.join(backup, os.path.basename(src_file)))
+                os.rmdir(backup)
+                total_backups -= 1
+
+
     # Register environment settings
     Env.set('encoding', encoding)
     Env.set('uses_git', not options.nogit)
     Env.set('app_dir', base_path)
     Env.set('data_dir', data_dir)
     Env.set('log_path', os.path.join(log_dir, 'CouchPotato.log'))
-    Env.set('db_path', 'sqlite:///' + os.path.join(data_dir, 'couchpotato.db'))
+    Env.set('db_path', 'sqlite:///' + db_path)
     Env.set('cache_dir', os.path.join(data_dir, 'cache'))
     Env.set('cache', FileSystemCache(os.path.join(Env.get('cache_dir'), 'python')))
     Env.set('console_log', options.console_log)
