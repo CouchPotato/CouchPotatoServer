@@ -254,8 +254,8 @@ var MovieList = new Class({
 		var self = this;
 		var ids = self.getSelectedMovies()
 
-		var qObj = new Question('Are you sure you want to delete the selected movies?', 'Items using this profile, will be set to the default quality.', [{
-			'text': 'Yes, delete them',
+		var qObj = new Question('Are you sure you want to delete '+ids.length+' movie'+ (ids.length != 1 ? 's' : '') +'?', 'If you do, you won\'t be able to watch them, as they won\'t get downloaded!', [{
+			'text': 'Yes, delete '+(ids.length != 1 ? 'them' : 'it'),
 			'class': 'delete',
 			'events': {
 				'click': function(e){
