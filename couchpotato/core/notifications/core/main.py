@@ -96,9 +96,11 @@ class CoreNotifier(Notification):
             'notifications': notifications
         })
 
-    def notify(self, message = '', data = {}):
+    def notify(self, message = '', data = {}, listener = None):
 
         db = get_session()
+
+        data['notification_type'] = listener if listener else 'unknown'
 
         n = Notif(
             message = toUnicode(message),

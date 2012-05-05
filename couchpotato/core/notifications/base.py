@@ -30,11 +30,11 @@ class Notification(Plugin):
         def notify(message, data):
             if not self.conf('on_snatch', default = True) and listener == 'movie.snatched':
                 return
-            return self.notify(message = message, data = data)
+            return self.notify(message = message, data = data, listener = listener)
 
         return notify
 
-    def notify(self, message = '', data = {}):
+    def notify(self, message = '', data = {}, listener = None):
         pass
 
     def test(self):
@@ -45,7 +45,8 @@ class Notification(Plugin):
 
         success = self.notify(
             message = self.test_message,
-            data = {}
+            data = {},
+            listener = 'test'
         )
 
         return jsonified({'success': success})
