@@ -270,7 +270,7 @@ class MoviePlugin(Plugin):
             'movies': movies,
         })
 
-    def add(self, params = {}, force_readd = True):
+    def add(self, params = {}, force_readd = True, search_after = True):
 
         library = fireEvent('library.add', single = True, attrs = params, update_after = False)
 
@@ -316,7 +316,7 @@ class MoviePlugin(Plugin):
 
         movie_dict = m.to_dict(self.default_dict)
 
-        if force_readd or do_search:
+        if (force_readd or do_search) and search_after:
             fireEventAsync('searcher.single', movie_dict)
 
         return movie_dict
