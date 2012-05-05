@@ -60,7 +60,7 @@ class MoviePlugin(Plugin):
         addApiView('movie.refresh', self.refresh, docs = {
             'desc': 'Refresh a movie by id',
             'params': {
-                'id': {'desc': 'The id of the movie that needs to be refreshed'},
+                'id': {'desc': 'Movie ID(s) you want to refresh.', 'type': 'int (comma separated)'},
             }
         })
         addApiView('movie.available_chars', self.charView)
@@ -232,19 +232,19 @@ class MoviePlugin(Plugin):
 
     def refresh(self):
 
-        params = getParams()
         db = get_session()
 
-        movie = db.query(Movie).filter_by(id = params.get('id')).first()
+        for id in getParam('id').split(','):
+            movie = db.query(Movie).filter_by(id = id).first()
 
-        # Get current selected title
-        default_title = ''
-        for title in movie.library.titles:
-            if title.default: default_title = title.title
+            # Get current selected title
+            default_title = ''
+            for title in movie.library.titles:
+                if title.default: default_title = title.title
 
-        if movie:
-            fireEventAsync('library.update', identifier = movie.library.identifier, default_title = default_title, force = True)
-            fireEventAsync('searcher.single', movie.to_dict(self.default_dict))
+            if movie:
+                fireEventAsync('library.update', identifier = movie.library.identifier, default_title = default_title, force = True)
+                fireEventAsync('searcher.single', movie.to_dict(self.default_dict))
 
         return jsonified({
             'success': True,

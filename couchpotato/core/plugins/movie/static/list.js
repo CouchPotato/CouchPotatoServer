@@ -144,6 +144,15 @@ var MovieList = new Class({
 							'click': self.deleteSelected.bind(self)
 						}
 					})
+				),
+				new Element('div.refresh').adopt(
+					new Element('span[text=or]'),
+					new Element('a.button.green', {
+						'text': 'Refresh',
+						'events': {
+							'click': self.refreshSelected.bind(self)
+						}
+					})
 				)
 			)
 		).inject(self.el, 'top');
@@ -289,6 +298,17 @@ var MovieList = new Class({
 				'profile_id': self.mass_edit_quality.get('value')
 			},
 			'onSuccess': self.search.bind(self)
+		});
+	},
+
+	refreshSelected: function(){
+		var self = this;
+		var ids = self.getSelectedMovies()
+
+		Api.request('movie.refresh', {
+			'data': {
+				'id': ids.join(','),
+			}
 		});
 	},
 

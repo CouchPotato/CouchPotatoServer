@@ -65,6 +65,10 @@ class Searcher(Plugin):
 
     def single(self, movie):
 
+        if not movie['profile']:
+            log.debug('Movie does\'nt have a profile, assuming in manage tab.')
+            return
+
         db = get_session()
 
         pre_releases = fireEvent('quality.pre_releases', single = True)
