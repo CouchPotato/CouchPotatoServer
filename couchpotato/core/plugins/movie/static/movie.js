@@ -69,7 +69,7 @@ var Movie = new Class({
 			self.profile.getTypes().each(function(type){
 
 				var q = self.addQuality(type.quality_id || type.get('quality_id'));
-				if(type.finish || type.get('finish'))
+				if(type.finish == true || type.get('finish'))
 					q.addClass('finish');
 
 			});
