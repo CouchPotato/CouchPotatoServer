@@ -67,9 +67,10 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
 
     # Create path and copy
     if not os.path.isdir(new_backup): os.makedirs(new_backup)
-    src_files = [options.config_file, db_path]
+    src_files = [options.config_file, db_path, db_path + '-shm', db_path + '-wal']
     for src_file in src_files:
-        shutil.copy2(src_file, os.path.join(new_backup, os.path.basename(src_file)))
+        if os.path.isfile(src_file):
+            shutil.copy2(src_file, os.path.join(new_backup, os.path.basename(src_file)))
 
     # Remove older backups, keep backups 3 days or at least 3
     backups = []
@@ -81,9 +82,11 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     total_backups = len(backups)
     for backup in backups:
         if total_backups > 3:
-            if int(os.path.basename(directory)) < time.time() - 259200:
+            if int(os.path.basename(backup)) < time.time() - 259200:
                 for src_file in src_files:
-                    os.remove(os.path.join(backup, os.path.basename(src_file)))
+                    b_file = os.path.join(backup, os.path.basename(src_file))
+                    if os.path.isfile(b_file):
+                        os.remove(b_file)
                 os.rmdir(backup)
                 total_backups -= 1
 
