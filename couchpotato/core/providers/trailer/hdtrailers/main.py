@@ -23,8 +23,10 @@ class HDTrailers(TrailerProvider):
 
         url = self.urls['api'] % self.movieUrlName(movie_name)
         data = self.getCache('hdtrailers.%s' % group['library']['identifier'], url)
+        result_data = {'480p':[], '720p':[], '1080p':[]}
 
-        result_data = {}
+        if not data:
+            return result_data
 
         did_alternative = False
         for provider in self.providers:
