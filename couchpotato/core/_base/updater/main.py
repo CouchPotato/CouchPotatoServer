@@ -232,6 +232,7 @@ class SourceUpdater(BaseUpdater):
             # Extract
             tar = tarfile.open(destination)
             tar.extractall(path = extracted_path)
+            tar.close()
             os.remove(destination)
 
             self.replaceWith(os.path.join(extracted_path, os.listdir(extracted_path)[0]))
