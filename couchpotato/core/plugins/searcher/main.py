@@ -68,7 +68,7 @@ class Searcher(Plugin):
         done_status = fireEvent('status.get', 'done', single = True)
 
         if not movie['profile'] or movie['status_id'] == done_status.get('id'):
-            log.debug('Movie does\'nt have a profile or already done, assuming in manage tab.')
+            log.debug('Movie doesn\'t have a profile or already done, assuming in manage tab.')
             return
 
         db = get_session()
