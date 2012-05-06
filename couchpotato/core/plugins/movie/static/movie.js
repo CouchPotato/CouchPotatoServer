@@ -82,7 +82,7 @@ var Movie = new Class({
 
 			if(!q && (status.identifier == 'snatched' || status.identifier == 'done'))
 				var q = self.addQuality(release.quality_id)
-			if (q)
+			if (status && q)
 				q.addClass(status.identifier);
 
 		});
