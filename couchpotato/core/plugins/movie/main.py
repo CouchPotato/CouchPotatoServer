@@ -429,6 +429,9 @@ class MoviePlugin(Plugin):
         db = get_session()
 
         m = db.query(Movie).filter_by(id = movie_id).first()
+        if not m:
+            log.debug('Can\'t restatus movie, doesn\'t seem to exist.')
+            return False
 
         log.debug('Changing status for %s' % (m.library.titles[0].title))
         if not m.profile:
@@ -444,3 +447,5 @@ class MoviePlugin(Plugin):
             m.status_id = active_status.get('id') if move_to_wanted else done_status.get('id')
 
         db.commit()
+
+        return True
