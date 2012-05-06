@@ -51,7 +51,10 @@ class LibraryPlugin(Plugin):
             handle = fireEventAsync if update_after is 'async' else fireEvent
             handle('library.update', identifier = l.identifier, default_title = toUnicode(attrs.get('title', '')))
 
-        return l.to_dict(self.default_dict)
+        library_dict = l.to_dict(self.default_dict)
+
+        db.remove()
+        return library_dict
 
     def update(self, identifier, default_title = '', force = False):
 
@@ -127,6 +130,7 @@ class LibraryPlugin(Plugin):
 
         fireEvent('library.update_finish', data = library_dict)
 
+        db.remove()
         return library_dict
 
     def updateReleaseDate(self, identifier):
