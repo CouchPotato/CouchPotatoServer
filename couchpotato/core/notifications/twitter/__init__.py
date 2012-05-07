@@ -38,6 +38,13 @@ config = [{
                     'advanced': True,
                     'description': 'Also send message when movie is snatched.',
                 },
+                {
+                    'name': 'direct_message',
+                    'default': 0,
+                    'type': 'bool',
+                    'advanced': True,
+                    'description': 'Use direct messages for the notifications (Also applies to the mentioned users).',
+                },
             ],
         }
     ],
