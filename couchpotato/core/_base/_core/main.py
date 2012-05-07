@@ -47,7 +47,6 @@ class Core(Plugin):
         addEvent('setting.save.core.password', self.md5Password)
         addEvent('setting.save.core.api_key', self.checkApikey)
 
-        self.removeRestartFile()
 
     def md5Password(self, value):
         return md5(value) if value else ''
@@ -119,9 +118,6 @@ class Core(Plugin):
 
             time.sleep(1)
 
-        if restart:
-            self.createFile(self.restartFilePath(), 'This is the most suckiest way to register if CP is restarted. Ever...')
-
         log.debug('Save to shutdown/restart')
 
         try:
@@ -132,15 +128,6 @@ class Core(Plugin):
             log.error('Failed shutting down the server: %s' % traceback.format_exc())
 
         fireEvent('app.after_shutdown', restart = restart)
-
-    def removeRestartFile(self):
-        try:
-            os.remove(self.restartFilePath())
-        except:
-            pass
-
-    def restartFilePath(self):
-        return os.path.join(Env.get('data_dir'), 'restart')
 
     def launchBrowser(self):
 
