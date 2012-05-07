@@ -65,6 +65,7 @@ class CoreNotifier(Notification):
         q.update({Notif.read: True})
 
         db.commit()
+        db.close()
 
         return jsonified({
             'success': True
@@ -90,15 +91,18 @@ class CoreNotifier(Notification):
             ndict['type'] = 'notification'
             notifications.append(ndict)
 
+        db.close()
         return jsonified({
             'success': True,
             'empty': len(notifications) == 0,
             'notifications': notifications
         })
 
-    def notify(self, message = '', data = {}):
+    def notify(self, message = '', data = {}, listener = None):
 
         db = get_session()
+
+        data['notification_type'] = listener if listener else 'unknown'
 
         n = Notif(
             message = toUnicode(message),
@@ -112,7 +116,8 @@ class CoreNotifier(Notification):
         ndict['time'] = time.time()
         self.messages.append(ndict)
 
-        db.remove()
+        db.close()
+        return True
 
     def frontend(self, type = 'notification', data = {}):
         self.messages.append({
@@ -140,6 +145,8 @@ class CoreNotifier(Notification):
                 ndict = n.to_dict()
                 ndict['type'] = 'notification'
                 messages.append(ndict)
+
+            db.close()
 
         self.messages = []
         return jsonified({

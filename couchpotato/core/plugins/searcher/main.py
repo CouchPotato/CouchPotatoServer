@@ -61,9 +61,16 @@ class Searcher(Plugin):
             if self.shuttingDown():
                 break
 
+        db.close()
         self.in_progress = False
 
     def single(self, movie):
+
+        done_status = fireEvent('status.get', 'done', single = True)
+
+        if not movie['profile'] or movie['status_id'] == done_status.get('id'):
+            log.debug('Movie doesn\'t have a profile or already done, assuming in manage tab.')
+            return
 
         db = get_session()
 
@@ -141,7 +148,7 @@ class Searcher(Plugin):
             if self.shuttingDown():
                 break
 
-        db.remove()
+        db.close()
         return False
 
     def download(self, data, movie, manual = False):
@@ -184,6 +191,7 @@ class Searcher(Plugin):
                 except Exception, e:
                     log.error('Failed marking movie finished: %s %s' % (e, traceback.format_exc()))
 
+            db.close()
             return True
 
         log.info('Tried to download, but none of the downloaders are enabled')

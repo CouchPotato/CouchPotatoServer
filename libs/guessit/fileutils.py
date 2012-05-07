@@ -51,8 +51,8 @@ def split_path(path):
         if head == '/' and tail == '':
             return ['/'] + result
 
-        # on Windows, the root folder is a drive letter (eg: 'C:\')
-        if len(head) == 3 and head[1:] == ':\\' and tail == '':
+        # on Windows, the root folder is a drive letter (eg: 'C:\') or for shares \\
+        if ((len(head) == 3 and head[1:] == ':\\') or (len(head) == 2 and head == '\\\\')) and tail == '':
             return [head] + result
 
         if head == '' and tail == '':

@@ -238,7 +238,15 @@ class Properties(Entity):
 def setup():
     """Setup the database and create the tables that don't exists yet"""
     from elixir import setup_all, create_all
-    from couchpotato import get_engine
+    from couchpotato.environment import Env
+
+    engine = Env.getEngine()
 
     setup_all()
-    create_all(get_engine())
+    create_all(engine)
+
+    try:
+        engine.execute("PRAGMA journal_mode = WAL")
+        engine.execute("PRAGMA temp_store = MEMORY")
+    except:
+        pass

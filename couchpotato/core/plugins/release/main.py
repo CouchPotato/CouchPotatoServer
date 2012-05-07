@@ -83,7 +83,9 @@ class Release(Plugin):
 
         fireEvent('movie.restatus', movie.id)
 
-        db.remove()
+        db.close()
+
+        return True
 
 
     def saveFile(self, filepath, type = 'unknown', include_media_info = False):
@@ -107,6 +109,7 @@ class Release(Plugin):
             rel.delete()
             db.commit()
 
+        db.close()
         return jsonified({
             'success': True
         })
@@ -123,6 +126,7 @@ class Release(Plugin):
             rel.status_id = available_status.get('id') if rel.status_id is ignored_status.get('id') else ignored_status.get('id')
             db.commit()
 
+        db.close()
         return jsonified({
             'success': True
         })
@@ -149,12 +153,14 @@ class Release(Plugin):
                 'files': {}
             }), manual = True)
 
+            db.close()
             return jsonified({
                 'success': True
             })
         else:
             log.error('Couldn\'t find release with id: %s' % id)
 
+        db.close()
         return jsonified({
             'success': False
         })

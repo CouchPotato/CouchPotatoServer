@@ -70,10 +70,16 @@ Page.Settings = new Class({
 			t.tab[a](c);
 			t.subtabs[subtab].tab[a](c);
 			t.subtabs[subtab].content[a](c);
+
+			if(!hide)
+				t.subtabs[subtab].content.fireEvent('activate');
 		}
 		else {
 			t.tab[a](c);
 			t.content[a](c);
+
+			if(!hide)
+				t.content.fireEvent('activate');
 		}
 
 		return t
@@ -869,6 +875,7 @@ Option.Choice = new Class({
 	afterInject: function(){
 		var self = this;
 
+		self.tags = [];
 		self.replaceInput();
 
 		self.select = new Element('select').adopt(
@@ -941,6 +948,10 @@ Option.Choice = new Class({
 				self.reset();
 			}
 		});
+
+		// Calc width on show
+		var input_group = self.tag_input.getParent('.tab_content');
+		input_group.addEvent('activate', self.setAllWidth.bind(self));
 	},
 
 	addLastTag: function(){
@@ -952,10 +963,8 @@ Option.Choice = new Class({
 		var self = this;
 		tag = new Option.Choice.Tag(tag, {
 			'onChange': self.setOrder.bind(self),
-			'onFocus': self.activate.bind(self),
 			'onBlur': function(){
 				self.addLastTag();
-				self.deactivate();
 			}
 		});
 		$(tag).inject(self.tag_input);
@@ -964,6 +973,8 @@ Option.Choice = new Class({
 			tag.setWidth();
 		else
 			(function(){ tag.setWidth(); }).delay(10, self);
+
+		self.tags.include(tag);
 
 		return tag;
 	},
@@ -979,6 +990,7 @@ Option.Choice = new Class({
 
 		self.input.set('value', value);
 		self.input.fireEvent('change');
+		self.setAllWidth();
 	},
 
 	addSelection: function(){
@@ -987,6 +999,7 @@ Option.Choice = new Class({
 		var tag = self.addTag(self.el.getElement('.selection input').get('value'));
 		self.sortable.addItems($(tag));
 		self.setOrder();
+		self.setAllWidth();
 	},
 
 	reset: function(){
@@ -996,14 +1009,14 @@ Option.Choice = new Class({
 		self.sortable.detach();
 
 		self.replaceInput();
+		self.setAllWidth();
 	},
 
-	activate: function(){
-
-	},
-
-	deactivate: function(){
-
+	setAllWidth: function(){
+		var self = this;
+		self.tags.each(function(tag){
+			tag.setWidth.delay(10, tag);
+		});
 	}
 
 });
@@ -1032,6 +1045,9 @@ Option.Choice.Tag = new Class({
 
 		self.el =  new Element('li', {
 			'class': self.is_choice ? 'choice' : '',
+			'styles': {
+				'border': 0
+			},
 			'events': {
 				'mouseover': !self.is_choice ? self.fireEvent.bind(self, 'focus') : function(){}
 			}
@@ -1039,6 +1055,9 @@ Option.Choice.Tag = new Class({
 			self.input = new Element(self.is_choice ? 'span' : 'input', {
 				'text': self.tag,
 				'value': self.tag,
+				'styles': {
+					'width': 0
+				},
 				'events': {
 					'keyup': self.is_choice ? null : function(){
 						self.setWidth();

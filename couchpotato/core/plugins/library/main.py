@@ -51,7 +51,10 @@ class LibraryPlugin(Plugin):
             handle = fireEventAsync if update_after is 'async' else fireEvent
             handle('library.update', identifier = l.identifier, default_title = toUnicode(attrs.get('title', '')))
 
-        return l.to_dict(self.default_dict)
+        library_dict = l.to_dict(self.default_dict)
+
+        db.close()
+        return library_dict
 
     def update(self, identifier, default_title = '', force = False):
 
@@ -68,7 +71,13 @@ class LibraryPlugin(Plugin):
             do_update = False
         else:
             info = fireEvent('movie.info', merge = True, identifier = identifier)
-            del info['in_wanted'], info['in_library'] # Don't need those here
+
+            # Don't need those here
+            try: del info['in_wanted']
+            except: pass
+            try: del info['in_library']
+            except: pass
+
             if not info or len(info) == 0:
                 log.error('Could not update, no movie info to work with: %s' % identifier)
                 return False
@@ -121,6 +130,7 @@ class LibraryPlugin(Plugin):
 
         fireEvent('library.update_finish', data = library_dict)
 
+        db.close()
         return library_dict
 
     def updateReleaseDate(self, identifier):
@@ -134,7 +144,7 @@ class LibraryPlugin(Plugin):
             db.commit()
 
         dates = library.info.get('release_date', {})
-        db.remove()
+        db.close()
 
         return dates
 

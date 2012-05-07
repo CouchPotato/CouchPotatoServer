@@ -25,7 +25,7 @@ from guessit.guess import (merge_similar_guesses, merge_all,
 import copy
 import logging
 
-log = logging.getLogger("guessit.matcher")
+log = logging.getLogger(__name__)
 
 
 class IterativeMatcher(object):
@@ -105,7 +105,7 @@ class IterativeMatcher(object):
                         'guess_release_group', 'guess_properties',
                         'guess_weak_episodes_rexps', 'guess_language']
         else:
-            strategy = ['guess_date', 'guess_year', 'guess_video_rexps',
+            strategy = ['guess_date', 'guess_video_rexps',
                         'guess_website', 'guess_release_group',
                         'guess_properties', 'guess_language']
 
@@ -125,6 +125,7 @@ class IterativeMatcher(object):
         if mtree.guess['type'] in ('episode', 'episodesubtitle'):
             apply_transfo('guess_episode_info_from_position')
         else:
+            apply_transfo('guess_year')
             apply_transfo('guess_movie_title_from_position')
 
         # 6- perform some post-processing steps

@@ -24,11 +24,7 @@ web = Blueprint('web', __name__)
 
 
 def get_session(engine = None):
-    engine = engine if engine else get_engine()
-    return scoped_session(sessionmaker(bind = engine))
-
-def get_engine():
-    return create_engine(Env.get('db_path') + '?check_same_thread=False', echo = False)
+    return Env.getSession(engine)
 
 def addView(route, func, static = False):
     web.add_url_rule(route + ('' if static else '/'), endpoint = route if route else 'index', view_func = func)

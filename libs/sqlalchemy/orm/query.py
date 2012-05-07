@@ -133,7 +133,7 @@ class Query(object):
                         with_polymorphic = mapper._with_polymorphic_mappers
                         if mapper.mapped_table not in \
                                             self._polymorphic_adapters:
-                            self.__mapper_loads_polymorphically_with(mapper, 
+                            self._mapper_loads_polymorphically_with(mapper, 
                                 sql_util.ColumnAdapter(
                                             selectable, 
                                             mapper._equivalent_columns))
@@ -150,7 +150,7 @@ class Query(object):
                                         is_aliased_class, with_polymorphic)
                 ent.setup_entity(entity, *d[entity])
 
-    def __mapper_loads_polymorphically_with(self, mapper, adapter):
+    def _mapper_loads_polymorphically_with(self, mapper, adapter):
         for m2 in mapper._with_polymorphic_mappers:
             self._polymorphic_adapters[m2] = adapter
             for m in m2.iterate_to_root():
@@ -174,10 +174,6 @@ class Query(object):
             self._from_obj_alias = sql_util.ColumnAdapter(
                                                 self._from_obj[0], equivs)
 
-    def _get_polymorphic_adapter(self, entity, selectable):
-        self.__mapper_loads_polymorphically_with(entity.mapper, 
-                    sql_util.ColumnAdapter(selectable, 
-                            entity.mapper._equivalent_columns))
 
     def _reset_polymorphic_adapter(self, mapper):
         for m2 in mapper._with_polymorphic_mappers:
@@ -276,6 +272,7 @@ class Query(object):
         return self._select_from_entity or \
             self._entity_zero().entity_zero
 
+
     @property
     def _mapper_entities(self):
         # TODO: this is wrong, its hardcoded to "primary entity" when
@@ -324,13 +321,6 @@ class Query(object):
                 )
         return self._entity_zero()
 
-    def _generate_mapper_zero(self):
-        if not getattr(self._entities[0], 'primary_entity', False):
-            raise sa_exc.InvalidRequestError(
-                            "No primary mapper set up for this Query.")
-        entity = self._entities[0]._clone()
-        self._entities = [entity] + self._entities[1:]
-        return entity
 
     def __all_equivs(self):
         equivs = {}
@@ -459,6 +449,62 @@ class Query(object):
 
         """
         return self.enable_eagerloads(False).statement.alias(name=name)
+
+    def cte(self, name=None, recursive=False):
+        """Return the full SELECT statement represented by this :class:`.Query`
+        represented as a common table expression (CTE).
+
+        The :meth:`.Query.cte` method is new in 0.7.6.
+        
+        Parameters and usage are the same as those of the 
+        :meth:`._SelectBase.cte` method; see that method for 
+        further details.
+        
+        Here is the `Postgresql WITH 
+        RECURSIVE example <http://www.postgresql.org/docs/8.4/static/queries-with.html>`_.
+        Note that, in this example, the ``included_parts`` cte and the ``incl_alias`` alias
+        of it are Core selectables, which
+        means the columns are accessed via the ``.c.`` attribute.  The ``parts_alias``
+        object is an :func:`.orm.aliased` instance of the ``Part`` entity, so column-mapped
+        attributes are available directly::
+
+            from sqlalchemy.orm import aliased
+
+            class Part(Base):
+                __tablename__ = 'part'
+                part = Column(String, primary_key=True)
+                sub_part = Column(String, primary_key=True)
+                quantity = Column(Integer)
+
+            included_parts = session.query(
+                                Part.sub_part, 
+                                Part.part, 
+                                Part.quantity).\\
+                                    filter(Part.part=="our part").\\
+                                    cte(name="included_parts", recursive=True)
+
+            incl_alias = aliased(included_parts, name="pr")
+            parts_alias = aliased(Part, name="p")
+            included_parts = included_parts.union_all(
+                session.query(
+                    parts_alias.part, 
+                    parts_alias.sub_part, 
+                    parts_alias.quantity).\\
+                        filter(parts_alias.part==incl_alias.c.sub_part)
+                )
+
+            q = session.query(
+                    included_parts.c.sub_part,
+                    func.sum(included_parts.c.quantity).label('total_quantity')
+                ).\\
+                group_by(included_parts.c.sub_part)
+
+        See also:
+        
+        :meth:`._SelectBase.cte`
+
+        """
+        return self.enable_eagerloads(False).statement.cte(name=name, recursive=recursive)
 
     def label(self, name):
         """Return the full SELECT statement represented by this :class:`.Query`, converted 
@@ -601,7 +647,12 @@ class Query(object):
             such as concrete table mappers.
 
         """
-        entity = self._generate_mapper_zero()
+
+        if not getattr(self._entities[0], 'primary_entity', False):
+            raise sa_exc.InvalidRequestError(
+                            "No primary mapper set up for this Query.")
+        entity = self._entities[0]._clone()
+        self._entities = [entity] + self._entities[1:]
         entity.set_with_polymorphic(self, 
                                         cls_or_mappers, 
                                         selectable=selectable,
@@ -1041,7 +1092,22 @@ class Query(object):
 
     @_generative()
     def with_lockmode(self, mode):
-        """Return a new Query object with the specified locking mode."""
+        """Return a new Query object with the specified locking mode.
+
+        :param mode: a string representing the desired locking mode. A
+            corresponding value is passed to the ``for_update`` parameter of
+            :meth:`~sqlalchemy.sql.expression.select` when the query is
+            executed. Valid values are:
+
+            ``'update'`` - passes ``for_update=True``, which translates to
+            ``FOR UPDATE`` (standard SQL, supported by most dialects)
+
+            ``'update_nowait'`` - passes ``for_update='nowait'``, which
+            translates to ``FOR UPDATE NOWAIT`` (supported by Oracle)
+
+            ``'read'`` - passes ``for_update='read'``, which translates to
+            ``LOCK IN SHARE MODE`` (supported by MySQL).
+        """
 
         self._lockmode = mode
 
@@ -1583,7 +1649,6 @@ class Query(object):
         consistent format with which to form the actual JOIN constructs.
 
         """
-        self._polymorphic_adapters = self._polymorphic_adapters.copy()
 
         if not from_joinpoint:
             self._reset_joinpoint()
@@ -1683,6 +1748,8 @@ class Query(object):
                             onclause, outerjoin, create_aliases, prop):
         """append a JOIN to the query's from clause."""
 
+        self._polymorphic_adapters = self._polymorphic_adapters.copy()
+
         if left is None:
             if self._from_obj:
                 left = self._from_obj[0]
@@ -1696,7 +1763,29 @@ class Query(object):
                         "are the same entity" % 
                         (left, right))
 
-        left_mapper, left_selectable, left_is_aliased = _entity_info(left)
+        right, right_is_aliased, onclause = self._prepare_right_side(
+                                            right, onclause,
+                                            outerjoin, create_aliases, 
+                                            prop)
+
+        # if joining on a MapperProperty path,
+        # track the path to prevent redundant joins
+        if not create_aliases and prop:
+            self._update_joinpoint({
+                '_joinpoint_entity':right,
+                'prev':((left, right, prop.key), self._joinpoint)
+            })
+        else:
+            self._joinpoint = {
+                '_joinpoint_entity':right
+            }
+
+        self._join_to_left(left, right, 
+                                right_is_aliased, 
+                                onclause, outerjoin)
+
+    def _prepare_right_side(self, right, onclause, outerjoin, 
+                                create_aliases, prop):
         right_mapper, right_selectable, right_is_aliased = _entity_info(right)
 
         if right_mapper:
@@ -1741,24 +1830,13 @@ class Query(object):
             right = aliased(right)
             need_adapter = True
 
-        # if joining on a MapperProperty path,
-        # track the path to prevent redundant joins
-        if not create_aliases and prop:
-            self._update_joinpoint({
-                '_joinpoint_entity':right,
-                'prev':((left, right, prop.key), self._joinpoint)
-            })
-        else:
-            self._joinpoint = {
-                '_joinpoint_entity':right
-            }
-
         # if an alias() of the right side was generated here,
         # apply an adapter to all subsequent filter() calls
         # until reset_joinpoint() is called.
         if need_adapter:
             self._filter_aliases = ORMAdapter(right,
-                        equivalents=right_mapper and right_mapper._equivalent_columns or {},
+                        equivalents=right_mapper and 
+                                    right_mapper._equivalent_columns or {},
                         chain_to=self._filter_aliases)
 
         # if the onclause is a ClauseElement, adapt it with any 
@@ -1771,13 +1849,18 @@ class Query(object):
         # ensure that columns retrieved from this target in the result
         # set are also adapted.
         if aliased_entity and not create_aliases:
-            self.__mapper_loads_polymorphically_with(
+            self._mapper_loads_polymorphically_with(
                         right_mapper,
                         ORMAdapter(
                             right, 
                             equivalents=right_mapper._equivalent_columns
                         )
                     )
+
+        return right, right_is_aliased, onclause
+
+    def _join_to_left(self, left, right, right_is_aliased, onclause, outerjoin):
+        left_mapper, left_selectable, left_is_aliased = _entity_info(left)
 
         # this is an overly broad assumption here, but there's a 
         # very wide variety of situations where we rely upon orm.join's
@@ -2959,7 +3042,9 @@ class _MapperEntity(_QueryEntity):
         # with_polymorphic() can be applied to aliases
         if not self.is_aliased_class:
             self.selectable = from_obj
-            self.adapter = query._get_polymorphic_adapter(self, from_obj)
+            query._mapper_loads_polymorphically_with(self.mapper, 
+                    sql_util.ColumnAdapter(from_obj, 
+                            self.mapper._equivalent_columns))
 
     filter_fn = id
 
@@ -3086,8 +3171,9 @@ class _MapperEntity(_QueryEntity):
 class _ColumnEntity(_QueryEntity):
     """Column/expression based entity."""
 
-    def __init__(self, query, column):
+    def __init__(self, query, column, namespace=None):
         self.expr = column
+        self.namespace = namespace
 
         if isinstance(column, basestring):
             column = sql.literal_column(column)
@@ -3106,7 +3192,7 @@ class _ColumnEntity(_QueryEntity):
             for c in column._select_iterable:
                 if c is column:
                     break
-                _ColumnEntity(query, c)
+                _ColumnEntity(query, c, namespace=column)
 
             if c is not column:
                 return
@@ -3147,12 +3233,14 @@ class _ColumnEntity(_QueryEntity):
 
         if self.entities:
             self.entity_zero = list(self.entities)[0]
+        elif self.namespace is not None:
+            self.entity_zero = self.namespace
         else:
             self.entity_zero = None
 
     @property
     def entity_zero_or_selectable(self):
-        if self.entity_zero:
+        if self.entity_zero is not None:
             return self.entity_zero
         elif self.actual_froms:
             return list(self.actual_froms)[0]

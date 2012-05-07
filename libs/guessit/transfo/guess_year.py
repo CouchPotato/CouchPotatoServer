@@ -22,7 +22,7 @@ from guessit.transfo import SingleNodeGuesser
 from guessit.date import search_year
 import logging
 
-log = logging.getLogger("guessit.transfo.guess_year")
+log = logging.getLogger(__name__)
 
 
 def guess_year(string):

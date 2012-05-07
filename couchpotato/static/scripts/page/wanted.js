@@ -211,6 +211,7 @@ window.addEvent('domready', function(){
 							},
 							'onComplete': function(){
 								movie.set('tween', {
+									'duration': 300,
 									'onComplete': function(){
 										movie.destroy();
 									}

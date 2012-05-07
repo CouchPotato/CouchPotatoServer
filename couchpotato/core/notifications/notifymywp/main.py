@@ -7,7 +7,7 @@ log = CPLog(__name__)
 
 class NotifyMyWP(Notification):
 
-    def notify(self, message = '', data = {}):
+    def notify(self, message = '', data = {}, listener = None):
         if self.isDisabled(): return
 
         keys = [x.strip() for x in self.conf('api_key').split(',')]

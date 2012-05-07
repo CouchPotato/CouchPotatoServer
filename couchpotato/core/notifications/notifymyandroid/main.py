@@ -7,7 +7,7 @@ log = CPLog(__name__)
 
 class NotifyMyAndroid(Notification):
 
-    def notify(self, message = '', data = {}):
+    def notify(self, message = '', data = {}, listener = None):
         if self.isDisabled(): return
 
         nma = pynma.PyNMA()

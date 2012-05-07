@@ -59,6 +59,9 @@ def flattenList(l):
 def md5(text):
     return hashlib.md5(text).hexdigest()
 
+def sha1(text):
+    return hashlib.sha1(text).hexdigest()
+
 def getExt(filename):
     return os.path.splitext(filename)[1][1:]
 

@@ -3,13 +3,14 @@ from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.request import jsonified
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
+from couchpotato.environment import Env
 
 log = CPLog(__name__)
 
 
 class Notification(Plugin):
 
-    default_title = 'CouchPotato'
+    default_title = Env.get('appname')
     test_message = 'ZOMG Lazors Pewpewpew!'
 
     listen_to = ['movie.downloaded', 'movie.snatched', 'updater.available']
@@ -29,11 +30,11 @@ class Notification(Plugin):
         def notify(message, data):
             if not self.conf('on_snatch', default = True) and listener == 'movie.snatched':
                 return
-            return self.notify(message = message, data = data)
+            return self.notify(message = message, data = data, listener = listener)
 
         return notify
 
-    def notify(self, message = '', data = {}):
+    def notify(self, message = '', data = {}, listener = None):
         pass
 
     def test(self):
@@ -44,7 +45,8 @@ class Notification(Plugin):
 
         success = self.notify(
             message = self.test_message,
-            data = {}
+            data = {},
+            listener = 'test'
         )
 
         return jsonified({'success': success})

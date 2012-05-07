@@ -87,7 +87,7 @@ class FileManager(Plugin):
             db.commit()
 
         type_dict = ft.to_dict()
-        db.remove()
+        db.close()
         return type_dict
 
     def getTypes(self):
@@ -100,4 +100,5 @@ class FileManager(Plugin):
         for type_object in results:
             types.append(type_object.to_dict())
 
+        db.close()
         return types

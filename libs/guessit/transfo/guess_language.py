@@ -24,7 +24,7 @@ from guessit.language import search_language
 from guessit.textutils import clean_string
 import logging
 
-log = logging.getLogger("guessit.transfo.guess_language")
+log = logging.getLogger(__name__)
 
 
 def guess_language(string):

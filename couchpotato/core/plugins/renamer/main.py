@@ -6,7 +6,7 @@ from couchpotato.core.helpers.request import jsonified
 from couchpotato.core.helpers.variable import getExt, mergeDicts
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.core.settings.model import Library, File
+from couchpotato.core.settings.model import Library, File, Profile
 from couchpotato.environment import Env
 import os
 import re
@@ -66,6 +66,12 @@ class Renamer(Plugin):
         trailer_name = self.conf('trailer_name')
         nfo_name = self.conf('nfo_name')
         separator = self.conf('separator')
+
+        # Statusses
+        done_status = fireEvent('status.get', 'done', single = True)
+        active_status = fireEvent('status.get', 'active', single = True)
+        downloaded_status = fireEvent('status.get', 'downloaded', single = True)
+        snatched_status = fireEvent('status.get', 'snatched', single = True)
 
         db = get_session()
 
@@ -185,7 +191,7 @@ class Renamer(Plugin):
                                     break
 
                             if not found:
-                                log.error('Could not determin dvd structure for: %s' % current_file)
+                                log.error('Could not determine dvd structure for: %s' % current_file)
 
                         # Do rename others
                         else:
@@ -240,10 +246,15 @@ class Renamer(Plugin):
                             cd += 1
 
                 # Before renaming, remove the lower quality files
-
                 library = db.query(Library).filter_by(identifier = group['library']['identifier']).first()
-                done_status = fireEvent('status.get', 'done', single = True)
-                active_status = fireEvent('status.get', 'active', single = True)
+                remove_leftovers = True
+
+                # Add it to the wanted list before we continue
+                if len(library.movies) == 0:
+                    profile = db.query(Profile).filter_by(core = True, label = group['meta_data']['quality']['label']).first()
+                    fireEvent('movie.add', params = {'identifier': group['library']['identifier'], 'profile_id': profile.id}, search_after = False)
+                    db.expire_all()
+                    library = db.query(Library).filter_by(identifier = group['library']['identifier']).first()
 
                 for movie in library.movies:
 
@@ -293,14 +304,25 @@ class Renamer(Plugin):
                                 # Notify on rename fail
                                 download_message = 'Renaming of %s (%s) canceled, exists in %s already.' % (movie.library.titles[0].title, group['meta_data']['quality']['label'], release.quality.label)
                                 fireEvent('movie.renaming.canceled', message = download_message, data = group)
+                                remove_leftovers = False
 
                                 break
+                        elif release.status_id is snatched_status.get('id'):
+                            print release.quality.label, group['meta_data']['quality']['label']
+                            if release.quality.id is group['meta_data']['quality']['id']:
+                                log.debug('Marking release as downloaded')
+                                release.status_id = downloaded_status.get('id')
+                                db.commit()
 
                 # Remove leftover files
-                if self.conf('cleanup') and not self.conf('move_leftover'):
+                if self.conf('cleanup') and not self.conf('move_leftover') and remove_leftovers:
                     log.debug('Removing leftover files')
                     for current_file in group['files']['leftover']:
                         remove_files.append(current_file)
+                elif not remove_leftovers: # Don't remove anything
+                    remove_files = []
+
+            continue
 
             # Rename all files marked
             group['renamed_files'] = []
@@ -356,6 +378,7 @@ class Renamer(Plugin):
             if self.shuttingDown():
                 break
 
+        db.close()
         self.renaming_started = False
 
     def getRenameExtras(self, extra_type = '', replacements = {}, folder_name = '', file_name = '', destination = '', group = {}, current_file = ''):
