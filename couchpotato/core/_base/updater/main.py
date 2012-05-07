@@ -21,7 +21,9 @@ class Updater(Plugin):
 
     def __init__(self):
 
-        if os.path.isdir(os.path.join(Env.get('app_dir'), '.git')):
+        if Env.get('desktop'):
+            self.updater = DesktopUpdater()
+        elif os.path.isdir(os.path.join(Env.get('app_dir'), '.git')):
             self.updater = GitUpdater(self.conf('git_command', default = 'git'))
         else:
             self.updater = SourceUpdater()
@@ -334,3 +336,32 @@ class SourceUpdater(BaseUpdater):
             log.error('Failed getting latest request from github: %s' % traceback.format_exc())
 
         return {}
+
+
+class DesktopUpdater(Plugin):
+
+    version = None
+    update_failed = False
+    update_version = None
+    last_check = 0
+
+    def __init__(self):
+        self.desktop = Env.get('desktop')
+
+    def doUpdate(self):
+        pass
+
+    def info(self):
+        return {
+            'last_check': self.last_check,
+            'update_version': self.update_version,
+            'version': self.getVersion(),
+            'branch': 'desktop_build',
+        }
+
+    def check(self):
+        pass
+
+    def getVersion(self):
+        return {}
+
