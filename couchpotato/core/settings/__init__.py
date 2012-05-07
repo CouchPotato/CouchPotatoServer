@@ -197,11 +197,15 @@ class Settings(object):
         from couchpotato import get_session
 
         db = get_session()
+        prop = None
         try:
-            prop = db.query(Properties).filter_by(identifier = identifier).first()
-            return prop.value if prop else None
+            propert = db.query(Properties).filter_by(identifier = identifier).first()
+            prop = propert.value
         except:
-            return None
+            pass
+
+        db.close()
+        return prop
 
     def setProperty(self, identifier, value = ''):
         from couchpotato import get_session
@@ -217,3 +221,4 @@ class Settings(object):
         p.value = toUnicode(value)
 
         db.commit()
+        db.close()

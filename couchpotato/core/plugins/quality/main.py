@@ -68,6 +68,7 @@ class QualityPlugin(Plugin):
             q = mergeDicts(self.getQuality(quality.identifier), quality.to_dict())
             temp.append(q)
 
+        db.close()
         return temp
 
     def single(self, identifier = ''):
@@ -79,6 +80,7 @@ class QualityPlugin(Plugin):
         if quality:
             quality_dict = dict(self.getQuality(quality.identifier), **quality.to_dict())
 
+        db.close()
         return quality_dict
 
     def getQuality(self, identifier):
@@ -98,6 +100,7 @@ class QualityPlugin(Plugin):
             setattr(quality, params.get('value_type'), params.get('value'))
             db.commit()
 
+        db.close()
         return jsonified({
             'success': True
         })
@@ -149,6 +152,7 @@ class QualityPlugin(Plugin):
             order += 1
             db.commit()
 
+        db.close()
         return True
 
     def guess(self, files, extra = {}):

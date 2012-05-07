@@ -38,6 +38,8 @@ class Subtitle(Plugin):
                     # get subtitles for those files
                     subliminal.list_subtitles(files, cache_dir = Env.get('cache_dir'), multi = True, languages = self.getLanguages(), services = self.services)
 
+        db.close()
+
     def searchSingle(self, group):
 
         if self.isDisabled(): return

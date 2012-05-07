@@ -8,9 +8,8 @@ from couchpotato.core.settings.model import File
 from couchpotato.environment import Env
 from enzyme.exceptions import NoParserError, ParseError
 from guessit import guess_movie_info
-from subliminal.videos import scan
+from subliminal.videos import scan, Video
 import enzyme
-import logging
 import os
 import re
 import time
@@ -102,12 +101,12 @@ class Scanner(Plugin):
             if group['library']:
                 fireEvent('release.add', group = group)
 
-    def scanFolderToLibrary(self, folder = None, newer_than = None):
+    def scanFolderToLibrary(self, folder = None, newer_than = None, simple = True):
 
         if not os.path.isdir(folder):
             return
 
-        groups = self.scan(folder = folder)
+        groups = self.scan(folder = folder, simple = simple)
 
         added_identifier = []
         while True and not self.shuttingDown():
@@ -128,7 +127,7 @@ class Scanner(Plugin):
         return added_identifier
 
 
-    def scan(self, folder = None, files = []):
+    def scan(self, folder = None, files = [], simple = False):
 
         if not folder or not os.path.isdir(folder):
             log.error('Folder doesn\'t exists: %s' % folder)
@@ -292,7 +291,7 @@ class Scanner(Plugin):
             group['meta_data'] = self.getMetaData(group)
 
             # Subtitle meta
-            group['subtitle_language'] = self.getSubtitleLanguage(group)
+            group['subtitle_language'] = self.getSubtitleLanguage(group) if not simple else {}
 
             # Get parent dir from movie files
             for movie_file in group['files']['movie']:
@@ -393,7 +392,9 @@ class Scanner(Plugin):
             scan_result = []
             for p in paths:
                 if not group['is_dvd']:
-                    scan_result.extend(scan(p))
+                    video = Video.from_path(p)
+                    video_result = [(video, video.scan())]
+                    scan_result.extend(video_result)
 
             for video, detected_subtitles in scan_result:
                 for s in detected_subtitles:
@@ -454,7 +455,7 @@ class Scanner(Plugin):
                     break
                 except:
                     pass
-            db.remove()
+            db.close()
 
         # Search based on OpenSubtitleHash
         if not imdb_id and not group['is_dvd']:

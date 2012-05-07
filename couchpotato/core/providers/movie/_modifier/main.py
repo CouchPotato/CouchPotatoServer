@@ -44,8 +44,8 @@ class MovieResultModifier(Plugin):
         }
 
         # Add release info from current library
+        db = get_session()
         try:
-            db = get_session()
             l = db.query(Library).filter_by(identifier = imdb).first()
             if l:
 
@@ -63,6 +63,7 @@ class MovieResultModifier(Plugin):
         except:
             log.error('Tried getting more info on searched movies: %s' % traceback.format_exc())
 
+        db.close()
         return temp
 
     def checkLibrary(self, result):

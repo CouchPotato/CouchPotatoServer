@@ -6,7 +6,7 @@ from couchpotato.core.helpers.request import getParams, jsonified, getParam
 from couchpotato.core.helpers.variable import getImdb
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.core.settings.model import Movie, Library, LibraryTitle
+from couchpotato.core.settings.model import Library, LibraryTitle, Movie
 from couchpotato.environment import Env
 from sqlalchemy.orm import joinedload_all
 from sqlalchemy.sql.expression import or_, asc, not_
@@ -109,10 +109,12 @@ class MoviePlugin(Plugin):
         db = get_session()
         m = db.query(Movie).filter_by(id = movie_id).first()
 
+        results = None
         if m:
-            return m.to_dict(self.default_dict)
+            results = m.to_dict(self.default_dict)
 
-        return None
+        db.close()
+        return results
 
     def list(self, status = ['active'], limit_offset = None, starts_with = None, search = None):
 
@@ -175,6 +177,7 @@ class MoviePlugin(Plugin):
             })
             movies.append(temp)
 
+        db.close()
         return movies
 
     def availableChars(self, status = ['active']):
@@ -200,6 +203,7 @@ class MoviePlugin(Plugin):
             if char not in chars:
                 chars += char
 
+        db.close()
         return chars
 
     def listView(self):
@@ -246,6 +250,7 @@ class MoviePlugin(Plugin):
                 fireEventAsync('library.update', identifier = movie.library.identifier, default_title = default_title, force = True)
                 fireEventAsync('searcher.single', movie.to_dict(self.default_dict))
 
+        db.close()
         return jsonified({
             'success': True,
         })
@@ -319,6 +324,7 @@ class MoviePlugin(Plugin):
         if (force_readd or do_search) and search_after:
             fireEventAsync('searcher.single', movie_dict)
 
+        db.close()
         return movie_dict
 
 
@@ -365,6 +371,7 @@ class MoviePlugin(Plugin):
             movie_dict = m.to_dict(self.default_dict)
             fireEventAsync('searcher.single', movie_dict)
 
+        db.close()
         return jsonified({
             'success': True,
         })
@@ -419,6 +426,7 @@ class MoviePlugin(Plugin):
                 else:
                     fireEvent('movie.restatus', movie.id, single = True)
 
+        db.close()
         return True
 
     def restatus(self, movie_id):
@@ -447,5 +455,6 @@ class MoviePlugin(Plugin):
             m.status_id = active_status.get('id') if move_to_wanted else done_status.get('id')
 
         db.commit()
+        db.close()
 
         return True
