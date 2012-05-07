@@ -80,6 +80,17 @@ def _get_table_key(name, schema):
     else:
         return schema + "." + name
 
+def _validate_dialect_kwargs(kwargs, name):
+    # validate remaining kwargs that they all specify DB prefixes
+    if len([k for k in kwargs
+            if not re.match(
+                        r'^(?:%s)_' % 
+                        '|'.join(dialects.__all__), k
+                    )
+            ]):
+        raise TypeError(
+            "Invalid argument(s) for %s: %r" % (name, kwargs.keys()))
+
 
 class Table(SchemaItem, expression.TableClause):
     """Represent a table in a database.
@@ -369,9 +380,12 @@ class Table(SchemaItem, expression.TableClause):
         # allow user-overrides
         self._init_items(*args)
 
-    def _autoload(self, metadata, autoload_with, include_columns, exclude_columns=None):
+    def _autoload(self, metadata, autoload_with, include_columns, exclude_columns=()):
         if self.primary_key.columns:
-            PrimaryKeyConstraint()._set_parent_with_dispatch(self)
+            PrimaryKeyConstraint(*[
+                c for c in self.primary_key.columns 
+                if c.key in exclude_columns
+            ])._set_parent_with_dispatch(self)
 
         if autoload_with:
             autoload_with.run_callable(
@@ -424,7 +438,7 @@ class Table(SchemaItem, expression.TableClause):
             if not autoload_replace:
                 exclude_columns = [c.name for c in self.c]
             else:
-                exclude_columns = None
+                exclude_columns = ()
             self._autoload(self.metadata, autoload_with, include_columns, exclude_columns)
 
         self._extra_kwargs(**kwargs)
@@ -432,14 +446,7 @@ class Table(SchemaItem, expression.TableClause):
 
     def _extra_kwargs(self, **kwargs):
         # validate remaining kwargs that they all specify DB prefixes
-        if len([k for k in kwargs
-                if not re.match(
-                            r'^(?:%s)_' % 
-                            '|'.join(dialects.__all__), k
-                        )
-                ]):
-            raise TypeError(
-                "Invalid argument(s) for Table: %r" % kwargs.keys())
+        _validate_dialect_kwargs(kwargs, "Table")
         self.kwargs.update(kwargs)
 
     def _init_collections(self):
@@ -1028,7 +1035,7 @@ class Column(SchemaItem, expression.ColumnClause):
                     "The 'index' keyword argument on Column is boolean only. "
                     "To create indexes with a specific name, create an "
                     "explicit Index object external to the Table.")
-            Index(expression._generated_label('ix_%s' % self._label), self, unique=self.unique)
+            Index(expression._truncated_label('ix_%s' % self._label), self, unique=self.unique)
         elif self.unique:
             if isinstance(self.unique, basestring):
                 raise exc.ArgumentError(
@@ -1093,7 +1100,7 @@ class Column(SchemaItem, expression.ColumnClause):
                     "been assigned.")
         try:
             c = self._constructor(
-                name or self.name, 
+                expression._as_truncated(name or self.name), 
                 self.type, 
                 key = name or self.key, 
                 primary_key = self.primary_key, 
@@ -1119,6 +1126,8 @@ class Column(SchemaItem, expression.ColumnClause):
 
         c.table = selectable
         selectable._columns.add(c)
+        if selectable._is_clone_of is not None:
+            c._is_clone_of = selectable._is_clone_of.columns[c.name]
         if self.primary_key:
             selectable.primary_key.add(c)
         c.dispatch.after_parent_attach(c, selectable)
@@ -1809,7 +1818,8 @@ class Constraint(SchemaItem):
     __visit_name__ = 'constraint'
 
     def __init__(self, name=None, deferrable=None, initially=None, 
-                            _create_rule=None):
+                            _create_rule=None, 
+                            **kw):
         """Create a SQL constraint.
 
         :param name:
@@ -1839,6 +1849,10 @@ class Constraint(SchemaItem):
 
           _create_rule is used by some types to create constraints.
           Currently, its call signature is subject to change at any time.
+        
+        :param \**kwargs: 
+          Dialect-specific keyword parameters, see the documentation
+          for various dialects and constraints regarding options here.
 
         """
 
@@ -1847,6 +1861,8 @@ class Constraint(SchemaItem):
         self.initially = initially
         self._create_rule = _create_rule
         util.set_creation_order(self)
+        _validate_dialect_kwargs(kw, self.__class__.__name__)
+        self.kwargs = kw
 
     @property
     def table(self):
@@ -2192,6 +2208,8 @@ class Index(ColumnCollectionMixin, SchemaItem):
         self.table = None
         # will call _set_parent() if table-bound column
         # objects are present
+        if not columns:
+            util.warn("No column names or expressions given for Index.")
         ColumnCollectionMixin.__init__(self, *columns)
         self.name = name
         self.unique = kw.pop('unique', False)
@@ -3004,9 +3022,11 @@ def _to_schema_column(element):
    return element
 
 def _to_schema_column_or_string(element):
-  if hasattr(element, '__clause_element__'):
-      element = element.__clause_element__()
-  return element
+    if hasattr(element, '__clause_element__'):
+        element = element.__clause_element__()
+    if not isinstance(element, (basestring, expression.ColumnElement)):
+        raise exc.ArgumentError("Element %r is not a string name or column element" % element)
+    return element
 
 class _CreateDropBase(DDLElement):
     """Base class for DDL constucts that represent CREATE and DROP or

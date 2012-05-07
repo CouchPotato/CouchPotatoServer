@@ -99,7 +99,7 @@ def sessionmaker(bind=None, class_=None, autoflush=True, autocommit=False,
             kwargs.update(new_kwargs)
 
 
-    return type("Session", (Sess, class_), {})
+    return type("SessionMaker", (Sess, class_), {})
 
 
 class SessionTransaction(object):
@@ -978,6 +978,34 @@ class Session(object):
 
         return self._query_cls(entities, self, **kwargs)
 
+    @property
+    @util.contextmanager
+    def no_autoflush(self):
+        """Return a context manager that disables autoflush.
+        
+        e.g.::
+        
+            with session.no_autoflush:
+                
+                some_object = SomeClass()
+                session.add(some_object)
+                # won't autoflush
+                some_object.related_thing = session.query(SomeRelated).first()
+        
+        Operations that proceed within the ``with:`` block
+        will not be subject to flushes occurring upon query
+        access.  This is useful when initializing a series
+        of objects which involve existing database queries,
+        where the uncompleted object should not yet be flushed.
+        
+        New in 0.7.6.
+
+        """
+        autoflush = self.autoflush
+        self.autoflush = False
+        yield self
+        self.autoflush = autoflush
+
     def _autoflush(self):
         if self.autoflush and not self._flushing:
             self.flush()
@@ -1771,6 +1799,19 @@ class Session(object):
         """
 
         return self.transaction and self.transaction.is_active
+
+    identity_map = None
+    """A mapping of object identities to objects themselves.
+    
+    Iterating through ``Session.identity_map.values()`` provides
+    access to the full set of persistent objects (i.e., those 
+    that have row identity) currently in the session.
+    
+    See also:
+    
+    :func:`.identity_key` - operations involving identity keys.
+    
+    """
 
     @property
     def _dirty_states(self):

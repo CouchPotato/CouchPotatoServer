@@ -9,6 +9,7 @@ import atexit
 import locale
 import logging
 import os.path
+import shutil
 import sys
 import time
 import warnings
@@ -58,13 +59,45 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     if not encoding or encoding in ('ANSI_X3.4-1968', 'US-ASCII', 'ASCII'):
         encoding = 'UTF-8'
 
+    # Do db stuff
+    db_path = os.path.join(data_dir, 'couchpotato.db')
+
+    # Backup before start and cleanup old databases
+    new_backup = os.path.join(data_dir, 'db_backup', str(int(time.time())))
+
+    # Create path and copy
+    if not os.path.isdir(new_backup): os.makedirs(new_backup)
+    src_files = [options.config_file, db_path, db_path + '-shm', db_path + '-wal']
+    for src_file in src_files:
+        if os.path.isfile(src_file):
+            shutil.copy2(src_file, os.path.join(new_backup, os.path.basename(src_file)))
+
+    # Remove older backups, keep backups 3 days or at least 3
+    backups = []
+    for directory in os.listdir(os.path.dirname(new_backup)):
+        backup = os.path.join(os.path.dirname(new_backup), directory)
+        if os.path.isdir(backup):
+            backups.append(backup)
+
+    total_backups = len(backups)
+    for backup in backups:
+        if total_backups > 3:
+            if int(os.path.basename(backup)) < time.time() - 259200:
+                for src_file in src_files:
+                    b_file = os.path.join(backup, os.path.basename(src_file))
+                    if os.path.isfile(b_file):
+                        os.remove(b_file)
+                os.rmdir(backup)
+                total_backups -= 1
+
+
     # Register environment settings
     Env.set('encoding', encoding)
     Env.set('uses_git', not options.nogit)
     Env.set('app_dir', base_path)
     Env.set('data_dir', data_dir)
     Env.set('log_path', os.path.join(log_dir, 'CouchPotato.log'))
-    Env.set('db_path', 'sqlite:///' + os.path.join(data_dir, 'couchpotato.db'))
+    Env.set('db_path', 'sqlite:///' + db_path)
     Env.set('cache_dir', os.path.join(data_dir, 'cache'))
     Env.set('cache', FileSystemCache(os.path.join(Env.get('cache_dir'), 'python')))
     Env.set('console_log', options.console_log)
@@ -83,11 +116,15 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     if not development:
         atexit.register(cleanup)
 
+    # Disable logging for some modules
+    for logger_name in ['enzyme', 'guessit', 'subliminal', 'apscheduler']:
+        logging.getLogger(logger_name).setLevel(logging.ERROR)
+
+    for logger_name in ['gntp', 'werkzeug', 'migrate']:
+        logging.getLogger(logger_name).setLevel(logging.WARNING)
+
     # Use reloader
     reloader = debug is True and development and not Env.get('desktop') and not options.daemon
-
-    # Disable server access log
-    logging.getLogger('werkzeug').setLevel(logging.WARNING)
 
     # Only run once when debugging
     fire_load = False
@@ -130,12 +167,11 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
         # Load migrations
         initialize = True
         db = Env.get('db_path')
-        if os.path.isfile(db.replace('sqlite:///', '')):
+        if os.path.isfile(db_path):
             initialize = False
 
             from migrate.versioning.api import version_control, db_version, version, upgrade
             repo = os.path.join(base_path, 'couchpotato', 'core', 'migration')
-            logging.getLogger('migrate').setLevel(logging.WARNING) # Disable logging for migration
 
             latest_db_version = version(repo)
             try:

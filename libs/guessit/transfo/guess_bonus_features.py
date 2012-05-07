@@ -21,7 +21,7 @@
 from guessit.transfo import found_property
 import logging
 
-log = logging.getLogger("guessit.transfo.guess_bonus_features")
+log = logging.getLogger(__name__)
 
 
 def process(mtree):

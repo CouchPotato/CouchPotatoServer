@@ -144,6 +144,15 @@ var MovieList = new Class({
 							'click': self.deleteSelected.bind(self)
 						}
 					})
+				),
+				new Element('div.refresh').adopt(
+					new Element('span[text=or]'),
+					new Element('a.button.green', {
+						'text': 'Refresh',
+						'events': {
+							'click': self.refreshSelected.bind(self)
+						}
+					})
 				)
 			)
 		).inject(self.el, 'top');
@@ -245,8 +254,8 @@ var MovieList = new Class({
 		var self = this;
 		var ids = self.getSelectedMovies()
 
-		var qObj = new Question('Are you sure you want to delete the selected movies?', 'Items using this profile, will be set to the default quality.', [{
-			'text': 'Yes, delete them',
+		var qObj = new Question('Are you sure you want to delete '+ids.length+' movie'+ (ids.length != 1 ? 's' : '') +'?', 'If you do, you won\'t be able to watch them, as they won\'t get downloaded!', [{
+			'text': 'Yes, delete '+(ids.length != 1 ? 'them' : 'it'),
 			'class': 'delete',
 			'events': {
 				'click': function(e){
@@ -289,6 +298,17 @@ var MovieList = new Class({
 				'profile_id': self.mass_edit_quality.get('value')
 			},
 			'onSuccess': self.search.bind(self)
+		});
+	},
+
+	refreshSelected: function(){
+		var self = this;
+		var ids = self.getSelectedMovies()
+
+		Api.request('movie.refresh', {
+			'data': {
+				'id': ids.join(','),
+			}
 		});
 	},
 

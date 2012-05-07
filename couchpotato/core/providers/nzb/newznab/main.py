@@ -4,6 +4,7 @@ from couchpotato.core.helpers.rss import RSS
 from couchpotato.core.helpers.variable import cleanHost
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.nzb.base import NZBProvider
+from couchpotato.environment import Env
 from dateutil.parser import parse
 import time
 import xml.etree.ElementTree as XMLTree
@@ -99,7 +100,7 @@ class Newznab(NZBProvider, RSS):
     def createItems(self, url, cache_key, host, single_cat = False, movie = None, quality = None, for_feed = False):
         results = []
 
-        data = self.getCache(cache_key, url)
+        data = self.getCache(cache_key, url, cache_timeout = 1800, headers = {'User-Agent': Env.getIdentifier()})
         if data:
             try:
                 try:

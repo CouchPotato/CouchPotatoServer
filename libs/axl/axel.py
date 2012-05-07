@@ -164,7 +164,12 @@ class Event(object):
             if not self.asynchronous:
                 self.queue.join()
 
-        return self.result or None
+        res = self.result or None
+
+        # Cleanup
+        self.result = {}
+
+        return res
 
     def count(self):
         """ Returns the count of registered handlers """

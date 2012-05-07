@@ -22,7 +22,7 @@ import json
 import datetime
 import logging
 
-log = logging.getLogger("guessit.guess")
+log = logging.getLogger(__name__)
 
 
 class Guess(dict):

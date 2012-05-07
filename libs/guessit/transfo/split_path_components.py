@@ -22,7 +22,7 @@ from guessit import fileutils
 import os.path
 import logging
 
-log = logging.getLogger("guessit.transfo.split_path_components")
+log = logging.getLogger(__name__)
 
 
 def process(mtree):

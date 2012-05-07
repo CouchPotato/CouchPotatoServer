@@ -1,0 +1,30 @@
+<html>
+	<head>
+		<link rel="stylesheet" href="{{ url_for('web.static', filename='style/main.css') }}" type="text/css">
+		<link rel="stylesheet" href="{{ url_for('web.static', filename='style/uniform.generic.css') }}" type="text/css">
+		<link rel="stylesheet" href="{{ url_for('web.static', filename='style/uniform.css') }}" type="text/css">
+		
+		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/library/mootools.js') }}"></script>
+
+		<script type="text/javascript">
+
+			window.addEvent('domready', function(){
+				if($('old_db'))
+					$('old_db').addEvent('change', function(){
+						$('form').submit();
+					});
+			});
+
+		</script>
+
+	</head>
+	<body>
+		{%  if message: %}
+			{{ message }}
+		{%  else: %}
+		<form id="form" method="post" enctype="multipart/form-data">
+			<input type="file" name="old_db" id="old_db" />
+		</form>
+		{%  endif %} 
+	</body>
+</html>

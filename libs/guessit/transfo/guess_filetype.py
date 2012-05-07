@@ -26,7 +26,7 @@ import re
 import mimetypes
 import logging
 
-log = logging.getLogger("guessit.transfo.guess_filetype")
+log = logging.getLogger(__name__)
 
 
 def guess_filetype(filename, filetype):

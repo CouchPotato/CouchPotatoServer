@@ -8,7 +8,7 @@ log = CPLog(__name__)
 
 class Prowl(Notification):
 
-    def notify(self, message = '', data = {}):
+    def notify(self, message = '', data = {}, listener = None):
         if self.isDisabled(): return
 
         http_handler = HTTPSConnection('api.prowlapp.com')

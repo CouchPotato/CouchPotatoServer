@@ -84,6 +84,10 @@ var CouchPotato = new Class({
 			'events': {
 				'click': self.checkForUpdate.bind(self)
 			}
+		}),
+		new Element('a', {
+			'text': 'Run install wizard',
+			'href': App.createUrl('wizard')
 		})].each(function(a){
 			self.block.more.addLink(a)
 		})

@@ -22,7 +22,7 @@ from guessit.transfo import found_property
 from guessit.patterns import non_episode_title, unlikely_series
 import logging
 
-log = logging.getLogger("guessit.transfo.guess_episode_info_from_position")
+log = logging.getLogger(__name__)
 
 
 def match_from_epnum_position(mtree, node):
@@ -112,6 +112,9 @@ def process(mtree):
         if len(title_candidates) >= 2:
             found_property(title_candidates[0], 'series', 0.4)
             found_property(title_candidates[1], 'title', 0.4)
+        elif len(title_candidates) == 1:
+            # but if there's only one candidate, it's probably the series name
+            found_property(title_candidates[0], 'series', 0.4)
 
     # if we only have 1 remaining valid group in the folder containing the
     # file, then it's likely that it is the series name

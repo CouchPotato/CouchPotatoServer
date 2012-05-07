@@ -3,6 +3,7 @@ from logging import handlers
 from os.path import dirname
 import logging
 import os
+import select
 import signal
 import socket
 import subprocess
@@ -120,6 +121,8 @@ if __name__ == '__main__':
         l.daemonize()
         l.run()
     except KeyboardInterrupt:
+        pass
+    except select.error:
         pass
     except SystemExit:
         raise

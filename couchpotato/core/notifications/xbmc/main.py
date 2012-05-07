@@ -10,7 +10,7 @@ class XBMC(Notification):
 
     listen_to = ['movie.downloaded']
 
-    def notify(self, message = '', data = {}):
+    def notify(self, message = '', data = {}, listener = None):
         if self.isDisabled(): return
 
         for host in [x.strip() for x in self.conf('host').split(",")]:

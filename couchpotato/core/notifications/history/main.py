@@ -12,7 +12,7 @@ class History(Notification):
 
     listen_to = ['movie.downloaded', 'movie.snatched', 'renamer.canceled']
 
-    def notify(self, message = '', data = {}):
+    def notify(self, message = '', data = {}, listener = None):
 
         db = get_session()
         history = Hist(
@@ -22,3 +22,6 @@ class History(Notification):
         )
         db.add(history)
         db.commit()
+        db.close()
+
+        return True

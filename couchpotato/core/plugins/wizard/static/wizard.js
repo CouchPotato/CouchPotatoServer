@@ -8,8 +8,28 @@ Page.Wizard = new Class({
 
 	headers: {
 		'welcome': {
-			'title': 'Welcome to CouchPotato',
-			'description': 'To get started, fill in each of the following settings as much as your can.'
+			'title': 'Welcome to the new CouchPotato',
+			'description': 'To get started, fill in each of the following settings as much as your can. <br />Maybe first start with importing your movies from the previous CouchPotato',
+			'content': new Element('div', {
+				'styles': {
+					'margin': '0 0 0 30px'
+				}
+			}).adopt(
+				new Element('div', {
+					'html': 'Select the <strong>data.db</strong>. It should be in your CouchPotato root directory.'
+				}),
+				self.import_iframe = new Element('iframe', {
+					'styles': {
+						'height': 40,
+						'width': 300,
+						'border': 0,
+						'overflow': 'hidden'
+					}
+				})
+			),
+			'event': function(){
+				self.import_iframe.set('src', Api.createUrl('v1.import'))
+			}
 		},
 		'general': {
 			'title': 'General',
@@ -105,7 +125,7 @@ Page.Wizard = new Class({
 						'text': self.headers[group].title
 					}),
 					self.headers[group].description ? new Element('span.description', {
-						'text': self.headers[group].description
+						'html': self.headers[group].description
 					}) : null,
 					self.headers[group].content ? self.headers[group].content : null
 				).inject(form);
@@ -132,6 +152,9 @@ Page.Wizard = new Class({
 					})
 				).inject(tabs);
 			}
+
+			if(self.headers[group] && self.headers[group].event)
+				self.headers[group].event.call()
 		});
 
 		// Remove toggle

@@ -6,7 +6,7 @@ from couchpotato.core.helpers.request import getParams, jsonified, getParam
 from couchpotato.core.helpers.variable import getImdb
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.core.settings.model import Movie, Library, LibraryTitle
+from couchpotato.core.settings.model import Library, LibraryTitle, Movie
 from couchpotato.environment import Env
 from sqlalchemy.orm import joinedload_all
 from sqlalchemy.sql.expression import or_, asc, not_
@@ -60,7 +60,7 @@ class MoviePlugin(Plugin):
         addApiView('movie.refresh', self.refresh, docs = {
             'desc': 'Refresh a movie by id',
             'params': {
-                'id': {'desc': 'The id of the movie that needs to be refreshed'},
+                'id': {'desc': 'Movie ID(s) you want to refresh.', 'type': 'int (comma separated)'},
             }
         })
         addApiView('movie.available_chars', self.charView)
@@ -109,10 +109,12 @@ class MoviePlugin(Plugin):
         db = get_session()
         m = db.query(Movie).filter_by(id = movie_id).first()
 
+        results = None
         if m:
-            return m.to_dict(self.default_dict)
+            results = m.to_dict(self.default_dict)
 
-        return None
+        db.close()
+        return results
 
     def list(self, status = ['active'], limit_offset = None, starts_with = None, search = None):
 
@@ -175,6 +177,7 @@ class MoviePlugin(Plugin):
             })
             movies.append(temp)
 
+        db.close()
         return movies
 
     def availableChars(self, status = ['active']):
@@ -200,6 +203,7 @@ class MoviePlugin(Plugin):
             if char not in chars:
                 chars += char
 
+        db.close()
         return chars
 
     def listView(self):
@@ -232,20 +236,21 @@ class MoviePlugin(Plugin):
 
     def refresh(self):
 
-        params = getParams()
         db = get_session()
 
-        movie = db.query(Movie).filter_by(id = params.get('id')).first()
+        for id in getParam('id').split(','):
+            movie = db.query(Movie).filter_by(id = id).first()
 
-        # Get current selected title
-        default_title = ''
-        for title in movie.library.titles:
-            if title.default: default_title = title.title
+            # Get current selected title
+            default_title = ''
+            for title in movie.library.titles:
+                if title.default: default_title = title.title
 
-        if movie:
-            fireEventAsync('library.update', identifier = movie.library.identifier, default_title = default_title, force = True)
-            fireEventAsync('searcher.single', movie.to_dict(self.default_dict))
+            if movie:
+                fireEventAsync('library.update', identifier = movie.library.identifier, default_title = default_title, force = True)
+                fireEventAsync('searcher.single', movie.to_dict(self.default_dict))
 
+        db.close()
         return jsonified({
             'success': True,
         })
@@ -270,7 +275,7 @@ class MoviePlugin(Plugin):
             'movies': movies,
         })
 
-    def add(self, params = {}, force_readd = True):
+    def add(self, params = {}, force_readd = True, search_after = True):
 
         library = fireEvent('library.add', single = True, attrs = params, update_after = False)
 
@@ -316,9 +321,10 @@ class MoviePlugin(Plugin):
 
         movie_dict = m.to_dict(self.default_dict)
 
-        if force_readd or do_search:
+        if (force_readd or do_search) and search_after:
             fireEventAsync('searcher.single', movie_dict)
 
+        db.close()
         return movie_dict
 
 
@@ -365,6 +371,7 @@ class MoviePlugin(Plugin):
             movie_dict = m.to_dict(self.default_dict)
             fireEventAsync('searcher.single', movie_dict)
 
+        db.close()
         return jsonified({
             'success': True,
         })
@@ -419,6 +426,7 @@ class MoviePlugin(Plugin):
                 else:
                     fireEvent('movie.restatus', movie.id, single = True)
 
+        db.close()
         return True
 
     def restatus(self, movie_id):
@@ -429,6 +437,9 @@ class MoviePlugin(Plugin):
         db = get_session()
 
         m = db.query(Movie).filter_by(id = movie_id).first()
+        if not m:
+            log.debug('Can\'t restatus movie, doesn\'t seem to exist.')
+            return False
 
         log.debug('Changing status for %s' % (m.library.titles[0].title))
         if not m.profile:
@@ -444,3 +455,6 @@ class MoviePlugin(Plugin):
             m.status_id = active_status.get('id') if move_to_wanted else done_status.get('id')
 
         db.commit()
+        db.close()
+
+        return True

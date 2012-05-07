@@ -22,7 +22,7 @@ from guessit.transfo import SingleNodeGuesser
 from guessit.patterns import websites
 import logging
 
-log = logging.getLogger("guessit.transfo.guess_website")
+log = logging.getLogger(__name__)
 
 
 def guess_website(string):

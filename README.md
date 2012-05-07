@@ -14,7 +14,7 @@ Windows:
 * Install [PyWin32 2.7](http://sourceforge.net/projects/pywin32/files/pywin32/Build%20217/) and [GIT](http://git-scm.com/)
 * If you come and ask on the forums 'why directory selection no work?', I will kill a kitten, also this is because you need PyWin32
 * Open up `Git Bash` (or CMD) and go to the folder you want to install CP. Something like Program Files.
-* Run `git clone https://RuudBurger@github.com/RuudBurger/CouchPotatoServer.git`.
+* Run `git clone https://github.com/RuudBurger/CouchPotatoServer.git`.
 * You can now start CP via `CouchPotatoServer\CouchPotato.py` to start
 
 OSx:
@@ -23,14 +23,14 @@ OSx:
 * Install [GIT](http://git-scm.com/)
 * Open up `Terminal`
 * Go to your App folder `cd /Applications`
-* Run `git clone https://RuudBurger@github.com/RuudBurger/CouchPotatoServer.git`
+* Run `git clone https://github.com/RuudBurger/CouchPotatoServer.git`
 * Then do `python CouchPotatoServer/CouchPotato.py`
 
 Linux (ubuntu / debian):
 
 * Install [GIT](http://git-scm.com/) with `apt-get install git-core`
 * 'cd' to the folder of your choosing.
-* Run `git clone https://RuudBurger@github.com/RuudBurger/CouchPotatoServer.git`
+* Run `git clone https://github.com/RuudBurger/CouchPotatoServer.git`
 * Then do `python CouchPotatoServer/CouchPotato.py` to start
 * To run on boot copy the init script. `cp CouchPotatoServer/init/ubuntu /etc/init.d/couchpotato`
 * Change the paths inside the init script. `nano /etc/init.d/couchpotato`

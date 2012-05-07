@@ -23,7 +23,7 @@ from guessit.patterns import canonical_form
 from guessit.textutils import clean_string
 import logging
 
-log = logging.getLogger('guessit.transfo')
+log = logging.getLogger(__name__)
 
 
 def found_property(node, name, confidence):

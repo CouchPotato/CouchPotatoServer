@@ -456,11 +456,13 @@
 				padding: 3px 7px;
 			}
 
+		.movies .alph_nav .mass_edit_form .refresh, 
 		.movies .alph_nav .mass_edit_form .delete {
 			float: left;
 			padding: 8px 0 0 8px;
 		}
 
+			.movies .alph_nav .mass_edit_form .refresh span,
 			.movies .alph_nav .mass_edit_form .delete span {
 				margin: 0 10px 0 0;
 			}
