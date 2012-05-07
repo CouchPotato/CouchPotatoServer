@@ -16,8 +16,6 @@ class Growl(Notification):
     def __init__(self):
         super(Growl, self).__init__()
 
-        logging.getLogger('gntp').setLevel(logging.WARNING)
-
         if self.isEnabled():
             self.register()
 

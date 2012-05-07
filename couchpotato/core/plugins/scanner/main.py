@@ -16,9 +16,6 @@ import re
 import time
 import traceback
 
-enzyme_logger = logging.getLogger('enzyme')
-enzyme_logger.setLevel(logging.INFO)
-
 log = CPLog(__name__)
 
 
@@ -96,10 +93,6 @@ class Scanner(Plugin):
             return self.scanFilesToLibrary(self, folder = group['destination_dir'], files = group['renamed_files'])
 
         addEvent('rename.after', after_rename)
-
-        # Disable lib logging
-        logging.getLogger('guessit').setLevel(logging.ERROR)
-        logging.getLogger('subliminal').setLevel(logging.ERROR)
 
     def scanFilesToLibrary(self, folder = None, files = None):
 

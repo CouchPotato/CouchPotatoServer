@@ -116,11 +116,15 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     if not development:
         atexit.register(cleanup)
 
+    # Disable logging for some modules
+    for logger_name in ['enzyme', 'guessit', 'subliminal', 'apscheduler']:
+        logging.getLogger(logger_name).setLevel(logging.ERROR)
+
+    for logger_name in ['gntp', 'werkzeug', 'migrate']:
+        logging.getLogger(logger_name).setLevel(logging.WARNING)
+
     # Use reloader
     reloader = debug is True and development and not Env.get('desktop') and not options.daemon
-
-    # Disable server access log
-    logging.getLogger('werkzeug').setLevel(logging.WARNING)
 
     # Only run once when debugging
     fire_load = False
@@ -168,7 +172,6 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
 
             from migrate.versioning.api import version_control, db_version, version, upgrade
             repo = os.path.join(base_path, 'couchpotato', 'core', 'migration')
-            logging.getLogger('migrate').setLevel(logging.WARNING) # Disable logging for migration
 
             latest_db_version = version(repo)
             try:

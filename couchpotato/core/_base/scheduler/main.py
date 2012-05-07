@@ -15,8 +15,6 @@ class Scheduler(Plugin):
 
     def __init__(self):
 
-        logging.getLogger('apscheduler').setLevel(logging.ERROR)
-
         addEvent('schedule.cron', self.cron)
         addEvent('schedule.interval', self.interval)
         addEvent('schedule.start', self.start)
