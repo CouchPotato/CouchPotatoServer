@@ -45,7 +45,7 @@ class Renamer(Plugin):
             return
 
         if self.renaming_started is True:
-            log.error('Renamer is disabled to avoid infinite looping of the same error.')
+            log.info('Renamer is disabled to avoid infinite looping of the same error.')
             return
 
         # Check to see if the "to" folder is inside the "from" folder.
