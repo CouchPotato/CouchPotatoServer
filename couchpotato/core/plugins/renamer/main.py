@@ -322,8 +322,6 @@ class Renamer(Plugin):
                 elif not remove_leftovers: # Don't remove anything
                     remove_files = []
 
-            continue
-
             # Rename all files marked
             group['renamed_files'] = []
             for src in rename_files:
