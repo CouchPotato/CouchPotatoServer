@@ -45,7 +45,7 @@ class Renamer(Plugin):
             return
 
         if self.renaming_started is True:
-            log.error('Renamer is disabled to avoid infinite looping of the same error.')
+            log.info('Renamer is disabled to avoid infinite looping of the same error.')
             return
 
         # Check to see if the "to" folder is inside the "from" folder.
@@ -321,8 +321,6 @@ class Renamer(Plugin):
                         remove_files.append(current_file)
                 elif not remove_leftovers: # Don't remove anything
                     remove_files = []
-
-            continue
 
             # Rename all files marked
             group['renamed_files'] = []
