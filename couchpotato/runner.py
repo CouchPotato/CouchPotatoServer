@@ -28,8 +28,6 @@ def getOptions(base_path, args):
                         dest = 'console_log', help = "Log to console")
     parser.add_argument('--quiet', action = 'store_true',
                         dest = 'quiet', help = 'No console logging')
-    parser.add_argument('--nogit', action = 'store_true',
-                        dest = 'nogit', help = 'No git available')
     parser.add_argument('--daemon', action = 'store_true',
                         dest = 'daemon', help = 'Daemonize the app')
     parser.add_argument('--pid_file', default = os.path.join(data_dir, 'couchpotato.pid'),
@@ -93,7 +91,6 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
 
     # Register environment settings
     Env.set('encoding', encoding)
-    Env.set('uses_git', not options.nogit)
     Env.set('app_dir', base_path)
     Env.set('data_dir', data_dir)
     Env.set('log_path', os.path.join(log_dir, 'CouchPotato.log'))
@@ -132,7 +129,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
 
         # Logger
         logger = logging.getLogger()
-        formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s', '%H:%M:%S')
+        formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s', '%m-%d %H:%M:%S')
         level = logging.DEBUG if debug else logging.INFO
         logger.setLevel(level)
 

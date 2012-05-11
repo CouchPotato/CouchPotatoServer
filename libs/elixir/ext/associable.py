@@ -222,12 +222,12 @@ def associable(assoc_entity, plural_name=None, lazy=True):
 
             # add helper methods
             def select_by(cls, **kwargs):
-                return cls.query.join([attr_name, 'targets']) \
+                return cls.query.join(attr_name, 'targets') \
                                 .filter_by(**kwargs).all()
             setattr(entity, 'select_by_%s' % self.name, classmethod(select_by))
 
             def select(cls, *args, **kwargs):
-                return cls.query.join([attr_name, 'targets']) \
+                return cls.query.join(attr_name, 'targets') \
                                 .filter(*args, **kwargs).all()
             setattr(entity, 'select_%s' % self.name, classmethod(select))
 

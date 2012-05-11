@@ -4,8 +4,6 @@ Default entity collection implementation
 import sys
 import re
 
-from elixir.py23compat import rsplit
-
 class BaseCollection(list):
     def __init__(self, entities=None):
         list.__init__(self)
@@ -24,7 +22,7 @@ class BaseCollection(list):
             root = entity._descriptor.resolve_root
         if root:
             full_path = '%s.%s' % (root, full_path)
-        module_path, classname = rsplit(full_path, '.', 1)
+        module_path, classname = full_path.rsplit('.', 1)
         module = sys.modules[module_path]
         res = getattr(module, classname, None)
         if res is None:

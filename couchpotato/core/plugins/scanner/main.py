@@ -8,7 +8,7 @@ from couchpotato.core.settings.model import File
 from couchpotato.environment import Env
 from enzyme.exceptions import NoParserError, ParseError
 from guessit import guess_movie_info
-from subliminal.videos import scan, Video
+from subliminal.videos import Video
 import enzyme
 import os
 import re
@@ -455,7 +455,7 @@ class Scanner(Plugin):
                     break
                 except:
                     pass
-            db.close()
+            #db.close()
 
         # Search based on OpenSubtitleHash
         if not imdb_id and not group['is_dvd']:

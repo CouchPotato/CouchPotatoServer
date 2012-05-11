@@ -47,7 +47,7 @@ class ProfilePlugin(Plugin):
         for profile in profiles:
             temp.append(profile.to_dict(self.to_dict))
 
-        db.close()
+        #db.close()
         return temp
 
     def save(self):
@@ -84,7 +84,7 @@ class ProfilePlugin(Plugin):
 
         profile_dict = p.to_dict(self.to_dict)
 
-        db.close()
+        #db.close()
         return jsonified({
             'success': True,
             'profile': profile_dict
@@ -95,7 +95,7 @@ class ProfilePlugin(Plugin):
         db = get_session()
         default = db.query(Profile).first()
         default_dict = default.to_dict(self.to_dict)
-        db.close()
+        #db.close()
 
         return default_dict
 
@@ -113,7 +113,7 @@ class ProfilePlugin(Plugin):
             order += 1
 
         db.commit()
-        db.close()
+        #db.close()
 
         return jsonified({
             'success': True
@@ -138,7 +138,7 @@ class ProfilePlugin(Plugin):
             message = 'Failed deleting Profile: %s' % e
             log.error(message)
 
-        db.close()
+        #db.close()
 
         return jsonified({
             'success': success,
@@ -187,5 +187,5 @@ class ProfilePlugin(Plugin):
 
             order += 1
 
-        db.close()
+        #db.close()
         return True

@@ -3,7 +3,7 @@ from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.request import jsonified
-from couchpotato.core.helpers.variable import getExt, mergeDicts
+from couchpotato.core.helpers.variable import getExt, mergeDicts, getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Library, File, Profile
@@ -82,8 +82,10 @@ class Renamer(Plugin):
             remove_files = []
             remove_releases = []
 
+            movie_title = getTitle(group['library'])
+
             # Add _UNKNOWN_ if no library item is connected
-            if not group['library']:
+            if not group['library'] or not movie_title:
                 if group['dirname']:
                     rename_files[group['parentdir']] = group['parentdir'].replace(group['dirname'], '_UNKNOWN_%s' % group['dirname'])
                 else: # Add it to filename
@@ -100,12 +102,13 @@ class Renamer(Plugin):
                     continue
 
                 library = group['library']
+                movie_title = getTitle(library)
 
                 # Find subtitle for renaming
                 fireEvent('renamer.before', group)
 
                 # Remove weird chars from moviename
-                movie_name = re.sub(r"[\x00\/\\:\*\?\"<>\|]", '', group['library']['titles'][0]['title'])
+                movie_name = re.sub(r"[\x00\/\\:\*\?\"<>\|]", '', movie_title)
 
                 # Put 'The' at the end
                 name_the = movie_name
@@ -369,14 +372,14 @@ class Renamer(Plugin):
             fireEventAsync('renamer.after', group)
 
             # Notify on download
-            download_message = 'Downloaded %s (%s)' % (group['library']['titles'][0]['title'], replacements['quality'])
+            download_message = 'Downloaded %s (%s)' % (movie_title, replacements['quality'])
             fireEventAsync('movie.downloaded', message = download_message, data = group)
 
             # Break if CP wants to shut down
             if self.shuttingDown():
                 break
 
-        db.close()
+        #db.close()
         self.renaming_started = False
 
     def getRenameExtras(self, extra_type = '', replacements = {}, folder_name = '', file_name = '', destination = '', group = {}, current_file = ''):

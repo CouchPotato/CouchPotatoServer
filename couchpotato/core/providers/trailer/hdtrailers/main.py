@@ -1,6 +1,6 @@
 from BeautifulSoup import SoupStrainer, BeautifulSoup
 from couchpotato.core.helpers.encoding import tryUrlencode
-from couchpotato.core.helpers.variable import mergeDicts
+from couchpotato.core.helpers.variable import mergeDicts, getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.trailer.base import TrailerProvider
 from string import letters, digits
@@ -19,7 +19,7 @@ class HDTrailers(TrailerProvider):
 
     def search(self, group):
 
-        movie_name = group['library']['titles'][0]['title']
+        movie_name = getTitle(group['library'])
 
         url = self.urls['api'] % self.movieUrlName(movie_name)
         data = self.getCache('hdtrailers.%s' % group['library']['identifier'], url)
@@ -44,7 +44,7 @@ class HDTrailers(TrailerProvider):
     def findViaAlternative(self, group):
         results = {'480p':[], '720p':[], '1080p':[]}
 
-        movie_name = group['library']['titles'][0]['title']
+        movie_name = getTitle(group['library'])
 
         url = "%s?%s" % (self.url['backup'], tryUrlencode({'s':movie_name}))
         data = self.getCache('hdtrailers.alt.%s' % group['library']['identifier'], url)

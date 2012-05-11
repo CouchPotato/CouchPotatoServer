@@ -49,7 +49,7 @@ class StatusPlugin(Plugin):
         db = get_session()
         status = db.query(Status).filter_by(id = id).first()
         status_dict = status.to_dict()
-        db.close()
+        #db.close()
 
         return status_dict
 
@@ -64,7 +64,7 @@ class StatusPlugin(Plugin):
             s = status.to_dict()
             temp.append(s)
 
-        db.close()
+        #db.close()
         return temp
 
     def add(self, identifier):
@@ -82,7 +82,7 @@ class StatusPlugin(Plugin):
 
         status_dict = s.to_dict()
 
-        db.close()
+        #db.close()
         return status_dict
 
     def fill(self):
@@ -102,5 +102,5 @@ class StatusPlugin(Plugin):
             s.label = toUnicode(label)
             db.commit()
 
-        db.close()
+        #db.close()
 

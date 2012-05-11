@@ -1,4 +1,5 @@
 from couchpotato.core.helpers.encoding import toUnicode
+from couchpotato.core.helpers.variable import getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.metadata.base import MetaDataBase
 from xml.etree.ElementTree import Element, SubElement, tostring
@@ -32,7 +33,7 @@ class XBMC(MetaDataBase):
         # Title
         try:
             el = SubElement(nfoxml, 'title')
-            el.text = toUnicode(data['library']['titles'][0]['title'])
+            el.text = toUnicode(getTitle(data['library']))
         except:
             pass
 

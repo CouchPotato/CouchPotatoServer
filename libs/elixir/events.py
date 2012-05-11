@@ -1,3 +1,5 @@
+from sqlalchemy.orm import reconstructor
+
 __all__ = [
     'before_insert',
     'after_insert',
@@ -22,9 +24,4 @@ before_update = create_decorator('before_update')
 after_update = create_decorator('after_update')
 before_delete = create_decorator('before_delete')
 after_delete = create_decorator('after_delete')
-try:
-    from sqlalchemy.orm import reconstructor
-except ImportError:
-    def reconstructor(func):
-        raise Exception('The reconstructor method decorator is only '
-                        'available with SQLAlchemy 0.5 and later')
+
