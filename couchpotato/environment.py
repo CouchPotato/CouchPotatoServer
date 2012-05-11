@@ -65,7 +65,7 @@ class Env(object):
 
     @staticmethod
     def getEngine():
-        return create_engine(Env.get('db_path'), echo = False)
+        return create_engine(Env.get('db_path'), echo = False, pool_recycle = 30)
 
     @staticmethod
     def setting(attr, section = 'core', value = None, default = '', type = None):

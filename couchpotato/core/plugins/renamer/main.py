@@ -378,7 +378,7 @@ class Renamer(Plugin):
             if self.shuttingDown():
                 break
 
-        db.close()
+        #db.close()
         self.renaming_started = False
 
     def getRenameExtras(self, extra_type = '', replacements = {}, folder_name = '', file_name = '', destination = '', group = {}, current_file = ''):

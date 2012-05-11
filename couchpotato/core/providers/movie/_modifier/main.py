@@ -63,7 +63,7 @@ class MovieResultModifier(Plugin):
         except:
             log.error('Tried getting more info on searched movies: %s' % traceback.format_exc())
 
-        db.close()
+        #db.close()
         return temp
 
     def checkLibrary(self, result):

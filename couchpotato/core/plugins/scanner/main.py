@@ -455,7 +455,7 @@ class Scanner(Plugin):
                     break
                 except:
                     pass
-            db.close()
+            #db.close()
 
         # Search based on OpenSubtitleHash
         if not imdb_id and not group['is_dvd']:
