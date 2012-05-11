@@ -12,7 +12,6 @@ class Env(object):
 
     ''' Environment variables '''
     _encoding = ''
-    _uses_git = False
     _debug = False
     _dev = False
     _settings = Settings()
