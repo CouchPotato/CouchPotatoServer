@@ -1,7 +1,7 @@
 from BeautifulSoup import BeautifulSoup
 from couchpotato.core.event import fireEvent
 from couchpotato.core.helpers.encoding import toUnicode, tryUrlencode
-from couchpotato.core.helpers.variable import tryInt
+from couchpotato.core.helpers.variable import tryInt, getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.nzb.base import NZBProvider
 from couchpotato.environment import Env
@@ -25,7 +25,7 @@ class Mysterbin(NZBProvider):
         if self.isDisabled() or not self.isAvailable(self.urls['search']):
             return results
 
-        q = '"%s" %s %s' % (movie['library']['titles'][0]['title'], movie['library']['year'], quality.get('identifier'))
+        q = '"%s" %s %s' % (getTitle(movie['library']), movie['library']['year'], quality.get('identifier'))
         for ignored in Env.setting('ignored_words', 'searcher').split(','):
             q = '%s -%s' % (q, ignored.strip())
 

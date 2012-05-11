@@ -2,7 +2,7 @@ from BeautifulSoup import BeautifulSoup
 from couchpotato.core.event import fireEvent
 from couchpotato.core.helpers.encoding import toUnicode, tryUrlencode
 from couchpotato.core.helpers.rss import RSS
-from couchpotato.core.helpers.variable import tryInt
+from couchpotato.core.helpers.variable import tryInt, getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.nzb.base import NZBProvider
 from couchpotato.environment import Env
@@ -29,7 +29,7 @@ class NzbIndex(NZBProvider, RSS):
         if self.isDisabled() or not self.isAvailable(self.urls['api']):
             return results
 
-        q = '%s %s %s' % (movie['library']['titles'][0]['title'], movie['library']['year'], quality.get('identifier'))
+        q = '%s %s %s' % (getTitle(movie['library']), movie['library']['year'], quality.get('identifier'))
         arguments = tryUrlencode({
             'q': q,
             'age': Env.setting('retention', 'nzb'),

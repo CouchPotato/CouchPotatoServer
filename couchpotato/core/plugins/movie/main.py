@@ -437,7 +437,7 @@ class MoviePlugin(Plugin):
         db = get_session()
 
         m = db.query(Movie).filter_by(id = movie_id).first()
-        if not m:
+        if not m or len(m.library.titles) == 0:
             log.debug('Can\'t restatus movie, doesn\'t seem to exist.')
             return False
 
