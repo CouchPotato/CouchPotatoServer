@@ -64,8 +64,12 @@ class IMDBAPI(MovieProvider):
         movie_data = {}
         try:
 
-            if isinstance(movie, (str, unicode)):
-                movie = json.loads(movie)
+            try:
+                if isinstance(movie, (str, unicode)):
+                    movie = json.loads(movie)
+            except ValueError:
+                log.info('No proper json to decode')
+                return movie_data
 
             if movie.get('Response') == 'Parse Error':
                 return movie_data
