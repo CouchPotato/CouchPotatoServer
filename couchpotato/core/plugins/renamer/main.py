@@ -102,6 +102,7 @@ class Renamer(Plugin):
                     continue
 
                 library = group['library']
+                movie_title = getTitle(library)
 
                 # Find subtitle for renaming
                 fireEvent('renamer.before', group)
