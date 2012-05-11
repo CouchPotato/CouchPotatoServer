@@ -129,7 +129,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
 
         # Logger
         logger = logging.getLogger()
-        formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s', '%H:%M:%S')
+        formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s', '%m-%d %H:%M:%S')
         level = logging.DEBUG if debug else logging.INFO
         logger.setLevel(level)
 
