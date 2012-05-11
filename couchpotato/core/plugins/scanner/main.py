@@ -8,7 +8,7 @@ from couchpotato.core.settings.model import File
 from couchpotato.environment import Env
 from enzyme.exceptions import NoParserError, ParseError
 from guessit import guess_movie_info
-from subliminal.videos import scan, Video
+from subliminal.videos import Video
 import enzyme
 import os
 import re

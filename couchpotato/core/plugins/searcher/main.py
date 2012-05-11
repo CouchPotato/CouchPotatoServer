@@ -101,6 +101,10 @@ class Searcher(Plugin):
                 if len(sorted_results) == 0:
                     log.debug('Nothing found for %s in %s' % (default_title, quality_type['quality']['label']))
 
+                # Check if movie isn't deleted while searching
+                if not db.query(Movie).filter_by(id = movie.get('id')).first():
+                    return
+
                 # Add them to this movie releases list
                 for nzb in sorted_results:
 
