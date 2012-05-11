@@ -69,13 +69,7 @@ class TheMovieDb(MovieProvider):
                 try:
                     nr = 0
 
-                    # Sort on returned score first when year is in q
-                    if re.search('\s\d{4}', q):
-                        movies = sorted(raw, key = lambda k: k['score'], reverse = True)
-                    else:
-                        movies = raw
-
-                    for movie in movies:
+                    for movie in raw:
                         results.append(self.parseMovie(movie))
 
                         nr += 1
