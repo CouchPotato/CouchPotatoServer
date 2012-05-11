@@ -3,8 +3,6 @@ This module provides the ``Entity`` base class, as well as its metaclass
 ``EntityMeta``.
 '''
 
-from py23compat import sorted
-
 import sys
 import types
 import warnings
@@ -25,11 +23,6 @@ from elixir import options
 from elixir.properties import Property
 
 DEBUG = False
-try:
-    from sqlalchemy.orm import EXT_PASS
-    SA05orlater = False
-except ImportError:
-    SA05orlater = True
 
 __doc_all__ = ['Entity', 'EntityMeta']
 
@@ -205,6 +198,7 @@ class EntityDescriptor(object):
                     parent_desc = self.parent._descriptor
                     tablename = parent_desc.table_fullname
                     join_clauses = []
+                    fk_columns = []
                     for pk_col in parent_desc.primary_keys:
                         colname = options.MULTIINHERITANCECOL_NAMEFORMAT % \
                                   {'entity': self.parent.__name__.lower(),
@@ -214,12 +208,14 @@ class EntityDescriptor(object):
                         # a real column object when said column is not yet
                         # attached to a table
                         pk_col_name = "%s.%s" % (tablename, pk_col.key)
-                        fk = ForeignKey(pk_col_name, ondelete='cascade')
-                        col = Column(colname, pk_col.type, fk,
-                                     primary_key=True)
+                        col = Column(colname, pk_col.type, primary_key=True)
+                        fk_columns.append(col)
                         self.add_column(col)
                         join_clauses.append(col == pk_col)
                     self.join_condition = and_(*join_clauses)
+                    self.add_constraint(
+                        ForeignKeyConstraint(fk_columns,
+                            parent_desc.primary_keys, ondelete='CASCADE'))
                 elif self.inheritance == 'concrete':
                     # Copy primary key columns from the parent.
                     for col in self.parent._descriptor.columns:
@@ -286,7 +282,7 @@ class EntityDescriptor(object):
                         self.add_constraint(
                             ForeignKeyConstraint(
                                 [e.parent.key for e in con.elements],
-                                [e._get_colspec() for e in con.elements],
+                                [e.target_fullname for e in con.elements],
                                 name=con.name, #TODO: modify it
                                 onupdate=con.onupdate, ondelete=con.ondelete,
                                 use_alter=con.use_alter))
@@ -370,6 +366,11 @@ class EntityDescriptor(object):
 
         order = []
         for colname in order_by:
+            #FIXME: get_column uses self.columns[key] instead of property
+            # names. self.columns correspond to the columns of the table if
+            # the table was already created and to self._columns otherwise,
+            # which is a ColumnCollection indexed on columns.key
+            # See ticket #108.
             col = self.get_column(colname.strip('-'))
             if colname.startswith('-'):
                 col = desc(col)
@@ -493,17 +494,13 @@ class EntityDescriptor(object):
                                 (col.key, self.entity.__name__))
             else:
                 del self._columns[col.key]
+        # are indexed on col.key
         self._columns.add(col)
 
         if col.primary_key:
             self.has_pk = True
 
-        # Autosetup triggers shouldn't be active anymore at this point, so we
-        # can theoretically access the entity's table safely. But the problem
-        # is that if, for some reason, the trigger removal phase didn't
-        # happen, we'll get an infinite loop. So we just make sure we don't
-        # get one in any case.
-        table = type.__getattribute__(self.entity, 'table')
+        table = self.entity.table
         if table is not None:
             if check_duplicate and col.key in table.columns.keys():
                 raise Exception("Column '%s' already exist in table '%s' ! " %
@@ -595,6 +592,7 @@ class EntityDescriptor(object):
     #------------------------
     # some useful properties
 
+    @property
     def table_fullname(self):
         '''
         Complete name of the table for the related entity.
@@ -605,8 +603,8 @@ class EntityDescriptor(object):
             return "%s.%s" % (schema, self.tablename)
         else:
             return self.tablename
-    table_fullname = property(table_fullname)
 
+    @property
     def columns(self):
         if self.entity.table is not None:
             return self.entity.table.columns
@@ -615,8 +613,8 @@ class EntityDescriptor(object):
             # return the parent entity's columns (for example for order_by
             # using a column defined in the parent.
             return self._columns
-    columns = property(columns)
 
+    @property
     def primary_keys(self):
         """
         Returns the list of primary key columns of the entity.
@@ -630,15 +628,15 @@ class EntityDescriptor(object):
                 return self.parent._descriptor.primary_keys
             else:
                 return [col for col in self.columns if col.primary_key]
-    primary_keys = property(primary_keys)
 
+    @property
     def table(self):
         if self.entity.table is not None:
             return self.entity.table
         else:
             return FakeTable(self)
-    table = property(table)
 
+    @property
     def primary_key_properties(self):
         """
         Returns the list of (mapper) properties corresponding to the primary
@@ -653,30 +651,32 @@ class EntityDescriptor(object):
             for prop in mapper.iterate_properties:
                 if isinstance(prop, ColumnProperty):
                     for col in prop.columns:
+                        #XXX: Why is this extra loop necessary? What is this
+                        #     "proxy_set" supposed to mean?
                         for col in col.proxy_set:
                             col_to_prop[col] = prop
             pk_cols = [c for c in mapper.mapped_table.c if c.primary_key]
             self._pk_props = [col_to_prop[c] for c in pk_cols]
         return self._pk_props
-    primary_key_properties = property(primary_key_properties)
 
 class FakePK(object):
     def __init__(self, descriptor):
         self.descriptor = descriptor
 
+    @property
     def columns(self):
         return self.descriptor.primary_keys
-    columns = property(columns)
 
 class FakeTable(object):
     def __init__(self, descriptor):
         self.descriptor = descriptor
         self.primary_key = FakePK(descriptor)
 
+    @property
     def columns(self):
         return self.descriptor.columns
-    columns = property(columns)
 
+    @property
     def fullname(self):
         '''
         Complete name of the table for the related entity.
@@ -687,45 +687,7 @@ class FakeTable(object):
             return "%s.%s" % (schema, self.descriptor.tablename)
         else:
             return self.descriptor.tablename
-    fullname = property(fullname)
 
-
-class TriggerProxy(object):
-    """
-    A class that serves as a "trigger" ; accessing its attributes runs
-    the setup_all function.
-
-    Note that the `setup_all` is called on each access of the attribute.
-    """
-
-    def __init__(self, class_, attrname):
-        self.class_ = class_
-        self.attrname = attrname
-
-    def __getattr__(self, name):
-        elixir.setup_all()
-        #FIXME: it's possible to get an infinite loop here if setup_all doesn't
-        #remove the triggers for this entity. This can happen if the entity is
-        #not in the `entities` list for some reason.
-        proxied_attr = getattr(self.class_, self.attrname)
-        return getattr(proxied_attr, name)
-
-    def __repr__(self):
-        proxied_attr = getattr(self.class_, self.attrname)
-        return "<TriggerProxy (%s)>" % (self.class_.__name__)
-
-
-class TriggerAttribute(object):
-
-    def __init__(self, attrname):
-        self.attrname = attrname
-
-    def __get__(self, instance, owner):
-        #FIXME: it's possible to get an infinite loop here if setup_all doesn't
-        #remove the triggers for this entity. This can happen if the entity is
-        #not in the `entities` list for some reason.
-        elixir.setup_all()
-        return getattr(owner, self.attrname)
 
 def is_entity(cls):
     """
@@ -805,13 +767,6 @@ def instrument_class(cls):
     # setup misc options here (like tablename etc.)
     desc.setup_options()
 
-    # create trigger proxies
-    # TODO: support entity_name... It makes sense only for autoloaded
-    # tables for now, and would make more sense if we support "external"
-    # tables
-    if desc.autosetup:
-        _install_autosetup_triggers(cls)
-
 
 class EntityMeta(type):
     """
@@ -822,11 +777,6 @@ class EntityMeta(type):
 
     def __init__(cls, name, bases, dict_):
         instrument_class(cls)
-
-    def __call__(cls, *args, **kwargs):
-        if cls._descriptor.autosetup and not hasattr(cls, '_setup_done'):
-            elixir.setup_all()
-        return type.__call__(cls, *args, **kwargs)
 
     def __setattr__(cls, key, value):
         if isinstance(value, Property):
@@ -839,84 +789,6 @@ class EntityMeta(type):
             type.__setattr__(cls, key, value)
 
 
-def _install_autosetup_triggers(cls, entity_name=None):
-    #TODO: move as much as possible of those "_private" values to the
-    # descriptor, so that we don't mess the initial class.
-    warnings.warn("The 'autosetup' option on entities is deprecated. "
-        "Please call setup_all() manually after all your entities have been "
-        "declared.", DeprecationWarning, stacklevel=4)
-    tablename = cls._descriptor.tablename
-    schema = cls._descriptor.table_options.get('schema', None)
-    cls._table_key = sqlalchemy.schema._get_table_key(tablename, schema)
-
-    table_proxy = TriggerProxy(cls, 'table')
-
-    md = cls._descriptor.metadata
-    md.tables[cls._table_key] = table_proxy
-
-    # We need to monkeypatch the metadata's table iterator method because
-    # otherwise it doesn't work if the setup is triggered by the
-    # metadata.create_all().
-    # This is because ManyToMany relationships add tables AFTER the list
-    # of tables that are going to be created is "computed"
-    # (metadata.tables.values()).
-    # see:
-    # - table_iterator method in MetaData class in sqlalchemy/schema.py
-    # - visit_metadata method in sqlalchemy/ansisql.py
-    if SA05orlater:
-        warnings.warn(
-            "The automatic setup via metadata.create_all() through "
-            "the autosetup option doesn't work with SQLAlchemy 0.5 and later!")
-    else:
-        # SA 0.6 does not use table_iterator anymore (it was already deprecated
-        # since SA 0.5.0)
-        original_table_iterator = md.table_iterator
-        if not hasattr(original_table_iterator,
-                       '_non_elixir_patched_iterator'):
-            def table_iterator(*args, **kwargs):
-                elixir.setup_all()
-                return original_table_iterator(*args, **kwargs)
-            table_iterator.__doc__ = original_table_iterator.__doc__
-            table_iterator._non_elixir_patched_iterator = \
-                original_table_iterator
-            md.table_iterator = table_iterator
-
-    #TODO: we might want to add all columns that will be available as
-    #attributes on the class itself (in SA 0.4+). This is a pretty
-    #rare usecase, as people will normally hit the query attribute before the
-    #column attributes, but I've seen people hitting this problem...
-    for name in ('c', 'table', 'mapper', 'query'):
-        setattr(cls, name, TriggerAttribute(name))
-
-    cls._has_triggers = True
-
-
-def _cleanup_autosetup_triggers(cls):
-    if not hasattr(cls, '_has_triggers'):
-        return
-
-    for name in ('table', 'mapper'):
-        setattr(cls, name, None)
-
-    for name in ('c', 'query'):
-        delattr(cls, name)
-
-    desc = cls._descriptor
-    md = desc.metadata
-
-    # the fake table could have already been removed (namely in a
-    # single table inheritance scenario)
-    md.tables.pop(cls._table_key, None)
-
-    # restore original table iterator if not done already
-    if not SA05orlater:
-        if hasattr(md.table_iterator, '_non_elixir_patched_iterator'):
-            md.table_iterator = \
-                md.table_iterator._non_elixir_patched_iterator
-
-    del cls._has_triggers
-
-
 def setup_entities(entities):
     '''Setup all entities in the list passed as argument'''
 
@@ -927,9 +799,6 @@ def setup_entities(entities):
         for name, attr in entity.__dict__.items():
             if isinstance(attr, Property):
                 delattr(entity, name)
-
-        if entity._descriptor.autosetup:
-            _cleanup_autosetup_triggers(entity)
 
     for method_name in (
             'setup_autoload_table', 'create_pk_cols', 'setup_relkeys',
@@ -955,8 +824,7 @@ def setup_entities(entities):
 def cleanup_entities(entities):
     """
     Try to revert back the list of entities passed as argument to the state
-    they had just before their setup phase. It will not work entirely for
-    autosetup entities as we need to remove the autosetup triggers.
+    they had just before their setup phase.
 
     As of now, this function is *not* functional in that it doesn't revert to
     the exact same state the entities were before setup. For example, the
@@ -968,8 +836,6 @@ def cleanup_entities(entities):
     """
     for entity in entities:
         desc = entity._descriptor
-        if desc.autosetup:
-            _cleanup_autosetup_triggers(entity)
 
         if hasattr(entity, '_setup_done'):
             del entity._setup_done
@@ -1007,6 +873,7 @@ class EntityBase(object):
         for key, value in kwargs.iteritems():
             setattr(self, key, value)
 
+    @classmethod
     def update_or_create(cls, data, surrogate=True):
         pk_props = cls._descriptor.primary_key_properties
 
@@ -1016,17 +883,16 @@ class EntityBase(object):
             record = cls.query.get(pk_tuple)
             if record is None:
                 if surrogate:
-                    raise Exception("cannot create surrogate with pk")
+                    raise Exception("Cannot create surrogate with pk")
                 else:
                     record = cls()
         else:
             if surrogate:
                 record = cls()
             else:
-                raise Exception("cannot create non surrogate without pk")
+                raise Exception("Cannot create non surrogate without pk")
         record.from_dict(data)
         return record
-    update_or_create = classmethod(update_or_create)
 
     def from_dict(self, data):
         """
@@ -1105,10 +971,11 @@ class EntityBase(object):
 
     # This bunch of session methods, along with all the query methods below
     # only make sense when using a global/scoped/contextual session.
+    @property
     def _global_session(self):
         return self._descriptor.session.registry()
-    _global_session = property(_global_session)
 
+    #FIXME: remove all deprecated methods, possibly all of these
     def merge(self, *args, **kwargs):
         return self._global_session.merge(self, *args, **kwargs)
 
@@ -1126,6 +993,7 @@ class EntityBase(object):
         return self._global_session.save_or_update(self, *args, **kwargs)
 
     # query methods
+    @classmethod
     def get_by(cls, *args, **kwargs):
         """
         Returns the first instance of this class matching the given criteria.
@@ -1133,8 +1001,8 @@ class EntityBase(object):
         session.query(MyClass).filter_by(...).first()
         """
         return cls.query.filter_by(*args, **kwargs).first()
-    get_by = classmethod(get_by)
 
+    @classmethod
     def get(cls, *args, **kwargs):
         """
         Return the instance of this class based on the given identifier,
@@ -1142,7 +1010,6 @@ class EntityBase(object):
         session.query(MyClass).get(...)
         """
         return cls.query.get(*args, **kwargs)
-    get = classmethod(get)
 
 
 class Entity(EntityBase):
