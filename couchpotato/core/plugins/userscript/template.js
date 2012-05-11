@@ -12,6 +12,9 @@
 
 // ==/UserScript==
 
+if (window.top != window.self)  // Only run on top window
+    return;
+
 var version = {{version}},
     host = '{{host}}',
     api = '{{api}}';
