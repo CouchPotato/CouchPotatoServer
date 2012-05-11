@@ -113,7 +113,7 @@ class MoviePlugin(Plugin):
         if m:
             results = m.to_dict(self.default_dict)
 
-        db.close()
+        #db.close()
         return results
 
     def list(self, status = ['active'], limit_offset = None, starts_with = None, search = None):
@@ -177,7 +177,7 @@ class MoviePlugin(Plugin):
             })
             movies.append(temp)
 
-        db.close()
+        #db.close()
         return movies
 
     def availableChars(self, status = ['active']):
@@ -203,7 +203,7 @@ class MoviePlugin(Plugin):
             if char not in chars:
                 chars += char
 
-        db.close()
+        #db.close()
         return chars
 
     def listView(self):
@@ -250,7 +250,7 @@ class MoviePlugin(Plugin):
                 fireEventAsync('library.update', identifier = movie.library.identifier, default_title = default_title, force = True)
                 fireEventAsync('searcher.single', movie.to_dict(self.default_dict))
 
-        db.close()
+        #db.close()
         return jsonified({
             'success': True,
         })
@@ -324,7 +324,7 @@ class MoviePlugin(Plugin):
         if (force_readd or do_search) and search_after:
             fireEventAsync('searcher.single', movie_dict)
 
-        db.close()
+        #db.close()
         return movie_dict
 
 
@@ -371,7 +371,7 @@ class MoviePlugin(Plugin):
             movie_dict = m.to_dict(self.default_dict)
             fireEventAsync('searcher.single', movie_dict)
 
-        db.close()
+        #db.close()
         return jsonified({
             'success': True,
         })
@@ -426,7 +426,7 @@ class MoviePlugin(Plugin):
                 else:
                     fireEvent('movie.restatus', movie.id, single = True)
 
-        db.close()
+        #db.close()
         return True
 
     def restatus(self, movie_id):
@@ -437,7 +437,7 @@ class MoviePlugin(Plugin):
         db = get_session()
 
         m = db.query(Movie).filter_by(id = movie_id).first()
-        if not m:
+        if not m or len(m.library.titles) == 0:
             log.debug('Can\'t restatus movie, doesn\'t seem to exist.')
             return False
 
@@ -455,6 +455,6 @@ class MoviePlugin(Plugin):
             m.status_id = active_status.get('id') if move_to_wanted else done_status.get('id')
 
         db.commit()
-        db.close()
+        #db.close()
 
         return True

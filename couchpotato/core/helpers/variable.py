@@ -1,7 +1,10 @@
+from couchpotato.core.logger import CPLog
 import hashlib
 import os.path
 import platform
 import re
+
+log = CPLog(__name__)
 
 def getDataDir():
 
@@ -102,3 +105,15 @@ def natsortKey(s):
 
 def natcmp(a, b):
     return cmp(natsortKey(a), natsortKey(b))
+
+def getTitle(library_dict):
+    try:
+        try:
+            return library_dict['titles'][0]['title']
+        except:
+            log.error('Could not get title for %s' % library_dict['identifier'])
+            return None
+    except:
+        log.error('Could not get title for library item: %s' % library_dict)
+        return None
+

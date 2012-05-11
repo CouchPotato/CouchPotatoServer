@@ -1,5 +1,6 @@
 from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import toUnicode
+from couchpotato.core.helpers.variable import getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.plugins.score.scores import nameScore, nameRatioScore, \
@@ -35,6 +36,6 @@ class Score(Plugin):
         score += providerScore(nzb['provider'])
 
         # Duplicates in name
-        score += duplicateScore(nzb['name'], movie['library']['titles'][0]['title'])
+        score += duplicateScore(nzb['name'], getTitle(movie['library']))
 
         return score

@@ -22,6 +22,6 @@ class History(Notification):
         )
         db.add(history)
         db.commit()
-        db.close()
+        #db.close()
 
         return True

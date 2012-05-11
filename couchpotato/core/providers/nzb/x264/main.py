@@ -1,6 +1,6 @@
 from couchpotato.core.event import fireEvent
 from couchpotato.core.helpers.encoding import tryUrlencode
-from couchpotato.core.helpers.variable import tryInt
+from couchpotato.core.helpers.variable import tryInt, getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.nzb.base import NZBProvider
 import re
@@ -25,7 +25,7 @@ class X264(NZBProvider):
         if self.isDisabled() or not self.isAvailable(self.urls['search'].split('requests')[0]) or not quality.get('hd', False):
             return results
 
-        q = '%s %s %s' % (movie['library']['titles'][0]['title'], movie['library']['year'], quality.get('identifier'))
+        q = '%s %s %s' % (getTitle(movie['library']), movie['library']['year'], quality.get('identifier'))
         url = self.urls['search'] % tryUrlencode(q)
 
         cache_key = 'x264.%s.%s' % (movie['library']['identifier'], quality.get('identifier'))

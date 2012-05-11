@@ -278,8 +278,9 @@ relationships accept the following optional (keyword) arguments:
 |                    | reference the "local"/current entity's table.          |
 +--------------------+--------------------------------------------------------+
 | ``table``          | Use a manually created table. If this argument is      |
-|                    | used, Elixir won't generate a table for this           |
-|                    | relationship, and use the one given instead.           |
+|                    | used, Elixir will not generate a table for this        |
+|                    | relationship, and use the one given instead. This      |
+|                    | argument only accepts SQLAlchemy's Table objects.      |
 +--------------------+--------------------------------------------------------+
 | ``order_by``       | Specify which field(s) should be used to sort the      |
 |                    | results given by accessing the relation field.         |
@@ -302,13 +303,6 @@ relationships accept the following optional (keyword) arguments:
 +--------------------+--------------------------------------------------------+
 | ``table_kwargs``   | A dictionary holding any other keyword argument you    |
 |                    | might want to pass to the underlying Table object.     |
-+--------------------+--------------------------------------------------------+
-| ``column_format``  | DEPRECATED. Specify an alternate format string for     |
-|                    | naming the                                             |
-|                    | columns in the mapping table.  The default value is    |
-|                    | defined in ``elixir.options.M2MCOL_NAMEFORMAT``.  You  |
-|                    | will be passed ``tablename``, ``key``, and ``entity``  |
-|                    | as arguments to the format string.                     |
 +--------------------+--------------------------------------------------------+
 
 
@@ -493,6 +487,7 @@ class Relationship(Property):
         self.property = relation(self.target, **kwargs)
         self.add_mapper_property(self.name, self.property)
 
+    @property
     def target(self):
         if not self._target:
             if isinstance(self.of_kind, basestring):
@@ -501,8 +496,8 @@ class Relationship(Property):
             else:
                 self._target = self.of_kind
         return self._target
-    target = property(target)
 
+    @property
     def inverse(self):
         if not hasattr(self, '_inverse'):
             if self.inverse_name:
@@ -531,7 +526,6 @@ class Relationship(Property):
                 inverse._inverse = self
 
         return self._inverse
-    inverse = property(inverse)
 
     def match_type_of(self, other):
         return False
@@ -612,12 +606,12 @@ class ManyToOne(Relationship):
     def match_type_of(self, other):
         return isinstance(other, (OneToMany, OneToOne))
 
+    @property
     def target_table(self):
         if isinstance(self.target, EntityMeta):
             return self.target._descriptor.table
         else:
             return class_mapper(self.target).local_table
-    target_table = property(target_table)
 
     def create_keys(self, pk):
         '''
@@ -634,7 +628,10 @@ class ManyToOne(Relationship):
         source_desc = self.entity._descriptor
         if isinstance(self.target, EntityMeta):
             # make sure the target has all its pk set up
+            #FIXME: this is not enough when specifying target_column manually,
+            # on unique, non-pk col, see tests/test_m2o.py:test_non_pk_forward
             self.target._descriptor.create_pk_cols()
+
         #XXX: another option, instead of the FakeTable, would be to create an
         # EntityDescriptor for the SA class.
         target_table = self.target_table
@@ -655,6 +652,12 @@ class ManyToOne(Relationship):
                             "Couldn't find a foreign key constraint in table "
                             "'%s' using the following columns: %s."
                             % (self.entity.table.name, colnames))
+            else:
+                # in this case we let SA handle everything. 
+                # XXX: we might want to try to build join clauses anyway so 
+                # that we know whether there is an ambiguity or not, and
+                # suggest using colname if there is one
+                pass
             if self.field:
                 raise NotImplementedError(
                     "'field' argument not allowed on autoloaded table "
@@ -808,8 +811,8 @@ class OneToOne(Relationship):
         # useless because the remote_side is already setup in the other way
         # (ManyToOne).
         if self.entity.table is self.target.table:
-            #FIXME: IF this code is of any use, it will probably break for
-            # autoloaded tables
+            # When using a manual/autoloaded table, it will be assigned
+            # an empty list, which doesn't seem to upset SQLAlchemy
             kwargs['remote_side'] = self.inverse.foreign_key
 
         # Contrary to ManyToMany relationships, we need to specify the join
@@ -839,7 +842,6 @@ class ManyToMany(Relationship):
                  local_colname=None, remote_colname=None,
                  ondelete=None, onupdate=None,
                  table=None, schema=None,
-                 column_format=None,
                  filter=None,
                  table_kwargs=None,
                  *args, **kwargs):
@@ -858,14 +860,9 @@ class ManyToMany(Relationship):
         self.table = table
         self.schema = schema
 
-        if column_format:
-            warnings.warn("The 'column_format' argument on ManyToMany "
-                "relationships is deprecated. Please use the 'local_colname' "
-                "and/or 'remote_colname' arguments if you want custom "
-                "column names for this table only, or modify "
-                "options.M2MCOL_NAMEFORMAT if you want a custom format for "
-                "all ManyToMany tables", DeprecationWarning, stacklevel=3)
-        self.column_format = column_format or options.M2MCOL_NAMEFORMAT
+        #TODO: this can probably be simplified/moved elsewhere since the
+        #argument disappeared
+        self.column_format = options.M2MCOL_NAMEFORMAT
         if not hasattr(self.column_format, '__call__'):
             # we need to store the format in a variable so that the
             # closure of the lambda is correct
@@ -890,13 +887,6 @@ class ManyToMany(Relationship):
         self.secondaryjoin_clauses = []
 
         super(ManyToMany, self).__init__(of_kind, *args, **kwargs)
-
-    def get_table(self):
-        warnings.warn("The secondary_table attribute on ManyToMany objects is "
-                      "deprecated. You should rather use the table attribute.",
-                      DeprecationWarning, stacklevel=2)
-        return self.table
-    secondary_table = property(get_table)
 
     def match_type_of(self, other):
         return isinstance(other, ManyToMany)

@@ -124,16 +124,6 @@ The list of supported arguments are as follows:
 |                     | module by setting the ``__session__`` attribute of    |
 |                     | that module.                                          |
 +---------------------+-------------------------------------------------------+
-| ``autosetup``       | DEPRECATED. Specify whether that entity will contain  |
-|                     | automatic setup triggers.                             |
-|                     | That is if this entity will be                        |
-|                     | automatically setup (along with all other entities    |
-|                     | which were already declared) if any of the following  |
-|                     | condition happen: some of its attributes are accessed |
-|                     | ('c', 'table', 'mapper' or 'query'), instanciated     |
-|                     | (called) or the create_all method of this entity's    |
-|                     | metadata is called. Defaults to ``False``.            |
-+---------------------+-------------------------------------------------------+
 | ``allowcoloverride``| Specify whether it is allowed to override columns.    |
 |                     | By default, Elixir forbids you to add a column to an  |
 |                     | entity's table which already exist in that table. If  |
@@ -225,7 +215,6 @@ MIGRATION_TO_07_AID = False
 #
 options_defaults = dict(
     abstract=False,
-    autosetup=False,
     inheritance='single',
     polymorphic=True,
     identity=None,

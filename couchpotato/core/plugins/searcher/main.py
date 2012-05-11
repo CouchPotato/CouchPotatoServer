@@ -1,7 +1,7 @@
 from couchpotato import get_session
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import simplifyString, toUnicode
-from couchpotato.core.helpers.variable import md5, getImdb
+from couchpotato.core.helpers.variable import md5, getImdb, getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Movie, Release, ReleaseInfo
@@ -61,7 +61,7 @@ class Searcher(Plugin):
             if self.shuttingDown():
                 break
 
-        db.close()
+        #db.close()
         self.in_progress = False
 
     def single(self, movie):
@@ -78,7 +78,10 @@ class Searcher(Plugin):
         release_dates = fireEvent('library.update_release_date', identifier = movie['library']['identifier'], merge = True)
         available_status = fireEvent('status.get', 'available', single = True)
 
-        default_title = movie['library']['titles'][0]['title']
+        default_title = getTitle(movie['library'])
+        if not default_title:
+            return
+
         for quality_type in movie['profile']['types']:
             if not self.couldBeReleased(quality_type['quality']['identifier'], release_dates, pre_releases):
                 log.info('To early to search for %s, %s' % (quality_type['quality']['identifier'], default_title))
@@ -100,6 +103,10 @@ class Searcher(Plugin):
                 sorted_results = sorted(results, key = lambda k: k['score'], reverse = True)
                 if len(sorted_results) == 0:
                     log.debug('Nothing found for %s in %s' % (default_title, quality_type['quality']['label']))
+
+                # Check if movie isn't deleted while searching
+                if not db.query(Movie).filter_by(id = movie.get('id')).first():
+                    return
 
                 # Add them to this movie releases list
                 for nzb in sorted_results:
@@ -148,7 +155,7 @@ class Searcher(Plugin):
             if self.shuttingDown():
                 break
 
-        db.close()
+        #db.close()
         return False
 
     def download(self, data, movie, manual = False):
@@ -164,7 +171,7 @@ class Searcher(Plugin):
             rls.status_id = snatched_status.get('id')
             db.commit()
 
-            log_movie = '%s (%s) in %s' % (movie['library']['titles'][0]['title'], movie['library']['year'], rls.quality.label)
+            log_movie = '%s (%s) in %s' % (getTitle(movie['library']), movie['library']['year'], rls.quality.label)
             snatch_message = 'Snatched "%s": %s' % (data.get('name'), log_movie)
             log.info(snatch_message)
             fireEvent('movie.snatched', message = snatch_message, data = rls.to_dict())
@@ -191,7 +198,7 @@ class Searcher(Plugin):
                 except Exception, e:
                     log.error('Failed marking movie finished: %s %s' % (e, traceback.format_exc()))
 
-            db.close()
+            #db.close()
             return True
 
         log.info('Tried to download, but none of the downloaders are enabled')
@@ -270,7 +277,7 @@ class Searcher(Plugin):
         if self.checkNFO(nzb['name'], movie['library']['identifier']):
             return True
 
-        log.info("Wrong: %s, undetermined naming. Looking for '%s (%s)'" % (nzb['name'], movie['library']['titles'][0]['title'], movie['library']['year']))
+        log.info("Wrong: %s, undetermined naming. Looking for '%s (%s)'" % (nzb['name'], getTitle(movie['library']), movie['library']['year']))
         return False
 
     def containsOtherQuality(self, nzb, movie_year = None, preferred_quality = {}, single_category = False):
