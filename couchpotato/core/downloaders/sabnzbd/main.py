@@ -2,7 +2,7 @@ from couchpotato.core.downloaders.base import Downloader
 from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.variable import cleanHost
 from couchpotato.core.logger import CPLog
-from inspect import isfunction
+from inspect import ismethod, isfunction
 from tempfile import mkstemp
 import base64
 import os
@@ -42,10 +42,10 @@ class Sabnzbd(Downloader):
             'nzbname': self.createNzbName(data, movie),
         }
 
-        if isfunction(data.get('download')):
+        if data.get('download') and (ismethod(data.get('download')) or isfunction(data.get('download'))):
             nzb_file = data.get('download')(url = data.get('url'), nzb_id = data.get('id'))
 
-            if len(nzb_file) < 50:
+            if not nzb_file or len(nzb_file) < 50:
                 log.error('No nzb available!')
                 return False
 
