@@ -138,7 +138,7 @@ class Newzbin(NZBProvider, RSS):
                 'username' : self.conf('username'),
                 'password' : self.conf('password'),
                 'reportid' : nzb_id
-            })
+            }, show_error = False)
         except Exception, e:
             log.error('Failed downloading from newzbin, check credit: %s' % e)
             return False
