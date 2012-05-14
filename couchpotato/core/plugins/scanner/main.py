@@ -328,6 +328,10 @@ class Scanner(Plugin):
         # Clean up
         self.path_identifiers = {}
 
+        if len(processed_movies) > 0:
+            log.info('Found %s movies in the folder %s' % (len(processed_movies), folder))
+        else:
+            log.debug('Found no movies in the folder %s' % (folder))
         return processed_movies
 
     def getMetaData(self, group):
