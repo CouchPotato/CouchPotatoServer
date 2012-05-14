@@ -360,8 +360,12 @@ class DesktopUpdater(Plugin):
         }
 
     def check(self):
-        pass
+        self.desktop.CheckForUpdate(silentUnlessUpdate = True)
 
     def getVersion(self):
-        return {}
+        return {
+            'hash': self.desktop._esky.active_version,
+            'data': None,
+            'type': 'desktop',
+        }
 
