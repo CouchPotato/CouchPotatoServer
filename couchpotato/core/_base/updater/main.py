@@ -370,7 +370,7 @@ class DesktopUpdater(Plugin):
         try:
             latest = self.desktop._esky.find_update()
 
-            if latest != current_version.get('hash'):
+            if latest and latest != current_version.get('hash'):
                 self.update_version = {
                     'hash': latest,
                     'date':  None,
