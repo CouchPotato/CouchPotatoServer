@@ -52,12 +52,16 @@ var UpdaterBase = new Class({
 	createMessage: function(data){
 		var self = this;
 
+		var changelog = 'https://github.com/'+data.repo_name+'/compare/'+data.version.hash+'...'+data.update_version.hash;
+		if(data.update_version.changelog)
+			changelog = data.update_version.changelog + '#' + data.version.hash+'...'+data.update_version.hash
+
 		self.message = new Element('div.message.update').adopt(
 			new Element('span', {
 				'text': 'A new version is available'
 			}),
 			new Element('a', {
-				'href': 'https://github.com/'+data.repo_name+'/compare/'+data.version.hash+'...'+data.update_version.hash,
+				'href': changelog,
 				'text': 'see what has changed',
 				'target': '_blank'
 			}),
