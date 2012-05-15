@@ -349,7 +349,13 @@ class DesktopUpdater(Plugin):
         self.desktop = Env.get('desktop')
 
     def doUpdate(self):
-        pass
+        try:
+            self.desktop.CheckForUpdate(silentUnlessUpdate = True)
+        except:
+            log.error('Failed updating desktop: %s' % traceback.format_exc())
+            self.update_failed = True
+
+        return False
 
     def info(self):
         return {
@@ -360,12 +366,26 @@ class DesktopUpdater(Plugin):
         }
 
     def check(self):
-        self.desktop.CheckForUpdate(silentUnlessUpdate = True)
+        current_version = self.getVersion()
+        try:
+            latest = self.desktop._esky.find_update()
+
+            if latest and latest != current_version.get('hash'):
+                self.update_version = {
+                    'hash': latest,
+                    'date':  None,
+                    'changelog': self.desktop._changelogURL,
+                }
+
+            self.last_check = time.time()
+        except:
+            log.error('Failed updating desktop: %s' % traceback.format_exc())
+
+        return self.update_version is not None
 
     def getVersion(self):
         return {
             'hash': self.desktop._esky.active_version,
-            'data': None,
+            'date': None,
             'type': 'desktop',
         }
-
