@@ -148,6 +148,7 @@ class TheMovieDb(MovieProvider):
             year = None
 
         movie_data = {
+            'via_tmdb': True,
             'id': int(movie.get('id', 0)),
             'titles': [toUnicode(movie.get('name'))],
             'original_title': movie.get('original_name'),
