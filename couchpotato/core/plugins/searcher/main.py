@@ -230,7 +230,7 @@ class Searcher(Plugin):
 
         pron_tags = ['xxx', 'sex', 'anal', 'tits', 'fuck', 'porn', 'orgy', 'milf', 'boobs']
         for p_tag in pron_tags:
-            if p_tag in movie_name:
+            if p_tag in nzb_words and p_tag not in movie_name:
                 log.info('Wrong: %s, probably pr0n' % (nzb['name']))
                 return False
 
