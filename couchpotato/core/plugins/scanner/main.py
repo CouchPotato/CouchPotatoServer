@@ -95,6 +95,8 @@ class Scanner(Plugin):
 
     def scanFilesToLibrary(self, folder = None, files = None):
 
+        folder = os.path.normpath(folder)
+
         groups = self.scan(folder = folder, files = files)
 
         for group in groups.itervalues():
@@ -102,6 +104,8 @@ class Scanner(Plugin):
                 fireEvent('release.add', group = group)
 
     def scanFolderToLibrary(self, folder = None, newer_than = None, simple = True):
+
+        folder = os.path.normpath(folder)
 
         if not os.path.isdir(folder):
             return
@@ -128,6 +132,8 @@ class Scanner(Plugin):
 
 
     def scan(self, folder = None, files = [], simple = False):
+
+        folder = os.path.normpath(folder)
 
         if not folder or not os.path.isdir(folder):
             log.error('Folder doesn\'t exists: %s' % folder)
