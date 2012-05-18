@@ -325,6 +325,18 @@ class Renamer(Plugin):
                 elif not remove_leftovers: # Don't remove anything
                     remove_files = []
 
+            # Remove files
+            for src in remove_files:
+
+                if isinstance(src, File):
+                    src = src.path
+
+                log.info('Removing "%s"' % src)
+                try:
+                    os.remove(src)
+                except:
+                    log.error('Failed removing %s: %s' % (src, traceback.format_exc()))
+
             # Rename all files marked
             group['renamed_files'] = []
             for src in rename_files:
@@ -340,18 +352,6 @@ class Renamer(Plugin):
                         group['renamed_files'].append(dst)
                     except:
                         log.error('Failed moving the file "%s" : %s' % (os.path.basename(src), traceback.format_exc()))
-
-            # Remove files
-            for src in remove_files:
-
-                if isinstance(src, File):
-                    src = src.path
-
-                log.info('Removing "%s"' % src)
-                try:
-                    os.remove(src)
-                except:
-                    log.error('Failed removing %s: %s' % (src, traceback.format_exc()))
 
             # Remove matching releases
             for release in remove_releases:
