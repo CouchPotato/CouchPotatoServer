@@ -6,6 +6,7 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Movie, Release, ReleaseInfo
 from couchpotato.environment import Env
+from inspect import ismethod, isfunction
 from sqlalchemy.exc import InterfaceError
 import datetime
 import re
@@ -142,9 +143,9 @@ class Searcher(Plugin):
 
                 for nzb in sorted_results:
                     downloaded = self.download(data = nzb, movie = movie)
-                    if downloaded:
+                    if downloaded is True:
                         return True
-                    else:
+                    elif downloaded != 'try_next':
                         break
             else:
                 log.info('Better quality (%s) already available or snatched for %s' % (quality_type['quality']['label'], default_title))
@@ -161,7 +162,15 @@ class Searcher(Plugin):
     def download(self, data, movie, manual = False):
 
         snatched_status = fireEvent('status.get', 'snatched', single = True)
-        successful = fireEvent('download', data = data, movie = movie, manual = manual, single = True)
+
+        # Download movie to temp
+        filedata = None
+        if data.get('download') and (ismethod(data.get('download')) or isfunction(data.get('download'))):
+            filedata = data.get('download')(url = data.get('url'), nzb_id = data.get('id'))
+            if filedata is 'try_next':
+                return filedata
+
+        successful = fireEvent('download', data = data, movie = movie, manual = manual, single = True, filedata = filedata)
 
         if successful:
 

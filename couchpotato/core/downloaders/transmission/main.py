@@ -11,7 +11,7 @@ class Transmission(Downloader):
 
     type = ['torrent']
 
-    def download(self, data = {}, movie = {}, manual = False):
+    def download(self, data = {}, movie = {}, manual = False, filedata = None):
 
         if self.isDisabled(manual) or not self.isCorrectType(data.get('type')):
             return
@@ -31,8 +31,10 @@ class Transmission(Downloader):
         }
 
         try:
+            if not filedata:
+                log.error('Failed sending torrent to transmission, no data')
+
             tc = transmissionrpc.Client(host[0], port = host[1], user = self.conf('username'), password = self.conf('password'))
-            filedata = data.get('download')(url = data.get('url'), nzb_id = data.get('id'))
             torrent = tc.add_torrent(b64encode(filedata), **params)
 
             # Change settings of added torrents

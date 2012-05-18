@@ -15,7 +15,7 @@ class Sabnzbd(Downloader):
 
     type = ['nzb']
 
-    def download(self, data = {}, movie = {}, manual = False):
+    def download(self, data = {}, movie = {}, manual = False, filedata = None):
 
         if self.isDisabled(manual) or not self.isCorrectType(data.get('type')):
             return
@@ -42,15 +42,13 @@ class Sabnzbd(Downloader):
             'nzbname': self.createNzbName(data, movie),
         }
 
-        if data.get('download') and (ismethod(data.get('download')) or isfunction(data.get('download'))):
-            nzb_file = data.get('download')(url = data.get('url'), nzb_id = data.get('id'))
-
-            if not nzb_file or len(nzb_file) < 50:
-                log.error('No nzb available!')
+        if filedata:
+            if len(filedata) < 50:
+                log.error('No proper nzb available!')
                 return False
 
             # If it's a .rar, it adds the .rar extension, otherwise it stays .nzb
-            nzb_filename = self.createFileName(data, nzb_file, movie)
+            nzb_filename = self.createFileName(data, filedata, movie)
             params['mode'] = 'addfile'
         else:
             params['name'] = data.get('url')
@@ -62,7 +60,7 @@ class Sabnzbd(Downloader):
 
         try:
             if params.get('mode') is 'addfile':
-                data = self.urlopen(url, params = {"nzbfile": (nzb_filename, nzb_file)}, multipart = True, show_error = False)
+                data = self.urlopen(url, params = {"nzbfile": (nzb_filename, filedata)}, multipart = True, show_error = False)
             else:
                 data = self.urlopen(url, show_error = False)
         except:

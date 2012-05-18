@@ -6,7 +6,10 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.nzb.base import NZBProvider
 from couchpotato.environment import Env
 from dateutil.parser import parse
+from urllib2 import HTTPError
+from urlparse import urlparse
 import time
+import traceback
 import xml.etree.ElementTree as XMLTree
 
 log = CPLog(__name__)
@@ -19,6 +22,8 @@ class Newznab(NZBProvider, RSS):
         'detail': 'details&id=%s',
         'search': 'movie',
     }
+
+    limits_reached = {}
 
     cat_ids = [
         ([2010], ['dvdr']),
@@ -194,3 +199,27 @@ class Newznab(NZBProvider, RSS):
 
     def getApiExt(self, host):
         return '&apikey=%s' % host['api_key']
+
+    def download(self, url = '', nzb_id = ''):
+        host = urlparse(url).hostname
+
+        if self.limits_reached.get(host):
+            # Try again in 3 hours
+            if self.limits_reached[host] > time.time() - 10800:
+                return 'try_next'
+
+        try:
+            data = self.urlopen(url, show_error = False)
+            self.limits_reached[host] = False
+            return data
+        except HTTPError, e:
+            if e.code == 503:
+                response = e.read().lower()
+                if 'maximum api' in response or 'download limit' in response:
+                    if not self.limits_reached.get(host):
+                        log.error('Limit reached for newznab provider: %s' % host)
+                    self.limits_reached[host] = time.time()
+                    return 'try_next'
+
+            log.error('Failed download from %s' % (host, traceback.format_exc()))
+            raise
