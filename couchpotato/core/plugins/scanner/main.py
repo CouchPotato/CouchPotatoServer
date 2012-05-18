@@ -443,7 +443,7 @@ class Scanner(Plugin):
                 log.debug('Found movie via CP tag: %s' % cur_file)
                 break
 
-        # Check and see if nfo contains the imdb-id
+        # Check and see if nfo or filenames contains the imdb-id
         if not imdb_id:
             try:
                 for nfo_file in files['nfo']:
@@ -451,6 +451,16 @@ class Scanner(Plugin):
                     if imdb_id:
                         log.debug('Found movie via nfo file: %s' % nfo_file)
                         break
+            except:
+                pass
+
+            try:
+                for filetype in files:
+                    for filetype_file in files[filetype]:
+                        imdb_id = getImdb(filetype_file, check_inside = False)
+                        if imdb_id:
+                            log.debug('Found movie via imdb in filename: %s' % nfo_file)
+                            break
             except:
                 pass
 

@@ -77,9 +77,9 @@ def cleanHost(host):
 
     return host
 
-def getImdb(txt):
+def getImdb(txt, check_inside = True):
 
-    if os.path.isfile(txt):
+    if check_inside and os.path.isfile(txt):
         output = open(txt, 'r')
         txt = output.read()
         output.close()
