@@ -2,7 +2,9 @@ from couchpotato.core.logger import CPLog
 import hashlib
 import os.path
 import platform
+import random
 import re
+import string
 
 log = CPLog(__name__)
 
@@ -116,4 +118,7 @@ def getTitle(library_dict):
     except:
         log.error('Could not get title for library item: %s' % library_dict)
         return None
+
+def randomString(size = 8, chars = string.ascii_uppercase + string.digits):
+    return ''.join(random.choice(chars) for x in range(size))
 
