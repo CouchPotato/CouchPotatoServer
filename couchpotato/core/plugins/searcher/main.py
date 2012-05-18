@@ -223,15 +223,17 @@ class Searcher(Plugin):
             log.info('Wrong: Outside retention, age is %s, needs %s or lower: %s' % (nzb['age'], retention, nzb['name']))
             return False
 
-        movie_name = simplifyString(nzb['name'])
-        nzb_words = re.split('\W+', movie_name)
-        required_words = [x.strip() for x in self.conf('required_words').split(',')]
+        movie_name = getTitle(movie['library'])
+        movie_words = re.split('\W+', simplifyString(movie_name))
+        nzb_name = simplifyString(nzb['name'])
+        nzb_words = re.split('\W+', nzb_name)
+        required_words = [x.strip().lower() for x in self.conf('required_words').lower().split(',')]
 
         if self.conf('required_words') and not list(set(nzb_words) & set(required_words)):
             log.info("NZB doesn't contain any of the required words.")
             return False
 
-        ignored_words = [x.strip() for x in self.conf('ignored_words').split(',')]
+        ignored_words = [x.strip().lower() for x in self.conf('ignored_words').split(',')]
         blacklisted = list(set(nzb_words) & set(ignored_words))
         if self.conf('ignored_words') and blacklisted:
             log.info("Wrong: '%s' blacklisted words: %s" % (nzb['name'], ", ".join(blacklisted)))
@@ -239,7 +241,7 @@ class Searcher(Plugin):
 
         pron_tags = ['xxx', 'sex', 'anal', 'tits', 'fuck', 'porn', 'orgy', 'milf', 'boobs']
         for p_tag in pron_tags:
-            if p_tag in nzb_words and p_tag not in movie_name:
+            if p_tag in nzb_words and p_tag not in movie_words:
                 log.info('Wrong: %s, probably pr0n' % (nzb['name']))
                 return False
 
@@ -286,7 +288,7 @@ class Searcher(Plugin):
         if self.checkNFO(nzb['name'], movie['library']['identifier']):
             return True
 
-        log.info("Wrong: %s, undetermined naming. Looking for '%s (%s)'" % (nzb['name'], getTitle(movie['library']), movie['library']['year']))
+        log.info("Wrong: %s, undetermined naming. Looking for '%s (%s)'" % (nzb['name'], movie_name, movie['library']['year']))
         return False
 
     def containsOtherQuality(self, nzb, movie_year = None, preferred_quality = {}, single_category = False):
