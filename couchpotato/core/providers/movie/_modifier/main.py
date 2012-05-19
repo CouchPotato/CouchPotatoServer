@@ -4,7 +4,6 @@ from couchpotato.core.helpers.variable import mergeDicts, randomString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Library
-import time
 import traceback
 
 log = CPLog(__name__)
