@@ -233,16 +233,18 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     fireEventAsync('app.load')
 
     # Go go go!
+    web_container = WSGIContainer(app)
+    web_container._log = _log
+    http_server = HTTPServer(web_container, no_keep_alive = True)
+    Env.set('httpserver', http_server)
+    loop = IOLoop.instance()
+
     try_restart = True
     restart_tries = 5
+
     while try_restart:
         try:
-            web_container = WSGIContainer(app)
-            web_container._log = _log
-
-            http_server = HTTPServer(web_container)
             http_server.listen(config['port'], config['host'])
-            loop = IOLoop.instance()
 
             if config['use_reloader']:
                 autoreload.start(loop)

@@ -5,7 +5,7 @@ from couchpotato.core.helpers.variable import cleanHost, md5
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
-from flask import request
+from tornado.ioloop import IOLoop
 from uuid import uuid4
 import os
 import platform
@@ -18,7 +18,7 @@ log = CPLog(__name__)
 
 class Core(Plugin):
 
-    ignore_restart = ['Core.crappyRestart', 'Core.crappyShutdown']
+    ignore_restart = ['Core.crappyRestart', 'Core.crappyShutdown', 'Updater.check']
     shutdown_started = False
 
     def __init__(self):
@@ -63,30 +63,28 @@ class Core(Plugin):
         if self.shutdown_started:
             return
 
-        try:
-            self.urlopen('%s/app.shutdown' % self.createApiUrl(), show_error = False)
-            return True
-        except:
-            self.initShutdown()
-            return False
+        self.initShutdown()
+        return True
 
     def crappyRestart(self):
         if self.shutdown_started:
             return
 
-        try:
-            self.urlopen('%s/app.restart' % self.createApiUrl(), show_error = False)
-            return True
-        except:
-            self.initShutdown(restart = True)
-            return False
+        self.initShutdown(restart = True)
+        return True
 
     def shutdown(self):
-        self.initShutdown()
+        def shutdown():
+            self.initShutdown()
+        IOLoop.instance().add_callback(shutdown)
+
         return 'shutdown'
 
     def restart(self):
-        self.initShutdown(restart = True)
+        def restart():
+            self.initShutdown(restart = True)
+        IOLoop.instance().add_callback(restart)
+
         return 'restarting'
 
     def initShutdown(self, restart = False):
@@ -121,7 +119,8 @@ class Core(Plugin):
         log.debug('Save to shutdown/restart')
 
         try:
-            request.environ.get('werkzeug.server.shutdown')()
+            Env.get('httpserver').stop()
+            IOLoop.instance().stop()
         except RuntimeError:
             pass
         except:
