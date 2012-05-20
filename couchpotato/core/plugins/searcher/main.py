@@ -230,7 +230,7 @@ class Searcher(Plugin):
         required_words = [x.strip().lower() for x in self.conf('required_words').lower().split(',')]
 
         if self.conf('required_words') and not list(set(nzb_words) & set(required_words)):
-            log.info("NZB doesn't contain any of the required words.")
+            log.info("Wrong: Required word missing: %s" % nzb['name'])
             return False
 
         ignored_words = [x.strip().lower() for x in self.conf('ignored_words').split(',')]
