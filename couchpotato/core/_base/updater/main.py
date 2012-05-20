@@ -338,7 +338,7 @@ class SourceUpdater(BaseUpdater):
         return {}
 
 
-class DesktopUpdater(Plugin):
+class DesktopUpdater(BaseUpdater):
 
     version = None
     update_failed = False
@@ -350,9 +350,15 @@ class DesktopUpdater(Plugin):
 
     def doUpdate(self):
         try:
-            self.desktop.CheckForUpdate(silentUnlessUpdate = True)
+            def do_restart(e):
+                if e['status'] == 'done':
+                    fireEventAsync('app.restart')
+                else:
+                    log.error('Failed updating desktop: %s' % e['exception'])
+                    self.update_failed = True
+
+            self.desktop._esky.auto_update(callback = do_restart)
         except:
-            log.error('Failed updating desktop: %s' % traceback.format_exc())
             self.update_failed = True
 
         return False
