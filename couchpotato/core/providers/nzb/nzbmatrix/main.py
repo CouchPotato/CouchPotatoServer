@@ -32,7 +32,7 @@ class NZBMatrix(NZBProvider, RSS):
 
         results = []
 
-        if self.isDisabled() or not self.isAvailable(self.urls['search']):
+        if self.isDisabled():
             return results
 
         cat_ids = ','.join(['%s' % x for x in self.getCatId(quality.get('identifier'))])

@@ -26,7 +26,7 @@ class NzbIndex(NZBProvider, RSS):
     def search(self, movie, quality):
 
         results = []
-        if self.isDisabled() or not self.isAvailable(self.urls['api']):
+        if self.isDisabled():
             return results
 
         q = '%s %s %s' % (getTitle(movie['library']), movie['library']['year'], quality.get('identifier'))

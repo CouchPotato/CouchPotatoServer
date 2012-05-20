@@ -39,7 +39,7 @@ class Newzbin(NZBProvider, RSS):
     def search(self, movie, quality):
 
         results = []
-        if self.isDisabled() or not self.isAvailable(self.urls['search']):
+        if self.isDisabled():
             return results
 
         format_id = self.getFormatId(type)

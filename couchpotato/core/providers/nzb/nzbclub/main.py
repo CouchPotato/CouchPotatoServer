@@ -24,7 +24,7 @@ class NZBClub(NZBProvider, RSS):
     def search(self, movie, quality):
 
         results = []
-        if self.isDisabled() or not self.isAvailable(self.urls['search']):
+        if self.isDisabled():
             return results
 
         q = '"%s" %s %s' % (getTitle(movie['library']), movie['library']['year'], quality.get('identifier'))
@@ -40,7 +40,7 @@ class NZBClub(NZBProvider, RSS):
             'ns': 1,
         }
 
-        cache_key = 'nzbclub.%s.%s' % (movie['library']['identifier'], quality.get('identifier'))
+        cache_key = 'nzbclub.%s.%s.%s' % (movie['library']['identifier'], quality.get('identifier'), q)
         data = self.getCache(cache_key, self.urls['search'] % tryUrlencode(params))
         if data:
             try:

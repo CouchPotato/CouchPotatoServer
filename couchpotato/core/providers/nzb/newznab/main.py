@@ -51,7 +51,7 @@ class Newznab(NZBProvider, RSS):
     def singleFeed(self, host):
 
         results = []
-        if self.isDisabled(host) or not self.isAvailable(self.getUrl(host['host'], self.urls['search'])):
+        if self.isDisabled(host):
             return results
 
         arguments = tryUrlencode({
@@ -83,7 +83,7 @@ class Newznab(NZBProvider, RSS):
     def singleSearch(self, host, movie, quality):
 
         results = []
-        if self.isDisabled(host) or not self.isAvailable(self.getUrl(host['host'], self.urls['search'])):
+        if self.isDisabled(host):
             return results
 
         cat_id = self.getCatId(quality['identifier'])
