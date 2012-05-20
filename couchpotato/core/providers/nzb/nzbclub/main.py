@@ -1,6 +1,7 @@
 from BeautifulSoup import BeautifulSoup
 from couchpotato.core.event import fireEvent
-from couchpotato.core.helpers.encoding import toUnicode, tryUrlencode
+from couchpotato.core.helpers.encoding import toUnicode, tryUrlencode, \
+    simplifyString
 from couchpotato.core.helpers.rss import RSS
 from couchpotato.core.helpers.variable import tryInt, getTitle
 from couchpotato.core.logger import CPLog
@@ -27,7 +28,7 @@ class NZBClub(NZBProvider, RSS):
         if self.isDisabled():
             return results
 
-        q = '"%s" %s %s' % (getTitle(movie['library']), movie['library']['year'], quality.get('identifier'))
+        q = '"%s" %s %s' % (simplifyString(getTitle(movie['library'])), movie['library']['year'], quality.get('identifier'))
         for ignored in Env.setting('ignored_words', 'searcher').split(','):
             q = '%s -%s' % (q, ignored.strip())
 
@@ -110,7 +111,7 @@ class NZBClub(NZBProvider, RSS):
         full_description = self.getCache('nzbclub.%s' % item['id'], item['detail_url'], cache_timeout = 25920000)
 
         if 'ARCHIVE inside ARCHIVE' in full_description:
-            log.info('Wrong: Seems to be passworded files: %s' % new['name'])
+            log.info('Wrong: Seems to be passworded files: %s' % item['name'])
             return False
 
         return True
