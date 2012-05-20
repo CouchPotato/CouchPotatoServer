@@ -1,6 +1,6 @@
 from couchpotato import addView
 from couchpotato.core.event import fireEvent, addEvent
-from couchpotato.core.helpers.encoding import tryUrlencode
+from couchpotato.core.helpers.encoding import tryUrlencode, simplifyString
 from couchpotato.core.helpers.variable import getExt
 from couchpotato.core.logger import CPLog
 from couchpotato.environment import Env
@@ -199,6 +199,7 @@ class Plugin(object):
 
 
     def getCache(self, cache_key, url = None, **kwargs):
+        cache_key = simplifyString(cache_key)
         cache = Env.get('cache').get(cache_key)
         if cache:
             if not Env.get('dev'): log.debug('Getting cache %s' % cache_key)
