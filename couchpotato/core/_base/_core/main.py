@@ -92,12 +92,15 @@ class Core(Plugin):
         log.debug('Every plugin got shutdown event')
 
         loop = True
+        starttime = time.time()
         while loop:
             log.debug('Asking who is running')
             still_running = fireEvent('plugin.running', merge = True)
             log.debug('Still running: %s' % still_running)
 
             if len(still_running) == 0:
+                break
+            elif starttime < time.time() - 30: # Always force break after 30s wait
                 break
 
             running = list(set(still_running) - set(self.ignore_restart))
