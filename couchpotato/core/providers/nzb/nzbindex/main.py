@@ -63,13 +63,8 @@ class NzbIndex(NZBProvider, RSS):
 
                     try:
                         description = self.getTextElement(nzb, "description")
-                        if '/nfo/' in description.lower():
-                            nfo_url = re.search('href=\"(?P<nfo>.+)\" ', description).group('nfo')
-                            full_description = self.getCache('nzbindex.%s' % nzbindex_id, url = nfo_url, cache_timeout = 25920000)
-                            html = BeautifulSoup(full_description)
-                            description = toUnicode(html.find('pre', attrs = {'id':'nfo0'}).text)
                     except:
-                        pass
+                        description = ''
 
                     new = {
                         'id': nzbindex_id,
@@ -81,15 +76,16 @@ class NzbIndex(NZBProvider, RSS):
                         'url': enclosure['url'],
                         'detail_url': enclosure['url'].replace('/download/', '/release/'),
                         'description': description,
+                        'get_more_info': self.getMoreInfo,
                         'check_nzb': True,
                     }
-                    new['score'] = fireEvent('score.calculate', new, movie, single = True)
 
                     is_correct_movie = fireEvent('searcher.correct_movie',
                                                  nzb = new, movie = movie, quality = quality,
                                                  imdb_results = False, single_category = False, single = True)
 
                     if is_correct_movie:
+                        new['score'] = fireEvent('score.calculate', new, movie, single = True)
                         results.append(new)
                         self.found(new)
 
@@ -99,6 +95,15 @@ class NzbIndex(NZBProvider, RSS):
 
         return results
 
+    def getMoreInfo(self, item):
+        try:
+            if '/nfo/' in item['description'].lower():
+                nfo_url = re.search('href=\"(?P<nfo>.+)\" ', item['description']).group('nfo')
+                full_description = self.getCache('nzbindex.%s' % item['id'], url = nfo_url, cache_timeout = 25920000)
+                html = BeautifulSoup(full_description)
+                item['description'] = toUnicode(html.find('pre', attrs = {'id':'nfo0'}).text)
+        except:
+            pass
 
     def isEnabled(self):
         return NZBProvider.isEnabled(self) and self.conf('enabled')

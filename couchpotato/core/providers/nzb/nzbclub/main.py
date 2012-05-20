@@ -58,10 +58,14 @@ class NZBClub(NZBProvider, RSS):
                     size = enclosure['length']
                     date = self.getTextElement(nzb, "pubDate")
 
-                    full_description = self.getCache('nzbclub.%s' % nzbclub_id, self.getTextElement(nzb, "link"), cache_timeout = 25920000)
-                    html = BeautifulSoup(full_description)
-                    nfo_pre = html.find('pre', attrs = {'class':'nfo'})
-                    description = toUnicode(nfo_pre.text) if nfo_pre else ''
+                    def extra_check(item):
+                        full_description = self.getCache('nzbclub.%s' % nzbclub_id, item['detail_url'], cache_timeout = 25920000)
+
+                        if 'ARCHIVE inside ARCHIVE' in full_description:
+                            log.info('Wrong: Seems to be passworded files: %s' % new['name'])
+                            return False
+
+                        return True
 
                     new = {
                         'id': nzbclub_id,
@@ -73,19 +77,17 @@ class NZBClub(NZBProvider, RSS):
                         'url': enclosure['url'].replace(' ', '_'),
                         'download': self.download,
                         'detail_url': self.getTextElement(nzb, "link"),
-                        'description': description,
+                        'description': '',
+                        'get_more_info': self.getMoreInfo,
+                        'extra_check': extra_check
                     }
-                    new['score'] = fireEvent('score.calculate', new, movie, single = True)
-
-                    if 'ARCHIVE inside ARCHIVE' in full_description:
-                        log.info('Wrong: Seems to be passworded files: %s' % new['name'])
-                        continue
 
                     is_correct_movie = fireEvent('searcher.correct_movie',
                                                  nzb = new, movie = movie, quality = quality,
                                                  imdb_results = False, single_category = False, single = True)
 
                     if is_correct_movie:
+                        new['score'] = fireEvent('score.calculate', new, movie, single = True)
                         results.append(new)
                         self.found(new)
 
@@ -94,3 +96,21 @@ class NZBClub(NZBProvider, RSS):
                 log.error('Failed to parse XML response from NZBClub')
 
         return results
+
+    def getMoreInfo(self, item):
+        full_description = self.getCache('nzbclub.%s' % item['id'], item['detail_url'], cache_timeout = 25920000)
+        html = BeautifulSoup(full_description)
+        nfo_pre = html.find('pre', attrs = {'class':'nfo'})
+        description = toUnicode(nfo_pre.text) if nfo_pre else ''
+
+        item['description'] = description
+        return item
+
+    def extraCheck(self, item):
+        full_description = self.getCache('nzbclub.%s' % item['id'], item['detail_url'], cache_timeout = 25920000)
+
+        if 'ARCHIVE inside ARCHIVE' in full_description:
+            log.info('Wrong: Seems to be passworded files: %s' % new['name'])
+            return False
+
+        return True

@@ -144,13 +144,12 @@ class Newznab(NZBProvider, RSS):
                     }
 
                     if not for_feed:
-                        new['score'] = fireEvent('score.calculate', new, movie, single = True)
-
                         is_correct_movie = fireEvent('searcher.correct_movie',
                                                      nzb = new, movie = movie, quality = quality,
                                                      imdb_results = True, single_category = single_cat, single = True)
 
                         if is_correct_movie:
+                            new['score'] = fireEvent('score.calculate', new, movie, single = True)
                             results.append(new)
                             self.found(new)
                     else:

@@ -265,6 +265,16 @@ class Searcher(Plugin):
             return False
 
 
+        # Provider specific functions
+        get_more = nzb.get('get_more_info')
+        if get_more:
+            get_more(nzb)
+
+        extra_check = nzb.get('extra_check')
+        if extra_check and not extra_check(nzb):
+            return False
+
+
         if imdb_results:
             return True
 
