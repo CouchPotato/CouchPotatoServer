@@ -10,7 +10,6 @@ from tornado.ioloop import IOLoop
 from tornado.web import RequestHandler
 from tornado.wsgi import WSGIContainer
 from werkzeug.contrib.cache import FileSystemCache
-import atexit
 import locale
 import logging
 import os.path
@@ -43,11 +42,6 @@ def getOptions(base_path, args):
     options.config_file = os.path.expanduser(options.config_file)
 
     return options
-
-
-def cleanup():
-    fireEvent('app.shutdown', single = True)
-    time.sleep(1)
 
 # Tornado monkey patch logging..
 def _log(status_code, request):
@@ -129,8 +123,6 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     # Development
     development = Env.setting('development', default = False, type = 'bool')
     Env.set('dev', development)
-    if not development:
-        atexit.register(cleanup)
 
     # Disable logging for some modules
     for logger_name in ['enzyme', 'guessit', 'subliminal', 'apscheduler']:
