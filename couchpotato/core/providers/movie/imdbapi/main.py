@@ -82,6 +82,7 @@ class IMDBAPI(MovieProvider):
             year = tryInt(movie.get('Year', ''))
 
             movie_data = {
+                'via_imdb': True,
                 'titles': [movie.get('Title')] if movie.get('Title') else [],
                 'original_title': movie.get('Title', ''),
                 'images': {
@@ -109,10 +110,10 @@ class IMDBAPI(MovieProvider):
     def runtimeToMinutes(self, runtime_str):
         runtime = 0
 
-        regex = '(\d*.?\d+).(hr|hrs|mins|min)+'
+        regex = '(\d*.?\d+).(h|hr|hrs|mins|min)+'
         matches = re.findall(regex, runtime_str)
         for match in matches:
             nr, size = match
-            runtime += tryInt(nr) * (60 if 'hr' in str(size) else 1)
+            runtime += tryInt(nr) * (60 if 'h' is str(size)[0] else 1)
 
         return runtime

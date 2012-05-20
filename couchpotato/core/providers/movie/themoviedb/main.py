@@ -3,7 +3,6 @@ from couchpotato.core.helpers.encoding import simplifyString, toUnicode
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.movie.base import MovieProvider
 from libs.themoviedb import tmdb
-import re
 
 log = CPLog(__name__)
 
@@ -88,6 +87,9 @@ class TheMovieDb(MovieProvider):
 
     def getInfo(self, identifier = None):
 
+        if not identifier:
+            return {}
+
         cache_key = 'tmdb.cache.%s' % identifier
         result = self.getCache(cache_key)
 
@@ -148,6 +150,7 @@ class TheMovieDb(MovieProvider):
             year = None
 
         movie_data = {
+            'via_tmdb': True,
             'id': int(movie.get('id', 0)),
             'titles': [toUnicode(movie.get('name'))],
             'original_title': movie.get('original_name'),

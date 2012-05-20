@@ -55,7 +55,7 @@ class Updater(Plugin):
         if self.updater.check():
             if self.conf('automatic') and not self.updater.update_failed:
                 if self.updater.doUpdate():
-                    fireEventAsync('app.crappy_restart')
+                    fireEventAsync('app.restart')
             else:
                 if self.conf('notification'):
                     fireEvent('updater.available', message = 'A new update is available', data = self.updater.info())
@@ -338,7 +338,7 @@ class SourceUpdater(BaseUpdater):
         return {}
 
 
-class DesktopUpdater(Plugin):
+class DesktopUpdater(BaseUpdater):
 
     version = None
     update_failed = False
@@ -350,9 +350,15 @@ class DesktopUpdater(Plugin):
 
     def doUpdate(self):
         try:
-            self.desktop.CheckForUpdate(silentUnlessUpdate = True)
+            def do_restart(e):
+                if e['status'] == 'done':
+                    fireEventAsync('app.restart')
+                else:
+                    log.error('Failed updating desktop: %s' % e['exception'])
+                    self.update_failed = True
+
+            self.desktop._esky.auto_update(callback = do_restart)
         except:
-            log.error('Failed updating desktop: %s' % traceback.format_exc())
             self.update_failed = True
 
         return False

@@ -89,7 +89,6 @@ class Loader(object):
                 if self.runAsDaemon():
                     try: self.daemon.stop()
                     except: pass
-                    self.daemon.delpid()
             except:
                 self.log.critical(traceback.format_exc())
 

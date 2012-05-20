@@ -4,8 +4,12 @@ from couchpotato.api import api
 from couchpotato.core.event import fireEventAsync, fireEvent
 from couchpotato.core.helpers.variable import getDataDir, tryInt
 from logging import handlers
+from tornado import autoreload
+from tornado.httpserver import HTTPServer
+from tornado.ioloop import IOLoop
+from tornado.web import RequestHandler
+from tornado.wsgi import WSGIContainer
 from werkzeug.contrib.cache import FileSystemCache
-import atexit
 import locale
 import logging
 import os.path
@@ -39,10 +43,19 @@ def getOptions(base_path, args):
 
     return options
 
+# Tornado monkey patch logging..
+def _log(status_code, request):
 
-def cleanup():
-    fireEvent('app.crappy_shutdown', single = True)
-    time.sleep(1)
+    if status_code < 400:
+        return
+    elif status_code < 500:
+        log_method = logging.warning
+    else:
+        log_method = logging.error
+    request_time = 1000.0 * request.request_time()
+    summary = request.method + " " + request.uri + " (" + \
+        request.remote_ip + ")"
+    log_method("%d %s %.2fms", status_code, summary, request_time)
 
 
 def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, Env = None, desktop = None):
@@ -110,85 +123,77 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     # Development
     development = Env.setting('development', default = False, type = 'bool')
     Env.set('dev', development)
-    if not development:
-        atexit.register(cleanup)
 
     # Disable logging for some modules
     for logger_name in ['enzyme', 'guessit', 'subliminal', 'apscheduler']:
         logging.getLogger(logger_name).setLevel(logging.ERROR)
 
-    for logger_name in ['gntp', 'werkzeug', 'migrate']:
+    for logger_name in ['gntp', 'migrate']:
         logging.getLogger(logger_name).setLevel(logging.WARNING)
 
     # Use reloader
     reloader = debug is True and development and not Env.get('desktop') and not options.daemon
 
-    # Only run once when debugging
-    fire_load = False
-    if os.environ.get('WERKZEUG_RUN_MAIN') or not reloader:
+    # Logger
+    logger = logging.getLogger()
+    formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s', '%m-%d %H:%M:%S')
+    level = logging.DEBUG if debug else logging.INFO
+    logger.setLevel(level)
 
-        # Logger
-        logger = logging.getLogger()
-        formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s', '%m-%d %H:%M:%S')
-        level = logging.DEBUG if debug else logging.INFO
-        logger.setLevel(level)
+    # To screen
+    if (debug or options.console_log) and not options.quiet and not options.daemon:
+        hdlr = logging.StreamHandler(sys.stderr)
+        hdlr.setFormatter(formatter)
+        logger.addHandler(hdlr)
 
-        # To screen
-        if (debug or options.console_log) and not options.quiet and not options.daemon:
-            hdlr = logging.StreamHandler(sys.stderr)
-            hdlr.setFormatter(formatter)
-            logger.addHandler(hdlr)
+    # To file
+    hdlr2 = handlers.RotatingFileHandler(Env.get('log_path'), 'a', 500000, 10)
+    hdlr2.setFormatter(formatter)
+    logger.addHandler(hdlr2)
 
-        # To file
-        hdlr2 = handlers.RotatingFileHandler(Env.get('log_path'), 'a', 500000, 10)
-        hdlr2.setFormatter(formatter)
-        logger.addHandler(hdlr2)
+    # Start logging & enable colors
+    import color_logs
+    from couchpotato.core.logger import CPLog
+    log = CPLog(__name__)
+    log.debug('Started with options %s' % options)
 
-        # Start logging & enable colors
-        import color_logs
-        from couchpotato.core.logger import CPLog
-        log = CPLog(__name__)
-        log.debug('Started with options %s' % options)
-
-        def customwarn(message, category, filename, lineno, file = None, line = None):
-            log.warning('%s %s %s line:%s' % (category, message, filename, lineno))
-        warnings.showwarning = customwarn
+    def customwarn(message, category, filename, lineno, file = None, line = None):
+        log.warning('%s %s %s line:%s' % (category, message, filename, lineno))
+    warnings.showwarning = customwarn
 
 
-        # Load configs & plugins
-        loader = Env.get('loader')
-        loader.preload(root = base_path)
-        loader.run()
+    # Load configs & plugins
+    loader = Env.get('loader')
+    loader.preload(root = base_path)
+    loader.run()
 
 
-        # Load migrations
-        initialize = True
-        db = Env.get('db_path')
-        if os.path.isfile(db_path):
-            initialize = False
+    # Load migrations
+    initialize = True
+    db = Env.get('db_path')
+    if os.path.isfile(db_path):
+        initialize = False
 
-            from migrate.versioning.api import version_control, db_version, version, upgrade
-            repo = os.path.join(base_path, 'couchpotato', 'core', 'migration')
+        from migrate.versioning.api import version_control, db_version, version, upgrade
+        repo = os.path.join(base_path, 'couchpotato', 'core', 'migration')
 
-            latest_db_version = version(repo)
-            try:
-                current_db_version = db_version(db, repo)
-            except:
-                version_control(db, repo, version = latest_db_version)
-                current_db_version = db_version(db, repo)
+        latest_db_version = version(repo)
+        try:
+            current_db_version = db_version(db, repo)
+        except:
+            version_control(db, repo, version = latest_db_version)
+            current_db_version = db_version(db, repo)
 
-            if current_db_version < latest_db_version and not debug:
-                log.info('Doing database upgrade. From %d to %d' % (current_db_version, latest_db_version))
-                upgrade(db, repo)
+        if current_db_version < latest_db_version and not debug:
+            log.info('Doing database upgrade. From %d to %d' % (current_db_version, latest_db_version))
+            upgrade(db, repo)
 
-        # Configure Database
-        from couchpotato.core.settings.model import setup
-        setup()
+    # Configure Database
+    from couchpotato.core.settings.model import setup
+    setup()
 
-        if initialize:
-            fireEvent('app.initialize', in_order = True)
-
-        fire_load = True
+    if initialize:
+        fireEvent('app.initialize', in_order = True)
 
     # Create app
     from couchpotato import app
@@ -197,6 +202,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
 
     # Basic config
     app.secret_key = api_key
+    # app.debug = development
     config = {
         'use_reloader': reloader,
         'host': Env.setting('host', default = '0.0.0.0'),
@@ -216,14 +222,26 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     # Some logging and fire load event
     try: log.info('Starting server on port %(port)s' % config)
     except: pass
-    if fire_load: fireEventAsync('app.load')
+    fireEventAsync('app.load')
 
     # Go go go!
+    web_container = WSGIContainer(app)
+    web_container._log = _log
+    http_server = HTTPServer(web_container, no_keep_alive = True)
+    Env.set('httpserver', http_server)
+    loop = IOLoop.instance()
+
     try_restart = True
     restart_tries = 5
+
     while try_restart:
         try:
-            app.run(**config)
+            http_server.listen(config['port'], config['host'])
+
+            if config['use_reloader']:
+                autoreload.start(loop)
+
+            loop.start()
         except Exception, e:
             try:
                 nr, msg = e

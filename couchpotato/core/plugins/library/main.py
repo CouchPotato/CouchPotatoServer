@@ -136,7 +136,12 @@ class LibraryPlugin(Plugin):
 
         db = get_session()
         library = db.query(Library).filter_by(identifier = identifier).first()
-        dates = library.info.get('release_date')
+
+        if not library.info:
+            self.update(identifier)
+            dates = library.get('info', {}).get('release_dates')
+        else:
+            dates = library.info.get('release_date')
 
         if dates and dates.get('expires', 0) < time.time():
             dates = fireEvent('movie.release_date', identifier = identifier, merge = True)

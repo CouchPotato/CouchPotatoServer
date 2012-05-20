@@ -39,7 +39,7 @@ class Newzbin(NZBProvider, RSS):
     def search(self, movie, quality):
 
         results = []
-        if self.isDisabled() or not self.isAvailable(self.urls['search']):
+        if self.isDisabled():
             return results
 
         format_id = self.getFormatId(type)
@@ -115,12 +115,12 @@ class Newzbin(NZBProvider, RSS):
                         'description': self.getTextElement(nzb, "description"),
                         'check_nzb': False,
                     }
-                    new['score'] = fireEvent('score.calculate', new, movie, single = True)
 
                     is_correct_movie = fireEvent('searcher.correct_movie',
                                                  nzb = new, movie = movie, quality = quality,
                                                  imdb_results = True, single_category = single_cat, single = True)
                     if is_correct_movie:
+                        new['score'] = fireEvent('score.calculate', new, movie, single = True)
                         results.append(new)
                         self.found(new)
 

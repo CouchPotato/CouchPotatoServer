@@ -17,7 +17,7 @@ rename_options = {
         'audio': 'Audio (DTS)',
         'group': 'Releasegroup name',
         'source': 'Source media (Bluray)',
-        'original': 'Original filename',
+        'filename': 'Original filename',
         'original_folder': 'Original foldername',
     },
 }

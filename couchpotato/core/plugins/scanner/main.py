@@ -95,6 +95,8 @@ class Scanner(Plugin):
 
     def scanFilesToLibrary(self, folder = None, files = None):
 
+        folder = os.path.normpath(folder)
+
         groups = self.scan(folder = folder, files = files)
 
         for group in groups.itervalues():
@@ -102,6 +104,8 @@ class Scanner(Plugin):
                 fireEvent('release.add', group = group)
 
     def scanFolderToLibrary(self, folder = None, newer_than = None, simple = True):
+
+        folder = os.path.normpath(folder)
 
         if not os.path.isdir(folder):
             return
@@ -128,6 +132,8 @@ class Scanner(Plugin):
 
 
     def scan(self, folder = None, files = [], simple = False):
+
+        folder = os.path.normpath(folder)
 
         if not folder or not os.path.isdir(folder):
             log.error('Folder doesn\'t exists: %s' % folder)
@@ -448,6 +454,18 @@ class Scanner(Plugin):
             except:
                 pass
 
+        # Check and see if filenames contains the imdb-id
+        if not imdb_id:
+            try:
+                for filetype in files:
+                    for filetype_file in files[filetype]:
+                        imdb_id = getImdb(filetype_file, check_inside = False)
+                        if imdb_id:
+                            log.debug('Found movie via imdb in filename: %s' % nfo_file)
+                            break
+            except:
+                pass
+
         # Check if path is already in db
         if not imdb_id:
             db = get_session()
@@ -703,11 +721,12 @@ class Scanner(Plugin):
     def getReleaseNameYear(self, release_name, file_name = None):
 
         # Use guessit first
+        guess = {}
         if file_name:
             try:
                 guess = guess_movie_info(file_name)
                 if guess.get('title') and guess.get('year'):
-                    return {
+                    guess = {
                         'name': guess.get('title'),
                         'year': guess.get('year'),
                     }
@@ -718,11 +737,12 @@ class Scanner(Plugin):
         cleaned = ' '.join(re.split('\W+', simplifyString(release_name)))
         cleaned = re.sub(self.clean, ' ', cleaned)
         year = self.findYear(cleaned)
+        cp_guess = {}
 
         if year: # Split name on year
             try:
                 movie_name = cleaned.split(year).pop(0).strip()
-                return {
+                cp_guess = {
                     'name': movie_name,
                     'year': int(year),
                 }
@@ -731,11 +751,16 @@ class Scanner(Plugin):
         else: # Split name on multiple spaces
             try:
                 movie_name = cleaned.split('  ').pop(0).strip()
-                return {
+                cp_guess = {
                     'name': movie_name,
                     'year': int(year),
                 }
             except:
                 pass
 
-        return {}
+        if cp_guess.get('year') == guess.get('year') and len(cp_guess.get('name', '')) > len(guess.get('name', '')):
+            return cp_guess
+        elif guess == {}:
+            return cp_guess
+
+        return guess

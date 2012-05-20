@@ -6,6 +6,7 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Movie, Release, ReleaseInfo
 from couchpotato.environment import Env
+from inspect import ismethod, isfunction
 from sqlalchemy.exc import InterfaceError
 import datetime
 import re
@@ -142,9 +143,9 @@ class Searcher(Plugin):
 
                 for nzb in sorted_results:
                     downloaded = self.download(data = nzb, movie = movie)
-                    if downloaded:
+                    if downloaded is True:
                         return True
-                    else:
+                    elif downloaded != 'try_next':
                         break
             else:
                 log.info('Better quality (%s) already available or snatched for %s' % (quality_type['quality']['label'], default_title))
@@ -161,7 +162,15 @@ class Searcher(Plugin):
     def download(self, data, movie, manual = False):
 
         snatched_status = fireEvent('status.get', 'snatched', single = True)
-        successful = fireEvent('download', data = data, movie = movie, manual = manual, single = True)
+
+        # Download movie to temp
+        filedata = None
+        if data.get('download') and (ismethod(data.get('download')) or isfunction(data.get('download'))):
+            filedata = data.get('download')(url = data.get('url'), nzb_id = data.get('id'))
+            if filedata is 'try_next':
+                return filedata
+
+        successful = fireEvent('download', data = data, movie = movie, manual = manual, single = True, filedata = filedata)
 
         if successful:
 
@@ -214,15 +223,17 @@ class Searcher(Plugin):
             log.info('Wrong: Outside retention, age is %s, needs %s or lower: %s' % (nzb['age'], retention, nzb['name']))
             return False
 
-        movie_name = simplifyString(nzb['name'])
-        nzb_words = re.split('\W+', movie_name)
-        required_words = [x.strip() for x in self.conf('required_words').split(',')]
+        movie_name = getTitle(movie['library'])
+        movie_words = re.split('\W+', simplifyString(movie_name))
+        nzb_name = simplifyString(nzb['name'])
+        nzb_words = re.split('\W+', nzb_name)
+        required_words = [x.strip().lower() for x in self.conf('required_words').lower().split(',')]
 
         if self.conf('required_words') and not list(set(nzb_words) & set(required_words)):
             log.info("NZB doesn't contain any of the required words.")
             return False
 
-        ignored_words = [x.strip() for x in self.conf('ignored_words').split(',')]
+        ignored_words = [x.strip().lower() for x in self.conf('ignored_words').split(',')]
         blacklisted = list(set(nzb_words) & set(ignored_words))
         if self.conf('ignored_words') and blacklisted:
             log.info("Wrong: '%s' blacklisted words: %s" % (nzb['name'], ", ".join(blacklisted)))
@@ -230,7 +241,7 @@ class Searcher(Plugin):
 
         pron_tags = ['xxx', 'sex', 'anal', 'tits', 'fuck', 'porn', 'orgy', 'milf', 'boobs']
         for p_tag in pron_tags:
-            if p_tag in movie_name:
+            if p_tag in nzb_words and p_tag not in movie_words:
                 log.info('Wrong: %s, probably pr0n' % (nzb['name']))
                 return False
 
@@ -251,6 +262,16 @@ class Searcher(Plugin):
         # File to large
         if nzb['size'] and preferred_quality.get('size_max') < nzb['size']:
             log.info('"%s" is too large to be %s. %sMB instead of the maximum of %sMB.' % (nzb['name'], preferred_quality['label'], nzb['size'], preferred_quality['size_max']))
+            return False
+
+
+        # Provider specific functions
+        get_more = nzb.get('get_more_info')
+        if get_more:
+            get_more(nzb)
+
+        extra_check = nzb.get('extra_check')
+        if extra_check and not extra_check(nzb):
             return False
 
 
@@ -277,7 +298,7 @@ class Searcher(Plugin):
         if self.checkNFO(nzb['name'], movie['library']['identifier']):
             return True
 
-        log.info("Wrong: %s, undetermined naming. Looking for '%s (%s)'" % (nzb['name'], getTitle(movie['library']), movie['library']['year']))
+        log.info("Wrong: %s, undetermined naming. Looking for '%s (%s)'" % (nzb['name'], movie_name, movie['library']['year']))
         return False
 
     def containsOtherQuality(self, nzb, movie_year = None, preferred_quality = {}, single_category = False):

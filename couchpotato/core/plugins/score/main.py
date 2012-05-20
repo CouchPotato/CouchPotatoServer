@@ -38,4 +38,9 @@ class Score(Plugin):
         # Duplicates in name
         score += duplicateScore(nzb['name'], getTitle(movie['library']))
 
+        # Extra provider specific check
+        extra_score = nzb.get('extra_score')
+        if extra_score:
+            score += extra_score(nzb)
+
         return score

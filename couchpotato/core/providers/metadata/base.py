@@ -75,7 +75,7 @@ class MetaDataBase(Plugin):
                 break
 
         for cur_file in data['library'].get('files', []):
-            if cur_file.get('type_id') is file_type.get('id'):
+            if cur_file.get('type_id') is file_type.get('id') and os.path.isfile(cur_file.get('path')):
                 return cur_file.get('path')
 
     def getFanart(self, movie_info = {}, data = {}):
