@@ -19,6 +19,7 @@ rename_options = {
         'source': 'Source media (Bluray)',
         'filename': 'Original filename',
         'original_folder': 'Original foldername',
+        'imdb_id': 'IMDB id (tt0123456)',
     },
 }
 

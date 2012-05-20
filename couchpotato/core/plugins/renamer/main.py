@@ -131,6 +131,7 @@ class Renamer(Plugin):
                      'source': group['meta_data']['source'],
                      'resolution_width': group['meta_data'].get('resolution_width'),
                      'resolution_height': group['meta_data'].get('resolution_height'),
+                     'imdb_id': library['identifier'],
                 }
 
                 for file_type in group['files']:
