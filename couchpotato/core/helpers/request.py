@@ -26,7 +26,7 @@ def getParams():
 
             for item in nested:
                 if item is nested[-1]:
-                    current[item] = toUnicode(unquote(value)).encode('utf-8')
+                    current[item] = toUnicode(unquote(value))
                 else:
                     try:
                         current[item]
@@ -35,7 +35,7 @@ def getParams():
 
                     current = current[item]
         else:
-            temp[param] = toUnicode(unquote(value)).encode('utf-8')
+            temp[param] = toUnicode(unquote(value))
 
     return dictToList(temp)
 
@@ -57,7 +57,7 @@ def dictToList(params):
 
 def getParam(attr, default = None):
     try:
-        return toUnicode(unquote(getattr(flask.request, 'args').get(attr, default))).encode('utf-8')
+        return toUnicode(unquote(getattr(flask.request, 'args').get(attr, default)))
     except:
         return default
 
