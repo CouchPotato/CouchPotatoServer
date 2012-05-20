@@ -443,7 +443,7 @@ class Scanner(Plugin):
                 log.debug('Found movie via CP tag: %s' % cur_file)
                 break
 
-        # Check and see if nfo or filenames contains the imdb-id
+        # Check and see if nfo contains the imdb-id
         if not imdb_id:
             try:
                 for nfo_file in files['nfo']:
@@ -454,6 +454,8 @@ class Scanner(Plugin):
             except:
                 pass
 
+        # Check and see if filenames contains the imdb-id
+        if not imdb_id:
             try:
                 for filetype in files:
                     for filetype_file in files[filetype]:
@@ -719,11 +721,12 @@ class Scanner(Plugin):
     def getReleaseNameYear(self, release_name, file_name = None):
 
         # Use guessit first
+        guess = {}
         if file_name:
             try:
                 guess = guess_movie_info(file_name)
                 if guess.get('title') and guess.get('year'):
-                    return {
+                    guess = {
                         'name': guess.get('title'),
                         'year': guess.get('year'),
                     }
@@ -734,11 +737,12 @@ class Scanner(Plugin):
         cleaned = ' '.join(re.split('\W+', simplifyString(release_name)))
         cleaned = re.sub(self.clean, ' ', cleaned)
         year = self.findYear(cleaned)
+        cp_guess = {}
 
         if year: # Split name on year
             try:
                 movie_name = cleaned.split(year).pop(0).strip()
-                return {
+                cp_guess = {
                     'name': movie_name,
                     'year': int(year),
                 }
@@ -747,11 +751,16 @@ class Scanner(Plugin):
         else: # Split name on multiple spaces
             try:
                 movie_name = cleaned.split('  ').pop(0).strip()
-                return {
+                cp_guess = {
                     'name': movie_name,
                     'year': int(year),
                 }
             except:
                 pass
 
-        return {}
+        if cp_guess.get('year') == guess.get('year') and len(cp_guess.get('name', '')) > len(guess.get('name', '')):
+            return cp_guess
+        elif guess == {}:
+            return cp_guess
+
+        return guess
