@@ -46,7 +46,7 @@ def getOptions(base_path, args):
 
 
 def cleanup():
-    fireEvent('app.crappy_shutdown', single = True)
+    fireEvent('app.shutdown', single = True)
     time.sleep(1)
 
 # Tornado monkey patch logging..

@@ -55,7 +55,7 @@ class Updater(Plugin):
         if self.updater.check():
             if self.conf('automatic') and not self.updater.update_failed:
                 if self.updater.doUpdate():
-                    fireEventAsync('app.crappy_restart')
+                    fireEventAsync('app.restart')
             else:
                 if self.conf('notification'):
                     fireEvent('updater.available', message = 'A new update is available', data = self.updater.info())

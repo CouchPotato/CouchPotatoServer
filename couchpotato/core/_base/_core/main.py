@@ -18,7 +18,7 @@ log = CPLog(__name__)
 
 class Core(Plugin):
 
-    ignore_restart = ['Core.crappyRestart', 'Core.crappyShutdown', 'Updater.check']
+    ignore_restart = ['Core.restart', 'Core.shutdown', 'Updater.check']
     shutdown_started = False
 
     def __init__(self):
@@ -37,8 +37,8 @@ class Core(Plugin):
             'desc': 'Get version.'
         })
 
-        addEvent('app.crappy_shutdown', self.crappyShutdown)
-        addEvent('app.crappy_restart', self.crappyRestart)
+        addEvent('app.shutdown', self.shutdown)
+        addEvent('app.restart', self.restart)
         addEvent('app.load', self.launchBrowser, priority = 1)
         addEvent('app.base_url', self.createBaseUrl)
         addEvent('app.api_url', self.createApiUrl)
@@ -59,21 +59,10 @@ class Core(Plugin):
             'succes': True
         })
 
-    def crappyShutdown(self):
-        if self.shutdown_started:
-            return
-
-        self.initShutdown()
-        return True
-
-    def crappyRestart(self):
-        if self.shutdown_started:
-            return
-
-        self.initShutdown(restart = True)
-        return True
-
     def shutdown(self):
+        if self.shutdown_started:
+            return False
+
         def shutdown():
             self.initShutdown()
         IOLoop.instance().add_callback(shutdown)
@@ -81,6 +70,9 @@ class Core(Plugin):
         return 'shutdown'
 
     def restart(self):
+        if self.shutdown_started:
+            return False
+
         def restart():
             self.initShutdown(restart = True)
         IOLoop.instance().add_callback(restart)
