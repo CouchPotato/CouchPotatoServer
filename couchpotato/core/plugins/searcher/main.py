@@ -83,6 +83,9 @@ class Searcher(Plugin):
         if not default_title:
             return
 
+        fireEvent('notify.frontend', type = 'searcher.started.%s' % movie['id'], data = True)
+
+        ret = False
         for quality_type in movie['profile']['types']:
             if not self.couldBeReleased(quality_type['quality']['identifier'], release_dates, pre_releases):
                 log.info('To early to search for %s, %s' % (quality_type['quality']['identifier'], default_title))
@@ -107,7 +110,7 @@ class Searcher(Plugin):
 
                 # Check if movie isn't deleted while searching
                 if not db.query(Movie).filter_by(id = movie.get('id')).first():
-                    return
+                    break
 
                 # Add them to this movie releases list
                 for nzb in sorted_results:
@@ -144,7 +147,8 @@ class Searcher(Plugin):
                 for nzb in sorted_results:
                     downloaded = self.download(data = nzb, movie = movie)
                     if downloaded is True:
-                        return True
+                        ret = True
+                        break
                     elif downloaded != 'try_next':
                         break
             else:
@@ -153,11 +157,13 @@ class Searcher(Plugin):
                 break
 
             # Break if CP wants to shut down
-            if self.shuttingDown():
+            if self.shuttingDown() or ret:
                 break
 
+        fireEvent('notify.frontend', type = 'searcher.ended.%s' % movie['id'], data = True)
+
         #db.close()
-        return False
+        return ret
 
     def download(self, data, movie, manual = False):
 

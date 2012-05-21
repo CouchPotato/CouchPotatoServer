@@ -11,53 +11,114 @@ var Movie = new Class({
 		self.view = options.view || 'thumbs';
 		self.list = list;
 
+		self.el = new Element('div.movie.inlay');
+
 		self.profile = Quality.getProfile(data.profile_id) || {};
 		self.parent(self, options);
+
+		App.addEvent('movie.update.'+data.id, self.update.bind(self));
+		App.addEvent('searcher.started.'+data.id, self.searching.bind(self));
+		App.addEvent('searcher.ended.'+data.id, self.searching.bind(self));
+	},
+
+	searching: function(notification){
+		var self = this;
+
+		if(notification && notification.type.indexOf('ended') > -1){
+			if(self.spinner){
+				self.mask.fade('out');
+				setTimeout(function(){
+					self.mask.destroy();
+					self.spinner.el.destroy();
+					self.spinner = null;
+					self.mask = null;
+				}, 400);
+			}
+		}
+		else if(!self.spinner) {
+			self.createMask();
+			self.spinner = createSpinner(self.mask);
+			self.positionMask();
+			self.mask.fade('in');
+		}
+	},
+
+	createMask: function(){
+		var self = this;
+		self.mask = new Element('div.mask', {
+			'styles': {
+				'z-index': '1'
+			}
+		}).inject(self.el, 'top').fade('hide');
+		self.positionMask();
+	},
+
+	positionMask: function(){
+		var self = this,
+			s = self.el.getSize()
+
+		return self.mask.setStyles({
+			'width': s.x,
+			'height': s.y
+		}).position({
+			'relativeTo': self.el
+		})
+	},
+
+	update: function(notification){
+		var self = this;
+
+		self.data = notification.data;
+		self.container.destroy();
+		self.profile = Quality.getProfile(self.data.profile_id) || {};
+		self.create();
 	},
 
 	create: function(){
 		var self = this;
 
-		self.el = new Element('div.movie.inlay').adopt(
-			self.select_checkbox = new Element('input[type=checkbox].inlay', {
-				'events': {
-					'change': function(){
-						self.fireEvent('select')
-					}
-				}
-			}),
-			self.thumbnail = File.Select.single('poster', self.data.library.files),
-			self.data_container = new Element('div.data.inlay.light', {
-				'tween': {
-					duration: 400,
-					transition: 'quint:in:out',
-					onComplete: self.fireEvent.bind(self, 'slideEnd')
-				}
-			}).adopt(
-				self.info_container = new Element('div.info').adopt(
-					self.title = new Element('div.title', {
-						'text': self.getTitle() || 'n/a'
-					}),
-					self.year = new Element('div.year', {
-						'text': self.data.library.year || 'n/a'
-					}),
-					self.rating = new Element('div.rating.icon', {
-						'text': self.data.library.rating
-					}),
-					self.description = new Element('div.description', {
-						'text': self.data.library.plot
-					}),
-					self.quality = new Element('div.quality', {
-						'events': {
-							'click': function(e){
-								var releases = self.el.getElement('.actions .releases');
-									if(releases)
-										releases.fireEvent('click', [e])
-							}
+		self.el.adopt(
+			self.container = new Element('div').adopt(
+				self.select_checkbox = new Element('input[type=checkbox].inlay', {
+					'events': {
+						'change': function(){
+							self.fireEvent('select')
 						}
-					})
-				),
-				self.actions = new Element('div.actions')
+					}
+				}),
+				self.thumbnail = File.Select.single('poster', self.data.library.files),
+				self.data_container = new Element('div.data.inlay.light', {
+					'tween': {
+						duration: 400,
+						transition: 'quint:in:out',
+						onComplete: self.fireEvent.bind(self, 'slideEnd')
+					}
+				}).adopt(
+					self.info_container = new Element('div.info').adopt(
+						self.title = new Element('div.title', {
+							'text': self.getTitle() || 'n/a'
+						}),
+						self.year = new Element('div.year', {
+							'text': self.data.library.year || 'n/a'
+						}),
+						self.rating = new Element('div.rating.icon', {
+							'text': self.data.library.rating
+						}),
+						self.description = new Element('div.description', {
+							'text': self.data.library.plot
+						}),
+						self.quality = new Element('div.quality', {
+							'events': {
+								'click': function(e){
+									var releases = self.el.getElement('.actions .releases');
+										if(releases)
+											releases.fireEvent('click', [e])
+								}
+							}
+						})
+					),
+					self.actions = new Element('div.actions')
+				)
 			)
 		);
 

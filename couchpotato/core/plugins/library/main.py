@@ -127,7 +127,7 @@ class LibraryPlugin(Plugin):
 
             library_dict = library.to_dict(self.default_dict)
 
-        fireEvent('library.update_finish', data = library_dict)
+        fireEvent('notify.frontend', type = 'library.update.%s' % identifier, data = library_dict)
 
         #db.close()
         return library_dict

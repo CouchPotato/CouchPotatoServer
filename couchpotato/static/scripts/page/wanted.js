@@ -17,7 +17,6 @@ Page.Wanted = new Class({
 				'actions': MovieActions
 			});
 			$(self.wanted).inject(self.el);
-			App.addEvent('library.update', self.wanted.update.bind(self.wanted));
 		}
 
 	}
@@ -131,6 +130,7 @@ window.addEvent('domready', function(){
 				var self = this;
 				(e).preventDefault();
 
+				self.movie.searching();
 				Api.request('movie.refresh', {
 					'data': {
 						'id': self.movie.get('id')

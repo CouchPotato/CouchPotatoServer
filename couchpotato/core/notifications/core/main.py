@@ -1,6 +1,6 @@
 from couchpotato import get_session
 from couchpotato.api import addApiView
-from couchpotato.core.event import addEvent, fireEvent
+from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.request import jsonified, getParam
 from couchpotato.core.helpers.variable import tryInt
@@ -47,13 +47,6 @@ class CoreNotifier(Notification):
         })
 
         addApiView('notification.listener', self.listener)
-
-        self.registerEvents()
-
-    def registerEvents(self):
-
-        # Library update, frontend refresh
-        addEvent('library.update_finish', lambda data: fireEvent('notify.frontend', type = 'library.update', data = data))
 
     def markAsRead(self):
         ids = [x.strip() for x in getParam('ids').split(',')]

@@ -88,7 +88,7 @@ var NotificationBase = new Class({
 
 		self.request = Api.request('notification.listener', {
 			'initialDelay': 100,
-    		'delay': 3000,
+    		'delay': 1500,
     		'data': {'init':true},
     		'onSuccess': self.processData.bind(self)
 		})

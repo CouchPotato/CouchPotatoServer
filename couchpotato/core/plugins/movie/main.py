@@ -247,8 +247,16 @@ class MoviePlugin(Plugin):
                 if title.default: default_title = title.title
 
             if movie:
-                fireEventAsync('library.update', identifier = movie.library.identifier, default_title = default_title, force = True)
-                fireEventAsync('searcher.single', movie.to_dict(self.default_dict))
+                def notifyFront():
+                    movie = db.query(Movie).filter_by(id = id).first()
+                    fireEvent('notify.frontend', type = 'movie.update.%s' % movie.id, data = movie.to_dict(self.default_dict))
+
+                def afterUpdate():
+                    movie = db.query(Movie).filter_by(id = id).first()
+                    fireEventAsync('searcher.single', movie.to_dict(self.default_dict), on_complete = notifyFront)
+
+                fireEventAsync('library.update', identifier = movie.library.identifier, default_title = default_title, force = True, on_complete = afterUpdate)
+
 
         #db.close()
         return jsonified({
