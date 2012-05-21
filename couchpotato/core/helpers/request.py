@@ -70,9 +70,8 @@ def jsonify(mimetype, *args, **kwargs):
     return getattr(current_app, 'response_class')(content, mimetype = mimetype)
 
 def jsonified(*args, **kwargs):
-    from couchpotato.environment import Env
     callback = getParam('callback_func', None)
     if callback:
         return padded_jsonify(callback, *args, **kwargs)
     else:
-        return jsonify('text/javascript' if Env.doDebug() else 'application/json', *args, **kwargs)
+        return jsonify('application/json', *args, **kwargs)
