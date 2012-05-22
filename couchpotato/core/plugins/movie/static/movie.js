@@ -78,7 +78,7 @@ var Movie = new Class({
 		var self = this;
 
 		self.el.adopt(
-			self.container = new Element('div').adopt(
+			self.container = new Element('div.movie_container').adopt(
 				self.select_checkbox = new Element('input[type=checkbox].inlay', {
 					'events': {
 						'change': function(){
@@ -211,7 +211,7 @@ var Movie = new Class({
 			self.el.removeEvents('outerClick')
 
 			self.addEvent('slideEnd:once', function(){
-				self.el.getElements('> :not(.data):not(.poster)').hide();
+				self.el.getElements('> :not(.data):not(.poster):not(.movie_container)').hide();
 			});
 
 			self.data_container.tween('right', -840, 0);
