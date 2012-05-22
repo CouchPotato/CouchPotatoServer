@@ -72,14 +72,20 @@ window.addEvent('domready', function(){
 						new Element('option', {
 							'text': alt.title
 						}).inject(self.title_select);
+						
+						if(alt['default'])
+							self.title_select.set('value', alt.title);
 					});
+
 
 					Quality.getActiveProfiles().each(function(profile){
 						new Element('option', {
 							'value': profile.id ? profile.id : profile.data.id,
 							'text': profile.label ? profile.label : profile.data.label
 						}).inject(self.profile_select);
-						self.profile_select.set('value', (self.movie.profile || {})['id']);
+
+						if(self.movie.profile)
+							self.profile_select.set('value', self.movie.profile.data.id);
 					});
 
 				}

@@ -247,15 +247,7 @@ class MoviePlugin(Plugin):
                 if title.default: default_title = title.title
 
             if movie:
-                def notifyFront():
-                    movie = db.query(Movie).filter_by(id = id).first()
-                    fireEvent('notify.frontend', type = 'movie.update.%s' % movie.id, data = movie.to_dict(self.default_dict))
-
-                def afterUpdate():
-                    movie = db.query(Movie).filter_by(id = id).first()
-                    fireEventAsync('searcher.single', movie.to_dict(self.default_dict), on_complete = notifyFront)
-
-                fireEventAsync('library.update', identifier = movie.library.identifier, default_title = default_title, force = True, on_complete = afterUpdate)
+                fireEventAsync('library.update', identifier = movie.library.identifier, default_title = default_title, force = True, on_complete = self.createOnComplete(id))
 
 
         #db.close()
@@ -377,7 +369,7 @@ class MoviePlugin(Plugin):
             fireEvent('movie.restatus', m.id)
 
             movie_dict = m.to_dict(self.default_dict)
-            fireEventAsync('searcher.single', movie_dict)
+            fireEventAsync('searcher.single', movie_dict, on_complete = self.createNotifyFront(movie_id))
 
         #db.close()
         return jsonified({
@@ -466,3 +458,22 @@ class MoviePlugin(Plugin):
         #db.close()
 
         return True
+
+    def createOnComplete(self, movie_id):
+
+        def onComplete():
+            db = get_session()
+            movie = db.query(Movie).filter_by(id = movie_id).first()
+            fireEventAsync('searcher.single', movie.to_dict(self.default_dict), on_complete = self.createNotifyFront(movie_id))
+
+        return onComplete
+
+
+    def createNotifyFront(self, movie_id):
+
+        def notifyFront():
+            db = get_session()
+            movie = db.query(Movie).filter_by(id = movie_id).first()
+            fireEvent('notify.frontend', type = 'movie.update.%s' % movie.id, data = movie.to_dict(self.default_dict))
+
+        return notifyFront
