@@ -1,7 +1,6 @@
 from axl.axel import Event
 from couchpotato.core.helpers.variable import mergeDicts, natcmp
 from couchpotato.core.logger import CPLog
-import thread
 import threading
 import traceback
 
