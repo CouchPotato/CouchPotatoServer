@@ -138,8 +138,8 @@ class LibraryPlugin(Plugin):
         library = db.query(Library).filter_by(identifier = identifier).first()
 
         if not library.info:
-            self.update(identifier)
-            dates = library.get('info', {}).get('release_dates')
+            library_dict = self.update(identifier)
+            dates = library_dict.get('info', {}).get('release_dates')
         else:
             dates = library.info.get('release_date')
 

@@ -287,7 +287,7 @@ class MoviePlugin(Plugin):
 
         db = get_session()
         m = db.query(Movie).filter_by(library_id = library.get('id')).first()
-        do_search = False
+        added = True
         if not m:
             m = Movie(
                 library_id = library.get('id'),
@@ -295,8 +295,13 @@ class MoviePlugin(Plugin):
                 status_id = status_active.get('id'),
             )
             db.add(m)
-            fireEvent('library.update', params.get('identifier'), default_title = params.get('title', ''))
-            do_search = True
+            db.commit()
+
+            onComplete = None
+            if search_after:
+                onComplete = self.createOnComplete(m.id)
+
+            fireEventAsync('library.update', params.get('identifier'), default_title = params.get('title', ''), on_complete = onComplete)
         elif force_readd:
             # Clean snatched history
             for release in m.releases:
@@ -306,9 +311,11 @@ class MoviePlugin(Plugin):
             m.profile_id = params.get('profile_id', default_profile.get('id'))
         else:
             log.debug('Movie already exists, not updating: %s' % params)
+            added = False
 
         if force_readd:
             m.status_id = status_active.get('id')
+            do_search = True
 
         db.commit()
 
@@ -321,8 +328,12 @@ class MoviePlugin(Plugin):
 
         movie_dict = m.to_dict(self.default_dict)
 
-        if (force_readd or do_search) and search_after:
-            fireEventAsync('searcher.single', movie_dict)
+        if do_search and search_after:
+            onComplete = self.createOnComplete(m.id)
+            onComplete()
+
+        if added:
+            fireEvent('notify.frontend', type = 'movie.added', data = movie_dict)
 
         #db.close()
         return movie_dict

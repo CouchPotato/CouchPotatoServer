@@ -28,8 +28,10 @@ var Movie = new Class({
 			if(self.spinner){
 				self.mask.fade('out');
 				setTimeout(function(){
-					self.mask.destroy();
-					self.spinner.el.destroy();
+					if(self.mask)
+						self.mask.destroy();
+					if(self.spinner)
+						self.spinner.el.destroy();
 					self.spinner = null;
 					self.mask = null;
 				}, 400);

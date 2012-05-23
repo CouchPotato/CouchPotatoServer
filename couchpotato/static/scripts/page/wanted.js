@@ -14,7 +14,8 @@ Page.Wanted = new Class({
 			self.wanted = new MovieList({
 				'identifier': 'wanted',
 				'status': 'active',
-				'actions': MovieActions
+				'actions': MovieActions,
+				'add_new': true
 			});
 			$(self.wanted).inject(self.el);
 		}
