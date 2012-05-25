@@ -10,7 +10,7 @@ var MovieList = new Class({
 	},
 
 	movies: [],
-	movies_added: [],
+	movies_added: {},
 	letters: {},
 	filter: {
 		'startswith': null,
@@ -106,7 +106,7 @@ var MovieList = new Class({
 		m.fireEvent('injected');
 
 		self.movies.include(m)
-		self.movies_added.include(movie.id);
+		self.movies_added[movie.id] = true;
 	},
 
 	createNavigation: function(){
