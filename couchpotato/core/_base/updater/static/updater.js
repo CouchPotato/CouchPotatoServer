@@ -52,7 +52,7 @@ var UpdaterBase = new Class({
 	createMessage: function(data){
 		var self = this;
 
-		var changelog = 'https://github.com/'+data.repo_name+'/compare/'+data.version.hash+'...'+data.update_version.hash;
+		var changelog = 'https://github.com/'+data.repo_name+'/compare/'+data.version.hash+'...'+data.branch;
 		if(data.update_version.changelog)
 			changelog = data.update_version.changelog + '#' + data.version.hash+'...'+data.update_version.hash
 
@@ -85,6 +85,7 @@ var UpdaterBase = new Class({
 					App.checkAvailable.delay(500, App);
 					if(self.message)
 						self.message.destroy();
+					window.location.reload();
 				}
 			}
 		});
