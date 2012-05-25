@@ -211,7 +211,7 @@ class Renamer(Plugin):
                         if file_type is 'subtitle':
 
                             # rename subtitles with or without language
-                            #rename_files[current_file] = os.path.join(destination, final_folder_name, final_file_name)
+                            rename_files[current_file] = os.path.join(destination, final_folder_name, final_file_name)
                             sub_langs = group['subtitle_language'].get(current_file, [])
 
                             rename_extras = self.getRenameExtras(
