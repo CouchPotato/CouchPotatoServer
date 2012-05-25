@@ -41,7 +41,7 @@ var MovieList = new Class({
 		var self = this;
 		window.scroll(0,0);
 
-		if(self.movies_added[notification.data.id])
+		if(!self.movies_added[notification.data.id])
 			self.createMovie(notification.data, 'top');
 	},
 
