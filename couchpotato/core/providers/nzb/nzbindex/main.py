@@ -71,6 +71,7 @@ class NzbIndex(NZBProvider, RSS):
                         'id': nzbindex_id,
                         'type': 'nzb',
                         'provider': self.getName(),
+                        'download': self.download,
                         'name': self.getTextElement(nzb, "title"),
                         'age': self.calculateAge(int(time.mktime(parse(self.getTextElement(nzb, "pubDate")).timetuple()))),
                         'size': tryInt(enclosure['length']) / 1024 / 1024,
