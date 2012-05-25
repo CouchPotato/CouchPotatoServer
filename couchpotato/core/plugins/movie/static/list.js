@@ -278,6 +278,7 @@ var MovieList = new Class({
 			'events': {
 				'click': function(e){
 					(e).preventDefault();
+					this.set('text', 'Deleting..')
 					Api.request('movie.delete', {
 						'data': {
 							'id': ids.join(','),
