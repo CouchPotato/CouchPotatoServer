@@ -62,13 +62,15 @@ class FileBrowser(Plugin):
 
     def view(self):
 
+        path = getParam('path', '/')
+
         try:
-            dirs = self.getDirectories(path = getParam('path', '/'), show_hidden = getParam('show_hidden', True))
+            dirs = self.getDirectories(path = path, show_hidden = getParam('show_hidden', True))
         except:
             dirs = []
 
         return jsonified({
-            'is_root': getParam('path', '/') == '/',
+            'is_root': path == '/' or not path,
             'empty': len(dirs) == 0,
             'dirs': dirs,
         })

@@ -702,7 +702,7 @@ Option.Directory = new Class({
 		var v = self.input.get('text');
 		var previous_dir = self.getParentDir();
 
-		if(previous_dir != v && previous_dir.length > 1){
+		if(previous_dir != v && previous_dir.length >= 1 && !json.is_root){
 			self.back_button.set('data-value', previous_dir)
 			self.back_button.set('html', '&laquo; '+self.getCurrentDirname(previous_dir))
 			self.back_button.show()
