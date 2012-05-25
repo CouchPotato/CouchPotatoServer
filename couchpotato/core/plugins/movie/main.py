@@ -302,6 +302,7 @@ class MoviePlugin(Plugin):
                 onComplete = self.createOnComplete(m.id)
 
             fireEventAsync('library.update', params.get('identifier'), default_title = params.get('title', ''), on_complete = onComplete)
+            do_search = False
         elif force_readd:
             # Clean snatched history
             for release in m.releases:
