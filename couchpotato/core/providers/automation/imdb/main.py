@@ -23,7 +23,14 @@ class IMDB(Automation):
         movies = []
         headers = {}
 
+        enablers = self.conf('automation_urls_use').split(',')
+
+        index = -1
         for csv_url in self.conf('automation_urls').split(','):
+            index += 1
+            if not enablers[index]:
+                continue
+
             prop_name = 'automation.imdb.last_update.%s' % md5(csv_url)
             last_update = float(Env.prop(prop_name, default = 0))
 
@@ -36,6 +43,8 @@ class IMDB(Automation):
                     for column in csv_reader.next():
                         headers[column] = nr
                         nr += 1
+                else:
+                    csv_reader.next()
 
                 for row in csv_reader:
                     created = int(time.mktime(parse(row[headers['created']]).timetuple()))

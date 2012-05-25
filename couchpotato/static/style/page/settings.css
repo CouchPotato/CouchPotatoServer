@@ -588,3 +588,8 @@
 			margin-left: 10px;
 			display: inline-block;
 		}
+		
+.active .group_imdb_automation:not(.disabled) {
+	background: url('../../images/imdb_watchlist.png') no-repeat right 50px;
+	min-height: 210px;
+}
