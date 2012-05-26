@@ -165,7 +165,7 @@ class CoreNotifier(Notification):
         self.listeners.append((callback, last_id))
 
     def removeListener(self, callback):
-        self.m_lock.aquire()
+        self.m_lock.acquire()
         for list_tuple in self.listeners:
             try:
                 listener, last_id = list_tuple
@@ -177,7 +177,7 @@ class CoreNotifier(Notification):
 
     def cleanMessages(self):
 
-        self.m_lock.aquire()
+        self.m_lock.acquire()
         for message in self.messages:
             if message['time'] < (time.time() - 15):
                 self.messages.remove(message)
