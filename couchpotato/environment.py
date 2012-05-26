@@ -23,7 +23,6 @@ class Env(object):
     _deamonize = False
     _desktop = None
     _session = None
-    _httpserver = None
 
     ''' Data paths and directories '''
     _app_dir = ""

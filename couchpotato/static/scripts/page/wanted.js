@@ -137,7 +137,6 @@ window.addEvent('domready', function(){
 				var self = this;
 				(e).preventDefault();
 
-				self.movie.searching();
 				Api.request('movie.refresh', {
 					'data': {
 						'id': self.movie.get('id')

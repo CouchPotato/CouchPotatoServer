@@ -239,6 +239,7 @@ class MoviePlugin(Plugin):
         db = get_session()
 
         for id in getParam('id').split(','):
+            fireEvent('notify.frontend', type = 'movie.busy.%s' % id, data = True)
             movie = db.query(Movie).filter_by(id = id).first()
 
             # Get current selected title

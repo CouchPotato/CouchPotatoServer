@@ -17,14 +17,16 @@ var Movie = new Class({
 		self.parent(self, options);
 
 		App.addEvent('movie.update.'+data.id, self.update.bind(self));
-		App.addEvent('searcher.started.'+data.id, self.searching.bind(self));
-		App.addEvent('searcher.ended.'+data.id, self.searching.bind(self));
+		App.addEvent('movie.busy.'+data.id, function(notification){
+			if(notification.data)
+				self.busy(true)
+		});
 	},
 
-	searching: function(notification){
+	busy: function(set_busy){
 		var self = this;
 
-		if(notification && notification.type.indexOf('ended') > -1){
+		if(!set_busy){
 			if(self.spinner){
 				self.mask.fade('out');
 				setTimeout(function(){
@@ -72,8 +74,11 @@ var Movie = new Class({
 
 		self.data = notification.data;
 		self.container.destroy();
+
 		self.profile = Quality.getProfile(self.data.profile_id) || {};
 		self.create();
+		
+		self.busy(false);
 	},
 
 	create: function(){
