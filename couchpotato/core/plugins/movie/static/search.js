@@ -221,7 +221,9 @@ Block.Search.Item = new Class({
 				}
 			}).adopt(
 				self.thumbnail = info.images && info.images.poster.length > 0 ? new Element('img.thumbnail', {
-					'src': info.images.poster[0]
+					'src': info.images.poster[0],
+					'height': null,
+					'width': null
 				}) : null,
 				new Element('div.info').adopt(
 					self.title = new Element('h2', {
@@ -332,8 +334,10 @@ Block.Search.Item = new Class({
 
 			self.options.adopt(
 				new Element('div').adopt(
-					self.info.images && self.info.images.poster.length > 0 ? new Element('img.thumbnail', {
-						'src': self.info.images.poster[0]
+					self.option_thumbnail = self.info.images && self.info.images.poster.length > 0 ? new Element('img.thumbnail', {
+						'src': self.info.images.poster[0],
+						'height': null,
+						'width': null
 					}) : null,
 					self.info.in_wanted ? new Element('span.in_wanted', {
 						'text': 'Already in wanted list: ' + self.info.in_wanted.profile.label

@@ -437,6 +437,7 @@ body > .spinner, .mask{
 	border-radius:3px;
 	border: 1px solid #252930;
 	box-shadow: inset 0 1px 0px rgba(255,255,255,0.20), 0 0 3px rgba(0,0,0, 0.2);
+	background: rgb(55,62,74);
 	background-image: -webkit-gradient(
 	    linear,
 	    left bottom,
