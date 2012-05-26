@@ -314,7 +314,6 @@ class Renamer(Plugin):
 
                                 break
                         elif release.status_id is snatched_status.get('id'):
-                            print release.quality.label, group['meta_data']['quality']['label']
                             if release.quality.id is group['meta_data']['quality']['id']:
                                 log.debug('Marking release as downloaded')
                                 release.status_id = downloaded_status.get('id')
