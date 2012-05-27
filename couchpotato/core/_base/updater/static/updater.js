@@ -82,10 +82,11 @@ var UpdaterBase = new Class({
 			'onComplete': function(json){
 				if(json.success){
 					App.restart('Please wait while CouchPotato is being updated with more awesome stuff.', 'Updating');
-					App.checkAvailable.delay(500, App);
+					App.checkAvailable.delay(500, App, [1000, function(){
+						window.location.reload();
+					}]);
 					if(self.message)
 						self.message.destroy();
-					window.location.reload();
 				}
 			}
 		});

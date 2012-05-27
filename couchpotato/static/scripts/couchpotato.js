@@ -220,18 +220,21 @@ var CouchPotato = new Class({
 		self.checkAvailable(3000);
 	},
 
-	checkAvailable: function(delay){
+	checkAvailable: function(delay, onAvailable){
 		var self = this;
 
 		(function(){
 
 			Api.request('app.available', {
 				'onFailure': function(){
-					self.checkAvailable.delay(1000, self);
+					self.checkAvailable.delay(1000, self, [delay, onAvailable]);
 					self.fireEvent('unload');
 				},
 				'onSuccess': function(){
+					if(onAvailable)
+						onAvailable()
 					self.unBlockPage();
+					self.fireEvent('reload');
 				}
 			});
 
@@ -263,13 +266,6 @@ var CouchPotato = new Class({
 
 	createUrl: function(action, params){
 		return this.options.base_url + (action ? action+'/' : '') + (params ? '?'+Object.toQueryString(params) : '')
-	},
-
-	notify: function(options){
-		return this.growl.notify({
-            title: "this scrolls away",
-            text: "test - hello there. mouseover to pause away action"
-        });
 	}
 
 });
