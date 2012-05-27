@@ -248,7 +248,7 @@ class MoviePlugin(Plugin):
             if movie:
                 for title in movie.library.titles:
                     if title.default: 
-			default_title = title.title
+                        default_title = title.title
                 fireEventAsync('library.update', identifier = movie.library.identifier, default_title = default_title, force = True, on_complete = self.createOnComplete(id))
 
 
