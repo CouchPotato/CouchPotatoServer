@@ -184,7 +184,7 @@ class CoreNotifier(Notification):
         for i in xrange(len(self.messages)):
             index = len(self.messages) - i - 1
             if self.messages[index]["message_id"] == last_id: break
-            recent = self.messages[index + 1:]
+            recent = self.messages[index:]
 
         self.m_lock.release()
 
