@@ -244,10 +244,11 @@ class MoviePlugin(Plugin):
 
             # Get current selected title
             default_title = ''
-            for title in movie.library.titles:
-                if title.default: default_title = title.title
 
             if movie:
+                for title in movie.library.titles:
+                    if title.default: 
+			default_title = title.title
                 fireEventAsync('library.update', identifier = movie.library.identifier, default_title = default_title, force = True, on_complete = self.createOnComplete(id))
 
 
@@ -277,6 +278,8 @@ class MoviePlugin(Plugin):
         })
 
     def add(self, params = {}, force_readd = True, search_after = True):
+
+        do_search = False
 
         library = fireEvent('library.add', single = True, attrs = params, update_after = False)
 
