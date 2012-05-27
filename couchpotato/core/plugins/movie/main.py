@@ -290,6 +290,7 @@ class MoviePlugin(Plugin):
         db = get_session()
         m = db.query(Movie).filter_by(library_id = library.get('id')).first()
         added = True
+        do_search = False
         if not m:
             m = Movie(
                 library_id = library.get('id'),
