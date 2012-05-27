@@ -30,7 +30,7 @@ class IMDB(Automation):
             index += 1
             if not enablers[index]:
                 continue
-            elif 'author_id=' in csv_url:
+            elif 'author_id=' not in csv_url:
                 log.error('This isn\'t the correct url.: %s' % csv_url)
                 continue
 
