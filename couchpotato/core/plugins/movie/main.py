@@ -242,12 +242,13 @@ class MoviePlugin(Plugin):
             fireEvent('notify.frontend', type = 'movie.busy.%s' % id, data = True)
             movie = db.query(Movie).filter_by(id = id).first()
 
-            # Get current selected title
-            default_title = ''
-            for title in movie.library.titles:
-                if title.default: default_title = title.title
-
             if movie:
+
+                # Get current selected title
+                default_title = ''
+                for title in movie.library.titles:
+                    if title.default: default_title = title.title
+
                 fireEventAsync('library.update', identifier = movie.library.identifier, default_title = default_title, force = True, on_complete = self.createOnComplete(id))
 
 
