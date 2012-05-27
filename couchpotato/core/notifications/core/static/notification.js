@@ -9,6 +9,7 @@ var NotificationBase = new Class({
 
 		// Listener
 		App.addEvent('unload', self.stopPoll.bind(self));
+		App.addEvent('reload', self.startInterval.bind(self, [true]));
 		App.addEvent('notification', self.notify.bind(self));
 
 		// Add test buttons to settings page
@@ -86,10 +87,13 @@ var NotificationBase = new Class({
 
 	},
 
-	startInterval: function(){
+	startInterval: function(force){
 		var self = this;
 		
-		if(self.stopped) return;
+		if(self.stopped && !force){
+			self.stopped = false;
+			return;
+		}
 
 		Api.request('notification.listener', {
     		'data': {'init':true},
@@ -132,7 +136,7 @@ var NotificationBase = new Class({
 				App.fireEvent(result.type, result)
 			})
 
-			self.last_id = json.result.getLast().id
+			self.last_id = json.result.getLast().message_id
 		}
 
 		// Restart poll

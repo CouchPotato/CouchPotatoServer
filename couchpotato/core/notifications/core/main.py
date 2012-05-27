@@ -17,7 +17,7 @@ log = CPLog(__name__)
 
 class CoreNotifier(Notification):
 
-    m_lock = threading.RLock()
+    m_lock = threading.Lock()
     messages = []
     listeners = []
 
@@ -124,14 +124,14 @@ class CoreNotifier(Notification):
 
         self.m_lock.acquire()
         message = {
-            'id': str(uuid.uuid4()),
+            'message_id': str(uuid.uuid4()),
             'time': time.time(),
             'type': type,
             'data': data,
         }
         self.messages.append(message)
 
-        while True and not self.shuttingDown():
+        while len(self.listeners) > 0 and not self.shuttingDown():
             try:
                 listener, last_id = self.listeners.pop()
                 listener({
@@ -142,7 +142,6 @@ class CoreNotifier(Notification):
                 break
 
         self.m_lock.release()
-
         self.cleanMessages()
 
     def addListener(self, callback, last_id = None):
@@ -157,8 +156,9 @@ class CoreNotifier(Notification):
 
         self.listeners.append((callback, last_id))
 
+
     def removeListener(self, callback):
-        self.m_lock.acquire()
+
         for list_tuple in self.listeners:
             try:
                 listener, last_id = list_tuple
@@ -166,26 +166,28 @@ class CoreNotifier(Notification):
                     self.listeners.remove(list_tuple)
             except:
                 pass
-        self.m_lock.release()
 
     def cleanMessages(self):
-
         self.m_lock.acquire()
+
         for message in self.messages:
             if message['time'] < (time.time() - 15):
                 self.messages.remove(message)
+
         self.m_lock.release()
 
     def getMessages(self, last_id):
         self.m_lock.acquire()
+
         recent = []
         index = 0
         for i in xrange(len(self.messages)):
             index = len(self.messages) - i - 1
-            if self.messages[index]["id"] == last_id: break
+            if self.messages[index]["message_id"] == last_id: break
             recent = self.messages[index + 1:]
 
         self.m_lock.release()
+
         return recent or []
 
     def listener(self):
