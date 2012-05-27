@@ -237,19 +237,51 @@ class Scanner(Plugin):
 
 
         # Group the files based on the identifier
-        for identifier, group in movie_files.iteritems():
+        delete_identifiers = []
+        for identifier, found_files in self.path_identifiers.iteritems():
             log.debug('Grouping files on identifier: %s' % identifier)
 
-            found_files = set(self.path_identifiers.get(identifier, []))
-            group['unsorted_files'].extend(found_files)
+            group = movie_files.get(identifier)
+            if group:
+                group['unsorted_files'].extend(found_files)
+                delete_identifiers.append(identifier)
 
-            # Remove the found files from the leftover stack
-            leftovers = leftovers - found_files
+                # Remove the found files from the leftover stack
+                leftovers = leftovers - set(found_files)
 
             # Break if CP wants to shut down
             if self.shuttingDown():
                 break
 
+        # Cleaning up used
+        for identifier in delete_identifiers:
+            del self.path_identifiers[identifier]
+        del delete_identifiers
+
+        # Group based on folder
+        delete_identifiers = []
+        for identifier, found_files in self.path_identifiers.iteritems():
+            log.debug('Grouping files on foldername: %s' % identifier)
+
+            for ff in found_files:
+                new_identifier = self.createStringIdentifier(os.path.dirname(ff), folder)
+
+                group = movie_files.get(new_identifier)
+                if group:
+                    group['unsorted_files'].extend([ff])
+                    delete_identifiers.append(identifier)
+
+                    # Remove the found files from the leftover stack
+                    leftovers = leftovers - set([ff])
+
+            # Break if CP wants to shut down
+            if self.shuttingDown():
+                break
+
+        # Cleaning up used
+        for identifier in delete_identifiers:
+            del self.path_identifiers[identifier]
+        del delete_identifiers
 
         # Determine file types
         processed_movies = {}
@@ -647,7 +679,7 @@ class Scanner(Plugin):
         identifier = self.removeCPTag(identifier)
 
         # groups, release tags, scenename cleaner, regex isn't correct
-        identifier = re.sub(self.clean, '::', simplifyString(identifier))
+        identifier = re.sub(self.clean, '::', simplifyString(identifier)).strip(':')
 
         # Year
         year = self.findYear(identifier)
