@@ -55,13 +55,6 @@ class CoreNotifier(Notification):
         addApiView('notification.listener', self.listener)
 
 
-        def test():
-            while True:
-                time.sleep(1)
-
-        addEvent('app.load', test)
-
-
     def markAsRead(self):
         ids = [x.strip() for x in getParam('ids').split(',')]
 
