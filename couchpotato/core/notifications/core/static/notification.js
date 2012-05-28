@@ -136,7 +136,8 @@ var NotificationBase = new Class({
 				App.fireEvent(result.type, result)
 			})
 
-			self.last_id = json.result.getLast().message_id
+			if(json.result.length > 0)
+				self.last_id = json.result.getLast().message_id
 		}
 
 		// Restart poll
