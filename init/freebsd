@@ -31,24 +31,14 @@ load_rc_config ${name}
 : ${couchpotato_user:="_sabnzbd"}
 : ${couchpotato_dir:="/usr/local/couchpotato"}
 : ${couchpotato_chdir:="${couchpotato_dir}"}
-: ${couchpotato_pid:="${couchpotato_dir}/couchpotato.pid"}
+: ${couchpotato_pid:="/var/run/couchpotato.pid"}
 
-WGET="/usr/local/bin/wget" # You need wget for this script to safely shutdown CouchPotato.
-HOST="127.0.0.1" # Set CouchPotato address here.
-PORT="8081" # Set CouchPotato port here.
-CPAPI="" # Set CouchPotato API key
-
+pidfile="${couchpotato_pid}"
 status_cmd="${name}_status"
 stop_cmd="${name}_stop"
 
 command="/usr/sbin/daemon"
-command_args="-f -p ${couchpotato_pid} python ${couchpotato_dir}/couchpotato.py ${couchpotato_flags}"
-
-# Check for wget and refuse to start without it.
-if [ ! -x "${WGET}" ]; then
-  warn "couchpotato not started: You need wget to safely shut down CouchPotato."
-  exit 1
-fi
+command_args="-f -p ${couchpotato_pid} python ${couchpotato_dir}/CouchPotato.py ${couchpotato_flags} --pid_file=${couchpotato_pid}"
 
 # Ensure user is root when running this script.
 if [ `id -u` != "0" ]; then
@@ -59,19 +49,23 @@ fi
 verify_couchpotato_pid() {
     # Make sure the pid corresponds to the CouchPotato process.
     pid=`cat ${couchpotato_pid} 2>/dev/null`
-    ps -p ${pid} | grep -q "python ${couchpotato_dir}/couchpotato.py"
+    ps -p ${pid} | grep -q "python ${couchpotato_dir}/CouchPotato.py"
     return $?
 }
 
 # Try to stop CouchPotato cleanly by calling shutdown over http.
 couchpotato_stop() {
+    
     echo "Stopping $name"
     verify_couchpotato_pid
-    ${WGET} -O - -q "http://${HOST}:${PORT}/${CPAPI}/app.shutdown/" >/dev/null
+
     if [ -n "${pid}" ]; then
+      kill -SIGTERM ${pid} 2> /dev/null
       wait_for_pids ${pid}
+      kill -9 ${pid} 2> /dev/null
       echo "Stopped"
     fi
+
 }
 
 couchpotato_status() {
