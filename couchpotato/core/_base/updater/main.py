@@ -28,7 +28,7 @@ class Updater(Plugin):
         else:
             self.updater = SourceUpdater()
 
-        fireEvent('schedule.interval', 'updater.check', self.check, hours = 6)
+        fireEvent('schedule.interval', 'updater.check', self.autoUpdate, hours = 6)
         addEvent('app.load', self.check)
         addEvent('updater.info', self.info)
 
@@ -48,17 +48,20 @@ class Updater(Plugin):
             'return': {'type': 'see updater.info'}
         })
 
+    def autoUpdate(self):
+        if self.check() and self.conf('automatic') and not self.updater.update_failed:
+            self.updater.doUpdate()
+
     def check(self):
         if self.isDisabled():
             return
 
         if self.updater.check():
-            if self.conf('automatic') and not self.updater.update_failed:
-                if self.updater.doUpdate():
-                    fireEventAsync('app.restart')
-            else:
-                if self.conf('notification'):
-                    fireEvent('updater.available', message = 'A new update is available', data = self.updater.info())
+            if self.conf('notification') and not self.conf('automatic'):
+                fireEvent('updater.available', message = 'A new update is available', data = self.updater.info())
+            return True
+
+        return False
 
     def info(self):
         return self.updater.info()
@@ -67,12 +70,22 @@ class Updater(Plugin):
         return jsonified(self.updater.info())
 
     def checkView(self):
-        self.check()
-        return self.updater.getInfo()
+        return jsonified({
+            'update_available': self.check(),
+            'info': self.updater.info()
+        })
 
     def doUpdateView(self):
+
+        self.check()
+        if not self.update_version:
+            log.error('Trying to update when no update is available.')
+            success = False
+        else:
+            success = self.updater.doUpdate()
+
         return jsonified({
-            'success': self.updater.doUpdate()
+            'success': success
         })
 
 
@@ -137,6 +150,7 @@ class GitUpdater(BaseUpdater):
         self.repo = LocalRepository(Env.get('app_dir'), command = git_command)
 
     def doUpdate(self):
+
         try:
             log.debug('Stashing local changes')
             self.repo.saveStash()
@@ -151,6 +165,8 @@ class GitUpdater(BaseUpdater):
             # Notify before returning and restarting
             version_date = datetime.fromtimestamp(info['update_version']['date'])
             fireEvent('updater.updated', 'Updated to a new version with hash "%s", this version is from %s' % (info['update_version']['hash'], version_date), data = info)
+
+            fireEventAsync('app.restart')
 
             return True
         except:
@@ -242,6 +258,8 @@ class SourceUpdater(BaseUpdater):
 
             # Write update version to file
             self.createFile(self.version_file, json.dumps(self.update_version))
+
+            fireEventAsync('app.restart')
 
             return True
         except:

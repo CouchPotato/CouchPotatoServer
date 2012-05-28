@@ -16,7 +16,15 @@ var UpdaterBase = new Class({
 		var self = this;
 
 		Api.request('updater.check', {
-			'onComplete': onComplete || Function.from()
+			'onComplete': function(json){
+				if(onComplete)
+					onComplete(json);
+
+				if(json.update_available)
+					self.doUpdate();
+				else
+					App.unBlockPage()
+			}
 		})
 
 	},
@@ -81,15 +89,19 @@ var UpdaterBase = new Class({
 		Api.request('updater.update', {
 			'onComplete': function(json){
 				if(json.success){
-					App.restart('Please wait while CouchPotato is being updated with more awesome stuff.', 'Updating');
-					App.checkAvailable.delay(500, App, [1000, function(){
-						window.location.reload();
-					}]);
-					if(self.message)
-						self.message.destroy();
+					self.updating();
 				}
 			}
 		});
+	},
+
+	updating: function(){
+		App.blockPage('Please wait while CouchPotato is being updated with more awesome stuff.', 'Updating');
+		App.checkAvailable.delay(500, App, [1000, function(){
+			window.location.reload();
+		}]);
+		if(self.message)
+			self.message.destroy();
 	}
 
 });

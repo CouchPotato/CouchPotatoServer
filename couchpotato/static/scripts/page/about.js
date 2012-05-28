@@ -48,7 +48,7 @@ var AboutSettingTab = new Class({
 					'text': 'Getting version...',
 					'events': {
 						'click': App.checkForUpdate.bind(App, function(json){
-							self.fillVersion(json)
+							self.fillVersion(json.info)
 						}),
 						'mouseenter': function(){
 							this.set('text', 'Check for updates')

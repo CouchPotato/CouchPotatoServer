@@ -24,7 +24,7 @@ var CouchPotato = new Class({
 
 		if(window.location.hash)
 			History.handleInitialState();
-		
+
 		self.openPage(window.location.pathname);
 
 		History.addEvent('change', self.openPage.bind(self));
@@ -211,10 +211,10 @@ var CouchPotato = new Class({
 		}]);
 	},
 
-	checkForUpdate: function(func){
+	checkForUpdate: function(onComplete){
 		var self = this;
 
-		Updater.check(func)
+		Updater.check(onComplete)
 
 		self.blockPage('Please wait. If this takes to long, something must have gone wrong.', 'Checking for updates');
 		self.checkAvailable(3000);
@@ -244,6 +244,8 @@ var CouchPotato = new Class({
 	blockPage: function(message, title){
 		var self = this;
 
+		self.unBlockPage();
+
 		var body = $(document.body);
 		self.mask = new Element('div.mask').adopt(
 			new Element('div').adopt(
@@ -259,9 +261,10 @@ var CouchPotato = new Class({
 
 	unBlockPage: function(){
 		var self = this;
-		self.mask.get('tween').start('opacity', 0).chain(function(){
-			this.element.destroy()
-		});
+		if(self.mask)
+			self.mask.get('tween').start('opacity', 0).chain(function(){
+				this.element.destroy()
+			});
 	},
 
 	createUrl: function(action, params){
