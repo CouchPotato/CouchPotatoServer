@@ -89,7 +89,7 @@
 					font-size: 16px;
 					font-weight: normal;
 					text-overflow: ellipsis;
-					width: 64%;
+					width: auto;
 				}
 
 			.movies .info .year {
@@ -152,7 +152,6 @@
 			.movies .list_view .data .quality, .movies .mass_edit_view .data .quality {
 				text-align: right;
 				float: right;
-				width: 30%;
 			}
 
 		.movies .data .quality .available, .movies .data .quality .snatched {
@@ -200,6 +199,7 @@
 		.movies .list_view .data:hover .actions, .movies .mass_edit_view .data:hover .actions {
 			margin: -34px 2px 0 0;
 			background: #4e5969;
+			position: relative;
 		}
 
 		.movies .delete_container {
