@@ -4,7 +4,7 @@ from couchpotato.core.helpers.encoding import toUnicode, simplifyString
 from couchpotato.core.helpers.variable import getExt, getImdb, tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.core.settings.model import File
+from couchpotato.core.settings.model import File, Movie
 from couchpotato.environment import Env
 from enzyme.exceptions import NoParserError, ParseError
 from guessit import guess_movie_info
@@ -160,6 +160,8 @@ class Scanner(Plugin):
                             files.append(os.path.join(root, filename))
                 except:
                     log.error('Failed getting files from %s: %s' % (folder, traceback.format_exc()))
+
+        db = get_session()
 
         for file_path in files:
 
@@ -359,6 +361,10 @@ class Scanner(Plugin):
             group['library'] = self.determineMovie(group)
             if not group['library']:
                 log.error('Unable to determine movie: %s' % group['identifiers'])
+            else:
+                movie = db.query(Movie).filter_by(library_id = group['library']['id']).first()
+                group['movie_id'] = None if not movie else movie.id
+
 
             processed_movies[identifier] = group
 
