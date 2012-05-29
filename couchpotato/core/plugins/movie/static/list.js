@@ -287,14 +287,19 @@ var MovieList = new Class({
 						'onSuccess': function(){
 							qObj.close();
 
+							var erase_movies = [];
 							self.movies.each(function(movie){
 								if (movie.isSelected()){
 									$(movie).destroy()
-									self.movies.erase(movie)
+									erase_movies.include(movie)
 								}
 							});
 
-							self.calculateSelected()
+							erase_movies.each(function(movie){
+								self.movies.erase(movie);
+							});
+
+							self.calculateSelected();
 						}
 					});
 
