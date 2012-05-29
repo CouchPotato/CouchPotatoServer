@@ -909,6 +909,7 @@ Option.Choice = new Class({
 						var input = self.tag_input.getElement('li:last-child input');
 						input.fireEvent('focus');
 						input.focus();
+						input.setCaretPosition(input.get('value').length);
 					}
 
 					self.el.addEvent('outerClick', function(){
@@ -965,6 +966,12 @@ Option.Choice = new Class({
 			'onChange': self.setOrder.bind(self),
 			'onBlur': function(){
 				self.addLastTag();
+			},
+			'onGoLeft': function(){
+				self.goLeft(this)
+			},
+			'onGoRight': function(){
+				self.goRight(this)
 			}
 		});
 		$(tag).inject(self.tag_input);
@@ -977,6 +984,30 @@ Option.Choice = new Class({
 		self.tags.include(tag);
 
 		return tag;
+	},
+
+	goLeft: function(from_tag){
+		var self = this;
+
+		from_tag.blur();
+
+		var prev_index = self.tags.indexOf(from_tag)-1;
+		if(prev_index >= 0)
+			self.tags[prev_index].selectFrom('right')
+		else
+			from_tag.focus();
+
+	},
+	goRight: function(from_tag){
+		var self = this;
+
+		from_tag.blur();
+
+		var next_index = self.tags.indexOf(from_tag)+1;
+		if(next_index < self.tags.length)
+			self.tags[next_index].selectFrom('left')
+		else
+			from_tag.focus();
 	},
 
 	setOrder: function(){
@@ -1059,7 +1090,16 @@ Option.Choice.Tag = new Class({
 					'width': 0
 				},
 				'events': {
-					'keyup': self.is_choice ? null : function(){
+					'keyup': self.is_choice ? null : function(e){
+						var current_caret_pos = self.input.getCaretPosition();
+						if(e.key == 'left' && current_caret_pos == self.last_caret_pos){
+							self.fireEvent('goLeft');
+						}
+						else if (e.key == 'right' && self.last_caret_pos === current_caret_pos){
+							self.fireEvent('goRight');
+						}
+						self.last_caret_pos = self.input.getCaretPosition();
+
 						self.setWidth();
 						self.fireEvent('change');
 					},
@@ -1081,8 +1121,70 @@ Option.Choice.Tag = new Class({
 
 	},
 
+	blur: function(){
+		var self = this;
+
+		self.input.blur();
+
+		self.selected = false;
+		self.el.removeClass('selected');
+		self.input.removeEvents('outerClick');
+	},
+
 	focus: function(){
-		this.input.focus();
+		var self = this;
+		if(!self.is_choice){
+			this.input.focus();
+		}
+		else {
+			if(self.selected) return;
+			self.selected = true;
+			self.el.addClass('selected');
+			self.input.addEvent('outerClick', self.blur.bind(self));
+
+			var temp_input = new Element('input', {
+				'events': {
+					'keyup': function(e){
+						e.stop();
+
+						if(e.key == 'right'){
+							self.fireEvent('goRight');
+							this.destroy();
+						}
+						else if (e.key == 'left'){
+							self.fireEvent('goLeft');
+							this.destroy();
+						}
+						else if (e.key == 'backspace'){
+							self.del();
+							this.destroy();
+						}
+					}
+				},
+				'styles': {
+					'height': 0,
+					'width': 0,
+					'position': 'absolute',
+					'top': -200
+				}
+			});
+			self.el.adopt(temp_input)
+			temp_input.focus();
+		}
+	},
+
+	selectFrom: function(direction){
+		var self = this;
+
+		if(!direction || self.is_choice){
+			self.focus();
+		}
+		else {
+			self.focus();
+			var position = direction == 'left' ? 0 : self.input.get('value').length;
+			self.input.setCaretPosition(position);
+		}
+
 	},
 
 	setWidth: function(){
