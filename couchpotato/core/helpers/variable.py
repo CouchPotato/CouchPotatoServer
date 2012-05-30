@@ -25,7 +25,7 @@ def getDataDir():
 
     # FreeBSD
     if 'freebsd9' in sys.platform:
-	return os.path.join('/usr/local/', 'couchpotato', 'data')
+        return os.path.join('/usr/local/', 'couchpotato', 'data')
 
     # Linux
     return os.path.join(user_dir, '.couchpotato')
