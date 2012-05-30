@@ -22,6 +22,11 @@ def getDataDir():
     if 'darwin' in platform.platform().lower():
         return os.path.join(user_dir, 'Library', 'Application Support', 'CouchPotato')
 
+    # FreeBSD
+    import sys
+    if 'freebsd' in sys.platform:
+        return os.path.join('/usr/local/', 'couchpotato', 'data')
+
     # Linux
     return os.path.join(user_dir, '.couchpotato')
 
