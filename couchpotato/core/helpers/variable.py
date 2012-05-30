@@ -5,7 +5,6 @@ import platform
 import random
 import re
 import string
-import sys
 
 log = CPLog(__name__)
 
@@ -24,6 +23,7 @@ def getDataDir():
         return os.path.join(user_dir, 'Library', 'Application Support', 'CouchPotato')
 
     # FreeBSD
+    import sys
     if 'freebsd9' in sys.platform:
         return os.path.join('/usr/local/', 'couchpotato', 'data')
 
