@@ -36,9 +36,9 @@ load_rc_config ${name}
 
 WGET="/usr/local/bin/wget" # You need wget for this script to safely shutdown CouchPotato.
 if [ -e "${couchpotato_conf}" ]; then
-	HOST=`cat "${couchpotato_conf}"|grep -A14 "\[core\]"|egrep "^host"|perl -wple 's/^host = (.*)$/$1/'`
-	PORT=`cat "${couchpotato_conf}"|grep -A14 "\[core\]"|egrep "^api_key"|perl -wple 's/^api_key = (.*)$/$1/'`
-	CPAPI=`cat "${couchpotato_conf}"|grep -A14 "\[core\]"|egrep "^port"|perl -wple 's/^port = (.*)$/$1/'`
+        HOST=`cat "${couchpotato_conf}"|grep -A14 "\[core\]"|egrep "^host"|perl -wple 's/^host = (.*)$/$1/'`
+        PORT=`cat "${couchpotato_conf}"|grep -A14 "\[core\]"|egrep "^api_key"|perl -wple 's/^api_key = (.*)$/$1/'`
+        CPAPI=`cat "${couchpotato_conf}"|grep -A14 "\[core\]"|egrep "^port"|perl -wple 's/^port = (.*)$/$1/'`
 fi
 
 status_cmd="${name}_status"
@@ -69,8 +69,8 @@ verify_couchpotato_pid() {
 # Try to stop CouchPotato cleanly by calling shutdown over http.
 couchpotato_stop() {
     if [ ! -e "${couchpotato_conf}" ]; then
-	echo "CouchPotato's settings file does not exist. Try starting CouchPotato, as this should create the file."
-	exit 1
+        echo "CouchPotato's settings file does not exist. Try starting CouchPotato, as this should create the file."
+        exit 1
     fi
     echo "Stopping $name"
     verify_couchpotato_pid
