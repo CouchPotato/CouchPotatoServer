@@ -45,7 +45,7 @@ Page.Log = new Class({
 				new Fx.Scroll(window, {'duration': 0}).toBottom();
 
 				var nav = new Element('ul.nav').inject(self.log, 'top');
-				for (var i = 0; i < json.total; i++) {
+				for (var i = 0; i <= json.total; i++) {
 					new Element('li', {
 						'text': i+1,
 						'class': nr == i ? 'active': '',
@@ -77,6 +77,10 @@ Page.Log = new Class({
 
 	addColors: function(text){
 		var self = this;
+
+		var text = new Element('div', {
+			'html': text
+		}).get('text')
 
 		text = text.replace(/\u001b\[31m/gi, '</span><span class="error">')
 		text = text.replace(/\u001b\[36m/gi, '</span><span class="debug">')

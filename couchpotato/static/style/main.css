@@ -203,18 +203,25 @@ body > .spinner, .mask{
 				display: block;
 				margin-top: 5px;
 			}
-
-		.header .navigation li.disabled {
-			color: #e5e5e5;
+		
+		.header .navigation li a:after {
+			content: '';
+			display: inline-block;
+			height: 2px;
+			width: 100%;
+			position: relative;
+			top: -20px;
+			background-color: #46505e;
+			outline: none;
+			box-shadow: inset 0 1px 8px rgba(0,0,0,0.05), 0 1px 0px rgba(255,255,255,0.15);
+			transition: all .4s cubic-bezier(0.9,0,0.1,1);
 		}
+		
+		.header .navigation li:hover a:after { background-color: #047792; }
+		.header .navigation li.active a:after { background-color: #04bce6; }
 
-		.header .navigation li a:link, .header .navigation li a:visited {
-			color: #fff;
-		}
-
-		.header .navigation li a:hover, .header .navigation li a:active {
-			color: #b1d8dc;
-		}
+		.header .navigation li.disabled { color: #e5e5e5; }
+		.header .navigation li a { color: #fff; }
 
 		.header .navigation .backtotop {
 			opacity: 0;

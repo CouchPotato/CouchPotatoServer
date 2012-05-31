@@ -20,7 +20,7 @@ var PageBase = new Class({
 		// Create tab for page
 		if(self.has_tab){
 			var nav = App.getBlock('navigation');
-			self.tab = nav.addTab({
+			self.tab = nav.addTab(self.name, {
 				'href': App.createUrl(self.name),
 				'title': self.title,
 				'text': self.name.capitalize()
@@ -39,6 +39,7 @@ var PageBase = new Class({
 				self.el.adopt(elements);
 			}
 
+			App.getBlock('navigation').activate(self.name);
 			self.fireEvent('opened');
 		}
 		catch (e){

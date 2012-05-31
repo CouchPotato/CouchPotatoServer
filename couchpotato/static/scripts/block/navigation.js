@@ -32,12 +32,20 @@ Block.Navigation = new Class({
 
 	},
 
-	addTab: function(tab){
+	addTab: function(name, tab){
 		var self = this
 
-		return new Element('li.tab_'+(tab.text.toLowerCase() || 'unknown')).adopt(
+		return new Element('li.tab_'+(name || 'unknown')).adopt(
 			new Element('a', tab)
 		).inject(self.nav)
+
+	},
+
+	activate: function(name){
+		var self = this;
+
+		self.nav.getElements('.active').removeClass('active');
+		self.nav.getElements('.tab_'+name).addClass('active');
 
 	}
 
