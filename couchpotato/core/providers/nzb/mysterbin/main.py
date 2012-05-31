@@ -81,6 +81,7 @@ class Mysterbin(NZBProvider):
                             'size': size,
                             'url': self.urls['download'] % myster_id,
                             'description': description,
+                            'download': self.download,
                             'check_nzb': False,
                         }
 

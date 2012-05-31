@@ -1,9 +1,8 @@
-from couchpotato.core.event import fireEvent
+from couchpotato.core.event import fireEvent, addEvent
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
 from couchpotato.environment import Env
 from gntp import notifier
-import logging
 import traceback
 
 log = CPLog(__name__)
@@ -17,7 +16,7 @@ class Growl(Notification):
         super(Growl, self).__init__()
 
         if self.isEnabled():
-            self.register()
+            addEvent('app.load', self.register)
 
     def register(self):
         if self.registered: return

@@ -1,13 +1,13 @@
 from argparse import ArgumentParser
 from couchpotato import web
-from couchpotato.api import api
+from couchpotato.api import api, NonBlockHandler
 from couchpotato.core.event import fireEventAsync, fireEvent
 from couchpotato.core.helpers.variable import getDataDir, tryInt
 from logging import handlers
 from tornado import autoreload
 from tornado.httpserver import HTTPServer
 from tornado.ioloop import IOLoop
-from tornado.web import RequestHandler
+from tornado.web import RequestHandler, Application, FallbackHandler
 from tornado.wsgi import WSGIContainer
 from werkzeug.contrib.cache import FileSystemCache
 import locale
@@ -227,20 +227,22 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     # Go go go!
     web_container = WSGIContainer(app)
     web_container._log = _log
-    http_server = HTTPServer(web_container, no_keep_alive = True)
-    Env.set('httpserver', http_server)
     loop = IOLoop.instance()
+
+    application = Application([
+        (r'%s/api/%s/nonblock/(.*)/' % (url_base, api_key), NonBlockHandler),
+        (r'.*', FallbackHandler, dict(fallback = web_container)),
+    ],
+        log_function = lambda x : None,
+        debug = config['use_reloader']
+    )
 
     try_restart = True
     restart_tries = 5
 
     while try_restart:
         try:
-            http_server.listen(config['port'], config['host'])
-
-            if config['use_reloader']:
-                autoreload.start(loop)
-
+            application.listen(config['port'], config['host'], no_keep_alive = True)
             loop.start()
         except Exception, e:
             try:

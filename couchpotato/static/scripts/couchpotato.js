@@ -24,8 +24,8 @@ var CouchPotato = new Class({
 
 		if(window.location.hash)
 			History.handleInitialState();
-		else
-			self.openPage(window.location.pathname);
+
+		self.openPage(window.location.pathname);
 
 		History.addEvent('change', self.openPage.bind(self));
 		self.c.addEvent('click:relay(a[href^=/]:not([target]))', self.pushState.bind(self));
@@ -211,27 +211,30 @@ var CouchPotato = new Class({
 		}]);
 	},
 
-	checkForUpdate: function(func){
+	checkForUpdate: function(onComplete){
 		var self = this;
 
-		Updater.check(func)
+		Updater.check(onComplete)
 
 		self.blockPage('Please wait. If this takes to long, something must have gone wrong.', 'Checking for updates');
 		self.checkAvailable(3000);
 	},
 
-	checkAvailable: function(delay){
+	checkAvailable: function(delay, onAvailable){
 		var self = this;
 
 		(function(){
 
 			Api.request('app.available', {
 				'onFailure': function(){
-					self.checkAvailable.delay(1000, self);
+					self.checkAvailable.delay(1000, self, [delay, onAvailable]);
 					self.fireEvent('unload');
 				},
 				'onSuccess': function(){
+					if(onAvailable)
+						onAvailable()
 					self.unBlockPage();
+					self.fireEvent('reload');
 				}
 			});
 
@@ -240,6 +243,8 @@ var CouchPotato = new Class({
 
 	blockPage: function(message, title){
 		var self = this;
+
+		self.unBlockPage();
 
 		var body = $(document.body);
 		self.mask = new Element('div.mask').adopt(
@@ -256,20 +261,14 @@ var CouchPotato = new Class({
 
 	unBlockPage: function(){
 		var self = this;
-		self.mask.get('tween').start('opacity', 0).chain(function(){
-			this.element.destroy()
-		});
+		if(self.mask)
+			self.mask.get('tween').start('opacity', 0).chain(function(){
+				this.element.destroy()
+			});
 	},
 
 	createUrl: function(action, params){
 		return this.options.base_url + (action ? action+'/' : '') + (params ? '?'+Object.toQueryString(params) : '')
-	},
-
-	notify: function(options){
-		return this.growl.notify({
-            title: "this scrolls away",
-            text: "test - hello there. mouseover to pause away action"
-        });
 	}
 
 });

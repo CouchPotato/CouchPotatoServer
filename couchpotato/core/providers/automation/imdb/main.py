@@ -1,17 +1,17 @@
-from couchpotato.core.helpers.variable import md5
+from couchpotato.core.helpers.rss import RSS
+from couchpotato.core.helpers.variable import md5, getImdb
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.automation.base import Automation
 from couchpotato.environment import Env
 from dateutil.parser import parse
-import StringIO
-import csv
 import time
 import traceback
+import xml.etree.ElementTree as XMLTree
 
 log = CPLog(__name__)
 
 
-class IMDB(Automation):
+class IMDB(Automation, RSS):
 
     interval = 1800
 
@@ -21,34 +21,41 @@ class IMDB(Automation):
             return
 
         movies = []
-        headers = {}
 
-        for csv_url in self.conf('automation_urls').split(','):
-            prop_name = 'automation.imdb.last_update.%s' % md5(csv_url)
+        enablers = self.conf('automation_urls_use').split(',')
+
+        index = -1
+        for rss_url in self.conf('automation_urls').split(','):
+
+            index += 1
+            if not enablers[index]:
+                continue
+            elif 'rss.imdb' not in rss_url:
+                log.error('This isn\'t the correct url.: %s' % rss_url)
+                continue
+
+            prop_name = 'automation.imdb.last_update.%s' % md5(rss_url)
             last_update = float(Env.prop(prop_name, default = 0))
 
             try:
-                cache_key = 'imdb_csv.%s' % md5(csv_url)
-                csv_data = self.getCache(cache_key, csv_url)
-                csv_reader = csv.reader(StringIO.StringIO(csv_data))
-                if not headers:
-                    nr = 0
-                    for column in csv_reader.next():
-                        headers[column] = nr
-                        nr += 1
+                cache_key = 'imdb.rss.%s' % md5(rss_url)
 
-                for row in csv_reader:
-                    created = int(time.mktime(parse(row[headers['created']]).timetuple()))
-                    if created < last_update:
+                rss_data = self.getCache(cache_key, rss_url)
+                data = XMLTree.fromstring(rss_data)
+                rss_movies = self.getElements(data, 'channel/item')
+
+                for movie in rss_movies:
+                    created = int(time.mktime(parse(self.getTextElement(movie, "pubDate")).timetuple()))
+                    imdb = getImdb(self.getTextElement(movie, "link"))
+
+                    if not imdb or created < last_update:
                         continue
 
-                    imdb = row[headers['const']]
-                    if imdb:
-                        movies.append(imdb)
+                    movies.append(imdb)
+
             except:
-                log.error('Failed loading IMDB watchlist: %s %s' % (csv_url, traceback.format_exc()))
+                log.error('Failed loading IMDB watchlist: %s %s' % (rss_url, traceback.format_exc()))
 
             Env.prop(prop_name, time.time())
-
 
         return movies

@@ -211,7 +211,7 @@ class Renamer(Plugin):
                         if file_type is 'subtitle':
 
                             # rename subtitles with or without language
-                            #rename_files[current_file] = os.path.join(destination, final_folder_name, final_file_name)
+                            rename_files[current_file] = os.path.join(destination, final_folder_name, final_file_name)
                             sub_langs = group['subtitle_language'].get(current_file, [])
 
                             rename_extras = self.getRenameExtras(
@@ -314,7 +314,6 @@ class Renamer(Plugin):
 
                                 break
                         elif release.status_id is snatched_status.get('id'):
-                            print release.quality.label, group['meta_data']['quality']['label']
                             if release.quality.id is group['meta_data']['quality']['id']:
                                 log.debug('Marking release as downloaded')
                                 release.status_id = downloaded_status.get('id')

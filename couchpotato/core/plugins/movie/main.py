@@ -239,16 +239,18 @@ class MoviePlugin(Plugin):
         db = get_session()
 
         for id in getParam('id').split(','):
+            fireEvent('notify.frontend', type = 'movie.busy.%s' % id, data = True)
             movie = db.query(Movie).filter_by(id = id).first()
 
-            # Get current selected title
-            default_title = ''
-            for title in movie.library.titles:
-                if title.default: default_title = title.title
-
             if movie:
-                fireEventAsync('library.update', identifier = movie.library.identifier, default_title = default_title, force = True)
-                fireEventAsync('searcher.single', movie.to_dict(self.default_dict))
+
+                # Get current selected title
+                default_title = ''
+                for title in movie.library.titles:
+                    if title.default: default_title = title.title
+
+                fireEventAsync('library.update', identifier = movie.library.identifier, default_title = default_title, force = True, on_complete = self.createOnComplete(id))
+
 
         #db.close()
         return jsonified({
@@ -287,6 +289,7 @@ class MoviePlugin(Plugin):
 
         db = get_session()
         m = db.query(Movie).filter_by(library_id = library.get('id')).first()
+        added = True
         do_search = False
         if not m:
             m = Movie(
@@ -295,8 +298,14 @@ class MoviePlugin(Plugin):
                 status_id = status_active.get('id'),
             )
             db.add(m)
-            fireEvent('library.update', params.get('identifier'), default_title = params.get('title', ''))
-            do_search = True
+            db.commit()
+
+            onComplete = None
+            if search_after:
+                onComplete = self.createOnComplete(m.id)
+
+            fireEventAsync('library.update', params.get('identifier'), default_title = params.get('title', ''), on_complete = onComplete)
+            search_after = False
         elif force_readd:
             # Clean snatched history
             for release in m.releases:
@@ -306,9 +315,11 @@ class MoviePlugin(Plugin):
             m.profile_id = params.get('profile_id', default_profile.get('id'))
         else:
             log.debug('Movie already exists, not updating: %s' % params)
+            added = False
 
         if force_readd:
             m.status_id = status_active.get('id')
+            do_search = True
 
         db.commit()
 
@@ -321,8 +332,12 @@ class MoviePlugin(Plugin):
 
         movie_dict = m.to_dict(self.default_dict)
 
-        if (force_readd or do_search) and search_after:
-            fireEventAsync('searcher.single', movie_dict)
+        if do_search and search_after:
+            onComplete = self.createOnComplete(m.id)
+            onComplete()
+
+        if added:
+            fireEvent('notify.frontend', type = 'movie.added', data = movie_dict)
 
         #db.close()
         return movie_dict
@@ -369,7 +384,7 @@ class MoviePlugin(Plugin):
             fireEvent('movie.restatus', m.id)
 
             movie_dict = m.to_dict(self.default_dict)
-            fireEventAsync('searcher.single', movie_dict)
+            fireEventAsync('searcher.single', movie_dict, on_complete = self.createNotifyFront(movie_id))
 
         #db.close()
         return jsonified({
@@ -458,3 +473,22 @@ class MoviePlugin(Plugin):
         #db.close()
 
         return True
+
+    def createOnComplete(self, movie_id):
+
+        def onComplete():
+            db = get_session()
+            movie = db.query(Movie).filter_by(id = movie_id).first()
+            fireEventAsync('searcher.single', movie.to_dict(self.default_dict), on_complete = self.createNotifyFront(movie_id))
+
+        return onComplete
+
+
+    def createNotifyFront(self, movie_id):
+
+        def notifyFront():
+            db = get_session()
+            movie = db.query(Movie).filter_by(id = movie_id).first()
+            fireEvent('notify.frontend', type = 'movie.update.%s' % movie.id, data = movie.to_dict(self.default_dict))
+
+        return notifyFront

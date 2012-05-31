@@ -1,7 +1,7 @@
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.variable import natcmp
 from flask.globals import current_app
-from flask.helpers import json
+from flask.helpers import json, make_response
 from libs.werkzeug.urls import url_decode
 from urllib import unquote
 import flask
@@ -70,9 +70,13 @@ def jsonify(mimetype, *args, **kwargs):
     return getattr(current_app, 'response_class')(content, mimetype = mimetype)
 
 def jsonified(*args, **kwargs):
-    from couchpotato.environment import Env
     callback = getParam('callback_func', None)
     if callback:
-        return padded_jsonify(callback, *args, **kwargs)
+        content = padded_jsonify(callback, *args, **kwargs)
     else:
-        return jsonify('text/javascript' if Env.doDebug() else 'application/json', *args, **kwargs)
+        content = jsonify('application/json', *args, **kwargs)
+
+    response = make_response(content)
+    response.cache_control.no_cache = True
+
+    return response

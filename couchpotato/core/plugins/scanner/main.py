@@ -4,7 +4,7 @@ from couchpotato.core.helpers.encoding import toUnicode, simplifyString
 from couchpotato.core.helpers.variable import getExt, getImdb, tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.core.settings.model import File
+from couchpotato.core.settings.model import File, Movie
 from couchpotato.environment import Env
 from enzyme.exceptions import NoParserError, ParseError
 from guessit import guess_movie_info
@@ -27,7 +27,7 @@ class Scanner(Plugin):
     ignored_in_path = ['_unpack', '_failed_', '_unknown_', '_exists_', '.appledouble', '.appledb', '.appledesktop', os.path.sep + '._', '.ds_store', 'cp.cpnfo'] #unpacking, smb-crap, hidden files
     ignore_names = ['extract', 'extracting', 'extracted', 'movie', 'movies', 'film', 'films', 'download', 'downloads', 'video_ts', 'audio_ts', 'bdmv', 'certificate']
     extensions = {
-        'movie': ['mkv', 'wmv', 'avi', 'mpg', 'mpeg', 'mp4', 'm2ts', 'iso', 'img', 'mdf', 'ts'],
+        'movie': ['mkv', 'wmv', 'avi', 'mpg', 'mpeg', 'mp4', 'm2ts', 'iso', 'img', 'mdf', 'ts', 'm4v'],
         'movie_extra': ['mds'],
         'dvd': ['vts_*', 'vob'],
         'nfo': ['nfo', 'txt', 'tag'],
@@ -161,6 +161,8 @@ class Scanner(Plugin):
                 except:
                     log.error('Failed getting files from %s: %s' % (folder, traceback.format_exc()))
 
+        db = get_session()
+
         for file_path in files:
 
             if not os.path.exists(file_path):
@@ -237,19 +239,51 @@ class Scanner(Plugin):
 
 
         # Group the files based on the identifier
-        for identifier, group in movie_files.iteritems():
+        delete_identifiers = []
+        for identifier, found_files in self.path_identifiers.iteritems():
             log.debug('Grouping files on identifier: %s' % identifier)
 
-            found_files = set(self.path_identifiers.get(identifier, []))
-            group['unsorted_files'].extend(found_files)
+            group = movie_files.get(identifier)
+            if group:
+                group['unsorted_files'].extend(found_files)
+                delete_identifiers.append(identifier)
 
-            # Remove the found files from the leftover stack
-            leftovers = leftovers - found_files
+                # Remove the found files from the leftover stack
+                leftovers = leftovers - set(found_files)
 
             # Break if CP wants to shut down
             if self.shuttingDown():
                 break
 
+        # Cleaning up used
+        for identifier in delete_identifiers:
+            del self.path_identifiers[identifier]
+        del delete_identifiers
+
+        # Group based on folder
+        delete_identifiers = []
+        for identifier, found_files in self.path_identifiers.iteritems():
+            log.debug('Grouping files on foldername: %s' % identifier)
+
+            for ff in found_files:
+                new_identifier = self.createStringIdentifier(os.path.dirname(ff), folder)
+
+                group = movie_files.get(new_identifier)
+                if group:
+                    group['unsorted_files'].extend([ff])
+                    delete_identifiers.append(identifier)
+
+                    # Remove the found files from the leftover stack
+                    leftovers = leftovers - set([ff])
+
+            # Break if CP wants to shut down
+            if self.shuttingDown():
+                break
+
+        # Cleaning up used
+        for identifier in delete_identifiers:
+            del self.path_identifiers[identifier]
+        del delete_identifiers
 
         # Determine file types
         processed_movies = {}
@@ -327,6 +361,10 @@ class Scanner(Plugin):
             group['library'] = self.determineMovie(group)
             if not group['library']:
                 log.error('Unable to determine movie: %s' % group['identifiers'])
+            else:
+                movie = db.query(Movie).filter_by(library_id = group['library']['id']).first()
+                group['movie_id'] = None if not movie else movie.id
+
 
             processed_movies[identifier] = group
 
@@ -647,7 +685,7 @@ class Scanner(Plugin):
         identifier = self.removeCPTag(identifier)
 
         # groups, release tags, scenename cleaner, regex isn't correct
-        identifier = re.sub(self.clean, '::', simplifyString(identifier))
+        identifier = re.sub(self.clean, '::', simplifyString(identifier)).strip(':')
 
         # Year
         year = self.findYear(identifier)

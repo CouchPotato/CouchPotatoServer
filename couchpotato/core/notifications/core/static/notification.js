@@ -8,8 +8,8 @@ var NotificationBase = new Class({
 		self.setOptions(options);
 
 		// Listener
-		App.addEvent('load', self.startInterval.bind(self));
-		App.addEvent('unload', self.stopTimer.bind(self));
+		App.addEvent('unload', self.stopPoll.bind(self));
+		App.addEvent('reload', self.startInterval.bind(self, [true]));
 		App.addEvent('notification', self.notify.bind(self));
 
 		// Add test buttons to settings page
@@ -30,7 +30,11 @@ var NotificationBase = new Class({
 				'href': App.createUrl('notifications'),
 				'text': 'Show older notifications'
 			})); */
-		})
+		});
+
+		window.addEvent('load', function(){
+			self.startInterval()
+		});
 
 	},
 
@@ -83,37 +87,61 @@ var NotificationBase = new Class({
 
 	},
 
-	startInterval: function(){
+	startInterval: function(force){
 		var self = this;
+		
+		if(self.stopped && !force){
+			self.stopped = false;
+			return;
+		}
 
-		self.request = Api.request('notification.listener', {
-			'initialDelay': 100,
-    		'delay': 3000,
+		Api.request('notification.listener', {
     		'data': {'init':true},
     		'onSuccess': self.processData.bind(self)
-		})
-
-		self.request.startTimer()
+		}).send()
 
 	},
 
-	startTimer: function(){
-		if(this.request)
-			this.request.startTimer()
+	startPoll: function(){
+		var self = this;
+
+		if(self.stopped || (self.request && self.request.isRunning()))
+			return;
+
+		self.request = Api.request('nonblock/notification.listener', {
+    		'onSuccess': self.processData.bind(self),
+    		'data': {
+    			'last_id': self.last_id
+    		},
+    		'onFailure': function(){
+    			self.startPoll.delay(2000, self)
+    		}
+		}).send()
+
 	},
 
-	stopTimer: function(){
+	stopPoll: function(){
 		if(this.request)
-			this.request.stopTimer()
+			this.request.cancel()
+		this.stopped = true;
 	},
 
 	processData: function(json){
 		var self = this;
 
-		self.request.options.data = {}
-		Array.each(json.result, function(result){
-			App.fireEvent(result.type, result)
-		})
+
+		// Process data
+		if(json){
+			Array.each(json.result, function(result){
+				App.fireEvent(result.type, result)
+			})
+
+			if(json.result.length > 0)
+				self.last_id = json.result.getLast().message_id
+		}
+
+		// Restart poll
+		self.startPoll()
 	},
 
 	addTestButtons: function(){

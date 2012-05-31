@@ -10,7 +10,7 @@ config = [{
             'tab': 'automation',
             'name': 'imdb_automation',
             'label': 'IMDB',
-            'description': 'From any <strong>public</strong> IMDB watchlists',
+            'description': 'From any <strong>public</strong> IMDB watchlists. Url should be the RSS link.',
             'options': [
                 {
                     'name': 'automation_enabled',

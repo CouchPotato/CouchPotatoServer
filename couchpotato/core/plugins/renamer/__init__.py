@@ -17,9 +17,11 @@ rename_options = {
         'audio': 'Audio (DTS)',
         'group': 'Releasegroup name',
         'source': 'Source media (Bluray)',
-        'filename': 'Original filename',
+        'original': 'Original filename',
         'original_folder': 'Original foldername',
         'imdb_id': 'IMDB id (tt0123456)',
+        'cd': 'CD number (cd1)',
+        'cd_nr': 'Just the cd nr. (1)',
     },
 }
 

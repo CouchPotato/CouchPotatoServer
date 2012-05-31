@@ -61,7 +61,6 @@ class Newzbin(NZBProvider, RSS):
 
         url = "%s?%s" % (self.urls['search'], arguments)
         cache_key = str('newzbin.%s.%s.%s' % (movie['library']['identifier'], str(format_id), str(cat_id)))
-        single_cat = True
 
         data = self.getCache(cache_key)
         if not data:
@@ -118,7 +117,7 @@ class Newzbin(NZBProvider, RSS):
 
                     is_correct_movie = fireEvent('searcher.correct_movie',
                                                  nzb = new, movie = movie, quality = quality,
-                                                 imdb_results = True, single_category = single_cat, single = True)
+                                                 imdb_results = True, single = True)
                     if is_correct_movie:
                         new['score'] = fireEvent('score.calculate', new, movie, single = True)
                         results.append(new)

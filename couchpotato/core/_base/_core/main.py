@@ -114,7 +114,6 @@ class Core(Plugin):
         log.debug('Save to shutdown/restart')
 
         try:
-            Env.get('httpserver').stop()
             IOLoop.instance().stop()
         except RuntimeError:
             pass

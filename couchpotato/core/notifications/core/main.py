@@ -1,6 +1,6 @@
 from couchpotato import get_session
-from couchpotato.api import addApiView
-from couchpotato.core.event import addEvent, fireEvent
+from couchpotato.api import addApiView, addNonBlockApiView
+from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.request import jsonified, getParam
 from couchpotato.core.helpers.variable import tryInt
@@ -8,14 +8,19 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
 from couchpotato.core.settings.model import Notification as Notif
 from sqlalchemy.sql.expression import or_
+import threading
 import time
+import uuid
 
 log = CPLog(__name__)
 
 
 class CoreNotifier(Notification):
 
+    m_lock = threading.Lock()
     messages = []
+    listeners = []
+
     listen_to = [
         'movie.downloaded', 'movie.snatched',
         'updater.available', 'updater.updated',
@@ -46,14 +51,9 @@ class CoreNotifier(Notification):
 }"""}
         })
 
+        addNonBlockApiView('notification.listener', (self.addListener, self.removeListener))
         addApiView('notification.listener', self.listener)
 
-        self.registerEvents()
-
-    def registerEvents(self):
-
-        # Library update, frontend refresh
-        addEvent('library.update_finish', lambda data: fireEvent('notify.frontend', type = 'library.update', data = data))
 
     def markAsRead(self):
         ids = [x.strip() for x in getParam('ids').split(',')]
@@ -114,25 +114,85 @@ class CoreNotifier(Notification):
         ndict = n.to_dict()
         ndict['type'] = 'notification'
         ndict['time'] = time.time()
-        self.messages.append(ndict)
+
+        self.frontend(type = listener, data = data)
 
         #db.close()
         return True
 
     def frontend(self, type = 'notification', data = {}):
-        self.messages.append({
+
+        self.m_lock.acquire()
+        message = {
+            'message_id': str(uuid.uuid4()),
             'time': time.time(),
             'type': type,
             'data': data,
-        })
+        }
+        self.messages.append(message)
+
+        while len(self.listeners) > 0 and not self.shuttingDown():
+            try:
+                listener, last_id = self.listeners.pop()
+                listener({
+                    'success': True,
+                    'result': [message],
+                })
+            except:
+                break
+
+        self.m_lock.release()
+        self.cleanMessages()
+
+    def addListener(self, callback, last_id = None):
+
+        if last_id:
+            messages = self.getMessages(last_id)
+            if len(messages) > 0:
+                return callback({
+                    'success': True,
+                    'result': messages,
+                })
+
+        self.listeners.append((callback, last_id))
+
+
+    def removeListener(self, callback):
+
+        for list_tuple in self.listeners:
+            try:
+                listener, last_id = list_tuple
+                if listener == callback:
+                    self.listeners.remove(list_tuple)
+            except:
+                pass
+
+    def cleanMessages(self):
+        self.m_lock.acquire()
+
+        for message in self.messages:
+            if message['time'] < (time.time() - 15):
+                self.messages.remove(message)
+
+        self.m_lock.release()
+
+    def getMessages(self, last_id):
+        self.m_lock.acquire()
+
+        recent = []
+        index = 0
+        for i in xrange(len(self.messages)):
+            index = len(self.messages) - i - 1
+            if self.messages[index]["message_id"] == last_id: break
+            recent = self.messages[index:]
+
+        self.m_lock.release()
+
+        return recent or []
 
     def listener(self):
 
         messages = []
-        for message in self.messages:
-            #delete message older then 15s
-            if message['time'] > (time.time() - 15):
-                messages.append(message)
 
         # Get unread
         if getParam('init'):
@@ -146,9 +206,6 @@ class CoreNotifier(Notification):
                 ndict['type'] = 'notification'
                 messages.append(ndict)
 
-            #db.close()
-
-        self.messages = []
         return jsonified({
             'success': True,
             'result': messages,
