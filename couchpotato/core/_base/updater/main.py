@@ -78,7 +78,7 @@ class Updater(Plugin):
     def doUpdateView(self):
 
         self.check()
-        if not self.update_version:
+        if not self.updater.update_version:
             log.error('Trying to update when no update is available.')
             success = False
         else:
