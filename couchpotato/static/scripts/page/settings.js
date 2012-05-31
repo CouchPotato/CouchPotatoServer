@@ -34,6 +34,8 @@ Page.Settings = new Class({
 		else {
 			self.openTab(action);
 		}
+
+		App.getBlock('navigation').activate(self.name);
 	},
 
 	openTab: function(action){
