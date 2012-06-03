@@ -34,12 +34,6 @@ config = [{
                     'description': 'The category CP places the nzb in. Like <strong>movies</strong> or <strong>couchpotato</strong>',
                 },
                 {
-                    'advanced': True,
-                    'name': 'pp_directory',
-                    'type': 'directory',
-                    'description': 'Your Post-Processing Script directory, set in Sabnzbd > Config > Directories.',
-                },
-                {
                     'name': 'manual',
                     'default': 0,
                     'type': 'bool',
