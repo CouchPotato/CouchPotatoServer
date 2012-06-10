@@ -57,6 +57,8 @@ class Newzbin(NZBProvider, RSS):
             'category': '6',
             'ps_rb_video_format': str(cat_id),
             'ps_rb_source': str(format_id),
+            'u_post_larger_than': quality.get('size_min'),
+            'u_post_smaller_than': quality.get('size_max'),
         })
 
         url = "%s?%s" % (self.urls['search'], arguments)
