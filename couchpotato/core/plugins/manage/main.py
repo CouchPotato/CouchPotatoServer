@@ -67,7 +67,7 @@ class Manage(Plugin):
         if self.conf('cleanup') and full and not self.shuttingDown():
 
             # Get movies with done status
-            done_movies = fireEvent('movie.list', status = 'done', single = True)
+            total_movies, done_movies = fireEvent('movie.list', status = 'done', single = True)
 
             for done_movie in done_movies:
                 if done_movie['library']['identifier'] not in added_identifiers:
