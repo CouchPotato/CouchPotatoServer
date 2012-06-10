@@ -406,7 +406,7 @@ class Renamer(Plugin):
             shutil.move(old, dest)
 
             try:
-                os.chmod(dest, Env.getPermission('folder'))
+                os.chmod(dest, Env.getPermission('file'))
             except:
                 log.error('Failed setting permissions for file: %s' % dest)
 
