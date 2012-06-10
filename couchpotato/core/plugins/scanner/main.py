@@ -89,9 +89,9 @@ class Scanner(Plugin):
         addEvent('scanner.partnumber', self.getPartNumber)
 
         def after_rename(group):
-            return self.scanFilesToLibrary(self, folder = group['destination_dir'], files = group['renamed_files'])
+            return self.scanFilesToLibrary(folder = group['destination_dir'], files = group['renamed_files'])
 
-        addEvent('rename.after', after_rename)
+        addEvent('renamer.after', after_rename)
 
     def scanFilesToLibrary(self, folder = None, files = None):
 
