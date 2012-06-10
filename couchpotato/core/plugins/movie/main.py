@@ -437,6 +437,7 @@ class MoviePlugin(Plugin):
                     db.commit()
                 elif new_movie_status:
                     new_status = fireEvent('status.get', new_movie_status, single = True)
+                    movie.profile_id = None
                     movie.status_id = new_status.get('id')
                     db.commit()
                 else:
