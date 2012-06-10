@@ -296,13 +296,22 @@ class Scanner(Plugin):
             # Check if movie is fresh and maybe still unpacking, ignore files new then 1 minute
             file_too_new = False
             for cur_file in group['unsorted_files']:
-                file_time = os.path.getmtime(cur_file)
-                if file_time > time.time() - 60:
-                    file_too_new = tryInt(time.time() - file_time)
+                file_time = [os.path.getmtime(cur_file), os.path.getctime(cur_file)]
+                for t in file_time:
+                    if t > time.time() - 60:
+                        file_too_new = tryInt(time.time() - t)
+                        break
+
+                if file_too_new:
                     break
 
             if file_too_new:
-                log.info('Files seem to be still unpacking or just unpacked (created on %s), ignoring for now: %s' % (time.ctime(file_time), identifier))
+                log.info('Files seem to be still unpacking or just unpacked (created on %s), ignoring for now: %s' % (time.ctime(file_time[0]), identifier))
+
+                # Delete the unsorted list
+                del group['unsorted_files']
+
+                continue
                 continue
 
             # Group extra (and easy) files first
