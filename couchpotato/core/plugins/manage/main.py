@@ -1,6 +1,6 @@
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, addEvent, fireEventAsync
-from couchpotato.core.helpers.request import jsonified, getParams
+from couchpotato.core.helpers.request import jsonified, getParam
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
@@ -25,13 +25,14 @@ class Manage(Plugin):
         })
 
         if not Env.get('dev'):
-            addEvent('app.load', self.updateLibrary)
+            def updateLibrary():
+                self.updateLibrary(full = False)
+            addEvent('app.load', updateLibrary)
 
     def updateLibraryView(self):
 
-        params = getParams()
-
-        fireEventAsync('manage.update', full = params.get('full', True))
+        full = getParam('full', default = 1)
+        fireEventAsync('manage.update', full = True if full == '1' else False)
 
         return jsonified({
             'success': True
@@ -55,7 +56,7 @@ class Manage(Plugin):
                 continue
 
             log.info('Updating manage library: %s' % directory)
-            identifiers = fireEvent('scanner.folder', folder = directory, newer_than = last_update, single = True)
+            identifiers = fireEvent('scanner.folder', folder = directory, newer_than = last_update if not full else 0, single = True)
             if identifiers:
                 added_identifiers.extend(identifiers)
 
@@ -71,7 +72,7 @@ class Manage(Plugin):
 
             for done_movie in done_movies:
                 if done_movie['library']['identifier'] not in added_identifiers:
-                    fireEvent('movie.delete', movie_id = done_movie['id'])
+                    fireEvent('movie.delete', movie_id = done_movie['id'], delete_from = 'all')
 
         Env.prop('manage.last_update', time.time())
 

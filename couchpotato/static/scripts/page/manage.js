@@ -41,7 +41,7 @@ Page.Manage = new Class({
 
 		Api.request('manage.update', {
 			'data': {
-				'full': full ? 1 : null
+				'full': +full
 			}
 		})
 
