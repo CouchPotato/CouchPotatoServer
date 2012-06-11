@@ -56,7 +56,7 @@ class TheMovieDb(MovieProvider):
             return False
 
         search_string = simplifyString(q)
-        cache_key = 'tmdb.cache.%s.%s', (search_string, limit)
+        cache_key = 'tmdb.cache.%s.%s' % (search_string, limit)
         results = self.getCache(cache_key)
 
         if not results:
@@ -90,7 +90,7 @@ class TheMovieDb(MovieProvider):
         if not identifier:
             return {}
 
-        cache_key = 'tmdb.cache.%s', identifier
+        cache_key = 'tmdb.cache.%s' % identifier
         result = self.getCache(cache_key)
 
         if not result:
@@ -111,7 +111,7 @@ class TheMovieDb(MovieProvider):
 
     def getInfoByTMDBId(self, id = None):
 
-        cache_key = 'tmdb.cache.%s', id
+        cache_key = 'tmdb.cache.%s' % id
         result = self.getCache(cache_key)
 
         if not result:
