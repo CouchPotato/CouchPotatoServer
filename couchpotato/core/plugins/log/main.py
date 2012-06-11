@@ -98,7 +98,6 @@ class Logging(Plugin):
             brk = False
             for line in reversed_lines:
 
-                #print '%s ' % log_type in line.lower()
                 if log_type == 'all' or '%s ' % log_type.upper() in line:
                     log_lines.append(line)
 
