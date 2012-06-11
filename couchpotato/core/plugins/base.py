@@ -1,6 +1,6 @@
 from couchpotato import addView
 from couchpotato.core.event import fireEvent, addEvent
-from couchpotato.core.helpers.encoding import tryUrlencode, simplifyString
+from couchpotato.core.helpers.encoding import tryUrlencode, simplifyString, ss
 from couchpotato.core.helpers.variable import getExt
 from couchpotato.core.logger import CPLog
 from couchpotato.environment import Env
@@ -71,6 +71,7 @@ class Plugin(object):
         return send_from_directory(d, filename)
 
     def createFile(self, path, content, binary = False):
+        path = ss(path)
 
         self.makeDir(os.path.dirname(path))
 
@@ -83,6 +84,7 @@ class Plugin(object):
             log.error('Unable writing to file "%s": %s', (path, e))
 
     def makeDir(self, path):
+        path = ss(path)
         try:
             if not os.path.isdir(path):
                 os.makedirs(path, Env.getPermission('folder'))
