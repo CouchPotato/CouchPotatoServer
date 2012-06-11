@@ -1,5 +1,6 @@
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
+from couchpotato.core.helpers.encoding import ss
 from couchpotato.core.helpers.request import jsonified
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
@@ -120,7 +121,7 @@ class BaseUpdater(Plugin):
 
     def deletePyc(self, only_excess = True):
 
-        for root, dirs, files in os.walk(Env.get('app_dir')):
+        for root, dirs, files in os.walk(ss(Env.get('app_dir'))):
 
             pyc_files = filter(lambda filename: filename.endswith('.pyc'), files)
             py_files = set(filter(lambda filename: filename.endswith('.py'), files))
@@ -269,7 +270,7 @@ class SourceUpdater(BaseUpdater):
         return False
 
     def replaceWith(self, path):
-        app_dir = Env.get('app_dir')
+        app_dir = ss(Env.get('app_dir'))
 
         # Get list of files we want to overwrite
         self.deletePyc(only_excess = False)

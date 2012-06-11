@@ -1,11 +1,10 @@
 from couchpotato import get_session
 from couchpotato.core.event import fireEvent, addEvent
-from couchpotato.core.helpers.encoding import toUnicode, simplifyString
+from couchpotato.core.helpers.encoding import toUnicode, simplifyString, ss
 from couchpotato.core.helpers.variable import getExt, getImdb, tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import File, Movie
-from couchpotato.environment import Env
 from enzyme.exceptions import NoParserError, ParseError
 from guessit import guess_movie_info
 from subliminal.videos import Video
@@ -133,7 +132,7 @@ class Scanner(Plugin):
 
     def scan(self, folder = None, files = [], simple = False, newer_than = 0):
 
-        folder = os.path.normpath(folder)
+        folder = ss(os.path.normpath(folder))
 
         if not folder or not os.path.isdir(folder):
             log.error('Folder doesn\'t exists: %s', folder)
@@ -147,19 +146,11 @@ class Scanner(Plugin):
         if len(files) == 0:
             try:
                 files = []
-                for root, dirs, walk_files in os.walk(toUnicode(folder)):
+                for root, dirs, walk_files in os.walk(folder):
                     for filename in walk_files:
                         files.append(os.path.join(root, filename))
             except:
-                try:
-                    files = []
-                    folder = toUnicode(folder).encode(Env.get('encoding'))
-                    log.info('Trying to convert unicode to str path: %s, %s', (folder, type(folder)))
-                    for root, dirs, walk_files in os.walk(folder):
-                        for filename in walk_files:
-                            files.append(os.path.join(root, filename))
-                except:
-                    log.error('Failed getting files from %s: %s', (folder, traceback.format_exc()))
+                log.error('Failed getting files from %s: %s', (folder, traceback.format_exc()))
 
         db = get_session()
 

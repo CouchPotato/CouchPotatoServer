@@ -34,34 +34,30 @@ class CPLog(object):
 
     def safeMessage(self, msg, replace_tuple = ()):
 
-        if not hasattr(self, 'Env'):
-            from couchpotato.environment import Env
-            from couchpotato.core.helpers.encoding import toUnicode
+        from couchpotato.environment import Env
+        from couchpotato.core.helpers.encoding import ss
 
-            self.Env = Env
-            self.toUnicode = toUnicode
-
-        msg = self.toUnicode(msg)
+        msg = ss(msg)
 
         try:
             msg = msg % replace_tuple
         except:
             try:
                 if isinstance(replace_tuple, tuple):
-                    msg = msg % tuple([self.toUnicode(x).encode(self.Env.get('encoding')) for x in list(replace_tuple)])
+                    msg = msg % tuple([ss(x) for x in list(replace_tuple)])
                 else:
-                    msg = msg % self.toUnicode(replace_tuple).encode(self.Env.get('encoding'))
+                    msg = msg % ss(replace_tuple)
             except:
                 self.error('Failed encoding stuff to log: %s' % traceback.format_exc())
 
-        if not self.Env.get('dev'):
+        if not Env.get('dev'):
 
             for replace in self.replace_private:
                 msg = re.sub('(%s=)[^\&]+' % replace, '%s=xxx' % replace, msg)
 
             # Replace api key
             try:
-                api_key = self.Env.setting('api_key')
+                api_key = Env.setting('api_key')
                 if api_key:
                     msg = msg.replace(api_key, 'API_KEY')
             except:

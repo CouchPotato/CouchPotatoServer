@@ -35,6 +35,10 @@ def toUnicode(original, *args):
         ascii_text = str(original).encode('string_escape')
         return toUnicode(ascii_text)
 
+def ss(original, *args):
+    from couchpotato.environment import Env
+    return toUnicode(original, *args).encode(Env.get('encoding'))
+
 def ek(original, *args):
     if isinstance(original, (str, unicode)):
         try:
