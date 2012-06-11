@@ -257,7 +257,8 @@ class Scanner(Plugin):
 
         # Cleaning up used
         for identifier in delete_identifiers:
-            del self.path_identifiers[identifier]
+            if self.path_identifiers.get(identifier):
+                del self.path_identifiers[identifier]
         del delete_identifiers
 
         # Group based on folder
@@ -282,7 +283,8 @@ class Scanner(Plugin):
 
         # Cleaning up used
         for identifier in delete_identifiers:
-            del self.path_identifiers[identifier]
+            if self.path_identifiers.get(identifier):
+                del self.path_identifiers[identifier]
         del delete_identifiers
 
         # Determine file types
