@@ -35,7 +35,7 @@ class Pushover(Notification):
             log.info('Pushover notifications sent.')
             return True
         elif request_status == 401:
-            log.error('Pushover auth failed: %s' % response.reason)
+            log.error('Pushover auth failed: %s', response.reason)
             return False
         else:
             log.error('Pushover notification failed.')

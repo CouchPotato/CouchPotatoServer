@@ -33,10 +33,10 @@ class NMJ(Notification):
         try:
             terminal = telnetlib.Telnet(host)
         except Exception:
-            log.error('Warning: unable to get a telnet session to %s' % (host))
+            log.error('Warning: unable to get a telnet session to %s', (host))
             return self.failed()
 
-        log.debug('Connected to %s via telnet' % (host))
+        log.debug('Connected to %s via telnet', (host))
         terminal.read_until('sh-3.00# ')
         terminal.write('cat /tmp/source\n')
         terminal.write('cat /tmp/netshare\n')
@@ -48,9 +48,9 @@ class NMJ(Notification):
         if match:
             database = match.group(1)
             device = match.group(2)
-            log.info('Found NMJ database %s on device %s' % (database, device))
+            log.info('Found NMJ database %s on device %s', (database, device))
         else:
-            log.error('Could not get current NMJ database on %s, NMJ is probably not running!' % (host))
+            log.error('Could not get current NMJ database on %s, NMJ is probably not running!', (host))
             return self.failed()
 
         if device.startswith('NETWORK_SHARE/'):
@@ -58,7 +58,7 @@ class NMJ(Notification):
 
             if match:
                 mount = match.group().replace('127.0.0.1', host)
-                log.info('Found mounting url on the Popcorn Hour in configuration: %s' % (mount))
+                log.info('Found mounting url on the Popcorn Hour in configuration: %s', (mount))
             else:
                 log.error('Detected a network share on the Popcorn Hour, but could not get the mounting url')
                 return self.failed()
@@ -77,7 +77,7 @@ class NMJ(Notification):
         database = self.conf('database')
 
         if self.mount:
-            log.debug('Try to mount network drive via url: %s' % (mount))
+            log.debug('Try to mount network drive via url: %s', (mount))
             try:
                 data = self.urlopen(mount)
             except:
@@ -102,11 +102,11 @@ class NMJ(Notification):
             et = etree.fromstring(response)
             result = et.findtext('returnValue')
         except SyntaxError, e:
-            log.error('Unable to parse XML returned from the Popcorn Hour: %s' % (e))
+            log.error('Unable to parse XML returned from the Popcorn Hour: %s', (e))
             return False
 
         if int(result) > 0:
-            log.error('Popcorn Hour returned an errorcode: %s' % (result))
+            log.error('Popcorn Hour returned an errorcode: %s', (result))
             return False
         else:
             log.info('NMJ started background scan')

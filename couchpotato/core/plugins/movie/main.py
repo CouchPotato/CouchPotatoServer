@@ -315,7 +315,7 @@ class MoviePlugin(Plugin):
 
             m.profile_id = params.get('profile_id', default_profile.get('id'))
         else:
-            log.debug('Movie already exists, not updating: %s' % params)
+            log.debug('Movie already exists, not updating: %s', params)
             added = False
 
         if force_readd:
@@ -458,7 +458,7 @@ class MoviePlugin(Plugin):
             log.debug('Can\'t restatus movie, doesn\'t seem to exist.')
             return False
 
-        log.debug('Changing status for %s' % (m.library.titles[0].title))
+        log.debug('Changing status for %s', (m.library.titles[0].title))
         if not m.profile:
             m.status_id = done_status.get('id')
         else:

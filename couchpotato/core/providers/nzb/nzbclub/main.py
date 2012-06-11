@@ -49,7 +49,7 @@ class NZBClub(NZBProvider, RSS):
                     data = XMLTree.fromstring(data)
                     nzbs = self.getElements(data, 'channel/item')
                 except Exception, e:
-                    log.debug('%s, %s' % (self.getName(), e))
+                    log.debug('%s, %s', (self.getName(), e))
                     return results
 
                 for nzb in nzbs:
@@ -63,7 +63,7 @@ class NZBClub(NZBProvider, RSS):
                         full_description = self.getCache('nzbclub.%s' % nzbclub_id, item['detail_url'], cache_timeout = 25920000)
 
                         if 'ARCHIVE inside ARCHIVE' in full_description:
-                            log.info('Wrong: Seems to be passworded files: %s' % new['name'])
+                            log.info('Wrong: Seems to be passworded files: %s', new['name'])
                             return False
 
                         return True
@@ -111,7 +111,7 @@ class NZBClub(NZBProvider, RSS):
         full_description = self.getCache('nzbclub.%s' % item['id'], item['detail_url'], cache_timeout = 25920000)
 
         if 'ARCHIVE inside ARCHIVE' in full_description:
-            log.info('Wrong: Seems to be passworded files: %s' % item['name'])
+            log.info('Wrong: Seems to be passworded files: %s', item['name'])
             return False
 
         return True

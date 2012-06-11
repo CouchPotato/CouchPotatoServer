@@ -31,7 +31,7 @@ def toUnicode(original, *args):
                 except:
                     raise
     except UnicodeDecodeError:
-        log.error('Unable to decode value: %s... ' % repr(original)[:20])
+        log.error('Unable to decode value: %s... ', repr(original)[:20])
         ascii_text = str(original).encode('string_escape')
         return toUnicode(ascii_text)
 

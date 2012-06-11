@@ -20,10 +20,10 @@ class NZBGet(Downloader):
             return
 
         if not filedata:
-            log.error('Unable to get NZB file: %s' % traceback.format_exc())
+            log.error('Unable to get NZB file: %s', traceback.format_exc())
             return False
 
-        log.info('Sending "%s" to NZBGet.' % data.get('name'))
+        log.info('Sending "%s" to NZBGet.', data.get('name'))
 
         url = self.url % {'host': self.conf('host'), 'password': self.conf('password')}
         nzb_name = '%s.nzb' % self.createNzbName(data, movie)
@@ -41,12 +41,12 @@ class NZBGet(Downloader):
             if e.errcode == 401:
                 log.error('Password is incorrect.')
             else:
-                log.error('Protocol Error: %s' % e)
+                log.error('Protocol Error: %s', e)
             return False
 
         if rpc.append(nzb_name, self.conf('category'), False, standard_b64encode(filedata.strip())):
             log.info('NZB sent successfully to NZBGet')
             return True
         else:
-            log.error('NZBGet could not add %s to the queue.' % nzb_name)
+            log.error('NZBGet could not add %s to the queue.', nzb_name)
             return False

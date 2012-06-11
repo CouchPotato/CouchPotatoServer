@@ -31,7 +31,7 @@ class Provider(Plugin):
                 self.urlopen(test_url, 30)
                 self.is_available[host] = True
             except:
-                log.error('"%s" unavailable, trying again in an 15 minutes.' % host)
+                log.error('"%s" unavailable, trying again in an 15 minutes.', host)
                 self.is_available[host] = False
 
         return self.is_available.get(host, False)
@@ -73,7 +73,7 @@ class YarrProvider(Provider):
                     if hostname in download_url:
                         return self
         except:
-            log.debug('Url % s doesn\'t belong to %s' % (url, self.getName()))
+            log.debug('Url % s doesn\'t belong to %s', (url, self.getName()))
 
         return
 
@@ -106,4 +106,4 @@ class YarrProvider(Provider):
         return [self.cat_backup_id]
 
     def found(self, new):
-        log.info('Found: score(%(score)s) on %(provider)s: %(name)s' % new)
+        log.info('Found: score(%(score)s) on %(provider)s: %(name)s', new)

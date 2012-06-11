@@ -32,10 +32,10 @@ class CouchPotatoApi(MovieProvider):
             headers = {'X-CP-Version': fireEvent('app.version', single = True)}
             data = self.urlopen((self.api_url % ('eta')) + (identifier + '/'), headers = headers)
             dates = json.loads(data)
-            log.debug('Found ETA for %s: %s' % (identifier, dates))
+            log.debug('Found ETA for %s: %s', (identifier, dates))
             return dates
         except Exception, e:
-            log.error('Error getting ETA for %s: %s' % (identifier, e))
+            log.error('Error getting ETA for %s: %s', (identifier, e))
 
         return {}
 
@@ -43,9 +43,9 @@ class CouchPotatoApi(MovieProvider):
         try:
             data = self.urlopen((self.api_url % ('suggest')) + ','.join(movies) + '/' + ','.join(ignore) + '/')
             suggestions = json.loads(data)
-            log.info('Found Suggestions for %s' % (suggestions))
+            log.info('Found Suggestions for %s', (suggestions))
         except Exception, e:
-            log.error('Error getting suggestions for %s: %s' % (movies, e))
+            log.error('Error getting suggestions for %s: %s', (movies, e))
 
         return suggestions
 

@@ -52,10 +52,10 @@ class Manage(Plugin):
 
             if not os.path.isdir(directory):
                 if len(directory) > 0:
-                    log.error('Directory doesn\'t exist: %s' % directory)
+                    log.error('Directory doesn\'t exist: %s', directory)
                 continue
 
-            log.info('Updating manage library: %s' % directory)
+            log.info('Updating manage library: %s', directory)
             identifiers = fireEvent('scanner.folder', folder = directory, newer_than = last_update if not full else 0, single = True)
             if identifiers:
                 added_identifiers.extend(identifiers)

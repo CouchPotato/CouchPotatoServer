@@ -38,7 +38,7 @@ class Plex(Notification):
                         x = self.urlopen(url)
 
             except:
-                log.error('Plex library update failed for %s: %s' % (host, traceback.format_exc()))
+                log.error('Plex library update failed for %s: %s', (host, traceback.format_exc()))
                 return False
 
         return True
@@ -63,5 +63,5 @@ class Plex(Notification):
             log.error("Couldn't sent command to Plex")
             return False
 
-        log.info('Plex notification to %s successful.' % host)
+        log.info('Plex notification to %s successful.', host)
         return True

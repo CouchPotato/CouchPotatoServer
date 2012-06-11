@@ -99,7 +99,7 @@ class KickAssTorrents(TorrentProvider):
                                     results.append(new)
                                     self.found(new)
                         except:
-                            log.error('Failed parsing KickAssTorrents: %s' % traceback.format_exc())
+                            log.error('Failed parsing KickAssTorrents: %s', traceback.format_exc())
                     except:
                         pass
 

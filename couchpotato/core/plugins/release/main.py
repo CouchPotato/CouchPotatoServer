@@ -79,7 +79,7 @@ class Release(Plugin):
                     rel.files.append(added_file)
                     db.commit()
                 except Exception, e:
-                    log.debug('Failed to attach "%s" to release: %s' % (cur_file, e))
+                    log.debug('Failed to attach "%s" to release: %s', (cur_file, e))
 
         fireEvent('movie.restatus', movie.id)
 
@@ -158,7 +158,7 @@ class Release(Plugin):
                 'success': True
             })
         else:
-            log.error('Couldn\'t find release with id: %s' % id)
+            log.error('Couldn\'t find release with id: %s', id)
 
         #db.close()
         return jsonified({

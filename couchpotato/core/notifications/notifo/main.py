@@ -32,7 +32,7 @@ class Notifo(Notification):
                 raise Exception
 
         except:
-            log.error('Notification failed: %s' % traceback.format_exc())
+            log.error('Notification failed: %s', traceback.format_exc())
             return False
 
         log.info('Notifo notification successful.')

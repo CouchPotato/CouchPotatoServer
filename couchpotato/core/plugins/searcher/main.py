@@ -56,7 +56,7 @@ class Searcher(Plugin):
             except IndexError:
                 fireEvent('library.update', movie_dict['library']['identifier'], force = True)
             except:
-                log.error('Search failed for %s: %s' % (movie_dict['library']['identifier'], traceback.format_exc()))
+                log.error('Search failed for %s: %s', (movie_dict['library']['identifier'], traceback.format_exc()))
 
             # Break if CP wants to shut down
             if self.shuttingDown():
@@ -88,7 +88,7 @@ class Searcher(Plugin):
         ret = False
         for quality_type in movie['profile']['types']:
             if not self.couldBeReleased(quality_type['quality']['identifier'], release_dates, pre_releases):
-                log.info('To early to search for %s, %s' % (quality_type['quality']['identifier'], default_title))
+                log.info('To early to search for %s, %s', (quality_type['quality']['identifier'], default_title))
                 continue
 
             has_better_quality = 0
@@ -101,12 +101,12 @@ class Searcher(Plugin):
             # Don't search for quality lower then already available.
             if has_better_quality is 0:
 
-                log.info('Search for %s in %s' % (default_title, quality_type['quality']['label']))
+                log.info('Search for %s in %s', (default_title, quality_type['quality']['label']))
                 quality = fireEvent('quality.single', identifier = quality_type['quality']['identifier'], single = True)
                 results = fireEvent('yarr.search', movie, quality, merge = True)
                 sorted_results = sorted(results, key = lambda k: k['score'], reverse = True)
                 if len(sorted_results) == 0:
-                    log.debug('Nothing found for %s in %s' % (default_title, quality_type['quality']['label']))
+                    log.debug('Nothing found for %s in %s', (default_title, quality_type['quality']['label']))
 
                 # Check if movie isn't deleted while searching
                 if not db.query(Movie).filter_by(id = movie.get('id')).first():
@@ -141,7 +141,7 @@ class Searcher(Plugin):
                             rls.info.append(rls_info)
                             db.commit()
                         except InterfaceError:
-                            log.debug('Couldn\'t add %s to ReleaseInfo: %s' % (info, traceback.format_exc()))
+                            log.debug('Couldn\'t add %s to ReleaseInfo: %s', (info, traceback.format_exc()))
 
 
                 for nzb in sorted_results:
@@ -152,7 +152,7 @@ class Searcher(Plugin):
                     elif downloaded != 'try_next':
                         break
             else:
-                log.info('Better quality (%s) already available or snatched for %s' % (quality_type['quality']['label'], default_title))
+                log.info('Better quality (%s) already available or snatched for %s', (quality_type['quality']['label'], default_title))
                 fireEvent('movie.restatus', movie['id'])
                 break
 
@@ -200,7 +200,7 @@ class Searcher(Plugin):
                     if movie['status_id'] == active_status.get('id'):
                         for profile_type in movie['profile']['types']:
                             if profile_type['quality_id'] == rls.quality.id and profile_type['finish']:
-                                log.info('Renamer disabled, marking movie as finished: %s' % log_movie)
+                                log.info('Renamer disabled, marking movie as finished: %s', log_movie)
 
                                 # Mark release done
                                 rls.status_id = done_status.get('id')
@@ -211,7 +211,7 @@ class Searcher(Plugin):
                                 mvie.status_id = done_status.get('id')
                                 db.commit()
                 except Exception, e:
-                    log.error('Failed marking movie finished: %s %s' % (e, traceback.format_exc()))
+                    log.error('Failed marking movie finished: %s %s', (e, traceback.format_exc()))
 
             #db.close()
             return True
@@ -226,7 +226,7 @@ class Searcher(Plugin):
         retention = Env.setting('retention', section = 'nzb')
 
         if nzb.get('seeds') is None and retention < nzb.get('age', 0):
-            log.info('Wrong: Outside retention, age is %s, needs %s or lower: %s' % (nzb['age'], retention, nzb['name']))
+            log.info('Wrong: Outside retention, age is %s, needs %s or lower: %s', (nzb['age'], retention, nzb['name']))
             return False
 
         movie_name = getTitle(movie['library'])
@@ -248,7 +248,7 @@ class Searcher(Plugin):
         pron_tags = ['xxx', 'sex', 'anal', 'tits', 'fuck', 'porn', 'orgy', 'milf', 'boobs']
         for p_tag in pron_tags:
             if p_tag in nzb_words and p_tag not in movie_words:
-                log.info('Wrong: %s, probably pr0n' % (nzb['name']))
+                log.info('Wrong: %s, probably pr0n', (nzb['name']))
                 return False
 
         #qualities = fireEvent('quality.all', single = True)
@@ -256,18 +256,18 @@ class Searcher(Plugin):
 
         # Contains lower quality string
         if self.containsOtherQuality(nzb, movie_year = movie['library']['year'], preferred_quality = preferred_quality, single_category = single_category):
-            log.info('Wrong: %s, looking for %s' % (nzb['name'], quality['label']))
+            log.info('Wrong: %s, looking for %s', (nzb['name'], quality['label']))
             return False
 
 
         # File to small
         if nzb['size'] and preferred_quality['size_min'] > nzb['size']:
-            log.info('"%s" is too small to be %s. %sMB instead of the minimal of %sMB.' % (nzb['name'], preferred_quality['label'], nzb['size'], preferred_quality['size_min']))
+            log.info('"%s" is too small to be %s. %sMB instead of the minimal of %sMB.', (nzb['name'], preferred_quality['label'], nzb['size'], preferred_quality['size_min']))
             return False
 
         # File to large
         if nzb['size'] and preferred_quality.get('size_max') < nzb['size']:
-            log.info('"%s" is too large to be %s. %sMB instead of the maximum of %sMB.' % (nzb['name'], preferred_quality['label'], nzb['size'], preferred_quality['size_max']))
+            log.info('"%s" is too large to be %s. %sMB instead of the maximum of %sMB.', (nzb['name'], preferred_quality['label'], nzb['size'], preferred_quality['size_max']))
             return False
 
 

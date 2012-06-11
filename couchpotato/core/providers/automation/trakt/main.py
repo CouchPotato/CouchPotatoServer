@@ -43,7 +43,7 @@ class Trakt(Automation):
 
         if self.conf('automation_password'):
             headers = {
-               'Authorization': "Basic %s" % base64.encodestring('%s:%s' % (self.conf('automation_username'), self.conf('automation_password')))[:-1]
+               'Authorization': 'Basic %s' % base64.encodestring('%s:%s' % (self.conf('automation_username'), self.conf('automation_password')))[:-1]
             }
         else:
             headers = {}

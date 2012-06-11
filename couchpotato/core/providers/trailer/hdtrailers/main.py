@@ -94,7 +94,7 @@ class HDTrailers(TrailerProvider):
             return results
 
         except AttributeError:
-            log.debug('No trailers found in provider %s.' % provider)
+            log.debug('No trailers found in provider %s.', provider)
             results['404'] = True
 
         return results

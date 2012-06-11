@@ -15,7 +15,7 @@ class Sabnzbd(Downloader):
         if self.isDisabled(manual) or not self.isCorrectType(data.get('type')):
             return
 
-        log.info("Sending '%s' to SABnzbd." % data.get('name'))
+        log.info('Sending "%s" to SABnzbd.', data.get('name'))
 
         params = {
             'apikey': self.conf('api_key'),

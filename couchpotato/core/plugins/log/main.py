@@ -149,7 +149,7 @@ class Logging(Plugin):
             except:
                 log.error(log_message)
         except:
-            log.error('Couldn\'t log via API: %s' % params)
+            log.error('Couldn\'t log via API: %s', params)
 
 
         return jsonified({

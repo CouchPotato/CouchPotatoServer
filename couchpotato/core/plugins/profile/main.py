@@ -135,8 +135,7 @@ class ProfilePlugin(Plugin):
 
             success = True
         except Exception, e:
-            message = 'Failed deleting Profile: %s' % e
-            log.error(message)
+            message = log.error('Failed deleting Profile: %s', e)
 
         #db.close()
 
@@ -163,7 +162,7 @@ class ProfilePlugin(Plugin):
         # Create default quality profile
         order = -2
         for profile in profiles:
-            log.info('Creating default profile: %s' % profile.get('label'))
+            log.info('Creating default profile: %s', profile.get('label'))
             p = Profile(
                 label = toUnicode(profile.get('label')),
                 order = order

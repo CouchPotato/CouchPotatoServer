@@ -116,7 +116,7 @@ class QualityPlugin(Plugin):
             quality = db.query(Quality).filter_by(identifier = q.get('identifier')).first()
 
             if not quality:
-                log.info('Creating quality: %s' % q.get('label'))
+                log.info('Creating quality: %s', q.get('label'))
                 quality = Quality()
                 db.add(quality)
 
@@ -133,7 +133,7 @@ class QualityPlugin(Plugin):
                 ).all()
 
             if not profile:
-                log.info('Creating profile: %s' % q.get('label'))
+                log.info('Creating profile: %s', q.get('label'))
                 profile = Profile(
                     core = True,
                     label = toUnicode(quality.label),
@@ -170,20 +170,20 @@ class QualityPlugin(Plugin):
 
                 # Check tags
                 if quality['identifier'] in words:
-                    log.debug('Found via identifier "%s" in %s' % (quality['identifier'], cur_file))
+                    log.debug('Found via identifier "%s" in %s', (quality['identifier'], cur_file))
                     return self.setCache(hash, quality)
 
                 if list(set(quality.get('alternative', [])) & set(words)):
-                    log.debug('Found %s via alt %s in %s' % (quality['identifier'], quality.get('alternative'), cur_file))
+                    log.debug('Found %s via alt %s in %s', (quality['identifier'], quality.get('alternative'), cur_file))
                     return self.setCache(hash, quality)
 
                 for tag in quality.get('tags', []):
                     if isinstance(tag, tuple) and '.'.join(tag) in '.'.join(words):
-                        log.debug('Found %s via tag %s in %s' % (quality['identifier'], quality.get('tags'), cur_file))
+                        log.debug('Found %s via tag %s in %s', (quality['identifier'], quality.get('tags'), cur_file))
                         return self.setCache(hash, quality)
 
                 if list(set(quality.get('tags', [])) & set(words)):
-                    log.debug('Found %s via tag %s in %s' % (quality['identifier'], quality.get('tags'), cur_file))
+                    log.debug('Found %s via tag %s in %s', (quality['identifier'], quality.get('tags'), cur_file))
                     return self.setCache(hash, quality)
 
         # Try again with loose testing
@@ -191,7 +191,7 @@ class QualityPlugin(Plugin):
         if quality:
             return self.setCache(hash, quality)
 
-        log.debug('Could not identify quality for: %s' % files)
+        log.debug('Could not identify quality for: %s', files)
         return None
 
     def guessLoose(self, hash, extra):
@@ -200,7 +200,7 @@ class QualityPlugin(Plugin):
 
             # Last check on resolution only
             if quality.get('width', 480) == extra.get('resolution_width', 0):
-                log.debug('Found %s via resolution_width: %s == %s' % (quality['identifier'], quality.get('width', 480), extra.get('resolution_width', 0)))
+                log.debug('Found %s via resolution_width: %s == %s', (quality['identifier'], quality.get('width', 480), extra.get('resolution_width', 0)))
                 return self.setCache(hash, quality)
 
         if 480 <= extra.get('resolution_width', 0) <= 720:

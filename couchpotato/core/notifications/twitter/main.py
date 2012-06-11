@@ -55,7 +55,7 @@ class Twitter(Notification):
             else:
                 api.PostUpdate('[%s] %s' % (self.default_title, message))
         except Exception, e:
-            log.error('Error sending tweet: %s' % e)
+            log.error('Error sending tweet: %s', e)
             return False
 
         return True
@@ -71,7 +71,7 @@ class Twitter(Notification):
         resp, content = oauth_client.request(self.urls['request'], 'POST', body = tryUrlencode({'oauth_callback': callback_url}))
 
         if resp['status'] != '200':
-            log.error('Invalid response from Twitter requesting temp token: %s' % resp['status'])
+            log.error('Invalid response from Twitter requesting temp token: %s', resp['status'])
             return jsonified({
                 'success': False,
             })
@@ -80,7 +80,7 @@ class Twitter(Notification):
 
             auth_url = self.urls['authorize'] + ("?oauth_token=%s" % self.request_token['oauth_token'])
 
-            log.info('Redirecting to "%s"' % auth_url)
+            log.info('Redirecting to "%s"', auth_url)
             return jsonified({
                 'success': True,
                 'url': auth_url,
@@ -100,10 +100,10 @@ class Twitter(Notification):
         access_token = dict(parse_qsl(content))
 
         if resp['status'] != '200':
-            log.error('The request for an access token did not succeed: %s' % resp['status'])
+            log.error('The request for an access token did not succeed: %s', resp['status'])
             return 'Twitter auth failed'
         else:
-            log.debug('Tokens: %s, %s' % (access_token['oauth_token'], access_token['oauth_token_secret']))
+            log.debug('Tokens: %s, %s', (access_token['oauth_token'], access_token['oauth_token_secret']))
 
             self.conf('access_token_key', value = access_token['oauth_token'])
             self.conf('access_token_secret', value = access_token['oauth_token_secret'])
