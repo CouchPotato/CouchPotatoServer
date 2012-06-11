@@ -18,8 +18,10 @@
 from . import ServiceBase
 from ..exceptions import ServiceError, DownloadFailedError
 from ..subtitles import get_subtitle_path, ResultSubtitle
-from ..videos import Episode, Movie
 from ..utils import to_unicode
+from ..videos import Episode, Movie
+from guessit.language import lang_set
+import guessit
 import gzip
 import logging
 import os.path
@@ -32,34 +34,71 @@ logger = logging.getLogger(__name__)
 class OpenSubtitles(ServiceBase):
     server_url = 'http://api.opensubtitles.org/xml-rpc'
     api_based = True
-    languages = {'aa': 'aar', 'ab': 'abk', 'af': 'afr', 'ak': 'aka', 'sq': 'alb', 'am': 'amh', 'ar': 'ara',
-                 'an': 'arg', 'hy': 'arm', 'as': 'asm', 'av': 'ava', 'ae': 'ave', 'ay': 'aym', 'az': 'aze',
-                 'ba': 'bak', 'bm': 'bam', 'eu': 'baq', 'be': 'bel', 'bn': 'ben', 'bh': 'bih', 'bi': 'bis',
-                 'bs': 'bos', 'br': 'bre', 'bg': 'bul', 'my': 'bur', 'ca': 'cat', 'ch': 'cha', 'ce': 'che',
-                 'zh': 'chi', 'cu': 'chu', 'cv': 'chv', 'kw': 'cor', 'co': 'cos', 'cr': 'cre', 'cs': 'cze',
-                 'da': 'dan', 'dv': 'div', 'nl': 'dut', 'dz': 'dzo', 'en': 'eng', 'eo': 'epo', 'et': 'est',
-                 'ee': 'ewe', 'fo': 'fao', 'fj': 'fij', 'fi': 'fin', 'fr': 'fre', 'fy': 'fry', 'ff': 'ful',
-                 'ka': 'geo', 'de': 'ger', 'gd': 'gla', 'ga': 'gle', 'gl': 'glg', 'gv': 'glv', 'el': 'ell',
-                 'gn': 'grn', 'gu': 'guj', 'ht': 'hat', 'ha': 'hau', 'he': 'heb', 'hz': 'her', 'hi': 'hin',
-                 'ho': 'hmo', 'hr': 'hrv', 'hu': 'hun', 'ig': 'ibo', 'is': 'ice', 'io': 'ido', 'ii': 'iii',
-                 'iu': 'iku', 'ie': 'ile', 'ia': 'ina', 'id': 'ind', 'ik': 'ipk', 'it': 'ita', 'jv': 'jav',
-                 'ja': 'jpn', 'kl': 'kal', 'kn': 'kan', 'ks': 'kas', 'kr': 'kau', 'kk': 'kaz', 'km': 'khm',
-                 'ki': 'kik', 'rw': 'kin', 'ky': 'kir', 'kv': 'kom', 'kg': 'kon', 'ko': 'kor', 'kj': 'kua',
-                 'ku': 'kur', 'lo': 'lao', 'la': 'lat', 'lv': 'lav', 'li': 'lim', 'ln': 'lin', 'lt': 'lit',
-                 'lb': 'ltz', 'lu': 'lub', 'lg': 'lug', 'mk': 'mac', 'mh': 'mah', 'ml': 'mal', 'mi': 'mao',
-                 'mr': 'mar', 'ms': 'may', 'mg': 'mlg', 'mt': 'mlt', 'mo': 'mol', 'mn': 'mon', 'na': 'nau',
-                 'nv': 'nav', 'nr': 'nbl', 'nd': 'nde', 'ng': 'ndo', 'ne': 'nep', 'nn': 'nno', 'nb': 'nob',
-                 'no': 'nor', 'ny': 'nya', 'oc': 'oci', 'oj': 'oji', 'or': 'ori', 'om': 'orm', 'os': 'oss',
-                 'pa': 'pan', 'fa': 'per', 'pi': 'pli', 'pl': 'pol', 'pt': 'por', 'ps': 'pus', 'qu': 'que',
-                 'rm': 'roh', 'rn': 'run', 'ru': 'rus', 'sg': 'sag', 'sa': 'san', 'sr': 'scc', 'si': 'sin',
-                 'sk': 'slo', 'sl': 'slv', 'se': 'sme', 'sm': 'smo', 'sn': 'sna', 'sd': 'snd', 'so': 'som',
-                 'st': 'sot', 'es': 'spa', 'sc': 'srd', 'ss': 'ssw', 'su': 'sun', 'sw': 'swa', 'sv': 'swe',
-                 'ty': 'tah', 'ta': 'tam', 'tt': 'tat', 'te': 'tel', 'tg': 'tgk', 'tl': 'tgl', 'th': 'tha',
-                 'bo': 'tib', 'ti': 'tir', 'to': 'ton', 'tn': 'tsn', 'ts': 'tso', 'tk': 'tuk', 'tr': 'tur',
-                 'tw': 'twi', 'ug': 'uig', 'uk': 'ukr', 'ur': 'urd', 'uz': 'uzb', 've': 'ven', 'vi': 'vie',
-                 'vo': 'vol', 'cy': 'wel', 'wa': 'wln', 'wo': 'wol', 'xh': 'xho', 'yi': 'yid', 'yo': 'yor',
-                 'za': 'zha', 'zu': 'zul', 'ro': 'rum', 'po': 'pob', 'un': 'unk', 'ay': 'ass'}
-    reverted_languages = False
+    # language list fetched from:
+    # http://www.opensubtitles.org/addons/export_languages.php
+    languages = lang_set(['aar', 'abk', 'ace', 'ach', 'ada', 'ady', 'afa', 'afh',
+                          'afr', 'ain', 'aka', 'akk', 'alb', 'ale', 'alg', 'alt',
+                          'amh', 'ang', 'apa', 'ara', 'arc', 'arg', 'arm', 'arn',
+                          'arp', 'art', 'arw', 'asm', 'ast', 'ath', 'aus', 'ava',
+                          'ave', 'awa', 'aym', 'aze', 'bad', 'bai', 'bak', 'bal',
+                          'bam', 'ban', 'baq', 'bas', 'bat', 'bej', 'bel', 'bem',
+                          'ben', 'ber', 'bho', 'bih', 'bik', 'bin', 'bis', 'bla',
+                          'bnt', 'bod', 'bos', 'bra', 'bre', 'btk', 'bua', 'bug',
+                          'bul', 'bur', 'byn', 'cad', 'cai', 'car', 'cat', 'cau',
+                          'ceb', 'cel', 'cha', 'chb', 'che', 'chg', 'chi', 'chk',
+                          'chm', 'chn', 'cho', 'chp', 'chr', 'chu', 'chv', 'chy',
+                          'cmc', 'cop', 'cor', 'cos', 'cpe', 'cpf', 'cpp', 'cre',
+                          'crh', 'crp', 'csb', 'cus', 'cym', 'cze', 'dak', 'dan',
+                          'dar', 'day', 'del', 'den', 'deu', 'dgr', 'din', 'div',
+                          'doi', 'dra', 'dua', 'dum', 'dut', 'dyu', 'dzo', 'efi',
+                          'egy', 'eka', 'elx', 'eng', 'enm', 'epo', 'est', 'eus',
+                          'ewe', 'ewo', 'fan', 'fao', 'fas', 'fat', 'fij', 'fil',
+                          'fin', 'fiu', 'fon', 'fra', 'fre', 'frm', 'fro', 'fry',
+                          'ful', 'fur', 'gaa', 'gay', 'gba', 'gem', 'geo', 'ger',
+                          'gez', 'gil', 'gla', 'gle', 'glg', 'glv', 'gmh', 'goh',
+                          'gon', 'gor', 'got', 'grb', 'grc', 'ell', 'grn', 'guj',
+                          'gwi', 'hai', 'hat', 'hau', 'haw', 'heb', 'her', 'hil',
+                          'him', 'hin', 'hit', 'hmn', 'hmo', 'hrv', 'hun', 'hup',
+                          'hye', 'iba', 'ibo', 'ice', 'ido', 'iii', 'ijo', 'iku',
+                          'ile', 'ilo', 'ina', 'inc', 'ind', 'ine', 'inh', 'ipk',
+                          'ira', 'iro', 'isl', 'ita', 'jav', 'jpn', 'jpr', 'jrb',
+                          'kaa', 'kab', 'kac', 'kal', 'kam', 'kan', 'kar', 'kas',
+                          'kat', 'kau', 'kaw', 'kaz', 'kbd', 'kha', 'khi', 'khm',
+                          'kho', 'kik', 'kin', 'kir', 'kmb', 'kok', 'kom', 'kon',
+                          'kor', 'kos', 'kpe', 'krc', 'kro', 'kru', 'kua', 'kum',
+                          'kur', 'kut', 'lad', 'lah', 'lam', 'lao', 'lat', 'lav',
+                          'lez', 'lim', 'lin', 'lit', 'lol', 'loz', 'ltz', 'lua',
+                          'lub', 'lug', 'lui', 'lun', 'luo', 'lus', 'mac', 'mad',
+                          'mag', 'mah', 'mai', 'mak', 'mal', 'man', 'mao', 'map',
+                          'mar', 'mas', 'may', 'mdf', 'mdr', 'men', 'mga', 'mic',
+                          'min', 'mis', 'mkd', 'mkh', 'mlg', 'mlt', 'mnc', 'mni',
+                          'mno', 'moh', 'mol', 'mon', 'mos', 'mri', 'msa', 'mwl',
+                          'mul', 'mun', 'mus', 'mwr', 'mya', 'myn', 'myv', 'nah',
+                          'nai', 'nap', 'nau', 'nav', 'nbl', 'nde', 'ndo', 'nds',
+                          'nep', 'new', 'nia', 'nic', 'niu', 'nld', 'nno', 'nob',
+                          'nog', 'non', 'nor', 'nso', 'nub', 'nwc', 'nya', 'nym',
+                          'nyn', 'nyo', 'nzi', 'oci', 'oji', 'ori', 'orm', 'osa',
+                          'oss', 'ota', 'oto', 'paa', 'pag', 'pal', 'pam', 'pan',
+                          'pap', 'pau', 'peo', 'per', 'phi', 'phn', 'pli', 'pol',
+                          'pon', 'por', 'pra', 'pro', 'pus', 'que', 'raj', 'rap',
+                          'rar', 'roa', 'roh', 'rom', 'ron', 'run', 'rup', 'rus',
+                          'sad', 'sag', 'sah', 'sai', 'sal', 'sam', 'san', 'sas',
+                          'sat', 'scc', 'scn', 'sco', 'scr', 'sel', 'sem', 'sga',
+                          'sgn', 'shn', 'sid', 'sin', 'sio', 'sit', 'sla', 'slk',
+                          'slo', 'slv', 'sma', 'sme', 'smi', 'smj', 'smn', 'smo',
+                          'sms', 'sna', 'snd', 'snk', 'sog', 'som', 'son', 'sot',
+                          'spa', 'sqi', 'srd', 'srp', 'srr', 'ssa', 'ssw', 'suk',
+                          'sun', 'sus', 'sux', 'swa', 'swe', 'syr', 'tah', 'tai',
+                          'tam', 'tat', 'tel', 'tem', 'ter', 'tet', 'tgk', 'tgl',
+                          'tha', 'tib', 'tig', 'tir', 'tiv', 'tkl', 'tlh', 'tli',
+                          'tmh', 'tog', 'ton', 'tpi', 'tsi', 'tsn', 'tso', 'tuk',
+                          'tum', 'tup', 'tur', 'tut', 'tvl', 'twi', 'tyv', 'udm',
+                          'uga', 'uig', 'ukr', 'umb', 'und', 'urd', 'uzb', 'vai',
+                          'ven', 'vie', 'vol', 'vot', 'wak', 'wal', 'war', 'was',
+                          'wel', 'wen', 'wln', 'wol', 'xal', 'xho', 'yao', 'yap',
+                          'yid', 'yor', 'ypk', 'zap', 'zen', 'zha', 'zho', 'znd',
+                          'zul', 'zun', 'rum', 'pob', 'unk', 'ass'])
+
     videos = [Episode, Movie]
     require_video = False
     confidence_order = ['moviehash', 'imdbid', 'fulltext']
@@ -92,7 +131,7 @@ class OpenSubtitles(ServiceBase):
         if not searches:
             raise ServiceError('One or more parameter missing')
         for search in searches:
-            search['sublanguageid'] = ','.join([self.get_language(l) for l in languages])
+            search['sublanguageid'] = ','.join(l.opensubtitles for l in languages)
         logger.debug(u'Getting subtitles %r with token %s' % (searches, self.token))
         results = self.server.SearchSubtitles(self.token, searches)
         if not results['data']:
@@ -100,7 +139,7 @@ class OpenSubtitles(ServiceBase):
             return []
         subtitles = []
         for result in results['data']:
-            language = self.get_revert_language(result['SubLanguageID'])
+            language = guessit.Language(result['SubLanguageID'])
             path = get_subtitle_path(filepath, language, self.config.multi)
             confidence = 1 - float(self.confidence_order.index(result['MatchedBy'])) / float(len(self.confidence_order))
             subtitle = ResultSubtitle(path, language, service=self.__class__.__name__.lower(), link=result['SubDownloadLink'],
@@ -108,9 +147,7 @@ class OpenSubtitles(ServiceBase):
             subtitles.append(subtitle)
         return subtitles
 
-    def list(self, video, languages):
-        if not self.check_validity(video, languages):
-            return []
+    def list_checked(self, video, languages):
         results = []
         if video.exists:
             results = self.query(video.path or video.release, languages, moviehash=video.hashes['OpenSubtitles'], size=str(video.size))

@@ -19,6 +19,7 @@
 #
 
 from guessit.patterns import sep
+import unicodedata
 import copy
 
 # string-related functions
@@ -70,9 +71,30 @@ def to_utf8(o):
         return [ to_utf8(i) for i in o ]
     elif isinstance(o, dict):
         # need to do it like that to handle Guess instances correctly
+        # FIXME: why is that necessary?
         result = copy.deepcopy(o)
         for key, value in o.items():
             result[to_utf8(key)] = to_utf8(value)
+        return result
+
+    else:
+        return o
+
+def to_unicode(o):
+    """Convert all strings found in the given object to normalized
+    unicode strings, using the UTF-8 codec if needed."""
+
+    if isinstance(o, unicode):
+        return unicodedata.normalize('NFC', o)
+    if isinstance(o, str):
+        return unicodedata.normalize('NFC', o.decode('utf-8'))
+    elif isinstance(o, list):
+        return [ to_unicode(i) for i in o ]
+    elif isinstance(o, dict):
+        # need to do it like that to handle Guess instances correctly
+        #result = copy.deepcopy(o)
+        for key, value in o.items():
+            result[to_unicode(key)] = to_unicode(value)
         return result
 
     else:

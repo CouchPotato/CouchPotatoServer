@@ -20,6 +20,8 @@ from .services import ServiceConfig
 from .tasks import DownloadTask, ListTask
 from .utils import get_keywords
 from .videos import Episode, Movie, scan
+from guessit.language import lang_set
+import bs4
 from collections import defaultdict
 from itertools import groupby
 import guessit
@@ -30,11 +32,11 @@ __all__ = ['SERVICES', 'LANGUAGE_INDEX', 'SERVICE_INDEX', 'SERVICE_CONFIDENCE', 
            'create_list_tasks', 'create_download_tasks', 'consume_task', 'matching_confidence',
            'key_subtitles', 'group_by_video']
 logger = logging.getLogger(__name__)
-SERVICES = ['opensubtitles', 'bierdopje', 'subswiki', 'subtitulos', 'thesubdb']
+SERVICES = ['opensubtitles', 'bierdopje', 'subswiki', 'subtitulos', 'thesubdb', 'addic7ed', 'tvsubtitles']
 LANGUAGE_INDEX, SERVICE_INDEX, SERVICE_CONFIDENCE, MATCHING_CONFIDENCE = range(4)
 
 
-def create_list_tasks(paths, languages, services, force, multi, cache_dir, max_depth):
+def create_list_tasks(paths, languages, services, force, multi, cache_dir, max_depth, scan_filter):
     """Create a list of :class:`~subliminal.tasks.ListTask` from one or more paths using the given criteria
 
     :param paths: path(s) to video file or folder
@@ -45,18 +47,20 @@ def create_list_tasks(paths, languages, services, force, multi, cache_dir, max_d
     :param bool multi: search multiple languages for the same video
     :param string cache_dir: path to the cache directory to use
     :param int max_depth: maximum depth for scanning entries
+    :param function scan_filter: filter function that takes a path as argument and returns a boolean indicating whether it has to be filtered out (``True``) or not (``False``)
     :return: the created tasks
     :rtype: list of :class:`~subliminal.tasks.ListTask`
 
     """
     scan_result = []
     for p in paths:
-        scan_result.extend(scan(p, max_depth))
+        scan_result.extend(scan(p, max_depth, scan_filter))
     logger.debug(u'Found %d videos in %r with maximum depth %d' % (len(scan_result), paths, max_depth))
     tasks = []
     config = ServiceConfig(multi, cache_dir)
+    services = filter_services(services)
     for video, detected_subtitles in scan_result:
-        detected_languages = set([s.language for s in detected_subtitles])
+        detected_languages = set(s.language for s in detected_subtitles)
         wanted_languages = languages.copy()
         if not force and multi:
             wanted_languages -= detected_languages
@@ -70,14 +74,9 @@ def create_list_tasks(paths, languages, services, force, multi, cache_dir, max_d
         for service_name in services:
             mod = __import__('services.' + service_name, globals=globals(), locals=locals(), fromlist=['Service'], level=-1)
             service = mod.Service
-            service_languages = wanted_languages & service.available_languages()
-            if not service_languages:
-                logger.debug(u'Skipping %r: none of wanted languages %r available for service %s' % (video, wanted_languages, service_name))
+            if not service.check_validity(video, wanted_languages):
                 continue
-            if not service.is_valid_video(video):
-                logger.debug(u'Skipping %r: not part of supported videos %r for service %s' % (video, service.videos, service_name))
-                continue
-            task = ListTask(video, service_languages, service_name, config)
+            task = ListTask(video, wanted_languages & service.languages, service_name, config)
             logger.debug(u'Created task %r' % task)
             tasks.append(task)
     return tasks
@@ -128,25 +127,19 @@ def consume_task(task, services=None):
     logger.info(u'Consuming %r' % task)
     result = None
     if isinstance(task, ListTask):
-        if task.service not in services:
-            mod = __import__('services.' + task.service, globals=globals(), locals=locals(), fromlist=['Service'], level=-1)
-            services[task.service] = mod.Service(task.config)
-            services[task.service].init()
-        subtitles = services[task.service].list(task.video, task.languages)
-        result = subtitles
+        service = get_service(services, task.service, config=task.config)
+        result = service.list(task.video, task.languages)
     elif isinstance(task, DownloadTask):
         for subtitle in task.subtitles:
-            if subtitle.service not in services:
-                mod = __import__('services.' + subtitle.service, globals=globals(), locals=locals(), fromlist=['Service'], level=-1)
-                services[subtitle.service] = mod.Service()
-                services[subtitle.service].init()
+            service = get_service(services, subtitle.service)
             try:
-                services[subtitle.service].download(subtitle)
+                service.download(subtitle)
                 result = subtitle
                 break
             except DownloadFailedError:
                 logger.warning(u'Could not download subtitle %r, trying next' % subtitle)
                 continue
+
         if result is None:
             logger.error(u'No subtitles could be downloaded for video %r' % task.video)
     return result
@@ -191,6 +184,26 @@ def matching_confidence(video, subtitle):
         return 0
     confidence = float(int(matching_format.format(**replacement), 2)) / float(int(best, 2))
     return confidence
+
+
+def get_service(services, service_name, config=None):
+    """Get a service from its name in the service dict with the specified config.
+    If the service does not exist in the service dict, it is created and added to the dict.
+
+    :param dict services: dict where to get existing services or put created ones
+    :param string service_name: name of the service to get
+    :param config: config to use for the service
+    :type config: :class:`~subliminal.services.ServiceConfig` or None
+    :return: the corresponding service
+    :rtype: :class:`~subliminal.services.ServiceBase`
+
+    """
+    if service_name not in services:
+        mod = __import__('services.' + service_name, globals=globals(), locals=locals(), fromlist=['Service'], level=-1)
+        services[service_name] = mod.Service()
+        services[service_name].init()
+    services[service_name].config = config
+    return services[service_name]
 
 
 def key_subtitles(subtitle, video, languages, services, order):
@@ -238,3 +251,21 @@ def group_by_video(list_results):
     for video, subtitles in list_results:
         result[video] += subtitles
     return result
+
+
+def filter_services(services):
+    """Filter out services that are not available because of a missing feature
+
+    :param list services: service names to filter
+    :return: a copy of the initial list of service names without unavailable ones
+    :rtype: list
+
+    """
+    filtered_services = services[:]
+    for service_name in services:
+        mod = __import__('services.' + service_name, globals=globals(), locals=locals(), fromlist=['Service'], level=-1)
+        service = mod.Service
+        if service.required_features is not None and bs4.builder_registry.lookup(*service.required_features) is None:
+            logger.warning(u'Service %s not available: none of available features could be used. One of %r required' % (service_name, service.required_features))
+            filtered_services.remove(service_name)
+    return filtered_services

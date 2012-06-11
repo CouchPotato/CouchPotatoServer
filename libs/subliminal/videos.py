@@ -16,7 +16,6 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with subliminal.  If not, see <http://www.gnu.org/licenses/>.
 from . import subtitles
-from .languages import list_languages
 import enzyme
 import guessit
 import hashlib
@@ -130,14 +129,23 @@ class Video(object):
             logger.debug(u'Failed parsing %s with enzyme' % self.path)
         if isinstance(video_infos, enzyme.core.AVContainer):
             results.extend([subtitles.EmbeddedSubtitle.from_enzyme(self.path, s) for s in video_infos.subtitles])
-        for l in list_languages(1):
-            for e in subtitles.EXTENSIONS:
-                single_path = basepath + '%s' % e
-                if os.path.exists(single_path):
-                    results.append(subtitles.ExternalSubtitle(single_path, None))
-                multi_path = basepath + '.%s%s' % (l, e)
-                if os.path.exists(multi_path):
-                    results.append(subtitles.ExternalSubtitle(multi_path, l))
+
+        # cannot use glob here because it chokes if there are any square
+        # brackets inside the filename, so we have to use basic string
+        # startswith/endswith comparisons
+        folder, basename = os.path.split(basepath)
+        existing = [f for f in os.listdir(folder) if f.startswith(basename)]
+        for path in existing:
+            for ext in subtitles.EXTENSIONS:
+                if path.endswith(ext):
+                    possible_lang = path[len(basename) + 1:-len(ext)]
+                    if possible_lang == '':
+                        results.append(subtitles.ExternalSubtitle(path, None))
+                    else:
+                        lang = guessit.Language(possible_lang)
+                        if lang:
+                            results.append(subtitles.ExternalSubtitle(path, lang))
+
         return results
 
     def __repr__(self):
@@ -189,11 +197,12 @@ class UnknownVideo(Video):
     pass
 
 
-def scan(entry, max_depth=3, depth=0):
+def scan(entry, max_depth=3, scan_filter=None, depth=0):
     """Scan a path for videos and subtitles
 
     :param string entry: path
     :param int max_depth: maximum folder depth
+    :param function scan_filter: filter function that takes a path as argument and returns a boolean indicating whether it has to be filtered out (``True``) or not (``False``)
     :param int depth: starting depth
     :return: found videos and subtitles
     :rtype: list of (:class:`Video`, [:class:`~subliminal.subtitles.Subtitle`])
@@ -207,12 +216,14 @@ def scan(entry, max_depth=3, depth=0):
         logger.debug(u'Scanning directory %s with depth %d/%d' % (entry, depth, max_depth))
         result = []
         for e in os.listdir(entry):
-            result.extend(scan(os.path.join(entry, e), max_depth, depth + 1))
+            result.extend(scan(os.path.join(entry, e), max_depth, scan_filter, depth + 1))
         return result
     if os.path.isfile(entry) or depth == 0:
         logger.debug(u'Scanning file %s with depth %d/%d' % (entry, depth, max_depth))
         if depth != 0:  # trust the user: only check for valid format if recursing
             if mimetypes.guess_type(entry)[0] not in MIMETYPES and os.path.splitext(entry)[1] not in EXTENSIONS:
+                return []
+            if scan_filter is not None and scan_filter(entry):
                 return []
         video = Video.from_path(entry)
         return [(video, video.scan())]

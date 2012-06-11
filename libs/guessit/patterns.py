@@ -40,10 +40,10 @@ episode_rexps = [ # ... Season 2 ...
                   (r'saison (?P<season>[0-9]+)', 1.0, (0, 0)),
 
                   # ... s02e13 ...
-                  (r'[Ss](?P<season>[0-9]{1,2}).{,3}[EeXx](?P<episodeNumber>[0-9]{1,2})[^0-9]', 1.0, (0, -1)),
+                  (r'[Ss](?P<season>[0-9]{1,2}).{,3}(?P<episodeNumber>(?:[EeXx][0-9]{1,2})+)[^0-9]', 1.0, (0, -1)),
 
                   # ... 2x13 ...
-                  (r'[^0-9](?P<season>[0-9]{1,2})x(?P<episodeNumber>[0-9]{2})[^0-9]', 0.8, (1, -1)),
+                  (r'[^0-9](?P<season>[0-9]{1,2})(?P<episodeNumber>(?:[xX][0-9]{1,2})+)[^0-9]', 0.8, (1, -1)),
 
                   # ... s02 ...
                   #(sep + r's(?P<season>[0-9]{1,2})' + sep, 0.6, (1, -1)),
@@ -61,7 +61,7 @@ weak_episode_rexps = [ # ... 213 or 0106 ...
                        (sep + r'(?P<episodeNumber>[0-9]{1,4})' + sep, (1, -1)),
 
                        # ... 2x13 ...
-                       (sep + r'[^0-9](?P<season>[0-9]{1,2})\.(?P<episodeNumber>[0-9]{2})[^0-9]' + sep, (1, -1)),
+                       (sep + r'[^0-9](?P<season>[0-9]{1,2})\.(?P<episodeNumber>[0-9]{1,2})[^0-9]' + sep, (1, -1)),
 
                        # ... e13 ... for a mini-series without a season number
                        (r'e(?P<episodeNumber>[0-9]{1,4})[^0-9]', (0, -1)),

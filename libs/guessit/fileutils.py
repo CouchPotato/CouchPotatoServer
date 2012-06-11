@@ -29,18 +29,13 @@ def split_path(path):
     If the given path was an absolute path, the first element will always be:
      - the '/' root folder on Unix systems
      - the drive letter on Windows systems (eg: r'C:\')
+     - the mount point '\\' on Windows systems (eg: r'\\host\share')
 
     >>> split_path('/usr/bin/smewt')
     ['/', 'usr', 'bin', 'smewt']
 
     >>> split_path('relative_path/to/my_folder/')
     ['relative_path', 'to', 'my_folder']
-
-    >>> split_path(r'C:\Program Files\Smewt\smewt.exe')
-    ['C:\\', 'Program Files', 'Smewt', 'smewt.exe']
-
-    >>> split_path(r'Documents and Settings\User\config\\')
-    ['Documents and Settings', 'User', 'config']
 
     """
     result = []
