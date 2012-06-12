@@ -216,7 +216,8 @@ class Plugin(object):
                     del kwargs['cache_timeout']
 
                 data = self.urlopen(url, **kwargs)
-                self.setCache(cache_key, data, timeout = cache_timeout)
+                if data:
+                    self.setCache(cache_key, data, timeout = cache_timeout)
                 return data
             except:
                 pass
