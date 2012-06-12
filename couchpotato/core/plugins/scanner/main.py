@@ -289,6 +289,9 @@ class Scanner(Plugin):
             # Check if movie is fresh and maybe still unpacking, ignore files new then 1 minute
             file_too_new = False
             for cur_file in group['unsorted_files']:
+                if not os.path.isfile(cur_file):
+                    file_too_new = time.time()
+                    break
                 file_time = [os.path.getmtime(cur_file), os.path.getctime(cur_file)]
                 for t in file_time:
                     if t > time.time() - 60:
