@@ -145,6 +145,9 @@ class Searcher(Plugin):
 
 
                 for nzb in sorted_results:
+                    if nzb['score'] <= 0:
+                        log.debug('No more releases with score higher than 0')
+                        break
                     downloaded = self.download(data = nzb, movie = movie)
                     if downloaded is True:
                         ret = True
@@ -245,7 +248,7 @@ class Searcher(Plugin):
             log.info("Wrong: '%s' blacklisted words: %s" % (nzb['name'], ", ".join(blacklisted)))
             return False
 
-        pron_tags = ['xxx', 'sex', 'anal', 'tits', 'fuck', 'porn', 'orgy', 'milf', 'boobs']
+        pron_tags = ['xxx', 'sex', 'anal', 'tits', 'fuck', 'porn', 'orgy', 'milf', 'boobs', 'erotica', 'erotic']
         for p_tag in pron_tags:
             if p_tag in nzb_words and p_tag not in movie_words:
                 log.info('Wrong: %s, probably pr0n', (nzb['name']))
@@ -406,17 +409,19 @@ class Searcher(Plugin):
                 if dates.get('theater') - 604800 < now:
                     return True
             else:
-                # 6 weeks after theater release
-                if dates.get('theater') + 3628800 < now:
+                # 12 weeks after theater release
+                if dates.get('theater') > 0 and dates.get('theater') + 7257600 < now:
                     return True
 
-                # 6 weeks before dvd release
-                if dates.get('dvd') - 3628800 < now:
-                    return True
+                if dates.get('dvd') > 0:
 
-                # Dvd should be released
-                if dates.get('dvd') > 0 and dates.get('dvd') < now:
-                    return True
+                    # 3 weeks before dvd release
+                    if dates.get('dvd') - 1814400 < now:
+                        return True
+
+                    # Dvd should be released
+                    if dates.get('dvd') < now:
+                        return True
 
 
         return False

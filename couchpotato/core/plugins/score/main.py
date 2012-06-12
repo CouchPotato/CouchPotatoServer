@@ -4,7 +4,7 @@ from couchpotato.core.helpers.variable import getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.plugins.score.scores import nameScore, nameRatioScore, \
-    sizeScore, providerScore, duplicateScore
+    sizeScore, providerScore, duplicateScore, partialIgnoredScore
 
 log = CPLog(__name__)
 
@@ -37,6 +37,9 @@ class Score(Plugin):
 
         # Duplicates in name
         score += duplicateScore(nzb['name'], getTitle(movie['library']))
+
+        # Partial ignored words
+        score += partialIgnoredScore(nzb['name'], getTitle(movie['library']))
 
         # Extra provider specific check
         extra_score = nzb.get('extra_score')

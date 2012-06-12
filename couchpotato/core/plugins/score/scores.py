@@ -79,3 +79,18 @@ def duplicateScore(nzb_name, movie_name):
     duplicates = [x for i, x in enumerate(nzb_words) if nzb_words[i:].count(x) > 1]
 
     return len(list(set(duplicates) - set(movie_words))) * -4
+
+
+def partialIgnoredScore(nzb_name, movie_name):
+
+    nzb_name = nzb_name.lower()
+    movie_name = movie_name.lower()
+
+    ignored_words = [x.strip().lower() for x in Env.setting('ignored_words', section = 'searcher').split(',')]
+
+    score = 0
+    for ignored_word in ignored_words:
+        if ignored_word in nzb_name and ignored_word not in movie_name:
+            score -= 5
+
+    return score
