@@ -408,7 +408,7 @@ class Renamer(Plugin):
             try:
                 os.chmod(dest, Env.getPermission('file'))
             except:
-                log.error('Failed setting permissions for file: %s', dest)
+                log.error('Failed setting permissions for file: %s, %s', (dest, traceback.format_exc(1)))
 
         except:
             log.error('Couldn\'t move file "%s" to "%s": %s', (old, dest, traceback.format_exc()))
