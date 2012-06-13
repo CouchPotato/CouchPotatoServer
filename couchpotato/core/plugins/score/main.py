@@ -4,7 +4,8 @@ from couchpotato.core.helpers.variable import getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.plugins.score.scores import nameScore, nameRatioScore, \
-    sizeScore, providerScore, duplicateScore, partialIgnoredScore
+    sizeScore, providerScore, duplicateScore, partialIgnoredScore, namePositionScore, \
+    halfMultipartScore
 
 log = CPLog(__name__)
 
@@ -21,6 +22,7 @@ class Score(Plugin):
 
         for movie_title in movie['library']['titles']:
             score += nameRatioScore(toUnicode(nzb['name']), toUnicode(movie_title['title']))
+            score += namePositionScore(toUnicode(nzb['name']), toUnicode(movie_title['title']))
 
         score += sizeScore(nzb['size'])
 
@@ -40,6 +42,9 @@ class Score(Plugin):
 
         # Partial ignored words
         score += partialIgnoredScore(nzb['name'], getTitle(movie['library']))
+
+        # Ignore single downloads from multipart
+        score += halfMultipartScore(nzb['name'])
 
         # Extra provider specific check
         extra_score = nzb.get('extra_score')
