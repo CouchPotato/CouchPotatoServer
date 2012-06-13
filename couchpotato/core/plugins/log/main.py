@@ -1,5 +1,7 @@
 from couchpotato.api import addApiView
+from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.request import jsonified, getParam, getParams
+from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
@@ -78,7 +80,7 @@ class Logging(Plugin):
     def partial(self):
 
         log_type = getParam('type', 'all')
-        total_lines = getParam('lines', 30)
+        total_lines = tryInt(getParam('lines', 30))
 
         log_lines = []
 
@@ -92,7 +94,7 @@ class Logging(Plugin):
 
             reversed_lines = []
             f = open(path, 'r')
-            reversed_lines = f.read().split('[0m\n')
+            reversed_lines = toUnicode(f.read()).split('[0m\n')
             reversed_lines.reverse()
 
             brk = False
