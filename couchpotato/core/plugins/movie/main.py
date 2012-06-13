@@ -280,6 +280,10 @@ class MoviePlugin(Plugin):
 
     def add(self, params = {}, force_readd = True, search_after = True):
 
+        if not params.get('identifier'):
+            log.error('Can\'t add movie without imdb identifier.')
+            return False
+
         library = fireEvent('library.add', single = True, attrs = params, update_after = False)
 
         # Status
@@ -352,7 +356,7 @@ class MoviePlugin(Plugin):
 
         return jsonified({
             'success': True,
-            'added': True,
+            'added': True if movie_dict else False,
             'movie': movie_dict,
         })
 
