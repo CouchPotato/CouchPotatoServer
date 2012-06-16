@@ -16,7 +16,7 @@ class Blackhole(Downloader):
 
         directory = self.conf('directory')
         if not directory or not os.path.isdir(directory):
-            log.error('No directory set for blackhole %s download.' % data.get('type'))
+            log.error('No directory set for blackhole %s download.', data.get('type'))
         else:
             try:
                 if not filedata or len(filedata) < 50:
@@ -27,19 +27,19 @@ class Blackhole(Downloader):
 
                 try:
                     if not os.path.isfile(fullPath):
-                        log.info('Downloading %s to %s.' % (data.get('type'), fullPath))
+                        log.info('Downloading %s to %s.', (data.get('type'), fullPath))
                         with open(fullPath, 'wb') as f:
                             f.write(filedata)
                         return True
                     else:
-                        log.info('File %s already exists.' % fullPath)
+                        log.info('File %s already exists.', fullPath)
                         return True
 
                 except:
-                    log.error('Failed to download to blackhole %s' % traceback.format_exc())
+                    log.error('Failed to download to blackhole %s', traceback.format_exc())
                     pass
 
             except:
-                log.info('Failed to download file %s: %s' % (data.get('name'), traceback.format_exc()))
+                log.info('Failed to download file %s: %s', (data.get('name'), traceback.format_exc()))
                 return False
         return False

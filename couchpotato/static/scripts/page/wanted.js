@@ -28,8 +28,9 @@ var MovieActions = {};
 window.addEvent('domready', function(){
 
 	MovieActions.Wanted = {
-		'IMBD': IMDBAction
-		,'releases': ReleaseAction
+		'IMDB': IMDBAction
+		,'Trailer': TrailerAction
+		,'Releases': ReleaseAction
 
 		,'Edit': new Class({
 
@@ -236,12 +237,12 @@ window.addEvent('domready', function(){
 	};
 
 	MovieActions.Snatched = {
-		'IMBD': IMDBAction
+		'IMDB': IMDBAction
 		,'Delete': MovieActions.Wanted.Delete
 	};
 
 	MovieActions.Done = {
-		'IMBD': IMDBAction
+		'IMDB': IMDBAction
 		,'Edit': MovieActions.Wanted.Edit
 		,'Files': new Class({
 

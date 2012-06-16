@@ -68,7 +68,7 @@ class MovieResultModifier(Plugin):
                         if release.status_id == done_status['id']:
                             temp['in_library'] = fireEvent('movie.get', movie.id, single = True)
         except:
-            log.error('Tried getting more info on searched movies: %s' % traceback.format_exc())
+            log.error('Tried getting more info on searched movies: %s', traceback.format_exc())
 
         #db.close()
         return temp

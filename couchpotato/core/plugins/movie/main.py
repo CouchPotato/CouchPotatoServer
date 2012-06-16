@@ -130,6 +130,8 @@ class MoviePlugin(Plugin):
             .filter(or_(*[Movie.status.has(identifier = s) for s in status])) \
             .group_by(Movie.id)
 
+        total_count = q.count()
+
         filter_or = []
         if starts_with:
             starts_with = toUnicode(starts_with.lower())
@@ -156,15 +158,13 @@ class MoviePlugin(Plugin):
             .options(joinedload_all('library.titles')) \
             .options(joinedload_all('library.files')) \
             .options(joinedload_all('status')) \
-            .options(joinedload_all('files')) \
-
+            .options(joinedload_all('files'))
 
         if limit_offset:
             splt = [x.strip() for x in limit_offset.split(',')]
             limit = splt[0]
             offset = 0 if len(splt) is 1 else splt[1]
             q2 = q2.limit(limit).offset(offset)
-
 
         results = q2.all()
         movies = []
@@ -178,7 +178,7 @@ class MoviePlugin(Plugin):
             movies.append(temp)
 
         #db.close()
-        return movies
+        return (total_count, movies)
 
     def availableChars(self, status = ['active']):
 
@@ -214,11 +214,12 @@ class MoviePlugin(Plugin):
         starts_with = params.get('starts_with', None)
         search = params.get('search', None)
 
-        movies = self.list(status = status, limit_offset = limit_offset, starts_with = starts_with, search = search)
+        total_movies, movies = self.list(status = status, limit_offset = limit_offset, starts_with = starts_with, search = search)
 
         return jsonified({
             'success': True,
             'empty': len(movies) == 0,
+            'total': total_movies,
             'movies': movies,
         })
 
@@ -279,6 +280,10 @@ class MoviePlugin(Plugin):
 
     def add(self, params = {}, force_readd = True, search_after = True):
 
+        if not params.get('identifier'):
+            log.error('Can\'t add movie without imdb identifier.')
+            return False
+
         library = fireEvent('library.add', single = True, attrs = params, update_after = False)
 
         # Status
@@ -314,7 +319,7 @@ class MoviePlugin(Plugin):
 
             m.profile_id = params.get('profile_id', default_profile.get('id'))
         else:
-            log.debug('Movie already exists, not updating: %s' % params)
+            log.debug('Movie already exists, not updating: %s', params)
             added = False
 
         if force_readd:
@@ -351,7 +356,7 @@ class MoviePlugin(Plugin):
 
         return jsonified({
             'success': True,
-            'added': True,
+            'added': True if movie_dict else False,
             'movie': movie_dict,
         })
 
@@ -436,6 +441,7 @@ class MoviePlugin(Plugin):
                     db.commit()
                 elif new_movie_status:
                     new_status = fireEvent('status.get', new_movie_status, single = True)
+                    movie.profile_id = None
                     movie.status_id = new_status.get('id')
                     db.commit()
                 else:
@@ -456,7 +462,7 @@ class MoviePlugin(Plugin):
             log.debug('Can\'t restatus movie, doesn\'t seem to exist.')
             return False
 
-        log.debug('Changing status for %s' % (m.library.titles[0].title))
+        log.debug('Changing status for %s', (m.library.titles[0].title))
         if not m.profile:
             m.status_id = done_status.get('id')
         else:

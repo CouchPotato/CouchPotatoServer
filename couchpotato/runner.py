@@ -155,10 +155,10 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     import color_logs
     from couchpotato.core.logger import CPLog
     log = CPLog(__name__)
-    log.debug('Started with options %s' % options)
+    log.debug('Started with options %s', options)
 
     def customwarn(message, category, filename, lineno, file = None, line = None):
-        log.warning('%s %s %s line:%s' % (category, message, filename, lineno))
+        log.warning('%s %s %s line:%s', (category, message, filename, lineno))
     warnings.showwarning = customwarn
 
 
@@ -185,7 +185,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
             current_db_version = db_version(db, repo)
 
         if current_db_version < latest_db_version and not debug:
-            log.info('Doing database upgrade. From %d to %d' % (current_db_version, latest_db_version))
+            log.info('Doing database upgrade. From %d to %d', (current_db_version, latest_db_version))
             upgrade(db, repo)
 
     # Configure Database
@@ -220,7 +220,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     app.register_blueprint(api, url_prefix = '%s/api/%s/' % (url_base, api_key))
 
     # Some logging and fire load event
-    try: log.info('Starting server on port %(port)s' % config)
+    try: log.info('Starting server on port %(port)s', config)
     except: pass
     fireEventAsync('app.load')
 
@@ -248,7 +248,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
             try:
                 nr, msg = e
                 if nr == 48:
-                    log.info('Already in use, try %s more time after few seconds' % restart_tries)
+                    log.info('Already in use, try %s more time after few seconds', restart_tries)
                     time.sleep(1)
                     restart_tries -= 1
 

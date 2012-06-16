@@ -96,7 +96,7 @@ class Core(Plugin):
         while loop:
             log.debug('Asking who is running')
             still_running = fireEvent('plugin.running', merge = True)
-            log.debug('Still running: %s' % still_running)
+            log.debug('Still running: %s', still_running)
 
             if len(still_running) == 0:
                 break
@@ -105,7 +105,7 @@ class Core(Plugin):
 
             running = list(set(still_running) - set(self.ignore_restart))
             if len(running) > 0:
-                log.info('Waiting on plugins to finish: %s' % running)
+                log.info('Waiting on plugins to finish: %s', running)
             else:
                 loop = False
 
@@ -118,7 +118,7 @@ class Core(Plugin):
         except RuntimeError:
             pass
         except:
-            log.error('Failed shutting down the server: %s' % traceback.format_exc())
+            log.error('Failed shutting down the server: %s', traceback.format_exc())
 
         fireEvent('app.after_shutdown', restart = restart)
 

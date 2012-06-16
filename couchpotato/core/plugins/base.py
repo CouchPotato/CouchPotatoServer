@@ -1,6 +1,6 @@
 from couchpotato import addView
 from couchpotato.core.event import fireEvent, addEvent
-from couchpotato.core.helpers.encoding import tryUrlencode, simplifyString
+from couchpotato.core.helpers.encoding import tryUrlencode, simplifyString, ss
 from couchpotato.core.helpers.variable import getExt
 from couchpotato.core.logger import CPLog
 from couchpotato.environment import Env
@@ -71,6 +71,7 @@ class Plugin(object):
         return send_from_directory(d, filename)
 
     def createFile(self, path, content, binary = False):
+        path = ss(path)
 
         self.makeDir(os.path.dirname(path))
 
@@ -80,15 +81,16 @@ class Plugin(object):
             f.close()
             os.chmod(path, Env.getPermission('file'))
         except Exception, e:
-            log.error('Unable writing to file "%s": %s' % (path, e))
+            log.error('Unable writing to file "%s": %s', (path, e))
 
     def makeDir(self, path):
+        path = ss(path)
         try:
             if not os.path.isdir(path):
                 os.makedirs(path, Env.getPermission('folder'))
             return True
         except Exception, e:
-            log.error('Unable to create folder "%s": %s' % (path, e))
+            log.error('Unable to create folder "%s": %s', (path, e))
 
         return False
 
@@ -106,7 +108,7 @@ class Plugin(object):
         # Don't try for failed requests
         if self.http_failed_disabled.get(host, 0) > 0:
             if self.http_failed_disabled[host] > (time.time() - 900):
-                log.info('Disabled calls to %s for 15 minutes because so many failed requests.' % host)
+                log.info('Disabled calls to %s for 15 minutes because so many failed requests.', host)
                 raise Exception
             else:
                 del self.http_failed_request[host]
@@ -116,7 +118,7 @@ class Plugin(object):
         try:
 
             if multipart:
-                log.info('Opening multipart url: %s, params: %s' % (url, [x for x in params.iterkeys()]))
+                log.info('Opening multipart url: %s, params: %s', (url, [x for x in params.iterkeys()]))
                 request = urllib2.Request(url, params, headers)
 
                 cookies = cookielib.CookieJar()
@@ -124,7 +126,7 @@ class Plugin(object):
 
                 data = opener.open(request, timeout = timeout).read()
             else:
-                log.info('Opening url: %s, params: %s' % (url, [x for x in params.iterkeys()]))
+                log.info('Opening url: %s, params: %s', (url, [x for x in params.iterkeys()]))
                 data = tryUrlencode(params) if len(params) > 0 else None
                 request = urllib2.Request(url, data, headers)
 
@@ -133,7 +135,7 @@ class Plugin(object):
             self.http_failed_request[host] = 0
         except IOError:
             if show_error:
-                log.error('Failed opening url in %s: %s %s' % (self.getName(), url, traceback.format_exc(1)))
+                log.error('Failed opening url in %s: %s %s', (self.getName(), url, traceback.format_exc(1)))
 
             # Save failed requests by hosts
             try:
@@ -147,7 +149,7 @@ class Plugin(object):
                         self.http_failed_disabled[host] = time.time()
 
             except:
-                log.debug('Failed logging failed requests for %s: %s' % (url, traceback.format_exc()))
+                log.debug('Failed logging failed requests for %s: %s', (url, traceback.format_exc()))
 
             raise
 
@@ -163,7 +165,7 @@ class Plugin(object):
         wait = math.ceil(last_use - now + self.http_time_between_calls)
 
         if wait > 0:
-            log.debug('Waiting for %s, %d seconds' % (self.getName(), wait))
+            log.debug('Waiting for %s, %d seconds', (self.getName(), wait))
             time.sleep(last_use - now + self.http_time_between_calls)
 
     def beforeCall(self, handler):
@@ -202,7 +204,7 @@ class Plugin(object):
         cache_key = simplifyString(cache_key)
         cache = Env.get('cache').get(cache_key)
         if cache:
-            if not Env.get('dev'): log.debug('Getting cache %s' % cache_key)
+            if not Env.get('dev'): log.debug('Getting cache %s', cache_key)
             return cache
 
         if url:
@@ -214,13 +216,14 @@ class Plugin(object):
                     del kwargs['cache_timeout']
 
                 data = self.urlopen(url, **kwargs)
-                self.setCache(cache_key, data, timeout = cache_timeout)
+                if data:
+                    self.setCache(cache_key, data, timeout = cache_timeout)
                 return data
             except:
                 pass
 
     def setCache(self, cache_key, value, timeout = 300):
-        log.debug('Setting cache %s' % cache_key)
+        log.debug('Setting cache %s', cache_key)
         Env.get('cache').set(cache_key, value, timeout)
         return value
 

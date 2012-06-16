@@ -87,6 +87,9 @@ def guess_filetype(filename, filetype):
                 upgrade_episode()
                 break
 
+        if 'tvu.org.ru' in filename:
+            upgrade_episode()
+
         # if no episode info found, assume it's a movie
         upgrade_movie()
 

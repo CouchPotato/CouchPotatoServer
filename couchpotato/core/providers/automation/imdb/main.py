@@ -31,12 +31,13 @@ class IMDB(Automation, RSS):
             if not enablers[index]:
                 continue
             elif 'rss.imdb' not in rss_url:
-                log.error('This isn\'t the correct url.: %s' % rss_url)
+                log.error('This isn\'t the correct url.: %s', rss_url)
                 continue
 
             prop_name = 'automation.imdb.last_update.%s' % md5(rss_url)
             last_update = float(Env.prop(prop_name, default = 0))
 
+            last_movie_added = 0
             try:
                 cache_key = 'imdb.rss.%s' % md5(rss_url)
 
@@ -48,14 +49,17 @@ class IMDB(Automation, RSS):
                     created = int(time.mktime(parse(self.getTextElement(movie, "pubDate")).timetuple()))
                     imdb = getImdb(self.getTextElement(movie, "link"))
 
-                    if not imdb or created < last_update:
+                    if created > last_movie_added:
+                        last_movie_added = created
+
+                    if not imdb or created <= last_update:
                         continue
 
                     movies.append(imdb)
 
             except:
-                log.error('Failed loading IMDB watchlist: %s %s' % (rss_url, traceback.format_exc()))
+                log.error('Failed loading IMDB watchlist: %s %s', (rss_url, traceback.format_exc()))
 
-            Env.prop(prop_name, time.time())
+            Env.prop(prop_name, last_movie_added)
 
         return movies

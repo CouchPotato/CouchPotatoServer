@@ -77,7 +77,7 @@ class XBMC(MetaDataBase):
                 votes.text = str(v)
                 break
             except:
-                log.debug('Failed adding rating info from %s: %s' % (rating_type, traceback.format_exc()))
+                log.debug('Failed adding rating info from %s: %s', (rating_type, traceback.format_exc()))
 
         # Genre
         for genre in movie_info.get('genres', []):

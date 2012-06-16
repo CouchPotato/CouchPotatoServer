@@ -17,7 +17,7 @@ class NotifyMyWP(Notification):
 
         for key in keys:
             if not response[key]['Code'] == u'200':
-                log.error('Could not send notification to NotifyMyWindowsPhone (%s). %s' % (key, response[key]['message']))
+                log.error('Could not send notification to NotifyMyWindowsPhone (%s). %s', (key, response[key]['message']))
                 return False
 
         return response

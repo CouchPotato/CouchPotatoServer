@@ -58,7 +58,7 @@ class NZBMatrix(NZBProvider, RSS):
                     data = XMLTree.fromstring(data)
                     nzbs = self.getElements(data, 'channel/item')
                 except Exception, e:
-                    log.debug('%s, %s' % (self.getName(), e))
+                    log.debug('%s, %s', (self.getName(), e))
                     return results
 
                 for nzb in nzbs:
@@ -98,6 +98,9 @@ class NZBMatrix(NZBProvider, RSS):
                 log.error('Failed to parse XML response from NZBMatrix.com')
 
         return results
+
+    def download(self, url = '', nzb_id = ''):
+        return self.urlopen(url, headers = {'User-Agent': Env.getIdentifier()})
 
     def getApiExt(self):
         return '&username=%s&apikey=%s' % (self.conf('username'), self.conf('api_key'))

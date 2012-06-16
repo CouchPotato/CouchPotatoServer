@@ -41,7 +41,7 @@ class Notification(Plugin):
 
         test_type = self.testNotifyName()
 
-        log.info('Sending test to %s' % test_type)
+        log.info('Sending test to %s', test_type)
 
         success = self.notify(
             message = self.test_message,

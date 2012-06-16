@@ -1,4 +1,4 @@
-from BeautifulSoup import BeautifulSoup
+from bs4 import BeautifulSoup
 from couchpotato.core.event import fireEvent
 from couchpotato.core.helpers.variable import tryInt, getTitle
 from couchpotato.core.logger import CPLog
@@ -47,14 +47,14 @@ class KickAssTorrents(TorrentProvider):
             try:
                 html = BeautifulSoup(data)
                 resultdiv = html.find('div', attrs = {'class':'tabs'})
-                for result in resultdiv.findAll('div', recursive = False):
+                for result in resultdiv.find_all('div', recursive = False):
                     if result.get('id').lower() not in cat_ids:
                         continue
 
                     try:
 
                         try:
-                            for temp in result.findAll('tr'):
+                            for temp in result.find_all('tr'):
                                 if temp['class'] is 'firstr' or not temp.get('id'):
                                     continue
 
@@ -68,15 +68,15 @@ class KickAssTorrents(TorrentProvider):
                                 }
 
                                 nr = 0
-                                for td in temp.findAll('td'):
+                                for td in temp.find_all('td'):
                                     column_name = table_order[nr]
                                     if column_name:
 
                                         if column_name is 'name':
-                                            link = td.find('div', {'class': 'torrentname'}).findAll('a')[1]
+                                            link = td.find('div', {'class': 'torrentname'}).find_all('a')[1]
                                             new['id'] = temp.get('id')[-8:]
                                             new['name'] = link.text
-                                            new['url'] = td.findAll('a', 'idownload')[1]['href']
+                                            new['url'] = td.find_all('a', 'idownload')[1]['href']
                                             if new['url'][:2] == '//':
                                                 new['url'] = 'http:%s' % new['url']
                                             new['score'] = 20 if td.find('a', 'iverif') else 0
@@ -99,7 +99,7 @@ class KickAssTorrents(TorrentProvider):
                                     results.append(new)
                                     self.found(new)
                         except:
-                            log.error('Failed parsing KickAssTorrents: %s' % traceback.format_exc())
+                            log.error('Failed parsing KickAssTorrents: %s', traceback.format_exc())
                     except:
                         pass
 

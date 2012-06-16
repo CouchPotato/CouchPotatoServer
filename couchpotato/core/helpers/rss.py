@@ -47,5 +47,5 @@ class RSS(object):
         try:
             return XMLTree.parse(data).findall(path)
         except Exception, e:
-            log.error('Error parsing RSS. %s' % e)
+            log.error('Error parsing RSS. %s', e)
             return []

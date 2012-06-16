@@ -1,4 +1,4 @@
-from BeautifulSoup import BeautifulSoup
+from bs4 import BeautifulSoup
 from couchpotato.core.providers.userscript.base import UserscriptBase
 
 class AlloCine(UserscriptBase):

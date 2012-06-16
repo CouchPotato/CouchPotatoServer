@@ -45,7 +45,7 @@ class Loader(object):
                 try:
                     m = getattr(self.loadModule(module_name), plugin.get('name'))
 
-                    log.info("Loading %s: %s" % (plugin['type'], plugin['name']))
+                    log.info('Loading %s: %s', (plugin['type'], plugin['name']))
 
                     # Save default settings for plugin/provider
                     did_save += self.loadSettings(m, module_name, save = False)
@@ -57,10 +57,10 @@ class Loader(object):
                         log.error(e.message)
                         pass
                     # todo:: this needs to be more descriptive.
-                    log.error('Import error, remove the empty folder: %s' % plugin.get('module'))
-                    log.debug('Can\'t import %s: %s' % (module_name, traceback.format_exc()))
+                    log.error('Import error, remove the empty folder: %s', plugin.get('module'))
+                    log.debug('Can\'t import %s: %s', (module_name, traceback.format_exc()))
                 except:
-                    log.error('Can\'t import %s: %s' % (module_name, traceback.format_exc()))
+                    log.error('Can\'t import %s: %s', (module_name, traceback.format_exc()))
 
         if did_save:
             fireEvent('settings.save')
@@ -84,7 +84,7 @@ class Loader(object):
                 fireEvent('settings.register', section_name = section['name'], options = options, save = save)
             return True
         except:
-            log.debug("Failed loading settings for '%s': %s" % (name, traceback.format_exc()))
+            log.debug('Failed loading settings for "%s": %s', (name, traceback.format_exc()))
             return False
 
     def loadPlugins(self, module, name):
@@ -97,7 +97,7 @@ class Loader(object):
 
             return True
         except Exception, e:
-            log.error("Failed loading plugin '%s': %s" % (module.__file__, traceback.format_exc()))
+            log.error('Failed loading plugin "%s": %s', (module.__file__, traceback.format_exc()))
             return False
 
     def addModule(self, priority, plugin_type, module, name):

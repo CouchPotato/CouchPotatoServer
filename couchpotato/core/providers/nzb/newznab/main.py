@@ -112,7 +112,7 @@ class Newznab(NZBProvider, RSS):
                     data = XMLTree.fromstring(data)
                     nzbs = self.getElements(data, 'channel/item')
                 except Exception, e:
-                    log.debug('%s, %s' % (self.getName(), e))
+                    log.debug('%s, %s', (self.getName(), e))
                     return results
 
                 results = []
@@ -126,8 +126,8 @@ class Newznab(NZBProvider, RSS):
                         elif item.attrib.get('name') == 'usenetdate':
                             date = item.attrib.get('value')
 
-                    if date is '': log.debug('Date not parsed properly or not available for %s: %s' % (host['host'], self.getTextElement(nzb, "title")))
-                    if size is 0: log.debug('Size not parsed properly or not available for %s: %s' % (host['host'], self.getTextElement(nzb, "title")))
+                    if date is '': log.debug('Date not parsed properly or not available for %s: %s', (host['host'], self.getTextElement(nzb, "title")))
+                    if size is 0: log.debug('Size not parsed properly or not available for %s: %s', (host['host'], self.getTextElement(nzb, "title")))
 
                     id = self.getTextElement(nzb, "guid").split('/')[-1:].pop()
                     new = {
@@ -157,7 +157,7 @@ class Newznab(NZBProvider, RSS):
 
                 return results
             except SyntaxError:
-                log.error('Failed to parse XML response from Newznab: %s' % host)
+                log.error('Failed to parse XML response from Newznab: %s', host)
                 return results
 
     def getHosts(self):
@@ -216,9 +216,9 @@ class Newznab(NZBProvider, RSS):
                 response = e.read().lower()
                 if 'maximum api' in response or 'download limit' in response:
                     if not self.limits_reached.get(host):
-                        log.error('Limit reached for newznab provider: %s' % host)
+                        log.error('Limit reached for newznab provider: %s', host)
                     self.limits_reached[host] = time.time()
                     return 'try_next'
 
-            log.error('Failed download from %s' % (host, traceback.format_exc()))
+            log.error('Failed download from %s', (host, traceback.format_exc()))
             raise

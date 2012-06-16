@@ -18,7 +18,7 @@ class Trailer(Plugin):
 
         trailers = fireEvent('trailer.search', group = group, merge = True)
         if not trailers or trailers == []:
-            log.info('No trailers found for: %s' % getTitle(group['library']))
+            log.info('No trailers found for: %s', getTitle(group['library']))
             return
 
         for trailer in trailers.get(self.conf('quality'), []):
@@ -26,7 +26,7 @@ class Trailer(Plugin):
             if not os.path.isfile(destination):
                 fireEvent('file.download', url = trailer, dest = destination, urlopen_kwargs = {'headers': {'User-Agent': 'Quicktime'}}, single = True)
             else:
-                log.debug('Trailer already exists: %s' % destination)
+                log.debug('Trailer already exists: %s', destination)
 
             # Download first and break
             break

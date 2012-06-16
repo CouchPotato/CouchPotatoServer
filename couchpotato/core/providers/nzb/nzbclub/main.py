@@ -1,4 +1,4 @@
-from BeautifulSoup import BeautifulSoup
+from bs4 import BeautifulSoup
 from couchpotato.core.event import fireEvent
 from couchpotato.core.helpers.encoding import toUnicode, tryUrlencode, \
     simplifyString
@@ -28,7 +28,7 @@ class NZBClub(NZBProvider, RSS):
         if self.isDisabled():
             return results
 
-        q = '"%s" %s %s' % (simplifyString(getTitle(movie['library'])), movie['library']['year'], quality.get('identifier'))
+        q = '"%s %s" %s' % (simplifyString(getTitle(movie['library'])), movie['library']['year'], quality.get('identifier'))
         for ignored in Env.setting('ignored_words', 'searcher').split(','):
             q = '%s -%s' % (q, ignored.strip())
 
@@ -49,7 +49,7 @@ class NZBClub(NZBProvider, RSS):
                     data = XMLTree.fromstring(data)
                     nzbs = self.getElements(data, 'channel/item')
                 except Exception, e:
-                    log.debug('%s, %s' % (self.getName(), e))
+                    log.debug('%s, %s', (self.getName(), e))
                     return results
 
                 for nzb in nzbs:
@@ -62,9 +62,10 @@ class NZBClub(NZBProvider, RSS):
                     def extra_check(item):
                         full_description = self.getCache('nzbclub.%s' % nzbclub_id, item['detail_url'], cache_timeout = 25920000)
 
-                        if 'ARCHIVE inside ARCHIVE' in full_description:
-                            log.info('Wrong: Seems to be passworded files: %s' % new['name'])
-                            return False
+                        for ignored in ['ARCHIVE inside ARCHIVE', 'Incomplete', 'repair impossible']:
+                            if ignored in full_description:
+                                log.info('Wrong: Seems to be passworded or corrupted files: %s', new['name'])
+                                return False
 
                         return True
 
@@ -111,7 +112,7 @@ class NZBClub(NZBProvider, RSS):
         full_description = self.getCache('nzbclub.%s' % item['id'], item['detail_url'], cache_timeout = 25920000)
 
         if 'ARCHIVE inside ARCHIVE' in full_description:
-            log.info('Wrong: Seems to be passworded files: %s' % item['name'])
+            log.info('Wrong: Seems to be passworded files: %s', item['name'])
             return False
 
         return True

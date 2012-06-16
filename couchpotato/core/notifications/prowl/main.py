@@ -32,7 +32,7 @@ class Prowl(Notification):
             log.info('Prowl notifications sent.')
             return True
         elif request_status == 401:
-            log.error('Prowl auth failed: %s' % response.reason)
+            log.error('Prowl auth failed: %s', response.reason)
             return False
         else:
             log.error('Prowl notification failed.')

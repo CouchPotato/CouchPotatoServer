@@ -16,7 +16,7 @@ class Transmission(Downloader):
         if self.isDisabled(manual) or not self.isCorrectType(data.get('type')):
             return
 
-        log.info('Sending "%s" to Transmission.' % data.get('name'))
+        log.info('Sending "%s" to Transmission.', data.get('name'))
 
         # Load host from config and split out port.
         host = self.conf('host').split(':')
@@ -42,10 +42,10 @@ class Transmission(Downloader):
                 torrent.seed_ratio_limit = self.conf('ratio')
                 torrent.seed_ratio_mode = 'single' if self.conf('ratio') else 'global'
             except transmissionrpc.TransmissionError, e:
-                log.error('Failed to change settings for transfer in transmission: %s' % e)
+                log.error('Failed to change settings for transfer in transmission: %s', e)
 
             return True
 
         except transmissionrpc.TransmissionError, e:
-            log.error('Failed to send link to transmission: %s' % e)
+            log.error('Failed to send link to transmission: %s', e)
             return False

@@ -1,5 +1,6 @@
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
+from couchpotato.core.helpers.encoding import ss
 from couchpotato.core.helpers.request import jsonified
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
@@ -120,7 +121,7 @@ class BaseUpdater(Plugin):
 
     def deletePyc(self, only_excess = True):
 
-        for root, dirs, files in os.walk(Env.get('app_dir')):
+        for root, dirs, files in os.walk(ss(Env.get('app_dir'))):
 
             pyc_files = filter(lambda filename: filename.endswith('.pyc'), files)
             py_files = set(filter(lambda filename: filename.endswith('.py'), files))
@@ -128,11 +129,11 @@ class BaseUpdater(Plugin):
 
             for excess_pyc_file in excess_pyc_files:
                 full_path = os.path.join(root, excess_pyc_file)
-                log.debug('Removing old PYC file: %s' % full_path)
+                log.debug('Removing old PYC file: %s', full_path)
                 try:
                     os.remove(full_path)
                 except:
-                    log.error('Couldn\'t remove %s: %s' % (full_path, traceback.format_exc()))
+                    log.error('Couldn\'t remove %s: %s', (full_path, traceback.format_exc()))
 
             for dir_name in dirs:
                 full_path = os.path.join(root, dir_name)
@@ -140,7 +141,7 @@ class BaseUpdater(Plugin):
                     try:
                         os.rmdir(full_path)
                     except:
-                        log.error('Couldn\'t remove empty directory %s: %s' % (full_path, traceback.format_exc()))
+                        log.error('Couldn\'t remove empty directory %s: %s', (full_path, traceback.format_exc()))
 
 
 
@@ -170,7 +171,7 @@ class GitUpdater(BaseUpdater):
 
             return True
         except:
-            log.error('Failed updating via GIT: %s' % traceback.format_exc())
+            log.error('Failed updating via GIT: %s', traceback.format_exc())
 
         self.update_failed = True
 
@@ -181,14 +182,14 @@ class GitUpdater(BaseUpdater):
         if not self.version:
             try:
                 output = self.repo.getHead() # Yes, please
-                log.debug('Git version output: %s' % output.hash)
+                log.debug('Git version output: %s', output.hash)
                 self.version = {
                     'hash': output.hash[:8],
                     'date': output.getDate(),
                     'type': 'git',
                 }
             except Exception, e:
-                log.error('Failed using GIT updater, running from source, you need to have GIT installed. %s' % e)
+                log.error('Failed using GIT updater, running from source, you need to have GIT installed. %s', e)
                 return 'No GIT'
 
         return self.version
@@ -198,7 +199,7 @@ class GitUpdater(BaseUpdater):
         if self.update_version:
             return
 
-        log.info('Checking for new version on github for %s' % self.repo_name)
+        log.info('Checking for new version on github for %s', self.repo_name)
         if not Env.get('dev'):
             self.repo.fetch()
 
@@ -210,7 +211,7 @@ class GitUpdater(BaseUpdater):
                 local = self.repo.getHead()
                 remote = branch.getHead()
 
-                log.info('Versions, local:%s, remote:%s' % (local.hash[:8], remote.hash[:8]))
+                log.info('Versions, local:%s, remote:%s', (local.hash[:8], remote.hash[:8]))
 
                 if local.getDate() < remote.getDate():
                     self.update_version = {
@@ -263,13 +264,13 @@ class SourceUpdater(BaseUpdater):
 
             return True
         except:
-            log.error('Failed updating: %s' % traceback.format_exc())
+            log.error('Failed updating: %s', traceback.format_exc())
 
         self.update_failed = True
         return False
 
     def replaceWith(self, path):
-        app_dir = Env.get('app_dir')
+        app_dir = ss(Env.get('app_dir'))
 
         # Get list of files we want to overwrite
         self.deletePyc(only_excess = False)
@@ -296,7 +297,7 @@ class SourceUpdater(BaseUpdater):
                         except ValueError:
                             pass
                     except Exception, e:
-                        log.error('Failed overwriting file: %s' % e)
+                        log.error('Failed overwriting file: %s', e)
 
 
     def removeDir(self, path):
@@ -315,11 +316,11 @@ class SourceUpdater(BaseUpdater):
                 output = json.loads(f.read())
                 f.close()
 
-                log.debug('Source version output: %s' % output)
+                log.debug('Source version output: %s', output)
                 self.version = output
                 self.version['type'] = 'source'
             except Exception, e:
-                log.error('Failed using source updater. %s' % e)
+                log.error('Failed using source updater. %s', e)
                 return {}
 
         return self.version
@@ -336,7 +337,7 @@ class SourceUpdater(BaseUpdater):
 
             self.last_check = time.time()
         except:
-            log.error('Failed updating via source: %s' % traceback.format_exc())
+            log.error('Failed updating via source: %s', traceback.format_exc())
 
         return self.update_version is not None
 
@@ -351,7 +352,7 @@ class SourceUpdater(BaseUpdater):
                 'date':  int(time.mktime(parse(commit['commit']['committer']['date']).timetuple())),
             }
         except:
-            log.error('Failed getting latest request from github: %s' % traceback.format_exc())
+            log.error('Failed getting latest request from github: %s', traceback.format_exc())
 
         return {}
 
@@ -372,7 +373,7 @@ class DesktopUpdater(BaseUpdater):
                 if e['status'] == 'done':
                     fireEventAsync('app.restart')
                 else:
-                    log.error('Failed updating desktop: %s' % e['exception'])
+                    log.error('Failed updating desktop: %s', e['exception'])
                     self.update_failed = True
 
             self.desktop._esky.auto_update(callback = do_restart)
@@ -403,7 +404,7 @@ class DesktopUpdater(BaseUpdater):
 
             self.last_check = time.time()
         except:
-            log.error('Failed updating desktop: %s' % traceback.format_exc())
+            log.error('Failed updating desktop: %s', traceback.format_exc())
 
         return self.update_version is not None
 

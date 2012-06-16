@@ -20,6 +20,7 @@
 
 from __future__ import unicode_literals
 from guessit import fileutils
+from guessit.textutils import to_unicode
 import logging
 
 log = logging.getLogger(__name__)
@@ -66,7 +67,8 @@ class Country(object):
     """
 
     def __init__(self, country, strict=False):
-        self.alpha3 = country_to_alpha3.get(country.lower())
+        country = to_unicode(country.strip().lower())
+        self.alpha3 = country_to_alpha3.get(country)
 
         if self.alpha3 is None and strict:
             msg = 'The given string "%s" could not be identified as a country'

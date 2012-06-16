@@ -1,4 +1,4 @@
-from BeautifulSoup import BeautifulSoup
+from bs4 import BeautifulSoup
 from couchpotato.core.event import fireEvent
 from couchpotato.core.helpers.encoding import toUnicode, tryUrlencode, \
     simplifyString
@@ -30,7 +30,7 @@ class NzbIndex(NZBProvider, RSS):
         if self.isDisabled():
             return results
 
-        q = '%s %s %s' % (simplifyString(getTitle(movie['library'])), movie['library']['year'], quality.get('identifier'))
+        q = '"%s %s" %s' % (simplifyString(getTitle(movie['library'])), movie['library']['year'], quality.get('identifier'))
         arguments = tryUrlencode({
             'q': q,
             'age': Env.setting('retention', 'nzb'),
@@ -53,7 +53,7 @@ class NzbIndex(NZBProvider, RSS):
                     data = XMLTree.fromstring(data)
                     nzbs = self.getElements(data, 'channel/item')
                 except Exception, e:
-                    log.debug('%s, %s' % (self.getName(), e))
+                    log.debug('%s, %s', (self.getName(), e))
                     return results
 
                 for nzb in nzbs:
@@ -67,6 +67,13 @@ class NzbIndex(NZBProvider, RSS):
                     except:
                         description = ''
 
+                    def extra_check(new):
+                        if '#c20000' in new['description'].lower():
+                            log.info('Wrong: Seems to be passworded: %s', new['name'])
+                            return False
+
+                        return True
+
                     new = {
                         'id': nzbindex_id,
                         'type': 'nzb',
@@ -79,6 +86,7 @@ class NzbIndex(NZBProvider, RSS):
                         'detail_url': enclosure['url'].replace('/download/', '/release/'),
                         'description': description,
                         'get_more_info': self.getMoreInfo,
+                        'extra_check': extra_check,
                         'check_nzb': True,
                     }
 

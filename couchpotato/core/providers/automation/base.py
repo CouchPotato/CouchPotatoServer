@@ -20,7 +20,7 @@ class Automation(Plugin):
     def _getMovies(self):
 
         if not self.canCheck():
-            log.debug('Just checked, skipping %s' % self.getName())
+            log.debug('Just checked, skipping %s', self.getName())
             return []
 
         self.last_checked = time.time()
@@ -43,7 +43,7 @@ class Automation(Plugin):
             type_value = movie.get(minimal_type, 0)
             type_min = self.getMinimal(minimal_type)
             if type_value < type_min:
-                log.info('%s to low for %s, need %s has %s' % (minimal_type, identifier, type_min, type_value))
+                log.info('%s to low for %s, need %s has %s', (minimal_type, identifier, type_min, type_value))
                 return False
 
         return True

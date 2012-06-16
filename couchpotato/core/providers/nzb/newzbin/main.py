@@ -57,6 +57,8 @@ class Newzbin(NZBProvider, RSS):
             'category': '6',
             'ps_rb_video_format': str(cat_id),
             'ps_rb_source': str(format_id),
+            'u_post_larger_than': quality.get('size_min'),
+            'u_post_smaller_than': quality.get('size_max'),
         })
 
         url = "%s?%s" % (self.urls['search'], arguments)
@@ -80,7 +82,7 @@ class Newzbin(NZBProvider, RSS):
                     data = XMLTree.fromstring(data)
                     nzbs = self.getElements(data, 'channel/item')
                 except Exception, e:
-                    log.debug('%s, %s' % (self.getName(), e))
+                    log.debug('%s, %s', (self.getName(), e))
                     return results
 
                 for nzb in nzbs:
@@ -131,7 +133,7 @@ class Newzbin(NZBProvider, RSS):
 
     def download(self, url = '', nzb_id = ''):
         try:
-            log.info('Download nzb from newzbin, report id: %s ' % nzb_id)
+            log.info('Download nzb from newzbin, report id: %s ', nzb_id)
 
             return self.urlopen(self.urls['download'], params = {
                 'username' : self.conf('username'),
@@ -139,7 +141,7 @@ class Newzbin(NZBProvider, RSS):
                 'reportid' : nzb_id
             }, show_error = False)
         except Exception, e:
-            log.error('Failed downloading from newzbin, check credit: %s' % e)
+            log.error('Failed downloading from newzbin, check credit: %s', e)
             return False
 
     def getFormatId(self, format):

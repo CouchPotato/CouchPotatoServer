@@ -73,7 +73,7 @@ class Userscript(Plugin):
             'movie': fireEvent('userscript.get_movie_via_url', url = url, single = True)
         }
         if not isDict(params['movie']):
-            log.error('Failed adding movie via url: %s' % url)
+            log.error('Failed adding movie via url: %s', url)
             params['error'] = params['movie'] if params['movie'] else 'Failed getting movie info'
 
         return jsonified(params)

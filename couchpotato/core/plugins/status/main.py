@@ -92,7 +92,7 @@ class StatusPlugin(Plugin):
         for identifier, label in self.statuses.iteritems():
             s = db.query(Status).filter_by(identifier = identifier).first()
             if not s:
-                log.info('Creating status: %s' % label)
+                log.info('Creating status: %s', label)
                 s = Status(
                     identifier = identifier,
                     label = toUnicode(label)

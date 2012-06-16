@@ -1,4 +1,4 @@
-from BeautifulSoup import BeautifulSoup
+from bs4 import BeautifulSoup
 from couchpotato.core.event import fireEvent
 from couchpotato.core.helpers.encoding import toUnicode, tryUrlencode, \
     simplifyString
@@ -49,21 +49,21 @@ class Mysterbin(NZBProvider):
             try:
                 html = BeautifulSoup(data)
                 resultable = html.find('table', attrs = {'class':'t'})
-                for result in resultable.findAll('tr'):
+                for result in resultable.find_all('tr'):
 
                     try:
                         myster_id = result.find('input', attrs = {'class': 'check4nzb'})['value']
 
                         # Age
                         age = ''
-                        for temp in result.find('td', attrs = {'class': 'cdetail'}).findAll(text = True):
+                        for temp in result.find('td', attrs = {'class': 'cdetail'}).find_all(text = True):
                             if 'days' in temp:
                                 age = tryInt(temp.split(' ')[0])
                                 break
 
                         # size
                         size = None
-                        for temp in result.find('div', attrs = {'class': 'cdetail'}).findAll(text = True):
+                        for temp in result.find('div', attrs = {'class': 'cdetail'}).find_all(text = True):
                             if 'gb' in temp.lower() or 'mb' in temp.lower() or 'kb' in temp.lower():
                                 size = self.parseSize(temp)
                                 break
@@ -74,7 +74,7 @@ class Mysterbin(NZBProvider):
 
                         new = {
                             'id': myster_id,
-                            'name': ''.join(result.find('span', attrs = {'class': 'cname'}).findAll(text = True)),
+                            'name': ''.join(result.find('span', attrs = {'class': 'cname'}).find_all(text = True)),
                             'type': 'nzb',
                             'provider': self.getName(),
                             'age': age,

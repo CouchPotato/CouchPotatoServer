@@ -35,5 +35,5 @@ class XBMC(Notification):
             log.error("Couldn't sent command to XBMC")
             return False
 
-        log.info('XBMC notification to %s successful.' % host)
+        log.info('XBMC notification to %s successful.', host)
         return True

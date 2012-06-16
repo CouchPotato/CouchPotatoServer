@@ -72,7 +72,7 @@ var MovieList = new Class({
 		self.created = true;
 	},
 
-	addMovies: function(movies){
+	addMovies: function(movies, total){
 		var self = this;
 
 		if(!self.created) self.create();
@@ -86,7 +86,18 @@ var MovieList = new Class({
 		Object.each(movies, function(movie){
 			self.createMovie(movie);
 		});
+		
+		self.setCounter(total);
 
+	},
+	
+	setCounter: function(count){
+		var self = this;
+		
+		if(!self.navigation_counter) return;
+		
+		self.navigation_counter.set('text', (count || 0));
+		
 	},
 
 	createMovie: function(movie, inject_at){
@@ -118,6 +129,7 @@ var MovieList = new Class({
 
 		self.navigation = new Element('div.alph_nav').adopt(
 			self.navigation_actions = new Element('ul.inlay.actions.reversed'),
+			self.navigation_counter = new Element('span.counter[title=Total]'),
 			self.navigation_alpha = new Element('ul.numbers', {
 				'events': {
 					'click:relay(li)': function(e, el){
@@ -443,7 +455,7 @@ var MovieList = new Class({
 			}, self.filter),
 			'onComplete': function(json){
 				self.store(json.movies);
-				self.addMovies(json.movies);
+				self.addMovies(json.movies, json.total);
 				self.load_more.set('text', 'load more movies');
 				if(self.scrollspy) self.scrollspy.start();
 			}

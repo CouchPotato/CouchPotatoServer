@@ -19,14 +19,14 @@ class MetaDataBase(Plugin):
     def create(self, release):
         if self.isDisabled(): return
 
-        log.info('Creating %s metadata.' % self.getName())
+        log.info('Creating %s metadata.', self.getName())
 
         # Update library to get latest info
         try:
             updated_library = fireEvent('library.update', release['library']['identifier'], force = True, single = True)
             release['library'] = mergeDicts(release['library'], updated_library)
         except:
-            log.error('Failed to update movie, before creating metadata: %s' % traceback.format_exc())
+            log.error('Failed to update movie, before creating metadata: %s', traceback.format_exc())
 
         root_name = self.getRootName(release)
         meta_name = os.path.basename(root_name)
@@ -44,14 +44,14 @@ class MetaDataBase(Plugin):
                     # Get file content
                     content = getattr(self, 'get' + file_type.capitalize())(movie_info = movie_info, data = release)
                     if content:
-                        log.debug('Creating %s file: %s' % (file_type, name))
+                        log.debug('Creating %s file: %s', (file_type, name))
                         if os.path.isfile(content):
                             shutil.copy2(content, name)
                         else:
                             self.createFile(name, content)
 
             except:
-                log.error('Unable to create %s file: %s' % (file_type, traceback.format_exc()))
+                log.error('Unable to create %s file: %s', (file_type, traceback.format_exc()))
 
     def getRootName(self, data):
         return

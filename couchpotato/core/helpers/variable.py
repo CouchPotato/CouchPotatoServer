@@ -118,10 +118,10 @@ def getTitle(library_dict):
         try:
             return library_dict['titles'][0]['title']
         except:
-            log.error('Could not get title for %s' % library_dict['identifier'])
+            log.error('Could not get title for %s', library_dict['identifier'])
             return None
     except:
-        log.error('Could not get title for library item: %s' % library_dict)
+        log.error('Could not get title for library item: %s', library_dict)
         return None
 
 def randomString(size = 8, chars = string.ascii_uppercase + string.digits):

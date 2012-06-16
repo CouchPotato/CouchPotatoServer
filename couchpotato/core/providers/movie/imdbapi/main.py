@@ -36,7 +36,7 @@ class IMDBAPI(MovieProvider):
         if cached:
             result = self.parseMovie(cached)
             if result.get('titles') and len(result.get('titles')) > 0:
-                log.info('Found: %s' % result['titles'][0] + ' (' + str(result['year']) + ')')
+                log.info('Found: %s', result['titles'][0] + ' (' + str(result['year']) + ')')
                 return [result]
 
             return []
@@ -54,7 +54,7 @@ class IMDBAPI(MovieProvider):
         if cached:
             result = self.parseMovie(cached)
             if result.get('titles') and len(result.get('titles')) > 0:
-                log.info('Found: %s' % result['titles'][0] + ' (' + str(result['year']) + ')')
+                log.info('Found: %s', result['titles'][0] + ' (' + str(result['year']) + ')')
                 return result
 
         return {}
@@ -103,7 +103,7 @@ class IMDBAPI(MovieProvider):
                 'actors': movie.get('Actors', '').split(','),
             }
         except:
-            log.error('Failed parsing IMDB API json: %s' % traceback.format_exc())
+            log.error('Failed parsing IMDB API json: %s', traceback.format_exc())
 
         return movie_data
 
