@@ -17,12 +17,11 @@
 # along with subliminal.  If not, see <http://www.gnu.org/licenses/>.
 from . import ServiceBase
 from ..exceptions import ServiceError
+from ..language import language_set, Language
 from ..subtitles import get_subtitle_path, ResultSubtitle
 from ..videos import Episode, Movie
 from bs4 import BeautifulSoup
-from guessit.language import lang_set
 from subliminal.utils import get_keywords, split_keyword
-import guessit
 import logging
 import re
 import urllib
@@ -34,9 +33,11 @@ logger = logging.getLogger(__name__)
 class SubsWiki(ServiceBase):
     server_url = 'http://www.subswiki.com'
     api_based = False
-    languages = lang_set([u'English (US)', u'English (UK)', u'English', u'French', u'Brazilian',
-                          u'Portuguese', u'Español (Latinoamérica)', u'Español (España)',
-                          u'Español', u'Italian', u'Català'], strict=True)
+    languages = language_set(['eng-US', 'eng-GB', 'eng', 'fre', 'por-BR', 'por', 'spa-ES', u'spa', u'ita', u'cat'])
+    language_map = {u'Español': Language('spa'), u'Español (España)': Language('spa'), u'Español (Latinoamérica)': Language('spa'),
+                    u'Català': Language('cat'), u'Brazilian': Language('por-BR'), u'English (US)': Language('eng-US'),
+                    u'English (UK)': Language('eng-GB')}
+    language_code = 'name'
     videos = [Episode, Movie]
     require_video = False
     release_pattern = re.compile('\nVersion (.+), ([0-9]+).([0-9])+ MBs')
@@ -82,7 +83,7 @@ class SubsWiki(ServiceBase):
                 logger.debug(u'None of subtitle keywords %r in %r' % (sub_keywords, keywords))
                 continue
             for html_language in sub.parent.parent.findAll('td', {'class': 'language'}):
-                language = guessit.Language(html_language.string.strip())
+                language = self.get_language(html_language.string.strip())
                 if language not in languages:
                     logger.debug(u'Language %r not in wanted languages %r' % (language, languages))
                     continue

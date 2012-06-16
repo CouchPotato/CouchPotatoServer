@@ -20,10 +20,9 @@ from .services import ServiceConfig
 from .tasks import DownloadTask, ListTask
 from .utils import get_keywords
 from .videos import Episode, Movie, scan
-from guessit.language import lang_set
-import bs4
 from collections import defaultdict
 from itertools import groupby
+import bs4
 import guessit
 import logging
 
@@ -119,7 +118,7 @@ def consume_task(task, services=None):
     :type task: :class:`~subliminal.tasks.ListTask` or :class:`~subliminal.tasks.DownloadTask`
     :param dict services: mapping between the service name and an instance of this service
     :return: the result of the task
-    :rtype: list of :class:`~subliminal.subtitles.ResultSubtitle` or :class:`~subliminal.subtitles.Subtitle`
+    :rtype: list of :class:`~subliminal.subtitles.ResultSubtitle`
 
     """
     if services is None:
@@ -134,12 +133,11 @@ def consume_task(task, services=None):
             service = get_service(services, subtitle.service)
             try:
                 service.download(subtitle)
-                result = subtitle
+                result = [subtitle]
                 break
             except DownloadFailedError:
                 logger.warning(u'Could not download subtitle %r, trying next' % subtitle)
                 continue
-
         if result is None:
             logger.error(u'No subtitles could be downloaded for video %r' % task.video)
     return result
@@ -225,6 +223,7 @@ def key_subtitles(subtitle, video, languages, services, order):
     for sort_item in order:
         if sort_item == LANGUAGE_INDEX:
             key += '{0:03d}'.format(len(languages) - languages.index(subtitle.language) - 1)
+            key += '{0:01d}'.format(subtitle.language == languages[languages.index(subtitle.language)])
         elif sort_item == SERVICE_INDEX:
             key += '{0:02d}'.format(len(services) - services.index(subtitle.service) - 1)
         elif sort_item == SERVICE_CONFIDENCE:

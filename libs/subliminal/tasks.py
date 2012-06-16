@@ -35,6 +35,7 @@ class ListTask(Task):
 
     """
     def __init__(self, video, languages, service, config):
+        super(ListTask, self).__init__()
         self.video = video
         self.service = service
         self.languages = languages
@@ -54,6 +55,7 @@ class DownloadTask(Task):
 
     """
     def __init__(self, video, subtitles):
+        super(DownloadTask, self).__init__()
         self.video = video
         self.subtitles = subtitles
 

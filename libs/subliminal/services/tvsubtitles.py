@@ -17,12 +17,11 @@
 # along with subliminal.  If not, see <http://www.gnu.org/licenses/>.
 from . import ServiceBase
 from ..cache import cachedmethod
+from ..language import language_set, Language
 from ..subtitles import get_subtitle_path, ResultSubtitle
+from ..utils import get_keywords
 from ..videos import Episode
 from bs4 import BeautifulSoup
-from guessit.language import lang_set
-from subliminal.utils import get_keywords
-import guessit
 import logging
 import re
 
@@ -41,12 +40,11 @@ def match(pattern, string):
 class TvSubtitles(ServiceBase):
     server_url = 'http://www.tvsubtitles.net'
     api_based = False
-    languages = lang_set([u'English', u'Español', u'French', u'German',
-                          u'Brazilian', u'Russian', u'Ukrainian', u'Italian',
-                          u'Greek', u'Arabic', u'Hungarian', u'Polish',
-                          u'Turkish', u'Dutch', u'Portuguese', u'Swedish',
-                          u'Danish', u'Finnish', u'Korean', u'Chinese',
-                          u'Japanese', u'Bulgarian', u'Czech', u'Romanian'], strict=True)
+    languages = language_set(['ar', 'bg', 'cs', 'da', 'de', 'el', 'en', 'es', 'fi', 'fr', 'hu',
+                              'it', 'ja', 'ko', 'nl', 'pl', 'pt', 'ro', 'ru', 'sv', 'tr', 'uk',
+                              'zh', 'pt-br'])
+    #TODO: Find more exceptions
+    language_map = {'gr': Language('gre'), 'cz': Language('cze'), 'ua': Language('ukr')}
     videos = [Episode]
     require_video = False
     required_features = ['permissive']
@@ -78,11 +76,9 @@ class TvSubtitles(ServiceBase):
             cells = row.find_all('td')
             if not cells:
                 continue
-
             episode_number = match('x([0-9]+)', cells[0].text)
             if not episode_number:
                 continue
-
             episode_number = int(episode_number)
             episode_id = int(match('episode-([0-9]+)', cells[1].a['href']))
             # we could just return the id of the queried episode, but as we
@@ -102,14 +98,13 @@ class TvSubtitles(ServiceBase):
             if 'href' not in subdiv.attrs or not subdiv['href'].startswith('/subtitle'):
                 continue
             subid = int(match('([0-9]+)', subdiv['href']))
-            lang = guessit.Language(match('flags/(.*).gif', subdiv.img['src']))
+            lang = self.get_language(match('flags/(.*).gif', subdiv.img['src']))
             result = {'subid': subid, 'language': lang}
             for p in subdiv.find_all('p'):
                 if 'alt' in p.attrs and p['alt'] == 'rip':
                     result['rip'] = p.text.strip()
                 if 'alt' in p.attrs and p['alt'] == 'release':
                     result['release'] = p.text.strip()
-
             subids.append(result)
         return subids
 

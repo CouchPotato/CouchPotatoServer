@@ -17,12 +17,11 @@
 # along with subliminal.  If not, see <http://www.gnu.org/licenses/>.
 from . import ServiceBase
 from ..exceptions import ServiceError, DownloadFailedError
+from ..language import language_set, Language
 from ..subtitles import get_subtitle_path, ResultSubtitle
 from ..utils import to_unicode
 from ..videos import Episode, Movie
-from guessit.language import lang_set
 from hashlib import md5, sha256
-import guessit
 import logging
 import xmlrpclib
 
@@ -33,11 +32,16 @@ logger = logging.getLogger(__name__)
 class Podnapisi(ServiceBase):
     server_url = 'http://ssp.podnapisi.net:8000'
     api_based = True
-    languages = lang_set(['sl', 'en', 'nn', 'ko', 'de', 'is', 'cs', 'fr', 'it', 'bs', 'jp', 'ar', 'ro',
-                          'hu', 'gr', 'zh', 'lt', 'et', 'lv', 'he', 'nl', 'da', 'sv', 'pl', 'ru', 'es',
-                          'sq', 'tr', 'fi', 'pt', 'bg', 'mk', 'sr', 'sk', 'hr', 'hi', 'th', 'ca', 'uk',
-                          'pb', 'ga', 'be', 'vi', 'fa', 'ca', 'id', 'ms'])
-    #FIXME: ag and cyr not recognized by guessit
+    languages = language_set(['ar', 'be', 'bg', 'bs', 'ca', 'ca', 'cs', 'da', 'de', 'el', 'en',
+                              'es', 'et', 'fa', 'fi', 'fr', 'ga', 'he', 'hi', 'hr', 'hu', 'id',
+                              'is', 'it', 'ja', 'ko', 'lt', 'lv', 'mk', 'ms', 'nl', 'nn', 'pl',
+                              'pt', 'ro', 'ru', 'sk', 'sl', 'sq', 'sr', 'sv', 'th', 'tr', 'uk',
+                              'vi', 'zh', 'es-ar', 'pt-br'])
+    language_map = {'jp': Language('jpn'), Language('jpn'): 'jp',
+                    'gr': Language('gre'), Language('gre'): 'gr',
+                    'pb': Language('por-BR'), Language('por-BR'): 'pb',
+                    'ag': Language('spa-AR'), Language('spa-AR'): 'ag',
+                    'cyr': Language('srp')}
     videos = [Episode, Movie]
     require_video = True
 
@@ -71,8 +75,8 @@ class Podnapisi(ServiceBase):
             return []
         subtitles = []
         for result in results['results'][moviehash]['subtitles']:
-            language = guessit.Language(result['lang'])
-            if language == guessit.language.UNDETERMINED or language not in languages:
+            language = self.get_language(result['lang'])
+            if language not in languages:
                 continue
             path = get_subtitle_path(filepath, language, self.config.multi)
             subtitle = ResultSubtitle(path, language, service=self.__class__.__name__.lower(), link=result['id'],

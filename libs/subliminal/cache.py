@@ -15,25 +15,26 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with subliminal.  If not, see <http://www.gnu.org/licenses/>.
-import os.path
 from collections import defaultdict
-import threading
 from functools import wraps
 import logging
+import os.path
+import threading
 try:
     import cPickle as pickle
 except ImportError:
     import pickle
 
 
+__all__ = ['Cache', 'cachedmethod']
 logger = logging.getLogger(__name__)
 
 
 class Cache(object):
     """A Cache object contains cached values for methods. It can have
-    separate internal caches, one for each service.
-    """
+    separate internal caches, one for each service
 
+    """
     def __init__(self, cache_dir):
         self.cache_dir = cache_dir
         self.cache = defaultdict(dict)
@@ -100,9 +101,12 @@ class Cache(object):
 def cachedmethod(function):
     """Decorator to make a method use the cache.
 
-    WARNING: this can NOT be used with static functions, it has to be used on
-    methods of some class."""
+    .. note::
 
+        This can NOT be used with static functions, it has to be used on
+        methods of some class
+
+    """
     @wraps(function)
     def cached(*args):
         c = args[0].config.cache
@@ -126,7 +130,5 @@ def cachedmethod(function):
         # meantime, but that's ok as we prefer to keep the latest value in
         # the cache
         func_cache[key] = result
-
         return result
-
     return cached

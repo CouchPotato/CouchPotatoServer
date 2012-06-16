@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with subliminal.  If not, see <http://www.gnu.org/licenses/>.
+from .language import Language
 import os.path
-import guessit
-from guessit.language import is_language
 
 
 __all__ = ['Subtitle', 'EmbeddedSubtitle', 'ExternalSubtitle', 'ResultSubtitle', 'get_subtitle_path']
@@ -31,7 +30,7 @@ class Subtitle(object):
 
     :param string path: path to the subtitle
     :param language: language of the subtitle
-    :type language: :class:`guessit.Language`
+    :type language: :class:`~subliminal.language.Language`
 
     """
     def __init__(self, path, language):
@@ -51,7 +50,7 @@ class EmbeddedSubtitle(Subtitle):
 
     :param string path: path to the subtitle
     :param language: language of the subtitle
-    :type language: :class:`guessit.Language`
+    :type language: :class:`~subliminal.language.Language`
     :param int track_id: id of the subtitle track in the container
 
     """
@@ -61,7 +60,7 @@ class EmbeddedSubtitle(Subtitle):
 
     @classmethod
     def from_enzyme(cls, path, subtitle):
-        language = guessit.Language(subtitle.language) or None
+        language = Language(subtitle.language) or None
         return cls(path, language, subtitle.trackno)
 
 
@@ -78,8 +77,7 @@ class ExternalSubtitle(Subtitle):
         if not extension:
             raise ValueError('Not a supported subtitle extension')
         language = os.path.splitext(path[:len(path) - len(extension)])[1][1:]
-        language = guessit.Language(language) or None
-
+        language = Language(language) or None
         return cls(path, language)
 
 
@@ -88,7 +86,7 @@ class ResultSubtitle(ExternalSubtitle):
 
     :param string path: path to the subtitle
     :param language: language of the subtitle
-    :type language: :class:`guessit.Language`
+    :type language: :class:`~subliminal.language.Language`
     :param string service: name of the service
     :param string link: download link for the subtitle
     :param string release: release name of the video
@@ -114,7 +112,7 @@ class ResultSubtitle(ExternalSubtitle):
         """
         extension = os.path.splitext(self.path)[0]
         language = os.path.splitext(self.path[:len(self.path) - len(extension)])[1][1:]
-        return not is_language(language)
+        return Language(language) == Language('und')
 
     def __repr__(self):
         return 'ResultSubtitle(%s, %s, %.2f, %s)' % (self.language, self.service, self.confidence, self.release)
@@ -125,7 +123,7 @@ def get_subtitle_path(video_path, language, multi):
 
     :param string video_path: path to the video
     :param language: language of the subtitle
-    :type language: :class:`guessit.Language`
+    :type language: :class:`~subliminal.language.Language`
     :param bool multi: whether to use multi language naming or not
     :return: path of the subtitle
     :rtype: string

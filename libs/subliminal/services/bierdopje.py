@@ -18,11 +18,11 @@
 from . import ServiceBase
 from ..cache import cachedmethod
 from ..exceptions import ServiceError
+from ..language import language_set
 from ..subtitles import get_subtitle_path, ResultSubtitle
 from ..utils import to_unicode
 from ..videos import Episode
 from bs4 import BeautifulSoup
-from guessit.language import lang_set
 import logging
 import urllib
 try:
@@ -37,7 +37,7 @@ logger = logging.getLogger(__name__)
 class BierDopje(ServiceBase):
     server_url = 'http://api.bierdopje.com/A2B638AC5D804C2E/'
     api_based = True
-    languages = lang_set(['en', 'nl'])
+    languages = language_set(['eng', 'dut'])
     videos = [Episode]
     require_video = False
     required_features = ['xml']
@@ -52,7 +52,6 @@ class BierDopje(ServiceBase):
         if soup.status.contents[0] == 'false':
             logger.debug(u'Could not find show %s' % series)
             return None
-
         return int(soup.showid.contents[0])
 
     def load_cache(self):

@@ -15,10 +15,10 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with subliminal.  If not, see <http://www.gnu.org/licenses/>.
-from .. import cache
-from ..exceptions import MissingLanguageError, DownloadFailedError, ServiceError
+from ..cache import Cache
+from ..exceptions import DownloadFailedError, ServiceError
+from ..language import language_set, Language
 from ..subtitles import EXTENSIONS
-from guessit.language import lang_set, UNDETERMINED
 import logging
 import os
 import requests
@@ -49,8 +49,14 @@ class ServiceBase(object):
     #: Timeout for web requests
     timeout = 5
 
-    #: Mapping to Service's language codes and subliminal's
-    languages = {}
+    #: :class:`~subliminal.language.language_set` of available languages
+    languages = language_set()
+
+    #: Map between language objects and language codes used in the service
+    language_map = {}
+
+    #: Default attribute of a :class:`~subliminal.language.Language` to get with :meth:`get_code`
+    language_code = 'alpha2'
 
     #: Accepted video classes (:class:`~subliminal.videos.Episode`, :class:`~subliminal.videos.Movie`, :class:`~subliminal.videos.UnknownVideo`)
     videos = []
@@ -63,6 +69,7 @@ class ServiceBase(object):
 
     def __init__(self, config=None):
         self.config = config or ServiceConfig()
+        self.session = None
 
     def __enter__(self):
         self.init()
@@ -80,33 +87,60 @@ class ServiceBase(object):
         """Initialize cache, make sure it is loaded from disk"""
         if not self.config or not self.config.cache:
             raise ServiceError('Cache directory is required')
-
-        service_name = self.__class__.__name__
-        self.config.cache.load(service_name)
+        self.config.cache.load(self.__class__.__name__)
 
     def save_cache(self):
-        service_name = self.__class__.__name__
-        self.config.cache.save(service_name)
+        self.config.cache.save(self.__class__.__name__)
 
     def clear_cache(self):
-        service_name = self.__class__.__name__
-        self.config.cache.clear(service_name)
+        self.config.cache.clear(self.__class__.__name__)
 
     def cache_for(self, func, args, result):
-        service_name = self.__class__.__name__
-        return self.config.cache.cache_for(service_name, func, args, result)
+        return self.config.cache.cache_for(self.__class__.__name__, func, args, result)
 
     def cached_value(self, func, args):
-        service_name = self.__class__.__name__
-        return self.config.cache.cached_value(service_name, func, args)
+        return self.config.cache.cached_value(self.__class__.__name__, func, args)
 
     def terminate(self):
         """Terminate connection"""
         logger.debug(u'Terminating %s' % self.__class__.__name__)
 
+    def get_code(self, language):
+        """Get the service code for a :class:`~subliminal.language.Language`
+
+        It uses the :data:`language_map` and if there's no match, falls back
+        on the :data:`language_code` attribute of the given :class:`~subliminal.language.Language`
+
+        """
+        if language in self.language_map:
+            return self.language_map[language]
+        if self.language_code is None:
+            raise ValueError('%r has no matching code' % language)
+        return getattr(language, self.language_code)
+
+    def get_language(self, code):
+        """Get a :class:`~subliminal.language.Language` from a service code
+
+        It uses the :data:`language_map` and if there's no match, uses the
+        given code as ``language`` parameter for the :class:`~subliminal.language.Language`
+        constructor
+
+        .. note::
+
+            A warning is emitted if the generated :class:`~subliminal.language.Language`
+            is "Undetermined"
+
+        """
+        if code in self.language_map:
+            return self.language_map[code]
+        language = Language(code, strict=False)
+        if language == Language('Undetermined'):
+            logger.warning(u'Code %s could not be identified as a language for %s' % (code, self.__class__.__name__))
+        return language
+
     def query(self, *args):
         """Make the actual query"""
-        pass
+        raise NotImplementedError()
 
     def list(self, video, languages):
         """List subtitles
@@ -119,6 +153,10 @@ class ServiceBase(object):
             return []
         return self.list_checked(video, languages)
 
+    def list_checked(self, video, languages):
+        """List subtitles without having to check parameters for validity"""
+        raise NotImplementedError()
+
     def download(self, subtitle):
         """Download a subtitle"""
         self.download_file(subtitle.link, subtitle.path)
@@ -129,11 +167,12 @@ class ServiceBase(object):
 
         :param video: the video to check
         :type video: :class:`~subliminal.videos.video`
-        :param set languages: languages to check
+        :param languages: languages to check
+        :type languages: :class:`~subliminal.language.Language`
         :rtype: bool
 
         """
-        languages = (lang_set(languages) & cls.languages) - set([UNDETERMINED])
+        languages = (languages & cls.languages) - language_set(['Undetermined'])
         if not languages:
             logger.debug(u'No language available for service %s' % cls.__name__.lower())
             return False
@@ -211,7 +250,7 @@ class ServiceConfig(object):
         self.cache_dir = cache_dir
         self.cache = None
         if cache_dir is not None:
-            self.cache = cache.Cache(cache_dir)
+            self.cache = Cache(cache_dir)
 
     def __repr__(self):
         return 'ServiceConfig(%r, %s)' % (self.multi, self.cache.cache_dir)
