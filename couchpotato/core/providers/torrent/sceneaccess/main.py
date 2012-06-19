@@ -26,7 +26,7 @@ class SceneAccess(TorrentProvider):
         'download': 'https://www.sceneaccess.eu/download/%d/%s/%s.torrent',
     }
 
-    regex = '<td class="ttr_name"><a href="details\?id=(?P<id>.*?)".+?<b>(?P<title>.*?)</b>.+?href="(?P<url>.*?)".*?</td>.+?<td class="ttr_size">(?P<size>.*?)<br />'
+    regex = '<td class="ttr_name"><a href="details\?id=(?P<id>.*?)".+?<b>(?P<title>.*?)</b>.+?href="(?P<url>.*?)".*?</td>.+?<td class="ttr_size">(?P<size>.*?)<br />.*?</td>.+?<td class="ttr_seeders"><b><a href=".*?">(?P<seeders>.*?)</a>.*?</td>.+?<td class="ttr_leechers"><b><a href=".*?">(?P<leechers>.*?)</a>'
 
     cat_ids = [
         ([22], ['720p', '1080p']),
@@ -43,10 +43,10 @@ class SceneAccess(TorrentProvider):
             return results
 
         cache_key = 'sceneaccess.%s.%s' % (movie['library']['identifier'], quality.get('identifier'))
-	searchUrl =  self.urls['search'] % (quote_plus(getTitle(movie['library']) + ' ' + quality['identifier']), self.getCatId(quality['identifier'])[0], self.getCatId(quality['identifier'])[0])
+        searchUrl =  self.urls['search'] % (quote_plus(getTitle(movie['library']) + ' ' + quality['identifier']), self.getCatId(quality['identifier'])[0], self.getCatId(quality['identifier'])[0])
         data = self.getCache(cache_key, searchUrl)
 
-	if data:
+        if data:
 
             cat_ids = self.getCatId(quality['identifier'])
 	    
@@ -80,18 +80,24 @@ class SceneAccess(TorrentProvider):
 	    new['name'] = torrent.group('title')
 	    new['size'] = self.parseSize(torrent.group('size'))
 	    new['id'] = torrent.group('id')
-	    new['seeds'] = 100
-	    new['leechers'] = 1
+	    new['seeds'] = torrent.group('seeders')
+	    new['leechers'] = torrent.group('leechers')
+	    new['imdbid'] = movie['library']['identifier']
+	    new['extra_score'] = self.extra_score
 	    new['score'] = fireEvent('score.calculate', new, movie, single = True)
-	    new['score'] += self.imdbMatch(self.urls['detail'] % new['id'], movie['library']['identifier'])
 	    is_correct_movie = fireEvent('searcher.correct_movie', nzb = new, movie = movie, quality = quality,
-                                   imdb_results = True, single_category = False, single = True)
+                                            imdb_results = True, single_category = False, single = True)
 
             if is_correct_movie:
 	        new['download'] = self.download
                 results.append(new)
                 self.found(new)
         return results
+
+    def extra_score(self, nzb):
+        url = self.urls['detail'] % nzb['id']
+        imdbId = nzb['imdbid']
+        return self.imdbMatch(url, imdbId)
 
     def imdbMatch(self, url, imdbId):
         try:
@@ -101,13 +107,13 @@ class SceneAccess(TorrentProvider):
             log.error('Failed to open %s.' % url)
             return ''
 
-	html = BeautifulSoup(data)
+        html = BeautifulSoup(data)
         imdbDiv = html.find('span', attrs = {'class':'i_link'})
         imdbDiv = str(imdbDiv).decode("utf-8", "replace")
-	imdbIdAlt = re.sub('tt[0]*', 'tt', imdbId)
+        imdbIdAlt = re.sub('tt[0]*', 'tt', imdbId)
 
 	if 'imdb.com/title/' + imdbId in imdbDiv or 'imdb.com/title/' + imdbIdAlt in imdbDiv:
-	        return 50
+	    return 50
 	return 0
 
     def download(self, url = '', nzb_id = ''):

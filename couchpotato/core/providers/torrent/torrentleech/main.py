@@ -25,15 +25,15 @@ class TorrentLeech(TorrentProvider):
         'search': 'http://torrentleech.org/torrents/browse/index/query/%s/categories/%d',
     }
 
-    regex = '<span class="title"><a href="\/torrent\/(?P<id>.*?)">(?P<title>.*?)</a></span>.+?<a href="(?P<url>.*?)">.+?comments">.+?<td>(?P<size>.*?)([MB,GB])</td>'
+    regex = '<span class="title"><a href="\/torrent\/(?P<id>.*?)">(?P<title>.*?)</a></span>.+?<a href="(?P<url>.*?)">.+?comments">.+?<td>(?P<size>.*?)([MB,GB])</td>.*?</td>.+?<td class="seeders">(?P<seeders>.*?)</td>.+?<td class="leechers">(?P<leechers>.*?)</td>'
 
     cat_ids = [
         ([13], ['720p', '1080p']),
         ([8], ['cam']),
-	([9], ['ts', 'tc']),
-	([10], ['r5', 'scr']),
-	([11], ['dvdrip']),
-	([14], ['brrip']),
+        ([9], ['ts', 'tc']),
+        ([10], ['r5', 'scr']),
+        ([11], ['dvdrip']),
+        ([14], ['brrip']),
         ([12], ['dvdr']),
     ]
 
@@ -82,19 +82,25 @@ class TorrentLeech(TorrentProvider):
 	    new['url'] = 'http://torrentleech.org' + torrent.group('url')
 	    new['name'] = torrent.group('title')
 	    new['id'] = torrent.group('id')
-	    new['seeds'] = 100
-	    new['leechers'] = 1
+	    new['seeds'] = torrent.group('seeders')
+	    new['leechers'] = torrent.group('leechers')
 	    new['size'] = self.parseSize(torrent.group('size') + 'B')
+	    new['imdbid'] = movie['library']['identifier']
+	    new['extra_score'] = self.extra_score
 	    new['score'] = fireEvent('score.calculate', new, movie, single = True)
-	    new['score'] += self.imdbMatch(self.urls['detail'] % new['id'], movie['library']['identifier'])
 	    is_correct_movie = fireEvent('searcher.correct_movie', nzb = new, movie = movie, quality = quality,
-                                   imdb_results = True, single_category = False, single = True)
+                                            imdb_results = True, single_category = False, single = True)
 
             if is_correct_movie:
 	        new['download'] = self.download
                 results.append(new)
                 self.found(new)
         return results
+
+    def extra_score(self, nzb):
+        url = self.urls['detail'] % nzb['id']
+        imdbId = nzb['imdbid']
+        return self.imdbMatch(url, imdbId)
 
     def imdbMatch(self, url, imdbId):
         try:
@@ -104,10 +110,10 @@ class TorrentLeech(TorrentProvider):
             log.error('Failed to open %s.' % url)
             return ''
 
-	imdbIdAlt = re.sub('tt[0]*', 'tt', imdbId)
+        imdbIdAlt = re.sub('tt[0]*', 'tt', imdbId)
 
 	if 'imdb.com/title/' + imdbId in data or 'imdb.com/title/' + imdbIdAlt in data:
-	        return 50
+	    return 50
 	return 0
 
     def download(self, url = '', nzb_id = ''):

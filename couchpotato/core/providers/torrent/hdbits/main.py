@@ -69,16 +69,21 @@ class HDBits(TorrentProvider):
 			'url' : 'https://hdbits.org/download.php/' + result['filename'] + '?id=' + result['id'] + '&passkey=' + self.conf('passkey'),
 			'name' : getTitle(movie['library']) + ' ' + result['name'],
 			'id' : result['id'],
-			'size' : (int(result['size']) / 1024*1024),
+			'seeds' : result['seeders'],
+			'leechers' : result['leechers'],
+			'size' : (int(result['size'])/(1024*1024)),
                     }
 		    new['score'] = fireEvent('score.calculate', new, movie, single = True)
 		  
-		    # Add 50 to the score and don't fire searcher.correct_movie because we search by imdb id and will always have results
-		    # that match our movie.
+		    # Add 50 to the score for having a perfect imdb match.
 		    new['score'] += 50
-		    new['download'] = self.download
-		    results.append(new)
-		    self.found(new)
+
+		    is_correct_movie = fireEvent('searcher.correct_movie', nzb = new, movie = movie, quality = quality,
+		                                    imdb_results = True, single_category = False, single = True)
+		    if is_correct_movie:
+		        new['download'] = self.download
+		        results.append(new)
+		        self.found(new)
                 return results
 	    except (IOError, URLError):
                 log.error('Failed to open %s.' % url)
@@ -87,5 +92,3 @@ class HDBits(TorrentProvider):
     def download(self, url = '', nzb_id = ''):
         torrent = self.urlopen(url)
         return torrent
-
-
