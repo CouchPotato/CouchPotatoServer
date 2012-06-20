@@ -1,2 +1,3 @@
 /_source/
 /data/
+*.pyc
