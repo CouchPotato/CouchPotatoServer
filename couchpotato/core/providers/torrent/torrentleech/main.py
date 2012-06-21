@@ -24,7 +24,7 @@ class TorrentLeech(TorrentProvider):
         'test' : 'http://torrentleech.org/',
         'detail' : 'http://torrentleech.org/torrent/%s',
         'search' : 'http://torrentleech.org/torrents/browse/index/query/%s/categories/%d',
-	'download' : 'http://torrentleech.org%s',
+        'download' : 'http://torrentleech.org%s',
     }
 
     cat_ids = [
@@ -46,66 +46,66 @@ class TorrentLeech(TorrentProvider):
             return results
 
         cache_key = 'torrentleech.%s.%s' % (movie['library']['identifier'], quality.get('identifier'))
-	searchUrl =  self.urls['search'] % (quote_plus(getTitle(movie['library']) + ' ' + quality['identifier']), self.getCatId(quality['identifier'])[0])
+        searchUrl =  self.urls['search'] % (quote_plus(getTitle(movie['library']) + ' ' + quality['identifier']), self.getCatId(quality['identifier'])[0])
         data = self.getCache(cache_key, searchUrl)
 
-	if data:
+        if data:
 
             cat_ids = self.getCatId(quality['identifier'])
-	    
-	    try:
-	        cookiejar = cookielib.CookieJar()
-	        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookiejar))
-	        urllib2.install_opener(opener)
-	        params = urllib.urlencode(dict(username=''+self.conf('username'), password=''+self.conf('password'), remember_me='on', login='submit'))
-	        f = opener.open('http://torrentleech.org/user/account/login/', params)
-	        data = f.read()
-	        f.close()
-	        f = opener.open(searchUrl)
-	        data = f.read()
-	        f.close()
             
-	    except (IOError, URLError):
+            try:
+                cookiejar = cookielib.CookieJar()
+                opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookiejar))
+                urllib2.install_opener(opener)
+                params = urllib.urlencode(dict(username=''+self.conf('username'), password=''+self.conf('password'), remember_me='on', login='submit'))
+                f = opener.open('http://torrentleech.org/user/account/login/', params)
+                data = f.read()
+                f.close()
+                f = opener.open(searchUrl)
+                data = f.read()
+                f.close()
+            
+            except (IOError, URLError):
                 log.error('Failed to open %s.' % url)
-	        return results
+                return results
 
-	html = BeautifulSoup(data)
+        html = BeautifulSoup(data)
 
         try:
-	    resultsTable = html.find('table', attrs = {'id' : 'torrenttable'})	    
-	    entries = resultsTable.findAll('tr')
-	    for result in entries[1:]:
-	        new = {
-	            'type': 'torrent',
+            resultsTable = html.find('table', attrs = {'id' : 'torrenttable'})            
+            entries = resultsTable.findAll('tr')
+            for result in entries[1:]:
+                new = {
+                    'type': 'torrent',
                     'check_nzb': False,
                     'description': '',
                     'provider': self.getName(),
                 }
                 
-		link = result.find('td', attrs = {'class' : 'name'}).find('a')
-	        new['name'] = link.string
-		new['id'] = link['href'].replace('/torrent/', '')
+                link = result.find('td', attrs = {'class' : 'name'}).find('a')
+                new['name'] = link.string
+                new['id'] = link['href'].replace('/torrent/', '')
                 url = result.find('td', attrs = {'class' : 'quickdownload'}).find('a')
                 new['url'] = self.urls['download'] % url['href']
-		new['size'] = self.parseSize(result.findAll('td')[4].string)
-		new['seeders'] = int(result.find('td', attrs = {'class' : 'seeders'}).string)
-		new['leechers'] = int(result.find('td', attrs = {'class' : 'leechers'}).string)		
-	        new['imdbid'] = movie['library']['identifier']
-		
-	        new['extra_score'] = self.extra_score
-	        new['score'] = fireEvent('score.calculate', new, movie, single = True)
-	        is_correct_movie = fireEvent('searcher.correct_movie', nzb = new, movie = movie, quality = quality,
+                new['size'] = self.parseSize(result.findAll('td')[4].string)
+                new['seeders'] = int(result.find('td', attrs = {'class' : 'seeders'}).string)
+                new['leechers'] = int(result.find('td', attrs = {'class' : 'leechers'}).string)                
+                new['imdbid'] = movie['library']['identifier']
+                
+                new['extra_score'] = self.extra_score
+                new['score'] = fireEvent('score.calculate', new, movie, single = True)
+                is_correct_movie = fireEvent('searcher.correct_movie', nzb = new, movie = movie, quality = quality,
                                                 imdb_results = True, single_category = False, single = True)
 
                 if is_correct_movie:
-	            new['download'] = self.download
+                    new['download'] = self.download
                     results.append(new)
                     self.found(new)
-	    return results
+            return results
         
-	except: 
-	    log.info("No results found at TorrentLeech")
-	    return []
+        except: 
+            log.info("No results found at TorrentLeech")
+            return []
 
     def extra_score(self, nzb):
         url = self.urls['detail'] % nzb['id']
@@ -121,10 +121,10 @@ class TorrentLeech(TorrentProvider):
             return ''
 
         imdbIdAlt = re.sub('tt[0]*', 'tt', imdbId)
-	data = unicode(data, errors='ignore')
-	if 'imdb.com/title/' + imdbId in data or 'imdb.com/title/' + imdbIdAlt in data:
-	    return 50
-	return 0
+        data = unicode(data, errors='ignore')
+        if 'imdb.com/title/' + imdbId in data or 'imdb.com/title/' + imdbIdAlt in data:
+            return 50
+        return 0
 
     def download(self, url = '', nzb_id = ''):
         torrent = self.urlopen(url)

@@ -46,64 +46,64 @@ class SceneAccess(TorrentProvider):
         if data:
 
             cat_ids = self.getCatId(quality['identifier'])
-	    
-	    try:
-	        cookiejar = cookielib.CookieJar()
-	        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookiejar))
-	        urllib2.install_opener(opener)
-	        params = urllib.urlencode(dict(username=''+self.conf('username'), password=''+self.conf('password'), submit='come on in'))
-	        f = opener.open('https://www.sceneaccess.eu/login', params)
-	        data = f.read()
-	        f.close()
-	        f = opener.open(searchUrl)
-	        data = f.read()
-	        f.close()
             
-	    except (IOError, URLError):
+            try:
+                cookiejar = cookielib.CookieJar()
+                opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookiejar))
+                urllib2.install_opener(opener)
+                params = urllib.urlencode(dict(username=''+self.conf('username'), password=''+self.conf('password'), submit='come on in'))
+                f = opener.open('https://www.sceneaccess.eu/login', params)
+                data = f.read()
+                f.close()
+                f = opener.open(searchUrl)
+                data = f.read()
+                f.close()
+            
+            except (IOError, URLError):
                 log.error('Failed to open %s.' % url)
-	        return results
+                return results
 
         html = BeautifulSoup(data)
 
-	try:
-	    resultsTable = html.find('table', attrs = {'id' : 'torrents-table'})	    
-	    entries = resultsTable.findAll('tr', attrs = {'class' : 'tt_row'})
-	    for result in entries:
-	        new = {
-	            'type': 'torrent',
+        try:
+            resultsTable = html.find('table', attrs = {'id' : 'torrents-table'})            
+            entries = resultsTable.findAll('tr', attrs = {'class' : 'tt_row'})
+            for result in entries:
+                new = {
+                    'type': 'torrent',
                     'check_nzb': False,
                     'description': '',
                     'provider': self.getName(),
                 }
                 
-		link = result.find('td', attrs = {'class' : 'ttr_name'}).find('a')
-	        new['name'] = link['title']
-		new['id'] = link['href'].replace('details?id=', '')
+                link = result.find('td', attrs = {'class' : 'ttr_name'}).find('a')
+                new['name'] = link['title']
+                new['id'] = link['href'].replace('details?id=', '')
                 url = result.find('td', attrs = {'class' : 'td_dl'}).find('a')
                 new['url'] = self.urls['download'] % url['href']
-		new['size'] = self.parseSize(result.find('td', attrs = {'class' : 'ttr_size'}).contents[0])
-		new['seeders'] = int(result.find('td', attrs = {'class' : 'ttr_seeders'}).find('a').string)
-		leechers = result.find('td', attrs = {'class' : 'ttr_leechers'}).find('a')
-		if leechers:
-		    new['leechers'] = int(leechers.string)
-		else:
-		    new['leechers'] = 0
-	    
-	        new['imdbid'] = movie['library']['identifier']
-	        new['extra_score'] = self.extra_score
-	        new['score'] = fireEvent('score.calculate', new, movie, single = True)
-	        is_correct_movie = fireEvent('searcher.correct_movie', nzb = new, movie = movie, quality = quality,
+                new['size'] = self.parseSize(result.find('td', attrs = {'class' : 'ttr_size'}).contents[0])
+                new['seeders'] = int(result.find('td', attrs = {'class' : 'ttr_seeders'}).find('a').string)
+                leechers = result.find('td', attrs = {'class' : 'ttr_leechers'}).find('a')
+                if leechers:
+                    new['leechers'] = int(leechers.string)
+                else:
+                    new['leechers'] = 0
+            
+                new['imdbid'] = movie['library']['identifier']
+                new['extra_score'] = self.extra_score
+                new['score'] = fireEvent('score.calculate', new, movie, single = True)
+                is_correct_movie = fireEvent('searcher.correct_movie', nzb = new, movie = movie, quality = quality,
                                                  imdb_results = True, single_category = False, single = True)
 
                 if is_correct_movie:
-	            new['download'] = self.download
+                    new['download'] = self.download
                     results.append(new)
                     self.found(new)
-	    return results
+            return results
         
-	except: 
-	    log.info("No results found at SceneAccess")
-	    return []
+        except: 
+            log.info("No results found at SceneAccess")
+            return []
 
     def extra_score(self, nzb):
         url = self.urls['detail'] % nzb['id']
@@ -123,9 +123,9 @@ class SceneAccess(TorrentProvider):
         imdbDiv = str(imdbDiv).decode("utf-8", "replace")
         imdbIdAlt = re.sub('tt[0]*', 'tt', imdbId)
 
-	if 'imdb.com/title/' + imdbId in imdbDiv or 'imdb.com/title/' + imdbIdAlt in imdbDiv:
-	    return 50
-	return 0
+        if 'imdb.com/title/' + imdbId in imdbDiv or 'imdb.com/title/' + imdbIdAlt in imdbDiv:
+            return 50
+        return 0
 
     def download(self, url = '', nzb_id = ''):
         torrent = self.urlopen(url)

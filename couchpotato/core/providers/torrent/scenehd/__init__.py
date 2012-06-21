@@ -16,7 +16,7 @@ config = [{
                     'type': 'enabler',
                     'default': False,
                 },
-		{
+                {
                     'name': 'username',
                     'default': '',
                 },
