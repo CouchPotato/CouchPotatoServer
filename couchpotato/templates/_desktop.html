@@ -36,6 +36,7 @@
 		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/page/settings.js') }}"></script>
 		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/page/about.js') }}"></script>
 		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/page/manage.js') }}"></script>
+		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/page/queue.js') }}"></script>
 		<!--<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/page/soon.js') }}"></script>-->
 
 		{% for url in fireEvent('clientscript.get_scripts', as_html = True, single = True) %}
