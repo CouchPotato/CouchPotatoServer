@@ -62,9 +62,8 @@ class V1Importer(Plugin):
             downloaded = set(downloaded)
             for imdb in downloaded:
 		fireEvent('movie.add', {'identifier': imdb, status: 'done'}, single = True, search_after = False)
-                #fireEventAsync('movie.add', {'identifier': imdb, status: 'downloaded'}, search_after = False)
 
-            message = 'Successfully imported %s downloaded movie(s)' % len(wanted)
+            message += ' and %s downloaded movie(s)' % len(downloaded)
 
             deleted = []
 
@@ -78,9 +77,8 @@ class V1Importer(Plugin):
             deleted = set(deleted)
             for imdb in deleted:
 		fireEvent('movie.add', {'identifier': imdb, status: 'deleted'}, single = True, search_after = False)
-                #fireEventAsync('movie.add', {'identifier': imdb, status: 'deleted'}, search_after = False)
 
-            message = 'Successfully imported %s deleted movie(s)' % len(wanted)
+            message += ' and %s deleted movie(s)' % len(deleted)
 
             viewed = []
 
@@ -93,9 +91,9 @@ class V1Importer(Plugin):
 
             viewed = set(viewed)
             for imdb in viewed:
-                fireEventAsync('movie.add', {'identifier': imdb, status: 'viewed'}, search_after = False)
+		fireEvent('movie.add', {'identifier': imdb, status: 'viewed'}, single = True, search_after = False)
 
-            message = 'Successfully imported %s viewed movie(s)' % len(wanted)
+            message += ' and %s viewed movie(s)' % len(viewed)
 
             snatched = []
 
@@ -111,7 +109,7 @@ class V1Importer(Plugin):
             for imdb in snatched:
 		fireEvent('movie.add', {'identifier': imdb, status: 'snatched'}, single = True, search_after = False)
 
-            message = 'Successfully imported %s snatched movie(s)' % len(wanted)
+            message += ' and %s snatched movie(s)' % len(snatched)
 
         except Exception, e:
             message = 'Failed: %s' % e
