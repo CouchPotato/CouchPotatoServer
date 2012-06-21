@@ -27,20 +27,20 @@ class Kinepolis(Automation, RSS):
         movies = []
         RSSMovie = {'name': 'placeholder', 'year' : 'placeholder'}
 
-	cache_key = 'kinepolis.%s' % md5(self.rss_url)
-	rss_data = self.getCache(cache_key, self.rss_url)
-	data = XMLTree.fromstring(rss_data)
+        cache_key = 'kinepolis.%s' % md5(self.rss_url)
+        rss_data = self.getCache(cache_key, self.rss_url)
+        data = XMLTree.fromstring(rss_data)
 
-	if data:
-	    rss_movies = self.getElements(data, 'channel/item')
-	    
-	    for movie in rss_movies:
+        if data:
+            rss_movies = self.getElements(data, 'channel/item')
+            
+            for movie in rss_movies:
                 RSSMovie['name'] = self.getTextElement(movie, "title")
                 currentYear = datetime.datetime.now().strftime("%Y")
                 RSSMovie['year'] = currentYear
 
                 log.info('Release found: %s.' % RSSMovie)
-		imdbId = self.getIMDBFromTitle(RSSMovie['name'])
+                imdbId = self.getIMDBFromTitle(RSSMovie['name'])
                 movies.append(imdbId)
 
         return movies
