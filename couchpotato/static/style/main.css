@@ -150,6 +150,8 @@ body > .spinner, .mask{
 .icon.check { background-image: url('../images/icon.check.png'); }
 .icon.folder { background-image: url('../images/icon.folder.png'); }
 .icon.imdb { background-image: url('../images/icon.imdb.png'); }
+.icon.allocine { background-image: url('../images/icon.allocine.png'); }
+.icon.sensacine { background-image: url('../images/icon.sensacine.png'); }
 .icon.refresh { background-image: url('../images/icon.refresh.png'); }
 .icon.rating { background-image: url('../images/icon.rating.png'); }
 .icon.files { background-image: url('../images/icon.files.png'); }
