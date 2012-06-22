@@ -1,9 +1,8 @@
 from couchpotato.core.helpers.rss import RSS
-from couchpotato.core.helpers.variable import md5, getImdb, cleanHost
+from couchpotato.core.helpers.variable import md5
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.automation.base import Automation
 from couchpotato.environment import Env
-from urllib import quote_plus
 import traceback
 import xml.etree.ElementTree as XMLTree
 import json
@@ -56,7 +55,6 @@ class Bluray(Automation, RSS):
             log.info("Applying IMDB filter to found movies...")
 
             for RSSMovie in RSSMovies:
-                log.debug('Searching for "%s".' % RSSMovie)
                 imdb = self.getIMDBFromTitle(RSSMovie['name'] + ' ' + RSSMovie['year'])
                 
                 if imdb:
