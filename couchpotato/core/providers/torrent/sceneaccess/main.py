@@ -20,6 +20,7 @@ class SceneAccess(TorrentProvider):
 
     urls = {
         'test': 'https://www.sceneaccess.eu/',
+        'login' : 'https://www.sceneaccess.eu/login',
         'detail': 'https://www.sceneaccess.eu/details?id=%s',
         'search': 'https://www.sceneaccess.eu/browse?search=%s&method=2&c%d=%d',
         'download': 'https://www.sceneaccess.eu/%s',
@@ -32,6 +33,10 @@ class SceneAccess(TorrentProvider):
     ]
 
     http_time_between_calls = 1 #seconds
+    
+    def getLoginParams(self):
+        loginParams = urllib.urlencode(dict(username=''+self.conf('username'), password=''+self.conf('password'), submit='come on in'))
+        return loginParams
 
     def search(self, movie, quality):
 
@@ -40,30 +45,21 @@ class SceneAccess(TorrentProvider):
             return results
 
         cache_key = 'sceneaccess.%s.%s' % (movie['library']['identifier'], quality.get('identifier'))
-        searchUrl =  self.urls['search'] % (quote_plus(getTitle(movie['library']) + ' ' + quality['identifier']), self.getCatId(quality['identifier'])[0], self.getCatId(quality['identifier'])[0])
+        searchUrl =  self.urls['search'] % (quote_plus(getTitle(movie['library']).replace(':','') + ' ' + quality['identifier']), self.getCatId(quality['identifier'])[0], self.getCatId(quality['identifier'])[0])
+        loginParams = self.getLoginParams()
+
+        opener = self.login(params = loginParams)
+        if not opener:
+            log.info("Couldn't login at SceneAccess")
+            return results
+
         data = self.getCache(cache_key, searchUrl)
 
         if data:
-
-            cat_ids = self.getCatId(quality['identifier'])
-            
-            try:
-                cookiejar = cookielib.CookieJar()
-                opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookiejar))
-                urllib2.install_opener(opener)
-                params = urllib.urlencode(dict(username=''+self.conf('username'), password=''+self.conf('password'), submit='come on in'))
-                f = opener.open('https://www.sceneaccess.eu/login', params)
-                data = f.read()
-                f.close()
-                f = opener.open(searchUrl)
-                data = f.read()
-                f.close()
-            
-            except (IOError, URLError):
-                log.error('Failed to open %s.' % url)
-                return results
-
-        html = BeautifulSoup(data)
+            html = BeautifulSoup(data)
+        
+        else:
+            log.info("No results found at SceneAccess")
 
         try:
             resultsTable = html.find('table', attrs = {'id' : 'torrents-table'})            
@@ -126,9 +122,3 @@ class SceneAccess(TorrentProvider):
         if 'imdb.com/title/' + imdbId in imdbDiv or 'imdb.com/title/' + imdbIdAlt in imdbDiv:
             return 50
         return 0
-
-    def download(self, url = '', nzb_id = ''):
-        torrent = self.urlopen(url)
-        return torrent
-
-
