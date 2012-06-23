@@ -85,11 +85,12 @@ class SceneAccess(TorrentProvider):
                 else:
                     new['leechers'] = 0
             
-                new['imdbid'] = movie['library']['identifier']
-                new['extra_score'] = self.extra_score
+                details = self.urls['detail'] % new['id']
+                imdb_results = self.imdbMatch(details, movie['library']['identifier'])
+
                 new['score'] = fireEvent('score.calculate', new, movie, single = True)
                 is_correct_movie = fireEvent('searcher.correct_movie', nzb = new, movie = movie, quality = quality,
-                                                 imdb_results = True, single_category = False, single = True)
+                                                 imdb_results = imdb_results, single_category = False, single = True)
 
                 if is_correct_movie:
                     new['download'] = self.download
@@ -101,10 +102,6 @@ class SceneAccess(TorrentProvider):
             log.info("No results found at SceneAccess")
             return []
 
-    def extra_score(self, nzb):
-        url = self.urls['detail'] % nzb['id']
-        imdbId = nzb['imdbid']
-        return self.imdbMatch(url, imdbId)
 
     def imdbMatch(self, url, imdbId):
         try:
@@ -112,7 +109,7 @@ class SceneAccess(TorrentProvider):
             pass
         except IOError:
             log.error('Failed to open %s.' % url)
-            return ''
+            return False
 
         html = BeautifulSoup(data)
         imdbDiv = html.find('span', attrs = {'class':'i_link'})
@@ -120,5 +117,5 @@ class SceneAccess(TorrentProvider):
         imdbIdAlt = re.sub('tt[0]*', 'tt', imdbId)
 
         if 'imdb.com/title/' + imdbId in imdbDiv or 'imdb.com/title/' + imdbIdAlt in imdbDiv:
-            return 50
-        return 0
+            return True
+        return False

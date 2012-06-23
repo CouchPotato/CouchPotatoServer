@@ -85,13 +85,14 @@ class TorrentLeech(TorrentProvider):
                 new['url'] = self.urls['download'] % url['href']
                 new['size'] = self.parseSize(result.findAll('td')[4].string)
                 new['seeders'] = int(result.find('td', attrs = {'class' : 'seeders'}).string)
-                new['leechers'] = int(result.find('td', attrs = {'class' : 'leechers'}).string)                
-                new['imdbid'] = movie['library']['identifier']
+                new['leechers'] = int(result.find('td', attrs = {'class' : 'leechers'}).string)   
                 
-                new['extra_score'] = self.extra_score
+                details = self.urls['detail'] % new['id']
+                imdb_results = self.imdbMatch(details, movie['library']['identifier'])
+                
                 new['score'] = fireEvent('score.calculate', new, movie, single = True)
                 is_correct_movie = fireEvent('searcher.correct_movie', nzb = new, movie = movie, quality = quality,
-                                                imdb_results = True, single_category = False, single = True)
+                                                imdb_results = imdb_results, single_category = False, single = True)
 
                 if is_correct_movie:
                     new['download'] = self.download
@@ -103,10 +104,6 @@ class TorrentLeech(TorrentProvider):
             log.info("No results found at TorrentLeech")
             return []
 
-    def extra_score(self, nzb):
-        url = self.urls['detail'] % nzb['id']
-        imdbId = nzb['imdbid']
-        return self.imdbMatch(url, imdbId)
 
     def imdbMatch(self, url, imdbId):
         try:
@@ -114,10 +111,10 @@ class TorrentLeech(TorrentProvider):
             pass
         except IOError:
             log.error('Failed to open %s.' % url)
-            return ''
+            return False
 
         imdbIdAlt = re.sub('tt[0]*', 'tt', imdbId)
         data = unicode(data, errors='ignore')
         if 'imdb.com/title/' + imdbId in data or 'imdb.com/title/' + imdbIdAlt in data:
-            return 50
-        return 0
+            return True
+        return False

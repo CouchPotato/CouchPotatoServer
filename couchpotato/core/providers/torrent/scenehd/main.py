@@ -82,17 +82,16 @@ class SceneHD(TorrentProvider):
                 new['name'] = detailLink['title']
             
                 imdbLink = allCells[1].find('a')
+                imdb_results = False
+
                 if imdbLink:
-                    new['imdbresult'] = imdbLink['href'].replace('http://www.imdb.com/title/','').rstrip('/')
-                else:
-                    new['imdbresult'] = 'tt00000000'
+                    imdbFound = imdbLink['href'].replace('http://www.imdb.com/title/','').rstrip('/')
+                    imdb_results = self.imdbMatch(imdbFound, movie['library']['identifier'])
                
                 new['url'] = self.urls['download'] % new['id']
-                new['imdbid'] = movie['library']['identifier']
-                new['extra_score'] = self.extra_score
                 new['score'] = fireEvent('score.calculate', new, movie, single = True)
                 is_correct_movie = fireEvent('searcher.correct_movie', nzb = new, movie = movie, quality = quality,
-                                                 imdb_results = True, single_category = False, single = True)
+                                                 imdb_results = imdb_results, single_category = False, single = True)
 
                 if is_correct_movie:
                     new['download'] = self.download
@@ -104,10 +103,9 @@ class SceneHD(TorrentProvider):
             log.info("No results found at SceneHD")
             return []
 
-    def extra_score(self, nzb):
-        imdbIdAlt = re.sub('tt[0]*', 'tt', nzb['imdbresult'])
-        if nzb['imdbresult'] == nzb['imdbid'] or imdbIdAlt == nzb['imdbid']:
-            return 50
-        return 0
-
+    def imdbMatch(self, imdbFound, imdbId):
+        imdbIdAlt = re.sub('tt[0]*', 'tt', imdbFound)
+        if imdbFound == imdbId or imdbIdAlt == imdbId:
+            return True
+        return False
 
