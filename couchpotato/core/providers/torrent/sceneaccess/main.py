@@ -53,7 +53,7 @@ class SceneAccess(TorrentProvider):
             log.info("Couldn't login at SceneAccess")
             return results
 
-        data = self.getCache(cache_key, searchUrl)
+        data = self.getCache(cache_key, searchUrl, opener = opener)
 
         if data:
             html = BeautifulSoup(data)

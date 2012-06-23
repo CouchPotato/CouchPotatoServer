@@ -16,7 +16,7 @@ class TorrentProvider(YarrProvider):
             opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookiejar))
             urllib2.install_opener(opener)
             f = opener.open(self.urls['login'], params)
-            data = f.read()
+            loginData = f.read()
             f.close()
         
         except:    

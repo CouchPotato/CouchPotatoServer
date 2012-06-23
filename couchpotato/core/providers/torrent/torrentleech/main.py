@@ -22,7 +22,7 @@ class TorrentLeech(TorrentProvider):
 
     urls = {
         'test' : 'http://torrentleech.org/',
-	'login' : 'http://torrentleech.org/user/account/login/',
+        'login' : 'http://torrentleech.org/user/account/login/',
         'detail' : 'http://torrentleech.org/torrent/%s',
         'search' : 'http://torrentleech.org/torrents/browse/index/query/%s/categories/%d',
         'download' : 'http://torrentleech.org%s',
@@ -42,7 +42,7 @@ class TorrentLeech(TorrentProvider):
     
     def getLoginParams(self):
         loginParams = urllib.urlencode(dict(username=''+self.conf('username'), password=''+self.conf('password'), remember_me='on', login='submit'))
-	return loginParams
+        return loginParams
 
     def search(self, movie, quality):
 
@@ -59,7 +59,7 @@ class TorrentLeech(TorrentProvider):
             log.info("Couldn't login at Torrentleech")
             return results
 
-        data = self.getCache(cache_key, searchUrl)
+        data = self.getCache(cache_key, searchUrl, opener = opener)
 
         if data:
             html = BeautifulSoup(data)

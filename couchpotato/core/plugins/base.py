@@ -215,7 +215,18 @@ class Plugin(object):
                     cache_timeout = kwargs.get('cache_timeout')
                     del kwargs['cache_timeout']
 
-                data = self.urlopen(url, **kwargs)
+                if kwargs.get('opener'):
+                    opener = kwargs.get('opener')
+                    del kwargs['opener']
+                
+                if opener:
+                    log.info('Opening url: %s', url)
+                    f = opener.open(url)
+                    data = f.read()
+                    f.close()
+                else:
+                    data = self.urlopen(url, **kwargs)
+
                 if data:
                     self.setCache(cache_key, data, timeout = cache_timeout)
                 return data

@@ -48,7 +48,7 @@ class SceneHD(TorrentProvider):
             log.error("Couldn't login at SceneHD")
             return results
 
-        data = self.getCache(cache_key, searchUrl)
+        data = self.getCache(cache_key, searchUrl, opener = opener)
 
         if data:
             html = BeautifulSoup(data)
