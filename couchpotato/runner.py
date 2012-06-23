@@ -26,6 +26,8 @@ def getOptions(base_path, args):
     parser = ArgumentParser(prog = 'CouchPotato.py')
     parser.add_argument('--config_file', default = os.path.join(data_dir, 'settings.conf'),
                         dest = 'config_file', help = 'Absolute or ~/ path of the settings file (default ./_data/settings.conf)')
+    parser.add_argument('--data_dir', default = data_dir,
+                        dest = 'data_dir', help = 'Absolute or ~/ path of the data dir')
     parser.add_argument('--debug', action = 'store_true',
                         dest = 'debug', help = 'Debug mode')
     parser.add_argument('--console_log', action = 'store_true',
