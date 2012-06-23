@@ -215,6 +215,7 @@ class Plugin(object):
                     cache_timeout = kwargs.get('cache_timeout')
                     del kwargs['cache_timeout']
 
+                opener = None
                 if kwargs.get('opener'):
                     opener = kwargs.get('opener')
                     del kwargs['opener']
