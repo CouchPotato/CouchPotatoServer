@@ -16,6 +16,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with subliminal.  If not, see <http://www.gnu.org/licenses/>.
 from . import subtitles
+from .language import Language
+from .utils import to_unicode
 import enzyme
 import guessit
 import hashlib
@@ -129,7 +131,6 @@ class Video(object):
             logger.debug(u'Failed parsing %s with enzyme' % self.path)
         if isinstance(video_infos, enzyme.core.AVContainer):
             results.extend([subtitles.EmbeddedSubtitle.from_enzyme(self.path, s) for s in video_infos.subtitles])
-
         # cannot use glob here because it chokes if there are any square
         # brackets inside the filename, so we have to use basic string
         # startswith/endswith comparisons
@@ -138,17 +139,18 @@ class Video(object):
         for path in existing:
             for ext in subtitles.EXTENSIONS:
                 if path.endswith(ext):
-                    possible_lang = path[len(basename) + 1:-len(ext)]
-                    if possible_lang == '':
-                        results.append(subtitles.ExternalSubtitle(path, None))
-                    else:
-                        lang = guessit.Language(possible_lang)
-                        if lang:
-                            results.append(subtitles.ExternalSubtitle(path, lang))
+                    language = Language(path[len(basename) + 1:-len(ext)], strict=False)
+                    results.append(subtitles.ExternalSubtitle(path, language))
         return results
 
+    def __unicode__(self):
+        return to_unicode(self.path or self.release)
+
+    def __str__(self):
+        return unicode(self).encode('utf-8')
+
     def __repr__(self):
-        return '%s(%r)' % (self.__class__.__name__, self.release)
+        return '%s(%s)' % (self.__class__.__name__, self)
 
     def __hash__(self):
         return hash(self.path or self.release)
@@ -212,8 +214,6 @@ def scan(entry, max_depth=3, scan_filter=None, depth=0):
     """
     if depth > max_depth and max_depth != 0:  # we do not want to search the whole file system except if max_depth = 0
         return []
-    if depth == 0:
-        entry = os.path.abspath(entry)
     if os.path.isdir(entry):  # a dir? recurse
         logger.debug(u'Scanning directory %s with depth %d/%d' % (entry, depth, max_depth))
         result = []
@@ -273,6 +273,8 @@ def hash_thesubdb(path):
 
     """
     readsize = 64 * 1024
+    if os.path.getsize(path) < readsize:
+        return None
     with open(path, 'rb') as f:
         data = f.read(readsize)
         f.seek(-readsize, os.SEEK_END)

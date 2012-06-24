@@ -134,7 +134,7 @@ class Pool(object):
         subtitles_by_video = self.list_subtitles(paths, languages, services, force, multi, cache_dir, max_depth, scan_filter)
         for video, subtitles in subtitles_by_video.iteritems():
             subtitles.sort(key=lambda s: key_subtitles(s, video, languages, services, order), reverse=True)
-        tasks = create_download_tasks(subtitles_by_video, multi)
+        tasks = create_download_tasks(subtitles_by_video, languages, multi)
         for task in tasks:
             self.tasks.put(task)
         self.join()

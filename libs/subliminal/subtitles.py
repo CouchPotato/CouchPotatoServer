@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with subliminal.  If not, see <http://www.gnu.org/licenses/>.
 from .language import Language
+from .utils import to_unicode
 import os.path
 
 
@@ -34,6 +35,8 @@ class Subtitle(object):
 
     """
     def __init__(self, path, language):
+        if not isinstance(language, Language):
+            raise TypeError('%r is not an instance of Language')
         self.path = path
         self.language = language
 
@@ -43,6 +46,15 @@ class Subtitle(object):
         if self.path:
             return os.path.exists(self.path)
         return False
+
+    def __unicode__(self):
+        return to_unicode(self.path)
+
+    def __str__(self):
+        return unicode(self).encode('utf-8')
+
+    def __repr__(self):
+        return '%s(%s, %s)' % (self.__class__.__name__, self, self.language)
 
 
 class EmbeddedSubtitle(Subtitle):
@@ -60,7 +72,7 @@ class EmbeddedSubtitle(Subtitle):
 
     @classmethod
     def from_enzyme(cls, path, subtitle):
-        language = Language(subtitle.language) or None
+        language = Language(subtitle.language, strict=False)
         return cls(path, language, subtitle.trackno)
 
 
@@ -69,15 +81,14 @@ class ExternalSubtitle(Subtitle):
     @classmethod
     def from_path(cls, path):
         """Create an :class:`ExternalSubtitle` from path"""
-        extension = ''
+        extension = None
         for e in EXTENSIONS:
             if path.endswith(e):
                 extension = e
                 break
-        if not extension:
+        if extension is None:
             raise ValueError('Not a supported subtitle extension')
-        language = os.path.splitext(path[:len(path) - len(extension)])[1][1:]
-        language = Language(language) or None
+        language = Language(os.path.splitext(path[:len(path) - len(extension)])[1][1:], strict=False)
         return cls(path, language)
 
 
@@ -94,13 +105,13 @@ class ResultSubtitle(ExternalSubtitle):
     :param set keywords: keywords that describe the subtitle
 
     """
-    def __init__(self, path, language, service, link, release=None, confidence=1, keywords=set()):
+    def __init__(self, path, language, service, link, release=None, confidence=1, keywords=None):
         super(ResultSubtitle, self).__init__(path, language)
         self.service = service
         self.link = link
         self.release = release
         self.confidence = confidence
-        self.keywords = keywords
+        self.keywords = keywords or set()
 
     @property
     def single(self):
@@ -110,12 +121,12 @@ class ResultSubtitle(ExternalSubtitle):
         :rtype: bool
 
         """
-        extension = os.path.splitext(self.path)[0]
-        language = os.path.splitext(self.path[:len(self.path) - len(extension)])[1][1:]
-        return Language(language) == Language('und')
+        return self.language == Language('Undetermined')
 
     def __repr__(self):
-        return 'ResultSubtitle(%s, %s, %.2f, %s)' % (self.language, self.service, self.confidence, self.release)
+        if not self.release:
+            return 'ResultSubtitle(%s, %s, %s, %.2f)' % (self.path, self.language, self.service, self.confidence)
+        return 'ResultSubtitle(%s, %s, %s, %.2f, release=%s)' % (self.path, self.language, self.service, self.confidence, self.release.encode('ascii', 'ignore'))
 
 
 def get_subtitle_path(video_path, language, multi):

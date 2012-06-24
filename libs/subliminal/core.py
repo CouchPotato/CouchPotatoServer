@@ -20,6 +20,7 @@ from .services import ServiceConfig
 from .tasks import DownloadTask, ListTask
 from .utils import get_keywords
 from .videos import Episode, Movie, scan
+from .language import Language
 from collections import defaultdict
 from itertools import groupby
 import bs4
@@ -66,7 +67,7 @@ def create_list_tasks(paths, languages, services, force, multi, cache_dir, max_d
             if not wanted_languages:
                 logger.debug(u'No need to list multi subtitles %r for %r because %r detected' % (languages, video, detected_languages))
                 continue
-        if not force and not multi and None in detected_languages:
+        if not force and not multi and Language('Undetermined') in detected_languages:
             logger.debug(u'No need to list single subtitles %r for %r because one detected' % (languages, video))
             continue
         logger.debug(u'Listing subtitles %r for %r with services %r' % (wanted_languages, video, services))
@@ -81,13 +82,13 @@ def create_list_tasks(paths, languages, services, force, multi, cache_dir, max_d
     return tasks
 
 
-def create_download_tasks(subtitles_by_video, multi):
+def create_download_tasks(subtitles_by_video, languages, multi):
     """Create a list of :class:`~subliminal.tasks.DownloadTask` from a list results grouped by video
 
-    :param subtitles_by_video: :class:`~subliminal.tasks.ListTask` results grouped by video and sorted
+    :param subtitles_by_video: :class:`~subliminal.tasks.ListTask` results with ordered subtitles
     :type subtitles_by_video: dict of :class:`~subliminal.videos.Video` => [:class:`~subliminal.subtitles.Subtitle`]
-    :param order: preferred order for subtitles sorting
-    :type list: list of :data:`LANGUAGE_INDEX`, :data:`SERVICE_INDEX`, :data:`SERVICE_CONFIDENCE`, :data:`MATCHING_CONFIDENCE`
+    :param languages: languages in preferred order
+    :type languages: :class:`~subliminal.language.language_list`
     :param bool multi: download multiple languages for the same video
     :return: the created tasks
     :rtype: list of :class:`~subliminal.tasks.DownloadTask`
@@ -102,7 +103,7 @@ def create_download_tasks(subtitles_by_video, multi):
             logger.debug(u'Created task %r' % task)
             tasks.append(task)
             continue
-        for _, by_language in groupby(subtitles, lambda s: s.language):
+        for _, by_language in groupby(subtitles, lambda s: languages.index(s.language)):
             task = DownloadTask(video, list(by_language))
             logger.debug(u'Created task %r' % task)
             tasks.append(task)
@@ -157,6 +158,7 @@ def matching_confidence(video, subtitle):
     guess = guessit.guess_file_info(subtitle.release, 'autodetect')
     video_keywords = get_keywords(video.guess)
     subtitle_keywords = get_keywords(guess) | subtitle.keywords
+    logger.debug(u'Video keywords %r - Subtitle keywords %r' % (video_keywords, subtitle_keywords))
     replacement = {'keywords': len(video_keywords & subtitle_keywords)}
     if isinstance(video, Episode):
         replacement.update({'series': 0, 'season': 0, 'episode': 0})
@@ -179,8 +181,11 @@ def matching_confidence(video, subtitle):
             if 'year' in guess and guess['year'] == video.year:
                 replacement['year'] = 1
     else:
-        return 0
+        logger.debug(u'Not able to compute confidence for %r' % video)
+        return 0.0
+    logger.debug(u'Found %r' % replacement)
     confidence = float(int(matching_format.format(**replacement), 2)) / float(int(best, 2))
+    logger.info(u'Computed confidence %.4f for %r and %r' % (confidence, video, subtitle))
     return confidence
 
 
@@ -248,7 +253,7 @@ def group_by_video(list_results):
     """
     result = defaultdict(list)
     for video, subtitles in list_results:
-        result[video] += subtitles
+        result[video] += subtitles or []
     return result
 
 

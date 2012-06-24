@@ -44,7 +44,8 @@ class TvSubtitles(ServiceBase):
                               'it', 'ja', 'ko', 'nl', 'pl', 'pt', 'ro', 'ru', 'sv', 'tr', 'uk',
                               'zh', 'pt-br'])
     #TODO: Find more exceptions
-    language_map = {'gr': Language('gre'), 'cz': Language('cze'), 'ua': Language('ukr')}
+    language_map = {'gr': Language('gre'), 'cz': Language('cze'), 'ua': Language('ukr'),
+                    'cn': Language('chi')}
     videos = [Episode]
     require_video = False
     required_features = ['permissive']
@@ -128,14 +129,14 @@ class TvSubtitles(ServiceBase):
             if language not in languages:
                 continue
             path = get_subtitle_path(filepath, language, self.config.multi)
-            subtitle = ResultSubtitle(path, language, self.__class__.__name__.lower(),
-                                      '%s/download-%d.html' % (self.server_url, subid['subid']),
+            subtitle = ResultSubtitle(path, language, self.__class__.__name__.lower(), '%s/download-%d.html' % (self.server_url, subid['subid']),
                                       keywords=[subid['rip'], subid['release']])
             subtitles.append(subtitle)
         return subtitles
 
     def download(self, subtitle):
         self.download_zip_file(subtitle.link, subtitle.path)
+        return subtitle
 
 
 Service = TvSubtitles
