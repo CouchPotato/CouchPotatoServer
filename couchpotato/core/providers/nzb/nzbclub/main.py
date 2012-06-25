@@ -20,7 +20,7 @@ class NZBClub(NZBProvider, RSS):
         'search': 'https://www.nzbclub.com/nzbfeed.aspx?%s',
     }
 
-    http_time_between_calls = 3 #seconds
+    http_time_between_calls = 4 #seconds
 
     def search(self, movie, quality):
 

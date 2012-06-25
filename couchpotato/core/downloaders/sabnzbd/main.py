@@ -41,7 +41,7 @@ class Sabnzbd(Downloader):
             if params.get('mode') is 'addfile':
                 data = self.urlopen(url, timeout = 60, params = {"nzbfile": (nzb_filename, filedata)}, multipart = True, show_error = False)
             else:
-                data = self.urlopen(url, show_error = False)
+                data = self.urlopen(url, timeout = 60, show_error = False)
         except:
             log.error(traceback.format_exc())
             return False
