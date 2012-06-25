@@ -85,17 +85,9 @@ class Renamer(Plugin):
             movie_title = getTitle(group['library'])
 
             # Add _UNKNOWN_ if no library item is connected
-            unknown = False
             if not group['library'] or not movie_title:
-                if group['dirname']:
-                    rename_files[group['parentdir']] = group['parentdir'].replace(group['dirname'], '_UNKNOWN_%s' % group['dirname'])
-                else: # Add it to filename
-                    for file_type in group['files']:
-                        for rename_me in group['files'][file_type]:
-                            filename = os.path.basename(rename_me)
-                            rename_files[rename_me] = rename_me.replace(filename, '_UNKNOWN_%s' % filename)
-
-                unknown = True
+                self.tagDir(group, 'unknown')
+                continue
             # Rename the files using the library data
             else:
                 group['library'] = fireEvent('library.update', identifier = group['library']['identifier'], single = True)
@@ -298,14 +290,7 @@ class Renamer(Plugin):
                                 log.info('Better quality release already exists for %s, with quality %s', (movie.library.titles[0].title, release.quality.label))
 
                                 # Add _EXISTS_ to the parent dir
-                                if group['dirname']:
-                                    for rename_me in rename_files: # Don't rename anything in this group
-                                        rename_files[rename_me] = None
-                                    rename_files[group['parentdir']] = group['parentdir'].replace(group['dirname'], '_EXISTS_%s' % group['dirname'])
-                                else: # Add it to filename
-                                    for rename_me in rename_files:
-                                        filename = os.path.basename(rename_me)
-                                        rename_files[rename_me] = rename_me.replace(filename, '_EXISTS_%s' % filename)
+                                self.tagDir(group, 'exists')
 
                                 # Notify on rename fail
                                 download_message = 'Renaming of %s (%s) canceled, exists in %s already.' % (movie.library.titles[0].title, group['meta_data']['quality']['label'], release.quality.label)
@@ -333,11 +318,16 @@ class Renamer(Plugin):
                 if isinstance(src, File):
                     src = src.path
 
+                if rename_files.get(src):
+                    log.debug('Not removing file that will be renamed: %s', src)
+                    continue
+
                 log.info('Removing "%s"', src)
                 try:
                     os.remove(src)
                 except:
                     log.error('Failed removing %s: %s', (src, traceback.format_exc()))
+                    self.tagDir(group, 'failed_remove')
 
             # Rename all files marked
             group['renamed_files'] = []
@@ -354,6 +344,7 @@ class Renamer(Plugin):
                         group['renamed_files'].append(dst)
                     except:
                         log.error('Failed moving the file "%s" : %s', (os.path.basename(src), traceback.format_exc()))
+                        self.tagDir(group, 'failed_rename')
 
             # Remove matching releases
             for release in remove_releases:
@@ -370,13 +361,12 @@ class Renamer(Plugin):
                 except:
                     log.error('Failed removing %s: %s', (group['parentdir'], traceback.format_exc()))
 
-            if not unknown:
-                # Search for trailers etc
-                fireEventAsync('renamer.after', group)
+            # Search for trailers etc
+            fireEventAsync('renamer.after', group)
 
-                # Notify on download
-                download_message = 'Downloaded %s (%s)' % (movie_title, replacements['quality'])
-                fireEventAsync('movie.downloaded', message = download_message, data = group)
+            # Notify on download
+            download_message = 'Downloaded %s (%s)' % (movie_title, replacements['quality'])
+            fireEventAsync('movie.downloaded', message = download_message, data = group)
 
             # Break if CP wants to shut down
             if self.shuttingDown():
@@ -400,6 +390,32 @@ class Renamer(Plugin):
             rename_files[extra] = os.path.join(destination, final_folder_name, final_file_name)
 
         return rename_files
+
+    def tagDir(self, group, tag):
+
+        rename_files = {}
+
+        if group['dirname']:
+            rename_files[group['parentdir']] = group['parentdir'].replace(group['dirname'], '_%s_%s' % (tag.upper(), group['dirname']))
+        else: # Add it to filename
+            for file_type in group['files']:
+                for rename_me in group['files'][file_type]:
+                    filename = os.path.basename(rename_me)
+                    rename_files[rename_me] = rename_me.replace(filename, '_%s_%s' % (tag.upper(), filename))
+
+        for src in rename_files:
+            if rename_files[src]:
+                dst = rename_files[src]
+                log.info('Renaming "%s" to "%s"', (src, dst))
+
+                # Create dir
+                self.makeDir(os.path.dirname(dst))
+
+                try:
+                    self.moveFile(src, dst)
+                except:
+                    log.error('Failed moving the file "%s" : %s', (os.path.basename(src), traceback.format_exc()))
+                    raise
 
     def moveFile(self, old, dest):
         try:
