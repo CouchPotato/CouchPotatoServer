@@ -95,7 +95,7 @@ class Plugin(object):
         return False
 
     # http request
-    def urlopen(self, url, timeout = 10, params = {}, headers = {}, multipart = False, show_error = True):
+    def urlopen(self, url, timeout = 30, params = {}, headers = {}, multipart = False, show_error = True):
 
         # Fill in some headers
         if not headers.get('Referer'):
