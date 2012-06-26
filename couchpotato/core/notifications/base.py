@@ -13,7 +13,10 @@ class Notification(Plugin):
     default_title = Env.get('appname')
     test_message = 'ZOMG Lazors Pewpewpew!'
 
-    listen_to = ['movie.downloaded', 'movie.snatched', 'updater.available']
+    listen_to = [
+        'movie.downloaded', 'movie.snatched',
+        'updater.available', 'updater.updated',
+    ]
     dont_listen_to = []
 
     def __init__(self):

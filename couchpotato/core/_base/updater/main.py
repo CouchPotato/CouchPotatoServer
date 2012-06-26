@@ -51,7 +51,18 @@ class Updater(Plugin):
 
     def autoUpdate(self):
         if self.check() and self.conf('automatic') and not self.updater.update_failed:
-            self.updater.doUpdate()
+            if self.updater.doUpdate():
+
+                # Notify before restarting
+                try:
+                    if self.conf('notification'):
+                        info = self.updater.info()
+                        version_date = datetime.fromtimestamp(info['update_version']['date'])
+                        fireEvent('updater.updated', 'Updated to a new version with hash "%s", this version is from %s' % (info['update_version']['hash'], version_date), data = info)
+                except:
+                    log.error('Failed notifying for update: %s', traceback.format_exc())
+
+                fireEventAsync('app.restart')
 
     def check(self):
         if self.isDisabled():
@@ -163,12 +174,6 @@ class GitUpdater(BaseUpdater):
             # Delete leftover .pyc files
             self.deletePyc()
 
-            # Notify before returning and restarting
-            version_date = datetime.fromtimestamp(info['update_version']['date'])
-            fireEvent('updater.updated', 'Updated to a new version with hash "%s", this version is from %s' % (info['update_version']['hash'], version_date), data = info)
-
-            fireEventAsync('app.restart')
-
             return True
         except:
             log.error('Failed updating via GIT: %s', traceback.format_exc())
@@ -259,8 +264,6 @@ class SourceUpdater(BaseUpdater):
 
             # Write update version to file
             self.createFile(self.version_file, json.dumps(self.update_version))
-
-            fireEventAsync('app.restart')
 
             return True
         except:
