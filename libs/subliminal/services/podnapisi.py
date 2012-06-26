@@ -79,7 +79,7 @@ class Podnapisi(ServiceBase):
             if language not in languages:
                 continue
             path = get_subtitle_path(filepath, language, self.config.multi)
-            subtitle = ResultSubtitle(path, language, service=self.__class__.__name__.lower(), link=result['id'],
+            subtitle = ResultSubtitle(path, language, self.__class__.__name__.lower(), result['id'],
                                       release=to_unicode(result['release']), confidence=result['weight'])
             subtitles.append(subtitle)
         if not subtitles:

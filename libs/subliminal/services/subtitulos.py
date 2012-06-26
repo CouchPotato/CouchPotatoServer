@@ -36,7 +36,7 @@ class Subtitulos(ServiceBase):
     languages = language_set(['eng-US', 'eng-GB', 'eng', 'fre', 'por-BR', 'por', 'spa-ES', u'spa', u'ita', u'cat'])
     language_map = {u'Español': Language('spa'), u'Español (España)': Language('spa'), u'Español (Latinoamérica)': Language('spa'),
                     u'Català': Language('cat'), u'Brazilian': Language('por-BR'), u'English (US)': Language('eng-US'),
-                    u'English (UK)': Language('eng-GB')}
+                    u'English (UK)': Language('eng-GB'), 'Galego': Language('glg')}
     language_code = 'name'
     videos = [Episode]
     require_video = False
@@ -79,7 +79,8 @@ class Subtitulos(ServiceBase):
                     logger.debug(u'Wrong subtitle status %s' % status)
                     continue
                 path = get_subtitle_path(filepath, language, self.config.multi)
-                subtitle = ResultSubtitle(path, language, service=self.__class__.__name__.lower(), link=html_status.findNext('span', {'class': 'descargar green'}).find('a')['href'], keywords=sub_keywords)
+                subtitle = ResultSubtitle(path, language, self.__class__.__name__.lower(), html_status.findNext('span', {'class': 'descargar green'}).find('a')['href'],
+                                          keywords=sub_keywords)
                 subtitles.append(subtitle)
         return subtitles
 

@@ -17,6 +17,10 @@
 # along with subliminal.  If not, see <http://www.gnu.org/licenses/>.
 from .utils import to_unicode
 import re
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 COUNTRIES = [('AF', 'AFG', '004', u'Afghanistan'),
@@ -838,15 +842,26 @@ class Language(object):
         if isinstance(country, Country):
             self.country = country
         elif isinstance(country, basestring):
-            self.country = Country(country, countries)
+            try:
+                self.country = Country(country, countries)
+            except ValueError:
+                logger.warning(u'Country %s could not be identified' % country)
+                if strict:
+                    raise
 
         # Language + Country format
         #TODO: Improve this part
-        for regexp in [r.match(language) for r in self.with_country_regexps]:
-            if regexp:
-                language = regexp.group(1)
-                self.country = Country(regexp.group(2), countries)
-                break
+        if country is None:
+            for regexp in [r.match(language) for r in self.with_country_regexps]:
+                if regexp:
+                    language = regexp.group(1)
+                    try:
+                        self.country = Country(regexp.group(2), countries)
+                    except ValueError:
+                        logger.warning(u'Country %s could not be identified' % country)
+                        if strict:
+                            raise
+                    break
 
         # Try to find the language
         language = to_unicode(language.strip().lower())

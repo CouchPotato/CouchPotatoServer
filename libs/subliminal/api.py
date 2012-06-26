@@ -81,6 +81,11 @@ def download_subtitles(paths, languages=None, services=None, force=True, multi=F
     :return: downloaded subtitles
     :rtype: dict of :class:`~subliminal.videos.Video` => [:class:`~subliminal.subtitles.ResultSubtitle`]
 
+    .. note::
+
+        If you use ``multi=True``, :data:`~subliminal.core.LANGUAGE_INDEX` has to be the first item of the ``order`` list
+        or you might get unexpected results.
+
     """
     services = services or SERVICES
     languages = language_list(languages) if languages is not None else language_list(LANGUAGES)
@@ -92,7 +97,7 @@ def download_subtitles(paths, languages=None, services=None, force=True, multi=F
         subtitles.sort(key=lambda s: key_subtitles(s, video, languages, services, order), reverse=True)
     results = []
     service_instances = {}
-    tasks = create_download_tasks(subtitles_by_video, multi)
+    tasks = create_download_tasks(subtitles_by_video, languages, multi)
     for task in tasks:
         try:
             result = consume_task(task, service_instances)

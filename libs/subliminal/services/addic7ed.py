@@ -17,12 +17,14 @@
 # along with subliminal.  If not, see <http://www.gnu.org/licenses/>.
 from . import ServiceBase
 from ..cache import cachedmethod
+from ..exceptions import DownloadFailedError
 from ..language import Language, language_set
 from ..subtitles import get_subtitle_path, ResultSubtitle
 from ..utils import get_keywords
 from ..videos import Episode
 from bs4 import BeautifulSoup
 import logging
+import os
 import re
 
 
@@ -51,7 +53,8 @@ class Addic7ed(ServiceBase):
     #TODO: Complete this
     languages = language_set(['ar', 'ca', 'de', 'el', 'en', 'es', 'eu', 'fr', 'ga', 'he', 'hr', 'hu', 'it',
                               'pl', 'pt', 'ro', 'ru', 'se', 'pt-br'])
-    language_map = {'Portuguese (Brazilian)': Language('por-BR'), 'Greek': Language('gre')}
+    language_map = {'Portuguese (Brazilian)': Language('por-BR'), 'Greek': Language('gre'),
+                    'Spanish (Latin America)': Language('spa'), }
     videos = [Episode]
     require_video = False
     required_features = ['permissive']
@@ -144,11 +147,27 @@ class Addic7ed(ServiceBase):
             if language not in languages:
                 continue
             path = get_subtitle_path(filepath, language, self.config.multi)
-            subtitle = ResultSubtitle(path, language, self.__class__.__name__.lower(),
-                                      '%s/%s' % (self.server_url, suburl['suburl']),
+            subtitle = ResultSubtitle(path, language, self.__class__.__name__.lower(), '%s/%s' % (self.server_url, suburl['suburl']),
                                       keywords=[suburl['release']])
             subtitles.append(subtitle)
         return subtitles
+
+    def download(self, subtitle):
+        logger.info(u'Downloading %s in %s' % (subtitle.link, subtitle.path))
+        try:
+            r = self.session.get(subtitle.link, headers={'Referer': subtitle.link, 'User-Agent': self.user_agent})
+            soup = BeautifulSoup(r.content, self.required_features)
+            if soup.title is not None and u'Addic7ed.com' in soup.title.text.strip():
+                raise DownloadFailedError('Download limit exceeded')
+            with open(subtitle.path, 'wb') as f:
+                f.write(r.content)
+        except Exception as e:
+            logger.error(u'Download failed: %s' % e)
+            if os.path.exists(subtitle.path):
+                os.remove(subtitle.path)
+            raise DownloadFailedError(str(e))
+        logger.debug(u'Download finished')
+        return subtitle
 
 
 Service = Addic7ed
