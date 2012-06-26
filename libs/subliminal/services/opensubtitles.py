@@ -120,7 +120,7 @@ class OpenSubtitles(ServiceBase):
             language = self.get_language(result['SubLanguageID'])
             path = get_subtitle_path(filepath, language, self.config.multi)
             confidence = 1 - float(self.confidence_order.index(result['MatchedBy'])) / float(len(self.confidence_order))
-            subtitle = ResultSubtitle(path, language, service=self.__class__.__name__.lower(), link=result['SubDownloadLink'],
+            subtitle = ResultSubtitle(path, language, self.__class__.__name__.lower(), result['SubDownloadLink'],
                                       release=to_unicode(result['SubFileName']), confidence=confidence)
             subtitles.append(subtitle)
         return subtitles

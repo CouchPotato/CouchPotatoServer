@@ -19,7 +19,7 @@ from . import ServiceBase
 from ..cache import cachedmethod
 from ..exceptions import ServiceError
 from ..language import language_set
-from ..subtitles import get_subtitle_path, ResultSubtitle
+from ..subtitles import get_subtitle_path, ResultSubtitle, EXTENSIONS
 from ..utils import to_unicode
 from ..videos import Episode
 from bs4 import BeautifulSoup
@@ -87,8 +87,11 @@ class BierDopje(ServiceBase):
                 continue
             path = get_subtitle_path(filepath, language, self.config.multi)
             for result in soup.results('result'):
-                subtitle = ResultSubtitle(path, language, service=self.__class__.__name__.lower(), link=result.downloadlink.contents[0],
-                                          release=to_unicode(result.filename.contents[0]))
+                release = to_unicode(result.filename.contents[0])
+                if not release.endswith(tuple(EXTENSIONS)):
+                    release += '.srt'
+                subtitle = ResultSubtitle(path, language, self.__class__.__name__.lower(), result.downloadlink.contents[0],
+                                          release=release)
                 subtitles.append(subtitle)
         return subtitles
 

@@ -12,7 +12,9 @@ This module implements the Requests API.
 """
 
 from . import sessions
+from .safe_mode import catch_exceptions_if_in_safe_mode
 
+@catch_exceptions_if_in_safe_mode
 def request(method, url, **kwargs):
     """Constructs and sends a :class:`Request <Request>`.
     Returns :class:`Response <Response>` object.
@@ -30,7 +32,7 @@ def request(method, url, **kwargs):
     :param proxies: (optional) Dictionary mapping protocol to the URL of the proxy.
     :param return_response: (optional) If False, an un-sent Request object will returned.
     :param session: (optional) A :class:`Session` object to be used for the request.
-    :param config: (optional) A configuration dictionary.
+    :param config: (optional) A configuration dictionary. See ``request.defaults`` for allowed keys and their default values.
     :param verify: (optional) if ``True``, the SSL cert will be verified. A CA_BUNDLE path can also be provided.
     :param prefetch: (optional) if ``True``, the response content will be immediately downloaded.
     :param cert: (optional) if String, path to ssl client cert file (.pem). If Tuple, ('cert', 'key') pair.
