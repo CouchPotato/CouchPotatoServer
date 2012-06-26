@@ -310,7 +310,7 @@ class Renamer(Plugin):
                     for current_file in group['files']['leftover']:
                         remove_files.append(current_file)
                 elif not remove_leftovers: # Don't remove anything
-                    remove_files = []
+                    break
 
             # Remove files
             for src in remove_files:
