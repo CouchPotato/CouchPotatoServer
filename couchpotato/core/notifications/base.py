@@ -1,9 +1,11 @@
 from couchpotato.api import addApiView
-from couchpotato.core.event import addEvent
-from couchpotato.core.helpers.request import jsonified
+from couchpotato.core.event import addEvent, fireEventAsync
+from couchpotato.core.helpers.request import jsonified, getParam
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
+from couchpotato import get_session
+from couchpotato.core.settings.model import Movie, Release, Quality, Library
 
 log = CPLog(__name__)
 
@@ -20,6 +22,7 @@ class Notification(Plugin):
         addEvent('notify.%s' % self.getName().lower(), self.notify)
 
         addApiView(self.testNotifyName(), self.test)
+        addApiView('movie.downloaded', self.downloadedView)
 
         # Attach listeners
         for listener in self.listen_to:
@@ -37,6 +40,30 @@ class Notification(Plugin):
     def notify(self, message = '', data = {}, listener = None):
         pass
 
+    def downloadedView(self):
+        identifier = getParam('identifier')
+
+        db = get_session()
+        release = db.query(Release).filter_by(identifier = identifier).first()
+        movie = release.movie
+        quality = release.quality.label
+        library = movie.library
+        year = library.year
+        movie_title = library.titles[0].title
+
+        data = {}
+        data['title'] = movie_title
+        data['quality'] = quality
+        data['year'] = year
+        data['imdb'] = library.identifier
+
+        message = 'Downloaded %s (%s) in %s' % (movie_title, year, quality)
+        fireEventAsync('movie.downloaded', message = message, data = data)
+        
+        return jsonified({
+            'success': True
+        })
+        
     def test(self):
 
         test_type = self.testNotifyName()
