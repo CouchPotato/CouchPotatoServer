@@ -51,8 +51,14 @@ class Notification(Plugin):
         year = library.year
         movie_title = library.titles[0].title
 
+        data = {}
+        data['title'] = movie_title
+        data['quality'] = quality
+        data['year'] = year
+        data['imdb'] = library.identifier
+
         message = 'Downloaded %s (%s) in %s' % (movie_title, year, quality)
-        fireEventAsync('movie.downloaded', message = message, data = {})
+        fireEventAsync('movie.downloaded', message = message, data = data)
         
         return jsonified({
             'success': True
