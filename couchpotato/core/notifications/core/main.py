@@ -54,6 +54,14 @@ class CoreNotifier(Notification):
         addNonBlockApiView('notification.listener', (self.addListener, self.removeListener))
         addApiView('notification.listener', self.listener)
 
+        addEvent('app.load', self.clean)
+
+    def clean(self):
+
+        db = get_session()
+        db.query(Notif).filter(Notif.added <= (int(time.time()) - 2419200)).delete()
+        db.commit()
+
 
     def markAsRead(self):
 
