@@ -371,6 +371,9 @@ class MoviePlugin(Plugin):
         for movie_id in ids:
 
             m = db.query(Movie).filter_by(id = movie_id).first()
+            if not m:
+                continue
+
             m.profile_id = params.get('profile_id')
 
             # Remove releases
