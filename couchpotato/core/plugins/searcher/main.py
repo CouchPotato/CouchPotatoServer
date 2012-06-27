@@ -78,6 +78,7 @@ class Searcher(Plugin):
         pre_releases = fireEvent('quality.pre_releases', single = True)
         release_dates = fireEvent('library.update_release_date', identifier = movie['library']['identifier'], merge = True)
         available_status = fireEvent('status.get', 'available', single = True)
+        ignored_status = fireEvent('status.get', 'ignored', single = True)
 
         default_title = getTitle(movie['library'])
         if not default_title:
@@ -88,14 +89,14 @@ class Searcher(Plugin):
         ret = False
         for quality_type in movie['profile']['types']:
             if not self.couldBeReleased(quality_type['quality']['identifier'], release_dates, pre_releases):
-                log.info('To early to search for %s, %s', (quality_type['quality']['identifier'], default_title))
+                log.info('Too early to search for %s, %s', (quality_type['quality']['identifier'], default_title))
                 continue
 
             has_better_quality = 0
 
-            # See if beter quality is available
+            # See if better quality is available
             for release in movie['releases']:
-                if release['quality']['order'] <= quality_type['quality']['order'] and release['status_id'] is not available_status.get('id'):
+                if release['quality']['order'] <= quality_type['quality']['order'] and release['status_id'] not in [available_status.get('id'), ignored_status.get('id')]:
                     has_better_quality += 1
 
             # Don't search for quality lower then already available.
@@ -143,8 +144,14 @@ class Searcher(Plugin):
                         except InterfaceError:
                             log.debug('Couldn\'t add %s to ReleaseInfo: %s', (info, traceback.format_exc()))
 
+                    nzb['status_id'] = rls.status_id
+
 
                 for nzb in sorted_results:
+                    if nzb['status_id'] == ignored_status.get('id'):
+                        log.info('Ignored: %s', nzb['name'])
+                        continue
+
                     if nzb['score'] <= 0:
                         log.debug('No more releases with score higher than 0')
                         break

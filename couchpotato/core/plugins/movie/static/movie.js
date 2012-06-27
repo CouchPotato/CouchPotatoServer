@@ -362,7 +362,7 @@ var ReleaseAction = new Class({
 				} catch(e){}
 
 				new Element('div', {
-					'class': 'item'
+					'class': 'item '+status.identifier
 				}).adopt(
 					new Element('span.name', {'text': self.get(release, 'name'), 'title': self.get(release, 'name')}),
 					new Element('span.status', {'text': status.identifier, 'class': 'release_status '+status.identifier}),
