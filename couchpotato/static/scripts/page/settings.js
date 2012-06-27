@@ -941,6 +941,9 @@ Option.Choice = new Class({
 					mtches.append([value == matchsplit ? match : matchsplit]);
 				});
 			});
+		
+		if(mtches.length == 0 && value != '')
+			mtches.include(value);
 
 		mtches.each(self.addTag.bind(self));
 
@@ -963,7 +966,7 @@ Option.Choice = new Class({
 	},
 
 	addLastTag: function(){
-		if(this.tag_input.getElement('li.choice:last-child'))
+		if(this.tag_input.getElement('li.choice:last-child') || !this.tag_input.getElement('li'))
 			this.addTag('');
 	},
 
@@ -1151,7 +1154,7 @@ Option.Choice.Tag = new Class({
 
 			var temp_input = new Element('input', {
 				'events': {
-					'keyup': function(e){
+					'keydown': function(e){
 						e.stop();
 
 						if(e.key == 'right'){
@@ -1165,6 +1168,7 @@ Option.Choice.Tag = new Class({
 						else if (e.key == 'backspace'){
 							self.del();
 							this.destroy();
+							self.fireEvent('goLeft');
 						}
 					}
 				},
