@@ -167,7 +167,6 @@ body > .spinner, .mask{
 	z-index: 5;
 	box-shadow: 0 20px 30px -30px rgba(0,0,0,0.05);
 	transition: box-shadow .4s cubic-bezier(0.9,0,0.1,1);
-	transform: translateZ(0);
 }
 	.header.with_shadow {
 		box-shadow: 0 20px 30px -30px rgba(0,0,0,0.3);
@@ -217,7 +216,6 @@ body > .spinner, .mask{
 			outline: none;
 			box-shadow: inset 0 1px 8px rgba(0,0,0,0.05), 0 1px 0px rgba(255,255,255,0.15);
 			transition: all .4s cubic-bezier(0.9,0,0.1,1);
-			transform: translateZ(0);
 		}
 		
 		.header .navigation li:hover a:after { background-color: #047792; }
@@ -525,7 +523,6 @@ body > .spinner, .mask{
 		width: 25px;
 		border: 1px solid rgba(0,0,0,0.3);
 		transition: all 0.3s ease-in-out;
-		transform: translateZ(0);
 	}
 	.more_menu.show > a:not(:active), .more_menu > a:hover:not(:active) {
 		background-color: #406db8;

@@ -13,7 +13,6 @@
 		overflow: hidden;
 		width: 100%;
 		transition: all 0.2s linear;
-		transform: translateZ(0);
 	}
 		.movies .movie.list_view, .movies .movie.mass_edit_view {
 			margin: 1px 0;
@@ -38,7 +37,6 @@
 			float: right;
 			border-radius: 0;
 			transition: all 0.2s linear;
-			transform: translateZ(0);
 		}
 			.movies .list_view .data, .movies .mass_edit_view .data {
 				height: 30px;
@@ -67,7 +65,6 @@
 			height: 180px;
 			border-radius: 4px 0 0 4px;
 			transition: all 0.2s linear;
-			transform: translateZ(0);
 
 		}
 			.movies .list_view .poster, .movies .mass_edit_view .poster {
@@ -90,7 +87,6 @@
 				float: left;
 				width: 90%;
 				transition: all 0.2s linear;
-				transform: translateZ(0);
 			}
 				.movies .list_view .info .title, .movies .mass_edit_view .info .title {
 					font-size: 16px;
@@ -107,7 +103,6 @@
 				width: 10%;
 				text-align: right;
 				transition: all 0.2s linear;
-				transform: translateZ(0);
 			}
 				.movies .list_view .info .year, .movies .mass_edit_view .info .year {
 					font-size: 16px;
@@ -324,7 +319,6 @@
 					background: #000;
 					text-align: center;
 					transition: all .6s cubic-bezier(0.9,0,0.1,1);
-					transform: translateZ(0);
 					overflow: hidden;
 				}
 					.movies .movie .trailer_container.hide {
@@ -342,7 +336,6 @@
 						background: #4e5969;
 						border-radius: 0 0 2px 2px;
 						transition: all .6s cubic-bezier(0.9,0,0.1,1) .2s;
-						transform: translateZ(0);
 					}
 					.movies .movie .hide_trailer.hide {
 						top: -30px;
@@ -360,7 +353,6 @@
 
 .movies .alph_nav {
 	transition: box-shadow .4s linear;
-	transform: translateZ(0);
 	position: fixed;
 	z-index: 2;
 	top: 0;
@@ -402,7 +394,6 @@
 		color: rgba(255,255,255,0.2);
 		border: 1px solid transparent;
 		transition: all 0.1s ease-in-out;
-		transform: translateZ(0);
 		text-shadow: none;
 	}
 		.movies .alph_nav .numbers li:first-child {

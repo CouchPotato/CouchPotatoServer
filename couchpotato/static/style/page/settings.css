@@ -35,7 +35,6 @@
 			padding: 11px 15px;
 			font-weight: normal;
 			transition: all 0.1s ease-in-out;
-			transform: translateZ(0);
 			color: rgba(255, 255, 255, 0.8);
 		}
 			.page.settings .tabs a:hover, .page.settings .tabs .active a {
@@ -50,7 +49,6 @@
 			padding: 0;
 			overflow: hidden;
 			transition: all 1s ease-in-out;
-			transform: translateZ(0);
 			max-height: 0;
 		}
 			.page.settings .tabs > .active .subtabs {
