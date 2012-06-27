@@ -77,9 +77,6 @@ var NotificationBase = new Class({
 
 		if(ids.length > 0)
 			Api.request('notification.markread', {
-				'data': {
-					'ids': ids.join(',')
-				},
 				'onSuccess': function(){
 					self.setBadge('')
 				}

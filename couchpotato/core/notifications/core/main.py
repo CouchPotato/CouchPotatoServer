@@ -35,7 +35,7 @@ class CoreNotifier(Notification):
         addApiView('notification.markread', self.markAsRead, docs = {
             'desc': 'Mark notifications as read',
             'params': {
-                'ids': {'desc': 'Notification id you want to mark as read.', 'type': 'int (comma separated)'},
+                'ids': {'desc': 'Notification id you want to mark as read. All if ids is empty.', 'type': 'int (comma separated)'},
             },
         })
 
@@ -56,12 +56,18 @@ class CoreNotifier(Notification):
 
 
     def markAsRead(self):
-        ids = [x.strip() for x in getParam('ids').split(',')]
+
+        ids = None
+        if getParam('ids'):
+            ids = [x.strip() for x in getParam('ids').split(',')]
 
         db = get_session()
 
-        q = db.query(Notif) \
-            .filter(or_(*[Notif.id == tryInt(s) for s in ids]))
+        if ids:
+            q = db.query(Notif).filter(or_(*[Notif.id == tryInt(s) for s in ids]))
+        else:
+            q = db.query(Notif).filter_by(read = False)
+
         q.update({Notif.read: True})
 
         db.commit()
@@ -83,6 +89,8 @@ class CoreNotifier(Notification):
             limit = splt[0]
             offset = 0 if len(splt) is 1 else splt[1]
             q = q.limit(limit).offset(offset)
+        else:
+            q = q.limit(200)
 
         results = q.all()
         notifications = []
