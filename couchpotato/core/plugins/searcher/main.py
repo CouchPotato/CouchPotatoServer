@@ -88,7 +88,7 @@ class Searcher(Plugin):
         ret = False
         for quality_type in movie['profile']['types']:
             if not self.couldBeReleased(quality_type['quality']['identifier'], release_dates, pre_releases):
-                log.info('To early to search for %s, %s', (quality_type['quality']['identifier'], default_title))
+                log.info('Too early to search for %s, %s', (quality_type['quality']['identifier'], default_title))
                 continue
 
             has_better_quality = 0
@@ -103,7 +103,21 @@ class Searcher(Plugin):
 
                 log.info('Search for %s in %s', (default_title, quality_type['quality']['label']))
                 quality = fireEvent('quality.single', identifier = quality_type['quality']['identifier'], single = True)
-                results = fireEvent('yarr.search', movie, quality, merge = True)
+                
+                download_preference = fireEvent('downloadpreference.preferredmethod')
+                if download_preference == 'torrents':
+                    log.info('First searching torrents')
+                    results = fireEvent('torrent.search', movie, quality, merge = True)
+                    if not results:
+                        log.info('No results from torrents, searching usenet')
+                        results = fireEvent('nzb.search', movie, quality, merge = True)
+                else:
+                    log.info('First searching usenet')
+                    results = fireEvent('nzb.search', movie, quality, merge = True)
+                    if not results:
+                        log.info('No results from usenet, searching torrents')
+                        results = fireEvent('torrent.search', movie, quality, merge = True)
+
                 sorted_results = sorted(results, key = lambda k: k['score'], reverse = True)
                 if len(sorted_results) == 0:
                     log.debug('Nothing found for %s in %s', (default_title, quality_type['quality']['label']))
