@@ -87,7 +87,7 @@ window.addEvent('domready', function(){
 						}).inject(self.profile_select);
 
 						if(self.movie.profile)
-							self.profile_select.set('value', self.movie.profile.data.id);
+							self.profile_select.set('value', profile.id ? profile.id : profile.data.id);
 					});
 
 				}
