@@ -20,24 +20,24 @@ class Trakt(Notification):
 
         trakt = Trakt()
 
-	api_key = trakt.conf('automation_api_key')
-	username = trakt.conf('automation_username')
-	password = trakt.conf('automation_password')
+        api_key = trakt.conf('automation_api_key')
+        username = trakt.conf('automation_username')
+        password = trakt.conf('automation_password')
 
         request = {}
-	request['username'] = username
-	request['password'] = password
-	request['movies'] = {'imdb_id' : data['imdb'], 'title' : data['title'], 'year' : data['year']}
-	json_request = json.dumps(request)
+        request['username'] = username
+        request['password'] = password
+        request['movies'] = {'imdb_id' : data['imdb'], 'title' : data['title'], 'year' : data['year']}
+        json_request = json.dumps(request)
 
         url = self.api_url % api_key
 
         try:
-	   urllib2.urlopen(url = url, data = json_request)
-	   log.info("Added %s (%s) to Trakt library" % (data['title'], data['year']))
+           urllib2.urlopen(url = url, data = json_request)
+           log.info("Added %s (%s) to Trakt library" % (data['title'], data['year']))
 
         except:
-	    log.error("API call failed")
-	    return False
+            log.error("API call failed")
+            return False
 
         return True
