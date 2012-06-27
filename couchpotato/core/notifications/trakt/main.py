@@ -14,6 +14,7 @@ class Trakt(Notification):
 
     listen_to = ['movie.downloaded']
     api_url = 'http://api.trakt.tv/movie/library/%s'
+    unwatch_url = 'http://api.trakt.tv/movie/unwatchlist/%s'
 
     def notify(self, message = '', data = {}, listener = None):
         if self.isDisabled(): return
@@ -27,13 +28,15 @@ class Trakt(Notification):
         request = {}
         request['username'] = username
         request['password'] = password
-        request['movies'] = {'imdb_id' : data['imdb'], 'title' : data['title'], 'year' : data['year']}
+        request['movies'] = [{'imdb_id' : data['imdb'], 'title' : data['title'], 'year' : data['year']}]
         json_request = json.dumps(request)
 
         url = self.api_url % api_key
+        unwatch_url = self.unwatch_url % api_key
 
         try:
            urllib2.urlopen(url = url, data = json_request)
+           urllib2.urlopen(url = unwatch_url, data = json_request)
            log.info("Added %s (%s) to Trakt library" % (data['title'], data['year']))
 
         except:
