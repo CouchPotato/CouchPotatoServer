@@ -30,7 +30,7 @@ config = [{
                     'label': 'Use for',
                     'default': 'both',
                     'type': 'dropdown',
-                    'values': [('nzbs & torrents', 'both'), ('nzb', 'nzb'), ('torrent', 'torrent')],
+                    'values': [('usenet & torrents', 'both'), ('usenet', 'nzb'), ('torrent', 'torrent')],
                 },
                 {
                     'name': 'manual',
