@@ -33,10 +33,11 @@ config = [{
                 },
                 {
                     'name': 'preferred_method',
-                    'label': 'Preferred download method',
-                    'default': 'both',
+                    'label': 'First search',
+                    'description': 'Which of the methods do you prefer',
+                    'default': 'nzb',
                     'type': 'dropdown',
-                    'values': [('usenet & torrents', 'both'), ('usenet', 'usenet'), ('torrents', 'torrents')],
+                    'values': [('usenet & torrents', 'both'), ('usenet', 'nzb'), ('torrents', 'torrent')],
                 },
             ],
         }, {
