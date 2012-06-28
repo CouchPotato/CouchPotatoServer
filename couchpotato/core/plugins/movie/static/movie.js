@@ -307,7 +307,65 @@ var IMDBAction = new Class({
 		var self = this;
 		(e).preventDefault();
 
-		window.open('http://www.imdb.com/title/'+self.id+'/');
+		window.open('http://www.dereferer.org/?http://www.imdb.com/title/'+self.id+'/');
+	}
+
+});
+
+var ALLOCINEAction = new Class({
+
+	Extends: MovieAction,
+	id: null,
+
+	create: function(){
+		var self = this;
+
+		self.id = self.movie.get('identifier');
+
+		self.el = new Element('a.allocine', {
+			'title': 'Go to the allocine page of ' + self.movie.getTitle(),
+			'events': {
+				'click': self.gotoALLOCINE.bind(self)
+			}
+		});
+
+		if(!self.id) self.disable();
+	},
+
+	gotoALLOCINE: function(e){
+		var self = this;
+		(e).preventDefault();
+
+		window.open('http://www.dereferer.org/?http://www.allocine.fr/recherche/?q='+self.movie.getTitle());
+	}
+
+});
+
+var SENSACINEAction = new Class({
+
+	Extends: MovieAction,
+	id: null,
+
+	create: function(){
+		var self = this;
+
+		self.id = self.movie.get('identifier');
+
+		self.el = new Element('a.sensacine', {
+			'title': 'Go to the sensacine page of ' + self.movie.getTitle(),
+			'events': {
+				'click': self.gotoSENSACINE.bind(self)
+			}
+		});
+
+		if(!self.id) self.disable();
+	},
+
+	gotoSENSACINE: function(e){
+		var self = this;
+		(e).preventDefault();
+
+		window.open('http://www.dereferer.org/?http://www.sensacine.com/busqueda/?q='+self.movie.getTitle());
 	}
 
 });

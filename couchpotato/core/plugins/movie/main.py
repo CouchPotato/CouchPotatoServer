@@ -87,12 +87,20 @@ class MoviePlugin(Plugin):
                 'delete_from': {'desc': 'Delete movie from this page', 'type': 'string: all (default), wanted, manage'},
             }
         })
+        addApiView('movie.status', self.statusView, docs = {
+            'desc': 'Change status of a movie by id',
+            'params': {
+                'id': {'desc': 'Movie ID(s) you want to chage status.', 'type': 'int (comma separated)'},
+                'status': {'desc': 'New status for the movie', 'type': 'string: done (default), wanted, snatched, deleted'},
+            }
+        })
 
         addEvent('movie.add', self.add)
         addEvent('movie.delete', self.delete)
         addEvent('movie.get', self.get)
         addEvent('movie.list', self.list)
         addEvent('movie.restatus', self.restatus)
+        addEvent('movie.status', self.status)
 
     def getView(self):
 
@@ -476,6 +484,38 @@ class MoviePlugin(Plugin):
             m.status_id = active_status.get('id') if move_to_wanted else done_status.get('id')
 
         db.commit()
+        #db.close()
+
+        return True
+
+    def statusView(self):
+
+        params = getParams()
+
+        ids = [x.strip() for x in params.get('id').split(',')]
+        for movie_id in ids:
+            self.status(movie_id, status = params.get('status', 'done'))
+
+        return jsonified({
+            'success': True,
+        })
+
+    def status(self, movie_id, status = None):
+
+        new_status = fireEvent('status.get', status, single = True)
+
+        db = get_session()
+
+        movie = db.query(Movie).filter_by(id = movie_id).first()
+        if not movie or len(movie.library.titles) == 0:
+            log.debug('Can\'t update status movie, doesn\'t seem to exist.')
+            return False
+
+        if movie and new_status:
+            log.debug('Changing status to %s for movie %s', (new_status.get('label'), movie.library.titles[0].title))
+            movie.status_id = new_status.get('id')
+            db.commit()
+
         #db.close()
 
         return True

@@ -29,6 +29,8 @@ window.addEvent('domready', function(){
 
 	MovieActions.Wanted = {
 		'IMDB': IMDBAction
+		,'ALLOCINE': ALLOCINEAction
+		,'SENSACINE': SENSACINEAction
 		,'Trailer': TrailerAction
 		,'Releases': ReleaseAction
 
@@ -234,10 +236,102 @@ window.addEvent('domready', function(){
 			}
 
 		})
+
+		,'Done': new Class({
+
+			Extends: MovieAction,
+
+			Implements: [Chain],
+
+			create: function(){
+				var self = this;
+
+				self.el = new Element('a.download', {
+					'title': 'Mark movie as downloaded',
+					'events': {
+						'click': self.showConfirm.bind(self)
+					}
+				});
+
+			},
+
+			showConfirm: function(e){
+				var self = this;
+				(e).preventDefault();
+
+				if(!self.download_container){
+					self.download_container = new Element('div.download_container').adopt(
+						new Element('a.cancel', {
+							'text': 'Cancel',
+							'events': {
+								'click': self.hideConfirm.bind(self)
+							}
+						}),
+						new Element('span.or', {
+							'text': 'or'
+						}),
+						new Element('a.button.download', {
+							'text': 'Mark as donwloaded ' + self.movie.title.get('text'),
+							'events': {
+								'click': self.done.bind(self)
+							}
+						})
+					).inject(self.movie, 'top');
+				}
+
+				self.movie.slide('in', self.download_container);
+
+			},
+
+			hideConfirm: function(e){
+				var self = this;
+				(e).preventDefault();
+
+				self.movie.slide('out');
+			},
+
+			done: function(e){
+				(e).preventDefault();
+				var self = this;
+
+				var movie = $(self.movie);
+
+				self.chain(
+					function(){
+						self.callChain();
+					},
+					function(){
+						Api.request('movie.status', {
+							'data': {
+								'id': self.movie.get('id'),
+								'status': 'done'
+							},
+							'onComplete': function(){
+								movie.set('tween', {
+									'duration': 300,
+									'onComplete': function(){
+										movie.destroy();
+									}
+								});
+								movie.tween('height', 0);
+							}
+						});
+					}
+				);
+
+				self.callChain();
+
+			}
+
+		})
 	};
 
 	MovieActions.Snatched = {
 		'IMDB': IMDBAction
+		,'ALLOCINE': ALLOCINEAction
+		,'SENSACINE': SENSACINEAction
+		,'Trailer': TrailerAction
+		,'Done': MovieActions.Wanted.Done
 		,'Delete': MovieActions.Wanted.Delete
 	};
 

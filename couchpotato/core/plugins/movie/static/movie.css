@@ -232,6 +232,28 @@
 				background-color: #d32917;
 			}
 
+		.movies .download_container {
+			clear: both;
+			text-align: center;
+			font-size: 20px;
+			position: absolute;
+			padding: 70px 0 0;
+			width: 100%;
+		}
+			.movies .download_container .cancel {
+			}
+			.movies .download_container .or {
+				padding: 10px;
+			}
+			.movies .download_container .done {
+				background-color: #ff321c;
+				font-weight: normal;
+			}
+			.movies .download_container .done:hover {
+				color: #fff;
+				background-color: #d32917;
+			}
+
 			.movies .options {
 				position: absolute;
 				margin-left: 120px;
