@@ -31,6 +31,13 @@ config = [{
                     'label': 'Ignored words',
                     'default': 'german, dutch, french, truefrench, danish, swedish, spanish, italian, korean, dubbed, swesub, korsub',
                 },
+                {
+                    'name': 'preferred_method',
+                    'label': 'Preferred download method',
+                    'default': 'both',
+                    'type': 'dropdown',
+                    'values': [('usenet & torrents', 'both'), ('usenet', 'usenet'), ('torrents', 'torrents')],
+                },
             ],
         }, {
             'tab': 'searcher',
