@@ -104,7 +104,25 @@ class Searcher(Plugin):
 
                 log.info('Search for %s in %s', (default_title, quality_type['quality']['label']))
                 quality = fireEvent('quality.single', identifier = quality_type['quality']['identifier'], single = True)
-                results = fireEvent('yarr.search', movie, quality, merge = True)
+
+                download_preference = self.conf('preferred_method')
+                if download_preference == 'torrents':
+                    log.info('First searching torrents')
+                    results = fireEvent('torrent.search', movie, quality, merge = True)
+                    if not results:
+                        log.info('No results from torrents, searching usenet')
+                        results = fireEvent('nzb.search', movie, quality, merge = True)
+
+                elif download_preference == 'usenet':
+                    log.info('First searching usenet')
+                    results = fireEvent('nzb.search', movie, quality, merge = True)
+                    if not results:
+                        log.info('No results from usenet, searching torrents')
+                        results = fireEvent('torrent.search', movie, quality, merge = True)
+
+                else:
+                    results = fireEvent('yarr.search', movie, quality, merge = True)
+
                 sorted_results = sorted(results, key = lambda k: k['score'], reverse = True)
                 if len(sorted_results) == 0:
                     log.debug('Nothing found for %s in %s', (default_title, quality_type['quality']['label']))
