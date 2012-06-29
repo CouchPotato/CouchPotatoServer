@@ -159,8 +159,9 @@ class Searcher(Plugin):
                         continue
 
                     if nzb['score'] <= 0:
-                        log.debug('No more releases with score higher than 0')
-                        break
+                        log.info('Ignored, score to low: %s', nzb['name'])
+                        continue
+
                     downloaded = self.download(data = nzb, movie = movie)
                     if downloaded is True:
                         ret = True
