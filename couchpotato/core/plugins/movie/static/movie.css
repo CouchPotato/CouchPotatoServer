@@ -360,12 +360,12 @@
 	width: 1080px;
 	margin: 0 -60px;
 	box-shadow:  0 20px 20px -22px rgba(0,0,0,0.1);
+	background: #4e5969;
 }
 
 	.movies .alph_nav.float {
 		box-shadow:  0 30px 30px -32px rgba(0,0,0,0.5);
 		border-radius: 0;
-		background: #4e5969;
 	}
 
 .movies .alph_nav ul.numbers, 
