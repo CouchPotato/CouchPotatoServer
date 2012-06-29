@@ -33,7 +33,7 @@ var NotificationBase = new Class({
 		});
 
 		window.addEvent('load', function(){
-			self.startInterval()
+			self.startInterval.delay(Browser.safari ? 100 : 0, self)
 		});
 
 	},
