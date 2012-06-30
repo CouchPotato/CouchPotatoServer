@@ -305,6 +305,13 @@ class SourceUpdater(BaseUpdater):
                     except Exception, e:
                         log.error('Failed overwriting file: %s', e)
 
+        if Env.get('app_dir') not in Env.get('data_dir'):
+            for still_exists in existing_files:
+                try:
+                    os.remove(still_exists)
+                except:
+                    log.error('Failed removing non-used file: %s', traceback.format_exc())
+
 
     def removeDir(self, path):
         try:

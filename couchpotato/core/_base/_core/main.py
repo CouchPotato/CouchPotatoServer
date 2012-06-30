@@ -43,6 +43,7 @@ class Core(Plugin):
         addEvent('app.base_url', self.createBaseUrl)
         addEvent('app.api_url', self.createApiUrl)
         addEvent('app.version', self.version)
+        addEvent('app.load', self.checkDataDir)
 
         addEvent('setting.save.core.password', self.md5Password)
         addEvent('setting.save.core.api_key', self.checkApikey)
@@ -53,6 +54,12 @@ class Core(Plugin):
 
     def checkApikey(self, value):
         return value if value and len(value) > 3 else uuid4().hex
+
+    def checkDataDir(self):
+        if Env.get('app_dir') in Env.get('data_dir'):
+            log.error('You should NOT use your CouchPotato directory to save your settings in. Files will get overwritten or be deleted.')
+
+        return True
 
     def available(self):
         return jsonified({
