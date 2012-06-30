@@ -22,8 +22,10 @@ var UpdaterBase = new Class({
 
 				if(json.update_available)
 					self.doUpdate();
-				else
-					App.unBlockPage()
+				else {
+					App.unBlockPage();
+					App.fireEvent('message', 'No updates available');
+				}
 			}
 		})
 

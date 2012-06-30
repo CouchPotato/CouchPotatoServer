@@ -11,6 +11,7 @@ var NotificationBase = new Class({
 		App.addEvent('unload', self.stopPoll.bind(self));
 		App.addEvent('reload', self.startInterval.bind(self, [true]));
 		App.addEvent('notification', self.notify.bind(self));
+		App.addEvent('message', self.showMessage.bind(self));
 
 		// Add test buttons to settings page
 		App.addEvent('load', self.addTestButtons.bind(self));
@@ -86,7 +87,7 @@ var NotificationBase = new Class({
 
 	startInterval: function(force){
 		var self = this;
-		
+
 		if(self.stopped && !force){
 			self.stopped = false;
 			return;
@@ -141,30 +142,30 @@ var NotificationBase = new Class({
 		// Restart poll
 		self.startPoll()
 	},
-	
+
 	showMessage: function(message){
 		var self = this;
-		
+
 		if(!self.message_container)
 			self.message_container = new Element('div.messages').inject(document.body);
-		
+
 		var new_message = new Element('div.message', {
 			'text': message
 		}).inject(self.message_container);
-		
+
 		setTimeout(function(){
 			new_message.addClass('show')
 		}, 10);
-		
+
 		setTimeout(function(){
 			new_message.addClass('hide')
 			setTimeout(function(){
 				new_message.destroy();
 			}, 1000);
 		}, 4000);
-		
+
 	},
-	
+
 	// Notification setting tests
 	addTestButtons: function(){
 		var self = this;
