@@ -21,9 +21,9 @@ body {
 	}
 
 * {
-  -moz-box-sizing: border-box;
-  -webkit-box-sizing: border-box;
-  box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+ 	   -moz-box-sizing: border-box;
+			box-sizing: border-box;
 }
 
 pre {
@@ -267,10 +267,9 @@ body > .spinner, .mask{
 		font-size: 8px;
 		margin: -5px 0 0 15px;
 		box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 0 3px rgba(0,0,0,.7);
-		background: -webkit-gradient(linear, left bottom, left top, from(rgba(255,255,255,.3)), to(rgba(255,255,255,.1)));
-		background: -moz-linear-gradient(center bottom, rgba(255,255,255,.3) 0%, rgba(255,255,255,.1) 100%);
 		background-color: #1b79b8;
 		text-shadow: none;
+		background-image: linear-gradient(0deg, rgba(255,255,255,.3) 0%, rgba(255,255,255,.1) 100%);
 	}
 
 	.header .notification_menu .wrapper {
@@ -354,16 +353,8 @@ body > .spinner, .mask{
 		border-radius:30px;
 
 		box-shadow: 0 1px 1px rgba(0,0,0,0.35), inset 0 1px 0px rgba(255,255,255,0.20);
-
-		background: url('../images/sprite.png') no-repeat 94% -53px, -webkit-gradient(
-		    linear,
-		    left bottom,
-		    left top,
-		    color-stop(0, #406db8),
-		    color-stop(1, #5b9bd1)
-		);
-		background: url('../images/sprite.png') no-repeat 94% -53px, -moz-linear-gradient(
-		    center top,
+		background: url('../images/sprite.png') no-repeat 94% -53px, linear-gradient(
+		    270deg,
 		    #5b9bd1 0%,
 		    #406db8 100%
 		);
@@ -448,15 +439,8 @@ body > .spinner, .mask{
 	border: 1px solid #252930;
 	box-shadow: inset 0 1px 0px rgba(255,255,255,0.20), 0 0 3px rgba(0,0,0, 0.2);
 	background: rgb(55,62,74);
-	background-image: -webkit-gradient(
-	    linear,
-	    left bottom,
-	    left top,
-	    color-stop(0, rgb(55,62,74)),
-	    color-stop(1, rgb(73,83,98))
-	);
-	background-image: -moz-linear-gradient(
-	    center bottom,
+	background-image: linear-gradient(
+	    90deg,
 	    rgb(55,62,74) 0%,
 	    rgb(73,83,98) 100%
 	);
@@ -544,15 +528,8 @@ body > .spinner, .mask{
 		text-align: center;
 		color: #000;
 		text-shadow: none;
-		background-image: -webkit-gradient(
-		    linear,
-		    left bottom,
-		    right top,
-		    color-stop(0, rgb(200,200,200)),
-		    color-stop(1, rgb(255,255,255))
-		);
-		background-image: -moz-linear-gradient(
-		    left bottom,
+		background-image: linear-gradient(
+		    45deg,
 		    rgb(200,200,200) 0%,
 		    rgb(255,255,255) 100%
 		);
