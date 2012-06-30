@@ -581,12 +581,15 @@ body > .spinner, .mask{
 			}
 			
 .messages {
-	position: fixed;
+	position: absolute;
 	right: 0;
 	bottom: 0;
 	padding: 2px;
 	width: 240px;
 	z-index: 2;
+	overflow: hidden;
+	font-size: 14px;
+	font-weight: bold;
 }
 
 	.messages .message {
@@ -595,23 +598,27 @@ body > .spinner, .mask{
 		margin: 2px 0 0 0;
 		height: 0;
 		overflow: hidden;
-		position: relative;
-		transition: all .4s cubic-bezier(0.9,0,0.1,1);
-		font-size: 12px;
+		transition: all .6s cubic-bezier(0.9,0,0.1,1);
 		box-shadow: 0 1px 1px rgba(0,0,0,0.35), inset 0 1px 0px rgba(255,255,255,0.20);
 		background-image: linear-gradient(
 		    270deg,
 		    #5b9bd1 0%,
 		    #406db8 100%
 		);
+		width: 100%;
+		padding: 0 5px;
+		visibility: hidden;
+		max-height: 0;
 	}
 		.messages .message.show {
+			visibility: visible;
 			height: auto;
-			padding: 3px 5px;
-			min-height: 10px;
-		    max-height: 400px;
+			padding-top: 3px;
+			padding-bottom: 3px;
+			min-height: 1px;
+			max-height: 400px;
 		}
 		.messages .message.hide {
-			right: -240px;
+			margin-left: 240px;
 			opacity: 0;
 		}
