@@ -89,7 +89,7 @@
 				App.setup({
 					'base_url': {{ url_for('web.index')|tojson|safe }},
 					'args': {{ env.get('args')|tojson|safe }},
-					'options': "{{ env.get('options')|safe }}",
+					'options': {{ ('%s' % env.get('options'))|tojson|safe }},
 					'app_dir': {{ env.get('app_dir')|tojson|safe }},
 					'data_dir': {{ env.get('data_dir')|tojson|safe }},
 					'pid': {{ env.getPid()|tojson|safe }},
