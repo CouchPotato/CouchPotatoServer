@@ -46,10 +46,13 @@ class Plex(Notification):
     def notify(self, message = '', data = {}, listener = None):
         if self.isDisabled(): return
 
-        for host in [x.strip() + ':3000' for x in self.conf('host').split(",")]:
-            self.send({'command': 'ExecBuiltIn', 'parameter': 'Notification(CouchPotato, %s)' % message}, host)
+        hosts = [x.strip() + ':3000' for x in self.conf('host').split(",")]
+        successful = 0
+        for host in hosts:
+            if self.send({'command': 'ExecBuiltIn', 'parameter': 'Notification(CouchPotato, %s)' % message}, host):
+                successful += 1
 
-        return True
+        return successful == len(hosts)
 
     def send(self, command, host):
 
@@ -60,7 +63,7 @@ class Plex(Notification):
         try:
             self.urlopen(url, headers = headers, show_error = False)
         except:
-            log.error("Couldn't sent command to Plex")
+            log.error("Couldn't sent command to Plex: %s", traceback.format_exc())
             return False
 
         log.info('Plex notification to %s successful.', host)
