@@ -136,23 +136,24 @@ class CoreNotifier(Notification):
         #db.close()
         return True
 
-    def frontend(self, type = 'notification', data = {}):
+    def frontend(self, type = 'notification', data = {}, message = None):
 
         self.m_lock.acquire()
-        message = {
+        notification = {
             'message_id': str(uuid.uuid4()),
             'time': time.time(),
             'type': type,
             'data': data,
+            'message': message,
         }
-        self.messages.append(message)
+        self.messages.append(notification)
 
         while len(self.listeners) > 0 and not self.shuttingDown():
             try:
                 listener, last_id = self.listeners.pop()
                 listener({
                     'success': True,
-                    'result': [message],
+                    'result': [notification],
                 })
             except:
                 break

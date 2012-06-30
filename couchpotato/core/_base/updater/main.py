@@ -20,6 +20,8 @@ log = CPLog(__name__)
 
 class Updater(Plugin):
 
+    available_notified = False
+
     def __init__(self):
 
         if Env.get('desktop'):
@@ -64,13 +66,18 @@ class Updater(Plugin):
 
                 fireEventAsync('app.restart')
 
+                return True
+
+        return False
+
     def check(self):
         if self.isDisabled():
             return
 
         if self.updater.check():
-            if self.conf('notification') and not self.conf('automatic'):
+            if not self.available_notified and self.conf('notification') and not self.conf('automatic'):
                 fireEvent('updater.available', message = 'A new update is available', data = self.updater.info())
+                self.available_notified = True
             return True
 
         return False
@@ -168,7 +175,6 @@ class GitUpdater(BaseUpdater):
             self.repo.saveStash()
 
             log.info('Updating to latest version')
-            info = self.info()
             self.repo.pull()
 
             # Delete leftover .pyc files
@@ -301,6 +307,13 @@ class SourceUpdater(BaseUpdater):
                             pass
                     except Exception, e:
                         log.error('Failed overwriting file: %s', e)
+
+        if Env.get('app_dir') not in Env.get('data_dir'):
+            for still_exists in existing_files:
+                try:
+                    os.remove(still_exists)
+                except:
+                    log.error('Failed removing non-used file: %s', traceback.format_exc())
 
 
     def removeDir(self, path):

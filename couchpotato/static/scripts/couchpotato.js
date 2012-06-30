@@ -80,7 +80,7 @@ var CouchPotato = new Class({
 			}
 		}),
 		new Element('a', {
-			'text': 'Check for updates',
+			'text': 'Update to latest',
 			'events': {
 				'click': self.checkForUpdate.bind(self, null)
 			}

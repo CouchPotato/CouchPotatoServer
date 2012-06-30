@@ -37,10 +37,9 @@ class Loader(object):
         # Create data dir if needed
         if self.options.data_dir:
             self.data_dir = self.options.data_dir
-        
         else:
             self.data_dir = os.path.expanduser(Env.setting('data_dir'))
-        
+
         if self.data_dir == '':
             self.data_dir = getDataDir()
 

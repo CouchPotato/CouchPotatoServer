@@ -17,10 +17,13 @@ var Movie = new Class({
 		self.parent(self, options);
 
 		App.addEvent('movie.update.'+data.id, self.update.bind(self));
-		App.addEvent('movie.busy.'+data.id, function(notification){
-			if(notification.data)
-				self.busy(true)
-		});
+
+		['movie.busy', 'searcher.started'].each(function(listener){
+			App.addEvent(listener+'.'+data.id, function(notification){
+				if(notification.data)
+					self.busy(true)
+			});
+		})
 	},
 
 	busy: function(set_busy){
