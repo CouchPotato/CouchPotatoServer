@@ -240,7 +240,6 @@ class MoviePlugin(Plugin):
         db = get_session()
 
         for id in getParam('id').split(','):
-            fireEvent('notify.frontend', type = 'movie.busy.%s' % id, data = True)
             movie = db.query(Movie).filter_by(id = id).first()
 
             if movie:
@@ -250,6 +249,7 @@ class MoviePlugin(Plugin):
                 for title in movie.library.titles:
                     if title.default: default_title = title.title
 
+                fireEvent('notify.frontend', type = 'movie.busy.%s' % id, data = True, message = 'Updating "%s"' % default_title)
                 fireEventAsync('library.update', identifier = movie.library.identifier, default_title = default_title, force = True, on_complete = self.createOnComplete(id))
 
 
@@ -342,7 +342,7 @@ class MoviePlugin(Plugin):
             onComplete()
 
         if added:
-            fireEvent('notify.frontend', type = 'movie.added', data = movie_dict)
+            fireEvent('notify.frontend', type = 'movie.added', data = movie_dict, message = 'Successfully added "%s" to your wanted list.' % params.get('title', ''))
 
         #db.close()
         return movie_dict

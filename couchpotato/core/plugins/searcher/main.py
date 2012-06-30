@@ -84,7 +84,7 @@ class Searcher(Plugin):
         if not default_title:
             return
 
-        fireEvent('notify.frontend', type = 'searcher.started.%s' % movie['id'], data = True)
+        fireEvent('notify.frontend', type = 'searcher.started.%s' % movie['id'], data = True, message = 'Searching for "%s"' % default_title)
 
         ret = False
         for quality_type in movie['profile']['types']:

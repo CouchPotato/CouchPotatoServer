@@ -602,3 +602,39 @@ body > .spinner, .mask{
 			.more_menu .wrapper li a:hover {
 				background: rgba(0,0,0,0.05);
 			}
+			
+.messages {
+	position: fixed;
+	right: 0;
+	bottom: 0;
+	padding: 2px;
+	width: 240px;
+	z-index: 2;
+}
+
+	.messages .message {
+		text-align: center;
+		border-radius: 2px;
+		margin: 2px 0 0 0;
+		height: 0;
+		overflow: hidden;
+		position: relative;
+		transition: all .4s cubic-bezier(0.9,0,0.1,1);
+		font-size: 12px;
+		box-shadow: 0 1px 1px rgba(0,0,0,0.35), inset 0 1px 0px rgba(255,255,255,0.20);
+		background-image: linear-gradient(
+		    270deg,
+		    #5b9bd1 0%,
+		    #406db8 100%
+		);
+	}
+		.messages .message.show {
+			height: auto;
+			padding: 3px 5px;
+			min-height: 10px;
+		    max-height: 400px;
+		}
+		.messages .message.hide {
+			right: -240px;
+			opacity: 0;
+		}
