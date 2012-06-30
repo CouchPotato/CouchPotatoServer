@@ -18,7 +18,10 @@ log = CPLog(__name__)
 
 class Core(Plugin):
 
-    ignore_restart = ['Core.restart', 'Core.shutdown', 'Updater.check']
+    ignore_restart = [
+        'Core.restart', 'Core.shutdown',
+        'Updater.check', 'Updater.autoUpdate',
+    ]
     shutdown_started = False
 
     def __init__(self):

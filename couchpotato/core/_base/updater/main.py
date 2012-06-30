@@ -66,6 +66,10 @@ class Updater(Plugin):
 
                 fireEventAsync('app.restart')
 
+                return True
+
+        return False
+
     def check(self):
         if self.isDisabled():
             return
@@ -171,7 +175,6 @@ class GitUpdater(BaseUpdater):
             self.repo.saveStash()
 
             log.info('Updating to latest version')
-            info = self.info()
             self.repo.pull()
 
             # Delete leftover .pyc files
