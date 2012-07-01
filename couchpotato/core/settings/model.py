@@ -28,7 +28,13 @@ class JsonType(TypeDecorator):
     impl = UnicodeText
 
     def process_bind_param(self, value, dialect):
-        return toUnicode(json.dumps(value, cls = SetEncoder))
+        try:
+            return toUnicode(json.dumps(value, cls = SetEncoder))
+        except:
+            try:
+                return toUnicode(json.dumps(value, cls = SetEncoder, encoding = 'latin-1'))
+            except:
+                raise
 
     def process_result_value(self, value, dialect):
         return json.loads(value if value else '{}')

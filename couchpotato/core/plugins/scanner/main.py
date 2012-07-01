@@ -151,6 +151,8 @@ class Scanner(Plugin):
                         files.append(os.path.join(root, filename))
             except:
                 log.error('Failed getting files from %s: %s', (folder, traceback.format_exc()))
+        else:
+            files = [ss(x) for x in files]
 
         db = get_session()
 

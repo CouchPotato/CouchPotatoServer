@@ -258,7 +258,7 @@ class Renamer(Plugin):
 
                     # Mark movie "done" onces it found the quality with the finish check
                     try:
-                        if movie.status_id == active_status.get('id'):
+                        if movie.status_id == active_status.get('id') and movie.profile:
                             for profile_type in movie.profile.types:
                                 if profile_type.quality_id == group['meta_data']['quality']['id'] and profile_type.finish:
                                     movie.status_id = done_status.get('id')
@@ -324,7 +324,8 @@ class Renamer(Plugin):
 
                 log.info('Removing "%s"', src)
                 try:
-                    os.remove(src)
+                    if os.path.isfile(src):
+                        os.remove(src)
                 except:
                     log.error('Failed removing %s: %s', (src, traceback.format_exc()))
                     self.tagDir(group, 'failed_remove')
@@ -440,7 +441,7 @@ class Renamer(Plugin):
         replaced = toUnicode(string)
         for x, r in replacements.iteritems():
             if r is not None:
-                replaced = replaced.replace('<%s>' % toUnicode(x), toUnicode(r))
+                replaced = replaced.replace(u'<%s>' % toUnicode(x), toUnicode(r))
             else:
                 #If information is not available, we don't want the tag in the filename
                 replaced = replaced.replace('<' + x + '>', '')
