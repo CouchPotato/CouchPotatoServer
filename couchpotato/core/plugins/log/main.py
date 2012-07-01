@@ -73,7 +73,7 @@ class Logging(Plugin):
 
         return jsonified({
             'success': True,
-            'log': log,
+            'log': toUnicode(log),
             'total': total,
         })
 

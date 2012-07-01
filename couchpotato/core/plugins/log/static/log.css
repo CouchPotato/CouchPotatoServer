@@ -59,6 +59,7 @@
 		width: 14%;
 		color: lightgrey;
 		padding: 3px 0;
+		font-size: 10px;
 	}
 
 	.page.log .container .time:last-child { display: none; }
