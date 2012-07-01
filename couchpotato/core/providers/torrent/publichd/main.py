@@ -33,92 +33,94 @@ class PublicHD(TorrentProvider):
         if self.isDisabled():
             return results
 
-        movie_name = re.sub("\W", " ", getTitle(movie['library']))
-        movie_name = re.sub("  ", " ", movie_name)
+        movie_name = re.sub("\W", ' ', getTitle(movie['library']))
+        movie_name = re.sub('  ', ' ', movie_name)
         log.info('Cleaned Name: %s', movie_name)
-        cache_key = 'publichd.%s.%s' % (movie['library']['identifier'], quality.get('identifier'))
-        searchUrl = self.urls['search'] \
-            % (quote_plus(movie_name + ' '
-               + quality['identifier']),
-               self.getCatId(quality['identifier'])[0])
+        cache_key = 'publichd.%s.%s' % (movie['library']['identifier'],
+                quality.get('identifier'))
+        searchUrl = self.urls['search'] % (quote_plus(movie_name + ' '
+                + quality['identifier']),
+                self.getCatId(quality['identifier'])[0])
         log.info('searchUrl: %s', searchUrl)
         data = self.getCache(cache_key, searchUrl)
+        if not data:
+            log.error('Failed to get data from %s.', searchUrl)
+            return results
 
-        if data:
+        print data
+        try:
             soup = BeautifulSoup(data)
 
             resultsTable = soup.find('table', attrs={'id': 'bgtorrlist2'
                     })
             entries = resultsTable.findAll('tr')
             for result in entries[2:len(entries) - 1]:
-                try:
+                info_url = result.find(href=re.compile('torrent-details'
+                        ))
+                download = result.find(href=re.compile('\.torrent'))
 
-                    info_url = result.find(href=re.compile('torrent-details'
-                            ))
-                    download = result.find(href=re.compile('\.torrent'))
+                if info_url and download:
+                    new = {
+                        'type': 'torrent',
+                        'check_nzb': False,
+                        'description': '',
+                        'provider': self.getName(),
+                        }
+                    log.info('Name: %s', result.findAll('td')[1].string)
+                    log.info('Seeders: %s', result.findAll('td'
+                             )[4].string)
+                    log.info('Leaches: %s', result.findAll('td'
+                             )[5].string)
+                    log.info('Size: %s', result.findAll('td')[7].string)
 
-                    if info_url and download:
-                        new = {
-                            'type': 'torrent',
-                            'check_nzb': False,
-                            'description': '',
-                            'provider': self.getName(),
-                            }
-                        log.info('Name: %s', result.findAll('td')[1].string)
-                        log.info('Seeds: %s', result.findAll('td'
-                                 )[4].string)
-                        log.info('Leaches: %s', result.findAll('td'
-                                 )[5].string)
-                        log.info('Size: %s', result.findAll('td')[7].string)
+                    url = parse_qs(info_url['href'])
 
-                        url = parse_qs(info_url['href'])
+                    new['name'] = info_url.string
+                    new['id'] = url['id'][0]
+                    new['url'] = self.urls['download'] % download['href'
+                            ]
+                    new['size'] = self.parseSize(result.findAll('td'
+                            )[7].string)
+                    new['seeders'] = int(result.findAll('td')[4].string)
+                    new['Leechers'] = int(result.findAll('td'
+                            )[5].string)
+                    new['imdbid'] = movie['library']['identifier']
 
-                        new['name'] = info_url.string
-                        new['id'] = url['id'][0]
-                        new['url'] = self.urls['download'] % download['href'
-                                ]
-                        new['size'] = self.parseSize(result.findAll('td'
-                                )[7].string)
-                        new['seeders'] = int(result.findAll('td')[4].string)
-                        new['leechers'] = int(result.findAll('td'
-                                )[5].string)
-                        new['imdbid'] = movie['library']['identifier']
+                    new['extra_score'] = self.extra_score
+                    new['score'] = fireEvent('score.calculate', new,
+                            movie, single=True)
+                    is_correct_movie = fireEvent(
+                        'searcher.correct_movie',
+                        nzb=new,
+                        movie=movie,
+                        quality=quality,
+                        imdb_results=True,
+                        single_category=False,
+                        single=True,
+                        )
 
-                        new['extra_score'] = self.extra_score
-                        new['score'] = fireEvent('score.calculate', new,
-                                movie, single=True)
-                        is_correct_movie = fireEvent(
-                            'searcher.correct_movie',
-                            nzb=new,
-                            movie=movie,
-                            quality=quality,
-                            imdb_results=True,
-                            single_category=False,
-                            single=True,
-                            )
-
-                        if is_correct_movie:
-                            new['download'] = self.download
-                            results.append(new)
-                            self.found(new)
-                except Exception, e:
-                    log.debug(e)
-                    log.info("Eroro occured during parsing! Passing only processed entries")
-                    return results
+                    if is_correct_movie:
+                        new['download'] = self.download
+                        results.append(new)
+                        self.found(new)
 
             return results
+        except Exception, e:
+            log.debug(e)
+            log.info('Error occured during parsing! Passing only processed entries'
+                     )
+            return results
 
-
-    def extra_score(self, req):
-        url = self.urls['detail'] % req['id']
+    def extra_score(self, torrent):
+        url = self.urls['detail'] % torrent['id']
         log.info('extra_score: %s', url)
-        imdbId = req['imdbid']
+        imdbId = torrent['imdbid']
         return self.imdbMatch(url, imdbId)
 
     def imdbMatch(self, url, imdbId):
         log.info('imdbMatch: %s', url)
         try:
-            data = self.getCache(url, url)
+            data = urllib2.urlopen(url).read()
             pass
         except IOError:
             log.error('Failed to open %s.' % url)
@@ -128,7 +130,7 @@ class PublicHD(TorrentProvider):
         data = unicode(data, errors='ignore')
         if 'imdb.com/title/' + imdbId in data or 'imdb.com/title/' \
             + imdbIdAlt in data:
-            return 500
+            return 50
         return 0
 
     def download(self, url='', nzb_id=''):
