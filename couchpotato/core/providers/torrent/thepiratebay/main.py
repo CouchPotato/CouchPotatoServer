@@ -14,8 +14,6 @@ log = CPLog(__name__)
 
 class ThePirateBay(TorrentProvider):
 
-    urls = {'detail': '%s/torrent/%s', 'search': '%s/search/%s/0/7/%d'}
-
     cat_ids = [([207], ['720p', '1080p']), ([201], [
         'cam',
         'ts',
@@ -25,10 +23,15 @@ class ThePirateBay(TorrentProvider):
         'scr',
         'brrip',
         ]), ([202], ['dvdr'])]
+
     cat_backup_id = 200
 
-    def getAPIurl(self):
-        return ("http://thepiratebay.se", self.conf('domain_for_tpb'))[self.conf('domain_for_tpb') != None]
+    def __init__(self):
+        super(ThePirateBay, self).__init__()
+        self.urls = {"test": self.getAPIurl(), 'detail': '%s/torrent/%s', 'search': '%s/search/%s/0/7/%d'}
+
+    def getAPIurl(self, url=""):
+        return (("http://thepiratebay.se", self.conf('domain_for_tpb'))[self.conf('domain_for_tpb') != None]) + url
 
     def search(self, movie, quality):
 
@@ -38,8 +41,10 @@ class ThePirateBay(TorrentProvider):
 
         movie_name = re.sub("\W", ' ', getTitle(movie['library']))
         movie_name = re.sub('  ', ' ', movie_name)
+
         log.info('API url: %s', self.getAPIurl())
         log.info('Cleaned Name: %s', movie_name)
+
         cache_key = 'thepiratebay.%s.%s' % (movie['library'
                 ]['identifier'], quality.get('identifier'))
         searchUrl = self.urls['search'] % (self.getAPIurl(),
@@ -64,19 +69,20 @@ class ThePirateBay(TorrentProvider):
                 size = re.search('Size (?P<size>.+),', unicode(result.select("font.detDesc")[0])).group("size")
                 if link and download:
                     new = {
-                        'type': 'torrent',
+                        'type': 'magnet',
                         'check_nzb': False,
                         'description': '',
                         'provider': self.getName(),
                         }
+
                     trusted = (0, 10)[result.find('img',
                             alt=re.compile('Trusted')) != None]
                     vip = (0, 20)[result.find('img',
                                   alt=re.compile('VIP')) != None]
                     moderated = (0, 50)[result.find('img',
                             alt=re.compile('Moderator')) != None]
-                    log.info('Name: %s', link.string)
 
+                    log.info('Name: %s', link.string)
                     log.info('Seeders: %s', result.findAll('td'
                              )[2].string)
                     log.info('Leechers: %s', result.findAll('td'
@@ -88,24 +94,26 @@ class ThePirateBay(TorrentProvider):
                     new['name'] = link.string
                     new['id'] = re.search('/(?P<id>\d+)/', link['href'
                             ]).group('id')
-                    new['url'] = link['href']
-                    new['download'] = self.getAPIurl() + download['href']
+                    new['url'] = self.getAPIurl(link['href'])
+                    new['magnet'] = unicode(download['href'])  # forcing of storing full magnet data
                     new['size'] = self.parseSize(size)
                     new['seeders'] = int(result.findAll('td')[2].string)
                     new['leechers'] = int(result.findAll('td'
                             )[3].string)
-                    new['imdbid'] = movie['library']['identifier']
-                    new['prtbscore'] = trusted + vip + moderated
 
+                    new['TPB_score'] = trusted + vip + moderated
                     new['extra_score'] = self.extra_score
                     new['score'] = fireEvent('score.calculate', new,
                             movie, single=True)
+
+                    isImdb = self.imdbMatch(self.getAPIurl(link['href']), movie['library']['identifier'])
+
                     is_correct_movie = fireEvent(
                         'searcher.correct_movie',
                         nzb=new,
                         movie=movie,
                         quality=quality,
-                        imdb_results=True,
+                        imdb_results=isImdb,
                         single_category=False,
                         single=True,
                         )
@@ -122,10 +130,7 @@ class ThePirateBay(TorrentProvider):
             return results
 
     def extra_score(self, torrent):
-        url = self.getAPIurl() + torrent['url']
-        log.info('extra_score: %s', url)
-        imdbId = torrent['imdbid']
-        return self.imdbMatch(url, imdbId) + torrent['prtbscore']
+        return torrent["TPB_score"]
 
     def imdbMatch(self, url, imdbId):
         log.info('imdbMatch: %s', url)
@@ -134,10 +139,13 @@ class ThePirateBay(TorrentProvider):
             pass
         except:
             log.error('Failed to open %s.' % url)
-            return 0
+            return False
         imdbIdAlt = re.sub('tt[0]*', 'tt', imdbId)
         data = unicode(data, errors='ignore')
         if 'imdb.com/title/' + imdbId in data or 'imdb.com/title/' \
             + imdbIdAlt in data:
-            return 50
-        return 0
+            return True
+        return False
+
+    def download(self, url='', nzb_id=''):
+        return url

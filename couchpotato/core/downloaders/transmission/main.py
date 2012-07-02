@@ -167,7 +167,6 @@ class Transmission(Downloader):
                 remote_torrent = tc.add_torrent_file(b64encode(filedata), arguments=params)
 
             # Change settings of added torrents
-            print remote_torrent
             tc.set_torrent(remote_torrent['torrent-added']['hashString'
                            ], torrent_params)
             return True
