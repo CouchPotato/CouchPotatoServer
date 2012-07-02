@@ -82,7 +82,7 @@ class PublicHD(TorrentProvider):
                     new['size'] = self.parseSize(result.findAll('td'
                             )[7].string)
                     new['seeders'] = int(result.findAll('td')[4].string)
-                    new['Leechers'] = int(result.findAll('td'
+                    new['leechers'] = int(result.findAll('td'
                             )[5].string)
                     new['imdbid'] = movie['library']['identifier']
 
