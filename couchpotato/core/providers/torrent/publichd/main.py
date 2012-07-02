@@ -47,7 +47,6 @@ class PublicHD(TorrentProvider):
             log.error('Failed to get data from %s.', searchUrl)
             return results
 
-        print data
         try:
             soup = BeautifulSoup(data)
 
