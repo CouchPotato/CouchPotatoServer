@@ -21,6 +21,7 @@ class IMDBAPI(MovieProvider):
 
     def __init__(self):
         addEvent('movie.search', self.search)
+        addEvent('movie.searchimdb', self.search)
         addEvent('movie.info', self.getInfo)
 
     def search(self, q, limit = 12):
