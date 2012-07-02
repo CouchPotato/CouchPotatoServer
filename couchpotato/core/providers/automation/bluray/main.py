@@ -3,9 +3,7 @@ from couchpotato.core.helpers.variable import md5
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.automation.base import Automation
 from couchpotato.environment import Env
-import traceback
 import xml.etree.ElementTree as XMLTree
-import json
 
 log = CPLog(__name__)
 
@@ -16,10 +14,10 @@ class Bluray(Automation, RSS):
     rss_url = 'http://www.blu-ray.com/rss/newreleasesfeed.xml'
 
     def getIMDBids(self):
-        
+
         if self.isDisabled():
             return
-        
+
         movies = []
         RSSMovie = {'name': 'placeholder', 'year' : 'placeholder'}
         RSSMovies = []
@@ -30,11 +28,11 @@ class Bluray(Automation, RSS):
 
         if data:
             rss_movies = self.getElements(data, 'channel/item')
-            
+
             for movie in rss_movies:
                 RSSMovie['name'] = self.getTextElement(movie, "title").lower().split("blu-ray")[0].strip("(").rstrip()
                 RSSMovie['year'] = self.getTextElement(movie, "description").split("|")[1].strip("(").strip()
-                
+
                 if not RSSMovie['name'].find("/") == -1: # make sure it is not a double movie release
                     continue
 
@@ -52,11 +50,11 @@ class Bluray(Automation, RSS):
                 log.info('No movies found.')
                 return
 
-            log.info("Applying IMDB filter to found movies...")
+            log.debug("Applying IMDB filter to found movies...")
 
             for RSSMovie in RSSMovies:
                 imdb = self.getIMDBFromTitle(RSSMovie['name'] + ' ' + RSSMovie['year'])
-                
+
                 if imdb:
                     if self.isMinimalMovie(imdb):
                         movies.append(imdb['imdb'])

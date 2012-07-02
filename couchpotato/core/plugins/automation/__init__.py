@@ -25,7 +25,7 @@ config = [{
                 },
                 {
                     'name': 'rating',
-                    'default': 6.0,
+                    'default': 7.0,
                     'type': 'float',
                 },
                 {

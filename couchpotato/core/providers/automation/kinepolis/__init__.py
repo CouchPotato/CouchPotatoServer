@@ -10,7 +10,7 @@ config = [{
             'tab': 'automation',
             'name': 'kinepolis_automation',
             'label': 'Kinepolis',
-            'description': 'imports movies from the current top 10 of kinepolis',
+            'description': 'Imports movies from the current top 10 of kinepolis. (uses minimal requirements)',
             'options': [
                 {
                     'name': 'automation_enabled',

@@ -2,7 +2,6 @@ from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
-from couchpotato.core.helpers.encoding import simplifyString
 import time
 
 log = CPLog(__name__)
@@ -36,14 +35,9 @@ class Automation(Plugin):
         else:
             return None
 
-    def isMinimal(self, identifier):
-        movie = fireEvent('movie.info', identifier = identifier, merge = True)
-        return self.isMinimalMovie(movie)
-
     def isMinimalMovie(self, movie):
-        if movie['rating']:
-            rating = movie['rating']['imdb'][0]
-            movie['votes'] =  movie['rating']['imdb'][1]
+        if movie['rating'] and movie['rating'].get('imdb'):
+            movie['votes'] = movie['rating']['imdb'][1]
             movie['rating'] = movie['rating']['imdb'][0]
         identifier = movie['imdb']
         for minimal_type in ['year', 'rating', 'votes']:
@@ -55,19 +49,13 @@ class Automation(Plugin):
 
         return True
 
-    def getIMDBFromTitle(self, title):
-        cache_key = u'%s/%s' % (__name__, simplifyString(title))
-        movies = Env.get('cache').get(cache_key)
+    def getIMDBFromTitle(self, name, year = None):
+        result = fireEvent('movie.search', q = '%s %s' % (name, year), limit = 1, merge = True)
 
-        if not movies:
-            movies = fireEvent('movie.searchimdb', q = title, merge = True)
-            Env.get('cache').set(cache_key, movies)
-        
-        try:
-            return movies[0]
-        
-        except:
-            log.info("No results for " + title)
+        if len(result) > 0:
+            return result[0]
+        else:
+            return None
 
     def getMinimal(self, min_type):
         return Env.setting(min_type, 'automation')
