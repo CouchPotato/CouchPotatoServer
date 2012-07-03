@@ -5,6 +5,7 @@ from base64 import b64encode
 from couchpotato.core.downloaders.base import Downloader
 from couchpotato.core.helpers.encoding import isInt
 from couchpotato.core.logger import CPLog
+
 import urllib2
 import httplib
 import json
