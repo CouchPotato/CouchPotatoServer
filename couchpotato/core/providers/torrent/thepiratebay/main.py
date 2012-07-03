@@ -106,7 +106,7 @@ class ThePirateBay(TorrentProvider):
                             )[2].string)
                     new['leechers'] = int(result.find_all('td'
                             )[3].string)
-                    new['extra_score'] = lambda : trusted + vip \
+                    new['extra_score'] = lambda (x): trusted + vip \
                         + moderated
                     new['score'] = fireEvent('score.calculate', new,
                             movie, single=True)
