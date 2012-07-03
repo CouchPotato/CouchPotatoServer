@@ -44,8 +44,8 @@ class ThePirateBay(TorrentProvider):
         cache_key = 'thepiratebay.%s.%s' % (movie['library'
                 ]['identifier'], quality.get('identifier'))
         search_url = self.urls['search'] % (self.getapiurl(),
-                self.for_search(getTitle(movie['library'])
-                + ' ' + quality['identifier']),
+                self.for_search(getTitle(movie['library']) + ' '
+                + quality['identifier']),
                 self.getCatId(quality['identifier'])[0])
         self.log.info('searchUrl: %s', search_url)
         data = self.getCache(cache_key, search_url)
@@ -82,6 +82,8 @@ class ThePirateBay(TorrentProvider):
                             alt=re.compile('Trusted')) != None]
                     vip = (0, 20)[result.find('img',
                                   alt=re.compile('VIP')) != None]
+                    confirmed = (0, 30)[result.find('img',
+                            alt=re.compile('Helpers')) != None]
                     moderated = (0, 50)[result.find('img',
                             alt=re.compile('Moderator')) != None]
                     is_imdb = self.imdb_match(self.getapiurl(link['href'
@@ -94,7 +96,8 @@ class ThePirateBay(TorrentProvider):
                                   )[3].string)
                     self.log.info('Size: %s', size)
                     self.log.info('Score(trusted + vip + moderated): %d'
-                                  , trusted + vip + moderated)
+                                  , confirmed + trusted + vip
+                                  + moderated)
 
                     new['name'] = link.string
                     new['id'] = re.search('/(?P<id>\d+)/', link['href'
@@ -106,8 +109,8 @@ class ThePirateBay(TorrentProvider):
                             )[2].string)
                     new['leechers'] = int(result.find_all('td'
                             )[3].string)
-                    new['extra_score'] = lambda (x): trusted + vip \
-                        + moderated
+                    new['extra_score'] = lambda x: confirmed + trusted \
+                        + vip + moderated
                     new['score'] = fireEvent('score.calculate', new,
                             movie, single=True)
 
