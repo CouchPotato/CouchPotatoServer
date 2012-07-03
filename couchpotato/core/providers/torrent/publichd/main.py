@@ -6,15 +6,14 @@ from couchpotato.core.event import fireEvent
 from couchpotato.core.helpers.variable import getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.torrent.base import TorrentProvider
-import re
 from urlparse import parse_qs
-from urllib import quote_plus
-import urllib2
-log = CPLog(__name__)
+
+import re
 
 
 class PublicHD(TorrentProvider):
 
+    log = CPLog(__name__)
     urls = {
         'test': 'http://publichd.eu',
         'download': 'http://publichd.eu/%s',
@@ -22,37 +21,35 @@ class PublicHD(TorrentProvider):
         'search': 'http://publichd.eu/index.php?page=torrents&search=%s&active=1&category=%d',
         }
 
-    cat_ids = [([2], ['720p']), ([5], ['1080p']), ([15], ['bdrip']),
-               ([16], ['brrip']), ([16], ['blue-ray'])]
+    cat_ids = [([2], ['720p']), ([5], ['1080p']), ([16], ['brrip']),
+               ([16], ['bd50'])]
 
     cat_backup_id = 0
 
     def search(self, movie, quality):
 
         results = []
-        if self.isDisabled():
+        if self.isDisabled() and quality['hd'] != True:
             return results
 
-        movie_name = re.sub("\W", ' ', getTitle(movie['library']))
-        movie_name = re.sub('  ', ' ', movie_name)
-        log.info('Cleaned Name: %s', movie_name)
         cache_key = 'publichd.%s.%s' % (movie['library']['identifier'],
                 quality.get('identifier'))
-        searchUrl = self.urls['search'] % (quote_plus(movie_name + ' '
-                + quality['identifier']),
-                self.getCatId(quality['identifier'])[0])
-        log.info('searchUrl: %s', searchUrl)
-        data = self.getCache(cache_key, searchUrl)
+        search_url = self.urls['search'] \
+            % (self.for_search(getTitle(movie['library'])
+               + ' ' + quality['identifier']),
+               self.getCatId(quality['identifier'])[0])
+        self.log.info('searchUrl: %s', search_url)
+        data = self.getCache(cache_key, search_url)
         if not data:
-            log.error('Failed to get data from %s.', searchUrl)
+            self.log.error('Failed to get data from %s.', search_url)
             return results
 
         try:
             soup = BeautifulSoup(data)
 
-            resultsTable = soup.find('table', attrs={'id': 'bgtorrlist2'
-                    })
-            entries = resultsTable.findAll('tr')
+            results_table = soup.find('table',
+                    attrs={'id': 'bgtorrlist2'})
+            entries = results_table.find_all('tr')
             for result in entries[2:len(entries) - 1]:
                 info_url = result.find(href=re.compile('torrent-details'
                         ))
@@ -65,12 +62,14 @@ class PublicHD(TorrentProvider):
                         'description': '',
                         'provider': self.getName(),
                         }
-                    log.info('Name: %s', result.findAll('td')[1].string)
-                    log.info('Seeders: %s', result.findAll('td'
-                             )[4].string)
-                    log.info('Leaches: %s', result.findAll('td'
-                             )[5].string)
-                    log.info('Size: %s', result.findAll('td')[7].string)
+                    self.log.debug('Name: %s', result.find_all('td'
+                                   )[1].string)
+                    self.log.debug('Seeders: %s', result.find_all('td'
+                                   )[4].string)
+                    self.log.debug('Leaches: %s', result.find_all('td'
+                                   )[5].string)
+                    self.log.debug('Size: %s', result.find_all('td'
+                                   )[7].string)
 
                     url = parse_qs(info_url['href'])
 
@@ -78,22 +77,23 @@ class PublicHD(TorrentProvider):
                     new['id'] = url['id'][0]
                     new['url'] = self.urls['download'] % download['href'
                             ]
-                    new['size'] = self.parseSize(result.findAll('td'
+                    new['size'] = self.parseSize(result.find_all('td'
                             )[7].string)
-                    new['seeders'] = int(result.findAll('td')[4].string)
-                    new['leechers'] = int(result.findAll('td'
+                    new['seeders'] = int(result.find_all('td'
+                            )[4].string)
+                    new['leechers'] = int(result.find_all('td'
                             )[5].string)
-                    new['imdbid'] = movie['library']['identifier']
 
-                    new['extra_score'] = self.extra_score
                     new['score'] = fireEvent('score.calculate', new,
                             movie, single=True)
+                    is_imdb = self.imdb_match(self.urls['detail']
+                            % new['id'], movie['library']['identifier'])
                     is_correct_movie = fireEvent(
                         'searcher.correct_movie',
                         nzb=new,
                         movie=movie,
                         quality=quality,
-                        imdb_results=True,
+                        imdb_results=is_imdb,
                         single_category=False,
                         single=True,
                         )
@@ -104,35 +104,13 @@ class PublicHD(TorrentProvider):
                         self.found(new)
 
             return results
-        except Exception, e:
-            log.debug(e)
-            log.info('Error occured during parsing! Passing only processed entries'
-                     )
+        except Exception, err:
+            self.log.debug(err)
+            self.log.info('Error occured during parsing! Passing only processed entries'
+                          )
             return results
 
-    def extra_score(self, torrent):
-        url = self.urls['detail'] % torrent['id']
-        log.info('extra_score: %s', url)
-        imdbId = torrent['imdbid']
-        return self.imdbMatch(url, imdbId)
-
-    def imdbMatch(self, url, imdbId):
-        log.info('imdbMatch: %s', url)
-        try:
-            data = urllib2.urlopen(url).read()
-            pass
-        except IOError:
-            log.error('Failed to open %s.' % url)
-            return ''
-
-        imdbIdAlt = re.sub('tt[0]*', 'tt', imdbId)
-        data = unicode(data, errors='ignore')
-        if 'imdb.com/title/' + imdbId in data or 'imdb.com/title/' \
-            + imdbIdAlt in data:
-            return 50
-        return 0
-
     def download(self, url='', nzb_id=''):
-        log.info('Downloading: %s', url)
+        self.log.info('Downloading: %s', url)
         torrent = self.urlopen(url)
         return torrent
