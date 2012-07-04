@@ -101,7 +101,7 @@ def getImdb(txt, check_inside = True):
 
 def tryInt(s):
     try: return int(s)
-    except: return s
+    except: return 0
 
 def tryFloat(s):
     try: return float(s) if '.' in s else tryInt(s)
