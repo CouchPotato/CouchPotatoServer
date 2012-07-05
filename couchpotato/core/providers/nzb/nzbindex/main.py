@@ -10,6 +10,7 @@ from couchpotato.environment import Env
 from dateutil.parser import parse
 import re
 import time
+import traceback
 import xml.etree.ElementTree as XMLTree
 
 log = CPLog(__name__)
@@ -100,8 +101,8 @@ class NzbIndex(NZBProvider, RSS):
                         self.found(new)
 
                 return results
-            except SyntaxError:
-                log.error('Failed to parse XML response from NZBMatrix.com')
+            except:
+                log.error('Failed to parsing %s: %s', (self.getName(), traceback.format_exc()))
 
         return results
 

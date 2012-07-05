@@ -1,18 +1,11 @@
 from bs4 import BeautifulSoup
 from couchpotato.core.event import fireEvent
-from couchpotato.core.helpers.variable import tryInt, getTitle
+from couchpotato.core.helpers.encoding import tryUrlencode
+from couchpotato.core.helpers.variable import getTitle, tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.torrent.base import TorrentProvider
-import StringIO
-import gzip
-import re
-import traceback
-import urllib
-import urllib2
-import cookielib
 from urllib import quote_plus
-from urllib2 import URLError
-import sys
+import traceback
 
 
 log = CPLog(__name__)
@@ -39,10 +32,6 @@ class TorrentLeech(TorrentProvider):
     ]
 
     http_time_between_calls = 1 #seconds
-    
-    def getLoginParams(self):
-        loginParams = urllib.urlencode(dict(username=''+self.conf('username'), password=''+self.conf('password'), remember_me='on', login='submit'))
-        return loginParams
 
     def search(self, movie, quality):
 
@@ -50,71 +39,60 @@ class TorrentLeech(TorrentProvider):
         if self.isDisabled():
             return results
 
-        cache_key = 'torrentleech.%s.%s' % (movie['library']['identifier'], quality.get('identifier'))
-        searchUrl =  self.urls['search'] % (quote_plus(getTitle(movie['library']).replace(':','') + ' ' + quality['identifier']), self.getCatId(quality['identifier'])[0])
-        loginParams = self.getLoginParams()
-      
-        opener = self.login(params = loginParams)
-        if not opener:
-            log.info("Couldn't login at Torrentleech")
+        # Cookie login
+        if not self.login_opener and not self.login():
             return results
 
-        data = self.getCache(cache_key, searchUrl, opener = opener)
+        cache_key = 'torrentleech.%s.%s' % (movie['library']['identifier'], quality.get('identifier'))
+        url = self.urls['search'] % (quote_plus(getTitle(movie['library']).replace(':', '') + ' ' + quality['identifier']), self.getCatId(quality['identifier'])[0])
+        data = self.getCache(cache_key, url, opener = self.login_opener)
 
         if data:
             html = BeautifulSoup(data)
-        
-        else:
-            log.info("No results found at Torrentleech")
 
-        try:
-            resultsTable = html.find('table', attrs = {'id' : 'torrenttable'})            
-            entries = resultsTable.findAll('tr')
-            for result in entries[1:]:
-                new = {
-                    'type': 'torrent',
-                    'check_nzb': False,
-                    'description': '',
-                    'provider': self.getName(),
-                }
-                
-                link = result.find('td', attrs = {'class' : 'name'}).find('a')
-                new['name'] = link.string
-                new['id'] = link['href'].replace('/torrent/', '')
-                url = result.find('td', attrs = {'class' : 'quickdownload'}).find('a')
-                new['url'] = self.urls['download'] % url['href']
-                new['size'] = self.parseSize(result.findAll('td')[4].string)
-                new['seeders'] = int(result.find('td', attrs = {'class' : 'seeders'}).string)
-                new['leechers'] = int(result.find('td', attrs = {'class' : 'leechers'}).string)   
-                
-                details = self.urls['detail'] % new['id']
-                imdb_results = self.imdbMatch(details, movie['library']['identifier'])
-                
-                new['score'] = fireEvent('score.calculate', new, movie, single = True)
-                is_correct_movie = fireEvent('searcher.correct_movie', nzb = new, movie = movie, quality = quality,
-                                                imdb_results = imdb_results, single_category = False, single = True)
+            try:
+                result_table = html.find('table', attrs = {'id' : 'torrenttable'})
+                entries = result_table.find_all('tr')
 
-                if is_correct_movie:
-                    new['download'] = self.download
-                    results.append(new)
-                    self.found(new)
-            return results
-        
-        except: 
-            log.info("No results found at TorrentLeech")
-            return []
+                for result in entries[1:]:
 
+                    link = result.find('td', attrs = {'class' : 'name'}).find('a')
+                    url = result.find('td', attrs = {'class' : 'quickdownload'}).find('a')
 
-    def imdbMatch(self, url, imdbId):
-        try:
-            data = urllib2.urlopen(url).read()
-            pass
-        except IOError:
-            log.error('Failed to open %s.' % url)
-            return False
+                    new = {
+                        'id': link['href'].replace('/torrent/', ''),
+                        'name': link.string,
+                        'type': 'torrent',
+                        'check_nzb': False,
+                        'description': '',
+                        'provider': self.getName(),
+                        'url': self.urls['download'] % url['href'],
+                        'download': self.download,
+                        'size': self.parseSize(result.find_all('td')[4].string),
+                        'seeders': tryInt(result.find('td', attrs = {'class' : 'seeders'}).string),
+                        'leechers': tryInt(result.find('td', attrs = {'class' : 'leechers'}).string),
+                    }
 
-        imdbIdAlt = re.sub('tt[0]*', 'tt', imdbId)
-        data = unicode(data, errors='ignore')
-        if 'imdb.com/title/' + imdbId in data or 'imdb.com/title/' + imdbIdAlt in data:
-            return True
-        return False
+                    imdb_results = self.imdbMatch(self.urls['detail'] % new['id'], movie['library']['identifier'])
+
+                    new['score'] = fireEvent('score.calculate', new, movie, single = True)
+                    is_correct_movie = fireEvent('searcher.correct_movie', nzb = new, movie = movie, quality = quality,
+                                                    imdb_results = imdb_results, single_category = False, single = True)
+
+                    if is_correct_movie:
+                        results.append(new)
+                        self.found(new)
+
+                return results
+            except:
+                log.error('Failed to parsing %s: %s', (self.getName(), traceback.format_exc()))
+
+        return []
+
+    def getLoginParams(self):
+        return tryUrlencode({
+            'username': self.conf('username'),
+            'password': self.conf('password'),
+            'remember_me': 'on',
+            'login': 'submit',
+        })
