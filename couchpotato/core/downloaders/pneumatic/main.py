@@ -18,7 +18,7 @@ class Pneumatic(Downloader):
 
         directory = self.conf('directory')
         if not directory or not os.path.isdir(directory):
-            log.error('No directory set for .strm downloads.', data.get('type'))
+            log.error('No directory set for .strm downloads.')
         else:
             try:
                 if not filedata or len(filedata) < 50:
@@ -48,7 +48,7 @@ class Pneumatic(Downloader):
                         return True
 
                 except:
-                    log.error('Failed to download .strm', traceback.format_exc())
+                    log.error('Failed to download .strm: %s', traceback.format_exc())
                     pass
 
             except:
