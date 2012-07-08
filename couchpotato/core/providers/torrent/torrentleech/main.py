@@ -67,7 +67,7 @@ class TorrentLeech(TorrentProvider):
                         'description': '',
                         'provider': self.getName(),
                         'url': self.urls['download'] % url['href'],
-                        'download': self.download,
+                        'download': self.loginDownload,
                         'size': self.parseSize(result.find_all('td')[4].string),
                         'seeders': tryInt(result.find('td', attrs = {'class' : 'seeders'}).string),
                         'leechers': tryInt(result.find('td', attrs = {'class' : 'leechers'}).string),

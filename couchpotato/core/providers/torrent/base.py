@@ -1,4 +1,4 @@
-from couchpotato.core.helpers.variable import getImdb
+from couchpotato.core.helpers.variable import getImdb, md5
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.base import YarrProvider
 import cookielib
@@ -19,7 +19,8 @@ class TorrentProvider(YarrProvider):
 
         if url[:4] == 'http':
             try:
-                data = self.urlopen(url)
+                cache_key = md5(url)
+                data = self.getCache(cache_key, url)
             except IOError:
                 log.error('Failed to open %s.', url)
                 return False
@@ -34,7 +35,7 @@ class TorrentProvider(YarrProvider):
             cookiejar = cookielib.CookieJar()
             opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookiejar))
             urllib2.install_opener(opener)
-            f = opener.open(self.urls['login'], self.getLoginParam())
+            f = opener.open(self.urls['login'], self.getLoginParams())
             f.read()
             f.close()
             self.login_opener = opener
@@ -44,12 +45,13 @@ class TorrentProvider(YarrProvider):
 
         return False
 
-    def download(self, url = '', nzb_id = ''):
-
+    def loginDownload(self, url = '', nzb_id = ''):
         try:
             if not self.login_opener and not self.login():
                 log.error('Failed downloading from %s', self.getName())
-
             return self.urlopen(url, opener = self.login_opener)
         except:
             log.error('Failed downloading from %s: %s', (self.getName(), traceback.format_exc()))
+
+    def getLoginParams(self):
+        return ''

@@ -1,7 +1,6 @@
 from couchpotato.core.event import fireEvent
 from couchpotato.core.helpers.encoding import simplifyString
 from couchpotato.core.helpers.variable import tryInt
-from couchpotato.core.plugins.scanner.main import Scanner
 from couchpotato.environment import Env
 import re
 

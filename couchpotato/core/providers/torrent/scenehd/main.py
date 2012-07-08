@@ -5,7 +5,6 @@ from couchpotato.core.helpers.variable import getTitle, tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.torrent.base import TorrentProvider
 import traceback
-import urllib
 
 log = CPLog(__name__)
 
@@ -72,7 +71,7 @@ class SceneHD(TorrentProvider):
                         'seeders': tryInt(all_cells[10].find('a').string),
                         'leechers': tryInt(leechers),
                         'url': self.urls['download'] % id,
-                        'download': self.download,
+                        'download': self.loginDownload,
                     }
 
                     imdb_link = all_cells[1].find('a')

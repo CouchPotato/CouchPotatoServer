@@ -1,12 +1,11 @@
 from bs4 import BeautifulSoup
 from couchpotato.core.event import fireEvent
-from couchpotato.core.helpers.encoding import simplifyString, tryUrlencode
+from couchpotato.core.helpers.encoding import simplifyString, tryUrlencode, \
+    toUnicode
 from couchpotato.core.helpers.variable import getTitle, tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.torrent.base import TorrentProvider
-from urllib import quote_plus
 import traceback
-import urllib
 
 log = CPLog(__name__)
 
@@ -35,15 +34,16 @@ class SceneAccess(TorrentProvider):
         if self.isDisabled():
             return results
 
+        url = self.urls['search'] % (
+           self.getCatId(quality['identifier'])[0],
+           self.getCatId(quality['identifier'])[0]
+        )
+
         q = '"%s %s" %s' % (simplifyString(getTitle(movie['library'])), movie['library']['year'], quality.get('identifier'))
         arguments = tryUrlencode({
             'search': q,
         })
-        url = "%s&%s" % (self.urls['search'], arguments)
-        url = url % (
-           self.getCatId(quality['identifier'])[0],
-           self.getCatId(quality['identifier'])[0]
-        )
+        url = "%s&%s" % (url, arguments)
 
         # Do login for the cookies
         if not self.login_opener and not self.login():
@@ -63,26 +63,27 @@ class SceneAccess(TorrentProvider):
                     link = result.find('td', attrs = {'class' : 'ttr_name'}).find('a')
                     url = result.find('td', attrs = {'class' : 'td_dl'}).find('a')
                     leechers = result.find('td', attrs = {'class' : 'ttr_leechers'}).find('a')
+                    id = link['href'].replace('details?id=', '')
 
                     new = {
-                        'id': link['href'].replace('details?id=', ''),
+                        'id': id,
                         'type': 'torrent',
                         'check_nzb': False,
                         'description': '',
                         'provider': self.getName(),
                         'name': link['title'],
                         'url': self.urls['download'] % url['href'],
+                        'detail_url': self.urls['detail'] % id,
                         'size': self.parseSize(result.find('td', attrs = {'class' : 'ttr_size'}).contents[0]),
                         'seeders': tryInt(result.find('td', attrs = {'class' : 'ttr_seeders'}).find('a').string),
                         'leechers': tryInt(leechers.string) if leechers else 0,
-                        'download': self.download,
+                        'download': self.loginDownload,
+                        'get_more_info': self.getMoreInfo,
                     }
-
-                    imdb_results = self.imdbMatch(self.urls['detail'] % new['id'], movie['library']['identifier'])
 
                     new['score'] = fireEvent('score.calculate', new, movie, single = True)
                     is_correct_movie = fireEvent('searcher.correct_movie', nzb = new, movie = movie, quality = quality,
-                                                     imdb_results = imdb_results, single_category = False, single = True)
+                                                     imdb_results = False, single_category = False, single = True)
 
                     if is_correct_movie:
                         results.append(new)
@@ -94,9 +95,18 @@ class SceneAccess(TorrentProvider):
 
         return []
 
-    def getLoginParams(self, params):
+    def getLoginParams(self):
         return tryUrlencode({
             'username': self.conf('username'),
             'password': self.conf('password'),
             'submit': 'come on in',
         })
+
+    def getMoreInfo(self, item):
+        full_description = self.getCache('sceneaccess.%s' % item['id'], item['detail_url'], cache_timeout = 25920000)
+        html = BeautifulSoup(full_description)
+        nfo_pre = html.find('div', attrs = {'id':'details_table'})
+        description = toUnicode(nfo_pre.text) if nfo_pre else ''
+
+        item['description'] = description
+        return item

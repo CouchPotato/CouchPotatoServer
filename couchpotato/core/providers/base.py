@@ -65,8 +65,11 @@ class YarrProvider(Provider):
     def search(self, movie, quality):
         return []
 
-    def belongsTo(self, url, host = None):
+    def belongsTo(self, url, provider = None, host = None):
         try:
+            if provider and provider == self.getName():
+                return self
+
             hostname = urlparse(url).hostname
             if host and hostname in host:
                 return self
@@ -107,25 +110,6 @@ class YarrProvider(Provider):
                 return ids
 
         return [self.cat_backup_id]
-
-    def imdb_match(self, url, imdb_id):
-        """ Searches for imdb_id in url of webpage """
-        log.info('Finding if imbd_id(%s) is found in url: %s' % (imdb_id, url))
-        try:
-            data = self.urlopen(url)
-        except:
-            log.error('Failed to open %s.' % url)
-            return False
-        imdb_id_alt = re.sub('tt[0]*', 'tt', imdb_id)
-        data = unicode(data, errors='ignore')
-        if 'imdb.com/title/' + imdb_id in data or 'imdb.com/title/' \
-            + imdb_id_alt in data:
-            return True
-        return False
-
-    def for_search(self, string):
-        """ Prepare string for search, removing all characters that might confuse search engine"""
-        return quote_plus(simplifyString(string))
 
     def found(self, new):
         log.info('Found: score(%(score)s) on %(provider)s: %(name)s', new)
