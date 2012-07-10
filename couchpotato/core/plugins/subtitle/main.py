@@ -1,5 +1,6 @@
 from couchpotato import get_session
 from couchpotato.core.event import addEvent, fireEvent
+from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Library, FileType
@@ -48,9 +49,11 @@ class Subtitle(Plugin):
         try:
             available_languages = sum(group['subtitle_language'].itervalues(), [])
             downloaded = []
+            files = [toUnicode(x) for x in group['files']['movie']]
+
             for lang in self.getLanguages():
                 if lang not in available_languages:
-                    download = subliminal.download_subtitles(group['files']['movie'], multi = True, force = False, languages = [lang], services = self.services, cache_dir = Env.get('cache_dir'))
+                    download = subliminal.download_subtitles(files, multi = True, force = False, languages = [lang], services = self.services, cache_dir = Env.get('cache_dir'))
                     downloaded.extend(download)
 
             for d_sub in downloaded:
@@ -61,6 +64,8 @@ class Subtitle(Plugin):
 
         except:
             log.error('Failed searching for subtitle: %s', (traceback.format_exc()))
+
+        return False
 
     def getLanguages(self):
         return [x.strip() for x in self.conf('languages').split(',')]
