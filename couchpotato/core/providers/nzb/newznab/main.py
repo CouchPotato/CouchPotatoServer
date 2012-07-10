@@ -176,16 +176,14 @@ class Newznab(NZBProvider, RSS):
 
         return list
 
-    def belongsTo(self, url):
+    def belongsTo(self, url, provider = None):
 
         hosts = self.getHosts()
 
         for host in hosts:
-            result = super(Newznab, self).belongsTo(url, host = host['host'])
+            result = super(Newznab, self).belongsTo(url, host = host['host'], provider)
             if result:
                 return result
-
-        return
 
     def getUrl(self, host, type):
         return cleanHost(host) + 'api?t=' + type
