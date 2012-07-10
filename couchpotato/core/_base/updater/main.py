@@ -282,7 +282,7 @@ class SourceUpdater(BaseUpdater):
         app_dir = ss(Env.get('app_dir'))
 
         # Get list of files we want to overwrite
-        self.deletePyc(only_excess = False)
+        self.deletePyc()
         existing_files = []
         for root, subfiles, filenames in os.walk(app_dir):
             for filename in filenames:
