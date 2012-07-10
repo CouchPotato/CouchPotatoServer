@@ -5,6 +5,7 @@ from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Library, FileType
 from couchpotato.environment import Env
 import subliminal
+import traceback
 
 log = CPLog(__name__)
 
@@ -44,16 +45,22 @@ class Subtitle(Plugin):
 
         if self.isDisabled(): return
 
-        available_languages = sum(group['subtitle_language'].itervalues(), [])
-        downloaded = []
-        for lang in self.getLanguages():
-            if lang not in available_languages:
-                download = subliminal.download_subtitles(group['files']['movie'], multi = True, force = False, languages = [lang], services = self.services, cache_dir = Env.get('cache_dir'))
-                downloaded.extend(download)
+        try:
+            available_languages = sum(group['subtitle_language'].itervalues(), [])
+            downloaded = []
+            for lang in self.getLanguages():
+                if lang not in available_languages:
+                    download = subliminal.download_subtitles(group['files']['movie'], multi = True, force = False, languages = [lang], services = self.services, cache_dir = Env.get('cache_dir'))
+                    downloaded.extend(download)
 
-        for d_sub in downloaded:
-            group['files']['subtitle'].add(d_sub.path)
-            group['subtitle_language'][d_sub.path] = [d_sub.language]
+            for d_sub in downloaded:
+                group['files']['subtitle'].add(d_sub.path)
+                group['subtitle_language'][d_sub.path] = [d_sub.language]
+
+            return True
+
+        except:
+            log.error('Failed searching for subtitle: %s', (traceback.format_exc()))
 
     def getLanguages(self):
         return [x.strip() for x in self.conf('languages').split(',')]
