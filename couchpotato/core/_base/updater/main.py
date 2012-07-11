@@ -265,13 +265,13 @@ class SourceUpdater(BaseUpdater):
             tar.close()
             os.remove(destination)
 
-            self.replaceWith(os.path.join(extracted_path, os.listdir(extracted_path)[0]))
-            self.removeDir(extracted_path)
+            if self.replaceWith(os.path.join(extracted_path, os.listdir(extracted_path)[0])):
+                self.removeDir(extracted_path)
 
-            # Write update version to file
-            self.createFile(self.version_file, json.dumps(self.update_version))
+                # Write update version to file
+                self.createFile(self.version_file, json.dumps(self.update_version))
 
-            return True
+                return True
         except:
             log.error('Failed updating: %s', traceback.format_exc())
 
@@ -295,18 +295,21 @@ class SourceUpdater(BaseUpdater):
 
                 if not Env.get('dev'):
                     try:
-                        os.remove(tofile)
-                    except:
-                        pass
+                        if os.path.isfile(tofile):
+                            os.remove(tofile)
 
-                    try:
-                        os.renames(fromfile, tofile)
+                        dirname = os.path.dirname(tofile)
+                        if not os.path.isdir(dirname):
+                            self.makeDir(dirname)
+
+                        os.rename(fromfile, tofile)
                         try:
                             existing_files.remove(tofile)
                         except ValueError:
                             pass
-                    except Exception, e:
-                        log.error('Failed overwriting file: %s', e)
+                    except:
+                        log.error('Failed overwriting file "%s": %s', (tofile, traceback.format_exc()))
+                        return False
 
         if Env.get('app_dir') not in Env.get('data_dir'):
             for still_exists in existing_files:
@@ -314,6 +317,8 @@ class SourceUpdater(BaseUpdater):
                     os.remove(still_exists)
                 except:
                     log.error('Failed removing non-used file: %s', traceback.format_exc())
+
+        return True
 
 
     def removeDir(self, path):
