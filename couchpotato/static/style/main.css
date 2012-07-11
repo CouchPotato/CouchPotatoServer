@@ -147,7 +147,7 @@ body > .spinner, .mask{
 .icon.delete { background-image: url('../images/icon.delete.png'); }
 .icon.download { background-image: url('../images/icon.download.png'); }
 .icon.edit { background-image: url('../images/icon.edit.png'); }
-.icon.check { background-image: url('../images/icon.check.png'); }
+.icon.completed { background-image: url('../images/icon.check.png'); }
 .icon.folder { background-image: url('../images/icon.folder.png'); }
 .icon.imdb { background-image: url('../images/icon.imdb.png'); }
 .icon.refresh { background-image: url('../images/icon.refresh.png'); }
@@ -155,6 +155,8 @@ body > .spinner, .mask{
 .icon.files { background-image: url('../images/icon.files.png'); }
 .icon.info { background-image: url('../images/icon.info.png'); }
 .icon.trailer { background-image: url('../images/icon.trailer.png'); }
+.icon.spinner { background-image: url('../images/icon.spinner.gif'); }
+.icon.attention { background-image: url('../images/icon.attention.png'); }
 
 /*** Navigation ***/
 .header {

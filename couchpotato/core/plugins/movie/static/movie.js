@@ -365,7 +365,8 @@ var ReleaseAction = new Class({
 				} catch(e){}
 
 				new Element('div', {
-					'class': 'item '+status.identifier
+					'class': 'item '+status.identifier,
+					'id': 'release_'+release.id
 				}).adopt(
 					new Element('span.name', {'text': self.get(release, 'name'), 'title': self.get(release, 'name')}),
 					new Element('span.status', {'text': status.identifier, 'class': 'release_status '+status.identifier}),
@@ -382,7 +383,8 @@ var ReleaseAction = new Class({
 						'events': {
 							'click': function(e){
 								(e).preventDefault();
-								self.download(release);
+								if(!this.hasClass('completed'))
+									self.download(release);
 							}
 						}
 					}),
@@ -414,9 +416,21 @@ var ReleaseAction = new Class({
 	download: function(release){
 		var self = this;
 
+		var release_el = self.release_container.getElement('#release_'+release.id),
+			icon = release_el.getElement('.download.icon');
+
+		icon.addClass('spinner');
+
 		Api.request('release.download', {
 			'data': {
 				'id': release.id
+			},
+			'onComplete': function(json){
+				icon.removeClass('spinner')
+				if(json.success)
+					icon.addClass('completed');
+				else
+					icon.addClass('attention').set('title', 'Something went wrong when downloading, please check logs.');
 			}
 		});
 	},

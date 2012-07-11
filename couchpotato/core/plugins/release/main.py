@@ -146,16 +146,16 @@ class Release(Plugin):
             provider = fireEvent('provider.belongs_to', item['url'], provider = item.get('provider'), single = True)
             item['download'] = provider.download
 
-            fireEvent('searcher.download', data = item, movie = rel.movie.to_dict({
+            success = fireEvent('searcher.download', data = item, movie = rel.movie.to_dict({
                 'profile': {'types': {'quality': {}}},
                 'releases': {'status': {}, 'quality': {}},
                 'library': {'titles': {}, 'files':{}},
                 'files': {}
-            }), manual = True)
+            }), manual = True, single = True)
 
             #db.close()
             return jsonified({
-                'success': True
+                'success': success
             })
         else:
             log.error('Couldn\'t find release with id: %s', id)
