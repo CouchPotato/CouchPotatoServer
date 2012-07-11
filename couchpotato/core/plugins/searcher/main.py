@@ -29,9 +29,6 @@ class Searcher(Plugin):
         # Schedule cronjob
         fireEvent('schedule.cron', 'searcher.all', self.all_movies, day = self.conf('cron_day'), hour = self.conf('cron_hour'), minute = self.conf('cron_minute'))
 
-
-        addEvent('app.load', self.all_movies)
-
     def all_movies(self):
 
         if self.in_progress:
