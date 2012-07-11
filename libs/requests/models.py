@@ -7,6 +7,7 @@ requests.models
 This module contains the primary objects that power Requests.
 """
 
+import json
 import os
 from datetime import datetime
 
@@ -15,8 +16,8 @@ from .structures import CaseInsensitiveDict
 from .status_codes import codes
 
 from .auth import HTTPBasicAuth, HTTPProxyAuth
-from .packages.urllib3.response import HTTPResponse
-from .packages.urllib3.exceptions import MaxRetryError
+from .cookies import cookiejar_from_dict, extract_cookies_to_jar, get_cookie_header
+from .packages.urllib3.exceptions import MaxRetryError, LocationParseError
 from .packages.urllib3.exceptions import SSLError as _SSLError
 from .packages.urllib3.exceptions import HTTPError as _HTTPError
 from .packages.urllib3 import connectionpool, poolmanager
@@ -24,22 +25,25 @@ from .packages.urllib3.filepost import encode_multipart_formdata
 from .defaults import SCHEMAS
 from .exceptions import (
     ConnectionError, HTTPError, RequestException, Timeout, TooManyRedirects,
-    URLRequired, SSLError, MissingSchema, InvalidSchema)
+    URLRequired, SSLError, MissingSchema, InvalidSchema, InvalidURL)
 from .utils import (
     get_encoding_from_headers, stream_untransfer, guess_filename, requote_uri,
-    dict_from_string, stream_decode_response_unicode, get_netrc_auth)
+    stream_decode_response_unicode, get_netrc_auth, get_environ_proxies,
+    DEFAULT_CA_BUNDLE_PATH)
 from .compat import (
-    urlparse, urlunparse, urljoin, urlsplit, urlencode, str, bytes,
-    SimpleCookie, is_py2)
+    cookielib, urlparse, urlunparse, urljoin, urlsplit, urlencode, str, bytes,
+    StringIO, is_py2)
 
 # Import chardet if it is available.
 try:
     import chardet
+    # hush pyflakes
+    chardet
 except ImportError:
-    pass
+    chardet = None
 
 REDIRECT_STATI = (codes.moved, codes.found, codes.other, codes.temporary_moved)
-
+CONTENT_CHUNK_SIZE = 10 * 1024
 
 class Request(object):
     """The :class:`Request <Request>` object. It carries out all functionality of
@@ -61,6 +65,7 @@ class Request(object):
         proxies=None,
         hooks=None,
         config=None,
+        prefetch=False,
         _poolmanager=None,
         verify=None,
         session=None,
@@ -80,17 +85,18 @@ class Request(object):
         self.headers = dict(headers or [])
 
         #: Dictionary of files to multipart upload (``{filename: content}``).
-        self.files = files
+        self.files = None
 
         #: HTTP Method to use.
         self.method = method
 
-        #: Dictionary or byte of request body data to attach to the
+        #: Dictionary, bytes or file stream of request body data to attach to the
         #: :class:`Request <Request>`.
         self.data = None
 
         #: Dictionary or byte of querystring data to attach to the
-        #: :class:`Request <Request>`.
+        #: :class:`Request <Request>`. The dictionary values can be lists for representing
+        #: multivalued query parameters.
         self.params = None
 
         #: True if :class:`Request <Request>` is part of a redirect chain (disables history
@@ -106,13 +112,11 @@ class Request(object):
         # If no proxies are given, allow configuration by environment variables
         # HTTP_PROXY and HTTPS_PROXY.
         if not self.proxies and self.config.get('trust_env'):
-          if 'HTTP_PROXY' in os.environ:
-            self.proxies['http'] = os.environ['HTTP_PROXY']
-          if 'HTTPS_PROXY' in os.environ:
-            self.proxies['https'] = os.environ['HTTPS_PROXY']
+            self.proxies = get_environ_proxies()
 
-        self.data, self._enc_data = self._encode_params(data)
-        self.params, self._enc_params = self._encode_params(params)
+        self.data = data
+        self.params = params
+        self.files = files
 
         #: :class:`Response <Response>` instance, containing
         #: content and metadata of HTTP Response, once :attr:`sent <send>`.
@@ -122,7 +126,10 @@ class Request(object):
         self.auth = auth
 
         #: CookieJar to attach to :class:`Request <Request>`.
-        self.cookies = dict(cookies or [])
+        if isinstance(cookies, cookielib.CookieJar):
+            self.cookies = cookies
+        else:
+            self.cookies = cookiejar_from_dict(cookies)
 
         #: True if Request has been sent.
         self.sent = False
@@ -146,6 +153,9 @@ class Request(object):
 
         #: SSL Certificate
         self.cert = cert
+
+        #: Prefetch response content
+        self.prefetch = prefetch
 
         if headers:
             headers = CaseInsensitiveDict(self.headers)
@@ -186,16 +196,16 @@ class Request(object):
                 # Set encoding.
                 response.encoding = get_encoding_from_headers(response.headers)
 
-                # Start off with our local cookies.
-                cookies = self.cookies or dict()
-
-                # Add new cookies from the server.
-                if 'set-cookie' in response.headers:
-                    cookie_header = response.headers['set-cookie']
-                    cookies = dict_from_string(cookie_header)
+                # Add new cookies from the server. Don't if configured not to
+                if self.config.get('store_cookies'):
+                    extract_cookies_to_jar(self.cookies, self, resp)
 
                 # Save cookies in Response.
-                response.cookies = cookies
+                response.cookies = self.cookies
+
+                # Save cookies in Session.
+                for cookie in self.cookies:
+                    self.session.cookies.set_cookie(cookie)
 
                 # No exceptions were harmed in the making of this request.
                 response.error = getattr(resp, 'error', None)
@@ -212,8 +222,6 @@ class Request(object):
         history = []
 
         r = build(resp)
-
-        self.cookies.update(r.cookies)
 
         if r.status_code in REDIRECT_STATI and not self.redirect:
 
@@ -232,6 +240,7 @@ class Request(object):
 
                 url = r.headers['location']
                 data = self.data
+                files = self.files
 
                 # Handle redirection without scheme (see: RFC 1808 Section 4)
                 if url.startswith('//'):
@@ -250,6 +259,7 @@ class Request(object):
                 if r.status_code is codes.see_other:
                     method = 'GET'
                     data = None
+                    files = None
                 else:
                     method = self.method
 
@@ -259,10 +269,12 @@ class Request(object):
                     if r.status_code in (codes.moved, codes.found) and self.method == 'POST':
                         method = 'GET'
                         data = None
+                        files = None
 
                     if (r.status_code == 303) and self.method != 'HEAD':
                         method = 'GET'
                         data = None
+                        files = None
 
                 # Remove the cookie headers that were sent.
                 headers = self.headers
@@ -274,7 +286,7 @@ class Request(object):
                 request = Request(
                     url=url,
                     headers=headers,
-                    files=self.files,
+                    files=files,
                     method=method,
                     params=self.session.params,
                     auth=self.auth,
@@ -292,41 +304,68 @@ class Request(object):
 
                 request.send()
                 r = request.response
-                self.cookies.update(r.cookies)
 
             r.history = history
 
         self.response = r
         self.response.request = self
-        self.response.cookies.update(self.cookies)
 
     @staticmethod
     def _encode_params(data):
         """Encode parameters in a piece of data.
 
-        If the data supplied is a dictionary, encodes each parameter in it, and
-        returns a list of tuples containing the encoded parameters, and a urlencoded
-        version of that.
-
-        Otherwise, assumes the data is already encoded appropriately, and
-        returns it twice.
+        Will successfully encode parameters when passed as a dict or a list of
+        2-tuples. Order is retained if data is a list of 2-tuples but abritrary
+        if parameters are supplied as a dict.
         """
 
         if isinstance(data, bytes):
-            return data, data
+            return data
+        if isinstance(data, str):
+            return data
+        elif hasattr(data, 'read'):
+            return data
+        elif hasattr(data, '__iter__'):
+            try:
+                dict(data)
+            except ValueError:
+                raise ValueError('Unable to encode lists with elements that are not 2-tuples.')
 
-        if hasattr(data, '__iter__') and not isinstance(data, str):
-            data = dict(data)
-
-        if hasattr(data, 'items'):
+            params = list(data.items() if isinstance(data, dict) else data)
             result = []
-            for k, vs in list(data.items()):
+            for k, vs in params:
                 for v in isinstance(vs, list) and vs or [vs]:
-                    result.append((k.encode('utf-8') if isinstance(k, str) else k,
-                                   v.encode('utf-8') if isinstance(v, str) else v))
-            return result, urlencode(result, doseq=True)
+                    result.append(
+                        (k.encode('utf-8') if isinstance(k, str) else k,
+                         v.encode('utf-8') if isinstance(v, str) else v))
+            return urlencode(result, doseq=True)
         else:
-            return data, data
+            return data
+
+    def _encode_files(self, files):
+
+        if (not files) or isinstance(self.data, str):
+            return None
+
+        try:
+            fields = self.data.copy()
+        except AttributeError:
+            fields = dict(self.data)
+
+        for (k, v) in list(files.items()):
+            # support for explicit filename
+            if isinstance(v, (tuple, list)):
+                fn, fp = v
+            else:
+                fn = guess_filename(v) or k
+                fp = v
+            if isinstance(fp, (bytes, str)):
+                fp = StringIO(fp)
+            fields.update({k: (fn, fp.read())})
+
+        (body, content_type) = encode_multipart_formdata(fields)
+
+        return (body, content_type)
 
     @property
     def full_url(self):
@@ -351,7 +390,6 @@ class Request(object):
         if not path:
             path = '/'
 
-
         if is_py2:
             if isinstance(scheme, str):
                 scheme = scheme.encode('utf-8')
@@ -368,11 +406,12 @@ class Request(object):
 
         url = (urlunparse([scheme, netloc, path, params, query, fragment]))
 
-        if self._enc_params:
+        enc_params = self._encode_params(self.params)
+        if enc_params:
             if urlparse(url).query:
-                url = '%s&%s' % (url, self._enc_params)
+                url = '%s&%s' % (url, enc_params)
             else:
-                url = '%s?%s' % (url, self._enc_params)
+                url = '%s?%s' % (url, enc_params)
 
         if self.config.get('encode_uri', True):
             url = requote_uri(url)
@@ -407,10 +446,21 @@ class Request(object):
     def register_hook(self, event, hook):
         """Properly register a hook."""
 
-        return self.hooks[event].append(hook)
+        self.hooks[event].append(hook)
+
+    def deregister_hook(self, event, hook):
+        """Deregister a previously registered hook.
+        Returns True if the hook existed, False if not.
+        """
+
+        try:
+            self.hooks[event].remove(hook)
+            return True
+        except ValueError:
+            return False
 
     def send(self, anyway=False, prefetch=False):
-        """Sends the request. Returns True of successful, False if not.
+        """Sends the request. Returns True if successful, False if not.
         If there was an HTTPError during transmission,
         self.response.status_code will contain the HTTPError code.
 
@@ -423,6 +473,10 @@ class Request(object):
         # Build the URL
         url = self.full_url
 
+        # Pre-request hook.
+        r = dispatch_hook('pre_request', self.hooks, self)
+        self.__dict__.update(r.__dict__)
+
         # Logging
         if self.config.get('verbose'):
             self.config.get('verbose').write('%s   %s   %s\n' % (
@@ -432,41 +486,6 @@ class Request(object):
         # Nottin' on you.
         body = None
         content_type = None
-
-        # Multi-part file uploads.
-        if self.files:
-            if not isinstance(self.data, str):
-
-                try:
-                    fields = self.data.copy()
-                except AttributeError:
-                    fields = dict(self.data)
-
-                for (k, v) in list(self.files.items()):
-                    # support for explicit filename
-                    if isinstance(v, (tuple, list)):
-                        fn, fp = v
-                    else:
-                        fn = guess_filename(v) or k
-                        fp = v
-                    fields.update({k: (fn, fp.read())})
-
-                (body, content_type) = encode_multipart_formdata(fields)
-            else:
-                pass
-                # TODO: Conflict?
-        else:
-            if self.data:
-
-                body = self._enc_data
-                if isinstance(self.data, str):
-                    content_type = None
-                else:
-                    content_type = 'application/x-www-form-urlencoded'
-
-        # Add content-type if it wasn't explicitly provided.
-        if (content_type) and (not 'content-type' in self.headers):
-            self.headers['Content-Type'] = content_type
 
         # Use .netrc auth if none was provided.
         if not self.auth and self.config.get('trust_env'):
@@ -483,10 +502,27 @@ class Request(object):
             # Update self to reflect the auth changes.
             self.__dict__.update(r.__dict__)
 
+        # Multi-part file uploads.
+        if self.files:
+            (body, content_type) = self._encode_files(self.files)
+        else:
+            if self.data:
+
+                body = self._encode_params(self.data)
+                if isinstance(self.data, str) or hasattr(self.data, 'read'):
+                    content_type = None
+                else:
+                    content_type = 'application/x-www-form-urlencoded'
+
+        # Add content-type if it wasn't explicitly provided.
+        if (content_type) and (not 'content-type' in self.headers):
+            self.headers['Content-Type'] = content_type
+
         _p = urlparse(url)
+        no_proxy = filter(lambda x:x.strip(), self.proxies.get('no', '').split(','))
         proxy = self.proxies.get(_p.scheme)
 
-        if proxy:
+        if proxy and not any(map(_p.netloc.endswith, no_proxy)):
             conn = poolmanager.proxy_from_url(proxy)
             _proxy = urlparse(proxy)
             if '@' in _proxy.netloc:
@@ -496,10 +532,14 @@ class Request(object):
                 self.__dict__.update(r.__dict__)
         else:
             # Check to see if keep_alive is allowed.
-            if self.config.get('keep_alive'):
-                conn = self._poolmanager.connection_from_url(url)
-            else:
-                conn = connectionpool.connection_from_url(url)
+            try:
+                if self.config.get('keep_alive'):
+                    conn = self._poolmanager.connection_from_url(url)
+                else:
+                    conn = connectionpool.connection_from_url(url)
+                    self.headers['Connection'] = 'close'
+            except LocationParseError as e:
+                raise InvalidURL(e)
 
         if url.startswith('https') and self.verify:
 
@@ -513,13 +553,15 @@ class Request(object):
             if not cert_loc and self.config.get('trust_env'):
                 cert_loc = os.environ.get('REQUESTS_CA_BUNDLE')
 
-            # Curl compatiblity.
+            # Curl compatibility.
             if not cert_loc and self.config.get('trust_env'):
                 cert_loc = os.environ.get('CURL_CA_BUNDLE')
 
-            # Use the awesome certifi list.
             if not cert_loc:
-                cert_loc = __import__('certifi').where()
+                cert_loc = DEFAULT_CA_BUNDLE_PATH
+
+            if not cert_loc:
+                raise Exception("Could not find a suitable SSL CA certificate bundle.")
 
             conn.cert_reqs = 'CERT_REQUIRED'
             conn.ca_certs = cert_loc
@@ -536,64 +578,43 @@ class Request(object):
 
         if not self.sent or anyway:
 
-            if self.cookies:
-
-                # Skip if 'cookie' header is explicitly set.
-                if 'cookie' not in self.headers:
-
-                    # Simple cookie with our dict.
-                    c = SimpleCookie()
-                    for (k, v) in list(self.cookies.items()):
-                        c[k] = v
-
-                    # Turn it into a header.
-                    cookie_header = c.output(header='', sep='; ').strip()
-
-                    # Attach Cookie header to request.
+            # Skip if 'cookie' header is explicitly set.
+            if 'cookie' not in self.headers:
+                cookie_header = get_cookie_header(self.cookies, self)
+                if cookie_header is not None:
                     self.headers['Cookie'] = cookie_header
 
-            # Pre-request hook.
-            r = dispatch_hook('pre_request', self.hooks, self)
+            # Pre-send hook.
+            r = dispatch_hook('pre_send', self.hooks, self)
             self.__dict__.update(r.__dict__)
 
+            # catch urllib3 exceptions and throw Requests exceptions
             try:
-                # The inner try .. except re-raises certain exceptions as
-                # internal exception types; the outer suppresses exceptions
-                # when safe mode is set.
-                try:
-                    # Send the request.
-                    r = conn.urlopen(
-                        method=self.method,
-                        url=self.path_url,
-                        body=body,
-                        headers=self.headers,
-                        redirect=False,
-                        assert_same_host=False,
-                        preload_content=False,
-                        decode_content=False,
-                        retries=self.config.get('max_retries', 0),
-                        timeout=self.timeout,
-                    )
-                    self.sent = True
+                # Send the request.
+                r = conn.urlopen(
+                    method=self.method,
+                    url=self.path_url,
+                    body=body,
+                    headers=self.headers,
+                    redirect=False,
+                    assert_same_host=False,
+                    preload_content=False,
+                    decode_content=False,
+                    retries=self.config.get('max_retries', 0),
+                    timeout=self.timeout,
+                )
+                self.sent = True
 
-                except MaxRetryError as e:
-                    raise ConnectionError(e)
+            except MaxRetryError as e:
+                raise ConnectionError(e)
 
-                except (_SSLError, _HTTPError) as e:
-                    if self.verify and isinstance(e, _SSLError):
-                        raise SSLError(e)
+            except (_SSLError, _HTTPError) as e:
+                if self.verify and isinstance(e, _SSLError):
+                    raise SSLError(e)
 
-                    raise Timeout('Request timed out.')
+                raise Timeout('Request timed out.')
 
-            except RequestException as e:
-                if self.config.get('safe_mode', False):
-                    # In safe mode, catch the exception and attach it to
-                    # a blank urllib3.HTTPResponse object.
-                    r = HTTPResponse()
-                    r.error = e
-                else:
-                    raise
-
+            # build_response can throw TooManyRedirects
             self._build_response(r)
 
             # Response manipulation hook.
@@ -604,7 +625,7 @@ class Request(object):
             self.__dict__.update(r.__dict__)
 
             # If prefetch is True, mark content as consumed.
-            if prefetch:
+            if prefetch or self.prefetch:
                 # Save the response.
                 self.response.content
 
@@ -623,7 +644,7 @@ class Response(object):
 
     def __init__(self):
 
-        self._content = None
+        self._content = False
         self._content_consumed = False
 
         #: Integer Code of responded HTTP Status.
@@ -643,7 +664,7 @@ class Response(object):
         #: Resulting :class:`HTTPError` of request, if one occurred.
         self.error = None
 
-        #: Encoding to decode with when accessing r.content.
+        #: Encoding to decode with when accessing r.text.
         self.encoding = None
 
         #: A list of :class:`Response <Response>` objects from
@@ -654,8 +675,8 @@ class Response(object):
         #: The :class:`Request <Request>` that created the Response.
         self.request = None
 
-        #: A dictionary of Cookies the server sent back.
-        self.cookies = {}
+        #: A CookieJar of Cookies the server sent back.
+        self.cookies = None
 
         #: Dictionary of configurations for this request.
         self.config = {}
@@ -679,7 +700,7 @@ class Response(object):
             return False
         return True
 
-    def iter_content(self, chunk_size=10 * 1024, decode_unicode=False):
+    def iter_content(self, chunk_size=1, decode_unicode=False):
         """Iterates over the response data.  This avoids reading the content
         at once into memory for large responses.  The chunk size is the number
         of bytes it should read into memory.  This is not necessarily the
@@ -721,7 +742,7 @@ class Response(object):
                 chunk = pending + chunk
             lines = chunk.splitlines()
 
-            if lines[-1][-1] == chunk[-1]:
+            if lines and lines[-1] and chunk and lines[-1][-1] == chunk[-1]:
                 pending = lines.pop()
             else:
                 pending = None
@@ -736,7 +757,7 @@ class Response(object):
     def content(self):
         """Content of the response, in bytes."""
 
-        if self._content is None:
+        if self._content is False:
             # Read the contents.
             try:
                 if self._content_consumed:
@@ -746,23 +767,13 @@ class Response(object):
                 if self.status_code is 0:
                     self._content = None
                 else:
-                    self._content = bytes().join(self.iter_content()) or bytes()
+                    self._content = bytes().join(self.iter_content(CONTENT_CHUNK_SIZE)) or bytes()
 
             except AttributeError:
                 self._content = None
 
         self._content_consumed = True
         return self._content
-
-    def _detected_encoding(self):
-        try:
-            detected = chardet.detect(self.content) or {}
-            return detected.get('encoding')
-
-        # Trust that chardet isn't available or something went terribly wrong.
-        except Exception:
-            pass
-
 
     @property
     def text(self):
@@ -776,9 +787,13 @@ class Response(object):
         content = None
         encoding = self.encoding
 
-        # Fallback to auto-detected encoding if chardet is available.
+        if not self.content:
+            return str('')
+
+        # Fallback to auto-detected encoding.
         if self.encoding is None:
-            encoding = self._detected_encoding()
+            if chardet is not None:
+                encoding = chardet.detect(self.content)['encoding']
 
         # Decode unicode from given encoding.
         try:
@@ -789,10 +804,16 @@ class Response(object):
             #
             # So we try blindly encoding.
             content = str(self.content, errors='replace')
-        except (UnicodeError, TypeError):
-            pass
 
         return content
+
+    @property
+    def json(self):
+        """Returns the json-encoded content of a request, if any."""
+        try:
+            return json.loads(self.text or self.content)
+        except ValueError:
+            return None
 
     def raise_for_status(self, allow_redirects=True):
         """Raises stored :class:`HTTPError` or :class:`URLError`, if one occurred."""
@@ -809,7 +830,6 @@ class Response(object):
             http_error = HTTPError('%s Client Error' % self.status_code)
             http_error.response = self
             raise http_error
-
 
         elif (self.status_code >= 500) and (self.status_code < 600):
             http_error = HTTPError('%s Server Error' % self.status_code)

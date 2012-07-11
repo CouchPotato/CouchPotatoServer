@@ -16,17 +16,9 @@
 		padding: 40px 0;
 		margin: 0;
 		min-height: 470px;
-
-		background-image: -webkit-gradient(
-		    linear,
-		    right top,
-		    40% 4%,
-		    color-stop(0, rgba(0,0,0, 0.3)),
-		    color-stop(1, rgba(0,0,0, 0))
-		);
-		background-image: -moz-linear-gradient(
-		    10% 0% 16deg,
-		    rgba(0,0,0,0) 0%,
+		background-image: linear-gradient(
+		    20deg,
+		    rgba(0,0,0,0) 50%,
 		    rgba(0,0,0,0.3) 100%
 		);
 	}
@@ -330,15 +322,16 @@
 
 	.page .tag_input > ul {
 		list-style: none;
-		line-height: 20px;
 		padding: 3px 0;
 		border-radius: 3px;
 		cursor: text;
-		width: 31%;
+		width: 30%;
 		margin: 0 !important;
+		height: 27px;
+		line-height: 0;
+		display: inline-block;
 	}
 		.page .tag_input:hover > ul {
-			width: 50%;
 			border-radius: 3px 0 0 3px;
 		}
 		.page .tag_input:hover .formHint { display: none; }
@@ -352,6 +345,7 @@
 			margin: 0 !important;
 			border-width: 0;
 			background: 0;
+			line-height: 20px;
 		}
 		.page .tag_input > ul > li:first-child { min-width: 4px; }
 			.page .tag_input li.choice {
@@ -362,29 +356,16 @@
 				border-radius: 2px;
 			}
 			.page .tag_input > ul:hover > li.choice {
-				background: url('../../images/sprite.png') no-repeat 94% -53px, -webkit-gradient(
-				    linear,
-				    left bottom,
-				    left top,
-				    color-stop(0, rgba(255,255,255,0.1)),
-				    color-stop(1, rgba(255,255,255,0.3))
-				);
-				background: url('../../images/sprite.png') no-repeat 94% -53px, -moz-linear-gradient(
-				    center top,
+				background: linear-gradient(
+				    270deg,
 				    rgba(255,255,255,0.3) 0%,
 				    rgba(255,255,255,0.1) 100%
 				);
 			}
-			.page .tag_input > ul > li.choice:hover {
-				background: url('../../images/sprite.png') no-repeat 94% -53px, -webkit-gradient(
-				    linear,
-				    left bottom,
-				    left top,
-				    color-stop(0, #406db8),
-				    color-stop(1, #5b9bd1)
-				);
-				background: url('../../images/sprite.png') no-repeat 94% -53px, -moz-linear-gradient(
-				    center top,
+			.page .tag_input > ul > li.choice:hover,
+			.page .tag_input > ul > li.choice.selected {
+				background: linear-gradient(
+				    270deg,
 				    #5b9bd1 0%,
 				    #406db8 100%
 				);
@@ -422,21 +403,15 @@
 				margin: -9px 0 0 -16px;
 				border-radius: 30px 30px 0 0;
 				cursor: pointer;
-				background: url('../../images/icon.delete.png') no-repeat center 2px, -webkit-gradient(
-				    linear,
-				    left bottom,
-				    left top,
-				    color-stop(0, #5b9bd1),
-				    color-stop(1, #5b9bd1)
-				);
-				background: url('../../images/icon.delete.png') no-repeat center 2px, -moz-linear-gradient(
-				    center top,
+				background: url('../../images/icon.delete.png') no-repeat center 2px, -webkit-linear-gradient(
+				   270deg,
 				    #5b9bd1 0%,
 				    #5b9bd1 100%
 				);
 				background-size: 65%;
 			}
-			.page .tag_input .choice:hover .delete { display: inline-block; }
+			.page .tag_input .choice:hover .delete, 
+			.page .tag_input .choice.selected .delete { display: inline-block; }
 			.page .tag_input .choice .delete:hover {
 				height: 14px;
 				margin-top: -13px;
@@ -588,3 +563,8 @@
 			margin-left: 10px;
 			display: inline-block;
 		}
+		
+.active .group_imdb_automation:not(.disabled) {
+	background: url('../../images/imdb_watchlist.png') no-repeat right 50px;
+	min-height: 210px;
+}

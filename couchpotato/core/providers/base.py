@@ -3,6 +3,9 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
 from urlparse import urlparse
+from urllib import quote_plus
+from couchpotato.core.helpers.encoding import simplifyString
+
 import re
 import time
 
@@ -31,7 +34,7 @@ class Provider(Plugin):
                 self.urlopen(test_url, 30)
                 self.is_available[host] = True
             except:
-                log.error('"%s" unavailable, trying again in an 15 minutes.' % host)
+                log.error('"%s" unavailable, trying again in an 15 minutes.', host)
                 self.is_available[host] = False
 
         return self.is_available.get(host, False)
@@ -62,8 +65,11 @@ class YarrProvider(Provider):
     def search(self, movie, quality):
         return []
 
-    def belongsTo(self, url, host = None):
+    def belongsTo(self, url, provider = None, host = None):
         try:
+            if provider and provider == self.getName():
+                return self
+
             hostname = urlparse(url).hostname
             if host and hostname in host:
                 return self
@@ -73,7 +79,7 @@ class YarrProvider(Provider):
                     if hostname in download_url:
                         return self
         except:
-            log.debug('Url % s doesn\'t belong to %s' % (url, self.getName()))
+            log.debug('Url % s doesn\'t belong to %s', (url, self.getName()))
 
         return
 
@@ -106,4 +112,4 @@ class YarrProvider(Provider):
         return [self.cat_backup_id]
 
     def found(self, new):
-        log.info('Found: score(%(score)s) on %(provider)s: %(name)s' % new)
+        log.info('Found: score(%(score)s) on %(provider)s: %(name)s', new)

@@ -8,6 +8,7 @@ from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import FileType, File
 from couchpotato.environment import Env
 import os.path
+import traceback
 
 log = CPLog(__name__)
 
@@ -46,6 +47,7 @@ class FileManager(Plugin):
         try:
             filedata = self.urlopen(url, **urlopen_kwargs)
         except:
+            log.error('Failed downloading file %s: %s', (url, traceback.format_exc()))
             return False
 
         self.createFile(dest, filedata, binary = True)

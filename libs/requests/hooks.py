@@ -12,6 +12,9 @@ Available hooks:
     A dictionary of the arguments being sent to Request().
 
 ``pre_request``:
+    The Request object, directly after being created.
+
+``pre_send``:
     The Request object, directly before being sent.
 
 ``post_request``:
@@ -25,8 +28,7 @@ Available hooks:
 import traceback
 
 
-HOOKS = ('args', 'pre_request', 'post_request', 'response')
-
+HOOKS = ('args', 'pre_request', 'pre_send', 'post_request', 'response')
 
 def dispatch_hook(key, hooks, hook_data):
     """Dispatches a hook dictionary on a given piece of data."""
@@ -41,7 +43,10 @@ def dispatch_hook(key, hooks, hook_data):
 
         for hook in hooks:
             try:
-                hook_data = hook(hook_data) or hook_data
+                _hook_data = hook(hook_data)
+                if _hook_data is not None:
+                    hook_data = _hook_data
+
             except Exception:
                 traceback.print_exc()
 

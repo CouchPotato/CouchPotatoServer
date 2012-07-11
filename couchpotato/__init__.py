@@ -69,10 +69,14 @@ def getApiKey():
 @app.errorhandler(404)
 def page_not_found(error):
     index_url = url_for('web.index')
-    url = getattr(request, 'path')[len(index_url):]
+    url = request.path[len(index_url):]
 
     if url[:3] != 'api':
-        return redirect(index_url + '#' + url)
+        if request.path != '/':
+            r = request.url.replace(request.path, index_url + '#' + url)
+        else:
+            r = '%s%s' % (request.url.rstrip('/'), index_url + '#' + url)
+        return redirect(r)
     else:
         time.sleep(0.1)
         return 'Wrong API key used', 404

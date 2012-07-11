@@ -29,7 +29,15 @@ config = [{
                 {
                     'name': 'ignored_words',
                     'label': 'Ignored words',
-                    'default': 'german, dutch, french, danish, swedish, spanish, italian, korean, dubbed, swesub, korsub',
+                    'default': 'german, dutch, french, truefrench, danish, swedish, spanish, italian, korean, dubbed, swesub, korsub',
+                },
+                {
+                    'name': 'preferred_method',
+                    'label': 'First search',
+                    'description': 'Which of the methods do you prefer',
+                    'default': 'nzb',
+                    'type': 'dropdown',
+                    'values': [('usenet & torrents', 'both'), ('usenet', 'nzb'), ('torrents', 'torrent')],
                 },
             ],
         }, {

@@ -1,1 +1,3 @@
+*.pyc
+/data/
 /_source/

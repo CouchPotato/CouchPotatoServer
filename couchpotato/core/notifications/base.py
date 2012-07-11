@@ -13,7 +13,10 @@ class Notification(Plugin):
     default_title = Env.get('appname')
     test_message = 'ZOMG Lazors Pewpewpew!'
 
-    listen_to = ['movie.downloaded', 'movie.snatched', 'updater.available']
+    listen_to = [
+        'movie.downloaded', 'movie.snatched',
+        'updater.available', 'updater.updated',
+    ]
     dont_listen_to = []
 
     def __init__(self):
@@ -41,7 +44,7 @@ class Notification(Plugin):
 
         test_type = self.testNotifyName()
 
-        log.info('Sending test to %s' % test_type)
+        log.info('Sending test to %s', test_type)
 
         success = self.notify(
             message = self.test_message,

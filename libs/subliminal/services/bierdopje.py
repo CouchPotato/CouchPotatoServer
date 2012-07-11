@@ -16,13 +16,14 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with subliminal.  If not, see <http://www.gnu.org/licenses/>.
 from . import ServiceBase
+from ..cache import cachedmethod
 from ..exceptions import ServiceError
-from ..subtitles import get_subtitle_path, ResultSubtitle
-from ..videos import Episode
+from ..language import language_set
+from ..subtitles import get_subtitle_path, ResultSubtitle, EXTENSIONS
 from ..utils import to_unicode
-import BeautifulSoup
+from ..videos import Episode
+from bs4 import BeautifulSoup
 import logging
-import os.path
 import urllib
 try:
     import cPickle as pickle
@@ -36,30 +37,22 @@ logger = logging.getLogger(__name__)
 class BierDopje(ServiceBase):
     server_url = 'http://api.bierdopje.com/A2B638AC5D804C2E/'
     api_based = True
-    languages = {'en': 'en', 'nl': 'nl'}
-    reverted_languages = False
+    languages = language_set(['eng', 'dut'])
     videos = [Episode]
     require_video = False
+    required_features = ['xml']
 
-    def __init__(self, config=None):
-        super(BierDopje, self).__init__(config)
-        self.showids = {}
-        if self.config and self.config.cache_dir:
-            self.init_cache()
-
-    def init_cache(self):
-        logger.debug(u'Initializing cache...')
-        if not self.config or not self.config.cache_dir:
-            raise ServiceError('Cache directory is required')
-        self.showids_cache = os.path.join(self.config.cache_dir, 'bierdopje_showids.cache')
-        if not os.path.exists(self.showids_cache):
-            self.save_cache()
-
-    def save_cache(self):
-        logger.debug(u'Saving showids to cache...')
-        with self.lock:
-            with open(self.showids_cache, 'w') as f:
-                pickle.dump(self.showids, f)
+    @cachedmethod
+    def get_show_id(self, series):
+        r = self.session.get('%sGetShowByName/%s' % (self.server_url, urllib.quote(series.lower())))
+        if r.status_code != 200:
+            logger.error(u'Request %s returned status code %d' % (r.url, r.status_code))
+            return None
+        soup = BeautifulSoup(r.content, self.required_features)
+        if soup.status.contents[0] == 'false':
+            logger.debug(u'Could not find show %s' % series)
+            return None
+        return int(soup.showid.contents[0])
 
     def load_cache(self):
         logger.debug(u'Loading showids from cache...')
@@ -67,25 +60,12 @@ class BierDopje(ServiceBase):
             with open(self.showids_cache, 'r') as f:
                 self.showids = pickle.load(f)
 
-    def query(self, season, episode, languages, filepath, tvdbid=None, series=None):
-        self.load_cache()
+    def query(self, filepath, season, episode, languages, tvdbid=None, series=None):
+        self.init_cache()
         if series:
-            if series.lower() in self.showids:  # from cache
-                request_id = self.showids[series.lower()]
-                logger.debug(u'Retreived showid %d for %s from cache' % (request_id, series))
-            else:  # query to get showid
-                logger.debug(u'Getting showid from show name %s...' % series)
-                r = self.session.get('%sGetShowByName/%s' % (self.server_url, urllib.quote(series.lower())))
-                if r.status_code != 200:
-                    logger.error(u'Request %s returned status code %d' % (r.url, r.status_code))
-                    return []
-                soup = BeautifulSoup.BeautifulStoneSoup(r.content)
-                if soup.status.contents[0] == 'false':
-                    logger.debug(u'Could not find show %s' % series)
-                    return []
-                request_id = int(soup.showid.contents[0])
-                self.showids[series.lower()] = request_id
-                self.save_cache()
+            request_id = self.get_show_id(series.lower())
+            if request_id is None:
+                return []
             request_source = 'showid'
             request_is_tvdbid = 'false'
         elif tvdbid:
@@ -96,27 +76,27 @@ class BierDopje(ServiceBase):
             raise ServiceError('One or more parameter missing')
         subtitles = []
         for language in languages:
-            logger.debug(u'Getting subtitles for %s %d season %d episode %d with language %s' % (request_source, request_id, season, episode, language))
-            r = self.session.get('%sGetAllSubsFor/%s/%s/%s/%s/%s' % (self.server_url, request_id, season, episode, language, request_is_tvdbid))
+            logger.debug(u'Getting subtitles for %s %d season %d episode %d with language %s' % (request_source, request_id, season, episode, language.alpha2))
+            r = self.session.get('%sGetAllSubsFor/%s/%s/%s/%s/%s' % (self.server_url, request_id, season, episode, language.alpha2, request_is_tvdbid))
             if r.status_code != 200:
                 logger.error(u'Request %s returned status code %d' % (r.url, r.status_code))
                 return []
-            soup = BeautifulSoup.BeautifulStoneSoup(r.content)
+            soup = BeautifulSoup(r.content, self.required_features)
             if soup.status.contents[0] == 'false':
-                logger.debug(u'Could not find subtitles for %s %d season %d episode %d with language %s' % (request_source, request_id, season, episode, language))
+                logger.debug(u'Could not find subtitles for %s %d season %d episode %d with language %s' % (request_source, request_id, season, episode, language.alpha2))
                 continue
             path = get_subtitle_path(filepath, language, self.config.multi)
             for result in soup.results('result'):
-                subtitle = ResultSubtitle(path, language, service=self.__class__.__name__.lower(), link=result.downloadlink.contents[0],
-                                          release=to_unicode(result.filename.contents[0]))
+                release = to_unicode(result.filename.contents[0])
+                if not release.endswith(tuple(EXTENSIONS)):
+                    release += '.srt'
+                subtitle = ResultSubtitle(path, language, self.__class__.__name__.lower(), result.downloadlink.contents[0],
+                                          release=release)
                 subtitles.append(subtitle)
         return subtitles
 
-    def list(self, video, languages):
-        if not self.check_validity(video, languages):
-            return []
-        results = self.query(video.season, video.episode, languages, video.path or video.release, video.tvdbid, video.series)
-        return results
+    def list_checked(self, video, languages):
+        return self.query(video.path or video.release, video.season, video.episode, languages, video.tvdbid, video.series)
 
 
 Service = BierDopje

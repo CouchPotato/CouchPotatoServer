@@ -2,7 +2,10 @@ from couchpotato.core.logger import CPLog
 import hashlib
 import os.path
 import platform
+import random
 import re
+import string
+import sys
 
 log = CPLog(__name__)
 
@@ -19,6 +22,10 @@ def getDataDir():
     # OSX
     if 'darwin' in platform.platform().lower():
         return os.path.join(user_dir, 'Library', 'Application Support', 'CouchPotato')
+
+    # FreeBSD
+    if 'freebsd' in sys.platform:
+        return os.path.join('/usr/local/', 'couchpotato', 'data')
 
     # Linux
     return os.path.join(user_dir, '.couchpotato')
@@ -77,9 +84,9 @@ def cleanHost(host):
 
     return host
 
-def getImdb(txt):
+def getImdb(txt, check_inside = True):
 
-    if os.path.isfile(txt):
+    if check_inside and os.path.isfile(txt):
         output = open(txt, 'r')
         txt = output.read()
         output.close()
@@ -94,7 +101,7 @@ def getImdb(txt):
 
 def tryInt(s):
     try: return int(s)
-    except: return s
+    except: return 0
 
 def tryFloat(s):
     try: return float(s) if '.' in s else tryInt(s)
@@ -111,9 +118,12 @@ def getTitle(library_dict):
         try:
             return library_dict['titles'][0]['title']
         except:
-            log.error('Could not get title for %s' % library_dict['identifier'])
+            log.error('Could not get title for %s', library_dict['identifier'])
             return None
     except:
-        log.error('Could not get title for library item: %s' % library_dict)
+        log.error('Could not get title for library item: %s', library_dict)
         return None
+
+def randomString(size = 8, chars = string.ascii_uppercase + string.digits):
+    return ''.join(random.choice(chars) for x in range(size))
 

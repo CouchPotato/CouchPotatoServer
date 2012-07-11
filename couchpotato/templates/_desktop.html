@@ -10,9 +10,7 @@
 
 		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/library/mootools.js') }}"></script>
 		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/library/mootools_more.js') }}"></script>
-		{% if not env.get('dev') %}
 		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/library/prefix_free.js') }}"></script>
-		{% endif %}
 		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/library/uniform.js') }}"></script>
 		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/library/form_replacement/form_check.js') }}"></script>
 		<script type="text/javascript" src="{{ url_for('web.static', filename='scripts/library/form_replacement/form_radio.js') }}"></script>
@@ -45,6 +43,8 @@
 
 		<link href="{{ url_for('web.static', filename='images/favicon.ico') }}" rel="icon" type="image/x-icon" />
 		<link rel="apple-touch-icon" href="{{ url_for('web.static', filename='images/homescreen.png') }}" />
+		
+		<script type="text/javascript" src="https://www.youtube.com/player_api" defer="defer"></script>
 
 		<script type="text/javascript">
 			window.addEvent('domready', function() {
@@ -87,7 +87,7 @@
 				App.setup({
 					'base_url': {{ url_for('web.index')|tojson|safe }},
 					'args': {{ env.get('args')|tojson|safe }},
-					'options': "{{ env.get('options')|safe }}",
+					'options': {{ ('%s' % env.get('options'))|tojson|safe }},
 					'app_dir': {{ env.get('app_dir')|tojson|safe }},
 					'data_dir': {{ env.get('data_dir')|tojson|safe }},
 					'pid': {{ env.getPid()|tojson|safe }},

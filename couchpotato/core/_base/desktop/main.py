@@ -27,7 +27,7 @@ if Env.get('desktop'):
             addEvent('app.after_shutdown', desktop.afterShutdown)
 
         def onClose(self, event):
-            return fireEvent('app.crappy_shutdown', single = True)
+            return fireEvent('app.shutdown', single = True)
 
 else:
 

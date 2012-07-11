@@ -12,7 +12,7 @@ def runHandler(name, handler, *args, **kwargs):
         return handler(*args, **kwargs)
     except:
         from couchpotato.environment import Env
-        log.error('Error in event "%s", that wasn\'t caught: %s%s' % (name, traceback.format_exc(), Env.all()))
+        log.error('Error in event "%s", that wasn\'t caught: %s%s', (name, traceback.format_exc(), Env.all()))
 
 def addEvent(name, handler, priority = 100):
 
@@ -43,7 +43,7 @@ def removeEvent(name, handler):
 
 def fireEvent(name, *args, **kwargs):
     if not events.get(name): return
-    #log.debug('Firing event %s' % name)
+    #log.debug('Firing event %s', name)
     try:
 
         # Fire after event
@@ -51,6 +51,13 @@ def fireEvent(name, *args, **kwargs):
         try:
             del kwargs['is_after_event']
             is_after_event = True
+        except: pass
+
+        # onComplete event
+        on_complete = False
+        try:
+            on_complete = kwargs['on_complete']
+            del kwargs['on_complete']
         except: pass
 
         # Return single handler
@@ -93,7 +100,7 @@ def fireEvent(name, *args, **kwargs):
                 elif r[1]:
                     errorHandler(r[1])
                 else:
-                    log.debug('Assume disabled eventhandler for: %s' % name)
+                    log.debug('Assume disabled eventhandler for: %s', name)
 
         else:
             results = []
@@ -123,30 +130,29 @@ def fireEvent(name, *args, **kwargs):
 
         modified_results = fireEvent('result.modify.%s' % name, results, single = True)
         if modified_results:
-            log.debug('Return modified results for %s' % name)
+            log.debug('Return modified results for %s', name)
             results = modified_results
 
         if not is_after_event:
             fireEvent('%s.after' % name, is_after_event = True)
 
+        if on_complete:
+            on_complete()
+
         return results
     except KeyError, e:
         pass
     except Exception:
-        log.error('%s: %s' % (name, traceback.format_exc()))
+        log.error('%s: %s', (name, traceback.format_exc()))
 
-def fireEventAsync(name, *args, **kwargs):
-    #log.debug('Async "%s": %s, %s' % (name, args, kwargs))
+def fireEventAsync(*args, **kwargs):
     try:
-        e = events[name]
-        e.lock.acquire()
-        e.asynchronous = True
-        e.error_handler = errorHandler
-        e(*args, **kwargs)
-        e.lock.release()
+        my_thread = threading.Thread(target = fireEvent, args = args, kwargs = kwargs)
+        my_thread.setDaemon(True)
+        my_thread.start()
         return True
     except Exception, e:
-        log.error('%s: %s' % (name, e))
+        log.error('%s: %s', (args[0], e))
 
 def errorHandler(error):
     etype, value, tb = error

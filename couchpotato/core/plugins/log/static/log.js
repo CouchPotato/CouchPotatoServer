@@ -45,7 +45,7 @@ Page.Log = new Class({
 				new Fx.Scroll(window, {'duration': 0}).toBottom();
 
 				var nav = new Element('ul.nav').inject(self.log, 'top');
-				for (var i = 0; i < json.total; i++) {
+				for (var i = 0; i <= json.total; i++) {
 					new Element('li', {
 						'text': i+1,
 						'class': nr == i ? 'active': '',
@@ -78,11 +78,16 @@ Page.Log = new Class({
 	addColors: function(text){
 		var self = this;
 
-		text = text.replace(/\u001b\[31m/gi, '</span><span class="error">')
-		text = text.replace(/\u001b\[36m/gi, '</span><span class="debug">')
-		text = text.replace(/\u001b\[33m/gi, '</span><span class="debug">')
-		text = text.replace(/\u001b\[0m\n/gi, '</span><span class="time">')
-		text = text.replace(/\u001b\[0m/gi, '</span><span>')
+		text = text
+			.replace(/&/g, '&amp;')
+			.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;')
+			.replace(/"/g, '&quot;')
+			.replace(/\u001b\[31m/gi, '</span><span class="error">')
+			.replace(/\u001b\[36m/gi, '</span><span class="debug">')
+			.replace(/\u001b\[33m/gi, '</span><span class="debug">')
+			.replace(/\u001b\[0m\n/gi, '</span><span class="time">')
+			.replace(/\u001b\[0m/gi, '</span><span>')
 
 		return '<span class="time">' + text + '</span>';
 	}

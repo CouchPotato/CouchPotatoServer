@@ -19,4 +19,8 @@ class Automation(Plugin):
 
         movies = fireEvent('automation.get_movies', merge = True)
         for imdb_id in movies:
-            fireEvent('movie.add', params = {'identifier': imdb_id}, force_readd = False)
+            prop_name = 'automation.added.%s' % imdb_id
+            added = Env.prop(prop_name, default = False)
+            if not added:
+                fireEvent('movie.add', params = {'identifier': imdb_id}, force_readd = False)
+                Env.prop(prop_name, True)

@@ -1,5 +1,7 @@
 from couchpotato.api import addApiView
+from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.request import jsonified, getParam, getParams
+from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
@@ -71,14 +73,14 @@ class Logging(Plugin):
 
         return jsonified({
             'success': True,
-            'log': log,
+            'log': toUnicode(log),
             'total': total,
         })
 
     def partial(self):
 
         log_type = getParam('type', 'all')
-        total_lines = getParam('lines', 30)
+        total_lines = tryInt(getParam('lines', 30))
 
         log_lines = []
 
@@ -92,13 +94,12 @@ class Logging(Plugin):
 
             reversed_lines = []
             f = open(path, 'r')
-            reversed_lines = f.read().split('[0m\n')
+            reversed_lines = toUnicode(f.read()).split('[0m\n')
             reversed_lines.reverse()
 
             brk = False
             for line in reversed_lines:
 
-                #print '%s ' % log_type in line.lower()
                 if log_type == 'all' or '%s ' % log_type.upper() in line:
                     log_lines.append(line)
 
@@ -149,7 +150,7 @@ class Logging(Plugin):
             except:
                 log.error(log_message)
         except:
-            log.error('Couldn\'t log via API: %s' % params)
+            log.error('Couldn\'t log via API: %s', params)
 
 
         return jsonified({

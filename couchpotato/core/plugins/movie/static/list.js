@@ -5,10 +5,12 @@ var MovieList = new Class({
 	options: {
 		navigation: true,
 		limit: 50,
-		menu: []
+		menu: [],
+		add_new: false
 	},
 
 	movies: [],
+	movies_added: {},
 	letters: {},
 	filter: {
 		'startswith': null,
@@ -30,6 +32,17 @@ var MovieList = new Class({
 			})
 		);
 		self.getMovies();
+
+		if(options.add_new)
+			App.addEvent('movie.added', self.movieAdded.bind(self))
+	},
+
+	movieAdded: function(notification){
+		var self = this;
+		window.scroll(0,0);
+
+		if(!self.movies_added[notification.data.id])
+			self.createMovie(notification.data, 'top');
 	},
 
 	create: function(){
@@ -59,7 +72,7 @@ var MovieList = new Class({
 		self.created = true;
 	},
 
-	addMovies: function(movies){
+	addMovies: function(movies, total){
 		var self = this;
 
 		if(!self.created) self.create();
@@ -71,24 +84,40 @@ var MovieList = new Class({
 		}
 
 		Object.each(movies, function(movie){
-
-			// Attach proper actions
-			var a = self.options.actions,
-				status = Status.get(movie.status_id);
-			var actions = a[status.identifier.capitalize()] || a.Wanted || {};
-
-			var m = new Movie(self, {
-				'actions': actions,
-				'view': self.current_view,
-				'onSelect': self.calculateSelected.bind(self)
-			}, movie);
-			$(m).inject(self.movie_list);
-			m.fireEvent('injected');
-
-			self.movies.include(m)
-
+			self.createMovie(movie);
 		});
+		
+		self.setCounter(total);
 
+	},
+	
+	setCounter: function(count){
+		var self = this;
+		
+		if(!self.navigation_counter) return;
+		
+		self.navigation_counter.set('text', (count || 0));
+		
+	},
+
+	createMovie: function(movie, inject_at){
+		var self = this;
+
+		// Attach proper actions
+		var a = self.options.actions,
+			status = Status.get(movie.status_id);
+		var actions = a[status.identifier.capitalize()] || a.Wanted || {};
+
+		var m = new Movie(self, {
+			'actions': actions,
+			'view': self.current_view,
+			'onSelect': self.calculateSelected.bind(self)
+		}, movie);
+		$(m).inject(self.movie_list, inject_at || 'bottom');
+		m.fireEvent('injected');
+
+		self.movies.include(m)
+		self.movies_added[movie.id] = true;
 	},
 
 	createNavigation: function(){
@@ -100,6 +129,7 @@ var MovieList = new Class({
 
 		self.navigation = new Element('div.alph_nav').adopt(
 			self.navigation_actions = new Element('ul.inlay.actions.reversed'),
+			self.navigation_counter = new Element('span.counter[title=Total]'),
 			self.navigation_alpha = new Element('ul.numbers', {
 				'events': {
 					'click:relay(li)': function(e, el){
@@ -260,6 +290,7 @@ var MovieList = new Class({
 			'events': {
 				'click': function(e){
 					(e).preventDefault();
+					this.set('text', 'Deleting..')
 					Api.request('movie.delete', {
 						'data': {
 							'id': ids.join(','),
@@ -268,14 +299,19 @@ var MovieList = new Class({
 						'onSuccess': function(){
 							qObj.close();
 
+							var erase_movies = [];
 							self.movies.each(function(movie){
 								if (movie.isSelected()){
 									$(movie).destroy()
-									self.movies.erase(movie)
+									erase_movies.include(movie)
 								}
 							});
 
-							self.calculateSelected()
+							erase_movies.each(function(movie){
+								self.movies.erase(movie);
+							});
+
+							self.calculateSelected();
 						}
 					});
 
@@ -419,7 +455,7 @@ var MovieList = new Class({
 			}, self.filter),
 			'onComplete': function(json){
 				self.store(json.movies);
-				self.addMovies(json.movies);
+				self.addMovies(json.movies, json.total);
 				self.load_more.set('text', 'load more movies');
 				if(self.scrollspy) self.scrollspy.start();
 			}

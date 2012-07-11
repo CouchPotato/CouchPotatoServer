@@ -11,53 +11,124 @@ var Movie = new Class({
 		self.view = options.view || 'thumbs';
 		self.list = list;
 
+		self.el = new Element('div.movie.inlay');
+
 		self.profile = Quality.getProfile(data.profile_id) || {};
 		self.parent(self, options);
+
+		App.addEvent('movie.update.'+data.id, self.update.bind(self));
+
+		['movie.busy', 'searcher.started'].each(function(listener){
+			App.addEvent(listener+'.'+data.id, function(notification){
+				if(notification.data)
+					self.busy(true)
+			});
+		})
+	},
+
+	busy: function(set_busy){
+		var self = this;
+
+		if(!set_busy){
+			if(self.spinner){
+				self.mask.fade('out');
+				setTimeout(function(){
+					if(self.mask)
+						self.mask.destroy();
+					if(self.spinner)
+						self.spinner.el.destroy();
+					self.spinner = null;
+					self.mask = null;
+				}, 400);
+			}
+		}
+		else if(!self.spinner) {
+			self.createMask();
+			self.spinner = createSpinner(self.mask);
+			self.positionMask();
+			self.mask.fade('in');
+		}
+	},
+
+	createMask: function(){
+		var self = this;
+		self.mask = new Element('div.mask', {
+			'styles': {
+				'z-index': '1'
+			}
+		}).inject(self.el, 'top').fade('hide');
+		self.positionMask();
+	},
+
+	positionMask: function(){
+		var self = this,
+			s = self.el.getSize()
+
+		return self.mask.setStyles({
+			'width': s.x,
+			'height': s.y
+		}).position({
+			'relativeTo': self.el
+		})
+	},
+
+	update: function(notification){
+		var self = this;
+
+		self.data = notification.data;
+		self.container.destroy();
+
+		self.profile = Quality.getProfile(self.data.profile_id) || {};
+		self.create();
+
+		self.busy(false);
 	},
 
 	create: function(){
 		var self = this;
 
-		self.el = new Element('div.movie.inlay').adopt(
-			self.select_checkbox = new Element('input[type=checkbox].inlay', {
-				'events': {
-					'change': function(){
-						self.fireEvent('select')
-					}
-				}
-			}),
-			self.thumbnail = File.Select.single('poster', self.data.library.files),
-			self.data_container = new Element('div.data.inlay.light', {
-				'tween': {
-					duration: 400,
-					transition: 'quint:in:out',
-					onComplete: self.fireEvent.bind(self, 'slideEnd')
-				}
-			}).adopt(
-				self.info_container = new Element('div.info').adopt(
-					self.title = new Element('div.title', {
-						'text': self.getTitle() || 'n/a'
-					}),
-					self.year = new Element('div.year', {
-						'text': self.data.library.year || 'n/a'
-					}),
-					self.rating = new Element('div.rating.icon', {
-						'text': self.data.library.rating
-					}),
-					self.description = new Element('div.description', {
-						'text': self.data.library.plot
-					}),
-					self.quality = new Element('div.quality', {
-						'events': {
-							'click': function(e){
-								var releases = self.el.getElement('.actions .releases');
-									if(releases)
-										releases.fireEvent('click', [e])
-							}
+		self.el.adopt(
+			self.container = new Element('div.movie_container').adopt(
+				self.select_checkbox = new Element('input[type=checkbox].inlay', {
+					'events': {
+						'change': function(){
+							self.fireEvent('select')
 						}
-					})
-				),
-				self.actions = new Element('div.actions')
+					}
+				}),
+				self.thumbnail = File.Select.single('poster', self.data.library.files),
+				self.data_container = new Element('div.data.inlay.light', {
+					'tween': {
+						duration: 400,
+						transition: 'quint:in:out',
+						onComplete: self.fireEvent.bind(self, 'slideEnd')
+					}
+				}).adopt(
+					self.info_container = new Element('div.info').adopt(
+						self.title = new Element('div.title', {
+							'text': self.getTitle() || 'n/a'
+						}),
+						self.year = new Element('div.year', {
+							'text': self.data.library.year || 'n/a'
+						}),
+						self.rating = new Element('div.rating.icon', {
+							'text': self.data.library.rating
+						}),
+						self.description = new Element('div.description', {
+							'text': self.data.library.plot
+						}),
+						self.quality = new Element('div.quality', {
+							'events': {
+								'click': function(e){
+									var releases = self.el.getElement('.actions .releases');
+										if(releases)
+											releases.fireEvent('click', [e])
+								}
+							}
+						})
+					),
+					self.actions = new Element('div.actions')
+				)
 			)
 		);
 
@@ -150,7 +221,7 @@ var Movie = new Class({
 			self.el.removeEvents('outerClick')
 
 			self.addEvent('slideEnd:once', function(){
-				self.el.getElements('> :not(.data):not(.poster)').hide();
+				self.el.getElements('> :not(.data):not(.poster):not(.movie_container)').hide();
 			});
 
 			self.data_container.tween('right', -840, 0);
@@ -178,6 +249,10 @@ var Movie = new Class({
 
 	isSelected: function(){
 		return this.select_checkbox.get('checked');
+	},
+
+	toElement: function(){
+		return this.el;
 	}
 
 });
@@ -290,7 +365,7 @@ var ReleaseAction = new Class({
 				} catch(e){}
 
 				new Element('div', {
-					'class': 'item'
+					'class': 'item '+status.identifier
 				}).adopt(
 					new Element('span.name', {'text': self.get(release, 'name'), 'title': self.get(release, 'name')}),
 					new Element('span.status', {'text': status.identifier, 'class': 'release_status '+status.identifier}),
@@ -356,5 +431,110 @@ var ReleaseAction = new Class({
 		})
 
 	}
+
+});
+
+var TrailerAction = new Class({
+
+	Extends: MovieAction,
+	id: null,
+
+	create: function(){
+		var self = this;
+
+		self.el = new Element('a.trailer', {
+			'title': 'Watch the trailer of ' + self.movie.getTitle(),
+			'events': {
+				'click': self.watch.bind(self)
+			}
+		});
+
+	},
+
+	watch: function(offset){
+		var self = this;
+
+		var data_url = 'http://gdata.youtube.com/feeds/videos?vq="{title}" {year} trailer&max-results=1&alt=json-in-script&orderby=relevance&sortorder=descending&format=5&fmt=18'
+		var url = data_url.substitute({
+				'title': self.movie.getTitle(),
+				'year': self.movie.get('year'),
+				'offset': offset || 1
+			}),
+			size = $(self.movie).getSize(),
+			height = (size.x/16)*9,
+			id = 'trailer-'+randomString();
+
+		self.player_container = new Element('div[id='+id+']');
+		self.container = new Element('div.hide.trailer_container')
+			.adopt(self.player_container)
+			.inject(self.movie.container, 'top');
+
+		self.container.setStyle('height', 0);
+		self.container.removeClass('hide');
+
+		self.close_button = new Element('a.hide.hide_trailer', {
+			'text': 'Hide trailer',
+			'events': {
+				'click': self.stop.bind(self)
+			}
+		}).inject(self.movie);
+
+		setTimeout(function(){
+			$(self.movie).setStyle('max-height', height);
+			self.container.setStyle('height', height);
+		}, 100)
+
+		new Request.JSONP({
+			'url': url,
+			'onComplete': function(json){
+				var video_url = json.feed.entry[0].id.$t.split('/'),
+					video_id = video_url[video_url.length-1];
+
+				self.player = new YT.Player(id, {
+					'height': height,
+					'width': size.x,
+					'videoId': video_id,
+					'playerVars': {
+						'autoplay': 1,
+						'showsearch': 0,
+						'wmode': 'transparent',
+						'iv_load_policy': 3
+					}
+				});
+
+				self.close_button.removeClass('hide');
+
+				var quality_set = false;
+				var change_quality = function(state){
+					if(!quality_set && (state.data == 1 || state.data || 2)){
+						try {
+							self.player.setPlaybackQuality('hd720');
+							quality_set = true;
+						}
+						catch(e){
+
+						}
+					}
+				}
+				self.player.addEventListener('onStateChange', change_quality);
+
+			}
+		}).send()
+
+	},
+
+	stop: function(){
+		var self = this;
+
+		self.player.stopVideo();
+		self.container.addClass('hide');
+		self.close_button.addClass('hide');
+
+		setTimeout(function(){
+			self.container.destroy()
+			self.close_button.destroy();
+		}, 1800)
+	}
+
 
 });

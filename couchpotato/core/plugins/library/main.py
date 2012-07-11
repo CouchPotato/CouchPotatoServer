@@ -78,7 +78,7 @@ class LibraryPlugin(Plugin):
             except: pass
 
             if not info or len(info) == 0:
-                log.error('Could not update, no movie info to work with: %s' % identifier)
+                log.error('Could not update, no movie info to work with: %s', identifier)
                 return False
 
         # Main info
@@ -95,7 +95,7 @@ class LibraryPlugin(Plugin):
             db.commit()
 
             titles = info.get('titles', [])
-            log.debug('Adding titles: %s' % titles)
+            log.debug('Adding titles: %s', titles)
             for title in titles:
                 if not title:
                     continue
@@ -117,26 +117,29 @@ class LibraryPlugin(Plugin):
                         continue
 
                     file_path = fireEvent('file.download', url = image, single = True)
-                    file_obj = fireEvent('file.add', path = file_path, type_tuple = ('image', type), single = True)
-                    try:
-                        file_obj = db.query(File).filter_by(id = file_obj.get('id')).one()
-                        library.files.append(file_obj)
-                        db.commit()
-                    except:
-                        log.debug('Failed to attach to library: %s' % traceback.format_exc())
+                    if file_path:
+                        file_obj = fireEvent('file.add', path = file_path, type_tuple = ('image', type), single = True)
+                        try:
+                            file_obj = db.query(File).filter_by(id = file_obj.get('id')).one()
+                            library.files.append(file_obj)
+                            db.commit()
+                        except:
+                            log.debug('Failed to attach to library: %s', traceback.format_exc())
 
             library_dict = library.to_dict(self.default_dict)
 
-        fireEvent('library.update_finish', data = library_dict)
-
-        #db.close()
         return library_dict
 
     def updateReleaseDate(self, identifier):
 
         db = get_session()
         library = db.query(Library).filter_by(identifier = identifier).first()
-        dates = library.info.get('release_date')
+
+        if not library.info:
+            library_dict = self.update(identifier)
+            dates = library_dict.get('info', {}).get('release_dates')
+        else:
+            dates = library.info.get('release_date')
 
         if dates and dates.get('expires', 0) < time.time():
             dates = fireEvent('movie.release_date', identifier = identifier, merge = True)

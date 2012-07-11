@@ -17,8 +17,9 @@ config = [{
                 },
                 {
                     'name': 'host',
-                    'default': 'localhost:32400',
-                    'description': 'Default should be on localhost:32400',
+                    'default': 'localhost',
+                    'description': 'Default should be on localhost',
+                    'advanced': True,
                 },
             ],
         }

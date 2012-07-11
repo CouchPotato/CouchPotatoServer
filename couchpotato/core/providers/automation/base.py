@@ -20,7 +20,7 @@ class Automation(Plugin):
     def _getMovies(self):
 
         if not self.canCheck():
-            log.debug('Just checked, skipping %s' % self.getName())
+            log.debug('Just checked, skipping %s', self.getName())
             return []
 
         self.last_checked = time.time()
@@ -35,18 +35,27 @@ class Automation(Plugin):
         else:
             return None
 
-    def isMinimal(self, identifier):
-
-        movie = fireEvent('movie.info', identifier = identifier, merge = True)
-
+    def isMinimalMovie(self, movie):
+        if movie['rating'] and movie['rating'].get('imdb'):
+            movie['votes'] = movie['rating']['imdb'][1]
+            movie['rating'] = movie['rating']['imdb'][0]
+        identifier = movie['imdb']
         for minimal_type in ['year', 'rating', 'votes']:
             type_value = movie.get(minimal_type, 0)
             type_min = self.getMinimal(minimal_type)
             if type_value < type_min:
-                log.info('%s to low for %s, need %s has %s' % (minimal_type, identifier, type_min, type_value))
+                log.info('%s too low for %s, need %s has %s', (minimal_type, identifier, type_min, type_value))
                 return False
 
         return True
+
+    def getIMDBFromTitle(self, name, year = None):
+        result = fireEvent('movie.search', q = '%s %s' % (name, year), limit = 1, merge = True)
+
+        if len(result) > 0:
+            return result[0]
+        else:
+            return None
 
     def getMinimal(self, min_type):
         return Env.setting(min_type, 'automation')

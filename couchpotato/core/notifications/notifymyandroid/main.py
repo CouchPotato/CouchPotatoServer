@@ -23,6 +23,6 @@ class NotifyMyAndroid(Notification):
 
         for key in keys:
             if not response[str(key)]['code'] == u'200':
-                log.error('Could not send notification to NotifyMyAndroid (%s). %s' % (key, response[key]['message']))
+                log.error('Could not send notification to NotifyMyAndroid (%s). %s', (key, response[key]['message']))
 
         return response

@@ -1,5 +1,14 @@
+from bs4 import BeautifulSoup
+from couchpotato.core.event import fireEvent
+from couchpotato.core.helpers.encoding import toUnicode
+from couchpotato.core.helpers.variable import getTitle, tryInt, cleanHost
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.torrent.base import TorrentProvider
+from couchpotato.environment import Env
+from urllib import quote_plus
+import re
+import time
+import traceback
 
 log = CPLog(__name__)
 
@@ -7,140 +16,127 @@ log = CPLog(__name__)
 class ThePirateBay(TorrentProvider):
 
     urls = {
-        'download': 'http://torrents.depiraatbaai.be/%s/%s.torrent',
-        'nfo': 'https://depiraatbaai.be/torrent/%s',
-        'detail': 'https://depiraatbaai.be/torrent/%s',
-        'search': 'https://depiraatbaai.be/search/%s/0/7/%d',
+         'detail': '%s/torrent/%s',
+         'search': '%s/search/%s/0/7/%d'
     }
 
     cat_ids = [
-        ([207], ['720p', '1080p']),
-        ([200], ['cam', 'ts', 'dvdrip', 'tc', 'r5', 'scr', 'brrip']),
-        ([202], ['dvdr'])
+       ([207], ['720p', '1080p']),
+       ([201], ['cam', 'ts', 'dvdrip', 'tc', 'r5', 'scr', 'brrip']),
+       ([202], ['dvdr'])
     ]
-    cat_backup_id = 200
 
-    ignore_string = {
-        '720p': ' -brrip -bdrip',
-        '1080p': ' -brrip -bdrip'
-    }
+    cat_backup_id = 200
+    disable_provider = False
+    http_time_between_calls = 0
+
+    proxy_list = [
+        'https://thepiratebay.se',
+        'https://tpb.ipredator.se',
+        'https://depiraatbaai.be',
+        'https://piratereverse.info',
+        'https://tpb.pirateparty.org.uk',
+        'https://argumentomteemigreren.nl',
+    ]
 
     def __init__(self):
-        pass
+        self.domain = self.conf('domain')
+        super(ThePirateBay, self).__init__()
 
-    def find(self, movie, quality, type):
+    def getDomain(self, url = ''):
+
+        if not self.domain:
+            for proxy in self.proxy_list:
+
+                prop_name = 'tpb_proxy.%s' % proxy
+                last_check = float(Env.prop(prop_name, default = 0))
+                if last_check > time.time() - 1209600:
+                    continue
+
+                data = ''
+                try:
+                    data = self.urlopen(proxy, timeout = 3)
+                except:
+                    log.debug('Failed tpb proxy %s', proxy)
+
+                if 'title="Pirate Search"' in data:
+                    log.debug('Using proxy: %s', proxy)
+                    self.domain = proxy
+                    break
+
+                Env.prop(prop_name, time.time())
+
+        if not self.domain:
+            log.error('No TPB proxies left, please add one in settings, or let us know which one to add on the forum.')
+            return None
+
+        return cleanHost(self.domain).rstrip('/') + url
+
+    def search(self, movie, quality):
 
         results = []
-        if not self.enabled() or not self.isAvailable(self.apiUrl):
+        if self.isDisabled() or not self.getDomain():
             return results
 
-        url = self.apiUrl % (quote_plus(self.toSearchString(movie.name + ' ' + quality) + self.makeIgnoreString(type)), self.getCatId(type))
+        cache_key = 'thepiratebay.%s.%s' % (movie['library']['identifier'], quality.get('identifier'))
+        search_url = self.urls['search'] % (self.getDomain(), quote_plus(getTitle(movie['library']) + ' ' + quality['identifier']), self.getCatId(quality['identifier'])[0])
+        data = self.getCache(cache_key, search_url)
 
-        log.info('Searching: %s' % url)
+        if data:
+            try:
+                soup = BeautifulSoup(data)
+                results_table = soup.find('table', attrs = {'id': 'searchResult'})
+                entries = results_table.find_all('tr')
+                for result in entries[1:]:
+                    link = result.find(href = re.compile('torrent\/\d+\/'))
+                    download = result.find(href = re.compile('magnet:'))
 
-        data = self.urlopen(url)
-        if not data:
-            log.error('Failed to get data from %s.' % url)
-            return results
+                    size = re.search('Size (?P<size>.+),', unicode(result.select('font.detDesc')[0])).group('size')
+                    if link and download:
 
-        try:
-            tables = SoupStrainer('table')
-            html = BeautifulSoup(data, parseOnlyThese = tables)
-            resultTable = html.find('table', attrs = {'id':'searchResult'})
-            for result in resultTable.findAll('tr'):
-                details = result.find('a', attrs = {'class':'detLink'})
-                if details:
-                    href = re.search('/(?P<id>\d+)/', details['href'])
-                    id = href.group('id')
-                    name = self.toSaveString(details.contents[0])
-                    desc = result.find('font', attrs = {'class':'detDesc'}).contents[0].split(',')
-                    date = ''
-                    size = 0
-                    for item in desc:
-                        # Weird date stuff
-                        if 'uploaded' in item.lower():
-                            date = item.replace('Uploaded', '')
-                            date = date.replace('Today', '')
+                        def extra_score(item):
+                            trusted = (0, 10)[result.find('img', alt = re.compile('Trusted')) != None]
+                            vip = (0, 20)[result.find('img', alt = re.compile('VIP')) != None]
+                            confirmed = (0, 30)[result.find('img', alt = re.compile('Helpers')) != None]
+                            moderated = (0, 50)[result.find('img', alt = re.compile('Moderator')) != None]
 
-                            # Do something with yesterday
-                            yesterdayMinus = 0
-                            if 'Y-day' in date:
-                                date = date.replace('Y-day', '')
-                                yesterdayMinus = 86400
+                            return confirmed + trusted + vip + moderated
 
-                            datestring = date.replace('&nbsp;', ' ').strip()
-                            date = int(time.mktime(parse(datestring).timetuple())) - yesterdayMinus
-                        # size
-                        elif 'size' in item.lower():
-                            size = item.replace('Size', '')
+                        new = {
+                            'id': re.search('/(?P<id>\d+)/', link['href']).group('id'),
+                            'type': 'torrent_magnet',
+                            'name': link.string,
+                            'check_nzb': False,
+                            'description': '',
+                            'provider': self.getName(),
+                            'url': download['href'],
+                            'detail_url': self.getDomain(link['href']),
+                            'size': self.parseSize(size),
+                            'seeders': tryInt(result.find_all('td')[2].string),
+                            'leechers': tryInt(result.find_all('td')[3].string),
+                            'extra_score': extra_score,
+                            'get_more_info': self.getMoreInfo
+                        }
 
-                    seedleech = []
-                    for td in result.findAll('td'):
-                        try:
-                            seedleech.append(int(td.contents[0]))
-                        except ValueError:
-                            pass
+                        new['score'] = fireEvent('score.calculate', new, movie, single = True)
+                        is_correct_movie = fireEvent('searcher.correct_movie', nzb = new, movie = movie, quality = quality,
+                                                        imdb_results = False, single_category = False, single = True)
 
-                    seeders = 0
-                    leechers = 0
-                    if len(seedleech) == 2 and seedleech[0] > 0 and seedleech[1] > 0:
-                        seeders = seedleech[0]
-                        leechers = seedleech[1]
-
-                    # to item
-                    new = self.feedItem()
-                    new.id = id
-                    new.type = 'torrent'
-                    new.name = name
-                    new.date = date
-                    new.size = self.parseSize(size)
-                    new.seeders = seeders
-                    new.leechers = leechers
-                    new.url = self.downloadLink(id, name)
-                    new.score = self.calcScore(new, movie) + self.uploader(result) + (seeders / 10)
-
-                    if seeders > 0 and (new.date + (int(self.conf('wait')) * 60 * 60) < time.time()) and Qualities.types.get(type).get('minSize') <= new.size:
-                        new.detailUrl = self.detailLink(id)
-                        new.content = self.getInfo(new.detailUrl)
-                        if self.isCorrectMovie(new, movie, type):
+                        if is_correct_movie:
                             results.append(new)
-                            log.info('Found: %s' % new.name)
+                            self.found(new)
 
-            return results
-
-        except AttributeError:
-            log.debug('No search results found.')
+                return results
+            except:
+                log.error('Failed getting results from %s: %s', (self.getName(), traceback.format_exc()))
 
         return []
 
-    def makeIgnoreString(self, type):
-        ignore = self.ignoreString.get(type)
-        return ignore if ignore else ''
+    def getMoreInfo(self, item):
+        full_description = self.getCache('tpb.%s' % item['id'], item['detail_url'], cache_timeout = 25920000)
+        html = BeautifulSoup(full_description)
+        nfo_pre = html.find('div', attrs = {'class':'nfo'})
+        description = toUnicode(nfo_pre.text) if nfo_pre else ''
 
-    def uploader(self, html):
-        score = 0
-        if html.find('img', attr = {'alt':'VIP'}):
-            score += 3
-        if html.find('img', attr = {'alt':'Trusted'}):
-            score += 1
-        return score
-
-
-    def getInfo(self, url):
-        log.debug('Getting info: %s' % url)
-
-        data = self.urlopen(url)
-        if not data:
-            log.error('Failed to get data from %s.' % url)
-            return ''
-
-        div = SoupStrainer('div')
-        html = BeautifulSoup(data, parseOnlyThese = div)
-        html = html.find('div', attrs = {'class':'nfo'})
-        return str(html).decode("utf-8", "replace")
-
-    def downloadLink(self, id, name):
-        return self.downloadUrl % (id, quote_plus(name))
-
-    def isEnabled(self):
-        return self.conf('enabled') and TorrentProvider.isEnabled(self)
+        item['description'] = description
+        return item

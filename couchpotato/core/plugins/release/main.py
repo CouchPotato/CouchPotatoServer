@@ -79,7 +79,7 @@ class Release(Plugin):
                     rel.files.append(added_file)
                     db.commit()
                 except Exception, e:
-                    log.debug('Failed to attach "%s" to release: %s' % (cur_file, e))
+                    log.debug('Failed to attach "%s" to release: %s', (cur_file, e))
 
         fireEvent('movie.restatus', movie.id)
 
@@ -143,7 +143,7 @@ class Release(Plugin):
                 item[info.identifier] = info.value
 
             # Get matching provider
-            provider = fireEvent('provider.belongs_to', item['url'], single = True)
+            provider = fireEvent('provider.belongs_to', item['url'], provider = item.get('provider'), single = True)
             item['download'] = provider.download
 
             fireEvent('searcher.download', data = item, movie = rel.movie.to_dict({
@@ -158,7 +158,7 @@ class Release(Plugin):
                 'success': True
             })
         else:
-            log.error('Couldn\'t find release with id: %s' % id)
+            log.error('Couldn\'t find release with id: %s', id)
 
         #db.close()
         return jsonified({

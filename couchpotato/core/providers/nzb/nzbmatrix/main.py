@@ -32,7 +32,7 @@ class NZBMatrix(NZBProvider, RSS):
 
         results = []
 
-        if self.isDisabled() or not self.isAvailable(self.urls['search']):
+        if self.isDisabled():
             return results
 
         cat_ids = ','.join(['%s' % x for x in self.getCatId(quality.get('identifier'))])
@@ -58,7 +58,7 @@ class NZBMatrix(NZBProvider, RSS):
                     data = XMLTree.fromstring(data)
                     nzbs = self.getElements(data, 'channel/item')
                 except Exception, e:
-                    log.debug('%s, %s' % (self.getName(), e))
+                    log.debug('%s, %s', (self.getName(), e))
                     return results
 
                 for nzb in nzbs:
@@ -83,13 +83,13 @@ class NZBMatrix(NZBProvider, RSS):
                         'description': self.getTextElement(nzb, "description"),
                         'check_nzb': True,
                     }
-                    new['score'] = fireEvent('score.calculate', new, movie, single = True)
 
                     is_correct_movie = fireEvent('searcher.correct_movie',
                                                  nzb = new, movie = movie, quality = quality,
                                                  imdb_results = True, single_category = single_cat, single = True)
 
                     if is_correct_movie:
+                        new['score'] = fireEvent('score.calculate', new, movie, single = True)
                         results.append(new)
                         self.found(new)
 
@@ -98,6 +98,9 @@ class NZBMatrix(NZBProvider, RSS):
                 log.error('Failed to parse XML response from NZBMatrix.com')
 
         return results
+
+    def download(self, url = '', nzb_id = ''):
+        return self.urlopen(url, headers = {'User-Agent': Env.getIdentifier()})
 
     def getApiExt(self):
         return '&username=%s&apikey=%s' % (self.conf('username'), self.conf('api_key'))

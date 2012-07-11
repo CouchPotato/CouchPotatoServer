@@ -18,13 +18,14 @@
 from .core import (consume_task, LANGUAGE_INDEX, SERVICE_INDEX,
     SERVICE_CONFIDENCE, MATCHING_CONFIDENCE, SERVICES, create_list_tasks,
     create_download_tasks, group_by_video, key_subtitles)
-from .languages import list_languages
+from .language import language_list, language_set, LANGUAGES
 from .tasks import StopTask
 import Queue
 import logging
 import threading
 
 
+__all__ = ['Worker', 'Pool']
 logger = logging.getLogger(__name__)
 
 
@@ -108,34 +109,34 @@ class Pool(object):
                 break
         return results
 
-    def list_subtitles(self, paths, languages=None, services=None, force=True, multi=False, cache_dir=None, max_depth=3):
+    def list_subtitles(self, paths, languages=None, services=None, force=True, multi=False, cache_dir=None, max_depth=3, scan_filter=None):
         """See :meth:`subliminal.list_subtitles`"""
         services = services or SERVICES
-        languages = set(languages or list_languages(1))
+        languages = language_set(languages) if languages is not None else language_set(LANGUAGES)
         if isinstance(paths, basestring):
             paths = [paths]
         if any([not isinstance(p, unicode) for p in paths]):
             logger.warning(u'Not all entries are unicode')
-        tasks = create_list_tasks(paths, languages, services, force, multi, cache_dir, max_depth)
+        tasks = create_list_tasks(paths, languages, services, force, multi, cache_dir, max_depth, scan_filter)
         for task in tasks:
             self.tasks.put(task)
         self.join()
         results = self.collect()
         return group_by_video(results)
 
-    def download_subtitles(self, paths, languages=None, services=None, cache_dir=None, max_depth=3, force=True, multi=False, order=None):
+    def download_subtitles(self, paths, languages=None, services=None, force=True, multi=False, cache_dir=None, max_depth=3, scan_filter=None, order=None):
         """See :meth:`subliminal.download_subtitles`"""
         services = services or SERVICES
-        languages = languages or list_languages(1)
+        languages = language_list(languages) if languages is not None else language_list(LANGUAGES)
         if isinstance(paths, basestring):
             paths = [paths]
         order = order or [LANGUAGE_INDEX, SERVICE_INDEX, SERVICE_CONFIDENCE, MATCHING_CONFIDENCE]
-        subtitles_by_video = self.list_subtitles(paths, set(languages), services, force, multi, cache_dir, max_depth)
+        subtitles_by_video = self.list_subtitles(paths, languages, services, force, multi, cache_dir, max_depth, scan_filter)
         for video, subtitles in subtitles_by_video.iteritems():
             subtitles.sort(key=lambda s: key_subtitles(s, video, languages, services, order), reverse=True)
-        tasks = create_download_tasks(subtitles_by_video, multi)
+        tasks = create_download_tasks(subtitles_by_video, languages, multi)
         for task in tasks:
             self.tasks.put(task)
         self.join()
         results = self.collect()
-        return results
+        return group_by_video(results)

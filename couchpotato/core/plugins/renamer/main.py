@@ -86,19 +86,13 @@ class Renamer(Plugin):
 
             # Add _UNKNOWN_ if no library item is connected
             if not group['library'] or not movie_title:
-                if group['dirname']:
-                    rename_files[group['parentdir']] = group['parentdir'].replace(group['dirname'], '_UNKNOWN_%s' % group['dirname'])
-                else: # Add it to filename
-                    for file_type in group['files']:
-                        for rename_me in group['files'][file_type]:
-                            filename = os.path.basename(rename_me)
-                            rename_files[rename_me] = rename_me.replace(filename, '_UNKNOWN_%s' % filename)
-
+                self.tagDir(group, 'unknown')
+                continue
             # Rename the files using the library data
             else:
                 group['library'] = fireEvent('library.update', identifier = group['library']['identifier'], single = True)
                 if not group['library']:
-                    log.error('Could not rename, no library item to work with: %s' % group_identifier)
+                    log.error('Could not rename, no library item to work with: %s', group_identifier)
                     continue
 
                 library = group['library']
@@ -129,13 +123,14 @@ class Renamer(Plugin):
                      'source': group['meta_data']['source'],
                      'resolution_width': group['meta_data'].get('resolution_width'),
                      'resolution_height': group['meta_data'].get('resolution_height'),
+                     'imdb_id': library['identifier'],
                 }
 
                 for file_type in group['files']:
 
                     # Move nfo depending on settings
                     if file_type is 'nfo' and not self.conf('rename_nfo'):
-                        log.debug('Skipping, renaming of %s disabled' % file_type)
+                        log.debug('Skipping, renaming of %s disabled', file_type)
                         if self.conf('cleanup'):
                             for current_file in group['files'][file_type]:
                                 remove_files.append(current_file)
@@ -194,7 +189,7 @@ class Renamer(Plugin):
                                     break
 
                             if not found:
-                                log.error('Could not determine dvd structure for: %s' % current_file)
+                                log.error('Could not determine dvd structure for: %s', current_file)
 
                         # Do rename others
                         else:
@@ -208,7 +203,7 @@ class Renamer(Plugin):
                         if file_type is 'subtitle':
 
                             # rename subtitles with or without language
-                            #rename_files[current_file] = os.path.join(destination, final_folder_name, final_file_name)
+                            rename_files[current_file] = os.path.join(destination, final_folder_name, final_file_name)
                             sub_langs = group['subtitle_language'].get(current_file, [])
 
                             rename_extras = self.getRenameExtras(
@@ -263,13 +258,13 @@ class Renamer(Plugin):
 
                     # Mark movie "done" onces it found the quality with the finish check
                     try:
-                        if movie.status_id == active_status.get('id'):
+                        if movie.status_id == active_status.get('id') and movie.profile:
                             for profile_type in movie.profile.types:
                                 if profile_type.quality_id == group['meta_data']['quality']['id'] and profile_type.finish:
                                     movie.status_id = done_status.get('id')
                                     db.commit()
                     except Exception, e:
-                        log.error('Failed marking movie finished: %s %s' % (e, traceback.format_exc()))
+                        log.error('Failed marking movie finished: %s %s', (e, traceback.format_exc()))
 
                     # Go over current movie releases
                     for release in movie.releases:
@@ -279,30 +274,23 @@ class Renamer(Plugin):
 
                             # This is where CP removes older, lesser quality releases
                             if release.quality.order > group['meta_data']['quality']['order']:
-                                log.info('Removing lesser quality %s for %s.' % (movie.library.titles[0].title, release.quality.label))
+                                log.info('Removing lesser quality %s for %s.', (movie.library.titles[0].title, release.quality.label))
                                 for current_file in release.files:
                                     remove_files.append(current_file)
                                 remove_releases.append(release)
                             # Same quality, but still downloaded, so maybe repack/proper/unrated/directors cut etc
                             elif release.quality.order is group['meta_data']['quality']['order']:
-                                log.info('Same quality release already exists for %s, with quality %s. Assuming repack.' % (movie.library.titles[0].title, release.quality.label))
+                                log.info('Same quality release already exists for %s, with quality %s. Assuming repack.', (movie.library.titles[0].title, release.quality.label))
                                 for current_file in release.files:
                                     remove_files.append(current_file)
                                 remove_releases.append(release)
 
                             # Downloaded a lower quality, rename the newly downloaded files/folder to exclude them from scan
                             else:
-                                log.info('Better quality release already exists for %s, with quality %s' % (movie.library.titles[0].title, release.quality.label))
+                                log.info('Better quality release already exists for %s, with quality %s', (movie.library.titles[0].title, release.quality.label))
 
                                 # Add _EXISTS_ to the parent dir
-                                if group['dirname']:
-                                    for rename_me in rename_files: # Don't rename anything in this group
-                                        rename_files[rename_me] = None
-                                    rename_files[group['parentdir']] = group['parentdir'].replace(group['dirname'], '_EXISTS_%s' % group['dirname'])
-                                else: # Add it to filename
-                                    for rename_me in rename_files:
-                                        filename = os.path.basename(rename_me)
-                                        rename_files[rename_me] = rename_me.replace(filename, '_EXISTS_%s' % filename)
+                                self.tagDir(group, 'exists')
 
                                 # Notify on rename fail
                                 download_message = 'Renaming of %s (%s) canceled, exists in %s already.' % (movie.library.titles[0].title, group['meta_data']['quality']['label'], release.quality.label)
@@ -311,7 +299,6 @@ class Renamer(Plugin):
 
                                 break
                         elif release.status_id is snatched_status.get('id'):
-                            print release.quality.label, group['meta_data']['quality']['label']
                             if release.quality.id is group['meta_data']['quality']['id']:
                                 log.debug('Marking release as downloaded')
                                 release.status_id = downloaded_status.get('id')
@@ -323,14 +310,32 @@ class Renamer(Plugin):
                     for current_file in group['files']['leftover']:
                         remove_files.append(current_file)
                 elif not remove_leftovers: # Don't remove anything
-                    remove_files = []
+                    break
+
+            # Remove files
+            for src in remove_files:
+
+                if isinstance(src, File):
+                    src = src.path
+
+                if rename_files.get(src):
+                    log.debug('Not removing file that will be renamed: %s', src)
+                    continue
+
+                log.info('Removing "%s"', src)
+                try:
+                    if os.path.isfile(src):
+                        os.remove(src)
+                except:
+                    log.error('Failed removing %s: %s', (src, traceback.format_exc()))
+                    self.tagDir(group, 'failed_remove')
 
             # Rename all files marked
             group['renamed_files'] = []
             for src in rename_files:
                 if rename_files[src]:
                     dst = rename_files[src]
-                    log.info('Renaming "%s" to "%s"' % (src, dst))
+                    log.info('Renaming "%s" to "%s"', (src, dst))
 
                     # Create dir
                     self.makeDir(os.path.dirname(dst))
@@ -339,34 +344,23 @@ class Renamer(Plugin):
                         self.moveFile(src, dst)
                         group['renamed_files'].append(dst)
                     except:
-                        log.error('Failed moving the file "%s" : %s' % (os.path.basename(src), traceback.format_exc()))
-
-            # Remove files
-            for src in remove_files:
-
-                if isinstance(src, File):
-                    src = src.path
-
-                log.info('Removing "%s"' % src)
-                try:
-                    os.remove(src)
-                except:
-                    log.error('Failed removing %s: %s' % (src, traceback.format_exc()))
+                        log.error('Failed moving the file "%s" : %s', (os.path.basename(src), traceback.format_exc()))
+                        self.tagDir(group, 'failed_rename')
 
             # Remove matching releases
             for release in remove_releases:
-                log.debug('Removing release %s' % release.identifier)
+                log.debug('Removing release %s', release.identifier)
                 try:
                     db.delete(release)
                 except:
-                    log.error('Failed removing %s: %s' % (release.identifier, traceback.format_exc()))
+                    log.error('Failed removing %s: %s', (release.identifier, traceback.format_exc()))
 
             if group['dirname'] and group['parentdir']:
                 try:
-                    log.info('Deleting folder: %s' % group['parentdir'])
+                    log.info('Deleting folder: %s', group['parentdir'])
                     self.deleteEmptyFolder(group['parentdir'])
                 except:
-                    log.error('Failed removing %s: %s' % (group['parentdir'], traceback.format_exc()))
+                    log.error('Failed removing %s: %s', (group['parentdir'], traceback.format_exc()))
 
             # Search for trailers etc
             fireEventAsync('renamer.after', group)
@@ -398,17 +392,43 @@ class Renamer(Plugin):
 
         return rename_files
 
+    def tagDir(self, group, tag):
+
+        rename_files = {}
+
+        if group['dirname']:
+            rename_files[group['parentdir']] = group['parentdir'].replace(group['dirname'], '_%s_%s' % (tag.upper(), group['dirname']))
+        else: # Add it to filename
+            for file_type in group['files']:
+                for rename_me in group['files'][file_type]:
+                    filename = os.path.basename(rename_me)
+                    rename_files[rename_me] = rename_me.replace(filename, '_%s_%s' % (tag.upper(), filename))
+
+        for src in rename_files:
+            if rename_files[src]:
+                dst = rename_files[src]
+                log.info('Renaming "%s" to "%s"', (src, dst))
+
+                # Create dir
+                self.makeDir(os.path.dirname(dst))
+
+                try:
+                    self.moveFile(src, dst)
+                except:
+                    log.error('Failed moving the file "%s" : %s', (os.path.basename(src), traceback.format_exc()))
+                    raise
+
     def moveFile(self, old, dest):
         try:
             shutil.move(old, dest)
 
             try:
-                os.chmod(dest, Env.getPermission('folder'))
+                os.chmod(dest, Env.getPermission('file'))
             except:
-                log.error('Failed setting permissions for file: %s' % dest)
+                log.error('Failed setting permissions for file: %s, %s', (dest, traceback.format_exc(1)))
 
         except:
-            log.error("Couldn't move file '%s' to '%s': %s" % (old, dest, traceback.format_exc()))
+            log.error('Couldn\'t move file "%s" to "%s": %s', (old, dest, traceback.format_exc()))
             raise Exception
 
         return True
@@ -421,7 +441,7 @@ class Renamer(Plugin):
         replaced = toUnicode(string)
         for x, r in replacements.iteritems():
             if r is not None:
-                replaced = replaced.replace('<%s>' % toUnicode(x), toUnicode(r))
+                replaced = replaced.replace(u'<%s>' % toUnicode(x), toUnicode(r))
             else:
                 #If information is not available, we don't want the tag in the filename
                 replaced = replaced.replace('<' + x + '>', '')
@@ -444,9 +464,9 @@ class Renamer(Plugin):
                     try:
                         os.rmdir(full_path)
                     except:
-                        log.error('Couldn\'t remove empty directory %s: %s' % (full_path, traceback.format_exc()))
+                        log.error('Couldn\'t remove empty directory %s: %s', (full_path, traceback.format_exc()))
 
         try:
             os.rmdir(folder)
         except:
-            log.error('Couldn\'t remove empty directory %s: %s' % (folder, traceback.format_exc()))
+            log.error('Couldn\'t remove empty directory %s: %s', (folder, traceback.format_exc()))

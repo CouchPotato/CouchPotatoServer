@@ -21,11 +21,13 @@
 from __future__ import unicode_literals
 from guessit import fileutils
 from guessit.country import Country
+from guessit.textutils import to_unicode
 import re
 import logging
 
 __all__ = [ 'is_iso_language', 'is_language', 'lang_set', 'Language',
-            'ALL_LANGUAGES', 'ALL_LANGUAGES_NAMES', 'search_language' ]
+            'ALL_LANGUAGES', 'ALL_LANGUAGES_NAMES', 'UNDETERMINED',
+            'search_language' ]
 
 
 log = logging.getLogger(__name__)
@@ -46,14 +48,21 @@ _iso639_contents = _iso639_contents[1:]
 language_matrix = [ l.strip().split('|')
                     for l in _iso639_contents.strip().split('\n') ]
 
-language_matrix += [ [ 'unk', '', 'un', 'Unknown', 'inconnu' ] ]
 
+# update information in the language matrix
+language_matrix += [['mol', '', 'mo', 'Moldavian', 'moldave'],
+                    ['ass', '', '', 'Assyrian', 'assyrien']]
 
-# remove unused languages that shadow other common ones with a non-official form
 for lang in language_matrix:
+    # remove unused languages that shadow other common ones with a non-official form
     if (lang[2] == 'se' or # Northern Sami shadows Swedish
         lang[2] == 'br'):  # Breton shadows Brazilian
-        language_matrix.remove(lang)
+        lang[2] = ''
+    # add missing information
+    if lang[0] == 'und':
+        lang[2] = 'un'
+    if lang[0] == 'srp':
+        lang[1] = 'scc' # from OpenSubtitles
 
 
 lng3        = frozenset(l[0] for l in language_matrix if l[0])
@@ -87,12 +96,17 @@ lng_fr_name_to_lng3 = dict((fr_name.lower(), l[0])
 
 # contains a list of exceptions: strings that should be parsed as a language
 # but which are not in an ISO form
-lng_exceptions = { 'gr': ('gre', None),
+lng_exceptions = { 'unknown': ('und', None),
+                   'inconnu': ('und', None),
+                   'unk': ('und', None),
+                   'un': ('und', None),
+                   'gr': ('gre', None),
                    'greek': ('gre', None),
                    'esp': ('spa', None),
                    'español': ('spa', None),
                    'se': ('swe', None),
                    'po': ('pt', 'br'),
+                   'pb': ('pt', 'br'),
                    'pob': ('pt', 'br'),
                    'br': ('pt', 'br'),
                    'brazilian': ('pt', 'br'),
@@ -101,7 +115,9 @@ lng_exceptions = { 'gr': ('gre', None),
                    'ua': ('ukr', None),
                    'cn': ('chi', None),
                    'chs': ('chi', None),
-                   'jp': ('jpn', None)
+                   'jp': ('jpn', None),
+                   'scc': ('srp', None),
+                   'scr': ('hrv', None)
                    }
 
 
@@ -130,6 +146,11 @@ class Language(object):
     You can also distinguish languages for specific countries, such as
     Portuguese and Brazilian Portuguese.
 
+    There are various properties on the language object that give you the
+    representation of the language for a specific usage, such as .alpha3
+    to get the ISO 3-letter code, or .opensubtitles to get the OpenSubtitles
+    language code.
+
     >>> Language('fr')
     Language(French)
 
@@ -146,16 +167,19 @@ class Language(object):
     True
 
     >>> Language('zz', strict=False).english_name
-    u'Unknown'
+    u'Undetermined'
+
+    >>> Language('pt(br)').opensubtitles
+    u'pob'
     """
 
     _with_country_regexp = re.compile('(.*)\((.*)\)')
+    _with_country_regexp2 = re.compile('(.*)-(.*)')
 
-    def __init__(self, language, country=None, strict=False):
-        language = language.strip().lower()
-        if isinstance(language, str):
-            language = language.decode('utf-8')
-        with_country = Language._with_country_regexp.match(language)
+    def __init__(self, language, country=None, strict=False, scheme=None):
+        language = to_unicode(language.strip().lower())
+        with_country = (Language._with_country_regexp.match(language) or
+                        Language._with_country_regexp2.match(language))
         if with_country:
             self.lang = Language(with_country.group(1)).lang
             self.country = Country(with_country.group(2))
@@ -164,6 +188,18 @@ class Language(object):
         self.lang = None
         self.country = Country(country) if country else None
 
+        # first look for scheme specific languages
+        if scheme == 'opensubtitles':
+            if language == 'br':
+                self.lang = 'bre'
+                return
+            elif language == 'se':
+                self.lang = 'sme'
+                return
+        elif scheme is not None:
+            log.warning('Unrecognized scheme: "%s" - Proceeding with standard one' % scheme)
+
+        # look for ISO language codes
         if len(language) == 2:
             self.lang = lng2_to_lng3.get(language)
         elif len(language) == 3:
@@ -174,6 +210,7 @@ class Language(object):
             self.lang = (lng_en_name_to_lng3.get(language) or
                          lng_fr_name_to_lng3.get(language))
 
+        # general language exceptions
         if self.lang is None and language in lng_exceptions:
             lang, country = lng_exceptions[language]
             self.lang = Language(lang).alpha3
@@ -186,7 +223,7 @@ class Language(object):
 
         if self.lang is None:
             log.debug(msg)
-            self.lang = 'unk'
+            self.lang = 'und'
 
     @property
     def alpha2(self):
@@ -208,6 +245,20 @@ class Language(object):
     def french_name(self):
         return lng3_to_lng_fr_name[self.lang]
 
+    @property
+    def opensubtitles(self):
+        if self.lang == 'por' and self.country and self.country.alpha2 == 'br':
+            return 'pob'
+        elif self.lang in ['gre', 'eus', 'ice', 'srp']:
+            return self.alpha3term
+        return self.alpha3
+
+    @property
+    def tmdb(self):
+        if self.country:
+            return '%s-%s' % (self.alpha2, self.country.alpha2.upper())
+        return self.alpha2
+
     def __hash__(self):
         return hash(self.lang)
 
@@ -227,7 +278,7 @@ class Language(object):
         return not self == other
 
     def __nonzero__(self):
-        return self.lang != 'unk'
+        return self.lang != 'und'
 
     def __unicode__(self):
         if self.country:
@@ -245,7 +296,8 @@ class Language(object):
             return 'Language(%s)' % self.english_name
 
 
-ALL_LANGUAGES = frozenset(Language(lng) for lng in lng_all_names) - frozenset([Language('unk')])
+UNDETERMINED = Language('und')
+ALL_LANGUAGES = frozenset(Language(lng) for lng in lng_all_names) - frozenset([UNDETERMINED])
 ALL_LANGUAGES_NAMES = lng_all_names
 
 def search_language(string, lang_filter=None):

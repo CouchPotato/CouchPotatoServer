@@ -32,17 +32,20 @@ load_rc_config ${name}
 : ${couchpotato_dir:="/usr/local/couchpotato"}
 : ${couchpotato_chdir:="${couchpotato_dir}"}
 : ${couchpotato_pid:="${couchpotato_dir}/couchpotato.pid"}
+: ${couchpotato_conf:="${couchpotato_dir}/data/settings.conf"}
 
 WGET="/usr/local/bin/wget" # You need wget for this script to safely shutdown CouchPotato.
-HOST="127.0.0.1" # Set CouchPotato address here.
-PORT="8081" # Set CouchPotato port here.
-CPAPI="" # Set CouchPotato API key
+if [ -e "${couchpotato_conf}" ]; then
+        HOST=`grep -A14 "\[core\]" "${couchpotato_conf}"|egrep "^host"|perl -wple 's/^host = (.*)$/$1/'`
+        PORT=`grep -A14 "\[core\]" "${couchpotato_conf}"|egrep "^port"|perl -wple 's/^port = (.*)$/$1/'`
+        CPAPI=`grep -A14 "\[core\]" "${couchpotato_conf}"|egrep "^api_key"|perl -wple 's/^api_key = (.*)$/$1/'`
+fi
 
 status_cmd="${name}_status"
 stop_cmd="${name}_stop"
 
 command="/usr/sbin/daemon"
-command_args="-f -p ${couchpotato_pid} python ${couchpotato_dir}/couchpotato.py ${couchpotato_flags}"
+command_args="-f -p ${couchpotato_pid} python ${couchpotato_dir}/CouchPotato.py ${couchpotato_flags}"
 
 # Check for wget and refuse to start without it.
 if [ ! -x "${WGET}" ]; then
@@ -59,15 +62,19 @@ fi
 verify_couchpotato_pid() {
     # Make sure the pid corresponds to the CouchPotato process.
     pid=`cat ${couchpotato_pid} 2>/dev/null`
-    ps -p ${pid} | grep -q "python ${couchpotato_dir}/couchpotato.py"
+    ps -p ${pid} | grep -q "python ${couchpotato_dir}/CouchPotato.py"
     return $?
 }
 
 # Try to stop CouchPotato cleanly by calling shutdown over http.
 couchpotato_stop() {
+    if [ ! -e "${couchpotato_conf}" ]; then
+        echo "CouchPotato's settings file does not exist. Try starting CouchPotato, as this should create the file."
+        exit 1
+    fi
     echo "Stopping $name"
     verify_couchpotato_pid
-    ${WGET} -O - -q "http://${HOST}:${PORT}/${CPAPI}/app.shutdown/" >/dev/null
+    ${WGET} -O - -q "http://${HOST}:${PORT}/api/${CPAPI}/app.shutdown/" >/dev/null
     if [ -n "${pid}" ]; then
       wait_for_pids ${pid}
       echo "Stopped"

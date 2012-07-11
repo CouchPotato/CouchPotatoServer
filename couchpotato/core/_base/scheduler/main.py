@@ -28,7 +28,7 @@ class Scheduler(Plugin):
         for type in ['interval', 'cron']:
             try:
                 self.sched.unschedule_job(getattr(self, type)[identifier]['job'])
-                log.debug('%s unscheduled %s' % (type.capitalize(), identifier))
+                log.debug('%s unscheduled %s', (type.capitalize(), identifier))
             except:
                 pass
 
@@ -45,7 +45,7 @@ class Scheduler(Plugin):
                 job = self.sched.add_cron_job(cron['handle'], day = cron['day'], hour = cron['hour'], minute = cron['minute'])
                 cron['job'] = job
             except ValueError, e:
-                log.error("Failed adding cronjob: %s" % e)
+                log.error('Failed adding cronjob: %s', e)
 
         # Intervals
         for identifier in self.intervals:
@@ -55,7 +55,7 @@ class Scheduler(Plugin):
                 job = self.sched.add_interval_job(interval['handle'], hours = interval['hours'], minutes = interval['minutes'], seconds = interval['seconds'])
                 interval['job'] = job
             except ValueError, e:
-                log.error("Failed adding interval cronjob: %s" % e)
+                log.error('Failed adding interval cronjob: %s', e)
 
         # Start it
         log.debug('Starting scheduler')
@@ -75,7 +75,7 @@ class Scheduler(Plugin):
         self.started = False
 
     def cron(self, identifier = '', handle = None, day = '*', hour = '*', minute = '*'):
-        log.info('Scheduling "%s", cron: day = %s, hour = %s, minute = %s' % (identifier, day, hour, minute))
+        log.info('Scheduling "%s", cron: day = %s, hour = %s, minute = %s', (identifier, day, hour, minute))
 
         self.remove(identifier)
         self.crons[identifier] = {
@@ -86,7 +86,7 @@ class Scheduler(Plugin):
         }
 
     def interval(self, identifier = '', handle = None, hours = 0, minutes = 0, seconds = 0):
-        log.info('Scheduling %s, interval: hours = %s, minutes = %s, seconds = %s' % (identifier, hours, minutes, seconds))
+        log.info('Scheduling %s, interval: hours = %s, minutes = %s, seconds = %s', (identifier, hours, minutes, seconds))
 
         self.remove(identifier)
         self.intervals[identifier] = {

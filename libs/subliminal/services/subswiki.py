@@ -17,10 +17,11 @@
 # along with subliminal.  If not, see <http://www.gnu.org/licenses/>.
 from . import ServiceBase
 from ..exceptions import ServiceError
+from ..language import language_set, Language
 from ..subtitles import get_subtitle_path, ResultSubtitle
 from ..videos import Episode, Movie
+from bs4 import BeautifulSoup
 from subliminal.utils import get_keywords, split_keyword
-import BeautifulSoup
 import logging
 import re
 import urllib
@@ -32,17 +33,17 @@ logger = logging.getLogger(__name__)
 class SubsWiki(ServiceBase):
     server_url = 'http://www.subswiki.com'
     api_based = False
-    languages = {u'English (US)': 'en', u'English (UK)': 'en', u'English': 'en', u'French': 'fr', u'Brazilian': 'po',
-                 u'Portuguese': 'pt', u'Español (Latinoamérica)': 'es', u'Español (España)': 'es', u'Español': 'es',
-                 u'Italian': 'it', u'Català': 'ca'}
-    reverted_languages = True
+    languages = language_set(['eng-US', 'eng-GB', 'eng', 'fre', 'por-BR', 'por', 'spa-ES', u'spa', u'ita', u'cat'])
+    language_map = {u'Español': Language('spa'), u'Español (España)': Language('spa'), u'Español (Latinoamérica)': Language('spa'),
+                    u'Català': Language('cat'), u'Brazilian': Language('por-BR'), u'English (US)': Language('eng-US'),
+                    u'English (UK)': Language('eng-GB')}
+    language_code = 'name'
     videos = [Episode, Movie]
     require_video = False
     release_pattern = re.compile('\nVersion (.+), ([0-9]+).([0-9])+ MBs')
+    required_features = ['permissive']
 
-    def list(self, video, languages):
-        if not self.check_validity(video, languages):
-            return []
+    def list_checked(self, video, languages):
         results = []
         if isinstance(video, Episode):
             results = self.query(video.path or video.release, languages, get_keywords(video.guess), series=video.series, season=video.season, episode=video.episode)
@@ -74,7 +75,7 @@ class SubsWiki(ServiceBase):
         if r.status_code != 200:
             logger.error(u'Request %s returned status code %d' % (r.url, r.status_code))
             return []
-        soup = BeautifulSoup.BeautifulSoup(r.content)
+        soup = BeautifulSoup(r.content, self.required_features)
         subtitles = []
         for sub in soup('td', {'class': 'NewsTitle'}):
             sub_keywords = split_keyword(self.release_pattern.search(sub.contents[1]).group(1).lower())
@@ -82,8 +83,8 @@ class SubsWiki(ServiceBase):
                 logger.debug(u'None of subtitle keywords %r in %r' % (sub_keywords, keywords))
                 continue
             for html_language in sub.parent.parent.findAll('td', {'class': 'language'}):
-                language = self.get_revert_language(html_language.string.strip())
-                if not language in languages:
+                language = self.get_language(html_language.string.strip())
+                if language not in languages:
                     logger.debug(u'Language %r not in wanted languages %r' % (language, languages))
                     continue
                 html_status = html_language.findNextSibling('td')
@@ -92,8 +93,9 @@ class SubsWiki(ServiceBase):
                     logger.debug(u'Wrong subtitle status %s' % status)
                     continue
                 path = get_subtitle_path(filepath, language, self.config.multi)
-                subtitle = ResultSubtitle(path, language, service=self.__class__.__name__.lower(), link='%s%s' % (self.server_url, html_status.findNext('td').find('a')['href']))
+                subtitle = ResultSubtitle(path, language, self.__class__.__name__.lower(), '%s%s' % (self.server_url, html_status.findNext('td').find('a')['href']))
                 subtitles.append(subtitle)
         return subtitles
+
 
 Service = SubsWiki

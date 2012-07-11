@@ -1,5 +1,6 @@
 import logging
 import re
+import traceback
 
 class CPLog(object):
 
@@ -13,31 +14,42 @@ class CPLog(object):
         self.context = context
         self.logger = logging.getLogger()
 
-    def info(self, msg):
-        self.logger.info(self.addContext(msg))
+    def info(self, msg, replace_tuple = ()):
+        self.logger.info(self.addContext(msg, replace_tuple))
 
-    def debug(self, msg):
-        self.logger.debug(self.addContext(msg))
+    def debug(self, msg, replace_tuple = ()):
+        self.logger.debug(self.addContext(msg, replace_tuple))
 
-    def error(self, msg):
-        self.logger.error(self.addContext(msg))
+    def error(self, msg, replace_tuple = ()):
+        self.logger.error(self.addContext(msg, replace_tuple))
 
-    def warning(self, msg):
-        self.logger.warning(self.addContext(msg))
+    def warning(self, msg, replace_tuple = ()):
+        self.logger.warning(self.addContext(msg, replace_tuple))
 
-    def critical(self, msg):
-        self.logger.critical(self.addContext(msg), exc_info = 1)
+    def critical(self, msg, replace_tuple = ()):
+        self.logger.critical(self.addContext(msg, replace_tuple), exc_info = 1)
 
-    def addContext(self, msg):
-        return '[%+25.25s] %s' % (self.context[-25:], self.removePrivateData(msg))
+    def addContext(self, msg, replace_tuple = ()):
+        return '[%+25.25s] %s' % (self.context[-25:], self.safeMessage(msg, replace_tuple))
 
-    def removePrivateData(self, msg):
-        try:
-            msg = unicode(msg)
-        except:
-            pass
+    def safeMessage(self, msg, replace_tuple = ()):
 
         from couchpotato.environment import Env
+        from couchpotato.core.helpers.encoding import ss
+
+        msg = ss(msg)
+
+        try:
+            msg = msg % replace_tuple
+        except:
+            try:
+                if isinstance(replace_tuple, tuple):
+                    msg = msg % tuple([ss(x) for x in list(replace_tuple)])
+                else:
+                    msg = msg % ss(replace_tuple)
+            except:
+                self.logger.error(u'Failed encoding stuff to log: %s' % traceback.format_exc())
+
         if not Env.get('dev'):
 
             for replace in self.replace_private:

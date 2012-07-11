@@ -1,4 +1,4 @@
-from BeautifulSoup import SoupStrainer, BeautifulSoup
+from bs4 import SoupStrainer, BeautifulSoup
 from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.variable import mergeDicts, getTitle
 from couchpotato.core.logger import CPLog
@@ -51,13 +51,13 @@ class HDTrailers(TrailerProvider):
 
         try:
             tables = SoupStrainer('div')
-            html = BeautifulSoup(data, parseOnlyThese = tables)
-            result_table = html.findAll('h2', text = re.compile(movie_name))
+            html = BeautifulSoup(data, parse_only = tables)
+            result_table = html.find_all('h2', text = re.compile(movie_name))
 
             for h2 in result_table:
                 if 'trailer' in h2.lower():
                     parent = h2.parent.parent.parent
-                    trailerLinks = parent.findAll('a', text = re.compile('480p|720p|1080p'))
+                    trailerLinks = parent.find_all('a', text = re.compile('480p|720p|1080p'))
                     try:
                         for trailer in trailerLinks:
                             results[trailer].insert(0, trailer.parent['href'])
@@ -74,11 +74,11 @@ class HDTrailers(TrailerProvider):
         results = {'480p':[], '720p':[], '1080p':[]}
         try:
             tables = SoupStrainer('table')
-            html = BeautifulSoup(data, parseOnlyThese = tables)
+            html = BeautifulSoup(data, parse_only = tables)
             result_table = html.find('table', attrs = {'class':'bottomTable'})
 
 
-            for tr in result_table.findAll('tr'):
+            for tr in result_table.find_all('tr'):
                 trtext = str(tr).lower()
                 if 'clips' in trtext:
                     break
@@ -86,7 +86,7 @@ class HDTrailers(TrailerProvider):
                     nr = 0
                     if 'trailer' not in tr.find('span', 'standardTrailerName').text.lower():
                         continue
-                    resolutions = tr.findAll('td', attrs = {'class':'bottomTableResolution'})
+                    resolutions = tr.find_all('td', attrs = {'class':'bottomTableResolution'})
                     for res in resolutions:
                         results[str(res.a.contents[0])].insert(0, res.a['href'])
                         nr += 1
@@ -94,7 +94,7 @@ class HDTrailers(TrailerProvider):
             return results
 
         except AttributeError:
-            log.debug('No trailers found in provider %s.' % provider)
+            log.debug('No trailers found in provider %s.', provider)
             results['404'] = True
 
         return results

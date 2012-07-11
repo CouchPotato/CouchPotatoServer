@@ -28,7 +28,13 @@ class JsonType(TypeDecorator):
     impl = UnicodeText
 
     def process_bind_param(self, value, dialect):
-        return toUnicode(json.dumps(value, cls = SetEncoder))
+        try:
+            return toUnicode(json.dumps(value, cls = SetEncoder))
+        except:
+            try:
+                return toUnicode(json.dumps(value, cls = SetEncoder, encoding = 'latin-1'))
+            except:
+                raise
 
     def process_result_value(self, value, dialect):
         return json.loads(value if value else '{}')
@@ -95,7 +101,6 @@ class Release(Entity):
     status = ManyToOne('Status')
     quality = ManyToOne('Quality')
     files = ManyToMany('File', cascade = 'all, delete-orphan', single_parent = True)
-    history = OneToMany('History', cascade = 'all, delete-orphan')
     info = OneToMany('ReleaseInfo', cascade = 'all, delete-orphan')
 
 
@@ -191,17 +196,6 @@ class FileProperty(Entity):
     value = Field(Unicode(255), nullable = False)
 
     file = ManyToOne('File')
-
-
-class History(Entity):
-    """History of actions that are connected to a certain release,
-    such as, renamed to, downloaded, deleted, download subtitles etc"""
-
-    added = Field(Integer, default = lambda: int(time.time()))
-    message = Field(UnicodeText)
-    type = Field(Unicode(50))
-
-    release = ManyToOne('Release')
 
 
 class RenameHistory(Entity):

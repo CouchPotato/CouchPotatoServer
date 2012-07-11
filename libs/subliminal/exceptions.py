@@ -22,60 +22,11 @@ class Error(Exception):
     pass
 
 
-class InvalidLanguageError(Error):
-    """Exception raised when invalid language is submitted
-
-    Attributes:
-        language -- language that cause the error
-    """
-    def __init__(self, language):
-        self.language = language
-
-    def __str__(self):
-        return self.language
-
-
-class MissingLanguageError(Error):
-    """Exception raised when a missing language is found
-
-    Attributes:
-        language -- the missing language
-    """
-    def __init__(self, language):
-        self.language = language
-
-    def __str__(self):
-        return self.language
-
-
-class InvalidServiceError(Error):
-    """Exception raised when invalid service is submitted
-
-    :param string service: service that causes the error
-
-    """
-    def __init__(self, service):
-        self.service = service
-
-    def __str__(self):
-        return self.service
-
-
 class ServiceError(Error):
     """"Exception raised by services"""
     pass
 
 
-class WrongTaskError(Error):
-    """"Exception raised when invalid task is submitted"""
-    pass
-
-
 class DownloadFailedError(Error):
     """"Exception raised when a download task has failed in service"""
-    pass
-
-
-class UnknownVideoError(Error):
-    """"Exception raised when a video could not be identified"""
     pass

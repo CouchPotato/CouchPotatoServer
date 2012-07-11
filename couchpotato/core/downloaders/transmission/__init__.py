@@ -34,6 +34,7 @@ config = [{
                 {
                     'name': 'paused',
                     'type': 'bool',
+                    'default': False,
                     'description': 'Add the torrent paused.',
                 },
                 {

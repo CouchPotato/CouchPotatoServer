@@ -3,7 +3,6 @@ from couchpotato.core.helpers.encoding import simplifyString, toUnicode
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.movie.base import MovieProvider
 from libs.themoviedb import tmdb
-import re
 
 log = CPLog(__name__)
 
@@ -29,7 +28,7 @@ class TheMovieDb(MovieProvider):
         results = self.getCache(cache_key)
 
         if not results:
-            log.debug('Searching for movie by hash: %s' % file)
+            log.debug('Searching for movie by hash: %s', file)
             try:
                 raw = tmdb.searchByHashingFile(file)
 
@@ -37,15 +36,15 @@ class TheMovieDb(MovieProvider):
                 if raw:
                     try:
                         results = self.parseMovie(raw)
-                        log.info('Found: %s' % results['titles'][0] + ' (' + str(results['year']) + ')')
+                        log.info('Found: %s', results['titles'][0] + ' (' + str(results['year']) + ')')
 
                         self.setCache(cache_key, results)
                         return results
                     except SyntaxError, e:
-                        log.error('Failed to parse XML response: %s' % e)
+                        log.error('Failed to parse XML response: %s', e)
                         return False
             except:
-                log.debug('No movies known by hash for: %s' % file)
+                log.debug('No movies known by hash for: %s', file)
                 pass
 
         return results
@@ -61,7 +60,7 @@ class TheMovieDb(MovieProvider):
         results = self.getCache(cache_key)
 
         if not results:
-            log.debug('Searching for movie: %s' % q)
+            log.debug('Searching for movie: %s', q)
             raw = tmdb.search(search_string)
 
             results = []
@@ -76,17 +75,20 @@ class TheMovieDb(MovieProvider):
                         if nr == limit:
                             break
 
-                    log.info('Found: %s' % [result['titles'][0] + ' (' + str(result['year']) + ')' for result in results])
+                    log.info('Found: %s', [result['titles'][0] + ' (' + str(result['year']) + ')' for result in results])
 
                     self.setCache(cache_key, results)
                     return results
                 except SyntaxError, e:
-                    log.error('Failed to parse XML response: %s' % e)
+                    log.error('Failed to parse XML response: %s', e)
                     return False
 
         return results
 
     def getInfo(self, identifier = None):
+
+        if not identifier:
+            return {}
 
         cache_key = 'tmdb.cache.%s' % identifier
         result = self.getCache(cache_key)
@@ -96,7 +98,7 @@ class TheMovieDb(MovieProvider):
             movie = None
 
             try:
-                log.debug('Getting info: %s' % cache_key)
+                log.debug('Getting info: %s', cache_key)
                 movie = tmdb.imdbLookup(id = identifier)
             except:
                 pass
@@ -117,7 +119,7 @@ class TheMovieDb(MovieProvider):
             movie = None
 
             try:
-                log.debug('Getting info: %s' % cache_key)
+                log.debug('Getting info: %s', cache_key)
                 movie = tmdb.getMovieInfo(id = id)
             except:
                 pass
@@ -148,7 +150,8 @@ class TheMovieDb(MovieProvider):
             year = None
 
         movie_data = {
-            'id': int(movie.get('id', 0)),
+            'via_tmdb': True,
+            'tmdb_id': int(movie.get('id', 0)),
             'titles': [toUnicode(movie.get('name'))],
             'original_title': movie.get('original_name'),
             'images': {

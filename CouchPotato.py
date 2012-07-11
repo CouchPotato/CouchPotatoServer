@@ -35,7 +35,11 @@ class Loader(object):
         settings.setFile(self.options.config_file)
 
         # Create data dir if needed
-        self.data_dir = os.path.expanduser(Env.setting('data_dir'))
+        if self.options.data_dir:
+            self.data_dir = self.options.data_dir
+        else:
+            self.data_dir = os.path.expanduser(Env.setting('data_dir'))
+
         if self.data_dir == '':
             self.data_dir = getDataDir()
 
@@ -89,7 +93,6 @@ class Loader(object):
                 if self.runAsDaemon():
                     try: self.daemon.stop()
                     except: pass
-                    self.daemon.delpid()
             except:
                 self.log.critical(traceback.format_exc())
 
