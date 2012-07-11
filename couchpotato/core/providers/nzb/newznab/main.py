@@ -181,7 +181,7 @@ class Newznab(NZBProvider, RSS):
         hosts = self.getHosts()
 
         for host in hosts:
-            result = super(Newznab, self).belongsTo(url, host = host['host'], provider)
+            result = super(Newznab, self).belongsTo(url, host = host['host'], provider = provider)
             if result:
                 return result
 
