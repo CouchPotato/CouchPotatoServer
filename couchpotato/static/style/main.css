@@ -315,7 +315,7 @@ body > .spinner, .mask{
 	.header .message.update {
 		text-align: center;
 		position: relative;
-		top: -100px;
+		top: -70px;
 		padding: 2px 0;
 		background: #ff6134;
 		font-size: 12px;
