@@ -357,7 +357,7 @@ var ReleaseAction = new Class({
 			Array.each(self.movie.data.releases, function(release){
 
 				var status = Status.get(release.status_id),
-					quality = Quality.getProfile(release.quality_id),
+					quality = Quality.getProfile(release.quality_id) || {},
 					info = release.info;
 
 				try {
