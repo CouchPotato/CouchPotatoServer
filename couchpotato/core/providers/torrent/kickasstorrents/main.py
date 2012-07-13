@@ -30,6 +30,7 @@ class KickAssTorrents(TorrentProvider):
     ]
 
     http_time_between_calls = 1 #seconds
+    cat_backup_id = None
 
     def search(self, movie, quality):
 
