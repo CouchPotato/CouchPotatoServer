@@ -165,7 +165,6 @@ class Renamer(Plugin):
                         # Group filename without cd extension
                         replacements['cd'] = ''
                         replacements['cd_nr'] = ''
-                        group['filename'] = self.doReplace(file_name, replacements)[:-(len(getExt(final_file_name)) + 1)]
 
                         # Meta naming
                         if file_type is 'trailer':
@@ -238,6 +237,7 @@ class Renamer(Plugin):
                             )
                             rename_files = mergeDicts(rename_files, rename_extras)
 
+                            group['filename'] = self.doReplace(file_name, replacements)[:-(len(getExt(final_file_name)) + 1)]
                             group['destination_dir'] = os.path.join(destination, final_folder_name)
 
                         if multiple:

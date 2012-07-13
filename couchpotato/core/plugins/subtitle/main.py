@@ -54,11 +54,12 @@ class Subtitle(Plugin):
             for lang in self.getLanguages():
                 if lang not in available_languages:
                     download = subliminal.download_subtitles(files, multi = True, force = False, languages = [lang], services = self.services, cache_dir = Env.get('cache_dir'))
-                    downloaded.extend(download)
+                    for subtitle in download:
+                        downloaded.extend(download[subtitle])
 
             for d_sub in downloaded:
                 group['files']['subtitle'].add(d_sub.path)
-                group['subtitle_language'][d_sub.path] = [d_sub.language]
+                group['subtitle_language'][d_sub.path] = [d_sub.language.alpha2]
 
             return True
 

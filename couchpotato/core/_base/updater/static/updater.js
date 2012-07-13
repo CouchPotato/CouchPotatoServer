@@ -62,6 +62,8 @@ var UpdaterBase = new Class({
 	createMessage: function(data){
 		var self = this;
 
+		if(self.message) return;
+
 		var changelog = 'https://github.com/'+data.repo_name+'/compare/'+data.version.hash+'...'+data.branch;
 		if(data.update_version.changelog)
 			changelog = data.update_version.changelog + '#' + data.version.hash+'...'+data.update_version.hash

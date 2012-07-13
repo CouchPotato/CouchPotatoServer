@@ -357,7 +357,7 @@ var ReleaseAction = new Class({
 			Array.each(self.movie.data.releases, function(release){
 
 				var status = Status.get(release.status_id),
-					quality = Quality.getProfile(release.quality_id),
+					quality = Quality.getProfile(release.quality_id) || {},
 					info = release.info;
 
 				try {
@@ -365,7 +365,8 @@ var ReleaseAction = new Class({
 				} catch(e){}
 
 				new Element('div', {
-					'class': 'item '+status.identifier
+					'class': 'item '+status.identifier,
+					'id': 'release_'+release.id
 				}).adopt(
 					new Element('span.name', {'text': self.get(release, 'name'), 'title': self.get(release, 'name')}),
 					new Element('span.status', {'text': status.identifier, 'class': 'release_status '+status.identifier}),
@@ -382,7 +383,8 @@ var ReleaseAction = new Class({
 						'events': {
 							'click': function(e){
 								(e).preventDefault();
-								self.download(release);
+								if(!this.hasClass('completed'))
+									self.download(release);
 							}
 						}
 					}),
@@ -414,9 +416,21 @@ var ReleaseAction = new Class({
 	download: function(release){
 		var self = this;
 
+		var release_el = self.release_container.getElement('#release_'+release.id),
+			icon = release_el.getElement('.download.icon');
+
+		icon.addClass('spinner');
+
 		Api.request('release.download', {
 			'data': {
 				'id': release.id
+			},
+			'onComplete': function(json){
+				icon.removeClass('spinner')
+				if(json.success)
+					icon.addClass('completed');
+				else
+					icon.addClass('attention').set('title', 'Something went wrong when downloading, please check logs.');
 			}
 		});
 	},
@@ -456,7 +470,7 @@ var TrailerAction = new Class({
 
 		var data_url = 'http://gdata.youtube.com/feeds/videos?vq="{title}" {year} trailer&max-results=1&alt=json-in-script&orderby=relevance&sortorder=descending&format=5&fmt=18'
 		var url = data_url.substitute({
-				'title': self.movie.getTitle(),
+				'title': encodeURI(self.movie.getTitle()),
 				'year': self.movie.get('year'),
 				'offset': offset || 1
 			}),

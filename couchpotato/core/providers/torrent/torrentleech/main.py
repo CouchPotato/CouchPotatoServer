@@ -52,6 +52,9 @@ class TorrentLeech(TorrentProvider):
 
             try:
                 result_table = html.find('table', attrs = {'id' : 'torrenttable'})
+                if not result_table:
+                    return results
+
                 entries = result_table.find_all('tr')
 
                 for result in entries[1:]:

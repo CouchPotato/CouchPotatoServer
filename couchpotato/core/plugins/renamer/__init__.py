@@ -84,7 +84,7 @@ config = [{
                     'advanced': True,
                     'name': 'separator',
                     'label': 'Separator',
-                    'description': 'Replace all the spaces with a character. Example: ".", "-". Leave empty to use spaces.',
+                    'description': 'Replace all the spaces with a character. Example: ".", "-" (without quotes). Leave empty to use spaces.',
                 },
                 {
                     'advanced': True,

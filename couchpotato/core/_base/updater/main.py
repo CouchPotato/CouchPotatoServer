@@ -32,7 +32,7 @@ class Updater(Plugin):
             self.updater = SourceUpdater()
 
         fireEvent('schedule.interval', 'updater.check', self.autoUpdate, hours = 6)
-        addEvent('app.load', self.check)
+        addEvent('app.load', self.autoUpdate)
         addEvent('updater.info', self.info)
 
         addApiView('updater.info', self.getInfo, docs = {
@@ -208,7 +208,7 @@ class GitUpdater(BaseUpdater):
     def check(self):
 
         if self.update_version:
-            return
+            return True
 
         log.info('Checking for new version on github for %s', self.repo_name)
         if not Env.get('dev'):
