@@ -470,7 +470,7 @@ var TrailerAction = new Class({
 
 		var data_url = 'http://gdata.youtube.com/feeds/videos?vq="{title}" {year} trailer&max-results=1&alt=json-in-script&orderby=relevance&sortorder=descending&format=5&fmt=18'
 		var url = data_url.substitute({
-				'title': self.movie.getTitle(),
+				'title': encodeURI(self.movie.getTitle()),
 				'year': self.movie.get('year'),
 				'offset': offset || 1
 			}),
