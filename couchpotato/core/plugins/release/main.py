@@ -7,6 +7,7 @@ from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.plugins.scanner.main import Scanner
 from couchpotato.core.settings.model import File, Release as Relea, Movie
 from sqlalchemy.sql.expression import and_, or_
+import os
 
 log = CPLog(__name__)
 
@@ -22,7 +23,7 @@ class Release(Plugin):
                 'id': {'type': 'id', 'desc': 'ID of the release object in release-table'}
             }
         })
-        addApiView('release.delete', self.delete, docs = {
+        addApiView('release.delete', self.deleteView, docs = {
             'desc': 'Delete releases',
             'params': {
                 'id': {'type': 'id', 'desc': 'ID of the release object in release-table'}
@@ -34,6 +35,9 @@ class Release(Plugin):
                 'id': {'type': 'id', 'desc': 'ID of the release object in release-table'}
             }
         })
+
+        addEvent('release.delete', self.delete)
+        addEvent('release.clean', self.clean)
 
     def add(self, group):
         db = get_session()
@@ -99,20 +103,41 @@ class Release(Plugin):
         # Check database and update/insert if necessary
         return fireEvent('file.add', path = filepath, part = fireEvent('scanner.partnumber', file, single = True), type_tuple = Scanner.file_types.get(type), properties = properties, single = True)
 
-    def delete(self):
+    def deleteView(self):
+
+        release_id = getParam('id')
+
+        #db.close()
+        return jsonified({
+            'success': self.delete(release_id)
+        })
+
+    def delete(self, id):
 
         db = get_session()
-        id = getParam('id')
 
         rel = db.query(Relea).filter_by(id = id).first()
         if rel:
             rel.delete()
             db.commit()
+            return True
 
-        #db.close()
-        return jsonified({
-            'success': True
-        })
+        return False
+
+    def clean(self, id):
+
+        db = get_session()
+
+        rel = db.query(Relea).filter_by(id = id).first()
+        if rel:
+            for release_file in rel.files:
+                if not os.path.isfile(release_file.path):
+                    db.delete(release_file)
+            db.commit()
+
+            return True
+
+        return False
 
     def ignore(self):
 
