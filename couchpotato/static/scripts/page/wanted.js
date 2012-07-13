@@ -244,6 +244,7 @@ window.addEvent('domready', function(){
 	MovieActions.Done = {
 		'IMDB': IMDBAction
 		,'Edit': MovieActions.Wanted.Edit
+		,'Trailer': TrailerAction
 		,'Files': new Class({
 
 			Extends: MovieAction,
