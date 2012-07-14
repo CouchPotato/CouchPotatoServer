@@ -26,7 +26,7 @@ class Bluray(Automation, RSS):
         rss_data = self.getCache(cache_key, self.rss_url)
         data = XMLTree.fromstring(rss_data)
 
-        if data:
+        if data is not None:
             rss_movies = self.getElements(data, 'channel/item')
 
             for movie in rss_movies:

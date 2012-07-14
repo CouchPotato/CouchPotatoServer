@@ -13,15 +13,14 @@ log = CPLog(__name__)
 class IMDBAPI(MovieProvider):
 
     urls = {
-        'search': 'http://www.imdbapi.com/?%s',
-        'info': 'http://www.imdbapi.com/?i=%s',
+        'search': 'http://www.imdbapi.com/?tomatoes=true&%s',
+        'info': 'http://www.imdbapi.com/?tomatoes=true&i=%s',
     }
 
     http_time_between_calls = 0
 
     def __init__(self):
         addEvent('movie.search', self.search)
-        addEvent('movie.searchimdb', self.search)
         addEvent('movie.info', self.getInfo)
 
     def search(self, q, limit = 12):
@@ -72,7 +71,7 @@ class IMDBAPI(MovieProvider):
                 log.info('No proper json to decode')
                 return movie_data
 
-            if movie.get('Response') == 'Parse Error':
+            if movie.get('Response') == 'Parse Error' or movie.get('Response') == 'False':
                 return movie_data
 
             tmp_movie = movie.copy()
@@ -91,7 +90,7 @@ class IMDBAPI(MovieProvider):
                 },
                 'rating': {
                     'imdb': (tryFloat(movie.get('imdbRating', 0)), tryInt(movie.get('imdbVotes', '').replace(',', ''))),
-                    #'rotten': (tryFloat(movie.get('tomatoRating', 0)), tryInt(movie.get('tomatoReviews', 0))),
+                    'rotten': (tryFloat(movie.get('tomatoRating', 0)), tryInt(movie.get('tomatoReviews', '').replace(',', ''))),
                 },
                 'imdb': str(movie.get('imdbID', '')),
                 'runtime': self.runtimeToMinutes(movie.get('Runtime', '')),
