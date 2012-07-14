@@ -112,7 +112,7 @@ class BaseUpdater(Plugin):
 
     repo_user = 'RuudBurger'
     repo_name = 'CouchPotatoServer'
-    branch = 'develop'
+    branch = 'master'
 
     version = None
     update_failed = False
