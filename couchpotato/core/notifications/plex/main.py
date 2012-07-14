@@ -11,18 +11,14 @@ log = CPLog(__name__)
 
 class Plex(Notification):
 
-    def __init__(self):
-        super(Plex, self).__init__()
-        addEvent('renamer.after', self.addToLibrary)
+    listen_to = ['movie.downloaded']
 
-    def addToLibrary(self, group = {}):
+    def notify(self, message = '', data = {}, listener = None):
         if self.isDisabled(): return
 
         log.info('Sending notification to Plex')
-        hosts = [cleanHost(x.strip() + ':32400') for x in self.conf('host').split(",")]
 
-        for host in hosts:
-
+        for host in [cleanHost(x.strip() + ':32400') for x in self.conf('host').split(",")]:
             source_type = ['movie']
             base_url = '%slibrary/sections' % host
             refresh_url = '%s/%%s/refresh' % base_url
@@ -34,8 +30,7 @@ class Plex(Notification):
 
                 for s in sections:
                     if s.getAttribute('type') in source_type:
-                        url = refresh_url % s.getAttribute('key')
-                        x = self.urlopen(url)
+                        self.send(refresh_url % s.getAttribute('key'))
 
             except:
                 log.error('Plex library update failed for %s: %s', (host, traceback.format_exc()))
@@ -43,20 +38,7 @@ class Plex(Notification):
 
         return True
 
-    def notify(self, message = '', data = {}, listener = None):
-        if self.isDisabled(): return
-
-        hosts = [x.strip() + ':3000' for x in self.conf('host').split(",")]
-        successful = 0
-        for host in hosts:
-            if self.send({'command': 'ExecBuiltIn', 'parameter': 'Notification(CouchPotato, %s)' % message}, host):
-                successful += 1
-
-        return successful == len(hosts)
-
-    def send(self, command, host):
-
-        url = 'http://%s/xbmcCmds/xbmcHttp/?%s' % (host, tryUrlencode(command))
+    def send(self, command, url):
 
         headers = {}
 
