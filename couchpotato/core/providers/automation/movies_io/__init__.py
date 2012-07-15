@@ -9,7 +9,7 @@ config = [{
         {
             'tab': 'automation',
             'name': 'moviesio',
-            'label': 'Movies.io',
+            'label': 'Movies.IO',
             'description': 'Imports movies from <a href="http://movies.io">Movies.io</a> RSS watchlists',
             'options': [
                 {
