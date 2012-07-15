@@ -102,6 +102,8 @@ class Updater(Plugin):
             success = False
         else:
             success = self.updater.doUpdate()
+            if success:
+                fireEventAsync('app.restart')
 
         return jsonified({
             'success': success
