@@ -1,7 +1,7 @@
 from couchpotato import get_session
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
-from couchpotato.core.helpers.encoding import toUnicode
+from couchpotato.core.helpers.encoding import toUnicode, ss
 from couchpotato.core.helpers.request import jsonified
 from couchpotato.core.helpers.variable import getExt, mergeDicts, getTitle
 from couchpotato.core.logger import CPLog
@@ -419,6 +419,7 @@ class Renamer(Plugin):
                     raise
 
     def moveFile(self, old, dest):
+        dest = ss(dest)
         try:
             shutil.move(old, dest)
 

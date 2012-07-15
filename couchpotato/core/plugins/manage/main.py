@@ -1,5 +1,6 @@
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, addEvent, fireEventAsync
+from couchpotato.core.helpers.encoding import ss
 from couchpotato.core.helpers.request import jsonified, getParam
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
@@ -77,7 +78,7 @@ class Manage(Plugin):
                     for release in done_movie.get('releases', []):
                         for release_file in release.get('files', []):
                             # Remove release not available anymore
-                            if not os.path.isfile(release_file['path']):
+                            if not os.path.isfile(ss(release_file['path'])):
                                 fireEvent('release.clean', release['id'])
                                 break
 
