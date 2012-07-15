@@ -1,9 +1,9 @@
 from argparse import ArgumentParser
-from cloghandler.cloghandler import ConcurrentRotatingFileHandler
 from couchpotato import web
 from couchpotato.api import api, NonBlockHandler
 from couchpotato.core.event import fireEventAsync, fireEvent
 from couchpotato.core.helpers.variable import getDataDir, tryInt
+from logging import handlers
 from tornado import autoreload
 from tornado.httpserver import HTTPServer
 from tornado.ioloop import IOLoop
@@ -156,7 +156,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
         logger.addHandler(hdlr)
 
     # To file
-    hdlr2 = ConcurrentRotatingFileHandler(Env.get('log_path'), 'a', 500000, 10)
+    hdlr2 = handlers.RotatingFileHandler(Env.get('log_path'), 'a', 500000, 10)
     hdlr2.setFormatter(formatter)
     logger.addHandler(hdlr2)
 
