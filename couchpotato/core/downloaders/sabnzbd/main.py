@@ -3,6 +3,7 @@ from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.variable import cleanHost
 from couchpotato.core.logger import CPLog
 import traceback
+import base64
 
 log = CPLog(__name__)
 
@@ -23,6 +24,12 @@ class Sabnzbd(Downloader):
             'mode': 'addurl',
             'nzbname': self.createNzbName(data, movie),
         }
+        
+        headers = {}
+        if self.conf('password'):
+            headers = {
+               'Authorization': "Basic %s" % base64.encodestring('%s:%s' % (self.conf('username'), self.conf('password')))[:-1]
+            }
 
         if filedata:
             if len(filedata) < 50:
@@ -39,9 +46,9 @@ class Sabnzbd(Downloader):
 
         try:
             if params.get('mode') is 'addfile':
-                data = self.urlopen(url, timeout = 60, params = {"nzbfile": (nzb_filename, filedata)}, multipart = True, show_error = False)
+                data = self.urlopen(url, timeout = 60, params = {"nzbfile": (nzb_filename, filedata)}, headers = headers, multipart = True, show_error = False)
             else:
-                data = self.urlopen(url, timeout = 60, show_error = False)
+                data = self.urlopen(url, timeout = 60, headers = headers, show_error = False)
         except:
             log.error(traceback.format_exc())
             return False

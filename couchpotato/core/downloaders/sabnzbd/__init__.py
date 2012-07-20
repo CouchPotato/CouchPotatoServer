@@ -34,6 +34,17 @@ config = [{
                     'description': 'The category CP places the nzb in. Like <strong>movies</strong> or <strong>couchpotato</strong>',
                 },
                 {
+                		'name': 'username',
+                		'label': 'Username',
+                		'description': '(Optional)',
+                },
+                {
+                		'name': 'password',
+                		'type': 'password',
+                		'label': 'Password',
+                		'description': '(Optional)',
+                },
+                {
                     'name': 'manual',
                     'default': 0,
                     'type': 'bool',
