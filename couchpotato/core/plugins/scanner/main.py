@@ -72,7 +72,7 @@ class Scanner(Plugin):
         '()([ab])(\.....?)$' #*a.mkv
     ]
 
-    cp_imdb = '(\.cp\((?P<id>tt[0-9{7}]+)\))'
+    cp_imdb = '(cp\((?P<id>tt[0-9{7}]+)\)\.)'
 
     path_identifiers = {} # bind identifier to filepath
 
@@ -426,7 +426,7 @@ class Scanner(Plugin):
 
         data['quality_type'] = 'HD' if data.get('resolution_width', 0) >= 1280 else 'SD'
 
-        filename = re.sub('(.cp\(tt[0-9{7}]+\))', '', files[0])
+        filename = re.sub('(cp\(tt[0-9{7}]+\)\.)', '', files[0])
         data['group'] = self.getGroup(filename)
         data['source'] = self.getSourceMedia(filename)
 
