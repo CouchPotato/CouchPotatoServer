@@ -17,9 +17,9 @@ class XBMC(Notification):
         successful = 0
         for host in hosts:
             if self.send({'command': 'ExecBuiltIn', 'parameter': 'Notification(CouchPotato, %s)' % message}, host):
-                success += 1
+                successful += 1
             if self.send({'command': 'ExecBuiltIn', 'parameter': 'XBMC.updatelibrary(video)'}, host):
-                success += 1
+                successful += 1
 
         return successful == len(hosts)*2
 
