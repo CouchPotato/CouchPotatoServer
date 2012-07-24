@@ -19,7 +19,7 @@ class Downloader(Plugin):
         pass
 
     def createNzbName(self, data, movie):
-        return '%s%s' % (toSafeString(data.get('name')), self.cpTag(movie))
+        return '%s%s' % (self.cpTag(movie), toSafeString(data.get('name')))
 
     def createFileName(self, data, filedata, movie):
         name = os.path.join(self.createNzbName(data, movie))
@@ -29,7 +29,7 @@ class Downloader(Plugin):
 
     def cpTag(self, movie):
         if Env.setting('enabled', 'renamer'):
-            return '.cp(' + movie['library'].get('identifier') + ')' if movie['library'].get('identifier') else ''
+            return 'cp(' + movie['library'].get('identifier') + ').' if movie['library'].get('identifier') else ''
 
         return ''
 
