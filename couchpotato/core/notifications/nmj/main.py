@@ -19,7 +19,7 @@ class NMJ(Notification):
 
     def __init__(self):
         addEvent('renamer.after', self.addToLibrary)
-
+        addApiView(self.testNotifyName(), self.test)
         addApiView('notify.nmj.auto_config', self.autoConfig)
 
     def autoConfig(self):
@@ -76,7 +76,7 @@ class NMJ(Notification):
         mount = self.conf('mount')
         database = self.conf('database')
 
-        if self.mount:
+        if mount:
             log.debug('Try to mount network drive via url: %s', (mount))
             try:
                 data = self.urlopen(mount)
@@ -114,3 +114,8 @@ class NMJ(Notification):
 
     def failed(self):
         return jsonified({'success': False})
+        
+    def test(self):
+        return jsonified({'success': self.addToLibrary()})
+    
+    
