@@ -13,11 +13,15 @@ class XBMC(Notification):
     def notify(self, message = '', data = {}, listener = None):
         if self.isDisabled(): return
 
-        for host in [x.strip() for x in self.conf('host').split(",")]:
-            self.send({'command': 'ExecBuiltIn', 'parameter': 'Notification(CouchPotato, %s)' % message}, host)
-            self.send({'command': 'ExecBuiltIn', 'parameter': 'XBMC.updatelibrary(video)'}, host)
+        hosts = [x.strip() for x in self.conf('host').split(",")]
+        successful = 0
+        for host in hosts:
+            if self.send({'command': 'ExecBuiltIn', 'parameter': 'Notification(CouchPotato, %s)' % message}, host):
+                success += 1
+            if self.send({'command': 'ExecBuiltIn', 'parameter': 'XBMC.updatelibrary(video)'}, host):
+                success += 1
 
-        return True
+        return successful == len(hosts)*2
 
     def send(self, command, host):
 
