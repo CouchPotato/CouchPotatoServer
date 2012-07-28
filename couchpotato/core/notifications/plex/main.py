@@ -19,7 +19,7 @@ class Plex(Notification):
         if self.isDisabled(): return
 
         log.info('Sending notification to Plex')
-        hosts = [cleanHost(x.strip() + ':32400') for x in self.conf('host').split(",")]
+        hosts = [cleanHost(x.strip()) for x in self.conf('server_host').split(",")]
 
         for host in hosts:
 
@@ -46,7 +46,7 @@ class Plex(Notification):
     def notify(self, message = '', data = {}, listener = None):
         if self.isDisabled(): return
 
-        hosts = [x.strip() + ':3000' for x in self.conf('host').split(",")]
+        hosts = [x.strip() for x in self.conf('client_host').split(",")]
         successful = 0
         for host in hosts:
             if self.send({'command': 'ExecBuiltIn', 'parameter': 'Notification(CouchPotato, %s)' % message}, host):
