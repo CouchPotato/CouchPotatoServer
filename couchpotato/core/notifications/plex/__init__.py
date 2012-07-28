@@ -16,9 +16,15 @@ config = [{
                     'type': 'enabler',
                 },
                 {
-                    'name': 'host',
-                    'default': 'localhost',
-                    'description': 'Default should be on localhost',
+                    'name': 'server_host',
+                    'default': 'localhost:32400',
+                    'description': 'Specify the host and port for Plex Media Server.  This is used to notify PMS to rescan it\'s library.',
+                    'advanced': True,
+                },
+                {
+                    'name': 'client_host',
+                    'default': 'localhost:3000',
+                    'description': 'Specify the host and port for Plex Media Center.  This is used to display an on-screen notification in PMC.',
                     'advanced': True,
                 },
             ],
