@@ -481,37 +481,32 @@ class Renamer(Plugin):
         db = get_session()
         rels = db.query(Relea).filter_by(status_id = snatched_status.get('id'))
 
-        log.debug('Checking snatched releases... %s', 'ops')
-
         for rel in rels:
             log.debug('Checking snatched release: %s' , rel.movie.library.titles[0].title)
+
             item = {}
             for info in rel.info:
                 item[info.identifier] = info.value
 
             log.debug('Checking status snatched release: %s' , item.get('name'))
 
-            mymovie = rel.movie.to_dict({
+            mov = rel.movie.to_dict({
                 'profile': {'types': {'quality': {}}},
                 'releases': {'status': {}, 'quality': {}},
                 'library': {'titles': {}, 'files':{}},
                 'files': {}
             })
 
-            log.debug('Checking status snatched release: %s' , mymovie['library'].get('identifier'))
-
             # check status
-            downloadfailed = fireEvent('getdownloadfailed', data = item, movie = mymovie)
+            downloadfailed = fireEvent('getdownloadfailed', data = item, movie = mov)
 
             if downloadfailed:
-                log.debug('Download of %s failed', item['name'])
-
                 # if failed set status to ignored
                 rel.status_id = ignored_status.get('id')
                 db.commit()
 
                 # search/download again
                 log.info('Download of %s failed, trying next release...', item['name'])
-                fireEvent('searcher.single', rel.movie)
+                fireEvent('searcher.single', mov)
 
         return
