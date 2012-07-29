@@ -4,6 +4,7 @@ from couchpotato.core.helpers.variable import cleanHost
 from couchpotato.core.logger import CPLog
 import traceback
 import urllib2
+import requests
 import json
 
 log = CPLog(__name__)
@@ -73,11 +74,16 @@ class Sabnzbd(Downloader):
         params = {
             'apikey': self.conf('api_key'),
             'mode': 'history',
-            'ouput': 'json'
+            'output': 'json'
         }
         url = cleanHost(self.conf('host')) + "api?" + tryUrlencode(params)
         log.debug('Opening: %s', url)
-        history = json.load(urllib2.urlopen(url))
+
+        try:
+            history = json.load(urllib2.urlopen(url))
+        except:
+            log.error(traceback.format_exc())
+            return False 
 
         nzbname = self.createNzbName(data, movie)
 
