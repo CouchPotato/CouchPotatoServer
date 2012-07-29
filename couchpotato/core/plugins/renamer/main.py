@@ -6,7 +6,7 @@ from couchpotato.core.helpers.request import jsonified
 from couchpotato.core.helpers.variable import getExt, mergeDicts, getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.core.settings.model import Library, File, Profile
+from couchpotato.core.settings.model import Library, File, Profile, Release as Relea
 from couchpotato.environment import Env
 import os
 import re
@@ -47,6 +47,8 @@ class Renamer(Plugin):
         if self.renaming_started is True:
             log.info('Renamer is disabled to avoid infinite looping of the same error.')
             return
+
+        self.checkSnatchedStatusses()
 
         # Check to see if the "to" folder is inside the "from" folder.
         if not os.path.isdir(self.conf('from')) or not os.path.isdir(self.conf('to')):
@@ -471,3 +473,45 @@ class Renamer(Plugin):
             os.rmdir(folder)
         except:
             log.error('Couldn\'t remove empty directory %s: %s', (folder, traceback.format_exc()))
+
+    def checkSnatchedStatusses(self):
+        snatched_status = fireEvent('status.get', 'snatched', single = True)
+        ignored_status = fireEvent('status.get', 'ignored', single = True)
+
+        db = get_session()
+        rels = db.query(Relea).filter_by(status_id = snatched_status.get('id'))
+
+        log.debug('Checking snatched releases... %s', 'ops')
+
+        for rel in rels:
+            log.debug('Checking snatched release: %s' , rel.movie.library.titles[0].title)
+            item = {}
+            for info in rel.info:
+                item[info.identifier] = info.value
+
+            log.debug('Checking status snatched release: %s' , item.get('name'))
+
+            mymovie = rel.movie.to_dict({
+                'profile': {'types': {'quality': {}}},
+                'releases': {'status': {}, 'quality': {}},
+                'library': {'titles': {}, 'files':{}},
+                'files': {}
+            })
+
+            log.debug('Checking status snatched release: %s' , mymovie['library'].get('identifier'))
+
+            # check status
+            downloadfailed = fireEvent('getdownloadfailed', data = item, movie = mymovie)
+
+            if downloadfailed:
+                log.debug('Download of %s failed', item['name'])
+
+                # if failed set status to ignored
+                rel.status_id = ignored_status.get('id')
+                db.commit()
+
+                # search/download again
+                log.info('Download of %s failed, trying next release...', item['name'])
+                fireEvent('searcher.single', rel.movie)
+
+        return

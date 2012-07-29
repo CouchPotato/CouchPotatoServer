@@ -7,15 +7,18 @@ import os
 
 log = CPLog(__name__)
 
-
 class Downloader(Plugin):
 
     type = []
 
     def __init__(self):
         addEvent('download', self.download)
+        addEvent('getdownloadfailed', self.getdownloadfailed)
 
     def download(self, data = {}):
+        pass
+
+    def getdownloadfailed(self, data = {}):
         pass
 
     def createNzbName(self, data, movie):

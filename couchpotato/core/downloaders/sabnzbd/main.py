@@ -3,6 +3,8 @@ from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.variable import cleanHost
 from couchpotato.core.logger import CPLog
 import traceback
+import urllib2
+import json
 
 log = CPLog(__name__)
 
@@ -61,3 +63,44 @@ class Sabnzbd(Downloader):
         else:
             log.error("Unknown error: " + result[:40])
             return False
+
+    def getdownloadfailed(self, data = {}, movie = {}, manual = False):
+        if self.isDisabled(manual) or not self.isCorrectType(data.get('type')):
+            return
+
+        log.info('Checking download status of "%s" at SABnzbd.', data.get('name'))
+
+        params = {
+            'apikey': self.conf('api_key'),
+            'mode': 'history',
+            'ouput': 'json'
+        }
+        url = cleanHost(self.conf('host')) + "api?" + tryUrlencode(params)
+        log.debug('Opening: %s', url)
+        history = json.load(urllib2.urlopen(url))
+
+        nzbname = self.createNzbName(data, movie)
+
+        # Go through history items
+        for slot in history['history']['slots']:
+            log.debug('Found %s in SabNZBd history, which has %s', (slot['name'], slot['status']))
+            if slot['name'] == nzbname and slot['status'] == 'Failed':
+                log.debug('%s failed downloading, deleting...', slot['name'])
+
+                # Delete failed download
+                params = {
+                    'apikey': self.conf('api_key'),
+                    'mode': 'history',
+                    'name': 'delete',
+                    'value' : slot['id']
+                }
+                url = cleanHost(self.conf('host')) + "api?" + tryUrlencode(params)
+                try:
+                    data = self.urlopen(url, timeout = 60, show_error = False)
+                except:
+                    log.error(traceback.format_exc())
+
+                # Return failed
+                return True
+
+        return False
