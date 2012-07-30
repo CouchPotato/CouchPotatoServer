@@ -98,7 +98,8 @@ class Sabnzbd(Downloader):
                     'apikey': self.conf('api_key'),
                     'mode': 'history',
                     'name': 'delete',
-                    'value' : slot['id']
+                    'del_files': '1',
+                    'value': slot['nzo_id']
                 }
                 url = cleanHost(self.conf('host')) + "api?" + tryUrlencode(params)
                 try:
