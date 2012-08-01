@@ -45,7 +45,7 @@ config = [{
                     'default': True,
                     'type': 'bool',
                     'advanced': True,
-                    'description': 'Try next the next best release for a movie after a download failed.',
+                    'description': 'Try the next best release for a movie after a download failed.',
                 },
                 {
                     'name': 'delete failed',
