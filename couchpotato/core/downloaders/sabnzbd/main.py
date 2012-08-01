@@ -65,8 +65,8 @@ class Sabnzbd(Downloader):
             log.error("Unknown error: " + result[:40])
             return False
 
-    def getdownloadfailed(self, data = {}, movie = {}, manual = False):
-        if self.isDisabled(manual) or not self.isCorrectType(data.get('type')):
+    def getdownloadfailed(self, data = {}, movie = {}):
+        if self.isDisabled(manual = True) or not self.isCorrectType(data.get('type')):
             return
 
         log.info('Checking download status of "%s" at SABnzbd.', data.get('name'))

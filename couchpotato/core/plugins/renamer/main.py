@@ -482,7 +482,13 @@ class Renamer(Plugin):
         rels = db.query(Relea).filter_by(status_id = snatched_status.get('id'))
 
         for rel in rels:
-            log.debug('Checking snatched release: %s' , rel.movie.library.titles[0].title)
+
+            # Get current selected title
+            default_title = ''
+            for title in rel.movie.library.titles:
+                if title.default: default_title = title.title
+
+            log.debug('Checking snatched movie: %s' , default_title)
 
             item = {}
             for info in rel.info:
@@ -506,6 +512,18 @@ class Renamer(Plugin):
                 db.commit()
 
                 # search/download again
+                # if downloaded manually: # this is currently not stored...
+                #   log.info('Download of %s failed...', item['name'])
+                #   return
+
+                #update movie to reflect release status update
+                mov = rel.movie.to_dict({
+                    'profile': {'types': {'quality': {}}},
+                    'releases': {'status': {}, 'quality': {}},
+                    'library': {'titles': {}, 'files':{}},
+                    'files': {}
+                })
+
                 log.info('Download of %s failed, trying next release...', item['name'])
                 fireEvent('searcher.single', mov)
 

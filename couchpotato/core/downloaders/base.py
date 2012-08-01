@@ -15,10 +15,10 @@ class Downloader(Plugin):
         addEvent('download', self.download)
         addEvent('getdownloadfailed', self.getdownloadfailed)
 
-    def download(self, data = {}):
+    def download(self, data = {}, movie = {}, manual = False, filedata = None):
         pass
 
-    def getdownloadfailed(self, data = {}):
+    def getdownloadfailed(self, data = {}, movie = {}):
         pass
 
     def createNzbName(self, data, movie):
