@@ -3,8 +3,6 @@ from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.variable import cleanHost
 from couchpotato.core.logger import CPLog
 import traceback
-import urllib2
-import requests
 import json
 
 log = CPLog(__name__)
@@ -69,6 +67,9 @@ class Sabnzbd(Downloader):
         if self.isDisabled(manual = True) or not self.isCorrectType(data.get('type')):
             return
 
+        if not self.conf('download failed', default = True):
+            return False
+
         log.info('Checking download status of "%s" at SABnzbd.', data.get('name'))
 
         params = {
@@ -80,7 +81,7 @@ class Sabnzbd(Downloader):
         log.debug('Opening: %s', url)
 
         try:
-            history = json.load(urllib2.urlopen(url))
+            history = json.load(self.urlopen(url))
         except:
             log.error(traceback.format_exc())
             return False 
@@ -91,23 +92,24 @@ class Sabnzbd(Downloader):
         for slot in history['history']['slots']:
             log.debug('Found %s in SabNZBd history, which has %s', (slot['name'], slot['status']))
             if slot['name'] == nzbname and slot['status'] == 'Failed':
-                log.debug('%s failed downloading, deleting...', slot['name'])
 
                 # Delete failed download
-                params = {
-                    'apikey': self.conf('api_key'),
-                    'mode': 'history',
-                    'name': 'delete',
-                    'del_files': '1',
-                    'value': slot['nzo_id']
-                }
-                url = cleanHost(self.conf('host')) + "api?" + tryUrlencode(params)
-                try:
-                    data = self.urlopen(url, timeout = 60, show_error = False)
-                except:
-                    log.error(traceback.format_exc())
+                if self.conf('delete failed',  default = True):
+                    log.info('%s failed downloading, deleting...', slot['name'])
+                    params = {
+                        'apikey': self.conf('api_key'),
+                        'mode': 'history',
+                        'name': 'delete',
+                        'del_files': '1',
+                        'value': slot['nzo_id']
+                    }
+                    url = cleanHost(self.conf('host')) + "api?" + tryUrlencode(params)
+                    try:
+                        data = self.urlopen(url, timeout = 60, show_error = False)
+                    except:
+                        log.error(traceback.format_exc())
 
-                # Return failed
+                # Return download failed
                 return True
 
         return False
