@@ -450,7 +450,8 @@ class Searcher(Plugin):
         db = get_session()
         rels = db.query(Release).filter_by(status_id = snatched_status.get('id'))
 
-        log.info('Checking snatched releases...')
+        log.info('Checking status snatched releases...')
+        scanrequired = False
 
         for rel in rels:
 
@@ -474,44 +475,47 @@ class Searcher(Plugin):
 
             # check status
             downloadstatus = fireEvent('getdownloadstatus', data = item, movie = movie)
-            log.debug('Download staus: %s' , downloadstatus[0])
+            if downloadstatus == None: # Downloader not compatible with download status
+                scanrequired = True
 
-            if downloadstatus[0] == 'Failed':
-                # if failed set status to ignored
-                rel.status_id = ignored_status.get('id')
-                db.commit()
+            else:
+                log.debug('Download staus: %s' , downloadstatus[0])
 
-                # search/download again
-                # if downloaded manually: # this is currently not stored...
-                #   log.info('Download of %s failed...', item['name'])
-                #   return
+                if downloadstatus[0] == 'Failed':
+                    # if failed set status to ignored
+                    rel.status_id = ignored_status.get('id')
+                    db.commit()
 
-                if self.conf('failed download', default = True):
+                    # search/download again
+                    # if downloaded manually: # this is currently not stored...
+                    #   log.info('Download of %s failed...', item['name'])
+                    #   return
 
-                    #update movie to reflect release status update
-                    movie = rel.movie.to_dict({
-                        'profile': {'types': {'quality': {}}},
-                        'releases': {'status': {}, 'quality': {}},
-                        'library': {'titles': {}, 'files':{}},
-                        'files': {}
-                    })
-                    log.info('Download of %s failed, trying next release...', item['name'])
-                    fireEvent('searcher.single', movie)
-                else:
-                    log.info('Download of %s failed.', item['name'])
+                    if self.conf('failed download', default = True):
 
-            elif downloadstatus[0] == 'Completed':
-                log.info('Download of %s completed!', item['name'])
-                fireEvent('renamer.scan')
+                        #update movie to reflect release status update
+                        movie = rel.movie.to_dict({
+                            'profile': {'types': {'quality': {}}},
+                            'releases': {'status': {}, 'quality': {}},
+                            'library': {'titles': {}, 'files':{}},
+                            'files': {}
+                        })
+                        log.info('Download of %s failed, trying next release...', item['name'])
+                        fireEvent('searcher.single', movie)
+                    else:
+                        log.info('Download of %s failed.', item['name'])
 
-            elif downloadstatus[0] == 'Not found':
-                log.info('%s not found in SabNZBd', item['name'])
-                rel.status_id = ignored_status.get('id')
-                db.commit()
+                elif downloadstatus[0] == 'Completed':
+                    log.info('Download of %s completed!', item['name'])
+                    scanrequired = True
 
-            elif downloadstatus[0] == None: # Downloader not compatible with download status or
-                fireEvent('renamer.scan')
+                elif downloadstatus[0] == 'Not found':
+                    log.info('%s not found in downloaders', item['name'])
+                    rel.status_id = ignored_status.get('id')
+                    db.commit()
 
-            # Note that Queued, Downloading, Paused, Repairn and Unpackimg are also available as status
+                # Note that Queued, Downloading, Paused, Repairn and Unpackimg are also available as status
+        if scanrequired:
+            fireEvent('renamer.scan')
 
         return
