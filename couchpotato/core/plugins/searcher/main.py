@@ -475,11 +475,12 @@ class Searcher(Plugin):
 
             # check status
             downloadstatus = fireEvent('getdownloadstatus', data = item, movie = movie)
-            if downloadstatus == None: # Downloader not compatible with download status
+            if not downloadstatus: # Downloader not compatible with download status
+                log.debug('Download status functionality is not implemented for active downloaders.')
                 scanrequired = True
 
             else:
-                log.debug('Download staus: %s' , downloadstatus[0])
+                log.debug('Download status: %s' , downloadstatus[0])
 
                 if downloadstatus[0] == 'Failed':
                     # if failed set status to ignored
@@ -514,7 +515,7 @@ class Searcher(Plugin):
                     rel.status_id = ignored_status.get('id')
                     db.commit()
 
-                # Note that Queued, Downloading, Paused, Repairn and Unpackimg are also available as status
+                # Note that Queued, Downloading, Paused, Repair and Unpackimg are also available as status for SabNZBd
         if scanrequired:
             fireEvent('renamer.scan')
 
