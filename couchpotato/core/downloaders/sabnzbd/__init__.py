@@ -41,13 +41,6 @@ config = [{
                     'description': 'Disable this downloader for automated searches, but use it when I manually send a release.',
                 },
                 {
-                    'name': 'download failed',
-                    'default': True,
-                    'type': 'bool',
-                    'advanced': True,
-                    'description': 'Try the next best release for a movie after a download failed.',
-                },
-                {
                     'name': 'delete failed',
                     'default': True,
                     'type': 'bool',

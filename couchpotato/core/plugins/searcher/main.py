@@ -25,9 +25,12 @@ class Searcher(Plugin):
         addEvent('searcher.single', self.single)
         addEvent('searcher.correct_movie', self.correctMovie)
         addEvent('searcher.download', self.download)
+        addEvent('searcher.checksnatched', self.checksnatched)
 
         # Schedule cronjob
         fireEvent('schedule.cron', 'searcher.all', self.all_movies, day = self.conf('cron_day'), hour = self.conf('cron_hour'), minute = self.conf('cron_minute'))
+        fireEvent('schedule.interval', 'searcher.checksnatched', self.checksnatched, minutes = self.conf('run_every'))
+
 
     def all_movies(self):
 
@@ -439,3 +442,76 @@ class Searcher(Plugin):
 
 
         return False
+
+    def checksnatched(self):
+        snatched_status = fireEvent('status.get', 'snatched', single = True)
+        ignored_status = fireEvent('status.get', 'ignored', single = True)
+
+        db = get_session()
+        rels = db.query(Release).filter_by(status_id = snatched_status.get('id'))
+
+        log.info('Checking snatched releases...')
+
+        for rel in rels:
+
+            # Get current selected title
+            default_title = ''
+            for title in rel.movie.library.titles:
+                if title.default: default_title = title.title
+
+            log.debug('Checking snatched movie: %s' , default_title)
+
+            item = {}
+            for info in rel.info:
+                item[info.identifier] = info.value
+
+            movie = rel.movie.to_dict({
+                'profile': {'types': {'quality': {}}},
+                'releases': {'status': {}, 'quality': {}},
+                'library': {'titles': {}, 'files':{}},
+                'files': {}
+            })
+
+            # check status
+            downloadstatus = fireEvent('getdownloadstatus', data = item, movie = movie)
+            log.debug('Download staus: %s' , downloadstatus[0])
+
+            if downloadstatus[0] == 'Failed':
+                # if failed set status to ignored
+                rel.status_id = ignored_status.get('id')
+                db.commit()
+
+                # search/download again
+                # if downloaded manually: # this is currently not stored...
+                #   log.info('Download of %s failed...', item['name'])
+                #   return
+
+                if self.conf('failed download', default = True):
+
+                    #update movie to reflect release status update
+                    movie = rel.movie.to_dict({
+                        'profile': {'types': {'quality': {}}},
+                        'releases': {'status': {}, 'quality': {}},
+                        'library': {'titles': {}, 'files':{}},
+                        'files': {}
+                    })
+                    log.info('Download of %s failed, trying next release...', item['name'])
+                    fireEvent('searcher.single', movie)
+                else:
+                    log.info('Download of %s failed.', item['name'])
+
+            elif downloadstatus[0] == 'Completed':
+                log.info('Download of %s completed!', item['name'])
+                fireEvent('renamer.scan')
+
+            elif downloadstatus[0] == 'Not found':
+                log.info('%s not found in SabNZBd', item['name'])
+                rel.status_id = ignored_status.get('id')
+                db.commit()
+
+            elif downloadstatus[0] == None: # Downloader not compatible with download status or
+                fireEvent('renamer.scan')
+
+            # Note that Queued, Downloading, Paused, Repairn and Unpackimg are also available as status
+
+        return

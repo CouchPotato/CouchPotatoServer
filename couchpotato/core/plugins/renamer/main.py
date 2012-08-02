@@ -29,7 +29,7 @@ class Renamer(Plugin):
         addEvent('renamer.scan', self.scan)
         addEvent('app.load', self.scan)
 
-        fireEvent('schedule.interval', 'renamer.scan', self.scan, minutes = self.conf('run_every'))
+        #fireEvent('schedule.interval', 'renamer.scan', self.scan, minutes = self.conf('run_every'))
 
     def scanView(self):
 
@@ -47,8 +47,6 @@ class Renamer(Plugin):
         if self.renaming_started is True:
             log.info('Renamer is disabled to avoid infinite looping of the same error.')
             return
-
-        self.checkSnatchedStatusses()
 
         # Check to see if the "to" folder is inside the "from" folder.
         if not os.path.isdir(self.conf('from')) or not os.path.isdir(self.conf('to')):
@@ -474,57 +472,4 @@ class Renamer(Plugin):
         except:
             log.error('Couldn\'t remove empty directory %s: %s', (folder, traceback.format_exc()))
 
-    def checkSnatchedStatusses(self):
-        snatched_status = fireEvent('status.get', 'snatched', single = True)
-        ignored_status = fireEvent('status.get', 'ignored', single = True)
 
-        db = get_session()
-        rels = db.query(Relea).filter_by(status_id = snatched_status.get('id'))
-
-        for rel in rels:
-
-            # Get current selected title
-            default_title = ''
-            for title in rel.movie.library.titles:
-                if title.default: default_title = title.title
-
-            log.debug('Checking snatched movie: %s' , default_title)
-
-            item = {}
-            for info in rel.info:
-                item[info.identifier] = info.value
-
-            log.debug('Checking status snatched release: %s' , item.get('name'))
-
-            mov = rel.movie.to_dict({
-                'profile': {'types': {'quality': {}}},
-                'releases': {'status': {}, 'quality': {}},
-                'library': {'titles': {}, 'files':{}},
-                'files': {}
-            })
-
-            # check status
-            downloadfailed = fireEvent('getdownloadfailed', data = item, movie = mov)
-
-            if downloadfailed:
-                # if failed set status to ignored
-                rel.status_id = ignored_status.get('id')
-                db.commit()
-
-                # search/download again
-                # if downloaded manually: # this is currently not stored...
-                #   log.info('Download of %s failed...', item['name'])
-                #   return
-
-                #update movie to reflect release status update
-                mov = rel.movie.to_dict({
-                    'profile': {'types': {'quality': {}}},
-                    'releases': {'status': {}, 'quality': {}},
-                    'library': {'titles': {}, 'files':{}},
-                    'files': {}
-                })
-
-                log.info('Download of %s failed, trying next release...', item['name'])
-                fireEvent('searcher.single', mov)
-
-        return
