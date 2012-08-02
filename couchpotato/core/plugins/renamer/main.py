@@ -6,7 +6,7 @@ from couchpotato.core.helpers.request import jsonified
 from couchpotato.core.helpers.variable import getExt, mergeDicts, getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.core.settings.model import Library, File, Profile, Release as Relea
+from couchpotato.core.settings.model import Library, File, Profile
 from couchpotato.environment import Env
 import os
 import re
@@ -471,5 +471,3 @@ class Renamer(Plugin):
             os.rmdir(folder)
         except:
             log.error('Couldn\'t remove empty directory %s: %s', (folder, traceback.format_exc()))
-
-
