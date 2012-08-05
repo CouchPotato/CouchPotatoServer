@@ -86,15 +86,6 @@ config = [{
                     'label': 'Separator',
                     'description': 'Replace all the spaces with a character. Example: ".", "-" (without quotes). Leave empty to use spaces.',
                 },
-                {
-                    'advanced': True,
-                    'name': 'run_every',
-                    'label': 'Run every',
-                    'default': 1,
-                    'type': 'int',
-                    'unit': 'min(s)',
-                    'description': 'Search for new movies inside the folder every X minutes.',
-                },
             ],
         }, {
             'tab': 'renamer',

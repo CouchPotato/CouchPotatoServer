@@ -7,19 +7,22 @@ import os
 
 log = CPLog(__name__)
 
-
 class Downloader(Plugin):
 
     type = []
 
     def __init__(self):
         addEvent('download', self.download)
+        addEvent('getdownloadstatus', self.getdownloadstatus)
 
-    def download(self, data = {}):
+    def download(self, data = {}, movie = {}, manual = False, filedata = None):
+        pass
+
+    def getdownloadstatus(self, data = {}, movie = {}):
         pass
 
     def createNzbName(self, data, movie):
-        return '%s%s' % (toSafeString(data.get('name')), self.cpTag(movie))
+        return '%s%s' % (toSafeString(data.get('name')[:40]), self.cpTag(movie))
 
     def createFileName(self, data, filedata, movie):
         name = os.path.join(self.createNzbName(data, movie))
