@@ -27,35 +27,30 @@ class Automation(Plugin):
 
         return self.getIMDBids()
 
-    def search(self, name, year = None):
+    def search(self, name, year = None, imdb_only = False):
         result = fireEvent('movie.search', q = '%s %s' % (name, year if year else ''), limit = 1, merge = True)
 
         if len(result) > 0:
-            return result[0].get('imdb')
+            return result[0].get('imdb') if imdb_only else result[0]
         else:
             return None
 
     def isMinimalMovie(self, movie):
+        if not movie.get('rating'):
+            return False
+
         if movie['rating'] and movie['rating'].get('imdb'):
             movie['votes'] = movie['rating']['imdb'][1]
             movie['rating'] = movie['rating']['imdb'][0]
-        identifier = movie['imdb']
+
         for minimal_type in ['year', 'rating', 'votes']:
             type_value = movie.get(minimal_type, 0)
             type_min = self.getMinimal(minimal_type)
             if type_value < type_min:
-                log.info('%s too low for %s, need %s has %s', (minimal_type, identifier, type_min, type_value))
+                log.info('%s too low for %s, need %s has %s', (minimal_type, movie['imdb'], type_min, type_value))
                 return False
 
         return True
-
-    def getIMDBFromTitle(self, name, year = None):
-        result = fireEvent('movie.search', q = '%s %s' % (name, year), limit = 1, merge = True)
-
-        if len(result) > 0:
-            return result[0]
-        else:
-            return None
 
     def getMinimal(self, min_type):
         return Env.setting(min_type, 'automation')

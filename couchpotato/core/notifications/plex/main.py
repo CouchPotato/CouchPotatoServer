@@ -1,8 +1,10 @@
 from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import tryUrlencode
+from couchpotato.core.helpers.request import jsonified
 from couchpotato.core.helpers.variable import cleanHost
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
+from urllib2 import URLError
 from xml.dom import minidom
 import traceback
 
@@ -38,7 +40,7 @@ class Plex(Notification):
                         x = self.urlopen(url)
 
             except:
-                log.error('Plex library update failed for %s: %s', (host, traceback.format_exc()))
+                log.error('Plex library update failed for %s, Media Server not running: %s', (host, traceback.format_exc(1)))
                 return False
 
         return True
@@ -62,9 +64,27 @@ class Plex(Notification):
 
         try:
             self.urlopen(url, headers = headers, show_error = False)
+        except URLError:
+            log.error("Couldn't sent command to Plex, probably just running Media Server")
+            return False
         except:
             log.error("Couldn't sent command to Plex: %s", traceback.format_exc())
             return False
 
         log.info('Plex notification to %s successful.', host)
         return True
+
+    def test(self):
+
+        test_type = self.testNotifyName()
+
+        log.info('Sending test to %s', test_type)
+
+        success = self.notify(
+            message = self.test_message,
+            data = {},
+            listener = 'test'
+        )
+        success2 = self.addToLibrary()
+
+        return jsonified({'success': success or success2})

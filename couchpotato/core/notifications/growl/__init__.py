@@ -9,6 +9,7 @@ config = [{
         {
             'tab': 'notifications',
             'name': 'growl',
+            'description': 'Version 1.4+',
             'options': [
                 {
                     'name': 'enabled',

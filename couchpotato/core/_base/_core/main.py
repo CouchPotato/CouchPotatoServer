@@ -53,7 +53,7 @@ class Core(Plugin):
 
 
     def md5Password(self, value):
-        return md5(value) if value else ''
+        return md5(value.encode(Env.get('encoding'))) if value else ''
 
     def checkApikey(self, value):
         return value if value and len(value) > 3 else uuid4().hex

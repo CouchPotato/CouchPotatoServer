@@ -1,8 +1,7 @@
 from bs4 import BeautifulSoup
 from couchpotato.core.event import fireEvent
-from couchpotato.core.helpers.encoding import simplifyString, tryUrlencode, \
-    toUnicode
-from couchpotato.core.helpers.variable import getTitle, tryInt
+from couchpotato.core.helpers.encoding import tryUrlencode, toUnicode
+from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.torrent.base import TorrentProvider
 import traceback
@@ -39,9 +38,10 @@ class SceneAccess(TorrentProvider):
            self.getCatId(quality['identifier'])[0]
         )
 
-        q = '"%s %s" %s' % (simplifyString(getTitle(movie['library'])), movie['library']['year'], quality.get('identifier'))
+        q = '%s %s' % (movie['library']['identifier'], quality.get('identifier'))
         arguments = tryUrlencode({
             'search': q,
+            'method': 1,
         })
         url = "%s&%s" % (url, arguments)
 
@@ -57,7 +57,10 @@ class SceneAccess(TorrentProvider):
 
             try:
                 resultsTable = html.find('table', attrs = {'id' : 'torrents-table'})
-                entries = resultsTable.findAll('tr', attrs = {'class' : 'tt_row'})
+                if resultsTable is None:
+                    return results
+
+                entries = resultsTable.find_all('tr', attrs = {'class' : 'tt_row'})
                 for result in entries:
 
                     link = result.find('td', attrs = {'class' : 'ttr_name'}).find('a')

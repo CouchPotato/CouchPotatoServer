@@ -1,6 +1,7 @@
 from couchpotato import get_session
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, addEvent
+from couchpotato.core.helpers.encoding import ss
 from couchpotato.core.helpers.request import getParam, jsonified
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
@@ -131,7 +132,7 @@ class Release(Plugin):
         rel = db.query(Relea).filter_by(id = id).first()
         if rel:
             for release_file in rel.files:
-                if not os.path.isfile(release_file.path):
+                if not os.path.isfile(ss(release_file.path)):
                     db.delete(release_file)
             db.commit()
 

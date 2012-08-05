@@ -74,8 +74,6 @@ class Scanner(Plugin):
 
     cp_imdb = '(\.cp\((?P<id>tt[0-9{7}]+)\))'
 
-    path_identifiers = {} # bind identifier to filepath
-
     def __init__(self):
 
         addEvent('scanner.create_file_identifier', self.createStringIdentifier)
@@ -222,18 +220,19 @@ class Scanner(Plugin):
 
 
         # Create identifiers for all leftover files
+        path_identifiers = {}
         for file_path in leftovers:
             identifier = self.createStringIdentifier(file_path, folder)
 
-            if not self.path_identifiers.get(identifier):
-                self.path_identifiers[identifier] = []
+            if not path_identifiers.get(identifier):
+                path_identifiers[identifier] = []
 
-            self.path_identifiers[identifier].append(file_path)
+            path_identifiers[identifier].append(file_path)
 
 
         # Group the files based on the identifier
         delete_identifiers = []
-        for identifier, found_files in self.path_identifiers.iteritems():
+        for identifier, found_files in path_identifiers.iteritems():
             log.debug('Grouping files on identifier: %s', identifier)
 
             group = movie_files.get(identifier)
@@ -250,13 +249,13 @@ class Scanner(Plugin):
 
         # Cleaning up used
         for identifier in delete_identifiers:
-            if self.path_identifiers.get(identifier):
-                del self.path_identifiers[identifier]
+            if path_identifiers.get(identifier):
+                del path_identifiers[identifier]
         del delete_identifiers
 
         # Group based on folder
         delete_identifiers = []
-        for identifier, found_files in self.path_identifiers.iteritems():
+        for identifier, found_files in path_identifiers.iteritems():
             log.debug('Grouping files on foldername: %s', identifier)
 
             for ff in found_files:
@@ -276,8 +275,8 @@ class Scanner(Plugin):
 
         # Cleaning up used
         for identifier in delete_identifiers:
-            if self.path_identifiers.get(identifier):
-                del self.path_identifiers[identifier]
+            if path_identifiers.get(identifier):
+                del path_identifiers[identifier]
         del delete_identifiers
 
         # Determine file types
@@ -388,14 +387,11 @@ class Scanner(Plugin):
 
             processed_movies[identifier] = group
 
-
-        # Clean up
-        self.path_identifiers = {}
-
         if len(processed_movies) > 0:
             log.info('Found %s movies in the folder %s', (len(processed_movies), folder))
         else:
             log.debug('Found no movies in the folder %s', (folder))
+
         return processed_movies
 
     def getMetaData(self, group):

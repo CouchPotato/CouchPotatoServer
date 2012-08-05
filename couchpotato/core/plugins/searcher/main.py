@@ -429,8 +429,8 @@ class Searcher(Plugin):
 
                 if dates.get('dvd') > 0:
 
-                    # 3 weeks before dvd release
-                    if dates.get('dvd') - 1814400 < now:
+                    # 4 weeks before dvd release
+                    if dates.get('dvd') - 2419200 < now:
                         return True
 
                     # Dvd should be released

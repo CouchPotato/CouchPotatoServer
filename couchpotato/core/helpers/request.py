@@ -2,8 +2,8 @@ from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.variable import natcmp
 from flask.globals import current_app
 from flask.helpers import json, make_response
-from libs.werkzeug.urls import url_decode
 from urllib import unquote
+from werkzeug.urls import url_decode
 import flask
 import re
 
@@ -57,7 +57,7 @@ def dictToList(params):
 
 def getParam(attr, default = None):
     try:
-        return toUnicode(unquote(getattr(flask.request, 'args').get(attr, default)))
+        return getParams().get(attr, default)
     except:
         return default
 

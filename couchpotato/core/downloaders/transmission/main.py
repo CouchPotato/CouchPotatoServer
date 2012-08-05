@@ -4,6 +4,7 @@ from couchpotato.core.helpers.encoding import isInt
 from couchpotato.core.logger import CPLog
 import httplib
 import json
+import os.path
 import re
 import urllib2
 
@@ -31,7 +32,7 @@ class Transmission(Downloader):
         # Set parameters for Transmission
         params = {
             'paused': self.conf('paused', default = 0),
-            'download-dir': self.conf('directory', default = None)
+            'download-dir': self.conf('directory', default = '').rstrip(os.path.sep)
         }
 
         torrent_params = {
