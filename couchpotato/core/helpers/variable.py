@@ -105,7 +105,7 @@ def tryInt(s):
 
 def tryFloat(s):
     try: return float(s) if '.' in s else tryInt(s)
-    except: return s
+    except: return 0
 
 def natsortKey(s):
     return map(tryInt, re.findall(r'(\d+|\D+)', s))
