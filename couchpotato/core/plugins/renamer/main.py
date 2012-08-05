@@ -12,6 +12,7 @@ import os
 import re
 import shutil
 import traceback
+import errno
 
 log = CPLog(__name__)
 
@@ -427,6 +428,14 @@ class Renamer(Plugin):
                 os.chmod(dest, Env.getPermission('file'))
             except:
                 log.error('Failed setting permissions for file: %s, %s', (dest, traceback.format_exc(1)))
+
+        except OSError, err:
+            # Copying from a filesystem with octal permission to an NTFS file system causes a permission error.  In this case ignore it.
+            if not hasattr(os, 'chmod') or err.errno != errno.EPERM:
+                raise
+            else:
+                if os.path.exists(dest):
+                    os.unlink(old)
 
         except:
             log.error('Couldn\'t move file "%s" to "%s": %s', (old, dest, traceback.format_exc()))
