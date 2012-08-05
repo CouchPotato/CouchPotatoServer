@@ -14,6 +14,7 @@ import shutil
 import tarfile
 import time
 import traceback
+import version
 
 log = CPLog(__name__)
 
@@ -114,7 +115,7 @@ class BaseUpdater(Plugin):
 
     repo_user = 'RuudBurger'
     repo_name = 'CouchPotatoServer'
-    branch = 'develop'
+    branch = version.BRANCH
 
     version = None
     update_failed = False
