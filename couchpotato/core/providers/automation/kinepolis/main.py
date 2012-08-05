@@ -19,7 +19,6 @@ class Kinepolis(Automation, RSS):
             return
 
         movies = []
-        RSSMovie = {'name': 'placeholder', 'year' : 'placeholder'}
 
         cache_key = 'kinepolis.%s' % md5(self.rss_url)
         rss_data = self.getCache(cache_key, self.rss_url)
@@ -29,14 +28,12 @@ class Kinepolis(Automation, RSS):
             rss_movies = self.getElements(data, 'channel/item')
 
             for movie in rss_movies:
-                RSSMovie['name'] = self.getTextElement(movie, "title")
-                currentYear = datetime.datetime.now().strftime("%Y")
-                RSSMovie['year'] = currentYear
+                name = self.getTextElement(movie, "title")
+                year = datetime.datetime.now().strftime("%Y")
 
-                log.debug('Release found: %s.', RSSMovie)
-                imdb = self.getIMDBFromTitle(RSSMovie['name'], RSSMovie['year'])
+                imdb = self.search(name, year)
 
-                if imdb:
+                if imdb and self.isMinimalMovie(imdb):
                     movies.append(imdb['imdb'])
 
         return movies

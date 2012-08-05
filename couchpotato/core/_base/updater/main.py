@@ -14,6 +14,7 @@ import shutil
 import tarfile
 import time
 import traceback
+import version
 
 log = CPLog(__name__)
 
@@ -102,6 +103,8 @@ class Updater(Plugin):
             success = False
         else:
             success = self.updater.doUpdate()
+            if success:
+                fireEventAsync('app.restart')
 
         return jsonified({
             'success': success
@@ -112,7 +115,7 @@ class BaseUpdater(Plugin):
 
     repo_user = 'RuudBurger'
     repo_name = 'CouchPotatoServer'
-    branch = 'master'
+    branch = version.BRANCH
 
     version = None
     update_failed = False

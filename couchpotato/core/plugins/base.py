@@ -1,3 +1,4 @@
+from StringIO import StringIO
 from couchpotato import addView
 from couchpotato.core.event import fireEvent, addEvent
 from couchpotato.core.helpers.encoding import tryUrlencode, simplifyString, ss
@@ -9,6 +10,7 @@ from multipartpost import MultipartPostHandler
 from urlparse import urlparse
 import cookielib
 import glob
+import gzip
 import math
 import os.path
 import re
@@ -101,10 +103,10 @@ class Plugin(object):
         if not params: params = {}
 
         # Fill in some headers
-        if not headers.get('Referer'):
-            headers['Referer'] = urlparse(url).hostname
-        if not headers.get('User-Agent'):
-            headers['User-Agent'] = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.7; rv:10.0.2) Gecko/20100101 Firefox/10.0.2'
+        headers['Referer'] = headers.get('Referer', urlparse(url).hostname)
+        headers['Host'] = headers.get('Host', urlparse(url).hostname)
+        headers['User-Agent'] = headers.get('User-Agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.7; rv:10.0.2) Gecko/20100101 Firefox/10.0.2')
+        headers['Accept-encoding'] = headers.get('Accept-encoding', 'gzip')
 
         host = urlparse(url).hostname
 
@@ -127,16 +129,24 @@ class Plugin(object):
                 cookies = cookielib.CookieJar()
                 opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookies), MultipartPostHandler)
 
-                data = opener.open(request, timeout = timeout).read()
+                response = opener.open(request, timeout = timeout)
             else:
                 log.info('Opening url: %s, params: %s', (url, [x for x in params.iterkeys()]))
                 data = tryUrlencode(params) if len(params) > 0 else None
                 request = urllib2.Request(url, data, headers)
 
                 if opener:
-                    data = opener.open(request, timeout = timeout).read()
+                    response = opener.open(request, timeout = timeout)
                 else:
-                    data = urllib2.urlopen(request, timeout = timeout).read()
+                    response = urllib2.urlopen(request, timeout = timeout)
+
+            # unzip if needed
+            if response.info().get('Content-Encoding') == 'gzip':
+                buf = StringIO(response.read())
+                f = gzip.GzipFile(fileobj = buf)
+                data = f.read()
+            else:
+                data = response.read()
 
             self.http_failed_request[host] = 0
         except IOError:

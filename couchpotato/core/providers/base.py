@@ -1,13 +1,12 @@
 from couchpotato.core.event import addEvent
+from couchpotato.core.helpers.variable import tryFloat
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
 from urlparse import urlparse
-from urllib import quote_plus
-from couchpotato.core.helpers.encoding import simplifyString
-
 import re
 import time
+
 
 log = CPLog(__name__)
 
@@ -86,19 +85,19 @@ class YarrProvider(Provider):
     def parseSize(self, size):
 
         sizeRaw = size.lower()
-        size = float(re.sub(r'[^0-9.]', '', size).strip())
+        size = tryFloat(re.sub(r'[^0-9.]', '', size).strip())
 
         for s in self.sizeGb:
             if s in sizeRaw:
-                return int(size) * 1024
+                return size * 1024
 
         for s in self.sizeMb:
             if s in sizeRaw:
-                return int(size)
+                return size
 
         for s in self.sizeKb:
             if s in sizeRaw:
-                return int(size) / 1024
+                return size / 1024
 
         return 0
 

@@ -12,8 +12,7 @@
 
 // ==/UserScript==
 
-if (window.top != window.self)  // Only run on top window
-    return;
+if (window.top == window.self){  // Only run on top window
 
 var version = {{version}},
     host = '{{host}}',
@@ -136,3 +135,5 @@ if(document.location.href.indexOf(host) == -1)
     osd();
 else
     setVersion();
+
+}

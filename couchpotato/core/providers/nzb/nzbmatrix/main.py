@@ -43,7 +43,7 @@ class NZBMatrix(NZBProvider, RSS):
             'username': self.conf('username'),
             'apikey': self.conf('api_key'),
             'searchin': 'weblink',
-            'age': Env.setting('retention', section = 'nzb'),
+            'maxage': Env.setting('retention', section = 'nzb'),
             'english': self.conf('english_only'),
         })
         url = "%s?%s" % (self.urls['search'], arguments)
