@@ -55,3 +55,9 @@ class TorrentProvider(YarrProvider):
 
     def getLoginParams(self):
         return ''
+
+    def download(self, url = '', nzb_id = ''):
+        if url.startswith('magnet:'):
+            return url
+
+        return self.urlopen(url)
