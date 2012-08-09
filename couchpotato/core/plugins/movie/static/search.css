@@ -186,7 +186,6 @@
 
 				.movie_result .info h2 span {
 					padding: 0 5px;
-					content: ")";
 				}
 
 				.movie_result .info h2 span:before { content: "("; }
