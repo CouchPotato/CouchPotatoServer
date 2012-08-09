@@ -15,19 +15,9 @@ class PublicHD(TorrentProvider):
 
     urls = {
         'test': 'http://publichd.eu',
-        'download': 'http://publichd.eu/%s',
         'detail': 'http://publichd.eu/index.php?page=torrent-details&id=%s',
         'search': 'http://publichd.eu/index.php',
     }
-
-    cat_ids = [
-       ([9], ['bd50']),
-       ([5], ['1080p']),
-       ([2], ['720p']),
-       ([15, 16], ['brrip']),
-    ]
-
-    cat_backup_id = 0
     http_time_between_calls = 0
 
     def search(self, movie, quality):
@@ -39,9 +29,8 @@ class PublicHD(TorrentProvider):
 
         params = tryUrlencode({
             'page':'torrents',
-            'search': getTitle(movie['library']) + ' ' + quality['identifier'],
+            'search': '%s %s' % (getTitle(movie['library']), movie['library']['year']),
             'active': 1,
-            'category': self.getCatId(quality['identifier'])[0]
         })
         url = '%s?%s' % (self.urls['search'], params)
 
@@ -58,7 +47,7 @@ class PublicHD(TorrentProvider):
 
                 for result in entries[2:len(entries) - 1]:
                     info_url = result.find(href = re.compile('torrent-details'))
-                    download = result.find(href = re.compile('\.torrent'))
+                    download = result.find(href = re.compile('magnet:'))
 
                     if info_url and download:
 
@@ -67,12 +56,11 @@ class PublicHD(TorrentProvider):
                         new = {
                             'id': url['id'][0],
                             'name': info_url.string,
-                            'type': 'torrent',
+                            'type': 'torrent_magnet',
                             'check_nzb': False,
                             'description': '',
                             'provider': self.getName(),
-                            'download': self.download,
-                            'url': self.urls['download'] % download['href'],
+                            'url': download['href'],
                             'detail_url': self.urls['detail'] % url['id'][0],
                             'size': self.parseSize(result.find_all('td')[7].string),
                             'seeders': tryInt(result.find_all('td')[4].string),

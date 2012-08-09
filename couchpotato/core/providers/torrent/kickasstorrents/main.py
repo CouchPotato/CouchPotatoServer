@@ -3,8 +3,6 @@ from couchpotato.core.event import fireEvent
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.torrent.base import TorrentProvider
-import StringIO
-import gzip
 import re
 import traceback
 
@@ -14,10 +12,9 @@ log = CPLog(__name__)
 class KickAssTorrents(TorrentProvider):
 
     urls = {
-        'test': 'http://www.kat.ph/',
-        'detail': 'http://www.kat.ph/%s-t%s.html',
-        'search': 'http://www.kat.ph/i%s/',
-        'download': 'http://torcache.net/',
+        'test': 'http://kat.ph/',
+        'detail': 'http://kat.ph/%s-t%s.html',
+        'search': 'http://kat.ph/i%s/',
     }
 
     cat_ids = [
@@ -60,11 +57,10 @@ class KickAssTorrents(TorrentProvider):
                                     continue
 
                                 new = {
-                                    'type': 'torrent',
+                                    'type': 'torrent_magnet',
                                     'check_nzb': False,
                                     'description': '',
                                     'provider': self.getName(),
-                                    'download': self.download,
                                     'score': 0,
                                 }
 
@@ -77,9 +73,7 @@ class KickAssTorrents(TorrentProvider):
                                             link = td.find('div', {'class': 'torrentname'}).find_all('a')[1]
                                             new['id'] = temp.get('id')[-8:]
                                             new['name'] = link.text
-                                            new['url'] = td.find_all('a', 'idownload')[1]['href']
-                                            if new['url'][:2] == '//':
-                                                new['url'] = 'http:%s' % new['url']
+                                            new['url'] = td.find('a', 'imagnet')['href']
                                             new['score'] = 20 if td.find('a', 'iverif') else 0
                                         elif column_name is 'size':
                                             new['size'] = self.parseSize(td.text)
@@ -129,13 +123,3 @@ class KickAssTorrents(TorrentProvider):
             age += tryInt(nr) * mult
 
         return tryInt(age)
-
-    def download(self, url = '', nzb_id = ''):
-        compressed_data = self.urlopen(url = url, headers = {'Referer': 'http://kat.ph/'})
-
-        compressedstream = StringIO.StringIO(compressed_data)
-        gzipper = gzip.GzipFile(fileobj = compressedstream)
-        data = gzipper.read()
-
-        return data
-
