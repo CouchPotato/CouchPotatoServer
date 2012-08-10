@@ -3,6 +3,7 @@ from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.variable import cleanHost
 from couchpotato.core.logger import CPLog
 import traceback
+import json
 
 log = CPLog(__name__)
 
@@ -39,14 +40,14 @@ class Sabnzbd(Downloader):
 
         try:
             if params.get('mode') is 'addfile':
-                data = self.urlopen(url, timeout = 60, params = {"nzbfile": (nzb_filename, filedata)}, multipart = True, show_error = False)
+                sab = self.urlopen(url, timeout = 60, params = {"nzbfile": (nzb_filename, filedata)}, multipart = True, show_error = False)
             else:
-                data = self.urlopen(url, timeout = 60, show_error = False)
+                sab = self.urlopen(url, timeout = 60, show_error = False)
         except:
             log.error(traceback.format_exc())
             return False
 
-        result = data.strip()
+        result = sab.strip()
         if not result:
             log.error("SABnzbd didn't return anything.")
             return False
@@ -61,3 +62,97 @@ class Sabnzbd(Downloader):
         else:
             log.error("Unknown error: " + result[:40])
             return False
+
+    def getdownloadstatus(self, data = {}, movie = {}):
+        if self.isDisabled(manual = True) or not self.isCorrectType(data.get('type')):
+            return
+
+        nzbname = self.createNzbName(data, movie)
+        log.info('Checking download status of "%s" at SABnzbd.', nzbname)
+
+        # Go through Queue
+        params = {
+            'apikey': self.conf('api_key'),
+            'mode': 'queue',
+            'output': 'json'
+        }
+        url = cleanHost(self.conf('host')) + "api?" + tryUrlencode(params)
+
+        try:
+            sab = self.urlopen(url, timeout = 60, show_error = False)
+        except:
+            log.error(traceback.format_exc())
+            return
+        try:
+            history = json.loads(sab)
+        except:
+            log.debug("Result text from SAB: " + sab[:40])
+            log.error(traceback.format_exc())
+            return
+
+        for slot in history['queue']['slots']:
+            if slot['cat'] == self.conf('category'):
+                log.debug('Found %s in SabNZBd queue, which is %s, with %s left', (slot['filename'], slot['status'], slot['timeleft']))
+                if slot['filename'] == nzbname:
+                    return slot['status']
+
+        # Go through history items
+        params = {
+            'apikey': self.conf('api_key'),
+            'mode': 'history',
+            'output': 'json'
+        }
+        url = cleanHost(self.conf('host')) + "api?" + tryUrlencode(params)
+
+        try:
+            sab = self.urlopen(url, timeout = 60, show_error = False)
+        except:
+            log.error(traceback.format_exc())
+            return
+        try:
+            history = json.loads(sab)
+        except:
+            log.debug("Result text from SAB: " + sab[:40])
+            log.error(traceback.format_exc())
+            return
+
+        for slot in history['history']['slots']:
+            if slot['category'] == self.conf('category'):
+                log.debug('Found %s in SabNZBd history, which has %s', (slot['name'], slot['status']))
+                if slot['name'] == nzbname:
+                    if slot['status'] == 'Failed' or 'fail' in slot['fail_message'].lower():
+
+                        # Delete failed download
+                        if self.conf('delete failed',  default = True):
+                            log.info('%s failed downloading, deleting...', slot['name'])
+                            params = {
+                                'apikey': self.conf('api_key'),
+                                'mode': 'history',
+                                'name': 'delete',
+                                'del_files': '1',
+                                'value': slot['nzo_id']
+                            }
+                            url = cleanHost(self.conf('host')) + "api?" + tryUrlencode(params)
+                            try:
+                                sab = self.urlopen(url, timeout = 60, show_error = False)
+                            except:
+                                log.error(traceback.format_exc())
+                                return False
+
+                            result = sab.strip()
+                            if not result:
+                                log.error("SABnzbd didn't return anything.")
+
+                            log.debug("Result text from SAB: " + result[:40])
+                            if result == "ok":
+                                log.info('SabNZBd deleted failed release %s successfully.', slot['name'])
+                            elif result == "Missing authentication":
+                                log.error("Incorrect username/password.")
+                            else:
+                                log.error("Unknown error: " + result[:40])
+
+                            return 'Failed'
+                    else:
+                        return slot['status']
+
+        return 'Not found'

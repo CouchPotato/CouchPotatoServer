@@ -35,10 +35,17 @@ config = [{
                 },
                 {
                     'name': 'manual',
-                    'default': 0,
+                    'default': False,
                     'type': 'bool',
                     'advanced': True,
                     'description': 'Disable this downloader for automated searches, but use it when I manually send a release.',
+                },
+                {
+                    'name': 'delete failed',
+                    'default': True,
+                    'type': 'bool',
+                    'advanced': True,
+                    'description': 'Delete a release after it\'s download failed.',
                 },
             ],
         }
