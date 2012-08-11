@@ -266,7 +266,7 @@ class PassThePopcorn(TorrentProvider):
                     results.append(new)
                     self.found(new)
         if not results:
-            log.info("Found nothing for '%s'" % movie.name)
+            log.info("Found nothing for '%s'" % movieTitle)
         return results
 
     def getMoreInfo(self, item):
