@@ -33,6 +33,7 @@ class PassThePopcorn(TorrentProvider):
     opener = None
     cookiejar = None
     quality_search_params = {
+        'bd50':     {'media': 'Blu-ray', 'format': 'BD50'},
         '1080p':    {'resolution': '1080p'},
         '720p':     {'resolution': '720p'},
         'brrip':    {'media': 'Blu-ray'}, # results are filtered by post_search_filters to narrow down the search
@@ -46,6 +47,7 @@ class PassThePopcorn(TorrentProvider):
     }
     
     post_search_filters = {
+        'bd50':     {'Codec': ['BD50']},
         '1080p':    {'Resolution': ['1080p']},
         '720p':     {'Resolution': ['720p']},
         'brrip':    {'Source': ['Blu-ray'], 'Quality': ['High Definition'], 'Container': ['!ISO']},
@@ -194,7 +196,7 @@ class PassThePopcorn(TorrentProvider):
     def htmltoascii(self, text):
         return self.unicodetoascii(self.htmltounicode(text))
 
-    def download(self, url = '', nzb_id = ''):
+    def download(self, url='', nzb_id=''):
         return self.protected_request(url)
 
     def search(self, movie, quality):
@@ -203,7 +205,7 @@ class PassThePopcorn(TorrentProvider):
         imdbID = movie['library']['info']['imdb']
         movieYear = movie['library']['info']['year']
         
-        log.info('Searching for %s' % movieTitle)
+        log.info('Searching for %s at quality %s' % (movieTitle, qualityID))
         if not self.enabled():
             log.info('PTP not enabled, skipping search')
             return []
@@ -222,20 +224,22 @@ class PassThePopcorn(TorrentProvider):
         
         res = self.json_request('torrents.php', params)
         if not res:
-            log.error('Search on passthepopcorn.me (%s) failed' % params)
+            log.error('Search on passthepopcorn.me (%s) failed (could not decode JSON)' % params)
             return []
         
         #log.info('JSON: %s' % json.dumps(res))        
         
         if not 'Movies' in res:
+            log.info("PTP search returned nothing for '%s' at quality '%s' with search parameters %s" % (movieTitle, qualityID, params))
             return []
+        log.info('PTP search returned %d movies' % len(res['Movies']))
         results = []
         for ptpmovie in res['Movies']:
             if not 'Torrents' in ptpmovie:
+                log.info('Movie %s (%s) has NO torrents' % (ptpmovie['Title'], ptpmovie['Year']))
                 continue
+            log.info('Movie %s (%s) has %d torrents' % (ptpmovie['Title'], ptpmovie['Year'], len(ptpmovie['Torrents'])))
             for torrent in ptpmovie['Torrents']:
-                if not self.torrent_meets_quality_spec(torrent, type):
-                    continue
                 torrentdesc = '%s %s %s' % (torrent['Resolution'], torrent['Source'], torrent['Codec'])
                 if 'GoldenPopcorn' in torrent and torrent['GoldenPopcorn']:
                     torrentdesc += ' HQ'
@@ -244,14 +248,21 @@ class PassThePopcorn(TorrentProvider):
                 if 'RemasterTitle' in torrent and torrent['RemasterTitle']:
                     # eliminate odd characters...
                     torrentdesc += self.htmltoascii(' %s')
+                torrentdesc += ' %s' % qualityID # this is really just to make CouchPotato not reject torrents we filtered ourselves using our own CPS->PTPSearch rules
+                if not self.torrent_meets_quality_spec(torrent, type):
+                    log.info('Ignoring \'%s\' because it does not meet the quality spec of \'%s\'' % (torrentName, qualityID))
+                    continue
+                # if we know the IMDB id, this must be the correct name. This avoids failing the CouchPotato name check if we know for certain we have the correct movie.
+                torrentNameMovieTitle = movieTitle if imdbID else self.htmltoascii(ptpmovie['Title'])
+                torrentName = re.sub('[^A-Za-z0-9\-_ \(\)]+', '', '%s (%s) - %s' % (torrentNameMovieTitle, ptpmovie['Year'], torrentdesc))
                 new = {
                     'id': int(torrent['Id']),
                     'type': 'torrent',
-                    'name': re.sub('[^A-Za-z0-9\-_ ]+', '', '%s - %s - %s' % (self.htmltoascii(ptpmovie['Title']), ptpmovie['Year'], torrentdesc)),
+                    'name': torrentName,
                     'check_nzb': False,
                     'description': '',
                     'date': int(time.mktime(parse(torrent['UploadTime']).timetuple())),
-                    'size': int(torrent['Size']) / (1024*1024),
+                    'size': int(torrent['Size']) / (1024 * 1024),
                     'provider': self.getName(),
                     'seeders': int(torrent['Seeders']),
                     'leechers': int(torrent['Leechers']),
@@ -261,12 +272,12 @@ class PassThePopcorn(TorrentProvider):
                     'download': self.download,
                 }
                 new['url'] = 'https://%s/torrents.php?action=download&id=%d' % (self.domain, new['id'])
-                new['score'] = fireEvent('score.calculate', new, movie, single = True)
-                if fireEvent('searcher.correct_movie', nzb = new, movie = movie, quality = quality):
+                new['score'] = fireEvent('score.calculate', new, movie, single=True)
+                if fireEvent('searcher.correct_movie', nzb=new, movie=movie, quality=quality):
                     results.append(new)
                     self.found(new)
         if not results:
-            log.info("Found nothing for '%s'" % movieTitle)
+            log.info("After quality-based filtering, found nothing for '%s' at quality '%s' with search parameters %s" % (movieTitle, qualityID, params))
         return results
 
     def getMoreInfo(self, item):
