@@ -242,7 +242,6 @@ class Searcher(Plugin):
     def correctMovie(self, nzb = {}, movie = {}, quality = {}, **kwargs):
 
         imdb_results = kwargs.get('imdb_results', False)
-        single_category = kwargs.get('single_category', False)
         retention = Env.setting('retention', section = 'nzb')
 
         if nzb.get('seeds') is None and retention < nzb.get('age', 0):
@@ -275,7 +274,7 @@ class Searcher(Plugin):
         preferred_quality = fireEvent('quality.single', identifier = quality['identifier'], single = True)
 
         # Contains lower quality string
-        if self.containsOtherQuality(nzb, movie_year = movie['library']['year'], preferred_quality = preferred_quality, single_category = single_category):
+        if self.containsOtherQuality(nzb, movie_year = movie['library']['year'], preferred_quality = preferred_quality):
             log.info('Wrong: %s, looking for %s', (nzb['name'], quality['label']))
             return False
 
@@ -327,7 +326,7 @@ class Searcher(Plugin):
         log.info("Wrong: %s, undetermined naming. Looking for '%s (%s)'" % (nzb['name'], movie_name, movie['library']['year']))
         return False
 
-    def containsOtherQuality(self, nzb, movie_year = None, preferred_quality = {}, single_category = False):
+    def containsOtherQuality(self, nzb, movie_year = None, preferred_quality = {}):
 
         name = nzb['name']
         size = nzb.get('size', 0)
@@ -357,9 +356,6 @@ class Searcher(Plugin):
         for allowed in preferred_quality.get('allow'):
             if found.get(allowed):
                 del found[allowed]
-
-        if (len(found) == 0 and single_category):
-            return False
 
         return not (found.get(preferred_quality['identifier']) and len(found) == 1)
 

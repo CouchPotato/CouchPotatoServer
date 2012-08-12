@@ -89,7 +89,7 @@ class KickAssTorrents(TorrentProvider):
                                 new['score'] += fireEvent('score.calculate', new, movie, single = True)
                                 is_correct_movie = fireEvent('searcher.correct_movie',
                                                                 nzb = new, movie = movie, quality = quality,
-                                                                imdb_results = True, single_category = False, single = True)
+                                                                imdb_results = True, single = True)
                                 if is_correct_movie:
                                     results.append(new)
                                     self.found(new)
