@@ -41,11 +41,10 @@ config = [{
                     'description': 'Disable this downloader for automated searches, but use it when I manually send a release.',
                 },
                 {
-                    'name': 'delete failed',
+                    'name': 'delete_failed',
                     'default': True,
                     'type': 'bool',
-                    'advanced': True,
-                    'description': 'Delete a release after it\'s download failed.',
+                    'description': 'Delete a release after the download has failed.',
                 },
             ],
         }

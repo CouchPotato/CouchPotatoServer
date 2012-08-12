@@ -419,15 +419,18 @@ function randomString(length, extra) {
 		return 0;
 	};
 
-	Array.implement('sortBy', function(){
-		keyPaths.empty();
-		Array.each(arguments, function(argument) {
-			switch (typeOf(argument)) {
-				case "array": saveKeyPath(argument); break;
-				case "string": saveKeyPath(argument.match(/[+-]|[^.]+/g)); break;
-			}
-		});
-		return this.sort(comparer);
+	Array.implement({
+		sortBy: function(){
+			keyPaths.empty();
+
+			Array.each(arguments, function(argument) {
+				switch (typeOf(argument)) {
+					case "array": saveKeyPath(argument); break;
+					case "string": saveKeyPath(argument.match(/[+-]|[^.]+/g)); break;
+				}
+			});
+			return this.sort(comparer);
+		}
 	});
 
 })();

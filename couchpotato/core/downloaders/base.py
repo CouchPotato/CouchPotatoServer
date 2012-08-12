@@ -13,16 +13,17 @@ class Downloader(Plugin):
 
     def __init__(self):
         addEvent('download', self.download)
-        addEvent('getdownloadstatus', self.getdownloadstatus)
+        addEvent('download.status', self.getDownloadStatus)
 
     def download(self, data = {}, movie = {}, manual = False, filedata = None):
         pass
 
-    def getdownloadstatus(self, data = {}, movie = {}):
+    def getDownloadStatus(self, data = {}, movie = {}):
         pass
 
     def createNzbName(self, data, movie):
-        return '%s%s' % (toSafeString(data.get('name')[:40]), self.cpTag(movie))
+        tag = self.cpTag(movie)
+        return '%s%s' % (toSafeString(data.get('name')[:127 - len(tag)]), tag)
 
     def createFileName(self, data, filedata, movie):
         name = os.path.join(self.createNzbName(data, movie))

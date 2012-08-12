@@ -31,7 +31,6 @@ window.addEvent('domready', function(){
 		'IMDB': IMDBAction
 		,'Trailer': TrailerAction
 		,'Releases': ReleaseAction
-
 		,'Edit': new Class({
 
 			Extends: MovieAction,
@@ -170,7 +169,7 @@ window.addEvent('domready', function(){
 				(e).preventDefault();
 
 				if(!self.delete_container){
-					self.delete_container = new Element('div.delete_container').adopt(
+					self.delete_container = new Element('div.buttons.delete_container').adopt(
 						new Element('a.cancel', {
 							'text': 'Cancel',
 							'events': {

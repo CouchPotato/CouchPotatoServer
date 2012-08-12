@@ -44,7 +44,7 @@ class Sabnzbd(Downloader):
             else:
                 sab = self.urlopen(url, timeout = 60, show_error = False)
         except:
-            log.error(traceback.format_exc())
+            log.error('Failed sending release: %s', traceback.format_exc())
             return False
 
         result = sab.strip()
@@ -63,7 +63,7 @@ class Sabnzbd(Downloader):
             log.error("Unknown error: " + result[:40])
             return False
 
-    def getdownloadstatus(self, data = {}, movie = {}):
+    def getDownloadStatus(self, data = {}, movie = {}):
         if self.isDisabled(manual = True) or not self.isCorrectType(data.get('type')):
             return
 
@@ -81,20 +81,21 @@ class Sabnzbd(Downloader):
         try:
             sab = self.urlopen(url, timeout = 60, show_error = False)
         except:
-            log.error(traceback.format_exc())
-            return
+            log.error('Failed checking status: %s', traceback.format_exc())
+            return False
+
         try:
             history = json.loads(sab)
         except:
             log.debug("Result text from SAB: " + sab[:40])
-            log.error(traceback.format_exc())
-            return
+            log.error('Failed parsing json status: %s', traceback.format_exc())
+            return False
 
         for slot in history['queue']['slots']:
             if slot['cat'] == self.conf('category'):
                 log.debug('Found %s in SabNZBd queue, which is %s, with %s left', (slot['filename'], slot['status'], slot['timeleft']))
                 if slot['filename'] == nzbname:
-                    return slot['status']
+                    return slot['status'].lower()
 
         # Go through history items
         params = {
@@ -107,13 +108,14 @@ class Sabnzbd(Downloader):
         try:
             sab = self.urlopen(url, timeout = 60, show_error = False)
         except:
-            log.error(traceback.format_exc())
+            log.error('Failed getting history: %s', traceback.format_exc())
             return
+
         try:
             history = json.loads(sab)
         except:
             log.debug("Result text from SAB: " + sab[:40])
-            log.error(traceback.format_exc())
+            log.error('Failed parsing history json: %s', traceback.format_exc())
             return
 
         for slot in history['history']['slots']:
@@ -123,7 +125,8 @@ class Sabnzbd(Downloader):
                     if slot['status'] == 'Failed' or 'fail' in slot['fail_message'].lower():
 
                         # Delete failed download
-                        if self.conf('delete failed',  default = True):
+                        if self.conf('delete_failed', default = True):
+
                             log.info('%s failed downloading, deleting...', slot['name'])
                             params = {
                                 'apikey': self.conf('api_key'),
@@ -133,10 +136,11 @@ class Sabnzbd(Downloader):
                                 'value': slot['nzo_id']
                             }
                             url = cleanHost(self.conf('host')) + "api?" + tryUrlencode(params)
+
                             try:
                                 sab = self.urlopen(url, timeout = 60, show_error = False)
                             except:
-                                log.error(traceback.format_exc())
+                                log.error('Failed deleting: %s', traceback.format_exc())
                                 return False
 
                             result = sab.strip()
@@ -147,12 +151,12 @@ class Sabnzbd(Downloader):
                             if result == "ok":
                                 log.info('SabNZBd deleted failed release %s successfully.', slot['name'])
                             elif result == "Missing authentication":
-                                log.error("Incorrect username/password.")
+                                log.error("Incorrect username/password or API?.")
                             else:
                                 log.error("Unknown error: " + result[:40])
 
-                            return 'Failed'
+                            return 'failed'
                     else:
-                        return slot['status']
+                        return slot['status'].lower()
 
-        return 'Not found'
+        return 'not_found'

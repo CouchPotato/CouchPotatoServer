@@ -340,6 +340,32 @@
 					.movies .movie .hide_trailer.hide {
 						top: -30px;
 					}
+						
+				.movies .movie .try_container {
+					padding: 5px 10px;
+					text-align: center;
+				}
+						
+					.movies .movie .try_container a {
+						margin: 0 5px;
+						padding: 2px 5px;
+					}
+
+					.movies .movie .releases .next_release {
+						border-left: 6px solid #2aa300;
+					}
+					
+						.movies .movie .releases .next_release > :first-child {
+							margin-left: -6px;
+						}
+						
+					.movies .movie .releases .last_release {
+						border-left: 6px solid #ffa200;
+					}
+					
+						.movies .movie .releases .last_release > :first-child {
+							margin-left: -6px;
+						}
 
 		.movies .load_more {
 			display: block;

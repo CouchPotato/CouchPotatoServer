@@ -1,6 +1,8 @@
 from couchpotato import get_session
+from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import simplifyString, toUnicode
+from couchpotato.core.helpers.request import jsonified, getParam
 from couchpotato.core.helpers.variable import md5, getImdb, getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
@@ -25,11 +27,15 @@ class Searcher(Plugin):
         addEvent('searcher.single', self.single)
         addEvent('searcher.correct_movie', self.correctMovie)
         addEvent('searcher.download', self.download)
-        addEvent('searcher.checksnatched', self.checksnatched)
+        addEvent('searcher.check_snatched', self.checkSnatched)
+
+        addApiView('searcher.try_next', self.tryNextReleaseView, docs = {
+            'desc': 'Try next best release',
+        })
 
         # Schedule cronjob
         fireEvent('schedule.cron', 'searcher.all', self.all_movies, day = self.conf('cron_day'), hour = self.conf('cron_hour'), minute = self.conf('cron_minute'))
-        fireEvent('schedule.interval', 'searcher.checksnatched', self.checksnatched, minutes = self.conf('run_every'))
+        fireEvent('schedule.interval', 'searcher.check_snatched', self.checkSnatched, minutes = self.conf('run_every'))
 
 
     def all_movies(self):
@@ -439,14 +445,17 @@ class Searcher(Plugin):
 
         return False
 
-    def checksnatched(self):
+    def checkSnatched(self):
         snatched_status = fireEvent('status.get', 'snatched', single = True)
         ignored_status = fireEvent('status.get', 'ignored', single = True)
+        failed_status = fireEvent('status.get', 'failed', single = True)
 
         db = get_session()
         rels = db.query(Release).filter_by(status_id = snatched_status.get('id'))
 
-        log.info('Checking status snatched releases...')
+        if rels:
+            log.debug('Checking status snatched releases...')
+
         scanrequired = False
 
         for rel in rels:
@@ -462,57 +471,66 @@ class Searcher(Plugin):
             for info in rel.info:
                 item[info.identifier] = info.value
 
-            movie = rel.movie.to_dict({
-                'profile': {'types': {'quality': {}}},
-                'releases': {'status': {}, 'quality': {}},
-                'library': {'titles': {}, 'files':{}},
-                'files': {}
-            })
+            movie_dict = fireEvent('movie.get', rel.movie_id, single = True)
 
             # check status
-            downloadstatus = fireEvent('getdownloadstatus', data = item, movie = movie)
-            if not downloadstatus: # Downloader not compatible with download status
+            downloadstatus = fireEvent('download.status', data = item, movie = movie_dict, single = True)
+            if not downloadstatus:
                 log.debug('Download status functionality is not implemented for active downloaders.')
                 scanrequired = True
-
             else:
-                log.debug('Download status: %s' , downloadstatus[0])
+                log.debug('Download status: %s' , downloadstatus)
 
-                if downloadstatus[0] == 'Failed':
-                    # if failed set status to ignored
-                    rel.status_id = ignored_status.get('id')
-                    db.commit()
-
-                    # search/download again
-                    # if downloaded manually: # this is currently not stored...
-                    #   log.info('Download of %s failed...', item['name'])
-                    #   return
-
-                    if self.conf('failed download', default = True):
-
-                        #update movie to reflect release status update
-                        movie = rel.movie.to_dict({
-                            'profile': {'types': {'quality': {}}},
-                            'releases': {'status': {}, 'quality': {}},
-                            'library': {'titles': {}, 'files':{}},
-                            'files': {}
-                        })
-                        log.info('Download of %s failed, trying next release...', item['name'])
-                        fireEvent('searcher.single', movie)
+                if downloadstatus == 'failed':
+                    if self.conf('next_on_failed'):
+                        self.tryNextRelease(rel.movie_id)
                     else:
+                        rel.status_id = failed_status.get('id')
+                        db.commit()
+
                         log.info('Download of %s failed.', item['name'])
 
-                elif downloadstatus[0] == 'Completed':
+                elif downloadstatus == 'completed':
                     log.info('Download of %s completed!', item['name'])
                     scanrequired = True
 
-                elif downloadstatus[0] == 'Not found':
+                elif downloadstatus == 'not_found':
                     log.info('%s not found in downloaders', item['name'])
                     rel.status_id = ignored_status.get('id')
                     db.commit()
 
-                # Note that Queued, Downloading, Paused, Repair and Unpackimg are also available as status for SabNZBd
+        # Note that Queued, Downloading, Paused, Repair and Unpackimg are also available as status for SabNZBd
         if scanrequired:
             fireEvent('renamer.scan')
 
-        return
+    def tryNextReleaseView(self):
+
+        trynext = self.tryNextRelease(getParam('id'))
+
+        return jsonified({
+            'success': trynext
+        })
+
+    def tryNextRelease(self, movie_id, manual = False):
+
+        snatched_status = fireEvent('status.get', 'snatched', single = True)
+        ignored_status = fireEvent('status.get', 'ignored', single = True)
+
+        try:
+            movie_dict = fireEvent('movie.get', movie_id, single = True)
+
+            db = get_session()
+            rels = db.query(Release).filter_by(status_id = snatched_status.get('id'))
+
+            for rel in rels:
+                rel.status_id = ignored_status.get('id')
+                db.commit()
+
+            log.info('Trying next release for', getTitle(movie_dict['library']))
+            fireEvent('searcher.single', movie_dict)
+
+            return True
+
+        except:
+            log.error('Failed searching for next release: %s', traceback.format_exc())
+            return False

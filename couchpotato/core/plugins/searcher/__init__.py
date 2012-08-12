@@ -49,10 +49,9 @@ config = [{
                     'description': 'Detect movie status every X minutes. Will start the renamer if movie is <strong>completed</strong> or handle <strong>failed</strong> download if these options are enabled',
                 },
                 {
-                    'name': 'failed download',
+                    'name': 'next_on_failed',
                     'default': True,
                     'type': 'bool',
-                    'advanced': True,
                     'description': 'Try the next best release for a movie after a download failed.',
                 },
             ],
