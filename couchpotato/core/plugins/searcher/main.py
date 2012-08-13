@@ -30,7 +30,10 @@ class Searcher(Plugin):
         addEvent('searcher.check_snatched', self.checkSnatched)
 
         addApiView('searcher.try_next', self.tryNextReleaseView, docs = {
-            'desc': 'Try next best release',
+            'desc': 'Marks the snatched results as ignored and try the next best release',
+            'params': {
+                'id': {'desc': 'The id of the movie'},
+            },
         })
 
         # Schedule cronjob
@@ -520,13 +523,16 @@ class Searcher(Plugin):
             movie_dict = fireEvent('movie.get', movie_id, single = True)
 
             db = get_session()
-            rels = db.query(Release).filter_by(status_id = snatched_status.get('id'))
+            rels = db.query(Release).filter_by(
+               status_id = snatched_status.get('id'),
+               movie_id = movie_id
+            ).all()
 
             for rel in rels:
                 rel.status_id = ignored_status.get('id')
-                db.commit()
+            db.commit()
 
-            log.info('Trying next release for', getTitle(movie_dict['library']))
+            log.info('Trying next release for: %s', getTitle(movie_dict['library']))
             fireEvent('searcher.single', movie_dict)
 
             return True
