@@ -105,14 +105,14 @@ class PassThePopcorn(TorrentProvider):
             return False
         if response.getcode() == 200:
             log.info('Login HTTP status 200; seems successful')
-            return True
+            return response
         else:
             log.error('Login to passthepopcorn failed: returned code %d' % response.getcode())
             return False
     
     def protected_request(self, url):
         log.debug('Retrieving %s' % url)
-        maxattempts = 3
+        maxattempts = 2
         while maxattempts > 0:
             try:
                 response = self.opener.open(url)
@@ -123,10 +123,16 @@ class PassThePopcorn(TorrentProvider):
                     return None
                 return txt
             except PassThePopcorn.NotLoggedInHTTPError as e:
-                if not self.login(): # if we can login, just retry
+                loginResult = self.login()
+                if not loginResult: # if we can login, just retry
                     log.error('Login failed, could not execute request %s' % url)
                     return None
-                log.debug("Should now be logged into passthepopcorn.me, trying request again...")
+                else:
+                    if loginResult.geturl() == url:
+                        log.info('Login redirected to desired URL; success!')
+                        return loginResult.read()
+                    else:
+                        log.info("Login seems to have succeeded, but got redirected to '%s' while we actually want to visit '%s'; retrying the request" % (loginResult.geturl(), url))
             except urllib2.URLError as e:
                 log.error('Retrieving JSON from url %s failed: %s' % (url, e))
                 return None
@@ -233,6 +239,8 @@ class PassThePopcorn(TorrentProvider):
             log.info("PTP search returned nothing for '%s' at quality '%s' with search parameters %s" % (movieTitle, qualityID, params))
             return []
         log.info('PTP search returned %d movies' % len(res['Movies']))
+        authkey = res['AuthKey']
+        passkey = res['PassKey']
         results = []
         for ptpmovie in res['Movies']:
             if not 'Torrents' in ptpmovie:
@@ -247,14 +255,14 @@ class PassThePopcorn(TorrentProvider):
                     torrentdesc += ' Scene'
                 if 'RemasterTitle' in torrent and torrent['RemasterTitle']:
                     # eliminate odd characters...
-                    torrentdesc += self.htmltoascii(' %s')
+                    torrentdesc += self.htmltoascii(' %s' % torrent['RemasterTitle'])
                 torrentdesc += ' %s' % qualityID # this is really just to make CouchPotato not reject torrents we filtered ourselves using our own CPS->PTPSearch rules
                 if not self.torrent_meets_quality_spec(torrent, type):
                     log.info('Ignoring \'%s\' because it does not meet the quality spec of \'%s\'' % (torrentName, qualityID))
                     continue
                 # if we know the IMDB id, this must be the correct name. This avoids failing the CouchPotato name check if we know for certain we have the correct movie.
                 torrentNameMovieTitle = movieTitle if imdbID else self.htmltoascii(ptpmovie['Title'])
-                torrentName = re.sub('[^A-Za-z0-9\-_ \(\)]+', '', '%s (%s) - %s' % (torrentNameMovieTitle, ptpmovie['Year'], torrentdesc))
+                torrentName = re.sub('[^A-Za-z0-9\-_ \(\).]+', '', '%s (%s) - %s' % (torrentNameMovieTitle, ptpmovie['Year'], torrentdesc))
                 new = {
                     'id': int(torrent['Id']),
                     'type': 'torrent',
@@ -271,7 +279,7 @@ class PassThePopcorn(TorrentProvider):
                     'extra_score': (lambda torrent: (50 if torrent['torrentjson']['GoldenPopcorn'] else 0)),
                     'download': self.download,
                 }
-                new['url'] = 'https://%s/torrents.php?action=download&id=%d' % (self.domain, new['id'])
+                new['url'] = 'https://%s/torrents.php?action=download&id=%d&authkey=%s&torrent_pass=%s' % (self.domain, new['id'], authkey, passkey)
                 new['score'] = fireEvent('score.calculate', new, movie, single=True)
                 if fireEvent('searcher.correct_movie', nzb=new, movie=movie, quality=quality):
                     results.append(new)
