@@ -25,11 +25,19 @@ Page.Manage = new Class({
 				}
 			});
 
+			self.refresh_quick = new Element('a', {
+				'title': 'Force the renamer to scan your downloads folder for new movies',
+				'text': 'Renamer Scan',
+				'events':{
+					'click': self.renamer_scan.bind(self)
+				}
+			});
+
 			self.list = new MovieList({
 				'identifier': 'manage',
 				'status': 'done',
 				'actions': MovieActions,
-				'menu': [self.refresh_button, self.refresh_quick]
+				'menu': [self.refresh_button, self.refresh_quick, self.renamer_scan]
 			});
 			$(self.list).inject(self.el);
 		}
@@ -44,6 +52,13 @@ Page.Manage = new Class({
 				'full': +full
 			}
 		})
+
+	},
+
+	renamer_scan: function(){
+		var self = this;
+
+		Api.request('renamer.scan')
 
 	}
 
