@@ -25,11 +25,11 @@ Page.Manage = new Class({
 				}
 			});
 
-			self.refresh_quick = new Element('a', {
+			self.renamer_scan = new Element('a', {
 				'title': 'Force the renamer to scan your downloads folder for new movies',
 				'text': 'Renamer Scan',
 				'events':{
-					'click': self.renamer_scan.bind(self)
+					'click': self.scan.bind(self)
 				}
 			});
 
@@ -55,7 +55,7 @@ Page.Manage = new Class({
 
 	},
 
-	renamer_scan: function(){
+	scan: function(){
 		var self = this;
 
 		Api.request('renamer.scan')
