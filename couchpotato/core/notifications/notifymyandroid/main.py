@@ -21,8 +21,11 @@ class NotifyMyAndroid(Notification):
 
         response = nma.push(self.default_title, self.event , message, self.conf('priority'), batch_mode = len(keys) > 1)
 
+        successful = 0
         for key in keys:
             if not response[str(key)]['code'] == u'200':
                 log.error('Could not send notification to NotifyMyAndroid (%s). %s', (key, response[key]['message']))
+            else:
+                successful += 1
 
-        return response
+        return successful == len(keys)
