@@ -19,12 +19,13 @@ class Nzbsrus(NZBProvider, RSS):
     }
 
     cat_ids = [
-        ([90], ['720p', '1080p','brrip','bd50']),
-        ([45], ['dvdr']),
-        ([51], ['cam', 'ts', 'dvdrip', 'tc', 'r5', 'scr']),
+        ([90,45,51], ['720p', '1080p','brrip','bd50','dvdr']),
+        ([48,51], ['cam', 'ts', 'dvdrip', 'tc', 'r5', 'scr']),
+
+
 
     ]
-    cat_backup_id = 2
+    cat_backup_id = 240
 
     def search(self, movie, quality):
 
@@ -33,22 +34,22 @@ class Nzbsrus(NZBProvider, RSS):
         if self.isDisabled():
             return results
 
-        cat_ids = ','.join(['%s' % x for x in self.getCatId(quality.get('identifier'))])
+        cat_id_string = '&'.join(['c%s=1' % x for x in self.getCatId(quality.get('identifier'))])
 
         arguments = tryUrlencode({
             'searchtext': 'imdb:'+movie['library']['identifier'][2:],
             'uid': self.conf('userid'),
             'key': self.conf('api_key'),
             'age': Env.setting('retention', section = 'nzb'),
-            'cat': cat_ids,
+
         })
         # check for english_only
         if self.conf('english_only'):
             arguments += "&lang0=1&lang3=1&lang1=1"
 
-        url = "%s&%s" % (self.urls['search'], arguments)
+        url = "%s&%s&%s" % (self.urls['search'], arguments ,cat_id_string)
 
-        cache_key = 'nzbsrus_.%s.%s' % (movie['library'].get('identifier'), cat_ids)
+        cache_key = 'nzbsrus_1.%s.%s' % (movie['library'].get('identifier'), cat_id_string)
         single_cat = True
 
         data = self.getCache(cache_key, url, cache_timeout = 1800, headers = {'User-Agent': Env.getIdentifier()})
