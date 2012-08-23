@@ -19,7 +19,7 @@ class Nzbsrus(NZBProvider, RSS):
     }
 
     cat_ids = [
-        ([90], ['720p', '1080p' , 'dvdr','brrip','bd50']),
+        ([90], ['720p', '1080p','brrip','bd50']),
         ([45], ['dvdr']),
         ([51], ['cam', 'ts', 'dvdrip', 'tc', 'r5', 'scr']),
 
