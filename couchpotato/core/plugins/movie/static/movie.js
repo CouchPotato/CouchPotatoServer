@@ -323,19 +323,10 @@ var IMDBAction = new Class({
 
 		self.el = new Element('a.imdb', {
 			'title': 'Go to the IMDB page of ' + self.movie.getTitle(),
-			'events': {
-				'click': self.gotoIMDB.bind(self)
-			}
+			'href': 'http://www.imdb.com/title/'+self.id+'/'
 		});
 
 		if(!self.id) self.disable();
-	},
-
-	gotoIMDB: function(e){
-		var self = this;
-		(e).preventDefault();
-
-		window.open('http://www.imdb.com/title/'+self.id+'/');
 	}
 
 });

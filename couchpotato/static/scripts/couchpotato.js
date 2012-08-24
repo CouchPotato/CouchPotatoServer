@@ -29,6 +29,7 @@ var CouchPotato = new Class({
 
 		History.addEvent('change', self.openPage.bind(self));
 		self.c.addEvent('click:relay(a[href^=/]:not([target]))', self.pushState.bind(self));
+		self.c.addEvent('click:relay(a[href^=http])', self.openDerefered.bind(self));
 	},
 
 	getOption: function(name){
@@ -269,6 +270,17 @@ var CouchPotato = new Class({
 
 	createUrl: function(action, params){
 		return this.options.base_url + (action ? action+'/' : '') + (params ? '?'+Object.toQueryString(params) : '')
+	},
+
+	openDerefered: function(e, el){
+		(e).stop();
+
+		var url = 'http://www.dereferer.org/?' + el.get('href');
+
+		if(el.get('target') == '_blank' || (e.meta && Browser.Platform.mac) || (e.control && !Browser.Platform.mac))
+			window.open(url);
+		else
+			window.location = url;
 	}
 
 });
