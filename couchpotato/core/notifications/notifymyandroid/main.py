@@ -15,11 +15,16 @@ class NotifyMyAndroid(Notification):
         nma.addkey(keys)
         nma.developerkey(self.conf('dev_key'))
 
-        # hacky fix for the event type 
+        # hacky fix for the event type
         # as it seems to be part of the message now
         self.event = message.split(' ')[0]
-
-        response = nma.push(self.default_title, self.event , message, self.conf('priority'), batch_mode = len(keys) > 1)
+        response = nma.push(
+            application = self.default_title,
+            event = self.event,
+            description = message,
+            priority = self.conf('priority'),
+            batch_mode = len(keys) > 1
+        )
 
         for key in keys:
             if not response[str(key)]['code'] == u'200':
