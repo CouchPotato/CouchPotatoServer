@@ -11,6 +11,7 @@ config = [{
             'subtab': 'providers',
             'name': 'nzbsrus',
             'label': 'Nzbsrus',
+            'description': 'See <a href="https://www.nzbsrus.com/">NZBsRus</a>',
             'wizard': True,
             'options': [
                 {

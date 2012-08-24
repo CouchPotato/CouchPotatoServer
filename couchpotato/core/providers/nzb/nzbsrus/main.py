@@ -9,7 +9,6 @@ import xml.etree.ElementTree as XMLTree
 
 log = CPLog(__name__)
 
-# See the api http://www.nzbsrus.com/NzbsrusAPI.pdf
 class Nzbsrus(NZBProvider, RSS):
 
     urls = {
@@ -19,11 +18,8 @@ class Nzbsrus(NZBProvider, RSS):
     }
 
     cat_ids = [
-        ([90,45,51], ['720p', '1080p','brrip','bd50','dvdr']),
-        ([48,51], ['cam', 'ts', 'dvdrip', 'tc', 'r5', 'scr']),
-
-
-
+        ([90, 45, 51], ['720p', '1080p', 'brrip', 'bd50', 'dvdr']),
+        ([48, 51], ['cam', 'ts', 'dvdrip', 'tc', 'r5', 'scr']),
     ]
     cat_backup_id = 240
 
@@ -37,17 +33,18 @@ class Nzbsrus(NZBProvider, RSS):
         cat_id_string = '&'.join(['c%s=1' % x for x in self.getCatId(quality.get('identifier'))])
 
         arguments = tryUrlencode({
-            'searchtext': 'imdb:'+movie['library']['identifier'][2:],
+            'searchtext': 'imdb:' + movie['library']['identifier'][2:],
             'uid': self.conf('userid'),
             'key': self.conf('api_key'),
             'age': Env.setting('retention', section = 'nzb'),
 
         })
+
         # check for english_only
         if self.conf('english_only'):
             arguments += "&lang0=1&lang3=1&lang1=1"
 
-        url = "%s&%s&%s" % (self.urls['search'], arguments ,cat_id_string)
+        url = "%s&%s&%s" % (self.urls['search'], arguments , cat_id_string)
 
         cache_key = 'nzbsrus_1.%s.%s' % (movie['library'].get('identifier'), cat_id_string)
         single_cat = True
@@ -69,9 +66,8 @@ class Nzbsrus(NZBProvider, RSS):
 
                     id = self.getTextElement(nzb, "id")
                     size = int(round(int(self.getTextElement(nzb, "size")) / 1048576))
-                    age  = int(round(( time.time() - int(self.getTextElement(nzb, "postdate")) ) / 86400 ))
+                    age = int(round((time.time() - int(self.getTextElement(nzb, "postdate"))) / 86400))
 
-                  
                     new = {
                         'id': id,
                         'type': 'nzb',
@@ -88,7 +84,7 @@ class Nzbsrus(NZBProvider, RSS):
 
                     is_correct_movie = fireEvent('searcher.correct_movie',
                                                  nzb = new, movie = movie, quality = quality,
-                                                 imdb_results = True, single_category = single_cat, single = True)
+                                                 imdb_results = True, single = True)
 
                     if is_correct_movie:
                         new['score'] = fireEvent('score.calculate', new, movie, single = True)
@@ -106,6 +102,3 @@ class Nzbsrus(NZBProvider, RSS):
 
     def getApiExt(self):
         return '/%s/' % (self.conf('userid'))
-
-    def isEnabled(self):
-        return NZBProvider.isEnabled(self) and self.conf('userid') and self.conf('api_key')
