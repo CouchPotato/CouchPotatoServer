@@ -100,7 +100,12 @@ var AboutSettingTab = new Class({
 					new Element('li[text=No speed or download limits]'),
 					new Element('li[text=Free SSL Encrypted connections]')
 				)
-			)
+			),
+			new Element('div.donate', {
+				'html':
+				'Or support me via:' +
+				'<iframe src="http://couchpota.to/donate.html" style="border:none; height: 200px;" scrolling="no"></iframe>'
+			})
 		);
 
 	},
