@@ -122,7 +122,7 @@ class Sabnzbd(Downloader):
             if slot['category'] == self.conf('category'):
                 log.debug('Found %s in SabNZBd history, which has %s', (slot['name'], slot['status']))
                 if slot['name'] == nzbname:
-                    if slot['status'] == 'Failed' or 'fail' in slot['fail_message'].lower():
+                    if slot['status'] == 'Failed' or slot['fail_message'].strip():
 
                         # Delete failed download
                         if self.conf('delete_failed', default = True):
