@@ -10,7 +10,7 @@ config = [{
             'tab': 'searcher',
             'subtab': 'providers',
             'name': 'nzbindex',
-            'description': 'Free provider, but less accurate.',
+            'description': 'Free provider, less accurate. See <a href="http://www.nzbindex.nl/">NZBIndex</a>',
             'options': [
                 {
                     'name': 'enabled',

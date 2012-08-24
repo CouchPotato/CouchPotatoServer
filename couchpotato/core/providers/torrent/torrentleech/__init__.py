@@ -10,6 +10,7 @@ config = [{
             'tab': 'searcher',
             'subtab': 'providers',
             'name': 'TorrentLeech',
+            'description': 'See <a href="http://torrentleech.org">TorrentLeech</a>',
             'options': [
                 {
                     'name': 'enabled',

@@ -10,7 +10,7 @@ config = [{
             'tab': 'searcher',
             'subtab': 'providers',
             'name': 'NZBClub',
-            'description': '',
+            'description': 'Free provider, less accurate. See <a href="https://www.nzbclub.com/">NZBClub</a>',
             'options': [
                 {
                     'name': 'enabled',
