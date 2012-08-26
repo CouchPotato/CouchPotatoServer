@@ -140,8 +140,10 @@ var Movie = new Class({
 			self.profile.getTypes().each(function(type){
 
 				var q = self.addQuality(type.quality_id || type.get('quality_id'));
-				if(type.finish == true || type.get('finish'))
+				if((type.finish == true || type.get('finish')) && !q.hasClass('finish')){
 					q.addClass('finish');
+					q.set('title', q.get('title') + ' Will finish searching for this movie if this quality is found.')
+				}
 
 			});
 
@@ -153,8 +155,11 @@ var Movie = new Class({
 
 			if(!q && (status.identifier == 'snatched' || status.identifier == 'done'))
 				var q = self.addQuality(release.quality_id)
-			if (status && q)
+
+			if (status && q && !q.hasClass(status.identifier)){
 				q.addClass(status.identifier);
+				q.set('title', (q.get('title') ? q.get('title') : '') + ' status: '+ status.label)
+			}
 
 		});
 
@@ -175,7 +180,8 @@ var Movie = new Class({
 		var q = Quality.getQuality(quality_id);
 		return new Element('span', {
 			'text': q.label,
-			'class': 'q_'+q.identifier + ' q_id' + q.id
+			'class': 'q_'+q.identifier + ' q_id' + q.id,
+			'title': ''
 		}).inject(self.quality);
 
 	},
