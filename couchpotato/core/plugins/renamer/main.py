@@ -327,6 +327,11 @@ class Renamer(Plugin):
                 try:
                     if os.path.isfile(src):
                         os.remove(src)
+
+                        parent_dir = os.path.normpath(os.path.dirname(src))
+                        if os.path.isdir(parent_dir) and destination != parent_dir:
+                            self.deleteEmptyFolder(parent_dir, show_error = False)
+
                 except:
                     log.error('Failed removing %s: %s', (src, traceback.format_exc()))
                     self.tagDir(group, 'failed_remove')
@@ -464,8 +469,9 @@ class Renamer(Plugin):
     def replaceDoubles(self, string):
         return string.replace('  ', ' ').replace(' .', '.')
 
-    def deleteEmptyFolder(self, folder):
+    def deleteEmptyFolder(self, folder, show_error = True):
 
+        loge = log.error if show_error else log.debug
         for root, dirs, files in os.walk(folder):
 
             for dir_name in dirs:
@@ -474,9 +480,9 @@ class Renamer(Plugin):
                     try:
                         os.rmdir(full_path)
                     except:
-                        log.error('Couldn\'t remove empty directory %s: %s', (full_path, traceback.format_exc()))
+                        loge('Couldn\'t remove empty directory %s: %s', (full_path, traceback.format_exc()))
 
         try:
             os.rmdir(folder)
         except:
-            log.error('Couldn\'t remove empty directory %s: %s', (folder, traceback.format_exc()))
+            loge('Couldn\'t remove empty directory %s: %s', (folder, traceback.format_exc()))
