@@ -4,6 +4,8 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
 import os
+import re
+import traceback
 
 log = CPLog(__name__)
 
@@ -44,6 +46,18 @@ class Downloader(Plugin):
             log.debug("Downloader doesn't support this type")
 
         return is_correct
+
+    def magnetToTorrent(self, magnet_link):
+        torrent_hash = re.findall('urn:btih:([\w]{40})', magnet_link)[0]
+        url = 'http://torrage.com/torrent/%s.torrent' % torrent_hash
+
+        try:
+            filedata = self.urlopen(url)
+            return filedata
+        except:
+            log.error('Failed converting magnet url to torrent: %s, %s', (url, traceback.format_exc()))
+
+        return False
 
     def isDisabled(self, manual):
         return not self.isEnabled(manual)
