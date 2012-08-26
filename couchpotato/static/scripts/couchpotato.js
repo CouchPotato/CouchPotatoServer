@@ -188,7 +188,7 @@ var CouchPotato = new Class({
 	restart: function(message, title){
 		var self = this;
 
-		self.blockPage(message || 'Restarting... please wait. If this takes to long, something must have gone wrong.', title);
+		self.blockPage(message || 'Restarting... please wait. If this takes too long, something must have gone wrong.', title);
 		Api.request('app.restart');
 		self.checkAvailable(1000);
 	},
@@ -217,7 +217,7 @@ var CouchPotato = new Class({
 
 		Updater.check(onComplete)
 
-		self.blockPage('Please wait. If this takes to long, something must have gone wrong.', 'Checking for updates');
+		self.blockPage('Please wait. If this takes too long, something must have gone wrong.', 'Checking for updates');
 		self.checkAvailable(3000);
 	},
 
