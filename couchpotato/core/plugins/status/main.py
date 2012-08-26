@@ -19,6 +19,7 @@ class StatusPlugin(Plugin):
         'downloaded': 'Downloaded',
         'wanted': 'Wanted',
         'snatched': 'Snatched',
+        'failed': 'Failed',
         'deleted': 'Deleted',
         'ignored': 'Ignored',
     }

@@ -1,17 +1,17 @@
-from .main import NZBMatrix
+from .main import Nzbsrus
 
 def start():
-    return NZBMatrix()
+    return Nzbsrus()
 
 config = [{
-    'name': 'nzbmatrix',
+    'name': 'nzbsrus',
     'groups': [
         {
             'tab': 'searcher',
             'subtab': 'providers',
-            'name': 'nzbmatrix',
-            'label': 'NZBMatrix',
-            'description': 'See <a href="https://nzbmatrix.com/">NZBMatrix</a>',
+            'name': 'nzbsrus',
+            'label': 'Nzbsrus',
+            'description': 'See <a href="https://www.nzbsrus.com/">NZBsRus</a>',
             'wizard': True,
             'options': [
                 {
@@ -19,7 +19,8 @@ config = [{
                     'type': 'enabler',
                 },
                 {
-                    'name': 'username',
+                    'name': 'userid',
+                    'label': 'User ID',
                 },
                 {
                     'name': 'api_key',
@@ -31,7 +32,7 @@ config = [{
                     'default': 1,
                     'type': 'bool',
                     'label': 'English only',
-                    'description': 'Only search for English spoken movies on NZBMatrix',
+                    'description': 'Only search for English spoken movies on Nzbsrus',
                 },
             ],
         },

@@ -10,6 +10,7 @@ config = [{
             'tab': 'searcher',
             'subtab': 'providers',
             'name': 'KickAssTorrents',
+            'description': 'See <a href="https://kat.ph/">KickAssTorrents</a>',
             'options': [
                 {
                     'name': 'enabled',

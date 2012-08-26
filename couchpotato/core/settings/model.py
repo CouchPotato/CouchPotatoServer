@@ -103,6 +103,22 @@ class Release(Entity):
     files = ManyToMany('File', cascade = 'all, delete-orphan', single_parent = True)
     info = OneToMany('ReleaseInfo', cascade = 'all, delete-orphan')
 
+    def to_dict(self, deep = {}, exclude = []):
+        orig_dict = super(Release, self).to_dict(deep = deep, exclude = exclude)
+
+        new_info = {}
+        for info in orig_dict.get('info', []):
+
+            value = info['value']
+            try: value = int(info['value'])
+            except: pass
+
+            new_info[info['identifier']] = value
+
+        orig_dict['info'] = new_info
+
+        return orig_dict
+
 
 class ReleaseInfo(Entity):
     """Properties that can be bound to a file for off-line usage"""

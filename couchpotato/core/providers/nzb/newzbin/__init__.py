@@ -10,6 +10,7 @@ config = [{
             'tab': 'searcher',
             'subtab': 'providers',
             'name': 'newzbin',
+            'description': 'See <a href="https://www.newzbin2.es/">Newzbin</a>',
             'wizard': True,
             'options': [
                 {

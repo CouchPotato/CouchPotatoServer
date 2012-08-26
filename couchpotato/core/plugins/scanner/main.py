@@ -303,7 +303,15 @@ class Scanner(Plugin):
                     break
 
             if file_too_new:
-                log.info('Files seem to be still unpacking or just unpacked (created on %s), ignoring for now: %s', (time.ctime(file_time[0]), identifier))
+                try:
+                    time_string = time.ctime(file_time[0])
+                except:
+                    try:
+                        time_string = time.ctime(file_time[1])
+                    except:
+                        time_string = 'unknown'
+
+                log.info('Files seem to be still unpacking or just unpacked (created on %s), ignoring for now: %s', (time_string, identifier))
 
                 # Delete the unsorted list
                 del group['unsorted_files']

@@ -29,6 +29,7 @@ var CouchPotato = new Class({
 
 		History.addEvent('change', self.openPage.bind(self));
 		self.c.addEvent('click:relay(a[href^=/]:not([target]))', self.pushState.bind(self));
+		self.c.addEvent('click:relay(a[href^=http])', self.openDerefered.bind(self));
 	},
 
 	getOption: function(name){
@@ -187,7 +188,7 @@ var CouchPotato = new Class({
 	restart: function(message, title){
 		var self = this;
 
-		self.blockPage(message || 'Restarting... please wait. If this takes to long, something must have gone wrong.', title);
+		self.blockPage(message || 'Restarting... please wait. If this takes too long, something must have gone wrong.', title);
 		Api.request('app.restart');
 		self.checkAvailable(1000);
 	},
@@ -216,7 +217,7 @@ var CouchPotato = new Class({
 
 		Updater.check(onComplete)
 
-		self.blockPage('Please wait. If this takes to long, something must have gone wrong.', 'Checking for updates');
+		self.blockPage('Please wait. If this takes too long, something must have gone wrong.', 'Checking for updates');
 		self.checkAvailable(3000);
 	},
 
@@ -269,6 +270,17 @@ var CouchPotato = new Class({
 
 	createUrl: function(action, params){
 		return this.options.base_url + (action ? action+'/' : '') + (params ? '?'+Object.toQueryString(params) : '')
+	},
+
+	openDerefered: function(e, el){
+		(e).stop();
+
+		var url = 'http://www.dereferer.org/?' + el.get('href');
+
+		if(el.get('target') == '_blank' || (e.meta && Browser.Platform.mac) || (e.control && !Browser.Platform.mac))
+			window.open(url);
+		else
+			window.location = url;
 	}
 
 });
@@ -419,15 +431,18 @@ function randomString(length, extra) {
 		return 0;
 	};
 
-	Array.implement('sortBy', function(){
-		keyPaths.empty();
-		Array.each(arguments, function(argument) {
-			switch (typeOf(argument)) {
-				case "array": saveKeyPath(argument); break;
-				case "string": saveKeyPath(argument.match(/[+-]|[^.]+/g)); break;
-			}
-		});
-		return this.sort(comparer);
+	Array.implement({
+		sortBy: function(){
+			keyPaths.empty();
+
+			Array.each(arguments, function(argument) {
+				switch (typeOf(argument)) {
+					case "array": saveKeyPath(argument); break;
+					case "string": saveKeyPath(argument.match(/[+-]|[^.]+/g)); break;
+				}
+			});
+			return this.sort(comparer);
+		}
 	});
 
 })();
