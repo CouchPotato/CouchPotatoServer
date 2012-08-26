@@ -58,6 +58,8 @@ var AboutSettingTab = new Class({
 						}
 					}
 				}),
+				new Element('dt[text=Updater]'),
+				self.updater_type = new Element('dd.updater'),
 				new Element('dt[text=ID]'),
 				new Element('dd', {'text': App.getOption('pid')}),
 				new Element('dt[text=Directories]'),
@@ -115,6 +117,7 @@ var AboutSettingTab = new Class({
 		var self = this;
 		var date = new Date(json.version.date * 1000);
 		self.version_text.set('text', json.version.hash + ' ('+date.toUTCString()+')');
+		self.updater_type.set('text', json.version.type);
 	}
 
 });
