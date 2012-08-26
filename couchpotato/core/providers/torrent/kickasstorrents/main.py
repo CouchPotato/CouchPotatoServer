@@ -13,7 +13,7 @@ class KickAssTorrents(TorrentProvider):
 
     urls = {
         'test': 'http://kat.ph/',
-        'detail': 'http://kat.ph/%s-t%s.html',
+        'detail': 'http://kat.ph/%s',
         'search': 'http://kat.ph/i%s/',
     }
 
@@ -74,6 +74,7 @@ class KickAssTorrents(TorrentProvider):
                                             new['id'] = temp.get('id')[-8:]
                                             new['name'] = link.text
                                             new['url'] = td.find('a', 'imagnet')['href']
+                                            new['detail_url'] = self.urls['detail'] % link['href'][1:]
                                             new['score'] = 20 if td.find('a', 'iverif') else 0
                                         elif column_name is 'size':
                                             new['size'] = self.parseSize(td.text)

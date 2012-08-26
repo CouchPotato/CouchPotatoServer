@@ -397,10 +397,6 @@ var ReleaseAction = new Class({
 					quality = Quality.getProfile(release.quality_id) || {},
 					info = release.info;
 
-				try {
-					var details_url = info.filter(function(item){ return item.identifier == 'detail_url' }).pick().value;
-				} catch(e){}
-
 				if( status.identifier == 'ignored' || status.identifier == 'failed'){
 					self.last_release = release;
 				}
@@ -422,8 +418,8 @@ var ReleaseAction = new Class({
 					new Element('span.age', {'text': self.get(release, 'age')}),
 					new Element('span.score', {'text': self.get(release, 'score')}),
 					new Element('span.provider', {'text': self.get(release, 'provider')}),
-					details_url ? new Element('a.info.icon', {
-						'href': details_url,
+					release.info['detail_url'] ? new Element('a.info.icon', {
+						'href': release.info['detail_url'],
 						'target': '_blank'
 					}) : null,
 					new Element('a.download.icon', {
