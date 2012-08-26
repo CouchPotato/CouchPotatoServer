@@ -7,11 +7,12 @@ Once a movie is found, it will send it to SABnzbd or download the torrent to a s
 
 ## Running from Source
 
-CouchPotatoServer can be run from source. This will use *git* as updater, so make sure that is installed also. 
+CouchPotatoServer can be run from source. This will use *git* as updater, so make sure that is installed also.
 
-Windows:
+Windows, see [the CP forum](http://couchpota.to/forum/showthread.php?tid=14) for more details:
 
-* Install [PyWin32 2.7](http://sourceforge.net/projects/pywin32/files/pywin32/Build%20217/) and [GIT](http://git-scm.com/)
+* Install [Python 2.7](http://www.python.org/download/releases/2.7.3/)
+* Then install [PyWin32 2.7](http://sourceforge.net/projects/pywin32/files/pywin32/Build%20217/) and [GIT](http://git-scm.com/)
 * If you come and ask on the forums 'why directory selection no work?', I will kill a kitten, also this is because you need PyWin32
 * Open up `Git Bash` (or CMD) and go to the folder you want to install CP. Something like Program Files.
 * Run `git clone https://github.com/RuudBurger/CouchPotatoServer.git`.
