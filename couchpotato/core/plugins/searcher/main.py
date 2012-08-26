@@ -150,7 +150,7 @@ class Searcher(Plugin):
 
                     for info in nzb:
                         try:
-                            if not isinstance(nzb[info], (str, unicode, int, long)):
+                            if not isinstance(nzb[info], (str, unicode, int, long, float)):
                                 continue
 
                             rls_info = ReleaseInfo(

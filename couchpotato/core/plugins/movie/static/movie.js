@@ -417,8 +417,8 @@ var ReleaseAction = new Class({
 				}).adopt(
 					new Element('span.name', {'text': self.get(release, 'name'), 'title': self.get(release, 'name')}),
 					new Element('span.status', {'text': status.identifier, 'class': 'release_status '+status.identifier}),
-					new Element('span.quality', {'text': quality.label || 'n/a'}),
-					new Element('span.size', {'text': (self.get(release, 'size'))}),
+					new Element('span.quality', {'text': quality.get('label') || 'n/a'}),
+					new Element('span.size', {'text': release.info['size'] ? Math.floor(self.get(release, 'size')) : 'n/a'}),
 					new Element('span.age', {'text': self.get(release, 'age')}),
 					new Element('span.score', {'text': self.get(release, 'score')}),
 					new Element('span.provider', {'text': self.get(release, 'provider')}),
