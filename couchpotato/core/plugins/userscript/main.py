@@ -15,7 +15,7 @@ log = CPLog(__name__)
 
 class Userscript(Plugin):
 
-    version = 2
+    version = 3
 
     def __init__(self):
         addApiView('userscript.get/<random>/<path:filename>', self.getUserScript, static = True)
