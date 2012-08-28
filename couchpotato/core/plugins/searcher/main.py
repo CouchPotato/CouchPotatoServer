@@ -453,6 +453,8 @@ class Searcher(Plugin):
         ignored_status = fireEvent('status.get', 'ignored', single = True)
         failed_status = fireEvent('status.get', 'failed', single = True)
 
+        done_status = fireEvent('status.get', 'done', single = True)
+
         db = get_session()
         rels = db.query(Release).filter_by(status_id = snatched_status.get('id'))
 
@@ -469,6 +471,13 @@ class Searcher(Plugin):
                 if title.default: default_title = title.title
 
             log.debug('Checking snatched movie: %s' , default_title)
+
+            # Check if movie has already completed and is manage tab (legacy db correction)
+            if rel.movie.status_id == done_status.get('id'):
+                log.debug('Found a completed movie with a snatched release : %s. Setting release status to ignored...' , default_title)
+                rel.status_id = ignored_status.get('id')
+                db.commit()
+                continue
 
             item = {}
             for info in rel.info:
