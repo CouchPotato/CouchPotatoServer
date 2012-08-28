@@ -155,7 +155,7 @@ class Sabnzbd(Downloader):
                             else:
                                 log.error("Unknown error: " + result[:40])
 
-                            return 'failed'
+                        return 'failed'
                     else:
                         return slot['status'].lower()
 
