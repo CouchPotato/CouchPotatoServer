@@ -1,3 +1,4 @@
+from base64 import b32decode, b16encode
 from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import toSafeString
 from couchpotato.core.logger import CPLog
@@ -48,7 +49,12 @@ class Downloader(Plugin):
         return is_correct
 
     def magnetToTorrent(self, magnet_link):
-        torrent_hash = re.findall('urn:btih:([\w]{40})', magnet_link)[0]
+        torrent_hash = re.findall('urn:btih:([\w]{32,40})', magnet_link)[0]
+
+        # Convert base 32 to hex
+        if len(torrent_hash) == 32:
+            torrent_hash = b16encode(b32decode(torrent_hash))
+
         url = 'http://torrage.com/torrent/%s.torrent' % torrent_hash
 
         try:
