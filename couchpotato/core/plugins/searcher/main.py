@@ -529,8 +529,6 @@ class Searcher(Plugin):
         ignored_status = fireEvent('status.get', 'ignored', single = True)
 
         try:
-            movie_dict = fireEvent('movie.get', movie_id, single = True)
-
             db = get_session()
             rels = db.query(Release).filter_by(
                status_id = snatched_status.get('id'),
@@ -541,6 +539,7 @@ class Searcher(Plugin):
                 rel.status_id = ignored_status.get('id')
             db.commit()
 
+            movie_dict = fireEvent('movie.get', movie_id, single = True)
             log.info('Trying next release for: %s', getTitle(movie_dict['library']))
             fireEvent('searcher.single', movie_dict)
 
