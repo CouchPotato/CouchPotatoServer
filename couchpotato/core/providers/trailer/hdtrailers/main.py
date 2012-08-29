@@ -46,7 +46,7 @@ class HDTrailers(TrailerProvider):
 
         movie_name = getTitle(group['library'])
 
-        url = "%s?%s" % (self.url['backup'], tryUrlencode({'s':movie_name}))
+        url = "%s?%s" % (self.urls['backup'], tryUrlencode({'s':movie_name}))
         data = self.getCache('hdtrailers.alt.%s' % group['library']['identifier'], url)
 
         try:
@@ -100,7 +100,7 @@ class HDTrailers(TrailerProvider):
         return results
 
     def movieUrlName(self, string):
-        safe_chars = letters + digits + ' '
+        safe_chars = ascii_letters + digits + ' '
         r = ''.join([char if char in safe_chars else ' ' for char in string])
         name = re.sub('\s+' , '-', r).lower()
 
