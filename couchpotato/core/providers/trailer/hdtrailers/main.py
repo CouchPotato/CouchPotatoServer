@@ -100,7 +100,7 @@ class HDTrailers(TrailerProvider):
         return results
 
     def movieUrlName(self, string):
-        safe_chars = letters + digits + ' '
+        safe_chars = ascii_letters + digits + ' '
         r = ''.join([char if char in safe_chars else ' ' for char in string])
         name = re.sub('\s+' , '-', r).lower()
 
