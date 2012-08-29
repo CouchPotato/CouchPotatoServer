@@ -92,10 +92,9 @@ class Sabnzbd(Downloader):
             return False
 
         for slot in history['queue']['slots']:
-            if slot['cat'] == self.conf('category'):
-                log.debug('Found %s in SabNZBd queue, which is %s, with %s left', (slot['filename'], slot['status'], slot['timeleft']))
-                if slot['filename'] == nzbname:
-                    return slot['status'].lower()
+            log.debug('Found %s in SabNZBd queue, which is %s, with %s left', (slot['filename'], slot['status'], slot['timeleft']))
+            if slot['filename'] == nzbname:
+                return slot['status'].lower()
 
         # Go through history items
         params = {
@@ -119,44 +118,44 @@ class Sabnzbd(Downloader):
             return
 
         for slot in history['history']['slots']:
-            if slot['category'] == self.conf('category'):
-                log.debug('Found %s in SabNZBd history, which has %s', (slot['name'], slot['status']))
-                if slot['name'] == nzbname:
-                    if slot['status'] == 'Failed' or slot['fail_message'].strip():
+            log.debug('Found %s in SabNZBd history, which has %s', (slot['name'], slot['status']))
+            if slot['name'] == nzbname:
+                # Note: if post process even if failed is on in SabNZBd, it will complete with a fail message
+                if slot['status'] == 'Failed' or (slot['status'] == 'Completed' and slot['fail_message'].strip()):
 
-                        # Delete failed download
-                        if self.conf('delete_failed', default = True):
+                    # Delete failed download
+                    if self.conf('delete_failed', default = True):
 
-                            log.info('%s failed downloading, deleting...', slot['name'])
-                            params = {
-                                'apikey': self.conf('api_key'),
-                                'mode': 'history',
-                                'name': 'delete',
-                                'del_files': '1',
-                                'value': slot['nzo_id']
-                            }
-                            url = cleanHost(self.conf('host')) + "api?" + tryUrlencode(params)
+                        log.info('%s failed downloading, deleting...', slot['name'])
+                        params = {
+                            'apikey': self.conf('api_key'),
+                            'mode': 'history',
+                            'name': 'delete',
+                            'del_files': '1',
+                            'value': slot['nzo_id']
+                        }
+                        url = cleanHost(self.conf('host')) + "api?" + tryUrlencode(params)
 
-                            try:
-                                sab = self.urlopen(url, timeout = 60, show_error = False)
-                            except:
-                                log.error('Failed deleting: %s', traceback.format_exc())
-                                return False
+                        try:
+                            sab = self.urlopen(url, timeout = 60, show_error = False)
+                        except:
+                            log.error('Failed deleting: %s', traceback.format_exc())
+                            return False
 
-                            result = sab.strip()
-                            if not result:
-                                log.error("SABnzbd didn't return anything.")
+                        result = sab.strip()
+                        if not result:
+                            log.error("SABnzbd didn't return anything.")
 
-                            log.debug("Result text from SAB: " + result[:40])
-                            if result == "ok":
-                                log.info('SabNZBd deleted failed release %s successfully.', slot['name'])
-                            elif result == "Missing authentication":
-                                log.error("Incorrect username/password or API?.")
-                            else:
-                                log.error("Unknown error: " + result[:40])
+                        log.debug("Result text from SAB: " + result[:40])
+                        if result == "ok":
+                            log.info('SabNZBd deleted failed release %s successfully.', slot['name'])
+                        elif result == "Missing authentication":
+                            log.error("Incorrect username/password or API?.")
+                        else:
+                            log.error("Unknown error: " + result[:40])
 
-                        return 'failed'
-                    else:
-                        return slot['status'].lower()
+                    return 'failed'
+                else:
+                    return slot['status'].lower()
 
         return 'not_found'
