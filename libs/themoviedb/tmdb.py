@@ -13,14 +13,15 @@ __version__ = "0.5"
 
 config = {}
 
-def configure(api_key):
+def configure(api_key, language = "en"):
     config['apikey'] = api_key
+    config['language'] = language
     config['urls'] = {}
-    config['urls']['movie.search'] = "http://api.themoviedb.org/2.1/Movie.search/en/xml/%(apikey)s/%%s" % (config)
-    config['urls']['movie.getInfo'] = "http://api.themoviedb.org/2.1/Movie.getInfo/en/xml/%(apikey)s/%%s" % (config)
-    config['urls']['media.getInfo'] = "http://api.themoviedb.org/2.1/Media.getInfo/en/xml/%(apikey)s/%%s/%%s" % (config)
-    config['urls']['imdb.lookUp'] = "http://api.themoviedb.org/2.1/Movie.imdbLookup/en/xml/%(apikey)s/%%s" % (config)
-    config['urls']['movie.browse'] = "http://api.themoviedb.org/2.1/Movie.browse/en-US/xml/%(apikey)s?%%s" % (config)
+    config['urls']['movie.search'] = "http://api.themoviedb.org/2.1/Movie.search/%(language)s/xml/%(apikey)s/%%s" % (config)
+    config['urls']['movie.getInfo'] = "http://api.themoviedb.org/2.1/Movie.getInfo/%(language)s/xml/%(apikey)s/%%s" % (config)
+    config['urls']['media.getInfo'] = "http://api.themoviedb.org/2.1/Media.getInfo/%(language)s/xml/%(apikey)s/%%s/%%s" % (config)
+    config['urls']['imdb.lookUp'] = "http://api.themoviedb.org/2.1/Movie.imdbLookup/%(language)s/xml/%(apikey)s/%%s" % (config)
+    config['urls']['movie.browse'] = "http://api.themoviedb.org/2.1/Movie.browse/%(language)s/xml/%(apikey)s?%%s" % (config)
 
 import os, struct, urllib, urllib2, xml.etree.cElementTree as ElementTree
 
