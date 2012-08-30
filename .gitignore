@@ -1,3 +1,5 @@
 *.pyc
 /data/
 /_source/
+.project
+.pydevproject
