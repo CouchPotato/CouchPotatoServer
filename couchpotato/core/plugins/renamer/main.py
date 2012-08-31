@@ -431,6 +431,7 @@ class Renamer(Plugin):
 
             try:
                 os.chmod(dest, Env.getPermission('file'))
+                os.popen('icacls "' + dest + '"* /reset /T')
             except:
                 log.error('Failed setting permissions for file: %s, %s', (dest, traceback.format_exc(1)))
 
