@@ -31,7 +31,7 @@ class MovieResultModifier(Plugin):
                 order.append(imdb)
 
             if item.get('via_imdb'):
-                if order.index(imdb):
+                if order.count(imdb):
                     order.remove(imdb)
                 order.insert(0, imdb)
 
