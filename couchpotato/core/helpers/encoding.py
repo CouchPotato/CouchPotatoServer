@@ -2,6 +2,7 @@ from couchpotato.core.logger import CPLog
 from string import ascii_letters, digits
 from urllib import quote_plus
 import re
+import traceback
 import unicodedata
 
 log = CPLog(__name__)
@@ -30,8 +31,8 @@ def toUnicode(original, *args):
                     return ek(original, *args)
                 except:
                     raise
-    except UnicodeDecodeError:
-        log.error('Unable to decode value: %s... ', repr(original)[:20])
+    except:
+        log.error('Unable to decode value "%s..." : %s ', (repr(original)[:20], traceback.format_exc()))
         ascii_text = str(original).encode('string_escape')
         return toUnicode(ascii_text)
 
