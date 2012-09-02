@@ -3,7 +3,7 @@ from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.variable import mergeDicts, getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.trailer.base import TrailerProvider
-from string import letters, digits
+from string import digits, ascii_letters
 import re
 
 log = CPLog(__name__)
