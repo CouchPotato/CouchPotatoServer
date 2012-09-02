@@ -23,7 +23,7 @@ class Searcher(Plugin):
     in_progress = False
 
     def __init__(self):
-        addEvent('searcher.all', self.all_movies)
+        addEvent('searcher.all', self.allMovies)
         addEvent('searcher.single', self.single)
         addEvent('searcher.correct_movie', self.correctMovie)
         addEvent('searcher.download', self.download)
@@ -37,11 +37,11 @@ class Searcher(Plugin):
         })
 
         # Schedule cronjob
-        fireEvent('schedule.cron', 'searcher.all', self.all_movies, day = self.conf('cron_day'), hour = self.conf('cron_hour'), minute = self.conf('cron_minute'))
+        fireEvent('schedule.cron', 'searcher.all', self.allMovies, day = self.conf('cron_day'), hour = self.conf('cron_hour'), minute = self.conf('cron_minute'))
         fireEvent('schedule.interval', 'searcher.check_snatched', self.checkSnatched, minutes = self.conf('run_every'))
 
 
-    def all_movies(self):
+    def allMovies(self):
 
         if self.in_progress:
             log.info('Search already in progress')
