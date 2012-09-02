@@ -24,39 +24,36 @@
 	}
 		.page.settings .tabs a {
 			display: block;
-			padding: 11px 15px;
+			padding: 7px 15px;
 			font-weight: normal;
-			transition: all 0.1s ease-in-out;
+			transition: all 0.3s ease-in-out;
 			color: rgba(255, 255, 255, 0.8);
+			text-shadow: none;
 		}
-			.page.settings .tabs a:hover, .page.settings .tabs .active a {
+			.page.settings .tabs a:hover, 
+			.page.settings .tabs .active a {
 				background: rgb(78, 89, 105);
-				font-weight: bold;
-				font-size: 25px;
 				color: #fff;
+			}
+			.page.settings .tabs > li {
+				border-bottom: 1px solid rgb(78, 89, 105);
 			}
 
 		.page.settings .tabs .subtabs {
 			list-style: none;
 			padding: 0;
-			overflow: hidden;
-			transition: all 1s ease-in-out;
-			max-height: 0;
+			margin: -5px 0 10px;
 		}
-			.page.settings .tabs > .active .subtabs {
-				max-height: 300px;
-			}
 
 			.page.settings .tabs .subtabs a {
-				font-size: 15px;
-				padding: 1px 15px;
+				font-size: 13px;
+				padding: 0 15px;
 				font-weight: normal;
-				color: rgba(255, 255, 255, 0.8);
-				background: rgba(78, 89, 105, 0.4);
+				transition: all .3s ease-in-out;
+				color: rgba(255, 255, 255, 0.7);
 			}
 
 				.page.settings .tabs .subtabs .active a {
-					font-weight: bold;
 					color: #fff;
 					background: rgb(78, 89, 105);
 				}
