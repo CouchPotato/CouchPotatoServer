@@ -328,10 +328,6 @@ class Searcher(Plugin):
                 if len(movie_words) <= 2 and self.correctYear([nzb['name']], movie['library']['year'], 0):
                     return True
 
-        # Get the nfo and see if it contains the proper imdb url
-        if self.checkNFO(nzb['name'], movie['library']['identifier']):
-            return True
-
         log.info("Wrong: %s, undetermined naming. Looking for '%s (%s)'" % (nzb['name'], movie_name, movie['library']['year']))
         return False
 
@@ -405,19 +401,6 @@ class Searcher(Plugin):
                 pass
 
         return False
-
-    def checkNFO(self, check_name, imdb_id):
-        cache_key = 'srrdb.com %s' % simplifyString(check_name)
-
-        nfo = self.getCache(cache_key)
-        if not nfo:
-            try:
-                nfo = self.urlopen('http://www.srrdb.com/showfile.php?release=%s' % check_name, show_error = False)
-                self.setCache(cache_key, nfo)
-            except:
-                pass
-
-        return nfo and getImdb(nfo) == imdb_id
 
     def couldBeReleased(self, wanted_quality, dates, pre_releases):
 
