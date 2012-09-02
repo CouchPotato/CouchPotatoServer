@@ -135,6 +135,7 @@ class PassThePopcorn(TorrentProvider):
                         'type': 'torrent',
                         'provider': self.getName(),
                         'name': torrent_name,
+                        'description': '',
                         'url': '%s?action=download&id=%d&authkey=%s&torrent_pass=%s' % (self.urls['torrent'], torrent_id, authkey, passkey),
                         'detail_url': self.urls['detail'] % torrent_id,
                         'date': tryInt(time.mktime(parse(torrent['UploadTime']).timetuple())),
