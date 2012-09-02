@@ -1,20 +1,17 @@
 from bs4 import BeautifulSoup
 from couchpotato.core.event import fireEvent
-from couchpotato.core.helpers.encoding import toUnicode
-from couchpotato.core.helpers.variable import getTitle, getImdb, tryInt, cleanHost
+from couchpotato.core.helpers.encoding import tryUrlencode
+from couchpotato.core.helpers.variable import getTitle, tryInt, mergeDicts
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.torrent.base import TorrentProvider
-from couchpotato.environment import Env
 from dateutil.parser import parse
-import os
-import time
-import re
-import htmlentitydefs
-import urllib
-import urllib2
 import cookielib
+import htmlentitydefs
 import json
-
+import re
+import time
+import traceback
+import urllib2
 
 log = CPLog(__name__)
 
@@ -22,30 +19,27 @@ log = CPLog(__name__)
 class PassThePopcorn(TorrentProvider):
 
     urls = {
-         'detail': '%s/torrent/%s',
-         'search': '%s/search/%s/0/7/%d'
+         'domain': 'https://tls.passthepopcorn.me',
+         'detail': 'https://tls.passthepopcorn.me/torrents.php?torrentid=%s',
+         'torrent': 'https://tls.passthepopcorn.me/torrents.php',
+         'login': 'https://tls.passthepopcorn.me/login.php',
+         'search': 'https://tls.passthepopcorn.me/search/%s/0/7/%d'
     }
 
-    disable_provider = False
-    
-    domain = 'tls.passthepopcorn.me'
-
-    opener = None
-    cookiejar = None
     quality_search_params = {
         'bd50':     {'media': 'Blu-ray', 'format': 'BD50'},
         '1080p':    {'resolution': '1080p'},
         '720p':     {'resolution': '720p'},
-        'brrip':    {'media': 'Blu-ray'}, # results are filtered by post_search_filters to narrow down the search
-        'dvdr':     {'resolution': 'anysd'}, # results are filtered by post_search_filters to narrow down the search
-        'dvdrip':   {'media': 'DVD'}, # results are filtered by post_search_filters to narrow down the search
+        'brrip':    {'media': 'Blu-ray'},
+        'dvdr':     {'resolution': 'anysd'},
+        'dvdrip':   {'media': 'DVD'},
         'scr':      {'media': 'DVD-Screener'},
         'r5':       {'media': 'R5'},
         'tc':       {'media': 'TC'},
         'ts':       {'media': 'TS'},
         'cam':      {'media': 'CAM'}
     }
-    
+
     post_search_filters = {
         'bd50':     {'Codec': ['BD50']},
         '1080p':    {'Resolution': ['1080p']},
@@ -59,29 +53,118 @@ class PassThePopcorn(TorrentProvider):
         'ts':       {'Source': ['TS']},
         'cam':      {'Source': ['CAM']}
     }
-    
-    
-    
+
     class NotLoggedInHTTPError(urllib2.HTTPError):
         def __init__(self, url, code, msg, headers, fp):
             urllib2.HTTPError.__init__(self, url, code, msg, headers, fp)
-    
+
     class PTPHTTPRedirectHandler(urllib2.HTTPRedirectHandler):
         def http_error_302(self, req, fp, code, msg, headers):
             log.debug("302 detected; redirected to %s" % headers['Location'])
             if (headers['Location'] != 'login.php'):
-                #log.info("Redirect NOT due to not being logged in detected; allowing redirect")
                 return urllib2.HTTPRedirectHandler.http_error_302(self, req, fp, code, msg, headers)
             else:
-                #log.info("NotLoggedInHTTPError detected; raising it")
                 raise PassThePopcorn.NotLoggedInHTTPError(req.get_full_url(), code, msg, headers, fp)
-    
 
-    def __init__(self):
-        cookieprocessor = urllib2.HTTPCookieProcessor(self.cookiejar)
-        self.cookiejar = cookielib.CookieJar()
-        self.opener = urllib2.build_opener(cookieprocessor, PassThePopcorn.PTPHTTPRedirectHandler())
-        self.opener.addheaders = [
+    def search(self, movie, quality):
+
+        results = []
+
+        if self.isDisabled():
+            return results
+
+        movie_title = getTitle(movie['library'])
+        quality_id = quality['identifier']
+
+        log.info('Searching for %s at quality %s' % (movie_title, quality_id))
+
+        params = mergeDicts(self.quality_search_params[quality_id].copy(), {
+            'order_by': 'relevance',
+            'order_way': 'descending',
+            'searchstr': movie['library']['identifier']
+        })
+
+        # Do login for the cookies
+        if not self.login_opener and not self.login():
+            return results
+
+        try:
+            url = '%s?json=noredirect&%s' % (self.urls['torrent'], tryUrlencode(params))
+            txt = self.urlopen(url, opener = self.login_opener)
+            res = json.loads(txt)
+        except:
+            log.error('Search on PassThePopcorn.me (%s) failed (could not decode JSON)' % params)
+            return []
+
+        try:
+            if not 'Movies' in res:
+                log.info("PTP search returned nothing for '%s' at quality '%s' with search parameters %s" % (movie_title, quality_id, params))
+                return []
+
+            authkey = res['AuthKey']
+            passkey = res['PassKey']
+
+            for ptpmovie in res['Movies']:
+                if not 'Torrents' in ptpmovie:
+                    log.debug('Movie %s (%s) has NO torrents' % (ptpmovie['Title'], ptpmovie['Year']))
+                    continue
+
+                log.debug('Movie %s (%s) has %d torrents' % (ptpmovie['Title'], ptpmovie['Year'], len(ptpmovie['Torrents'])))
+                for torrent in ptpmovie['Torrents']:
+                    torrent_id = tryInt(torrent['Id'])
+                    torrentdesc = '%s %s %s' % (torrent['Resolution'], torrent['Source'], torrent['Codec'])
+
+                    if 'GoldenPopcorn' in torrent and torrent['GoldenPopcorn']:
+                        torrentdesc += ' HQ'
+                    if 'Scene' in torrent and torrent['Scene']:
+                        torrentdesc += ' Scene'
+                    if 'RemasterTitle' in torrent and torrent['RemasterTitle']:
+                        # eliminate odd characters...
+                        torrentdesc += self.htmlToASCII(' %s' % torrent['RemasterTitle'])
+
+                    torrentdesc += ' (%s)' % quality_id
+                    torrent_name = re.sub('[^A-Za-z0-9\-_ \(\).]+', '', '%s (%s) - %s' % (movie_title, ptpmovie['Year'], torrentdesc))
+
+                    def extra_check(item):
+                        return self.torrentMeetsQualitySpec(item, type)
+
+                    def extra_score(item):
+                        return 50 if torrent['GoldenPopcorn'] else 0
+
+                    new = {
+                        'id': torrent_id,
+                        'type': 'torrent',
+                        'provider': self.getName(),
+                        'name': torrent_name,
+                        'url': '%s?action=download&id=%d&authkey=%s&torrent_pass=%s' % (self.urls['torrent'], torrent_id, authkey, passkey),
+                        'detail_url': self.urls['detail'] % torrent_id,
+                        'date': tryInt(time.mktime(parse(torrent['UploadTime']).timetuple())),
+                        'size': tryInt(torrent['Size']) / (1024 * 1024),
+                        'provider': self.getName(),
+                        'seeders': tryInt(torrent['Seeders']),
+                        'leechers': tryInt(torrent['Leechers']),
+                        'extra_score': extra_score,
+                        'extra_check': extra_check,
+                        'download': self.loginDownload,
+                    }
+
+                    new['score'] = fireEvent('score.calculate', new, movie, single = True)
+
+                    if fireEvent('searcher.correct_movie', nzb = new, movie = movie, quality = quality):
+                        results.append(new)
+                        self.found(new)
+
+            return results
+        except:
+            log.error('Failed getting results from %s: %s', (self.getName(), traceback.format_exc()))
+
+        return []
+
+    def login(self):
+
+        cookieprocessor = urllib2.HTTPCookieProcessor(cookielib.CookieJar())
+        opener = urllib2.build_opener(cookieprocessor, PassThePopcorn.PTPHTTPRedirectHandler())
+        opener.addheaders = [
             ('User-Agent', 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.1 (KHTML, like Gecko) Chrome/21.0.1180.75 Safari/537.1'),
             ('Accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'),
             ('Accept-Language', 'en-gb,en;q=0.5'),
@@ -90,76 +173,34 @@ class PassThePopcorn(TorrentProvider):
             ('Connection', 'keep-alive'),
             ('Cache-Control', 'max-age=0'),
         ]
-	self.domain = self.conf('domain') if self.conf('domain') else self.domain
-        super(PassThePopcorn, self).__init__()
 
-    def login(self):
-        log.info("Trying to log into passthepopcorn.me...")
-        url = 'https://%s/login.php' % (self.domain)
-        postdata = urllib.urlencode({'username': self.conf('username'), 'password': self.conf('password'), 'keeplogged': '1', 'login': 'Login'})
         try:
-            response = self.opener.open(url, postdata)
-            log.debug('Login POST did not throw exception')
+            response = opener.open(self.urls['login'], self.getLoginParams())
         except urllib2.URLError as e:
-            log.error('Login to passthepopcorn failed: %s' % e)
+            log.error('Login to PassThePopcorn failed: %s' % e)
             return False
+
         if response.getcode() == 200:
-            log.info('Login HTTP status 200; seems successful')
-            return response
+            log.debug('Login HTTP status 200; seems successful')
+            self.login_opener = opener
+            return True
         else:
-            log.error('Login to passthepopcorn failed: returned code %d' % response.getcode())
+            log.error('Login to PassThePopcorn failed: returned code %d' % response.getcode())
             return False
-    
-    def protected_request(self, url):
-        log.debug('Retrieving %s' % url)
-        maxattempts = 2
-        while maxattempts > 0:
-            try:
-                response = self.opener.open(url)
-                txt = response.read()
-                #log.info('Response was:\n %s' % jsontxt)
-                if response.getcode() != 200:
-                    log.error('Retrieving \'%s\' resulted in HTTP response code %d' % (url, response.getcode()))
-                    return None
-                return txt
-            except PassThePopcorn.NotLoggedInHTTPError as e:
-                loginResult = self.login()
-                if not loginResult: # if we can login, just retry
-                    log.error('Login failed, could not execute request %s' % url)
-                    return None
-                else:
-                    if loginResult.geturl() == url:
-                        log.info('Login redirected to desired URL; success!')
-                        return loginResult.read()
-                    else:
-                        log.info("Login seems to have succeeded, but got redirected to '%s' while we actually want to visit '%s'; retrying the request" % (loginResult.geturl(), url))
-            except urllib2.URLError as e:
-                log.error('Retrieving JSON from url %s failed: %s' % (url, e))
-                return None
-            maxattempts = maxattempts - 1
-    
-    def json_request(self, path, params):
-        url = 'https://%s/%s?json=noredirect&%s' % (self.domain, path, urllib.urlencode(params))
-        txt = self.protected_request(url)
-        if txt:
-            return json.loads(txt)
-        else:
-            return None
-        
-    def enabled(self):
-        return  (not self.isDisabled() and \
-                self.conf('username') and \
-                self.conf('password'))
- 
-    def torrent_meets_quality_spec(self, torrent, quality):
+
+    def torrentMeetsQualitySpec(self, torrent, quality):
+
         if not quality in self.post_search_filters:
             return True
+
         for field, specs in self.post_search_filters[quality].items():
-            matchesOne = False
-            seenOne = False
+            matches_one = False
+            seen_one = False
+
             if not field in torrent:
-                log.info('Torrent with ID %s has no field "%s"; cannot apply post-search-filter for quality "%s"' % (torrent['Id'], field, quality))
+                log.debug('Torrent with ID %s has no field "%s"; cannot apply post-search-filter for quality "%s"' % (torrent['Id'], field, quality))
                 continue
+
             for spec in specs:
                 if len(spec) > 0 and spec[0] == '!':
                     # a negative rule; if the field matches, return False
@@ -167,14 +208,16 @@ class PassThePopcorn(TorrentProvider):
                         return False
                 else:
                     # a positive rule; if any of the possible positive values match the field, return True
-                    seenOne = True
+                    seen_one = True
                     if torrent[field] == spec:
-                        matchesOne = True
-            if seenOne and not matchesOne:
+                        matches_one = True
+
+            if seen_one and not matches_one:
                 return False
+
         return True
-        
-    def htmltounicode(self, text):
+
+    def htmlToUnicode(self, text):
         def fixup(m):
             text = m.group(0)
             if text[:2] == "&#":
@@ -194,99 +237,18 @@ class PassThePopcorn(TorrentProvider):
                     pass
             return text # leave as is
         return re.sub("&#?\w+;", fixup, u'%s' % text)
-    
-    def unicodetoascii(self, text):
+
+    def unicodeToASCII(self, text):
         import unicodedata
         return ''.join(c for c in unicodedata.normalize('NFKD', text) if unicodedata.category(c) != 'Mn')
-    
-    def htmltoascii(self, text):
-        return self.unicodetoascii(self.htmltounicode(text))
 
-    def download(self, url='', nzb_id=''):
-        return self.protected_request(url)
+    def htmlToASCII(self, text):
+        return self.unicodeToASCII(self.htmlToUnicode(text))
 
-    def search(self, movie, quality):
-        movieTitle = getTitle(movie['library'])
-        qualityID = quality['identifier']
-        imdbID = movie['library']['info']['imdb']
-        movieYear = movie['library']['info']['year']
-        
-        log.info('Searching for %s at quality %s' % (movieTitle, qualityID))
-        if not self.enabled():
-            log.info('PTP not enabled, skipping search')
-            return []
-        
-        params = []
-        if qualityID:
-            params = self.quality_search_params[qualityID]
-        if imdbID:
-            params['searchstr'] = imdbID
-        else:
-            params['searchstr'] = movieTitle
-            params['year'] = movieYear
-        
-        params['order_by'] = 'relevance'
-        params['order_way'] = 'descending'
-        
-        res = self.json_request('torrents.php', params)
-        if not res:
-            log.error('Search on passthepopcorn.me (%s) failed (could not decode JSON)' % params)
-            return []
-        
-        #log.info('JSON: %s' % json.dumps(res))        
-        
-        if not 'Movies' in res:
-            log.info("PTP search returned nothing for '%s' at quality '%s' with search parameters %s" % (movieTitle, qualityID, params))
-            return []
-        log.info('PTP search returned %d movies' % len(res['Movies']))
-        authkey = res['AuthKey']
-        passkey = res['PassKey']
-        results = []
-        for ptpmovie in res['Movies']:
-            if not 'Torrents' in ptpmovie:
-                log.info('Movie %s (%s) has NO torrents' % (ptpmovie['Title'], ptpmovie['Year']))
-                continue
-            log.info('Movie %s (%s) has %d torrents' % (ptpmovie['Title'], ptpmovie['Year'], len(ptpmovie['Torrents'])))
-            for torrent in ptpmovie['Torrents']:
-                torrentdesc = '%s %s %s' % (torrent['Resolution'], torrent['Source'], torrent['Codec'])
-                if 'GoldenPopcorn' in torrent and torrent['GoldenPopcorn']:
-                    torrentdesc += ' HQ'
-                if 'Scene' in torrent and torrent['Scene']:
-                    torrentdesc += ' Scene'
-                if 'RemasterTitle' in torrent and torrent['RemasterTitle']:
-                    # eliminate odd characters...
-                    torrentdesc += self.htmltoascii(' %s' % torrent['RemasterTitle'])
-                torrentdesc += ' %s' % qualityID # this is really just to make CouchPotato not reject torrents we filtered ourselves using our own CPS->PTPSearch rules
-                if not self.torrent_meets_quality_spec(torrent, type):
-                    log.info('Ignoring \'%s\' because it does not meet the quality spec of \'%s\'' % (torrentName, qualityID))
-                    continue
-                # if we know the IMDB id, this must be the correct name. This avoids failing the CouchPotato name check if we know for certain we have the correct movie.
-                torrentNameMovieTitle = movieTitle if imdbID else self.htmltoascii(ptpmovie['Title'])
-                torrentName = re.sub('[^A-Za-z0-9\-_ \(\).]+', '', '%s (%s) - %s' % (torrentNameMovieTitle, ptpmovie['Year'], torrentdesc))
-                new = {
-                    'id': int(torrent['Id']),
-                    'type': 'torrent',
-                    'name': torrentName,
-                    'check_nzb': False,
-                    'description': '',
-                    'date': int(time.mktime(parse(torrent['UploadTime']).timetuple())),
-                    'size': int(torrent['Size']) / (1024 * 1024),
-                    'provider': self.getName(),
-                    'seeders': int(torrent['Seeders']),
-                    'leechers': int(torrent['Leechers']),
-                    'ptpobj': self,
-                    'torrentjson': torrent,
-                    'extra_score': (lambda torrent: (50 if torrent['torrentjson']['GoldenPopcorn'] else 0)),
-                    'download': self.download,
-                }
-                new['url'] = 'https://%s/torrents.php?action=download&id=%d&authkey=%s&torrent_pass=%s' % (self.domain, new['id'], authkey, passkey)
-                new['score'] = fireEvent('score.calculate', new, movie, single=True)
-                if fireEvent('searcher.correct_movie', nzb=new, movie=movie, quality=quality):
-                    results.append(new)
-                    self.found(new)
-        if not results:
-            log.info("After quality-based filtering, found nothing for '%s' at quality '%s' with search parameters %s" % (movieTitle, qualityID, params))
-        return results
-
-    def getMoreInfo(self, item):
-        return {}
+    def getLoginParams(self):
+        return tryUrlencode({
+             'username': self.conf('username'),
+             'password': self.conf('password'),
+             'keeplogged': '1',
+             'login': 'Login'
+        })

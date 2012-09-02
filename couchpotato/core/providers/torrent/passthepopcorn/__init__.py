@@ -9,7 +9,7 @@ config = [{
         'tab': 'searcher',
         'subtab': 'providers',
         'name': 'PassThePopcorn',
-        'description': 'passthepopcorn.me',
+        'description': 'See <a href="http://passthepopcorn.me">PassThePopcorn.me</a>',
         'options': [
             {
                 'name': 'enabled',
