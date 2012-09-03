@@ -37,6 +37,8 @@ class ThePirateBay(TorrentProvider):
         'https://piratereverse.info',
         'https://tpb.pirateparty.org.uk',
         'https://argumentomteemigreren.nl',
+        'https://livepirate.com/',
+        'https://www.getpirate.com/',
     ]
 
     def __init__(self):

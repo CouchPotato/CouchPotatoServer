@@ -314,6 +314,7 @@ class Renamer(Plugin):
                     break
 
             # Remove files
+            delete_folders = []
             for src in remove_files:
 
                 if isinstance(src, File):
@@ -329,12 +330,16 @@ class Renamer(Plugin):
                         os.remove(src)
 
                         parent_dir = os.path.normpath(os.path.dirname(src))
-                        if os.path.isdir(parent_dir) and destination != parent_dir:
-                            self.deleteEmptyFolder(parent_dir, show_error = False)
+                        if delete_folders.count(parent_dir) == 0 and os.path.isdir(parent_dir) and destination != parent_dir:
+                            delete_folders.append(parent_dir)
 
                 except:
                     log.error('Failed removing %s: %s', (src, traceback.format_exc()))
                     self.tagDir(group, 'failed_remove')
+
+            # Delete leftover folder from older releases
+            for delete_folder in delete_folders:
+                self.deleteEmptyFolder(delete_folder, show_error = False)
 
             # Rename all files marked
             group['renamed_files'] = []

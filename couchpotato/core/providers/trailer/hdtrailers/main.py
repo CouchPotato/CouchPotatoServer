@@ -3,7 +3,7 @@ from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.variable import mergeDicts, getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.trailer.base import TrailerProvider
-from string import letters, digits
+from string import digits, ascii_letters
 import re
 
 log = CPLog(__name__)
@@ -46,7 +46,7 @@ class HDTrailers(TrailerProvider):
 
         movie_name = getTitle(group['library'])
 
-        url = "%s?%s" % (self.url['backup'], tryUrlencode({'s':movie_name}))
+        url = "%s?%s" % (self.urls['backup'], tryUrlencode({'s':movie_name}))
         data = self.getCache('hdtrailers.alt.%s' % group['library']['identifier'], url)
 
         try:
@@ -100,7 +100,7 @@ class HDTrailers(TrailerProvider):
         return results
 
     def movieUrlName(self, string):
-        safe_chars = letters + digits + ' '
+        safe_chars = ascii_letters + digits + ' '
         r = ''.join([char if char in safe_chars else ' ' for char in string])
         name = re.sub('\s+' , '-', r).lower()
 

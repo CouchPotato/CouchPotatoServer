@@ -23,7 +23,7 @@ class Searcher(Plugin):
     in_progress = False
 
     def __init__(self):
-        addEvent('searcher.all', self.all_movies)
+        addEvent('searcher.all', self.allMovies)
         addEvent('searcher.single', self.single)
         addEvent('searcher.correct_movie', self.correctMovie)
         addEvent('searcher.download', self.download)
@@ -37,11 +37,11 @@ class Searcher(Plugin):
         })
 
         # Schedule cronjob
-        fireEvent('schedule.cron', 'searcher.all', self.all_movies, day = self.conf('cron_day'), hour = self.conf('cron_hour'), minute = self.conf('cron_minute'))
+        fireEvent('schedule.cron', 'searcher.all', self.allMovies, day = self.conf('cron_day'), hour = self.conf('cron_hour'), minute = self.conf('cron_minute'))
         fireEvent('schedule.interval', 'searcher.check_snatched', self.checkSnatched, minutes = self.conf('run_every'))
 
 
-    def all_movies(self):
+    def allMovies(self):
 
         if self.in_progress:
             log.info('Search already in progress')
@@ -328,10 +328,6 @@ class Searcher(Plugin):
                 if len(movie_words) <= 2 and self.correctYear([nzb['name']], movie['library']['year'], 0):
                     return True
 
-        # Get the nfo and see if it contains the proper imdb url
-        if self.checkNFO(nzb['name'], movie['library']['identifier']):
-            return True
-
         log.info("Wrong: %s, undetermined naming. Looking for '%s (%s)'" % (nzb['name'], movie_name, movie['library']['year']))
         return False
 
@@ -406,19 +402,6 @@ class Searcher(Plugin):
 
         return False
 
-    def checkNFO(self, check_name, imdb_id):
-        cache_key = 'srrdb.com %s' % simplifyString(check_name)
-
-        nfo = self.getCache(cache_key)
-        if not nfo:
-            try:
-                nfo = self.urlopen('http://www.srrdb.com/showfile.php?release=%s' % check_name, show_error = False)
-                self.setCache(cache_key, nfo)
-            except:
-                pass
-
-        return nfo and getImdb(nfo) == imdb_id
-
     def couldBeReleased(self, wanted_quality, dates, pre_releases):
 
         now = int(time.time())
@@ -453,6 +436,8 @@ class Searcher(Plugin):
         ignored_status = fireEvent('status.get', 'ignored', single = True)
         failed_status = fireEvent('status.get', 'failed', single = True)
 
+        done_status = fireEvent('status.get', 'done', single = True)
+
         db = get_session()
         rels = db.query(Release).filter_by(status_id = snatched_status.get('id'))
 
@@ -469,6 +454,13 @@ class Searcher(Plugin):
                 if title.default: default_title = title.title
 
             log.debug('Checking snatched movie: %s' , default_title)
+
+            # Check if movie has already completed and is manage tab (legacy db correction)
+            if rel.movie.status_id == done_status.get('id'):
+                log.debug('Found a completed movie with a snatched release : %s. Setting release status to ignored...' , default_title)
+                rel.status_id = ignored_status.get('id')
+                db.commit()
+                continue
 
             item = {}
             for info in rel.info:
@@ -520,8 +512,6 @@ class Searcher(Plugin):
         ignored_status = fireEvent('status.get', 'ignored', single = True)
 
         try:
-            movie_dict = fireEvent('movie.get', movie_id, single = True)
-
             db = get_session()
             rels = db.query(Release).filter_by(
                status_id = snatched_status.get('id'),
@@ -532,6 +522,7 @@ class Searcher(Plugin):
                 rel.status_id = ignored_status.get('id')
             db.commit()
 
+            movie_dict = fireEvent('movie.get', movie_id, single = True)
             log.info('Trying next release for: %s', getTitle(movie_dict['library']))
             fireEvent('searcher.single', movie_dict)
 

@@ -305,7 +305,7 @@ class SourceUpdater(BaseUpdater):
                         if not os.path.isdir(dirname):
                             self.makeDir(dirname)
 
-                        os.rename(fromfile, tofile)
+                        shutil.move(fromfile, tofile)
                         try:
                             existing_files.remove(tofile)
                         except ValueError:
