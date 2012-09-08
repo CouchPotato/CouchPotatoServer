@@ -502,7 +502,7 @@ class Renamer(Plugin):
         done_status = fireEvent('status.get', 'done', single = True)
 
         db = get_session()
-        rels = db.query(Release).filter_by(status_id = snatched_status.get('id'))
+        rels = db.query(Release).filter_by(status_id = snatched_status.get('id')).all()
 
         if rels:
             log.debug('Checking status snatched releases...')
