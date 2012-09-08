@@ -5,14 +5,21 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
 import os
+import random
 import re
-import traceback
 
 log = CPLog(__name__)
+
 
 class Downloader(Plugin):
 
     type = []
+
+    torrent_sources = [
+        'http://torrage.com/torrent/%s.torrent',
+        'http://torrage.ws/torrent/%s.torrent',
+        'http://torcache.net/torrent/%s.torrent',
+    ]
 
     def __init__(self):
         addEvent('download', self.download)
@@ -55,14 +62,17 @@ class Downloader(Plugin):
         if len(torrent_hash) == 32:
             torrent_hash = b16encode(b32decode(torrent_hash))
 
-        url = 'http://torrage.com/torrent/%s.torrent' % torrent_hash
+        sources = self.torrent_sources
+        random.shuffle(sources)
 
-        try:
-            filedata = self.urlopen(url)
-            return filedata
-        except:
-            log.error('Failed converting magnet url to torrent: %s, %s', (url, traceback.format_exc()))
+        for source in sources:
+            try:
+                filedata = self.urlopen(source % torrent_hash, show_error = False)
+                return filedata
+            except:
+                log.debug('Torrent hash "%s" wasn\'t found on: %s', (torrent_hash, source))
 
+        log.error('Failed converting magnet url to torrent: %s', (torrent_hash))
         return False
 
     def isDisabled(self, manual):
