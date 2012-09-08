@@ -3,7 +3,7 @@ from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import simplifyString, toUnicode
 from couchpotato.core.helpers.request import jsonified, getParam
-from couchpotato.core.helpers.variable import md5, getImdb, getTitle
+from couchpotato.core.helpers.variable import md5, getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Movie, Release, ReleaseInfo
@@ -27,7 +27,7 @@ class Searcher(Plugin):
         addEvent('searcher.single', self.single)
         addEvent('searcher.correct_movie', self.correctMovie)
         addEvent('searcher.download', self.download)
-        addEvent('searcher.check_snatched', self.checkSnatched)
+        addEvent('searcher.try_next_release', self.tryNextRelease)
 
         addApiView('searcher.try_next', self.tryNextReleaseView, docs = {
             'desc': 'Marks the snatched results as ignored and try the next best release',
@@ -38,7 +38,6 @@ class Searcher(Plugin):
 
         # Schedule cronjob
         fireEvent('schedule.cron', 'searcher.all', self.allMovies, day = self.conf('cron_day'), hour = self.conf('cron_hour'), minute = self.conf('cron_minute'))
-        fireEvent('schedule.interval', 'searcher.check_snatched', self.checkSnatched, minutes = self.conf('run_every'))
 
 
     def allMovies(self):
@@ -430,73 +429,6 @@ class Searcher(Plugin):
 
 
         return False
-
-    def checkSnatched(self):
-        snatched_status = fireEvent('status.get', 'snatched', single = True)
-        ignored_status = fireEvent('status.get', 'ignored', single = True)
-        failed_status = fireEvent('status.get', 'failed', single = True)
-
-        done_status = fireEvent('status.get', 'done', single = True)
-
-        db = get_session()
-        rels = db.query(Release).filter_by(status_id = snatched_status.get('id'))
-
-        if rels:
-            log.debug('Checking status snatched releases...')
-
-        scanrequired = False
-
-        for rel in rels:
-
-            # Get current selected title
-            default_title = ''
-            for title in rel.movie.library.titles:
-                if title.default: default_title = title.title
-
-            log.debug('Checking snatched movie: %s' , default_title)
-
-            # Check if movie has already completed and is manage tab (legacy db correction)
-            if rel.movie.status_id == done_status.get('id'):
-                log.debug('Found a completed movie with a snatched release : %s. Setting release status to ignored...' , default_title)
-                rel.status_id = ignored_status.get('id')
-                db.commit()
-                continue
-
-            item = {}
-            for info in rel.info:
-                item[info.identifier] = info.value
-
-            movie_dict = fireEvent('movie.get', rel.movie_id, single = True)
-
-            # check status
-            downloadstatus = fireEvent('download.status', data = item, movie = movie_dict, single = True)
-            if not downloadstatus:
-                log.debug('Download status functionality is not implemented for active downloaders.')
-                scanrequired = True
-            else:
-                log.debug('Download status: %s' , downloadstatus)
-
-                if downloadstatus == 'failed':
-                    if self.conf('next_on_failed'):
-                        self.tryNextRelease(rel.movie_id)
-                    else:
-                        rel.status_id = failed_status.get('id')
-                        db.commit()
-
-                        log.info('Download of %s failed.', item['name'])
-
-                elif downloadstatus == 'completed':
-                    log.info('Download of %s completed!', item['name'])
-                    scanrequired = True
-
-                elif downloadstatus == 'not_found':
-                    log.info('%s not found in downloaders', item['name'])
-                    rel.status_id = ignored_status.get('id')
-                    db.commit()
-
-        # Note that Queued, Downloading, Paused, Repair and Unpackimg are also available as status for SabNZBd
-        if scanrequired:
-            fireEvent('renamer.scan')
 
     def tryNextReleaseView(self):
 

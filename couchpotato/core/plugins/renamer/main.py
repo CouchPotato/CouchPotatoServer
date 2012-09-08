@@ -6,13 +6,13 @@ from couchpotato.core.helpers.request import jsonified
 from couchpotato.core.helpers.variable import getExt, mergeDicts, getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.core.settings.model import Library, File, Profile
+from couchpotato.core.settings.model import Library, File, Profile, Release
 from couchpotato.environment import Env
+import errno
 import os
 import re
 import shutil
 import traceback
-import errno
 
 log = CPLog(__name__)
 
@@ -28,9 +28,11 @@ class Renamer(Plugin):
         })
 
         addEvent('renamer.scan', self.scan)
+        addEvent('renamer.check_snatched', self.checkSnatched)
+
         addEvent('app.load', self.scan)
 
-        #fireEvent('schedule.interval', 'renamer.scan', self.scan, minutes = self.conf('run_every'))
+        fireEvent('schedule.interval', 'renamer.check_snatched', self.checkSnatched, minutes = self.conf('run_every'))
 
     def scanView(self):
 
@@ -491,3 +493,68 @@ class Renamer(Plugin):
             os.rmdir(folder)
         except:
             loge('Couldn\'t remove empty directory %s: %s', (folder, traceback.format_exc()))
+
+    def checkSnatched(self):
+        snatched_status = fireEvent('status.get', 'snatched', single = True)
+        ignored_status = fireEvent('status.get', 'ignored', single = True)
+        failed_status = fireEvent('status.get', 'failed', single = True)
+
+        done_status = fireEvent('status.get', 'done', single = True)
+
+        db = get_session()
+        rels = db.query(Release).filter_by(status_id = snatched_status.get('id'))
+
+        if rels:
+            log.debug('Checking status snatched releases...')
+
+        scan_required = False
+
+        for rel in rels:
+
+            # Get current selected title
+            default_title = ''
+            for title in rel.movie.library.titles:
+                if title.default: default_title = title.title
+
+            # Check if movie has already completed and is manage tab (legacy db correction)
+            if rel.movie.status_id == done_status.get('id'):
+                log.debug('Found a completed movie with a snatched release : %s. Setting release status to ignored...' , default_title)
+                rel.status_id = ignored_status.get('id')
+                db.commit()
+                continue
+
+            item = {}
+            for info in rel.info:
+                item[info.identifier] = info.value
+
+            movie_dict = fireEvent('movie.get', rel.movie_id, single = True)
+
+            # check status
+            downloadstatus = fireEvent('download.status', data = item, movie = movie_dict, single = True)
+            if not downloadstatus:
+                log.debug('Download status functionality is not implemented for active downloaders.')
+                scan_required = True
+            else:
+                log.debug('Download status: %s' , downloadstatus)
+
+                if downloadstatus == 'failed':
+                    if self.conf('next_on_failed'):
+                        fireEvent('searcher.try_next_release', movie_id = rel.movie_id)
+                    else:
+                        rel.status_id = failed_status.get('id')
+                        db.commit()
+
+                        log.info('Download of %s failed.', item['name'])
+
+                elif downloadstatus == 'completed':
+                    log.info('Download of %s completed!', item['name'])
+                    scan_required = True
+
+                elif downloadstatus == 'not_found':
+                    log.info('%s not found in downloaders', item['name'])
+                    rel.status_id = ignored_status.get('id')
+                    db.commit()
+
+        # Note that Queued, Downloading, Paused, Repair and Unpackimg are also available as status for SabNZBd
+        if scan_required:
+            fireEvent('renamer.scan')

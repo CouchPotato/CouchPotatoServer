@@ -39,21 +39,6 @@ config = [{
                     'type': 'dropdown',
                     'values': [('usenet & torrents', 'both'), ('usenet', 'nzb'), ('torrents', 'torrent')],
                 },
-                {
-                    'advanced': True,
-                    'name': 'run_every',
-                    'label': 'Run every',
-                    'default': 1,
-                    'type': 'int',
-                    'unit': 'min(s)',
-                    'description': 'Detect movie status every X minutes. Will start the renamer if movie is <strong>completed</strong> or handle <strong>failed</strong> download if these options are enabled',
-                },
-                {
-                    'name': 'next_on_failed',
-                    'default': True,
-                    'type': 'bool',
-                    'description': 'Try the next best release for a movie after a download failed.',
-                },
             ],
         }, {
             'tab': 'searcher',
