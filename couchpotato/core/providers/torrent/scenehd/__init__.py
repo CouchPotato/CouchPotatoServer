@@ -10,6 +10,7 @@ config = [{
             'tab': 'searcher',
             'subtab': 'providers',
             'name': 'SceneHD',
+            'description': 'See <a href="http://scenehd.org">SceneHD</a>',
             'options': [
                 {
                     'name': 'enabled',

@@ -1,5 +1,9 @@
-from bs4 import BeautifulSoup
+from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.userscript.base import UserscriptBase
+import traceback
+
+log = CPLog(__name__)
+
 
 class AlloCine(UserscriptBase):
 
@@ -15,11 +19,17 @@ class AlloCine(UserscriptBase):
         except:
             return
 
-        html = BeautifulSoup(data)
-        title = html.find('title').contents[0].strip()
-        split = title.split(') - ')
+        name = None
+        year = None
 
-        name = split[0][:-5].strip()
-        year = split[0][-4:]
+        try:
+            start = data.find('<title>')
+            end = data.find('</title>', start)
+            page_title = data[start + len('<title>'):end].strip().split('-')
 
-        return self.search(name, year)
+            name = page_title[0].strip()
+            year = page_title[1].strip()[-4:]
+            return self.search(name, year)
+        except:
+            log.error('Failed parsing page for title and year: %s', traceback.format_exc())
+

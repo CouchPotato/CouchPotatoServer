@@ -96,13 +96,12 @@ class Newznab(NZBProvider, RSS):
         url = "%s&%s" % (self.getUrl(host['host'], self.urls['search']), arguments)
 
         cache_key = 'newznab.%s.%s.%s' % (host['host'], movie['library']['identifier'], cat_id[0])
-        single_cat = (len(cat_id) == 1 and cat_id[0] != self.cat_backup_id)
 
-        results = self.createItems(url, cache_key, host, single_cat = single_cat, movie = movie, quality = quality)
+        results = self.createItems(url, cache_key, host, movie = movie, quality = quality)
 
         return results
 
-    def createItems(self, url, cache_key, host, single_cat = False, movie = None, quality = None, for_feed = False):
+    def createItems(self, url, cache_key, host, movie = None, quality = None, for_feed = False):
         results = []
 
         data = self.getCache(cache_key, url, cache_timeout = 1800, headers = {'User-Agent': Env.getIdentifier()})
@@ -146,7 +145,7 @@ class Newznab(NZBProvider, RSS):
                     if not for_feed:
                         is_correct_movie = fireEvent('searcher.correct_movie',
                                                      nzb = new, movie = movie, quality = quality,
-                                                     imdb_results = True, single_category = single_cat, single = True)
+                                                     imdb_results = True, single = True)
 
                         if is_correct_movie:
                             new['score'] = fireEvent('score.calculate', new, movie, single = True)

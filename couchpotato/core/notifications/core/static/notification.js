@@ -216,7 +216,7 @@ var NotificationBase = new Class({
 	},
 
 	testButtonName: function(fieldset){
-		var name = fieldset.getElement('h2').get('text');
+		var name = String(fieldset.getElement('h2').innerHTML).substring(0,String(fieldset.getElement('h2').innerHTML).indexOf("<span")); //.get('text');
 		return 'Test '+name;
 	}
 

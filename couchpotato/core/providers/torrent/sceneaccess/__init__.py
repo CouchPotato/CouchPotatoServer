@@ -10,6 +10,7 @@ config = [{
             'tab': 'searcher',
             'subtab': 'providers',
             'name': 'SceneAccess',
+            'description': 'See <a href="https://sceneaccess.eu/">SceneAccess</a>',
             'options': [
                 {
                     'name': 'enabled',

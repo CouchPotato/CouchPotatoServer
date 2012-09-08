@@ -43,7 +43,7 @@
 
 		<link href="{{ url_for('web.static', filename='images/favicon.ico') }}" rel="icon" type="image/x-icon" />
 		<link rel="apple-touch-icon" href="{{ url_for('web.static', filename='images/homescreen.png') }}" />
-		
+
 		<script type="text/javascript" src="https://www.youtube.com/player_api" defer="defer"></script>
 
 		<script type="text/javascript">
@@ -51,7 +51,6 @@
 				new Uniform();
 
 				Api.setup({
-					'host': {{ fireEvent('app.api_url', single = True)|tojson|safe }},
 					'url': {{ url_for('api.index')|tojson|safe }},
 					'path_sep': {{ sep|tojson|safe }},
 					'is_remote': false

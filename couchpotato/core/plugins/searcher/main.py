@@ -1,7 +1,9 @@
 from couchpotato import get_session
+from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import simplifyString, toUnicode
-from couchpotato.core.helpers.variable import md5, getImdb, getTitle
+from couchpotato.core.helpers.request import jsonified, getParam
+from couchpotato.core.helpers.variable import md5, getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Movie, Release, ReleaseInfo
@@ -21,15 +23,24 @@ class Searcher(Plugin):
     in_progress = False
 
     def __init__(self):
-        addEvent('searcher.all', self.all_movies)
+        addEvent('searcher.all', self.allMovies)
         addEvent('searcher.single', self.single)
         addEvent('searcher.correct_movie', self.correctMovie)
         addEvent('searcher.download', self.download)
+        addEvent('searcher.try_next_release', self.tryNextRelease)
+
+        addApiView('searcher.try_next', self.tryNextReleaseView, docs = {
+            'desc': 'Marks the snatched results as ignored and try the next best release',
+            'params': {
+                'id': {'desc': 'The id of the movie'},
+            },
+        })
 
         # Schedule cronjob
-        fireEvent('schedule.cron', 'searcher.all', self.all_movies, day = self.conf('cron_day'), hour = self.conf('cron_hour'), minute = self.conf('cron_minute'))
+        fireEvent('schedule.cron', 'searcher.all', self.allMovies, day = self.conf('cron_day'), hour = self.conf('cron_hour'), minute = self.conf('cron_minute'))
 
-    def all_movies(self):
+
+    def allMovies(self):
 
         if self.in_progress:
             log.info('Search already in progress')
@@ -138,7 +149,7 @@ class Searcher(Plugin):
 
                     for info in nzb:
                         try:
-                            if not isinstance(nzb[info], (str, unicode, int, long)):
+                            if not isinstance(nzb[info], (str, unicode, int, long, float)):
                                 continue
 
                             rls_info = ReleaseInfo(
@@ -239,7 +250,6 @@ class Searcher(Plugin):
     def correctMovie(self, nzb = {}, movie = {}, quality = {}, **kwargs):
 
         imdb_results = kwargs.get('imdb_results', False)
-        single_category = kwargs.get('single_category', False)
         retention = Env.setting('retention', section = 'nzb')
 
         if nzb.get('seeds') is None and retention < nzb.get('age', 0):
@@ -272,7 +282,7 @@ class Searcher(Plugin):
         preferred_quality = fireEvent('quality.single', identifier = quality['identifier'], single = True)
 
         # Contains lower quality string
-        if self.containsOtherQuality(nzb, movie_year = movie['library']['year'], preferred_quality = preferred_quality, single_category = single_category):
+        if self.containsOtherQuality(nzb, movie_year = movie['library']['year'], preferred_quality = preferred_quality):
             log.info('Wrong: %s, looking for %s', (nzb['name'], quality['label']))
             return False
 
@@ -317,14 +327,10 @@ class Searcher(Plugin):
                 if len(movie_words) <= 2 and self.correctYear([nzb['name']], movie['library']['year'], 0):
                     return True
 
-        # Get the nfo and see if it contains the proper imdb url
-        if self.checkNFO(nzb['name'], movie['library']['identifier']):
-            return True
-
         log.info("Wrong: %s, undetermined naming. Looking for '%s (%s)'" % (nzb['name'], movie_name, movie['library']['year']))
         return False
 
-    def containsOtherQuality(self, nzb, movie_year = None, preferred_quality = {}, single_category = False):
+    def containsOtherQuality(self, nzb, movie_year = None, preferred_quality = {}):
 
         name = nzb['name']
         size = nzb.get('size', 0)
@@ -354,9 +360,6 @@ class Searcher(Plugin):
         for allowed in preferred_quality.get('allow'):
             if found.get(allowed):
                 del found[allowed]
-
-        if (len(found) == 0 and single_category):
-            return False
 
         return not (found.get(preferred_quality['identifier']) and len(found) == 1)
 
@@ -398,19 +401,6 @@ class Searcher(Plugin):
 
         return False
 
-    def checkNFO(self, check_name, imdb_id):
-        cache_key = 'srrdb.com %s' % simplifyString(check_name)
-
-        nfo = self.getCache(cache_key)
-        if not nfo:
-            try:
-                nfo = self.urlopen('http://www.srrdb.com/showfile.php?release=%s' % check_name, show_error = False)
-                self.setCache(cache_key, nfo)
-            except:
-                pass
-
-        return nfo and getImdb(nfo) == imdb_id
-
     def couldBeReleased(self, wanted_quality, dates, pre_releases):
 
         now = int(time.time())
@@ -439,3 +429,37 @@ class Searcher(Plugin):
 
 
         return False
+
+    def tryNextReleaseView(self):
+
+        trynext = self.tryNextRelease(getParam('id'))
+
+        return jsonified({
+            'success': trynext
+        })
+
+    def tryNextRelease(self, movie_id, manual = False):
+
+        snatched_status = fireEvent('status.get', 'snatched', single = True)
+        ignored_status = fireEvent('status.get', 'ignored', single = True)
+
+        try:
+            db = get_session()
+            rels = db.query(Release).filter_by(
+               status_id = snatched_status.get('id'),
+               movie_id = movie_id
+            ).all()
+
+            for rel in rels:
+                rel.status_id = ignored_status.get('id')
+            db.commit()
+
+            movie_dict = fireEvent('movie.get', movie_id, single = True)
+            log.info('Trying next release for: %s', getTitle(movie_dict['library']))
+            fireEvent('searcher.single', movie_dict)
+
+            return True
+
+        except:
+            log.error('Failed searching for next release: %s', traceback.format_exc())
+            return False

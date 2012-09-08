@@ -8,10 +8,12 @@ log = CPLog(__name__)
 
 class Blackhole(Downloader):
 
-    type = ['nzb', 'torrent']
+    type = ['nzb', 'torrent', 'torrent_magnet']
 
     def download(self, data = {}, movie = {}, manual = False, filedata = None):
-        if self.isDisabled(manual) or (not self.isCorrectType(data.get('type')) or (not self.conf('use_for') in ['both', data.get('type')])):
+        if self.isDisabled(manual) or \
+        (not self.isCorrectType(data.get('type')) or \
+        (not self.conf('use_for') in ['both', 'torrent' if 'torrent' in data.get('type') else data.get('type')])):
             return
 
         directory = self.conf('directory')
@@ -20,8 +22,16 @@ class Blackhole(Downloader):
         else:
             try:
                 if not filedata or len(filedata) < 50:
-                    log.error('No nzb/torrent available!')
-                    return False
+                    try:
+                        if data.get('type') == 'torrent_magnet':
+                            filedata = self.magnetToTorrent(data.get('url'))
+                            data['type'] = 'torrent'
+                    except:
+                        log.error('Failed download torrent via magnet url: %s', traceback.format_exc())
+
+                    if not filedata or len(filedata) < 50:
+                        log.error('No nzb/torrent available: %s', data.get('url'))
+                        return False
 
                 fullPath = os.path.join(directory, self.createFileName(data, filedata, movie))
 

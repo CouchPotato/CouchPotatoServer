@@ -1,9 +1,12 @@
+from base64 import b32decode, b16encode
 from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import toSafeString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
 import os
+import random
+import re
 
 log = CPLog(__name__)
 
@@ -12,14 +15,25 @@ class Downloader(Plugin):
 
     type = []
 
+    torrent_sources = [
+        'http://torrage.com/torrent/%s.torrent',
+        'http://torrage.ws/torrent/%s.torrent',
+        'http://torcache.net/torrent/%s.torrent',
+    ]
+
     def __init__(self):
         addEvent('download', self.download)
+        addEvent('download.status', self.getDownloadStatus)
 
-    def download(self, data = {}):
+    def download(self, data = {}, movie = {}, manual = False, filedata = None):
+        pass
+
+    def getDownloadStatus(self, data = {}, movie = {}):
         pass
 
     def createNzbName(self, data, movie):
-        return '%s%s' % (toSafeString(data.get('name')), self.cpTag(movie))
+        tag = self.cpTag(movie)
+        return '%s%s' % (toSafeString(data.get('name')[:127 - len(tag)]), tag)
 
     def createFileName(self, data, filedata, movie):
         name = os.path.join(self.createNzbName(data, movie))
@@ -40,6 +54,26 @@ class Downloader(Plugin):
             log.debug("Downloader doesn't support this type")
 
         return is_correct
+
+    def magnetToTorrent(self, magnet_link):
+        torrent_hash = re.findall('urn:btih:([\w]{32,40})', magnet_link)[0]
+
+        # Convert base 32 to hex
+        if len(torrent_hash) == 32:
+            torrent_hash = b16encode(b32decode(torrent_hash))
+
+        sources = self.torrent_sources
+        random.shuffle(sources)
+
+        for source in sources:
+            try:
+                filedata = self.urlopen(source % torrent_hash, show_error = False)
+                return filedata
+            except:
+                log.debug('Torrent hash "%s" wasn\'t found on: %s', (torrent_hash, source))
+
+        log.error('Failed converting magnet url to torrent: %s', (torrent_hash))
+        return False
 
     def isDisabled(self, manual):
         return not self.isEnabled(manual)

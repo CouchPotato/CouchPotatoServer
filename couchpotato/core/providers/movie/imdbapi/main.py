@@ -27,7 +27,7 @@ class IMDBAPI(MovieProvider):
 
         name_year = fireEvent('scanner.name_year', q, single = True)
 
-        if not q or not name_year.get('name'):
+        if not q or not name_year or (name_year and not name_year.get('name')):
             return []
 
         cache_key = 'imdbapi.cache.%s' % q

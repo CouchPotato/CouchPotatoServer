@@ -86,7 +86,7 @@ class SceneAccess(TorrentProvider):
 
                     new['score'] = fireEvent('score.calculate', new, movie, single = True)
                     is_correct_movie = fireEvent('searcher.correct_movie', nzb = new, movie = movie, quality = quality,
-                                                     imdb_results = False, single_category = False, single = True)
+                                                     imdb_results = False, single = True)
 
                     if is_correct_movie:
                         results.append(new)

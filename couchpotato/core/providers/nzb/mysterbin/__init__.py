@@ -10,7 +10,7 @@ config = [{
             'tab': 'searcher',
             'subtab': 'providers',
             'name': 'Mysterbin',
-            'description': '',
+            'description': 'Free provider, less accurate. See <a href="http://www.mysterbin.com/">Mysterbin</a>',
             'options': [
                 {
                     'name': 'enabled',
