@@ -25,6 +25,7 @@ if Env.get('desktop'):
 
             # Events to desktop
             addEvent('app.after_shutdown', desktop.afterShutdown)
+            addEvent('app.load', desktop.onAppLoad, priority = 110)
 
         def onClose(self, event):
             return fireEvent('app.shutdown', single = True)

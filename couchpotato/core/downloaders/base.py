@@ -29,7 +29,7 @@ class Downloader(Plugin):
         pass
 
     def getDownloadStatus(self, data = {}, movie = {}):
-        pass
+        return False
 
     def createNzbName(self, data, movie):
         tag = self.cpTag(movie)
