@@ -2,8 +2,10 @@ from threading import Thread
 from wx.lib.softwareupdate import SoftwareUpdate
 import os
 import sys
+import time
 import webbrowser
 import wx
+import subprocess
 
 
 # Include proper dirs
@@ -24,8 +26,11 @@ class TaskBarIcon(wx.TaskBarIcon):
 
     TBMENU_OPEN = wx.NewId()
     TBMENU_SETTINGS = wx.NewId()
-    TBMENU_ABOUT = wx.ID_ABOUT
     TBMENU_EXIT = wx.ID_EXIT
+
+    closed = False
+    menu = False
+    enabled = False
 
     def __init__(self, frame):
         wx.TaskBarIcon.__init__(self)
@@ -34,21 +39,42 @@ class TaskBarIcon(wx.TaskBarIcon):
         icon = wx.Icon('icon.png', wx.BITMAP_TYPE_PNG)
         self.SetIcon(icon)
 
-        self.Bind(wx.EVT_TASKBAR_LEFT_DCLICK, self.onTaskBarActivate)
+        self.Bind(wx.EVT_TASKBAR_LEFT_UP, self.OnTaskBarClick)
+        self.Bind(wx.EVT_TASKBAR_RIGHT_UP, self.OnTaskBarClick)
 
         self.Bind(wx.EVT_MENU, self.onOpen, id = self.TBMENU_OPEN)
         self.Bind(wx.EVT_MENU, self.onSettings, id = self.TBMENU_SETTINGS)
-        self.Bind(wx.EVT_MENU, self.onAbout, id = self.TBMENU_ABOUT)
         self.Bind(wx.EVT_MENU, self.onTaskBarClose, id = self.TBMENU_EXIT)
 
+    def OnTaskBarClick(self, evt):
+        menu = self.CreatePopupMenu()
+        self.PopupMenu(menu)
+        menu.Destroy()
+
+    def enable(self):
+        self.enabled = True
+
+        if self.menu:
+            self.open_menu.Enable(True)
+            self.setting_menu.Enable(True)
+
+            self.open_menu.SetText('Open')
 
     def CreatePopupMenu(self):
-        menu = wx.Menu()
-        menu.Append(self.TBMENU_OPEN, "Open")
-        menu.Append(self.TBMENU_SETTINGS, "Settings")
-        menu.Append(self.TBMENU_ABOUT, "About")
-        menu.Append(self.TBMENU_EXIT, "Close")
-        return menu
+
+        if not self.menu:
+            self.menu = wx.Menu()
+            self.open_menu = self.menu.Append(self.TBMENU_OPEN, 'Open')
+            self.setting_menu = self.menu.Append(self.TBMENU_SETTINGS, 'About')
+            self.exit_menu = self.menu.Append(self.TBMENU_EXIT, 'Quit')
+
+            if not self.enabled:
+                self.open_menu.Enable(False)
+                self.setting_menu.Enable(False)
+
+                self.open_menu.SetText('Loading...')
+
+        return self.menu
 
     def onOpen(self, event):
         url = self.frame.parent.getSetting('base_url')
@@ -58,16 +84,15 @@ class TaskBarIcon(wx.TaskBarIcon):
         url = self.frame.parent.getSetting('base_url') + '/settings/'
         webbrowser.open(url)
 
-    def onAbout(self, event):
-        print 'onAbout'
-
-    def onTaskBarActivate(self, evt):
-        if not self.frame.IsShown():
-            self.frame.Show(True)
-        self.frame.Raise()
-
     def onTaskBarClose(self, evt):
+        if self.closed:
+            return
+
+        self.closed = True
+
+        self.RemoveIcon()
         wx.CallAfter(self.frame.Close)
+
 
     def makeIcon(self, img):
         if "wxMSW" in wx.PlatformInfo:
@@ -82,7 +107,7 @@ class TaskBarIcon(wx.TaskBarIcon):
 class MainFrame(wx.Frame):
 
     def __init__(self, parent):
-        wx.Frame.__init__(self, None)
+        wx.Frame.__init__(self, None, style = wx.FRAME_NO_TASKBAR)
 
         self.parent = parent
         self.tbicon = TaskBarIcon(self)
@@ -136,6 +161,7 @@ class CouchPotatoApp(wx.App, SoftwareUpdate):
     settings = {}
     events = {}
     restart = False
+    closing = False
 
     def OnInit(self):
 
@@ -152,6 +178,9 @@ class CouchPotatoApp(wx.App, SoftwareUpdate):
 
         return True
 
+    def onAppLoad(self):
+        self.frame.tbicon.enable()
+
     def setSettings(self, settings = {}):
         self.settings = settings
 
@@ -164,24 +193,26 @@ class CouchPotatoApp(wx.App, SoftwareUpdate):
 
     def onClose(self, event):
 
-        onClose = self.events.get('onClose')
-        if self.events.get('onClose'):
+        if not self.closing:
+            self.closing = True
+            self.frame.tbicon.onTaskBarClose(event)
+
+            onClose = self.events.get('onClose')
             onClose(event)
-        else:
-            self.afterShutdown()
 
     def afterShutdown(self, restart = False):
         self.frame.Destroy()
         self.restart = restart
-
         self.ExitMainLoop()
 
 
 if __name__ == '__main__':
+
     app = CouchPotatoApp(redirect = False)
     app.MainLoop()
 
-    path = os.path.join(sys.path[0].decode(sys.getfilesystemencoding()), sys.argv[0])
+    time.sleep(1)
+
     if app.restart:
-        pass
-        #wx.Process.Open(path)
+        args = [sys.executable] + [os.path.join(base_path, 'Desktop.py')] + sys.argv[1:]
+        subprocess.Popen(args)

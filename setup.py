@@ -16,13 +16,25 @@ def getDataFiles(dirs):
     data_files = []
     for directory in dirs:
         for root, dirs, files in os.walk(directory):
-            print files
             if files:
                 for filename in files:
                     if filename[:-4] is not '.pyc':
                         data_files.append((root, [os.path.join(root, filename)]))
 
     return data_files
+
+includes = [
+    'telnetlib',
+    'xml.etree.ElementTree',
+    'xml.etree.cElementTree',
+    'xml.dom',
+    'xml.dom.minidom',
+    'netrc',
+    'csv',
+    'HTMLParser',
+    'version',
+    'distutils',
+]
 
 # Windows
 if sys.platform == "win32":
@@ -39,19 +51,12 @@ if sys.platform == "win32":
             'USP10.dll',
         ],
         packages = ['couchpotato', 'libs'],
-        includes = [
-            'telnetlib',
-            'xml.etree.ElementTree',
-            'xml.etree.cElementTree',
-            'xml.dom',
-            'xml.dom.minidom',
-            'netrc',
-            'csv',
-        ],
+        includes = includes,
         skip_archive = 1,
     )
-    exeICON = 'icon.ico'
+    exeICON = os.path.join(base_path, 'icon.ico')
     DATA_FILES = getDataFiles([r'.\\couchpotato', r'.\\libs'])
+    DATA_FILES.append('icon.png')
 
 
 # OSX
@@ -60,28 +65,22 @@ elif sys.platform == "darwin":
 
     FREEZER = 'py2app'
     FREEZER_OPTIONS = dict(
+        strip = True,
         argv_emulation = False,
+        site_packages = False,
         iconfile = 'icon.icns',
         plist = dict(
             LSUIElement = True,
         ),
         packages = ['couchpotato', 'libs'],
-        includes = [
-            'telnetlib',
-            'xml.etree.ElementTree',
-            'xml.etree.cElementTree',
-            'xml.dom',
-            'xml.dom.minidom',
-            'netrc',
-            'csv',
-        ],
+        includes = includes,
     )
     exeICON = None
     DATA_FILES = ['icon.png']
 
 # Common
 NAME = "CouchPotato"
-APP = [bdist_esky.Executable("Desktop.py", name = NAME, icon = exeICON,)]
+APP = [bdist_esky.Executable("Desktop.py", name = NAME, icon = exeICON, gui_only = True,)]
 ESKY_OPTIONS = dict(
     freezer_module = FREEZER,
     freezer_options = FREEZER_OPTIONS,
