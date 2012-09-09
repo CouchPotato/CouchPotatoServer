@@ -1,0 +1,72 @@
+from pyutil import benchutil
+
+import hashlib
+import os
+
+from decimal import Decimal
+D=Decimal
+
+p1 = 'a'*32
+p1a = 'a'*32
+p2 = 'a'*31+'b' # close, but no cigar
+p3 = 'b'*32 # different in the first byte
+
+def compare(n, f, a, b):
+    for i in xrange(n):
+        f(a, b)
+
+def eqeq(a, b):
+    return a == b
+
+def equalsequals_s(n):
+    # return compare(n, eqeq, 
+    for i in xrange(n):
+        p1 == p1a
+
+def equalsequals_c(n):
+    for i in xrange(n):
+        p1 == p2
+
+def equalsequals_f(n):
+    for i in xrange(n):
+        p1 == p3
+
+def hash_s(n):
+    for i in xrange(n):
+        salt = os.urandom(32)
+        hashlib.md5(salt+ p1).digest() == hashlib.md5(salt+p1a).digest()
+
+def hash_c(n):
+    for i in xrange(n):
+        salt = os.urandom(32)
+        hashlib.md5(salt+ p1).digest() == hashlib.md5(salt+p2).digest()
+
+def hash_f(n):
+    for i in xrange(n):
+        salt = os.urandom(32)
+        hashlib.md5(salt+ p1).digest() == hashlib.md5(salt+p3).digest()
+
+N=10**4
+REPS=10**2
+
+print "using '=='"
+
+print "same"
+benchutil.rep_bench(equalsequals_s, N, UNITS_PER_SECOND=10**9, MAXREPS=REPS)
+
+print "close"
+benchutil.rep_bench(equalsequals_c, N, UNITS_PER_SECOND=10**9, MAXREPS=REPS)
+
+print "far"
+benchutil.rep_bench(equalsequals_f, N, UNITS_PER_SECOND=10**9, MAXREPS=REPS)
+
+print "using hash"
+
+print "same"
+benchutil.rep_bench(hash_s, N, UNITS_PER_SECOND=10**9, MAXREPS=REPS)
+
+print "far"
+benchutil.rep_bench(hash_f, N, UNITS_PER_SECOND=10**9, MAXREPS=REPS)
+
+print "close"
+benchutil.rep_bench(hash_c, N, UNITS_PER_SECOND=10**9, MAXREPS=REPS)

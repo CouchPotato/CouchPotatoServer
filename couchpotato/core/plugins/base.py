@@ -192,6 +192,7 @@ class Plugin(object):
 
     def doShutdown(self):
         self.shuttingDown(True)
+        return True
 
     def shuttingDown(self, value = None):
         if value is None:
