@@ -281,8 +281,22 @@ class MoviePlugin(Plugin):
     def add(self, params = {}, force_readd = True, search_after = True):
 
         if not params.get('identifier'):
-            log.error('Can\'t add movie without imdb identifier.')
+            msg = 'Can\'t add movie without imdb identifier.'
+            log.error(msg)
+            fireEvent('notify.frontend', type = 'movie.is_tvshow', message = msg)
             return False
+        else:
+            try:
+                url = 'http://thetvdb.com/api/GetSeriesByRemoteID.php?imdbid=%s' % params.get('identifier')
+                tvdb = self.getCache('thetvdb.%s' % params.get('identifier'), url = url)
+                if 'series' in tvdb.lower():
+                    msg = 'Can\'t add movie, seems to be a TV show.'
+                    log.error(msg)
+                    fireEvent('notify.frontend', type = 'movie.is_tvshow', message = msg)
+                    return False
+            except:
+                pass
+
 
         library = fireEvent('library.add', single = True, attrs = params, update_after = False)
 
