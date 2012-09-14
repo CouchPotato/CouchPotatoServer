@@ -67,7 +67,10 @@ class Downloader(Plugin):
 
         for source in sources:
             try:
-                filedata = self.urlopen(source % torrent_hash, show_error = False)
+                filedata = self.urlopen(source % torrent_hash, headers = {'Referer': ''}, show_error = False)
+                if 'torcache' in filedata and 'file not found' in filedata.lower():
+                    continue
+
                 return filedata
             except:
                 log.debug('Torrent hash "%s" wasn\'t found on: %s', (torrent_hash, source))

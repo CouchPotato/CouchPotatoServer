@@ -93,6 +93,8 @@ class Searcher(Plugin):
 
         default_title = getTitle(movie['library'])
         if not default_title:
+            log.error('No proper info found for movie, removing it from library to cause it from having more issues.')
+            fireEvent('movie.delete', movie['id'], single = True)
             return
 
         fireEvent('notify.frontend', type = 'searcher.started.%s' % movie['id'], data = True, message = 'Searching for "%s"' % default_title)
