@@ -29,7 +29,10 @@ class CouchPotatoApi(MovieProvider):
 
         if identifier is None: return {}
         try:
-            headers = {'X-CP-Version': fireEvent('app.version', single = True)}
+            headers = {
+                'X-CP-Version': fireEvent('app.version', single = True),
+                'X-CP-API': 1,
+            }
             data = self.urlopen((self.api_url % ('eta')) + (identifier + '/'), headers = headers)
             dates = json.loads(data)
             log.debug('Found ETA for %s: %s', (identifier, dates))
