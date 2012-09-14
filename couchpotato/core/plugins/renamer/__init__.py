@@ -74,6 +74,22 @@ config = [{
                     'default': False,
                 },
                 {
+                    'advanced': True,
+                    'name': 'run_every',
+                    'label': 'Run every',
+                    'default': 1,
+                    'type': 'int',
+                    'unit': 'min(s)',
+                    'description': 'Detect movie status every X minutes. Will start the renamer if movie is <strong>completed</strong> or handle <strong>failed</strong> download if these options are enabled',
+                },
+                {
+                    'advanced': True,
+                    'name': 'next_on_failed',
+                    'default': True,
+                    'type': 'bool',
+                    'description': 'Try the next best release for a movie after a download failed.',
+                },
+                {
                     'name': 'move_leftover',
                     'type': 'bool',
                     'description': 'Move all leftover file after renaming, to the movie folder.',
