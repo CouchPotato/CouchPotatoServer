@@ -288,8 +288,8 @@ class MoviePlugin(Plugin):
         else:
             try:
                 url = 'http://thetvdb.com/api/GetSeriesByRemoteID.php?imdbid=%s' % params.get('identifier')
-                tvdb = self.getCache('thetvdb.%s' % params.get('identifier'), url = url)
-                if 'series' in tvdb.lower():
+                tvdb = self.getCache('thetvdb.%s' % params.get('identifier'), url = url, show_error = False)
+                if tvdb and 'series' in tvdb.lower():
                     msg = 'Can\'t add movie, seems to be a TV show.'
                     log.error(msg)
                     fireEvent('notify.frontend', type = 'movie.is_tvshow', message = msg)
