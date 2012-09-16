@@ -32,7 +32,7 @@ class CouchPotatoApi(MovieProvider):
     def search(self, q, limit = 12):
 
         cache_key = 'cpapi.cache.%s' % q
-        cached = self.getCache(cache_key, self.urls['search'] % tryUrlencode(q), timeout = 3)
+        cached = self.getCache(cache_key, self.urls['search'] % tryUrlencode(q), timeout = 3, headers = self.getRequestHeaders())
 
         if cached:
             try:
@@ -49,7 +49,7 @@ class CouchPotatoApi(MovieProvider):
             return
 
         cache_key = 'cpapi.cache.info.%s' % identifier
-        cached = self.getCache(cache_key, self.urls['info'] % identifier, timeout = 3)
+        cached = self.getCache(cache_key, self.urls['info'] % identifier, timeout = 3, headers = self.getRequestHeaders())
 
         if cached:
             try:
