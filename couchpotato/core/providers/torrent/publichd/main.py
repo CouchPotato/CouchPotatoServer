@@ -24,7 +24,7 @@ class PublicHD(TorrentProvider):
 
         results = []
 
-        if self.isDisabled() or quality['hd'] != True:
+        if self.isDisabled() or not quality.get('hd', False):
             return results
 
         params = tryUrlencode({
