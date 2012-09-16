@@ -383,11 +383,6 @@ class SourceUpdater(BaseUpdater):
 
 class DesktopUpdater(BaseUpdater):
 
-    version = None
-    update_failed = False
-    update_version = None
-    last_check = 0
-
     def __init__(self):
         self.desktop = Env.get('desktop')
 
@@ -396,7 +391,7 @@ class DesktopUpdater(BaseUpdater):
             def do_restart(e):
                 if e['status'] == 'done':
                     fireEventAsync('app.restart')
-                else:
+                elif e['status'] == 'error':
                     log.error('Failed updating desktop: %s', e['exception'])
                     self.update_failed = True
 
