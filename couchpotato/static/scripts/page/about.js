@@ -116,7 +116,7 @@ var AboutSettingTab = new Class({
 		if(!json) return;
 		var self = this;
 		var date = new Date(json.version.date * 1000);
-		self.version_text.set('text', json.version.hash + ' ('+date.toUTCString()+')');
+		self.version_text.set('text', json.version.hash + (json.version.date ? ' ('+date.toLocaleString()+')' : ''));
 		self.updater_type.set('text', json.version.type);
 	}
 
