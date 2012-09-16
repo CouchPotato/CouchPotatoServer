@@ -11,8 +11,8 @@ class TheMovieDb(MovieProvider):
 
     def __init__(self):
         addEvent('movie.by_hash', self.byHash)
-        addEvent('movie.search', self.search, priority = 1)
-        addEvent('movie.info', self.getInfo, priority = 1)
+        addEvent('movie.search', self.search, priority = 2)
+        addEvent('movie.info', self.getInfo, priority = 2)
         addEvent('movie.info_by_tmdb', self.getInfoByTMDBId)
 
         # Use base wrapper
