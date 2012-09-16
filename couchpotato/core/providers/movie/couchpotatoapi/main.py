@@ -13,11 +13,11 @@ log = CPLog(__name__)
 
 class CouchPotatoApi(MovieProvider):
 
-    api_url = 'http://couchpota.to/api/%s/'
     urls = {
         'search': 'https://couchpota.to/api/search/%s/',
         'info': 'https://couchpota.to/api/info/%s/',
         'eta': 'https://couchpota.to/api/eta/%s/',
+        'suggest': 'https://couchpota.to/api/suggest/%s/%s/',
     }
     http_time_between_calls = 0
     api_version = 1
@@ -64,7 +64,7 @@ class CouchPotatoApi(MovieProvider):
 
         if identifier is None: return {}
         try:
-            data = self.urlopen((self.api_url % ('eta')) + (identifier + '/'), headers = self.getRequestHeaders())
+            data = self.urlopen(self.urls['eta'] % identifier, headers = self.getRequestHeaders())
             dates = json.loads(data)
             log.debug('Found ETA for %s: %s', (identifier, dates))
             return dates
@@ -75,7 +75,7 @@ class CouchPotatoApi(MovieProvider):
 
     def suggest(self, movies = [], ignore = []):
         try:
-            data = self.urlopen((self.api_url % ('suggest')) + ','.join(movies) + '/' + ','.join(ignore) + '/')
+            data = self.urlopen(self.urls['suggest'] % (','.join(movies), ','.join(ignore)))
             suggestions = json.loads(data)
             log.info('Found Suggestions for %s', (suggestions))
         except Exception, e:
