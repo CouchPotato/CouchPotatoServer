@@ -74,9 +74,18 @@ class MetaDataBase(Plugin):
             if file_type.get('identifier') == wanted_file_type:
                 break
 
+        # See if it is in current files
         for cur_file in data['library'].get('files', []):
             if cur_file.get('type_id') is file_type.get('id') and os.path.isfile(cur_file.get('path')):
                 return cur_file.get('path')
+
+        # Download using existing info
+        try:
+            images = data['library']['info']['images'][wanted_file_type]
+            file_path = fireEvent('file.download', url = images[0], single = True)
+            return file_path
+        except:
+            pass
 
     def getFanart(self, movie_info = {}, data = {}):
         return self.getThumbnail(movie_info = movie_info, data = data, wanted_file_type = 'backdrop_original')
