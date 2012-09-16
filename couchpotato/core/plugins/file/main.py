@@ -8,6 +8,7 @@ from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import FileType, File
 from couchpotato.environment import Env
 import os.path
+import time
 import traceback
 
 log = CPLog(__name__)
@@ -27,6 +28,25 @@ class FileManager(Plugin):
             },
             'return': {'type': 'file'}
         })
+
+        addEvent('app.load', self.cleanup)
+
+    def cleanup(self):
+
+        # Wait a bit after starting before cleanup
+        time.sleep(3)
+        log.debug('Cleaning up unused files')
+
+        try:
+            db = get_session()
+            for root, dirs, walk_files in os.walk(Env.get('cache_dir')):
+                for filename in walk_files:
+                    file_path = os.path.join(root, filename)
+                    f = db.query(File).filter(File.path == toUnicode(file_path)).first()
+                    if not f:
+                        os.remove(file_path)
+        except:
+            log.error('Failed removing unused file: %s', traceback.format_exc())
 
     def showCacheFile(self, filename = ''):
 
