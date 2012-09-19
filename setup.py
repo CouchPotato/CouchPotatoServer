@@ -1,8 +1,9 @@
 from esky import bdist_esky
 from setuptools import setup
+import os
 import sys
 import version
-import os
+import zipfile
 
 
 # Include proper dirs
@@ -57,6 +58,7 @@ if sys.platform == "win32":
     exeICON = os.path.join(base_path, 'icon.ico')
     DATA_FILES = getDataFiles([r'.\\couchpotato', r'.\\libs'])
     DATA_FILES.append('icon.png')
+    file_ext = 'win32.zip'
 
 
 # OSX
@@ -65,6 +67,7 @@ elif sys.platform == "darwin":
 
     FREEZER = 'py2app'
     FREEZER_OPTIONS = dict(
+        optimize = 2,
         strip = True,
         argv_emulation = False,
         site_packages = False,
@@ -77,6 +80,8 @@ elif sys.platform == "darwin":
     )
     exeICON = None
     DATA_FILES = ['icon.png']
+
+    file_ext = 'macosx-10_6-intel.zip'
 
 # Common
 NAME = "CouchPotato"
@@ -96,4 +101,7 @@ setup(
     options = dict(bdist_esky = ESKY_OPTIONS),
 )
 
-
+distpath = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'dist')
+zipfilename = os.path.join(distpath, '%s-%s.%s' % (NAME, version.VERSION, file_ext))
+zfile = zipfile.ZipFile(zipfilename, "r")
+zfile.extractall(distpath)
