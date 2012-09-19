@@ -6,6 +6,7 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.movie.base import MovieProvider
 from couchpotato.core.settings.model import Movie
 from flask.helpers import json
+import time
 import traceback
 
 log = CPLog(__name__)
@@ -107,4 +108,5 @@ class CouchPotatoApi(MovieProvider):
         return {
             'X-CP-Version': fireEvent('app.version', single = True),
             'X-CP-API': self.api_version,
+            'X-CP-Time': time.time(),
         }
