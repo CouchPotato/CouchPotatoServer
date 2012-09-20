@@ -320,17 +320,20 @@ class Scanner(Plugin):
 
             # Only process movies newer than x
             if newer_than and newer_than > 0:
+                has_new_files = False
                 for cur_file in group['unsorted_files']:
                     file_time = [os.path.getmtime(cur_file), os.path.getctime(cur_file)]
-                    if file_time[0] > time.time() or file_time[1] > time.time():
+                    if file_time[0] > newer_than or file_time[1] > newer_than:
+                        has_new_files = True
                         break
 
-                log.debug('None of the files have changed since %s for %s, skipping.', (time.ctime(newer_than), identifier))
+                if not has_new_files:
+                    log.debug('None of the files have changed since %s for %s, skipping.', (time.ctime(newer_than), identifier))
 
-                # Delete the unsorted list
-                del group['unsorted_files']
+                    # Delete the unsorted list
+                    del group['unsorted_files']
 
-                continue
+                    continue
 
             # Group extra (and easy) files first
             # images = self.getImages(group['unsorted_files'])
