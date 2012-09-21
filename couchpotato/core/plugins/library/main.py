@@ -154,9 +154,6 @@ class LibraryPlugin(Plugin):
 
     def simplifyTitle(self, title):
 
-        dates = library.info.get('release_date', {})
-        dates = library.info.get('release_date', {})
-
         title = toUnicode(title)
 
         nr_prefix = '' if title[0] in ascii_letters else '#'
