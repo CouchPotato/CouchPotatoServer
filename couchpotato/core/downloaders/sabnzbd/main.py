@@ -100,6 +100,7 @@ class Sabnzbd(Downloader):
         params = {
             'apikey': self.conf('api_key'),
             'mode': 'history',
+            'limit': 15,
             'output': 'json'
         }
         url = cleanHost(self.conf('host')) + "api?" + tryUrlencode(params)
