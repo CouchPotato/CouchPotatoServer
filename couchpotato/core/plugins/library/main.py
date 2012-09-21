@@ -1,6 +1,7 @@
 from couchpotato import get_session
 from couchpotato.core.event import addEvent, fireEventAsync, fireEvent
 from couchpotato.core.helpers.encoding import toUnicode, simplifyString
+from couchpotato.core.helpers.variable import mergeDicts
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Library, LibraryTitle, File
@@ -138,26 +139,26 @@ class LibraryPlugin(Plugin):
         library = db.query(Library).filter_by(identifier = identifier).first()
 
         if not library.info:
-            library_dict = self.update(identifier)
-            dates = library_dict.get('info', {}).get('release_dates')
+            library_dict = self.update(identifier, force = True)
+            dates = library_dict.get('info', {}).get('release_date')
         else:
             dates = library.info.get('release_date')
 
-        if dates and dates.get('expires', 0) < time.time():
+        if dates and dates.get('expires', 0) < time.time() or not dates:
             dates = fireEvent('movie.release_date', identifier = identifier, merge = True)
-            library.info['release_date'] = dates
-            library.info = library.info
+            library.info = mergeDicts(library.info, {'release_date': dates })
             db.commit()
-
-        dates = library.info.get('release_date', {})
-        #db.close()
 
         return dates
 
 
     def simplifyTitle(self, title):
 
+        dates = library.info.get('release_date', {})
+        dates = library.info.get('release_date', {})
+
         title = toUnicode(title)
+
         nr_prefix = '' if title[0] in ascii_letters else '#'
         title = simplifyString(title)
 
