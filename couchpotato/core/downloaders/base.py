@@ -16,9 +16,9 @@ class Downloader(Plugin):
     type = []
 
     torrent_sources = [
-        'http://torrage.com/torrent/%s.torrent',
-        'http://torrage.ws/torrent/%s.torrent',
-        'http://torcache.net/torrent/%s.torrent',
+        'http://torrage.com/torrent/',
+        'http://torrage.ws/torrent/',
+        'http://torcache.net/torrent/',
     ]
 
     def __init__(self):
@@ -56,7 +56,7 @@ class Downloader(Plugin):
         return is_correct
 
     def magnetToTorrent(self, magnet_link):
-        torrent_hash = re.findall('urn:btih:([\w]{32,40})', magnet_link)[0]
+        torrent_hash = re.findall('urn:btih:([\w]{32,40})', magnet_link)[0].upper()
 
         # Convert base 32 to hex
         if len(torrent_hash) == 32:
@@ -67,8 +67,12 @@ class Downloader(Plugin):
 
         for source in sources:
             try:
-                filedata = self.urlopen(source % torrent_hash, headers = {'Referer': ''}, show_error = False)
+                url = '%s%s.torrent' % (source, torrent_hash)
+                filedata = self.urlopen(url, headers = {'Referer': ''}, show_error = False)
                 if 'torcache' in filedata and 'file not found' in filedata.lower():
+                    continue
+                if not filedata:
+                    log.debug('Could not retrieve torrent hash %s from torrent source: %s', (torrent_hash, source))
                     continue
 
                 return filedata
