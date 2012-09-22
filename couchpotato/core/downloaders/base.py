@@ -56,7 +56,7 @@ class Downloader(Plugin):
         return is_correct
 
     def magnetToTorrent(self, magnet_link):
-        torrent_hash = re.findall('urn:btih:([\w]{32,40})', magnet_link)[0]
+        torrent_hash = re.findall('urn:btih:([\w]{32,40})', magnet_link)[0].upper()
 
         # Convert base 32 to hex
         if len(torrent_hash) == 32:
