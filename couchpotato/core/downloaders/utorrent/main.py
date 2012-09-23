@@ -1,7 +1,10 @@
 from base64 import b64encode
+from hashlib import sha1
 from couchpotato.core.downloaders.base import Downloader
 from couchpotato.core.helpers.encoding import isInt
 from couchpotato.core.logger import CPLog
+from multipartpost import MultipartPostHandler
+from bencode import bencode, bdecode
 import httplib
 import json
 import os.path
@@ -11,12 +14,13 @@ import urllib2
 import time
 import cookielib
 
+
 log = CPLog(__name__)
 
 
 class uTorrent(Downloader):
 
-    type = ['torrent_magnet']
+    type = ['torrent', 'torrent_magnet']
     utAPI = None
 
     def download(self, data, movie, manual = False, filedata = None):
@@ -39,13 +43,21 @@ class uTorrent(Downloader):
         if not filedata and data.get('type') == 'torrent':
             log.error('Failed sending torrent, no data')
             return False
-
-        torrent_hash = re.findall('urn:btih:([\w]{32,40})', data.get('url'))[0]
+        if data.get('type') == 'torrent_magnet':
+            torrent_hash = re.findall('urn:btih:([\w]{32,40})', data.get('url'))[0].upper()
+        else:
+            info = bdecode(filedata)["info"]
+            torrent_hash = sha1(bencode(info)).hexdigest().upper()
+            torrent_filename = self.createFileName(data, filedata, movie)
         # Send request to uTorrent
         try:
             if not self.utAPI:
                 self.utAPI = uTorrentAPI(host[0], port = host[1], username = self.conf('username'), password = self.conf('password'))
-            self.utAPI.add_torrent_uri(data.get('url'))
+
+            if data.get('type') == 'torrent_magnet':
+                self.utAPI.add_torrent_uri(data.get('url'))
+            else:
+                self.utAPI.add_torrent_file(torrent_filename, filedata)
 
             # Change settings of added torrents
             self.utAPI.set_torrent(torrent_hash, torrent_params)
@@ -53,7 +65,7 @@ class uTorrent(Downloader):
                 self.utAPI.pause_torrent(torrent_hash)
             return True
         except Exception, err:
-            log.error('Failed to change settings for transfer: %s', err)
+            log.error('Failed to send torrent to uTorrent: %s', err)
             return False
 
 
@@ -63,11 +75,11 @@ class uTorrentAPI(object):
 
         super(uTorrentAPI, self).__init__()
 
-        self.url = 'http://' + host + ':' + str(port) + '/gui/'
+        self.url = 'http://' + str(host) + ':' + str(port) + '/gui/'
         self.token = ''
         self.last_time = time.time()
         cookies = cookielib.CookieJar()
-        self.opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookies))
+        self.opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookies), MultipartPostHandler)
         self.opener.addheaders = [('User-agent', 'couchpotato-utorrent-client/1.0')]
         if username and password:
             password_manager = urllib2.HTTPPasswordMgrWithDefaultRealm()
@@ -78,11 +90,11 @@ class uTorrentAPI(object):
             log.debug('User or password missing, not using authentication.')
         self.token = self.get_token()
 
-    def _request(self, action):
+    def _request(self, action, data = None):
         if time.time() > self.last_time + 1800:
             self.last_time = time.time()
             self.token = self.get_token()
-        request = urllib2.Request(self.url + "?token=" + self.token + "&" + action)
+        request = urllib2.Request(self.url + "?token=" + self.token + "&" + action, data)
         try:
             open_request = self.opener.open(request)
             response = open_request.read()
@@ -92,18 +104,16 @@ class uTorrentAPI(object):
                 return response
             else:
                 log.debug('Unknown failure sending command to uTorrent. Return text is: %s', response)
-                return False
         except httplib.InvalidURL, err:
             log.error('Invalid uTorrent host, check your config %s', err)
-            return False
         except urllib2.HTTPError, err:
             if err.code == 401:
                 log.error('Invalid uTorrent Username or Password, check your config')
-                return False
             else:
                 log.error('uTorrent HTTPError: %s', err)
         except urllib2.URLError, err:
             log.error('Unable to connect to uTorrent %s', err)
+        return False
 
     def get_token(self):
         request = self.opener.open(self.url+"token.html")
@@ -113,6 +123,10 @@ class uTorrentAPI(object):
     def add_torrent_uri(self, torrent):
         action = "action=add-url&s=%s" % urllib.quote(torrent)
         return self._request(action)
+
+    def add_torrent_file(self, filename, filedata):
+        action = "action=add-file"
+        return self._request(action, {"torrent_file": (filename, filedata)})
 
     def set_torrent(self, hash, params):
         action = "action=setprops&hash=%s" % hash
