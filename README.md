@@ -33,7 +33,7 @@ Linux (ubuntu / debian):
 * 'cd' to the folder of your choosing.
 * Run `git clone https://github.com/RuudBurger/CouchPotatoServer.git`
 * Then do `python CouchPotatoServer/CouchPotato.py` to start
-* To run on boot copy the init script. `cp CouchPotatoServer/init/ubuntu /etc/init.d/couchpotato`
-* Change the paths inside the init script. `nano /etc/init.d/couchpotato`
-* Make it executable. `chmod +x /etc/init.d/couchpotato`
+* To run on boot copy the init script. `sudo cp CouchPotatoServer/init/ubuntu /etc/init.d/couchpotato`
+* Change the paths inside the init script. `sudo nano /etc/init.d/couchpotato`
+* Make it executable. `sudo chmod +x /etc/init.d/couchpotato`
 * Add it to defaults. `sudo update-rc.d couchpotato defaults`
