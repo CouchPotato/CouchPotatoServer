@@ -324,7 +324,7 @@
 		cursor: text;
 		width: 30%;
 		margin: 0 !important;
-		height: 27px;
+		min-height: 27px;
 		line-height: 0;
 		display: inline-block;
 	}
