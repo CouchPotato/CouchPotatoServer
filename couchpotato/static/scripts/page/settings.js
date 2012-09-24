@@ -211,7 +211,7 @@ Page.Settings = new Class({
 		if(self.tabs[tab_name] && self.tabs[tab_name].tab)
 			return self.tabs[tab_name].tab
 
-		var label = (tab.label || tab.name || tab_name).capitalize()
+		var label = tab.label || (tab.name || tab_name).capitalize()
 		var tab_el = new Element('li.t_'+tab_name).adopt(
 			new Element('a', {
 				'href': App.createUrl(self.name+'/'+tab_name),
@@ -244,7 +244,7 @@ Page.Settings = new Class({
 		if(!parent_tab.subtabs_el)
 			parent_tab.subtabs_el = new Element('ul.subtabs').inject(parent_tab.tab);
 
-		var label = (tab.label || tab.name || tab_name).capitalize()
+		var label = tab.label || (tab.name || tab_name).capitalize()
 		var tab_el = new Element('li.t_'+tab_name).adopt(
 			new Element('a', {
 				'href': App.createUrl(self.name+'/'+parent_tab_name+'/'+tab_name),
@@ -274,7 +274,7 @@ Page.Settings = new Class({
 			'class': (group.advanced ? 'inlineLabels advanced' : 'inlineLabels') + ' group_' + (group.name || '') + ' subtab_' + (group.subtab || '')
 		}).adopt(
 			new Element('h2', {
-				'text': (group.label || group.name).capitalize()
+				'text': group.label || (group.name).capitalize()
 			}).adopt(
 				new Element('span.hint', {
 					'html': group.description || ''
