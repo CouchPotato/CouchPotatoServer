@@ -8,9 +8,9 @@ config = [{
     'groups': [
         {
             'tab': 'renamer',
-            'subtab': 'trailer',
             'name': 'trailer',
-            'label': 'Download trailer after rename',
+            'label': 'Download trailer',
+            'description': 'after rename',
             'options': [
                 {
                     'name': 'enabled',

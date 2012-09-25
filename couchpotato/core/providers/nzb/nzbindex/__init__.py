@@ -8,7 +8,7 @@ config = [{
     'groups': [
         {
             'tab': 'searcher',
-            'subtab': 'providers',
+            'subtab': 'nzb_providers',
             'name': 'nzbindex',
             'description': 'Free provider, less accurate. See <a href="http://www.nzbindex.nl/">NZBIndex</a>',
             'options': [

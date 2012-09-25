@@ -244,7 +244,7 @@ Page.Settings = new Class({
 		if(!parent_tab.subtabs_el)
 			parent_tab.subtabs_el = new Element('ul.subtabs').inject(parent_tab.tab);
 
-		var label = tab.label || (tab.name || tab_name).capitalize()
+		var label = tab.label || (tab.name || tab_name.replace('_', ' ')).capitalize()
 		var tab_el = new Element('li.t_'+tab_name).adopt(
 			new Element('a', {
 				'href': App.createUrl(self.name+'/'+parent_tab_name+'/'+tab_name),
