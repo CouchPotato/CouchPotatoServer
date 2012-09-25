@@ -324,7 +324,7 @@ Block.Search.Item = new Class({
 		var self = this;
 
 		if(!self.options.hasClass('set')){
-			
+
 			if(self.info.in_library){
 				var in_library = [];
 				self.info.in_library.releases.each(function(release){

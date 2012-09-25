@@ -86,18 +86,18 @@ var MovieList = new Class({
 		Object.each(movies, function(movie){
 			self.createMovie(movie);
 		});
-		
+
 		self.setCounter(total);
 
 	},
-	
+
 	setCounter: function(count){
 		var self = this;
-		
+
 		if(!self.navigation_counter) return;
-		
+
 		self.navigation_counter.set('text', (count || 0));
-		
+
 	},
 
 	createMovie: function(movie, inject_at){
@@ -309,6 +309,8 @@ var MovieList = new Class({
 
 							erase_movies.each(function(movie){
 								self.movies.erase(movie);
+
+								movie.destroy()
 							});
 
 							self.calculateSelected();

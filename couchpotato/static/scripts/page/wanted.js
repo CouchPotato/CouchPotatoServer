@@ -222,7 +222,7 @@ window.addEvent('domready', function(){
 								movie.set('tween', {
 									'duration': 300,
 									'onComplete': function(){
-										movie.destroy();
+										self.movie.destroy()
 									}
 								});
 								movie.tween('height', 0);

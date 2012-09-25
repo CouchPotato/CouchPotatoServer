@@ -16,13 +16,32 @@ var Movie = new Class({
 		self.profile = Quality.getProfile(data.profile_id) || {};
 		self.parent(self, options);
 
-		App.addEvent('movie.update.'+data.id, self.update.bind(self));
+		self.addEvents();
+	},
+
+	addEvents: function(){
+		var self = this;
+
+		App.addEvent('movie.update.'+self.data.id, self.update.bind(self));
 
 		['movie.busy', 'searcher.started'].each(function(listener){
-			App.addEvent(listener+'.'+data.id, function(notification){
+			App.addEvent(listener+'.'+self.data.id, function(notification){
 				if(notification.data)
 					self.busy(true)
 			});
+		})
+	},
+
+	destroy: function(){
+		var self = this;
+
+		self.el.destroy();
+		delete self.list.movies_added[self.get('id')];
+
+		// Remove events
+		App.removeEvents('movie.update.'+self.data.id);
+		['movie.busy', 'searcher.started'].each(function(listener){
+			App.removeEvents(listener+'.'+self.data.id);
 		})
 	},
 
