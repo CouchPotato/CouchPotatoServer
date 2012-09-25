@@ -10,6 +10,7 @@ config = [{
         'subtab': 'providers',
         'name': 'ThePirateBay',
         'description': 'The world\'s largest bittorrent tracker. See <a href="http://fucktimkuik.org/">ThePirateBay</a>',
+        'wizard': True,
         'options': [
             {
                 'name': 'enabled',

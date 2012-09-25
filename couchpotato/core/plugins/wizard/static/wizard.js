@@ -37,21 +37,77 @@ Page.Wizard = new Class({
 		},
 		'downloaders': {
 			'title': 'What download apps are you using?',
-			'description': 'If you don\'t have any of these listed, you have to use Blackhole. Or drop me a line, maybe I\'ll support your download app.'
+			'description': 'CP needs an external download app to work with. Choose one below. For more downloaders check settings after you have filled in the wizard. If your download app isn\'t in the list, use Blackhole.'
 		},
 		'providers': {
 			'title': 'Are you registered at any of these sites?',
-			'description': 'CP uses these sites to search for movies. A few free are enabled by default, but it\'s always better to have a few more.'
+			'description': 'CP uses these sites to search for movies. A few free are enabled by default, but it\'s always better to have a few more. Check settings for the full list of available providers.'
 		},
 		'renamer': {
 			'title': 'Move & rename the movies after downloading?',
-			'description': ''
+			'description': 'The coolest part of CP is that it can move and organize your downloaded movies automagically. Check settings and you can even download trailers, subtitles and other data when it has finished downloading. It\'s awesome!'
+		},
+		'automation': {
+			'title': 'Easily add movies to your wanted list!',
+			'description': 'You can easily add movies from your favorite movie site, like IMDB, Rotten Tomatoes, Apple Trailers and more. Just install the userscript or drag the bookmarklet to your browsers bookmarks.' + 
+				'<br />Once installed, just click the bookmarklet on a movie page and watch the magic happen ;)',
+			'content': function(){
+
+				// See if userscript can be installed
+				var userscript = false;
+				try {
+					if(Components.interfaces.gmIGreasemonkeyService)
+						userscript = true
+				}
+				catch(e){
+					userscript = Browser.chrome === true;
+				}
+
+				var host_url = window.location.protocol + '//' + window.location.host;
+				
+				var el = new Element('div.group_userscript').adopt(
+
+					(userscript ? [new Element('a.userscript.button', {
+						'text': 'Install userscript',
+						'href': Api.createUrl('userscript.get')+randomString()+'/couchpotato.user.js',
+						'target': '_self'
+					}), new Element('span.or[text=or]')] : null),
+					new Element('span.bookmarklet').adopt(
+						new Element('a.button.orange', {
+							'text': '+CouchPotato',
+							'href': "javascript:void((function(){var e=document.createElement('script');e.setAttribute('type','text/javascript');e.setAttribute('charset','UTF-8');e.setAttribute('src','" +
+									host_url + Api.createUrl('userscript.bookmark') +
+									"?host="+ encodeURI(host_url + Api.createUrl('userscript.get')+randomString()+'/') +
+							 		"&r='+Math.random()*99999999);document.body.appendChild(e)})());",
+							'target': '',
+							'events': {
+								'click': function(e){
+									(e).stop()
+									alert('Drag it to your bookmark ;)')
+								}
+							}
+						}),
+						new Element('span', {
+							'text': '⇽ Drag this to your bookmarks'
+						})
+					)
+				).setStyles({
+					'background-image': "url('"+Api.createUrl('static/userscript/userscript.png')+"')"
+				});
+				
+				return el
+			}
 		},
 		'finish': {
-			'title': 'Finish Up',
-			'description': 'Are you done? Did you fill in everything as much as possible? Yes, ok gogogo!',
+			'title': 'Finishing Up',
+			'description': 'Are you done? Did you fill in everything as much as possible?' +
+				'<br />Be sure to check the settings to see what more CP can do!<br /><br />' + 
+				'<div class="wizard_support">After you\'ve used CP for a while, and you like it (which of course you will), consider supporting CP. Maybe even by writing some code. <br />Or by getting a subscription at <a href="https://usenetserver.com/partners/?a_aid=couchpotato&a_bid=3f357c6f">Usenet Server</a> or <a href="http://www.newshosting.com/partners/?a_aid=couchpotato&a_bid=a0b022df">Newshosting</a>.</div>',
 			'content': new Element('div').adopt(
 				new Element('a.button.green', {
+					'styles': {
+						'margin-top': 20
+					},
 					'text': 'I\'m ready to start the awesomeness, wow this button is big and green!',
 					'events': {
 						'click': function(e){
@@ -76,7 +132,7 @@ Page.Wizard = new Class({
 			)
 		}
 	},
-	groups: ['welcome', 'general', 'downloaders', 'searcher', 'providers', 'renamer', 'finish'],
+	groups: ['welcome', 'general', 'downloaders', 'searcher', 'providers', 'renamer', 'automation', 'finish'],
 
 	open: function(action, params){
 		var self = this;
@@ -110,7 +166,7 @@ Page.Wizard = new Class({
 		var form = self.el.getElement('.uniForm');
 		var tabs = self.el.getElement('.tabs');
 
-		self.groups.each(function(group){
+		self.groups.each(function(group, nr){
 			if(self.headers[group]){
 				group_container = new Element('.wgroup_'+group, {
 					'styles': {
@@ -120,6 +176,8 @@ Page.Wizard = new Class({
 						'duration': 350
 					}
 				});
+
+				var content = self.headers[group].content
 				group_container.adopt(
 					new Element('h1', {
 						'text': self.headers[group].title
@@ -127,7 +185,7 @@ Page.Wizard = new Class({
 					self.headers[group].description ? new Element('span.description', {
 						'html': self.headers[group].description
 					}) : null,
-					self.headers[group].content ? self.headers[group].content : null
+					content ? (typeOf(content) == 'function' ? content() : content) : null
 				).inject(form);
 			}
 
