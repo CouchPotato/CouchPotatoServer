@@ -410,6 +410,11 @@ class Searcher(Plugin):
         if not dates or (dates.get('theater', 0) == 0 and dates.get('dvd', 0) == 0):
             return True
         else:
+
+            # For movies before 1972
+            if dates.get('theater', 0) < 0 or dates.get('dvd', 0) < 0:
+                return True
+
             if wanted_quality in pre_releases:
                 # Prerelease 1 week before theaters
                 if dates.get('theater') - 604800 < now:
