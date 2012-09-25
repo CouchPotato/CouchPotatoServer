@@ -635,7 +635,7 @@ Option.Directory = new Class({
 				),
 				self.dir_list = new Element('ul', {
 					'events': {
-						'click:relay(li)': function(e, el){
+						'click:relay(li:not(.empty))': function(e, el){
 							(e).preventDefault();
 							self.selectDirectory(el.get('data-value'))
 						},
@@ -701,12 +701,24 @@ Option.Directory = new Class({
 	fillBrowser: function(json){
 		var self = this;
 
-		var v = self.input.get('text');
+		self.data = json;
+
+		var v = self.getValue();
 		var previous_dir = self.getParentDir();
 
+		if(v == '')
+			self.input.set('text', json.home);
+
 		if(previous_dir != v && previous_dir.length >= 1 && !json.is_root){
+
+			var prev_dirname = self.getCurrentDirname(previous_dir);
+			if(previous_dir == json.home)
+				prev_dirname = 'Home';
+			else if (previous_dir == '/' && json.platform == 'nt')
+				prev_dirname = 'Computer';
+
 			self.back_button.set('data-value', previous_dir)
-			self.back_button.set('html', '&laquo; '+self.getCurrentDirname(previous_dir))
+			self.back_button.set('html', '&laquo; '+prev_dirname)
 			self.back_button.show()
 		}
 		else {
@@ -719,23 +731,24 @@ Option.Directory = new Class({
 			else
 				self.cached[v] = json;
 
-		setTimeout(function(){
-			self.dir_list.empty();
+		self.dir_list.empty();
+		if(json.dirs.length > 0)
 			json.dirs.each(function(dir){
-				if(dir.indexOf(v) != -1){
-					new Element('li', {
-						'data-value': dir,
-						'text': self.getCurrentDirname(dir)
-					}).inject(self.dir_list)
-				}
+				new Element('li', {
+					'data-value': dir,
+					'text': self.getCurrentDirname(dir)
+				}).inject(self.dir_list)
 			});
-		}, 50);
+		else
+			new Element('li.empty', {
+				'text': 'Selected folder is empty'
+			}).inject(self.dir_list)
 	},
 
 	getDirs: function(){
 		var self = this;
 
-		var c = self.input.get('text');
+		var c = self.getValue();
 
 		if(self.cached[c] && self.use_cache){
 			self.fillBrowser()
@@ -754,7 +767,10 @@ Option.Directory = new Class({
 	getParentDir: function(dir){
 		var self = this;
 
-		var v = dir || self.input.get('text');
+		if(!dir && self.data && self.data.parent)
+			return self.data.parent;
+
+		var v = dir || self.getValue();
 		var sep = Api.getOption('path_sep');
 		var dirs = v.split(sep);
 			if(dirs.pop() == '')
@@ -941,7 +957,7 @@ Option.Choice = new Class({
 					mtches.append([value == matchsplit ? match : matchsplit]);
 				});
 			});
-		
+
 		if(mtches.length == 0 && value != '')
 			mtches.include(value);
 

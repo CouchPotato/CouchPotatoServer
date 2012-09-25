@@ -235,6 +235,19 @@
 			.page .directory_list li:hover {
 				background-color: #515c68;
 			}
+			
+		.page .directory_list li.empty {
+			background: none;
+			height: 100px;
+			text-align: center;
+			font-style: italic;
+			border: none;
+			line-height: 100px;
+			cursor: default;
+			color: #BBB;
+			text-shadow: none;
+			font-size: 12px;
+		}
 
 	.page .directory_list .actions {
 		clear: both;
