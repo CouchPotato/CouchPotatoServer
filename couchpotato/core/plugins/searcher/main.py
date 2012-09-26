@@ -42,6 +42,9 @@ class Searcher(Plugin):
 
         addApiView('searcher.progress', self.getProgress, docs = {
             'desc': 'Get the progress of current full search',
+            'return': {'type': 'object', 'example': """{
+    'progress': False || object, total & to_go,
+}"""},
         })
 
         # Schedule cronjob
