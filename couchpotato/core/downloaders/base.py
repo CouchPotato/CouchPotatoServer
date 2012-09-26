@@ -24,11 +24,15 @@ class Downloader(Plugin):
     def __init__(self):
         addEvent('download', self.download)
         addEvent('download.status', self.getDownloadStatus)
+        addEvent('download.remove', self.remove)
 
     def download(self, data = {}, movie = {}, manual = False, filedata = None):
         pass
 
     def getDownloadStatus(self, data = {}, movie = {}):
+        return False
+
+    def remove(self, name = {}, nzo_id = {}):
         return False
 
     def createNzbName(self, data, movie):
