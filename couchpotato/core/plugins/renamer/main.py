@@ -506,9 +506,11 @@ class Renamer(Plugin):
 
         if rels:
             log.debug('Checking status snatched releases...')
+            # get queue and history (once) from SABnzbd
+            queue, history = fireEvent('download.status', data = item, movie = movie_dict, single = True)
 
         scan_required = False
-
+        
         for rel in rels:
 
             # Get current selected title
@@ -531,6 +533,23 @@ class Renamer(Plugin):
 
             # check status
             downloadstatus = fireEvent('download.status', data = item, movie = movie_dict, single = True)
+            try:
+                for slot in queue['queue']['slots']:
+                    log.debug('Found %s in SabNZBd queue, which is %s, with %s left', (slot['filename'], slot['status'], slot['timeleft']))
+                    if slot['filename'] == nzbname:
+                        downloadstatus =['status'].lower()
+            except:
+                log.debug('No items in queue: %s', (traceback.format_exc()))
+            try:
+                for slot in history['history']['slots']:
+                    log.debug('Found %s in SabNZBd history, which has %s', (slot['name'], slot['status']))
+                    if slot['name'] == nzbname:
+                        downloadstatus = 'failed'
+                    else:
+                        downloadstatus = slot['status'].lower()
+            except:
+                log.debug('No items in history: %s', (traceback.format_exc()))
+
             if not downloadstatus:
                 log.debug('Download status functionality is not implemented for active downloaders.')
                 scan_required = True
