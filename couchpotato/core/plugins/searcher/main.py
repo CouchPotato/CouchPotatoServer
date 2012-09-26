@@ -105,7 +105,6 @@ class Searcher(Plugin):
                 log.error('Search failed for %s: %s', (movie_dict['library']['identifier'], traceback.format_exc()))
 
             self.in_progress['to_go'] -= 1
-            time.sleep(10)
 
             # Break if CP wants to shut down
             if self.shuttingDown():
