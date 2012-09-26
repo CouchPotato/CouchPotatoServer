@@ -30,6 +30,11 @@ var Movie = new Class({
 					self.busy(true)
 			});
 		})
+
+		App.addEvent('searcher.ended.'+self.data.id, function(notification){
+			if(notification.data)
+				self.busy(false)
+		});
 	},
 
 	destroy: function(){
