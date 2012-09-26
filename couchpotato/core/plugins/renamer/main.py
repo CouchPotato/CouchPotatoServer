@@ -532,7 +532,6 @@ class Renamer(Plugin):
             movie_dict = fireEvent('movie.get', rel.movie_id, single = True)
 
             # check status
-            downloadstatus = fireEvent('download.status', data = item, movie = movie_dict, single = True)
             try:
                 for slot in queue['queue']['slots']:
                     log.debug('Found %s in SabNZBd queue, which is %s, with %s left', (slot['filename'], slot['status'], slot['timeleft']))
@@ -544,9 +543,14 @@ class Renamer(Plugin):
                 for slot in history['history']['slots']:
                     log.debug('Found %s in SabNZBd history, which has %s', (slot['name'], slot['status']))
                     if slot['name'] == nzbname:
-                        downloadstatus = 'failed'
-                    else:
-                        downloadstatus = slot['status'].lower()
+                        # Note: if post process even if failed is on in SabNZBd, it will complete with a fail message
+                        if slot['status'] == 'Failed' or (slot['status'] == 'Completed' and slot['fail_message'].strip()):
+
+                            # Delete failed download
+                            rel_remove = fireEvent('download.remove', name = slot['name'], nzo_id = slot['nzo_id'], single = True)
+                            downloadstatus = 'failed'
+                        else:
+                            downloadstatus = slot['status'].lower()
             except:
                 log.debug('No items in history: %s', (traceback.format_exc()))
 
