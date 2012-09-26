@@ -32,7 +32,7 @@ class Downloader(Plugin):
     def getDownloadStatus(self, data = {}, movie = {}):
         return False
 
-    def remove(self, data = {}, movie = {}):
+    def remove(self, name = {}, nzo_id = {}):
 
     def createNzbName(self, data, movie):
         tag = self.cpTag(movie)
