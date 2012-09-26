@@ -65,6 +65,7 @@ class Searcher(Plugin):
             try:
                 self.single(movie_dict)
             except IndexError:
+                log.error('Forcing library update for %s, if you see this often, please report: %s', (movie_dict['library']['identifier'], traceback.format_exc()))
                 fireEvent('library.update', movie_dict['library']['identifier'], force = True)
             except:
                 log.error('Search failed for %s: %s', (movie_dict['library']['identifier'], traceback.format_exc()))
