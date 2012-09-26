@@ -532,6 +532,7 @@ class Renamer(Plugin):
             movie_dict = fireEvent('movie.get', rel.movie_id, single = True)
 
             # check status
+            nzbname = self.createNzbName(item, movie_dict)
             try:
                 for slot in queue['queue']['slots']:
                     log.debug('Found %s in SabNZBd queue, which is %s, with %s left', (slot['filename'], slot['status'], slot['timeleft']))
