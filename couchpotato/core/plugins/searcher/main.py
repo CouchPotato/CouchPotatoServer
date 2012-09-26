@@ -1,6 +1,6 @@
 from couchpotato import get_session
 from couchpotato.api import addApiView
-from couchpotato.core.event import addEvent, fireEvent
+from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
 from couchpotato.core.helpers.encoding import simplifyString, toUnicode
 from couchpotato.core.helpers.request import jsonified, getParam
 from couchpotato.core.helpers.variable import md5, getTitle
@@ -36,9 +36,35 @@ class Searcher(Plugin):
             },
         })
 
+        addApiView('searcher.full_search', self.allMoviesView, docs = {
+            'desc': 'Starts a full search for all wanted movies',
+        })
+
+        addApiView('searcher.progress', self.getProgress, docs = {
+            'desc': 'Get the progress of current full search',
+        })
+
         # Schedule cronjob
         fireEvent('schedule.cron', 'searcher.all', self.allMovies, day = self.conf('cron_day'), hour = self.conf('cron_hour'), minute = self.conf('cron_minute'))
 
+    def allMoviesView(self):
+
+        in_progress = self.in_progress
+        if not in_progress:
+            fireEventAsync('searcher.all')
+            fireEvent('notify.frontend', type = 'searcher.started', data = True, message = 'Full search started')
+        else:
+            fireEvent('notify.frontend', type = 'searcher.already_started', data = True, message = 'Full search already in progress')
+
+        return jsonified({
+            'success': not in_progress
+        })
+
+    def getProgress(self):
+
+        return jsonified({
+            'progress': self.in_progress
+        })
 
     def allMovies(self):
 
@@ -53,6 +79,11 @@ class Searcher(Plugin):
         movies = db.query(Movie).filter(
             Movie.status.has(identifier = 'active')
         ).all()
+
+        self.in_progress = {
+            'total': len(movies),
+            'to_go': len(movies),
+        }
 
         for movie in movies:
             movie_dict = movie.to_dict({
@@ -69,6 +100,9 @@ class Searcher(Plugin):
                 fireEvent('library.update', movie_dict['library']['identifier'], force = True)
             except:
                 log.error('Search failed for %s: %s', (movie_dict['library']['identifier'], traceback.format_exc()))
+
+            self.in_progress['to_go'] -= 1
+            time.sleep(10)
 
             # Break if CP wants to shut down
             if self.shuttingDown():
