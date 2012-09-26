@@ -254,7 +254,7 @@ class Searcher(Plugin):
         imdb_results = kwargs.get('imdb_results', False)
         retention = Env.setting('retention', section = 'nzb')
 
-        if nzb.get('seeds') is None and retention < nzb.get('age', 0):
+        if nzb.get('seeds') is None and 0 < retention < nzb.get('age', 0):
             log.info('Wrong: Outside retention, age is %s, needs %s or lower: %s', (nzb['age'], retention, nzb['name']))
             return False
 
