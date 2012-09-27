@@ -161,6 +161,7 @@ class Release(Plugin):
 
         db = get_session()
         id = getParam('id')
+        status_snatched = fireEvent('status.add', 'snatched', single = True)
 
         rel = db.query(Relea).filter_by(id = id).first()
         if rel:
@@ -180,6 +181,10 @@ class Release(Plugin):
                 'library': {'titles': {}, 'files':{}},
                 'files': {}
             }), manual = True, single = True)
+
+            if success:
+                rel.status_id = status_snatched.get('id')
+                db.commit()
 
             #db.close()
             return jsonified({

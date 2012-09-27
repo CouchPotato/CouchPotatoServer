@@ -421,19 +421,11 @@ var ReleaseAction = new Class({
 				var status = Status.get(release.status_id),
 					quality = Quality.getProfile(release.quality_id) || {},
 					info = release.info;
-
-				if( status.identifier == 'ignored' || status.identifier == 'failed'){
-					self.last_release = release;
-				}
-				else if(!self.next_release && status.identifier == 'available'){
-					self.next_release = release;
-				}
+				release.status = status;
 
 				// Create release
 				new Element('div', {
-					'class': 'item '+status.identifier +
-						(self.next_release && self.next_release.id == release.id ? ' next_release' : '') +
-						(self.last_release && self.last_release.id == release.id ? ' last_release' : ''),
+					'class': 'item '+status.identifier,
 					'id': 'release_'+release.id
 				}).adopt(
 					new Element('span.name', {'text': self.get(release, 'name'), 'title': self.get(release, 'name')}),
@@ -466,11 +458,27 @@ var ReleaseAction = new Class({
 						}
 					})
 				).inject(self.release_container)
+
+				if(status.identifier == 'ignored' || status.identifier == 'failed' || status.identifier == 'snatched'){
+					if(!self.last_release || (self.last_release && self.last_release.status.identifier != 'snatched' && status.identifier == 'snatched'))
+						self.last_release = release;
+				}
+				else if(!self.next_release && status.identifier == 'available'){
+					self.next_release = release;
+				}
 			});
+			
+			if(self.last_release){
+				self.release_container.getElement('#release_'+self.last_release.id).addClass('last_release');
+			}
+			
+			if(self.next_release){
+				self.release_container.getElement('#release_'+self.next_release.id).addClass('next_release');
+			}
 
 			self.trynext_container.adopt(
 				new Element('span.or', {
-					'text': 'Download'
+					'text': 'This movie is snatched, if anything went wrong, download'
 				}),
 				self.last_release ? new Element('a.button.orange', {
 					'text': 'the same release again',
@@ -479,7 +487,7 @@ var ReleaseAction = new Class({
 					}
 				}) : null,
 				self.next_release && self.last_release ? new Element('span.or', {
-					'text': 'or'
+					'text': ','
 				}) : null,
 				self.next_release ? [new Element('a.button.green', {
 					'text': self.last_release ? 'another release' : 'the best release',
