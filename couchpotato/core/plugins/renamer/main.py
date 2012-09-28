@@ -20,6 +20,7 @@ log = CPLog(__name__)
 class Renamer(Plugin):
 
     renaming_started = False
+    checking_snatched = False
 
     def __init__(self):
 
@@ -33,6 +34,7 @@ class Renamer(Plugin):
         addEvent('app.load', self.scan)
 
         fireEvent('schedule.interval', 'renamer.check_snatched', self.checkSnatched, minutes = self.conf('run_every'))
+        fireEvent('schedule.interval', 'renamer.check_snatched_forced', self.scan, hours = 2)
 
     def scanView(self):
 
@@ -495,6 +497,11 @@ class Renamer(Plugin):
             loge('Couldn\'t remove empty directory %s: %s', (folder, traceback.format_exc()))
 
     def checkSnatched(self):
+        if self.checking_snatched:
+            log.debug('Already checking snatched')
+
+        self.checking_snatched = True
+
         snatched_status = fireEvent('status.get', 'snatched', single = True)
         ignored_status = fireEvent('status.get', 'ignored', single = True)
         failed_status = fireEvent('status.get', 'failed', single = True)
@@ -504,81 +511,75 @@ class Renamer(Plugin):
         db = get_session()
         rels = db.query(Release).filter_by(status_id = snatched_status.get('id')).all()
 
+        scan_required = False
+
         if rels:
+            self.checking_snatched = True
             log.debug('Checking status snatched releases...')
             # get queue and history (once) from SABnzbd
-            queue, history = fireEvent('download.status', data = {}, movie = {}, single = True)
-
-        scan_required = False
-        
-        for rel in rels:
-
-            # Get current selected title
-            default_title = ''
-            for title in rel.movie.library.titles:
-                if title.default: default_title = title.title
-
-            # Check if movie has already completed and is manage tab (legacy db correction)
-            if rel.movie.status_id == done_status.get('id'):
-                log.debug('Found a completed movie with a snatched release : %s. Setting release status to ignored...' , default_title)
-                rel.status_id = ignored_status.get('id')
-                db.commit()
-                continue
-
-            item = {}
-            for info in rel.info:
-                item[info.identifier] = info.value
-
-            movie_dict = fireEvent('movie.get', rel.movie_id, single = True)
-
-            # check status
-            nzbname = self.createNzbName(item, movie_dict)
-            try:
-                for slot in queue['queue']['slots']:
-                    log.debug('Found %s in SabNZBd queue, which is %s, with %s left', (slot['filename'], slot['status'], slot['timeleft']))
-                    if slot['filename'] == nzbname:
-                        downloadstatus =['status'].lower()
-            except:
-                log.debug('No items in queue: %s', (traceback.format_exc()))
-            try:
-                for slot in history['history']['slots']:
-                    log.debug('Found %s in SabNZBd history, which has %s', (slot['name'], slot['status']))
-                    if slot['name'] == nzbname:
-                        # Note: if post process even if failed is on in SabNZBd, it will complete with a fail message
-                        if slot['status'] == 'Failed' or (slot['status'] == 'Completed' and slot['fail_message'].strip()):
-
-                            # Delete failed download
-                            rel_remove = fireEvent('download.remove', name = slot['name'], nzo_id = slot['nzo_id'], single = True)
-                            downloadstatus = 'failed'
-                        else:
-                            downloadstatus = slot['status'].lower()
-            except:
-                log.debug('No items in history: %s', (traceback.format_exc()))
-
-            if not downloadstatus:
+            statuses = fireEvent('download.status', merge = True)
+            if not statuses:
                 log.debug('Download status functionality is not implemented for active downloaders.')
                 scan_required = True
-            else:
-                log.debug('Download status: %s' , downloadstatus)
 
-                if downloadstatus == 'failed':
-                    if self.conf('next_on_failed'):
-                        fireEvent('searcher.try_next_release', movie_id = rel.movie_id)
-                    else:
-                        rel.status_id = failed_status.get('id')
+            try:
+                for rel in rels:
+                    rel_dict = rel.to_dict({'info': {}})
+
+                    # Get current selected title
+                    default_title = getTitle(rel.movie.library)
+
+                    # Check if movie has already completed and is manage tab (legacy db correction)
+                    if rel.movie.status_id == done_status.get('id'):
+                        log.debug('Found a completed movie with a snatched release : %s. Setting release status to ignored...' , default_title)
+                        rel.status_id = ignored_status.get('id')
+                        db.commit()
+                        continue
+
+                    movie_dict = fireEvent('movie.get', rel.movie_id, single = True)
+
+                    # check status
+                    nzbname = self.createNzbName(rel_dict['info'], movie_dict)
+
+                    found = False
+                    for item in statuses:
+                        if item['name'] == nzbname:
+
+                            timeleft = 'N/A' if item['timeleft'] == -1 else item['timeleft']
+                            log.debug('Found %s: %s, time to go: %s', (item['name'], item['status'].upper(), timeleft))
+
+                            if item['status'] == 'busy':
+                                pass
+                            elif item['status'] == 'failed':
+                                if item['delete']:
+                                    fireEvent('download.remove_failed', item, single = True)
+
+                                if self.conf('next_on_failed'):
+                                    fireEvent('searcher.try_next_release', movie_id = rel.movie_id)
+                                else:
+                                    rel.status_id = failed_status.get('id')
+                                    db.commit()
+                            elif item['status'] == 'completed':
+                                log.info('Download of %s completed!', item['name'])
+                                scan_required = True
+
+                            found = True
+                            break
+
+                    if not found:
+                        log.info('%s not found in downloaders', nzbname)
+                        rel.status_id = ignored_status.get('id')
                         db.commit()
 
-                        log.info('Download of %s failed.', item['name'])
+                        if self.conf('next_on_failed'):
+                            fireEvent('searcher.try_next_release', movie_id = rel.movie_id)
 
-                elif downloadstatus == 'completed':
-                    log.info('Download of %s completed!', item['name'])
-                    scan_required = True
+            except:
+                log.error('Failed checking for release in downloader: %s', traceback.format_exc())
 
-                elif downloadstatus == 'not_found':
-                    log.info('%s not found in downloaders', item['name'])
-                    rel.status_id = ignored_status.get('id')
-                    db.commit()
-
-        # Note that Queued, Downloading, Paused, Repair and Unpackimg are also available as status for SabNZBd
         if scan_required:
             fireEvent('renamer.scan')
+
+        self.checking_snatched = False
+
+        return True

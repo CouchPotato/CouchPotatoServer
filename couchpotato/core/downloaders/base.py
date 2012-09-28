@@ -1,10 +1,7 @@
 from base64 import b32decode, b16encode
 from couchpotato.core.event import addEvent
-from couchpotato.core.helpers.encoding import toSafeString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.environment import Env
-import os
 import random
 import re
 
@@ -23,33 +20,17 @@ class Downloader(Plugin):
 
     def __init__(self):
         addEvent('download', self.download)
-        addEvent('download.status', self.getDownloadStatus)
-        addEvent('download.remove', self.remove)
+        addEvent('download.status', self.getAllDownloadStatus)
+        addEvent('download.remove_failed', self.removeFailed)
 
     def download(self, data = {}, movie = {}, manual = False, filedata = None):
         pass
 
-    def getDownloadStatus(self, data = {}, movie = {}):
+    def getAllDownloadStatus(self):
         return False
 
-    def remove(self, name = {}, nzo_id = {}):
+    def removeFailed(self, name = {}, nzo_id = {}):
         return False
-
-    def createNzbName(self, data, movie):
-        tag = self.cpTag(movie)
-        return '%s%s' % (toSafeString(data.get('name')[:127 - len(tag)]), tag)
-
-    def createFileName(self, data, filedata, movie):
-        name = os.path.join(self.createNzbName(data, movie))
-        if data.get('type') == 'nzb' and 'DOCTYPE nzb' not in filedata and '</nzb>' not in filedata:
-            return '%s.%s' % (name, 'rar')
-        return '%s.%s' % (name, data.get('type'))
-
-    def cpTag(self, movie):
-        if Env.setting('enabled', 'renamer'):
-            return '.cp(' + movie['library'].get('identifier') + ')' if movie['library'].get('identifier') else ''
-
-        return ''
 
     def isCorrectType(self, item_type):
         is_correct = item_type in self.type
