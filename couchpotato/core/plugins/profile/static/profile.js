@@ -242,7 +242,7 @@ Profile.Type = new Class({
 			),
 			new Element('span.finish').adopt(
 				self.finish = new Element('input.inlay.finish[type=checkbox]', {
-					'checked': data.finish,
+					'checked': data.finish !== undefined ? data.finish : 1,
 					'events': {
 						'change': function(e){
 							if(self.el == self.el.getParent().getElement(':first-child')){
