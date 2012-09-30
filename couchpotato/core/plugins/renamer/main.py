@@ -521,61 +521,61 @@ class Renamer(Plugin):
             if not statuses:
                 log.debug('Download status functionality is not implemented for active downloaders.')
                 scan_required = True
+            else:
+                try:
+                    for rel in rels:
+                        rel_dict = rel.to_dict({'info': {}})
 
-            try:
-                for rel in rels:
-                    rel_dict = rel.to_dict({'info': {}})
+                        # Get current selected title
+                        default_title = getTitle(rel.movie.library)
 
-                    # Get current selected title
-                    default_title = getTitle(rel.movie.library)
+                        # Check if movie has already completed and is manage tab (legacy db correction)
+                        if rel.movie.status_id == done_status.get('id'):
+                            log.debug('Found a completed movie with a snatched release : %s. Setting release status to ignored...' , default_title)
+                            rel.status_id = ignored_status.get('id')
+                            db.commit()
+                            continue
 
-                    # Check if movie has already completed and is manage tab (legacy db correction)
-                    if rel.movie.status_id == done_status.get('id'):
-                        log.debug('Found a completed movie with a snatched release : %s. Setting release status to ignored...' , default_title)
-                        rel.status_id = ignored_status.get('id')
-                        db.commit()
-                        continue
+                        movie_dict = fireEvent('movie.get', rel.movie_id, single = True)
 
-                    movie_dict = fireEvent('movie.get', rel.movie_id, single = True)
+                        # check status
+                        nzbname = self.createNzbName(rel_dict['info'], movie_dict)
 
-                    # check status
-                    nzbname = self.createNzbName(rel_dict['info'], movie_dict)
+                        found = False
+                        for item in statuses:
+                            if item['name'] == nzbname:
 
-                    found = False
-                    for item in statuses:
-                        if item['name'] == nzbname:
+                                timeleft = 'N/A' if item['timeleft'] == -1 else item['timeleft']
+                                log.debug('Found %s: %s, time to go: %s', (item['name'], item['status'].upper(), timeleft))
 
-                            timeleft = 'N/A' if item['timeleft'] == -1 else item['timeleft']
-                            log.debug('Found %s: %s, time to go: %s', (item['name'], item['status'].upper(), timeleft))
+                                if item['status'] == 'busy':
+                                    pass
+                                elif item['status'] == 'failed':
+                                    if item['delete']:
+                                        fireEvent('download.remove_failed', item, single = True)
 
-                            if item['status'] == 'busy':
-                                pass
-                            elif item['status'] == 'failed':
-                                if item['delete']:
-                                    fireEvent('download.remove_failed', item, single = True)
+                                    if self.conf('next_on_failed'):
+                                        fireEvent('searcher.try_next_release', movie_id = rel.movie_id)
+                                    else:
+                                        rel.status_id = failed_status.get('id')
+                                        db.commit()
+                                elif item['status'] == 'completed':
+                                    log.info('Download of %s completed!', item['name'])
+                                    scan_required = True
 
-                                if self.conf('next_on_failed'):
-                                    fireEvent('searcher.try_next_release', movie_id = rel.movie_id)
-                                else:
-                                    rel.status_id = failed_status.get('id')
-                                    db.commit()
-                            elif item['status'] == 'completed':
-                                log.info('Download of %s completed!', item['name'])
-                                scan_required = True
+                                found = True
+                                break
 
-                            found = True
-                            break
+                        if not found:
+                            log.info('%s not found in downloaders', nzbname)
+                            rel.status_id = ignored_status.get('id')
+                            db.commit()
 
-                    if not found:
-                        log.info('%s not found in downloaders', nzbname)
-                        rel.status_id = ignored_status.get('id')
-                        db.commit()
+                            if self.conf('next_on_failed'):
+                                fireEvent('searcher.try_next_release', movie_id = rel.movie_id)
 
-                        if self.conf('next_on_failed'):
-                            fireEvent('searcher.try_next_release', movie_id = rel.movie_id)
-
-            except:
-                log.error('Failed checking for release in downloader: %s', traceback.format_exc())
+                except:
+                    log.error('Failed checking for release in downloader: %s', traceback.format_exc())
 
         if scan_required:
             fireEvent('renamer.scan')
