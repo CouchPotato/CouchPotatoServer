@@ -383,7 +383,7 @@ var ReleaseAction = new Class({
 
 			var status = Status.get(release.status_id);
 
-			if((status.identifier == 'ignored' || status.identifier == 'failed') || (!self.next_release && status.identifier == 'available')){
+			if((self.next_release && (status.identifier == 'ignored' || status.identifier == 'failed')) || (!self.next_release && status.identifier == 'available')){
 				self.hide_on_click = false;
 				self.show();
 				buttons_done = true;
