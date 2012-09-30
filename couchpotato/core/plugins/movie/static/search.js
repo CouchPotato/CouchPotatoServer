@@ -339,7 +339,7 @@ Block.Search.Item = new Class({
 						'height': null,
 						'width': null
 					}) : null,
-					self.info.in_wanted ? new Element('span.in_wanted', {
+					self.info.in_wanted && self.info.in_wanted.profile ? new Element('span.in_wanted', {
 						'text': 'Already in wanted list: ' + self.info.in_wanted.profile.label
 					}) : (in_library ? new Element('span.in_library', {
 						'text': 'Already in library: ' + in_library.join(', ')
