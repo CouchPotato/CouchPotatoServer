@@ -551,8 +551,7 @@ class Renamer(Plugin):
                                 if item['status'] == 'busy':
                                     pass
                                 elif item['status'] == 'failed':
-                                    if item['delete']:
-                                        fireEvent('download.remove_failed', item, single = True)
+                                    fireEvent('download.remove_failed', item, single = True)
 
                                     if self.conf('next_on_failed'):
                                         fireEvent('searcher.try_next_release', movie_id = rel.movie_id)
