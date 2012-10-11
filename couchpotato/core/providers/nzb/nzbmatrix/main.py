@@ -21,9 +21,8 @@ class NZBMatrix(NZBProvider, RSS):
 
     cat_ids = [
         ([50], ['bd50']),
-        ([42, 53], ['720p', '1080p']),
-        ([2, 9], ['cam', 'ts', 'dvdrip', 'tc', 'r5', 'scr']),
-        ([54], ['brrip']),
+        ([42, 53, 54], ['720p', '1080p', 'brrip']),
+        ([2, 4, 9], ['cam', 'ts', 'dvdrip', 'tc', 'r5', 'scr']),
         ([1], ['dvdr']),
     ]
     cat_backup_id = 2
