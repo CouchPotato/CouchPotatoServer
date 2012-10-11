@@ -1,7 +1,8 @@
 from StringIO import StringIO
 from couchpotato import addView
 from couchpotato.core.event import fireEvent, addEvent
-from couchpotato.core.helpers.encoding import tryUrlencode, simplifyString, ss
+from couchpotato.core.helpers.encoding import tryUrlencode, simplifyString, ss, \
+    toSafeString
 from couchpotato.core.helpers.variable import getExt
 from couchpotato.core.logger import CPLog
 from couchpotato.environment import Env
@@ -244,6 +245,22 @@ class Plugin(object):
         log.debug('Setting cache %s', cache_key)
         Env.get('cache').set(cache_key, value, timeout)
         return value
+
+    def createNzbName(self, data, movie):
+        tag = self.cpTag(movie)
+        return '%s%s' % (toSafeString(data.get('name')[:127 - len(tag)]), tag)
+
+    def createFileName(self, data, filedata, movie):
+        name = os.path.join(self.createNzbName(data, movie))
+        if data.get('type') == 'nzb' and 'DOCTYPE nzb' not in filedata and '</nzb>' not in filedata:
+            return '%s.%s' % (name, 'rar')
+        return '%s.%s' % (name, data.get('type'))
+
+    def cpTag(self, movie):
+        if Env.setting('enabled', 'renamer'):
+            return '.cp(' + movie['library'].get('identifier') + ')' if movie['library'].get('identifier') else ''
+
+        return ''
 
     def isDisabled(self):
         return not self.isEnabled()
