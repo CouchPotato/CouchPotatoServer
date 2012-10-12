@@ -77,3 +77,7 @@
 		display: block;
 		text-align: center;
 	}
+
+.page.wizard .tab_nzb_providers {
+	margin: 20px 0 0 0;
+}

@@ -41,7 +41,8 @@ Page.Wizard = new Class({
 		},
 		'providers': {
 			'title': 'Are you registered at any of these sites?',
-			'description': 'CP uses these sites to search for movies. A few free are enabled by default, but it\'s always better to have a few more. Check settings for the full list of available providers.'
+			'description': 'CP uses these sites to search for movies. A few free are enabled by default, but it\'s always better to have a few more. Check settings for the full list of available providers.',
+			'include': ['nzb_providers', 'torrent_providers']
 		},
 		'renamer': {
 			'title': 'Move & rename the movies after downloading?',
@@ -49,59 +50,18 @@ Page.Wizard = new Class({
 		},
 		'automation': {
 			'title': 'Easily add movies to your wanted list!',
-			'description': 'You can easily add movies from your favorite movie site, like IMDB, Rotten Tomatoes, Apple Trailers and more. Just install the userscript or drag the bookmarklet to your browsers bookmarks.' + 
+			'description': 'You can easily add movies from your favorite movie site, like IMDB, Rotten Tomatoes, Apple Trailers and more. Just install the userscript or drag the bookmarklet to your browsers bookmarks.' +
 				'<br />Once installed, just click the bookmarklet on a movie page and watch the magic happen ;)',
 			'content': function(){
-
-				// See if userscript can be installed
-				var userscript = false;
-				try {
-					if(Components.interfaces.gmIGreasemonkeyService)
-						userscript = true
-				}
-				catch(e){
-					userscript = Browser.chrome === true;
-				}
-
-				var host_url = window.location.protocol + '//' + window.location.host;
-				
-				var el = new Element('div.group_userscript').adopt(
-
-					(userscript ? [new Element('a.userscript.button', {
-						'text': 'Install userscript',
-						'href': Api.createUrl('userscript.get')+randomString()+'/couchpotato.user.js',
-						'target': '_self'
-					}), new Element('span.or[text=or]')] : null),
-					new Element('span.bookmarklet').adopt(
-						new Element('a.button.orange', {
-							'text': '+CouchPotato',
-							'href': "javascript:void((function(){var e=document.createElement('script');e.setAttribute('type','text/javascript');e.setAttribute('charset','UTF-8');e.setAttribute('src','" +
-									host_url + Api.createUrl('userscript.bookmark') +
-									"?host="+ encodeURI(host_url + Api.createUrl('userscript.get')+randomString()+'/') +
-							 		"&r='+Math.random()*99999999);document.body.appendChild(e)})());",
-							'target': '',
-							'events': {
-								'click': function(e){
-									(e).stop()
-									alert('Drag it to your bookmark ;)')
-								}
-							}
-						}),
-						new Element('span', {
-							'text': '⇽ Drag this to your bookmarks'
-						})
-					)
-				).setStyles({
+				return App.createUserscriptButtons().setStyles({
 					'background-image': "url('"+Api.createUrl('static/userscript/userscript.png')+"')"
-				});
-				
-				return el
+				})
 			}
 		},
 		'finish': {
 			'title': 'Finishing Up',
 			'description': 'Are you done? Did you fill in everything as much as possible?' +
-				'<br />Be sure to check the settings to see what more CP can do!<br /><br />' + 
+				'<br />Be sure to check the settings to see what more CP can do!<br /><br />' +
 				'<div class="wizard_support">After you\'ve used CP for a while, and you like it (which of course you will), consider supporting CP. Maybe even by writing some code. <br />Or by getting a subscription at <a href="https://usenetserver.com/partners/?a_aid=couchpotato&a_bid=3f357c6f">Usenet Server</a> or <a href="http://www.newshosting.com/partners/?a_aid=couchpotato&a_bid=a0b022df">Newshosting</a>.</div>',
 			'content': new Element('div').adopt(
 				new Element('a.button.green', {
@@ -167,6 +127,7 @@ Page.Wizard = new Class({
 		var tabs = self.el.getElement('.tabs');
 
 		self.groups.each(function(group, nr){
+
 			if(self.headers[group]){
 				group_container = new Element('.wgroup_'+group, {
 					'styles': {
@@ -176,6 +137,12 @@ Page.Wizard = new Class({
 						'duration': 350
 					}
 				});
+
+				if(self.headers[group].include){
+					self.headers[group].include.each(function(inc){
+						group_container.addClass('wgroup_'+inc);
+					})
+				}
 
 				var content = self.headers[group].content
 				group_container.adopt(
@@ -190,10 +157,35 @@ Page.Wizard = new Class({
 			}
 
 			var tab_navigation = tabs.getElement('.t_'+group);
+
+			if(!tab_navigation && self.headers[group] && self.headers[group].include){
+				tab_navigation = []
+				self.headers[group].include.each(function(inc){
+					tab_navigation.include(tabs.getElement('.t_'+inc));
+				})
+			}
+
 			if(tab_navigation && group_container){
-				tab_navigation.inject(tabs); // Tab navigation
-				self.el.getElement('.tab_'+group).inject(group_container); // Tab content
-				if(self.headers[group]){
+				tabs.adopt(tab_navigation); // Tab navigation
+
+				if(self.headers[group] && self.headers[group].include){
+
+					self.headers[group].include.each(function(inc){
+						self.el.getElement('.tab_'+inc).inject(group_container);
+					})
+
+					new Element('li.t_'+group).adopt(
+						new Element('a', {
+							'href': App.createUrl('wizard/'+group),
+							'text': (self.headers[group].label || group).capitalize()
+						})
+					).inject(tabs);
+
+				}
+				else
+					self.el.getElement('.tab_'+group).inject(group_container); // Tab content
+
+				if(tab_navigation.getElement && self.headers[group]){
 					var a = tab_navigation.getElement('a');
 						a.set('text', (self.headers[group].label || group).capitalize());
 						var url_split = a.get('href').split('wizard')[1].split('/');
@@ -221,6 +213,8 @@ Page.Wizard = new Class({
 		// Hide retention
 		self.el.getElement('.tab_searcher').hide();
 		self.el.getElement('.t_searcher').hide();
+		self.el.getElement('.t_nzb_providers').hide();
+		self.el.getElement('.t_torrent_providers').hide();
 
 		// Add pointer
 		new Element('.tab_wrapper').wraps(tabs).adopt(
