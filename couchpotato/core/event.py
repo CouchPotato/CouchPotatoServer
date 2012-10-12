@@ -57,8 +57,9 @@ def fireEvent(name, *args, **kwargs):
         # Do options
         for x in options:
             try:
+                val = kwargs[x]
                 del kwargs[x]
-                options[x] = True
+                options[x] = val
             except: pass
 
         e = events[name]
