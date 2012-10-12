@@ -391,9 +391,11 @@ class Searcher(Plugin):
         year_name = fireEvent('scanner.name_year', name, single = True)
         if movie_year < datetime.datetime.now().year - 3 and not year_name.get('year', None):
             if size > 3000: # Assume dvdr
-                return 'dvdr' == preferred_quality['identifier']
+                log.info('Quality was missing in name, assuming it\'s a DVD-R based on the size: %s', (size))
+                found['dvdr'] = True
             else: # Assume dvdrip
-                return 'dvdrip' == preferred_quality['identifier']
+                log.info('Quality was missing in name, assuming it\'s a DVD-Rip based on the size: %s', (size))
+                found['dvdrip'] = True
 
         # Allow other qualities
         for allowed in preferred_quality.get('allow'):
