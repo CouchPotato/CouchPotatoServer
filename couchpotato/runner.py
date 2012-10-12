@@ -170,18 +170,17 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
         log.warning('%s %s %s line:%s', (category, message, filename, lineno))
     warnings.showwarning = customwarn
 
+    # Check if database exists
+    db = Env.get('db_path')
+    db_exists = os.path.isfile(db_path)
 
     # Load configs & plugins
     loader = Env.get('loader')
     loader.preload(root = base_path)
     loader.run()
 
-
     # Load migrations
-    initialize = True
-    db = Env.get('db_path')
-    if os.path.isfile(db_path):
-        initialize = False
+    if db_exists:
 
         from migrate.versioning.api import version_control, db_version, version, upgrade
         repo = os.path.join(base_path, 'couchpotato', 'core', 'migration')
@@ -201,7 +200,8 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     from couchpotato.core.settings.model import setup
     setup()
 
-    if initialize:
+    # Fill database with needed stuff
+    if not db_exists:
         fireEvent('app.initialize', in_order = True)
 
     # Create app
