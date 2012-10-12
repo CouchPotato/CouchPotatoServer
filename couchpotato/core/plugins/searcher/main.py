@@ -110,7 +110,6 @@ class Searcher(Plugin):
             if self.shuttingDown():
                 break
 
-        #db.close()
         self.in_progress = False
 
     def single(self, movie):
@@ -229,7 +228,6 @@ class Searcher(Plugin):
 
         fireEvent('notify.frontend', type = 'searcher.ended.%s' % movie['id'], data = True)
 
-        #db.close()
         return ret
 
     def download(self, data, movie, manual = False):
@@ -280,7 +278,6 @@ class Searcher(Plugin):
                 except Exception, e:
                     log.error('Failed marking movie finished: %s %s', (e, traceback.format_exc()))
 
-            #db.close()
             return True
 
         log.info('Tried to download, but none of the downloaders are enabled')

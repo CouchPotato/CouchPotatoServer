@@ -94,7 +94,6 @@ class CouchPotatoApi(MovieProvider):
             db = get_session()
             active_movies = db.query(Movie).filter(Movie.status.has(identifier = 'active')).all()
             movies = [x.library.identifier for x in active_movies]
-            #db.close()
 
         suggestions = self.suggest(movies, ignore)
 

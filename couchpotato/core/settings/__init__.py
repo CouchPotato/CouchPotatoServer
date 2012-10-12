@@ -204,7 +204,6 @@ class Settings(object):
         except:
             pass
 
-        #db.close()
         return prop
 
     def setProperty(self, identifier, value = ''):
@@ -221,4 +220,3 @@ class Settings(object):
         p.value = toUnicode(value)
 
         db.commit()
-        #db.close()
