@@ -53,7 +53,6 @@ class LibraryPlugin(Plugin):
 
         library_dict = l.to_dict(self.default_dict)
 
-        #db.close()
         return library_dict
 
     def update(self, identifier, default_title = '', force = False):

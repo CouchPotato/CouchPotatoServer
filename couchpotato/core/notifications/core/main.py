@@ -79,7 +79,6 @@ class CoreNotifier(Notification):
         q.update({Notif.read: True})
 
         db.commit()
-        #db.close()
 
         return jsonified({
             'success': True
@@ -107,7 +106,6 @@ class CoreNotifier(Notification):
             ndict['type'] = 'notification'
             notifications.append(ndict)
 
-        #db.close()
         return jsonified({
             'success': True,
             'empty': len(notifications) == 0,
@@ -133,7 +131,6 @@ class CoreNotifier(Notification):
 
         self.frontend(type = listener, data = data)
 
-        #db.close()
         return True
 
     def frontend(self, type = 'notification', data = {}, message = None):

@@ -8,7 +8,7 @@ config = [{
     'groups': [
         {
             'tab': 'searcher',
-            'subtab': 'providers',
+            'subtab': 'nzb_providers',
             'name': 'NZBClub',
             'description': 'Free provider, less accurate. See <a href="https://www.nzbclub.com/">NZBClub</a>',
             'options': [

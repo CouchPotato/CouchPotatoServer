@@ -8,7 +8,7 @@ config = [{
     'groups': [
         {
             'tab': 'searcher',
-            'subtab': 'providers',
+            'subtab': 'torrent_providers',
             'name': 'SceneAccess',
             'description': 'See <a href="https://sceneaccess.eu/">SceneAccess</a>',
             'options': [

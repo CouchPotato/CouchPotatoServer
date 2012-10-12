@@ -11,7 +11,6 @@ config = [{
             'name': 'nzbget',
             'label': 'NZBGet',
             'description': 'Send NZBs to your NZBGet installation.',
-            'wizard': True,
             'options': [
                 {
                     'name': 'enabled',

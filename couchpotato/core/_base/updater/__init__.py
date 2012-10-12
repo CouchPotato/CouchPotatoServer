@@ -1,4 +1,6 @@
 from .main import Updater
+from couchpotato.environment import Env
+import os
 
 def start():
     return Updater()
@@ -33,6 +35,7 @@ config = [{
                 {
                     'name': 'git_command',
                     'default': 'git',
+                    'hidden': not os.path.isdir(os.path.join(Env.get('app_dir'), '.git')),
                     'advanced': True
                 },
             ],

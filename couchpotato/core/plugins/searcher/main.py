@@ -1,6 +1,6 @@
 from couchpotato import get_session
 from couchpotato.api import addApiView
-from couchpotato.core.event import addEvent, fireEvent
+from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
 from couchpotato.core.helpers.encoding import simplifyString, toUnicode
 from couchpotato.core.helpers.request import jsonified, getParam
 from couchpotato.core.helpers.variable import md5, getTitle
@@ -36,9 +36,38 @@ class Searcher(Plugin):
             },
         })
 
+        addApiView('searcher.full_search', self.allMoviesView, docs = {
+            'desc': 'Starts a full search for all wanted movies',
+        })
+
+        addApiView('searcher.progress', self.getProgress, docs = {
+            'desc': 'Get the progress of current full search',
+            'return': {'type': 'object', 'example': """{
+    'progress': False || object, total & to_go,
+}"""},
+        })
+
         # Schedule cronjob
         fireEvent('schedule.cron', 'searcher.all', self.allMovies, day = self.conf('cron_day'), hour = self.conf('cron_hour'), minute = self.conf('cron_minute'))
 
+    def allMoviesView(self):
+
+        in_progress = self.in_progress
+        if not in_progress:
+            fireEventAsync('searcher.all')
+            fireEvent('notify.frontend', type = 'searcher.started', data = True, message = 'Full search started')
+        else:
+            fireEvent('notify.frontend', type = 'searcher.already_started', data = True, message = 'Full search already in progress')
+
+        return jsonified({
+            'success': not in_progress
+        })
+
+    def getProgress(self):
+
+        return jsonified({
+            'progress': self.in_progress
+        })
 
     def allMovies(self):
 
@@ -54,6 +83,11 @@ class Searcher(Plugin):
             Movie.status.has(identifier = 'active')
         ).all()
 
+        self.in_progress = {
+            'total': len(movies),
+            'to_go': len(movies),
+        }
+
         for movie in movies:
             movie_dict = movie.to_dict({
                 'profile': {'types': {'quality': {}}},
@@ -65,15 +99,17 @@ class Searcher(Plugin):
             try:
                 self.single(movie_dict)
             except IndexError:
+                log.error('Forcing library update for %s, if you see this often, please report: %s', (movie_dict['library']['identifier'], traceback.format_exc()))
                 fireEvent('library.update', movie_dict['library']['identifier'], force = True)
             except:
                 log.error('Search failed for %s: %s', (movie_dict['library']['identifier'], traceback.format_exc()))
+
+            self.in_progress['to_go'] -= 1
 
             # Break if CP wants to shut down
             if self.shuttingDown():
                 break
 
-        #db.close()
         self.in_progress = False
 
     def single(self, movie):
@@ -192,7 +228,6 @@ class Searcher(Plugin):
 
         fireEvent('notify.frontend', type = 'searcher.ended.%s' % movie['id'], data = True)
 
-        #db.close()
         return ret
 
     def download(self, data, movie, manual = False):
@@ -243,7 +278,6 @@ class Searcher(Plugin):
                 except Exception, e:
                     log.error('Failed marking movie finished: %s %s', (e, traceback.format_exc()))
 
-            #db.close()
             return True
 
         log.info('Tried to download, but none of the downloaders are enabled')
@@ -254,7 +288,7 @@ class Searcher(Plugin):
         imdb_results = kwargs.get('imdb_results', False)
         retention = Env.setting('retention', section = 'nzb')
 
-        if nzb.get('seeds') is None and retention < nzb.get('age', 0):
+        if nzb.get('seeds') is None and 0 < retention < nzb.get('age', 0):
             log.info('Wrong: Outside retention, age is %s, needs %s or lower: %s', (nzb['age'], retention, nzb['name']))
             return False
 
@@ -354,9 +388,11 @@ class Searcher(Plugin):
         year_name = fireEvent('scanner.name_year', name, single = True)
         if movie_year < datetime.datetime.now().year - 3 and not year_name.get('year', None):
             if size > 3000: # Assume dvdr
-                return 'dvdr' == preferred_quality['identifier']
+                log.info('Quality was missing in name, assuming it\'s a DVD-R based on the size: %s', (size))
+                found['dvdr'] = True
             else: # Assume dvdrip
-                return 'dvdrip' == preferred_quality['identifier']
+                log.info('Quality was missing in name, assuming it\'s a DVD-Rip based on the size: %s', (size))
+                found['dvdrip'] = True
 
         # Allow other qualities
         for allowed in preferred_quality.get('allow'):
@@ -410,6 +446,11 @@ class Searcher(Plugin):
         if not dates or (dates.get('theater', 0) == 0 and dates.get('dvd', 0) == 0):
             return True
         else:
+
+            # For movies before 1972
+            if dates.get('theater', 0) < 0 or dates.get('dvd', 0) < 0:
+                return True
+
             if wanted_quality in pre_releases:
                 # Prerelease 1 week before theaters
                 if dates.get('theater') - 604800 < now:

@@ -281,6 +281,47 @@ var CouchPotato = new Class({
 			window.open(url);
 		else
 			window.location = url;
+	},
+
+	createUserscriptButtons: function(){
+
+		var userscript = false;
+		try {
+			if(Components.interfaces.gmIGreasemonkeyService)
+				userscript = true
+		}
+		catch(e){
+			userscript = Browser.chrome === true;
+		}
+
+		var host_url = window.location.protocol + '//' + window.location.host;
+
+		return new Element('div.group_userscript').adopt(
+			(userscript ? [new Element('a.userscript.button', {
+				'text': 'Install userscript',
+				'href': Api.createUrl('userscript.get')+randomString()+'/couchpotato.user.js',
+				'target': '_self'
+			}), new Element('span.or[text=or]')] : null),
+			new Element('span.bookmarklet').adopt(
+				new Element('a.button.orange', {
+					'text': '+CouchPotato',
+					'href': "javascript:void((function(){var e=document.createElement('script');e.setAttribute('type','text/javascript');e.setAttribute('charset','UTF-8');e.setAttribute('src','" +
+							host_url + Api.createUrl('userscript.bookmark') +
+							"?host="+ encodeURI(host_url + Api.createUrl('userscript.get')+randomString()+'/') +
+					 		"&r='+Math.random()*99999999);document.body.appendChild(e)})());",
+					'target': '',
+					'events': {
+						'click': function(e){
+							(e).stop()
+							alert('Drag it to your bookmark ;)')
+						}
+					}
+				}),
+				new Element('span', {
+					'text': '⇽ Drag this to your bookmarks'
+				})
+			)
+		);
 	}
 
 });

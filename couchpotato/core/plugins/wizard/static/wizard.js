@@ -37,21 +37,37 @@ Page.Wizard = new Class({
 		},
 		'downloaders': {
 			'title': 'What download apps are you using?',
-			'description': 'If you don\'t have any of these listed, you have to use Blackhole. Or drop me a line, maybe I\'ll support your download app.'
+			'description': 'CP needs an external download app to work with. Choose one below. For more downloaders check settings after you have filled in the wizard. If your download app isn\'t in the list, use Blackhole.'
 		},
 		'providers': {
 			'title': 'Are you registered at any of these sites?',
-			'description': 'CP uses these sites to search for movies. A few free are enabled by default, but it\'s always better to have a few more.'
+			'description': 'CP uses these sites to search for movies. A few free are enabled by default, but it\'s always better to have a few more. Check settings for the full list of available providers.',
+			'include': ['nzb_providers', 'torrent_providers']
 		},
 		'renamer': {
 			'title': 'Move & rename the movies after downloading?',
-			'description': ''
+			'description': 'The coolest part of CP is that it can move and organize your downloaded movies automagically. Check settings and you can even download trailers, subtitles and other data when it has finished downloading. It\'s awesome!'
+		},
+		'automation': {
+			'title': 'Easily add movies to your wanted list!',
+			'description': 'You can easily add movies from your favorite movie site, like IMDB, Rotten Tomatoes, Apple Trailers and more. Just install the userscript or drag the bookmarklet to your browsers bookmarks.' +
+				'<br />Once installed, just click the bookmarklet on a movie page and watch the magic happen ;)',
+			'content': function(){
+				return App.createUserscriptButtons().setStyles({
+					'background-image': "url('"+Api.createUrl('static/userscript/userscript.png')+"')"
+				})
+			}
 		},
 		'finish': {
-			'title': 'Finish Up',
-			'description': 'Are you done? Did you fill in everything as much as possible? Yes, ok gogogo!',
+			'title': 'Finishing Up',
+			'description': 'Are you done? Did you fill in everything as much as possible?' +
+				'<br />Be sure to check the settings to see what more CP can do!<br /><br />' +
+				'<div class="wizard_support">After you\'ve used CP for a while, and you like it (which of course you will), consider supporting CP. Maybe even by writing some code. <br />Or by getting a subscription at <a href="https://usenetserver.com/partners/?a_aid=couchpotato&a_bid=3f357c6f">Usenet Server</a> or <a href="http://www.newshosting.com/partners/?a_aid=couchpotato&a_bid=a0b022df">Newshosting</a>.</div>',
 			'content': new Element('div').adopt(
 				new Element('a.button.green', {
+					'styles': {
+						'margin-top': 20
+					},
 					'text': 'I\'m ready to start the awesomeness, wow this button is big and green!',
 					'events': {
 						'click': function(e){
@@ -76,7 +92,7 @@ Page.Wizard = new Class({
 			)
 		}
 	},
-	groups: ['welcome', 'general', 'downloaders', 'searcher', 'providers', 'renamer', 'finish'],
+	groups: ['welcome', 'general', 'downloaders', 'searcher', 'providers', 'renamer', 'automation', 'finish'],
 
 	open: function(action, params){
 		var self = this;
@@ -110,7 +126,8 @@ Page.Wizard = new Class({
 		var form = self.el.getElement('.uniForm');
 		var tabs = self.el.getElement('.tabs');
 
-		self.groups.each(function(group){
+		self.groups.each(function(group, nr){
+
 			if(self.headers[group]){
 				group_container = new Element('.wgroup_'+group, {
 					'styles': {
@@ -120,6 +137,14 @@ Page.Wizard = new Class({
 						'duration': 350
 					}
 				});
+
+				if(self.headers[group].include){
+					self.headers[group].include.each(function(inc){
+						group_container.addClass('wgroup_'+inc);
+					})
+				}
+
+				var content = self.headers[group].content
 				group_container.adopt(
 					new Element('h1', {
 						'text': self.headers[group].title
@@ -127,15 +152,40 @@ Page.Wizard = new Class({
 					self.headers[group].description ? new Element('span.description', {
 						'html': self.headers[group].description
 					}) : null,
-					self.headers[group].content ? self.headers[group].content : null
+					content ? (typeOf(content) == 'function' ? content() : content) : null
 				).inject(form);
 			}
 
 			var tab_navigation = tabs.getElement('.t_'+group);
+
+			if(!tab_navigation && self.headers[group] && self.headers[group].include){
+				tab_navigation = []
+				self.headers[group].include.each(function(inc){
+					tab_navigation.include(tabs.getElement('.t_'+inc));
+				})
+			}
+
 			if(tab_navigation && group_container){
-				tab_navigation.inject(tabs); // Tab navigation
-				self.el.getElement('.tab_'+group).inject(group_container); // Tab content
-				if(self.headers[group]){
+				tabs.adopt(tab_navigation); // Tab navigation
+
+				if(self.headers[group] && self.headers[group].include){
+
+					self.headers[group].include.each(function(inc){
+						self.el.getElement('.tab_'+inc).inject(group_container);
+					})
+
+					new Element('li.t_'+group).adopt(
+						new Element('a', {
+							'href': App.createUrl('wizard/'+group),
+							'text': (self.headers[group].label || group).capitalize()
+						})
+					).inject(tabs);
+
+				}
+				else
+					self.el.getElement('.tab_'+group).inject(group_container); // Tab content
+
+				if(tab_navigation.getElement && self.headers[group]){
 					var a = tab_navigation.getElement('a');
 						a.set('text', (self.headers[group].label || group).capitalize());
 						var url_split = a.get('href').split('wizard')[1].split('/');
@@ -163,6 +213,8 @@ Page.Wizard = new Class({
 		// Hide retention
 		self.el.getElement('.tab_searcher').hide();
 		self.el.getElement('.t_searcher').hide();
+		self.el.getElement('.t_nzb_providers').hide();
+		self.el.getElement('.t_torrent_providers').hide();
 
 		// Add pointer
 		new Element('.tab_wrapper').wraps(tabs).adopt(
