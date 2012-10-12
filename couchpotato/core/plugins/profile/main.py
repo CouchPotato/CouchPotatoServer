@@ -181,10 +181,10 @@ class ProfilePlugin(Plugin):
                 )
                 p.types.append(profile_type)
 
-                db.commit()
                 quality_order += 1
 
             order += 1
 
-        #db.close()
+        db.commit()
+
         return True

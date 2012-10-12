@@ -9,6 +9,7 @@ from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Quality, Profile, ProfileType
 import os.path
 import re
+import time
 
 log = CPLog(__name__)
 
@@ -113,46 +114,48 @@ class QualityPlugin(Plugin):
         for q in self.qualities:
 
             # Create quality
-            quality = db.query(Quality).filter_by(identifier = q.get('identifier')).first()
+            qual = db.query(Quality).filter_by(identifier = q.get('identifier')).first()
 
-            if not quality:
+            if not qual:
                 log.info('Creating quality: %s', q.get('label'))
-                quality = Quality()
-                db.add(quality)
+                qual = Quality()
+                qual.order = order
+                qual.identifier = q.get('identifier')
+                qual.label = toUnicode(q.get('label'))
+                qual.size_min, qual.size_max = q.get('size')
 
-            quality.order = order
-            quality.identifier = q.get('identifier')
-            quality.label = toUnicode(q.get('label'))
-            quality.size_min, quality.size_max = q.get('size')
+                db.add(qual)
 
             # Create single quality profile
-            profile = db.query(Profile).filter(
+            prof = db.query(Profile).filter(
                     Profile.core == True
                 ).filter(
-                    Profile.types.any(quality = quality)
+                    Profile.types.any(quality = qual)
                 ).all()
 
-            if not profile:
+            if not prof:
                 log.info('Creating profile: %s', q.get('label'))
-                profile = Profile(
+                prof = Profile(
                     core = True,
-                    label = toUnicode(quality.label),
+                    label = toUnicode(qual.label),
                     order = order
                 )
-                db.add(profile)
+                db.add(prof)
 
                 profile_type = ProfileType(
-                    quality = quality,
-                    profile = profile,
+                    quality = qual,
+                    profile = prof,
                     finish = True,
                     order = 0
                 )
-                profile.types.append(profile_type)
+                prof.types.append(profile_type)
 
             order += 1
-            db.commit()
 
-        #db.close()
+        db.commit()
+
+        time.sleep(0.3) # Wait a moment
+
         return True
 
     def guess(self, files, extra = {}):
