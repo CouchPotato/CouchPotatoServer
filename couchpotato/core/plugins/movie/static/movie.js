@@ -42,6 +42,9 @@ var Movie = new Class({
 
 		self.el.destroy();
 		delete self.list.movies_added[self.get('id')];
+		self.list.movies.erase(self)
+
+		self.list.checkIfEmpty();
 
 		// Remove events
 		App.removeEvents('movie.update.'+self.data.id);
@@ -467,11 +470,11 @@ var ReleaseAction = new Class({
 					self.next_release = release;
 				}
 			});
-			
+
 			if(self.last_release){
 				self.release_container.getElement('#release_'+self.last_release.id).addClass('last_release');
 			}
-			
+
 			if(self.next_release){
 				self.release_container.getElement('#release_'+self.next_release.id).addClass('next_release');
 			}

@@ -18,13 +18,23 @@ Page.Wanted = new Class({
 				}
 			});
 
+			// See if userscript can be installed
+
+
 			// Wanted movies
 			self.wanted = new MovieList({
 				'identifier': 'wanted',
 				'status': 'active',
 				'actions': MovieActions,
 				'add_new': true,
-				'menu': [self.manual_search]
+				'menu': [self.manual_search],
+				'on_empty_element': App.createUserscriptButtons().setStyles({
+					'background-image': "url('"+Api.createUrl('static/images/emptylist.png')+"')",
+					'height': 750,
+					'width': 800,
+					'padding-top': 260,
+					'margin-top': -50
+				})
 			});
 			$(self.wanted).inject(self.el);
 
