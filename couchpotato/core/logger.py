@@ -5,7 +5,7 @@ import traceback
 class CPLog(object):
 
     context = ''
-    replace_private = ['api', 'apikey', 'api_key', 'password', 'username', 'h']
+    replace_private = ['api', 'apikey', 'api_key', 'password', 'username', 'h', 'uid', 'key']
 
     def __init__(self, context = ''):
         if context.endswith('.main'):
