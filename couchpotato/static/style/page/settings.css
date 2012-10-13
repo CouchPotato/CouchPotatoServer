@@ -16,7 +16,7 @@
 		padding: 40px 0;
 		margin: 0;
 		min-height: 470px;
-		background-image: linear-gradient(
+		background-image: -*-linear-gradient(
 		    20deg,
 		    rgba(0,0,0,0) 50%,
 		    rgba(0,0,0,0.3) 100%
@@ -365,7 +365,7 @@
 				border-radius: 2px;
 			}
 			.page .tag_input > ul:hover > li.choice {
-				background: linear-gradient(
+				background: -*-linear-gradient(
 				    270deg,
 				    rgba(255,255,255,0.3) 0%,
 				    rgba(255,255,255,0.1) 100%
@@ -373,7 +373,7 @@
 			}
 			.page .tag_input > ul > li.choice:hover,
 			.page .tag_input > ul > li.choice.selected {
-				background: linear-gradient(
+				background: -*-linear-gradient(
 				    270deg,
 				    #5b9bd1 0%,
 				    #406db8 100%
@@ -412,7 +412,7 @@
 				margin: -9px 0 0 -16px;
 				border-radius: 30px 30px 0 0;
 				cursor: pointer;
-				background: url('../../images/icon.delete.png') no-repeat center 2px, linear-gradient(
+				background: url('../../images/icon.delete.png') no-repeat center 2px, -*-linear-gradient(
 				   270deg,
 				    #5b9bd1 0%,
 				    #5b9bd1 100%
