@@ -409,12 +409,17 @@ class Searcher(Plugin):
 
         return False
 
-    def correctYear(self, haystack, year, range):
+    def correctYear(self, haystack, year, year_range):
 
         for string in haystack:
-            if str(year) in string or str(int(year) + range) in string or str(int(year) - range) in string: # 1 year of is fine too
+
+            year_name = fireEvent('scanner.name_year', string, single = True)
+
+            if year_name and ((year - year_range) <= year_name.get('year') <= (year + year_range)):
+                log.debug('Movie year matches range: %s looking for %s', (year_name.get('year'), year))
                 return True
 
+        log.debug('Movie year doesn\'t matche range: %s looking for %s', (year_name.get('year'), year))
         return False
 
     def correctName(self, check_name, movie_name):
