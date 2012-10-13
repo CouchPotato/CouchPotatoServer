@@ -29,7 +29,20 @@ Page.Manage = new Class({
 				'identifier': 'manage',
 				'status': 'done',
 				'actions': MovieActions,
-				'menu': [self.refresh_button, self.refresh_quick]
+				'menu': [self.refresh_button, self.refresh_quick],
+				'on_empty_element': new Element('div.empty_manage').adopt(
+					new Element('div', {
+						'text': 'Seems like you don\'t have anything in your library yet.'
+					}),
+					new Element('div', {
+						'text': 'Add your existing movie folders in '
+					}).adopt(
+						new Element('a', {
+							'text': 'Settings > Manage',
+							'href': App.createUrl('settings/manage')
+						})
+					)
+				)
 			});
 			$(self.list).inject(self.el);
 		}

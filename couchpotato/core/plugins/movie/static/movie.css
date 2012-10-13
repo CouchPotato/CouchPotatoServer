@@ -24,7 +24,7 @@
 		.movies .movie.list_view:hover, .movies .movie.mass_edit_view:hover {
 			background: rgba(255,255,255,0.03);
 		}
-		
+
 		.movies .movie_container {
 			overflow: hidden;
 		}
@@ -313,7 +313,7 @@
 					padding-bottom: 4px;
 					height: auto;
 				}
-				
+
 				.movies .movie .trailer_container {
 					width: 100%;
 					background: #000;
@@ -324,7 +324,7 @@
 					.movies .movie .trailer_container.hide {
 						height: 0 !important;
 					}
-				
+
 					.movies .movie .hide_trailer {
 						position: absolute;
 						top: 0;
@@ -340,12 +340,12 @@
 					.movies .movie .hide_trailer.hide {
 						top: -30px;
 					}
-						
+
 				.movies .movie .try_container {
 					padding: 5px 10px;
 					text-align: center;
 				}
-						
+
 					.movies .movie .try_container a {
 						margin: 0 5px;
 						padding: 2px 5px;
@@ -354,15 +354,15 @@
 					.movies .movie .releases .next_release {
 						border-left: 6px solid #2aa300;
 					}
-					
+
 						.movies .movie .releases .next_release > :first-child {
 							margin-left: -6px;
 						}
-						
+
 					.movies .movie .releases .last_release {
 						border-left: 6px solid #ffa200;
 					}
-					
+
 						.movies .movie .releases .last_release > :first-child {
 							margin-left: -6px;
 						}
@@ -394,8 +394,8 @@
 		border-radius: 0;
 	}
 
-.movies .alph_nav ul.numbers, 
-.movies .alph_nav .counter, 
+.movies .alph_nav ul.numbers,
+.movies .alph_nav .counter,
 .movies .alph_nav ul.actions {
 	list-style: none;
 	padding: 0 0 1px;
@@ -518,7 +518,7 @@
 				padding: 3px 7px;
 			}
 
-		.movies .alph_nav .mass_edit_form .refresh, 
+		.movies .alph_nav .mass_edit_form .refresh,
 		.movies .alph_nav .mass_edit_form .delete {
 			float: left;
 			padding: 8px 0 0 8px;
@@ -536,3 +536,17 @@
 		.movies .alph_nav .more_menu > a {
 			background-position: center -158px;
 		}
+
+.movies .empty_wanted {
+	background-image: url('../images/emptylist.png');
+	height: 750px;
+	width: 800px;
+	padding-top: 260px;
+	margin-top: -50px;
+}
+
+.movies .empty_manage {
+	text-align: center;
+	font-size: 25px;
+	line-height: 150%;
+}
