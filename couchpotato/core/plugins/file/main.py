@@ -5,6 +5,7 @@ from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.variable import md5, getExt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
+from couchpotato.core.plugins.scanner.main import Scanner
 from couchpotato.core.settings.model import FileType, File
 from couchpotato.environment import Env
 import os.path
@@ -30,6 +31,12 @@ class FileManager(Plugin):
         })
 
         addEvent('app.load', self.cleanup)
+        addEvent('app.load', self.init)
+
+    def init(self):
+
+        for type_tuple in Scanner.file_types.values():
+            self.getType(type_tuple)
 
     def cleanup(self):
 
