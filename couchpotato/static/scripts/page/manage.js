@@ -41,10 +41,23 @@ Page.Manage = new Class({
 							'text': 'Settings > Manage',
 							'href': App.createUrl('settings/manage')
 						})
+					),
+					new Element('div.after_manage', {
+						'text': 'When you\'ve done that, hit this button → '
+					}).adopt(
+						new Element('a.button.green', {
+							'text': 'Hit me, but not to hard',
+							'events':{
+								'click': self.refresh.bind(self, true)
+							}
+						})
 					)
 				)
 			});
 			$(self.list).inject(self.el);
+
+			// Check if search is in progress
+			self.startProgressInterval();
 		}
 
 	},
@@ -52,11 +65,55 @@ Page.Manage = new Class({
 	refresh: function(full){
 		var self = this;
 
-		Api.request('manage.update', {
-			'data': {
-				'full': +full
-			}
-		})
+		if(!self.update_in_progress){
+
+			Api.request('manage.update', {
+				'data': {
+					'full': +full
+				}
+			})
+
+			self.startProgressInterval();
+
+		}
+
+	},
+
+	startProgressInterval: function(){
+		var self = this;
+
+		self.progress_interval = setInterval(function(){
+
+			Api.request('manage.progress', {
+				'onComplete': function(json){
+					self.update_in_progress = true;
+
+					if(!json.progress){
+						clearInterval(self.progress_interval);
+						self.update_in_progress = false;
+						if(self.progress_container){
+							self.progress_container.destroy();
+							self.list.update();
+						}
+					}
+					else {
+						if(!self.progress_container)
+							self.progress_container = new Element('div.progress').inject(self.list.navigation, 'after')
+
+						self.progress_container.empty();
+
+						Object.each(json.progress, function(progress, folder){
+							new Element('div').adopt(
+								new Element('span.folder', {'text': folder}),
+								new Element('span.percentage', {'text': progress.total ? (((progress.total-progress.to_go)/progress.total)*100).round() + '%' : '0%'})
+							).inject(self.progress_container)
+						});
+
+					}
+				}
+			})
+
+		}, 1000);
 
 	}
 

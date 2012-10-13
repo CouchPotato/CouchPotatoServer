@@ -550,3 +550,51 @@
 	font-size: 25px;
 	line-height: 150%;
 }
+
+	.movies .empty_manage .after_manage {
+		margin-top: 30px;
+		font-size: 16px;
+	}
+
+	.movies .progress {
+		border-radius: 2px;
+		padding: 10px;
+		margin: 5px 0;
+		text-align: left;
+	}
+
+		.movies .progress > div {
+			padding: 5px 10px;
+			font-size: 12px;
+			line-height: 12px;
+			text-align: left;
+			display: inline-block;
+			width: 49%;
+			background: rgba(255, 255, 255, 0.05);
+			margin: 2px 0.5%;
+			border-radius: 3px;
+		}
+
+			.movies .progress > div .folder {
+				display: inline-block;
+				padding: 5px 20px 5px 0;
+			    white-space: nowrap;
+				text-overflow: ellipsis;
+				overflow: hidden;
+				width: 85%;
+				direction: rtl;
+				vertical-align: middle;
+			}
+
+			.movies .progress > div .percentage {
+				font-weight: bold;
+				display: inline-block;
+				text-transform: uppercase;
+				text-shadow: none;
+				font-weight: normal;
+				font-size: 20px;
+				border-left: 1px solid rgba(255, 255, 255, .2);
+				width: 15%;
+				text-align: right;
+				vertical-align: middle;
+			}

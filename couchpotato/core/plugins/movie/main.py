@@ -107,13 +107,18 @@ class MoviePlugin(Plugin):
     def get(self, movie_id):
 
         db = get_session()
-        m = db.query(Movie).filter_by(id = movie_id).first()
+
+        imdb_id = getImdb(str(movie_id))
+
+        if(imdb_id):
+            m = db.query(Movie).filter(Movie.library.has(identifier = imdb_id)).first()
+        else:
+            m = db.query(Movie).filter_by(id = movie_id).first()
 
         results = None
         if m:
             results = m.to_dict(self.default_dict)
 
-        #db.close()
         return results
 
     def list(self, status = ['active'], limit_offset = None, starts_with = None, search = None):

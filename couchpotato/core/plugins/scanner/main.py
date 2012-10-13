@@ -34,6 +34,7 @@ class Scanner(Plugin):
         'subtitle_extra': ['idx'],
         'trailer': ['mov', 'mp4', 'flv']
     }
+
     file_types = {
         'subtitle': ('subtitle', 'subtitle'),
         'subtitle_extra': ('subtitle', 'subtitle_extra'),
@@ -42,6 +43,8 @@ class Scanner(Plugin):
         'movie': ('video', 'movie'),
         'movie_extra': ('movie', 'movie_extra'),
         'backdrop': ('image', 'backdrop'),
+        'poster': ('image', 'poster'),
+        'thumbnail': ('image', 'thumbnail'),
         'leftover': ('leftover', 'leftover'),
     }
 
@@ -80,55 +83,10 @@ class Scanner(Plugin):
         addEvent('scanner.remove_cptag', self.removeCPTag)
 
         addEvent('scanner.scan', self.scan)
-        addEvent('scanner.files', self.scanFilesToLibrary)
-        addEvent('scanner.folder', self.scanFolderToLibrary)
         addEvent('scanner.name_year', self.getReleaseNameYear)
         addEvent('scanner.partnumber', self.getPartNumber)
 
-        def after_rename(group):
-            return self.scanFilesToLibrary(folder = group['destination_dir'], files = group['renamed_files'])
-
-        addEvent('renamer.after', after_rename)
-
-    def scanFilesToLibrary(self, folder = None, files = None):
-
-        folder = os.path.normpath(folder)
-
-        groups = self.scan(folder = folder, files = files)
-
-        for group in groups.itervalues():
-            if group['library']:
-                fireEvent('release.add', group = group)
-
-    def scanFolderToLibrary(self, folder = None, newer_than = 0, simple = True):
-
-        folder = os.path.normpath(folder)
-
-        if not os.path.isdir(folder):
-            return
-
-        groups = self.scan(folder = folder, simple = simple, newer_than = newer_than)
-
-        added_identifier = []
-        while True and not self.shuttingDown():
-            try:
-                identifier, group = groups.popitem()
-            except:
-                break
-
-            # Save to DB
-            if group['library']:
-
-                # Add release
-                fireEvent('release.add', group = group)
-                library_item = fireEvent('library.update', identifier = group['library'].get('identifier'), single = True)
-                if library_item:
-                    added_identifier.append(library_item['identifier'])
-
-        return added_identifier
-
-
-    def scan(self, folder = None, files = [], simple = False, newer_than = 0):
+    def scan(self, folder = None, files = [], simple = False, newer_than = 0, on_found = None):
 
         folder = ss(os.path.normpath(folder))
 
@@ -281,6 +239,7 @@ class Scanner(Plugin):
 
         # Determine file types
         processed_movies = {}
+        total_found = len(movie_files)
         while True and not self.shuttingDown():
             try:
                 identifier, group = movie_files.popitem()
@@ -395,8 +354,11 @@ class Scanner(Plugin):
                 movie = db.query(Movie).filter_by(library_id = group['library']['id']).first()
                 group['movie_id'] = None if not movie else movie.id
 
-
             processed_movies[identifier] = group
+
+            # Notify parent & progress on something found
+            if on_found:
+                on_found(group, total_found, total_found - len(processed_movies))
 
         if len(processed_movies) > 0:
             log.info('Found %s movies in the folder %s', (len(processed_movies), folder))

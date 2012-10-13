@@ -136,7 +136,7 @@ window.addEvent('domready', function(){
 							'text': profile.label ? profile.label : profile.data.label
 						}).inject(self.profile_select);
 
-						if(self.movie.profile && self.movie.profile.data.id == profile_id)
+						if(self.movie.profile && self.movie.profile.data && self.movie.profile.data.id == profile_id)
 							self.profile_select.set('value', profile_id);
 					});
 
