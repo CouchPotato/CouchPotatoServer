@@ -54,12 +54,13 @@ var MovieList = new Class({
 
 	movieAdded: function(notification){
 		var self = this;
-		window.scroll(0,0);
 
-		if(self.options.add_new && !self.movies_added[notification.data.id] && notification.data.status.identifier == self.options.status)
+		if(self.options.add_new && !self.movies_added[notification.data.id] && notification.data.status.identifier == self.options.status){
+			window.scroll(0,0);
 			self.createMovie(notification.data, 'top');
 
-		self.checkIfEmpty();
+			self.checkIfEmpty();
+		}
 	},
 
 	create: function(){
