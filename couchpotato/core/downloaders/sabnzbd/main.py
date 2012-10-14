@@ -2,6 +2,7 @@ from couchpotato.core.downloaders.base import Downloader
 from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.variable import cleanHost, mergeDicts
 from couchpotato.core.logger import CPLog
+from urllib2 import URLError
 import json
 import traceback
 
@@ -43,8 +44,11 @@ class Sabnzbd(Downloader):
                 sab = self.urlopen(url, timeout = 60, params = {"nzbfile": (nzb_filename, filedata)}, multipart = True, show_error = False)
             else:
                 sab = self.urlopen(url, timeout = 60, show_error = False)
+        except URLError:
+            log.error('Failed sending release, probably wrong HOST: %s', traceback.format_exc(0))
+            return False
         except:
-            log.error('Failed sending release: %s', traceback.format_exc())
+            log.error('Failed sending release, use API key, NOT the NZB key: %s', traceback.format_exc(0))
             return False
 
         result = sab.strip()
@@ -53,14 +57,12 @@ class Sabnzbd(Downloader):
             return False
 
         log.debug("Result text from SAB: " + result[:40])
+        print result
         if result == "ok":
             log.info("NZB sent to SAB successfully.")
             return True
-        elif result == "Missing authentication":
-            log.error("Incorrect username/password.")
-            return False
         else:
-            log.error("Unknown error: " + result[:40])
+            log.error(result[:40])
             return False
 
     def getAllDownloadStatus(self):
@@ -75,7 +77,7 @@ class Sabnzbd(Downloader):
                 'mode': 'queue',
             })
         except:
-            log.error('Failed getting queue: %s', traceback.format_exc())
+            log.error('Failed getting queue: %s', traceback.format_exc(0))
             return False
 
         # Go through history items
@@ -85,7 +87,7 @@ class Sabnzbd(Downloader):
                 'limit': 15,
             })
         except:
-            log.error('Failed getting history json: %s', traceback.format_exc())
+            log.error('Failed getting history json: %s', traceback.format_exc(0))
             return False
 
         statuses = []
@@ -134,7 +136,7 @@ class Sabnzbd(Downloader):
                 'value': item['id']
             }, use_json = False)
         except:
-            log.error('Failed deleting: %s', traceback.format_exc())
+            log.error('Failed deleting: %s', traceback.format_exc(0))
             return False
 
         return True
