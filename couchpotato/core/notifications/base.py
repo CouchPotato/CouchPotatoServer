@@ -30,10 +30,10 @@ class Notification(Plugin):
                 addEvent(listener, self.createNotifyHandler(listener))
 
     def createNotifyHandler(self, listener):
-        def notify(message = None, group = {}):
+        def notify(message = None, group = {}, data = {}):
             if not self.conf('on_snatch', default = True) and listener == 'movie.snatched':
                 return
-            return self.notify(message = message, data = group, listener = listener)
+            return self.notify(message = message, data = group if group != {} else data, listener = listener)
 
         return notify
 
