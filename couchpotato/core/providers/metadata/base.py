@@ -49,6 +49,7 @@ class MetaDataBase(Plugin):
                             shutil.copy2(content, name)
                         else:
                             self.createFile(name, content)
+                            group['renamed_files'].append(name)
 
             except:
                 log.error('Unable to create %s file: %s', (file_type, traceback.format_exc()))

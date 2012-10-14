@@ -86,7 +86,7 @@ class Scanner(Plugin):
         addEvent('scanner.name_year', self.getReleaseNameYear)
         addEvent('scanner.partnumber', self.getPartNumber)
 
-    def scan(self, folder = None, files = [], simple = False, newer_than = 0, on_found = None):
+    def scan(self, folder = None, files = None, simple = False, newer_than = 0, on_found = None):
 
         folder = ss(os.path.normpath(folder))
 
@@ -99,7 +99,8 @@ class Scanner(Plugin):
         leftovers = []
 
         # Scan all files of the folder if no files are set
-        if len(files) == 0:
+        if not files:
+            check_file_date = True
             try:
                 files = []
                 for root, dirs, walk_files in os.walk(folder):
@@ -108,6 +109,7 @@ class Scanner(Plugin):
             except:
                 log.error('Failed getting files from %s: %s', (folder, traceback.format_exc()))
         else:
+            check_file_date = False
             files = [ss(x) for x in files]
 
         db = get_session()
@@ -237,7 +239,6 @@ class Scanner(Plugin):
                 del path_identifiers[identifier]
         del delete_identifiers
 
-
         # Make sure we remove older / still extracting files
         valid_files = {}
         while True and not self.shuttingDown():
@@ -261,7 +262,7 @@ class Scanner(Plugin):
                 if file_too_new:
                     break
 
-            if file_too_new:
+            if check_file_date and file_too_new:
                 try:
                     time_string = time.ctime(file_time[0])
                 except:

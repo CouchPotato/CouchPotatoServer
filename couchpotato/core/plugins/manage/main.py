@@ -2,7 +2,7 @@ from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, addEvent, fireEventAsync
 from couchpotato.core.helpers.encoding import ss
 from couchpotato.core.helpers.request import jsonified, getParam
-from couchpotato.core.helpers.variable import getTitle
+from couchpotato.core.helpers.variable import getTitle, splitString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
@@ -26,7 +26,7 @@ class Manage(Plugin):
         # Add files after renaming
         def after_rename(message = None, group = {}):
             return self.scanFilesToLibrary(folder = group['destination_dir'], files = group['renamed_files'])
-        addEvent('renamer.after', after_rename)
+        addEvent('renamer.after', after_rename, priority = 110)
 
         addApiView('manage.update', self.updateLibraryView, docs = {
             'desc': 'Update the library by scanning for new movies',
@@ -176,7 +176,7 @@ class Manage(Plugin):
 
     def directories(self):
         try:
-            return [x.strip() for x in self.conf('library', default = '').split('::')]
+            return splitString(self.conf('library', default = ''), '::')
         except:
             return []
 

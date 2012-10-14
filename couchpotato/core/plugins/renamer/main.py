@@ -50,7 +50,7 @@ class Renamer(Plugin):
             return
 
         if self.renaming_started is True:
-            log.info('Renamer is disabled to avoid infinite looping of the same error.')
+            log.info('Renamer is already running, if you see this often, check the logs above for errors.')
             return
 
         # Check to see if the "to" folder is inside the "from" folder.
@@ -379,7 +379,7 @@ class Renamer(Plugin):
 
             # Notify on download, search for trailers etc
             download_message = 'Downloaded %s (%s)' % (movie_title, replacements['quality'])
-            fireEventAsync('renamer.after', message = download_message, group = group)
+            fireEvent('renamer.after', message = download_message, group = group, in_order = True)
 
             # Break if CP wants to shut down
             if self.shuttingDown():

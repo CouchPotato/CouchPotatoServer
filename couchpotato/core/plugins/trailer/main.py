@@ -28,6 +28,8 @@ class Trailer(Plugin):
             else:
                 log.debug('Trailer already exists: %s', destination)
 
+            group['renamed_files'].append(destination)
+
             # Download first and break
             break
 
