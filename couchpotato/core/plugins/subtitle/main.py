@@ -14,7 +14,7 @@ log = CPLog(__name__)
 
 class Subtitle(Plugin):
 
-    services = ['opensubtitles', 'thesubdb', 'subswiki']
+    services = ['opensubtitles', 'thesubdb', 'subswiki', 'podnapisi']
 
     def __init__(self):
         addEvent('renamer.before', self.searchSingle)
