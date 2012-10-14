@@ -377,12 +377,9 @@ class Renamer(Plugin):
                 except:
                     log.error('Failed removing %s: %s', (group['parentdir'], traceback.format_exc()))
 
-            # Search for trailers etc
-            fireEventAsync('renamer.after', group)
-
-            # Notify on download
+            # Notify on download, search for trailers etc
             download_message = 'Downloaded %s (%s)' % (movie_title, replacements['quality'])
-            fireEventAsync('movie.downloaded', message = download_message, data = group)
+            fireEventAsync('renamer.after', message = download_message, group = group)
 
             # Break if CP wants to shut down
             if self.shuttingDown():

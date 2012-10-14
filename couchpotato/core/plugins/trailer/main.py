@@ -12,7 +12,7 @@ class Trailer(Plugin):
     def __init__(self):
         addEvent('renamer.after', self.searchSingle)
 
-    def searchSingle(self, group):
+    def searchSingle(self, message = None, group = {}):
 
         if self.isDisabled() or len(group['files']['trailer']) > 0: return
 

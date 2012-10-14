@@ -22,7 +22,7 @@ class CoreNotifier(Notification):
     listeners = []
 
     listen_to = [
-        'movie.downloaded', 'movie.snatched',
+        'renamer.after', 'movie.snatched',
         'updater.available', 'updater.updated',
     ]
 

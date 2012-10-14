@@ -8,7 +8,7 @@ log = CPLog(__name__)
 
 class XBMC(Notification):
 
-    listen_to = ['movie.downloaded']
+    listen_to = ['renamer.after']
 
     def notify(self, message = '', data = {}, listener = None):
         if self.isDisabled(): return
@@ -21,7 +21,7 @@ class XBMC(Notification):
             if self.send({'command': 'ExecBuiltIn', 'parameter': 'XBMC.updatelibrary(video)'}, host):
                 successful += 1
 
-        return successful == len(hosts)*2
+        return successful == len(hosts) * 2
 
     def send(self, command, host):
 

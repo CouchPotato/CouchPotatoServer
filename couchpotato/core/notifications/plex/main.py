@@ -17,7 +17,7 @@ class Plex(Notification):
         super(Plex, self).__init__()
         addEvent('renamer.after', self.addToLibrary)
 
-    def addToLibrary(self, group = {}):
+    def addToLibrary(self, message = None, group = {}):
         if self.isDisabled(): return
 
         log.info('Sending notification to Plex')

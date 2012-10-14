@@ -14,7 +14,7 @@ class Notification(Plugin):
     test_message = 'ZOMG Lazors Pewpewpew!'
 
     listen_to = [
-        'movie.downloaded', 'movie.snatched',
+        'renamer.after', 'movie.snatched',
         'updater.available', 'updater.updated',
     ]
     dont_listen_to = []
@@ -30,10 +30,10 @@ class Notification(Plugin):
                 addEvent(listener, self.createNotifyHandler(listener))
 
     def createNotifyHandler(self, listener):
-        def notify(message, data):
+        def notify(message = None, group = {}):
             if not self.conf('on_snatch', default = True) and listener == 'movie.snatched':
                 return
-            return self.notify(message = message, data = data, listener = listener)
+            return self.notify(message = message, data = group, listener = listener)
 
         return notify
 

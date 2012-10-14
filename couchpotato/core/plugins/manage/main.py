@@ -22,10 +22,9 @@ class Manage(Plugin):
         fireEvent('scheduler.interval', identifier = 'manage.update_library', handle = self.updateLibrary, hours = 2)
 
         addEvent('manage.update', self.updateLibrary)
-        addEvent('manage.scan_files', self.scanFilesToLibrary)
 
         # Add files after renaming
-        def after_rename(group):
+        def after_rename(message = None, group = {}):
             return self.scanFilesToLibrary(folder = group['destination_dir'], files = group['renamed_files'])
         addEvent('renamer.after', after_rename)
 
