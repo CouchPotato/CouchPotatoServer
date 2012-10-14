@@ -18,8 +18,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from __future__ import unicode_literals
 from guessit.textutils import find_first_level_groups
 from guessit.patterns import group_delimiters
+import functools
 import logging
 
 log = logging.getLogger(__name__)
@@ -33,10 +35,10 @@ def process(mtree):
         groups = find_first_level_groups(c.value, group_delimiters[0])
         for delimiters in group_delimiters:
             flatten = lambda l, x: l + find_first_level_groups(x, delimiters)
-            groups = reduce(flatten, groups, [])
+            groups = functools.reduce(flatten, groups, [])
 
         # do not do this at this moment, it is not strong enough and can break other
         # patterns, such as dates, etc...
-        #groups = reduce(lambda l, x: l + x.split('-'), groups, [])
+        #groups = functools.reduce(lambda l, x: l + x.split('-'), groups, [])
 
         c.split_on_components(groups)

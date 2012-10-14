@@ -18,8 +18,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from __future__ import unicode_literals
+from guessit import PY3, u
 from guessit.matchtree import MatchTree
-from guessit.textutils import to_utf8
 from guessit.guess import (merge_similar_guesses, merge_all,
                            choose_int, choose_string)
 import copy
@@ -69,12 +70,12 @@ class IterativeMatcher(object):
         """
 
         valid_filetypes = ('autodetect', 'subtitle', 'video',
-                            'movie', 'moviesubtitle',
-                            'episode', 'episodesubtitle')
+                           'movie', 'moviesubtitle',
+                           'episode', 'episodesubtitle')
         if filetype not in valid_filetypes:
             raise ValueError("filetype needs to be one of %s" % valid_filetypes)
-        if not isinstance(filename, unicode):
-            log.debug('WARNING: given filename to matcher is not unicode...')
+        if not PY3 and not isinstance(filename, unicode):
+            log.warning('Given filename to matcher is not unicode...')
 
         self.match_tree = MatchTree(filename)
         mtree = self.match_tree
@@ -99,21 +100,26 @@ class IterativeMatcher(object):
         apply_transfo('split_explicit_groups')
 
         # 4- try to match information for specific patterns
+        # NOTE: order needs to comply to the following:
+        #       - website before language (eg: tvu.org.ru vs russian)
+        #       - language before episodes_rexps
+        #       - properties before language (eg: he-aac vs hebrew)
+        #       - release_group before properties (eg: XviD-?? vs xvid)
         if mtree.guess['type'] in ('episode', 'episodesubtitle'):
-            strategy = ['guess_date', 'guess_video_rexps',
-                        'guess_episodes_rexps', 'guess_website',
-                        'guess_release_group', 'guess_properties',
-                        'guess_weak_episodes_rexps', 'guess_language']
+            strategy = [ 'guess_date', 'guess_website', 'guess_release_group',
+                         'guess_properties', 'guess_language',
+                         'guess_video_rexps',
+                         'guess_episodes_rexps', 'guess_weak_episodes_rexps' ]
         else:
-            strategy = ['guess_date', 'guess_video_rexps',
-                        'guess_website', 'guess_release_group',
-                        'guess_properties', 'guess_language']
+            strategy = [ 'guess_date', 'guess_website', 'guess_release_group',
+                         'guess_properties', 'guess_language',
+                         'guess_video_rexps' ]
 
         for name in strategy:
             apply_transfo(name)
 
         # more guessers for both movies and episodes
-        for name in ['guess_bonus_features']:
+        for name in ['guess_bonus_features', 'guess_year', 'guess_country']:
             apply_transfo(name)
 
         # split into '-' separated subgroups (with required separator chars
@@ -125,13 +131,12 @@ class IterativeMatcher(object):
         if mtree.guess['type'] in ('episode', 'episodesubtitle'):
             apply_transfo('guess_episode_info_from_position')
         else:
-            apply_transfo('guess_year')
             apply_transfo('guess_movie_title_from_position')
 
         # 6- perform some post-processing steps
         apply_transfo('post_process')
 
-        log.debug('Found match tree:\n%s' % (to_utf8(unicode(mtree))))
+        log.debug('Found match tree:\n%s' % u(mtree))
 
     def matched(self):
         # we need to make a copy here, as the merge functions work in place and
@@ -147,9 +152,12 @@ class IterativeMatcher(object):
 
         for string_part in ('title', 'series', 'container', 'format',
                             'releaseGroup', 'website', 'audioCodec',
-                            'videoCodec', 'screenSize', 'episodeFormat'):
+                            'videoCodec', 'screenSize', 'episodeFormat',
+                            'audioChannels'):
             merge_similar_guesses(parts, string_part, choose_string)
 
+        # 2- merge the rest, potentially discarding information not properly
+        #    merged before
         result = merge_all(parts,
                            append=['language', 'subtitleLanguage', 'other'])
 

@@ -18,6 +18,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from __future__ import unicode_literals
+from guessit import s, u
 import os.path
 import zipfile
 
@@ -31,10 +33,10 @@ def split_path(path):
      - the drive letter on Windows systems (eg: r'C:\')
      - the mount point '\\' on Windows systems (eg: r'\\host\share')
 
-    >>> split_path('/usr/bin/smewt')
+    >>> s(split_path('/usr/bin/smewt'))
     ['/', 'usr', 'bin', 'smewt']
 
-    >>> split_path('relative_path/to/my_folder/')
+    >>> s(split_path('relative_path/to/my_folder/'))
     ['relative_path', 'to', 'my_folder']
 
     """
@@ -65,7 +67,7 @@ def split_path(path):
 def file_in_same_dir(ref_file, desired_file):
     """Return the path for a file in the same dir as a given reference file.
 
-    >>> file_in_same_dir('~/smewt/smewt.db', 'smewt.settings')
+    >>> s(file_in_same_dir('~/smewt/smewt.db', 'smewt.settings'))
     '~/smewt/smewt.settings'
 
     """
@@ -82,4 +84,4 @@ def load_file_in_same_dir(ref_file, filename):
             zfile = zipfile.ZipFile(zfilename)
             return zfile.read('/'.join(path[i + 1:]))
 
-    return open(os.path.join(*path)).read()
+    return u(open(os.path.join(*path)).read())

@@ -23,7 +23,7 @@ import os.path
 __all__ = ['Subtitle', 'EmbeddedSubtitle', 'ExternalSubtitle', 'ResultSubtitle', 'get_subtitle_path']
 
 #: Subtitles extensions
-EXTENSIONS = ['.srt', '.sub', '.txt']
+EXTENSIONS = ['.srt', '.sub', '.txt', '.ass']
 
 
 class Subtitle(object):

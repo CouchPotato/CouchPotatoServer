@@ -18,11 +18,24 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from __future__ import unicode_literals
 from guessit.transfo import SingleNodeGuesser
+from guessit.patterns import properties, canonical_form
 import re
 import logging
 
 log = logging.getLogger(__name__)
+
+
+CODECS = properties['videoCodec']
+FORMATS = properties['format']
+
+def adjust_metadata(md):
+    codec = canonical_form(md['videoCodec'])
+    if codec in FORMATS:
+        md['format'] = codec
+        del md['videoCodec']
+    return md
 
 
 def guess_release_group(string):
@@ -30,12 +43,28 @@ def guess_release_group(string):
                     r'\.(DivX)-(?P<releaseGroup>.*?)[\. ]',
                     r'\.(DVDivX)-(?P<releaseGroup>.*?)[\. ]',
                     ]
+
+    # first try to see whether we have both a known codec and a known release group
+    group_names = [ r'\.(?P<videoCodec>' + codec + r')-(?P<releaseGroup>.*?)[ \.]'
+                    for codec in (CODECS + FORMATS) ]
+
     for rexp in group_names:
         match = re.search(rexp, string, re.IGNORECASE)
         if match:
             metadata = match.groupdict()
-            metadata.update({ 'videoCodec': match.group(1) })
-            return metadata, (match.start() + 1, match.end() - 1)
+            if canonical_form(metadata['releaseGroup']) in properties['releaseGroup']:
+                return adjust_metadata(metadata), (match.start(1), match.end(2))
+
+    # pick anything as releaseGroup as long as we have a codec in front
+    # this doesn't include a potential dash ('-') ending the release group
+    # eg: [...].X264-HiS@SiLUHD-English.[...]
+    group_names = [ r'\.(?P<videoCodec>' + codec + r')-(?P<releaseGroup>.*?)(-(.*?))?[ \.]'
+                    for codec in (CODECS + FORMATS) ]
+
+    for rexp in group_names:
+        match = re.search(rexp, string, re.IGNORECASE)
+        if match:
+            return adjust_metadata(match.groupdict()), (match.start(1), match.end(2))
 
     return None, None
 

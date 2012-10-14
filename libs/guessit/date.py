@@ -18,9 +18,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from __future__ import unicode_literals
 import datetime
 import re
 
+def valid_year(year):
+    return 1920 < year < datetime.date.today().year + 5
 
 def search_year(string):
     """Looks for year patterns, and if found return the year and group span.
@@ -40,7 +43,7 @@ def search_year(string):
     match = re.search(r'[^0-9]([0-9]{4})[^0-9]', string)
     if match:
         year = int(match.group(1))
-        if 1920 < year < datetime.date.today().year + 5:
+        if valid_year(year):
             return (year, match.span(1))
 
     return (None, None)

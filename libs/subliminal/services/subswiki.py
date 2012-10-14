@@ -19,11 +19,10 @@ from . import ServiceBase
 from ..exceptions import ServiceError
 from ..language import language_set, Language
 from ..subtitles import get_subtitle_path, ResultSubtitle
+from ..utils import get_keywords, split_keyword
 from ..videos import Episode, Movie
 from bs4 import BeautifulSoup
-from subliminal.utils import get_keywords, split_keyword
 import logging
-import re
 import urllib
 
 
@@ -40,7 +39,6 @@ class SubsWiki(ServiceBase):
     language_code = 'name'
     videos = [Episode, Movie]
     require_video = False
-    release_pattern = re.compile('\nVersion (.+), ([0-9]+).([0-9])+ MBs')
     required_features = ['permissive']
 
     def list_checked(self, video, languages):
@@ -78,22 +76,22 @@ class SubsWiki(ServiceBase):
         soup = BeautifulSoup(r.content, self.required_features)
         subtitles = []
         for sub in soup('td', {'class': 'NewsTitle'}):
-            sub_keywords = split_keyword(self.release_pattern.search(sub.contents[1]).group(1).lower())
+            sub_keywords = split_keyword(sub.b.string.lower())
             if not keywords & sub_keywords:
                 logger.debug(u'None of subtitle keywords %r in %r' % (sub_keywords, keywords))
                 continue
-            for html_language in sub.parent.parent.findAll('td', {'class': 'language'}):
+            for html_language in sub.parent.parent.find_all('td', {'class': 'language'}):
                 language = self.get_language(html_language.string.strip())
                 if language not in languages:
                     logger.debug(u'Language %r not in wanted languages %r' % (language, languages))
                     continue
-                html_status = html_language.findNextSibling('td')
-                status = html_status.find('strong').string.strip()
-                if status != 'Completed':
+                html_status = html_language.find_next_sibling('td')
+                status = html_status.strong.string.strip()
+                if status != 'Completado':
                     logger.debug(u'Wrong subtitle status %s' % status)
                     continue
                 path = get_subtitle_path(filepath, language, self.config.multi)
-                subtitle = ResultSubtitle(path, language, self.__class__.__name__.lower(), '%s%s' % (self.server_url, html_status.findNext('td').find('a')['href']))
+                subtitle = ResultSubtitle(path, language, self.__class__.__name__.lower(), '%s%s' % (self.server_url, html_status.find_next('td').find('a')['href']))
                 subtitles.append(subtitle)
         return subtitles
 

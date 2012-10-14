@@ -14,6 +14,7 @@ This module implements the Requests API.
 from . import sessions
 from .safe_mode import catch_exceptions_if_in_safe_mode
 
+
 @catch_exceptions_if_in_safe_mode
 def request(method, url, **kwargs):
     """Constructs and sends a :class:`Request <Request>`.
@@ -38,9 +39,19 @@ def request(method, url, **kwargs):
     :param cert: (optional) if String, path to ssl client cert file (.pem). If Tuple, ('cert', 'key') pair.
     """
 
-    s = kwargs.pop('session') if 'session' in kwargs else sessions.session()
-    return s.request(method=method, url=url, **kwargs)
+    # if this session was passed in, leave it open (and retain pooled connections);
+    # if we're making it just for this call, then close it when we're done.
+    adhoc_session = False
+    session = kwargs.pop('session', None)
+    if session is None:
+        session = sessions.session()
+        adhoc_session = True
 
+    try:
+        return session.request(method=method, url=url, **kwargs)
+    finally:
+        if adhoc_session:
+            session.close()
 
 
 def get(url, **kwargs):
