@@ -1,4 +1,5 @@
 from couchpotato.core.helpers.encoding import tryUrlencode
+from couchpotato.core.helpers.variable import splitString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
 import base64
@@ -13,7 +14,7 @@ class XBMC(Notification):
     def notify(self, message = '', data = {}, listener = None):
         if self.isDisabled(): return
 
-        hosts = [x.strip() for x in self.conf('host').split(",")]
+        hosts = splitString(self.conf('host'))
         successful = 0
         for host in hosts:
             if self.send({'command': 'ExecBuiltIn', 'parameter': 'Notification(CouchPotato, %s)' % message}, host):

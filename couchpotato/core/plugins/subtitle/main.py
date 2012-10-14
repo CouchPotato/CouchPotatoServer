@@ -1,6 +1,7 @@
 from couchpotato import get_session
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import toUnicode
+from couchpotato.core.helpers.variable import splitString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Library, FileType
@@ -67,4 +68,4 @@ class Subtitle(Plugin):
         return False
 
     def getLanguages(self):
-        return [x.strip() for x in self.conf('languages').split(',')]
+        return splitString(self.conf('languages'))

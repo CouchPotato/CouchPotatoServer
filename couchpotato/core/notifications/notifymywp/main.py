@@ -1,3 +1,4 @@
+from couchpotato.core.helpers.variable import splitString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
 from pynmwp import PyNMWP
@@ -10,7 +11,7 @@ class NotifyMyWP(Notification):
     def notify(self, message = '', data = {}, listener = None):
         if self.isDisabled(): return
 
-        keys = [x.strip() for x in self.conf('api_key').split(',')]
+        keys = splitString(self.conf('api_key'))
         p = PyNMWP(keys, self.conf('dev_key'))
 
         response = p.push(application = self.default_title, event = message, description = message, priority = self.conf('priority'), batch_mode = len(keys) > 1)

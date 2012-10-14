@@ -3,7 +3,7 @@ from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, fireEventAsync, addEvent
 from couchpotato.core.helpers.encoding import toUnicode, simplifyString
 from couchpotato.core.helpers.request import getParams, jsonified, getParam
-from couchpotato.core.helpers.variable import getImdb
+from couchpotato.core.helpers.variable import getImdb, splitString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Library, LibraryTitle, Movie
@@ -166,7 +166,7 @@ class MoviePlugin(Plugin):
             .options(joinedload_all('files'))
 
         if limit_offset:
-            splt = [x.strip() for x in limit_offset.split(',')]
+            splt = splitString(limit_offset)
             limit = splt[0]
             offset = 0 if len(splt) is 1 else splt[1]
             q2 = q2.limit(limit).offset(offset)
@@ -244,7 +244,7 @@ class MoviePlugin(Plugin):
 
         db = get_session()
 
-        for id in getParam('id').split(','):
+        for id in splitString(getParam('id')):
             movie = db.query(Movie).filter_by(id = id).first()
 
             if movie:
@@ -386,7 +386,7 @@ class MoviePlugin(Plugin):
 
         available_status = fireEvent('status.get', 'available', single = True)
 
-        ids = [x.strip() for x in params.get('id').split(',')]
+        ids = splitString(params.get('id'))
         for movie_id in ids:
 
             m = db.query(Movie).filter_by(id = movie_id).first()
@@ -422,7 +422,7 @@ class MoviePlugin(Plugin):
 
         params = getParams()
 
-        ids = [x.strip() for x in params.get('id').split(',')]
+        ids = splitString(params.get('id'))
         for movie_id in ids:
             self.delete(movie_id, delete_from = params.get('delete_from', 'all'))
 

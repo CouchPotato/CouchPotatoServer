@@ -1,6 +1,6 @@
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import tryUrlencode
-from couchpotato.core.helpers.variable import tryInt, tryFloat
+from couchpotato.core.helpers.variable import tryInt, tryFloat, splitString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.movie.base import MovieProvider
 import json
@@ -97,10 +97,10 @@ class IMDBAPI(MovieProvider):
                 'released': movie.get('Released', ''),
                 'year': year if isinstance(year, (int)) else None,
                 'plot': movie.get('Plot', ''),
-                'genres': movie.get('Genre', '').split(','),
-                'directors': movie.get('Director', '').split(','),
-                'writers': movie.get('Writer', '').split(','),
-                'actors': movie.get('Actors', '').split(','),
+                'genres': splitString(movie.get('Genre', '')),
+                'directors': splitString(movie.get('Director', '')),
+                'writers': splitString(movie.get('Writer', '')),
+                'actors': splitString(movie.get('Actors', '')),
             }
         except:
             log.error('Failed parsing IMDB API json: %s', traceback.format_exc())

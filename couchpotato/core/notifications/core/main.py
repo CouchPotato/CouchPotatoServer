@@ -3,7 +3,7 @@ from couchpotato.api import addApiView, addNonBlockApiView
 from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.request import jsonified, getParam
-from couchpotato.core.helpers.variable import tryInt
+from couchpotato.core.helpers.variable import tryInt, splitString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
 from couchpotato.core.settings.model import Notification as Notif
@@ -67,7 +67,7 @@ class CoreNotifier(Notification):
 
         ids = None
         if getParam('ids'):
-            ids = [x.strip() for x in getParam('ids').split(',')]
+            ids = splitString(getParam('ids'))
 
         db = get_session()
 
@@ -92,7 +92,7 @@ class CoreNotifier(Notification):
         q = db.query(Notif)
 
         if limit_offset:
-            splt = [x.strip() for x in limit_offset.split(',')]
+            splt = splitString(limit_offset)
             limit = splt[0]
             offset = 0 if len(splt) is 1 else splt[1]
             q = q.limit(limit).offset(offset)
