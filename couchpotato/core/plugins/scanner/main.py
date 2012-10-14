@@ -237,9 +237,9 @@ class Scanner(Plugin):
                 del path_identifiers[identifier]
         del delete_identifiers
 
-        # Determine file types
-        processed_movies = {}
-        total_found = len(movie_files)
+
+        # Make sure we remove older / still extracting files
+        valid_files = {}
         while True and not self.shuttingDown():
             try:
                 identifier, group = movie_files.popitem()
@@ -293,6 +293,19 @@ class Scanner(Plugin):
                     del group['unsorted_files']
 
                     continue
+
+            valid_files[identifier] = group
+
+        del movie_files
+
+        # Determine file types
+        processed_movies = {}
+        total_found = len(valid_files)
+        while True and not self.shuttingDown():
+            try:
+                identifier, group = valid_files.popitem()
+            except:
+                break
 
             # Group extra (and easy) files first
             # images = self.getImages(group['unsorted_files'])
