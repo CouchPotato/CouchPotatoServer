@@ -180,10 +180,8 @@ class Searcher(Plugin):
                             status_id = available_status.get('id')
                         )
                         db.add(rls)
-                        db.commit()
                     else:
                         [db.delete(info) for info in rls.info]
-                        db.commit()
 
                     for info in nzb:
                         try:
@@ -195,11 +193,12 @@ class Searcher(Plugin):
                                 value = toUnicode(nzb[info])
                             )
                             rls.info.append(rls_info)
-                            db.commit()
                         except InterfaceError:
                             log.debug('Couldn\'t add %s to ReleaseInfo: %s', (info, traceback.format_exc()))
 
                     nzb['status_id'] = rls.status_id
+
+                db.commit()
 
 
                 for nzb in sorted_results:
@@ -245,38 +244,42 @@ class Searcher(Plugin):
 
         if successful:
 
-            # Mark release as snatched
-            db = get_session()
-            rls = db.query(Release).filter_by(identifier = md5(data['url'])).first()
-            rls.status_id = snatched_status.get('id')
-            db.commit()
+            try:
+                # Mark release as snatched
+                db = get_session()
+                rls = db.query(Release).filter_by(identifier = md5(data['url'])).first()
+                if rls:
+                    rls.status_id = snatched_status.get('id')
+                    db.commit()
 
-            log_movie = '%s (%s) in %s' % (getTitle(movie['library']), movie['library']['year'], rls.quality.label)
-            snatch_message = 'Snatched "%s": %s' % (data.get('name'), log_movie)
-            log.info(snatch_message)
-            fireEvent('movie.snatched', message = snatch_message, data = rls.to_dict())
+                    log_movie = '%s (%s) in %s' % (getTitle(movie['library']), movie['library']['year'], rls.quality.label)
+                    snatch_message = 'Snatched "%s": %s' % (data.get('name'), log_movie)
+                    log.info(snatch_message)
+                    fireEvent('movie.snatched', message = snatch_message, data = rls.to_dict())
 
+                # If renamer isn't used, mark movie done
+                if not Env.setting('enabled', 'renamer'):
+                    active_status = fireEvent('status.get', 'active', single = True)
+                    done_status = fireEvent('status.get', 'done', single = True)
+                    try:
+                        if movie['status_id'] == active_status.get('id'):
+                            for profile_type in movie['profile']['types']:
+                                if rls and profile_type['quality_id'] == rls.quality.id and profile_type['finish']:
+                                    log.info('Renamer disabled, marking movie as finished: %s', log_movie)
 
-            # If renamer isn't used, mark movie done
-            if not Env.setting('enabled', 'renamer'):
-                active_status = fireEvent('status.get', 'active', single = True)
-                done_status = fireEvent('status.get', 'done', single = True)
-                try:
-                    if movie['status_id'] == active_status.get('id'):
-                        for profile_type in movie['profile']['types']:
-                            if profile_type['quality_id'] == rls.quality.id and profile_type['finish']:
-                                log.info('Renamer disabled, marking movie as finished: %s', log_movie)
+                                    # Mark release done
+                                    rls.status_id = done_status.get('id')
+                                    db.commit()
 
-                                # Mark release done
-                                rls.status_id = done_status.get('id')
-                                db.commit()
+                                    # Mark movie done
+                                    mvie = db.query(Movie).filter_by(id = movie['id']).first()
+                                    mvie.status_id = done_status.get('id')
+                                    db.commit()
+                    except:
+                        log.error('Failed marking movie finished, renamer disabled: %s', traceback.format_exc())
 
-                                # Mark movie done
-                                mvie = db.query(Movie).filter_by(id = movie['id']).first()
-                                mvie.status_id = done_status.get('id')
-                                db.commit()
-                except Exception, e:
-                    log.error('Failed marking movie finished: %s %s', (e, traceback.format_exc()))
+            except:
+                log.error('Failed marking movie finished: %s', traceback.format_exc())
 
             return True
 
