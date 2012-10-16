@@ -2,6 +2,7 @@ from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.variable import mergeDicts
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
+from couchpotato.environment import Env
 import os
 import shutil
 import traceback
@@ -50,6 +51,11 @@ class MetaDataBase(Plugin):
                         else:
                             self.createFile(name, content)
                             group['renamed_files'].append(name)
+
+                        try:
+                            os.chmod(name, Env.getPermission('file'))
+                        except:
+                            log.debug('Failed setting permissions for %s: %s', (name, traceback.format_exc()))
 
             except:
                 log.error('Unable to create %s file: %s', (file_type, traceback.format_exc()))
