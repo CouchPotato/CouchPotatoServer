@@ -2,6 +2,7 @@ from couchpotato import get_session
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import toUnicode
+from couchpotato.core.helpers.request import jsonified
 from couchpotato.core.helpers.variable import md5, getExt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
@@ -28,6 +29,27 @@ class FileManager(Plugin):
                 'filename': {'desc': 'path/filename of the wanted file'}
             },
             'return': {'type': 'file'}
+        })
+
+        addApiView('file.types', self.getTypesView, docs = {
+            'desc': 'Return a list of all the file types and their ids.',
+            'return': {'type': 'object', 'example': """{
+    'types': [
+        {
+            "identifier": "poster_original",
+            "type": "image",
+            "id": 1,
+            "name": "Poster_original"
+        },
+        {
+            "identifier": "poster",
+            "type": "image",
+            "id": 2,
+            "name": "Poster"
+        },
+        etc
+    ]
+}"""}
         })
 
         addEvent('app.load', self.cleanup)
@@ -129,3 +151,9 @@ class FileManager(Plugin):
             types.append(type_object.to_dict())
 
         return types
+
+    def getTypesView(self):
+
+        return jsonified({
+            'types': self.getTypes()
+        })
