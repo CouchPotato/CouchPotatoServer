@@ -3,7 +3,52 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
 import base64
 
+try: import simplejson as json
+except ImportError: import json
+  
+import urllib2
+
 log = CPLog(__name__)
+
+class XBMCJSON:
+    #below code is modified code from N3MIS15 on XBMC forum
+
+    def __init__(self, server, user, password ):
+        self.server = server
+        self.version = '2.0'
+        self.password = password
+        self.user = user
+
+    def Request(self, method, kwargs):
+        data = [{}]
+        data[0]['method'] = method
+        data[0]['params'] = kwargs
+        data[0]['jsonrpc'] = self.version
+        data[0]['id'] = 1
+
+        data = json.JSONEncoder().encode(data)
+        content_length = len(data)
+
+        content = {
+            'Content-Type': 'application/json',
+            'Content-Length': content_length,
+        }
+   
+        request = urllib2.Request(self.server, data, content)
+        base64string = base64.encodestring('%s:%s' % (self.user, self.password)).replace('\n', '')
+        request.add_header("Authorization", "Basic %s" % base64string)
+
+        f = urllib2.urlopen(request)
+        response = f.read()
+        f.close()
+        response = json.JSONDecoder().decode(response)
+        print response
+
+        try:
+            return response[0]['result']
+        except:
+            return response[0]['error']
+
 
 
 class XBMC(Notification):
@@ -16,28 +61,11 @@ class XBMC(Notification):
         hosts = [x.strip() for x in self.conf('host').split(",")]
         successful = 0
         for host in hosts:
-            if self.send({'command': 'ExecBuiltIn', 'parameter': 'Notification(CouchPotato, %s)' % message}, host):
+            xbmc = XBMCJSON('http://%s/jsonrpc' % host, self.conf('username'), self.conf('password'))
+            if xbmc.Request("GUI.ShowNotification",{"title":"CouchPotato", "message":message}) == "OK":
                 successful += 1
-            if self.send({'command': 'ExecBuiltIn', 'parameter': 'XBMC.updatelibrary(video)'}, host):
+            if xbmc.Request("VideoLibrary.Scan",{}) == "OK": 
                 successful += 1
 
         return successful == len(hosts)*2
 
-    def send(self, command, host):
-
-        url = 'http://%s/xbmcCmds/xbmcHttp/?%s' % (host, tryUrlencode(command))
-
-        headers = {}
-        if self.conf('password'):
-            headers = {
-               'Authorization': "Basic %s" % base64.encodestring('%s:%s' % (self.conf('username'), self.conf('password')))[:-1]
-            }
-
-        try:
-            self.urlopen(url, headers = headers, show_error = False)
-        except:
-            log.error("Couldn't sent command to XBMC")
-            return False
-
-        log.info('XBMC notification to %s successful.', host)
-        return True
