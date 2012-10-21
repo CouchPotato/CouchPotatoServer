@@ -129,6 +129,8 @@ class Renamer(Plugin):
                      'resolution_width': group['meta_data'].get('resolution_width'),
                      'resolution_height': group['meta_data'].get('resolution_height'),
                      'imdb_id': library['identifier'],
+                     'cd': '',
+                     'cd_nr': '',
                 }
 
                 for file_type in group['files']:
@@ -146,7 +148,7 @@ class Renamer(Plugin):
                         continue
 
                     # Move other files
-                    multiple = len(group['files']['movie']) > 1 and not group['is_dvd']
+                    multiple = len(group['files'][file_type]) > 1 and not group['is_dvd']
                     cd = 1 if multiple else 0
 
                     for current_file in sorted(list(group['files'][file_type])):
@@ -159,23 +161,19 @@ class Renamer(Plugin):
                         replacements['ext'] = getExt(current_file)
 
                         # cd #
-                        replacements['cd'] = ' cd%d' % cd if cd else ''
-                        replacements['cd_nr'] = cd
+                        replacements['cd'] = ' cd%d' % cd if multiple else ''
+                        replacements['cd_nr'] = cd if multiple else ''
 
                         # Naming
                         final_folder_name = self.doReplace(folder_name, replacements)
                         final_file_name = self.doReplace(file_name, replacements)
                         replacements['filename'] = final_file_name[:-(len(getExt(final_file_name)) + 1)]
 
-                        # Group filename without cd extension
-                        replacements['cd'] = ''
-                        replacements['cd_nr'] = ''
-
                         # Meta naming
                         if file_type is 'trailer':
-                            final_file_name = self.doReplace(trailer_name, replacements)
+                            final_file_name = self.doReplace(trailer_name, replacements, remove_multiple = True)
                         elif file_type is 'nfo':
-                            final_file_name = self.doReplace(nfo_name, replacements)
+                            final_file_name = self.doReplace(nfo_name, replacements, remove_multiple = True)
 
                         # Seperator replace
                         if separator:
@@ -206,9 +204,15 @@ class Renamer(Plugin):
                         # Check for extra subtitle files
                         if file_type is 'subtitle':
 
-                            # rename subtitles with or without language
-                            rename_files[current_file] = os.path.join(destination, final_folder_name, final_file_name)
+                            remove_multiple = False
+                            if len(group['files']['movie']) == 1:
+                                remove_multiple = True
+
                             sub_langs = group['subtitle_language'].get(current_file, [])
+
+                            # rename subtitles with or without language
+                            sub_name = self.doReplace(file_name, replacements, remove_multiple = remove_multiple)
+                            rename_files[current_file] = os.path.join(destination, final_folder_name, sub_name)
 
                             rename_extras = self.getRenameExtras(
                                 extra_type = 'subtitle_extra',
@@ -217,20 +221,19 @@ class Renamer(Plugin):
                                 file_name = file_name,
                                 destination = destination,
                                 group = group,
-                                current_file = current_file
+                                current_file = current_file,
+                                remove_multiple = remove_multiple,
                             )
 
-                            # Don't add language if multiple languages in 1 file
-                            if len(sub_langs) > 1:
-                                rename_files[current_file] = os.path.join(destination, final_folder_name, final_file_name)
-                            elif len(sub_langs) == 1:
+                            # Don't add language if multiple languages in 1 subtitle file
+                            if len(sub_langs) == 1:
                                 sub_name = final_file_name.replace(replacements['ext'], '%s.%s' % (sub_langs[0], replacements['ext']))
                                 rename_files[current_file] = os.path.join(destination, final_folder_name, sub_name)
 
                             rename_files = mergeDicts(rename_files, rename_extras)
 
                         # Filename without cd etc
-                        if file_type is 'movie':
+                        elif file_type is 'movie':
                             rename_extras = self.getRenameExtras(
                                 extra_type = 'movie_extra',
                                 replacements = replacements,
@@ -242,7 +245,7 @@ class Renamer(Plugin):
                             )
                             rename_files = mergeDicts(rename_files, rename_extras)
 
-                            group['filename'] = self.doReplace(file_name, replacements)[:-(len(getExt(final_file_name)) + 1)]
+                            group['filename'] = self.doReplace(file_name, replacements, remove_multiple = True)[:-(len(getExt(final_file_name)) + 1)]
                             group['destination_dir'] = os.path.join(destination, final_folder_name)
 
                         if multiple:
@@ -387,8 +390,9 @@ class Renamer(Plugin):
 
         self.renaming_started = False
 
-    def getRenameExtras(self, extra_type = '', replacements = {}, folder_name = '', file_name = '', destination = '', group = {}, current_file = ''):
+    def getRenameExtras(self, extra_type = '', replacements = {}, folder_name = '', file_name = '', destination = '', group = {}, current_file = '', remove_multiple = False):
 
+        replacements = replacements.copy()
         rename_files = {}
 
         def test(s):
@@ -397,8 +401,8 @@ class Renamer(Plugin):
         for extra in set(filter(test, group['files'][extra_type])):
             replacements['ext'] = getExt(extra)
 
-            final_folder_name = self.doReplace(folder_name, replacements)
-            final_file_name = self.doReplace(file_name, replacements)
+            final_folder_name = self.doReplace(folder_name, replacements, remove_multiple = remove_multiple)
+            final_file_name = self.doReplace(file_name, replacements, remove_multiple = remove_multiple)
             rename_files[extra] = os.path.join(destination, final_folder_name, final_file_name)
 
         return rename_files
@@ -453,10 +457,15 @@ class Renamer(Plugin):
 
         return True
 
-    def doReplace(self, string, replacements):
+    def doReplace(self, string, replacements, remove_multiple = False):
         '''
         replace confignames with the real thing
         '''
+
+        replacements = replacements.copy()
+        if remove_multiple:
+            replacements['cd'] = ''
+            replacements['cd_nr'] = ''
 
         replaced = toUnicode(string)
         for x, r in replacements.iteritems():
