@@ -18,9 +18,16 @@ class Automation(Plugin):
     def addMovies(self):
 
         movies = fireEvent('automation.get_movies', merge = True)
+        movie_ids = []
+
         for imdb_id in movies:
             prop_name = 'automation.added.%s' % imdb_id
             added = Env.prop(prop_name, default = False)
             if not added:
-                fireEvent('movie.add', params = {'identifier': imdb_id}, force_readd = False)
+                added_movie = fireEvent('movie.add', params = {'identifier': imdb_id}, force_readd = False, search_after = False, single = True)
+                movie_ids.append(added_movie['id'])
                 Env.prop(prop_name, True)
+
+        for movie_id in movie_ids:
+            movie_dict = fireEvent('movie.get', movie_id, single = True)
+            fireEvent('searcher.single', movie_dict)
