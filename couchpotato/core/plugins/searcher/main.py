@@ -181,7 +181,9 @@ class Searcher(Plugin):
                         )
                         db.add(rls)
                     else:
-                        [db.delete(info) for info in rls.info]
+                        [db.delete(old_info) for old_info in rls.info]
+
+                    db.commit()
 
                     for info in nzb:
                         try:
@@ -196,9 +198,9 @@ class Searcher(Plugin):
                         except InterfaceError:
                             log.debug('Couldn\'t add %s to ReleaseInfo: %s', (info, traceback.format_exc()))
 
-                    nzb['status_id'] = rls.status_id
+                    db.commit()
 
-                db.commit()
+                    nzb['status_id'] = rls.status_id
 
 
                 for nzb in sorted_results:
