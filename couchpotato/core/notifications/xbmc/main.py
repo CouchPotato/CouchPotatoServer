@@ -1,7 +1,7 @@
-from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.variable import splitString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
+from flask.helpers import json
 import base64
 
 log = CPLog(__name__)
@@ -17,28 +17,43 @@ class XBMC(Notification):
         hosts = splitString(self.conf('host'))
         successful = 0
         for host in hosts:
-            if self.send({'command': 'ExecBuiltIn', 'parameter': 'Notification(CouchPotato, %s)' % message}, host):
-                successful += 1
-            if self.send({'command': 'ExecBuiltIn', 'parameter': 'XBMC.updatelibrary(video)'}, host):
-                successful += 1
+            response = self.request(host, [
+                ('GUI.ShowNotification', {"title":"CouchPotato", "message":message}),
+                ('VideoLibrary.Scan', {}),
+            ])
+
+            for result in response:
+                if result['result'] == "OK":
+                    successful += 1
 
         return successful == len(hosts) * 2
 
-    def send(self, command, host):
+    def request(self, host, requests):
+        server = 'http://%s/jsonrpc' % host
 
-        url = 'http://%s/xbmcCmds/xbmcHttp/?%s' % (host, tryUrlencode(command))
+        data = []
+        for req in requests:
+            method, kwargs = req
+            data.append({
+                'method': method,
+                'params': kwargs,
+                'jsonrpc': '2.0',
+                'id': method,
+            })
+        data = json.dumps(data)
 
-        headers = {}
+        headers = {
+            'Content-Type': 'application/json',
+        }
+
         if self.conf('password'):
-            headers = {
-               'Authorization': "Basic %s" % base64.encodestring('%s:%s' % (self.conf('username'), self.conf('password')))[:-1]
-            }
+            base64string = base64.encodestring('%s:%s' % (self.conf('username'), self.conf('password'))).replace('\n', '')
+            headers['Authorization'] = 'Basic %s' % base64string
 
-        try:
-            self.urlopen(url, headers = headers, show_error = False)
-        except:
-            log.error("Couldn't sent command to XBMC")
-            return False
+        log.debug('Sending request to %s: %s', (host, data))
+        rdata = self.urlopen(server, headers = headers, params = data, multipart = True)
+        response = json.loads(rdata)
+        log.debug('Returned from request %s: %s', (host, response))
 
-        log.info('XBMC notification to %s successful.', host)
-        return True
+        return response
+
