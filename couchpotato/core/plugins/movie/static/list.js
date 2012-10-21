@@ -105,6 +105,7 @@ var MovieList = new Class({
 			self.createMovie(movie);
 		});
 
+		self.total_movies = total;
 		self.setCounter(total);
 
 	},
@@ -500,7 +501,7 @@ var MovieList = new Class({
 	checkIfEmpty: function(){
 		var self = this;
 
-		var is_empty = self.movies.length == 0;
+		var is_empty = self.movies.length == 0 && self.total_movies == 0;
 
 		if(is_empty && self.options.on_empty_element){
 			self.el.grab(self.options.on_empty_element);
