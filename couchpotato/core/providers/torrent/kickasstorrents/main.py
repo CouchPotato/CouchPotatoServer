@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup
 from couchpotato.core.event import fireEvent
-from couchpotato.core.helpers.variable import tryInt
+from couchpotato.core.helpers.encoding import simplifyString
+from couchpotato.core.helpers.variable import tryInt, getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.torrent.base import TorrentProvider
 import re
@@ -12,9 +13,9 @@ log = CPLog(__name__)
 class KickAssTorrents(TorrentProvider):
 
     urls = {
-        'test': 'http://kat.ph/',
-        'detail': 'http://kat.ph/%s',
-        'search': 'http://kat.ph/i%s/',
+        'test': 'https://kat.ph/',
+        'detail': 'https://kat.ph/%s',
+        'search': 'https://kat.ph/%s-i%s/',
     }
 
     cat_ids = [
@@ -35,8 +36,10 @@ class KickAssTorrents(TorrentProvider):
         if self.isDisabled():
             return results
 
+        title = simplifyString(getTitle(movie['library'])).replace(' ', '-')
+
         cache_key = 'kickasstorrents.%s.%s' % (movie['library']['identifier'], quality.get('identifier'))
-        data = self.getCache(cache_key, self.urls['search'] % (movie['library']['identifier'].replace('tt', '')))
+        data = self.getCache(cache_key, self.urls['search'] % (title, movie['library']['identifier'].replace('tt', '')))
         if data:
 
             cat_ids = self.getCatId(quality['identifier'])
