@@ -283,7 +283,7 @@ class MoviePlugin(Plugin):
             'movies': movies,
         })
 
-    def add(self, params = {}, force_readd = True, search_after = True):
+    def add(self, params = {}, force_readd = True, search_after = True, update_library = False):
 
         if not params.get('identifier'):
             msg = 'Can\'t add movie without imdb identifier.'
@@ -303,7 +303,7 @@ class MoviePlugin(Plugin):
                 pass
 
 
-        library = fireEvent('library.add', single = True, attrs = params, update_after = False)
+        library = fireEvent('library.add', single = True, attrs = params, update_after = update_library)
 
         # Status
         status_active = fireEvent('status.add', 'active', single = True)
