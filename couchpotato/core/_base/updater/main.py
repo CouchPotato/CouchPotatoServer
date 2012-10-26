@@ -406,7 +406,7 @@ class DesktopUpdater(BaseUpdater):
             'last_check': self.last_check,
             'update_version': self.update_version,
             'version': self.getVersion(),
-            'branch': 'desktop_build',
+            'branch': self.branch,
         }
 
     def check(self):
