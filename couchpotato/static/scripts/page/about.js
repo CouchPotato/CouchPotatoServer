@@ -117,7 +117,7 @@ var AboutSettingTab = new Class({
 		var self = this;
 		var date = new Date(json.version.date * 1000);
 		self.version_text.set('text', json.version.hash + (json.version.date ? ' ('+date.toLocaleString()+')' : ''));
-		self.updater_type.set('text', json.version.type);
+		self.updater_type.set('text', json.version.type + ', ' + json.branch);
 	}
 
 });
