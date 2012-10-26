@@ -124,7 +124,7 @@ class Plugin(object):
         try:
 
             if multipart:
-                log.info('Opening multipart url: %s, params: %s', (url, [x for x in params.iterkeys()]))
+                log.info('Opening multipart url: %s, params: %s', (url, [x for x in params.iterkeys()] if isinstance(params, dict) else 'with data'))
                 request = urllib2.Request(url, params, headers)
 
                 cookies = cookielib.CookieJar()
@@ -239,7 +239,8 @@ class Plugin(object):
                     self.setCache(cache_key, data, timeout = cache_timeout)
                 return data
             except:
-                pass
+                if not kwargs.get('show_error'):
+                    raise
 
     def setCache(self, cache_key, value, timeout = 300):
         log.debug('Setting cache %s', cache_key)

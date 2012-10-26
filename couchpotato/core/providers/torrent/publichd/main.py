@@ -14,9 +14,9 @@ log = CPLog(__name__)
 class PublicHD(TorrentProvider):
 
     urls = {
-        'test': 'http://publichd.eu',
-        'detail': 'http://publichd.eu/index.php?page=torrent-details&id=%s',
-        'search': 'http://publichd.eu/index.php',
+        'test': 'https://publichd.eu',
+        'detail': 'https://publichd.eu/index.php?page=torrent-details&id=%s',
+        'search': 'https://publichd.eu/index.php',
     }
     http_time_between_calls = 0
 

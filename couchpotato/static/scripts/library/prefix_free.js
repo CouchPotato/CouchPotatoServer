@@ -1,5 +1,5 @@
 /**
- * StyleFix 1.0.3
+ * StyleFix 1.0.3 & PrefixFree 1.0.7
  * @author Lea Verou
  * MIT license
  */
@@ -122,9 +122,9 @@ var self = window.StyleFix = {
 			.splice(index === undefined? self.fixers.length : index, 0, fixer);
 	},
 	
-	fix: function(css, raw) {
+	fix: function(css, raw, element) {
 		for(var i=0; i<self.fixers.length; i++) {
-			css = self.fixers[i](css, raw) || css;
+			css = self.fixers[i](css, raw, element) || css;
 		}
 		
 		return css;
@@ -157,11 +157,9 @@ function $(expr, con) {
 })();
 
 /**
- * PrefixFree 1.0.6
- * @author Lea Verou
- * MIT license
+ * PrefixFree
  */
-(function(root, undefined){
+(function(root){
 
 if(!window.StyleFix || !window.getComputedStyle) {
 	return;
@@ -181,8 +179,16 @@ function fix(what, before, after, replacement, css) {
 }
 
 var self = window.PrefixFree = {
-	prefixCSS: function(css, raw) {
+	prefixCSS: function(css, raw, element) {
 		var prefix = self.prefix;
+		
+		// Gradient angles hotfix
+		if(self.functions.indexOf('linear-gradient') > -1) {
+			// Gradients are supported with a prefix, convert angles to legacy
+			css = css.replace(/(\s|:|,)(repeating-)?linear-gradient\(\s*(-?\d*\.?\d*)deg/ig, function ($0, delim, repeating, deg) {
+				return delim + (repeating || '') + 'linear-gradient(' + (90-deg) + 'deg';
+			});
+		}
 		
 		css = fix('functions', '(\\s|:|,)', '\\s*\\(', '$1' + prefix + '$2(', css);
 		css = fix('keywords', '(\\s|:)', '(\\s|;|\\}|$)', '$1' + prefix + '$2$3', css);
@@ -204,6 +210,9 @@ var self = window.PrefixFree = {
 		
 		// Fix double prefixing
 		css = css.replace(RegExp('-' + prefix, 'g'), '-');
+		
+		// Prefix wildcard
+		css = css.replace(/-\*-(?=[a-z]+)/gi, self.prefix);
 		
 		return css;
 	},

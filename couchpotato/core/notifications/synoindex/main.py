@@ -16,7 +16,7 @@ class Synoindex(Notification):
         super(Synoindex, self).__init__()
         addEvent('renamer.after', self.addToLibrary)
 
-    def addToLibrary(self, group = {}):
+    def addToLibrary(self, message = None, group = {}):
         if self.isDisabled(): return
 
         command = [self.index_path, '-A', group.get('destination_dir')]

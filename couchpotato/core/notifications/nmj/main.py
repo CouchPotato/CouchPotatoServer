@@ -69,7 +69,7 @@ class NMJ(Notification):
             'mount': mount,
         })
 
-    def addToLibrary(self, group = {}):
+    def addToLibrary(self, message = None, group = {}):
         if self.isDisabled(): return
 
         host = self.conf('host')
@@ -114,8 +114,8 @@ class NMJ(Notification):
 
     def failed(self):
         return jsonified({'success': False})
-        
+
     def test(self):
         return jsonified({'success': self.addToLibrary()})
-    
-    
+
+

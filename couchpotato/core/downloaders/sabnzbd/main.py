@@ -2,6 +2,7 @@ from couchpotato.core.downloaders.base import Downloader
 from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.variable import cleanHost, mergeDicts
 from couchpotato.core.logger import CPLog
+from urllib2 import URLError
 import json
 import traceback
 
@@ -36,31 +37,31 @@ class Sabnzbd(Downloader):
         else:
             params['name'] = data.get('url')
 
-        url = cleanHost(self.conf('host')) + "api?" + tryUrlencode(params)
+        url = cleanHost(self.conf('host')) + 'api?' + tryUrlencode(params)
 
         try:
             if params.get('mode') is 'addfile':
-                sab = self.urlopen(url, timeout = 60, params = {"nzbfile": (nzb_filename, filedata)}, multipart = True, show_error = False)
+                sab = self.urlopen(url, timeout = 60, params = {'nzbfile': (nzb_filename, filedata)}, multipart = True, show_error = False)
             else:
                 sab = self.urlopen(url, timeout = 60, show_error = False)
+        except URLError:
+            log.error('Failed sending release, probably wrong HOST: %s', traceback.format_exc(0))
+            return False
         except:
-            log.error('Failed sending release: %s', traceback.format_exc())
+            log.error('Failed sending release, use API key, NOT the NZB key: %s', traceback.format_exc(0))
             return False
 
         result = sab.strip()
         if not result:
-            log.error("SABnzbd didn't return anything.")
+            log.error('SABnzbd didn\'t return anything.')
             return False
 
-        log.debug("Result text from SAB: " + result[:40])
-        if result == "ok":
-            log.info("NZB sent to SAB successfully.")
+        log.debug('Result text from SAB: %s', result[:40])
+        if result[:2] == 'ok':
+            log.info('NZB sent to SAB successfully.')
             return True
-        elif result == "Missing authentication":
-            log.error("Incorrect username/password.")
-            return False
         else:
-            log.error("Unknown error: " + result[:40])
+            log.error(result[:40])
             return False
 
     def getAllDownloadStatus(self):
@@ -75,7 +76,7 @@ class Sabnzbd(Downloader):
                 'mode': 'queue',
             })
         except:
-            log.error('Failed getting queue: %s', traceback.format_exc())
+            log.error('Failed getting queue: %s', traceback.format_exc(0))
             return False
 
         # Go through history items
@@ -85,7 +86,7 @@ class Sabnzbd(Downloader):
                 'limit': 15,
             })
         except:
-            log.error('Failed getting history json: %s', traceback.format_exc())
+            log.error('Failed getting history json: %s', traceback.format_exc(0))
             return False
 
         statuses = []
@@ -134,21 +135,26 @@ class Sabnzbd(Downloader):
                 'value': item['id']
             }, use_json = False)
         except:
-            log.error('Failed deleting: %s', traceback.format_exc())
+            log.error('Failed deleting: %s', traceback.format_exc(0))
             return False
 
         return True
 
     def call(self, params, use_json = True):
 
-        url = cleanHost(self.conf('host')) + "api?" + tryUrlencode(mergeDicts(params, {
+        url = cleanHost(self.conf('host')) + 'api?' + tryUrlencode(mergeDicts(params, {
            'apikey': self.conf('api_key'),
            'output': 'json'
         }))
 
         data = self.urlopen(url, timeout = 60, show_error = False)
         if use_json:
-            return json.loads(data)[params['mode']]
+            d = json.loads(data)
+            if d.get('error'):
+                log.error('Error getting data from SABNZBd: %s', d.get('error'))
+                return {}
+
+            return d[params['mode']]
         else:
             return data
 

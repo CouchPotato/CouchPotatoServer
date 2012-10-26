@@ -11,7 +11,7 @@ config = [{
             'subtab': 'nzb_providers',
             'name': 'newznab',
             'order': 10,
-            'description': 'Enable multiple NewzNab providers such as <a href="http://nzb.su" target="_blank">NZB.su</a> and <a href="http://nzbs.org" target="_blank">nzbs.org</a>',
+            'description': 'Enable multiple NewzNab providers such as <a href="https://nzb.su" target="_blank">NZB.su</a> and <a href="https://nzbs.org" target="_blank">nzbs.org</a>',
             'wizard': True,
             'options': [
                 {

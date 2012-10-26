@@ -18,6 +18,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from __future__ import unicode_literals
+from guessit import s, to_hex
 import hashlib
 import os.path
 
@@ -25,7 +27,7 @@ import os.path
 def hash_file(filename):
     """Returns the ed2k hash of a given file.
 
-    >>> hash_file('test/dummy.srt')
+    >>> s(hash_file('tests/dummy.srt'))
     'ed2k://|file|dummy.srt|44|1CA0B9DED3473B926AA93A0A546138BB|/'
     """
     return 'ed2k://|file|%s|%d|%s|/' % (os.path.basename(filename),
@@ -58,6 +60,6 @@ def hash_filehash(filename):
         a = gen(f)
         hashes = [md4_hash(data).digest() for data in a]
         if len(hashes) == 1:
-            return hashes[0].encode("hex")
+            return to_hex(hashes[0])
         else:
             return md4_hash(reduce(lambda a, d: a + d, hashes, "")).hexd
