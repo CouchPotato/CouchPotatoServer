@@ -33,29 +33,34 @@ var MovieList = new Class({
 		);
 		self.getMovies();
 
-		if(options.add_new)
-			App.addEvent('movie.added', self.movieAdded.bind(self))
-
+		App.addEvent('movie.added', self.movieAdded.bind(self))
 		App.addEvent('movie.deleted', self.movieDeleted.bind(self))
 	},
 
 	movieDeleted: function(notification){
 		var self = this;
 
-		if(!self.movies_added[notification.data.id])
-			self.movies_added[notification.data.id].destroy();
+		if(self.movies_added[notification.data.id]){
+			self.movies.each(function(movie){
+				if(movie.get('id') == notification.data.id){
+					movie.destroy();
+					delete self.movies_added[notification.data.id]
+				}
+			})
+		}
 
 		self.checkIfEmpty();
 	},
 
 	movieAdded: function(notification){
 		var self = this;
-		window.scroll(0,0);
 
-		if(!self.movies_added[notification.data.id])
+		if(self.options.add_new && !self.movies_added[notification.data.id] && notification.data.status.identifier == self.options.status){
+			window.scroll(0,0);
 			self.createMovie(notification.data, 'top');
 
-		self.checkIfEmpty();
+			self.checkIfEmpty();
+		}
 	},
 
 	create: function(){
@@ -100,6 +105,7 @@ var MovieList = new Class({
 			self.createMovie(movie);
 		});
 
+		self.total_movies = total;
 		self.setCounter(total);
 
 	},
@@ -495,7 +501,7 @@ var MovieList = new Class({
 	checkIfEmpty: function(){
 		var self = this;
 
-		var is_empty = self.movies.length == 0;
+		var is_empty = self.movies.length == 0 && self.total_movies == 0;
 
 		if(is_empty && self.options.on_empty_element){
 			self.el.grab(self.options.on_empty_element);

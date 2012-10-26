@@ -2,7 +2,6 @@ from couchpotato.core.helpers.rss import RSS
 from couchpotato.core.helpers.variable import md5, tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.automation.base import Automation
-from couchpotato.environment import Env
 import xml.etree.ElementTree as XMLTree
 
 log = CPLog(__name__)

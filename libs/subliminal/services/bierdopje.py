@@ -36,6 +36,7 @@ logger = logging.getLogger(__name__)
 
 class BierDopje(ServiceBase):
     server_url = 'http://api.bierdopje.com/A2B638AC5D804C2E/'
+    user_agent = 'Subliminal/0.6'
     api_based = True
     languages = language_set(['eng', 'dut'])
     videos = [Episode]

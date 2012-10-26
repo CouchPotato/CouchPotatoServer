@@ -19,9 +19,11 @@
 #
 
 from __future__ import unicode_literals
-from guessit import fileutils
-from guessit.textutils import to_unicode
+from guessit import UnicodeMixin, base_text_type, u
+from guessit.fileutils import load_file_in_same_dir
 import logging
+
+__all__ = [ 'Country' ]
 
 log = logging.getLogger(__name__)
 
@@ -32,8 +34,7 @@ log = logging.getLogger(__name__)
 # "An English name, an alpha-2 code (when given),
 # an alpha-3 code (when given), a numeric code, and an ISO 31666-2 code
 # are all separated by pipe (|) characters."
-_iso3166_contents = fileutils.load_file_in_same_dir(__file__,
-                                                    'ISO-3166-1_utf8.txt').decode('utf-8')
+_iso3166_contents = load_file_in_same_dir(__file__, 'ISO-3166-1_utf8.txt')
 
 country_matrix = [ l.strip().split('|')
                    for l in _iso3166_contents.strip().split('\n') ]
@@ -59,7 +60,7 @@ country_alpha3_to_alpha2 = dict((c[2].lower(), c[1].lower()) for c in country_ma
 
 
 
-class Country(object):
+class Country(UnicodeMixin):
     """This class represents a country.
 
     You can initialize it with pretty much anything, as it knows conversion
@@ -67,7 +68,7 @@ class Country(object):
     """
 
     def __init__(self, country, strict=False):
-        country = to_unicode(country.strip().lower())
+        country = u(country.strip().lower())
         self.alpha3 = country_to_alpha3.get(country)
 
         if self.alpha3 is None and strict:
@@ -93,7 +94,7 @@ class Country(object):
         if isinstance(other, Country):
             return self.alpha3 == other.alpha3
 
-        if isinstance(other, basestring):
+        if isinstance(other, base_text_type):
             try:
                 return self == Country(other)
             except ValueError:
@@ -107,9 +108,5 @@ class Country(object):
     def __unicode__(self):
         return self.english_name
 
-    def __str__(self):
-        return unicode(self).encode('utf-8')
-
     def __repr__(self):
         return 'Country(%s)' % self.english_name
-

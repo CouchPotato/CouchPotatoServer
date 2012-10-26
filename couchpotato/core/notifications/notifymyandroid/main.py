@@ -1,3 +1,4 @@
+from couchpotato.core.helpers.variable import splitString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
 import pynma
@@ -11,7 +12,7 @@ class NotifyMyAndroid(Notification):
         if self.isDisabled(): return
 
         nma = pynma.PyNMA()
-        keys = [x.strip() for x in self.conf('api_key').split(',')]
+        keys = splitString(self.conf('api_key'))
         nma.addkey(keys)
         nma.developerkey(self.conf('dev_key'))
 

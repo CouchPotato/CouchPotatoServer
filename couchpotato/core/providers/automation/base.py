@@ -28,9 +28,18 @@ class Automation(Plugin):
         return self.getIMDBids()
 
     def search(self, name, year = None, imdb_only = False):
+
+        prop_name = 'automation.cached.%s.%s' % (name, year)
+        cached_imdb = Env.prop(prop_name, default = False)
+        if cached_imdb and imdb_only:
+            return cached_imdb
+
         result = fireEvent('movie.search', q = '%s %s' % (name, year if year else ''), limit = 1, merge = True)
 
         if len(result) > 0:
+            if imdb_only and result[0].get('imdb'):
+                Env.prop(prop_name, result[0].get('imdb'))
+
             return result[0].get('imdb') if imdb_only else result[0]
         else:
             return None

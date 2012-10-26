@@ -10,7 +10,7 @@ config = [{
             'tab': 'searcher',
             'subtab': 'torrent_providers',
             'name': 'PassThePopcorn',
-            'description': 'See <a href="http://passthepopcorn.me">PassThePopcorn.me</a>',
+            'description': 'See <a href="https://passthepopcorn.me">PassThePopcorn.me</a>',
             'options': [
                 {
                     'name': 'enabled',

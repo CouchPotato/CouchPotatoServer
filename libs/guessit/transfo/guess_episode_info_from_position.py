@@ -18,6 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from __future__ import unicode_literals
 from guessit.transfo import found_property
 from guessit.patterns import non_episode_title, unlikely_series
 import logging
