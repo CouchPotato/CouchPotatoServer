@@ -3,7 +3,8 @@ from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
 from couchpotato.core.helpers.encoding import toUnicode, ss
 from couchpotato.core.helpers.request import jsonified
-from couchpotato.core.helpers.variable import getExt, mergeDicts, getTitle
+from couchpotato.core.helpers.variable import getExt, mergeDicts, getTitle, \
+    getImdb
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Library, File, Profile, Release
@@ -521,7 +522,7 @@ class Renamer(Plugin):
         if rels:
             self.checking_snatched = True
             log.debug('Checking status snatched releases...')
-            # get queue and history (once) from SABnzbd
+
             statuses = fireEvent('download.status', merge = True)
             if not statuses:
                 log.debug('Download status functionality is not implemented for active downloaders.')
@@ -548,7 +549,7 @@ class Renamer(Plugin):
 
                         found = False
                         for item in statuses:
-                            if item['name'] == nzbname:
+                            if item['name'] == nzbname or getImdb(item['name']) == movie_dict['library']['identifier']:
 
                                 timeleft = 'N/A' if item['timeleft'] == -1 else item['timeleft']
                                 log.debug('Found %s: %s, time to go: %s', (item['name'], item['status'].upper(), timeleft))
@@ -572,11 +573,6 @@ class Renamer(Plugin):
 
                         if not found:
                             log.info('%s not found in downloaders', nzbname)
-                            rel.status_id = ignored_status.get('id')
-                            db.commit()
-
-                            if self.conf('next_on_failed'):
-                                fireEvent('searcher.try_next_release', movie_id = rel.movie_id)
 
                 except:
                     log.error('Failed checking for release in downloader: %s', traceback.format_exc())
