@@ -1,3 +1,4 @@
+from esky.util import appdir_from_executable #@UnresolvedImport
 from threading import Thread
 from wx.lib.softwareupdate import SoftwareUpdate
 import os
@@ -5,8 +6,6 @@ import sys
 import time
 import webbrowser
 import wx
-import subprocess
-
 
 # Include proper dirs
 if hasattr(sys, 'frozen'):
@@ -214,5 +213,18 @@ if __name__ == '__main__':
     time.sleep(1)
 
     if app.restart:
-        args = [sys.executable] + [os.path.join(base_path, 'Desktop.py')] + sys.argv[1:]
-        subprocess.Popen(args)
+
+        def appexe_from_executable(exepath):
+            appdir = appdir_from_executable(exepath)
+            exename = os.path.basename(exepath)
+
+            if sys.platform == "darwin":
+                if os.path.isdir(os.path.join(appdir, "Contents", "MacOS")):
+                    return os.path.join(appdir, "Contents", "MacOS", exename)
+
+            return os.path.join(appdir, exename)
+
+        exe = appexe_from_executable(sys.executable)
+        os.chdir(os.path.dirname(exe))
+
+        os.execv(exe, [exe] + sys.argv[1:])
