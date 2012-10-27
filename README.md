@@ -17,7 +17,7 @@ Windows, see [the CP forum](http://couchpota.to/forum/showthread.php?tid=14) for
 * Open up `Git Bash` (or CMD) and go to the folder you want to install CP. Something like Program Files.
 * Run `git clone https://github.com/RuudBurger/CouchPotatoServer.git`.
 * You can now start CP via `CouchPotatoServer\CouchPotato.py` to start
-* Open your browser and go to: 'http://localhost:5050/'
+* Open your browser and go to: `http://localhost:5050/`
 
 OSx:
 
@@ -27,7 +27,7 @@ OSx:
 * Go to your App folder `cd /Applications`
 * Run `git clone https://github.com/RuudBurger/CouchPotatoServer.git`
 * Then do `python CouchPotatoServer/CouchPotato.py`
-* Open your browser and go to: 'http://localhost:5050/'
+* Open your browser and go to: `http://localhost:5050/`
 
 Linux (ubuntu / debian):
 
@@ -39,4 +39,4 @@ Linux (ubuntu / debian):
 * Change the paths inside the init script. `sudo nano /etc/init.d/couchpotato`
 * Make it executable. `sudo chmod +x /etc/init.d/couchpotato`
 * Add it to defaults. `sudo update-rc.d couchpotato defaults`
-* Open your browser and go to: 'http://localhost:5050/'
+* Open your browser and go to: `http://localhost:5050/`
