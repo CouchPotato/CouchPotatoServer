@@ -18,7 +18,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from guessit import Guess
+from __future__ import unicode_literals
+from guessit import base_text_type, Guess
 from guessit.patterns import canonical_form
 from guessit.textutils import clean_string
 import logging
@@ -41,7 +42,7 @@ def format_guess(guess):
         if prop in ('season', 'episodeNumber', 'year', 'cdNumber',
                     'cdNumberTotal', 'bonusNumber', 'filmNumber'):
             guess[prop] = int(guess[prop])
-        elif isinstance(value, basestring):
+        elif isinstance(value, base_text_type):
             if prop in ('edition',):
                 value = clean_string(value)
             guess[prop] = canonical_form(value)
@@ -63,7 +64,7 @@ def find_and_split_node(node, strategy, logger):
 
             if isinstance(result, Guess):
                 if confidence is None:
-                    confidence = result.confidence(result.keys()[0])
+                    confidence = result.confidence(list(result.keys())[0])
             else:
                 if confidence is None:
                     confidence = 1.0

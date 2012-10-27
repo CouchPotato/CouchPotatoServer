@@ -10,15 +10,63 @@ Page.Wanted = new Class({
 
 		if(!self.wanted){
 
+			self.manual_search = new Element('a', {
+				'title': 'Force a search for the full wanted list',
+				'text': 'Search all wanted',
+				'events':{
+					'click': self.doFullSearch.bind(self, true)
+				}
+			});
+
 			// Wanted movies
 			self.wanted = new MovieList({
 				'identifier': 'wanted',
 				'status': 'active',
 				'actions': MovieActions,
-				'add_new': true
+				'add_new': true,
+				'menu': [self.manual_search],
+				'on_empty_element': App.createUserscriptButtons().addClass('empty_wanted')
 			});
 			$(self.wanted).inject(self.el);
+
+			// Check if search is in progress
+			self.startProgressInterval();
 		}
+
+	},
+
+	doFullSearch: function(full){
+		var self = this;
+
+		if(!self.search_in_progress){
+
+			Api.request('searcher.full_search');
+			self.startProgressInterval();
+
+		}
+
+	},
+
+	startProgressInterval: function(){
+		var self = this;
+
+		var start_text = self.manual_search.get('text');
+		self.progress_interval = setInterval(function(){
+			Api.request('searcher.progress', {
+				'onComplete': function(json){
+					self.search_in_progress = true;
+					if(!json.progress){
+						clearInterval(self.progress_interval);
+						self.search_in_progress = false;
+						self.manual_search.set('text', start_text);
+					}
+					else {
+						var progress = json.progress;
+						self.manual_search.set('text', 'Searching.. (' + (((progress.total-progress.to_go)/progress.total)*100).round() + '%)');
+					}
+				}
+			})
+		}, 1000);
 
 	}
 
@@ -88,7 +136,7 @@ window.addEvent('domready', function(){
 							'text': profile.label ? profile.label : profile.data.label
 						}).inject(self.profile_select);
 
-						if(self.movie.profile && self.movie.profile.data.id == profile_id)
+						if(self.movie.profile && self.movie.profile.data && self.movie.profile.data.id == profile_id)
 							self.profile_select.set('value', profile_id);
 					});
 
@@ -222,7 +270,7 @@ window.addEvent('domready', function(){
 								movie.set('tween', {
 									'duration': 300,
 									'onComplete': function(){
-										movie.destroy();
+										self.movie.destroy()
 									}
 								});
 								movie.tween('height', 0);

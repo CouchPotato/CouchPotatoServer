@@ -12,7 +12,6 @@ config = [{
             'name': 'pneumatic',
             'label': 'Pneumatic',
             'description': 'Download the .strm file to a specific folder.',
-            'wizard': True,
             'options': [
                 {
                     'name': 'enabled',

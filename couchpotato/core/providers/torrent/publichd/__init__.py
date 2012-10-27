@@ -8,9 +8,9 @@ config = [{
     'groups': [
         {
             'tab': 'searcher',
-            'subtab': 'providers',
+            'subtab': 'torrent_providers',
             'name': 'PublicHD',
-            'description': 'Public Torrent site with only HD content. See <a href="http://publichd.eu/">PublicHD</a>',
+            'description': 'Public Torrent site with only HD content. See <a href="https://publichd.eu/">PublicHD</a>',
             'options': [
                 {
                     'name': 'enabled',

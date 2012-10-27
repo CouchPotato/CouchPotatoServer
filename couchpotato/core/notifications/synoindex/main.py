@@ -1,6 +1,8 @@
 from couchpotato.core.event import addEvent
+from couchpotato.core.helpers.request import jsonified
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
+import os
 import subprocess
 
 log = CPLog(__name__)
@@ -8,14 +10,17 @@ log = CPLog(__name__)
 
 class Synoindex(Notification):
 
+    index_path = '/usr/syno/bin/synoindex'
+
     def __init__(self):
+        super(Synoindex, self).__init__()
         addEvent('renamer.after', self.addToLibrary)
 
-    def addToLibrary(self, group = {}):
+    def addToLibrary(self, message = None, group = {}):
         if self.isDisabled(): return
 
-        command = ['/usr/syno/bin/synoindex', '-A', group.get('destination_dir')]
-        log.info(u'Executing synoindex command: %s ', command)
+        command = [self.index_path, '-A', group.get('destination_dir')]
+        log.info('Executing synoindex command: %s ', command)
         try:
             p = subprocess.Popen(command, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
             out = p.communicate()
@@ -26,3 +31,6 @@ class Synoindex(Notification):
             return False
 
         return True
+
+    def test(self):
+        return jsonified({'success': os.path.isfile(self.index_path)})

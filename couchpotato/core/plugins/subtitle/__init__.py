@@ -8,9 +8,9 @@ config = [{
     'groups': [
         {
             'tab': 'renamer',
-            'subtab': 'subtitles',
             'name': 'subtitle',
-            'label': 'Download subtitles after rename',
+            'label': 'Download subtitles',
+            'description': 'after rename',
             'options': [
                 {
                     'name': 'enabled',

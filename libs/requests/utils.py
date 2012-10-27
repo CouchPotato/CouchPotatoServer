@@ -12,12 +12,15 @@ that are also useful for external consumption.
 import cgi
 import codecs
 import os
+import platform
 import re
+import sys
 import zlib
 from netrc import netrc, NetrcParseError
 
+from . import __version__
 from .compat import parse_http_list as _parse_list_header
-from .compat import quote, urlparse, basestring, bytes, str
+from .compat import quote, urlparse, basestring, bytes, str, OrderedDict
 from .cookies import RequestsCookieJar, cookiejar_from_dict
 
 _hush_pyflakes = (RequestsCookieJar,)
@@ -25,8 +28,8 @@ _hush_pyflakes = (RequestsCookieJar,)
 CERTIFI_BUNDLE_PATH = None
 try:
     # see if requests's own CA certificate bundle is installed
-    import certifi
-    CERTIFI_BUNDLE_PATH = certifi.where()
+    from . import certs
+    CERTIFI_BUNDLE_PATH = certs.where()
 except ImportError:
     pass
 
@@ -40,7 +43,12 @@ POSSIBLE_CA_BUNDLE_PATHS = [
         '/etc/ssl/certs/ca-certificates.crt',
         # FreeBSD (provided by the ca_root_nss package):
         '/usr/local/share/certs/ca-root-nss.crt',
+        # openSUSE (provided by the ca-certificates package), the 'certs' directory is the
+        # preferred way but may not be supported by the SSL module, thus it has 'ca-bundle.pem'
+        # as a fallback (which is generated from pem files in the 'certs' directory):
+        '/etc/ssl/ca-bundle.pem',
 ]
+
 
 def get_os_ca_bundle_path():
     """Try to pick an available CA certificate bundle provided by the OS."""
@@ -52,6 +60,7 @@ def get_os_ca_bundle_path():
 # if certifi is installed, use its CA bundle;
 # otherwise, try and use the OS bundle
 DEFAULT_CA_BUNDLE_PATH = CERTIFI_BUNDLE_PATH or get_os_ca_bundle_path()
+
 
 def dict_to_sequence(d):
     """Returns an internal sequence dictionary update."""
@@ -94,7 +103,7 @@ def get_netrc_auth(url):
             pass
 
     # AppEngine hackiness.
-    except AttributeError:
+    except (ImportError, AttributeError):
         pass
 
 
@@ -103,6 +112,54 @@ def guess_filename(obj):
     name = getattr(obj, 'name', None)
     if name and name[0] != '<' and name[-1] != '>':
         return name
+
+
+def from_key_val_list(value):
+    """Take an object and test to see if it can be represented as a
+    dictionary. Unless it can not be represented as such, return an
+    OrderedDict, e.g.,
+
+    ::
+
+        >>> from_key_val_list([('key', 'val')])
+        OrderedDict([('key', 'val')])
+        >>> from_key_val_list('string')
+        ValueError: need more than 1 value to unpack
+        >>> from_key_val_list({'key': 'val'})
+        OrderedDict([('key', 'val')])
+    """
+    if value is None:
+        return None
+
+    if isinstance(value, (str, bytes, bool, int)):
+        raise ValueError('cannot encode objects that are not 2-tuples')
+
+    return OrderedDict(value)
+
+
+def to_key_val_list(value):
+    """Take an object and test to see if it can be represented as a
+    dictionary. If it can be, return a list of tuples, e.g.,
+
+    ::
+
+        >>> to_key_val_list([('key', 'val')])
+        [('key', 'val')]
+        >>> to_key_val_list({'key': 'val'})
+        [('key', 'val')]
+        >>> to_key_val_list('string')
+        ValueError: cannot encode objects that are not 2-tuples.
+    """
+    if value is None:
+        return None
+
+    if isinstance(value, (str, bytes, bool, int)):
+        raise ValueError('cannot encode objects that are not 2-tuples')
+
+    if isinstance(value, dict):
+        value = value.items()
+
+    return list(value)
 
 
 # From mitsuhiko/werkzeug (used with permission).
@@ -254,11 +311,8 @@ def dict_from_cookiejar(cj):
 
     cookie_dict = {}
 
-    for _, cookies in list(cj._cookies.items()):
-        for _, cookies in list(cookies.items()):
-            for cookie in list(cookies.values()):
-                # print cookie
-                cookie_dict[cookie.name] = cookie.value
+    for cookie in cj:
+        cookie_dict[cookie.name] = cookie.value
 
     return cookie_dict
 
@@ -324,6 +378,12 @@ def stream_decode_response_unicode(iterator, r):
     if rv:
         yield rv
 
+def iter_slices(string, slice_length):
+    """Iterate over slices of a string."""
+    pos = 0
+    while pos < len(string):
+        yield string[pos:pos+slice_length]
+        pos += slice_length
 
 def get_unicode_from_response(r):
     """Returns the requested content back in unicode.
@@ -438,6 +498,7 @@ def requote_uri(uri):
     # or '%')
     return quote(unquote_unreserved(uri), safe="!#$%&'()*+,/:;=?@[]~")
 
+
 def get_environ_proxies():
     """Return a dict of environment proxies."""
 
@@ -453,3 +514,64 @@ def get_environ_proxies():
     get_proxy = lambda k: os.environ.get(k) or os.environ.get(k.upper())
     proxies = [(key, get_proxy(key + '_proxy')) for key in proxy_keys]
     return dict([(key, val) for (key, val) in proxies if val])
+
+
+def default_user_agent():
+    """Return a string representing the default user agent."""
+    _implementation = platform.python_implementation()
+
+    if _implementation == 'CPython':
+        _implementation_version = platform.python_version()
+    elif _implementation == 'PyPy':
+        _implementation_version = '%s.%s.%s' % (
+                                                sys.pypy_version_info.major,
+                                                sys.pypy_version_info.minor,
+                                                sys.pypy_version_info.micro
+                                            )
+        if sys.pypy_version_info.releaselevel != 'final':
+            _implementation_version = ''.join([_implementation_version, sys.pypy_version_info.releaselevel])
+    elif _implementation == 'Jython':
+        _implementation_version = platform.python_version()  # Complete Guess
+    elif _implementation == 'IronPython':
+        _implementation_version = platform.python_version()  # Complete Guess
+    else:
+        _implementation_version = 'Unknown'
+
+    return " ".join([
+            'python-requests/%s' % __version__,
+            '%s/%s' % (_implementation, _implementation_version),
+            '%s/%s' % (platform.system(), platform.release()),
+        ])
+
+def parse_header_links(value):
+    """Return a dict of parsed link headers proxies.
+
+    i.e. Link: <http:/.../front.jpeg>; rel=front; type="image/jpeg",<http://.../back.jpeg>; rel=back;type="image/jpeg"
+
+    """
+
+    links = []
+
+    replace_chars = " '\""
+
+    for val in value.split(","):
+        try:
+            url, params = val.split(";", 1)
+        except ValueError:
+            url, params = val, ''
+
+        link = {}
+
+        link["url"] = url.strip("<> '\"")
+
+        for param in params.split(";"):
+            try:
+                key,value = param.split("=")
+            except ValueError:
+                break
+
+            link[key.strip(replace_chars)] = value.strip(replace_chars)
+
+        links.append(link)
+
+    return links

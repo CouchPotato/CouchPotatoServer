@@ -8,9 +8,9 @@ config = [{
     'groups': [
         {
             'tab': 'searcher',
-            'subtab': 'providers',
+            'subtab': 'nzb_providers',
             'name': 'Mysterbin',
-            'description': 'Free provider, less accurate. See <a href="http://www.mysterbin.com/">Mysterbin</a>',
+            'description': 'Free provider, less accurate. See <a href="https://www.mysterbin.com/">Mysterbin</a>',
             'options': [
                 {
                     'name': 'enabled',

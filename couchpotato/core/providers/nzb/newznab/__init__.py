@@ -8,9 +8,10 @@ config = [{
     'groups': [
         {
             'tab': 'searcher',
-            'subtab': 'providers',
+            'subtab': 'nzb_providers',
             'name': 'newznab',
-            'description': 'Enable multiple NewzNab providers such as <a href="http://nzb.su" target="_blank">NZB.su</a> and <a href="http://nzbs.org" target="_blank">nzbs.org</a>',
+            'order': 10,
+            'description': 'Enable multiple NewzNab providers such as <a href="https://nzb.su" target="_blank">NZB.su</a> and <a href="https://nzbs.org" target="_blank">nzbs.org</a>',
             'wizard': True,
             'options': [
                 {

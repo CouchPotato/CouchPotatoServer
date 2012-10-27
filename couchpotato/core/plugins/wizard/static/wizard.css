@@ -14,12 +14,13 @@
 
 .page.wizard .tab_wrapper {
 	background: #5c697b;
-	padding: 18px 0;
-	font-size: 23px;
+	padding: 10px 0;
+	font-size: 18px;
 	position: fixed;
 	top: 0;
 	margin: 0;
 	width: 100%;
+	min-width: 960px;
 	left: 0;
 	z-index: 2;
 	box-shadow: 0 0 50px rgba(0,0,0,0.55);
@@ -36,7 +37,7 @@
 		display: inline-block;
 	}
 		.page.wizard .tabs li a {
-			padding: 20px 30px;
+			padding: 20px 10px;
 		}
 
 	.page.wizard .tab_wrapper .pointer {
@@ -45,7 +46,7 @@
 		border-top: 10px solid #5c697b;
 		display: block;
 		position: absolute;
-		top: 60px;
+		top: 44px;
 	}
 
 .page.wizard .tab_content {
@@ -58,11 +59,25 @@
 .page.wizard .wgroup_finish {
 	height: 300px;
 }
+	.page.wizard .wgroup_finish h1 {
+		text-align: center;
+	}
+	.page.wizard .wgroup_finish .wizard_support,
+	.page.wizard .wgroup_finish .description {
+		font-size: 25px;
+		line-height: 120%;
+		margin: 20px 0;
+		text-align: center;
+	}
 
 	.page.wizard .button.green {
 		padding: 20px;
 		font-size: 25px;
-		margin: 10px 30px;
+		margin: 10px 30px 80px;
 		display: block;
 		text-align: center;
 	}
+
+.page.wizard .tab_nzb_providers {
+	margin: 20px 0 0 0;
+}

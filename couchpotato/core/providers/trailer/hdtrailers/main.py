@@ -4,6 +4,7 @@ from couchpotato.core.helpers.variable import mergeDicts, getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.trailer.base import TrailerProvider
 from string import digits, ascii_letters
+from urllib2 import HTTPError
 import re
 
 log = CPLog(__name__)
@@ -22,7 +23,12 @@ class HDTrailers(TrailerProvider):
         movie_name = getTitle(group['library'])
 
         url = self.urls['api'] % self.movieUrlName(movie_name)
-        data = self.getCache('hdtrailers.%s' % group['library']['identifier'], url)
+        try:
+            data = self.getCache('hdtrailers.%s' % group['library']['identifier'], url, show_error = False)
+        except HTTPError:
+            log.debug('No page found for: %s', movie_name)
+            data = None
+
         result_data = {'480p':[], '720p':[], '1080p':[]}
 
         if not data:
@@ -47,7 +53,14 @@ class HDTrailers(TrailerProvider):
         movie_name = getTitle(group['library'])
 
         url = "%s?%s" % (self.urls['backup'], tryUrlencode({'s':movie_name}))
-        data = self.getCache('hdtrailers.alt.%s' % group['library']['identifier'], url)
+        try:
+            data = self.getCache('hdtrailers.alt.%s' % group['library']['identifier'], url, show_error = False)
+        except HTTPError:
+            log.debug('No alternative page found for: %s', movie_name)
+            data = None
+
+        if not data:
+            return results
 
         try:
             tables = SoupStrainer('div')

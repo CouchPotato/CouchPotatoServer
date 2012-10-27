@@ -2,12 +2,15 @@ from couchpotato import get_session
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import toUnicode
+from couchpotato.core.helpers.request import jsonified
 from couchpotato.core.helpers.variable import md5, getExt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
+from couchpotato.core.plugins.scanner.main import Scanner
 from couchpotato.core.settings.model import FileType, File
 from couchpotato.environment import Env
 import os.path
+import time
 import traceback
 
 log = CPLog(__name__)
@@ -27,6 +30,52 @@ class FileManager(Plugin):
             },
             'return': {'type': 'file'}
         })
+
+        addApiView('file.types', self.getTypesView, docs = {
+            'desc': 'Return a list of all the file types and their ids.',
+            'return': {'type': 'object', 'example': """{
+    'types': [
+        {
+            "identifier": "poster_original",
+            "type": "image",
+            "id": 1,
+            "name": "Poster_original"
+        },
+        {
+            "identifier": "poster",
+            "type": "image",
+            "id": 2,
+            "name": "Poster"
+        },
+        etc
+    ]
+}"""}
+        })
+
+        addEvent('app.load', self.cleanup)
+        addEvent('app.load', self.init)
+
+    def init(self):
+
+        for type_tuple in Scanner.file_types.values():
+            self.getType(type_tuple)
+
+    def cleanup(self):
+
+        # Wait a bit after starting before cleanup
+        time.sleep(3)
+        log.debug('Cleaning up unused files')
+
+        try:
+            db = get_session()
+            for root, dirs, walk_files in os.walk(Env.get('cache_dir')):
+                for filename in walk_files:
+                    file_path = os.path.join(root, filename)
+                    f = db.query(File).filter(File.path == toUnicode(file_path)).first()
+                    if not f:
+                        os.remove(file_path)
+        except:
+            log.error('Failed removing unused file: %s', traceback.format_exc())
 
     def showCacheFile(self, filename = ''):
 
@@ -89,7 +138,6 @@ class FileManager(Plugin):
             db.commit()
 
         type_dict = ft.to_dict()
-        #db.close()
         return type_dict
 
     def getTypes(self):
@@ -102,5 +150,10 @@ class FileManager(Plugin):
         for type_object in results:
             types.append(type_object.to_dict())
 
-        #db.close()
         return types
+
+    def getTypesView(self):
+
+        return jsonified({
+            'types': self.getTypes()
+        })

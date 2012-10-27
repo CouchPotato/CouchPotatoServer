@@ -18,6 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from __future__ import unicode_literals
 from guessit import Guess
 from guessit.transfo import SingleNodeGuesser
 from guessit.language import search_language

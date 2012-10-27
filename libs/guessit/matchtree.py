@@ -18,15 +18,16 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from guessit import Guess
-from guessit.textutils import clean_string, str_fill, to_utf8
+from __future__ import unicode_literals
+from guessit import UnicodeMixin, base_text_type, Guess
+from guessit.textutils import clean_string, str_fill
 from guessit.patterns import group_delimiters
 import logging
 
 log = logging.getLogger(__name__)
 
 
-class BaseMatchTree(object):
+class BaseMatchTree(UnicodeMixin):
     """A MatchTree represents the hierarchical split of a string into its
     constituent semantic groups."""
 
@@ -154,6 +155,7 @@ class BaseMatchTree(object):
                      'extension': 'e',
                      'format': 'f',
                      'language': 'l',
+                     'country': 'C',
                      'videoCodec': 'v',
                      'audioCodec': 'a',
                      'website': 'w',
@@ -198,9 +200,6 @@ class BaseMatchTree(object):
     def __unicode__(self):
         return self.to_string()
 
-    def __str__(self):
-        return to_utf8(unicode(self))
-
 
 class MatchTree(BaseMatchTree):
     """The MatchTree contains a few "utility" methods which are not necessary
@@ -218,7 +217,7 @@ class MatchTree(BaseMatchTree):
         return list(self._unidentified_leaves(valid))
 
     def _leaves_containing(self, property_name):
-        if isinstance(property_name, basestring):
+        if isinstance(property_name, base_text_type):
             property_name = [ property_name ]
 
         for leaf in self._leaves():

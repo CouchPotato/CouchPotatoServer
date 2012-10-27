@@ -271,7 +271,7 @@ body > .spinner, .mask{
 		box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 0 3px rgba(0,0,0,.7);
 		background-color: #1b79b8;
 		text-shadow: none;
-		background-image: linear-gradient(0deg, rgba(255,255,255,.3) 0%, rgba(255,255,255,.1) 100%);
+		background-image: -*-linear-gradient(0deg, rgba(255,255,255,.3) 0%, rgba(255,255,255,.1) 100%);
 	}
 
 	.header .notification_menu .wrapper {
@@ -355,7 +355,7 @@ body > .spinner, .mask{
 		border-radius:30px;
 
 		box-shadow: 0 1px 1px rgba(0,0,0,0.35), inset 0 1px 0px rgba(255,255,255,0.20);
-		background: url('../images/sprite.png') no-repeat 94% -53px, linear-gradient(
+		background: url('../images/sprite.png') no-repeat 94% -53px, -*-linear-gradient(
 		    270deg,
 		    #5b9bd1 0%,
 		    #406db8 100%
@@ -376,22 +376,12 @@ body > .spinner, .mask{
 	  	font-weight: bold;
 	}
 
-	.select .list:before {
-		content: ' ';
-		height: 0;
-		position: absolute;
-		width: 0;
-		border: 6px solid transparent;
-		border-bottom-color: #282d34;
-		margin: -11px 0 0 70px;
-	}
-
 	.select .list {
 		display: none;
 	  	background: #282d34;
 	  	border: 1px solid #1f242b;
 		position: absolute;
-		margin: 30px 0 0 0;
+		margin: 28px 0 0 0;
 		box-shadow: 0 20px 20px -10px rgba(0,0,0,0.4);
 		border-radius:3px;
 		z-index: 3;
@@ -441,7 +431,7 @@ body > .spinner, .mask{
 	border: 1px solid #252930;
 	box-shadow: inset 0 1px 0px rgba(255,255,255,0.20), 0 0 3px rgba(0,0,0, 0.2);
 	background: rgb(55,62,74);
-	background-image: linear-gradient(
+	background-image: -*-linear-gradient(
 	    90deg,
 	    rgb(55,62,74) 0%,
 	    rgb(73,83,98) 100%
@@ -530,7 +520,7 @@ body > .spinner, .mask{
 		text-align: center;
 		color: #000;
 		text-shadow: none;
-		background-image: linear-gradient(
+		background-image: -*-linear-gradient(
 		    45deg,
 		    rgb(200,200,200) 0%,
 		    rgb(255,255,255) 100%
@@ -602,7 +592,7 @@ body > .spinner, .mask{
 		overflow: hidden;
 		transition: all .6s cubic-bezier(0.9,0,0.1,1);
 		box-shadow: 0 1px 1px rgba(0,0,0,0.35), inset 0 1px 0px rgba(255,255,255,0.20);
-		background-image: linear-gradient(
+		background-image: -*-linear-gradient(
 		    270deg,
 		    #5b9bd1 0%,
 		    #406db8 100%

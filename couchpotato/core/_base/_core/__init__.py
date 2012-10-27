@@ -27,6 +27,7 @@ config = [{
                     'name': 'host',
                     'advanced': True,
                     'default': '0.0.0.0',
+                    'hidden': True,
                     'label': 'IP',
                     'description': 'Host that I should listen to. "0.0.0.0" listens to all ips.',
                 },
