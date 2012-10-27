@@ -8,9 +8,11 @@ from couchpotato.environment import Env
 from datetime import datetime
 from dateutil.parser import parse
 from git.repository import LocalRepository
+import atexit
 import json
 import os
 import shutil
+import sys
 import tarfile
 import time
 import traceback
@@ -105,6 +107,10 @@ class Updater(Plugin):
             success = self.updater.doUpdate()
             if success:
                 fireEventAsync('app.restart')
+
+            # Assume the updater handles things
+            if not success:
+                success = True
 
         return jsonified({
             'success': success
@@ -396,6 +402,7 @@ class DesktopUpdater(BaseUpdater):
                     self.update_failed = True
 
             self.desktop._esky.auto_update(callback = do_restart)
+            return
         except:
             self.update_failed = True
 
