@@ -104,7 +104,7 @@ setup(
     options = dict(bdist_esky = ESKY_OPTIONS),
 )
 
-distpath = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'dist')
-zipfilename = os.path.join(distpath, '%s-%s.%s' % (NAME, version.VERSION, file_ext))
-zfile = zipfile.ZipFile(zipfilename, "r")
-zfile.extractall(distpath)
+#distpath = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'dist')
+#zipfilename = os.path.join(distpath, '%s-%s.%s' % (NAME, version.VERSION, file_ext))
+#zfile = zipfile.ZipFile(zipfilename, "r")
+#zfile.extractall(distpath)
