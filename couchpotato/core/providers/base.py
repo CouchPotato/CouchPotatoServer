@@ -111,4 +111,9 @@ class YarrProvider(Provider):
         return [self.cat_backup_id]
 
     def found(self, new):
-        log.info('Found: score(%(score)s) on %(provider)s: %(name)s', new)
+        if not new.get('provider_extra'):
+            new['provider_extra'] = ''
+        else:
+            new['provider_extra'] = ', %s' % new['provider_extra']
+
+        log.info('Found: score(%(score)s) on %(provider)s%(provider_extra)s: %(name)s', new)
