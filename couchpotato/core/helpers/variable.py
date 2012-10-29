@@ -9,15 +9,34 @@ import sys
 
 log = CPLog(__name__)
 
+def getUserDir():
+    try:
+        import pwd
+        os.environ['HOME'] = pwd.getpwuid(os.geteuid()).pw_dir
+    except:
+        pass
+
+    return os.path.expanduser('~')
+
+def getDownloadDir():
+    user_dir = getUserDir()
+
+    # OSX
+    if 'darwin' in platform.platform().lower():
+        return os.path.join(user_dir, 'Downloads')
+
+    if os.name == 'nt':
+        return os.path.join(user_dir, 'Downloads')
+
+    return user_dir
+
 def getDataDir():
 
     # Windows
     if os.name == 'nt':
         return os.path.join(os.environ['APPDATA'], 'CouchPotato')
 
-    import pwd
-    os.environ['HOME'] = pwd.getpwuid(os.geteuid()).pw_dir
-    user_dir = os.path.expanduser('~')
+    user_dir = getUserDir()
 
     # OSX
     if 'darwin' in platform.platform().lower():

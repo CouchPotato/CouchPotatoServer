@@ -1,4 +1,5 @@
 from .main import Blackhole
+from couchpotato.core.helpers.variable import getDownloadDir
 
 def start():
     return Blackhole()
@@ -16,7 +17,7 @@ config = [{
             'options': [
                 {
                     'name': 'enabled',
-                    'default': 0,
+                    'default': True,
                     'type': 'enabler',
                     'radio_group': 'nzb,torrent',
                 },
@@ -24,6 +25,7 @@ config = [{
                     'name': 'directory',
                     'type': 'directory',
                     'description': 'Directory where the .nzb (or .torrent) file is saved to.',
+                    'default': getDownloadDir()
                 },
                 {
                     'name': 'use_for',

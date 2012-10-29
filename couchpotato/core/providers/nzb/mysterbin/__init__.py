@@ -15,7 +15,7 @@ config = [{
                 {
                     'name': 'enabled',
                     'type': 'enabler',
-                    'default': False,
+                    'default': True,
                 },
             ],
         },
