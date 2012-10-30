@@ -213,7 +213,7 @@ class Event(object):
                 try:
                     r = self._memoize(memoize, timeout, handler, *args, **kwargs)
                     if not self.asynchronous:
-                        if not return_on_result  or (return_on_result and r[1]):
+                        if not return_on_result or (return_on_result and r[1] is not None):
                             add_to_result(h_, tuple(r))
                             got_results = True
 
