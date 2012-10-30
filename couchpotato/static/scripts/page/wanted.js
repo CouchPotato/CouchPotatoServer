@@ -333,7 +333,7 @@ window.addEvent('domready', function(){
 
 						Array.each(release.files, function(file){
 							new Element('div.file.item').adopt(
-								new Element('span.name', {'text': file.path, 'title': file.path}),
+								new Element('span.name', {'text': file.path}),
 								new Element('span.type', {'text': File.Type.get(file.type_id).name}),
 								new Element('span.available', {'text': file.available})
 							).inject(rel)
