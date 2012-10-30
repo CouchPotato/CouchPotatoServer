@@ -4,7 +4,7 @@ from couchpotato.core.helpers.rss import RSS
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.nzb.base import NZBProvider
 from couchpotato.environment import Env
-from dateutil.parser import parse
+from libs.dateutil.parser import parse
 import time
 import xml.etree.ElementTree as XMLTree
 
