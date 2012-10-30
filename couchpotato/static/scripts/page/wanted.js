@@ -350,4 +350,3 @@ window.addEvent('domready', function(){
 	};
 
 })
-
