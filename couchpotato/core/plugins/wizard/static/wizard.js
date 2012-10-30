@@ -37,7 +37,7 @@ Page.Wizard = new Class({
 		},
 		'downloaders': {
 			'title': 'What download apps are you using?',
-			'description': 'CP needs an external download app to work with. Choose one below. For more downloaders check settings after you have filled in the wizard. If your download app isn\'t in the list, use Blackhole.'
+			'description': 'CP needs an external download app to work with. Choose one below. For more downloaders check settings after you have filled in the wizard. If your download app isn\'t in the list, use the default Blackhole.'
 		},
 		'providers': {
 			'title': 'Are you registered at any of these sites?',

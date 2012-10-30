@@ -294,7 +294,7 @@ class Searcher(Plugin):
         retention = Env.setting('retention', section = 'nzb')
 
         if nzb.get('seeds') is None and 0 < retention < nzb.get('age', 0):
-            log.info('Wrong: Outside retention, age is %s, needs %s or lower: %s', (nzb['age'], retention, nzb['name']))
+            log.info2('Wrong: Outside retention, age is %s, needs %s or lower: %s', (nzb['age'], retention, nzb['name']))
             return False
 
         movie_name = getTitle(movie['library'])
@@ -304,13 +304,13 @@ class Searcher(Plugin):
         required_words = [x.strip().lower() for x in self.conf('required_words').lower().split(',')]
 
         if self.conf('required_words') and not list(set(nzb_words) & set(required_words)):
-            log.info("Wrong: Required word missing: %s" % nzb['name'])
+            log.info2("Wrong: Required word missing: %s" % nzb['name'])
             return False
 
         ignored_words = [x.strip().lower() for x in self.conf('ignored_words').split(',')]
         blacklisted = list(set(nzb_words) & set(ignored_words))
         if self.conf('ignored_words') and blacklisted:
-            log.info("Wrong: '%s' blacklisted words: %s" % (nzb['name'], ", ".join(blacklisted)))
+            log.info2("Wrong: '%s' blacklisted words: %s" % (nzb['name'], ", ".join(blacklisted)))
             return False
 
         pron_tags = ['xxx', 'sex', 'anal', 'tits', 'fuck', 'porn', 'orgy', 'milf', 'boobs', 'erotica', 'erotic']
@@ -324,18 +324,18 @@ class Searcher(Plugin):
 
         # Contains lower quality string
         if self.containsOtherQuality(nzb, movie_year = movie['library']['year'], preferred_quality = preferred_quality):
-            log.info('Wrong: %s, looking for %s', (nzb['name'], quality['label']))
+            log.info2('Wrong: %s, looking for %s', (nzb['name'], quality['label']))
             return False
 
 
         # File to small
         if nzb['size'] and preferred_quality['size_min'] > nzb['size']:
-            log.info('"%s" is too small to be %s. %sMB instead of the minimal of %sMB.', (nzb['name'], preferred_quality['label'], nzb['size'], preferred_quality['size_min']))
+            log.info2('Wrong: "%s" is too small to be %s. %sMB instead of the minimal of %sMB.', (nzb['name'], preferred_quality['label'], nzb['size'], preferred_quality['size_min']))
             return False
 
         # File to large
         if nzb['size'] and preferred_quality.get('size_max') < nzb['size']:
-            log.info('"%s" is too large to be %s. %sMB instead of the maximum of %sMB.', (nzb['name'], preferred_quality['label'], nzb['size'], preferred_quality['size_max']))
+            log.info2('Wrong: "%s" is too large to be %s. %sMB instead of the maximum of %sMB.', (nzb['name'], preferred_quality['label'], nzb['size'], preferred_quality['size_max']))
             return False
 
 

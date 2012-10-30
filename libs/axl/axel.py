@@ -95,7 +95,6 @@ class Event(object):
                 (None, None, handler), ...      # asynchronous execution
             )
         """
-        self.in_order = False
         self.name = name
         self.asynchronous = asynch
         self.exc_info = exc_info
@@ -142,11 +141,16 @@ class Event(object):
     def fire(self, *args, **kwargs):
         """ Stores all registered handlers in a queue for processing """
         self.queue = Queue.Queue()
-        self.result = {}
+        result = {}
 
         if self.handlers:
 
-            max_threads = self._threads()
+            max_threads = 1 if kwargs.get('event_order_lock') else self._threads()
+
+            # Set global result
+            def add_to(key, value):
+                result[key] = value
+            kwargs['event_add_to_result'] = add_to
 
             for i in range(max_threads):
                 t = threading.Thread(target = self._execute,
@@ -159,17 +163,12 @@ class Event(object):
 
                 if self.asynchronous:
                     handler_, memoize, timeout = self.handlers[handler]
-                    self.result[handler] = (None, None, handler_)
+                    result[handler] = (None, None, handler_)
 
             if not self.asynchronous:
                 self.queue.join()
 
-        res = self.result or None
-
-        # Cleanup
-        self.result = {}
-
-        return res
+        return result
 
     def count(self):
         """ Returns the count of registered handlers """
@@ -181,24 +180,47 @@ class Event(object):
         self.memoize.clear()
 
     def _execute(self, *args, **kwargs):
+
+        # Remove get and set from kwargs
+        add_to_result = kwargs.get('event_add_to_result')
+        del kwargs['event_add_to_result']
+
+        # Get and remove order lock
+        order_lock = kwargs.get('event_order_lock')
+        try: del kwargs['event_order_lock']
+        except: pass
+
+        # Get and remove return on first
+        return_on_result = kwargs.get('event_return_on_result')
+        try: del kwargs['event_return_on_result']
+        except: pass
+
+        got_results = False
+
         """ Executes all handlers stored in the queue """
         while True:
+
             try:
                 h_ = self.queue.get(timeout = 2)
                 handler, memoize, timeout = self.handlers[h_]
 
-                if self.lock and self.in_order:
-                    self.lock.acquire()
+                if return_on_result and got_results:
+                    continue
+
+                if order_lock:
+                    order_lock.acquire()
 
                 try:
                     r = self._memoize(memoize, timeout, handler, *args, **kwargs)
                     if not self.asynchronous:
-                        self.result[h_] = tuple(r)
+                        if not return_on_result  or (return_on_result and r[1]):
+                            add_to_result(h_, tuple(r))
+                            got_results = True
 
                 except Exception:
                     if not self.asynchronous:
-                        self.result[h_] = (False, self._error(sys.exc_info()),
-                                            handler)
+                        add_to_result(h_, (False, self._error(sys.exc_info()),
+                                            handler))
                     else:
                         self.error_handler(sys.exc_info())
                 finally:
@@ -206,8 +228,8 @@ class Event(object):
                     if not self.asynchronous:
                         self.queue.task_done()
 
-                    if self.lock and self.in_order:
-                        self.lock.release()
+                    if order_lock:
+                        order_lock.release()
 
                     if self.queue.empty():
                         raise Queue.Empty
@@ -257,7 +279,7 @@ class Event(object):
             args.insert(0, self.sender)
 
         if not memoize:
-            if timeout <= 0:    #no time restriction
+            if timeout <= 0: #no time restriction
                 result = [True, handler(*args, **kwargs), handler]
                 return result
 
@@ -273,7 +295,7 @@ class Event(object):
                     if args_ == args and kwargs_ == kwargs:
                         return [True, result, handler]
 
-            if timeout <= 0:    #no time restriction
+            if timeout <= 0: #no time restriction
                 result = handler(*args, **kwargs)
             else:
                 result = self._timeout(timeout, handler, *args, **kwargs)
