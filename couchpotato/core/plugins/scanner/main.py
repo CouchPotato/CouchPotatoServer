@@ -398,6 +398,7 @@ class Scanner(Plugin):
                 for x in range(len(ident)):
                     if ident[x] == str(meta.get('audio')):
                         meta['audio'] = name[x]
+                        break
                 
             try:
                 data['video'] = meta.get('video', self.getCodec(cur_file, self.codecs['video']))
