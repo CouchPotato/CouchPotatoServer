@@ -51,7 +51,7 @@ class Scanner(Plugin):
     codecs = {
         'audio': ['dts', 'ac3', 'ac3d', 'mp3'],
         'a_dec': ['8193', '8192', '85', '80', '1', '3', '30625', '22358', '26448', '61868', '225'],  
-        'a_nam': ['dts', 'ac3', 'mpeg/l3', 'mpeg', 'pcm/int', 'pcm/float, 'tta1', 'wavpack', 'vorbis', 'flac', 'aac'], 
+        'a_nam': ['dts', 'ac3', 'mpeg/l3', 'mpeg', 'pcm/int', 'pcm/float', 'tta1', 'wavpack', 'vorbis', 'flac', 'aac'], 
         'video': ['x264', 'h264', 'divx', 'xvid']
     }
 
