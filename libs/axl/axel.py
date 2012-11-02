@@ -205,6 +205,10 @@ class Event(object):
                 handler, memoize, timeout = self.handlers[h_]
 
                 if return_on_result and got_results:
+
+                    if not self.asynchronous:
+                        self.queue.task_done()
+
                     continue
 
                 if order_lock:
