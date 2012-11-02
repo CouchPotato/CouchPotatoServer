@@ -49,11 +49,12 @@ class Scanner(Plugin):
     }
 
     codecs = {
-        'audio': ['dts', 'ac3', 'ac3d', 'mp3'],
-        'a_dec': ['8193', '8192', '85', '80', '1', '3', '30625', '22358', '26448', '61868', '225'],  
-        'a_nam': ['dts', 'ac3', 'mpeg/l3', 'mpeg', 'pcm/int', 'pcm/float', 'tta1', 'wavpack', 'vorbis', 'flac', 'aac'], 
+        'audio': ['dts', 'ac3', 'ac3d', 'mp3'], 
         'video': ['x264', 'h264', 'divx', 'xvid']
     }
+
+    codecmap = {8192:'ac3', 8193:'dts', 85:'mp3', 80:'mp2', 1:'pcm', 3:'pcm', 30625:'tta1', 22358:'wav', 26448:'vorbis', 61868:'flac', 225:'aac'}
+
 
     source_media = {
         'bluray': ['bluray', 'blu-ray', 'brrip', 'br-rip'],
@@ -392,14 +393,7 @@ class Scanner(Plugin):
             if os.path.getsize(cur_file) < self.minimal_filesize['media']: continue # Ignore smaller files
 
             meta = self.getMeta(cur_file)
-            if meta.get('audio'):
-                ident = self.codecs['a_dec']
-                name = self.codecs['a_nam']
-                for x in range(len(ident)):
-                    if ident[x] == str(meta.get('audio')):
-                        meta['audio'] = name[x]
-                        break
-                
+  
             try:
                 data['video'] = meta.get('video', self.getCodec(cur_file, self.codecs['video']))
                 data['audio'] = meta.get('audio', self.getCodec(cur_file, self.codecs['audio']))
@@ -428,6 +422,9 @@ class Scanner(Plugin):
 
         try:
             p = enzyme.parse(filename)
+            if p.video[0].codec == 'AVC1'
+                p.video[0].codec = 'h264'
+            p.audio[0].codec = codecmap[p.audio[0].codec]
             return {
                 'video': p.video[0].codec,
                 'audio': p.audio[0].codec,
