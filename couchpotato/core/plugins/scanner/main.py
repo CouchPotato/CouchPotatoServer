@@ -422,7 +422,7 @@ class Scanner(Plugin):
 
         try:
             p = enzyme.parse(filename)
-            if p.video[0].codec == 'AVC1'
+            if p.video[0].codec == 'AVC1':
                 p.video[0].codec = 'h264'
             p.audio[0].codec = self.codecmap[p.audio[0].codec]
             return {
