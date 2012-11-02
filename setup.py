@@ -3,7 +3,6 @@ from setuptools import setup
 import os
 import sys
 import version
-import zipfile
 
 
 # Include proper dirs
@@ -99,7 +98,7 @@ setup(
     version = version.VERSION,
     author = "Ruud",
     author_email = "info@couchpota.to",
-    description = ("Download movies automatically, easily and in the best quality as soon as they are released, via usenet or torrents"),
+    description = 'CouchPotato %s' % version.VERSION,
     data_files = DATA_FILES,
     options = dict(bdist_esky = ESKY_OPTIONS),
 )
