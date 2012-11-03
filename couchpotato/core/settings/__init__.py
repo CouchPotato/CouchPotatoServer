@@ -90,7 +90,7 @@ class Settings(object):
     def set(self, section, option, value):
         return self.p.set(section, option, value)
 
-    def get(self, option = '', section = 'core', default = '', type = None):
+    def get(self, option = '', section = 'core', default = None, type = None):
         try:
 
             try: type = self.types[section][option]
@@ -111,7 +111,7 @@ class Settings(object):
         try:
             return self.p.getboolean(section, option)
         except:
-            return self.p.get(section, option)
+            return self.p.get(section, option) == 1
 
     def getInt(self, section, option):
         try:
