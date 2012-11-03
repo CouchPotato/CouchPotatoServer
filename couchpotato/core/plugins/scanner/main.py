@@ -53,6 +53,20 @@ class Scanner(Plugin):
         'video': ['x264', 'h264', 'divx', 'xvid']
     }
 
+    audio_codec_map = {
+        0x2000: 'ac3',
+        0x2001: 'dts',
+        0x0055: 'mp3',
+        0x0050: 'mp2',
+        0x0001: 'pcm',
+        0x003: 'pcm',
+        0x77a1: 'tta1',
+        0x5756: 'wav',
+        0x6750: 'vorbis',
+        0xF1AC: 'flac',
+        0x00ff: 'aac',
+    }
+
     source_media = {
         'bluray': ['bluray', 'blu-ray', 'brrip', 'br-rip'],
         'hddvd': ['hddvd', 'hd-dvd'],
@@ -419,9 +433,18 @@ class Scanner(Plugin):
 
         try:
             p = enzyme.parse(filename)
+
+            # Video codec
+            vc = ('h264' if p.video[0].codec == 'AVC1' else p.video[0].codec).lower()
+
+            # Audio codec
+            ac = p.audio[0].codec
+            try: ac = self.audio_codec_map.get(p.audio[0].codec)
+            except: pass
+
             return {
-                'video': p.video[0].codec,
-                'audio': p.audio[0].codec,
+                'video': vc,
+                'audio': ac,
                 'resolution_width': tryInt(p.video[0].width),
                 'resolution_height': tryInt(p.video[0].height),
             }
