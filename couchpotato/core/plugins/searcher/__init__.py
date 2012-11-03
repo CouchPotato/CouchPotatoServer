@@ -35,7 +35,7 @@ config = [{
                     'name': 'preferred_method',
                     'label': 'First search',
                     'description': 'Which of the methods do you prefer',
-                    'default': 'nzb',
+                    'default': 'both',
                     'type': 'dropdown',
                     'values': [('usenet & torrents', 'both'), ('usenet', 'nzb'), ('torrents', 'torrent')],
                 },
