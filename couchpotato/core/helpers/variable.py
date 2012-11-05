@@ -103,7 +103,7 @@ def cleanHost(host):
 
     return host
 
-def getImdb(txt, check_inside = True):
+def getImdb(txt, check_inside = True, multiple = False):
 
     if check_inside and os.path.isfile(txt):
         output = open(txt, 'r')
@@ -111,8 +111,10 @@ def getImdb(txt, check_inside = True):
         output.close()
 
     try:
-        id = re.findall('(tt\d{7})', txt)[0]
-        return id
+        ids = re.findall('(tt\d{7})', txt)
+        if multiple:
+            return ids if len(ids) > 0 else []
+        return ids[0]
     except IndexError:
         pass
 
