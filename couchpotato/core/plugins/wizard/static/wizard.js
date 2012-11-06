@@ -9,7 +9,7 @@ Page.Wizard = new Class({
 	headers: {
 		'welcome': {
 			'title': 'Welcome to the new CouchPotato',
-			'description': 'To get started, fill in each of the following settings as much as your can. <br />Maybe first start with importing your movies from the previous CouchPotato',
+			'description': 'To get started, fill in each of the following settings as much as you can. <br />Maybe first start with importing your movies from the previous CouchPotato',
 			'content': new Element('div', {
 				'styles': {
 					'margin': '0 0 0 30px'
