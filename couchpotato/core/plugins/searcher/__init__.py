@@ -29,7 +29,7 @@ config = [{
                 {
                     'name': 'ignored_words',
                     'label': 'Ignored words',
-                    'default': 'german, dutch, french, truefrench, danish, swedish, spanish, italian, korean, dubbed, swesub, korsub',
+                    'default': 'german, dutch, french, truefrench, danish, swedish, spanish, italian, korean, dubbed, swesub, korsub, dksubs',
                 },
                 {
                     'name': 'preferred_method',
