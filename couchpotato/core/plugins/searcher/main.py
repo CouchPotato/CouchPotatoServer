@@ -391,7 +391,7 @@ class Searcher(Plugin):
 
         # Hack for older movies that don't contain quality tag
         year_name = fireEvent('scanner.name_year', name, single = True)
-        if movie_year < datetime.datetime.now().year - 3 and not year_name.get('year', None):
+        if len(found) == 0 and movie_year < datetime.datetime.now().year - 3 and not year_name.get('year', None):
             if size > 3000: # Assume dvdr
                 log.info('Quality was missing in name, assuming it\'s a DVD-R based on the size: %s', (size))
                 found['dvdr'] = True
