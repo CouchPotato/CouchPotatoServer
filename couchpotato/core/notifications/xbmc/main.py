@@ -3,6 +3,7 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
 from flask.helpers import json
 import base64
+import traceback
 
 log = CPLog(__name__)
 
@@ -22,9 +23,12 @@ class XBMC(Notification):
                 ('VideoLibrary.Scan', {}),
             ])
 
-            for result in response:
-                if result['result'] == "OK":
-                    successful += 1
+            try:
+                for result in response:
+                    if result['result'] == "OK":
+                        successful += 1
+            except:
+                log.error('Failed parsing results: %s', traceback.format_exc())
 
         return successful == len(hosts) * 2
 
@@ -50,10 +54,14 @@ class XBMC(Notification):
             base64string = base64.encodestring('%s:%s' % (self.conf('username'), self.conf('password'))).replace('\n', '')
             headers['Authorization'] = 'Basic %s' % base64string
 
-        log.debug('Sending request to %s: %s', (host, data))
-        rdata = self.urlopen(server, headers = headers, params = data, multipart = True)
-        response = json.loads(rdata)
-        log.debug('Returned from request %s: %s', (host, response))
+        try:
+            log.debug('Sending request to %s: %s', (host, data))
+            rdata = self.urlopen(server, headers = headers, params = data, multipart = True)
+            response = json.loads(rdata)
+            log.debug('Returned from request %s: %s', (host, response))
 
-        return response
+            return response
+        except:
+            log.error('Failed sending request to XBMC: %s', traceback.format_exc())
+            return []
 

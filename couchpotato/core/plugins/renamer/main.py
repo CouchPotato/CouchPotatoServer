@@ -383,7 +383,10 @@ class Renamer(Plugin):
 
             # Notify on download, search for trailers etc
             download_message = 'Downloaded %s (%s)' % (movie_title, replacements['quality'])
-            fireEvent('renamer.after', message = download_message, group = group, in_order = True)
+            try:
+                fireEvent('renamer.after', message = download_message, group = group, in_order = True)
+            except:
+                log.error('Failed firing (some) of the renamer.after events: %s', traceback.format_exc())
 
             # Break if CP wants to shut down
             if self.shuttingDown():
