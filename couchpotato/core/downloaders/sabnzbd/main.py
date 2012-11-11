@@ -76,7 +76,7 @@ class Sabnzbd(Downloader):
                 'mode': 'queue',
             })
         except:
-            log.error('Failed getting queue: %s', traceback.format_exc(0))
+            log.error('Failed getting queue: %s', traceback.format_exc(1))
             return False
 
         # Go through history items
@@ -86,7 +86,7 @@ class Sabnzbd(Downloader):
                 'limit': 15,
             })
         except:
-            log.error('Failed getting history json: %s', traceback.format_exc(0))
+            log.error('Failed getting history json: %s', traceback.format_exc(1))
             return False
 
         statuses = []

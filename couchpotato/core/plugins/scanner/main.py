@@ -23,7 +23,7 @@ class Scanner(Plugin):
         'media': 314572800, # 300MB
         'trailer': 1048576, # 1MB
     }
-    ignored_in_path = ['_unpack', '_failed_', '_unknown_', '_exists_', '_failed_remove_', '_failed_rename_', '.appledouble', '.appledb', '.appledesktop', os.path.sep + '._', '.ds_store', 'cp.cpnfo'] #unpacking, smb-crap, hidden files
+    ignored_in_path = ['extracting', '_unpack', '_failed_', '_unknown_', '_exists_', '_failed_remove_', '_failed_rename_', '.appledouble', '.appledb', '.appledesktop', os.path.sep + '._', '.ds_store', 'cp.cpnfo'] #unpacking, smb-crap, hidden files
     ignore_names = ['extract', 'extracting', 'extracted', 'movie', 'movies', 'film', 'films', 'download', 'downloads', 'video_ts', 'audio_ts', 'bdmv', 'certificate']
     extensions = {
         'movie': ['mkv', 'wmv', 'avi', 'mpg', 'mpeg', 'mp4', 'm2ts', 'iso', 'img', 'mdf', 'ts', 'm4v'],
@@ -51,6 +51,20 @@ class Scanner(Plugin):
     codecs = {
         'audio': ['dts', 'ac3', 'ac3d', 'mp3'],
         'video': ['x264', 'h264', 'divx', 'xvid']
+    }
+
+    audio_codec_map = {
+        0x2000: 'ac3',
+        0x2001: 'dts',
+        0x0055: 'mp3',
+        0x0050: 'mp2',
+        0x0001: 'pcm',
+        0x003: 'pcm',
+        0x77a1: 'tta1',
+        0x5756: 'wav',
+        0x6750: 'vorbis',
+        0xF1AC: 'flac',
+        0x00ff: 'aac',
     }
 
     source_media = {
@@ -331,7 +345,7 @@ class Scanner(Plugin):
                 continue
 
             log.debug('Getting metadata for %s', identifier)
-            group['meta_data'] = self.getMetaData(group)
+            group['meta_data'] = self.getMetaData(group, folder = folder)
 
             # Subtitle meta
             group['subtitle_language'] = self.getSubtitleLanguage(group) if not simple else {}
@@ -381,7 +395,7 @@ class Scanner(Plugin):
 
         return processed_movies
 
-    def getMetaData(self, group):
+    def getMetaData(self, group, folder = ''):
 
         data = {}
         files = list(group['files']['movie'])
@@ -410,7 +424,7 @@ class Scanner(Plugin):
         data['quality_type'] = 'HD' if data.get('resolution_width', 0) >= 1280 else 'SD'
 
         filename = re.sub('(.cp\(tt[0-9{7}]+\))', '', files[0])
-        data['group'] = self.getGroup(filename)
+        data['group'] = self.getGroup(filename[len(folder):])
         data['source'] = self.getSourceMedia(filename)
 
         return data
@@ -419,9 +433,18 @@ class Scanner(Plugin):
 
         try:
             p = enzyme.parse(filename)
+
+            # Video codec
+            vc = ('h264' if p.video[0].codec == 'AVC1' else p.video[0].codec).lower()
+
+            # Audio codec
+            ac = p.audio[0].codec
+            try: ac = self.audio_codec_map.get(p.audio[0].codec)
+            except: pass
+
             return {
-                'video': p.video[0].codec,
-                'audio': p.audio[0].codec,
+                'video': vc,
+                'audio': ac,
                 'resolution_width': tryInt(p.video[0].width),
                 'resolution_height': tryInt(p.video[0].height),
             }
@@ -738,8 +761,8 @@ class Scanner(Plugin):
 
     def getGroup(self, file):
         try:
-            match = re.search('-(?P<group>[A-Z0-9]+).', file, re.I)
-            return match.group('group') or ''
+            match = re.findall('\-([A-Z0-9]+)[\.\/]', file, re.I)
+            return match[-1] or ''
         except:
             return ''
 

@@ -35,7 +35,7 @@ class Renamer(Plugin):
         addEvent('app.load', self.scan)
 
         fireEvent('schedule.interval', 'renamer.check_snatched', self.checkSnatched, minutes = self.conf('run_every'))
-        fireEvent('schedule.interval', 'renamer.check_snatched_forced', self.scan, hours = 2)
+        fireEvent('schedule.interval', 'renamer.check_snatched_forced', self.scan, hours = self.conf('force_every'))
 
     def scanView(self):
 
@@ -383,7 +383,10 @@ class Renamer(Plugin):
 
             # Notify on download, search for trailers etc
             download_message = 'Downloaded %s (%s)' % (movie_title, replacements['quality'])
-            fireEvent('renamer.after', message = download_message, group = group, in_order = True)
+            try:
+                fireEvent('renamer.after', message = download_message, group = group, in_order = True)
+            except:
+                log.error('Failed firing (some) of the renamer.after events: %s', traceback.format_exc())
 
             # Break if CP wants to shut down
             if self.shuttingDown():

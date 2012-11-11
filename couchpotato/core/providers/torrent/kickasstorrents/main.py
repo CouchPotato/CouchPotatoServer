@@ -94,6 +94,7 @@ class KickAssTorrents(TorrentProvider):
                                 is_correct_movie = fireEvent('searcher.correct_movie',
                                                                 nzb = new, movie = movie, quality = quality,
                                                                 imdb_results = True, single = True)
+
                                 if is_correct_movie:
                                     results.append(new)
                                     self.found(new)

@@ -132,6 +132,7 @@ class Newznab(NZBProvider, RSS):
                     new = {
                         'id': id,
                         'provider': self.getName(),
+                        'provider_extra': host['host'],
                         'type': 'nzb',
                         'name': self.getTextElement(nzb, "title"),
                         'age': self.calculateAge(int(time.mktime(parse(date).timetuple()))),
