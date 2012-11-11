@@ -49,6 +49,7 @@ class Transmission(Downloader):
             trpc = TransmissionRPC(host[0], port = host[1], username = self.conf('username'), password = self.conf('password'))
             if data.get('type') == 'torrent_magnet':
                 remote_torrent = trpc.add_torrent_uri(data.get('url'), arguments = params)
+                torrent_params['trackerAdd'] = self.torrent_trackers
             else:
                 remote_torrent = trpc.add_torrent_file(b64encode(filedata), arguments = params)
 
