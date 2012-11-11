@@ -35,7 +35,7 @@ class Renamer(Plugin):
         addEvent('app.load', self.scan)
 
         fireEvent('schedule.interval', 'renamer.check_snatched', self.checkSnatched, minutes = self.conf('run_every'))
-        fireEvent('schedule.interval', 'renamer.check_snatched_forced', self.scan, hours = 2)
+        fireEvent('schedule.interval', 'renamer.check_snatched_forced', self.scan, hours = self.conf('force_every'))
 
     def scanView(self):
 
