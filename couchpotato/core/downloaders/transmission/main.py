@@ -30,9 +30,10 @@ class Transmission(Downloader):
             return False
 
         # Set parameters for Transmission
+        folder_name = self.createFileName(data, filedata, movie)[:-len(data.get('type')) - 1]
         params = {
             'paused': self.conf('paused', default = 0),
-            'download-dir': self.conf('directory', default = '').rstrip(os.path.sep)
+            'download-dir': os.path.join(self.conf('directory', default = ''), folder_name).rstrip(os.path.sep)
         }
 
         torrent_params = {
