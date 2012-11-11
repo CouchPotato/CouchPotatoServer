@@ -345,7 +345,7 @@ class Scanner(Plugin):
                 continue
 
             log.debug('Getting metadata for %s', identifier)
-            group['meta_data'] = self.getMetaData(group)
+            group['meta_data'] = self.getMetaData(group, folder = folder)
 
             # Subtitle meta
             group['subtitle_language'] = self.getSubtitleLanguage(group) if not simple else {}
@@ -395,7 +395,7 @@ class Scanner(Plugin):
 
         return processed_movies
 
-    def getMetaData(self, group):
+    def getMetaData(self, group, folder = ''):
 
         data = {}
         files = list(group['files']['movie'])
@@ -424,7 +424,7 @@ class Scanner(Plugin):
         data['quality_type'] = 'HD' if data.get('resolution_width', 0) >= 1280 else 'SD'
 
         filename = re.sub('(.cp\(tt[0-9{7}]+\))', '', files[0])
-        data['group'] = self.getGroup(filename)
+        data['group'] = self.getGroup(filename[len(folder):])
         data['source'] = self.getSourceMedia(filename)
 
         return data
@@ -761,8 +761,8 @@ class Scanner(Plugin):
 
     def getGroup(self, file):
         try:
-            match = re.search('-(?P<group>[A-Z0-9]+).', file, re.I)
-            return match.group('group') or ''
+            match = re.findall('\-([A-Z0-9]+)[\.\/]', file, re.I)
+            return match[-1] or ''
         except:
             return ''
 
