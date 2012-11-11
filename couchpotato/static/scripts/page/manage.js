@@ -46,7 +46,7 @@ Page.Manage = new Class({
 						'text': 'When you\'ve done that, hit this button → '
 					}).adopt(
 						new Element('a.button.green', {
-							'text': 'Hit me, but not to hard',
+							'text': 'Hit me, but not too hard',
 							'events':{
 								'click': self.refresh.bind(self, true)
 							}
