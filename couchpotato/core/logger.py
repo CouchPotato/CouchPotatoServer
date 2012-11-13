@@ -56,7 +56,8 @@ class CPLog(object):
         if not Env.get('dev'):
 
             for replace in self.replace_private:
-                msg = re.sub('(%s=)[^\&]+' % replace, '%s=xxx' % replace, msg)
+                msg = re.sub('(\?%s=)[^\&]+' % replace, '?%s=xxx' % replace, msg)
+                msg = re.sub('(&%s=)[^\&]+' % replace, '&%s=xxx' % replace, msg)
 
             # Replace api key
             try:
