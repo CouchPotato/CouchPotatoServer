@@ -94,8 +94,10 @@ class Newzbin(NZBProvider, RSS):
 
                     # Add attributes to name
                     try:
+                        use_attr = ['Source', 'Video Fmt', 'Audio Fmt', 'Language']
                         for attr in nzb.find('{%s}attributes' % REPORT_NS):
-                            title += ' ' + attr.text
+                            if attr.get("type") in use_attr:
+                                title += ' ' + attr.text
                     except:
                         pass
 
