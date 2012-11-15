@@ -144,7 +144,8 @@ class Newzbin(NZBProvider, RSS):
             }, show_error = False)
         except Exception, e:
             log.error('Failed downloading from newzbin, check credit: %s', e)
-            return False
+
+        return 'try_next'
 
     def getFormatId(self, format):
         for id, quality in self.format_ids.iteritems():
