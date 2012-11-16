@@ -268,6 +268,14 @@ class Scanner(Plugin):
                     file_too_new = time.time()
                     break
                 file_time = [os.path.getmtime(cur_file), os.path.getctime(cur_file)]
+
+                # If the file modified time is in the future, set it to the file creation time
+                if file_time[0] > time.time():
+                    log.info('File modified date is in the future (%s). Setting it to the creation date (%s).', (file_time[0], file_time[1]))
+                    file_time[0] = file_time[1]
+                    # Fix the modified date on the file itself
+                    os.utime(cur_file, (file_time[1], file_time[1]))
+
                 for t in file_time:
                     if t > time.time() - 60:
                         file_too_new = tryInt(time.time() - t)
