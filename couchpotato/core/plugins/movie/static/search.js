@@ -19,7 +19,9 @@ Block.Search = new Class({
 								self.hideResults(false)
 						},
 						'blur': function(){
-							self.el.removeClass('focused')
+							(function(){
+								self.el.removeClass('focused')
+							}).delay(2000);
 						}
 					}
 				}),
@@ -117,7 +119,7 @@ Block.Search = new Class({
 		self.hideResults(false);
 
 		if(!cache){
-			self.positionMask().fade('in');
+			self.mask.fade('in');
 
 			if(!self.spinner)
 				self.spinner = createSpinner(self.mask);
@@ -139,7 +141,6 @@ Block.Search = new Class({
 	fill: function(q, json){
 		var self = this;
 
-		self.positionMask()
 		self.cache[q] = json
 
 		self.movies = {}
@@ -168,19 +169,6 @@ Block.Search = new Class({
 
 	},
 
-	positionMask: function(){
-		var self = this;
-
-		var s = self.result_container.getSize()
-
-		return self.mask.setStyles({
-			'width': s.x,
-			'height': s.y
-		}).position({
-			'relativeTo': self.result_container
-		})
-	},
-
 	loading: function(bool){
 		this.el[bool ? 'addClass' : 'removeClass']('loading')
 	},
@@ -193,7 +181,7 @@ Block.Search = new Class({
 
 Block.Search.Item = new Class({
 
-	initialize: function(info){
+	initialize: function(info, options){
 		var self = this;
 
 		self.info = info;
@@ -203,14 +191,13 @@ Block.Search.Item = new Class({
 	},
 
 	create: function(){
-		var self = this;
-
-		var info = self.info;
+		var self = this,
+			info = self.info;
 
 		self.el = new Element('div.movie_result', {
 			'id': info.imdb
 		}).adopt(
-			self.options = new Element('div.options.inlay'),
+			self.options_el = new Element('div.options.inlay'),
 			self.data_container = new Element('div.data', {
 				'tween': {
 					duration: 400,
@@ -273,11 +260,7 @@ Block.Search.Item = new Class({
 
 		self.createOptions();
 
-		if(!self.width)
-			self.width = self.data_container.getCoordinates().width
-
-		self.data_container.tween('left', 0, self.width);
-
+		self.data_container.addClass('open');
 		self.el.addEvent('outerClick', self.closeOptions.bind(self))
 
 	},
@@ -285,7 +268,7 @@ Block.Search.Item = new Class({
 	closeOptions: function(){
 		var self = this;
 
-		self.data_container.tween('left', self.width, 0);
+		self.data_container.removeClass('open');
 		self.el.removeEvents('outerClick')
 	},
 
@@ -302,28 +285,31 @@ Block.Search.Item = new Class({
 				'profile_id': self.profile_select.get('value')
 			},
 			'onComplete': function(json){
-				self.options.empty();
-				self.options.adopt(
+				self.options_el.empty();
+				self.options_el.adopt(
 					new Element('div.message', {
 						'text': json.added ? 'Movie succesfully added.' : 'Movie didn\'t add properly. Check logs'
 					})
 				);
+				self.mask.fade('out');
 			},
 			'onFailure': function(){
-				self.options.empty();
-				self.options.adopt(
+				self.options_el.empty();
+				self.options_el.adopt(
 					new Element('div.message', {
 						'text': 'Something went wrong, check the logs for more info.'
 					})
 				);
+				self.mask.fade('out');
 			}
 		});
 	},
 
 	createOptions: function(){
-		var self = this;
+		var self = this,
+			info = self.info;
 
-		if(!self.options.hasClass('set')){
+		if(!self.options_el.hasClass('set')){
 
 			if(self.info.in_library){
 				var in_library = [];
@@ -332,10 +318,10 @@ Block.Search.Item = new Class({
 				});
 			}
 
-			self.options.adopt(
+			self.options_el.grab(
 				new Element('div').adopt(
-					self.option_thumbnail = self.info.images && self.info.images.poster.length > 0 ? new Element('img.thumbnail', {
-						'src': self.info.images.poster[0],
+					self.thumbnail = (info.images && info.images.poster.length > 0) ? new Element('img.thumbnail', {
+						'src': info.images.poster[0],
 						'height': null,
 						'width': null
 					}) : null,
@@ -372,7 +358,7 @@ Block.Search.Item = new Class({
 				}).inject(self.profile_select)
 			});
 
-			self.options.addClass('set');
+			self.options_el.addClass('set');
 		}
 
 	},
@@ -380,17 +366,7 @@ Block.Search.Item = new Class({
 	loadingMask: function(){
 		var self = this;
 
-		var s = self.options.getSize();
-
-		self.mask = new Element('span.mask', {
-			'styles': {
-				'position': 'relative',
-				'width': s.x,
-				'height': s.y,
-				'top': -s.y,
-				'display': 'block'
-			}
-		}).inject(self.options).fade('hide')
+		self.mask = new Element('span.mask').inject(self.el).fade('hide')
 
 		createSpinner(self.mask)
 		self.mask.fade('in')
