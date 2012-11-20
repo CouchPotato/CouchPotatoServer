@@ -93,11 +93,15 @@ class ThePirateBay(TorrentProvider):
                     return results
 
                 entries = results_table.find_all('tr')
-                for result in entries[1:]:
+                for result in entries[2:]:
                     link = result.find(href = re.compile('torrent\/\d+\/'))
                     download = result.find(href = re.compile('magnet:'))
 
-                    size = re.search('Size (?P<size>.+),', unicode(result.select('font.detDesc')[0])).group('size')
+                    try:
+                        size = re.search('Size (?P<size>.+),', unicode(result.select('font.detDesc')[0])).group('size')
+                    except:
+                        continue
+
                     if link and download:
 
                         def extra_score(item):
