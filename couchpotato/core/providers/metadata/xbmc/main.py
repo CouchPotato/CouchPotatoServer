@@ -28,83 +28,90 @@ class XBMC(MetaDataBase):
         return os.path.join(root, basename.replace('%s', name))
 
     def getNfo(self, movie_info = {}, data = {}):
-        nfoxml = Element('movie')
+        if self.conf('meta_nfo_url'):
 
-        # Title
-        try:
-            el = SubElement(nfoxml, 'title')
-            el.text = toUnicode(getTitle(data['library']))
-        except:
-            pass
+            imdb_url = 'http://www.imdb.com/title/%s/' % toUnicode(data['library']['identifier'])
 
-        # IMDB id
-        try:
-            el = SubElement(nfoxml, 'id')
-            el.text = toUnicode(data['library']['identifier'])
-        except:
-            pass
+            return imdb_url
 
-        # Runtime
-        try:
-            runtime = SubElement(nfoxml, 'runtime')
-            runtime.text = '%s min' % movie_info.get('runtime')
-        except:
-            pass
+        else:
+            nfoxml = Element('movie')
 
-        # Other values
-        types = ['year', 'mpaa', 'originaltitle:original_title', 'outline', 'plot', 'tagline', 'premiered:released']
-        for type in types:
-
-            if ':' in type:
-                name, type = type.split(':')
-            else:
-                name = type
-
+            # Title
             try:
-                if data['library'].get(type):
-                    el = SubElement(nfoxml, name)
-                    el.text = toUnicode(movie_info.get(type, ''))
+                el = SubElement(nfoxml, 'title')
+                el.text = toUnicode(getTitle(data['library']))
             except:
                 pass
 
-        # Rating
-        for rating_type in ['imdb', 'rotten', 'tmdb']:
+            # IMDB id
             try:
-                r, v = movie_info['rating'][rating_type]
-                rating = SubElement(nfoxml, 'rating')
-                rating.text = str(r)
-                votes = SubElement(nfoxml, 'votes')
-                votes.text = str(v)
-                break
+                el = SubElement(nfoxml, 'id')
+                el.text = toUnicode(data['library']['identifier'])
             except:
-                log.debug('Failed adding rating info from %s: %s', (rating_type, traceback.format_exc()))
+                pass
 
-        # Genre
-        for genre in movie_info.get('genres', []):
-            genres = SubElement(nfoxml, 'genre')
-            genres.text = toUnicode(genre)
+            # Runtime
+            try:
+                runtime = SubElement(nfoxml, 'runtime')
+                runtime.text = '%s min' % movie_info.get('runtime')
+            except:
+                pass
 
-        # Actors
-        for actor in movie_info.get('actors', []):
-            actors = SubElement(nfoxml, 'actor')
-            name = SubElement(actors, 'name')
-            name.text = toUnicode(actor)
+            # Other values
+            types = ['year', 'mpaa', 'originaltitle:original_title', 'outline', 'plot', 'tagline', 'premiered:released']
+            for type in types:
 
-        # Directors
-        for director_name in movie_info.get('directors', []):
-            director = SubElement(nfoxml, 'director')
-            director.text = toUnicode(director_name)
+                if ':' in type:
+                    name, type = type.split(':')
+                else:
+                    name = type
 
-        # Writers
-        for writer in movie_info.get('writers', []):
-            writers = SubElement(nfoxml, 'credits')
-            writers.text = toUnicode(writer)
+                try:
+                    if data['library'].get(type):
+                        el = SubElement(nfoxml, name)
+                        el.text = toUnicode(movie_info.get(type, ''))
+                except:
+                    pass
+
+            # Rating
+            for rating_type in ['imdb', 'rotten', 'tmdb']:
+                try:
+                    r, v = movie_info['rating'][rating_type]
+                    rating = SubElement(nfoxml, 'rating')
+                    rating.text = str(r)
+                    votes = SubElement(nfoxml, 'votes')
+                    votes.text = str(v)
+                    break
+                except:
+                    log.debug('Failed adding rating info from %s: %s', (rating_type, traceback.format_exc()))
+
+            # Genre
+            for genre in movie_info.get('genres', []):
+                genres = SubElement(nfoxml, 'genre')
+                genres.text = toUnicode(genre)
+
+            # Actors
+            for actor in movie_info.get('actors', []):
+                actors = SubElement(nfoxml, 'actor')
+                name = SubElement(actors, 'name')
+                name.text = toUnicode(actor)
+
+            # Directors
+            for director_name in movie_info.get('directors', []):
+                director = SubElement(nfoxml, 'director')
+                director.text = toUnicode(director_name)
+
+            # Writers
+            for writer in movie_info.get('writers', []):
+                writers = SubElement(nfoxml, 'credits')
+                writers.text = toUnicode(writer)
 
 
-        # Clean up the xml and return it
-        nfoxml = xml.dom.minidom.parseString(tostring(nfoxml))
-        xml_string = nfoxml.toprettyxml(indent = '  ')
-        text_re = re.compile('>\n\s+([^<>\s].*?)\n\s+</', re.DOTALL)
-        xml_string = text_re.sub('>\g<1></', xml_string)
+            # Clean up the xml and return it
+            nfoxml = xml.dom.minidom.parseString(tostring(nfoxml))
+            xml_string = nfoxml.toprettyxml(indent = '  ')
+            text_re = re.compile('>\n\s+([^<>\s].*?)\n\s+</', re.DOTALL)
+            xml_string = text_re.sub('>\g<1></', xml_string)
 
-        return xml_string.encode('utf-8')
+            return xml_string.encode('utf-8')
