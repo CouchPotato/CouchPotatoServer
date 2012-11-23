@@ -305,7 +305,7 @@ Block.Search.Item = new Class({
 				self.options.empty();
 				self.options.adopt(
 					new Element('div.message', {
-						'text': json.added ? 'Movie succesfully added.' : 'Movie didn\'t add properly. Check logs'
+						'text': json.added ? 'Movie successfully added.' : 'Movie didn\'t add properly. Check logs'
 					})
 				);
 			},
