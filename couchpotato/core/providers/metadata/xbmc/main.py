@@ -28,6 +28,11 @@ class XBMC(MetaDataBase):
         return os.path.join(root, basename.replace('%s', name))
 
     def getNfo(self, movie_info = {}, data = {}):
+
+        # return imdb url only
+        if self.conf('meta_url_only'):
+            return 'http://www.imdb.com/title/%s/' % toUnicode(data['library']['identifier'])
+
         nfoxml = Element('movie')
 
         # Title
