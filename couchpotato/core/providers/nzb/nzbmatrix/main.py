@@ -1,6 +1,7 @@
 from couchpotato.core.event import fireEvent
-from couchpotato.core.helpers.encoding import tryUrlencode
+from couchpotato.core.helpers.encoding import tryUrlencode, simplifyString
 from couchpotato.core.helpers.rss import RSS
+from couchpotato.core.helpers.variable import getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.nzb.base import NZBProvider
 from couchpotato.environment import Env
@@ -37,15 +38,25 @@ class NZBMatrix(NZBProvider, RSS):
 
         cat_ids = ','.join(['%s' % x for x in self.getCatId(quality.get('identifier'))])
 
-        arguments = tryUrlencode({
-            'term': movie['library']['identifier'],
-            'subcat': cat_ids,
-            'username': self.conf('username'),
-            'apikey': self.conf('api_key'),
-            'searchin': 'weblink',
-            'maxage': Env.setting('retention', section = 'nzb'),
-            'english': self.conf('english_only'),
-        })
+        if self.conf('search_name'):
+            arguments = tryUrlencode({
+                'term': simplifyString(getTitle(movie['library'])),
+                'subcat': cat_ids,
+                'username': self.conf('username'),
+                'apikey': self.conf('api_key'),
+                'maxage': Env.setting('retention', section = 'nzb'),
+                'english': self.conf('english_only'),
+            })
+        else:
+            arguments = tryUrlencode({
+                'term': movie['library']['identifier'],
+                'subcat': cat_ids,
+                'username': self.conf('username'),
+                'apikey': self.conf('api_key'),
+                'searchin': 'weblink',
+                'maxage': Env.setting('retention', section = 'nzb'),
+                'english': self.conf('english_only'),
+            })
         url = "%s?%s" % (self.urls['search'], arguments)
 
         cache_key = 'nzbmatrix.%s.%s' % (movie['library'].get('identifier'), cat_ids)
@@ -83,9 +94,13 @@ class NZBMatrix(NZBProvider, RSS):
                         'check_nzb': True,
                     }
 
+                    if self.conf('search_name'):
+                        imdb_res = False
+                    else:
+                        imdb_res = True
                     is_correct_movie = fireEvent('searcher.correct_movie',
                                                  nzb = new, movie = movie, quality = quality,
-                                                 imdb_results = True, single = True)
+                                                 imdb_results = imdb_res, single = True)
 
                     if is_correct_movie:
                         new['score'] = fireEvent('score.calculate', new, movie, single = True)
@@ -97,6 +112,9 @@ class NZBMatrix(NZBProvider, RSS):
                 log.error('Failed to parse XML response from NZBMatrix.com')
 
         return results
+
+    def download(self, url = '', nzb_id = ''):
+        return self.urlopen(url, headers = {'User-Agent': Env.getIdentifier()})
 
     def getApiExt(self):
         return '&username=%s&apikey=%s' % (self.conf('username'), self.conf('api_key'))
