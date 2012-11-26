@@ -89,7 +89,7 @@ class ThePirateBay(TorrentProvider):
                 soup = BeautifulSoup(data)
                 results_table = soup.find('table', attrs = {'id': 'searchResult'})
                 entries = results_table.find_all('tr')
-                for result in entries[1:]:
+                for result in entries[2:]:
                     link = result.find(href = re.compile('torrent\/\d+\/'))
                     download = result.find(href = re.compile('magnet:'))
 
