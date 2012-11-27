@@ -9,7 +9,7 @@ Page.Wizard = new Class({
 	headers: {
 		'welcome': {
 			'title': 'Welcome to the new CouchPotato',
-			'description': 'To get started, fill in each of the following settings as much as your can. <br />Maybe first start with importing your movies from the previous CouchPotato',
+			'description': 'To get started, fill in each of the following settings as much as you can. <br />Maybe first start with importing your movies from the previous CouchPotato',
 			'content': new Element('div', {
 				'styles': {
 					'margin': '0 0 0 30px'
@@ -37,7 +37,7 @@ Page.Wizard = new Class({
 		},
 		'downloaders': {
 			'title': 'What download apps are you using?',
-			'description': 'CP needs an external download app to work with. Choose one below. For more downloaders check settings after you have filled in the wizard. If your download app isn\'t in the list, use Blackhole.'
+			'description': 'CP needs an external download app to work with. Choose one below. For more downloaders check settings after you have filled in the wizard. If your download app isn\'t in the list, use the default Blackhole.'
 		},
 		'providers': {
 			'title': 'Are you registered at any of these sites?',

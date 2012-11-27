@@ -28,7 +28,7 @@ pidfile=${CP_PIDFILE-/var/run/couchpotato/couchpotato.pid}
 ##
 
 pidpath=`dirname ${pidfile}`
-options=" --daemon --pid_file=${pidfile} --datadir=${datadir}"
+options=" --daemon --pid_file=${pidfile} --data_dir=${datadir}"
 
 # create PID directory if not exist and ensure the couchpotato user can write to it
 if [ ! -d $pidpath ]; then

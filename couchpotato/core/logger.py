@@ -17,6 +17,9 @@ class CPLog(object):
     def info(self, msg, replace_tuple = ()):
         self.logger.info(self.addContext(msg, replace_tuple))
 
+    def info2(self, msg, replace_tuple = ()):
+        self.logger.log(19, self.addContext(msg, replace_tuple))
+
     def debug(self, msg, replace_tuple = ()):
         self.logger.debug(self.addContext(msg, replace_tuple))
 

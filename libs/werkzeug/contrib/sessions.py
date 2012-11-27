@@ -58,7 +58,10 @@ import tempfile
 from os import path
 from time import time
 from random import random
-from hashlib import sha1
+try:
+    from hashlib import sha1
+except ImportError:
+    from sha import new as sha1
 from cPickle import dump, load, HIGHEST_PROTOCOL
 
 from werkzeug.datastructures import CallbackDict

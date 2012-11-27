@@ -18,6 +18,20 @@ class Downloader(Plugin):
         'http://torcache.net/torrent/%s.torrent',
     ]
 
+    torrent_trackers = [
+        'http://tracker.publicbt.com/announce',
+        'udp://tracker.istole.it:80/announce',
+        'udp://fr33domtracker.h33t.com:3310/announce',
+        'http://tracker.istole.it/announce',
+        'http://tracker.ccc.de/announce',
+        'udp://tracker.publicbt.com:80/announce',
+        'udp://tracker.ccc.de:80/announce',
+        'http://exodus.desync.com/announce',
+        'http://exodus.desync.com:6969/announce',
+        'http://tracker.publichd.eu/announce',
+        'http://tracker.openbittorrent.com/announce',
+    ]
+
     def __init__(self):
         addEvent('download', self.download)
         addEvent('download.status', self.getAllDownloadStatus)

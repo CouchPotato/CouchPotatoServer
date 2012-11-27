@@ -9,15 +9,34 @@ import sys
 
 log = CPLog(__name__)
 
+def getUserDir():
+    try:
+        import pwd
+        os.environ['HOME'] = pwd.getpwuid(os.geteuid()).pw_dir
+    except:
+        pass
+
+    return os.path.expanduser('~')
+
+def getDownloadDir():
+    user_dir = getUserDir()
+
+    # OSX
+    if 'darwin' in platform.platform().lower():
+        return os.path.join(user_dir, 'Downloads')
+
+    if os.name == 'nt':
+        return os.path.join(user_dir, 'Downloads')
+
+    return user_dir
+
 def getDataDir():
 
     # Windows
     if os.name == 'nt':
         return os.path.join(os.environ['APPDATA'], 'CouchPotato')
 
-    import pwd
-    os.environ['HOME'] = pwd.getpwuid(os.geteuid()).pw_dir
-    user_dir = os.path.expanduser('~')
+    user_dir = getUserDir()
 
     # OSX
     if 'darwin' in platform.platform().lower():
@@ -84,7 +103,7 @@ def cleanHost(host):
 
     return host
 
-def getImdb(txt, check_inside = True):
+def getImdb(txt, check_inside = True, multiple = False):
 
     if check_inside and os.path.isfile(txt):
         output = open(txt, 'r')
@@ -92,8 +111,10 @@ def getImdb(txt, check_inside = True):
         output.close()
 
     try:
-        id = re.findall('(tt\d{7})', txt)[0]
-        return id
+        ids = re.findall('(tt\d{7})', txt)
+        if multiple:
+            return ids if len(ids) > 0 else []
+        return ids[0]
     except IndexError:
         pass
 
