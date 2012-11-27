@@ -57,31 +57,26 @@ class SynologyRPC(object):
         self.username = username
         self.password = password
         self.session_name = "DownloadStation"
-        if username and password:
-            if self._login() == True:
-                log.info( ">Login ok" )
-            else:
-                log.error( ">Login failed" )
-        elif username or password:
-            log.error('User or password missing, not using authentication.')
 
     def _login(self):
-        args = {'api': 'SYNO.API.Auth', 'account': self.username, 'passwd': self.password, 'version': 2, 
+        if self.username and self.password:
+            args = {'api': 'SYNO.API.Auth', 'account': self.username, 'passwd': self.password, 'version': 2, 
             'method': 'login', 'session': self.session_name, 'format': 'sid'}
-        response = self._req(self.Authurl, args)
-        if response['success'] == True:
-            self.sid = response['data']['sid']
-            log.info( "Sid=%s", self.sid)
-        return response['success']
+            response = self._req(self.Authurl, args)
+            if response['success'] == True:
+                self.sid = response['data']['sid']
+                log.debug( "Sid=%s", self.sid)
+            return response
+        elif username or password:
+            log.error('User or password missing, not using authentication.')
+            return False
 
     def _logout(self):
-        args = {'api':'SYNO.API.Auth', 'version':1, 'method':'logout', 'session':self.session_name}
-        response = self._req(self.Authurl, args)
-        return response['success']
+        args = {'api':'SYNO.API.Auth', 'version':1, 'method':'logout', 'session':self.session_name, '_sid':self.sid}
+        return self._req(self.Authurl, args)
 
     def _req(self, url, args):
         req_url = url + '?' + urllib.urlencode(args)
-        #print "Trying URL: ", req_url
         try:
             req_open = urllib2.urlopen(req_url)
             response = json.loads(req_open.read())
@@ -100,7 +95,16 @@ class SynologyRPC(object):
 
     def add_torrent_uri(self, torrent):
         log.info( "Adding torrent URL %s", torrent)
-        args = {'api':'SYNO.DownloadStation.Task', 'version':1, 'method':'create', 'uri':torrent, '_sid':self.sid}
-        response = self._req(self.DLurl, args)
+        response = {}
+        # login
+        login = self._login()
+        if len(login) > 0 and login['success'] == True:
+            log.info("Login success, adding torrent")
+            args = {'api':'SYNO.DownloadStation.Task', 'version':1, 'method':'create', 'uri':torrent, '_sid':self.sid}
+            response = self._req(self.DLurl, args)
+            self._logout()
+        else:
+            log.error("Couldn't login to Synology, %s", login)
         return response
+
 
