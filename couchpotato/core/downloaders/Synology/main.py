@@ -1,11 +1,9 @@
-from base64 import b64encode
 from couchpotato.core.downloaders.base import Downloader
 from couchpotato.core.helpers.encoding import isInt
 from couchpotato.core.logger import CPLog
 import httplib
 import json
-import os.path
-import re
+
 import urllib2
 import urllib
 
@@ -60,14 +58,14 @@ class SynologyRPC(object):
 
     def _login(self):
         if self.username and self.password:
-            args = {'api': 'SYNO.API.Auth', 'account': self.username, 'passwd': self.password, 'version': 2, 
+            args = {'api': 'SYNO.API.Auth', 'account': self.username, 'passwd': self.password, 'version': 2,
             'method': 'login', 'session': self.session_name, 'format': 'sid'}
             response = self._req(self.Authurl, args)
             if response['success'] == True:
                 self.sid = response['data']['sid']
                 log.debug( "Sid=%s", self.sid)
             return response
-        elif username or password:
+        elif self.username or self.password:
             log.error('User or password missing, not using authentication.')
             return False
 
