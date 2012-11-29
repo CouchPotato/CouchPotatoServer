@@ -20,7 +20,12 @@ class Kere(NZBProvider, RSS):
     }
 
     cat_ids = [
-        ([1000], ['720p', '1080p','cam', 'ts', 'dvdrip', 'tc', 'r5', 'scr', 'brrip', 'dvdr']),
+        ([1000], [ 'cam', 'ts', 'tc', 'scr']),
+		([1010], [ 'r5' ]),
+		([1020], [ 'dvdrip', 'brrip' ]),
+		([1030], [ 'dvdr' ]),
+		([1050], [ '720p' ]),
+		([1060], [ '1080p' ]),
     ]
     cat_backup_id = 2
 
