@@ -25,4 +25,10 @@ Name: "{userstartup}\{#MyAppName}"; Filename: "{app}\{#MyAppName}.exe"; Tasks: s
 Name: "startup"; Description: "Run {#MyAppName} at startup"; Flags: unchecked
 
 [UninstallDelete]
-Type: filesandordirs; Name: "{app}\*.*"
+Type: filesandordirs; Name: "{app}\appdata"
+Type: filesandordirs; Name: "{app}\Microsoft.VC90.CRT"
+Type: filesandordirs; Name: "{app}\updates"
+Type: filesandordirs; Name: "{app}\CouchPotato*"
+Type: filesandordirs; Name: "{app}\python27.dll"
+Type: filesandordirs; Name: "{app}\unins000.dat"
+Type: filesandordirs; Name: "{app}\unins000.exe"
