@@ -35,7 +35,7 @@ class Plugin(object):
     http_failed_disabled = {}
 
     def registerPlugin(self):
-        addEvent('app.shutdown', self.doShutdown)
+        addEvent('app.do_shutdown', self.doShutdown)
         addEvent('plugin.running', self.isRunning)
 
     def conf(self, attr, value = None, default = None):
