@@ -9,6 +9,7 @@ from tornado.ioloop import IOLoop
 from uuid import uuid4
 import os
 import platform
+import signal
 import time
 import traceback
 import webbrowser
@@ -51,6 +52,8 @@ class Core(Plugin):
         addEvent('setting.save.core.password', self.md5Password)
         addEvent('setting.save.core.api_key', self.checkApikey)
 
+        # Make sure we can close-down with ctrl+c properly
+        self.signalHandler()
 
     def md5Password(self, value):
         return md5(value.encode(Env.get('encoding'))) if value else ''
@@ -170,3 +173,10 @@ class Core(Plugin):
         return jsonified({
             'version': self.version()
         })
+
+    def signalHandler(self):
+
+        def signal_handler(signal, frame):
+            fireEvent('app.shutdown')
+
+        signal.signal(signal.SIGINT, signal_handler)

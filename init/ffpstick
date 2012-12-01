@@ -1,0 +1,85 @@
+#!/ffp/bin/sh
+
+# PROVIDE: Couchpotato
+# REQUIRE: LOGIN
+
+. /ffp/etc/ffp.subr
+
+# script name
+NAME=couchpotato
+APP_PATH=/ffp/usr/local/CouchPotatoServer
+APP_CONFIG_DIF=/ffp/root/.couchpotato
+
+# path to python bin
+DAEMON=/ffp/bin/python
+
+# Path to store PID file
+PID_FILE=/ffp/var/run/couchpotato.pid
+PID_PATH=$(dirname $PID_FILE)
+
+# startup args
+DAEMON_OPTS=" ${APP_PATH}/CouchPotato.py --daemon --pid_file=${PID_FILE}"
+
+command=$NAME
+start_cmd="couchpotato_start"
+stop_cmd="couchpotato_stop"
+status_cmd="couchpotato_status"
+
+wait_for_status()
+{
+    counter=$2
+    while [ ${counter} -gt 0 ]; do
+        daemon_status
+        [ $? -eq $1 ] && break
+        let counter=counter-1
+        sleep 1
+    done
+}
+
+daemon_status()
+{
+    if [ -f ${PID_FILE} ] && [ -d /proc/`cat ${PID_FILE}` ]; then
+        return 0
+    fi
+        return 1
+}
+
+couchpotato_start()
+{
+    if [ -f ${PID_FILE} ] && [ -d /proc/`cat ${PID_FILE}` ]; then
+		echo "$NAME already running"
+		return 1
+    fi
+	
+	echo "Starting $NAME"
+	$DAEMON $DAEMON_OPTS
+}
+
+couchpotato_stop()
+{
+    if [ -f $PID_FILE ] ; then
+        echo "Stopping $NAME"
+        kill `cat ${PID_FILE}`
+        wait_for_status 1 20
+        rm -f ${PID_FILE}
+    else
+        echo "Cannot find $PID_FILE"
+    fi
+}
+
+couchpotato_status()
+{
+	local pid=` cat ${PID_FILE} 2>/dev/null `
+	if test -n "$pid"; then
+		if cat /proc/$pid/cmdline | grep ${APP_PATH} >/dev/null ; then
+		    [ "$1" == "silent" ] || echo "$NAME is running"
+		    return 0
+		fi
+		rm $pidfile
+	fi
+	
+	[ "$1" == "silent" ] || echo "$NAME not running"
+	return 1
+}
+
+run_rc_command "$1"

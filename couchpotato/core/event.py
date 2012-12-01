@@ -63,11 +63,21 @@ def fireEvent(name, *args, **kwargs):
             except: pass
 
         e = events[name]
-        if not options['in_order']: e.lock.acquire()
+
+        # Lock this event
+        e.lock.acquire()
+
         e.asynchronous = False
-        e.in_order = options['in_order']
+
+        # Make sure only 1 event is fired at a time when order is wanted
+        kwargs['event_order_lock'] = threading.RLock() if options['in_order'] or options['single'] else None
+        kwargs['event_return_on_result'] = options['single']
+
+        # Fire
         result = e(*args, **kwargs)
-        if not options['in_order']: e.lock.release()
+
+        # Release lock for this event
+        e.lock.release()
 
         if options['single'] and not options['merge']:
             results = None

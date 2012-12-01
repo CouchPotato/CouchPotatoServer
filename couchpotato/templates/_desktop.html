@@ -55,6 +55,8 @@
 					'is_remote': false
 				});
 
+				$(document.body).set('data-api', window.location.protocol + '//' + window.location.host + Api.createUrl().replace('/default/', '/'));
+
 				// Catch errors
 				window.onerror = function(message, file, line){
 

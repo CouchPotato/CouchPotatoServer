@@ -28,7 +28,7 @@ class Sabnzbd(Downloader):
 
         if filedata:
             if len(filedata) < 50:
-                log.error('No proper nzb available!')
+                log.error('No proper nzb available: %s', (filedata))
                 return False
 
             # If it's a .rar, it adds the .rar extension, otherwise it stays .nzb

@@ -98,9 +98,6 @@ class NZBMatrix(NZBProvider, RSS):
 
         return results
 
-    def download(self, url = '', nzb_id = ''):
-        return self.urlopen(url, headers = {'User-Agent': Env.getIdentifier()})
-
     def getApiExt(self):
         return '&username=%s&apikey=%s' % (self.conf('username'), self.conf('api_key'))
 

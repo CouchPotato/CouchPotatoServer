@@ -100,7 +100,7 @@ class Loader(object):
             logging.shutdown()
             time.sleep(3)
 
-            args = [sys.executable] + [os.path.join(base_path, __file__)] + sys.argv[1:]
+            args = [sys.executable] + [os.path.join(base_path, os.path.basename(__file__))] + sys.argv[1:]
             subprocess.Popen(args)
         except:
             self.log.critical(traceback.format_exc())

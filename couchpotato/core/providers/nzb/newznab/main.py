@@ -132,6 +132,7 @@ class Newznab(NZBProvider, RSS):
                     new = {
                         'id': id,
                         'provider': self.getName(),
+                        'provider_extra': host['host'],
                         'type': 'nzb',
                         'name': self.getTextElement(nzb, "title"),
                         'age': self.calculateAge(int(time.mktime(parse(date).timetuple()))),
@@ -218,4 +219,5 @@ class Newznab(NZBProvider, RSS):
                     return 'try_next'
 
             log.error('Failed download from %s', (host, traceback.format_exc()))
-            raise
+
+        return 'try_next'

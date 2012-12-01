@@ -84,6 +84,15 @@ config = [{
                 },
                 {
                     'advanced': True,
+                    'name': 'force_every',
+                    'label': 'Force every',
+                    'default': 2,
+                    'type': 'int',
+                    'unit': 'hour(s)',
+                    'description': 'Forces the renamer to scan every X hours',
+                },
+                {
+                    'advanced': True,
                     'name': 'next_on_failed',
                     'default': True,
                     'type': 'bool',

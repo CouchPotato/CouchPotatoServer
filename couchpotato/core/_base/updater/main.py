@@ -8,11 +8,9 @@ from couchpotato.environment import Env
 from datetime import datetime
 from dateutil.parser import parse
 from git.repository import LocalRepository
-import atexit
 import json
 import os
 import shutil
-import sys
 import tarfile
 import time
 import traceback

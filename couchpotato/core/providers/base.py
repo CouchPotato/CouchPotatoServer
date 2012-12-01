@@ -6,6 +6,7 @@ from couchpotato.environment import Env
 from urlparse import urlparse
 import re
 import time
+import traceback
 
 
 log = CPLog(__name__)
@@ -56,7 +57,12 @@ class YarrProvider(Provider):
         addEvent('nzb.feed', self.feed)
 
     def download(self, url = '', nzb_id = ''):
-        return self.urlopen(url)
+        try:
+            return self.urlopen(url, headers = {'User-Agent': Env.getIdentifier()}, show_error = False)
+        except:
+            log.error('Failed getting nzb from %s: %s', (self.getName(), traceback.format_exc()))
+
+        return 'try_next'
 
     def feed(self):
         return []
@@ -111,4 +117,9 @@ class YarrProvider(Provider):
         return [self.cat_backup_id]
 
     def found(self, new):
-        log.info('Found: score(%(score)s) on %(provider)s: %(name)s', new)
+        if not new.get('provider_extra'):
+            new['provider_extra'] = ''
+        else:
+            new['provider_extra'] = ', %s' % new['provider_extra']
+
+        log.info('Found: score(%(score)s) on %(provider)s%(provider_extra)s: %(name)s', new)

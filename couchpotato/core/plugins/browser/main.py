@@ -1,5 +1,6 @@
 from couchpotato.api import addApiView
 from couchpotato.core.helpers.request import getParam, jsonified
+from couchpotato.core.helpers.variable import getUserDir
 from couchpotato.core.plugins.base import Plugin
 import ctypes
 import os
@@ -65,15 +66,7 @@ class FileBrowser(Plugin):
     def view(self):
 
         path = getParam('path', '/')
-
-        # Set proper home dir for some systems
-        try:
-            import pwd
-            os.environ['HOME'] = pwd.getpwuid(os.geteuid()).pw_dir
-        except:
-            pass
-
-        home = os.path.expanduser('~')
+        home = getUserDir()
 
         if not path:
             path = home

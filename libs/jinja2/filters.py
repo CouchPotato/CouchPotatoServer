@@ -13,10 +13,9 @@ import math
 from random import choice
 from operator import itemgetter
 from itertools import imap, groupby
-from jinja2.utils import Markup, escape, pformat, urlize, soft_unicode, \
-     unicode_urlencode
+from jinja2.utils import Markup, escape, pformat, urlize, soft_unicode
 from jinja2.runtime import Undefined
-from jinja2.exceptions import FilterArgumentError
+from jinja2.exceptions import FilterArgumentError, SecurityError
 
 
 _word_re = re.compile(r'\w+(?u)')
@@ -69,26 +68,6 @@ def do_forceescape(value):
     if hasattr(value, '__html__'):
         value = value.__html__()
     return escape(unicode(value))
-
-
-def do_urlencode(value):
-    """Escape strings for use in URLs (uses UTF-8 encoding).  It accepts both
-    dictionaries and regular strings as well as pairwise iterables.
-
-    .. versionadded:: 2.7
-    """
-    itemiter = None
-    if isinstance(value, dict):
-        itemiter = value.iteritems()
-    elif not isinstance(value, basestring):
-        try:
-            itemiter = iter(value)
-        except TypeError:
-            pass
-    if itemiter is None:
-        return unicode_urlencode(value)
-    return u'&'.join(unicode_urlencode(k) + '=' +
-                     unicode_urlencode(v) for k, v in itemiter)
 
 
 @evalcontextfilter
@@ -176,12 +155,7 @@ def do_title(s):
     """Return a titlecased version of the value. I.e. words will start with
     uppercase letters, all remaining characters are lowercase.
     """
-    rv = []
-    for item in re.compile(r'([-\s]+)(?u)').split(s):
-        if not item:
-            continue
-        rv.append(item[0].upper() + item[1:])
-    return ''.join(rv)
+    return soft_unicode(s).title()
 
 
 def do_dictsort(value, case_sensitive=False, by='key'):
@@ -372,25 +346,25 @@ def do_filesizeformat(value, binary=False):
     bytes = float(value)
     base = binary and 1024 or 1000
     prefixes = [
-        (binary and 'KiB' or 'kB'),
-        (binary and 'MiB' or 'MB'),
-        (binary and 'GiB' or 'GB'),
-        (binary and 'TiB' or 'TB'),
-        (binary and 'PiB' or 'PB'),
-        (binary and 'EiB' or 'EB'),
-        (binary and 'ZiB' or 'ZB'),
-        (binary and 'YiB' or 'YB')
+        (binary and "KiB" or "kB"),
+        (binary and "MiB" or "MB"),
+        (binary and "GiB" or "GB"),
+        (binary and "TiB" or "TB"),
+        (binary and "PiB" or "PB"),
+        (binary and "EiB" or "EB"),
+        (binary and "ZiB" or "ZB"),
+        (binary and "YiB" or "YB")
     ]
     if bytes == 1:
-        return '1 Byte'
+        return "1 Byte"
     elif bytes < base:
-        return '%d Bytes' % bytes
+        return "%d Bytes" % bytes
     else:
         for i, prefix in enumerate(prefixes):
-            unit = base ** (i + 2)
+            unit = base * base ** (i + 1)
             if bytes < unit:
-                return '%.1f %s' % ((base * bytes / unit), prefix)
-        return '%.1f %s' % ((base * bytes / unit), prefix)
+                return "%.1f %s" % ((bytes / unit), prefix)
+        return "%.1f %s" % ((bytes / unit), prefix)
 
 
 def do_pprint(value, verbose=False):
@@ -583,7 +557,7 @@ def do_batch(value, linecount, fill_with=None):
     A filter that batches items. It works pretty much like `slice`
     just the other way round. It returns a list of lists with the
     given number of items. If you provide a second parameter this
-    is used to fill up missing items. See this example:
+    is used to fill missing items. See this example:
 
     .. sourcecode:: html+jinja
 
@@ -823,6 +797,5 @@ FILTERS = {
     'round':                do_round,
     'groupby':              do_groupby,
     'safe':                 do_mark_safe,
-    'xmlattr':              do_xmlattr,
-    'urlencode':            do_urlencode
+    'xmlattr':              do_xmlattr
 }
