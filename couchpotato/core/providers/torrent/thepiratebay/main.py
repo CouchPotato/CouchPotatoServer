@@ -57,7 +57,7 @@ class ThePirateBay(TorrentProvider):
 
                 data = ''
                 try:
-                    data = self.urlopen(proxy, timeout = 3)
+                    data = self.urlopen(proxy, timeout = 3, show_error = False)
                 except:
                     log.debug('Failed tpb proxy %s', proxy)
 
@@ -88,12 +88,20 @@ class ThePirateBay(TorrentProvider):
             try:
                 soup = BeautifulSoup(data)
                 results_table = soup.find('table', attrs = {'id': 'searchResult'})
+
+                if not results_table:
+                    return results
+
                 entries = results_table.find_all('tr')
-                for result in entries[1:]:
+                for result in entries[2:]:
                     link = result.find(href = re.compile('torrent\/\d+\/'))
                     download = result.find(href = re.compile('magnet:'))
 
-                    size = re.search('Size (?P<size>.+),', unicode(result.select('font.detDesc')[0])).group('size')
+                    try:
+                        size = re.search('Size (?P<size>.+),', unicode(result.select('font.detDesc')[0])).group('size')
+                    except:
+                        continue
+
                     if link and download:
 
                         def extra_score(item):

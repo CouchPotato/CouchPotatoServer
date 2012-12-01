@@ -239,7 +239,7 @@ class Searcher(Plugin):
         filedata = None
         if data.get('download') and (ismethod(data.get('download')) or isfunction(data.get('download'))):
             filedata = data.get('download')(url = data.get('url'), nzb_id = data.get('id'))
-            if filedata is 'try_next':
+            if filedata == 'try_next':
                 return filedata
 
         successful = fireEvent('download', data = data, movie = movie, manual = manual, filedata = filedata, single = True)

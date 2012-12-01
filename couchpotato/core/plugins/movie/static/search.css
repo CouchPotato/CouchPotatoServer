@@ -91,10 +91,15 @@
 	.movie_result {
 		overflow: hidden;
 		height: 140px;
+		position: relative;
 	}
 
 		.movie_result .options {
-			height: 140px;
+			position: absolute;
+			height: 100%;
+			width: 100%;
+			top: 0;
+			left: 0;
 			border: 1px solid transparent;
 			border-width: 1px 0;
 			border-radius: 0;
@@ -133,17 +138,21 @@
 
 		.movie_result .data {
 			padding: 0 15px;
-			width: 470px;
-			position: relative;
-			height: 140px;
+			position: absolute;
+			height: 100%;
+			width: 100%;
 			top: 0;
-			margin: -140px 0 0 0;
+			left: 0;
 			background: #5c697b;
 			cursor: pointer;
 
 			border-bottom: 1px solid #333;
 			border-top: 1px solid rgba(255,255,255, 0.15);
+			transition: all .6s cubic-bezier(0.9,0,0.1,1);
 		}
+			.movie_result .data.open {
+				left: 100%;
+			}
 
 			.movie_result:last-child .data { border-bottom: 0; }
 
@@ -193,4 +202,9 @@
 
 .search_form .mask {
 	border-radius: 3px;
+	position: absolute;
+	height: 100%;
+	width: 100%;
+	left: 0;
+	top: 0;
 }

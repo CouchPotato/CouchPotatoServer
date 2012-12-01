@@ -479,29 +479,32 @@ var ReleaseAction = new Class({
 				self.release_container.getElement('#release_'+self.next_release.id).addClass('next_release');
 			}
 
-			self.trynext_container.adopt(
-				new Element('span.or', {
-					'text': 'This movie is snatched, if anything went wrong, download'
-				}),
-				self.last_release ? new Element('a.button.orange', {
-					'text': 'the same release again',
-					'events': {
-						'click': self.trySameRelease.bind(self)
-					}
-				}) : null,
-				self.next_release && self.last_release ? new Element('span.or', {
-					'text': ','
-				}) : null,
-				self.next_release ? [new Element('a.button.green', {
-					'text': self.last_release ? 'another release' : 'the best release',
-					'events': {
-						'click': self.tryNextRelease.bind(self)
-					}
-				}),
-				new Element('span.or', {
-					'text': 'or pick one below'
-				})] : null
-			)
+			if(self.next_release || self.last_release){
+
+				self.trynext_container.adopt(
+					new Element('span.or', {
+						'text': 'This movie is snatched, if anything went wrong, download'
+					}),
+					self.last_release ? new Element('a.button.orange', {
+						'text': 'the same release again',
+						'events': {
+							'click': self.trySameRelease.bind(self)
+						}
+					}) : null,
+					self.next_release && self.last_release ? new Element('span.or', {
+						'text': ','
+					}) : null,
+					self.next_release ? [new Element('a.button.green', {
+						'text': self.last_release ? 'another release' : 'the best release',
+						'events': {
+							'click': self.tryNextRelease.bind(self)
+						}
+					}),
+					new Element('span.or', {
+						'text': 'or pick one below'
+					})] : null
+				)
+			}
 
 		}
 
