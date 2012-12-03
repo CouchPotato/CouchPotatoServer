@@ -4,10 +4,8 @@ from couchpotato.api import api, NonBlockHandler
 from couchpotato.core.event import fireEventAsync, fireEvent
 from couchpotato.core.helpers.variable import getDataDir, tryInt
 from logging import handlers
-from tornado import autoreload
-from tornado.httpserver import HTTPServer
 from tornado.ioloop import IOLoop
-from tornado.web import RequestHandler, Application, FallbackHandler
+from tornado.web import Application, FallbackHandler
 from tornado.wsgi import WSGIContainer
 from werkzeug.contrib.cache import FileSystemCache
 import locale
@@ -57,10 +55,8 @@ def _log(status_code, request):
 
     if status_code < 400:
         return
-    elif status_code < 500:
-        log_method = logging.warning
     else:
-        log_method = logging.error
+        log_method = logging.debug
     request_time = 1000.0 * request.request_time()
     summary = request.method + " " + request.uri + " (" + \
         request.remote_ip + ")"
