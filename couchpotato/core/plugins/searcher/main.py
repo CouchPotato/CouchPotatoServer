@@ -204,6 +204,10 @@ class Searcher(Plugin):
 
 
                 for nzb in sorted_results:
+                    if not quality_type.get('finish', False) and quality_type.get('wait_for', 0) > 0 and nzb.get('age') <= quality_type.get('wait_for', 0):
+                        log.info('Ignored, waiting %s days: %s', (quality_type.get('wait_for'), nzb['name']))
+                        continue
+
                     if nzb['status_id'] == ignored_status.get('id'):
                         log.info('Ignored: %s', nzb['name'])
                         continue
