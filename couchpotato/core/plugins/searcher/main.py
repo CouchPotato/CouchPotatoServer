@@ -393,6 +393,11 @@ class Searcher(Plugin):
             if list(set(nzb_words) & set(quality['alternative'])):
                 found[quality['identifier']] = True
 
+        # Try guessing via quality tags
+        guess = fireEvent('quality.guess', [nzb.get('name')], single = True)
+        if guess:
+            found[guess['identifier']] = True
+
         # Hack for older movies that don't contain quality tag
         year_name = fireEvent('scanner.name_year', name, single = True)
         if len(found) == 0 and movie_year < datetime.datetime.now().year - 3 and not year_name.get('year', None):
