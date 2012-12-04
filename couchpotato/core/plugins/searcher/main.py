@@ -307,7 +307,13 @@ class Searcher(Plugin):
         nzb_words = re.split('\W+', nzb_name)
         required_words = [x.strip().lower() for x in self.conf('required_words').lower().split(',')]
 
-        if self.conf('required_words') and not list(set(nzb_words) & set(required_words)):
+        req_match = 0
+        for index in range(len(required_words)):
+            req = [x.strip().lower() for x in required_words[index].lower().split('&')]
+            if len(list(set(nzb_words) & set(req))) == len(req):
+                req_match = req_match + 1
+
+        if self.conf('required_words') and req_match == 0:
             log.info2("Wrong: Required word missing: %s" % nzb['name'])
             return False
 
