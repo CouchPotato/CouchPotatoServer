@@ -24,6 +24,7 @@ config = [{
                     'name': 'required_words',
                     'label': 'Required words',
                     'default': '',
+                    'placeholder': 'Example: DTS, AC3 & English',
                     'description': 'Ignore releases that don\'t contain at least one set of words. Sets are separated by "," and each word within a set must be separated with "&"'
                 },
                 {
