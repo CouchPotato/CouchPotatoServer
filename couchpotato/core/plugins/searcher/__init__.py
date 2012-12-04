@@ -24,7 +24,7 @@ config = [{
                     'name': 'required_words',
                     'label': 'Required words',
                     'default': '',
-                    'description': 'Ignore releases that don\'t contain at least contain one set of words. Sets are separated by "," and each word within a set must be separated with "&"'
+                    'description': 'Ignore releases that don\'t contain at least one set of words. Sets are separated by "," and each word within a set must be separated with "&"'
                 },
                 {
                     'name': 'ignored_words',
