@@ -3,7 +3,7 @@ from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
 from couchpotato.core.helpers.encoding import simplifyString, toUnicode
 from couchpotato.core.helpers.request import jsonified, getParam
-from couchpotato.core.helpers.variable import md5, getTitle
+from couchpotato.core.helpers.variable import md5, getTitle, splitString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Movie, Release, ReleaseInfo
@@ -305,19 +305,18 @@ class Searcher(Plugin):
         movie_words = re.split('\W+', simplifyString(movie_name))
         nzb_name = simplifyString(nzb['name'])
         nzb_words = re.split('\W+', nzb_name)
-        required_words = [x.strip().lower() for x in self.conf('required_words').lower().split(',')]
+        required_words = splitString(self.conf('required_words').lower())
 
         req_match = 0
-        for index in range(len(required_words)):
-            req = [x.strip().lower() for x in required_words[index].lower().split('&')]
-            if len(list(set(nzb_words) & set(req))) == len(req):
-                req_match = req_match + 1
+        for req_set in required_words:
+            req = splitString(req_set, '&')
+            req_match += len(list(set(nzb_words) & set(req))) == len(req)
 
         if self.conf('required_words') and req_match == 0:
             log.info2("Wrong: Required word missing: %s" % nzb['name'])
             return False
 
-        ignored_words = [x.strip().lower() for x in self.conf('ignored_words').split(',')]
+        ignored_words = splitString(self.conf('ignored_words').lower())
         blacklisted = list(set(nzb_words) & set(ignored_words))
         if self.conf('ignored_words') and blacklisted:
             log.info2("Wrong: '%s' blacklisted words: %s" % (nzb['name'], ", ".join(blacklisted)))
