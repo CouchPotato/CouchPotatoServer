@@ -204,6 +204,10 @@ class Searcher(Plugin):
 
 
                 for nzb in sorted_results:
+                    if not quality_type.get('finish', False) and quality_type.get('wait_for', 0) > 0 and nzb.get('age') <= quality_type.get('wait_for', 0):
+                        log.info('Ignored, waiting %s days: %s', (quality_type.get('wait_for'), nzb['name']))
+                        continue
+
                     if nzb['status_id'] == ignored_status.get('id'):
                         log.info('Ignored: %s', nzb['name'])
                         continue
@@ -388,6 +392,11 @@ class Searcher(Plugin):
             # Alt in words
             if list(set(nzb_words) & set(quality['alternative'])):
                 found[quality['identifier']] = True
+
+        # Try guessing via quality tags
+        guess = fireEvent('quality.guess', [nzb.get('name')], single = True)
+        if guess:
+            found[guess['identifier']] = True
 
         # Hack for older movies that don't contain quality tag
         year_name = fireEvent('scanner.name_year', name, single = True)
