@@ -69,7 +69,7 @@ class Core(Plugin):
 
     def available(self):
         return jsonified({
-            'succes': True
+            'success': True
         })
 
     def shutdown(self):
