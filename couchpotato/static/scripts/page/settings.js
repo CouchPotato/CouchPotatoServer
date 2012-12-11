@@ -436,9 +436,14 @@ Option.String = new Class({
 			self.input = new Element('input.inlay', {
 				'type': 'text',
 				'name': self.postName(),
-				'value': self.getSettingValue()
+				'value': self.getSettingValue(),
+				'placeholder': self.getPlaceholder()
 			})
 		);
+	},
+
+	getPlaceholder: function(){
+		return this.options.placeholder
 	}
 });
 

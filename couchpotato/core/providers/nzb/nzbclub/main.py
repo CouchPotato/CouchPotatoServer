@@ -29,8 +29,6 @@ class NZBClub(NZBProvider, RSS):
             return results
 
         q = '"%s %s" %s' % (simplifyString(getTitle(movie['library'])), movie['library']['year'], quality.get('identifier'))
-        for ignored in Env.setting('ignored_words', 'searcher').split(','):
-            q = '%s -%s' % (q, ignored.strip())
 
         params = {
             'q': q,

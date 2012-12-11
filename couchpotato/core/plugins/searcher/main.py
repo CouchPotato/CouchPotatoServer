@@ -3,7 +3,7 @@ from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
 from couchpotato.core.helpers.encoding import simplifyString, toUnicode
 from couchpotato.core.helpers.request import jsonified, getParam
-from couchpotato.core.helpers.variable import md5, getTitle
+from couchpotato.core.helpers.variable import md5, getTitle, splitString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Movie, Release, ReleaseInfo
@@ -204,6 +204,10 @@ class Searcher(Plugin):
 
 
                 for nzb in sorted_results:
+                    if not quality_type.get('finish', False) and quality_type.get('wait_for', 0) > 0 and nzb.get('age') <= quality_type.get('wait_for', 0):
+                        log.info('Ignored, waiting %s days: %s', (quality_type.get('wait_for'), nzb['name']))
+                        continue
+
                     if nzb['status_id'] == ignored_status.get('id'):
                         log.info('Ignored: %s', nzb['name'])
                         continue
@@ -301,13 +305,18 @@ class Searcher(Plugin):
         movie_words = re.split('\W+', simplifyString(movie_name))
         nzb_name = simplifyString(nzb['name'])
         nzb_words = re.split('\W+', nzb_name)
-        required_words = [x.strip().lower() for x in self.conf('required_words').lower().split(',')]
+        required_words = splitString(self.conf('required_words').lower())
 
-        if self.conf('required_words') and not list(set(nzb_words) & set(required_words)):
+        req_match = 0
+        for req_set in required_words:
+            req = splitString(req_set, '&')
+            req_match += len(list(set(nzb_words) & set(req))) == len(req)
+
+        if self.conf('required_words') and req_match == 0:
             log.info2("Wrong: Required word missing: %s" % nzb['name'])
             return False
 
-        ignored_words = [x.strip().lower() for x in self.conf('ignored_words').split(',')]
+        ignored_words = splitString(self.conf('ignored_words').lower())
         blacklisted = list(set(nzb_words) & set(ignored_words))
         if self.conf('ignored_words') and blacklisted:
             log.info2("Wrong: '%s' blacklisted words: %s" % (nzb['name'], ", ".join(blacklisted)))
@@ -388,6 +397,11 @@ class Searcher(Plugin):
             # Alt in words
             if list(set(nzb_words) & set(quality['alternative'])):
                 found[quality['identifier']] = True
+
+        # Try guessing via quality tags
+        guess = fireEvent('quality.guess', [nzb.get('name')], single = True)
+        if guess:
+            found[guess['identifier']] = True
 
         # Hack for older movies that don't contain quality tag
         year_name = fireEvent('scanner.name_year', name, single = True)
