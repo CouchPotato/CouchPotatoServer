@@ -1,10 +1,7 @@
 from base64 import b32decode, b16encode
 from couchpotato.core.event import addEvent
-from couchpotato.core.helpers.encoding import toSafeString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.environment import Env
-import os
 import random
 import re
 
@@ -21,31 +18,33 @@ class Downloader(Plugin):
         'http://torcache.net/torrent/%s.torrent',
     ]
 
+    torrent_trackers = [
+        'http://tracker.publicbt.com/announce',
+        'udp://tracker.istole.it:80/announce',
+        'udp://fr33domtracker.h33t.com:3310/announce',
+        'http://tracker.istole.it/announce',
+        'http://tracker.ccc.de/announce',
+        'udp://tracker.publicbt.com:80/announce',
+        'udp://tracker.ccc.de:80/announce',
+        'http://exodus.desync.com/announce',
+        'http://exodus.desync.com:6969/announce',
+        'http://tracker.publichd.eu/announce',
+        'http://tracker.openbittorrent.com/announce',
+    ]
+
     def __init__(self):
         addEvent('download', self.download)
-        addEvent('download.status', self.getDownloadStatus)
+        addEvent('download.status', self.getAllDownloadStatus)
+        addEvent('download.remove_failed', self.removeFailed)
 
     def download(self, data = {}, movie = {}, manual = False, filedata = None):
         pass
 
-    def getDownloadStatus(self, data = {}, movie = {}):
+    def getAllDownloadStatus(self):
         return False
 
-    def createNzbName(self, data, movie):
-        tag = self.cpTag(movie)
-        return '%s%s' % (toSafeString(data.get('name')[:127 - len(tag)]), tag)
-
-    def createFileName(self, data, filedata, movie):
-        name = os.path.join(self.createNzbName(data, movie))
-        if data.get('type') == 'nzb' and 'DOCTYPE nzb' not in filedata and '</nzb>' not in filedata:
-            return '%s.%s' % (name, 'rar')
-        return '%s.%s' % (name, data.get('type'))
-
-    def cpTag(self, movie):
-        if Env.setting('enabled', 'renamer'):
-            return '.cp(' + movie['library'].get('identifier') + ')' if movie['library'].get('identifier') else ''
-
-        return ''
+    def removeFailed(self, name = {}, nzo_id = {}):
+        return False
 
     def isCorrectType(self, item_type):
         is_correct = item_type in self.type
@@ -56,7 +55,7 @@ class Downloader(Plugin):
         return is_correct
 
     def magnetToTorrent(self, magnet_link):
-        torrent_hash = re.findall('urn:btih:([\w]{32,40})', magnet_link)[0]
+        torrent_hash = re.findall('urn:btih:([\w]{32,40})', magnet_link)[0].upper()
 
         # Convert base 32 to hex
         if len(torrent_hash) == 32:

@@ -86,7 +86,10 @@ var Profile = new Class({
 				},
 				'onComplete': function(json){
 					if(json.success){
-						self.data = json.profile
+						self.data = json.profile;
+						self.type_container.getElement('li:first-child input[type=checkbox]')
+							.set('checked', true)
+							.getParent().addClass('checked');
 					}
 				}
 			});
@@ -239,9 +242,17 @@ Profile.Type = new Class({
 			),
 			new Element('span.finish').adopt(
 				self.finish = new Element('input.inlay.finish[type=checkbox]', {
-					'checked': data.finish,
+					'checked': data.finish !== undefined ? data.finish : 1,
 					'events': {
-						'change': self.fireEvent.bind(self, 'change')
+						'change': function(e){
+							if(self.el == self.el.getParent().getElement(':first-child')){
+								self.finish_class.check();
+								alert('Top quality always finishes the search')
+								return;
+							}
+
+							self.fireEvent('change');
+						}
 					}
 				})
 			),
@@ -255,7 +266,7 @@ Profile.Type = new Class({
 
 		self.el[self.data.quality_id > 0 ? 'removeClass' : 'addClass']('is_empty');
 
-		new Form.Check(self.finish);
+		self.finish_class = new Form.Check(self.finish);
 
 	},
 

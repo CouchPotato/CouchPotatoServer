@@ -5,7 +5,7 @@ import traceback
 class CPLog(object):
 
     context = ''
-    replace_private = ['api', 'apikey', 'api_key', 'password', 'username', 'h']
+    replace_private = ['api', 'apikey', 'api_key', 'password', 'username', 'h', 'uid', 'key']
 
     def __init__(self, context = ''):
         if context.endswith('.main'):
@@ -16,6 +16,9 @@ class CPLog(object):
 
     def info(self, msg, replace_tuple = ()):
         self.logger.info(self.addContext(msg, replace_tuple))
+
+    def info2(self, msg, replace_tuple = ()):
+        self.logger.log(19, self.addContext(msg, replace_tuple))
 
     def debug(self, msg, replace_tuple = ()):
         self.logger.debug(self.addContext(msg, replace_tuple))
@@ -53,7 +56,8 @@ class CPLog(object):
         if not Env.get('dev'):
 
             for replace in self.replace_private:
-                msg = re.sub('(%s=)[^\&]+' % replace, '%s=xxx' % replace, msg)
+                msg = re.sub('(\?%s=)[^\&]+' % replace, '?%s=xxx' % replace, msg)
+                msg = re.sub('(&%s=)[^\&]+' % replace, '&%s=xxx' % replace, msg)
 
             # Replace api key
             try:

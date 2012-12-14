@@ -4,10 +4,8 @@ from couchpotato.api import api, NonBlockHandler
 from couchpotato.core.event import fireEventAsync, fireEvent
 from couchpotato.core.helpers.variable import getDataDir, tryInt
 from logging import handlers
-from tornado import autoreload
-from tornado.httpserver import HTTPServer
 from tornado.ioloop import IOLoop
-from tornado.web import RequestHandler, Application, FallbackHandler
+from tornado.web import Application, FallbackHandler
 from tornado.wsgi import WSGIContainer
 from werkzeug.contrib.cache import FileSystemCache
 import locale
@@ -57,10 +55,8 @@ def _log(status_code, request):
 
     if status_code < 400:
         return
-    elif status_code < 500:
-        log_method = logging.warning
     else:
-        log_method = logging.error
+        log_method = logging.debug
     request_time = 1000.0 * request.request_time()
     summary = request.method + " " + request.uri + " (" + \
         request.remote_ip + ")"
@@ -148,6 +144,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s', '%m-%d %H:%M:%S')
     level = logging.DEBUG if debug else logging.INFO
     logger.setLevel(level)
+    logging.addLevelName(19, 'INFO')
 
     # To screen
     if (debug or options.console_log) and not options.quiet and not options.daemon:
@@ -170,18 +167,17 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
         log.warning('%s %s %s line:%s', (category, message, filename, lineno))
     warnings.showwarning = customwarn
 
+    # Check if database exists
+    db = Env.get('db_path')
+    db_exists = os.path.isfile(db_path)
 
     # Load configs & plugins
     loader = Env.get('loader')
     loader.preload(root = base_path)
     loader.run()
 
-
     # Load migrations
-    initialize = True
-    db = Env.get('db_path')
-    if os.path.isfile(db_path):
-        initialize = False
+    if db_exists:
 
         from migrate.versioning.api import version_control, db_version, version, upgrade
         repo = os.path.join(base_path, 'couchpotato', 'core', 'migration')
@@ -201,7 +197,8 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     from couchpotato.core.settings.model import setup
     setup()
 
-    if initialize:
+    # Fill database with needed stuff
+    if not db_exists:
         fireEvent('app.initialize', in_order = True)
 
     # Create app

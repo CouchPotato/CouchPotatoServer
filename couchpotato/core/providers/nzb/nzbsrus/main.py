@@ -97,8 +97,5 @@ class Nzbsrus(NZBProvider, RSS):
 
         return results
 
-    def download(self, url = '', nzb_id = ''):
-        return self.urlopen(url, headers = {'User-Agent': Env.getIdentifier()})
-
     def getApiExt(self):
         return '/%s/' % (self.conf('userid'))

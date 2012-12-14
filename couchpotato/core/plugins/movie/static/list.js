@@ -33,16 +33,34 @@ var MovieList = new Class({
 		);
 		self.getMovies();
 
-		if(options.add_new)
-			App.addEvent('movie.added', self.movieAdded.bind(self))
+		App.addEvent('movie.added', self.movieAdded.bind(self))
+		App.addEvent('movie.deleted', self.movieDeleted.bind(self))
+	},
+
+	movieDeleted: function(notification){
+		var self = this;
+
+		if(self.movies_added[notification.data.id]){
+			self.movies.each(function(movie){
+				if(movie.get('id') == notification.data.id){
+					movie.destroy();
+					delete self.movies_added[notification.data.id]
+				}
+			})
+		}
+
+		self.checkIfEmpty();
 	},
 
 	movieAdded: function(notification){
 		var self = this;
-		window.scroll(0,0);
 
-		if(!self.movies_added[notification.data.id])
+		if(self.options.add_new && !self.movies_added[notification.data.id] && notification.data.status.identifier == self.options.status){
+			window.scroll(0,0);
 			self.createMovie(notification.data, 'top');
+
+			self.checkIfEmpty();
+		}
 	},
 
 	create: function(){
@@ -86,18 +104,19 @@ var MovieList = new Class({
 		Object.each(movies, function(movie){
 			self.createMovie(movie);
 		});
-		
+
+		self.total_movies = total;
 		self.setCounter(total);
 
 	},
-	
+
 	setCounter: function(count){
 		var self = this;
-		
+
 		if(!self.navigation_counter) return;
-		
+
 		self.navigation_counter.set('text', (count || 0));
-		
+
 	},
 
 	createMovie: function(movie, inject_at){
@@ -281,10 +300,11 @@ var MovieList = new Class({
 	},
 
 	deleteSelected: function(){
-		var self = this;
-		var ids = self.getSelectedMovies()
+		var self = this,
+			ids = self.getSelectedMovies(),
+			help_msg = self.identifier == 'wanted' ? 'If you do, you won\'t be able to watch them, as they won\'t get downloaded!' : 'Your files will be safe, this will only delete the reference from the CouchPotato manage list';
 
-		var qObj = new Question('Are you sure you want to delete '+ids.length+' movie'+ (ids.length != 1 ? 's' : '') +'?', 'If you do, you won\'t be able to watch them, as they won\'t get downloaded!', [{
+		var qObj = new Question('Are you sure you want to delete '+ids.length+' movie'+ (ids.length != 1 ? 's' : '') +'?', help_msg, [{
 			'text': 'Yes, delete '+(ids.length != 1 ? 'them' : 'it'),
 			'class': 'delete',
 			'events': {
@@ -309,6 +329,8 @@ var MovieList = new Class({
 
 							erase_movies.each(function(movie){
 								self.movies.erase(movie);
+
+								movie.destroy()
 							});
 
 							self.calculateSelected();
@@ -458,6 +480,8 @@ var MovieList = new Class({
 				self.addMovies(json.movies, json.total);
 				self.load_more.set('text', 'load more movies');
 				if(self.scrollspy) self.scrollspy.start();
+
+				self.checkIfEmpty()
 			}
 		});
 	},
@@ -472,6 +496,28 @@ var MovieList = new Class({
 		var self = this;
 
 		self.offset += movies.length;
+
+	},
+
+	checkIfEmpty: function(){
+		var self = this;
+
+		var is_empty = self.movies.length == 0 && self.total_movies == 0;
+
+		if(is_empty && self.options.on_empty_element){
+			self.el.grab(self.options.on_empty_element);
+
+			if(self.navigation)
+				self.navigation.hide();
+
+			self.empty_element = self.options.on_empty_element;
+		}
+		else if(self.empty_element){
+			self.empty_element.destroy();
+
+			if(self.navigation)
+				self.navigation.show();
+		}
 
 	},
 

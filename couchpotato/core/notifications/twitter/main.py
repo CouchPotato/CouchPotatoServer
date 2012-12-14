@@ -38,22 +38,33 @@ class Twitter(Notification):
 
         direct_message = self.conf('direct_message')
         direct_message_users = self.conf('screen_name')
-        
+
         mention = self.conf('mention')
+        mention_tag = None
         if mention:
             if direct_message:
                 direct_message_users = '%s %s' % (direct_message_users, mention)
-                direct_message_users = direct_message_users.replace('@',' ')
-                direct_message_users = direct_message_users.replace(',',' ')
+                direct_message_users = direct_message_users.replace('@', ' ')
+                direct_message_users = direct_message_users.replace(',', ' ')
             else:
-                message = '%s @%s' % (message, mention.lstrip('@'))
+                mention_tag = '@%s' % mention.lstrip('@')
+                message = '%s %s' % (message, mention_tag)
 
         try:
             if direct_message:
                 for user in direct_message_users.split():
                     api.PostDirectMessage(user, '[%s] %s' % (self.default_title, message))
             else:
-                api.PostUpdate('[%s] %s' % (self.default_title, message))
+                update_message = '[%s] %s' % (self.default_title, message)
+                if len(update_message) > 140:
+                    if mention_tag:
+                        api.PostUpdate(update_message[:135 - len(mention_tag)] + ('%s 1/2 ' % mention_tag))
+                        api.PostUpdate(update_message[135 - len(mention_tag):] + ('%s 2/2 ' % mention_tag))
+                    else:
+                        api.PostUpdate(update_message[:135] + ' 1/2')
+                        api.PostUpdate(update_message[135:] + ' 2/2')
+                else:
+                    api.PostUpdate(update_message)
         except Exception, e:
             log.error('Error sending tweet: %s', e)
             return False

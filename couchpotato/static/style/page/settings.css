@@ -16,7 +16,7 @@
 		padding: 40px 0;
 		margin: 0;
 		min-height: 470px;
-		background-image: linear-gradient(
+		background-image: -*-linear-gradient(
 		    20deg,
 		    rgba(0,0,0,0) 50%,
 		    rgba(0,0,0,0.3) 100%
@@ -235,6 +235,19 @@
 			.page .directory_list li:hover {
 				background-color: #515c68;
 			}
+			
+		.page .directory_list li.empty {
+			background: none;
+			height: 100px;
+			text-align: center;
+			font-style: italic;
+			border: none;
+			line-height: 100px;
+			cursor: default;
+			color: #BBB;
+			text-shadow: none;
+			font-size: 12px;
+		}
 
 	.page .directory_list .actions {
 		clear: both;
@@ -319,12 +332,11 @@
 
 	.page .tag_input > ul {
 		list-style: none;
-		padding: 3px 0;
 		border-radius: 3px;
 		cursor: text;
 		width: 30%;
 		margin: 0 !important;
-		height: 27px;
+		min-height: 27px;
 		line-height: 0;
 		display: inline-block;
 	}
@@ -339,7 +351,7 @@
 			min-width: 2px;
 			font-size: 12px;
 			padding: 0;
-			margin: 0 !important;
+			margin: 4px 0 0 !important;
 			border-width: 0;
 			background: 0;
 			line-height: 20px;
@@ -353,7 +365,7 @@
 				border-radius: 2px;
 			}
 			.page .tag_input > ul:hover > li.choice {
-				background: linear-gradient(
+				background: -*-linear-gradient(
 				    270deg,
 				    rgba(255,255,255,0.3) 0%,
 				    rgba(255,255,255,0.1) 100%
@@ -361,7 +373,7 @@
 			}
 			.page .tag_input > ul > li.choice:hover,
 			.page .tag_input > ul > li.choice.selected {
-				background: linear-gradient(
+				background: -*-linear-gradient(
 				    270deg,
 				    #5b9bd1 0%,
 				    #406db8 100%
@@ -400,7 +412,7 @@
 				margin: -9px 0 0 -16px;
 				border-radius: 30px 30px 0 0;
 				cursor: pointer;
-				background: url('../../images/icon.delete.png') no-repeat center 2px, -webkit-linear-gradient(
+				background: url('../../images/icon.delete.png') no-repeat center 2px, -*-linear-gradient(
 				   270deg,
 				    #5b9bd1 0%,
 				    #5b9bd1 100%

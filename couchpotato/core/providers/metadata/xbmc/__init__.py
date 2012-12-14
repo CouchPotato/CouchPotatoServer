@@ -32,6 +32,14 @@ config = [{
                     'description': '<strong>%s</strong> is the rootname of the movie. For example "/path/to/movie cd1.mkv" will be "/path/to/movie"'
                 },
                 {
+                    'name': 'meta_url_only',
+                    'label': 'Only IMDB URL',
+                    'default': False,
+                    'advanced': True,
+                    'description': 'Create a nfo with only the IMDB url inside',
+                    'type': 'bool',
+                },
+                {
                     'name': 'meta_fanart',
                     'label': 'Fanart',
                     'default': True,

@@ -16,13 +16,40 @@ var Movie = new Class({
 		self.profile = Quality.getProfile(data.profile_id) || {};
 		self.parent(self, options);
 
-		App.addEvent('movie.update.'+data.id, self.update.bind(self));
+		self.addEvents();
+	},
+
+	addEvents: function(){
+		var self = this;
+
+		App.addEvent('movie.update.'+self.data.id, self.update.bind(self));
 
 		['movie.busy', 'searcher.started'].each(function(listener){
-			App.addEvent(listener+'.'+data.id, function(notification){
+			App.addEvent(listener+'.'+self.data.id, function(notification){
 				if(notification.data)
 					self.busy(true)
 			});
+		})
+
+		App.addEvent('searcher.ended.'+self.data.id, function(notification){
+			if(notification.data)
+				self.busy(false)
+		});
+	},
+
+	destroy: function(){
+		var self = this;
+
+		self.el.destroy();
+		delete self.list.movies_added[self.get('id')];
+		self.list.movies.erase(self)
+
+		self.list.checkIfEmpty();
+
+		// Remove events
+		App.removeEvents('movie.update.'+self.data.id);
+		['movie.busy', 'searcher.started'].each(function(listener){
+			App.removeEvents(listener+'.'+self.data.id);
 		})
 	},
 
@@ -359,7 +386,7 @@ var ReleaseAction = new Class({
 
 			var status = Status.get(release.status_id);
 
-			if((status.identifier == 'ignored' || status.identifier == 'failed') || (!self.next_release && status.identifier == 'available')){
+			if((self.next_release && (status.identifier == 'ignored' || status.identifier == 'failed')) || (!self.next_release && status.identifier == 'available')){
 				self.hide_on_click = false;
 				self.show();
 				buttons_done = true;
@@ -397,19 +424,11 @@ var ReleaseAction = new Class({
 				var status = Status.get(release.status_id),
 					quality = Quality.getProfile(release.quality_id) || {},
 					info = release.info;
-
-				if( status.identifier == 'ignored' || status.identifier == 'failed'){
-					self.last_release = release;
-				}
-				else if(!self.next_release && status.identifier == 'available'){
-					self.next_release = release;
-				}
+				release.status = status;
 
 				// Create release
 				new Element('div', {
-					'class': 'item '+status.identifier +
-						(self.next_release && self.next_release.id == release.id ? ' next_release' : '') +
-						(self.last_release && self.last_release.id == release.id ? ' last_release' : ''),
+					'class': 'item '+status.identifier,
 					'id': 'release_'+release.id
 				}).adopt(
 					new Element('span.name', {'text': self.get(release, 'name'), 'title': self.get(release, 'name')}),
@@ -442,31 +461,50 @@ var ReleaseAction = new Class({
 						}
 					})
 				).inject(self.release_container)
+
+				if(status.identifier == 'ignored' || status.identifier == 'failed' || status.identifier == 'snatched'){
+					if(!self.last_release || (self.last_release && self.last_release.status.identifier != 'snatched' && status.identifier == 'snatched'))
+						self.last_release = release;
+				}
+				else if(!self.next_release && status.identifier == 'available'){
+					self.next_release = release;
+				}
 			});
 
-			self.trynext_container.adopt(
-				new Element('span.or', {
-					'text': 'Download'
-				}),
-				self.last_release ? new Element('a.button.orange', {
-					'text': 'the same release again',
-					'events': {
-						'click': self.trySameRelease.bind(self)
-					}
-				}) : null,
-				self.next_release && self.last_release ? new Element('span.or', {
-					'text': 'or'
-				}) : null,
-				self.next_release ? [new Element('a.button.green', {
-					'text': self.last_release ? 'another release' : 'the best release',
-					'events': {
-						'click': self.tryNextRelease.bind(self)
-					}
-				}),
-				new Element('span.or', {
-					'text': 'or pick one below'
-				})] : null
-			)
+			if(self.last_release){
+				self.release_container.getElement('#release_'+self.last_release.id).addClass('last_release');
+			}
+
+			if(self.next_release){
+				self.release_container.getElement('#release_'+self.next_release.id).addClass('next_release');
+			}
+
+			if(self.next_release || self.last_release){
+
+				self.trynext_container.adopt(
+					new Element('span.or', {
+						'text': 'This movie is snatched, if anything went wrong, download'
+					}),
+					self.last_release ? new Element('a.button.orange', {
+						'text': 'the same release again',
+						'events': {
+							'click': self.trySameRelease.bind(self)
+						}
+					}) : null,
+					self.next_release && self.last_release ? new Element('span.or', {
+						'text': ','
+					}) : null,
+					self.next_release ? [new Element('a.button.green', {
+						'text': self.last_release ? 'another release' : 'the best release',
+						'events': {
+							'click': self.tryNextRelease.bind(self)
+						}
+					}),
+					new Element('span.or', {
+						'text': 'or pick one below'
+					})] : null
+				)
+			}
 
 		}
 

@@ -2,9 +2,11 @@ from couchpotato import get_session
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import toUnicode
+from couchpotato.core.helpers.request import jsonified
 from couchpotato.core.helpers.variable import md5, getExt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
+from couchpotato.core.plugins.scanner.main import Scanner
 from couchpotato.core.settings.model import FileType, File
 from couchpotato.environment import Env
 import os.path
@@ -29,7 +31,34 @@ class FileManager(Plugin):
             'return': {'type': 'file'}
         })
 
+        addApiView('file.types', self.getTypesView, docs = {
+            'desc': 'Return a list of all the file types and their ids.',
+            'return': {'type': 'object', 'example': """{
+    'types': [
+        {
+            "identifier": "poster_original",
+            "type": "image",
+            "id": 1,
+            "name": "Poster_original"
+        },
+        {
+            "identifier": "poster",
+            "type": "image",
+            "id": 2,
+            "name": "Poster"
+        },
+        etc
+    ]
+}"""}
+        })
+
         addEvent('app.load', self.cleanup)
+        addEvent('app.load', self.init)
+
+    def init(self):
+
+        for type_tuple in Scanner.file_types.values():
+            self.getType(type_tuple)
 
     def cleanup(self):
 
@@ -109,7 +138,6 @@ class FileManager(Plugin):
             db.commit()
 
         type_dict = ft.to_dict()
-        #db.close()
         return type_dict
 
     def getTypes(self):
@@ -122,5 +150,10 @@ class FileManager(Plugin):
         for type_object in results:
             types.append(type_object.to_dict())
 
-        #db.close()
         return types
+
+    def getTypesView(self):
+
+        return jsonified({
+            'types': self.getTypes()
+        })

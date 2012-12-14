@@ -30,9 +30,15 @@ class Transmission(Downloader):
             return False
 
         # Set parameters for Transmission
+        folder_name = self.createFileName(data, filedata, movie)[:-len(data.get('type')) - 1]
+        folder_path = os.path.join(self.conf('directory', default = ''), folder_name).rstrip(os.path.sep)
+
+        # Create the empty folder to download too
+        self.makeDir(folder_path)
+
         params = {
             'paused': self.conf('paused', default = 0),
-            'download-dir': self.conf('directory', default = '').rstrip(os.path.sep)
+            'download-dir': folder_path
         }
 
         torrent_params = {
@@ -49,6 +55,7 @@ class Transmission(Downloader):
             trpc = TransmissionRPC(host[0], port = host[1], username = self.conf('username'), password = self.conf('password'))
             if data.get('type') == 'torrent_magnet':
                 remote_torrent = trpc.add_torrent_uri(data.get('url'), arguments = params)
+                torrent_params['trackerAdd'] = self.torrent_trackers
             else:
                 remote_torrent = trpc.add_torrent_file(b64encode(filedata), arguments = params)
 

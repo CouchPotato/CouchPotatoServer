@@ -106,6 +106,10 @@ class Updater(Plugin):
             if success:
                 fireEventAsync('app.restart')
 
+            # Assume the updater handles things
+            if not success:
+                success = True
+
         return jsonified({
             'success': success
         })
@@ -396,6 +400,7 @@ class DesktopUpdater(BaseUpdater):
                     self.update_failed = True
 
             self.desktop._esky.auto_update(callback = do_restart)
+            return
         except:
             self.update_failed = True
 
@@ -406,7 +411,7 @@ class DesktopUpdater(BaseUpdater):
             'last_check': self.last_check,
             'update_version': self.update_version,
             'version': self.getVersion(),
-            'branch': 'desktop_build',
+            'branch': self.branch,
         }
 
     def check(self):

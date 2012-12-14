@@ -1,6 +1,7 @@
 from couchpotato import get_session
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import toUnicode
+from couchpotato.core.helpers.variable import splitString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Library, FileType
@@ -13,7 +14,7 @@ log = CPLog(__name__)
 
 class Subtitle(Plugin):
 
-    services = ['opensubtitles', 'thesubdb', 'subswiki']
+    services = ['opensubtitles', 'thesubdb', 'subswiki', 'podnapisi']
 
     def __init__(self):
         addEvent('renamer.before', self.searchSingle)
@@ -39,8 +40,6 @@ class Subtitle(Plugin):
 
                     # get subtitles for those files
                     subliminal.list_subtitles(files, cache_dir = Env.get('cache_dir'), multi = True, languages = self.getLanguages(), services = self.services)
-
-        #db.close()
 
     def searchSingle(self, group):
 
@@ -69,4 +68,4 @@ class Subtitle(Plugin):
         return False
 
     def getLanguages(self):
-        return [x.strip() for x in self.conf('languages').split(',')]
+        return splitString(self.conf('languages'))

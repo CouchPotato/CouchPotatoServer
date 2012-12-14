@@ -20,20 +20,19 @@ Configurations:
 :pool_connections: The number of active HTTP connection pools to use.
 :encode_uri: If true, URIs will automatically be percent-encoded.
 :trust_env: If true, the surrouding environment will be trusted (environ, netrc).
-:param store_cookies: If false, the received cookies as part of the HTTP response would be ignored.
+:store_cookies: If false, the received cookies as part of the HTTP response would be ignored.
 
 """
 
 SCHEMAS = ['http', 'https']
 
-from . import __version__
+from .utils import default_user_agent
 
 defaults = dict()
 
-
 defaults['base_headers'] = {
-    'User-Agent': 'python-requests/%s' % __version__,
-    'Accept-Encoding': ', '.join(('identity', 'deflate', 'compress', 'gzip')),
+    'User-Agent': default_user_agent(),
+    'Accept-Encoding': ', '.join(('gzip', 'deflate', 'compress')),
     'Accept': '*/*'
 }
 
@@ -49,5 +48,3 @@ defaults['keep_alive'] = True
 defaults['encode_uri'] = True
 defaults['trust_env'] = True
 defaults['store_cookies'] = True
-
-

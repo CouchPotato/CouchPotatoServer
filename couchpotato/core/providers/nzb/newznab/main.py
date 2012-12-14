@@ -1,7 +1,7 @@
 from couchpotato.core.event import fireEvent
 from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.rss import RSS
-from couchpotato.core.helpers.variable import cleanHost
+from couchpotato.core.helpers.variable import cleanHost, splitString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.nzb.base import NZBProvider
 from couchpotato.environment import Env
@@ -132,6 +132,7 @@ class Newznab(NZBProvider, RSS):
                     new = {
                         'id': id,
                         'provider': self.getName(),
+                        'provider_extra': host['host'],
                         'type': 'nzb',
                         'name': self.getTextElement(nzb, "title"),
                         'age': self.calculateAge(int(time.mktime(parse(date).timetuple()))),
@@ -161,9 +162,9 @@ class Newznab(NZBProvider, RSS):
 
     def getHosts(self):
 
-        uses = [x.strip() for x in str(self.conf('use')).split(',')]
-        hosts = [x.strip() for x in self.conf('host').split(',')]
-        api_keys = [x.strip() for x in self.conf('api_key').split(',')]
+        uses = splitString(str(self.conf('use')))
+        hosts = splitString(self.conf('host'))
+        api_keys = splitString(self.conf('api_key'))
 
         list = []
         for nr in range(len(hosts)):
@@ -218,4 +219,5 @@ class Newznab(NZBProvider, RSS):
                     return 'try_next'
 
             log.error('Failed download from %s', (host, traceback.format_exc()))
-            raise
+
+        return 'try_next'

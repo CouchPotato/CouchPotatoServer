@@ -1,17 +1,19 @@
-from couchpotato.core.helpers.encoding import toUnicode, tryUrlencode
+from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
-from httplib import HTTPSConnection
+import traceback
 
 log = CPLog(__name__)
 
 
 class Prowl(Notification):
 
+    urls = {
+        'api': 'https://api.prowlapp.com/publicapi/add'
+    }
+
     def notify(self, message = '', data = {}, listener = None):
         if self.isDisabled(): return
-
-        http_handler = HTTPSConnection('api.prowlapp.com')
 
         data = {
             'apikey': self.conf('api_key'),
@@ -19,21 +21,15 @@ class Prowl(Notification):
             'description': toUnicode(message),
             'priority': self.conf('priority'),
         }
+        headers = {
+           'Content-type': 'application/x-www-form-urlencoded'
+        }
 
-        http_handler.request('POST',
-            '/publicapi/add',
-            headers = {'Content-type': 'application/x-www-form-urlencoded'},
-            body = tryUrlencode(data)
-        )
-        response = http_handler.getresponse()
-        request_status = response.status
-
-        if request_status == 200:
+        try:
+            self.urlopen(self.urls['api'], headers = headers, params = data, multipart = True, show_error = False)
             log.info('Prowl notifications sent.')
             return True
-        elif request_status == 401:
-            log.error('Prowl auth failed: %s', response.reason)
-            return False
-        else:
-            log.error('Prowl notification failed.')
-            return False
+        except:
+            log.error('Prowl failed: %s', traceback.format_exc())
+
+        return False

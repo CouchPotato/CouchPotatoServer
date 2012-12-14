@@ -88,8 +88,6 @@ class Release(Plugin):
 
         fireEvent('movie.restatus', movie.id)
 
-        #db.close()
-
         return True
 
 
@@ -108,7 +106,6 @@ class Release(Plugin):
 
         release_id = getParam('id')
 
-        #db.close()
         return jsonified({
             'success': self.delete(release_id)
         })
@@ -152,7 +149,6 @@ class Release(Plugin):
             rel.status_id = available_status.get('id') if rel.status_id is ignored_status.get('id') else ignored_status.get('id')
             db.commit()
 
-        #db.close()
         return jsonified({
             'success': True
         })
@@ -161,6 +157,7 @@ class Release(Plugin):
 
         db = get_session()
         id = getParam('id')
+        status_snatched = fireEvent('status.add', 'snatched', single = True)
 
         rel = db.query(Relea).filter_by(id = id).first()
         if rel:
@@ -181,14 +178,16 @@ class Release(Plugin):
                 'files': {}
             }), manual = True, single = True)
 
-            #db.close()
+            if success:
+                rel.status_id = status_snatched.get('id')
+                db.commit()
+
             return jsonified({
                 'success': success
             })
         else:
             log.error('Couldn\'t find release with id: %s', id)
 
-        #db.close()
         return jsonified({
             'success': False
         })

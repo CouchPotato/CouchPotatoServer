@@ -24,18 +24,19 @@ config = [{
                     'name': 'required_words',
                     'label': 'Required words',
                     'default': '',
-                    'description': 'Ignore releases that don\'t contain at least one of these words.'
+                    'placeholder': 'Example: DTS, AC3 & English',
+                    'description': 'Ignore releases that don\'t contain at least one set of words. Sets are separated by "," and each word within a set must be separated with "&"'
                 },
                 {
                     'name': 'ignored_words',
                     'label': 'Ignored words',
-                    'default': 'german, dutch, french, truefrench, danish, swedish, spanish, italian, korean, dubbed, swesub, korsub',
+                    'default': 'german, dutch, french, truefrench, danish, swedish, spanish, italian, korean, dubbed, swesub, korsub, dksubs',
                 },
                 {
                     'name': 'preferred_method',
                     'label': 'First search',
                     'description': 'Which of the methods do you prefer',
-                    'default': 'nzb',
+                    'default': 'both',
                     'type': 'dropdown',
                     'values': [('usenet & torrents', 'both'), ('usenet', 'nzb'), ('torrents', 'torrent')],
                 },

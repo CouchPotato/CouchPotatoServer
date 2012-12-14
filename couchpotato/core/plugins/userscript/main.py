@@ -21,6 +21,7 @@ class Userscript(Plugin):
         addApiView('userscript.get/<random>/<path:filename>', self.getUserScript, static = True)
         addApiView('userscript', self.iFrame)
         addApiView('userscript.add_via_url', self.getViaUrl)
+        addApiView('userscript.includes', self.getIncludes)
         addApiView('userscript.bookmark', self.bookmark)
 
         addEvent('userscript.get_version', self.getVersion)
@@ -34,6 +35,13 @@ class Userscript(Plugin):
         }
 
         return self.renderTemplate(__file__, 'bookmark.js', **params)
+
+    def getIncludes(self):
+
+        return jsonified({
+            'includes': fireEvent('userscript.get_includes', merge = True),
+            'excludes': fireEvent('userscript.get_excludes', merge = True),
+        })
 
     def getUserScript(self, random = '', filename = ''):
 

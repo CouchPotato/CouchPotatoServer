@@ -11,11 +11,6 @@
 # Source function library.
 . /etc/init.d/functions
 
-# Source couchpotato configuration
-if [ -f /etc/sysconfig/couchpotato ]; then
-        . /etc/sysconfig/couchpotato
-fi
-
 prog=couchpotato
 lockfile=/var/lock/subsys/$prog
 
@@ -27,8 +22,13 @@ datadir=${CP_DATA-~/.couchpotato}
 pidfile=${CP_PIDFILE-/var/run/couchpotato/couchpotato.pid}
 ##
 
+# Source couchpotato configuration
+if [ -f /etc/sysconfig/couchpotato ]; then
+        . /etc/sysconfig/couchpotato
+fi
+
 pidpath=`dirname ${pidfile}`
-options=" --daemon --pid_file=${pidfile} --datadir=${datadir}"
+options=" --daemon --pid_file=${pidfile} --data_dir=${datadir}"
 
 # create PID directory if not exist and ensure the couchpotato user can write to it
 if [ ! -d $pidpath ]; then
