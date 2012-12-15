@@ -117,7 +117,10 @@ class Renamer(Plugin):
                 name_the = movie_name
                 if movie_name[:4].lower() == 'the ':
                     name_the = movie_name[4:] + ', The'
-
+                
+                genre = ''
+                for x in range(min(length(library['info']['genres']),4)):
+                    genre = genre + '.' + library['info']['genres'][x]
                 replacements = {
                      'ext': 'mkv',
                      'namethe': name_the.strip(),
@@ -135,7 +138,7 @@ class Renamer(Plugin):
                      'imdb_id': library['identifier'],
                      'cd': '',
                      'cd_nr': '',
-                     'genre': library['info']['genres'][0],
+                     'genre': genre[1:],
                 }
 
                 for file_type in group['files']:
