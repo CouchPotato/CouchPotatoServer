@@ -27,8 +27,8 @@ class Nzbx(NZBProvider, RSS):
         'categories': 'https://nzbx.co/api/categories',
         'groups': 'https://nzbx.co/api/groups',
     }
-
-    http_time_between_calls = 1 # Seconds
+    
+	http_time_between_calls = 1 # Seconds
 
     def search(self, movie, quality):
 
@@ -60,7 +60,12 @@ class Nzbx(NZBProvider, RSS):
 
                     nzbx_guid = nzb['guid']
                     
-                    # need to filter by completed
+                    def extra_score(item):
+					    score = 0
+						if item['votes']['upvotes'] > item['votes']['downvotes']
+						    score += 5
+							
+						return score
                     
                     new = {
                         'guid': nzbx_guid,
@@ -70,6 +75,8 @@ class Nzbx(NZBProvider, RSS):
                         'name': nzb['name'],
                         'age': self.calculateAge(int(nzb['postdate'])),
                         'size': tryInt(nzb['size']) / 1024 / 1024,
+						'description': '',
+						'extra_score': extra_score,
                         'check_nzb': True,
                     }
 
