@@ -135,6 +135,7 @@ class Renamer(Plugin):
                      'imdb_id': library['identifier'],
                      'cd': '',
                      'cd_nr': '',
+                     'genre': library['genres'][0],
                 }
 
                 for file_type in group['files']:
