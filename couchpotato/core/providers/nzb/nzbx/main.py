@@ -28,7 +28,7 @@ class Nzbx(NZBProvider, RSS):
         'groups': 'https://nzbx.co/api/groups',
     }
     
-	http_time_between_calls = 1 # Seconds
+    http_time_between_calls = 1 # Seconds
 
     def search(self, movie, quality):
 
