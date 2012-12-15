@@ -61,22 +61,24 @@ class Nzbx(NZBProvider, RSS):
                     nzbx_guid = nzb['guid']
                     
                     def extra_score(item):
-					    score = 0
-						if item['votes']['upvotes'] > item['votes']['downvotes']
-						    score += 5
-							
-						return score
+                        score = 0
+                        if item['votes']['upvotes'] > item['votes']['downvotes']:
+                            score += 5
+                            
+                        return score
                     
                     new = {
                         'guid': nzbx_guid,
                         'type': 'nzb',
                         'provider': self.getName(),
-                        'download': nzb['nzb'],
+                        'download': self.download,
+                        'url': nzb['nzb'],
                         'name': nzb['name'],
                         'age': self.calculateAge(int(nzb['postdate'])),
                         'size': tryInt(nzb['size']) / 1024 / 1024,
-						'description': '',
-						'extra_score': extra_score,
+                        'description': '',
+                        'extra_score': extra_score,
+                        'votes': nzb['votes'],
                         'check_nzb': True,
                     }
 
