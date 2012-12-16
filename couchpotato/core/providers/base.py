@@ -4,9 +4,11 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
 from urlparse import urlparse
+import cookielib
 import re
 import time
 import traceback
+import urllib2
 
 
 log = CPLog(__name__)
@@ -48,6 +50,8 @@ class YarrProvider(Provider):
     sizeMb = ['mb', 'mib']
     sizeKb = ['kb', 'kib']
 
+    login_opener = None
+
     def __init__(self):
         addEvent('provider.belongs_to', self.belongsTo)
 
@@ -55,6 +59,34 @@ class YarrProvider(Provider):
         addEvent('yarr.search', self.search)
 
         addEvent('nzb.feed', self.feed)
+
+    def login(self):
+
+        try:
+            cookiejar = cookielib.CookieJar()
+            opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookiejar))
+            urllib2.install_opener(opener)
+            log.info2('Logging into %s', self.urls['login'])
+            f = opener.open(self.urls['login'], self.getLoginParams())
+            f.read()
+            f.close()
+            self.login_opener = opener
+            return True
+        except:
+            log.error('Failed to login %s: %s', (self.getName(), traceback.format_exc()))
+
+        return False
+
+    def loginDownload(self, url = '', nzb_id = ''):
+        try:
+            if not self.login_opener and not self.login():
+                log.error('Failed downloading from %s', self.getName())
+            return self.urlopen(url, opener = self.login_opener)
+        except:
+            log.error('Failed downloading from %s: %s', (self.getName(), traceback.format_exc()))
+
+    def getLoginParams(self):
+        return ''
 
     def download(self, url = '', nzb_id = ''):
         try:
