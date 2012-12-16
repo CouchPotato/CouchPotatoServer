@@ -69,7 +69,7 @@ class Core(Plugin):
 
     def available(self):
         return jsonified({
-            'succes': True
+            'success': True
         })
 
     def shutdown(self):
@@ -101,7 +101,7 @@ class Core(Plugin):
 
         self.shutdown_started = True
 
-        fireEvent('app.shutdown')
+        fireEvent('app.do_shutdown')
         log.debug('Every plugin got shutdown event')
 
         loop = True
@@ -177,6 +177,6 @@ class Core(Plugin):
     def signalHandler(self):
 
         def signal_handler(signal, frame):
-            fireEvent('app.shutdown')
+            fireEvent('app.do_shutdown')
 
         signal.signal(signal.SIGINT, signal_handler)

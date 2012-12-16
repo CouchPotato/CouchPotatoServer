@@ -21,7 +21,7 @@ class PassThePopcorn(TorrentProvider):
          'domain': 'https://tls.passthepopcorn.me',
          'detail': 'https://tls.passthepopcorn.me/torrents.php?torrentid=%s',
          'torrent': 'https://tls.passthepopcorn.me/torrents.php',
-         'login': 'https://tls.passthepopcorn.me/login.php',
+         'login': 'https://tls.passthepopcorn.me/ajax.php?action=login',
          'search': 'https://tls.passthepopcorn.me/search/%s/0/7/%d'
     }
 
@@ -249,6 +249,7 @@ class PassThePopcorn(TorrentProvider):
         return tryUrlencode({
              'username': self.conf('username'),
              'password': self.conf('password'),
+             'passkey': self.conf('passkey'),
              'keeplogged': '1',
              'login': 'Login'
         })

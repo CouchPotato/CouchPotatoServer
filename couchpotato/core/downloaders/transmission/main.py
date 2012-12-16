@@ -31,9 +31,14 @@ class Transmission(Downloader):
 
         # Set parameters for Transmission
         folder_name = self.createFileName(data, filedata, movie)[:-len(data.get('type')) - 1]
+        folder_path = os.path.join(self.conf('directory', default = ''), folder_name).rstrip(os.path.sep)
+
+        # Create the empty folder to download too
+        self.makeDir(folder_path)
+
         params = {
             'paused': self.conf('paused', default = 0),
-            'download-dir': os.path.join(self.conf('directory', default = ''), folder_name).rstrip(os.path.sep)
+            'download-dir': folder_path
         }
 
         torrent_params = {
