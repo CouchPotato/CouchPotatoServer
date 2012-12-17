@@ -53,7 +53,8 @@ class Core(Plugin):
         addEvent('setting.save.core.api_key', self.checkApikey)
 
         # Make sure we can close-down with ctrl+c properly
-        self.signalHandler()
+        if not Env.get('desktop'):
+            self.signalHandler()
 
     def md5Password(self, value):
         return md5(value.encode(Env.get('encoding'))) if value else ''
