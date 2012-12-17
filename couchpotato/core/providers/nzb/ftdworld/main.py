@@ -29,7 +29,7 @@ class FTDWorld(NZBProvider):
         ([1], ['cam', 'ts', 'dvdrip', 'tc', 'r5', 'scr', 'brrip']),
         ([10, 13, 14], ['bd50', '720p', '1080p']),
     ]
-    cat_backup_id = [1]
+    cat_backup_id = 1
 
     def search(self, movie, quality):
 
