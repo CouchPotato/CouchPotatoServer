@@ -446,12 +446,16 @@ class Searcher(Plugin):
     def correctName(self, check_name, movie_name):
 
         check_names = [check_name]
-        try:
-            check_names.append(re.search(r'([\'"])[^\1]*\1', check_name).group(0))
-        except:
-            pass
 
-        for check_name in check_names:
+        # Match names between "
+        try: check_names.append(re.search(r'([\'"])[^\1]*\1', check_name).group(0))
+        except: pass
+
+        # Match longest name between []
+        try: check_names.append(max(check_name.split('['), key = len))
+        except: pass
+
+        for check_name in list(set(check_names)):
             check_movie = fireEvent('scanner.name_year', check_name, single = True)
 
             try:
