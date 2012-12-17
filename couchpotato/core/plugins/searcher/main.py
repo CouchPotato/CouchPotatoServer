@@ -317,16 +317,16 @@ class Searcher(Plugin):
             return False
 
         ignored_words = splitString(self.conf('ignored_words').lower())
-        blacklisted = list(set(nzb_words) & set(ignored_words))
+        blacklisted = list(set(nzb_words) & set(ignored_words) - set(movie_words))
         if self.conf('ignored_words') and blacklisted:
             log.info2("Wrong: '%s' blacklisted words: %s" % (nzb['name'], ", ".join(blacklisted)))
             return False
 
         pron_tags = ['xxx', 'sex', 'anal', 'tits', 'fuck', 'porn', 'orgy', 'milf', 'boobs', 'erotica', 'erotic']
-        for p_tag in pron_tags:
-            if p_tag in nzb_words and p_tag not in movie_words:
-                log.info('Wrong: %s, probably pr0n', (nzb['name']))
-                return False
+        pron_words = list(set(nzb_words) & set(pron_tags) - set(movie_words))
+        if pron_words:
+            log.info('Wrong: %s, probably pr0n', (nzb['name']))
+            return False
 
         #qualities = fireEvent('quality.all', single = True)
         preferred_quality = fireEvent('quality.single', identifier = quality['identifier'], single = True)
