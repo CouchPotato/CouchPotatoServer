@@ -153,7 +153,7 @@ class Manage(Plugin):
                     'to_go': total_found,
                 }
 
-            if group['library']:
+            if group['library'] and group['library'].get('identifier'):
                 identifier = group['library'].get('identifier')
                 added_identifiers.append(identifier)
 
@@ -187,5 +187,5 @@ class Manage(Plugin):
         groups = fireEvent('scanner.scan', folder = folder, files = files, single = True)
 
         for group in groups.itervalues():
-            if group['library']:
+            if group['library'] and group['library'].get('identifier'):
                 fireEvent('release.add', group = group)
