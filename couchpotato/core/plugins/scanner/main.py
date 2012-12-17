@@ -421,7 +421,7 @@ class Scanner(Plugin):
         if not data['quality']:
             data['quality'] = fireEvent('quality.single', 'dvdr' if group['is_dvd'] else 'dvdrip', single = True)
 
-        data['quality_type'] = 'HD' if data.get('resolution_width', 0) >= 1280 else 'SD'
+        data['quality_type'] = 'HD' if data.get('resolution_width', 0) >= 1280 or data['quality'].get('hd') else 'SD'
 
         filename = re.sub('(.cp\(tt[0-9{7}]+\))', '', files[0])
         data['group'] = self.getGroup(filename[len(folder):])
