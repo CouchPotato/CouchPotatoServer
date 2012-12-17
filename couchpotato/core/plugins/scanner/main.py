@@ -775,7 +775,7 @@ class Scanner(Plugin):
         return None
 
     def findYear(self, text):
-        matches = re.search('(?P<year>[12]{1}[0-9]{3})', text)
+        matches = re.search('(?P<year>19[0-9]{2}|20[0-9]{2})', text)
         if matches:
             return matches.group('year')
 
