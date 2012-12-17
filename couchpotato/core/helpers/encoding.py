@@ -68,7 +68,7 @@ def tryUrlencode(s):
 
         return new[1:]
     else:
-        for letter in toUnicode(s):
+        for letter in ss(s):
             try:
                 new += quote_plus(letter)
             except:

@@ -1,8 +1,7 @@
 from StringIO import StringIO
 from couchpotato import addView
 from couchpotato.core.event import fireEvent, addEvent
-from couchpotato.core.helpers.encoding import tryUrlencode, simplifyString, ss, \
-    toSafeString
+from couchpotato.core.helpers.encoding import tryUrlencode, ss, toSafeString
 from couchpotato.core.helpers.variable import getExt, md5
 from couchpotato.core.logger import CPLog
 from couchpotato.environment import Env
@@ -222,7 +221,7 @@ class Plugin(object):
 
 
     def getCache(self, cache_key, url = None, **kwargs):
-        cache_key = md5(cache_key)
+        cache_key = md5(ss(cache_key))
         cache = Env.get('cache').get(cache_key)
         if cache:
             if not Env.get('dev'): log.debug('Getting cache %s', cache_key)
