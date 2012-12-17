@@ -1,9 +1,8 @@
 from bs4 import BeautifulSoup
 from couchpotato.core.event import fireEvent
-from couchpotato.core.helpers.encoding import toUnicode, tryUrlencode, \
-    simplifyString
+from couchpotato.core.helpers.encoding import toUnicode, tryUrlencode
 from couchpotato.core.helpers.rss import RSS
-from couchpotato.core.helpers.variable import tryInt, getTitle
+from couchpotato.core.helpers.variable import tryInt, getTitle, possibleTitles
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.nzb.base import NZBProvider
 from couchpotato.environment import Env
@@ -27,11 +26,19 @@ class NzbIndex(NZBProvider, RSS):
 
     def search(self, movie, quality):
 
-        results = []
         if self.isDisabled():
-            return results
+            return []
 
-        q = '"%s %s" %s' % (simplifyString(getTitle(movie['library'])), movie['library']['year'], quality.get('identifier'))
+        results = []
+        for title in possibleTitles(getTitle(movie['library'])):
+            results.extend(self._search(title, movie, quality))
+
+        return self.removeDuplicateResults(results)
+
+    def _search(self, title, movie, quality):
+        results = []
+
+        q = '"%s" %s %s' % (title, movie['library']['year'], quality.get('identifier'))
         arguments = tryUrlencode({
             'q': q,
             'age': Env.setting('retention', 'nzb'),
@@ -45,9 +52,9 @@ class NzbIndex(NZBProvider, RSS):
         })
         url = "%s?%s" % (self.urls['api'], arguments)
 
-        cache_key = 'nzbindex.%s.%s' % (movie['library']['identifier'], quality.get('identifier'))
-
+        cache_key = 'nzbindex.%s.%s' % (movie['library']['identifier'], q)
         data = self.getCache(cache_key, url)
+
         if data:
             try:
                 try:

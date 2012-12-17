@@ -46,8 +46,7 @@ class Nzbsrus(NZBProvider, RSS):
 
         url = "%s&%s&%s" % (self.urls['search'], arguments , cat_id_string)
 
-        cache_key = 'nzbsrus_1.%s.%s' % (movie['library'].get('identifier'), cat_id_string)
-        single_cat = True
+        cache_key = 'nzbsrus.%s.%s' % (movie['library'].get('identifier'), cat_id_string)
 
         data = self.getCache(cache_key, url, cache_timeout = 1800, headers = {'User-Agent': Env.getIdentifier()})
         if data:

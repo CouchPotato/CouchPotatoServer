@@ -3,7 +3,8 @@ from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
 from couchpotato.core.helpers.encoding import simplifyString, toUnicode
 from couchpotato.core.helpers.request import jsonified, getParam
-from couchpotato.core.helpers.variable import md5, getTitle, splitString
+from couchpotato.core.helpers.variable import md5, getTitle, splitString, \
+    possibleTitles
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Movie, Release, ReleaseInfo
@@ -365,17 +366,18 @@ class Searcher(Plugin):
         if self.checkIMDB([nzb['description']], movie['library']['identifier']):
             return True
 
-        for movie_title in movie['library']['titles']:
-            movie_words = re.split('\W+', simplifyString(movie_title['title']))
+        for raw_title in movie['library']['titles']:
+            for movie_title in possibleTitles(raw_title['title']):
+                movie_words = re.split('\W+', simplifyString(movie_title))
 
-            if self.correctName(nzb['name'], movie_title['title']):
-                # if no IMDB link, at least check year range 1
-                if len(movie_words) > 2 and self.correctYear([nzb['name']], movie['library']['year'], 1):
-                    return True
+                if self.correctName(nzb['name'], movie_title):
+                    # if no IMDB link, at least check year range 1
+                    if len(movie_words) > 2 and self.correctYear([nzb['name']], movie['library']['year'], 1):
+                        return True
 
-                # if no IMDB link, at least check year
-                if len(movie_words) <= 2 and self.correctYear([nzb['name']], movie['library']['year'], 0):
-                    return True
+                    # if no IMDB link, at least check year
+                    if len(movie_words) <= 2 and self.correctYear([nzb['name']], movie['library']['year'], 0):
+                        return True
 
         log.info("Wrong: %s, undetermined naming. Looking for '%s (%s)'" % (nzb['name'], movie_name, movie['library']['year']))
         return False
