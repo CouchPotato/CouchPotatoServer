@@ -84,7 +84,7 @@ class KickAssTorrents(TorrentProvider):
                                         elif column_name is 'age':
                                             new['age'] = self.ageToDays(td.text)
                                         elif column_name is 'seeds':
-                                            new['seeds'] = tryInt(td.text)
+                                            new['seeders'] = tryInt(td.text)
                                         elif column_name is 'leechers':
                                             new['leechers'] = tryInt(td.text)
 

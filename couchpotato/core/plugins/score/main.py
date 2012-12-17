@@ -27,9 +27,9 @@ class Score(Plugin):
         score += sizeScore(nzb['size'])
 
         # Torrents only
-        if nzb.get('seeds'):
+        if nzb.get('seeders'):
             try:
-                score += nzb.get('seeds') / 5
+                score += nzb.get('seeders') / 5
                 score += nzb.get('leechers') / 10
             except:
                 pass
