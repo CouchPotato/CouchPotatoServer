@@ -32,6 +32,7 @@ class TorrentLeech(TorrentProvider):
     ]
 
     http_time_between_calls = 1 #seconds
+    cat_backup_id = None
 
     def search(self, movie, quality):
 
@@ -61,6 +62,7 @@ class TorrentLeech(TorrentProvider):
 
                     link = result.find('td', attrs = {'class' : 'name'}).find('a')
                     url = result.find('td', attrs = {'class' : 'quickdownload'}).find('a')
+                    details = result.find('td', attrs = {'class' : 'name'}).find('a')
 
                     new = {
                         'id': link['href'].replace('/torrent/', ''),
@@ -70,6 +72,7 @@ class TorrentLeech(TorrentProvider):
                         'description': '',
                         'provider': self.getName(),
                         'url': self.urls['download'] % url['href'],
+                        'detail_url': self.urls['download'] % details['href'],
                         'download': self.loginDownload,
                         'size': self.parseSize(result.find_all('td')[4].string),
                         'seeders': tryInt(result.find('td', attrs = {'class' : 'seeders'}).string),
