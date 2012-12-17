@@ -340,6 +340,7 @@ class Renamer(Plugin):
 
                 log.info('Removing "%s"', src)
                 try:
+                    src = ss(src)
                     if os.path.isfile(src):
                         os.remove(src)
 
