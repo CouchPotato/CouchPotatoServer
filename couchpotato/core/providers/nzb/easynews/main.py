@@ -27,7 +27,7 @@ class Easynews(NZBProvider, RSS):
         search = []
         r = requests.get('http://members.easynews.com/global5/index.html?fty[]=VIDEO&u=1',
                      params={'gps': q},
-                     auth=('drjeep', 'gatolus02'))
+                     auth=(self.conf('username'), self.conf('password')))
         soup = BeautifulSoup(r.text)
         rows = soup.find_all('tr', 'rRow1') + soup.find_all('tr', 'rRow2')
         for tr in rows:

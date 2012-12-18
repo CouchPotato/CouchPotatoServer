@@ -20,8 +20,8 @@ config = [{
                     'type': 'enabler',
                 },
                 {
-                    'name': 'userid',
-                    'label': 'User ID',
+                    'name': 'username',
+                    'label': 'Username',
                 },
                 {
                     'name': 'password',
