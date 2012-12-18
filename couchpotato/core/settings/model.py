@@ -100,7 +100,7 @@ class Release(Entity):
     movie = ManyToOne('Movie')
     status = ManyToOne('Status')
     quality = ManyToOne('Quality')
-    files = ManyToMany('File', cascade = 'all, delete-orphan', single_parent = True)
+    files = ManyToMany('File')
     info = OneToMany('ReleaseInfo', cascade = 'all, delete-orphan')
 
     def to_dict(self, deep = {}, exclude = []):
