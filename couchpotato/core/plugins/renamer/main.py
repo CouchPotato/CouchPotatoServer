@@ -498,6 +498,7 @@ class Renamer(Plugin):
         return string.replace('  ', ' ').replace(' .', '.')
 
     def deleteEmptyFolder(self, folder, show_error = True):
+        folder = ss(folder)
 
         loge = log.error if show_error else log.debug
         for root, dirs, files in os.walk(folder):
