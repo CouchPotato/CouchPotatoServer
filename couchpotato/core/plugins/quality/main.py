@@ -7,6 +7,7 @@ from couchpotato.core.helpers.variable import mergeDicts, md5, getExt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Quality, Profile, ProfileType
+from sqlalchemy.sql.expression import or_
 import os.path
 import re
 import time
@@ -76,7 +77,7 @@ class QualityPlugin(Plugin):
         db = get_session()
         quality_dict = {}
 
-        quality = db.query(Quality).filter_by(identifier = identifier).first()
+        quality = db.query(Quality).filter(or_(Quality.identifier == identifier, Quality.id == identifier)).first()
         if quality:
             quality_dict = dict(self.getQuality(quality.identifier), **quality.to_dict())
 
