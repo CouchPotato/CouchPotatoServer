@@ -5,6 +5,14 @@ from couchpotato.core.logger import CPLog
 log = CPLog(__name__)
 
 
+def true_false(val):
+    lookup = {
+        True: 'true',
+        False: 'false',
+    }
+    return lookup.get(val, 'false')
+
+
 class Aria2(Downloader):
 
     type = ['http']
@@ -16,7 +24,7 @@ class Aria2(Downloader):
         log.info('Sending "%s" to aria2', data.get('name'))
 
         s = xmlrpclib.ServerProxy('http://%s/rpc' % self.conf('host'))
-        return s.aria2.addUri([data['url']])
+        return s.aria2.addUri([data['url']], {'pause': true_false(self.conf('pause'))})
 
     def getAllDownloadStatus(self):
         """

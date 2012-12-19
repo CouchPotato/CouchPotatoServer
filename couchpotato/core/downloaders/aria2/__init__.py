@@ -25,6 +25,13 @@ config = [{
                     'default': 'htpc:6800',
                 },
                 {
+                    'name': 'pause',
+                    'default': False,
+                    'type': 'bool',
+                    'advanced': True,
+                    'description': 'Pause download after added.',
+                },
+                {
                     'name': 'manual',
                     'default': True,
                     'type': 'bool',
