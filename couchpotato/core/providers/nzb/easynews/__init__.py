@@ -5,7 +5,7 @@ def start():
     return Easynews()
 
 config = [{
-    'name': 'nzbsrus',
+    'name': 'easynews',
     'groups': [
         {
             'tab': 'searcher',
