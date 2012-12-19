@@ -241,8 +241,10 @@ class Plugin(object):
                     self.setCache(cache_key, data, timeout = cache_timeout)
                 return data
             except:
-                if not kwargs.get('show_error'):
+                if not kwargs.get('show_error', True):
                     raise
+
+                return ''
 
     def setCache(self, cache_key, value, timeout = 300):
         log.debug('Setting cache %s', cache_key)
