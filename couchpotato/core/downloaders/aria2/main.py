@@ -7,7 +7,7 @@ log = CPLog(__name__)
 
 class Aria2(Downloader):
 
-    type = ['nzb']
+    type = ['http']
 
     def download(self, data={}, movie={}, manual=False, filedata=None):
         if self.isDisabled(manual):

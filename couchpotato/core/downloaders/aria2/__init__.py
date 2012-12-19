@@ -18,7 +18,7 @@ config = [{
                     'name': 'enabled',
                     'default': 0,
                     'type': 'enabler',
-                    'radio_group': 'nzb',
+                    'radio_group': 'http',
                 },
                 {
                     'name': 'host',
@@ -28,7 +28,7 @@ config = [{
                     'name': 'manual',
                     'default': True,
                     'type': 'bool',
-#                    'advanced': True,
+                    'advanced': True,
                     'description': 'Disable this downloader for automated searches, but use it when I manually send a release.',
                 },
                 {

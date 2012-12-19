@@ -7,12 +7,12 @@ from couchpotato.core.helpers.encoding import simplifyString
 from couchpotato.core.helpers.rss import RSS
 from couchpotato.core.helpers.variable import getTitle
 from couchpotato.core.logger import CPLog
-from couchpotato.core.providers.nzb.base import NZBProvider
+from couchpotato.core.providers.http.base import HTTPProvider
 
 log = CPLog(__name__)
 
 
-class Easynews(NZBProvider, RSS):
+class Easynews(HTTPProvider, RSS):
 
     def search(self, movie, quality):
 
