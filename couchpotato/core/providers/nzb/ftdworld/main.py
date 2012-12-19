@@ -1,8 +1,7 @@
 from bs4 import BeautifulSoup
 from couchpotato.core.event import fireEvent
-from couchpotato.core.helpers.encoding import toUnicode, tryUrlencode, \
-    simplifyString
-from couchpotato.core.helpers.variable import tryInt, getTitle
+from couchpotato.core.helpers.encoding import toUnicode, tryUrlencode
+from couchpotato.core.helpers.variable import tryInt, possibleTitles, getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.nzb.base import NZBProvider
 from couchpotato.environment import Env
@@ -22,7 +21,7 @@ class FTDWorld(NZBProvider):
         'login': 'http://ftdworld.net/index.php',
     }
 
-    http_time_between_calls = 1 #seconds
+    http_time_between_calls = 3 #seconds
 
     cat_ids = [
         ([4, 11], ['dvdr']),
@@ -33,11 +32,19 @@ class FTDWorld(NZBProvider):
 
     def search(self, movie, quality):
 
-        results = []
         if self.isDisabled():
-            return results
+            return []
 
-        q = '%s %s' % (simplifyString(getTitle(movie['library'])), movie['library']['year'])
+        results = []
+        for title in possibleTitles(getTitle(movie['library'])):
+            results.extend(self._search(title, movie, quality))
+
+        return self.removeDuplicateResults(results)
+
+    def _search(self, title, movie, quality):
+        results = []
+
+        q = '"%s" %s' % (title, movie['library']['year'])
 
         params = {
             'ctitle': q,
@@ -81,7 +88,7 @@ class FTDWorld(NZBProvider):
                         'download': self.loginDownload,
                         'detail_url': self.urls['detail'] % nzb_id,
                         'description': '',
-                        'score': (tryInt(up.attrs['title'].split(' ')[0]) * 3) - (tryInt(down.attrs['title'].split(' ')[0]) * 3),
+                        'score': (tryInt(up.attrs['title'].split(' ')[0]) * 3) - (tryInt(down.attrs['title'].split(' ')[0]) * 3) if up else 0,
                     }
 
                     is_correct_movie = fireEvent('searcher.correct_movie',

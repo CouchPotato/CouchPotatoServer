@@ -133,6 +133,9 @@ class Release(Plugin):
                     db.delete(release_file)
             db.commit()
 
+            if len(rel.files) == 0:
+                self.delete(id)
+
             return True
 
         return False

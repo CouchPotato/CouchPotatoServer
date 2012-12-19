@@ -1,5 +1,6 @@
 from couchpotato.core.event import addEvent
-from couchpotato.core.helpers.variable import tryFloat
+from couchpotato.core.helpers.encoding import simplifyString
+from couchpotato.core.helpers.variable import tryFloat, getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
@@ -155,3 +156,15 @@ class YarrProvider(Provider):
             new['provider_extra'] = ', %s' % new['provider_extra']
 
         log.info('Found: score(%(score)s) on %(provider)s%(provider_extra)s: %(name)s', new)
+
+    def removeDuplicateResults(self, results):
+
+        result_ids = []
+        new_results = []
+
+        for result in results:
+            if result['id'] not in result_ids:
+                new_results.append(result)
+                result_ids.append(result['id'])
+
+        return new_results

@@ -133,13 +133,6 @@ config = [{
                     'type': 'choice',
                     'options': rename_options
                 },
-                {
-                    'name': 'trailer_name',
-                    'label': 'Trailer naming',
-                    'default': '<filename>-trailer.<ext>',
-                    'type': 'choice',
-                    'options': rename_options
-                },
             ],
         },
     ],

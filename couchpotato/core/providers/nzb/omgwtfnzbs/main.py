@@ -1,9 +1,8 @@
 from bs4 import BeautifulSoup
 from couchpotato.core.event import fireEvent
-from couchpotato.core.helpers.encoding import toUnicode, tryUrlencode, \
-    simplifyString
+from couchpotato.core.helpers.encoding import toUnicode, tryUrlencode
 from couchpotato.core.helpers.rss import RSS
-from couchpotato.core.helpers.variable import tryInt, getTitle
+from couchpotato.core.helpers.variable import tryInt, getTitle, possibleTitles
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.nzb.base import NZBProvider
 from dateutil.parser import parse
@@ -33,12 +32,19 @@ class OMGWTFNZBs(NZBProvider, RSS):
     def search(self, movie, quality):
 
         pre_releases = fireEvent('quality.pre_releases', single = True)
+        if self.isDisabled() or quality['identifier'] in pre_releases:
+            return []
 
         results = []
-        if self.isDisabled() or quality['identifier'] in pre_releases:
-            return results
+        for title in possibleTitles(getTitle(movie['library'])):
+            results.extend(self._search(title, movie, quality))
 
-        q = '%s %s' % (simplifyString(getTitle(movie['library'])), movie['library']['year'])
+        return self.removeDuplicateResults(results)
+
+    def _search(self, title, movie, quality):
+        results = []
+
+        q = '%s %s' % (title, movie['library']['year'])
 
         params = {
             'search': q,
