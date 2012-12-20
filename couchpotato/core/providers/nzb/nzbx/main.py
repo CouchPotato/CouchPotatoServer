@@ -1,23 +1,18 @@
 from couchpotato.core.event import fireEvent
-from couchpotato.core.helpers.encoding import toUnicode, tryUrlencode, \
-    simplifyString
+from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.rss import RSS
-from couchpotato.core.helpers.variable import tryInt, getTitle
+from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.nzb.base import NZBProvider
-from couchpotato.environment import Env
-from dateutil.parser import parse
-import re
-import time
-import traceback
 import json
+import traceback
 
 log = CPLog(__name__)
 
 
 class Nzbx(NZBProvider, RSS):
     endpoint = 'https://nzbx.co/api/'
-    
+
     urls = {
         'search': 'https://nzbx.co/api/search',
         'details': 'https://nzbx.co/api/details?guid=%s',
@@ -27,27 +22,25 @@ class Nzbx(NZBProvider, RSS):
         'categories': 'https://nzbx.co/api/categories',
         'groups': 'https://nzbx.co/api/groups',
     }
-    
+
     http_time_between_calls = 1 # Seconds
 
     def search(self, movie, quality):
-
         results = []
+
         if self.isDisabled():
             return results
 
-        q = '"%s %s" %s' % (simplifyString(getTitle(movie['library'])), movie['library']['year'], quality.get('identifier'))
         arguments = tryUrlencode({
-            'q': q,
-            'l': 250, # Limit on number of files returned
-            #'i': '', # index of file
-            #'sf': '' # size filter
+            'q': movie['library']['identifier'].replace('tt', ''),
+            'sf': quality.get('size_min'),
         })
         url = "%s?%s" % (self.urls['search'], arguments)
 
         cache_key = 'nzbx.%s.%s' % (movie['library']['identifier'], quality.get('identifier'))
 
         data = self.getCache(cache_key, url)
+
         if data:
             try:
                 try:
@@ -59,14 +52,13 @@ class Nzbx(NZBProvider, RSS):
                 for nzb in nzbs:
 
                     nzbx_guid = nzb['guid']
-                    
+
                     def extra_score(item):
                         score = 0
                         if item['votes']['upvotes'] > item['votes']['downvotes']:
                             score += 5
-                            
                         return score
-                    
+
                     new = {
                         'guid': nzbx_guid,
                         'type': 'nzb',
@@ -97,5 +89,3 @@ class Nzbx(NZBProvider, RSS):
 
         return results
 
-    def isEnabled(self):
-        return NZBProvider.isEnabled(self) and self.conf('enabled')
