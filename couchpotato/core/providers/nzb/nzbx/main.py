@@ -16,18 +16,18 @@ log = CPLog(__name__)
 
 
 class Nzbx(NZBProvider, RSS):
-	endpoint = 'https://nzbx.co/api/'
-	
+    endpoint = 'https://nzbx.co/api/'
+    
     urls = {
-        'search': endpoint + 'search',
-		'details': endpoint + 'details?guid=%s',
-		'comments': endpoint + 'get-comments?guid=%s',
-		'ratings': endpoint + 'get-votes?guid=%s',
-		'downloads': endpoint + 'get-downloads-count?guid=%s',
-		'categories': endpoint + 'categories',
-		'groups': endpoint + 'groups',
+        'search': 'https://nzbx.co/api/search',
+        'details': 'https://nzbx.co/api/details?guid=%s',
+        'comments': 'https://nzbx.co/api/get-comments?guid=%s',
+        'ratings': 'https://nzbx.co/api/get-votes?guid=%s',
+        'downloads': 'https://nzbx.co/api/get-downloads-count?guid=%s',
+        'categories': 'https://nzbx.co/api/categories',
+        'groups': 'https://nzbx.co/api/groups',
     }
-
+    
     http_time_between_calls = 1 # Seconds
 
     def search(self, movie, quality):
@@ -39,9 +39,9 @@ class Nzbx(NZBProvider, RSS):
         q = '"%s %s" %s' % (simplifyString(getTitle(movie['library'])), movie['library']['year'], quality.get('identifier'))
         arguments = tryUrlencode({
             'q': q,
-			'l': 250, # Limit on number of files returned
-			#'i': '', # index of file
-			#'sf': '' # size filter
+            'l': 250, # Limit on number of files returned
+            #'i': '', # index of file
+            #'sf': '' # size filter
         })
         url = "%s?%s" % (self.urls['search'], arguments)
 
@@ -59,17 +59,26 @@ class Nzbx(NZBProvider, RSS):
                 for nzb in nzbs:
 
                     nzbx_guid = nzb['guid']
-					
-					# need to filter by completed
-					
+                    
+                    def extra_score(item):
+                        score = 0
+                        if item['votes']['upvotes'] > item['votes']['downvotes']:
+                            score += 5
+                            
+                        return score
+                    
                     new = {
                         'guid': nzbx_guid,
                         'type': 'nzb',
                         'provider': self.getName(),
-                        'download': nzb['nzb'],
+                        'download': self.download,
+                        'url': nzb['nzb'],
                         'name': nzb['name'],
                         'age': self.calculateAge(int(nzb['postdate'])),
                         'size': tryInt(nzb['size']) / 1024 / 1024,
+                        'description': '',
+                        'extra_score': extra_score,
+                        'votes': nzb['votes'],
                         'check_nzb': True,
                     }
 
