@@ -117,29 +117,18 @@ class Newznab(NZBProvider, RSS):
                 results = []
                 for nzb in nzbs:
 
-                    date = ''
-                    size = 0
-                    for item in nzb:
-                        if item.attrib.get('name') == 'size':
-                            size = item.attrib.get('value')
-                        elif item.attrib.get('name') == 'usenetdate':
-                            date = item.attrib.get('value')
-
-                    if date is '': log.debug('Date not parsed properly or not available for %s: %s', (host['host'], self.getTextElement(nzb, "title")))
-                    if size is 0: log.debug('Size not parsed properly or not available for %s: %s', (host['host'], self.getTextElement(nzb, "title")))
-
-                    id = self.getTextElement(nzb, "guid").split('/')[-1:].pop()
+                    nzb_id = self.getTextElement(nzb, "guid").split('/')[-1:].pop()
                     new = {
-                        'id': id,
+                        'id': nzb_id,
                         'provider': self.getName(),
                         'provider_extra': host['host'],
                         'type': 'nzb',
                         'name': self.getTextElement(nzb, "title"),
-                        'age': self.calculateAge(int(time.mktime(parse(date).timetuple()))),
-                        'size': int(size) / 1024 / 1024,
-                        'url': (self.getUrl(host['host'], self.urls['download']) % id) + self.getApiExt(host),
+                        'age': self.calculateAge(int(time.mktime(parse(self.getTextElement(nzb, 'pubDate')).timetuple()))),
+                        'size': int(self.getElement(nzb, "enclosure").attrib['length']) / 1024 / 1024,
+                        'url': (self.getUrl(host['host'], self.urls['download']) % nzb_id) + self.getApiExt(host),
                         'download': self.download,
-                        'detail_url': '%sdetails/%s' % (cleanHost(host['host']), id),
+                        'detail_url': '%sdetails/%s' % (cleanHost(host['host']), nzb_id),
                         'content': self.getTextElement(nzb, "description"),
                     }
 
