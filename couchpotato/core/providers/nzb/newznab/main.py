@@ -25,13 +25,7 @@ class Newznab(NZBProvider, RSS):
 
     limits_reached = {}
 
-    cat_ids = [
-        ([2010], ['dvdr']),
-        ([2030], ['cam', 'ts', 'dvdrip', 'tc', 'r5', 'scr']),
-        ([2040], ['720p', '1080p']),
-        ([2050], ['bd50']),
-    ]
-    cat_backup_id = 2000
+    cat_backup_id = '2000'
 
     http_time_between_calls = 1 # Seconds
 
@@ -89,13 +83,13 @@ class Newznab(NZBProvider, RSS):
         cat_id = self.getCatId(quality['identifier'])
         arguments = tryUrlencode({
             'imdbid': movie['library']['identifier'].replace('tt', ''),
-            'cat': cat_id[0],
+            'cat': ','.join(cat_id),
             'apikey': host['api_key'],
             'extended': 1
         })
         url = "%s&%s" % (self.getUrl(host['host'], self.urls['search']), arguments)
 
-        cache_key = 'newznab.%s.%s.%s' % (host['host'], movie['library']['identifier'], cat_id[0])
+        cache_key = 'newznab.%s.%s.%s' % (host['host'], movie['library']['identifier'], cat_id)
 
         results = self.createItems(url, cache_key, host, movie = movie, quality = quality)
 
