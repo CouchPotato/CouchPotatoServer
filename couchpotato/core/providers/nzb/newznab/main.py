@@ -25,13 +25,7 @@ class Newznab(NZBProvider, RSS):
 
     limits_reached = {}
 
-    cat_ids = [
-        ([2010], ['dvdr']),
-        ([2030], ['cam', 'ts', 'dvdrip', 'tc', 'r5', 'scr']),
-        ([2040], ['720p', '1080p']),
-        ([2050], ['bd50']),
-    ]
-    cat_backup_id = 2000
+    cat_backup_id = '2000'
 
     http_time_between_calls = 1 # Seconds
 
@@ -89,13 +83,13 @@ class Newznab(NZBProvider, RSS):
         cat_id = self.getCatId(quality['identifier'])
         arguments = tryUrlencode({
             'imdbid': movie['library']['identifier'].replace('tt', ''),
-            'cat': cat_id[0],
+            'cat': ','.join(cat_id),
             'apikey': host['api_key'],
             'extended': 1
         })
         url = "%s&%s" % (self.getUrl(host['host'], self.urls['search']), arguments)
 
-        cache_key = 'newznab.%s.%s.%s' % (host['host'], movie['library']['identifier'], cat_id[0])
+        cache_key = 'newznab.%s.%s.%s' % (host['host'], movie['library']['identifier'], cat_id)
 
         results = self.createItems(url, cache_key, host, movie = movie, quality = quality)
 
@@ -117,29 +111,18 @@ class Newznab(NZBProvider, RSS):
                 results = []
                 for nzb in nzbs:
 
-                    date = ''
-                    size = 0
-                    for item in nzb:
-                        if item.attrib.get('name') == 'size':
-                            size = item.attrib.get('value')
-                        elif item.attrib.get('name') == 'usenetdate':
-                            date = item.attrib.get('value')
-
-                    if date is '': log.debug('Date not parsed properly or not available for %s: %s', (host['host'], self.getTextElement(nzb, "title")))
-                    if size is 0: log.debug('Size not parsed properly or not available for %s: %s', (host['host'], self.getTextElement(nzb, "title")))
-
-                    id = self.getTextElement(nzb, "guid").split('/')[-1:].pop()
+                    nzb_id = self.getTextElement(nzb, "guid").split('/')[-1:].pop()
                     new = {
-                        'id': id,
+                        'id': nzb_id,
                         'provider': self.getName(),
                         'provider_extra': host['host'],
                         'type': 'nzb',
                         'name': self.getTextElement(nzb, "title"),
-                        'age': self.calculateAge(int(time.mktime(parse(date).timetuple()))),
-                        'size': int(size) / 1024 / 1024,
-                        'url': (self.getUrl(host['host'], self.urls['download']) % id) + self.getApiExt(host),
+                        'age': self.calculateAge(int(time.mktime(parse(self.getTextElement(nzb, 'pubDate')).timetuple()))),
+                        'size': int(self.getElement(nzb, "enclosure").attrib['length']) / 1024 / 1024,
+                        'url': (self.getUrl(host['host'], self.urls['download']) % nzb_id) + self.getApiExt(host),
                         'download': self.download,
-                        'detail_url': '%sdetails/%s' % (cleanHost(host['host']), id),
+                        'detail_url': '%sdetails/%s' % (cleanHost(host['host']), nzb_id),
                         'content': self.getTextElement(nzb, "description"),
                     }
 

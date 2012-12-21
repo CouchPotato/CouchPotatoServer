@@ -14,7 +14,6 @@ class Downloader(Plugin):
 
     torrent_sources = [
         'http://torrage.com/torrent/%s.torrent',
-        'http://torrage.ws/torrent/%s.torrent',
         'http://torcache.net/torrent/%s.torrent',
     ]
 
