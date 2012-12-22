@@ -53,7 +53,7 @@ class Newznab(NZBProvider, RSS):
             'r': host['api_key'],
             'i': 58,
         })
-        url = "%s?%s" % (cleanHost(host['host']) + 'rss', arguments)
+        url = '%s?%s' % (cleanHost(host['host']) + 'rss', arguments)
         cache_key = 'newznab.%s.feed.%s' % (host['host'], arguments)
 
         results = self.createItems(url, cache_key, host, for_feed = True)
@@ -87,7 +87,7 @@ class Newznab(NZBProvider, RSS):
             'apikey': host['api_key'],
             'extended': 1
         })
-        url = "%s&%s" % (self.getUrl(host['host'], self.urls['search']), arguments)
+        url = '%s&%s' % (self.getUrl(host['host'], self.urls['search']), arguments)
 
         cache_key = 'newznab.%s.%s.%s' % (host['host'], movie['library']['identifier'], cat_id)
 
@@ -111,19 +111,33 @@ class Newznab(NZBProvider, RSS):
                 results = []
                 for nzb in nzbs:
 
-                    nzb_id = self.getTextElement(nzb, "guid").split('/')[-1:].pop()
+                    date = None
+                    for item in nzb:
+                        if item.attrib.get('name') == 'usenetdate':
+                            date = item.attrib.get('value')
+                            break
+
+                    if not date:
+                        date = self.getTextElement(nzb, 'pubDate')
+
+                    nzb_id = self.getTextElement(nzb, 'guid').split('/')[-1:].pop()
+                    name = self.getTextElement(nzb, 'title')
+
+                    if not name:
+                        continue
+
                     new = {
                         'id': nzb_id,
                         'provider': self.getName(),
                         'provider_extra': host['host'],
                         'type': 'nzb',
-                        'name': self.getTextElement(nzb, "title"),
-                        'age': self.calculateAge(int(time.mktime(parse(self.getTextElement(nzb, 'pubDate')).timetuple()))),
-                        'size': int(self.getElement(nzb, "enclosure").attrib['length']) / 1024 / 1024,
+                        'name': self.getTextElement(nzb, 'title'),
+                        'age': self.calculateAge(int(time.mktime(parse(date).timetuple()))),
+                        'size': int(self.getElement(nzb, 'enclosure').attrib['length']) / 1024 / 1024,
                         'url': (self.getUrl(host['host'], self.urls['download']) % nzb_id) + self.getApiExt(host),
                         'download': self.download,
                         'detail_url': '%sdetails/%s' % (cleanHost(host['host']), nzb_id),
-                        'content': self.getTextElement(nzb, "description"),
+                        'content': self.getTextElement(nzb, 'description'),
                     }
 
                     if not for_feed:
