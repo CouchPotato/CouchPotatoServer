@@ -1,8 +1,8 @@
 from bs4 import BeautifulSoup
-from couchpotato.core.event import fireEvent
 from couchpotato.core.helpers.encoding import toUnicode, tryUrlencode
 from couchpotato.core.helpers.variable import tryInt, possibleTitles, getTitle
 from couchpotato.core.logger import CPLog
+from couchpotato.core.providers.base import ResultList
 from couchpotato.core.providers.nzb.base import NZBProvider
 from couchpotato.environment import Env
 from dateutil.parser import parse
@@ -35,18 +35,17 @@ class FTDWorld(NZBProvider):
         if self.isDisabled():
             return []
 
-        results = []
+        results = ResultList(self, movie, quality)
         for title in possibleTitles(getTitle(movie['library'])):
             results.extend(self._search(title, movie, quality))
 
-        return self.removeDuplicateResults(results)
+        return results
 
     def _search(self, title, movie, quality):
-        results = []
 
         q = '"%s" %s' % (title, movie['library']['year'])
 
-        params = {
+        params = tryUrlencode({
             'ctitle': q,
             'customQuery': 'usr',
             'cage': Env.setting('retention', 'nzb'),
@@ -54,10 +53,9 @@ class FTDWorld(NZBProvider):
             'csizemax': quality.get('size_max'),
             'ccategory': 14,
             'ctype': ','.join([str(x) for x in self.getCatId(quality['identifier'])]),
-        }
+        })
 
-        cache_key = 'ftdworld.%s.%s' % (movie['library']['identifier'], q)
-        data = self.getCache(cache_key, self.urls['search'] % tryUrlencode(params), opener = self.login_opener)
+        data = self.getHTMLData(self.urls['search'] % params, opener = self.login_opener)
 
         if data:
             try:
@@ -66,8 +64,9 @@ class FTDWorld(NZBProvider):
                 main_table = html.find('table', attrs = {'id':'ftdresult'})
 
                 if not main_table:
-                    return results
+                    return []
 
+                results = ResultList(self, movie, quality)
                 items = main_table.find_all('tr', attrs = {'class': re.compile('tcontent')})
 
                 for item in items:
@@ -77,32 +76,20 @@ class FTDWorld(NZBProvider):
                     up = item.find('img', attrs = {'src': re.compile('up.png')})
                     down = item.find('img', attrs = {'src': re.compile('down.png')})
 
-                    new = {
+                    results.append({
                         'id': nzb_id,
-                        'type': 'nzb',
-                        'provider': self.getName(),
                         'name': toUnicode(item.find('a', attrs = {'href': re.compile('./spotinfo')}).text.strip()),
                         'age': self.calculateAge(int(time.mktime(parse(tds[2].text).timetuple()))),
-                        'size': 0,
                         'url': self.urls['download'] % nzb_id,
                         'download': self.loginDownload,
                         'detail_url': self.urls['detail'] % nzb_id,
-                        'description': '',
                         'score': (tryInt(up.attrs['title'].split(' ')[0]) * 3) - (tryInt(down.attrs['title'].split(' ')[0]) * 3) if up else 0,
-                    }
-
-                    is_correct_movie = fireEvent('searcher.correct_movie',
-                                                 nzb = new, movie = movie, quality = quality,
-                                                 imdb_results = False, single = True)
-
-                    if is_correct_movie:
-                        new['score'] += fireEvent('score.calculate', new, movie, single = True)
-                        results.append(new)
-                        self.found(new)
+                    })
 
                 return results
-            except SyntaxError:
-                log.error('Failed to parse XML response from NZBClub')
+
+            except:
+                log.error('Failed to parse HTML response from FTDWorld')
 
         return results
 

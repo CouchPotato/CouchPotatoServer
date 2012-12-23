@@ -1,15 +1,16 @@
-from couchpotato.core.event import addEvent
-from couchpotato.core.helpers.encoding import simplifyString
-from couchpotato.core.helpers.variable import tryFloat, getTitle
+from couchpotato.core.event import addEvent, fireEvent
+from couchpotato.core.helpers.variable import tryFloat, mergeDicts, md5
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
 from urlparse import urlparse
 import cookielib
+import json
 import re
 import time
 import traceback
 import urllib2
+import xml.etree.ElementTree as XMLTree
 
 
 log = CPLog(__name__)
@@ -59,8 +60,6 @@ class YarrProvider(Provider):
         addEvent('%s.search' % self.type, self.search)
         addEvent('yarr.search', self.search)
 
-        addEvent('nzb.feed', self.feed)
-
     def login(self):
 
         try:
@@ -96,9 +95,6 @@ class YarrProvider(Provider):
             log.error('Failed getting nzb from %s: %s', (self.getName(), traceback.format_exc()))
 
         return 'try_next'
-
-    def feed(self):
-        return []
 
     def search(self, movie, quality):
         return []
@@ -149,22 +145,93 @@ class YarrProvider(Provider):
 
         return [self.cat_backup_id]
 
-    def found(self, new):
-        if not new.get('provider_extra'):
-            new['provider_extra'] = ''
+    def getJsonData(self, url, **kwargs):
+
+        data = self.getCache(md5(url), url, **kwargs)
+
+        if data:
+            try:
+                return json.loads(data)
+            except:
+                log.error('Failed to parsing %s: %s', (self.getName(), traceback.format_exc()))
+
+        return []
+
+    def getRSSData(self, url, **kwargs):
+
+        data = self.getCache(md5(url), url, **kwargs)
+
+        if data:
+            try:
+                data = XMLTree.fromstring(data)
+                return self.getElements(data, 'channel/item')
+            except:
+                log.error('Failed to parsing %s: %s', (self.getName(), traceback.format_exc()))
+
+        return []
+
+    def getHTMLData(self, url, **kwargs):
+        return self.getCache(md5(url), url, **kwargs)
+
+
+class ResultList(list):
+
+    result_ids = None
+    provider = None
+    movie = None
+    quality = None
+
+    def __init__(self, provider, movie, quality, **kwargs):
+
+        self.result_ids = []
+        self.provider = provider
+        self.movie = movie
+        self.quality = quality
+        self.kwargs = kwargs
+
+        super(ResultList, self).__init__()
+
+    def extend(self, results):
+        for r in results:
+            self.append(r)
+
+    def append(self, result):
+
+        new_result = self.fillResult(result)
+
+        is_correct_movie = fireEvent('searcher.correct_movie',
+                                     nzb = new_result, movie = self.movie, quality = self.quality,
+                                     imdb_results = self.kwargs.get('imdb_results', False), single = True)
+
+        if is_correct_movie and new_result['id'] not in self.result_ids:
+            new_result['score'] += fireEvent('score.calculate', new_result, self.movie, single = True)
+
+            self.found(new_result)
+            self.result_ids.append(result['id'])
+
+            super(ResultList, self).append(new_result)
+
+    def fillResult(self, result):
+
+        defaults = {
+            'id': 0,
+            'type': self.provider.type,
+            'provider': self.provider.getName(),
+            'download': self.provider.download,
+            'url': '',
+            'name': '',
+            'age': 0,
+            'size': 0,
+            'description': '',
+            'score': 0
+        }
+
+        return mergeDicts(defaults, result)
+
+    def found(self, new_result):
+        if not new_result.get('provider_extra'):
+            new_result['provider_extra'] = ''
         else:
-            new['provider_extra'] = ', %s' % new['provider_extra']
+            new_result['provider_extra'] = ', %s' % new_result['provider_extra']
 
-        log.info('Found: score(%(score)s) on %(provider)s%(provider_extra)s: %(name)s', new)
-
-    def removeDuplicateResults(self, results):
-
-        result_ids = []
-        new_results = []
-
-        for result in results:
-            if result['id'] not in result_ids:
-                new_results.append(result)
-                result_ids.append(result['id'])
-
-        return new_results
+        log.info('Found: score(%(score)s) on %(provider)s%(provider_extra)s: %(name)s', new_result)

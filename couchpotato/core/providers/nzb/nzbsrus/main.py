@@ -1,11 +1,10 @@
-from couchpotato.core.event import fireEvent
 from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.rss import RSS
 from couchpotato.core.logger import CPLog
+from couchpotato.core.providers.base import ResultList
 from couchpotato.core.providers.nzb.base import NZBProvider
 from couchpotato.environment import Env
 import time
-import xml.etree.ElementTree as XMLTree
 
 log = CPLog(__name__)
 
@@ -25,13 +24,12 @@ class Nzbsrus(NZBProvider, RSS):
 
     def search(self, movie, quality):
 
-        results = []
-
         if self.isDisabled():
-            return results
+            return []
+
+        results = ResultList(self, movie, quality, imdb_result = True)
 
         cat_id_string = '&'.join(['c%s=1' % x for x in self.getCatId(quality.get('identifier'))])
-
         arguments = tryUrlencode({
             'searchtext': 'imdb:' + movie['library']['identifier'][2:],
             'uid': self.conf('userid'),
@@ -42,57 +40,29 @@ class Nzbsrus(NZBProvider, RSS):
 
         # check for english_only
         if self.conf('english_only'):
-            arguments += "&lang0=1&lang3=1&lang1=1"
+            arguments += '&lang0=1&lang3=1&lang1=1'
 
-        url = "%s&%s&%s" % (self.urls['search'], arguments , cat_id_string)
+        url = '%s&%s&%s' % (self.urls['search'], arguments , cat_id_string)
+        nzbs = self.getRSSData(url, cache_timeout = 1800, headers = {'User-Agent': Env.getIdentifier()})
 
-        cache_key = 'nzbsrus.%s.%s' % (movie['library'].get('identifier'), cat_id_string)
+        for nzb in nzbs:
 
-        data = self.getCache(cache_key, url, cache_timeout = 1800, headers = {'User-Agent': Env.getIdentifier()})
-        if data:
-            try:
-                try:
-                    data = XMLTree.fromstring(data)
-                    nzbs = self.getElements(data, 'results/result')
-                except Exception, e:
-                    log.debug('%s, %s', (self.getName(), e))
-                    return results
+            title = self.getTextElement(nzb, 'name')
+            if 'error' in title.lower(): continue
 
-                for nzb in nzbs:
+            nzb_id = self.getTextElement(nzb, 'id')
+            size = int(round(int(self.getTextElement(nzb, 'size')) / 1048576))
+            age = int(round((time.time() - int(self.getTextElement(nzb, 'postdate'))) / 86400))
 
-                    title = self.getTextElement(nzb, "name")
-                    if 'error' in title.lower(): continue
-
-                    id = self.getTextElement(nzb, "id")
-                    size = int(round(int(self.getTextElement(nzb, "size")) / 1048576))
-                    age = int(round((time.time() - int(self.getTextElement(nzb, "postdate"))) / 86400))
-
-                    new = {
-                        'id': id,
-                        'type': 'nzb',
-                        'provider': self.getName(),
-                        'name': title,
-                        'age': age,
-                        'size': size,
-                        'url': self.urls['download'] % id + self.getApiExt() + self.getTextElement(nzb, "key"),
-                        'download': self.download,
-                        'detail_url': self.urls['detail'] % id,
-                        'description': self.getTextElement(nzb, "addtext"),
-                        'check_nzb': True,
-                    }
-
-                    is_correct_movie = fireEvent('searcher.correct_movie',
-                                                 nzb = new, movie = movie, quality = quality,
-                                                 imdb_results = True, single = True)
-
-                    if is_correct_movie:
-                        new['score'] = fireEvent('score.calculate', new, movie, single = True)
-                        results.append(new)
-                        self.found(new)
-
-                return results
-            except SyntaxError:
-                log.error('Failed to parse XML response from Nzbsrus.com')
+            results.append({
+                'id': nzb_id,
+                'name': title,
+                'age': age,
+                'size': size,
+                'url': self.urls['download'] % id + self.getApiExt() + self.getTextElement(nzb, 'key'),
+                'detail_url': self.urls['detail'] % nzb_id,
+                'description': self.getTextElement(nzb, 'addtext'),
+            })
 
         return results
 

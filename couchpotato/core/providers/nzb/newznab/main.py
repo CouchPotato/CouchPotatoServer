@@ -1,8 +1,8 @@
-from couchpotato.core.event import fireEvent
 from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.rss import RSS
 from couchpotato.core.helpers.variable import cleanHost, splitString
 from couchpotato.core.logger import CPLog
+from couchpotato.core.providers.base import ResultList
 from couchpotato.core.providers.nzb.base import NZBProvider
 from couchpotato.environment import Env
 from dateutil.parser import parse
@@ -10,7 +10,6 @@ from urllib2 import HTTPError
 from urlparse import urlparse
 import time
 import traceback
-import xml.etree.ElementTree as XMLTree
 
 log = CPLog(__name__)
 
@@ -29,38 +28,6 @@ class Newznab(NZBProvider, RSS):
 
     http_time_between_calls = 1 # Seconds
 
-    def feed(self):
-
-        hosts = self.getHosts()
-
-        results = []
-        for host in hosts:
-            result = self.singleFeed(host)
-
-            if result:
-                results.extend(result)
-
-        return results
-
-    def singleFeed(self, host):
-
-        results = []
-        if self.isDisabled(host):
-            return results
-
-        arguments = tryUrlencode({
-            't': self.cat_backup_id,
-            'r': host['api_key'],
-            'i': 58,
-        })
-        url = '%s?%s' % (cleanHost(host['host']) + 'rss', arguments)
-        cache_key = 'newznab.%s.feed.%s' % (host['host'], arguments)
-
-        results = self.createItems(url, cache_key, host, for_feed = True)
-
-        return results
-
-
     def search(self, movie, quality):
 
         hosts = self.getHosts()
@@ -76,9 +43,10 @@ class Newznab(NZBProvider, RSS):
 
     def singleSearch(self, host, movie, quality):
 
-        results = []
         if self.isDisabled(host):
-            return results
+            return []
+
+        results = ResultList(self, movie, quality, imdb_result = True)
 
         cat_id = self.getCatId(quality['identifier'])
         arguments = tryUrlencode({
@@ -89,73 +57,35 @@ class Newznab(NZBProvider, RSS):
         })
         url = '%s&%s' % (self.getUrl(host['host'], self.urls['search']), arguments)
 
-        cache_key = 'newznab.%s.%s.%s' % (host['host'], movie['library']['identifier'], cat_id)
+        nzbs = self.getRSSData(url, cache_timeout = 1800, headers = {'User-Agent': Env.getIdentifier()})
 
-        results = self.createItems(url, cache_key, host, movie = movie, quality = quality)
+        for nzb in nzbs:
 
-        return results
+            date = None
+            for item in nzb:
+                if item.attrib.get('name') == 'usenetdate':
+                    date = item.attrib.get('value')
+                    break
 
-    def createItems(self, url, cache_key, host, movie = None, quality = None, for_feed = False):
-        results = []
+            if not date:
+                date = self.getTextElement(nzb, 'pubDate')
 
-        data = self.getCache(cache_key, url, cache_timeout = 1800, headers = {'User-Agent': Env.getIdentifier()})
-        if data:
-            try:
-                try:
-                    data = XMLTree.fromstring(data)
-                    nzbs = self.getElements(data, 'channel/item')
-                except Exception, e:
-                    log.debug('%s, %s', (self.getName(), e))
-                    return results
+            nzb_id = self.getTextElement(nzb, 'guid').split('/')[-1:].pop()
+            name = self.getTextElement(nzb, 'title')
 
-                results = []
-                for nzb in nzbs:
+            if not name:
+                continue
 
-                    date = None
-                    for item in nzb:
-                        if item.attrib.get('name') == 'usenetdate':
-                            date = item.attrib.get('value')
-                            break
-
-                    if not date:
-                        date = self.getTextElement(nzb, 'pubDate')
-
-                    nzb_id = self.getTextElement(nzb, 'guid').split('/')[-1:].pop()
-                    name = self.getTextElement(nzb, 'title')
-
-                    if not name:
-                        continue
-
-                    new = {
-                        'id': nzb_id,
-                        'provider': self.getName(),
-                        'provider_extra': host['host'],
-                        'type': 'nzb',
-                        'name': self.getTextElement(nzb, 'title'),
-                        'age': self.calculateAge(int(time.mktime(parse(date).timetuple()))),
-                        'size': int(self.getElement(nzb, 'enclosure').attrib['length']) / 1024 / 1024,
-                        'url': (self.getUrl(host['host'], self.urls['download']) % nzb_id) + self.getApiExt(host),
-                        'download': self.download,
-                        'detail_url': '%sdetails/%s' % (cleanHost(host['host']), nzb_id),
-                        'content': self.getTextElement(nzb, 'description'),
-                    }
-
-                    if not for_feed:
-                        is_correct_movie = fireEvent('searcher.correct_movie',
-                                                     nzb = new, movie = movie, quality = quality,
-                                                     imdb_results = True, single = True)
-
-                        if is_correct_movie:
-                            new['score'] = fireEvent('score.calculate', new, movie, single = True)
-                            results.append(new)
-                            self.found(new)
-                    else:
-                        results.append(new)
-
-                return results
-            except SyntaxError:
-                log.error('Failed to parse XML response from Newznab: %s', host)
-                return results
+            results.append({
+                'id': nzb_id,
+                'provider_extra': host['host'],
+                'name': self.getTextElement(nzb, 'title'),
+                'age': self.calculateAge(int(time.mktime(parse(date).timetuple()))),
+                'size': int(self.getElement(nzb, 'enclosure').attrib['length']) / 1024 / 1024,
+                'url': (self.getUrl(host['host'], self.urls['download']) % nzb_id) + self.getApiExt(host),
+                'detail_url': '%sdetails/%s' % (cleanHost(host['host']), nzb_id),
+                'content': self.getTextElement(nzb, 'description'),
+            })
 
     def getHosts(self):
 
