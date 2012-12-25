@@ -37,9 +37,8 @@ class SceneAccess(TorrentProvider):
            self.getCatId(quality['identifier'])[0]
         )
 
-        q = '%s %s' % (movie['library']['identifier'], quality.get('identifier'))
         arguments = tryUrlencode({
-            'search': q,
+            'search': movie['library']['identifier'],
             'method': 1,
         })
         url = "%s&%s" % (url, arguments)
