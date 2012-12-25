@@ -1,9 +1,8 @@
 # This code was originally contributed by Jeffrey Harris.
 import datetime
 import struct
-import _winreg
+import winreg
 
-__author__ = "Jeffrey Harris & Gustavo Niemeyer <gustavo@niemeyer.net>"
 
 __all__ = ["tzwin", "tzwinlocal"]
 
@@ -15,9 +14,9 @@ TZLOCALKEYNAME = r"SYSTEM\CurrentControlSet\Control\TimeZoneInformation"
 
 def _settzkeyname():
     global TZKEYNAME
-    handle = _winreg.ConnectRegistry(None, _winreg.HKEY_LOCAL_MACHINE)
+    handle = winreg.ConnectRegistry(None, winreg.HKEY_LOCAL_MACHINE)
     try:
-        _winreg.OpenKey(handle, TZKEYNAMENT).Close()
+        winreg.OpenKey(handle, TZKEYNAMENT).Close()
         TZKEYNAME = TZKEYNAMENT
     except WindowsError:
         TZKEYNAME = TZKEYNAME9X
@@ -49,10 +48,10 @@ class tzwinbase(datetime.tzinfo):
 
     def list():
         """Return a list of all time zones known to the system."""
-        handle = _winreg.ConnectRegistry(None, _winreg.HKEY_LOCAL_MACHINE)
-        tzkey = _winreg.OpenKey(handle, TZKEYNAME)
-        result = [_winreg.EnumKey(tzkey, i)
-                  for i in range(_winreg.QueryInfoKey(tzkey)[0])]
+        handle = winreg.ConnectRegistry(None, winreg.HKEY_LOCAL_MACHINE)
+        tzkey = winreg.OpenKey(handle, TZKEYNAME)
+        result = [winreg.EnumKey(tzkey, i)
+                  for i in range(winreg.QueryInfoKey(tzkey)[0])]
         tzkey.Close()
         handle.Close()
         return result
@@ -79,8 +78,8 @@ class tzwin(tzwinbase):
     def __init__(self, name):
         self._name = name
 
-        handle = _winreg.ConnectRegistry(None, _winreg.HKEY_LOCAL_MACHINE)
-        tzkey = _winreg.OpenKey(handle, "%s\%s" % (TZKEYNAME, name))
+        handle = winreg.ConnectRegistry(None, winreg.HKEY_LOCAL_MACHINE)
+        tzkey = winreg.OpenKey(handle, "%s\%s" % (TZKEYNAME, name))
         keydict = valuestodict(tzkey)
         tzkey.Close()
         handle.Close()
@@ -118,9 +117,9 @@ class tzwinlocal(tzwinbase):
     
     def __init__(self):
 
-        handle = _winreg.ConnectRegistry(None, _winreg.HKEY_LOCAL_MACHINE)
+        handle = winreg.ConnectRegistry(None, winreg.HKEY_LOCAL_MACHINE)
 
-        tzlocalkey = _winreg.OpenKey(handle, TZLOCALKEYNAME)
+        tzlocalkey = winreg.OpenKey(handle, TZLOCALKEYNAME)
         keydict = valuestodict(tzlocalkey)
         tzlocalkey.Close()
 
@@ -128,7 +127,7 @@ class tzwinlocal(tzwinbase):
         self._dstname = keydict["DaylightName"].encode("iso-8859-1")
 
         try:
-            tzkey = _winreg.OpenKey(handle, "%s\%s"%(TZKEYNAME, self._stdname))
+            tzkey = winreg.OpenKey(handle, "%s\%s"%(TZKEYNAME, self._stdname))
             _keydict = valuestodict(tzkey)
             self._display = _keydict["Display"]
             tzkey.Close()
@@ -165,7 +164,7 @@ def picknthweekday(year, month, dayofweek, hour, minute, whichweek):
     """dayofweek == 0 means Sunday, whichweek 5 means last instance"""
     first = datetime.datetime(year, month, 1, hour, minute)
     weekdayone = first.replace(day=((dayofweek-first.isoweekday())%7+1))
-    for n in xrange(whichweek):
+    for n in range(whichweek):
         dt = weekdayone+(whichweek-n)*ONEWEEK
         if dt.month == month:
             return dt
@@ -173,8 +172,8 @@ def picknthweekday(year, month, dayofweek, hour, minute, whichweek):
 def valuestodict(key):
     """Convert a registry key's values to a dictionary."""
     dict = {}
-    size = _winreg.QueryInfoKey(key)[1]
+    size = winreg.QueryInfoKey(key)[1]
     for i in range(size):
-        data = _winreg.EnumValue(key, i)
+        data = winreg.EnumValue(key, i)
         dict[data[0]] = data[1]
     return dict
