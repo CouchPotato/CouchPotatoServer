@@ -1,8 +1,8 @@
 from bs4 import BeautifulSoup
-from couchpotato.core.event import fireEvent
 from couchpotato.core.helpers.encoding import tryUrlencode, toUnicode
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
+from couchpotato.core.providers.base import ResultList
 from couchpotato.core.providers.torrent.base import TorrentProvider
 import traceback
 
@@ -29,9 +29,8 @@ class SceneAccess(TorrentProvider):
 
     def search(self, movie, quality):
 
-        results = []
         if self.isDisabled():
-            return results
+            return []
 
         url = self.urls['search'] % (
            self.getCatId(quality['identifier'])[0],
@@ -47,10 +46,11 @@ class SceneAccess(TorrentProvider):
 
         # Do login for the cookies
         if not self.login_opener and not self.login():
-            return results
+            return []
 
-        cache_key = 'sceneaccess.%s.%s' % (movie['library']['identifier'], quality.get('identifier'))
-        data = self.getCache(cache_key, url, opener = self.login_opener)
+        results = ResultList(self, movie, quality, imdb_results = True)
+
+        data = self.getHTMLData(url, opener = self.login_opener)
 
         if data:
             html = BeautifulSoup(data)
@@ -66,37 +66,24 @@ class SceneAccess(TorrentProvider):
                     link = result.find('td', attrs = {'class' : 'ttr_name'}).find('a')
                     url = result.find('td', attrs = {'class' : 'td_dl'}).find('a')
                     leechers = result.find('td', attrs = {'class' : 'ttr_leechers'}).find('a')
-                    id = link['href'].replace('details?id=', '')
+                    torrent_id = link['href'].replace('details?id=', '')
 
-                    new = {
-                        'id': id,
-                        'type': 'torrent',
-                        'check_nzb': False,
-                        'description': '',
-                        'provider': self.getName(),
+                    results.append({
+                        'id': torrent_id,
                         'name': link['title'],
                         'url': self.urls['download'] % url['href'],
-                        'detail_url': self.urls['detail'] % id,
+                        'detail_url': self.urls['detail'] % torrent_id,
                         'size': self.parseSize(result.find('td', attrs = {'class' : 'ttr_size'}).contents[0]),
                         'seeders': tryInt(result.find('td', attrs = {'class' : 'ttr_seeders'}).find('a').string),
                         'leechers': tryInt(leechers.string) if leechers else 0,
                         'download': self.loginDownload,
                         'get_more_info': self.getMoreInfo,
-                    }
+                    })
 
-                    new['score'] = fireEvent('score.calculate', new, movie, single = True)
-                    is_correct_movie = fireEvent('searcher.correct_movie', nzb = new, movie = movie, quality = quality,
-                                                     imdb_results = False, single = True)
-
-                    if is_correct_movie:
-                        results.append(new)
-                        self.found(new)
-
-                return results
             except:
                 log.error('Failed getting results from %s: %s', (self.getName(), traceback.format_exc()))
 
-        return []
+        return results
 
     def getLoginParams(self):
         return tryUrlencode({

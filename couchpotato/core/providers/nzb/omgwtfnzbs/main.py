@@ -9,7 +9,6 @@ from couchpotato.core.providers.nzb.base import NZBProvider
 from dateutil.parser import parse
 from urlparse import urlparse, parse_qs
 import time
-import xml.etree.ElementTree as XMLTree
 
 log = CPLog(__name__)
 

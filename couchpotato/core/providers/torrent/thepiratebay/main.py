@@ -1,11 +1,10 @@
 from bs4 import BeautifulSoup
-from couchpotato.core.event import fireEvent
-from couchpotato.core.helpers.encoding import toUnicode
+from couchpotato.core.helpers.encoding import toUnicode, tryUrlencode
 from couchpotato.core.helpers.variable import getTitle, tryInt, cleanHost
 from couchpotato.core.logger import CPLog
-from couchpotato.core.providers.torrent.base import TorrentProvider
+from couchpotato.core.providers.base import ResultList
+from couchpotato.core.providers.torrent.base import TorrentMagnetProvider
 from couchpotato.environment import Env
-from urllib import quote_plus
 import re
 import time
 import traceback
@@ -13,7 +12,7 @@ import traceback
 log = CPLog(__name__)
 
 
-class ThePirateBay(TorrentProvider):
+class ThePirateBay(TorrentMagnetProvider):
 
     urls = {
          'detail': '%s/torrent/%s',
@@ -76,13 +75,14 @@ class ThePirateBay(TorrentProvider):
 
     def search(self, movie, quality):
 
-        results = []
         if self.isDisabled() or not self.getDomain():
-            return results
+            return []
 
-        cache_key = 'thepiratebay.%s.%s' % (movie['library']['identifier'], quality.get('identifier'))
-        search_url = self.urls['search'] % (self.getDomain(), quote_plus(getTitle(movie['library']) + ' ' + quality['identifier']), self.getCatId(quality['identifier'])[0])
-        data = self.getCache(cache_key, search_url)
+        results = ResultList(self, movie, quality)
+
+        search_url = self.urls['search'] % (self.getDomain(), tryUrlencode(getTitle(movie['library']) + ' ' + quality['identifier']), self.getCatId(quality['identifier'])[0])
+
+        data = self.getHTMLData(search_url)
 
         if data:
             try:
@@ -90,7 +90,7 @@ class ThePirateBay(TorrentProvider):
                 results_table = soup.find('table', attrs = {'id': 'searchResult'})
 
                 if not results_table:
-                    return results
+                    return []
 
                 entries = results_table.find_all('tr')
                 for result in entries[2:]:
@@ -112,13 +112,9 @@ class ThePirateBay(TorrentProvider):
 
                             return confirmed + trusted + vip + moderated
 
-                        new = {
+                        results.append({
                             'id': re.search('/(?P<id>\d+)/', link['href']).group('id'),
-                            'type': 'torrent_magnet',
                             'name': link.string,
-                            'check_nzb': False,
-                            'description': '',
-                            'provider': self.getName(),
                             'url': download['href'],
                             'detail_url': self.getDomain(link['href']),
                             'size': self.parseSize(size),
@@ -126,17 +122,8 @@ class ThePirateBay(TorrentProvider):
                             'leechers': tryInt(result.find_all('td')[3].string),
                             'extra_score': extra_score,
                             'get_more_info': self.getMoreInfo
-                        }
+                        })
 
-                        new['score'] = fireEvent('score.calculate', new, movie, single = True)
-                        is_correct_movie = fireEvent('searcher.correct_movie', nzb = new, movie = movie, quality = quality,
-                                                        imdb_results = False, single = True)
-
-                        if is_correct_movie:
-                            results.append(new)
-                            self.found(new)
-
-                return results
             except:
                 log.error('Failed getting results from %s: %s', (self.getName(), traceback.format_exc()))
 

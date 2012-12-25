@@ -86,8 +86,6 @@ class FTDWorld(NZBProvider):
                         'score': (tryInt(up.attrs['title'].split(' ')[0]) * 3) - (tryInt(down.attrs['title'].split(' ')[0]) * 3) if up else 0,
                     })
 
-                return results
-
             except:
                 log.error('Failed to parse HTML response from FTDWorld')
 

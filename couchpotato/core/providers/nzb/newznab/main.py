@@ -35,12 +35,12 @@ class Newznab(NZBProvider, RSS):
         results = ResultList(self, movie, quality, imdb_result = True)
 
         for host in hosts:
-            result = self.singleSearch(host, movie, quality)
+            result = self._search(host, movie, quality)
             results.extend(result)
 
         return results
 
-    def singleSearch(self, host, movie, quality):
+    def _search(self, host, movie, quality):
 
         if self.isDisabled(host):
             return []

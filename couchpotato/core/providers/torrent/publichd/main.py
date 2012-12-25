@@ -1,9 +1,9 @@
 from bs4 import BeautifulSoup
-from couchpotato.core.event import fireEvent
 from couchpotato.core.helpers.encoding import tryUrlencode, toUnicode
 from couchpotato.core.helpers.variable import getTitle, tryInt
 from couchpotato.core.logger import CPLog
-from couchpotato.core.providers.torrent.base import TorrentProvider
+from couchpotato.core.providers.base import ResultList
+from couchpotato.core.providers.torrent.base import TorrentMagnetProvider
 from urlparse import parse_qs
 import re
 import traceback
@@ -11,7 +11,7 @@ import traceback
 log = CPLog(__name__)
 
 
-class PublicHD(TorrentProvider):
+class PublicHD(TorrentMagnetProvider):
 
     urls = {
         'test': 'https://publichd.se',
@@ -22,20 +22,18 @@ class PublicHD(TorrentProvider):
 
     def search(self, movie, quality):
 
-        results = []
-
         if self.isDisabled() or not quality.get('hd', False):
-            return results
+            return []
+
+        results = ResultList(self, movie, quality)
 
         params = tryUrlencode({
             'page':'torrents',
             'search': '%s %s' % (getTitle(movie['library']), movie['library']['year']),
             'active': 1,
         })
-        url = '%s?%s' % (self.urls['search'], params)
 
-        cache_key = 'publichd.%s.%s' % (movie['library']['identifier'], quality.get('identifier'))
-        data = self.getCache(cache_key, url)
+        data = self.getHTMLData('%s?%s' % (self.urls['search'], params))
 
         if data:
 
@@ -53,35 +51,21 @@ class PublicHD(TorrentProvider):
 
                         url = parse_qs(info_url['href'])
 
-                        new = {
+                        results.append({
                             'id': url['id'][0],
                             'name': info_url.string,
-                            'type': 'torrent_magnet',
-                            'check_nzb': False,
-                            'description': '',
-                            'provider': self.getName(),
                             'url': download['href'],
                             'detail_url': self.urls['detail'] % url['id'][0],
                             'size': self.parseSize(result.find_all('td')[7].string),
                             'seeders': tryInt(result.find_all('td')[4].string),
                             'leechers': tryInt(result.find_all('td')[5].string),
                             'get_more_info': self.getMoreInfo
-                        }
-
-                        new['score'] = fireEvent('score.calculate', new, movie, single = True)
-                        is_correct_movie = fireEvent('searcher.correct_movie', nzb = new, movie = movie, quality = quality,
-                                                        imdb_results = False, single = True)
-
-                        if is_correct_movie:
-                            results.append(new)
-                            self.found(new)
-
-                return results
+                        })
 
             except:
                 log.error('Failed getting results from %s: %s', (self.getName(), traceback.format_exc()))
 
-        return []
+        return results
 
     def getMoreInfo(self, item):
         full_description = self.getCache('publichd.%s' % item['id'], item['detail_url'], cache_timeout = 25920000)

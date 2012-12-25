@@ -2,6 +2,7 @@ from couchpotato.core.event import fireEvent
 from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.variable import getTitle, tryInt, mergeDicts
 from couchpotato.core.logger import CPLog
+from couchpotato.core.providers.base import ResultList
 from couchpotato.core.providers.torrent.base import TorrentProvider
 from dateutil.parser import parse
 import cookielib
@@ -67,10 +68,10 @@ class PassThePopcorn(TorrentProvider):
 
     def search(self, movie, quality):
 
-        results = []
-
         if self.isDisabled():
-            return results
+            return []
+
+        results = ResultList(self, movie, quality, imdb_results = True)
 
         movie_title = getTitle(movie['library'])
         quality_id = quality['identifier']
@@ -118,7 +119,6 @@ class PassThePopcorn(TorrentProvider):
                     if 'Scene' in torrent and torrent['Scene']:
                         torrentdesc += ' Scene'
                     if 'RemasterTitle' in torrent and torrent['RemasterTitle']:
-                        # eliminate odd characters...
                         torrentdesc += self.htmlToASCII(' %s' % torrent['RemasterTitle'])
 
                     torrentdesc += ' (%s)' % quality_id
@@ -127,38 +127,24 @@ class PassThePopcorn(TorrentProvider):
                     def extra_check(item):
                         return self.torrentMeetsQualitySpec(item, type)
 
-                    def extra_score(item):
-                        return 50 if torrent['GoldenPopcorn'] else 0
-
-                    new = {
+                    results.append({
                         'id': torrent_id,
-                        'type': 'torrent',
-                        'provider': self.getName(),
                         'name': torrent_name,
-                        'description': '',
                         'url': '%s?action=download&id=%d&authkey=%s&torrent_pass=%s' % (self.urls['torrent'], torrent_id, authkey, passkey),
                         'detail_url': self.urls['detail'] % torrent_id,
                         'date': tryInt(time.mktime(parse(torrent['UploadTime']).timetuple())),
                         'size': tryInt(torrent['Size']) / (1024 * 1024),
-                        'provider': self.getName(),
                         'seeders': tryInt(torrent['Seeders']),
                         'leechers': tryInt(torrent['Leechers']),
-                        'extra_score': extra_score,
+                        'score': 50 if torrent['GoldenPopcorn'] else 0,
                         'extra_check': extra_check,
                         'download': self.loginDownload,
-                    }
+                    })
 
-                    new['score'] = fireEvent('score.calculate', new, movie, single = True)
-
-                    if fireEvent('searcher.correct_movie', nzb = new, movie = movie, quality = quality):
-                        results.append(new)
-                        self.found(new)
-
-            return results
         except:
             log.error('Failed getting results from %s: %s', (self.getName(), traceback.format_exc()))
 
-        return []
+        return results
 
     def login(self):
 
