@@ -28,7 +28,10 @@ class QualityPlugin(Plugin):
         {'identifier': 'r5', 'size': (600, 1000), 'label': 'R5', 'alternative': [], 'allow': ['dvdr'], 'ext':['avi', 'mpg', 'mpeg']},
         {'identifier': 'tc', 'size': (600, 1000), 'label': 'TeleCine', 'alternative': ['telecine'], 'allow': [], 'ext':['avi', 'mpg', 'mpeg']},
         {'identifier': 'ts', 'size': (600, 1000), 'label': 'TeleSync', 'alternative': ['telesync', 'hdts'], 'allow': [], 'ext':['avi', 'mpg', 'mpeg']},
-        {'identifier': 'cam', 'size': (600, 1000), 'label': 'Cam', 'alternative': ['camrip', 'hdcam'], 'allow': [], 'ext':['avi', 'mpg', 'mpeg']}
+        {'identifier': 'cam', 'size': (600, 1000), 'label': 'Cam', 'alternative': ['camrip', 'hdcam'], 'allow': [], 'ext':['avi', 'mpg', 'mpeg']},
+        {'identifier': '3dbd50', 'hd': True, 'size': (23000, 60000), 'label': '3D BR-Disk', 'alternative': [], 'allow': ['1080p','3d1080p'], 'ext':[], 'tags': ['2d+3d', '3d']},
+        {'identifier': '3d1080p', 'hd': True, 'size': (5000, 20000), 'label': '3D 1080P', 'width': 1920, 'height': 1080, 'alternative': [], 'allow': ['1080p'], 'ext':['mkv', 'm2ts'], 'tags': [('1080p', 'm2ts'),('1080p', '3d'), ('1080p', 'hsbs'), ('1080p', 'sbs'), ('1080p', 'half')]},
+        {'identifier': '3d720p', 'hd': True, 'size': (3500, 10000), 'label': '3D 720P', 'width': 1280, 'height': 720, 'alternative': [], 'allow': ['720p'], 'ext':['mkv', 'ts'], 'tags': [('720p', 'm2ts'), ('720p', '3d'), ('720p', 'hsbs'), ('720p', 'sbs'), ('720p', 'half')]}
     ]
     pre_releases = ['cam', 'ts', 'tc', 'r5', 'scr']
 
@@ -49,6 +52,63 @@ class QualityPlugin(Plugin):
 
         addEvent('app.initialize', self.fill, priority = 10)
 
+    def update3D(self):
+        # Add 3D qualities to dB
+
+        db = get_session()
+        quality = db.query(Quality).filter(Quality.identifier == '3dbd50').first()
+
+        if not quality:
+            log.info('Adding 3D qualities...')
+
+            order = 0
+            for q in self.qualities:
+
+                # Create quality
+                qual = db.query(Quality).filter_by(identifier = q.get('identifier')).first()
+
+                if not qual:
+                    log.info('Creating quality: %s', q.get('label'))
+                    qual = Quality()
+                    qual.order = order
+                    qual.identifier = q.get('identifier')
+                    qual.label = toUnicode(q.get('label'))
+                    qual.size_min, qual.size_max = q.get('size')
+
+                    db.add(qual)
+
+                # Create single quality profile
+                prof = db.query(Profile).filter(
+                        Profile.core == True
+                    ).filter(
+                        Profile.types.any(quality = qual)
+                    ).all()
+
+                if not prof:
+                    log.info('Creating profile: %s', q.get('label'))
+                    prof = Profile(
+                        core = True,
+                        label = toUnicode(qual.label),
+                        order = order + 100 # Add a 100 to make sure no existing profiles have the same number when adding 3d qualities
+                    )
+                    db.add(prof)
+
+                    profile_type = ProfileType(
+                        quality = qual,
+                        profile = prof,
+                        finish = True,
+                        order = 0
+                    )
+                    prof.types.append(profile_type)
+
+                order += 1
+
+            db.commit()
+
+            time.sleep(0.3) # Wait a moment
+
+        return
+
     def preReleases(self):
         return self.pre_releases
 
@@ -60,6 +120,9 @@ class QualityPlugin(Plugin):
         })
 
     def all(self):
+
+        # Make sure we work with a database that includes 3D qualities
+        self.update3D()
 
         db = get_session()
 
