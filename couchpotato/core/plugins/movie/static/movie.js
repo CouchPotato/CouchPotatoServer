@@ -422,7 +422,7 @@ var ReleaseAction = new Class({
 			self.movie.data.releases.sortBy('-info.score').each(function(release){
 
 				var status = Status.get(release.status_id),
-					quality = Quality.getProfile(release.quality_id) || {},
+					quality = Quality.getQuality(release.quality_id) || {},
 					info = release.info;
 				release.status = status;
 
@@ -433,7 +433,7 @@ var ReleaseAction = new Class({
 				}).adopt(
 					new Element('span.name', {'text': self.get(release, 'name'), 'title': self.get(release, 'name')}),
 					new Element('span.status', {'text': status.identifier, 'class': 'release_status '+status.identifier}),
-					new Element('span.quality', {'text': quality.get('label') || 'n/a'}),
+					new Element('span.quality', {'text': quality.label || 'n/a'}),
 					new Element('span.size', {'text': release.info['size'] ? Math.floor(self.get(release, 'size')) : 'n/a'}),
 					new Element('span.age', {'text': self.get(release, 'age')}),
 					new Element('span.score', {'text': self.get(release, 'score')}),
