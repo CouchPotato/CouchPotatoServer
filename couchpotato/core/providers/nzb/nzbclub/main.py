@@ -1,9 +1,8 @@
 from bs4 import BeautifulSoup
 from couchpotato.core.helpers.encoding import toUnicode, tryUrlencode
 from couchpotato.core.helpers.rss import RSS
-from couchpotato.core.helpers.variable import tryInt, getTitle, possibleTitles
+from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
-from couchpotato.core.providers.base import ResultList
 from couchpotato.core.providers.nzb.base import NZBProvider
 from dateutil.parser import parse
 import time
@@ -19,20 +18,7 @@ class NZBClub(NZBProvider, RSS):
 
     http_time_between_calls = 4 #seconds
 
-    def search(self, movie, quality):
-
-        if self.isDisabled():
-            return []
-
-        results = ResultList(self, movie, quality)
-
-        for title in possibleTitles(getTitle(movie['library'])):
-            results.extend(self._search(title, movie, quality))
-
-        return results
-
-    def _search(self, title, movie, quality):
-        results = []
+    def _searchOnTitle(self, title, movie, quality, results):
 
         q = '"%s %s" %s' % (title, movie['library']['year'], quality.get('identifier'))
 
@@ -74,8 +60,6 @@ class NZBClub(NZBProvider, RSS):
                 'get_more_info': self.getMoreInfo,
                 'extra_check': extra_check
             })
-
-        return results
 
     def getMoreInfo(self, item):
         full_description = self.getCache('nzbclub.%s' % item['id'], item['detail_url'], cache_timeout = 25920000)

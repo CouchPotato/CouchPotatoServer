@@ -24,33 +24,25 @@ class Newznab(NZBProvider, RSS):
 
     limits_reached = {}
 
-    cat_backup_id = '2000'
-
     http_time_between_calls = 1 # Seconds
 
     def search(self, movie, quality):
-
         hosts = self.getHosts()
 
         results = ResultList(self, movie, quality, imdb_result = True)
 
         for host in hosts:
-            result = self._search(host, movie, quality)
-            results.extend(result)
+            if self.isDisabled(host):
+                continue
+
+            self._searchOnHost(host, movie, quality, results)
 
         return results
 
-    def _search(self, host, movie, quality):
+    def _searchOnHost(self, host, movie, quality, results):
 
-        if self.isDisabled(host):
-            return []
-
-        results = []
-
-        cat_id = self.getCatId(quality['identifier'])
         arguments = tryUrlencode({
             'imdbid': movie['library']['identifier'].replace('tt', ''),
-            'cat': ','.join(cat_id),
             'apikey': host['api_key'],
             'extended': 1
         })
@@ -85,8 +77,6 @@ class Newznab(NZBProvider, RSS):
                 'detail_url': '%sdetails/%s' % (cleanHost(host['host']), nzb_id),
                 'content': self.getTextElement(nzb, 'description'),
             })
-
-        return results
 
     def getHosts(self):
 

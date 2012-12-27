@@ -1,8 +1,7 @@
 from bs4 import BeautifulSoup
 from couchpotato.core.helpers.encoding import toUnicode, tryUrlencode
-from couchpotato.core.helpers.variable import tryInt, possibleTitles, getTitle
+from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
-from couchpotato.core.providers.base import ResultList
 from couchpotato.core.providers.nzb.base import NZBProvider
 from couchpotato.environment import Env
 from dateutil.parser import parse
@@ -30,18 +29,7 @@ class FTDWorld(NZBProvider):
     ]
     cat_backup_id = 1
 
-    def search(self, movie, quality):
-
-        if self.isDisabled():
-            return []
-
-        results = ResultList(self, movie, quality)
-        for title in possibleTitles(getTitle(movie['library'])):
-            results.extend(self._search(title, movie, quality))
-
-        return results
-
-    def _search(self, title, movie, quality):
+    def _searchOnTitle(self, title, movie, quality, results):
 
         q = '"%s" %s' % (title, movie['library']['year'])
 
@@ -64,9 +52,8 @@ class FTDWorld(NZBProvider):
                 main_table = html.find('table', attrs = {'id':'ftdresult'})
 
                 if not main_table:
-                    return []
+                    return
 
-                results = ResultList(self, movie, quality)
                 items = main_table.find_all('tr', attrs = {'class': re.compile('tcontent')})
 
                 for item in items:
@@ -88,8 +75,6 @@ class FTDWorld(NZBProvider):
 
             except:
                 log.error('Failed to parse HTML response from FTDWorld')
-
-        return results
 
     def getLoginParams(self):
         return tryUrlencode({

@@ -1,7 +1,6 @@
 from bs4 import BeautifulSoup
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
-from couchpotato.core.providers.base import ResultList
 from couchpotato.core.providers.torrent.base import TorrentMagnetProvider
 import re
 import traceback
@@ -29,12 +28,7 @@ class KickAssTorrents(TorrentMagnetProvider):
     http_time_between_calls = 1 #seconds
     cat_backup_id = None
 
-    def search(self, movie, quality):
-
-        if self.isDisabled():
-            return []
-
-        results = ResultList(self, movie, quality, imdb_results = True)
+    def _search(self, movie, quality, results):
 
         data = self.getHTMLData(self.urls['search'] % ('m', movie['library']['identifier'].replace('tt', '')))
 
@@ -86,8 +80,6 @@ class KickAssTorrents(TorrentMagnetProvider):
 
             except AttributeError:
                 log.debug('No search results found.')
-
-        return results
 
     def ageToDays(self, age_str):
         age = 0

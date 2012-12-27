@@ -1,7 +1,6 @@
 from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.variable import getTitle, tryInt, mergeDicts
 from couchpotato.core.logger import CPLog
-from couchpotato.core.providers.base import ResultList
 from couchpotato.core.providers.torrent.base import TorrentProvider
 from dateutil.parser import parse
 import cookielib
@@ -65,17 +64,10 @@ class PassThePopcorn(TorrentProvider):
             else:
                 raise PassThePopcorn.NotLoggedInHTTPError(req.get_full_url(), code, msg, headers, fp)
 
-    def search(self, movie, quality):
-
-        if self.isDisabled():
-            return []
-
-        results = ResultList(self, movie, quality, imdb_results = True)
+    def _search(self, movie, quality, results):
 
         movie_title = getTitle(movie['library'])
         quality_id = quality['identifier']
-
-        log.info('Searching for %s at quality %s' % (movie_title, quality_id))
 
         params = mergeDicts(self.quality_search_params[quality_id].copy(), {
             'order_by': 'relevance',
@@ -85,7 +77,7 @@ class PassThePopcorn(TorrentProvider):
 
         # Do login for the cookies
         if not self.login_opener and not self.login():
-            return results
+            return
 
         try:
             url = '%s?json=noredirect&%s' % (self.urls['torrent'], tryUrlencode(params))
@@ -93,12 +85,11 @@ class PassThePopcorn(TorrentProvider):
             res = json.loads(txt)
         except:
             log.error('Search on PassThePopcorn.me (%s) failed (could not decode JSON)' % params)
-            return []
+            return
 
         try:
             if not 'Movies' in res:
-                log.info("PTP search returned nothing for '%s' at quality '%s' with search parameters %s" % (movie_title, quality_id, params))
-                return []
+                return
 
             authkey = res['AuthKey']
             passkey = res['PassKey']
@@ -142,8 +133,6 @@ class PassThePopcorn(TorrentProvider):
 
         except:
             log.error('Failed getting results from %s: %s', (self.getName(), traceback.format_exc()))
-
-        return results
 
     def login(self):
 

@@ -1,10 +1,8 @@
-from bs4 import BeautifulSoup
 from couchpotato.core.event import fireEvent
 from couchpotato.core.helpers.encoding import toUnicode, tryUrlencode
 from couchpotato.core.helpers.rss import RSS
-from couchpotato.core.helpers.variable import tryInt, getTitle, possibleTitles
+from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
-from couchpotato.core.providers.base import ResultList
 from couchpotato.core.providers.nzb.base import NZBProvider
 from dateutil.parser import parse
 from urlparse import urlparse, parse_qs
@@ -31,18 +29,12 @@ class OMGWTFNZBs(NZBProvider, RSS):
 
     def search(self, movie, quality):
 
-        pre_releases = fireEvent('quality.pre_releases', single = True)
-        if self.isDisabled() or quality['identifier'] in pre_releases:
+        if quality['identifier'] in fireEvent('quality.pre_releases', single = True):
             return []
 
-        results = ResultList(self, movie, quality)
-        for title in possibleTitles(getTitle(movie['library'])):
-            results.extend(self._search(title, movie, quality))
+        return super(OMGWTFNZBs, self).search(movie, quality)
 
-        return results
-
-    def _search(self, title, movie, quality):
-        results = []
+    def _searchOnTitle(self, title, movie, quality, results):
 
         q = '%s %s' % (title, movie['library']['year'])
         params = tryUrlencode({
@@ -56,18 +48,14 @@ class OMGWTFNZBs(NZBProvider, RSS):
 
         for nzb in nzbs:
 
-            nzb_id = parse_qs(urlparse(self.getTextElement(nzb, 'link')).query).get('id')[0]
             enclosure = self.getElement(nzb, 'enclosure').attrib
-            size = enclosure['length']
 
             results.append({
-                'id': nzb_id,
+                'id': parse_qs(urlparse(self.getTextElement(nzb, 'link')).query).get('id')[0],
                 'name': toUnicode(self.getTextElement(nzb, 'title')),
                 'age': self.calculateAge(int(time.mktime(parse(self.getTextElement(nzb, 'pubDate')).timetuple()))),
-                'size': tryInt(size) / 1024 / 1024,
+                'size': tryInt(enclosure['length']) / 1024 / 1024,
                 'url': enclosure['url'],
                 'detail_url': self.getTextElement(nzb, 'link'),
                 'description': self.getTextElement(nzb, 'description')
             })
-
-        return results

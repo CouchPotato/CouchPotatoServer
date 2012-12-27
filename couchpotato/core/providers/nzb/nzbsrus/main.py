@@ -1,7 +1,6 @@
 from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.rss import RSS
 from couchpotato.core.logger import CPLog
-from couchpotato.core.providers.base import ResultList
 from couchpotato.core.providers.nzb.base import NZBProvider
 from couchpotato.environment import Env
 import time
@@ -22,12 +21,7 @@ class Nzbsrus(NZBProvider, RSS):
     ]
     cat_backup_id = 240
 
-    def search(self, movie, quality):
-
-        if self.isDisabled():
-            return []
-
-        results = ResultList(self, movie, quality, imdb_result = True)
+    def _search(self, movie, quality, results):
 
         cat_id_string = '&'.join(['c%s=1' % x for x in self.getCatId(quality.get('identifier'))])
         arguments = tryUrlencode({
@@ -63,8 +57,6 @@ class Nzbsrus(NZBProvider, RSS):
                 'detail_url': self.urls['detail'] % nzb_id,
                 'description': self.getTextElement(nzb, 'addtext'),
             })
-
-        return results
 
     def getApiExt(self):
         return '/%s/' % (self.conf('userid'))

@@ -1,8 +1,7 @@
 from bs4 import BeautifulSoup
 from couchpotato.core.helpers.encoding import toUnicode, tryUrlencode
-from couchpotato.core.helpers.variable import getTitle, tryInt, cleanHost
+from couchpotato.core.helpers.variable import tryInt, cleanHost
 from couchpotato.core.logger import CPLog
-from couchpotato.core.providers.base import ResultList
 from couchpotato.core.providers.torrent.base import TorrentMagnetProvider
 from couchpotato.environment import Env
 import re
@@ -44,43 +43,9 @@ class ThePirateBay(TorrentMagnetProvider):
         self.domain = self.conf('domain')
         super(ThePirateBay, self).__init__()
 
-    def getDomain(self, url = ''):
+    def _searchOnTitle(self, title, movie, quality, results):
 
-        if not self.domain:
-            for proxy in self.proxy_list:
-
-                prop_name = 'tpb_proxy.%s' % proxy
-                last_check = float(Env.prop(prop_name, default = 0))
-                if last_check > time.time() - 1209600:
-                    continue
-
-                data = ''
-                try:
-                    data = self.urlopen(proxy, timeout = 3, show_error = False)
-                except:
-                    log.debug('Failed tpb proxy %s', proxy)
-
-                if 'title="Pirate Search"' in data:
-                    log.debug('Using proxy: %s', proxy)
-                    self.domain = proxy
-                    break
-
-                Env.prop(prop_name, time.time())
-
-        if not self.domain:
-            log.error('No TPB proxies left, please add one in settings, or let us know which one to add on the forum.')
-            return None
-
-        return cleanHost(self.domain).rstrip('/') + url
-
-    def search(self, movie, quality):
-
-        if self.isDisabled() or not self.getDomain():
-            return []
-
-        results = ResultList(self, movie, quality)
-
-        search_url = self.urls['search'] % (self.getDomain(), tryUrlencode(getTitle(movie['library']) + ' ' + quality['identifier']), self.getCatId(quality['identifier'])[0])
+        search_url = self.urls['search'] % (self.getDomain(), tryUrlencode(title + ' ' + quality['identifier']), self.getCatId(quality['identifier'])[0])
 
         data = self.getHTMLData(search_url)
 
@@ -90,7 +55,7 @@ class ThePirateBay(TorrentMagnetProvider):
                 results_table = soup.find('table', attrs = {'id': 'searchResult'})
 
                 if not results_table:
-                    return []
+                    return
 
                 entries = results_table.find_all('tr')
                 for result in entries[2:]:
@@ -127,7 +92,37 @@ class ThePirateBay(TorrentMagnetProvider):
             except:
                 log.error('Failed getting results from %s: %s', (self.getName(), traceback.format_exc()))
 
-        return []
+    def isEnabled(self):
+        return super(ThePirateBay, self).isEnabled() and self.getDomain()
+
+    def getDomain(self, url = ''):
+
+        if not self.domain:
+            for proxy in self.proxy_list:
+
+                prop_name = 'tpb_proxy.%s' % proxy
+                last_check = float(Env.prop(prop_name, default = 0))
+                if last_check > time.time() - 1209600:
+                    continue
+
+                data = ''
+                try:
+                    data = self.urlopen(proxy, timeout = 3, show_error = False)
+                except:
+                    log.debug('Failed tpb proxy %s', proxy)
+
+                if 'title="Pirate Search"' in data:
+                    log.debug('Using proxy: %s', proxy)
+                    self.domain = proxy
+                    break
+
+                Env.prop(prop_name, time.time())
+
+        if not self.domain:
+            log.error('No TPB proxies left, please add one in settings, or let us know which one to add on the forum.')
+            return None
+
+        return cleanHost(self.domain).rstrip('/') + url
 
     def getMoreInfo(self, item):
         full_description = self.getCache('tpb.%s' % item['id'], item['detail_url'], cache_timeout = 25920000)

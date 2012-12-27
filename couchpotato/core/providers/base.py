@@ -1,5 +1,6 @@
 from couchpotato.core.event import addEvent, fireEvent
-from couchpotato.core.helpers.variable import tryFloat, mergeDicts, md5
+from couchpotato.core.helpers.variable import tryFloat, mergeDicts, md5, \
+    possibleTitles, getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
@@ -56,8 +57,6 @@ class YarrProvider(Provider):
 
     def __init__(self):
         addEvent('provider.belongs_to', self.belongsTo)
-
-        addEvent('%s.search' % self.type, self.search)
         addEvent('yarr.search', self.search)
 
     def login(self):
@@ -97,7 +96,28 @@ class YarrProvider(Provider):
         return 'try_next'
 
     def search(self, movie, quality):
-        return []
+
+        if self.isDisabled():
+            return []
+
+        # Login if needed
+        if self.urls.get('login') and (not self.login_opener and not self.login()):
+            log.error('Failed to login to: %s', self.getName())
+            return []
+
+        # Create result container
+        imdb_result = hasattr(self, '_search')
+        results = ResultList(self, movie, quality, imdb_result = imdb_result)
+
+        # Do search based on imdb id
+        if imdb_result:
+            self._search(movie, quality, results)
+        # Search possible titles
+        else:
+            for title in possibleTitles(getTitle(movie['library'])):
+                self._searchOnTitle(title, movie, quality, results)
+
+        return results
 
     def belongsTo(self, url, provider = None, host = None):
         try:

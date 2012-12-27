@@ -1,8 +1,7 @@
 from bs4 import BeautifulSoup
 from couchpotato.core.helpers.encoding import tryUrlencode
-from couchpotato.core.helpers.variable import getTitle, tryInt
+from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
-from couchpotato.core.providers.base import ResultList
 from couchpotato.core.providers.torrent.base import TorrentProvider
 import traceback
 
@@ -33,18 +32,9 @@ class TorrentLeech(TorrentProvider):
     http_time_between_calls = 1 #seconds
     cat_backup_id = None
 
-    def search(self, movie, quality):
+    def _searchOnTitle(self, title, movie, quality, results):
 
-        if self.isDisabled():
-            return []
-
-        # Cookie login
-        if not self.login_opener and not self.login():
-            return []
-
-        results = ResultList(self, movie, quality)
-
-        url = self.urls['search'] % (tryUrlencode(getTitle(movie['library']).replace(':', '') + ' ' + quality['identifier']), self.getCatId(quality['identifier'])[0])
+        url = self.urls['search'] % (tryUrlencode(title.replace(':', '') + ' ' + quality['identifier']), self.getCatId(quality['identifier'])[0])
         data = self.getHTMLData(url, opener = self.login_opener)
 
         if data:
@@ -53,7 +43,7 @@ class TorrentLeech(TorrentProvider):
             try:
                 result_table = html.find('table', attrs = {'id' : 'torrenttable'})
                 if not result_table:
-                    return []
+                    return
 
                 entries = result_table.find_all('tr')
 
@@ -76,8 +66,6 @@ class TorrentLeech(TorrentProvider):
 
             except:
                 log.error('Failed to parsing %s: %s', (self.getName(), traceback.format_exc()))
-
-        return results
 
     def getLoginParams(self):
         return tryUrlencode({

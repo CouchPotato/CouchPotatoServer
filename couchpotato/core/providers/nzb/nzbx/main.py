@@ -1,7 +1,6 @@
 from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
-from couchpotato.core.providers.base import ResultList
 from couchpotato.core.providers.nzb.base import NZBProvider
 
 log = CPLog(__name__)
@@ -16,12 +15,7 @@ class Nzbx(NZBProvider):
 
     http_time_between_calls = 1 # Seconds
 
-    def search(self, movie, quality):
-
-        if self.isDisabled():
-            return []
-
-        results = ResultList(self, movie, quality, imdb_result = True)
+    def _search(self, movie, quality, results):
 
         # Get nbzs
         arguments = tryUrlencode({
@@ -41,5 +35,3 @@ class Nzbx(NZBProvider):
                 'size': tryInt(nzb['size']) / 1024 / 1024,
                 'score': 5 if nzb['votes']['upvotes'] > nzb['votes']['downvotes'] else 0
             })
-
-        return results

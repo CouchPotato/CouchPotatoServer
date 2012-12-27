@@ -2,7 +2,6 @@ from bs4 import BeautifulSoup
 from couchpotato.core.helpers.encoding import tryUrlencode, toUnicode
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
-from couchpotato.core.providers.base import ResultList
 from couchpotato.core.providers.torrent.base import TorrentProvider
 import traceback
 
@@ -27,10 +26,7 @@ class SceneAccess(TorrentProvider):
 
     http_time_between_calls = 1 #seconds
 
-    def search(self, movie, quality):
-
-        if self.isDisabled():
-            return []
+    def _search(self, movie, quality, results):
 
         url = self.urls['search'] % (
            self.getCatId(quality['identifier'])[0],
@@ -45,9 +41,7 @@ class SceneAccess(TorrentProvider):
 
         # Do login for the cookies
         if not self.login_opener and not self.login():
-            return []
-
-        results = ResultList(self, movie, quality, imdb_results = True)
+            return
 
         data = self.getHTMLData(url, opener = self.login_opener)
 
@@ -57,7 +51,7 @@ class SceneAccess(TorrentProvider):
             try:
                 resultsTable = html.find('table', attrs = {'id' : 'torrents-table'})
                 if resultsTable is None:
-                    return results
+                    return
 
                 entries = resultsTable.find_all('tr', attrs = {'class' : 'tt_row'})
                 for result in entries:
@@ -81,8 +75,6 @@ class SceneAccess(TorrentProvider):
 
             except:
                 log.error('Failed getting results from %s: %s', (self.getName(), traceback.format_exc()))
-
-        return results
 
     def getLoginParams(self):
         return tryUrlencode({

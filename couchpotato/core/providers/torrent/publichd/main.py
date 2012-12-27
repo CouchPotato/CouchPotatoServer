@@ -1,8 +1,7 @@
 from bs4 import BeautifulSoup
 from couchpotato.core.helpers.encoding import tryUrlencode, toUnicode
-from couchpotato.core.helpers.variable import getTitle, tryInt
+from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
-from couchpotato.core.providers.base import ResultList
 from couchpotato.core.providers.torrent.base import TorrentMagnetProvider
 from urlparse import parse_qs
 import re
@@ -22,14 +21,16 @@ class PublicHD(TorrentMagnetProvider):
 
     def search(self, movie, quality):
 
-        if self.isDisabled() or not quality.get('hd', False):
+        if not quality.get('hd', False):
             return []
 
-        results = ResultList(self, movie, quality)
+        return super(PublicHD, self).search(movie, quality)
+
+    def _searchOnTitle(self, title, movie, quality, results):
 
         params = tryUrlencode({
             'page':'torrents',
-            'search': '%s %s' % (getTitle(movie['library']), movie['library']['year']),
+            'search': '%s %s' % (title, movie['library']['year']),
             'active': 1,
         })
 
@@ -64,8 +65,6 @@ class PublicHD(TorrentMagnetProvider):
 
             except:
                 log.error('Failed getting results from %s: %s', (self.getName(), traceback.format_exc()))
-
-        return results
 
     def getMoreInfo(self, item):
         full_description = self.getCache('publichd.%s' % item['id'], item['detail_url'], cache_timeout = 25920000)

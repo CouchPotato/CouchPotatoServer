@@ -1,8 +1,7 @@
 from bs4 import BeautifulSoup
 from couchpotato.core.helpers.encoding import simplifyString, tryUrlencode
-from couchpotato.core.helpers.variable import getTitle, tryInt
+from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
-from couchpotato.core.providers.base import ResultList
 from couchpotato.core.providers.torrent.base import TorrentProvider
 import traceback
 
@@ -21,12 +20,9 @@ class SceneHD(TorrentProvider):
 
     http_time_between_calls = 1 #seconds
 
-    def search(self, movie, quality):
+    def _searchOnTitle(self, title, movie, quality, results):
 
-        if self.isDisabled():
-            return []
-
-        q = '"%s %s" %s' % (simplifyString(getTitle(movie['library'])), movie['library']['year'], quality.get('identifier'))
+        q = '"%s %s" %s' % (simplifyString(title), movie['library']['year'], quality.get('identifier'))
         arguments = tryUrlencode({
             'search': q,
         })
@@ -34,9 +30,7 @@ class SceneHD(TorrentProvider):
 
         # Cookie login
         if not self.login_opener and not self.login():
-            return []
-
-        results = ResultList(self, movie, quality, imdb_results = True)
+            return
 
         data = self.getHTMLData(url, opener = self.login_opener)
 
@@ -73,8 +67,6 @@ class SceneHD(TorrentProvider):
 
             except:
                 log.error('Failed getting results from %s: %s', (self.getName(), traceback.format_exc()))
-
-        return results
 
 
     def getLoginParams(self, params):
