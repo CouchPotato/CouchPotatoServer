@@ -244,16 +244,16 @@ class QualityPlugin(Plugin):
                     log.debug('Found via identifier "%s" in %s', (quality['identifier'], cur_file))
                     return self.setCache(hash, quality)
 
-                if list(set(quality.get('alternative', [])) & set(words)) and (size >= dbqual.size_min and size <= dbqual.size_max)::
+                if list(set(quality.get('alternative', [])) & set(words)) and (size >= dbqual.size_min and size <= dbqual.size_max):
                     log.debug('Found %s via alt %s in %s', (quality['identifier'], quality.get('alternative'), cur_file))
                     return self.setCache(hash, quality)
 
                 for tag in quality.get('tags', []):
-                    if isinstance(tag, tuple) and '.'.join(tag) in '.'.join(words) and (size >= dbqual.size_min and size <= dbqual.size_max)::
+                    if isinstance(tag, tuple) and '.'.join(tag) in '.'.join(words) and (size >= dbqual.size_min and size <= dbqual.size_max):
                         log.debug('Found %s via tag %s in %s', (quality['identifier'], quality.get('tags'), cur_file))
                         return self.setCache(hash, quality)
 
-                if list(set(quality.get('tags', [])) & set(words)) and (size >= dbqual.size_min and size <= dbqual.size_max)::
+                if list(set(quality.get('tags', [])) & set(words)) and (size >= dbqual.size_min and size <= dbqual.size_max):
                     log.debug('Found %s via tag %s in %s', (quality['identifier'], quality.get('tags'), cur_file))
                     return self.setCache(hash, quality)
 
