@@ -18,8 +18,11 @@ log = CPLog(__name__)
 class QualityPlugin(Plugin):
 
     qualities = [
+        {'identifier': '3dbd50', 'hd': True, 'size': (23000, 60000), 'label': '3D BR-Disk', 'alternative': [], 'allow': ['1080p','3d1080p'], 'ext':[], 'tags': ['2d+3d', '3d']},
         {'identifier': 'bd50', 'hd': True, 'size': (15000, 60000), 'label': 'BR-Disk', 'alternative': ['bd25'], 'allow': ['1080p'], 'ext':[], 'tags': ['bdmv', 'certificate', ('complete', 'bluray')]},
+        {'identifier': '3d1080p', 'hd': True, 'size': (5000, 20000), 'label': '3D 1080P', 'width': 1920, 'height': 1080, 'alternative': [], 'allow': ['1080p'], 'ext':['mkv', 'm2ts'], 'tags': [('1080p', 'm2ts'),('1080p', '3d'), ('1080p', 'hsbs'), ('1080p', 'sbs'), ('1080p', 'half')]},
         {'identifier': '1080p', 'hd': True, 'size': (5000, 20000), 'label': '1080P', 'width': 1920, 'height': 1080, 'alternative': [], 'allow': [], 'ext':['mkv', 'm2ts'], 'tags': ['m2ts']},
+        {'identifier': '3d720p', 'hd': True, 'size': (3500, 10000), 'label': '3D 720P', 'width': 1280, 'height': 720, 'alternative': [], 'allow': ['720p'], 'ext':['mkv', 'ts'], 'tags': [('720p', 'm2ts'), ('720p', '3d'), ('720p', 'hsbs'), ('720p', 'sbs'), ('720p', 'half')]},
         {'identifier': '720p', 'hd': True, 'size': (3500, 10000), 'label': '720P', 'width': 1280, 'height': 720, 'alternative': [], 'allow': [], 'ext':['mkv', 'ts']},
         {'identifier': 'brrip', 'hd': True, 'size': (700, 7000), 'label': 'BR-Rip', 'alternative': ['bdrip'], 'allow': ['720p'], 'ext':['avi']},
         {'identifier': 'dvdr', 'size': (3000, 10000), 'label': 'DVD-R', 'alternative': [], 'allow': [], 'ext':['iso', 'img'], 'tags': ['pal', 'ntsc', 'video_ts', 'audio_ts']},
@@ -28,10 +31,7 @@ class QualityPlugin(Plugin):
         {'identifier': 'r5', 'size': (600, 1000), 'label': 'R5', 'alternative': [], 'allow': ['dvdr'], 'ext':['avi', 'mpg', 'mpeg']},
         {'identifier': 'tc', 'size': (600, 1000), 'label': 'TeleCine', 'alternative': ['telecine'], 'allow': [], 'ext':['avi', 'mpg', 'mpeg']},
         {'identifier': 'ts', 'size': (600, 1000), 'label': 'TeleSync', 'alternative': ['telesync', 'hdts'], 'allow': [], 'ext':['avi', 'mpg', 'mpeg']},
-        {'identifier': 'cam', 'size': (600, 1000), 'label': 'Cam', 'alternative': ['camrip', 'hdcam'], 'allow': [], 'ext':['avi', 'mpg', 'mpeg']},
-        {'identifier': '3dbd50', 'hd': True, 'size': (23000, 60000), 'label': '3D BR-Disk', 'alternative': [], 'allow': ['1080p','3d1080p'], 'ext':[], 'tags': ['2d+3d', '3d']},
-        {'identifier': '3d1080p', 'hd': True, 'size': (5000, 20000), 'label': '3D 1080P', 'width': 1920, 'height': 1080, 'alternative': [], 'allow': ['1080p'], 'ext':['mkv', 'm2ts'], 'tags': [('1080p', 'm2ts'),('1080p', '3d'), ('1080p', 'hsbs'), ('1080p', 'sbs'), ('1080p', 'half')]},
-        {'identifier': '3d720p', 'hd': True, 'size': (3500, 10000), 'label': '3D 720P', 'width': 1280, 'height': 720, 'alternative': [], 'allow': ['720p'], 'ext':['mkv', 'ts'], 'tags': [('720p', 'm2ts'), ('720p', '3d'), ('720p', 'hsbs'), ('720p', 'sbs'), ('720p', 'half')]}
+        {'identifier': 'cam', 'size': (600, 1000), 'label': 'Cam', 'alternative': ['camrip', 'hdcam'], 'allow': [], 'ext':['avi', 'mpg', 'mpeg']}
     ]
     pre_releases = ['cam', 'ts', 'tc', 'r5', 'scr']
 
@@ -56,9 +56,10 @@ class QualityPlugin(Plugin):
         # Add 3D qualities to dB
 
         db = get_session()
-        quality = db.query(Quality).filter(Quality.identifier == '3dbd50').first()
+        quality3d = db.query(Quality).filter(Quality.identifier == '3dbd50').first()
+        quality = db.query(Quality).filter(Quality.identifier == '1080p').first()
 
-        if not quality:
+        if not quality3d or quality.order == 1:
             log.info('Adding 3D qualities...')
 
             order = 0
@@ -76,6 +77,9 @@ class QualityPlugin(Plugin):
                     qual.size_min, qual.size_max = q.get('size')
 
                     db.add(qual)
+                else:
+                    qual.order = order
+                    db.commit()
 
                 # Create single quality profile
                 prof = db.query(Profile).filter(
@@ -232,21 +236,24 @@ class QualityPlugin(Plugin):
 
             for quality in self.all():
 
+                db = get_session();
+                dbqual = db.query(Quality).filter_by(identifier = quality.get('identifier')).first()
+
                 # Check tags
-                if quality['identifier'] in words:
+                if quality['identifier'] in words and (size >= dbqual.size_min and size <= dbqual.size_max):
                     log.debug('Found via identifier "%s" in %s', (quality['identifier'], cur_file))
                     return self.setCache(hash, quality)
 
-                if list(set(quality.get('alternative', [])) & set(words)):
+                if list(set(quality.get('alternative', [])) & set(words)) and (size >= dbqual.size_min and size <= dbqual.size_max)::
                     log.debug('Found %s via alt %s in %s', (quality['identifier'], quality.get('alternative'), cur_file))
                     return self.setCache(hash, quality)
 
                 for tag in quality.get('tags', []):
-                    if isinstance(tag, tuple) and '.'.join(tag) in '.'.join(words):
+                    if isinstance(tag, tuple) and '.'.join(tag) in '.'.join(words) and (size >= dbqual.size_min and size <= dbqual.size_max)::
                         log.debug('Found %s via tag %s in %s', (quality['identifier'], quality.get('tags'), cur_file))
                         return self.setCache(hash, quality)
 
-                if list(set(quality.get('tags', [])) & set(words)):
+                if list(set(quality.get('tags', [])) & set(words)) and (size >= dbqual.size_min and size <= dbqual.size_max)::
                     log.debug('Found %s via tag %s in %s', (quality['identifier'], quality.get('tags'), cur_file))
                     return self.setCache(hash, quality)
 
