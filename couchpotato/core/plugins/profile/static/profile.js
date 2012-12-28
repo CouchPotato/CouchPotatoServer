@@ -49,7 +49,7 @@ var Profile = new Class({
 				new Element('label', {'text': 'Search for'}),
 				self.type_container = new Element('ol.types'),
 				new Element('div.formHint', {
-					'html': "Search these qualities (2 minimum), from top to bottom. Use the checkbox, to stop searching after it found this quality."
+					'html': "Search these qualities (2 minimum), from top to bottom."
 				})
 			)
 		);
@@ -87,7 +87,7 @@ var Profile = new Class({
 				'onComplete': function(json){
 					if(json.success){
 						self.data = json.profile;
-						self.type_container.getElement('li:first-child input[type=checkbox]')
+						self.type_container.getElement('li:first-child input[type=checkbox].finish')
 							.set('checked', true)
 							.getParent().addClass('checked');
 					}
@@ -112,7 +112,8 @@ var Profile = new Class({
 			if(!type.hasClass('deleted') && type.getElement('select').get('value') > 0)
 				data.types.include({
 					'quality_id': type.getElement('select').get('value'),
-					'finish': +type.getElement('input[type=checkbox]').checked
+					'finish': +type.getElement('input[type=checkbox].finish').checked,
+					'3d': +type.getElement('input[type=checkbox].3d').checked
 				});
 		})
 
@@ -226,8 +227,11 @@ Profile.Type = new Class({
 		self.create();
 
 		self.addEvent('change', function(){
-			self.el[self.qualities.get('value') == '-1' ? 'addClass' : 'removeClass']('is_empty');
-			self.deleted = self.qualities.get('value') == '-1';
+			var qu = self.qualities.get('value');
+			self.el[qu == '-1' ? 'addClass' : 'removeClass']('is_empty');
+			self.el[Quality.getQuality(qu).allow_3d ? 'addClass': 'removeClass']('allow_3d');
+
+			self.deleted = qu == '-1';
 		});
 
 	},
@@ -240,11 +244,13 @@ Profile.Type = new Class({
 			new Element('span.quality_type').adopt(
 				self.fillQualities()
 			),
-			new Element('span.finish').adopt(
+			self.finish_container = new Element('label.finish').adopt(
 				self.finish = new Element('input.inlay.finish[type=checkbox]', {
 					'checked': data.finish !== undefined ? data.finish : 1,
 					'events': {
 						'change': function(e){
+							self['3d_container'].addClass('enabled');
+
 							if(self.el == self.el.getParent().getElement(':first-child')){
 								self.finish_class.check();
 								alert('Top quality always finishes the search')
@@ -254,7 +260,21 @@ Profile.Type = new Class({
 							self.fireEvent('change');
 						}
 					}
-				})
+				}),
+				new Element('span.check_label[text=finish]')
+			),
+			self['3d_container'] = new Element('label.threed').adopt(
+				self['3d'] = new Element('input.inlay.3d[type=checkbox]', {
+					'checked': data['threed'] !== undefined ? data['threed'] : 0,
+					'events': {
+						'change': function(e){
+							self['3d_container'].addClass('enabled');
+
+							self.fireEvent('change');
+						}
+					}
+				}),
+				new Element('span.check_label[text=3D]')
 			),
 			new Element('span.delete.icon', {
 				'events': {
@@ -266,7 +286,11 @@ Profile.Type = new Class({
 
 		self.el[self.data.quality_id > 0 ? 'removeClass' : 'addClass']('is_empty');
 
+		if(self.data.quality_id > 0 && Quality.getQuality(self.data.quality_id).allow_3d)
+			self.el.addClass('allow_3d');
+
 		self.finish_class = new Form.Check(self.finish);
+		self['3d_class'] = new Form.Check(self['3d']);
 
 	},
 
@@ -279,7 +303,7 @@ Profile.Type = new Class({
 			}
 		}).adopt(
 			new Element('option', {
-				'text': '+ Add another quality',
+				'text': '+ Add quality',
 				'value': -1
 			})
 		);
@@ -287,7 +311,8 @@ Profile.Type = new Class({
 		Object.each(Quality.qualities, function(q){
 			new Element('option', {
 				'text': q.label,
-				'value': q.id
+				'value': q.id,
+				'data-allow_3d': q.allow_3d
 			}).inject(self.qualities)
 		});
 
@@ -302,7 +327,8 @@ Profile.Type = new Class({
 
 		return {
 			'quality_id': self.qualities.get('value'),
-			'finish': +self.finish.checked
+			'finish': +self.finish.checked,
+			'3d': +self['3d'].checked
 		}
 	},
 
