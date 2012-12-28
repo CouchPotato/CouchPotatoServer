@@ -173,6 +173,7 @@ class ProfileType(Entity):
 
     order = Field(Integer, index = True)
     finish = Field(Boolean)
+    threed = Field(Boolean)
     wait_for = Field(Integer)
 
     quality = ManyToOne('Quality')
