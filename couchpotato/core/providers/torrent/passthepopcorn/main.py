@@ -1,4 +1,3 @@
-from couchpotato.core.event import fireEvent
 from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.variable import getTitle, tryInt, mergeDicts
 from couchpotato.core.logger import CPLog
@@ -65,17 +64,10 @@ class PassThePopcorn(TorrentProvider):
             else:
                 raise PassThePopcorn.NotLoggedInHTTPError(req.get_full_url(), code, msg, headers, fp)
 
-    def search(self, movie, quality):
-
-        results = []
-
-        if self.isDisabled():
-            return results
+    def _search(self, movie, quality, results):
 
         movie_title = getTitle(movie['library'])
         quality_id = quality['identifier']
-
-        log.info('Searching for %s at quality %s' % (movie_title, quality_id))
 
         params = mergeDicts(self.quality_search_params[quality_id].copy(), {
             'order_by': 'relevance',
@@ -85,7 +77,7 @@ class PassThePopcorn(TorrentProvider):
 
         # Do login for the cookies
         if not self.login_opener and not self.login():
-            return results
+            return
 
         try:
             url = '%s?json=noredirect&%s' % (self.urls['torrent'], tryUrlencode(params))
@@ -93,12 +85,11 @@ class PassThePopcorn(TorrentProvider):
             res = json.loads(txt)
         except:
             log.error('Search on PassThePopcorn.me (%s) failed (could not decode JSON)' % params)
-            return []
+            return
 
         try:
             if not 'Movies' in res:
-                log.info("PTP search returned nothing for '%s' at quality '%s' with search parameters %s" % (movie_title, quality_id, params))
-                return []
+                return
 
             authkey = res['AuthKey']
             passkey = res['PassKey']
@@ -118,7 +109,6 @@ class PassThePopcorn(TorrentProvider):
                     if 'Scene' in torrent and torrent['Scene']:
                         torrentdesc += ' Scene'
                     if 'RemasterTitle' in torrent and torrent['RemasterTitle']:
-                        # eliminate odd characters...
                         torrentdesc += self.htmlToASCII(' %s' % torrent['RemasterTitle'])
 
                     torrentdesc += ' (%s)' % quality_id
@@ -127,38 +117,22 @@ class PassThePopcorn(TorrentProvider):
                     def extra_check(item):
                         return self.torrentMeetsQualitySpec(item, type)
 
-                    def extra_score(item):
-                        return 50 if torrent['GoldenPopcorn'] else 0
-
-                    new = {
+                    results.append({
                         'id': torrent_id,
-                        'type': 'torrent',
-                        'provider': self.getName(),
                         'name': torrent_name,
-                        'description': '',
                         'url': '%s?action=download&id=%d&authkey=%s&torrent_pass=%s' % (self.urls['torrent'], torrent_id, authkey, passkey),
                         'detail_url': self.urls['detail'] % torrent_id,
                         'date': tryInt(time.mktime(parse(torrent['UploadTime']).timetuple())),
                         'size': tryInt(torrent['Size']) / (1024 * 1024),
-                        'provider': self.getName(),
                         'seeders': tryInt(torrent['Seeders']),
                         'leechers': tryInt(torrent['Leechers']),
-                        'extra_score': extra_score,
+                        'score': 50 if torrent['GoldenPopcorn'] else 0,
                         'extra_check': extra_check,
                         'download': self.loginDownload,
-                    }
+                    })
 
-                    new['score'] = fireEvent('score.calculate', new, movie, single = True)
-
-                    if fireEvent('searcher.correct_movie', nzb = new, movie = movie, quality = quality):
-                        results.append(new)
-                        self.found(new)
-
-            return results
         except:
             log.error('Failed getting results from %s: %s', (self.getName(), traceback.format_exc()))
-
-        return []
 
     def login(self):
 

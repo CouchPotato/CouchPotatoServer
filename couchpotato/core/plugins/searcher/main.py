@@ -363,7 +363,7 @@ class Searcher(Plugin):
             return True
 
         # Check if nzb contains imdb link
-        if self.checkIMDB([nzb['description']], movie['library']['identifier']):
+        if self.checkIMDB([nzb.get('description', '')], movie['library']['identifier']):
             return True
 
         for raw_title in movie['library']['titles']:
