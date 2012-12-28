@@ -1,5 +1,6 @@
 from esky.util import appdir_from_executable #@UnresolvedImport
 from threading import Thread
+from version import VERSION
 from wx.lib.softwareupdate import SoftwareUpdate
 import os
 import sys
@@ -165,7 +166,7 @@ class CouchPotatoApp(wx.App, SoftwareUpdate):
     def OnInit(self):
 
         # Updater
-        base_url = 'http://couchpota.to/updates/'
+        base_url = 'http://couchpota.to/updates/%s/' % VERSION
         self.InitUpdates(base_url, base_url + 'changelog.html',
                          icon = wx.Icon('icon.png'))
 
