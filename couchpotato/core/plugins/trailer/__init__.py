@@ -24,6 +24,13 @@ config = [{
                     'type': 'dropdown',
                     'values': [('1080P', '1080p'), ('720P', '720p'), ('480P', '480p')],
                 },
+                {
+                    'name': 'name',
+                    'label': 'Naming',
+                    'default': '<filename>-trailer',
+                    'advanced': True,
+                    'description': 'Use <filename> to use above settings.'
+                },
             ],
         },
     ],

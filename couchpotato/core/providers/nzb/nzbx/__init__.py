@@ -1,16 +1,16 @@
-from .main import PublicHD
+from .main import Nzbx
 
 def start():
-    return PublicHD()
+    return Nzbx()
 
 config = [{
-    'name': 'publichd',
+    'name': 'nzbx',
     'groups': [
         {
             'tab': 'searcher',
-            'subtab': 'torrent_providers',
-            'name': 'PublicHD',
-            'description': 'Public Torrent site with only HD content. See <a href="https://publichd.se/">PublicHD</a>',
+            'subtab': 'nzb_providers',
+            'name': 'nzbX',
+            'description': 'Free provider, less accurate. See <a href="https://www.nzbx.co/">nzbX</a>',
             'options': [
                 {
                     'name': 'enabled',

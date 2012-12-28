@@ -12,7 +12,7 @@ def runHandler(name, handler, *args, **kwargs):
         return handler(*args, **kwargs)
     except:
         from couchpotato.environment import Env
-        log.error('Error in event "%s", that wasn\'t caught: %s%s', (name, traceback.format_exc(), Env.all()))
+        log.error('Error in event "%s", that wasn\'t caught: %s%s', (name, traceback.format_exc(), Env.all() if not Env.get('dev') else ''))
 
 def addEvent(name, handler, priority = 100):
 
@@ -105,14 +105,14 @@ def fireEvent(name, *args, **kwargs):
             # Merge
             if options['merge'] and len(results) > 0:
                 # Dict
-                if type(results[0]) == dict:
+                if isinstance(results[0], dict):
                     merged = {}
                     for result in results:
                         merged = mergeDicts(merged, result)
 
                     results = merged
                 # Lists
-                elif type(results[0]) == list:
+                elif isinstance(results[0], list):
                     merged = []
                     for result in results:
                         merged += result
