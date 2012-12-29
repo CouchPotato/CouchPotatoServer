@@ -10,7 +10,7 @@ config = [{
             'tab': 'searcher',
             'subtab': 'nzb_providers',
             'name': 'nzbX',
-            'description': 'Free provider, less accurate. See <a href="https://www.nzbx.co/">nzbX</a>',
+            'description': 'Free provider. See <a href="https://www.nzbx.co/">nzbX</a>',
             'options': [
                 {
                     'name': 'enabled',
