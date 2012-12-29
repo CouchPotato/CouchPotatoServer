@@ -23,7 +23,7 @@ class QualityPlugin(Plugin):
         {'identifier': '1080p', 'allow_3d': True, 'hd': True, 'size': (5000, 20000), 'label': '1080P', 'width': 1920, 'height': 1080, 'alternative': [], 'allow': [], 'ext':['mkv', 'm2ts'],
 			'tags': ['m2ts'], 'tags_3d': [('1080p', '3d'), ('1080p', 'hsbs'), ('1080p', 'sbs'), ('1080p', 'hou'), ('1080p', 'ou')]}, 
         {'identifier': '720p', 'allow_3d': True, 'hd': True, 'size': (3500, 10000), 'label': '720P', 'width': 1280, 'height': 720, 'alternative': [], 'allow': [], 'ext':['mkv', 'ts'],
-			'tags_3d': [('1080p', 'hsbs'), ('1080p', 'sbs'), ('1080p', 'hou'), ('1080p', 'ou')]},
+			'tags_3d': [('720p', 'hsbs'), ('720p', 'sbs'), ('720', 'hou'), ('720p', 'ou')]},
         {'identifier': 'brrip', 'hd': True, 'size': (700, 7000), 'label': 'BR-Rip', 'alternative': ['bdrip'], 'allow': ['720p'], 'ext':['avi']},
         {'identifier': 'dvdr', 'size': (3000, 10000), 'label': 'DVD-R', 'alternative': [], 'allow': [], 'ext':['iso', 'img'], 'tags': ['pal', 'ntsc', 'video_ts', 'audio_ts']},
         {'identifier': 'dvdrip', 'size': (600, 2400), 'label': 'DVD-Rip', 'width': 720, 'alternative': ['dvdrip'], 'allow': [], 'ext':['avi', 'mpg', 'mpeg'], 'tags': [('dvd', 'rip'), ('dvd', 'xvid'), ('dvd', 'divx')]},
