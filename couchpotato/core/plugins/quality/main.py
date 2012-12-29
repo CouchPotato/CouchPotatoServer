@@ -18,9 +18,12 @@ log = CPLog(__name__)
 class QualityPlugin(Plugin):
 
     qualities = [
-        {'identifier': 'bd50', 'allow_3d': True, 'hd': True, 'size': (15000, 60000), 'label': 'BR-Disk', 'alternative': ['bd25'], 'allow': ['1080p'], 'ext':[], 'tags': ['bdmv', 'certificate', ('complete', 'bluray')]},
-        {'identifier': '1080p', 'allow_3d': True, 'hd': True, 'size': (5000, 20000), 'label': '1080P', 'width': 1920, 'height': 1080, 'alternative': [], 'allow': [], 'ext':['mkv', 'm2ts'], 'tags': ['m2ts']},
-        {'identifier': '720p', 'allow_3d': True, 'hd': True, 'size': (3500, 10000), 'label': '720P', 'width': 1280, 'height': 720, 'alternative': [], 'allow': [], 'ext':['mkv', 'ts']},
+        {'identifier': 'bd50', 'allow_3d': True, 'hd': True, 'size': (23000, 60000), 'label': 'BR-Disk', 'alternative': ['bd25'], 'allow': ['1080p'], 'ext':[],
+			'tags': ['bdmv', 'certificate', ('complete', 'bluray')], 'tags_3d': ['3d', '2d+3d', '3d+2d']},
+        {'identifier': '1080p', 'allow_3d': True, 'hd': True, 'size': (5000, 20000), 'label': '1080P', 'width': 1920, 'height': 1080, 'alternative': [], 'allow': [], 'ext':['mkv', 'm2ts'],
+			'tags': ['m2ts'], 'tags_3d': [('1080p', '3d'), ('1080p', 'hsbs'), ('1080p', 'sbs'), ('1080p', 'hou'), ('1080p', 'ou')]}, 
+        {'identifier': '720p', 'allow_3d': True, 'hd': True, 'size': (3500, 10000), 'label': '720P', 'width': 1280, 'height': 720, 'alternative': [], 'allow': [], 'ext':['mkv', 'ts'],
+			'tags_3d': [('1080p', 'hsbs'), ('1080p', 'sbs'), ('1080p', 'hou'), ('1080p', 'ou')]},
         {'identifier': 'brrip', 'hd': True, 'size': (700, 7000), 'label': 'BR-Rip', 'alternative': ['bdrip'], 'allow': ['720p'], 'ext':['avi']},
         {'identifier': 'dvdr', 'size': (3000, 10000), 'label': 'DVD-R', 'alternative': [], 'allow': [], 'ext':['iso', 'img'], 'tags': ['pal', 'ntsc', 'video_ts', 'audio_ts']},
         {'identifier': 'dvdrip', 'size': (600, 2400), 'label': 'DVD-Rip', 'width': 720, 'alternative': ['dvdrip'], 'allow': [], 'ext':['avi', 'mpg', 'mpeg'], 'tags': [('dvd', 'rip'), ('dvd', 'xvid'), ('dvd', 'divx')]},
@@ -31,7 +34,6 @@ class QualityPlugin(Plugin):
         {'identifier': 'cam', 'size': (600, 1000), 'label': 'Cam', 'alternative': ['camrip', 'hdcam'], 'allow': [], 'ext':['avi', 'mpg', 'mpeg']}
     ]
     pre_releases = ['cam', 'ts', 'tc', 'r5', 'scr']
-    tags_3d = ['3d', 'hsbs', ('half', 'sbs'), ('full', 'sbs')]
 
     def __init__(self):
         addEvent('quality.all', self.all)
