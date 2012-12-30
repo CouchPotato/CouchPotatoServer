@@ -44,6 +44,34 @@ class Provider(Plugin):
 
         return self.is_available.get(host, False)
 
+    def getJsonData(self, url, **kwargs):
+
+        data = self.getCache(md5(url), url, **kwargs)
+
+        if data:
+            try:
+                return json.loads(data)
+            except:
+                log.error('Failed to parsing %s: %s', (self.getName(), traceback.format_exc()))
+
+        return []
+
+    def getRSSData(self, url, **kwargs):
+
+        data = self.getCache(md5(url), url, **kwargs)
+
+        if data:
+            try:
+                data = XMLTree.fromstring(data)
+                return self.getElements(data, 'channel/item')
+            except:
+                log.error('Failed to parsing %s: %s', (self.getName(), traceback.format_exc()))
+
+        return []
+
+    def getHTMLData(self, url, **kwargs):
+        return self.getCache(md5(url), url, **kwargs)
+
 
 class YarrProvider(Provider):
 
@@ -164,34 +192,6 @@ class YarrProvider(Provider):
                 return ids
 
         return [self.cat_backup_id]
-
-    def getJsonData(self, url, **kwargs):
-
-        data = self.getCache(md5(url), url, **kwargs)
-
-        if data:
-            try:
-                return json.loads(data)
-            except:
-                log.error('Failed to parsing %s: %s', (self.getName(), traceback.format_exc()))
-
-        return []
-
-    def getRSSData(self, url, **kwargs):
-
-        data = self.getCache(md5(url), url, **kwargs)
-
-        if data:
-            try:
-                data = XMLTree.fromstring(data)
-                return self.getElements(data, 'channel/item')
-            except:
-                log.error('Failed to parsing %s: %s', (self.getName(), traceback.format_exc()))
-
-        return []
-
-    def getHTMLData(self, url, **kwargs):
-        return self.getCache(md5(url), url, **kwargs)
 
 
 class ResultList(list):
