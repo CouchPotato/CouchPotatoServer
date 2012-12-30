@@ -25,6 +25,9 @@
 name="couchpotato"
 rcvar=${name}_enable
 
+# Required, for some reason, to find all our binaries when starting via service.
+PATH="/usr/bin:/usr/local/bin:$PATH"
+
 load_rc_config ${name}
 
 : ${couchpotato_enable:="NO"}
