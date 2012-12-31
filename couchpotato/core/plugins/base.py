@@ -98,6 +98,7 @@ class Plugin(object):
 
     # http request
     def urlopen(self, url, timeout = 30, params = None, headers = None, opener = None, multipart = False, show_error = True):
+        url = ss(url)
 
         if not headers: headers = {}
         if not params: params = {}
