@@ -10,7 +10,7 @@ config = [{
             'tab': 'downloaders',
             'name': 'sabnzbd',
             'label': 'Sabnzbd',
-            'description': 'Send NZBs to your Sabnzbd installation.',
+            'description': 'Use <a href="http://sabnzbd.org/" target="_blank">SABnzbd</a> to download NZBs.',
             'wizard': True,
             'options': [
                 {

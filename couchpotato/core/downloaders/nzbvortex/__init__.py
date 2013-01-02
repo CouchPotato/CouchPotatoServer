@@ -10,7 +10,7 @@ config = [{
             'tab': 'downloaders',
             'name': 'nzbvortex',
             'label': 'NZBVortex',
-            'description': 'Send NZBs to your NZBVortex app.',
+            'description': 'Use <a href="http://www.nzbvortex.com/landing/" target="_blank">NZBVortex</a> to download NZBs.',
             'wizard': True,
             'options': [
                 {

@@ -10,7 +10,7 @@ config = [{
             'tab': 'downloaders',
             'name': 'nzbget',
             'label': 'NZBGet',
-            'description': 'Send NZBs to your NZBGet installation.',
+            'description': 'Use <a href="http://nzbget.sourceforge.net/Main_Page" target="_blank">NZBGet</a> to download NZBs.',
             'options': [
                 {
                     'name': 'enabled',
