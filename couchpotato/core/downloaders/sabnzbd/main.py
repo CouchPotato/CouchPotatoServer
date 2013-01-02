@@ -65,7 +65,7 @@ class Sabnzbd(Downloader):
             return False
 
     def getAllDownloadStatus(self):
-        if self.isDisabled(manual = False):
+        if self.isDisabled(manual = True):
             return False
 
         log.debug('Checking SABnzbd download status.')

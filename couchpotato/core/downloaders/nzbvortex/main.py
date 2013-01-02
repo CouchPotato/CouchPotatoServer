@@ -39,7 +39,7 @@ class NZBVortex(Downloader):
 
     def getAllDownloadStatus(self):
 
-        if self.isDisabled(manual = False):
+        if self.isDisabled(manual = True):
             return False
 
         raw_statuses = self.call('nzb')
