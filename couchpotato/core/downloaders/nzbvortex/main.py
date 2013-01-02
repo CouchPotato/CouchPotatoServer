@@ -39,7 +39,7 @@ class NZBVortex(Downloader):
 
     def getAllDownloadStatus(self):
 
-        if self.isDisabled(manual = False):
+        if self.isDisabled(manual = True):
             return False
 
         raw_statuses = self.call('nzb')
@@ -63,6 +63,21 @@ class NZBVortex(Downloader):
             })
 
         return statuses
+
+    def removeFailed(self, item):
+
+        if not self.conf('delete_failed', default = True):
+            return False
+
+        log.info('%s failed downloading, deleting...', item['name'])
+
+        try:
+            self.call('nzb/%s/cancel' % item['id'])
+        except:
+            log.error('Failed deleting: %s', traceback.format_exc(0))
+            return False
+
+        return True
 
     def login(self):
 
