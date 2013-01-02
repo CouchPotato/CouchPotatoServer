@@ -89,7 +89,7 @@ class Scanner(Plugin):
         '()([ab])(\.....?)$' #*a.mkv
     ]
 
-    cp_imdb = '(\.cp\((?P<id>tt[0-9{7}]+)\))'
+    cp_imdb = '(.cp.(?P<id>tt[0-9{7}]+).)'
 
     def __init__(self):
 
