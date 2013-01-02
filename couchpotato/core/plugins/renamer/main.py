@@ -33,6 +33,7 @@ class Renamer(Plugin):
         addEvent('renamer.check_snatched', self.checkSnatched)
 
         addEvent('app.load', self.scan)
+        addEvent('app.load', self.checkSnatched)
 
         if self.conf('run_every') > 0:
             fireEvent('schedule.interval', 'renamer.check_snatched', self.checkSnatched, minutes = self.conf('run_every'))
