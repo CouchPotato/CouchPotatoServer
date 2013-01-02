@@ -1,5 +1,5 @@
 from couchpotato.core.downloaders.base import Downloader
-from couchpotato.core.helpers.encoding import tryUrlencode
+from couchpotato.core.helpers.encoding import tryUrlencode, ss
 from couchpotato.core.helpers.variable import cleanHost, mergeDicts
 from couchpotato.core.logger import CPLog
 from urllib2 import URLError
@@ -41,7 +41,7 @@ class Sabnzbd(Downloader):
 
         try:
             if params.get('mode') is 'addfile':
-                sab = self.urlopen(url, timeout = 60, params = {'nzbfile': (nzb_filename, filedata)}, multipart = True, show_error = False)
+                sab = self.urlopen(url, timeout = 60, params = {'nzbfile': (ss(nzb_filename), filedata)}, multipart = True, show_error = False)
             else:
                 sab = self.urlopen(url, timeout = 60, show_error = False)
         except URLError:

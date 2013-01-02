@@ -13,7 +13,7 @@ var ApiClass = new Class({
 		return new Request[r_type](Object.merge({
 			'callbackKey': 'callback_func',
 			'method': 'get',
-			'url': self.createUrl(type),
+			'url': self.createUrl(type, {'t': randomString()}),
 		}, options)).send()
 	},
 

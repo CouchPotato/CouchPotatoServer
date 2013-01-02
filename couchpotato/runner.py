@@ -4,7 +4,6 @@ from couchpotato.api import api, NonBlockHandler
 from couchpotato.core.event import fireEventAsync, fireEvent
 from couchpotato.core.helpers.variable import getDataDir, tryInt
 from logging import handlers
-from tornado.ioloop import IOLoop
 from tornado.web import Application, FallbackHandler
 from tornado.wsgi import WSGIContainer
 from werkzeug.contrib.cache import FileSystemCache
@@ -231,6 +230,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     fireEventAsync('app.load')
 
     # Go go go!
+    from tornado.ioloop import IOLoop
     web_container = WSGIContainer(app)
     web_container._log = _log
     loop = IOLoop.instance()

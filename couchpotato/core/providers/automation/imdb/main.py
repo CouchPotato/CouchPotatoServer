@@ -1,5 +1,5 @@
 from couchpotato.core.helpers.rss import RSS
-from couchpotato.core.helpers.variable import md5, getImdb, splitString, tryInt
+from couchpotato.core.helpers.variable import getImdb, splitString, tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.automation.base import Automation
 import traceback
@@ -12,9 +12,6 @@ class IMDB(Automation, RSS):
     interval = 1800
 
     def getIMDBids(self):
-
-        if self.isDisabled():
-            return
 
         movies = []
 
@@ -29,8 +26,7 @@ class IMDB(Automation, RSS):
                 continue
 
             try:
-                cache_key = 'imdb.rss.%s' % md5(url)
-                rss_data = self.getCache(cache_key, url)
+                rss_data = self.getHTMLData(url)
                 imdbs = getImdb(rss_data, multiple = True)
 
                 for imdb in imdbs:

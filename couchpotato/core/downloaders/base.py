@@ -1,16 +1,17 @@
 from base64 import b32decode, b16encode
 from couchpotato.core.event import addEvent
 from couchpotato.core.logger import CPLog
-from couchpotato.core.plugins.base import Plugin
+from couchpotato.core.providers.base import Provider
 import random
 import re
 
 log = CPLog(__name__)
 
 
-class Downloader(Plugin):
+class Downloader(Provider):
 
     type = []
+    http_time_between_calls = 0
 
     torrent_sources = [
         'http://torrage.com/torrent/%s.torrent',
