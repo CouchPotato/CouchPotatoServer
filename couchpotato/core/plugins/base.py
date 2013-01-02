@@ -130,8 +130,11 @@ class Plugin(object):
                 log.info('Opening multipart url: %s, params: %s', (url, [x for x in params.iterkeys()] if isinstance(params, dict) else 'with data'))
                 request = urllib2.Request(url, params, headers)
 
-                cookies = cookielib.CookieJar()
-                opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookies), MultipartPostHandler)
+                if opener:
+                    opener.add_handler(MultipartPostHandler())
+                else:
+                    cookies = cookielib.CookieJar()
+                    opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookies), MultipartPostHandler)
 
                 response = opener.open(request, timeout = timeout)
             else:
