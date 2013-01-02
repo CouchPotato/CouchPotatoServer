@@ -134,11 +134,11 @@ class YarrProvider(Provider):
             return []
 
         # Create result container
-        imdb_result = hasattr(self, '_search')
-        results = ResultList(self, movie, quality, imdb_result = imdb_result)
+        imdb_results = hasattr(self, '_search')
+        results = ResultList(self, movie, quality, imdb_results = imdb_results)
 
         # Do search based on imdb id
-        if imdb_result:
+        if imdb_results:
             self._search(movie, quality, results)
         # Search possible titles
         else:

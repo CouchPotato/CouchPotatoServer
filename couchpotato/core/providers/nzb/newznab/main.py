@@ -29,7 +29,7 @@ class Newznab(NZBProvider, RSS):
     def search(self, movie, quality):
         hosts = self.getHosts()
 
-        results = ResultList(self, movie, quality, imdb_result = True)
+        results = ResultList(self, movie, quality, imdb_results = True)
 
         for host in hosts:
             if self.isDisabled(host):
