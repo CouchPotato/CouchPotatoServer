@@ -49,6 +49,7 @@ stop_cmd="${name}_stop"
 
 command="/usr/sbin/daemon"
 command_args="-f -p ${couchpotato_pid} python ${couchpotato_dir}/CouchPotato.py ${couchpotato_flags}"
+start_cmd="${command} ${command_args}"
 
 # Check for wget and refuse to start without it.
 if [ ! -x "${WGET}" ]; then
@@ -65,8 +66,11 @@ fi
 verify_couchpotato_pid() {
     # Make sure the pid corresponds to the CouchPotato process.
     pid=`cat ${couchpotato_pid} 2>/dev/null`
-    ps -p ${pid} | grep -q "python ${couchpotato_dir}/CouchPotato.py"
-    return $?
+    if [ -n "${pid}" ]; then
+        ps -p ${pid} | grep -q "python ${couchpotato_dir}/CouchPotato.py"
+        return $?
+    fi
+    return 1
 }
 
 # Try to stop CouchPotato cleanly by calling shutdown over http.
@@ -75,12 +79,17 @@ couchpotato_stop() {
         echo "CouchPotato's settings file does not exist. Try starting CouchPotato, as this should create the file."
         exit 1
     fi
-    echo "Stopping $name"
     verify_couchpotato_pid
-    ${WGET} -O - -q "http://${HOST}:${PORT}/api/${CPAPI}/app.shutdown/" >/dev/null
-    if [ -n "${pid}" ]; then
-      wait_for_pids ${pid}
-      echo "Stopped"
+    if [ "${?}" -eq 0 ]; then
+        echo "Stopping $name"
+        ${WGET} -O - -q "http://${HOST}:${PORT}/api/${CPAPI}/app.shutdown/" >/dev/null
+        if [ -n "${pid}" ]; then
+            wait_for_pids ${pid}
+            echo "Stopped"
+        fi
+    else
+        echo "$name not running?"
+        exit 1
     fi
 }
 
