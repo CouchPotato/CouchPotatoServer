@@ -1,13 +1,15 @@
-from couchpotato.core.helpers.encoding import toUnicode
+from couchpotato.core.helpers.encoding import toUnicode, tryUrlencode
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
-from httplib import HTTPConnection
-from urllib import urlencode
 import traceback
 
 log = CPLog(__name__)
 
 class Toasty(Notification):
+
+    urls = {
+        'api': 'http://api.supertoasty.com/notify/%s?%s'
+    }
 
     def notify(self, message = '', data = {}, listener = None):
         if self.isDisabled(): return
@@ -20,9 +22,7 @@ class Toasty(Notification):
         }
 
         try:
-            http_handler = HTTPConnection("api.supertoasty.com")
-            http_handler.request("GET", "/notify/"+self.conf('api_key')+"?"+urlencode(data))
-            log.info('Toasty notifications sent.')
+            self.urlopen(self.urls['api'] % (self.conf('api_key'), tryUrlencode(data)), show_error = False)
             return True
         except:
             log.error('Toasty failed: %s', traceback.format_exc())
