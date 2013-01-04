@@ -20,12 +20,14 @@ config = [{
                 {
                     'name': 'automation_urls_use',
                     'label': 'Use',
+                    'default': ',',
                 },
                 {
                     'name': 'automation_urls',
                     'label': 'url',
                     'type': 'combined',
                     'combine': ['automation_urls_use', 'automation_urls'],
+                    'default': 'https://itunes.apple.com/rss/topmovies/limit=25/xml,',
                 },
             ],
         },
