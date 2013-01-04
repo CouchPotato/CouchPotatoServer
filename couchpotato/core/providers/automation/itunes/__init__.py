@@ -1,4 +1,4 @@
-from .main import ITunes 
+from .main import ITunes
 
 def start():
     return ITunes()
