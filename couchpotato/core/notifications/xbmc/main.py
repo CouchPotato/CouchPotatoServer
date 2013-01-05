@@ -18,15 +18,39 @@ class XBMC(Notification):
         hosts = splitString(self.conf('host'))
         successful = 0
         for host in hosts:
-            response = self.request(host, [
-                ('GUI.ShowNotification', {"title":"CouchPotato", "message":message}),
-                ('VideoLibrary.Scan', {}),
-            ])
+            if listener == "test":
+                # XBMC JSON-RPC version request
+                response = self.request(host, [
+                    ('JSONRPC.Version', {})
+                ])
+            else:
+                response = self.request(host, [
+                    ('GUI.ShowNotification', {"title":"CouchPotato", "message":message}),
+                    ('VideoLibrary.Scan', {}),
+                ])
 
             try:
                 for result in response:
-                    if result['result'] == "OK":
+                    if (listener != "test" and result['result'] == "OK"):
                         successful += 1
+                    elif (listener == "test"):
+                        if (type(result['result']['version']).__name__ == 'int'):
+                            # fail, only v2 and v4 return an int object
+                            # v6 (as of XBMC v12(Frodo)) is required to send notifications
+                            xbmc_rpc_version = str(result['result']['version'])
+                            log.error("XBMC JSON-RPC Version: %s ; Notifications only supported for v6 [as of XBMC v12(Frodo)]", xbmc_rpc_version)
+                            return False
+
+                        elif (type(result['result']['version']).__name__ == 'dict'):
+                            # success, v6 returns an array object containing
+                            # major, minor and patch number
+                            xbmc_rpc_version = str(result['result']['version']['major'])
+                            xbmc_rpc_version += "." + str(result['result']['version']['minor'])
+                            xbmc_rpc_version += "." + str(result['result']['version']['patch'])
+                            log.debug("XBMC JSON-RPC Version: %s", xbmc_rpc_version)
+                            # ok, XBMC version is supported, send the text message
+                            self.notify(message = message, data = {}, listener = 'test-rpcversion-ok')
+                            return True
             except:
                 log.error('Failed parsing results: %s', traceback.format_exc())
 
