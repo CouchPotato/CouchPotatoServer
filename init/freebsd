@@ -25,9 +25,6 @@
 name="couchpotato"
 rcvar=${name}_enable
 
-# Required, for some reason, to find all our binaries when starting via service.
-PATH="/usr/bin:/usr/local/bin:$PATH"
-
 load_rc_config ${name}
 
 : ${couchpotato_enable:="NO"}
@@ -38,17 +35,12 @@ load_rc_config ${name}
 : ${couchpotato_conf:="${couchpotato_dir}/data/settings.conf"}
 
 WGET="/usr/local/bin/wget" # You need wget for this script to safely shutdown CouchPotato.
-if [ -e "${couchpotato_conf}" ]; then
-        HOST=`grep -A14 "\[core\]" "${couchpotato_conf}"|awk -F" = " '/^host/ {print $2}'`
-        PORT=`grep -A14 "\[core\]" "${couchpotato_conf}"|awk -F" = " '/^port/ {print $2}'`
-        CPAPI=`grep -A14 "\[core\]" "${couchpotato_conf}"|awk -F" = " '/^api_key/ {print $2}'`
-fi
 
 status_cmd="${name}_status"
 stop_cmd="${name}_stop"
 
 command="/usr/sbin/daemon"
-command_args="-f -p ${couchpotato_pid} python ${couchpotato_dir}/CouchPotato.py ${couchpotato_flags}"
+command_args="-f -p ${couchpotato_pid} /usr/local/bin/python ${couchpotato_dir}/CouchPotato.py ${couchpotato_flags}"
 start_cmd="${command} ${command_args}"
 
 # Check for wget and refuse to start without it.
