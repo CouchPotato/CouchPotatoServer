@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 # PROVIDE: couchpotato
-# REQUIRE: DAEMON sabnzb transmission
+# REQUIRE: DAEMON
 # KEYWORD: shutdown
 
 # Add the following lines to /etc/rc.conf to enable couchpotato:
