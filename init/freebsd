@@ -40,7 +40,7 @@ status_cmd="${name}_status"
 stop_cmd="${name}_stop"
 
 command="/usr/sbin/daemon"
-command_args="-f -p ${couchpotato_pid} /usr/local/bin/python ${couchpotato_dir}/CouchPotato.py ${couchpotato_flags}"
+command_args="-f -p ${couchpotato_pid} /usr/local/bin/python ${couchpotato_dir}/CouchPotato.py --config_file ${couchpotato_conf} ${couchpotato_flags}"
 start_cmd="${command} ${command_args}"
 
 # Check for wget and refuse to start without it.
