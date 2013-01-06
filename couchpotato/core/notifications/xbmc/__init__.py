@@ -10,7 +10,7 @@ config = [{
             'tab': 'notifications',
             'name': 'xbmc',
             'label': 'XBMC',
-            'description': 'v12 (Frodo)',
+            'description': 'v11 (Dharma) and v12 (Frodo)',
             'options': [
                 {
                     'name': 'enabled',
