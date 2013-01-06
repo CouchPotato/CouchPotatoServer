@@ -12,102 +12,98 @@ log = CPLog(__name__)
 class XBMC(Notification):
 
     listen_to = ['renamer.after']
-    firstRun = True
-    useJSONnotifications = True
+    use_json_notifications = {}
 
     def notify(self, message = '', data = {}, listener = None):
         if self.isDisabled(): return
 
         hosts = splitString(self.conf('host'))
-        if self.firstRun or listener == "test" : return self.getXBMCJSONversion(hosts, message=message )
 
         successful = 0
         for host in hosts:
-            if self.useJSONnotifications:
+
+            if self.use_json_notifications.get(host) is None:
+                self.getXBMCJSONversion(host, message = message)
+
+            if self.use_json_notifications.get(host):
                 response = self.request(host, [
-                    ('GUI.ShowNotification', {"title":self.default_title, "message":message}),
+                    ('GUI.ShowNotification', {'title':self.default_title, 'message':message}),
                     ('VideoLibrary.Scan', {}),
                 ])
             else:
-                response = self.notifyXBMCnoJSON(host, {'title':self.default_title,'message':message})
+                response = self.notifyXBMCnoJSON(host, {'title':self.default_title, 'message':message})
                 response += self.request(host, [('VideoLibrary.Scan', {})])
 
             try:
                 for result in response:
-                    if (result.get('result') and result['result'] == "OK"):
+                    if (result.get('result') and result['result'] == 'OK'):
                         successful += 1
                     elif (result.get('error')):
-                        log.error("XBMC error; %s: %s (%s)", (result['id'], result['error']['message'], result['error']['code']))
+                        log.error('XBMC error; %s: %s (%s)', (result['id'], result['error']['message'], result['error']['code']))
 
             except:
                 log.error('Failed parsing results: %s', traceback.format_exc())
 
         return successful == len(hosts) * 2
 
-    # TODO: implement multiple hosts support, for now the last host of the 'hosts' array
-    # sets 'useJSONnotifications'
-    def getXBMCJSONversion(self, hosts, message=''):
+    def getXBMCJSONversion(self, host, message = ''):
 
-        success = 0
-        for host in hosts:
-            # XBMC JSON-RPC version request
-            response = self.request(host, [
-                ('JSONRPC.Version', {})
-                ])
-            for result in response:
-                if (result.get('result') and type(result['result']['version']).__name__ == 'int'):
-                    # only v2 and v4 return an int object
-                    # v6 (as of XBMC v12(Frodo)) is required to send notifications
-                    xbmc_rpc_version = str(result['result']['version'])
+        success = False
 
-                    log.debug("XBMC JSON-RPC Version: %s ; Notifications by JSON-RPC only supported for v6 [as of XBMC v12(Frodo)]", xbmc_rpc_version)
+        # XBMC JSON-RPC version request
+        response = self.request(host, [
+            ('JSONRPC.Version', {})
+            ])
+        for result in response:
+            if (result.get('result') and type(result['result']['version']).__name__ == 'int'):
+                # only v2 and v4 return an int object
+                # v6 (as of XBMC v12(Frodo)) is required to send notifications
+                xbmc_rpc_version = str(result['result']['version'])
 
-                    # disable JSON use
-                    self.useJSONnotifications = False
+                log.debug('XBMC JSON-RPC Version: %s ; Notifications by JSON-RPC only supported for v6 [as of XBMC v12(Frodo)]', xbmc_rpc_version)
 
-                    # send the text message
-                    resp = self.notifyXBMCnoJSON(host, {'title':self.default_title,'message':message})
-                    for result in resp:
-                        if (result.get('result') and result['result'] == "OK"):
-                            log.debug("Message delivered successfully!")
-                            success = True
-                            break
-                        elif (result.get('error')):
-                            log.error("XBMC error; %s: %s (%s)", (result['id'], result['error']['message'], result['error']['code']))
-                            break
+                # disable JSON use
+                self.use_json_notifications[host] = False
 
-                elif (result.get('result') and type(result['result']['version']).__name__ == 'dict'):
-                    # XBMC JSON-RPC v6 returns an array object containing
-                    # major, minor and patch number
-                    xbmc_rpc_version = str(result['result']['version']['major'])
-                    xbmc_rpc_version += "." + str(result['result']['version']['minor'])
-                    xbmc_rpc_version += "." + str(result['result']['version']['patch'])
+                # send the text message
+                resp = self.notifyXBMCnoJSON(host, {'title':self.default_title, 'message':message})
+                for result in resp:
+                    if (result.get('result') and result['result'] == 'OK'):
+                        log.debug('Message delivered successfully!')
+                        success = True
+                        break
+                    elif (result.get('error')):
+                        log.error('XBMC error; %s: %s (%s)', (result['id'], result['error']['message'], result['error']['code']))
+                        break
 
-                    log.debug("XBMC JSON-RPC Version: %s", xbmc_rpc_version)
+            elif (result.get('result') and type(result['result']['version']).__name__ == 'dict'):
+                # XBMC JSON-RPC v6 returns an array object containing
+                # major, minor and patch number
+                xbmc_rpc_version = str(result['result']['version']['major'])
+                xbmc_rpc_version += '.' + str(result['result']['version']['minor'])
+                xbmc_rpc_version += '.' + str(result['result']['version']['patch'])
 
-                    # ok, XBMC version is supported
-                    self.useJSONnotifications = True
+                log.debug('XBMC JSON-RPC Version: %s', xbmc_rpc_version)
 
-                    # send the text message
-                    resp = self.request(host, [('GUI.ShowNotification', {"title":self.default_title, "message":message})])
-                    for result in resp:
-                        if (result.get('result') and result['result'] == "OK"):
-                            log.debug("Message delivered successfully!")
-                            success = True
-                            break
-                        elif (result.get('error')):
-                            log.error("XBMC error; %s: %s (%s)", (result['id'], result['error']['message'], result['error']['code']))
-                            break
+                # ok, XBMC version is supported
+                self.use_json_notifications[host] = True
 
-                # error getting version info (we do have contact with XBMC though)
-                elif (result.get('error')):
-                    log.error("XBMC error; %s: %s (%s)", (result['id'], result['error']['message'], result['error']['code']))
+                # send the text message
+                resp = self.request(host, [('GUI.ShowNotification', {'title':self.default_title, 'message':message})])
+                for result in resp:
+                    if (result.get('result') and result['result'] == 'OK'):
+                        log.debug('Message delivered successfully!')
+                        success = True
+                        break
+                    elif (result.get('error')):
+                        log.error('XBMC error; %s: %s (%s)', (result['id'], result['error']['message'], result['error']['code']))
+                        break
 
-        # set boolean so we only run this once after boot
-        # in func notify() ignored for 'test' messages
-        self.firstRun = False
+            # error getting version info (we do have contact with XBMC though)
+            elif (result.get('error')):
+                log.error('XBMC error; %s: %s (%s)', (result['id'], result['error']['message'], result['error']['code']))
 
-        log.debug("use JSON notifications: %s ", self.useJSONnotifications)
+        log.debug('Use JSON notifications: %s ', self.use_json_notifications)
 
         return success
 
@@ -116,7 +112,7 @@ class XBMC(Notification):
         server = 'http://%s/xbmcCmds/' % host
 
         # title, message [, timeout , image #can be added!]
-        cmd = 'xbmcHttp?command=ExecBuiltIn(Notification("%s","%s"))' % (urllib.quote(data['title']), urllib.quote(data['message']))
+        cmd = "xbmcHttp?command=ExecBuiltIn(Notification('%s','%s'))" % (urllib.quote(data['title']), urllib.quote(data['message']))
         server += cmd
 
         # I have no idea what to set to, just tried text/plain and seems to be working :)
@@ -144,18 +140,18 @@ class XBMC(Notification):
             #
             response = self.urlopen(server, headers = headers)
 
-            if "OK" in response:
+            if 'OK' in response:
                 log.debug('Returned from non-JSON-type request %s: %s', (host, response))
                 # manually fake expected response array
-                return [{"result": "OK"}]
+                return [{'result': 'OK'}]
             else:
                 log.error('Returned from non-JSON-type request %s: %s', (host, response))
                 # manually fake expected response array
-                return [{"result": "Error"}]
+                return [{'result': 'Error'}]
 
         except:
             log.error('Failed sending non-JSON-type request to XBMC: %s', traceback.format_exc())
-            return [{"result": "Error"}]
+            return [{'result': 'Error'}]
 
     def request(self, host, requests):
         server = 'http://%s/jsonrpc' % host
