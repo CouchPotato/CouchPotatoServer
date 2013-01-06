@@ -136,6 +136,6 @@ class Newznab(NZBProvider, RSS):
                     self.limits_reached[host] = time.time()
                     return 'try_next'
 
-            log.error('Failed download from %s', (host, traceback.format_exc()))
+            log.error('Failed download from %s: %s', (host, traceback.format_exc()))
 
         return 'try_next'
