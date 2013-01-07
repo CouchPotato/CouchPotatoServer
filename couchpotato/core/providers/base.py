@@ -95,14 +95,19 @@ class YarrProvider(Provider):
             urllib2.install_opener(opener)
             log.info2('Logging into %s', self.urls['login'])
             f = opener.open(self.urls['login'], self.getLoginParams())
-            f.read()
+            output = f.read()
             f.close()
-            self.login_opener = opener
-            return True
+
+            if self.loginSuccess(output):
+                self.login_opener = opener
+                return True
         except:
             log.error('Failed to login %s: %s', (self.getName(), traceback.format_exc()))
 
         return False
+
+    def loginSuccess(self, output):
+        return True
 
     def loginDownload(self, url = '', nzb_id = ''):
         try:
