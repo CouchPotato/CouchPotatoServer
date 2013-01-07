@@ -13,7 +13,7 @@ config = [{
             'order': 10,
             'description': 'Enable <a href="http://newznab.com/" target="_blank">NewzNab providers</a> such as <a href="https://nzb.su" target="_blank">NZB.su</a>, \
                 <a href="https://nzbs.org" target="_blank">NZBs.org</a>, <a href="http://dognzb.cr/" target="_blank">DOGnzb.cr</a>, \
-                <a href="https://github.com/spotweb/spotweb" target="_blank">Spotweb</a>',
+                <a href="https://github.com/spotweb/spotweb" target="_blank">Spotweb</a> or <a href="https://nzbgeek.info/" target="_blank">NZBGeek</a>',
             'wizard': True,
             'options': [
                 {
@@ -22,16 +22,16 @@ config = [{
                 },
                 {
                     'name': 'use',
-                    'default': '0,0,0'
+                    'default': '0,0,0,0'
                 },
                 {
                     'name': 'host',
-                    'default': 'nzb.su,dognzb.cr,nzbs.org',
+                    'default': 'nzb.su,dognzb.cr,nzbs.org,https://index.nzbgeek.info',
                     'description': 'The hostname of your newznab provider',
                 },
                 {
                     'name': 'api_key',
-                    'default': ',,',
+                    'default': ',,,',
                     'label': 'Api Key',
                     'description': 'Can be found on your profile page',
                     'type': 'combined',

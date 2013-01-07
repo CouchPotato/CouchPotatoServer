@@ -8,7 +8,4 @@ class CP(Automation):
 
     def getMovies(self):
 
-        if self.isDisabled():
-            return
-
         return []

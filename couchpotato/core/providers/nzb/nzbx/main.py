@@ -2,6 +2,7 @@ from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.nzb.base import NZBProvider
+from couchpotato.environment import Env
 
 log = CPLog(__name__)
 
@@ -22,7 +23,7 @@ class Nzbx(NZBProvider):
             'q': movie['library']['identifier'].replace('tt', ''),
             'sf': quality.get('size_min'),
         })
-        nzbs = self.getJsonData(self.urls['search'] % arguments)
+        nzbs = self.getJsonData(self.urls['search'] % arguments, headers = {'User-Agent': Env.getIdentifier()})
 
         for nzb in nzbs:
 

@@ -1,16 +1,16 @@
-from .main import Sabnzbd
+from .main import NZBVortex
 
 def start():
-    return Sabnzbd()
+    return NZBVortex()
 
 config = [{
-    'name': 'sabnzbd',
+    'name': 'nzbvortex',
     'groups': [
         {
             'tab': 'downloaders',
-            'name': 'sabnzbd',
-            'label': 'Sabnzbd',
-            'description': 'Use <a href="http://sabnzbd.org/" target="_blank">SABnzbd</a> to download NZBs.',
+            'name': 'nzbvortex',
+            'label': 'NZBVortex',
+            'description': 'Use <a href="http://www.nzbvortex.com/landing/" target="_blank">NZBVortex</a> to download NZBs.',
             'wizard': True,
             'options': [
                 {
@@ -21,17 +21,11 @@ config = [{
                 },
                 {
                     'name': 'host',
-                    'default': 'localhost:8080',
+                    'default': 'https://localhost:4321',
                 },
                 {
                     'name': 'api_key',
                     'label': 'Api Key',
-                    'description': 'Used for all calls to Sabnzbd.',
-                },
-                {
-                    'name': 'category',
-                    'label': 'Category',
-                    'description': 'The category CP places the nzb in. Like <strong>movies</strong> or <strong>couchpotato</strong>',
                 },
                 {
                     'name': 'manual',

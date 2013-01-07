@@ -22,43 +22,6 @@ __all__ = [
 logger = logging.getLogger(__name__)
 
 
-def mini(description, applicationName = 'PythonMini', noteType = "Message",
-			title = "Mini Message", applicationIcon = None, hostname = 'localhost',
-			password = None, port = 23053, sticky = False, priority = None,
-			callback = None):
-	"""Single notification function
-
-	Simple notification function in one line. Has only one required parameter
-	and attempts to use reasonable defaults for everything else
-	:param string description: Notification message
-
-	.. warning::
-			For now, only URL callbacks are supported. In the future, the
-			callback argument will also support a function
-	"""
-	growl = GrowlNotifier(
-		applicationName = applicationName,
-		notifications = [noteType],
-		defaultNotifications = [noteType],
-		hostname = hostname,
-		password = password,
-		port = port,
-	)
-	result = growl.register()
-	if result is not True:
-		return result
-
-	return growl.notify(
-		noteType = noteType,
-		title = title,
-		description = description,
-		icon = applicationIcon,
-		sticky = sticky,
-		priority = priority,
-		callback = callback,
-	)
-
-
 class GrowlNotifier(object):
 	"""Helper class to simplfy sending Growl messages
 
@@ -93,10 +56,12 @@ class GrowlNotifier(object):
 	def _checkIcon(self, data):
 		'''
 		Check the icon to see if it's valid
-		@param data:
-		@todo Consider checking for a valid URL
+
+		If it's a simple URL icon, then we return True. If it's a data icon
+		then we return False
 		'''
-		return data
+		logger.info('Checking icon')
+		return data.startswith('http')
 
 	def register(self):
 		"""Send GNTP Registration
@@ -112,7 +77,11 @@ class GrowlNotifier(object):
 			enabled = notification in self.defaultNotifications
 			register.add_notification(notification, enabled)
 		if self.applicationIcon:
-			register.add_header('Application-Icon', self.applicationIcon)
+			if self._checkIcon(self.applicationIcon):
+				register.add_header('Application-Icon', self.applicationIcon)
+			else:
+				id = register.add_resource(self.applicationIcon)
+				register.add_header('Application-Icon', id)
 		if self.password:
 			register.set_password(self.password, self.passwordHash)
 		self.add_origin_info(register)
@@ -120,7 +89,7 @@ class GrowlNotifier(object):
 		return self._send('register', register)
 
 	def notify(self, noteType, title, description, icon = None, sticky = False,
-			priority = None, callback = None):
+			priority = None, callback = None, identifier = None):
 		"""Send a GNTP notifications
 
 		.. warning::
@@ -151,11 +120,18 @@ class GrowlNotifier(object):
 		if priority:
 			notice.add_header('Notification-Priority', priority)
 		if icon:
-			notice.add_header('Notification-Icon', self._checkIcon(icon))
+			if self._checkIcon(icon):
+				notice.add_header('Notification-Icon', icon)
+			else:
+				id = notice.add_resource(icon)
+				notice.add_header('Notification-Icon', id)
+
 		if description:
 			notice.add_header('Notification-Text', description)
 		if callback:
 			notice.add_header('Notification-Callback-Target', callback)
+		if identifier:
+			notice.add_header('Notification-Coalescing-ID', identifier)
 
 		self.add_origin_info(notice)
 		self.notify_hook(notice)
@@ -193,9 +169,10 @@ class GrowlNotifier(object):
 	def subscribe_hook(self, packet):
 		pass
 
-	def _send(self, type, packet):
+	def _send(self, messagetype, packet):
 		"""Send the GNTP Packet"""
 
+		packet.validate()
 		data = packet.encode()
 
 		logger.debug('To : %s:%s <%s>\n%s', self.hostname, self.port, packet.__class__, data)
@@ -203,7 +180,7 @@ class GrowlNotifier(object):
 		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		s.settimeout(self.socketTimeout)
 		s.connect((self.hostname, self.port))
-		s.send(data.encode('utf8', 'replace'))
+		s.send(data)
 		recv_data = s.recv(1024)
 		while not recv_data.endswith("\r\n\r\n"):
 			recv_data += s.recv(1024)
@@ -212,10 +189,50 @@ class GrowlNotifier(object):
 
 		logger.debug('From : %s:%s <%s>\n%s', self.hostname, self.port, response.__class__, response)
 
-		if response.info['messagetype'] == '-OK':
+		if type(response) == gntp.GNTPOK:
 			return True
 		logger.error('Invalid response: %s', response.error())
 		return response.error()
+
+
+def mini(description, applicationName = 'PythonMini', noteType = "Message",
+			title = "Mini Message", applicationIcon = None, hostname = 'localhost',
+			password = None, port = 23053, sticky = False, priority = None,
+			callback = None, notificationIcon = None, identifier = None,
+			notifierFactory = GrowlNotifier):
+	"""Single notification function
+
+	Simple notification function in one line. Has only one required parameter
+	and attempts to use reasonable defaults for everything else
+	:param string description: Notification message
+
+	.. warning::
+			For now, only URL callbacks are supported. In the future, the
+			callback argument will also support a function
+	"""
+	growl = notifierFactory(
+		applicationName = applicationName,
+		notifications = [noteType],
+		defaultNotifications = [noteType],
+		applicationIcon = applicationIcon,
+		hostname = hostname,
+		password = password,
+		port = port,
+	)
+	result = growl.register()
+	if result is not True:
+		return result
+
+	return growl.notify(
+		noteType = noteType,
+		title = title,
+		description = description,
+		icon = notificationIcon,
+		sticky = sticky,
+		priority = priority,
+		callback = callback,
+		identifier = identifier,
+	)
 
 if __name__ == '__main__':
 	# If we're running this module directly we're likely running it as a test

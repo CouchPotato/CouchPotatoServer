@@ -10,7 +10,7 @@ config = [{
             'tab': 'downloaders',
             'name': 'utorrent',
             'label': 'uTorrent',
-            'description': 'Send torrents to uTorrent.',
+            'description': 'Use <a href="http://www.utorrent.com/" target="_blank">uTorrent</a> to download torrents.',
             'wizard': True,
             'options': [
                 {

@@ -1,89 +1,49 @@
 #!/bin/sh
 #
 # PROVIDE: couchpotato
-# REQUIRE: sabnzbd
+# REQUIRE: DAEMON
 # KEYWORD: shutdown
-#
-# Add the following lines to /etc/rc.conf.local or /etc/rc.conf
-# to enable this service:
-#
-# couchpotato_enable (bool):	Set to NO by default.
-#			Set it to YES to enable it.
-# couchpotato_user:  The user account CouchPotato daemon runs as what
-#			you want it to be. It uses '_sabnzbd' user by
-#			default. Do not sets it as empty or it will run
-#			as root.
-# couchpotato_dir:	Directory where CouchPotato lives.
-#			Default: /usr/local/couchpotato
-# couchpotato_chdir:  Change to this directory before running CouchPotato.
-#     Default is same as couchpotato_dir.
-# couchpotato_pid:  The name of the pidfile to create.
-#     Default is couchpotato.pid in couchpotato_dir.
+
+# Add the following lines to /etc/rc.conf to enable couchpotato:
+# couchpotato_enable:   Set to NO by default. Set it to YES to enable it.
+# couchpotato_user:     The user account CouchPotato daemon runs as what
+#                       you want it to be.
+# couchpotato_dir:      Directory where CouchPotato lives.
+#                           Default: /usr/local/CouchPotatoServer
+# couchpotato_datadir:  Directory where CouchPotato user data lives.
+#                           Default: $couchpotato_dir/data
+# couchpotato_conf:     Directory where CouchPotato user data lives.
+#                           Default: $couchpotato_datadir/settings.conf
+# couchpotato_pid:      Full path to PID file.
+#                           Default: $couchpotato_datadir/couchpotato.pid
+# couchpotato_flags:    Set additonal flags as needed.
 
 . /etc/rc.subr
 
 name="couchpotato"
-rcvar=${name}_enable
+rcvar=couchpotato_enable
 
 load_rc_config ${name}
 
-: ${couchpotato_enable:="NO"}
-: ${couchpotato_user:="_sabnzbd"}
-: ${couchpotato_dir:="/usr/local/couchpotato"}
-: ${couchpotato_chdir:="${couchpotato_dir}"}
-: ${couchpotato_pid:="${couchpotato_dir}/couchpotato.pid"}
-: ${couchpotato_conf:="${couchpotato_dir}/data/settings.conf"}
+: ${couchpotato_enable:=NO}
+: ${couchpotato_user:=} #default is root
+: ${couchpotato_dir:=/usr/local/CouchPotatoServer}
+: ${couchpotato_datadir:=${couchpotato_dir}/data}
+: ${couchpotato_conf:=} #default is datadir/settings.conf
+: ${couchpotato_pid:=} #default is datadir/couchpotato.pid
+: ${couchpotato_flags:=}
 
-WGET="/usr/local/bin/wget" # You need wget for this script to safely shutdown CouchPotato.
-if [ -e "${couchpotato_conf}" ]; then
-        HOST=`grep -A14 "\[core\]" "${couchpotato_conf}"|egrep "^host"|perl -wple 's/^host = (.*)$/$1/'`
-        PORT=`grep -A14 "\[core\]" "${couchpotato_conf}"|egrep "^port"|perl -wple 's/^port = (.*)$/$1/'`
-        CPAPI=`grep -A14 "\[core\]" "${couchpotato_conf}"|egrep "^api_key"|perl -wple 's/^api_key = (.*)$/$1/'`
+command="${couchpotato_dir}/CouchPotato.py"
+command_interpreter="/usr/local/bin/python"
+command_args="--daemon --data_dir ${couchpotato_datadir}"
+
+# append optional flags
+if [ -n "${couchpotato_pid}" ]; then
+    pidfile=${couchpotato_pid}
+    couchpotato_flags="${couchpotato_flags} --pid_file ${couchpotato_pid}"
 fi
-
-status_cmd="${name}_status"
-stop_cmd="${name}_stop"
-
-command="/usr/sbin/daemon"
-command_args="-f -p ${couchpotato_pid} python ${couchpotato_dir}/CouchPotato.py ${couchpotato_flags}"
-
-# Check for wget and refuse to start without it.
-if [ ! -x "${WGET}" ]; then
-  warn "couchpotato not started: You need wget to safely shut down CouchPotato."
-  exit 1
+if [ -n "${couchpotato_conf}" ]; then
+    couchpotato_flags="${couchpotato_flags} --config_file ${couchpotato_conf}"
 fi
-
-# Ensure user is root when running this script.
-if [ `id -u` != "0" ]; then
-  echo "Oops, you should be root before running this!"
-  exit 1
-fi
-
-verify_couchpotato_pid() {
-    # Make sure the pid corresponds to the CouchPotato process.
-    pid=`cat ${couchpotato_pid} 2>/dev/null`
-    ps -p ${pid} | grep -q "python ${couchpotato_dir}/CouchPotato.py"
-    return $?
-}
-
-# Try to stop CouchPotato cleanly by calling shutdown over http.
-couchpotato_stop() {
-    if [ ! -e "${couchpotato_conf}" ]; then
-        echo "CouchPotato's settings file does not exist. Try starting CouchPotato, as this should create the file."
-        exit 1
-    fi
-    echo "Stopping $name"
-    verify_couchpotato_pid
-    ${WGET} -O - -q "http://${HOST}:${PORT}/api/${CPAPI}/app.shutdown/" >/dev/null
-    if [ -n "${pid}" ]; then
-      wait_for_pids ${pid}
-      echo "Stopped"
-    fi
-}
-
-couchpotato_status() {
-    verify_couchpotato_pid && echo "$name is running as ${pid}" || echo "$name is not running"
-}
 
 run_rc_command "$1"
-

@@ -44,6 +44,34 @@ class Provider(Plugin):
 
         return self.is_available.get(host, False)
 
+    def getJsonData(self, url, **kwargs):
+
+        data = self.getCache(md5(url), url, **kwargs)
+
+        if data:
+            try:
+                return json.loads(data)
+            except:
+                log.error('Failed to parsing %s: %s', (self.getName(), traceback.format_exc()))
+
+        return []
+
+    def getRSSData(self, url, **kwargs):
+
+        data = self.getCache(md5(url), url, **kwargs)
+
+        if data:
+            try:
+                data = XMLTree.fromstring(data)
+                return self.getElements(data, 'channel/item')
+            except:
+                log.error('Failed to parsing %s: %s', (self.getName(), traceback.format_exc()))
+
+        return []
+
+    def getHTMLData(self, url, **kwargs):
+        return self.getCache(md5(url), url, **kwargs)
+
 
 class YarrProvider(Provider):
 
@@ -67,14 +95,19 @@ class YarrProvider(Provider):
             urllib2.install_opener(opener)
             log.info2('Logging into %s', self.urls['login'])
             f = opener.open(self.urls['login'], self.getLoginParams())
-            f.read()
+            output = f.read()
             f.close()
-            self.login_opener = opener
-            return True
+
+            if self.loginSuccess(output):
+                self.login_opener = opener
+                return True
         except:
             log.error('Failed to login %s: %s', (self.getName(), traceback.format_exc()))
 
         return False
+
+    def loginSuccess(self, output):
+        return True
 
     def loginDownload(self, url = '', nzb_id = ''):
         try:
@@ -106,11 +139,11 @@ class YarrProvider(Provider):
             return []
 
         # Create result container
-        imdb_result = hasattr(self, '_search')
-        results = ResultList(self, movie, quality, imdb_result = imdb_result)
+        imdb_results = hasattr(self, '_search')
+        results = ResultList(self, movie, quality, imdb_results = imdb_results)
 
         # Do search based on imdb id
-        if imdb_result:
+        if imdb_results:
             self._search(movie, quality, results)
         # Search possible titles
         else:
@@ -164,34 +197,6 @@ class YarrProvider(Provider):
                 return ids
 
         return [self.cat_backup_id]
-
-    def getJsonData(self, url, **kwargs):
-
-        data = self.getCache(md5(url), url, **kwargs)
-
-        if data:
-            try:
-                return json.loads(data)
-            except:
-                log.error('Failed to parsing %s: %s', (self.getName(), traceback.format_exc()))
-
-        return []
-
-    def getRSSData(self, url, **kwargs):
-
-        data = self.getCache(md5(url), url, **kwargs)
-
-        if data:
-            try:
-                data = XMLTree.fromstring(data)
-                return self.getElements(data, 'channel/item')
-            except:
-                log.error('Failed to parsing %s: %s', (self.getName(), traceback.format_exc()))
-
-        return []
-
-    def getHTMLData(self, url, **kwargs):
-        return self.getCache(md5(url), url, **kwargs)
 
 
 class ResultList(list):

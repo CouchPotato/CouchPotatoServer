@@ -14,7 +14,7 @@ log = CPLog(__name__)
 class OMGWTFNZBs(NZBProvider, RSS):
 
     urls = {
-        'search': 'http://rss.omgwtfnzbs.com/rss-search.php?%s',
+        'search': 'http://rss.omgwtfnzbs.org/rss-search.php?%s',
     }
 
     http_time_between_calls = 1 #seconds

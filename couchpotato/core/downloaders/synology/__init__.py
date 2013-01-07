@@ -10,7 +10,7 @@ config = [{
             'tab': 'downloaders',
             'name': 'synology',
             'label': 'Synology',
-            'description': 'Send torrents to Synology\'s Download Station.',
+            'description': 'Use <a href="http://www.synology.com/dsm/home_home_applications_download_station.php" target="_blank">Synology Download Station</a> to download.',
             'wizard': True,
             'options': [
                 {

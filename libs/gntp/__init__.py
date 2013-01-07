@@ -1,8 +1,9 @@
-import hashlib
 import re
+import hashlib
 import time
+import StringIO
 
-__version__ = '0.6'
+__version__ = '0.8'
 
 #GNTP/<version> <messagetype> <encryptionAlgorithmID>[:<ivValue>][ <keyHashAlgorithmID>:<keyHash>.<salt>]
 GNTP_INFO_LINE = re.compile(
@@ -19,7 +20,7 @@ GNTP_INFO_LINE_SHORT = re.compile(
 
 GNTP_HEADER = re.compile('([\w-]+):(.+)')
 
-GNTP_EOL = u'\r\n'
+GNTP_EOL = '\r\n'
 
 
 class BaseError(Exception):
@@ -41,6 +42,14 @@ class AuthError(BaseError):
 class UnsupportedError(BaseError):
 	errorcode = 500
 	errordesc = 'Currently unsupported by gntp.py'
+
+
+class _GNTPBuffer(StringIO.StringIO):
+	"""GNTP Buffer class"""
+	def writefmt(self, message = "", *args):
+		"""Shortcut function for writing GNTP Headers"""
+		self.write((message % args).encode('utf8', 'replace'))
+		self.write(GNTP_EOL)
 
 
 class _GNTPBase(object):
@@ -206,8 +215,8 @@ class _GNTPBase(object):
 			if not match:
 				continue
 
-			key = match.group(1).strip()
-			val = match.group(2).strip()
+			key = unicode(match.group(1).strip(), 'utf8', 'replace')
+			val = unicode(match.group(2).strip(), 'utf8', 'replace')
 			dict[key] = val
 		return dict
 
@@ -216,6 +225,15 @@ class _GNTPBase(object):
 			self.headers[key] = value
 		else:
 			self.headers[key] = unicode('%s' % value, 'utf8', 'replace')
+
+	def add_resource(self, data):
+		"""Add binary resource
+
+		:param string data: Binary Data
+		"""
+		identifier = hashlib.md5(data).hexdigest()
+		self.resources[identifier] = data
+		return 'x-growl-resource://%s' % identifier
 
 	def decode(self, data, password = None):
 		"""Decode GNTP Message
@@ -229,19 +247,30 @@ class _GNTPBase(object):
 		self.headers = self._parse_dict(parts[0])
 
 	def encode(self):
-		"""Encode a GNTP Message
+		"""Encode a generic GNTP Message
 
-		:return string: Encoded GNTP Message ready to be sent
+		:return string: GNTP Message ready to be sent
 		"""
-		self.validate()
 
-		message = self._format_info() + GNTP_EOL
+		buffer = _GNTPBuffer()
+
+		buffer.writefmt(self._format_info())
+
 		#Headers
 		for k, v in self.headers.iteritems():
-			message += u'%s: %s%s' % (k, v, GNTP_EOL)
+			buffer.writefmt('%s: %s', k, v)
+		buffer.writefmt()
 
-		message += GNTP_EOL
-		return message
+		#Resources
+		for resource, data in self.resources.iteritems():
+			buffer.writefmt('Identifier: %s', resource)
+			buffer.writefmt('Length: %d', len(data))
+			buffer.writefmt()
+			buffer.write(data)
+			buffer.writefmt()
+			buffer.writefmt()
+
+		return buffer.getvalue()
 
 
 class GNTPRegister(_GNTPBase):
@@ -290,7 +319,7 @@ class GNTPRegister(_GNTPBase):
 
 		for i, part in enumerate(parts):
 			if i == 0:
-				continue  # Skip Header
+				continue # Skip Header
 			if part.strip() == '':
 				continue
 			notice = self._parse_dict(part)
@@ -319,22 +348,33 @@ class GNTPRegister(_GNTPBase):
 
 		:return string: Encoded GNTP Registration message
 		"""
-		self.validate()
 
-		message = self._format_info() + GNTP_EOL
+		buffer = _GNTPBuffer()
+
+		buffer.writefmt(self._format_info())
+
 		#Headers
 		for k, v in self.headers.iteritems():
-			message += u'%s: %s%s' % (k, v, GNTP_EOL)
+			buffer.writefmt('%s: %s', k, v)
+		buffer.writefmt()
 
 		#Notifications
 		if len(self.notifications) > 0:
 			for notice in self.notifications:
-				message += GNTP_EOL
 				for k, v in notice.iteritems():
-					message += u'%s: %s%s' % (k, v, GNTP_EOL)
+					buffer.writefmt('%s: %s', k, v)
+				buffer.writefmt()
 
-		message += GNTP_EOL
-		return message
+		#Resources
+		for resource, data in self.resources.iteritems():
+			buffer.writefmt('Identifier: %s', resource)
+			buffer.writefmt('Length: %d', len(data))
+			buffer.writefmt()
+			buffer.write(data)
+			buffer.writefmt()
+			buffer.writefmt()
+
+		return buffer.getvalue()
 
 
 class GNTPNotice(_GNTPBase):
@@ -379,7 +419,7 @@ class GNTPNotice(_GNTPBase):
 
 		for i, part in enumerate(parts):
 			if i == 0:
-				continue  # Skip Header
+				continue # Skip Header
 			if part.strip() == '':
 				continue
 			notice = self._parse_dict(part)
@@ -387,21 +427,6 @@ class GNTPNotice(_GNTPBase):
 				notice['Data'] = self._decode_binary(part, notice)
 				#open('notice.png','wblol').write(notice['Data'])
 				self.resources[notice.get('Identifier')] = notice
-
-	def encode(self):
-		"""Encode a GNTP Notification Message
-
-		:return string: GNTP Notification Message ready to be sent
-		"""
-		self.validate()
-
-		message = self._format_info() + GNTP_EOL
-		#Headers
-		for k, v in self.headers.iteritems():
-			message += u'%s: %s%s' % (k, v, GNTP_EOL)
-
-		message += GNTP_EOL
-		return message
 
 
 class GNTPSubscribe(_GNTPBase):
@@ -457,7 +482,8 @@ class GNTPError(_GNTPBase):
 			self.add_header('Error-Description', errordesc)
 
 	def error(self):
-		return self.headers['Error-Code'], self.headers['Error-Description']
+		return (self.headers.get('Error-Code', None),
+			self.headers.get('Error-Description', None))
 
 
 def parse_gntp(data, password = None):

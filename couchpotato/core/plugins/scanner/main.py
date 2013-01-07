@@ -89,7 +89,7 @@ class Scanner(Plugin):
         '()([ab])(\.....?)$' #*a.mkv
     ]
 
-    cp_imdb = '(\.cp\((?P<id>tt[0-9{7}]+)\))'
+    cp_imdb = '(.cp.(?P<id>tt[0-9{7}]+).)'
 
     def __init__(self):
 
@@ -341,7 +341,7 @@ class Scanner(Plugin):
                 group['files']['movie'] = self.getMediaFiles(group['unsorted_files'])
 
             if len(group['files']['movie']) == 0:
-                log.error('Couldn\t find any movie files for %s', identifier)
+                log.error('Couldn\'t find any movie files for %s', identifier)
                 continue
 
             log.debug('Getting metadata for %s', identifier)
