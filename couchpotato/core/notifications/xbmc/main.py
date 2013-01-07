@@ -15,7 +15,7 @@ class XBMC(Notification):
     use_json_notifications = {}
     # pls create a 35x35px image to reduce github traffic!
     # it's working if you remove '-35'
-    couch_logo = 'https://raw.github.com/RuudBurger/CouchPotatoServer/master/couchpotato/static/images/couch-35.png'
+    couch_logo_url = 'https://raw.github.com/RuudBurger/CouchPotatoServer/master/couchpotato/static/images/couch-35.png'
 
     def notify(self, message = '', data = {}, listener = None):
         if self.isDisabled(): return
@@ -30,7 +30,7 @@ class XBMC(Notification):
 
             if self.use_json_notifications.get(host):
                 response = self.request(host, [
-                    ('GUI.ShowNotification', {'title':self.default_title, 'message':message, 'image':self.couch_logo}),
+                    ('GUI.ShowNotification', {'title':self.default_title, 'message':message, 'image':self.couch_logo_url}),
                     ('VideoLibrary.Scan', {}),
                 ])
             else:
@@ -92,7 +92,7 @@ class XBMC(Notification):
                 self.use_json_notifications[host] = True
 
                 # send the text message
-                resp = self.request(host, [('GUI.ShowNotification', {'title':self.default_title, 'message':message, 'image':self.couch_logo})])
+                resp = self.request(host, [('GUI.ShowNotification', {'title':self.default_title, 'message':message, 'image':self.couch_logo_url})])
                 for result in resp:
                     if (result.get('result') and result['result'] == 'OK'):
                         log.debug('Message delivered successfully!')
@@ -115,7 +115,7 @@ class XBMC(Notification):
         server = 'http://%s/xbmcCmds/' % host
 
         # Notification(title, message [, timeout , image])
-        cmd = "xbmcHttp?command=ExecBuiltIn(Notification(%s,%s,'',%s))" % (urllib.quote(data['title']), urllib.quote(data['message']), urllib.quote(self.couch_logo))
+        cmd = "xbmcHttp?command=ExecBuiltIn(Notification(%s,%s,'',%s))" % (urllib.quote(data['title']), urllib.quote(data['message']), urllib.quote(self.couch_logo_url))
         server += cmd
 
         # I have no idea what to set to, just tried text/plain and seems to be working :)
