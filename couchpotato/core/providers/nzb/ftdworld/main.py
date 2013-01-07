@@ -71,3 +71,6 @@ class FTDWorld(NZBProvider):
             'passlogin': self.conf('password'),
             'submit': 'Log In',
         })
+
+    def loginSuccess(self, output):
+        return 'password is incorrect' not in output
