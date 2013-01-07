@@ -112,7 +112,7 @@ class XBMC(Notification):
         server = 'http://%s/xbmcCmds/' % host
 
         # title, message [, timeout , image #can be added!]
-        cmd = "xbmcHttp?command=ExecBuiltIn(Notification('%s','%s'))" % (urllib.quote(data['title']), urllib.quote(data['message']))
+        cmd = "xbmcHttp?command=ExecBuiltIn(Notification(%s,%s))" % (urllib.quote(data['title']), urllib.quote(data['message']))
         server += cmd
 
         # I have no idea what to set to, just tried text/plain and seems to be working :)
