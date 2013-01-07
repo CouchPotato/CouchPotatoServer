@@ -73,8 +73,8 @@ class Newznab(NZBProvider, RSS):
                 'name': self.getTextElement(nzb, 'title'),
                 'age': self.calculateAge(int(time.mktime(parse(date).timetuple()))),
                 'size': int(self.getElement(nzb, 'enclosure').attrib['length']) / 1024 / 1024,
-                'url': (self.getUrl(host['host'], self.urls['download']) % nzb_id) + self.getApiExt(host),
-                'detail_url': '%sdetails/%s' % (cleanHost(host['host']), nzb_id),
+                'url': (self.getUrl(host['host'], self.urls['download']) % tryUrlencode(nzb_id)) + self.getApiExt(host),
+                'detail_url': '%sdetails/%s' % (cleanHost(host['host']), tryUrlencode(nzb_id)),
                 'content': self.getTextElement(nzb, 'description'),
             })
 
