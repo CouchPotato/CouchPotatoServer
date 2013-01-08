@@ -104,6 +104,9 @@ class Newznab(NZBProvider, RSS):
                 return result
 
     def getUrl(self, host, type):
+        if '?page=newznabapi' in host:
+            return cleanHost(host)[:-1] + '&t=' + type
+
         return cleanHost(host) + 'api?t=' + type
 
     def isDisabled(self, host):
