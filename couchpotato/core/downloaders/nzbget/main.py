@@ -44,7 +44,7 @@ class NZBGet(Downloader):
                 log.error('Protocol Error: %s', e)
             return False
 
-        if rpc.append(nzb_name, self.conf('category'), False, standard_b64encode(filedata.strip())):
+        if rpc.append(nzb_name, self.conf('category'), int(self.conf('priority')), False, standard_b64encode(filedata.strip())):
             log.info('NZB sent successfully to NZBGet')
             return True
         else:

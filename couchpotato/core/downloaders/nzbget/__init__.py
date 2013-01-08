@@ -34,6 +34,12 @@ config = [{
                     'description': 'The category CP places the nzb in. Like <strong>movies</strong> or <strong>couchpotato</strong>',
                 },
                 {
+                    'name': 'priority',
+                    'default': '0',
+                    'type': 'dropdown',
+                    'values': [('Very Low', -100), ('Low', -50), ('Normal', 0), ('High', 50), ('Very High', 100)]
+                },
+                {
                     'name': 'manual',
                     'default': 0,
                     'type': 'bool',
