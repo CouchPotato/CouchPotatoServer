@@ -5,6 +5,7 @@ from inspect import isfunction
 import socket
 import traceback
 import xmlrpclib
+import re
 
 log = CPLog(__name__)
 
@@ -44,7 +45,12 @@ class NZBGet(Downloader):
                 log.error('Protocol Error: %s', e)
             return False
 
-        if rpc.append(nzb_name, self.conf('category'), int(self.conf('priority')), False, standard_b64encode(filedata.strip())):
+        if re.search(r"^0", rpc.version()):
+            xml_response = rpc.append(nzb_name, self.conf('category'), False, standard_b64encode(filedata.strip()))
+        else:
+            xml_response = rpc.append(nzb_name, self.conf('category'), int(self.conf('priority')), False, standard_b64encode(filedata.strip()))
+
+        if xml_response:
             log.info('NZB sent successfully to NZBGet')
             return True
         else:
