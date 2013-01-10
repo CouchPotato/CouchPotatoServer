@@ -10,7 +10,7 @@ config = [{
             'tab': 'automation',
             'name': 'rottentomatoes_automation',
             'label': 'Rottentomatoes',
-            'description': 'Imports movies from the rottentomatoes in theaters rss feed.',
+            'description': 'Imports movies from the rottentomatoes "in theaters"-feed.',
             'options': [
                 {
                     'name': 'automation_enabled',
