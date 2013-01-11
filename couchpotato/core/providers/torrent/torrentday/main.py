@@ -59,3 +59,6 @@ class TorrentDay(TorrentProvider):
             'password': self.conf('password'),
             'submit': 'submit',
         })
+
+    def loginSuccess(self, output):
+        return 'Password not correct' not in output

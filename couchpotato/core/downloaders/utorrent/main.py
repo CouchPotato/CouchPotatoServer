@@ -1,6 +1,6 @@
 from bencode import bencode, bdecode
 from couchpotato.core.downloaders.base import Downloader
-from couchpotato.core.helpers.encoding import isInt
+from couchpotato.core.helpers.encoding import isInt, ss
 from couchpotato.core.logger import CPLog
 from hashlib import sha1
 from multipartpost import MultipartPostHandler
@@ -125,7 +125,7 @@ class uTorrentAPI(object):
 
     def add_torrent_file(self, filename, filedata):
         action = "action=add-file"
-        return self._request(action, {"torrent_file": (filename, filedata)})
+        return self._request(action, {"torrent_file": (ss(filename), filedata)})
 
     def set_torrent(self, hash, params):
         action = "action=setprops&hash=%s" % hash
