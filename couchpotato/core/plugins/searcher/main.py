@@ -130,6 +130,8 @@ class Searcher(Plugin):
         available_status = fireEvent('status.get', 'available', single = True)
         ignored_status = fireEvent('status.get', 'ignored', single = True)
 
+        found_releases = []
+
         default_title = getTitle(movie['library'])
         if not default_title:
             log.error('No proper info found for movie, removing it from library to cause it from having more issues.')
@@ -174,10 +176,13 @@ class Searcher(Plugin):
                 # Add them to this movie releases list
                 for nzb in sorted_results:
 
-                    rls = db.query(Release).filter_by(identifier = md5(nzb['url'])).first()
+                    nzb_identifier = md5(nzb['url'])
+                    found_releases.append(nzb_identifier)
+
+                    rls = db.query(Release).filter_by(identifier = nzb_identifier).first()
                     if not rls:
                         rls = Release(
-                            identifier = md5(nzb['url']),
+                            identifier = nzb_identifier,
                             movie_id = movie.get('id'),
                             quality_id = quality_type.get('quality_id'),
                             status_id = available_status.get('id')
@@ -233,6 +238,11 @@ class Searcher(Plugin):
             # Break if CP wants to shut down
             if self.shuttingDown() or ret:
                 break
+
+        # Remove releases that aren't found anymore
+        for release in movie.get('releases', []):
+            if release.get('identifier') not in found_releases:
+                fireEvent('release.delete', release.get('id'), single = True)
 
         fireEvent('notify.frontend', type = 'searcher.ended.%s' % movie['id'], data = True)
 
