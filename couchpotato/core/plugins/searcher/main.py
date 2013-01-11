@@ -12,6 +12,7 @@ from couchpotato.environment import Env
 from inspect import ismethod, isfunction
 from sqlalchemy.exc import InterfaceError
 import datetime
+import random
 import re
 import time
 import traceback
@@ -83,6 +84,7 @@ class Searcher(Plugin):
         movies = db.query(Movie).filter(
             Movie.status.has(identifier = 'active')
         ).all()
+        random.shuffle(movies)
 
         self.in_progress = {
             'total': len(movies),
