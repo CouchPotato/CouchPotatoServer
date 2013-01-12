@@ -10,11 +10,7 @@ class Blackhole(Downloader):
 
     type = ['nzb', 'torrent', 'torrent_magnet']
 
-    def download(self, data = {}, movie = {}, manual = False, filedata = None):
-        if self.isDisabled(manual) or \
-        (not self.isCorrectType(data.get('type')) or \
-        (not self.conf('use_for') in ['both', 'torrent' if 'torrent' in data.get('type') else data.get('type')])):
-            return
+    def download(self, data = {}, movie = {}, filedata = None):
 
         directory = self.conf('directory')
         if not directory or not os.path.isdir(directory):
@@ -52,4 +48,17 @@ class Blackhole(Downloader):
             except:
                 log.info('Failed to download file %s: %s', (data.get('name'), traceback.format_exc()))
                 return False
+
         return False
+
+    def getEnabledDownloadType(self):
+        if self.conf('use_for') == 'both':
+            return super(Blackhole, self).getEnabledDownloadType()
+        elif self.conf('use_for') == 'torrent':
+            return ['torrent', 'torrent_magnet']
+        else:
+            return ['nzb']
+
+    def isEnabled(self, manual, data = {}):
+        return super(Blackhole, self).isEnabled(manual, data) and \
+            ((self.conf('use_for') in ['both', 'torrent' if 'torrent' in data.get('type') else data.get('type')]))

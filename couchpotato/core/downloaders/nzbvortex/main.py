@@ -22,10 +22,7 @@ class NZBVortex(Downloader):
     api_level = None
     session_id = None
 
-    def download(self, data = {}, movie = {}, manual = False, filedata = None):
-
-        if self.isDisabled(manual) or not self.isCorrectType(data.get('type')) or not self.getApiLevel():
-            return
+    def download(self, data = {}, movie = {}, filedata = None):
 
         # Send the nzb
         try:
@@ -38,9 +35,6 @@ class NZBVortex(Downloader):
             return False
 
     def getAllDownloadStatus(self):
-
-        if self.isDisabled(manual = True):
-            return False
 
         raw_statuses = self.call('nzb')
 
@@ -65,9 +59,6 @@ class NZBVortex(Downloader):
         return statuses
 
     def removeFailed(self, item):
-
-        if not self.conf('delete_failed', default = True):
-            return False
 
         log.info('%s failed downloading, deleting...', item['name'])
 
@@ -152,6 +143,9 @@ class NZBVortex(Downloader):
                     log.error('NZBVortex doesn\'t seem to be running or maybe the remote option isn\'t enabled yet: %s', traceback.format_exc(1))
 
         return self.api_level
+
+    def isEnabled(self, manual, data):
+        return super(NZBVortex, self).isEnabled(manual, data) and self.getApiLevel()
 
 
 class HTTPSConnection(httplib.HTTPSConnection):

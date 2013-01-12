@@ -12,10 +12,7 @@ class Sabnzbd(Downloader):
 
     type = ['nzb']
 
-    def download(self, data = {}, movie = {}, manual = False, filedata = None):
-
-        if self.isDisabled(manual) or not self.isCorrectType(data.get('type')):
-            return
+    def download(self, data = {}, movie = {}, filedata = None):
 
         log.info('Sending "%s" to SABnzbd.', data.get('name'))
 
@@ -65,8 +62,6 @@ class Sabnzbd(Downloader):
             return False
 
     def getAllDownloadStatus(self):
-        if self.isDisabled(manual = True):
-            return False
 
         log.debug('Checking SABnzbd download status.')
 
@@ -121,9 +116,6 @@ class Sabnzbd(Downloader):
         return statuses
 
     def removeFailed(self, item):
-
-        if not self.conf('delete_failed', default = True):
-            return False
 
         log.info('%s failed downloading, deleting...', item['name'])
 
