@@ -84,8 +84,16 @@ class YarrProvider(Provider):
     login_opener = None
 
     def __init__(self):
+        addEvent('provider.enabled_types', self.getEnabledProviderType)
         addEvent('provider.belongs_to', self.belongsTo)
         addEvent('yarr.search', self.search)
+        addEvent('%s.search' % self.type, self.search)
+
+    def getEnabledProviderType(self):
+        if self.isEnabled():
+            return self.type
+        else:
+            return []
 
     def login(self):
 

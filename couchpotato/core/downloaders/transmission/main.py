@@ -16,10 +16,7 @@ class Transmission(Downloader):
     type = ['torrent', 'torrent_magnet']
     log = CPLog(__name__)
 
-    def download(self, data, movie, manual = False, filedata = None):
-
-        if self.isDisabled(manual) or not self.isCorrectType(data.get('type')):
-            return
+    def download(self, data, movie, filedata = None):
 
         log.debug('Sending "%s" (%s) to Transmission.', (data.get('name'), data.get('type')))
 

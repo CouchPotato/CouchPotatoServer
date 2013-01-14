@@ -11,9 +11,7 @@ class Pneumatic(Downloader):
     type = ['nzb']
     strm_syntax = 'plugin://plugin.program.pneumatic/?mode=strm&type=add_file&nzb=%s&nzbname=%s'
 
-    def download(self, data = {}, movie = {}, manual = False, filedata = None):
-        if self.isDisabled(manual) or (not self.isCorrectType(data.get('type'))):
-            return
+    def download(self, data = {}, movie = {}, filedata = None):
 
         directory = self.conf('directory')
         if not directory or not os.path.isdir(directory):

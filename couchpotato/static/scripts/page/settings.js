@@ -1311,7 +1311,7 @@ Option.Combined = new Class({
 		if(has_empty > 0) return;
 
 		self.add_empty_timeout = setTimeout(function(){
-			self.createItem(false, null);
+			self.createItem({'use': true});
 		}, 10);
 	},
 

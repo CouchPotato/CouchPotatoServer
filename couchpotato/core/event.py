@@ -115,7 +115,8 @@ def fireEvent(name, *args, **kwargs):
                 elif isinstance(results[0], list):
                     merged = []
                     for result in results:
-                        merged += result
+                        if result not in merged:
+                            merged += result
 
                     results = merged
 

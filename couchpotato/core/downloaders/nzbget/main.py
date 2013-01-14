@@ -1,7 +1,8 @@
 from base64 import standard_b64encode
 from couchpotato.core.downloaders.base import Downloader
+from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
-from inspect import isfunction
+import re
 import socket
 import traceback
 import xmlrpclib
@@ -14,10 +15,7 @@ class NZBGet(Downloader):
 
     url = 'http://nzbget:%(password)s@%(host)s/xmlrpc'
 
-    def download(self, data = {}, movie = {}, manual = False, filedata = None):
-
-        if self.isDisabled(manual) or not self.isCorrectType(data.get('type')):
-            return
+    def download(self, data = {}, movie = {}, filedata = None):
 
         if not filedata:
             log.error('Unable to get NZB file: %s', traceback.format_exc())
@@ -44,7 +42,12 @@ class NZBGet(Downloader):
                 log.error('Protocol Error: %s', e)
             return False
 
-        if rpc.append(nzb_name, self.conf('category'), False, standard_b64encode(filedata.strip())):
+        if re.search(r"^0", rpc.version()):
+            xml_response = rpc.append(nzb_name, self.conf('category'), False, standard_b64encode(filedata.strip()))
+        else:
+            xml_response = rpc.append(nzb_name, self.conf('category'), tryInt(self.conf('priority')), False, standard_b64encode(filedata.strip()))
+
+        if xml_response:
             log.info('NZB sent successfully to NZBGet')
             return True
         else:

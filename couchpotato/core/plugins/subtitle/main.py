@@ -49,6 +49,7 @@ class Subtitle(Plugin):
             available_languages = sum(group['subtitle_language'].itervalues(), [])
             downloaded = []
             files = [toUnicode(x) for x in group['files']['movie']]
+            log.debug('Searching for subtitles for: %s', files)
 
             for lang in self.getLanguages():
                 if lang not in available_languages:
@@ -57,6 +58,7 @@ class Subtitle(Plugin):
                         downloaded.extend(download[subtitle])
 
             for d_sub in downloaded:
+                log.info('Found subtitle (%s): %s', (d_sub.language.alpha2, files))
                 group['files']['subtitle'].add(d_sub.path)
                 group['subtitle_language'][d_sub.path] = [d_sub.language.alpha2]
 

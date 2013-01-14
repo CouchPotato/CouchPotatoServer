@@ -135,7 +135,6 @@ class Manage(Plugin):
                                     already_used = used_files.get(release_file['path'])
 
                                     if already_used:
-                                        print already_used, release['id']
                                         if already_used < release['id']:
                                             fireEvent('release.delete', release['id'], single = True) # delete this one
                                         else:
