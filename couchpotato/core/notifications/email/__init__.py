@@ -24,11 +24,6 @@ config = [{
                     'label': 'Send e-mail to',
                 },
                 {
-                    'name': 'subject',
-                    'label': 'Subject',
-                    'default': 'Couch Potato report',
-                },
-                {
                     'name': 'smtp_server',
                     'label': 'SMTP server',
                 },
