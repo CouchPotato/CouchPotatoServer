@@ -29,18 +29,23 @@ class Email(Notification):
 
         try:
             # Open the SMTP connection, via SSL if requested
+            log.debug("SMTP over SSL %s", ("enabled" if ssl == 1 else "disabled"))
             mailserver = smtplib.SMTP_SSL(smtp_server) if ssl == 1 else smtplib.SMTP(smtp_server)
 
             # Check too see if an login attempt should be attempted
             if len(smtp_user) > 0:
+                log.debug("Loggin in on SMTP server using username \'%s\'%s", (smtp_user, " and password" if len(smtp_pass) > 0 else ""))
                 mailserver.login(smtp_user, smtp_pass)
 
             # Send the e-mail
+            log.debug("Sending the email")
             mailserver.sendmail(from_address, to_address, message.as_string())
 
             # Close the SMTP connection
             mailserver.quit()
-            log.info('Email notifications sent.')
+
+            log.info('Email notification sent')
+
             return True
         except:
             log.error('E-mail failed: %s', traceback.format_exc())
