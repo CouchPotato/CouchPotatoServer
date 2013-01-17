@@ -130,7 +130,8 @@ class Renamer(Plugin):
                     if result[0].get('imdb'):
                         Env.prop(prop_name, result[0].get('imdb'))
 
-                    movie = result[0].get('imdb')
+                    movie = result[0]
+                    movie['rating'].get('imdb')
                     rating = movie['rating']['imdb'][0]
 
                 replacements = {
