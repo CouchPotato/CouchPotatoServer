@@ -122,17 +122,20 @@ class Renamer(Plugin):
                 # Retrieve IMDB rating
                 rating = None
                 
-                prop_name = 'automation.cached.%s.%s' % (movie_name.strip(), library['year'])
+                try:
+                    prop_name = 'automation.cached.%s.%s' % (movie_name.strip(), library['year'])
 
-                result = fireEvent('movie.search', q = '%s %s' % (movie_name.strip(), library['year'] if library['year'] else ''), limit = 1, merge = True)
+                    result = fireEvent('movie.search', q = '%s %s' % (movie_name.strip(), library['year'] if library['year'] else ''), limit = 1, merge = True)
 
-                if len(result) > 0:
-                    if result[0].get('imdb'):
-                        Env.prop(prop_name, result[0].get('imdb'))
+                    if len(result) > 0:
+                        if result[0].get('imdb'):
+                            Env.prop(prop_name, result[0].get('imdb'))
 
-                    movie = result[0]
-                    movie['rating'].get('imdb')
-                    rating = movie['rating']['imdb'][0]
+                        movie = result[0]
+                        movie['rating'].get('imdb')
+                        rating = movie['rating']['imdb'][0]
+                except Exception as e:
+                    pass
 
                 replacements = {
                      'ext': 'mkv',
@@ -529,7 +532,7 @@ class Renamer(Plugin):
                         loge('Couldn\'t remove empty directory %s: %s', (full_path, traceback.format_exc()))
 
         try:
-            os.rmdir(folder)
+            shutil.rmtree(folder)
         except:
             loge('Couldn\'t remove empty directory %s: %s', (folder, traceback.format_exc()))
 
