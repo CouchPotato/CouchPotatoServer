@@ -468,6 +468,10 @@ class Renamer(Plugin):
                     raise
 
     def moveFile(self, old, dest):
+        
+        if not os.path.exists(old):
+            return
+        
         dest = ss(dest)
         try:
             shutil.move(old, dest)
