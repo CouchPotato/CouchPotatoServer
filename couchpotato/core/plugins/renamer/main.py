@@ -65,10 +65,10 @@ class Renamer(Plugin):
         elif self.conf('from') in self.conf('to'):
             log.error('The "to" can\'t be inside of the "from" folder. You\'ll get an infinite loop.')
             return
+            
+        self.renaming_started = True
 
         groups = fireEvent('scanner.scan', folder = self.conf('from'), single = True)
-
-        self.renaming_started = True
 
         destination = self.conf('to')
         folder_name = self.conf('folder_name')
