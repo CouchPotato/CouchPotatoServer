@@ -530,7 +530,10 @@ class Renamer(Plugin):
                         os.rmdir(full_path)
                     except:
                         loge('Couldn\'t remove empty directory %s: %s', (full_path, traceback.format_exc()))
-
+        
+        if not os.path.exists(folder):
+            return
+        
         try:
             shutil.rmtree(folder)
         except:
