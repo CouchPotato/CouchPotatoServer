@@ -118,6 +118,20 @@ class Renamer(Plugin):
                 name_the = movie_name
                 if movie_name[:4].lower() == 'the ':
                     name_the = movie_name[4:] + ', The'
+                
+                # Retrieve IMDB rating
+                rating = None
+                
+                prop_name = 'automation.cached.%s.%s' % (movie_name.strip(), library['year'])
+
+                result = fireEvent('movie.search', q = '%s %s' % (movie_name.strip(), library['year'] if library['year'] else ''), limit = 1, merge = True)
+
+                if len(result) > 0:
+                    if result[0].get('imdb'):
+                        Env.prop(prop_name, result[0].get('imdb'))
+
+                    movie = result[0].get('imdb') if imdb_only else result[0]
+                    rating = movie['rating']['imdb'][0]
 
                 replacements = {
                      'ext': 'mkv',
@@ -136,6 +150,7 @@ class Renamer(Plugin):
                      'imdb_id': library['identifier'],
                      'cd': '',
                      'cd_nr': '',
+                     'rating': rating
                 }
 
                 for file_type in group['files']:
