@@ -15,9 +15,9 @@ class Email(Notification):
 
         # Extract all the settings from settings
         from_address = self.conf('from')
-        to = self.conf('to')
-        smtp_server = self.conf('smtp_server')
+        to_address = self.conf('to')
         ssl = self.conf('ssl')
+        smtp_server = self.conf('smtp_server')
         smtp_user = self.conf('smtp_user')
         smtp_pass = self.conf('smtp_pass')
 
@@ -25,7 +25,7 @@ class Email(Notification):
         message = MIMEText(toUnicode(message))
         message['Subject'] = self.default_title
         message['From'] = from_address
-        message['To'] = to
+        message['To'] = to_address
 
         try:
             # Open the SMTP connection, via SSL if requested
@@ -36,7 +36,7 @@ class Email(Notification):
                 mailserver.login(smtp_user, smtp_pass)
 
             # Send the e-mail
-            mailserver.sendmail(from_address, to, message.as_string())
+            mailserver.sendmail(from_address, to_address, message.as_string())
 
             # Close the SMTP connection
             mailserver.quit()
