@@ -51,6 +51,7 @@ class ThePirateBay(TorrentMagnetProvider):
         while page < total_pages:
 
             search_url = self.urls['search'] % (self.getDomain(), tryUrlencode('"%s %s"' % (title, movie['library']['year'])), page, self.getCatId(quality['identifier'])[0])
+            page += 1
 
             data = self.getHTMLData(search_url)
 
@@ -64,7 +65,6 @@ class ThePirateBay(TorrentMagnetProvider):
 
                     try:
                         total_pages = len(soup.find('div', attrs = {'align': 'center'}).find_all('a'))
-                        page += 1
                     except:
                         pass
 
