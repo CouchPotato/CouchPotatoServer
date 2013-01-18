@@ -469,9 +469,6 @@ class Renamer(Plugin):
 
     def moveFile(self, old, dest):
         
-        if not os.path.exists(old):
-            return
-        
         dest = ss(dest)
         try:
             shutil.move(old, dest)
@@ -535,11 +532,8 @@ class Renamer(Plugin):
                     except:
                         loge('Couldn\'t remove empty directory %s: %s', (full_path, traceback.format_exc()))
         
-        if not os.path.exists(folder):
-            return
-        
         try:
-            shutil.rmtree(folder)
+            os.rmdir(folder)
         except:
             loge('Couldn\'t remove empty directory %s: %s', (folder, traceback.format_exc()))
 
