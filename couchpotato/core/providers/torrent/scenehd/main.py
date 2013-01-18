@@ -22,7 +22,7 @@ class SceneHD(TorrentProvider):
 
     def _searchOnTitle(self, title, movie, quality, results):
 
-        q = '"%s %s" %s' % (simplifyString(title), movie['library']['year'], quality.get('identifier'))
+        q = '"%s %s"' % (simplifyString(title), movie['library']['year'])
         arguments = tryUrlencode({
             'search': q,
         })
