@@ -30,11 +30,6 @@ class MovieResultModifier(Plugin):
                 temp[imdb] = self.getLibraryTags(imdb)
                 order.append(imdb)
 
-            if item.get('via_imdb'):
-                if order.count(imdb):
-                    order.remove(imdb)
-                order.insert(0, imdb)
-
             # Merge dicts
             temp[imdb] = mergeDicts(temp[imdb], item)
 

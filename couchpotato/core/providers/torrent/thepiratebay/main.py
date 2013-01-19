@@ -15,7 +15,7 @@ class ThePirateBay(TorrentMagnetProvider):
 
     urls = {
          'detail': '%s/torrent/%s',
-         'search': '%s/search/%s/0/7/%d'
+         'search': '%s/search/%s/%s/7/%d'
     }
 
     cat_ids = [
@@ -45,52 +45,66 @@ class ThePirateBay(TorrentMagnetProvider):
 
     def _searchOnTitle(self, title, movie, quality, results):
 
-        search_url = self.urls['search'] % (self.getDomain(), tryUrlencode(title + ' ' + quality['identifier']), self.getCatId(quality['identifier'])[0])
+        page = 0
+        total_pages = 1
 
-        data = self.getHTMLData(search_url)
+        while page < total_pages:
 
-        if data:
-            try:
-                soup = BeautifulSoup(data)
-                results_table = soup.find('table', attrs = {'id': 'searchResult'})
+            search_url = self.urls['search'] % (self.getDomain(), tryUrlencode('"%s %s"' % (title, movie['library']['year'])), page, self.getCatId(quality['identifier'])[0])
+            page += 1
 
-                if not results_table:
-                    return
+            data = self.getHTMLData(search_url)
 
-                entries = results_table.find_all('tr')
-                for result in entries[2:]:
-                    link = result.find(href = re.compile('torrent\/\d+\/'))
-                    download = result.find(href = re.compile('magnet:'))
+            if data:
+                try:
+                    soup = BeautifulSoup(data)
+                    results_table = soup.find('table', attrs = {'id': 'searchResult'})
+
+                    if not results_table:
+                        return
 
                     try:
-                        size = re.search('Size (?P<size>.+),', unicode(result.select('font.detDesc')[0])).group('size')
+                        total_pages = len(soup.find('div', attrs = {'align': 'center'}).find_all('a'))
                     except:
-                        continue
+                        pass
 
-                    if link and download:
+                    print total_pages, page
 
-                        def extra_score(item):
-                            trusted = (0, 10)[result.find('img', alt = re.compile('Trusted')) != None]
-                            vip = (0, 20)[result.find('img', alt = re.compile('VIP')) != None]
-                            confirmed = (0, 30)[result.find('img', alt = re.compile('Helpers')) != None]
-                            moderated = (0, 50)[result.find('img', alt = re.compile('Moderator')) != None]
+                    entries = results_table.find_all('tr')
+                    for result in entries[2:]:
+                        link = result.find(href = re.compile('torrent\/\d+\/'))
+                        download = result.find(href = re.compile('magnet:'))
 
-                            return confirmed + trusted + vip + moderated
+                        try:
+                            size = re.search('Size (?P<size>.+),', unicode(result.select('font.detDesc')[0])).group('size')
+                        except:
+                            continue
 
-                        results.append({
-                            'id': re.search('/(?P<id>\d+)/', link['href']).group('id'),
-                            'name': link.string,
-                            'url': download['href'],
-                            'detail_url': self.getDomain(link['href']),
-                            'size': self.parseSize(size),
-                            'seeders': tryInt(result.find_all('td')[2].string),
-                            'leechers': tryInt(result.find_all('td')[3].string),
-                            'extra_score': extra_score,
-                            'get_more_info': self.getMoreInfo
-                        })
+                        if link and download:
 
-            except:
-                log.error('Failed getting results from %s: %s', (self.getName(), traceback.format_exc()))
+                            def extra_score(item):
+                                trusted = (0, 10)[result.find('img', alt = re.compile('Trusted')) != None]
+                                vip = (0, 20)[result.find('img', alt = re.compile('VIP')) != None]
+                                confirmed = (0, 30)[result.find('img', alt = re.compile('Helpers')) != None]
+                                moderated = (0, 50)[result.find('img', alt = re.compile('Moderator')) != None]
+
+                                return confirmed + trusted + vip + moderated
+
+                            results.append({
+                                'id': re.search('/(?P<id>\d+)/', link['href']).group('id'),
+                                'name': link.string,
+                                'url': download['href'],
+                                'detail_url': self.getDomain(link['href']),
+                                'size': self.parseSize(size),
+                                'seeders': tryInt(result.find_all('td')[2].string),
+                                'leechers': tryInt(result.find_all('td')[3].string),
+                                'extra_score': extra_score,
+                                'get_more_info': self.getMoreInfo
+                            })
+
+                except:
+                    log.error('Failed getting results from %s: %s', (self.getName(), traceback.format_exc()))
+
 
     def isEnabled(self):
         return super(ThePirateBay, self).isEnabled() and self.getDomain()
