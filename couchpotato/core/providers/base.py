@@ -56,14 +56,14 @@ class Provider(Plugin):
 
         return []
 
-    def getRSSData(self, url, **kwargs):
+    def getRSSData(self, url, item_path = 'channel/item', **kwargs):
 
         data = self.getCache(md5(url), url, **kwargs)
 
         if data:
             try:
                 data = XMLTree.fromstring(data)
-                return self.getElements(data, 'channel/item')
+                return self.getElements(data, item_path)
             except:
                 log.error('Failed to parsing %s: %s', (self.getName(), traceback.format_exc()))
 
