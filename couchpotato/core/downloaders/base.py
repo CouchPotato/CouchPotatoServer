@@ -106,4 +106,6 @@ class Downloader(Provider):
 
     def isEnabled(self, manual, data = {}):
         d_manual = self.conf('manual', default = False)
-        return super(Downloader, self).isEnabled() and ((d_manual and manual) or (d_manual is False)) and self.isCorrectType(data.get('type'))
+        return super(Downloader, self).isEnabled() and \
+            ((d_manual and manual) or (d_manual is False)) and \
+            (not data or self.isCorrectType(data.get('type')))
