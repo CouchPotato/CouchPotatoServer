@@ -8,6 +8,7 @@ config = [{
     'groups': [
         {
             'tab': 'downloaders',
+            'list': 'download_providers',
             'name': 'nzbget',
             'label': 'NZBGet',
             'description': 'Use <a href="http://nzbget.sourceforge.net/Main_Page" target="_blank">NZBGet</a> to download NZBs.',

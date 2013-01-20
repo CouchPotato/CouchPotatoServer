@@ -8,6 +8,7 @@ config = [{
     'groups': [
         {
             'tab': 'automation',
+            'list': 'watchlist_providers',
             'name': 'trakt_automation',
             'label': 'Trakt',
             'description': 'import movies from your own watchlist',

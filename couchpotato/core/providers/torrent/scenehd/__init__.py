@@ -8,7 +8,8 @@ config = [{
     'groups': [
         {
             'tab': 'searcher',
-            'subtab': 'torrent_providers',
+            'subtab': 'providers',
+            'list': 'torrent_providers',
             'name': 'SceneHD',
             'description': 'See <a href="https://scenehd.org">SceneHD</a>',
             'options': [

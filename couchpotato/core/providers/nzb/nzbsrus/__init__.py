@@ -8,7 +8,8 @@ config = [{
     'groups': [
         {
             'tab': 'searcher',
-            'subtab': 'nzb_providers',
+            'subtab': 'providers',
+            'list': 'nzb_providers',
             'name': 'nzbsrus',
             'label': 'Nzbsrus',
             'description': 'See <a href="https://www.nzbsrus.com/">NZBsRus</a>',

@@ -8,6 +8,7 @@ config = [{
     'groups': [
         {
             'tab': 'automation',
+            'list': 'automation_providers',
             'name': 'moviemeter_automation',
             'label': 'Moviemeter',
             'description': 'Imports movies from the current top 10 of moviemeter.nl. (uses minimal requirements)',

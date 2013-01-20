@@ -8,7 +8,8 @@ config = [{
     'groups': [
         {
             'tab': 'searcher',
-            'subtab': 'torrent_providers',
+            'subtab': 'providers',
+            'list': 'torrent_providers',
             'name': 'TorrentLeech',
             'description': 'See <a href="http://torrentleech.org">TorrentLeech</a>',
             'options': [
