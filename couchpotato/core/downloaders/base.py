@@ -59,7 +59,7 @@ class Downloader(Provider):
 
     def _removeFailed(self, item):
         if self.conf('delete_failed', default = True):
-            return self.removeFailed(self, item)
+            return self.removeFailed(item)
         return False
 
     def removeFailed(self, item):
