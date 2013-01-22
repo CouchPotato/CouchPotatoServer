@@ -78,7 +78,7 @@ class Plugin(object):
         self.makeDir(os.path.dirname(path))
 
         try:
-            f = open(path, 'w' if not binary else 'wb')
+            f = open(path, 'w+' if not binary else 'w+b')
             f.write(content)
             f.close()
             os.chmod(path, Env.getPermission('file'))
