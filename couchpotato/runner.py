@@ -212,6 +212,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     config = {
         'use_reloader': reloader,
         'port': tryInt(Env.setting('port', default = 5000)),
+        'host': Env.setting('host', default = ''),
         'ssl_cert': Env.setting('ssl_cert', default = None),
         'ssl_key': Env.setting('ssl_key', default = None),
     }
