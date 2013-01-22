@@ -53,7 +53,7 @@ class Nzbsrus(NZBProvider, RSS):
                 'name': title,
                 'age': age,
                 'size': size,
-                'url': self.urls['download'] % id + self.getApiExt() + self.getTextElement(nzb, 'key'),
+                'url': self.urls['download'] % nzb_id + self.getApiExt() + self.getTextElement(nzb, 'key'),
                 'detail_url': self.urls['detail'] % nzb_id,
                 'description': self.getTextElement(nzb, 'addtext'),
             })
