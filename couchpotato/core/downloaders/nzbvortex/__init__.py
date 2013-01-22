@@ -8,6 +8,7 @@ config = [{
     'groups': [
         {
             'tab': 'downloaders',
+            'list': 'download_providers',
             'name': 'nzbvortex',
             'label': 'NZBVortex',
             'description': 'Use <a href="http://www.nzbvortex.com/landing/" target="_blank">NZBVortex</a> to download NZBs.',

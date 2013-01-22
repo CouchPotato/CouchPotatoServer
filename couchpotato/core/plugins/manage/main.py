@@ -198,9 +198,12 @@ class Manage(Plugin):
 
     def directories(self):
         try:
-            return splitString(self.conf('library', default = ''), '::')
+            if self.conf('library', '').strip():
+                return splitString(self.conf('library', default = ''), '::')
         except:
-            return []
+            pass
+
+        return []
 
     def scanFilesToLibrary(self, folder = None, files = None):
 

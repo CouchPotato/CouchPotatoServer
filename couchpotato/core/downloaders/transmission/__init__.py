@@ -8,6 +8,7 @@ config = [{
     'groups': [
         {
             'tab': 'downloaders',
+            'list': 'download_providers',
             'name': 'transmission',
             'label': 'Transmission',
             'description': 'Use <a href="http://www.transmissionbt.com/" target="_blank">Transmission</a> to download torrents.',

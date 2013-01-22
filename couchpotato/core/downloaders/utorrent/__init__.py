@@ -8,6 +8,7 @@ config = [{
     'groups': [
         {
             'tab': 'downloaders',
+            'list': 'download_providers',
             'name': 'utorrent',
             'label': 'uTorrent',
             'description': 'Use <a href="http://www.utorrent.com/" target="_blank">uTorrent</a> to download torrents.',

@@ -58,12 +58,16 @@ class Downloader(Provider):
         return self.getAllDownloadStatus()
 
     def _removeFailed(self, item):
+        if self.isDisabled(manual = True, data = {}):
+            return
+
         if self.conf('delete_failed', default = True):
-            return self.removeFailed(self, item)
+            return self.removeFailed(item)
+
         return False
 
     def removeFailed(self, item):
-        return False
+        return
 
     def isCorrectType(self, item_type):
         is_correct = item_type in self.type
@@ -106,4 +110,6 @@ class Downloader(Provider):
 
     def isEnabled(self, manual, data = {}):
         d_manual = self.conf('manual', default = False)
-        return super(Downloader, self).isEnabled() and ((d_manual and manual) or (d_manual is False)) and self.isCorrectType(data.get('type'))
+        return super(Downloader, self).isEnabled() and \
+            ((d_manual and manual) or (d_manual is False)) and \
+            (not data or self.isCorrectType(data.get('type')))

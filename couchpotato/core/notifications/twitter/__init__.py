@@ -8,6 +8,7 @@ config = [{
     'groups': [
         {
             'tab': 'notifications',
+            'list': 'notification_providers',
             'name': 'twitter',
             'options': [
                 {

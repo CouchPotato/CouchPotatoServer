@@ -34,7 +34,7 @@ class TorrentLeech(TorrentProvider):
 
     def _searchOnTitle(self, title, movie, quality, results):
 
-        url = self.urls['search'] % (tryUrlencode(title.replace(':', '') + ' ' + quality['identifier']), self.getCatId(quality['identifier'])[0])
+        url = self.urls['search'] % (tryUrlencode('%s %s' % (title.replace(':', ''), movie['library']['year'])), self.getCatId(quality['identifier'])[0])
         data = self.getHTMLData(url, opener = self.login_opener)
 
         if data:

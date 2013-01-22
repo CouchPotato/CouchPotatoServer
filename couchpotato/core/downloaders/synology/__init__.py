@@ -8,6 +8,7 @@ config = [{
     'groups': [
         {
             'tab': 'downloaders',
+            'list': 'download_providers',
             'name': 'synology',
             'label': 'Synology',
             'description': 'Use <a href="http://www.synology.com/dsm/home_home_applications_download_station.php" target="_blank">Synology Download Station</a> to download.',

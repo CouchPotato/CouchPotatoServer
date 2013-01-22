@@ -92,6 +92,10 @@
 				font-size: 12px;
 				margin-left: 10px;
 			}
+				.page fieldset h2 .hint a {
+					margin: 0 !important;
+					padding: 0;
+				}
 
 			.page fieldset.disabled .ctrlHolder {
 				display: none;
@@ -102,7 +106,7 @@
 				width: auto;
 				margin: 0;
 				position: relative;
-				margin-bottom: -25px;
+				margin-bottom: -23px;
 				border: none;
 				width: 20px;
 			}
@@ -148,6 +152,73 @@
 		}
 
 		.page .xsmall { width: 20px !important; text-align: center; }
+		
+	.page .enabler {
+		display: block;
+	}
+	
+	.page .option_list {
+		margin-bottom: 20px;
+	}
+	
+		.page .option_list .enabler {
+			padding: 0;
+		}
+		
+			.page .option_list .enabler:not(.disabled) {
+				margin: 0 0 0 30px;
+			}
+			
+				.page .option_list .enabler:not(.disabled) .ctrlHolder:first-child {
+					margin: 10px 0 -33px 0;
+				}
+	
+		.page .option_list h3 {
+			padding: 0;
+			margin: 10px 0 0 0;
+			text-align: center;
+			font-weight: normal;
+			text-shadow: none;
+			text-transform: uppercase;
+			font-size: 12px;
+			background: rgba(255,255,255,0.03);
+		}
+	
+	.page .option_list .enabler.disabled {
+		display: inline-block;
+		margin: 3px 3px 3px 20px;
+		padding: 4px 0;
+		width: 159px;
+		vertical-align: top;
+	}
+		
+		.page .option_list .enabler.disabled h2 {
+			border: none;
+			box-shadow: none;
+			padding: 0 10px 0 25px;
+			font-size: 16px;
+		}
+		
+			.page .option_list .enabler:not(.disabled) h2 {
+				font-size: 16px;
+				font-weight: bold;
+				border: none;
+				border-top: 1px solid rgba(255,255,255, 0.15);
+				box-shadow: 0 -1px 0px #333;
+				margin: 0;
+				padding: 10px 0 5px 25px;
+			}
+				.page .option_list .enabler:not(.disabled):first-child h2 {
+					border: none;
+					box-shadow: none;
+				}
+		
+		.page .option_list .enabler.disabled h2 .hint {
+			display: none;
+		}
+			.page .option_list .enabler h2 .hint {
+				font-weight: normal;
+			}
 
 	.page input[type=text], .page input[type=password] {
 		padding: 5px 3px;

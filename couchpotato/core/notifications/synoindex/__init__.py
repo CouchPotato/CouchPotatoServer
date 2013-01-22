@@ -8,6 +8,7 @@ config = [{
     'groups': [
         {
             'tab': 'notifications',
+            'list': 'notification_providers',
             'name': 'synoindex',
             'description': 'Automaticly adds index to Synology Media Server.',
             'options': [

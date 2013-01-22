@@ -8,6 +8,7 @@ config = [{
     'groups': [
         {
             'tab': 'automation',
+            'list': 'automation_providers',
             'name': 'rottentomatoes_automation',
             'label': 'Rottentomatoes',
             'description': 'Imports movies from the rottentomatoes "in theaters"-feed.',
