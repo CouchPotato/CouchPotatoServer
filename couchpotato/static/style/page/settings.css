@@ -163,6 +163,7 @@
 	
 		.page .option_list .enabler {
 			padding: 0;
+			margin-left: 5px !important;
 		}
 		
 			.page .option_list .enabler:not(.disabled) {

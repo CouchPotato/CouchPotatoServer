@@ -1,8 +1,13 @@
+.page.wizard .uniForm {
+	width: 80%;
+	margin: 0 auto 30px;
+}
+
 .page.wizard h1 {
 	padding: 10px 30px;
 	margin: 0;
 	display: block;
-	font-size: 40px;
+	font-size: 30px;
 	margin-top: 80px;
 }
 

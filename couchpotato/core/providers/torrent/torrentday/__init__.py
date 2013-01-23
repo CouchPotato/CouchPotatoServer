@@ -12,6 +12,7 @@ config = [{
             'list': 'torrent_providers',
             'name': 'TorrentDay',
             'description': 'See <a href="http://www.td.af/">TorrentDay</a>',
+            'wizard': True,
             'options': [
                 {
                     'name': 'enabled',
