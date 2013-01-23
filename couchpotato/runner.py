@@ -98,7 +98,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     total_backups = len(backups)
     for backup in backups:
         if total_backups > 3:
-            if int(os.path.basename(backup)) < time.time() - 259200:
+            if(os.path.basename(backup).isdigit() and (int(os.path.basename(backup)) < time.time() - 259200)):
                 for src_file in src_files:
                     b_file = os.path.join(backup, os.path.basename(src_file))
                     if os.path.isfile(b_file):
