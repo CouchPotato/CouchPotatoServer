@@ -176,7 +176,7 @@
 	
 		.page .option_list h3 {
 			padding: 0;
-			margin: 10px 0 0 0;
+			margin: 10px 5px 0;
 			text-align: center;
 			font-weight: normal;
 			text-shadow: none;
@@ -189,7 +189,7 @@
 		display: inline-block;
 		margin: 3px 3px 3px 20px;
 		padding: 4px 0;
-		width: 159px;
+		width: 173px;
 		vertical-align: top;
 	}
 		
@@ -629,14 +629,14 @@
 
 	.group_userscript .or {
 		float: left;
-		margin: 20px 10px;
+		margin: 20px -10px 0 10px;
 	}
 
 	.group_userscript .bookmarklet {
 		display: block;
 		display: block;
 		float: left;
-		padding: 20px 15px 0 0 ;
+		padding: 20px 15px 0 25px;
 		border-radius: 5px;
 	}
 
