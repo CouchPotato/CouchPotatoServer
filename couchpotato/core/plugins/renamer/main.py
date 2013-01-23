@@ -65,10 +65,10 @@ class Renamer(Plugin):
         elif self.conf('from') in self.conf('to'):
             log.error('The "to" can\'t be inside of the "from" folder. You\'ll get an infinite loop.')
             return
+            
+        self.renaming_started = True
 
         groups = fireEvent('scanner.scan', folder = self.conf('from'), single = True)
-
-        self.renaming_started = True
 
         destination = self.conf('to')
         folder_name = self.conf('folder_name')
@@ -118,6 +118,24 @@ class Renamer(Plugin):
                 name_the = movie_name
                 if movie_name[:4].lower() == 'the ':
                     name_the = movie_name[4:] + ', The'
+                
+                # Retrieve IMDB rating
+                rating = None
+                
+                try:
+                    prop_name = 'automation.cached.%s.%s' % (movie_name.strip(), library['year'])
+
+                    result = fireEvent('movie.search', q = '%s %s' % (movie_name.strip(), library['year'] if library['year'] else ''), limit = 1, merge = True)
+
+                    if len(result) > 0:
+                        if result[0].get('imdb'):
+                            Env.prop(prop_name, result[0].get('imdb'))
+
+                        movie = result[0]
+                        movie['rating'].get('imdb')
+                        rating = movie['rating']['imdb'][0]
+                except Exception as e:
+                    pass
 
                 replacements = {
                      'ext': 'mkv',
@@ -136,6 +154,7 @@ class Renamer(Plugin):
                      'imdb_id': library['identifier'],
                      'cd': '',
                      'cd_nr': '',
+                     'rating': rating
                 }
 
                 for file_type in group['files']:
@@ -449,6 +468,7 @@ class Renamer(Plugin):
                     raise
 
     def moveFile(self, old, dest):
+        
         dest = ss(dest)
         try:
             shutil.move(old, dest)
@@ -511,7 +531,7 @@ class Renamer(Plugin):
                         os.rmdir(full_path)
                     except:
                         loge('Couldn\'t remove empty directory %s: %s', (full_path, traceback.format_exc()))
-
+        
         try:
             os.rmdir(folder)
         except:
