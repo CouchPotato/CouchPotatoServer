@@ -12,6 +12,7 @@ from couchpotato.environment import Env
 from inspect import ismethod, isfunction
 from sqlalchemy.exc import InterfaceError
 import datetime
+import random
 import re
 import time
 import traceback
@@ -83,37 +84,51 @@ class Searcher(Plugin):
         movies = db.query(Movie).filter(
             Movie.status.has(identifier = 'active')
         ).all()
+        random.shuffle(movies)
 
         self.in_progress = {
             'total': len(movies),
             'to_go': len(movies),
         }
 
-        for movie in movies:
-            movie_dict = movie.to_dict({
-                'profile': {'types': {'quality': {}}},
-                'releases': {'status': {}, 'quality': {}},
-                'library': {'titles': {}, 'files':{}},
-                'files': {}
-            })
+        try:
+            search_types = self.getSearchTypes()
 
-            try:
-                self.single(movie_dict)
-            except IndexError:
-                log.error('Forcing library update for %s, if you see this often, please report: %s', (movie_dict['library']['identifier'], traceback.format_exc()))
-                fireEvent('library.update', movie_dict['library']['identifier'], force = True)
-            except:
-                log.error('Search failed for %s: %s', (movie_dict['library']['identifier'], traceback.format_exc()))
+            for movie in movies:
+                movie_dict = movie.to_dict({
+                    'profile': {'types': {'quality': {}}},
+                    'releases': {'status': {}, 'quality': {}},
+                    'library': {'titles': {}, 'files':{}},
+                    'files': {}
+                })
 
-            self.in_progress['to_go'] -= 1
+                try:
+                    self.single(movie_dict, search_types)
+                except IndexError:
+                    log.error('Forcing library update for %s, if you see this often, please report: %s', (movie_dict['library']['identifier'], traceback.format_exc()))
+                    fireEvent('library.update', movie_dict['library']['identifier'], force = True)
+                except:
+                    log.error('Search failed for %s: %s', (movie_dict['library']['identifier'], traceback.format_exc()))
 
-            # Break if CP wants to shut down
-            if self.shuttingDown():
-                break
+                self.in_progress['to_go'] -= 1
+
+                # Break if CP wants to shut down
+                if self.shuttingDown():
+                    break
+
+        except SearchSetupError:
+            pass
 
         self.in_progress = False
 
-    def single(self, movie):
+    def single(self, movie, search_types = None):
+
+        # Find out search type
+        try:
+            if not search_types:
+                search_types = self.getSearchTypes()
+        except SearchSetupError:
+            return
 
         done_status = fireEvent('status.get', 'done', single = True)
 
@@ -128,6 +143,8 @@ class Searcher(Plugin):
         available_status = fireEvent('status.get', 'available', single = True)
         ignored_status = fireEvent('status.get', 'ignored', single = True)
 
+        found_releases = []
+
         default_title = getTitle(movie['library'])
         if not default_title:
             log.error('No proper info found for movie, removing it from library to cause it from having more issues.')
@@ -135,6 +152,7 @@ class Searcher(Plugin):
             return
 
         fireEvent('notify.frontend', type = 'searcher.started.%s' % movie['id'], data = True, message = 'Searching for "%s"' % default_title)
+
 
         ret = False
         for quality_type in movie['profile']['types']:
@@ -155,7 +173,11 @@ class Searcher(Plugin):
                 log.info('Search for %s in %s', (default_title, quality_type['quality']['label']))
                 quality = fireEvent('quality.single', identifier = quality_type['quality']['identifier'], single = True)
 
-                results = fireEvent('yarr.search', movie, quality, merge = True)
+                results = []
+                for search_type in search_types:
+                    type_results = fireEvent('%s.search' % search_type, movie, quality, merge = True)
+                    if type_results:
+                        results += type_results
 
                 sorted_results = sorted(results, key = lambda k: k['score'], reverse = True)
                 if len(sorted_results) == 0:
@@ -172,10 +194,13 @@ class Searcher(Plugin):
                 # Add them to this movie releases list
                 for nzb in sorted_results:
 
-                    rls = db.query(Release).filter_by(identifier = md5(nzb['url'])).first()
+                    nzb_identifier = md5(nzb['url'])
+                    found_releases.append(nzb_identifier)
+
+                    rls = db.query(Release).filter_by(identifier = nzb_identifier).first()
                     if not rls:
                         rls = Release(
-                            identifier = md5(nzb['url']),
+                            identifier = nzb_identifier,
                             movie_id = movie.get('id'),
                             quality_id = quality_type.get('quality_id'),
                             status_id = available_status.get('id')
@@ -223,6 +248,12 @@ class Searcher(Plugin):
                         break
                     elif downloaded != 'try_next':
                         break
+
+                # Remove releases that aren't found anymore
+                for release in movie.get('releases', []):
+                    if release.get('status_id') == available_status.get('id') and release.get('identifier') not in found_releases:
+                        fireEvent('release.delete', release.get('id'), single = True)
+
             else:
                 log.info('Better quality (%s) already available or snatched for %s', (quality_type['quality']['label'], default_title))
                 fireEvent('movie.restatus', movie['id'])
@@ -238,60 +269,86 @@ class Searcher(Plugin):
 
     def download(self, data, movie, manual = False):
 
-        snatched_status = fireEvent('status.get', 'snatched', single = True)
+        # Test to see if any downloaders are enabled for this type
+        downloader_enabled = fireEvent('download.enabled', manual, data, single = True)
 
-        # Download movie to temp
-        filedata = None
-        if data.get('download') and (ismethod(data.get('download')) or isfunction(data.get('download'))):
-            filedata = data.get('download')(url = data.get('url'), nzb_id = data.get('id'))
-            if filedata == 'try_next':
-                return filedata
+        if downloader_enabled:
 
-        successful = fireEvent('download', data = data, movie = movie, manual = manual, filedata = filedata, single = True)
+            snatched_status = fireEvent('status.get', 'snatched', single = True)
 
-        if successful:
+            # Download movie to temp
+            filedata = None
+            if data.get('download') and (ismethod(data.get('download')) or isfunction(data.get('download'))):
+                filedata = data.get('download')(url = data.get('url'), nzb_id = data.get('id'))
+                if filedata == 'try_next':
+                    return filedata
 
-            try:
-                # Mark release as snatched
-                db = get_session()
-                rls = db.query(Release).filter_by(identifier = md5(data['url'])).first()
-                if rls:
-                    rls.status_id = snatched_status.get('id')
-                    db.commit()
+            successful = fireEvent('download', data = data, movie = movie, manual = manual, filedata = filedata, single = True)
 
-                    log_movie = '%s (%s) in %s' % (getTitle(movie['library']), movie['library']['year'], rls.quality.label)
-                    snatch_message = 'Snatched "%s": %s' % (data.get('name'), log_movie)
-                    log.info(snatch_message)
-                    fireEvent('movie.snatched', message = snatch_message, data = rls.to_dict())
+            if successful:
 
-                # If renamer isn't used, mark movie done
-                if not Env.setting('enabled', 'renamer'):
-                    active_status = fireEvent('status.get', 'active', single = True)
-                    done_status = fireEvent('status.get', 'done', single = True)
-                    try:
-                        if movie['status_id'] == active_status.get('id'):
-                            for profile_type in movie['profile']['types']:
-                                if rls and profile_type['quality_id'] == rls.quality.id and profile_type['finish']:
-                                    log.info('Renamer disabled, marking movie as finished: %s', log_movie)
+                try:
+                    # Mark release as snatched
+                    db = get_session()
+                    rls = db.query(Release).filter_by(identifier = md5(data['url'])).first()
+                    if rls:
+                        rls.status_id = snatched_status.get('id')
+                        db.commit()
 
-                                    # Mark release done
-                                    rls.status_id = done_status.get('id')
-                                    db.commit()
+                        log_movie = '%s (%s) in %s' % (getTitle(movie['library']), movie['library']['year'], rls.quality.label)
+                        snatch_message = 'Snatched "%s": %s' % (data.get('name'), log_movie)
+                        log.info(snatch_message)
+                        fireEvent('movie.snatched', message = snatch_message, data = rls.to_dict())
 
-                                    # Mark movie done
-                                    mvie = db.query(Movie).filter_by(id = movie['id']).first()
-                                    mvie.status_id = done_status.get('id')
-                                    db.commit()
-                    except:
-                        log.error('Failed marking movie finished, renamer disabled: %s', traceback.format_exc())
+                    # If renamer isn't used, mark movie done
+                    if not Env.setting('enabled', 'renamer'):
+                        active_status = fireEvent('status.get', 'active', single = True)
+                        done_status = fireEvent('status.get', 'done', single = True)
+                        try:
+                            if movie['status_id'] == active_status.get('id'):
+                                for profile_type in movie['profile']['types']:
+                                    if rls and profile_type['quality_id'] == rls.quality.id and profile_type['finish']:
+                                        log.info('Renamer disabled, marking movie as finished: %s', log_movie)
 
-            except:
-                log.error('Failed marking movie finished: %s', traceback.format_exc())
+                                        # Mark release done
+                                        rls.status_id = done_status.get('id')
+                                        db.commit()
 
-            return True
+                                        # Mark movie done
+                                        mvie = db.query(Movie).filter_by(id = movie['id']).first()
+                                        mvie.status_id = done_status.get('id')
+                                        db.commit()
+                        except:
+                            log.error('Failed marking movie finished, renamer disabled: %s', traceback.format_exc())
 
-        log.info('Tried to download, but none of the downloaders are enabled')
+                except:
+                    log.error('Failed marking movie finished: %s', traceback.format_exc())
+
+                return True
+
+        log.info('Tried to download, but none of the "%s" downloaders are enabled', (data.get('type', '')))
+
         return False
+
+    def getSearchTypes(self):
+
+        download_types = fireEvent('download.enabled_types', merge = True)
+        provider_types = fireEvent('provider.enabled_types', merge = True)
+
+        if download_types and len(list(set(provider_types) & set(download_types))) == 0:
+            log.error('There aren\'t any providers enabled for your downloader (%s). Check your settings.', ','.join(download_types))
+            raise NoProviders
+
+        for useless_provider in list(set(provider_types) - set(download_types)):
+            log.debug('Provider for "%s" enabled, but no downloader.', useless_provider)
+
+        search_types = download_types
+
+        if len(search_types) == 0:
+            log.error('There aren\'t any downloaders enabled. Please pick one in settings.')
+            raise NoDownloaders
+
+        return search_types
 
     def correctMovie(self, nzb = {}, movie = {}, quality = {}, **kwargs):
 
@@ -536,3 +593,12 @@ class Searcher(Plugin):
         except:
             log.error('Failed searching for next release: %s', traceback.format_exc())
             return False
+
+class SearchSetupError(Exception):
+    pass
+
+class NoDownloaders(SearchSetupError):
+    pass
+
+class NoProviders(SearchSetupError):
+    pass

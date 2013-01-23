@@ -104,12 +104,23 @@ class Newznab(NZBProvider, RSS):
                 return result
 
     def getUrl(self, host, type):
+        if '?page=newznabapi' in host:
+            return cleanHost(host)[:-1] + '&t=' + type
+
         return cleanHost(host) + 'api?t=' + type
 
-    def isDisabled(self, host):
+    def isDisabled(self, host = None):
         return not self.isEnabled(host)
 
-    def isEnabled(self, host):
+    def isEnabled(self, host = None):
+
+        # Return true if at least one is enabled and no host is given
+        if host is None:
+            for host in self.getHosts():
+                if self.isEnabled(host):
+                    return True
+            return False
+
         return NZBProvider.isEnabled(self) and host['host'] and host['api_key'] and int(host['use'])
 
     def getApiExt(self, host):

@@ -27,7 +27,7 @@ class IMDB(Automation, RSS):
 
             try:
                 rss_data = self.getHTMLData(url)
-                imdbs = getImdb(rss_data, multiple = True)
+                imdbs = getImdb(rss_data, multiple = True) if rss_data else []
 
                 for imdb in imdbs:
                     movies.append(imdb)

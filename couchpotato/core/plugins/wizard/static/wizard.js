@@ -41,8 +41,7 @@ Page.Wizard = new Class({
 		},
 		'providers': {
 			'title': 'Are you registered at any of these sites?',
-			'description': 'CP uses these sites to search for movies. A few free are enabled by default, but it\'s always better to have a few more. Check settings for the full list of available providers.',
-			'include': ['nzb_providers', 'torrent_providers']
+			'description': 'CP uses these sites to search for movies. A few free are enabled by default, but it\'s always better to have a few more. Check settings for the full list of available providers.'
 		},
 		'renamer': {
 			'title': 'Move & rename the movies after downloading?',
@@ -213,8 +212,6 @@ Page.Wizard = new Class({
 		// Hide retention
 		self.el.getElement('.tab_searcher').hide();
 		self.el.getElement('.t_searcher').hide();
-		self.el.getElement('.t_nzb_providers').hide();
-		self.el.getElement('.t_torrent_providers').hide();
 
 		// Add pointer
 		new Element('.tab_wrapper').wraps(tabs).adopt(

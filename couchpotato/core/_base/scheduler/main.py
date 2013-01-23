@@ -2,7 +2,6 @@ from apscheduler.scheduler import Scheduler as Sched
 from couchpotato.core.event import addEvent
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-import logging
 
 log = CPLog(__name__)
 

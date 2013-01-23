@@ -8,7 +8,8 @@ config = [{
     'groups': [
         {
             'tab': 'searcher',
-            'subtab': 'nzb_providers',
+            'subtab': 'providers',
+            'list': 'nzb_providers',
             'name': 'newznab',
             'order': 10,
             'description': 'Enable <a href="http://newznab.com/" target="_blank">NewzNab providers</a> such as <a href="https://nzb.su" target="_blank">NZB.su</a>, \

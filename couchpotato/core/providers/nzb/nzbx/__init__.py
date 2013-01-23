@@ -8,9 +8,11 @@ config = [{
     'groups': [
         {
             'tab': 'searcher',
-            'subtab': 'nzb_providers',
+            'subtab': 'providers',
+            'list': 'nzb_providers',
             'name': 'nzbX',
             'description': 'Free provider. See <a href="https://www.nzbx.co/">nzbX</a>',
+            'wizard': True,
             'options': [
                 {
                     'name': 'enabled',

@@ -37,7 +37,7 @@ class Nzbsrus(NZBProvider, RSS):
             arguments += '&lang0=1&lang3=1&lang1=1'
 
         url = '%s&%s&%s' % (self.urls['search'], arguments , cat_id_string)
-        nzbs = self.getRSSData(url, cache_timeout = 1800, headers = {'User-Agent': Env.getIdentifier()})
+        nzbs = self.getRSSData(url, item_path = 'results/result', cache_timeout = 1800, headers = {'User-Agent': Env.getIdentifier()})
 
         for nzb in nzbs:
 
@@ -53,7 +53,7 @@ class Nzbsrus(NZBProvider, RSS):
                 'name': title,
                 'age': age,
                 'size': size,
-                'url': self.urls['download'] % id + self.getApiExt() + self.getTextElement(nzb, 'key'),
+                'url': self.urls['download'] % nzb_id + self.getApiExt() + self.getTextElement(nzb, 'key'),
                 'detail_url': self.urls['detail'] % nzb_id,
                 'description': self.getTextElement(nzb, 'addtext'),
             })

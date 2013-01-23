@@ -8,6 +8,7 @@ config = [{
     'groups': [
         {
             'tab': 'automation',
+            'list': 'automation_providers',
             'name': 'kinepolis_automation',
             'label': 'Kinepolis',
             'description': 'Imports movies from the current top 10 of kinepolis. (uses minimal requirements)',

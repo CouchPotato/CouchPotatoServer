@@ -4,6 +4,7 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.nzb.base import NZBProvider
 from couchpotato.environment import Env
 from dateutil.parser import parse
+import json
 import traceback
 
 log = CPLog(__name__)
@@ -15,7 +16,7 @@ class FTDWorld(NZBProvider):
         'search': 'http://ftdworld.net/api/index.php?%s',
         'detail': 'http://ftdworld.net/spotinfo.php?id=%s',
         'download': 'http://ftdworld.net/cgi-bin/nzbdown.pl?fileID=%s',
-        'login': 'http://ftdworld.net/index.php',
+        'login': 'http://ftdworld.net/api/login.php',
     }
 
     http_time_between_calls = 3 #seconds
@@ -56,6 +57,7 @@ class FTDWorld(NZBProvider):
                         'id': nzb_id,
                         'name': toUnicode(item.get('Title')),
                         'age': self.calculateAge(tryInt(item.get('Created'))),
+                        'size': item.get('Size', 0),
                         'url': self.urls['download'] % nzb_id,
                         'download': self.loginDownload,
                         'detail_url': self.urls['detail'] % nzb_id,
@@ -73,4 +75,7 @@ class FTDWorld(NZBProvider):
         })
 
     def loginSuccess(self, output):
-        return 'password is incorrect' not in output
+        try:
+            return json.loads(output).get('goodToGo', False)
+        except:
+            return False

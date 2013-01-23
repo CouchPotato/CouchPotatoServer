@@ -56,14 +56,14 @@ class Provider(Plugin):
 
         return []
 
-    def getRSSData(self, url, **kwargs):
+    def getRSSData(self, url, item_path = 'channel/item', **kwargs):
 
         data = self.getCache(md5(url), url, **kwargs)
 
         if data:
             try:
                 data = XMLTree.fromstring(data)
-                return self.getElements(data, 'channel/item')
+                return self.getElements(data, item_path)
             except:
                 log.error('Failed to parsing %s: %s', (self.getName(), traceback.format_exc()))
 
@@ -84,8 +84,16 @@ class YarrProvider(Provider):
     login_opener = None
 
     def __init__(self):
+        addEvent('provider.enabled_types', self.getEnabledProviderType)
         addEvent('provider.belongs_to', self.belongsTo)
         addEvent('yarr.search', self.search)
+        addEvent('%s.search' % self.type, self.search)
+
+    def getEnabledProviderType(self):
+        if self.isEnabled():
+            return self.type
+        else:
+            return []
 
     def login(self):
 

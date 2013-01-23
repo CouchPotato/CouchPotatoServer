@@ -33,18 +33,41 @@ class Downloader(Provider):
     ]
 
     def __init__(self):
-        addEvent('download', self.download)
-        addEvent('download.status', self.getAllDownloadStatus)
-        addEvent('download.remove_failed', self.removeFailed)
+        addEvent('download', self._download)
+        addEvent('download.enabled', self._isEnabled)
+        addEvent('download.enabled_types', self.getEnabledDownloadType)
+        addEvent('download.status', self._getAllDownloadStatus)
+        addEvent('download.remove_failed', self._removeFailed)
 
-    def download(self, data = {}, movie = {}, manual = False, filedata = None):
-        pass
+    def getEnabledDownloadType(self):
+        for download_type in self.type:
+            if self.isEnabled(manual = True, data = {'type': download_type}):
+                return self.type
 
-    def getAllDownloadStatus(self):
+        return []
+
+    def _download(self, data = {}, movie = {}, manual = False, filedata = None):
+        if self.isDisabled(manual, data):
+            return
+        return self.download(data = data, movie = movie, filedata = filedata)
+
+    def _getAllDownloadStatus(self):
+        if self.isDisabled(manual = True, data = {}):
+            return
+
+        return self.getAllDownloadStatus()
+
+    def _removeFailed(self, item):
+        if self.isDisabled(manual = True, data = {}):
+            return
+
+        if self.conf('delete_failed', default = True):
+            return self.removeFailed(item)
+
         return False
 
-    def removeFailed(self, name = {}, nzo_id = {}):
-        return False
+    def removeFailed(self, item):
+        return
 
     def isCorrectType(self, item_type):
         is_correct = item_type in self.type
@@ -77,9 +100,16 @@ class Downloader(Provider):
         log.error('Failed converting magnet url to torrent: %s', (torrent_hash))
         return False
 
-    def isDisabled(self, manual):
-        return not self.isEnabled(manual)
+    def isDisabled(self, manual, data):
+        return not self.isEnabled(manual, data)
 
-    def isEnabled(self, manual):
+    def _isEnabled(self, manual, data = {}):
+        if not self.isEnabled(manual, data):
+            return
+        return True
+
+    def isEnabled(self, manual, data = {}):
         d_manual = self.conf('manual', default = False)
-        return super(Downloader, self).isEnabled() and ((d_manual and manual) or (d_manual is False))
+        return super(Downloader, self).isEnabled() and \
+            ((d_manual and manual) or (d_manual is False)) and \
+            (not data or self.isCorrectType(data.get('type')))

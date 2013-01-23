@@ -7,6 +7,7 @@ Page.Settings = new Class({
 	wizard_only: false,
 
 	tabs: {},
+	lists: {},
 	current: 'about',
 	has_tab: false,
 
@@ -178,12 +179,24 @@ Page.Settings = new Class({
 					var content_container = self.tabs[group.tab].subtabs[group.subtab].content
 				}
 
+				if(group.list && !self.lists[group.list]){
+					self.lists[group.list] = self.createList(content_container);
+				}
+
 				// Create the group
 				if(!self.tabs[group.tab].groups[group.name]){
 					var group_el = self.createGroup(group)
-						.inject(content_container)
+						.inject(group.list ? self.lists[group.list] : content_container)
 						.addClass('section_'+section_name);
-					self.tabs[group.tab].groups[group.name] = group_el
+					self.tabs[group.tab].groups[group.name] = group_el;
+				}
+
+				// Create list if needed
+				if(group.type && group.type == 'list'){
+					if(!self.lists[group.name])
+						self.lists[group.name] = self.createList(content_container);
+					else
+						self.lists[group.name].inject(self.tabs[group.tab].groups[group.name]);
 				}
 
 				// Add options to group
@@ -283,6 +296,14 @@ Page.Settings = new Class({
 		)
 
 		return group_el
+	},
+	
+	createList: function(content_container){
+		return new Element('div.option_list').grab(
+			new Element('h3', {
+				'text': 'Enable another'
+			})
+		).inject(content_container)
 	}
 
 });
@@ -550,15 +571,21 @@ Option.Enabler = new Class({
 	},
 
 	checkState: function(){
-		var self = this;
+		var self = this,
+			enabled = self.getValue();
 
-		self.parentFieldset[ self.getValue() ? 'removeClass' : 'addClass']('disabled');
+		self.parentFieldset[ enabled ? 'removeClass' : 'addClass']('disabled');
+
+		if(self.parentList)
+			self.parentFieldset.inject(self.parentList.getElement('h3'), enabled ? 'before' : 'after');
+
 	},
 
 	afterInject: function(){
 		var self = this;
 
-		self.parentFieldset = self.el.getParent('fieldset')
+		self.parentFieldset = self.el.getParent('fieldset').addClass('enabler')
+		self.parentList = self.parentFieldset.getParent('.option_list');
 		self.el.inject(self.parentFieldset, 'top')
 		self.checkState()
 	}
@@ -1311,7 +1338,7 @@ Option.Combined = new Class({
 		if(has_empty > 0) return;
 
 		self.add_empty_timeout = setTimeout(function(){
-			self.createItem(false, null);
+			self.createItem({'use': true});
 		}, 10);
 	},
 

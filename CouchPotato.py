@@ -62,7 +62,6 @@ class Loader(object):
         self.log.logger.addHandler(hdlr)
 
     def addSignals(self):
-
         signal.signal(signal.SIGINT, self.onExit)
         signal.signal(signal.SIGTERM, lambda signum, stack_frame: sys.exit(1))
 
@@ -74,7 +73,7 @@ class Loader(object):
 
     def onExit(self, signal, frame):
         from couchpotato.core.event import fireEvent
-        fireEvent('app.crappy_shutdown', single = True)
+        fireEvent('app.shutdown', single = True)
 
     def run(self):
 

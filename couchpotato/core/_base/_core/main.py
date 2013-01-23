@@ -10,6 +10,7 @@ from uuid import uuid4
 import os
 import platform
 import signal
+import sys
 import time
 import traceback
 import webbrowser
@@ -178,6 +179,7 @@ class Core(Plugin):
     def signalHandler(self):
 
         def signal_handler(signal, frame):
-            fireEvent('app.do_shutdown')
+            fireEvent('app.shutdown')
 
         signal.signal(signal.SIGINT, signal_handler)
+        signal.signal(signal.SIGTERM, signal_handler)

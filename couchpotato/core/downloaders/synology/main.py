@@ -14,10 +14,7 @@ class Synology(Downloader):
     type = ['torrent_magnet']
     log = CPLog(__name__)
 
-    def download(self, data, movie, manual = False, filedata = None):
-
-        if self.isDisabled(manual) or not self.isCorrectType(data.get('type')):
-            return
+    def download(self, data, movie, filedata = None):
 
         log.error('Sending "%s" (%s) to Synology.', (data.get('name'), data.get('type')))
 

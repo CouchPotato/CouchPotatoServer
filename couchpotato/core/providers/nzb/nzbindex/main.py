@@ -23,7 +23,7 @@ class NzbIndex(NZBProvider, RSS):
 
     def _searchOnTitle(self, title, movie, quality, results):
 
-        q = '"%s" %s %s' % (title, movie['library']['year'], quality.get('identifier'))
+        q = '"%s %s"' % (title, movie['library']['year'])
         arguments = tryUrlencode({
             'q': q,
             'age': Env.setting('retention', 'nzb'),

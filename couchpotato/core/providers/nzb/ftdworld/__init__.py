@@ -8,9 +8,11 @@ config = [{
     'groups': [
         {
             'tab': 'searcher',
-            'subtab': 'nzb_providers',
+            'subtab': 'providers',
+            'list': 'nzb_providers',
             'name': 'FTDWorld',
             'description': 'Free provider, less accurate. See <a href="http://ftdworld.net">FTDWorld</a>',
+            'wizard': True,
             'options': [
                 {
                     'name': 'enabled',
