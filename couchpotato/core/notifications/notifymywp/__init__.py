@@ -10,7 +10,7 @@ config = [{
             'tab': 'notifications',
             'list': 'notification_providers',
             'name': 'notifymywp',
-            'label': 'Notify My Windows Phone',
+            'label': 'Windows Phone',
             'options': [
                 {
                     'name': 'enabled',

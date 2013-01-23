@@ -12,6 +12,7 @@ config = [{
             'list': 'torrent_providers',
             'name': 'SceneHD',
             'description': 'See <a href="https://scenehd.org">SceneHD</a>',
+            'wizard': True,
             'options': [
                 {
                     'name': 'enabled',

@@ -12,7 +12,7 @@ config = [{
             'list': 'nzb_providers',
             'name': 'nzbsrus',
             'label': 'Nzbsrus',
-            'description': 'See <a href="https://www.nzbsrus.com/">NZBsRus</a>',
+            'description': 'See <a href="https://www.nzbsrus.com/">NZBsRus</a>. <strong>You need a VIP account!</strong>',
             'wizard': True,
             'options': [
                 {

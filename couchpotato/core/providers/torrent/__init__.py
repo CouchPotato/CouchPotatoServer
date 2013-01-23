@@ -4,6 +4,7 @@ config = {
         {
             'label': 'Torrent',
             'description': 'Providers searching torrent sites for new releases',
+            'wizard': True,
             'type': 'list',
             'name': 'torrent_providers',
             'tab': 'searcher',

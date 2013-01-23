@@ -251,7 +251,7 @@ class Searcher(Plugin):
 
                 # Remove releases that aren't found anymore
                 for release in movie.get('releases', []):
-                    if release.get('identifier') not in found_releases:
+                    if release.get('status_id') == available_status.get('id') and release.get('identifier') not in found_releases:
                         fireEvent('release.delete', release.get('id'), single = True)
 
             else:

@@ -4,6 +4,7 @@ config = {
         {
             'label': 'Usenet',
             'description': 'Providers searching usenet for new releases',
+            'wizard': True,
             'type': 'list',
             'name': 'nzb_providers',
             'tab': 'searcher',

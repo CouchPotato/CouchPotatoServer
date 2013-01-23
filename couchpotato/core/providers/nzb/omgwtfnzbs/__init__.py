@@ -12,6 +12,7 @@ config = [{
             'list': 'nzb_providers',
             'name': 'OMGWTFNZBs',
             'description': 'See <a href="http://omgwtfnzbs.org/">OMGWTFNZBs</a>',
+            'wizard': True,
             'options': [
                 {
                     'name': 'enabled',

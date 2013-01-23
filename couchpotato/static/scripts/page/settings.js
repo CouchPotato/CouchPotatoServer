@@ -301,7 +301,7 @@ Page.Settings = new Class({
 	createList: function(content_container){
 		return new Element('div.option_list').grab(
 			new Element('h3', {
-				'text': 'Enable more providers'
+				'text': 'Enable another'
 			})
 		).inject(content_container)
 	}

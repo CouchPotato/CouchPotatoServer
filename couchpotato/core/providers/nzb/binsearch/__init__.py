@@ -12,6 +12,7 @@ config = [{
             'list': 'nzb_providers',
             'name': 'binsearch',
             'description': 'Free provider, less accurate. See <a href="https://www.binsearch.info/">BinSearch</a>',
+            'wizard': True,
             'options': [
                 {
                     'name': 'enabled',
