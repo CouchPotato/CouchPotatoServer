@@ -38,10 +38,11 @@ class Transmission(Downloader):
             'download-dir': folder_path
         }
 
-        torrent_params = {
-            'seedRatioLimit': self.conf('ratio'),
-            'seedRatioMode': (0 if self.conf('ratio') else 1)
-        }
+        if self.conf('ratio'):
+            torrent_params = {
+                'seedRatioLimit': self.conf('ratio'),
+                'seedRatioMode': self.conf('ratio')
+            }
 
         if not filedata and data.get('type') == 'torrent':
             log.error('Failed sending torrent, no data')
