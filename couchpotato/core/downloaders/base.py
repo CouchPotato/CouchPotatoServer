@@ -57,6 +57,9 @@ class Downloader(Provider):
 
         return self.getAllDownloadStatus()
 
+    def getAllDownloadStatus(self):
+        return
+
     def _removeFailed(self, item):
         if self.isDisabled(manual = True, data = {}):
             return
