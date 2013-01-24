@@ -259,7 +259,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
 
     while try_restart:
         try:
-            server.listen(config['port'])
+            server.listen(config['port'], config['host'])
             loop.start()
         except Exception, e:
             try:
