@@ -118,6 +118,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     Env.set('console_log', options.console_log)
     Env.set('quiet', options.quiet)
     Env.set('desktop', desktop)
+    Env.set('daemonized', options.daemon)
     Env.set('args', args)
     Env.set('options', options)
 
