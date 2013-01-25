@@ -10,7 +10,6 @@ from uuid import uuid4
 import os
 import platform
 import signal
-import sys
 import time
 import traceback
 import webbrowser
@@ -153,7 +152,7 @@ class Core(Plugin):
 
     def createBaseUrl(self):
         host = Env.setting('host')
-        if host == '0.0.0.0':
+        if host == '0.0.0.0' or host == '':
             host = 'localhost'
         port = Env.setting('port')
 
@@ -177,6 +176,7 @@ class Core(Plugin):
         })
 
     def signalHandler(self):
+        if Env.get('daemonized'): return
 
         def signal_handler(signal, frame):
             fireEvent('app.shutdown')
