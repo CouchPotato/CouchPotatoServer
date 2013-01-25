@@ -105,6 +105,11 @@ class Renamer(Plugin):
                     log.error('Could not rename, no library item to work with: %s', group_identifier)
                     continue
 
+                try:
+                    group['profile'] = fireEvent('movie.get', movie_id = group['library']['identifier'])[0]['profile']['label']
+                except:
+                    group['profile'] = 'default'
+
                 library = group['library']
                 movie_title = getTitle(library)
 
@@ -134,6 +139,7 @@ class Renamer(Plugin):
                      'resolution_width': group['meta_data'].get('resolution_width'),
                      'resolution_height': group['meta_data'].get('resolution_height'),
                      'imdb_id': library['identifier'],
+                     'profile': group['profile'],
                      'cd': '',
                      'cd_nr': '',
                 }
