@@ -38,6 +38,7 @@ class Transmission(Downloader):
             'download-dir': folder_path
         }
 
+        torrent_params = {}
         if self.conf('ratio'):
             torrent_params = {
                 'seedRatioLimit': self.conf('ratio'),
@@ -58,7 +59,8 @@ class Transmission(Downloader):
                 remote_torrent = trpc.add_torrent_file(b64encode(filedata), arguments = params)
 
             # Change settings of added torrents
-            trpc.set_torrent(remote_torrent['torrent-added']['hashString'], torrent_params)
+            if torrent_params:
+                trpc.set_torrent(remote_torrent['torrent-added']['hashString'], torrent_params)
 
             return True
         except Exception, err:
