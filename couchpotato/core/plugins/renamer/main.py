@@ -105,7 +105,10 @@ class Renamer(Plugin):
                     log.error('Could not rename, no library item to work with: %s', group_identifier)
                     continue
 
-                group['profile'] = fireEvent('movie.get', movie_id = group['library']['identifier'])[0]['profile']['label']
+                try:
+                    group['profile'] = fireEvent('movie.get', movie_id = group['library']['identifier'])[0]['profile']['label']
+                except:
+                    group['profile'] = 'default'
 
                 library = group['library']
                 movie_title = getTitle(library)
