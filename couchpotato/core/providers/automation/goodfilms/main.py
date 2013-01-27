@@ -1,5 +1,3 @@
-from couchpotato.core.event import addEvent
-from couchpotato.core.helpers.variable import sha1
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.automation.base import Automation
 from bs4 import BeautifulSoup
