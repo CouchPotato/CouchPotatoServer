@@ -60,5 +60,11 @@ class Blackhole(Downloader):
             return ['nzb']
 
     def isEnabled(self, manual, data = {}):
+        for_type = ['both']
+        if data and 'torrent' in data.get('type'):
+            for_type.append('torrent')
+        elif data:
+            for_type.append(data.get('type'))
+
         return super(Blackhole, self).isEnabled(manual, data) and \
-            ((self.conf('use_for') in ['both', 'torrent' if 'torrent' in data.get('type') else data.get('type')]))
+            ((self.conf('use_for') in for_type))
