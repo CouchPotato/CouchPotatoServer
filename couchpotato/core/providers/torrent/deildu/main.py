@@ -34,6 +34,11 @@ class Deildu(TorrentProvider):
 
         data = self.getHTMLData(url, opener = self.login_opener)
 
+        # If nothing found, exit
+        if 'Ekkert fannst!' in data:
+            log.info("Deildu.net reported torrent not found: %s", q)
+            return
+
         if data:
             html = BeautifulSoup(data)
 
