@@ -1,5 +1,6 @@
 from base64 import standard_b64encode
 from couchpotato.core.downloaders.base import Downloader
+from couchpotato.core.helpers.encoding import ss
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 import re
@@ -24,7 +25,7 @@ class NZBGet(Downloader):
         log.info('Sending "%s" to NZBGet.', data.get('name'))
 
         url = self.url % {'host': self.conf('host'), 'password': self.conf('password')}
-        nzb_name = '%s.nzb' % self.createNzbName(data, movie)
+        nzb_name = ss('%s.nzb' % self.createNzbName(data, movie))
 
         rpc = xmlrpclib.ServerProxy(url)
         try:
