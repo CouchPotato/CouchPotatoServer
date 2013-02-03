@@ -17,6 +17,7 @@ class CouchPotatoApi(MovieProvider):
     urls = {
         'search': 'https://couchpota.to/api/search/%s/',
         'info': 'https://couchpota.to/api/info/%s/',
+        'is_movie': 'https://couchpota.to/api/ismovie/%s/',
         'eta': 'https://couchpota.to/api/eta/%s/',
         'suggest': 'https://couchpota.to/api/suggest/%s/%s/',
     }
@@ -29,6 +30,7 @@ class CouchPotatoApi(MovieProvider):
         addEvent('movie.info', self.getInfo, priority = 1)
         addEvent('movie.search', self.search, priority = 1)
         addEvent('movie.release_date', self.getReleaseDate)
+        addEvent('movie.is_movie', self.isMovie)
 
     def search(self, q, limit = 12):
 
@@ -43,6 +45,17 @@ class CouchPotatoApi(MovieProvider):
                 log.error('Failed parsing search results: %s', traceback.format_exc())
 
         return []
+
+    def isMovie(self, identifier = None):
+
+        if not identifier:
+            return
+
+        data = self.getJsonData(self.urls['is_movie'] % identifier, headers = self.getRequestHeaders())
+        if data:
+            return data.get('is_movie', True)
+
+        return True
 
     def getInfo(self, identifier = None):
 
