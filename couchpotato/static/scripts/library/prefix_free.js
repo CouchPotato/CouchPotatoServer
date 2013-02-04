@@ -24,6 +24,9 @@ var self = window.StyleFix = {
 
 		var url = link.href || link.getAttribute('data-href'),
 		    base = url.replace(/[^\/]+$/, ''),
+		    base_scheme = (/^[a-z]{3,10}:/.exec(base) || [''])[0],
+		    base_domain = (/^[a-z]{3,10}:\/\/[^\/]+/.exec(base) || [''])[0],
+		    base_query = /^([^?]*)\??/.exec(url)[1],
 		    parent = link.parentNode,
 		    xhr = new XMLHttpRequest(),
 		    process;
@@ -43,12 +46,23 @@ var self = window.StyleFix = {
 					// Convert relative URLs to absolute, if needed
 					if(base) {
 						css = css.replace(/url\(\s*?((?:"|')?)(.+?)\1\s*?\)/gi, function($0, quote, url) {
-							if(!/^([a-z]{3,10}:|\/|#)/i.test(url)) { // If url not absolute & not a hash
+							if(/^([a-z]{3,10}:|#)/i.test(url)) { // Absolute & or hash-relative
+								return $0;
+							}
+							else if(/^\/\//.test(url)) { // Scheme-relative
 								// May contain sequences like /../ and /./ but those DO work
+								return 'url("' + base_scheme + url + '")';
+							}
+							else if(/^\//.test(url)) { // Domain-relative
+								return 'url("' + base_domain + url + '")';
+							}
+							else if(/^\?/.test(url)) { // Query-relative
+								return 'url("' + base_query + url + '")';
+							}
+							else {
+								// Path-relative
 								return 'url("' + base + url + '")';
 							}
-							
-							return $0;						
 						});
 
 						// behavior URLs shoudn’t be converted (Issue #19)
