@@ -138,7 +138,7 @@ class ClientScript(Plugin):
         data = '' if as_html else []
 
         try:
-            if Env.get('dev'):
+            if not Env.get('dev'):
                 return self.minified[type][location]
 
             return self.urls[type][location]
