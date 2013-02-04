@@ -52,7 +52,8 @@ Page.Wanted = new Class({
 
 		var start_text = self.manual_search.get('text');
 		self.progress_interval = setInterval(function(){
-			Api.request('searcher.progress', {
+			if(self.search_progress && self.search_progress.running) return;
+			self.search_progress = Api.request('searcher.progress', {
 				'onComplete': function(json){
 					self.search_in_progress = true;
 					if(!json.progress){
@@ -65,7 +66,7 @@ Page.Wanted = new Class({
 						self.manual_search.set('text', 'Searching.. (' + (((progress.total-progress.to_go)/progress.total)*100).round() + '%)');
 					}
 				}
-			})
+			});
 		}, 1000);
 
 	}
