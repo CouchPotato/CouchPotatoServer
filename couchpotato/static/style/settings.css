@@ -118,7 +118,7 @@
 		border: 0;
 	}
 		.page .ctrlHolder.save_success:not(:first-child) {
-			background: url('../../images/icon.check.png') no-repeat 7px center;
+			background: url('../images/icon.check.png') no-repeat 7px center;
 		}
 		.page .ctrlHolder:last-child { border: none; }
 		.page .ctrlHolder:hover { background-color: rgba(255,255,255,0.05); }
@@ -250,7 +250,7 @@
 		padding: 0 4% 0 4px;
 		font-size: 13px;
 		width: 30%;
-		background-image: url('../../images/icon.folder.gif');
+		background-image: url('../images/icon.folder.gif');
 		background-repeat: no-repeat;
 		background-position: 97% center;
 		overflow: hidden;
@@ -298,7 +298,7 @@
 			cursor: pointer;
 			margin: 0 !important;
 			border-top: 1px solid rgba(255,255,255,0.1);
-			background: url('../../images/right.arrow.png') no-repeat 98% center;
+			background: url('../images/right.arrow.png') no-repeat 98% center;
 		}
 		.page .directory_list li:last-child {
 			border-bottom: 1px solid rgba(255,255,255,0.1);
@@ -484,7 +484,7 @@
 				margin: -9px 0 0 -16px;
 				border-radius: 30px 30px 0 0;
 				cursor: pointer;
-				background: url('../../images/icon.delete.png') no-repeat center 2px, -*-linear-gradient(
+				background: url('../images/icon.delete.png') no-repeat center 2px, -*-linear-gradient(
 				   270deg,
 				    #5b9bd1 0%,
 				    #5b9bd1 100%
@@ -558,7 +558,7 @@
 		}
 
 			.page .tab_about .usenet li {
-				background: url('../../images/icon.check.png') no-repeat left center;
+				background: url('../images/icon.check.png') no-repeat left center;
 				padding: 0 0 0 25px;
 			}
 
@@ -646,6 +646,6 @@
 		}
 		
 .active .group_imdb_automation:not(.disabled) {
-	background: url('../../images/imdb_watchlist.png') no-repeat right 50px;
+	background: url('../images/imdb_watchlist.png') no-repeat right 50px;
 	min-height: 210px;
 }

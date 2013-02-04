@@ -468,7 +468,7 @@ class Renamer(Plugin):
 
         except:
             log.error('Couldn\'t move file "%s" to "%s": %s', (old, dest, traceback.format_exc()))
-            raise Exception
+            raise
 
         return True
 
