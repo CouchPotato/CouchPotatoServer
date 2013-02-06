@@ -18,9 +18,6 @@ class Aria2(Downloader):
     type = ['http']
 
     def download(self, data={}, movie={}, manual=False, filedata=None):
-        if self.isDisabled(manual):
-            return
-
         log.info('Sending "%s" to aria2', data.get('name'))
 
         s = xmlrpclib.ServerProxy('http://%s/rpc' % self.conf('host'))
@@ -30,9 +27,6 @@ class Aria2(Downloader):
         """
         status = {'id': '', 'name': '', 'status': '', 'original_status': '', 'timeleft': ''}
         """
-        if self.isDisabled(manual=False):
-            return False
-
         log.debug('Checking aria2 download status...')
 
         statuses = []
