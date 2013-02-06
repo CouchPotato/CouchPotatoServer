@@ -115,12 +115,34 @@ class Manage(Plugin):
                     if done_movie['library']['identifier'] not in added_identifiers:
                         fireEvent('movie.delete', movie_id = done_movie['id'], delete_from = 'all')
                     else:
+
                         for release in done_movie.get('releases', []):
-                            for release_file in release.get('files', []):
-                                # Remove release not available anymore
-                                if not os.path.isfile(ss(release_file['path'])):
-                                    fireEvent('release.clean', release['id'])
-                                    break
+                            if len(release.get('files', [])) == 0:
+                                fireEvent('release.delete', release['id'])
+                            else:
+                                for release_file in release.get('files', []):
+                                    # Remove release not available anymore
+                                    if not os.path.isfile(ss(release_file['path'])):
+                                        fireEvent('release.clean', release['id'])
+                                        break
+
+                        # Check if there are duplicate releases (different quality) use the last one, delete the rest
+                        if len(done_movie.get('releases', [])) > 1:
+                            used_files = {}
+                            for release in done_movie.get('releases', []):
+
+                                for release_file in release.get('files', []):
+                                    already_used = used_files.get(release_file['path'])
+
+                                    if already_used:
+                                        if already_used < release['id']:
+                                            fireEvent('release.delete', release['id'], single = True) # delete this one
+                                        else:
+                                            fireEvent('release.delete', already_used, single = True) # delete previous one
+                                        break
+                                    else:
+                                        used_files[release_file['path']] = release.get('id')
+                            del used_files
 
             Env.prop('manage.last_update', time.time())
         except:
@@ -153,7 +175,7 @@ class Manage(Plugin):
                     'to_go': total_found,
                 }
 
-            if group['library']:
+            if group['library'] and group['library'].get('identifier'):
                 identifier = group['library'].get('identifier')
                 added_identifiers.append(identifier)
 
@@ -176,9 +198,12 @@ class Manage(Plugin):
 
     def directories(self):
         try:
-            return splitString(self.conf('library', default = ''), '::')
+            if self.conf('library', default = '').strip():
+                return splitString(self.conf('library', default = ''), '::')
         except:
-            return []
+            pass
+
+        return []
 
     def scanFilesToLibrary(self, folder = None, files = None):
 
@@ -187,5 +212,5 @@ class Manage(Plugin):
         groups = fireEvent('scanner.scan', folder = folder, files = files, single = True)
 
         for group in groups.itervalues():
-            if group['library']:
+            if group['library'] and group['library'].get('identifier'):
                 fireEvent('release.add', group = group)

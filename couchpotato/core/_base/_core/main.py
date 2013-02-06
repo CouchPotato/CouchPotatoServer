@@ -152,7 +152,7 @@ class Core(Plugin):
 
     def createBaseUrl(self):
         host = Env.setting('host')
-        if host == '0.0.0.0':
+        if host == '0.0.0.0' or host == '':
             host = 'localhost'
         port = Env.setting('port')
 
@@ -176,8 +176,10 @@ class Core(Plugin):
         })
 
     def signalHandler(self):
+        if Env.get('daemonized'): return
 
         def signal_handler(signal, frame):
-            fireEvent('app.do_shutdown')
+            fireEvent('app.shutdown', single = True)
 
         signal.signal(signal.SIGINT, signal_handler)
+        signal.signal(signal.SIGTERM, signal_handler)

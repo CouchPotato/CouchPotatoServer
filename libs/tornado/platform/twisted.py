@@ -431,6 +431,8 @@ class TwistedIOLoop(tornado.ioloop.IOLoop):
                 self.reactor.removeWriter(self.fds[fd])
 
     def remove_handler(self, fd):
+        if fd not in self.fds:
+            return
         self.fds[fd].lost = True
         if self.fds[fd].reading:
             self.reactor.removeReader(self.fds[fd])
@@ -444,6 +446,12 @@ class TwistedIOLoop(tornado.ioloop.IOLoop):
     def stop(self):
         self.reactor.crash()
 
+    def _run_callback(self, callback, *args, **kwargs):
+        try:
+            callback(*args, **kwargs)
+        except Exception:
+            self.handle_callback_exception(callback)
+
     def add_timeout(self, deadline, callback):
         if isinstance(deadline, (int, long, float)):
             delay = max(deadline - self.time(), 0)
@@ -451,13 +459,14 @@ class TwistedIOLoop(tornado.ioloop.IOLoop):
             delay = deadline.total_seconds()
         else:
             raise TypeError("Unsupported deadline %r")
-        return self.reactor.callLater(delay, wrap(callback))
+        return self.reactor.callLater(delay, self._run_callback, wrap(callback))
 
     def remove_timeout(self, timeout):
         timeout.cancel()
 
-    def add_callback(self, callback):
-        self.reactor.callFromThread(wrap(callback))
+    def add_callback(self, callback, *args, **kwargs):
+        self.reactor.callFromThread(self._run_callback,
+                                    wrap(callback), *args, **kwargs)
 
-    def add_callback_from_signal(self, callback):
-        self.add_callback(callback)
+    def add_callback_from_signal(self, callback, *args, **kwargs):
+        self.add_callback(callback, *args, **kwargs)

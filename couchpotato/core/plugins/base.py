@@ -1,9 +1,8 @@
 from StringIO import StringIO
 from couchpotato import addView
 from couchpotato.core.event import fireEvent, addEvent
-from couchpotato.core.helpers.encoding import tryUrlencode, simplifyString, ss, \
-    toSafeString
-from couchpotato.core.helpers.variable import getExt
+from couchpotato.core.helpers.encoding import tryUrlencode, ss, toSafeString
+from couchpotato.core.helpers.variable import getExt, md5
 from couchpotato.core.logger import CPLog
 from couchpotato.environment import Env
 from flask.templating import render_template_string
@@ -65,7 +64,7 @@ class Plugin(object):
             for f in glob.glob(os.path.join(self.plugin_path, 'static', '*')):
                 ext = getExt(f)
                 if ext in ['js', 'css']:
-                    fireEvent('register_%s' % ('script' if ext in 'js' else 'style'), path + os.path.basename(f))
+                    fireEvent('register_%s' % ('script' if ext in 'js' else 'style'), path + os.path.basename(f), f)
 
     def showStatic(self, filename):
         d = os.path.join(self.plugin_path, 'static')
@@ -79,7 +78,7 @@ class Plugin(object):
         self.makeDir(os.path.dirname(path))
 
         try:
-            f = open(path, 'w' if not binary else 'wb')
+            f = open(path, 'w+' if not binary else 'w+b')
             f.write(content)
             f.close()
             os.chmod(path, Env.getPermission('file'))
@@ -99,6 +98,7 @@ class Plugin(object):
 
     # http request
     def urlopen(self, url, timeout = 30, params = None, headers = None, opener = None, multipart = False, show_error = True):
+        url = ss(url)
 
         if not headers: headers = {}
         if not params: params = {}
@@ -130,8 +130,11 @@ class Plugin(object):
                 log.info('Opening multipart url: %s, params: %s', (url, [x for x in params.iterkeys()] if isinstance(params, dict) else 'with data'))
                 request = urllib2.Request(url, params, headers)
 
-                cookies = cookielib.CookieJar()
-                opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookies), MultipartPostHandler)
+                if opener:
+                    opener.add_handler(MultipartPostHandler())
+                else:
+                    cookies = cookielib.CookieJar()
+                    opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookies), MultipartPostHandler)
 
                 response = opener.open(request, timeout = timeout)
             else:
@@ -222,7 +225,7 @@ class Plugin(object):
 
 
     def getCache(self, cache_key, url = None, **kwargs):
-        cache_key = simplifyString(cache_key)
+        cache_key = md5(ss(cache_key))
         cache = Env.get('cache').get(cache_key)
         if cache:
             if not Env.get('dev'): log.debug('Getting cache %s', cache_key)
@@ -242,8 +245,10 @@ class Plugin(object):
                     self.setCache(cache_key, data, timeout = cache_timeout)
                 return data
             except:
-                if not kwargs.get('show_error'):
+                if not kwargs.get('show_error', True):
                     raise
+
+                return ''
 
     def setCache(self, cache_key, value, timeout = 300):
         log.debug('Setting cache %s', cache_key)

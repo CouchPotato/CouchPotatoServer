@@ -1,6 +1,5 @@
 from flask.blueprints import Blueprint
 from flask.helpers import url_for
-from tornado.ioloop import IOLoop
 from tornado.web import RequestHandler, asynchronous
 from werkzeug.utils import redirect
 
@@ -11,7 +10,11 @@ api_nonblock = {}
 
 
 class NonBlockHandler(RequestHandler):
-    stoppers = []
+
+    def __init__(self, application, request, **kwargs):
+        cls = NonBlockHandler
+        cls.stoppers = []
+        super(NonBlockHandler, self).__init__(application, request, **kwargs)
 
     @asynchronous
     def get(self, route):

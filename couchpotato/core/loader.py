@@ -67,6 +67,18 @@ class Loader(object):
 
     def addFromDir(self, plugin_type, priority, module, dir_name):
 
+        # Load dir module
+        try:
+            m = __import__(module)
+            splitted = module.split('.')
+            for sub in splitted[1:]:
+                m = getattr(m, sub)
+
+            if hasattr(m, 'config'):
+                fireEvent('settings.options', splitted[-1] + '_config', getattr(m, 'config'))
+        except:
+            raise
+
         for cur_file in glob.glob(os.path.join(dir_name, '*')):
             name = os.path.basename(cur_file)
             if os.path.isdir(os.path.join(dir_name, name)):

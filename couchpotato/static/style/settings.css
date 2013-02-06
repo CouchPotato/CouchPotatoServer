@@ -92,6 +92,10 @@
 				font-size: 12px;
 				margin-left: 10px;
 			}
+				.page fieldset h2 .hint a {
+					margin: 0 !important;
+					padding: 0;
+				}
 
 			.page fieldset.disabled .ctrlHolder {
 				display: none;
@@ -102,7 +106,7 @@
 				width: auto;
 				margin: 0;
 				position: relative;
-				margin-bottom: -25px;
+				margin-bottom: -23px;
 				border: none;
 				width: 20px;
 			}
@@ -114,7 +118,7 @@
 		border: 0;
 	}
 		.page .ctrlHolder.save_success:not(:first-child) {
-			background: url('../../images/icon.check.png') no-repeat 7px center;
+			background: url('../images/icon.check.png') no-repeat 7px center;
 		}
 		.page .ctrlHolder:last-child { border: none; }
 		.page .ctrlHolder:hover { background-color: rgba(255,255,255,0.05); }
@@ -148,6 +152,74 @@
 		}
 
 		.page .xsmall { width: 20px !important; text-align: center; }
+		
+	.page .enabler {
+		display: block;
+	}
+	
+	.page .option_list {
+		margin-bottom: 20px;
+	}
+	
+		.page .option_list .enabler {
+			padding: 0;
+			margin-left: 5px !important;
+		}
+		
+			.page .option_list .enabler:not(.disabled) {
+				margin: 0 0 0 30px;
+			}
+			
+				.page .option_list .enabler:not(.disabled) .ctrlHolder:first-child {
+					margin: 10px 0 -33px 0;
+				}
+	
+		.page .option_list h3 {
+			padding: 0;
+			margin: 10px 5px 0;
+			text-align: center;
+			font-weight: normal;
+			text-shadow: none;
+			text-transform: uppercase;
+			font-size: 12px;
+			background: rgba(255,255,255,0.03);
+		}
+	
+	.page .option_list .enabler.disabled {
+		display: inline-block;
+		margin: 3px 3px 3px 20px;
+		padding: 4px 0;
+		width: 173px;
+		vertical-align: top;
+	}
+		
+		.page .option_list .enabler.disabled h2 {
+			border: none;
+			box-shadow: none;
+			padding: 0 10px 0 25px;
+			font-size: 16px;
+		}
+		
+			.page .option_list .enabler:not(.disabled) h2 {
+				font-size: 16px;
+				font-weight: bold;
+				border: none;
+				border-top: 1px solid rgba(255,255,255, 0.15);
+				box-shadow: 0 -1px 0px #333;
+				margin: 0;
+				padding: 10px 0 5px 25px;
+			}
+				.page .option_list .enabler:not(.disabled):first-child h2 {
+					border: none;
+					box-shadow: none;
+				}
+		
+		.page .option_list .enabler.disabled h2 .hint {
+			display: none;
+		}
+			.page .option_list .enabler h2 .hint {
+				font-weight: normal;
+			}
 
 	.page input[type=text], .page input[type=password] {
 		padding: 5px 3px;
@@ -178,7 +250,7 @@
 		padding: 0 4% 0 4px;
 		font-size: 13px;
 		width: 30%;
-		background-image: url('../../images/icon.folder.gif');
+		background-image: url('../images/icon.folder.gif');
 		background-repeat: no-repeat;
 		background-position: 97% center;
 		overflow: hidden;
@@ -226,7 +298,7 @@
 			cursor: pointer;
 			margin: 0 !important;
 			border-top: 1px solid rgba(255,255,255,0.1);
-			background: url('../../images/right.arrow.png') no-repeat 98% center;
+			background: url('../images/right.arrow.png') no-repeat 98% center;
 		}
 		.page .directory_list li:last-child {
 			border-bottom: 1px solid rgba(255,255,255,0.1);
@@ -412,7 +484,7 @@
 				margin: -9px 0 0 -16px;
 				border-radius: 30px 30px 0 0;
 				cursor: pointer;
-				background: url('../../images/icon.delete.png') no-repeat center 2px, -*-linear-gradient(
+				background: url('../images/icon.delete.png') no-repeat center 2px, -*-linear-gradient(
 				   270deg,
 				    #5b9bd1 0%,
 				    #5b9bd1 100%
@@ -486,7 +558,7 @@
 		}
 
 			.page .tab_about .usenet li {
-				background: url('../../images/icon.check.png') no-repeat left center;
+				background: url('../images/icon.check.png') no-repeat left center;
 				padding: 0 0 0 25px;
 			}
 
@@ -557,14 +629,14 @@
 
 	.group_userscript .or {
 		float: left;
-		margin: 20px 10px;
+		margin: 20px -10px 0 10px;
 	}
 
 	.group_userscript .bookmarklet {
 		display: block;
 		display: block;
 		float: left;
-		padding: 20px 15px 0 0 ;
+		padding: 20px 15px 0 25px;
 		border-radius: 5px;
 	}
 
@@ -574,6 +646,6 @@
 		}
 		
 .active .group_imdb_automation:not(.disabled) {
-	background: url('../../images/imdb_watchlist.png') no-repeat right 50px;
+	background: url('../images/imdb_watchlist.png') no-repeat right 50px;
 	min-height: 210px;
 }

@@ -1,3 +1,4 @@
+from couchpotato.core.helpers.encoding import simplifyString, toSafeString
 from couchpotato.core.logger import CPLog
 import hashlib
 import os.path
@@ -152,6 +153,16 @@ def getTitle(library_dict):
     except:
         log.error('Could not get title for library item: %s', library_dict)
         return None
+
+def possibleTitles(raw_title):
+
+    titles = []
+
+    titles.append(toSafeString(raw_title).lower())
+    titles.append(raw_title.lower())
+    titles.append(simplifyString(raw_title))
+
+    return list(set(titles))
 
 def randomString(size = 8, chars = string.ascii_uppercase + string.digits):
     return ''.join(random.choice(chars) for x in range(size))

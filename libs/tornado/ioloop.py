@@ -194,7 +194,7 @@ class IOLoop(Configurable):
     def initialize(self):
         pass
 
-    def close(self, all_fds=False):
+    def close(self, all_fds = False):
         """Closes the IOLoop, freeing any resources used.
 
         If ``all_fds`` is true, all file descriptors registered on the
@@ -320,7 +320,7 @@ class IOLoop(Configurable):
         """
         raise NotImplementedError()
 
-    def add_callback(self, callback):
+    def add_callback(self, callback, *args, **kwargs):
         """Calls the given callback on the next I/O loop iteration.
 
         It is safe to call this method from any thread at any time,
@@ -335,7 +335,7 @@ class IOLoop(Configurable):
         """
         raise NotImplementedError()
 
-    def add_callback_from_signal(self, callback):
+    def add_callback_from_signal(self, callback, *args, **kwargs):
         """Calls the given callback on the next I/O loop iteration.
 
         Safe for use from a Python signal handler; should not be used
@@ -359,8 +359,7 @@ class IOLoop(Configurable):
         assert isinstance(future, IOLoop._FUTURE_TYPES)
         callback = stack_context.wrap(callback)
         future.add_done_callback(
-            lambda future: self.add_callback(
-                functools.partial(callback, future)))
+            lambda future: self.add_callback(callback, future))
 
     def _run_callback(self, callback):
         """Runs a callback with error handling.
@@ -382,7 +381,7 @@ class IOLoop(Configurable):
         The exception itself is not passed explicitly, but is available
         in sys.exc_info.
         """
-        app_log.error("Exception in callback %r", callback, exc_info=True)
+        app_log.error("Exception in callback %r", callback, exc_info = True)
 
 
 
@@ -393,7 +392,7 @@ class PollIOLoop(IOLoop):
     (Linux), `tornado.platform.kqueue.KQueueIOLoop` (BSD and Mac), or
     `tornado.platform.select.SelectIOLoop` (all platforms).
     """
-    def initialize(self, impl, time_func=None):
+    def initialize(self, impl, time_func = None):
         super(PollIOLoop, self).initialize()
         self._impl = impl
         if hasattr(self._impl, 'fileno'):
@@ -417,7 +416,7 @@ class PollIOLoop(IOLoop):
                          lambda fd, events: self._waker.consume(),
                          self.READ)
 
-    def close(self, all_fds=False):
+    def close(self, all_fds = False):
         with self._callback_lock:
             self._closing = True
         self.remove_handler(self._waker.fileno())
@@ -426,7 +425,7 @@ class PollIOLoop(IOLoop):
                 try:
                     os.close(fd)
                 except Exception:
-                    gen_log.debug("error closing fd %s", fd, exc_info=True)
+                    gen_log.debug("error closing fd %s", fd, exc_info = True)
         self._waker.close()
         self._impl.close()
 
@@ -442,8 +441,8 @@ class PollIOLoop(IOLoop):
         self._events.pop(fd, None)
         try:
             self._impl.unregister(fd)
-        except (OSError, IOError):
-            gen_log.debug("Error deleting fd from IOLoop", exc_info=True)
+        except Exception:
+            gen_log.debug("Error deleting fd from IOLoop", exc_info = True)
 
     def set_blocking_signal_threshold(self, seconds, action):
         if not hasattr(signal, "setitimer"):
@@ -501,7 +500,7 @@ class PollIOLoop(IOLoop):
                     # IOLoop is just started once at the beginning.
                     signal.set_wakeup_fd(old_wakeup_fd)
                     old_wakeup_fd = None
-            except ValueError:  # non-main thread
+            except ValueError: # non-main thread
                 pass
 
         while True:
@@ -569,17 +568,18 @@ class PollIOLoop(IOLoop):
             while self._events:
                 fd, events = self._events.popitem()
                 try:
-                    self._handlers[fd](fd, events)
+                    hdlr = self._handlers.get(fd)
+                    if hdlr: hdlr(fd, events)
                 except (OSError, IOError), e:
                     if e.args[0] == errno.EPIPE:
                         # Happens when the client closes the connection
                         pass
                     else:
                         app_log.error("Exception in I/O handler for fd %s",
-                                      fd, exc_info=True)
+                                      fd, exc_info = True)
                 except Exception:
                     app_log.error("Exception in I/O handler for fd %s",
-                                  fd, exc_info=True)
+                                  fd, exc_info = True)
         # reset the stopped flag so another start/stop pair can be issued
         self._stopped = False
         if self._blocking_signal_threshold is not None:
@@ -609,12 +609,13 @@ class PollIOLoop(IOLoop):
         # collection pass whenever there are too many dead timeouts.
         timeout.callback = None
 
-    def add_callback(self, callback):
+    def add_callback(self, callback, *args, **kwargs):
         with self._callback_lock:
             if self._closing:
                 raise RuntimeError("IOLoop is closing")
             list_empty = not self._callbacks
-            self._callbacks.append(stack_context.wrap(callback))
+            self._callbacks.append(functools.partial(
+                    stack_context.wrap(callback), *args, **kwargs))
         if list_empty and thread.get_ident() != self._thread_ident:
             # If we're in the IOLoop's thread, we know it's not currently
             # polling.  If we're not, and we added the first callback to an
@@ -624,12 +625,12 @@ class PollIOLoop(IOLoop):
             # avoid it when we can.
             self._waker.wake()
 
-    def add_callback_from_signal(self, callback):
+    def add_callback_from_signal(self, callback, *args, **kwargs):
         with stack_context.NullContext():
             if thread.get_ident() != self._thread_ident:
                 # if the signal is handled on another thread, we can add
                 # it normally (modulo the NullContext)
-                self.add_callback(callback)
+                self.add_callback(callback, *args, **kwargs)
             else:
                 # If we're on the IOLoop's thread, we cannot use
                 # the regular add_callback because it may deadlock on
@@ -639,7 +640,8 @@ class PollIOLoop(IOLoop):
                 # _callback_lock block in IOLoop.start, we may modify
                 # either the old or new version of self._callbacks,
                 # but either way will work.
-                self._callbacks.append(stack_context.wrap(callback))
+                self._callbacks.append(functools.partial(
+                        stack_context.wrap(callback), *args, **kwargs))
 
 
 class _Timeout(object):
@@ -682,7 +684,7 @@ class PeriodicCallback(object):
 
     `start` must be called after the PeriodicCallback is created.
     """
-    def __init__(self, callback, callback_time, io_loop=None):
+    def __init__(self, callback, callback_time, io_loop = None):
         self.callback = callback
         if callback_time <= 0:
             raise ValueError("Periodic callback must have a positive callback_time")
@@ -710,7 +712,7 @@ class PeriodicCallback(object):
         try:
             self.callback()
         except Exception:
-            app_log.error("Error in periodic callback", exc_info=True)
+            app_log.error("Error in periodic callback", exc_info = True)
         self._schedule_next()
 
     def _schedule_next(self):

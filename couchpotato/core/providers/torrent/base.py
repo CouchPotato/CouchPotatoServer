@@ -24,3 +24,9 @@ class TorrentProvider(YarrProvider):
             return getImdb(data) == imdbId
 
         return False
+
+class TorrentMagnetProvider(TorrentProvider):
+
+    type = 'torrent_magnet'
+
+    download = None

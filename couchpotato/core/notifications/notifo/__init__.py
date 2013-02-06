@@ -8,6 +8,7 @@ config = [{
     'groups': [
         {
             'tab': 'notifications',
+            'list': 'notification_providers',
             'name': 'notifo',
             'description': 'Keep in mind that Notifo service will end soon.',
             'options': [

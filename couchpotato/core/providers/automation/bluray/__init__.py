@@ -8,6 +8,7 @@ config = [{
     'groups': [
         {
             'tab': 'automation',
+            'list': 'automation_providers',
             'name': 'bluray_automation',
             'label': 'Blu-ray.com',
             'description': 'Imports movies from blu-ray.com. (uses minimal requirements)',

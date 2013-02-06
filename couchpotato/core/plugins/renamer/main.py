@@ -33,6 +33,7 @@ class Renamer(Plugin):
         addEvent('renamer.check_snatched', self.checkSnatched)
 
         addEvent('app.load', self.scan)
+        addEvent('app.load', self.checkSnatched)
 
         if self.conf('run_every') > 0:
             fireEvent('schedule.interval', 'renamer.check_snatched', self.checkSnatched, minutes = self.conf('run_every'))
@@ -340,6 +341,7 @@ class Renamer(Plugin):
 
                 log.info('Removing "%s"', src)
                 try:
+                    src = ss(src)
                     if os.path.isfile(src):
                         os.remove(src)
 
@@ -466,7 +468,7 @@ class Renamer(Plugin):
 
         except:
             log.error('Couldn\'t move file "%s" to "%s": %s', (old, dest, traceback.format_exc()))
-            raise Exception
+            raise
 
         return True
 
@@ -497,6 +499,7 @@ class Renamer(Plugin):
         return string.replace('  ', ' ').replace(' .', '.')
 
     def deleteEmptyFolder(self, folder, show_error = True):
+        folder = ss(folder)
 
         loge = log.error if show_error else log.debug
         for root, dirs, files in os.walk(folder):

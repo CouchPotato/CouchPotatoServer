@@ -1,5 +1,5 @@
 from couchpotato.core.downloaders.base import Downloader
-from couchpotato.core.helpers.encoding import tryUrlencode
+from couchpotato.core.helpers.encoding import tryUrlencode, ss
 from couchpotato.core.helpers.variable import cleanHost, mergeDicts
 from couchpotato.core.logger import CPLog
 from urllib2 import URLError
@@ -12,10 +12,7 @@ class Sabnzbd(Downloader):
 
     type = ['nzb']
 
-    def download(self, data = {}, movie = {}, manual = False, filedata = None):
-
-        if self.isDisabled(manual) or not self.isCorrectType(data.get('type')):
-            return
+    def download(self, data = {}, movie = {}, filedata = None):
 
         log.info('Sending "%s" to SABnzbd.', data.get('name'))
 
@@ -41,7 +38,7 @@ class Sabnzbd(Downloader):
 
         try:
             if params.get('mode') is 'addfile':
-                sab = self.urlopen(url, timeout = 60, params = {'nzbfile': (nzb_filename, filedata)}, multipart = True, show_error = False)
+                sab = self.urlopen(url, timeout = 60, params = {'nzbfile': (ss(nzb_filename), filedata)}, multipart = True, show_error = False)
             else:
                 sab = self.urlopen(url, timeout = 60, show_error = False)
         except URLError:
@@ -65,8 +62,6 @@ class Sabnzbd(Downloader):
             return False
 
     def getAllDownloadStatus(self):
-        if self.isDisabled(manual = False):
-            return False
 
         log.debug('Checking SABnzbd download status.')
 
@@ -121,9 +116,6 @@ class Sabnzbd(Downloader):
         return statuses
 
     def removeFailed(self, item):
-
-        if not self.conf('delete_failed', default = True):
-            return False
 
         log.info('%s failed downloading, deleting...', item['name'])
 

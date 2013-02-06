@@ -24,8 +24,8 @@ var CouchPotato = new Class({
 
 		if(window.location.hash)
 			History.handleInitialState();
-
-		self.openPage(window.location.pathname);
+		else
+			self.openPage(window.location.pathname);
 
 		History.addEvent('change', self.openPage.bind(self));
 		self.c.addEvent('click:relay(a[href^=/]:not([target]))', self.pushState.bind(self));

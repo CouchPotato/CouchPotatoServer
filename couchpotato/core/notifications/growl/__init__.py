@@ -8,6 +8,7 @@ config = [{
     'groups': [
         {
             'tab': 'notifications',
+            'list': 'notification_providers',
             'name': 'growl',
             'description': 'Version 1.4+',
             'options': [

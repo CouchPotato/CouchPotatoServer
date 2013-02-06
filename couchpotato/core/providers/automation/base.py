@@ -1,13 +1,13 @@
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.logger import CPLog
-from couchpotato.core.plugins.base import Plugin
+from couchpotato.core.providers.base import Provider
 from couchpotato.environment import Env
 import time
 
 log = CPLog(__name__)
 
 
-class Automation(Plugin):
+class Automation(Provider):
 
     enabled_option = 'automation_enabled'
 
@@ -18,6 +18,9 @@ class Automation(Plugin):
         addEvent('automation.get_movies', self._getMovies)
 
     def _getMovies(self):
+
+        if self.isDisabled():
+            return
 
         if not self.canCheck():
             log.debug('Just checked, skipping %s', self.getName())

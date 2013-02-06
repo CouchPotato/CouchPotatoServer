@@ -116,7 +116,7 @@ def sizeScore(size):
 
 
 def providerScore(provider):
-    if provider in ['NZBMatrix', 'Nzbs', 'Newzbin']:
+    if provider in ['OMGWTFNZBs', 'PassThePopcorn', 'SceneAccess', 'TorrentLeech']:
         return 20
 
     if provider in ['Newznab']:

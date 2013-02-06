@@ -19,10 +19,11 @@ class Trailer(Plugin):
         trailers = fireEvent('trailer.search', group = group, merge = True)
         if not trailers or trailers == []:
             log.info('No trailers found for: %s', getTitle(group['library']))
-            return
+            return False
 
         for trailer in trailers.get(self.conf('quality'), []):
-            destination = '%s-trailer.%s' % (self.getRootName(group), getExt(trailer))
+            filename = self.conf('name').replace('<filename>', group['filename']) + ('.%s' % getExt(trailer))
+            destination = os.path.join(group['destination_dir'], filename)
             if not os.path.isfile(destination):
                 fireEvent('file.download', url = trailer, dest = destination, urlopen_kwargs = {'headers': {'User-Agent': 'Quicktime'}}, single = True)
             else:
@@ -33,5 +34,5 @@ class Trailer(Plugin):
             # Download first and break
             break
 
-    def getRootName(self, data = {}):
-        return os.path.join(data['destination_dir'], data['filename'])
+        return True
+

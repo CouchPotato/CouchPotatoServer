@@ -9,9 +9,10 @@ config = [{
     'groups': [
         {
             'tab': 'downloaders',
+            'list': 'download_providers',
             'name': 'pneumatic',
             'label': 'Pneumatic',
-            'description': 'Download the .strm file to a specific folder.',
+            'description': 'Use <a href="http://forum.xbmc.org/showthread.php?tid=97657" target="_blank">Pneumatic</a> to download .strm files.',
             'options': [
                 {
                     'name': 'enabled',

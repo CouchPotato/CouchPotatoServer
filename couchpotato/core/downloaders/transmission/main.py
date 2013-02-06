@@ -16,10 +16,7 @@ class Transmission(Downloader):
     type = ['torrent', 'torrent_magnet']
     log = CPLog(__name__)
 
-    def download(self, data, movie, manual = False, filedata = None):
-
-        if self.isDisabled(manual) or not self.isCorrectType(data.get('type')):
-            return
+    def download(self, data, movie, filedata = None):
 
         log.debug('Sending "%s" (%s) to Transmission.', (data.get('name'), data.get('type')))
 
@@ -41,10 +38,12 @@ class Transmission(Downloader):
             'download-dir': folder_path
         }
 
-        torrent_params = {
-            'seedRatioLimit': self.conf('ratio'),
-            'seedRatioMode': (0 if self.conf('ratio') else 1)
-        }
+        torrent_params = {}
+        if self.conf('ratio'):
+            torrent_params = {
+                'seedRatioLimit': self.conf('ratio'),
+                'seedRatioMode': self.conf('ratio')
+            }
 
         if not filedata and data.get('type') == 'torrent':
             log.error('Failed sending torrent, no data')
@@ -60,7 +59,8 @@ class Transmission(Downloader):
                 remote_torrent = trpc.add_torrent_file(b64encode(filedata), arguments = params)
 
             # Change settings of added torrents
-            trpc.set_torrent(remote_torrent['torrent-added']['hashString'], torrent_params)
+            if torrent_params:
+                trpc.set_torrent(remote_torrent['torrent-added']['hashString'], torrent_params)
 
             return True
         except Exception, err:

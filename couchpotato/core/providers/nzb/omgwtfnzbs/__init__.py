@@ -8,9 +8,11 @@ config = [{
     'groups': [
         {
             'tab': 'searcher',
-            'subtab': 'nzb_providers',
+            'subtab': 'providers',
+            'list': 'nzb_providers',
             'name': 'OMGWTFNZBs',
-            'description': 'See <a href="http://www.omgwtfnzbs.com/">OMGWTFNZBs</a>',
+            'description': 'See <a href="http://omgwtfnzbs.org/">OMGWTFNZBs</a>',
+            'wizard': True,
             'options': [
                 {
                     'name': 'enabled',
