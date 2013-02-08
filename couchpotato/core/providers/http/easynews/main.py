@@ -15,7 +15,7 @@ log = CPLog(__name__)
 class Easynews(HTTPProvider):
 
     urls = {
-        'search': 'http://members.easynews.com/global5/index.html?fty[]=VIDEO&u=1',
+        'search': 'http://members.easynews.com/global5/index.html?fty[]=VIDEO&s1=dsize&s1d=-&u=1',
     }
 
     def _search(self, movie, quality, results):
@@ -53,27 +53,27 @@ class Easynews(HTTPProvider):
                 'date': tr.find('td', 'timeStamp').string
             })
 
-        for r in search:
+        for s in search:
 
             def extra_score(item):
-                group1 = (0, 50)[any(s in r['file'].lower() for s in ('ctrlhd', 'wiki', 'esir', 'shitsony', 'cytsunee', 'don.mkv'))]
-                group2 = (0, 30)[any(s in r['file'].lower() for s in ('chd', 'hdc', 'hdchina'))]
-                hires = (0, 10)['1080p' in r['file'].lower()]
+                group1 = (0, 50)[any(g in s['file'].lower() for g in ('ctrlhd', 'wiki', 'esir', 'shitsony', 'cytsunee', 'don.mkv'))]
+                group2 = (0, 30)[any(g in s['file'].lower() for g in ('chd', 'hdc', 'hdchina'))]
+                hires = (0, 10)['1080p' in s['file'].lower()]
 
                 return group1 + group2 + hires
 
-            d = parser.parse(r['date'])
+            d = parser.parse(s['date'])
             if d > datetime.now():
                 d = datetime(d.year - 1, d.month, d.day)
             age = (datetime.now() - d).days + 1
 
             results.append({
-                'id': r['id'],
-                'name': r['file'],
+                'id': s['id'],
+                'name': s['file'],
                 'age': age,
-                'size': self.parseSize(r['size']),
-                'url': r['url'],
-                'detail_url': self.urls['search'] + '&gps=%s' % q,
+                'size': self.parseSize(s['size']),
+                'url': s['url'],
+                'detail_url': r.url,
                 'extra_score': extra_score
             })
 
