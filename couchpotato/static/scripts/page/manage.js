@@ -88,7 +88,7 @@ Page.Manage = new Class({
 				'onComplete': function(json){
 					self.update_in_progress = true;
 
-					if(!json.progress){
+					if(!json || !json.progress){
 						clearInterval(self.progress_interval);
 						self.update_in_progress = false;
 						if(self.progress_container){
