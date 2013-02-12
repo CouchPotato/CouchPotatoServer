@@ -1,4 +1,5 @@
 from couchpotato.core.plugins.renamer.main import Renamer
+import os
 
 def start():
     return Renamer()
@@ -110,6 +111,15 @@ config = [{
                     'name': 'separator',
                     'label': 'Separator',
                     'description': 'Replace all the spaces with a character. Example: ".", "-" (without quotes). Leave empty to use spaces.',
+                },
+                {
+                    'advanced': True,
+                    'name': 'ntfs_permission',
+                    'label': 'NTFS Permission',
+                    'type': 'bool',
+                    'hidden': os.name != 'nt',
+                    'description': 'Set permission of moved files to that of destination folder (Windows NTFS only).',
+                    'default': False,
                 },
             ],
         }, {

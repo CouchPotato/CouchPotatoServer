@@ -2,6 +2,7 @@ from couchpotato.core.downloaders.base import Downloader
 from couchpotato.core.helpers.encoding import tryUrlencode, ss
 from couchpotato.core.helpers.variable import cleanHost, mergeDicts
 from couchpotato.core.logger import CPLog
+from couchpotato.environment import Env
 from urllib2 import URLError
 import json
 import traceback
@@ -38,9 +39,9 @@ class Sabnzbd(Downloader):
 
         try:
             if params.get('mode') is 'addfile':
-                sab = self.urlopen(url, timeout = 60, params = {'nzbfile': (ss(nzb_filename), filedata)}, multipart = True, show_error = False)
+                sab = self.urlopen(url, timeout = 60, params = {'nzbfile': (ss(nzb_filename), filedata)}, multipart = True, show_error = False, headers = {'User-Agent': Env.getIdentifier()})
             else:
-                sab = self.urlopen(url, timeout = 60, show_error = False)
+                sab = self.urlopen(url, timeout = 60, show_error = False, headers = {'User-Agent': Env.getIdentifier()})
         except URLError:
             log.error('Failed sending release, probably wrong HOST: %s', traceback.format_exc(0))
             return False
@@ -139,7 +140,7 @@ class Sabnzbd(Downloader):
            'output': 'json'
         }))
 
-        data = self.urlopen(url, timeout = 60, show_error = False)
+        data = self.urlopen(url, timeout = 60, show_error = False, headers = {'User-Agent': Env.getIdentifier()})
         if use_json:
             d = json.loads(data)
             if d.get('error'):
