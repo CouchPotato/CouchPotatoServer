@@ -373,6 +373,7 @@ class Renamer(Plugin):
 
                     try:
                         self.moveFile(src, dst)
+						
                         group['renamed_files'].append(dst)
                     except:
                         log.error('Failed moving the file "%s" : %s', (os.path.basename(src), traceback.format_exc()))
@@ -444,7 +445,7 @@ class Renamer(Plugin):
                 self.makeDir(os.path.dirname(dst))
 
                 try:
-                    self.moveFile(src, dst)
+					self.moveFile(src, dst)
                 except:
                     log.error('Failed moving the file "%s" : %s', (os.path.basename(src), traceback.format_exc()))
                     raise
@@ -455,9 +456,17 @@ class Renamer(Plugin):
 			##hardlink
 			if self.conf('hardlink'):
 				if os.name == 'nt':
-					subprocess.call(['cmd', '/C', 'mklink', '/H', old, dest], stdout=subprocess.PIPE)
+					try:
+						subprocess.call(['cmd', '/C', 'mklink', '/H', old, dest], stdout=subprocess.PIPE)
+					except OSError:
+						# source and destination may be on different partitions, so hard-link is impossible
+						shutil.move(old, dest)
 				else:
-					os.link(old, dest)
+					try:
+						os.link(old, dest)
+					except OSError:
+						# source and destination may be on different partitions, so hard-link is impossible
+						shutil.move(old, dest)
 			else:
 				##not using hardlinks, so we move the file
 				shutil.move(old, dest)
