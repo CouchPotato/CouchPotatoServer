@@ -14,6 +14,7 @@ import os
 import re
 import shutil
 import traceback
+from subprocess import call
 
 log = CPLog(__name__)
 
@@ -451,7 +452,15 @@ class Renamer(Plugin):
     def moveFile(self, old, dest):
         dest = ss(dest)
         try:
-            shutil.move(old, dest)
+			##hardlink
+			if self.conf('hardlink'):
+				if os.name == 'nt':
+					subprocess.call(['cmd', '/C', 'mklink', '/H', old, dest], stdout=subprocess.PIPE)
+				else:
+					os.link(old, dest)
+			else:
+				##not using hardlinks, so we move the file
+				shutil.move(old, dest)
 
             try:
                 os.chmod(dest, Env.getPermission('file'))
