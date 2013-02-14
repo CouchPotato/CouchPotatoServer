@@ -451,7 +451,27 @@ class Renamer(Plugin):
     def moveFile(self, old, dest):
         dest = ss(dest)
         try:
-            shutil.move(old, dest)
+        # Hardlink
+            if self.conf('hardlink'):
+                if os.name == 'nt':
+                    try:
+                        subprocess.call(['cmd', '/C', 'mklink', '/H', old, dest], stdout=subprocess.PIPE)
+                    except OSError:
+                        # source and destination may be on different partitions, so hard-link is impossible
+                        log.error('Failed to hardlink the file "%s" : %s', (os.path.basename(old), traceback.format_exc()))
+                else:
+                    try:
+                        os.link(old, dest)
+                    except OSError:
+                        # source and destination may be on different partitions, so hard-link is impossible
+                        log.error('Failed hardlink the file "%s" : %s', (os.path.basename(old), traceback.format_exc()))
+            else:
+                try:
+                    # Not using hardlinks, so we try and move the file
+                    shutil.move(old, dest)
+                except OSError:
+                    # File is in use, lets copy the file
+                    shutil.copyfile(old, dest)
 
             try:
                 os.chmod(dest, Env.getPermission('file'))
