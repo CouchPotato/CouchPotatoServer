@@ -121,6 +121,14 @@ config = [{
                     'description': 'Set permission of moved files to that of destination folder (Windows NTFS only).',
                     'default': False,
                 },
+				{
+                    'advanced': True,
+                    'name': 'hardlink',
+                    'label': 'Hardlinks',
+                    'type': 'bool',
+                    'description': 'Use hardlinks instead of moving files. This will only work if source and destination is on the same harddrive/partition.',
+                    'default': False,
+                },
             ],
         }, {
             'tab': 'renamer',

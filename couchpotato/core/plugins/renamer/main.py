@@ -14,6 +14,7 @@ import os
 import re
 import shutil
 import traceback
+from subprocess import call
 
 log = CPLog(__name__)
 
@@ -372,6 +373,7 @@ class Renamer(Plugin):
 
                     try:
                         self.moveFile(src, dst)
+						
                         group['renamed_files'].append(dst)
                     except:
                         log.error('Failed moving the file "%s" : %s', (os.path.basename(src), traceback.format_exc()))
@@ -443,7 +445,7 @@ class Renamer(Plugin):
                 self.makeDir(os.path.dirname(dst))
 
                 try:
-                    self.moveFile(src, dst)
+					self.moveFile(src, dst)
                 except:
                     log.error('Failed moving the file "%s" : %s', (os.path.basename(src), traceback.format_exc()))
                     raise
@@ -451,7 +453,27 @@ class Renamer(Plugin):
     def moveFile(self, old, dest):
         dest = ss(dest)
         try:
-            shutil.move(old, dest)
+	# Hardlink
+            if self.conf('hardlink'):
+                if os.name == 'nt':
+                    try:
+                        subprocess.call(['cmd', '/C', 'mklink', '/H', old, dest], stdout=subprocess.PIPE)
+                    except OSError:
+                        # source and destination may be on different partitions, so hard-link is impossible
+                        log.error('Failed to hardlink the file "%s" : %s', (os.path.basename(old), traceback.format_exc()))
+                else:
+                    try:
+                        os.link(old, dest)
+                    except OSError:
+                        # source and destination may be on different partitions, so hard-link is impossible
+                        log.error('Failed hardlink the file "%s" : %s', (os.path.basename(old), traceback.format_exc()))
+            else:
+                try:
+                    # Not using hardlinks, so we try and move the file
+                    shutil.move(old, dest)
+                except OSError:
+                    # File is in use, lets copy the file
+                    shutil.copyfile(old, dest)
 
             try:
                 os.chmod(dest, Env.getPermission('file'))
