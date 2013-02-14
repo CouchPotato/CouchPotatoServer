@@ -126,7 +126,7 @@ config = [{
                     'name': 'hardlink',
                     'label': 'Hardlinks',
                     'type': 'bool',
-                    'description': 'Use hardlinks instead of moving files.',
+                    'description': 'Use hardlinks instead of moving files. This will only work if source and destination is on the same harddrive/partition.',
                     'default': False,
                 },
             ],
