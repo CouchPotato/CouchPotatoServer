@@ -40,35 +40,43 @@ class IPTorrents(TorrentProvider):
             html = BeautifulSoup(data)
 
             try:
-                result_table = html.find('table', attrs = {'class' : 'torrents'})
+                find_string = html.find(text='Nothing found!')
 
-                if not result_table:
-                    return
+                if find_string:
 
-                entries = result_table.find_all('tr')
+                    log.info('No results found for: %s', (title))
 
-                for result in entries[1:]:
+                else:
 
-                    torrent = result.find_all('td')[1].find('a')
+                    result_table = html.find('table', attrs = {'class' : 'torrents'})
 
-                    torrent_id = torrent['href'].replace('/details.php?id=', '')
-                    torrent_name = torrent.string
-                    torrent_download_url = self.urls['download'] % (torrent_id, torrent_name.replace(' ', '.'))
-                    torrent_details_url = self.urls['detail'] % (torrent_id)
-                    torrent_size = self.parseSize(result.find_all('td')[5].string)
-                    torrent_seeders = tryInt(result.find('td', attrs = {'class' : 'ac t_seeders'}).string)
-                    torrent_leechers = tryInt(result.find('td', attrs = {'class' : 'ac t_leechers'}).string)
+                    if not result_table:
+                        return
 
-                    results.append({
-                        'id': torrent_id,
-                        'name': torrent_name,
-                        'url': torrent_download_url,
-                        'detail_url': torrent_details_url,
-                        'download': self.loginDownload,
-                        'size': torrent_size,
-                        'seeders': torrent_seeders,
-                        'leechers': torrent_leechers,
-                    })
+                    entries = result_table.find_all('tr')
+
+                    for result in entries[1:]:
+
+                        torrent = result.find_all('td')[1].find('a')
+
+                        torrent_id = torrent['href'].replace('/details.php?id=', '')
+                        torrent_name = torrent.string
+                        torrent_download_url = self.urls['download'] % (torrent_id, torrent_name.replace(' ', '.'))
+                        torrent_details_url = self.urls['detail'] % (torrent_id)
+                        torrent_size = self.parseSize(result.find_all('td')[5].string)
+                        torrent_seeders = tryInt(result.find('td', attrs = {'class' : 'ac t_seeders'}).string)
+                        torrent_leechers = tryInt(result.find('td', attrs = {'class' : 'ac t_leechers'}).string)
+
+                        results.append({
+                            'id': torrent_id,
+                            'name': torrent_name,
+                            'url': torrent_download_url,
+                            'detail_url': torrent_details_url,
+                            'download': self.loginDownload,
+                            'size': torrent_size,
+                            'seeders': torrent_seeders,
+                            'leechers': torrent_leechers,
+                        })
 
             except:
                 log.error('Failed to parsing %s: %s', (self.getName(), traceback.format_exc()))
