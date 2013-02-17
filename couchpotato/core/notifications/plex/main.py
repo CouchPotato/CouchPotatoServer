@@ -26,7 +26,7 @@ class Plex(Notification):
         for host in hosts:
 
             source_type = ['movie']
-            base_url = '%slibrary/sections' % host
+            base_url = '%s/library/sections' % host
             refresh_url = '%s/%%s/refresh' % base_url
 
             try:
