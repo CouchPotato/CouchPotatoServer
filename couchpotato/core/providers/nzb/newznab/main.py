@@ -69,6 +69,7 @@ class Newznab(NZBProvider, RSS):
 
             results.append({
                 'id': nzb_id,
+                'provider': host['name'],
                 'provider_extra': host['host'],
                 'name': self.getTextElement(nzb, 'title'),
                 'age': self.calculateAge(int(time.mktime(parse(date).timetuple()))),
@@ -81,6 +82,7 @@ class Newznab(NZBProvider, RSS):
     def getHosts(self):
 
         uses = splitString(str(self.conf('use')))
+        names = splitString(self.conf('name'))
         hosts = splitString(self.conf('host'))
         api_keys = splitString(self.conf('api_key'))
 
@@ -88,6 +90,7 @@ class Newznab(NZBProvider, RSS):
         for nr in range(len(hosts)):
             list.append({
                 'use': uses[nr],
+                'name': names[nr],
                 'host': hosts[nr],
                 'api_key': api_keys[nr]
             })
@@ -99,7 +102,7 @@ class Newznab(NZBProvider, RSS):
         hosts = self.getHosts()
 
         for host in hosts:
-            result = super(Newznab, self).belongsTo(url, host = host['host'], provider = provider)
+            result = super(host['name'], self).belongsTo(url, host = host['host'], provider = provider)
             if result:
                 return result
 
@@ -121,7 +124,7 @@ class Newznab(NZBProvider, RSS):
                     return True
             return False
 
-        return NZBProvider.isEnabled(self) and host['host'] and host['api_key'] and int(host['use'])
+        return NZBProvider.isEnabled(self) and host['name'] and host['host'] and host['api_key'] and int(host['use'])
 
     def getApiExt(self, host):
         return '&apikey=%s' % host['api_key']

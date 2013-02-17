@@ -26,6 +26,11 @@ config = [{
                     'default': '0,0,0,0'
                 },
                 {
+                    'name': 'name',
+                    'default': 'NZB.su,DOGnzb,NZBs.org,NZBGeek',
+                    'description': 'The name of your newznab provider',
+                },
+                {
                     'name': 'host',
                     'default': 'nzb.su,dognzb.cr,nzbs.org,https://index.nzbgeek.info',
                     'description': 'The hostname of your newznab provider',
@@ -36,7 +41,7 @@ config = [{
                     'label': 'Api Key',
                     'description': 'Can be found on your profile page',
                     'type': 'combined',
-                    'combine': ['use', 'host', 'api_key'],
+                    'combine': ['use', 'name', 'host', 'api_key'],
                 },
             ],
         },
