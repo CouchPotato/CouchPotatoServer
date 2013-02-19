@@ -512,8 +512,11 @@
 		.page .combined_table .head abbr.use, .page .combined_table .head abbr.automation_urls_use {
 			display: none;
 		}
+		.page .combined_table .head abbr.name {
+			margin-right: 174px;
+		}
 		.page .combined_table .head abbr.host {
-			margin-right: 197px;
+			margin-right: 182px;
 		}
 
 	.page .combined_table .ctrlHolder {
@@ -539,8 +542,10 @@
 
 	.page .combined_table .ctrlHolder.is_empty .delete, .page.settings .combined_table .ctrlHolder.is_empty .check {
 		visibility: hidden;
-}
-
+	}
+	.page .combined_table input[type=text] {
+		width: 29%;
+	}
 	.page .tab_about .usenet {
 		padding: 20px 30px 0;
 		font-size: 17px;
