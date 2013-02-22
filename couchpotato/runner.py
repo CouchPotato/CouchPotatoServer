@@ -245,7 +245,8 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
         (r'.*', FallbackHandler, dict(fallback = web_container)),
     ],
         log_function = lambda x : None,
-        debug = config['use_reloader']
+        debug = config['use_reloader'],
+        gzip = True,
     )
 
     if config['ssl_cert'] and config['ssl_key']:
