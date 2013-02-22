@@ -6,6 +6,7 @@ from couchpotato.environment import Env
 from minify.cssmin import cssmin
 from minify.jsmin import jsmin
 import os
+import traceback
 
 log = CPLog(__name__)
 
@@ -138,12 +139,15 @@ class ClientScript(Plugin):
         data = '' if as_html else []
 
         try:
-            if not Env.get('dev'):
-                return self.minified[type][location]
+            try:
+                if not Env.get('dev'):
+                    return self.minified[type][location]
+            except:
+                pass
 
             return self.urls[type][location]
-        except Exception, e:
-            log.error(e)
+        except:
+            log.error('Error getting minified %s, %s: %s', (type, location, traceback.format_exc()))
 
         return data
 
