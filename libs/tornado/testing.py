@@ -18,10 +18,10 @@ inheritance.  See the docstrings for each class/function below for more
 information.
 """
 
-from __future__ import absolute_import, division, with_statement
+from __future__ import absolute_import, division, print_function, with_statement
 
-from cStringIO import StringIO
 try:
+    from tornado import gen
     from tornado.httpclient import AsyncHTTPClient
     from tornado.httpserver import HTTPServer
     from tornado.simple_httpclient import SimpleAsyncHTTPClient
@@ -31,20 +31,27 @@ except ImportError:
     # These modules are not importable on app engine.  Parts of this module
     # won't work, but e.g. LogTrapTestCase and main() will.
     AsyncHTTPClient = None
+    gen = None
     HTTPServer = None
     IOLoop = None
     netutil = None
     SimpleAsyncHTTPClient = None
 from tornado.log import gen_log
 from tornado.stack_context import ExceptionStackContext
-from tornado.util import raise_exc_info
+from tornado.util import raise_exc_info, basestring_type
+import functools
 import logging
 import os
 import re
 import signal
 import socket
 import sys
-import time
+import types
+
+try:
+    from io import StringIO  # py3
+except ImportError:
+    from cStringIO import StringIO  # py2
 
 # Tornado's own test suite requires the updated unittest module
 # (either py27+ or unittest2) so tornado.test.util enforces
@@ -151,7 +158,7 @@ class AsyncTestCase(unittest.TestCase):
     def tearDown(self):
         self.io_loop.clear_current()
         if (not IOLoop.initialized() or
-            self.io_loop is not IOLoop.instance()):
+                self.io_loop is not IOLoop.instance()):
             # Try to clean up any file descriptors left open in the ioloop.
             # This avoids leaks, especially when tests are run repeatedly
             # in the same process with autoreload (because curl does not
@@ -160,10 +167,10 @@ class AsyncTestCase(unittest.TestCase):
         super(AsyncTestCase, self).tearDown()
 
     def get_new_ioloop(self):
-        '''Creates a new IOLoop for this test.  May be overridden in
+        """Creates a new IOLoop for this test.  May be overridden in
         subclasses for tests that require a specific IOLoop (usually
         the singleton).
-        '''
+        """
         return IOLoop()
 
     def _handle_exception(self, typ, value, tb):
@@ -185,12 +192,12 @@ class AsyncTestCase(unittest.TestCase):
         self.__rethrow()
 
     def stop(self, _arg=None, **kwargs):
-        '''Stops the ioloop, causing one pending (or future) call to wait()
+        """Stops the ioloop, causing one pending (or future) call to wait()
         to return.
 
         Keyword arguments or a single positional argument passed to stop() are
         saved and will be returned by wait().
-        '''
+        """
         assert _arg is None or not kwargs
         self.__stop_args = kwargs or _arg
         if self.__running:
@@ -211,20 +218,21 @@ class AsyncTestCase(unittest.TestCase):
                 def timeout_func():
                     try:
                         raise self.failureException(
-                          'Async operation timed out after %s seconds' %
-                          timeout)
+                            'Async operation timed out after %s seconds' %
+                            timeout)
                     except Exception:
                         self.__failure = sys.exc_info()
                     self.stop()
-                if self.__timeout is not None:
-                    self.io_loop.remove_timeout(self.__timeout)
                 self.__timeout = self.io_loop.add_timeout(self.io_loop.time() + timeout, timeout_func)
             while True:
                 self.__running = True
                 self.io_loop.start()
                 if (self.__failure is not None or
-                    condition is None or condition()):
+                        condition is None or condition()):
                     break
+            if self.__timeout is not None:
+                self.io_loop.remove_timeout(self.__timeout)
+                self.__timeout = None
         assert self.__stopped
         self.__stopped = False
         self.__rethrow()
@@ -234,7 +242,7 @@ class AsyncTestCase(unittest.TestCase):
 
 
 class AsyncHTTPTestCase(AsyncTestCase):
-    '''A test case that starts up an HTTP server.
+    """A test case that starts up an HTTP server.
 
     Subclasses must override get_app(), which returns the
     tornado.web.Application (or other HTTPServer callback) to be tested.
@@ -255,7 +263,7 @@ class AsyncHTTPTestCase(AsyncTestCase):
                 self.http_client.fetch(self.get_url('/'), self.stop)
                 response = self.wait()
                 # test contents of response
-    '''
+    """
     def setUp(self):
         super(AsyncHTTPTestCase, self).setUp()
         sock, port = bind_unused_port()
@@ -314,7 +322,7 @@ class AsyncHTTPTestCase(AsyncTestCase):
     def tearDown(self):
         self.http_server.stop()
         if (not IOLoop.initialized() or
-            self.http_client.io_loop is not IOLoop.instance()):
+                self.http_client.io_loop is not IOLoop.instance()):
             self.http_client.close()
         super(AsyncHTTPTestCase, self).tearDown()
 
@@ -342,11 +350,41 @@ class AsyncHTTPSTestCase(AsyncHTTPTestCase):
         # openssl req -new -keyout tornado/test/test.key -out tornado/test/test.crt -nodes -days 3650 -x509
         module_dir = os.path.dirname(__file__)
         return dict(
-                certfile=os.path.join(module_dir, 'test', 'test.crt'),
-                keyfile=os.path.join(module_dir, 'test', 'test.key'))
+            certfile=os.path.join(module_dir, 'test', 'test.crt'),
+            keyfile=os.path.join(module_dir, 'test', 'test.key'))
 
     def get_protocol(self):
         return 'https'
+
+
+def gen_test(f):
+    """Testing equivalent of ``@gen.engine``, to be applied to test methods.
+
+    ``@gen.engine`` cannot be used on tests because the `IOLoop` is not
+    already running.  ``@gen_test`` should be applied to test methods
+    on subclasses of `AsyncTestCase`.
+
+    Note that unlike most uses of ``@gen.engine``, ``@gen_test`` can
+    detect automatically when the function finishes cleanly so there
+    is no need to run a callback to signal completion.
+
+    Example::
+        class MyTest(AsyncHTTPTestCase):
+            @gen_test
+            def test_something(self):
+                response = yield gen.Task(self.fetch('/'))
+
+    """
+    @functools.wraps(f)
+    def wrapper(self, *args, **kwargs):
+        result = f(self, *args, **kwargs)
+        if result is None:
+            return
+        assert isinstance(result, types.GeneratorType)
+        runner = gen.Runner(result, self.stop)
+        runner.run()
+        self.wait()
+    return wrapper
 
 
 class LogTrapTestCase(unittest.TestCase):
@@ -361,21 +399,21 @@ class LogTrapTestCase(unittest.TestCase):
 
     This class assumes that only one log handler is configured and that
     it is a StreamHandler.  This is true for both logging.basicConfig
-    and the "pretty logging" configured by tornado.options.
+    and the "pretty logging" configured by tornado.options.  It is not
+    compatible with other log buffering mechanisms, such as those provided
+    by some test runners.
     """
     def run(self, result=None):
         logger = logging.getLogger()
-        if len(logger.handlers) > 1:
-            # Multiple handlers have been defined.  It gets messy to handle
-            # this, especially since the handlers may have different
-            # formatters.  Just leave the logging alone in this case.
-            super(LogTrapTestCase, self).run(result)
-            return
         if not logger.handlers:
             logging.basicConfig()
-        self.assertEqual(len(logger.handlers), 1)
         handler = logger.handlers[0]
-        assert isinstance(handler, logging.StreamHandler)
+        if (len(logger.handlers) > 1 or
+            not isinstance(handler, logging.StreamHandler)):
+            # Logging has been configured in a way we don't recognize,
+            # so just leave it alone.
+            super(LogTrapTestCase, self).run(result)
+            return
         old_stream = handler.stream
         try:
             handler.stream = StringIO()
@@ -410,7 +448,7 @@ class ExpectLog(logging.Filter):
         :param required: If true, an exeption will be raised if the end of
             the ``with`` statement is reached without matching any log entries.
         """
-        if isinstance(logger, basestring):
+        if isinstance(logger, basestring_type):
             logger = logging.getLogger(logger)
         self.logger = logger
         self.regex = re.compile(regex)
@@ -496,7 +534,7 @@ def main(**kwargs):
         kwargs['buffer'] = True
 
     if __name__ == '__main__' and len(argv) == 1:
-        print >> sys.stderr, "No tests specified"
+        print("No tests specified", file=sys.stderr)
         sys.exit(1)
     try:
         # In order to be able to run tests by their fully-qualified name
@@ -509,7 +547,7 @@ def main(**kwargs):
             unittest.main(module=None, argv=argv, **kwargs)
         else:
             unittest.main(defaultTest="all", argv=argv, **kwargs)
-    except SystemExit, e:
+    except SystemExit as e:
         if e.code == 0:
             gen_log.info('PASS')
         else:

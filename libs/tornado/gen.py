@@ -62,10 +62,11 @@ it was called with one argument, the result is that argument.  If it was
 called with more than one argument or any keyword arguments, the result
 is an `Arguments` object, which is a named tuple ``(args, kwargs)``.
 """
-from __future__ import absolute_import, division, with_statement
+from __future__ import absolute_import, division, print_function, with_statement
 
+import collections
 import functools
-import operator
+import itertools
 import sys
 import types
 
@@ -276,15 +277,23 @@ class Multi(YieldPoint):
     a list of ``YieldPoints``.
     """
     def __init__(self, children):
-        assert all(isinstance(i, YieldPoint) for i in children)
-        self.children = children
+        self.children = []
+        for i in children:
+            if isinstance(i, Future):
+                i = YieldFuture(i)
+            self.children.append(i)
+        assert all(isinstance(i, YieldPoint) for i in self.children)
+        self.unfinished_children = set(self.children)
 
     def start(self, runner):
         for i in self.children:
             i.start(runner)
 
     def is_ready(self):
-        return all(i.is_ready() for i in self.children)
+        finished = list(itertools.takewhile(
+                lambda i: i.is_ready(), self.unfinished_children))
+        self.unfinished_children.difference_update(finished)
+        return not self.unfinished_children
 
     def get_result(self):
         return [i.get_result() for i in self.children]
@@ -305,10 +314,12 @@ class Runner(object):
     """Internal implementation of `tornado.gen.engine`.
 
     Maintains information about pending callbacks and their results.
+
+    ``final_callback`` is run after the generator exits.
     """
-    def __init__(self, gen, deactivate_stack_context):
+    def __init__(self, gen, final_callback):
         self.gen = gen
-        self.deactivate_stack_context = deactivate_stack_context
+        self.final_callback = final_callback
         self.yield_point = _NullYieldPoint()
         self.pending_callbacks = set()
         self.results = {}
@@ -373,16 +384,15 @@ class Runner(object):
                         raise LeakedCallbackError(
                             "finished without waiting for callbacks %r" %
                             self.pending_callbacks)
-                    self.deactivate_stack_context()
-                    self.deactivate_stack_context = None
+                    self.final_callback()
+                    self.final_callback = None
                     return
                 except Exception:
                     self.finished = True
                     raise
                 if isinstance(yielded, list):
                     yielded = Multi(yielded)
-                if isinstance(yielded, Future):
-                    # TODO: lists of futures
+                elif isinstance(yielded, Future):
                     yielded = YieldFuture(yielded)
                 if isinstance(yielded, YieldPoint):
                     self.yield_point = yielded
@@ -414,20 +424,4 @@ class Runner(object):
         else:
             return False
 
-# in python 2.6+ this could be a collections.namedtuple
-
-
-class Arguments(tuple):
-    """The result of a yield expression whose callback had more than one
-    argument (or keyword arguments).
-
-    The `Arguments` object can be used as a tuple ``(args, kwargs)``
-    or an object with attributes ``args`` and ``kwargs``.
-    """
-    __slots__ = ()
-
-    def __new__(cls, args, kwargs):
-        return tuple.__new__(cls, (args, kwargs))
-
-    args = property(operator.itemgetter(0))
-    kwargs = property(operator.itemgetter(1))
+Arguments = collections.namedtuple('Arguments', ['args', 'kwargs'])
