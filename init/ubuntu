@@ -23,7 +23,7 @@ RUN_AS=YOUR_USERNAME_HERE
 DAEMON=/usr/bin/python
 
 # Path to store PID file
-PID_FILE=/var/run/couchpotato/server.pid
+PID_FILE=/var/run/couchpotato.pid
 PID_PATH=$(dirname $PID_FILE)
 
 # script name
