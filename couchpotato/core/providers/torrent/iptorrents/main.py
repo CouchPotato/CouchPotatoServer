@@ -42,7 +42,7 @@ class IPTorrents(TorrentProvider):
             try:
                 result_table = html.find('table', attrs = {'class' : 'torrents'})
 
-                if not result_table:
+                if not result_table or 'nothing found!' in data.lower():
                     return
 
                 entries = result_table.find_all('tr')
