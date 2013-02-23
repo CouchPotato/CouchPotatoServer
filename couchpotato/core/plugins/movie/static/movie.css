@@ -284,6 +284,7 @@
 						.movies .options .table .provider {
 							width: 120px;
 							text-overflow: ellipsis;
+							overflow: hidden;
 						}
 						.movies .options .table .name {
 							width: 350px;

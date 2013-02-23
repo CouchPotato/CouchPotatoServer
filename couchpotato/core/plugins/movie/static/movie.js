@@ -423,7 +423,8 @@ var ReleaseAction = new Class({
 
 				var status = Status.get(release.status_id),
 					quality = Quality.getProfile(release.quality_id) || {},
-					info = release.info;
+					info = release.info,
+					provider = self.get(release, 'provider') + (release.info['provider_extra'] ? self.get(release, 'provider_extra') : '');
 				release.status = status;
 
 				// Create release
@@ -437,7 +438,7 @@ var ReleaseAction = new Class({
 					new Element('span.size', {'text': release.info['size'] ? Math.floor(self.get(release, 'size')) : 'n/a'}),
 					new Element('span.age', {'text': self.get(release, 'age')}),
 					new Element('span.score', {'text': self.get(release, 'score')}),
-					new Element('span.provider', {'text': self.get(release, 'provider')}),
+					new Element('span.provider', { 'text': provider, 'title': provider }),
 					release.info['detail_url'] ? new Element('a.info.icon', {
 						'href': release.info['detail_url'],
 						'target': '_blank'
