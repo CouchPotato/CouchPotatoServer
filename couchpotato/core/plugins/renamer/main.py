@@ -566,7 +566,7 @@ class Renamer(Plugin):
 
                         found = False
                         for item in statuses:
-                            if item['name'] == nzbname or getImdb(item['name']) == movie_dict['library']['identifier']:
+                            if item['name'] == nzbname or rel_dict['info']['name'] in item['name'] or getImdb(item['name']) == movie_dict['library']['identifier']:
 
                                 timeleft = 'N/A' if item['timeleft'] == -1 else item['timeleft']
                                 log.debug('Found %s: %s, time to go: %s', (item['name'], item['status'].upper(), timeleft))
