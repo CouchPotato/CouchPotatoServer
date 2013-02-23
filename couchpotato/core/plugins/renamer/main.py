@@ -170,15 +170,15 @@ class Renamer(Plugin):
                         replacements['cd_nr'] = cd if multiple else ''
 
                         # Naming
-                        final_folder_name = self.doReplace(folder_name, replacements)
-                        final_file_name = self.doReplace(file_name, replacements)
+                        final_folder_name = self.doReplace(folder_name, replacements).lstrip('. ')
+                        final_file_name = self.doReplace(file_name, replacements).lstrip('. ')
                         replacements['filename'] = final_file_name[:-(len(getExt(final_file_name)) + 1)]
 
                         # Meta naming
                         if file_type is 'trailer':
-                            final_file_name = self.doReplace(trailer_name, replacements, remove_multiple = True)
+                            final_file_name = self.doReplace(trailer_name, replacements, remove_multiple = True).lstrip('. ')
                         elif file_type is 'nfo':
-                            final_file_name = self.doReplace(nfo_name, replacements, remove_multiple = True)
+                            final_file_name = self.doReplace(nfo_name, replacements, remove_multiple = True).lstrip('. ')
 
                         # Seperator replace
                         if separator:
