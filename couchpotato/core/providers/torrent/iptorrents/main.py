@@ -40,9 +40,14 @@ class IPTorrents(TorrentProvider):
             html = BeautifulSoup(data)
 
             try:
+                if html.find(text='Nothing found!'):
+                    log.info('No results found for: %s', (title))
+                    return
+
                 result_table = html.find('table', attrs = {'class' : 'torrents'})
 
                 if not result_table:
+                    log.info('No results found for: %s', (title))
                     return
 
                 entries = result_table.find_all('tr')
