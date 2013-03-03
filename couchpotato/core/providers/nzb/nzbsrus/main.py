@@ -25,7 +25,7 @@ class Nzbsrus(NZBProvider, RSS):
 
         cat_id_string = '&'.join(['c%s=1' % x for x in self.getCatId(quality.get('identifier'))])
         arguments = tryUrlencode({
-            'searchtext': 'imdb:' + movie['library']['identifier'][2:],
+            'searchtext': movie['library']['titles'][0]['title'].replace('&', ' '),
             'uid': self.conf('userid'),
             'key': self.conf('api_key'),
             'age': Env.setting('retention', section = 'nzb'),
