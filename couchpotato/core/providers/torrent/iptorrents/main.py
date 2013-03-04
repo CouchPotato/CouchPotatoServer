@@ -48,11 +48,10 @@ class IPTorrents(TorrentProvider):
                 for result in entries[1:]:
 
                     torrent = result.find_all('td')[1].find('a')
-                    torrent_download = result.find_all('td')[3].find('a')
 
                     torrent_id = torrent['href'].replace('/details.php?id=', '')
                     torrent_name = torrent.string
-                    torrent_download_url = self.urls['base_url'] + torrent_download['href'].replace(' ', '.')
+                    torrent_download_url = self.urls['base_url'] + (result.find_all('td')[3].find('a'))['href'].replace(' ', '.')
                     torrent_details_url = self.urls['base_url'] + torrent['href']
                     torrent_size = self.parseSize(result.find_all('td')[5].string)
                     torrent_seeders = tryInt(result.find('td', attrs = {'class' : 'ac t_seeders'}).string)
