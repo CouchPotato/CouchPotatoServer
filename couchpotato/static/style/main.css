@@ -80,6 +80,12 @@ a:hover { color: #f3f3f3; }
 	padding: 80px 0 10px;
 }
 
+h2 {
+	font-size: 30px;
+	padding: 0;
+	margin: 20px 0 0 0;
+}
+
 .footer {
 	text-align:center;
 	padding: 50px 0 0 0;
