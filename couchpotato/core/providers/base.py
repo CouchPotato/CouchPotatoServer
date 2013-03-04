@@ -46,7 +46,8 @@ class Provider(Plugin):
 
     def getJsonData(self, url, **kwargs):
 
-        data = self.getCache(md5(url), url, **kwargs)
+        cache_key = '%s%s' % (md5(url), md5('%s' % kwargs.get('params', {})))
+        data = self.getCache(cache_key, url, **kwargs)
 
         if data:
             try:
@@ -58,7 +59,8 @@ class Provider(Plugin):
 
     def getRSSData(self, url, item_path = 'channel/item', **kwargs):
 
-        data = self.getCache(md5(url), url, **kwargs)
+        cache_key = '%s%s' % (md5(url), md5('%s' % kwargs.get('params', {})))
+        data = self.getCache(cache_key, url, **kwargs)
 
         if data:
             try:
@@ -70,7 +72,9 @@ class Provider(Plugin):
         return []
 
     def getHTMLData(self, url, **kwargs):
-        return self.getCache(md5(url), url, **kwargs)
+
+        cache_key = '%s%s' % (md5(url), md5('%s' % kwargs.get('params', {})))
+        return self.getCache(cache_key, url, **kwargs)
 
 
 class YarrProvider(Provider):
