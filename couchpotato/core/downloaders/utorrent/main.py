@@ -1,3 +1,4 @@
+from base64 import b16encode, b32decode
 from bencode import bencode, bdecode
 from couchpotato.core.downloaders.base import Downloader
 from couchpotato.core.helpers.encoding import isInt, ss
@@ -42,8 +43,13 @@ class uTorrent(Downloader):
             torrent_hash = re.findall('urn:btih:([\w]{32,40})', data.get('url'))[0].upper()
             torrent_params['trackers'] = '%0D%0A%0D%0A'.join(self.torrent_trackers)
         else:
-            info = bdecode(filedata)["info"]
-            torrent_hash = sha1(bencode(info)).hexdigest().upper()
+            # Convert base 32 to hex
+            if len(torrent_hash) == 32:
+                torrent_hash = b16encode(b32decode(torrent_hash))
+            else:
+                info = bdecode(filedata)["info"]
+                torrent_hash = sha1(bencode(info)).hexdigest().upper()
+
             torrent_filename = self.createFileName(data, filedata, movie)
 
         # Send request to uTorrent
