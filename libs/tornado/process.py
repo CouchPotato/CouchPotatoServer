@@ -16,10 +16,10 @@
 
 """Utilities for working with multiple processes."""
 
-from __future__ import absolute_import, division, with_statement
+from __future__ import absolute_import, division, print_function, with_statement
 
 import errno
-import functools
+import multiprocessing
 import os
 import signal
 import subprocess
@@ -34,18 +34,17 @@ from tornado.log import gen_log
 from tornado import stack_context
 
 try:
-    import multiprocessing  # Python 2.6+
-except ImportError:
-    multiprocessing = None
+    long  # py2
+except NameError:
+    long = int  # py3
 
 
 def cpu_count():
     """Returns the number of processors on this machine."""
-    if multiprocessing is not None:
-        try:
-            return multiprocessing.cpu_count()
-        except NotImplementedError:
-            pass
+    try:
+        return multiprocessing.cpu_count()
+    except NotImplementedError:
+        pass
     try:
         return os.sysconf("SC_NPROCESSORS_CONF")
     except ValueError:
@@ -125,7 +124,7 @@ def fork_processes(num_processes, max_restarts=100):
     while children:
         try:
             pid, status = os.wait()
-        except OSError, e:
+        except OSError as e:
             if e.errno == errno.EINTR:
                 continue
             raise
@@ -162,6 +161,7 @@ def task_id():
     global _task_id
     return _task_id
 
+
 class Subprocess(object):
     """Wraps ``subprocess.Popen`` with IOStream support.
 
@@ -195,7 +195,7 @@ class Subprocess(object):
             err_r, err_w = os.pipe()
             kwargs['stderr'] = err_w
             to_close.append(err_w)
-            self.stdout = PipeIOStream(err_r, io_loop=self.io_loop)
+            self.stderr = PipeIOStream(err_r, io_loop=self.io_loop)
         self.proc = subprocess.Popen(*args, **kwargs)
         for fd in to_close:
             os.close(fd)
@@ -253,14 +253,14 @@ class Subprocess(object):
 
     @classmethod
     def _cleanup(cls):
-        for pid in cls._waiting.keys():
+        for pid in list(cls._waiting.keys()):  # make a copy
             cls._try_cleanup_process(pid)
 
     @classmethod
     def _try_cleanup_process(cls, pid):
         try:
             ret_pid, status = os.waitpid(pid, os.WNOHANG)
-        except OSError, e:
+        except OSError as e:
             if e.args[0] == errno.ECHILD:
                 return
         if ret_pid == 0:

@@ -8,7 +8,7 @@ var Movie = new Class({
 		var self = this;
 
 		self.data = data;
-		self.view = options.view || 'thumbs';
+		self.view = options.view || 'details';
 		self.list = list;
 
 		self.el = new Element('div.movie.inlay');
@@ -72,7 +72,6 @@ var Movie = new Class({
 		else if(!self.spinner) {
 			self.createMask();
 			self.spinner = createSpinner(self.mask);
-			self.positionMask();
 			self.mask.fade('in');
 		}
 	},
@@ -84,7 +83,6 @@ var Movie = new Class({
 				'z-index': '1'
 			}
 		}).inject(self.el, 'top').fade('hide');
-		self.positionMask();
 	},
 
 	positionMask: function(){
@@ -103,7 +101,7 @@ var Movie = new Class({
 		var self = this;
 
 		self.data = notification.data;
-		self.container.destroy();
+		self.el.empty();
 
 		self.profile = Quality.getProfile(self.data.profile_id) || {};
 		self.create();
@@ -114,52 +112,50 @@ var Movie = new Class({
 	create: function(){
 		var self = this;
 
+		var s = Status.get(self.get('status_id'));
+		self.el.addClass('status_'+s.identifier);
+
 		self.el.adopt(
-			self.container = new Element('div.movie_container').adopt(
-				self.select_checkbox = new Element('input[type=checkbox].inlay', {
-					'events': {
-						'change': function(){
-							self.fireEvent('select')
-						}
+			self.select_checkbox = new Element('input[type=checkbox].inlay', {
+				'events': {
+					'change': function(){
+						self.fireEvent('select')
 					}
-				}),
-				self.thumbnail = File.Select.single('poster', self.data.library.files),
-				self.data_container = new Element('div.data.inlay.light', {
-					'tween': {
-						duration: 400,
-						transition: 'quint:in:out',
-						onComplete: self.fireEvent.bind(self, 'slideEnd')
-					}
-				}).adopt(
-					self.info_container = new Element('div.info').adopt(
-						self.title = new Element('div.title', {
-							'text': self.getTitle() || 'n/a'
-						}),
-						self.year = new Element('div.year', {
-							'text': self.data.library.year || 'n/a'
-						}),
-						self.rating = new Element('div.rating.icon', {
-							'text': self.data.library.rating
-						}),
-						self.description = new Element('div.description', {
-							'text': self.data.library.plot
-						}),
-						self.quality = new Element('div.quality', {
-							'events': {
-								'click': function(e){
-									var releases = self.el.getElement('.actions .releases');
-										if(releases)
-											releases.fireEvent('click', [e])
-								}
+				}
+			}),
+			self.thumbnail = File.Select.single('poster', self.data.library.files),
+			self.data_container = new Element('div.data.inlay.light').adopt(
+				self.info_container = new Element('div.info').adopt(
+					self.title = new Element('div.title', {
+						'text': self.getTitle() || 'n/a'
+					}),
+					self.year = new Element('div.year', {
+						'text': self.data.library.year || 'n/a'
+					}),
+					self.rating = new Element('div.rating.icon', {
+						'text': self.data.library.rating
+					}),
+					self.description = new Element('div.description', {
+						'text': self.data.library.plot
+					}),
+					self.quality = new Element('div.quality', {
+						'events': {
+							'click': function(e){
+								var releases = self.el.getElement('.actions .releases');
+									if(releases)
+										releases.fireEvent('click', [e])
 							}
-						})
-					),
-					self.actions = new Element('div.actions')
-				)
+						}
+					})
+				),
+				self.actions = new Element('div.actions')
 			)
 		);
 
-		self.changeView(self.view);
+		if(self.thumbnail.empty)
+			self.el.addClass('no_thumbnail');
+
+		//self.changeView(self.view);
 		self.select_checkbox_class = new Form.Check(self.select_checkbox);
 
 		// Add profile
@@ -174,7 +170,7 @@ var Movie = new Class({
 
 			});
 
-		// Add done releases
+		// Add releases
 		self.data.releases.each(function(release){
 
 			var q = self.quality.getElement('.q_id'+ release.quality_id),
@@ -241,23 +237,23 @@ var Movie = new Class({
 
 		if(direction == 'in'){
 			self.temp_view = self.view;
-			self.changeView('thumbs')
+			self.changeView('details')
 
 			self.el.addEvent('outerClick', function(){
-				self.changeView(self.temp_view)
+				self.removeView()
 				self.slide('out')
 			})
 			el.show();
-			self.data_container.tween('right', 0, -840);
+			self.data_container.addClass('hide_right');
 		}
 		else {
 			self.el.removeEvents('outerClick')
 
-			self.addEvent('slideEnd:once', function(){
+			setTimeout(function(){
 				self.el.getElements('> :not(.data):not(.poster):not(.movie_container)').hide();
-			});
+			}, 600);
 
-			self.data_container.tween('right', -840, 0);
+			self.data_container.removeClass('hide_right');
 		}
 	},
 
@@ -269,6 +265,12 @@ var Movie = new Class({
 			.addClass(new_view+'_view')
 
 		self.view = new_view;
+	},
+
+	removeView: function(){
+		var self = this;
+
+		self.el.removeClass(self.view+'_view')
 	},
 
 	get: function(attr){
@@ -320,7 +322,7 @@ var MovieAction = new Class({
 				'z-index': '1'
 			}
 		}).inject(self.movie, 'top').fade('hide');
-		self.positionMask();
+		//self.positionMask();
 	},
 
 	positionMask: function(){
@@ -379,20 +381,27 @@ var ReleaseAction = new Class({
 			}
 		});
 
-		var buttons_done = false;
+		if(self.movie.data.releases.length == 0){
+			self.el.hide()
+		}
+		else {
 
-		self.movie.data.releases.sortBy('-info.score').each(function(release){
-			if(buttons_done) return;
+			var buttons_done = false;
 
-			var status = Status.get(release.status_id);
+			self.movie.data.releases.sortBy('-info.score').each(function(release){
+				if(buttons_done) return;
 
-			if((self.next_release && (status.identifier == 'ignored' || status.identifier == 'failed')) || (!self.next_release && status.identifier == 'available')){
-				self.hide_on_click = false;
-				self.show();
-				buttons_done = true;
-			}
+				var status = Status.get(release.status_id);
 
-		});
+				if((self.next_release && (status.identifier == 'ignored' || status.identifier == 'failed')) || (!self.next_release && status.identifier == 'available')){
+					self.hide_on_click = false;
+					self.show();
+					buttons_done = true;
+				}
+
+			});
+
+		}
 
 	},
 
@@ -423,7 +432,8 @@ var ReleaseAction = new Class({
 
 				var status = Status.get(release.status_id),
 					quality = Quality.getProfile(release.quality_id) || {},
-					info = release.info;
+					info = release.info,
+					provider = self.get(release, 'provider') + (release.info['provider_extra'] ? self.get(release, 'provider_extra') : '');
 				release.status = status;
 
 				// Create release
@@ -437,7 +447,7 @@ var ReleaseAction = new Class({
 					new Element('span.size', {'text': release.info['size'] ? Math.floor(self.get(release, 'size')) : 'n/a'}),
 					new Element('span.age', {'text': self.get(release, 'age')}),
 					new Element('span.score', {'text': self.get(release, 'score')}),
-					new Element('span.provider', {'text': self.get(release, 'provider')}),
+					new Element('span.provider', { 'text': provider, 'title': provider }),
 					release.info['detail_url'] ? new Element('a.info.icon', {
 						'href': release.info['detail_url'],
 						'target': '_blank'
@@ -602,7 +612,7 @@ var TrailerAction = new Class({
 		self.player_container = new Element('div[id='+id+']');
 		self.container = new Element('div.hide.trailer_container')
 			.adopt(self.player_container)
-			.inject(self.movie.container, 'top');
+			.inject($(self.movie), 'top');
 
 		self.container.setStyle('height', 0);
 		self.container.removeClass('hide');
@@ -614,10 +624,8 @@ var TrailerAction = new Class({
 			}
 		}).inject(self.movie);
 
-		setTimeout(function(){
-			$(self.movie).setStyle('max-height', height);
-			self.container.setStyle('height', height);
-		}, 100)
+		self.container.setStyle('height', height);
+		$(self.movie).setStyle('height', height);
 
 		new Request.JSONP({
 			'url': url,
@@ -664,6 +672,7 @@ var TrailerAction = new Class({
 		self.player.stopVideo();
 		self.container.addClass('hide');
 		self.close_button.addClass('hide');
+		$(self.movie).setStyle('height', null);
 
 		setTimeout(function(){
 			self.container.destroy()

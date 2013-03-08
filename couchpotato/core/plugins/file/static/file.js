@@ -4,6 +4,7 @@ var File = new Class({
 		var self = this;
 
 		if(!file){
+			self.empty = true;
 			self.el = new Element('div');
 			return
 		}

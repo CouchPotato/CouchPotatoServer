@@ -191,6 +191,8 @@
 
 				.movie_result .info h2 {
 					margin: 0;
+					font-size: 17px;
+					line-height: 20px;
 				}
 
 				.movie_result .info h2 span {

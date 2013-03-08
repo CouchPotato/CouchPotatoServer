@@ -30,6 +30,7 @@ class Searcher(Plugin):
         addEvent('searcher.correct_movie', self.correctMovie)
         addEvent('searcher.download', self.download)
         addEvent('searcher.try_next_release', self.tryNextRelease)
+        addEvent('searcher.could_be_released', self.couldBeReleased)
 
         addApiView('searcher.try_next', self.tryNextReleaseView, docs = {
             'desc': 'Marks the snatched results as ignored and try the next best release',
@@ -156,7 +157,7 @@ class Searcher(Plugin):
 
         ret = False
         for quality_type in movie['profile']['types']:
-            if not self.couldBeReleased(quality_type['quality']['identifier'], release_dates, pre_releases):
+            if not self.couldBeReleased(quality_type['quality']['identifier'] in pre_releases, release_dates):
                 log.info('Too early to search for %s, %s', (quality_type['quality']['identifier'], default_title))
                 continue
 
@@ -526,7 +527,7 @@ class Searcher(Plugin):
 
         return False
 
-    def couldBeReleased(self, wanted_quality, dates, pre_releases):
+    def couldBeReleased(self, is_pre_release, dates):
 
         now = int(time.time())
 
@@ -538,7 +539,7 @@ class Searcher(Plugin):
             if dates.get('theater', 0) < 0 or dates.get('dvd', 0) < 0:
                 return True
 
-            if wanted_quality in pre_releases:
+            if is_pre_release:
                 # Prerelease 1 week before theaters
                 if dates.get('theater') - 604800 < now:
                     return True

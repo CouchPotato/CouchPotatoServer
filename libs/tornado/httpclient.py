@@ -29,14 +29,12 @@ you use a recent version of ``libcurl`` and ``pycurl``.  Currently the minimum
 supported version is 7.18.2, and the recommended version is 7.21.1 or newer.
 """
 
-from __future__ import absolute_import, division, with_statement
+from __future__ import absolute_import, division, print_function, with_statement
 
-import calendar
-import email.utils
-import httplib
 import time
 import weakref
 
+from tornado.concurrent import Future
 from tornado.escape import utf8
 from tornado import httputil, stack_context
 from tornado.ioloop import IOLoop
@@ -134,7 +132,7 @@ class AsyncHTTPClient(Configurable):
     def _async_clients(cls):
         attr_name = '_async_client_dict_' + cls.__name__
         if not hasattr(cls, attr_name):
-            setattr(cls, attr_name,  weakref.WeakKeyDictionary())
+            setattr(cls, attr_name, weakref.WeakKeyDictionary())
         return getattr(cls, attr_name)
 
     def __new__(cls, io_loop=None, force_instance=False, **kwargs):
@@ -147,6 +145,12 @@ class AsyncHTTPClient(Configurable):
             cls._async_clients()[io_loop] = instance
         return instance
 
+    def initialize(self, io_loop, defaults=None):
+        self.io_loop = io_loop
+        self.defaults = dict(HTTPRequest._DEFAULTS)
+        if defaults is not None:
+            self.defaults.update(defaults)
+
     def close(self):
         """Destroys this http client, freeing any file descriptors used.
         Not needed in normal use, but may be helpful in unittests that
@@ -156,7 +160,7 @@ class AsyncHTTPClient(Configurable):
         if self._async_clients().get(self.io_loop) is self:
             del self._async_clients()[self.io_loop]
 
-    def fetch(self, request, callback, **kwargs):
+    def fetch(self, request, callback=None, **kwargs):
         """Executes a request, calling callback with an `HTTPResponse`.
 
         The request may be either a string URL or an `HTTPRequest` object.
@@ -168,6 +172,37 @@ class AsyncHTTPClient(Configurable):
         encountered during the request. You can call response.rethrow() to
         throw the exception (if any) in the callback.
         """
+        if not isinstance(request, HTTPRequest):
+            request = HTTPRequest(url=request, **kwargs)
+        # We may modify this (to add Host, Accept-Encoding, etc),
+        # so make sure we don't modify the caller's object.  This is also
+        # where normal dicts get converted to HTTPHeaders objects.
+        request.headers = httputil.HTTPHeaders(request.headers)
+        request = _RequestProxy(request, self.defaults)
+        future = Future()
+        if callback is not None:
+            callback = stack_context.wrap(callback)
+            def handle_future(future):
+                exc = future.exception()
+                if isinstance(exc, HTTPError) and exc.response is not None:
+                    response = exc.response
+                elif exc is not None:
+                    response = HTTPResponse(
+                        request, 599, error=exc,
+                        request_time=time.time() - request.start_time)
+                else:
+                    response = future.result()
+                self.io_loop.add_callback(callback, response)
+            future.add_done_callback(handle_future)
+        def handle_response(response):
+            if response.error:
+                future.set_exception(response.error)
+            else:
+                future.set_result(response)
+        self.fetch_impl(request, handle_response)
+        return future
+
+    def fetch_impl(self, request, callback):
         raise NotImplementedError()
 
     @classmethod
@@ -280,9 +315,8 @@ class HTTPRequest(object):
         if headers is None:
             headers = httputil.HTTPHeaders()
         if if_modified_since:
-            timestamp = calendar.timegm(if_modified_since.utctimetuple())
-            headers["If-Modified-Since"] = email.utils.formatdate(
-                timestamp, localtime=False, usegmt=True)
+            headers["If-Modified-Since"] = httputil.format_timestamp(
+                if_modified_since)
         self.proxy_host = proxy_host
         self.proxy_port = proxy_port
         self.proxy_username = proxy_username
@@ -346,7 +380,7 @@ class HTTPResponse(object):
                  time_info=None, reason=None):
         self.request = request
         self.code = code
-        self.reason = reason or httplib.responses.get(code, "Unknown")
+        self.reason = reason or httputil.responses.get(code, "Unknown")
         if headers is not None:
             self.headers = headers
         else:
@@ -383,7 +417,7 @@ class HTTPResponse(object):
             raise self.error
 
     def __repr__(self):
-        args = ",".join("%s=%r" % i for i in self.__dict__.iteritems())
+        args = ",".join("%s=%r" % i for i in sorted(self.__dict__.items()))
         return "%s(%s)" % (self.__class__.__name__, args)
 
 
@@ -403,9 +437,10 @@ class HTTPError(Exception):
     """
     def __init__(self, code, message=None, response=None):
         self.code = code
-        message = message or httplib.responses.get(code, "Unknown")
+        message = message or httputil.responses.get(code, "Unknown")
         self.response = response
         Exception.__init__(self, "HTTP %d: %s" % (self.code, message))
+
 
 class _RequestProxy(object):
     """Combines an object with a dictionary of defaults.
@@ -440,15 +475,15 @@ def main():
                                     follow_redirects=options.follow_redirects,
                                     validate_cert=options.validate_cert,
                                     )
-        except HTTPError, e:
+        except HTTPError as e:
             if e.response is not None:
                 response = e.response
             else:
                 raise
         if options.print_headers:
-            print response.headers
+            print(response.headers)
         if options.print_body:
-            print response.body
+            print(response.body)
     client.close()
 
 if __name__ == "__main__":

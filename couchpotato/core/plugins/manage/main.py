@@ -2,11 +2,13 @@ from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, addEvent, fireEventAsync
 from couchpotato.core.helpers.encoding import ss
 from couchpotato.core.helpers.request import jsonified, getParam
-from couchpotato.core.helpers.variable import getTitle, splitString
+from couchpotato.core.helpers.variable import splitString, getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
+import ctypes
 import os
+import sys
 import time
 import traceback
 
@@ -22,6 +24,7 @@ class Manage(Plugin):
         fireEvent('scheduler.interval', identifier = 'manage.update_library', handle = self.updateLibrary, hours = 2)
 
         addEvent('manage.update', self.updateLibrary)
+        addEvent('manage.diskspace', self.getDiskSpace)
 
         # Add files after renaming
         def after_rename(message = None, group = {}):
@@ -192,6 +195,7 @@ class Manage(Plugin):
             self.in_progress[folder]['to_go'] = self.in_progress[folder]['to_go'] - 1
             total = self.in_progress[folder]['total']
             movie_dict = fireEvent('movie.get', identifier, single = True)
+
             fireEvent('notify.frontend', type = 'movie.added', data = movie_dict, message = None if total > 5 else 'Added "%s" to manage.' % getTitle(movie_dict['library']))
 
         return afterUpdate
@@ -214,3 +218,31 @@ class Manage(Plugin):
         for group in groups.itervalues():
             if group['library'] and group['library'].get('identifier'):
                 fireEvent('release.add', group = group)
+
+    def getDiskSpace(self):
+
+        free_space = {}
+        for folder in self.directories():
+
+            size = None
+            if os.path.isdir(folder):
+                if os.name == 'nt':
+                    _, total, free = ctypes.c_ulonglong(), ctypes.c_ulonglong(), \
+                                       ctypes.c_ulonglong()
+                    if sys.version_info >= (3,) or isinstance(folder, unicode):
+                        fun = ctypes.windll.kernel32.GetDiskFreeSpaceExW #@UndefinedVariable
+                    else:
+                        fun = ctypes.windll.kernel32.GetDiskFreeSpaceExA #@UndefinedVariable
+                    ret = fun(folder, ctypes.byref(_), ctypes.byref(total), ctypes.byref(free))
+                    if ret == 0:
+                        raise ctypes.WinError()
+                    used = total.value - free.value
+                    return [total.value, used, free.value]
+                else:
+                    s = os.statvfs(folder)
+                    size = [s.f_blocks * s.f_frsize / (1024 * 1024), (s.f_bavail * s.f_frsize) / (1024 * 1024)]
+
+            free_space[folder] = size
+
+        return free_space
+

@@ -27,7 +27,9 @@ Page.Manage = new Class({
 
 			self.list = new MovieList({
 				'identifier': 'manage',
-				'status': 'done',
+				'filter': {
+					'release_status': 'done'
+				},
 				'actions': MovieActions,
 				'menu': [self.refresh_button, self.refresh_quick],
 				'on_empty_element': new Element('div.empty_manage').adopt(
