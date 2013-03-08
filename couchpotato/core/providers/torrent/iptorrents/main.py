@@ -13,10 +13,9 @@ class IPTorrents(TorrentProvider):
 
     urls = {
         'test' : 'http://www.iptorrents.com/',
+        'base_url' : 'http://www.iptorrents.com',
         'login' : 'http://www.iptorrents.com/torrents/',
-        'detail' : 'http://www.iptorrents.com/details.php?id=%s',
         'search' : 'http://www.iptorrents.com/torrents/?l%d=1%s&q=%s&qf=ti',
-        'download' : 'http://www.iptorrents.com/download.php/%s/%s.torrent',
     }
 
     cat_ids = [
@@ -53,8 +52,8 @@ class IPTorrents(TorrentProvider):
 
                     torrent_id = torrent['href'].replace('/details.php?id=', '')
                     torrent_name = torrent.string
-                    torrent_download_url = self.urls['download'] % (torrent_id, torrent_name.replace(' ', '.'))
-                    torrent_details_url = self.urls['detail'] % (torrent_id)
+                    torrent_download_url = self.urls['base_url'] + (result.find_all('td')[3].find('a'))['href'].replace(' ', '.')
+                    torrent_details_url = self.urls['base_url'] + torrent['href']
                     torrent_size = self.parseSize(result.find_all('td')[5].string)
                     torrent_seeders = tryInt(result.find('td', attrs = {'class' : 'ac t_seeders'}).string)
                     torrent_leechers = tryInt(result.find('td', attrs = {'class' : 'ac t_leechers'}).string)
