@@ -36,6 +36,14 @@ DAEMON_OPTS=" CouchPotato.py --daemon --pid_file=${PID_FILE}"
 
 ############### END EDIT ME ##################
 
+# Check for existance of defaults file
+# and utilze if available
+if [ -e "/etc/default/couchpotato" ]
+then
+    unset DAEMON_OPTS
+    . /etc/default/couchpotato
+fi
+
 test -x $DAEMON || exit 0
 
 set -e
