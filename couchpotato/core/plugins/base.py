@@ -240,6 +240,7 @@ class Plugin(object):
                     del kwargs['cache_timeout']
 
                 data = self.urlopen(url, **kwargs)
+
                 if data:
                     self.setCache(cache_key, data, timeout = cache_timeout)
                 return data
@@ -256,7 +257,7 @@ class Plugin(object):
 
     def createNzbName(self, data, movie):
         tag = self.cpTag(movie)
-        return '%s%s' % (toSafeString(data.get('name')[:127 - len(tag)]), tag)
+        return '%s%s' % (toSafeString(data.get('name')[:63 - len(tag)]), tag)
 
     def createFileName(self, data, filedata, movie):
         name = os.path.join(self.createNzbName(data, movie))
