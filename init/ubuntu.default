@@ -1,0 +1,5 @@
+# COPY THIS FILE TO /etc/default/couchpotato
+# OPTIONS: APP_PATH, RUN_AS, DAEMON_PATH, CP_PID_FILE
+
+APP_PATH=
+RUN_AS=root
