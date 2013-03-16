@@ -12,6 +12,7 @@ from couchpotato.environment import Env
 from sqlalchemy.orm import joinedload_all
 from sqlalchemy.sql.expression import or_, asc, not_, desc
 from string import ascii_lowercase
+import time
 
 log = CPLog(__name__)
 
@@ -96,32 +97,33 @@ class MoviePlugin(Plugin):
         addEvent('movie.list', self.list)
         addEvent('movie.restatus', self.restatus)
 
+        # Clean releases that didn't have activity in the last week
         addEvent('app.load', self.cleanReleases)
+        fireEvent('schedule.interval', 'movie.clean_releases', self.cleanReleases, hours = 4)
 
     def cleanReleases(self):
 
-        prop_name = 'cleaned_releases'
-        already_cleaned = Env.prop(prop_name, default = False)
-        if already_cleaned:
-            return True
+        log.debug('Removing releases from dashboard')
 
-        log.info('Removing releases from library movies')
-
-        db = get_session()
-
-        movies = db.query(Movie).all()
+        now = time.time()
+        week = 262080
 
         done_status = fireEvent('status.get', 'done', single = True)
         available_status = fireEvent('status.get', 'available', single = True)
         snatched_status = fireEvent('status.get', 'snatched', single = True)
 
-        for movie in movies:
-            if movie.status_id == done_status.get('id'):
-                for rel in movie.releases:
-                    if rel.status_id in [available_status.get('id'), snatched_status.get('id')]:
-                        fireEvent('release.delete', id = rel.id, single = True)
+        db = get_session()
 
-        Env.prop(prop_name, True)
+        # get movies last_edit more than a week ago
+        movies = db.query(Movie) \
+            .filter(Movie.status_id == done_status.get('id'), Movie.last_edit < (now - week)) \
+            .all()
+
+        #
+        for movie in movies:
+            for rel in movie.releases:
+                if rel.status_id in [available_status.get('id'), snatched_status.get('id')]:
+                    fireEvent('release.delete', id = rel.id, single = True)
 
     def getView(self):
 
@@ -402,6 +404,7 @@ class MoviePlugin(Plugin):
 
         if force_readd:
             m.status_id = status_id if status_id else status_active.get('id')
+            m.last_edit = int(time.time())
             do_search = True
 
         db.commit()
