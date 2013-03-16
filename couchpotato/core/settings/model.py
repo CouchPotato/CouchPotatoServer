@@ -45,7 +45,7 @@ class Movie(Entity):
     The files belonging to the movie object are global for the whole movie
     such as trailers, nfo, thumbnails"""
 
-    last_edit = Field(Integer, default = lambda: int(time.time()))
+    last_edit = Field(Integer, default = lambda: int(time.time()), index = True)
 
     library = ManyToOne('Library', cascade = 'delete, delete-orphan', single_parent = True)
     status = ManyToOne('Status')
@@ -95,6 +95,7 @@ class Release(Entity):
     """Logically groups all files that belong to a certain release, such as
     parts of a movie, subtitles."""
 
+    last_edit = Field(Integer, default = lambda: int(time.time()), index = True)
     identifier = Field(String(100), index = True)
 
     movie = ManyToOne('Movie')
