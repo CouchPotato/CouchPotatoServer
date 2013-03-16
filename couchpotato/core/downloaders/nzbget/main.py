@@ -8,6 +8,7 @@ import re
 import socket
 import traceback
 import xmlrpclib
+import shutil
 
 log = CPLog(__name__)
 
@@ -61,7 +62,7 @@ class NZBGet(Downloader):
         log.debug('Checking NZBGet download status.')
 
         url = self.url % {'host': self.conf('host'), 'password': self.conf('password')}
-        
+
         rpc = xmlrpclib.ServerProxy(url)
         try:
             if rpc.writelog('INFO', 'CouchPotato connected to check status'):
@@ -80,18 +81,18 @@ class NZBGet(Downloader):
 
         # Get NZBGet data
         try:
-            status = rpc.status()  
-            groups = rpc.listgroups()  
-            queue = rpc.postqueue(0)  
-            history = rpc.history()  
+            status = rpc.status()
+            groups = rpc.listgroups()
+            queue = rpc.postqueue(0)
+            history = rpc.history()
         except:
             log.error('Failed getting data: %s', traceback.format_exc(1))
             return False
-            
+
         statuses = []
 
-        for item in groups:  
-            log.debug('Found %s in NZBGet download queue', item['NZBFilename'])  
+        for item in groups:
+            log.debug('Found %s in NZBGet download queue', item['NZBFilename'])
             statuses.append({
                 'id': item['NZBID'],
                 'name': item['NZBFilename'],
@@ -101,8 +102,8 @@ class NZBGet(Downloader):
                 'timeleft': str(timedelta(seconds = item['RemainingSizeMB'] / status['DownloadRate'] * 2^20)) if item['ActiveDownloads'] > 0 and not (status['DownloadPaused'] or status['Download2Paused']) else -1,
             })
 
-        for item in queue:  
-            log.debug('Found %s in NZBGet postprocessing queue', item['NZBFilename'])  
+        for item in queue:
+            log.debug('Found %s in NZBGet postprocessing queue', item['NZBFilename'])
             statuses.append({
                 'id': item['NZBID'],
                 'name': item['NZBFilename'],
@@ -111,8 +112,8 @@ class NZBGet(Downloader):
                 'timeleft': str(timedelta(seconds = 0)) if not status['PostPaused'] else -1,
             })
 
-        for item in history:  
-            log.debug('Found %s in NZBGet history. ParStatus: %s, ScriptStatus: %s, Log: %s', (item['NZBFilename'] , item['ParStatus'], item['ScriptStatus'] , item['Log']))  
+        for item in history:
+            log.debug('Found %s in NZBGet history. ParStatus: %s, ScriptStatus: %s, Log: %s', (item['NZBFilename'] , item['ParStatus'], item['ScriptStatus'] , item['Log']))
             statuses.append({
                 'id': item['NZBID'],
                 'name': item['NZBFilename'],
@@ -122,3 +123,36 @@ class NZBGet(Downloader):
             })
 
         return statuses
+
+    def removeFailed(self, item):
+
+        log.info('%s failed downloading, deleting...', item['name'])
+
+        url = self.url % {'host': self.conf('host'), 'password': self.conf('password')}
+
+        rpc = xmlrpclib.ServerProxy(url)
+        try:
+            if rpc.writelog('INFO', 'CouchPotato connected to delete some history'):
+                log.info('Successfully connected to NZBGet')
+            else:
+                log.info('Successfully connected to NZBGet, but unable to send a message')
+        except socket.error:
+            log.error('NZBGet is not responding. Please ensure that NZBGet is running and host setting is correct.')
+            return False
+        except xmlrpclib.ProtocolError, e:
+            if e.errcode == 401:
+                log.error('Password is incorrect.')
+            else:
+                log.error('Protocol Error: %s', e)
+            return False
+
+        try:
+            history = rpc.history()
+            if rpc.editqueue('HistoryDelete',0,"",[int(item['id'])]):
+                path = [hist['DestDir'] for hist in history if hist['NZBID'] == item['id']][0]
+                shutil.rmtree(path, True)
+        except:
+            log.error('Failed deleting: %s', traceback.format_exc(0))
+            return False
+
+        return True
