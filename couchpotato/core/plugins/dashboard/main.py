@@ -8,6 +8,7 @@ from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Movie
 from sqlalchemy.sql.expression import or_
 import random
+import time
 
 log = CPLog(__name__)
 
@@ -41,7 +42,6 @@ class Dashboard(Plugin):
         identifiers = [m.library.identifier for m in movies]
 
         suggestions = fireEvent('movie.suggest', movies = identifiers, single = True)
-        print suggestions
 
         return jsonified({
             'result': True,
@@ -52,6 +52,7 @@ class Dashboard(Plugin):
 
         params = getParams()
         db = get_session()
+        now = time.time()
 
         # Get profiles first, determine pre or post theater
         profiles = fireEvent('profile.all', single = True)
@@ -92,7 +93,7 @@ class Dashboard(Plugin):
         movies = []
         for movie in all_movies:
             pp = profile_pre.get(movie.profile.id)
-            eta = movie.library.info.get('release_date', {})
+            eta = movie.library.info.get('release_date', {}) or {}
             coming_soon = False
 
             # Theater quality
@@ -101,6 +102,7 @@ class Dashboard(Plugin):
             if pp.get('dvd') and fireEvent('searcher.could_be_released', False, eta, single = True):
                 coming_soon = True
 
+
             if coming_soon:
                 temp = movie.to_dict({
                     'profile': {'types': {}},
@@ -108,7 +110,11 @@ class Dashboard(Plugin):
                     'library': {'titles': {}, 'files':{}},
                     'files': {},
                 })
-                movies.append(temp)
+
+                # Don't list older movies
+                if ((not params.get('late') and (not eta.get('dvd') or (eta.get('dvd') and eta.get('dvd') > (now - 2419200)))) or \
+                        (params.get('late') and eta.get('dvd') and eta.get('dvd') < (now - 2419200))):
+                    movies.append(temp)
 
                 if len(movies) >= limit:
                     break
@@ -118,3 +124,5 @@ class Dashboard(Plugin):
             'empty': len(movies) == 0,
             'movies': movies,
         })
+
+    getLateView = getSoonView

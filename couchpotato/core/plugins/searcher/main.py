@@ -165,7 +165,7 @@ class Searcher(Plugin):
 
             # See if better quality is available
             for release in movie['releases']:
-                if release['quality']['order'] <= quality_type['quality']['order'] and release['status_id'] not in [available_status.get('id'), ignored_status.get('id')]:
+                if release['quality']['order'] < quality_type['quality']['order'] and release['status_id'] not in [available_status.get('id'), ignored_status.get('id')]:
                     has_better_quality += 1
 
             # Don't search for quality lower then already available.
@@ -294,7 +294,10 @@ class Searcher(Plugin):
                     db = get_session()
                     rls = db.query(Release).filter_by(identifier = md5(data['url'])).first()
                     if rls:
-                        rls.status_id = snatched_status.get('id')
+                        renamer_enabled = Env.setting('enabled', 'renamer')
+
+                        done_status = fireEvent('status.get', 'done', single = True)
+                        rls.status_id = done_status.get('id') if not renamer_enabled else snatched_status.get('id')
                         db.commit()
 
                         log_movie = '%s (%s) in %s' % (getTitle(movie['library']), movie['library']['year'], rls.quality.label)
@@ -303,7 +306,7 @@ class Searcher(Plugin):
                         fireEvent('movie.snatched', message = snatch_message, data = rls.to_dict())
 
                         # If renamer isn't used, mark movie done
-                        if not Env.setting('enabled', 'renamer'):
+                        if not renamer_enabled:
                             active_status = fireEvent('status.get', 'active', single = True)
                             done_status = fireEvent('status.get', 'done', single = True)
                             try:

@@ -368,7 +368,9 @@ class MoviePlugin(Plugin):
 
         # Status
         status_active = fireEvent('status.add', 'active', single = True)
-        status_snatched = fireEvent('status.add', 'snatched', single = True)
+        snatched_status = fireEvent('status.add', 'snatched', single = True)
+        ignored_status = fireEvent('status.add', 'ignored', single = True)
+        downloaded_status = fireEvent('status.add', 'downloaded', single = True)
 
         default_profile = fireEvent('profile.default', single = True)
 
@@ -392,10 +394,14 @@ class MoviePlugin(Plugin):
             fireEventAsync('library.update', params.get('identifier'), default_title = params.get('title', ''), on_complete = onComplete)
             search_after = False
         elif force_readd:
+
             # Clean snatched history
             for release in m.releases:
-                if release.status_id == status_snatched.get('id'):
-                    release.delete()
+                if release.status_id in [downloaded_status.get('id'), snatched_status.get('id')]:
+                    if params.get('ignore_previous', False):
+                        release.status_id = ignored_status.get('id')
+                    else:
+                        fireEvent('release.delete', release.id, single = True)
 
             m.profile_id = params.get('profile_id', default_profile.get('id'))
         else:
