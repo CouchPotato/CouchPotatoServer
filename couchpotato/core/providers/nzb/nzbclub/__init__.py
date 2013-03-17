@@ -18,6 +18,13 @@ config = [{
                     'name': 'enabled',
                     'type': 'enabler',
                 },
+                {
+                    'name': 'extra_score',
+                    'advanced': True,
+                    'label': 'Extra Score',
+                    'default': '',
+                    'description': 'Adds an extra score for each provided download.',
+                }
             ],
         },
     ],

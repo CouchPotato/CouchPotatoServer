@@ -55,6 +55,9 @@ class NzbIndex(NZBProvider, RSS):
 
                 return True
 
+            def extra_score(item):
+                return tryInt(self.conf('extra_score'))
+
             results.append({
                 'id': nzbindex_id,
                 'name': self.getTextElement(nzb, "title"),
@@ -65,6 +68,7 @@ class NzbIndex(NZBProvider, RSS):
                 'description': description,
                 'get_more_info': self.getMoreInfo,
                 'extra_check': extra_check,
+                'extra_score': extra_score,
             })
 
     def getMoreInfo(self, item):

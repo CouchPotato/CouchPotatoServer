@@ -48,6 +48,9 @@ class Nzbsrus(NZBProvider, RSS):
             size = int(round(int(self.getTextElement(nzb, 'size')) / 1048576))
             age = int(round((time.time() - int(self.getTextElement(nzb, 'postdate'))) / 86400))
 
+            def extra_score(item):
+                return tryInt(self.conf('extra_score'))
+
             results.append({
                 'id': nzb_id,
                 'name': title,
@@ -56,6 +59,7 @@ class Nzbsrus(NZBProvider, RSS):
                 'url': self.urls['download'] % nzb_id + self.getApiExt() + self.getTextElement(nzb, 'key'),
                 'detail_url': self.urls['detail'] % nzb_id,
                 'description': self.getTextElement(nzb, 'addtext'),
+                'extra_score': extra_score,
             })
 
     def getApiExt(self):

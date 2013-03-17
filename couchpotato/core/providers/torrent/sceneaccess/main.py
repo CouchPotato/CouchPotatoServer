@@ -61,6 +61,9 @@ class SceneAccess(TorrentProvider):
                     leechers = result.find('td', attrs = {'class' : 'ttr_leechers'}).find('a')
                     torrent_id = link['href'].replace('details?id=', '')
 
+                    def extra_score(item):
+                        return tryInt(self.conf('extra_score'))
+
                     results.append({
                         'id': torrent_id,
                         'name': link['title'],
@@ -71,6 +74,7 @@ class SceneAccess(TorrentProvider):
                         'leechers': tryInt(leechers.string) if leechers else 0,
                         'download': self.loginDownload,
                         'get_more_info': self.getMoreInfo,
+                        'extra_score': extra_score,
                     })
 
             except:

@@ -54,6 +54,9 @@ class SceneHD(TorrentProvider):
                     else:
                         leechers = all_cells[11].string
 
+                    def extra_score(item):
+                        return tryInt(self.conf('extra_score'))
+
                     results.append({
                         'id': torrent_id,
                         'name': detail_link['title'],
@@ -63,6 +66,7 @@ class SceneHD(TorrentProvider):
                         'url': self.urls['download'] % torrent_id,
                         'download': self.loginDownload,
                         'description': all_cells[1].find('a')['href'],
+                        'extra_score': extra_score,
                     })
 
             except:

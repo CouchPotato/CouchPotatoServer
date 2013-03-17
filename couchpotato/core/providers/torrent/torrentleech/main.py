@@ -53,6 +53,9 @@ class TorrentLeech(TorrentProvider):
                     url = result.find('td', attrs = {'class' : 'quickdownload'}).find('a')
                     details = result.find('td', attrs = {'class' : 'name'}).find('a')
 
+                    def extra_score(item):
+                        return tryInt(self.conf('extra_score'))
+
                     results.append({
                         'id': link['href'].replace('/torrent/', ''),
                         'name': link.string,
@@ -62,6 +65,7 @@ class TorrentLeech(TorrentProvider):
                         'size': self.parseSize(result.find_all('td')[4].string),
                         'seeders': tryInt(result.find('td', attrs = {'class' : 'seeders'}).string),
                         'leechers': tryInt(result.find('td', attrs = {'class' : 'leechers'}).string),
+                        'extra_score': extra_score,
                     })
 
             except:

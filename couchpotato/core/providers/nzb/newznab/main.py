@@ -67,6 +67,9 @@ class Newznab(NZBProvider, RSS):
             if not name:
                 continue
 
+            def extra_score(item):
+                    return tryInt(self.conf('extra_score'))
+
             results.append({
                 'id': nzb_id,
                 'provider_extra': urlparse(host['host']).hostname or host['host'],
@@ -76,6 +79,7 @@ class Newznab(NZBProvider, RSS):
                 'url': (self.getUrl(host['host'], self.urls['download']) % tryUrlencode(nzb_id)) + self.getApiExt(host),
                 'detail_url': '%sdetails/%s' % (cleanHost(host['host']), tryUrlencode(nzb_id)),
                 'content': self.getTextElement(nzb, 'description'),
+                'extra_score': extra_score,
             })
 
     def getHosts(self):

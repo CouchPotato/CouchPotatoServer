@@ -117,6 +117,9 @@ class PassThePopcorn(TorrentProvider):
                     def extra_check(item):
                         return self.torrentMeetsQualitySpec(item, type)
 
+                    def extra_score(item):
+                        return tryInt(self.conf('extra_score'))
+
                     results.append({
                         'id': torrent_id,
                         'name': torrent_name,
@@ -129,6 +132,7 @@ class PassThePopcorn(TorrentProvider):
                         'score': 50 if torrent['GoldenPopcorn'] else 0,
                         'extra_check': extra_check,
                         'download': self.loginDownload,
+                        'extra_score': extra_score,
                     })
 
         except:

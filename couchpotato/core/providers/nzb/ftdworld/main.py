@@ -53,6 +53,10 @@ class FTDWorld(NZBProvider):
                 for item in data.get('data'):
 
                     nzb_id = tryInt(item.get('id'))
+
+                    def extra_score(item):
+                        return tryInt(self.conf('extra_score'))
+
                     results.append({
                         'id': nzb_id,
                         'name': toUnicode(item.get('Title')),
@@ -62,6 +66,7 @@ class FTDWorld(NZBProvider):
                         'download': self.loginDownload,
                         'detail_url': self.urls['detail'] % nzb_id,
                         'score': (tryInt(item.get('webPlus', 0)) - tryInt(item.get('webMin', 0))) * 3,
+                        'extra_score': extra_score,
                     })
 
             except:

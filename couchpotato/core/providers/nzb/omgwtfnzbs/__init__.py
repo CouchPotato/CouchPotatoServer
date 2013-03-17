@@ -27,6 +27,13 @@ config = [{
                     'label': 'Api Key',
                     'default': '',
                 },
+                {
+                    'name': 'extra_score',
+                    'advanced': True,
+                    'label': 'Extra Score',
+                    'default': '',
+                    'description': 'Adds an extra score for each provided download.',
+                }
             ],
         },
     ],

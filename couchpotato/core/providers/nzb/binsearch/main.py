@@ -71,6 +71,9 @@ class BinSearch(NZBProvider):
 
                         return True
 
+                    def extra_score(item):
+                        return tryInt(self.conf('extra_score'))
+
                     results.append({
                         'id': nzb_id,
                         'name': title.text,
@@ -78,7 +81,8 @@ class BinSearch(NZBProvider):
                         'size': self.parseSize(size_match.group('size')),
                         'url': self.urls['download'] % nzb_id,
                         'detail_url': self.urls['detail'] % info.find('a')['href'],
-                        'extra_check': extra_check
+                        'extra_check': extra_check,
+                        'extra_score': extra_score,
                     })
 
             except:

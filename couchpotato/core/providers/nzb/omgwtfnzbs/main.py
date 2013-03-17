@@ -50,6 +50,9 @@ class OMGWTFNZBs(NZBProvider, RSS):
 
             enclosure = self.getElement(nzb, 'enclosure').attrib
 
+            def extra_score(item):
+                return tryInt(self.conf('extra_score'))
+
             results.append({
                 'id': parse_qs(urlparse(self.getTextElement(nzb, 'link')).query).get('id')[0],
                 'name': toUnicode(self.getTextElement(nzb, 'title')),
@@ -58,4 +61,5 @@ class OMGWTFNZBs(NZBProvider, RSS):
                 'url': enclosure['url'],
                 'detail_url': self.getTextElement(nzb, 'link'),
                 'description': self.getTextElement(nzb, 'description')
+                'extra_score': extra_score,
             })
