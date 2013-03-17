@@ -366,7 +366,7 @@ Block.Search.Item = new Class({
 	loadingMask: function(){
 		var self = this;
 
-		self.mask = new Element('span.mask').inject(self.el).fade('hide')
+		self.mask = new Element('div.mask').inject(self.el).fade('hide')
 
 		createSpinner(self.mask)
 		self.mask.fade('in')

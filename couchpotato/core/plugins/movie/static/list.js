@@ -27,7 +27,12 @@ var MovieList = new Class({
 
 		self.el = new Element('div.movies').adopt(
 			self.title = self.options.title ? new Element('h2', {
-				'text': self.options.title
+				'text': self.options.title,
+				'styles': {'display': 'none'}
+			}) : null,
+			self.description = self.options.description ? new Element('div.description', {
+				'html': self.options.description,
+				'styles': {'display': 'none'}
 			}) : null,
 			self.movie_list = new Element('div'),
 			self.load_more = self.options.load_more ? new Element('a.load_more', {
@@ -37,7 +42,7 @@ var MovieList = new Class({
 			}) : null
 		);
 
-		self.changeView(self.options.view || 'details');
+		self.changeView(self.getSavedView() || self.options.view || 'details');
 
 		self.getMovies();
 
@@ -121,18 +126,14 @@ var MovieList = new Class({
 
 	createMovie: function(movie, inject_at){
 		var self = this;
-
-		// Attach proper actions
-		var a = self.options.actions,
-			status = Status.get(movie.status_id),
-			actions = a ? a[status.identifier.capitalize()] || a.Wanted :  {};
-
 		var m = new Movie(self, {
-			'actions': actions,
+			'actions': self.options.actions,
 			'view': self.current_view,
 			'onSelect': self.calculateSelected.bind(self)
 		}, movie);
+
 		$(m).inject(self.movie_list, inject_at || 'bottom');
+
 		m.fireEvent('injected');
 
 		self.movies.include(m)
@@ -398,8 +399,11 @@ var MovieList = new Class({
 		var self = this;
 
 		self.movies = []
-		self.calculateSelected()
-		self.navigation_alpha.getElements('.active').removeClass('active')
+		if(self.mass_edit_select)
+			self.calculateSelected()
+		if(self.navigation_alpha)
+			self.navigation_alpha.getElements('.active').removeClass('active')
+
 		self.offset = 0;
 		if(self.scrollspy){
 			self.load_more.show();
@@ -430,7 +434,7 @@ var MovieList = new Class({
 
 	getSavedView: function(){
 		var self = this;
-		return Cookie.read(self.options.identifier+'_view') || 'thumbs';
+		return Cookie.read(self.options.identifier+'_view') || 'details';
 	},
 
 	search: function(){
@@ -505,10 +509,13 @@ var MovieList = new Class({
 	checkIfEmpty: function(){
 		var self = this;
 
-		var is_empty = self.movies.length == 0 && self.total_movies == 0;
-		
+		var is_empty = self.movies.length == 0 && (self.total_movies == 0 || self.total_movies === undefined);
+
 		if(self.title)
 			self.title[is_empty ? 'hide' : 'show']()
+
+		if(self.description)
+			self.description[is_empty ? 'hide' : 'show']()
 
 		if(is_empty && self.options.on_empty_element){
 			self.el.grab(self.options.on_empty_element);
