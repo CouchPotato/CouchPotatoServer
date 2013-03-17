@@ -46,31 +46,22 @@ class t411(TorrentProvider):
         if not self.login_opener and not self.login():
             return
 
-        #dataTitle = self.getHTMLData("http://www.imdb.fr/title/%s/" % (movie['library']['identifier']))
-
         TitleStringReal = ""
-
-        #if dataTitle:
-        #    try:
-        #        htmlTitle = BeautifulSoup(dataTitle)
-        #        TitleString = htmlTitle.find('div', attrs = {'id':'tn15title'}).find('h1')
-        #
-        #        TitleStringReal = TitleString.text.replace(TitleString.find('span').text,'')
-        #        TitleStringReal = TitleStringReal.strip()
-        #
-        #    except:
-        #        log.error('Failed parsing T411: %s', traceback.format_exc())
 
         TitleStringReal = getTitle(movie['library'])
 
 
-        URL = (self.urls['search'] % (simplifyString(TitleStringReal), simplifyString(quality['identifier'] ))).replace('-',' ').replace('  ',' ').replace('  ',' ').replace('  ',' ').encode("utf8")
+        URL = (self.urls['search'] % (simplifyString(TitleStringReal), simplifyString(quality['identifier'] ))).replace('-',' ').replace(' ',' ').replace(' ',' ').replace(' ',' ').encode("utf8")
         URL=unicodedata.normalize('NFD',unicode(URL,"utf8","replace"))
         URL=URL.encode('ascii','ignore')
 
         URL = urllib2.quote(URL.encode('utf8'), ":/?=")
 
+
+
         data = self.getHTMLData(URL , opener = self.login_opener)
+
+        
 
         if data:
 
@@ -88,38 +79,45 @@ class t411(TorrentProvider):
 
                     try:
 
-                        new = {}
+                        categorie = result.find_all('td')[0].find_all('img')[0]['class']                        
+                        insert = 0
+                    
+                        if categorie == ['cat-631']:
+                            insert = 1
+                        if categorie == ['cat-455']:
+                            insert = 1
+                     
+                        if insert == 1 :
+                     
+                            new = {}
+    
+                            id = result.find_all('td')[2].find_all('a')[0]['href'][1:].replace('torrents/nfo/?id=','')
+                            name = result.find_all('td')[1].find_all('a')[0]['title']
+                            url = ('http://www.t411.me/torrents/download/?id=%s' % id)
+                            detail_url = ('http://www.t411.me/torrents/?id=%s' % id)
 
-                        id = result.find_all('td')[2].find_all('a')[0]['href'][1:].replace('torrents/nfo/?id=','')
-                        name = result.find_all('td')[1].find_all('a')[0]['title']
-                        url = ('http://www.t411.me/torrents/download/?id=%s' % id)
-                        detail_url = ('http://www.t411.me/torrents/?id=%s' % id)
-
-                        size = result.find_all('td')[5].text
-                        age = result.find_all('td')[4].text
-                        seeder = result.find_all('td')[7].text
-                        leecher = result.find_all('td')[8].text
-                        #score = 10
-                        #score = score + (self.parseSize(size) // 1024) * 2 + tryInt(seeder)
-
-                        def extra_check(item):
-                            return True
-
-                        log.debug(name)
-
-                        new['id'] = id
-                        new['name'] = name + ' french'
-                        new['url'] = url
-                        new['detail_url'] = detail_url
-                        #new['score'] = score
-                        new['size'] = self.parseSize(size)
-                        new['age'] = self.ageToDays(age)
-                        new['seeders'] = tryInt(seeder)
-                        new['leechers'] = tryInt(leecher)
-                        new['extra_check'] = extra_check
-                        new['download'] = self.loginDownload                    
-
-                        results.append(new)
+                            size = result.find_all('td')[5].text
+                            age = result.find_all('td')[4].text
+                            seeder = result.find_all('td')[7].text
+                            leecher = result.find_all('td')[8].text
+    
+                            def extra_check(item):
+                                return True
+    
+                            log.debug(name)
+    
+                            new['id'] = id
+                            new['name'] = name + ' french'
+                            new['url'] = url
+                            new['detail_url'] = detail_url
+                            new['size'] = self.parseSize(size)
+                            new['age'] = self.ageToDays(age)
+                            new['seeders'] = tryInt(seeder)
+                            new['leechers'] = tryInt(leecher)
+                            new['extra_check'] = extra_check
+                            new['download'] = self.loginDownload
+    
+                            results.append(new)
 
                     except:
                         log.error('Failed parsing T411: %s', traceback.format_exc())
