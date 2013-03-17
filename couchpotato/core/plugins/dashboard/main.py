@@ -7,7 +7,6 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Movie
 from sqlalchemy.orm import joinedload_all
-from sqlalchemy.sql.expression import or_
 import random
 import time
 
@@ -74,18 +73,16 @@ class Dashboard(Plugin):
             profile_pre[profile.get('id')] = contains
 
         # Get all active movies
-        q = db.query(Movie) \
-            .join(Movie.profile, Movie.library) \
+        active_status = fireEvent('status.get', 'active', single = True)
+        subq = db.query(Movie).filter(Movie.status_id == active_status.get('id')).subquery()
+
+        q = db.query(Movie).join((subq, subq.c.id == Movie.id)) \
             .options(joinedload_all('releases')) \
-            .options(joinedload_all('releases.files')) \
-            .options(joinedload_all('releases.info')) \
             .options(joinedload_all('profile.types')) \
             .options(joinedload_all('library.titles')) \
             .options(joinedload_all('library.files')) \
             .options(joinedload_all('status')) \
-            .options(joinedload_all('files')) \
-            .filter(or_(*[Movie.status.has(identifier = s) for s in ['active']])) \
-            .group_by(Movie.id)
+            .options(joinedload_all('files'))
 
         # Add limit
         limit_offset = params.get('limit_offset')
