@@ -78,6 +78,7 @@ def page_not_found(error):
             r = '%s%s' % (request.url.rstrip('/'), index_url + '#' + url)
         return redirect(r)
     else:
-        time.sleep(0.1)
+        if not Env.get('dev'):
+            time.sleep(0.1)
         return 'Wrong API key used', 404
 
