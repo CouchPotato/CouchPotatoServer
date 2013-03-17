@@ -285,7 +285,7 @@
 					text-align: right;
 					right: 0;
 					margin-right: 50px;
-					z-index: 2;
+					z-index: 1;
 				}
 	
 			.movies .data .quality .available,

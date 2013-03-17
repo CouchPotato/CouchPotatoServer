@@ -80,7 +80,7 @@ var Movie = new Class({
 		var self = this;
 		self.mask = new Element('div.mask', {
 			'styles': {
-				'z-index': '1000'
+				'z-index': '1'
 			}
 		}).inject(self.el, 'top').fade('hide');
 	},
