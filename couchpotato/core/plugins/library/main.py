@@ -39,7 +39,6 @@ class LibraryPlugin(Plugin):
             title = LibraryTitle(
                 title = toUnicode(attrs.get('title')),
                 simple_title = self.simplifyTitle(attrs.get('title')),
-                default = True,
             )
 
             l.titles.append(title)
