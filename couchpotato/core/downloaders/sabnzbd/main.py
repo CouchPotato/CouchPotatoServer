@@ -22,6 +22,7 @@ class Sabnzbd(Downloader):
             'cat': self.conf('category'),
             'mode': 'addurl',
             'nzbname': self.createNzbName(data, movie),
+            'output': 'json'
         }
 
         if filedata:
@@ -49,17 +50,24 @@ class Sabnzbd(Downloader):
             log.error('Failed sending release, use API key, NOT the NZB key: %s', traceback.format_exc(0))
             return False
 
-        result = sab.strip()
-        if not result:
+        if not sab.strip():
             log.error('SABnzbd didn\'t return anything.')
             return False
 
-        log.debug('Result text from SAB: %s', result[:40])
-        if result[:2] == 'ok':
+        d = json.loads(sab)
+        if d.get('error'):
+            log.error('Error getting data from SABNZBd: %s', d.get('error'))
+            return False
+
+        log.debug('Result from SAB: %s', d)
+        if d.get('status'):
             log.info('NZB sent to SAB successfully.')
-            return True
+            if filedata:
+                return {'download_id': d.get('nzo_ids')[0]}
+            else:
+                return True
         else:
-            log.error(result[:40])
+            log.error(sab[:40])
             return False
 
     def getAllDownloadStatus(self):
