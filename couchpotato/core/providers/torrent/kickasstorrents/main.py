@@ -56,6 +56,9 @@ class KickAssTorrents(TorrentMagnetProvider):
                                 column_name = table_order[nr]
                                 if column_name:
 
+                                    def extra_score(item):
+                                        return tryInt(self.conf('extra_score'))
+
                                     if column_name is 'name':
                                         link = td.find('div', {'class': 'torrentname'}).find_all('a')[1]
                                         new['id'] = temp.get('id')[-8:]
@@ -63,6 +66,7 @@ class KickAssTorrents(TorrentMagnetProvider):
                                         new['url'] = td.find('a', 'imagnet')['href']
                                         new['detail_url'] = self.urls['detail'] % link['href'][1:]
                                         new['score'] = 20 if td.find('a', 'iverif') else 0
+                                        new['extra_score'] = extra_score
                                     elif column_name is 'size':
                                         new['size'] = self.parseSize(td.text)
                                     elif column_name is 'age':
