@@ -117,19 +117,27 @@ class Transmission(Downloader):
                 return
             if (item['percentDone'] * 100) >= 100 and (item['status'] == 6 or item['status'] == 0) and (item['uploadRatio'] * 100) > self.conf('ratio'):
                 try:
+                    doMove = True
                     trpc.stop_torrent(item['hashString'], {})
-                    if not os.path.isdir(item['downloadDir']):
-                        log.error('Missing folder: %s', item['downloadDir'])
-                    else:
-                        log.info('Moving folder from "%s" to "%s"', (item['downloadDir'], self.conf('renamerDirectory')))
-                        shutil.move(item['downloadDir'], self.conf('renamerDirectory'))
-                    statuses.append({
-                        'name': item['downloadDir'],
-                        'status': 'completed',
-                        'original_status': item['status'],
-                        'timeleft': 0,
-                    })
-                    trpc.remove_torrent(item['hashString'], True, {})
+                    fixedDownloadDir = item['downloadDir'].rstrip(os.path.sep)
+                    if fixedDownloadDir == self.conf('directory', default = '').rstrip(os.path.sep):
+                        fixedDownloadDir = os.path.join(fixedDownloadDir,item['name']).rstrip(os.path.sep)
+                    if fixedDownloadDir == self.conf('directory', default = '').rstrip(os.path.sep):
+                        doMove = False
+                        log.error('Bad folder to move: %s', fixedDownloadDir)
+                    if not os.path.isdir(fixedDownloadDir):
+                        doMove = False
+                        log.error('Missing folder: %s', fixedDownloadDir)
+                    if doMove:
+                        log.info('Moving folder from "%s" to "%s"', (fixedDownloadDir, self.conf('renamerDirectory')))
+                        shutil.move(fixedDownloadDir, self.conf('renamerDirectory'))
+                        statuses.append({
+                            'name': item['downloadDir'],
+                            'status': 'completed',
+                            'original_status': item['status'],
+                            'timeleft': 0,
+                        })
+                        trpc.remove_torrent(item['hashString'], True, {})
                 except Exception, err:
                     log.error('Failed to stop and remove torrent "%s" with error: %s', (item['name'], err))
                     statuses.append({
