@@ -20,7 +20,7 @@ class Env(object):
     _options = None
     _args = None
     _quiet = False
-    _deamonize = False
+    _daemonized = False
     _desktop = None
     _session = None
 

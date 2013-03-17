@@ -179,7 +179,7 @@ class Core(Plugin):
         if Env.get('daemonized'): return
 
         def signal_handler(signal, frame):
-            fireEvent('app.shutdown')
+            fireEvent('app.shutdown', single = True)
 
         signal.signal(signal.SIGINT, signal_handler)
         signal.signal(signal.SIGTERM, signal_handler)

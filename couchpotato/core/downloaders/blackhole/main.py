@@ -1,6 +1,7 @@
 from __future__ import with_statement
 from couchpotato.core.downloaders.base import Downloader
 from couchpotato.core.logger import CPLog
+from couchpotato.environment import Env
 import os
 import traceback
 
@@ -36,6 +37,7 @@ class Blackhole(Downloader):
                         log.info('Downloading %s to %s.', (data.get('type'), fullPath))
                         with open(fullPath, 'wb') as f:
                             f.write(filedata)
+                        os.chmod(fullPath, Env.getPermission('file'))
                         return True
                     else:
                         log.info('File %s already exists.', fullPath)

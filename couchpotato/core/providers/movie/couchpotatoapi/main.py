@@ -5,9 +5,7 @@ from couchpotato.core.helpers.request import jsonified, getParams
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.movie.base import MovieProvider
 from couchpotato.core.settings.model import Movie
-from flask.helpers import json
 import time
-import traceback
 
 log = CPLog(__name__)
 
@@ -17,8 +15,9 @@ class CouchPotatoApi(MovieProvider):
     urls = {
         'search': 'https://couchpota.to/api/search/%s/',
         'info': 'https://couchpota.to/api/info/%s/',
+        'is_movie': 'https://couchpota.to/api/ismovie/%s/',
         'eta': 'https://couchpota.to/api/eta/%s/',
-        'suggest': 'https://couchpota.to/api/suggest/%s/%s/',
+        'suggest': 'https://couchpota.to/api/suggest/',
     }
     http_time_between_calls = 0
     api_version = 1
@@ -29,58 +28,47 @@ class CouchPotatoApi(MovieProvider):
         addEvent('movie.info', self.getInfo, priority = 1)
         addEvent('movie.search', self.search, priority = 1)
         addEvent('movie.release_date', self.getReleaseDate)
+        addEvent('movie.suggest', self.suggest)
+        addEvent('movie.is_movie', self.isMovie)
 
     def search(self, q, limit = 12):
+        return self.getJsonData(self.urls['search'] % tryUrlencode(q), headers = self.getRequestHeaders())
 
-        cache_key = 'cpapi.cache.%s' % q
-        cached = self.getCache(cache_key, self.urls['search'] % tryUrlencode(q), headers = self.getRequestHeaders())
+    def isMovie(self, identifier = None):
 
-        if cached:
-            try:
-                movies = json.loads(cached)
-                return movies
-            except:
-                log.error('Failed parsing search results: %s', traceback.format_exc())
+        if not identifier:
+            return
 
-        return []
+        data = self.getJsonData(self.urls['is_movie'] % identifier, headers = self.getRequestHeaders())
+        if data:
+            return data.get('is_movie', True)
+
+        return True
 
     def getInfo(self, identifier = None):
 
         if not identifier:
             return
 
-        cache_key = 'cpapi.cache.info.%s' % identifier
-        cached = self.getCache(cache_key, self.urls['info'] % identifier, headers = self.getRequestHeaders())
-
-        if cached:
-            try:
-                movie = json.loads(cached)
-                return movie
-            except:
-                log.error('Failed parsing info results: %s', traceback.format_exc())
+        result = self.getJsonData(self.urls['info'] % identifier, headers = self.getRequestHeaders())
+        if result: return result
 
         return {}
 
     def getReleaseDate(self, identifier = None):
-
         if identifier is None: return {}
-        try:
-            data = self.urlopen(self.urls['eta'] % identifier, headers = self.getRequestHeaders())
-            dates = json.loads(data)
-            log.debug('Found ETA for %s: %s', (identifier, dates))
-            return dates
-        except Exception, e:
-            log.error('Error getting ETA for %s: %s', (identifier, e))
 
-        return {}
+        dates = self.getJsonData(self.urls['eta'] % identifier, headers = self.getRequestHeaders())
+        log.debug('Found ETA for %s: %s', (identifier, dates))
+
+        return dates
 
     def suggest(self, movies = [], ignore = []):
-        try:
-            data = self.urlopen(self.urls['suggest'] % (','.join(movies), ','.join(ignore)))
-            suggestions = json.loads(data)
-            log.info('Found Suggestions for %s', (suggestions))
-        except Exception, e:
-            log.error('Error getting suggestions for %s: %s', (movies, e))
+        suggestions = self.getJsonData(self.urls['suggest'], params = {
+            'movies': ','.join(movies),
+            #'ignore': ','.join(ignore),
+        })
+        log.info('Found Suggestions for %s', (suggestions))
 
         return suggestions
 

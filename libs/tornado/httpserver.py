@@ -24,24 +24,24 @@ This module also defines the `HTTPRequest` class which is exposed via
 `tornado.web.RequestHandler.request`.
 """
 
-from __future__ import absolute_import, division, with_statement
+from __future__ import absolute_import, division, print_function, with_statement
 
-import Cookie
 import socket
+import ssl
 import time
 
 from tornado.escape import native_str, parse_qs_bytes
 from tornado import httputil
 from tornado import iostream
 from tornado.log import gen_log
-from tornado.netutil import TCPServer
+from tornado.tcpserver import TCPServer
 from tornado import stack_context
-from tornado.util import b, bytes_type
+from tornado.util import bytes_type
 
 try:
-    import ssl  # Python 2.6+
+    import Cookie  # py2
 except ImportError:
-    ssl = None
+    import http.cookies as Cookie  # py3
 
 
 class HTTPServer(TCPServer):
@@ -95,7 +95,8 @@ class HTTPServer(TCPServer):
     `HTTPServer` can serve SSL traffic with Python 2.6+ and OpenSSL.
     To make this server serve SSL traffic, send the ssl_options dictionary
     argument with the arguments required for the `ssl.wrap_socket` method,
-    including "certfile" and "keyfile"::
+    including "certfile" and "keyfile".  In Python 3.2+ you can pass
+    an `ssl.SSLContext` object instead of a dict::
 
        HTTPServer(applicaton, ssl_options={
            "certfile": os.path.join(data_dir, "mydomain.crt"),
@@ -103,9 +104,9 @@ class HTTPServer(TCPServer):
        })
 
     `HTTPServer` initialization follows one of three patterns (the
-    initialization methods are defined on `tornado.netutil.TCPServer`):
+    initialization methods are defined on `tornado.tcpserver.TCPServer`):
 
-    1. `~tornado.netutil.TCPServer.listen`: simple single-process::
+    1. `~tornado.tcpserver.TCPServer.listen`: simple single-process::
 
             server = HTTPServer(app)
             server.listen(8888)
@@ -114,7 +115,7 @@ class HTTPServer(TCPServer):
        In many cases, `tornado.web.Application.listen` can be used to avoid
        the need to explicitly create the `HTTPServer`.
 
-    2. `~tornado.netutil.TCPServer.bind`/`~tornado.netutil.TCPServer.start`:
+    2. `~tornado.tcpserver.TCPServer.bind`/`~tornado.tcpserver.TCPServer.start`:
        simple multi-process::
 
             server = HTTPServer(app)
@@ -126,7 +127,7 @@ class HTTPServer(TCPServer):
        to the `HTTPServer` constructor.  `start` will always start
        the server on the default singleton `IOLoop`.
 
-    3. `~tornado.netutil.TCPServer.add_sockets`: advanced multi-process::
+    3. `~tornado.tcpserver.TCPServer.add_sockets`: advanced multi-process::
 
             sockets = tornado.netutil.bind_sockets(8888)
             tornado.process.fork_processes(0)
@@ -171,6 +172,10 @@ class HTTPConnection(object):
                  xheaders=False, protocol=None):
         self.stream = stream
         self.address = address
+        # Save the socket's address family now so we know how to
+        # interpret self.address even after the stream is closed
+        # and its socket attribute replaced with None.
+        self.address_family = stream.socket.family
         self.request_callback = request_callback
         self.no_keep_alive = no_keep_alive
         self.xheaders = xheaders
@@ -180,7 +185,19 @@ class HTTPConnection(object):
         # Save stack context here, outside of any request.  This keeps
         # contexts from one request from leaking into the next.
         self._header_callback = stack_context.wrap(self._on_headers)
-        self.stream.read_until(b("\r\n\r\n"), self._header_callback)
+        self.stream.read_until(b"\r\n\r\n", self._header_callback)
+        self._write_callback = None
+        self._close_callback = None
+
+    def set_close_callback(self, callback):
+        self._close_callback = stack_context.wrap(callback)
+        self.stream.set_close_callback(self._on_connection_close)
+
+    def _on_connection_close(self):
+        callback = self._close_callback
+        self._close_callback = None
+        callback()
+        # Delete any unfinished callbacks to break up reference cycles.
         self._write_callback = None
 
     def close(self):
@@ -241,7 +258,7 @@ class HTTPConnection(object):
             # Use a try/except instead of checking stream.closed()
             # directly, because in some cases the stream doesn't discover
             # that it's closed until you try to read from it.
-            self.stream.read_until(b("\r\n\r\n"), self._header_callback)
+            self.stream.read_until(b"\r\n\r\n", self._header_callback)
         except iostream.StreamClosedError:
             self.close()
 
@@ -259,10 +276,7 @@ class HTTPConnection(object):
             headers = httputil.HTTPHeaders.parse(data[eol:])
 
             # HTTPRequest wants an IP, not a full socket address
-            if getattr(self.stream.socket, 'family', socket.AF_INET) in (
-                socket.AF_INET, socket.AF_INET6):
-                # Jython 2.5.2 doesn't have the socket.family attribute,
-                # so just assume IP in that case.
+            if self.address_family in (socket.AF_INET, socket.AF_INET6):
                 remote_ip = self.address[0]
             else:
                 # Unix (or other) socket; fake the remote address
@@ -278,12 +292,12 @@ class HTTPConnection(object):
                 if content_length > self.stream.max_buffer_size:
                     raise _BadRequestException("Content-Length too long")
                 if headers.get("Expect") == "100-continue":
-                    self.stream.write(b("HTTP/1.1 100 (Continue)\r\n\r\n"))
+                    self.stream.write(b"HTTP/1.1 100 (Continue)\r\n\r\n")
                 self.stream.read_bytes(content_length, self._on_request_body)
                 return
 
             self.request_callback(self._request)
-        except _BadRequestException, e:
+        except _BadRequestException as e:
             gen_log.info("Malformed HTTP request from %s: %s",
                          self.address[0], e)
             self.close()
@@ -484,7 +498,7 @@ class HTTPRequest(object):
                                      socket.SOCK_STREAM,
                                      0, socket.AI_NUMERICHOST)
             return bool(res)
-        except socket.gaierror, e:
+        except socket.gaierror as e:
             if e.args[0] == socket.EAI_NONAME:
                 return False
             raise

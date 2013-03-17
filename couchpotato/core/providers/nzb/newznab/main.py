@@ -69,7 +69,7 @@ class Newznab(NZBProvider, RSS):
 
             results.append({
                 'id': nzb_id,
-                'provider_extra': host['host'],
+                'provider_extra': urlparse(host['host']).hostname or host['host'],
                 'name': self.getTextElement(nzb, 'title'),
                 'age': self.calculateAge(int(time.mktime(parse(date).timetuple()))),
                 'size': int(self.getElement(nzb, 'enclosure').attrib['length']) / 1024 / 1024,

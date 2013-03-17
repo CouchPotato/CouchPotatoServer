@@ -31,7 +31,7 @@ Additionally, modifying these variables will cause reloading to behave
 incorrectly.
 """
 
-from __future__ import absolute_import, division, with_statement
+from __future__ import absolute_import, division, print_function, with_statement
 
 import os
 import sys
@@ -79,6 +79,7 @@ import weakref
 from tornado import ioloop
 from tornado.log import gen_log
 from tornado import process
+from tornado.util import exec_in
 
 try:
     import signal
@@ -90,6 +91,7 @@ _watched_files = set()
 _reload_hooks = []
 _reload_attempted = False
 _io_loops = weakref.WeakKeyDictionary()
+
 
 def start(io_loop=None, check_time=500):
     """Restarts the process automatically when a module is modified.
@@ -103,7 +105,7 @@ def start(io_loop=None, check_time=500):
     _io_loops[io_loop] = True
     if len(_io_loops) > 1:
         gen_log.warning("tornado.autoreload started more than once in the same process")
-    add_reload_hook(functools.partial(_close_all_fds, io_loop))
+    add_reload_hook(functools.partial(io_loop.close, all_fds=True))
     modify_times = {}
     callback = functools.partial(_reload_on_update, modify_times)
     scheduler = ioloop.PeriodicCallback(callback, check_time, io_loop=io_loop)
@@ -139,14 +141,6 @@ def add_reload_hook(fn):
     hook to close them.
     """
     _reload_hooks.append(fn)
-
-
-def _close_all_fds(io_loop):
-    for fd in io_loop._handlers.keys():
-        try:
-            os.close(fd)
-        except Exception:
-            pass
 
 
 def _reload_on_update(modify_times):
@@ -204,7 +198,7 @@ def _reload():
     # to ensure that the new process sees the same path we did.
     path_prefix = '.' + os.pathsep
     if (sys.path[0] == '' and
-        not os.environ.get("PYTHONPATH", "").startswith(path_prefix)):
+            not os.environ.get("PYTHONPATH", "").startswith(path_prefix)):
         os.environ["PYTHONPATH"] = (path_prefix +
                                     os.environ.get("PYTHONPATH", ""))
     if sys.platform == 'win32':
@@ -263,7 +257,7 @@ def main():
         script = sys.argv[1]
         sys.argv = sys.argv[1:]
     else:
-        print >>sys.stderr, _USAGE
+        print(_USAGE, file=sys.stderr)
         sys.exit(1)
 
     try:
@@ -277,11 +271,11 @@ def main():
                 # Use globals as our "locals" dictionary so that
                 # something that tries to import __main__ (e.g. the unittest
                 # module) will see the right things.
-                exec f.read() in globals(), globals()
-    except SystemExit, e:
+                exec_in(f.read(), globals(), globals())
+    except SystemExit as e:
         logging.basicConfig()
         gen_log.info("Script exited with status %s", e.code)
-    except Exception, e:
+    except Exception as e:
         logging.basicConfig()
         gen_log.warning("Script exited with uncaught exception", exc_info=True)
         # If an exception occurred at import time, the file with the error

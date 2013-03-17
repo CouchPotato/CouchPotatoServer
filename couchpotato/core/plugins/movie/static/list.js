@@ -5,6 +5,7 @@ var MovieList = new Class({
 	options: {
 		navigation: true,
 		limit: 50,
+		load_more: true,
 		menu: [],
 		add_new: false
 	},
@@ -12,25 +13,37 @@ var MovieList = new Class({
 	movies: [],
 	movies_added: {},
 	letters: {},
-	filter: {
-		'startswith': null,
-		'search': null
-	},
+	filter: null,
 
 	initialize: function(options){
 		var self = this;
 		self.setOptions(options);
 
 		self.offset = 0;
+		self.filter = self.options.filter || {
+			'startswith': null,
+			'search': null
+		}
 
 		self.el = new Element('div.movies').adopt(
+			self.title = self.options.title ? new Element('h2', {
+				'text': self.options.title,
+				'styles': {'display': 'none'}
+			}) : null,
+			self.description = self.options.description ? new Element('div.description', {
+				'html': self.options.description,
+				'styles': {'display': 'none'}
+			}) : null,
 			self.movie_list = new Element('div'),
-			self.load_more = new Element('a.load_more', {
+			self.load_more = self.options.load_more ? new Element('a.load_more', {
 				'events': {
 					'click': self.loadMore.bind(self)
 				}
-			})
+			}) : null
 		);
+
+		self.changeView(self.getSavedView() || self.options.view || 'details');
+
 		self.getMovies();
 
 		App.addEvent('movie.added', self.movieAdded.bind(self))
@@ -70,22 +83,14 @@ var MovieList = new Class({
 		if(self.options.navigation)
 			self.createNavigation();
 
-		self.movie_list.addEvents({
-			'mouseenter:relay(.movie)': function(e, el){
-				el.addClass('hover');
-			},
-			'mouseleave:relay(.movie)': function(e, el){
-				el.removeClass('hover');
-			}
-		});
-
-		self.scrollspy = new ScrollSpy({
-			min: function(){
-				var c = self.load_more.getCoordinates()
-				return c.top - window.document.getSize().y - 300
-			},
-			onEnter: self.loadMore.bind(self)
-		});
+		if(self.options.load_more)
+			self.scrollspy = new ScrollSpy({
+				min: function(){
+					var c = self.load_more.getCoordinates()
+					return c.top - window.document.getSize().y - 300
+				},
+				onEnter: self.loadMore.bind(self)
+			});
 
 		self.created = true;
 	},
@@ -96,7 +101,7 @@ var MovieList = new Class({
 		if(!self.created) self.create();
 
 		// do scrollspy
-		if(movies.length < self.options.limit){
+		if(movies.length < self.options.limit && self.scrollspy){
 			self.load_more.hide();
 			self.scrollspy.stop();
 		}
@@ -121,18 +126,14 @@ var MovieList = new Class({
 
 	createMovie: function(movie, inject_at){
 		var self = this;
-
-		// Attach proper actions
-		var a = self.options.actions,
-			status = Status.get(movie.status_id);
-		var actions = a[status.identifier.capitalize()] || a.Wanted || {};
-
 		var m = new Movie(self, {
-			'actions': actions,
+			'actions': self.options.actions,
 			'view': self.current_view,
 			'onSelect': self.calculateSelected.bind(self)
 		}, movie);
+
 		$(m).inject(self.movie_list, inject_at || 'bottom');
+
 		m.fireEvent('injected');
 
 		self.movies.include(m)
@@ -216,7 +217,7 @@ var MovieList = new Class({
 		});
 
 		// Actions
-		['mass_edit', 'thumbs', 'list'].each(function(view){
+		['mass_edit', 'details', 'list'].each(function(view){
 			self.navigation_actions.adopt(
 				new Element('li.'+view+(self.current_view == view ? '.active' : '')+'[data-view='+view+']', {
 					'events': {
@@ -398,11 +399,16 @@ var MovieList = new Class({
 		var self = this;
 
 		self.movies = []
-		self.calculateSelected()
-		self.navigation_alpha.getElements('.active').removeClass('active')
+		if(self.mass_edit_select)
+			self.calculateSelected()
+		if(self.navigation_alpha)
+			self.navigation_alpha.getElements('.active').removeClass('active')
+
 		self.offset = 0;
-		self.load_more.show();
-		self.scrollspy.start();
+		if(self.scrollspy){
+			self.load_more.show();
+			self.scrollspy.start();
+		}
 	},
 
 	activateLetter: function(letter){
@@ -418,10 +424,6 @@ var MovieList = new Class({
 	changeView: function(new_view){
 		var self = this;
 
-		self.movies.each(function(movie){
-			movie.changeView(new_view)
-		});
-
 		self.el
 			.removeClass(self.current_view+'_list')
 			.addClass(new_view+'_list')
@@ -432,7 +434,7 @@ var MovieList = new Class({
 
 	getSavedView: function(){
 		var self = this;
-		return Cookie.read(self.options.identifier+'_view') || 'thumbs';
+		return Cookie.read(self.options.identifier+'_view') || 'details';
 	},
 
 	search: function(){
@@ -468,9 +470,12 @@ var MovieList = new Class({
 	getMovies: function(){
 		var self = this;
 
-		if(self.scrollspy) self.scrollspy.stop();
-		self.load_more.set('text', 'loading...');
-		Api.request('movie.list', {
+		if(self.scrollspy){
+			self.scrollspy.stop();
+			self.load_more.set('text', 'loading...');
+		}
+
+		Api.request(self.options.api_call || 'movie.list', {
 			'data': Object.merge({
 				'status': self.options.status,
 				'limit_offset': self.options.limit + ',' + self.offset
@@ -478,8 +483,10 @@ var MovieList = new Class({
 			'onComplete': function(json){
 				self.store(json.movies);
 				self.addMovies(json.movies, json.total);
-				self.load_more.set('text', 'load more movies');
-				if(self.scrollspy) self.scrollspy.start();
+				if(self.scrollspy) {
+					self.load_more.set('text', 'load more movies');
+					self.scrollspy.start();
+				}
 
 				self.checkIfEmpty()
 			}
@@ -502,7 +509,13 @@ var MovieList = new Class({
 	checkIfEmpty: function(){
 		var self = this;
 
-		var is_empty = self.movies.length == 0 && self.total_movies == 0;
+		var is_empty = self.movies.length == 0 && (self.total_movies == 0 || self.total_movies === undefined);
+
+		if(self.title)
+			self.title[is_empty ? 'hide' : 'show']()
+
+		if(self.description)
+			self.description[is_empty ? 'hide' : 'show']()
 
 		if(is_empty && self.options.on_empty_element){
 			self.el.grab(self.options.on_empty_element);

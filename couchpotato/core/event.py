@@ -104,6 +104,8 @@ def fireEvent(name, *args, **kwargs):
 
             # Merge
             if options['merge'] and len(results) > 0:
+                results.reverse() # Priority 1 is higher then 100
+
                 # Dict
                 if isinstance(results[0], dict):
                     merged = {}

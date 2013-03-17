@@ -12,51 +12,56 @@
 # Description:       starts instance of CouchPotato using start-stop-daemon
 ### END INIT INFO
 
-############### EDIT ME ##################
-# path to app
-APP_PATH=/usr/local/sbin/CouchPotatoServer/
+# Check for existance of defaults file
+# and utilze if available
+if [ -f /etc/default/couchpotato ]; then
+    . /etc/default/couchpotato
+else
+    echo "/etc/default/couchpotato not found using default settings.";
+fi
 
-# user
-RUN_AS=YOUR_USERNAME_HERE
-
-# path to python bin
-DAEMON=/usr/bin/python
-
-# Path to store PID file
-PID_FILE=/var/run/couchpotato/server.pid
-PID_PATH=$(dirname $PID_FILE)
-
-# script name
+# Script name
 NAME=couchpotato
 
-# app name
+# App name
 DESC=CouchPotato
 
-# startup args
-DAEMON_OPTS=" CouchPotato.py --daemon --pid_file=${PID_FILE}"
+# Path to app root
+CP_APP_PATH=${APP_PATH-/usr/local/sbin/CouchPotatoServer/}
 
-############### END EDIT ME ##################
+# User to run CP as
+CP_RUN_AS=${RUN_AS-root}
 
-test -x $DAEMON || exit 0
+# Path to python bin
+CP_DAEMON=${DAEMON_PATH-/usr/bin/python}
+
+# Path to store PID file
+CP_PID_FILE=${PID_FILE-/var/run/couchpotato.pid}
+
+# Other startup args
+CP_DAEMON_OPTS=" CouchPotato.py --daemon --pid_file=${CP_PID_FILE}"
+
+test -x $CP_DAEMON || exit 0
 
 set -e
 
 case "$1" in
   start)
         echo "Starting $DESC"
-        rm -rf $PID_PATH || return 1
-        install -d --mode=0755 -o $RUN_AS $PID_PATH || return 1
-        start-stop-daemon -d $APP_PATH -c $RUN_AS --start --background --pidfile $PID_FILE --exec $DAEMON -- $DAEMON_OPTS
+        rm -rf $CP_PID_FILE || return 1
+        touch $CP_PID_FILE
+        chown $CP_RUN_AS $CP_PID_FILE
+        start-stop-daemon -d $CP_APP_PATH -c $CP_RUN_AS --start --background --pidfile $CP_PID_FILE --exec $CP_DAEMON -- $CP_DAEMON_OPTS
         ;;
   stop)
         echo "Stopping $DESC"
-        start-stop-daemon --stop --pidfile $PID_FILE --retry 15
+        start-stop-daemon --stop --pidfile $CP_PID_FILE --retry 15
         ;;
 
   restart|force-reload)
         echo "Restarting $DESC"
-        start-stop-daemon --stop --pidfile $PID_FILE --retry 15
-        start-stop-daemon -d $APP_PATH -c $RUN_AS --start --background --pidfile $PID_FILE --exec $DAEMON -- $DAEMON_OPTS
+        start-stop-daemon --stop --pidfile $CP_PID_FILE --retry 15
+        start-stop-daemon -d $CP_APP_PATH -c $CP_RUN_AS --start --background --pidfile $CP_PID_FILE --exec $CP_DAEMON -- $CP_DAEMON_OPTS
         ;;
   *)
         N=/etc/init.d/$NAME

@@ -23,6 +23,7 @@ class StatusPlugin(Plugin):
         'deleted': 'Deleted',
         'ignored': 'Ignored',
         'available': 'Available',
+        'suggest': 'Suggest',
     }
 
     def __init__(self):

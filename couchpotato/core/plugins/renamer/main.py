@@ -13,6 +13,7 @@ import errno
 import os
 import re
 import shutil
+import time
 import traceback
 
 log = CPLog(__name__)
@@ -170,15 +171,15 @@ class Renamer(Plugin):
                         replacements['cd_nr'] = cd if multiple else ''
 
                         # Naming
-                        final_folder_name = self.doReplace(folder_name, replacements)
-                        final_file_name = self.doReplace(file_name, replacements)
+                        final_folder_name = self.doReplace(folder_name, replacements).lstrip('. ')
+                        final_file_name = self.doReplace(file_name, replacements).lstrip('. ')
                         replacements['filename'] = final_file_name[:-(len(getExt(final_file_name)) + 1)]
 
                         # Meta naming
                         if file_type is 'trailer':
-                            final_file_name = self.doReplace(trailer_name, replacements, remove_multiple = True)
+                            final_file_name = self.doReplace(trailer_name, replacements, remove_multiple = True).lstrip('. ')
                         elif file_type is 'nfo':
-                            final_file_name = self.doReplace(nfo_name, replacements, remove_multiple = True)
+                            final_file_name = self.doReplace(nfo_name, replacements, remove_multiple = True).lstrip('. ')
 
                         # Seperator replace
                         if separator:
@@ -275,6 +276,7 @@ class Renamer(Plugin):
                             for profile_type in movie.profile.types:
                                 if profile_type.quality_id == group['meta_data']['quality']['id'] and profile_type.finish:
                                     movie.status_id = done_status.get('id')
+                                    movie.last_edit = int(time.time())
                                     db.commit()
                     except Exception, e:
                         log.error('Failed marking movie finished: %s %s', (e, traceback.format_exc()))
@@ -316,8 +318,10 @@ class Renamer(Plugin):
                                 log.debug('Marking release as downloaded')
                                 try:
                                     release.status_id = downloaded_status.get('id')
+                                    release.last_edit = int(time.time())
                                 except Exception, e:
                                     log.error('Failed marking release as finished: %s %s', (e, traceback.format_exc()))
+
                                 db.commit()
 
                 # Remove leftover files
@@ -455,6 +459,8 @@ class Renamer(Plugin):
 
             try:
                 os.chmod(dest, Env.getPermission('file'))
+                if os.name == 'nt' and self.conf('ntfs_permission'):
+                    os.popen('icacls "' + dest + '"* /reset /T')
             except:
                 log.error('Failed setting permissions for file: %s, %s', (dest, traceback.format_exc(1)))
 
@@ -468,7 +474,7 @@ class Renamer(Plugin):
 
         except:
             log.error('Couldn\'t move file "%s" to "%s": %s', (old, dest, traceback.format_exc()))
-            raise Exception
+            raise
 
         return True
 
@@ -554,6 +560,7 @@ class Renamer(Plugin):
                         if rel.movie.status_id == done_status.get('id'):
                             log.debug('Found a completed movie with a snatched release : %s. Setting release status to ignored...' , default_title)
                             rel.status_id = ignored_status.get('id')
+                            rel.last_edit = int(time.time())
                             db.commit()
                             continue
 
@@ -564,7 +571,7 @@ class Renamer(Plugin):
 
                         found = False
                         for item in statuses:
-                            if item['name'] == nzbname or getImdb(item['name']) == movie_dict['library']['identifier']:
+                            if item['name'] == nzbname or rel_dict['info']['name'] in item['name'] or getImdb(item['name']) == movie_dict['library']['identifier']:
 
                                 timeleft = 'N/A' if item['timeleft'] == -1 else item['timeleft']
                                 log.debug('Found %s: %s, time to go: %s', (item['name'], item['status'].upper(), timeleft))
@@ -578,6 +585,7 @@ class Renamer(Plugin):
                                         fireEvent('searcher.try_next_release', movie_id = rel.movie_id)
                                     else:
                                         rel.status_id = failed_status.get('id')
+                                        rel.last_edit = int(time.time())
                                         db.commit()
                                 elif item['status'] == 'completed':
                                     log.info('Download of %s completed!', item['name'])

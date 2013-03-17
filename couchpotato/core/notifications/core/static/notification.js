@@ -178,11 +178,14 @@ var NotificationBase = new Class({
 	},
 
 	addTestButton: function(fieldset, plugin_name){
-		var self = this;
+		var self = this,
+			button_name = self.testButtonName(fieldset);
+
+		if(button_name.contains('Notifications')) return;
 
 		new Element('.ctrlHolder.test_button').adopt(
 			new Element('a.button', {
-				'text': self.testButtonName(fieldset),
+				'text': button_name,
 				'events': {
 					'click': function(){
 						var button = fieldset.getElement('.test_button .button');
@@ -191,7 +194,7 @@ var NotificationBase = new Class({
 						Api.request('notify.'+plugin_name+'.test', {
 							'onComplete': function(json){
 
-								button.set('text', self.testButtonName(fieldset));
+								button.set('text', button_name);
 
 								if(json.success){
 									var message = new Element('span.success', {

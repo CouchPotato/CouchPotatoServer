@@ -24,32 +24,32 @@ Contents:
 * `PipeIOStream`: Pipe-based IOStream implementation.
 """
 
-from __future__ import absolute_import, division, with_statement
+from __future__ import absolute_import, division, print_function, with_statement
 
 import collections
 import errno
+import numbers
 import os
 import socket
+import ssl
 import sys
 import re
 
 from tornado import ioloop
 from tornado.log import gen_log, app_log
+from tornado.netutil import ssl_wrap_socket, ssl_match_hostname, SSLCertificateError
 from tornado import stack_context
-from tornado.util import b, bytes_type
-
-try:
-    import ssl  # Python 2.6+
-except ImportError:
-    ssl = None
+from tornado.util import bytes_type
 
 try:
     from tornado.platform.posix import _set_nonblocking
 except ImportError:
     _set_nonblocking = None
 
+
 class StreamClosedError(IOError):
     pass
+
 
 class BaseIOStream(object):
     """A utility class to write to and read from a non-blocking file or socket.
@@ -146,7 +146,7 @@ class BaseIOStream(object):
         ``callback`` will be empty.
         """
         self._set_read_callback(callback)
-        assert isinstance(num_bytes, (int, long))
+        assert isinstance(num_bytes, numbers.Integral)
         self._read_bytes = num_bytes
         self._streaming_callback = stack_context.wrap(streaming_callback)
         self._try_inline_read()
@@ -237,12 +237,14 @@ class BaseIOStream(object):
 
     def _maybe_run_close_callback(self):
         if (self.closed() and self._close_callback and
-            self._pending_callbacks == 0):
+                self._pending_callbacks == 0):
             # if there are pending callbacks, don't run the close callback
             # until they're done (see _maybe_add_error_handler)
             cb = self._close_callback
             self._close_callback = None
             self._run_callback(cb)
+            # Delete any unfinished callbacks to break up reference cycles.
+            self._read_callback = self._write_callback = None
 
     def reading(self):
         """Returns true if we are currently reading from the stream."""
@@ -399,7 +401,7 @@ class BaseIOStream(object):
         """
         try:
             chunk = self.read_from_fd()
-        except (socket.error, IOError, OSError), e:
+        except (socket.error, IOError, OSError) as e:
             # ssl.SSLError is a subclass of socket.error
             if e.args[0] == errno.ECONNRESET:
                 # Treat ECONNRESET as a connection close rather than
@@ -504,7 +506,7 @@ class BaseIOStream(object):
                 self._write_buffer_frozen = False
                 _merge_prefix(self._write_buffer, num_bytes)
                 self._write_buffer.popleft()
-            except socket.error, e:
+            except socket.error as e:
                 if e.args[0] in (errno.EWOULDBLOCK, errno.EAGAIN):
                     self._write_buffer_frozen = True
                     break
@@ -520,7 +522,7 @@ class BaseIOStream(object):
 
     def _consume(self, loc):
         if loc == 0:
-            return b("")
+            return b""
         _merge_prefix(self._read_buffer, loc)
         self._read_buffer_size -= loc
         return self._read_buffer.popleft()
@@ -630,7 +632,7 @@ class IOStream(BaseIOStream):
     def read_from_fd(self):
         try:
             chunk = self.socket.recv(self.read_chunk_size)
-        except socket.error, e:
+        except socket.error as e:
             if e.args[0] in (errno.EWOULDBLOCK, errno.EAGAIN):
                 return None
             else:
@@ -643,7 +645,7 @@ class IOStream(BaseIOStream):
     def write_to_fd(self, data):
         return self.socket.send(data)
 
-    def connect(self, address, callback=None):
+    def connect(self, address, callback=None, server_hostname=None):
         """Connects the socket to a remote address without blocking.
 
         May only be called if the socket passed to the constructor was
@@ -651,6 +653,11 @@ class IOStream(BaseIOStream):
         same format as for socket.connect, i.e. a (host, port) tuple.
         If callback is specified, it will be called when the
         connection is completed.
+
+        If specified, the ``server_hostname`` parameter will be used
+        in SSL connections for certificate validation (if requested in
+        the ``ssl_options``) and SNI (if supported; requires
+        Python 3.2+).
 
         Note that it is safe to call IOStream.write while the
         connection is pending, in which case the data will be written
@@ -661,7 +668,7 @@ class IOStream(BaseIOStream):
         self._connecting = True
         try:
             self.socket.connect(address)
-        except socket.error, e:
+        except socket.error as e:
             # In non-blocking mode we expect connect() to raise an
             # exception with EINPROGRESS or EWOULDBLOCK.
             #
@@ -710,8 +717,9 @@ class SSLIOStream(IOStream):
     def __init__(self, *args, **kwargs):
         """Creates an SSLIOStream.
 
-        If a dictionary is provided as keyword argument ssl_options,
-        it will be used as additional keyword arguments to ssl.wrap_socket.
+        The ``ssl_options`` keyword argument may either be a dictionary
+        of keywords arguments for `ssl.wrap_socket`, or an `ssl.SSLContext`
+        object.
         """
         self._ssl_options = kwargs.pop('ssl_options', {})
         super(SSLIOStream, self).__init__(*args, **kwargs)
@@ -719,6 +727,7 @@ class SSLIOStream(IOStream):
         self._handshake_reading = False
         self._handshake_writing = False
         self._ssl_connect_callback = None
+        self._server_hostname = None
 
     def reading(self):
         return self._handshake_reading or super(SSLIOStream, self).reading()
@@ -732,7 +741,7 @@ class SSLIOStream(IOStream):
             self._handshake_reading = False
             self._handshake_writing = False
             self.socket.do_handshake()
-        except ssl.SSLError, err:
+        except ssl.SSLError as err:
             if err.args[0] == ssl.SSL_ERROR_WANT_READ:
                 self._handshake_reading = True
                 return
@@ -751,15 +760,45 @@ class SSLIOStream(IOStream):
                                 self.socket.fileno(), peer, err)
                 return self.close(exc_info=True)
             raise
-        except socket.error, err:
+        except socket.error as err:
             if err.args[0] in (errno.ECONNABORTED, errno.ECONNRESET):
                 return self.close(exc_info=True)
         else:
             self._ssl_accepting = False
+            if not self._verify_cert(self.socket.getpeercert()):
+                self.close()
+                return
             if self._ssl_connect_callback is not None:
                 callback = self._ssl_connect_callback
                 self._ssl_connect_callback = None
                 self._run_callback(callback)
+
+    def _verify_cert(self, peercert):
+        """Returns True if peercert is valid according to the configured
+        validation mode and hostname.
+
+        The ssl handshake already tested the certificate for a valid
+        CA signature; the only thing that remains is to check
+        the hostname.
+        """
+        if isinstance(self._ssl_options, dict):
+            verify_mode = self._ssl_options.get('cert_reqs', ssl.CERT_NONE)
+        elif isinstance(self._ssl_options, ssl.SSLContext):
+            verify_mode = self._ssl_options.verify_mode
+        assert verify_mode in (ssl.CERT_NONE, ssl.CERT_REQUIRED, ssl.CERT_OPTIONAL)
+        if verify_mode == ssl.CERT_NONE or self._server_hostname is None:
+            return True
+        cert = self.socket.getpeercert()
+        if cert is None and verify_mode == ssl.CERT_REQUIRED:
+            gen_log.warning("No SSL certificate given")
+            return False
+        try:
+            ssl_match_hostname(peercert, self._server_hostname)
+        except SSLCertificateError:
+            gen_log.warning("Invalid SSL certificate", exc_info=True)
+            return False
+        else:
+            return True
 
     def _handle_read(self):
         if self._ssl_accepting:
@@ -773,10 +812,11 @@ class SSLIOStream(IOStream):
             return
         super(SSLIOStream, self)._handle_write()
 
-    def connect(self, address, callback=None):
+    def connect(self, address, callback=None, server_hostname=None):
         # Save the user's callback and run it after the ssl handshake
         # has completed.
         self._ssl_connect_callback = callback
+        self._server_hostname = server_hostname
         super(SSLIOStream, self).connect(address, callback=None)
 
     def _handle_connect(self):
@@ -786,9 +826,9 @@ class SSLIOStream(IOStream):
         # user callbacks are enqueued asynchronously on the IOLoop,
         # but since _handle_events calls _handle_connect immediately
         # followed by _handle_write we need this to be synchronous.
-        self.socket = ssl.wrap_socket(self.socket,
-                                      do_handshake_on_connect=False,
-                                      **self._ssl_options)
+        self.socket = ssl_wrap_socket(self.socket, self._ssl_options,
+                                      server_hostname=self._server_hostname,
+                                      do_handshake_on_connect=False)
         super(SSLIOStream, self)._handle_connect()
 
     def read_from_fd(self):
@@ -804,14 +844,14 @@ class SSLIOStream(IOStream):
             # called when there is nothing to read, so we have to use
             # read() instead.
             chunk = self.socket.read(self.read_chunk_size)
-        except ssl.SSLError, e:
+        except ssl.SSLError as e:
             # SSLError is a subclass of socket.error, so this except
             # block must come first.
             if e.args[0] == ssl.SSL_ERROR_WANT_READ:
                 return None
             else:
                 raise
-        except socket.error, e:
+        except socket.error as e:
             if e.args[0] in (errno.EWOULDBLOCK, errno.EAGAIN):
                 return None
             else:
@@ -820,6 +860,7 @@ class SSLIOStream(IOStream):
             self.close()
             return None
         return chunk
+
 
 class PipeIOStream(BaseIOStream):
     """Pipe-based IOStream implementation.
@@ -844,7 +885,7 @@ class PipeIOStream(BaseIOStream):
     def read_from_fd(self):
         try:
             chunk = os.read(self.fd, self.read_chunk_size)
-        except (IOError, OSError), e:
+        except (IOError, OSError) as e:
             if e.args[0] in (errno.EWOULDBLOCK, errno.EAGAIN):
                 return None
             elif e.args[0] == errno.EBADF:
@@ -874,17 +915,17 @@ def _merge_prefix(deque, size):
     string of up to size bytes.
 
     >>> d = collections.deque(['abc', 'de', 'fghi', 'j'])
-    >>> _merge_prefix(d, 5); print d
+    >>> _merge_prefix(d, 5); print(d)
     deque(['abcde', 'fghi', 'j'])
 
     Strings will be split as necessary to reach the desired size.
-    >>> _merge_prefix(d, 7); print d
+    >>> _merge_prefix(d, 7); print(d)
     deque(['abcdefg', 'hi', 'j'])
 
-    >>> _merge_prefix(d, 3); print d
+    >>> _merge_prefix(d, 3); print(d)
     deque(['abc', 'defg', 'hi', 'j'])
 
-    >>> _merge_prefix(d, 100); print d
+    >>> _merge_prefix(d, 100); print(d)
     deque(['abcdefghij'])
     """
     if len(deque) == 1 and len(deque[0]) <= size:
@@ -904,7 +945,7 @@ def _merge_prefix(deque, size):
     if prefix:
         deque.appendleft(type(prefix[0])().join(prefix))
     if not deque:
-        deque.appendleft(b(""))
+        deque.appendleft(b"")
 
 
 def doctests():

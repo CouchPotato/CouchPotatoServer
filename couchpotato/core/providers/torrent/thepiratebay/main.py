@@ -68,8 +68,6 @@ class ThePirateBay(TorrentMagnetProvider):
                     except:
                         pass
 
-                    print total_pages, page
-
                     entries = results_table.find_all('tr')
                     for result in entries[2:]:
                         link = result.find(href = re.compile('torrent\/\d+\/'))

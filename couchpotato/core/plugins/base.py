@@ -64,7 +64,7 @@ class Plugin(object):
             for f in glob.glob(os.path.join(self.plugin_path, 'static', '*')):
                 ext = getExt(f)
                 if ext in ['js', 'css']:
-                    fireEvent('register_%s' % ('script' if ext in 'js' else 'style'), path + os.path.basename(f))
+                    fireEvent('register_%s' % ('script' if ext in 'js' else 'style'), path + os.path.basename(f), f)
 
     def showStatic(self, filename):
         d = os.path.join(self.plugin_path, 'static')
@@ -240,7 +240,6 @@ class Plugin(object):
                     del kwargs['cache_timeout']
 
                 data = self.urlopen(url, **kwargs)
-
                 if data:
                     self.setCache(cache_key, data, timeout = cache_timeout)
                 return data

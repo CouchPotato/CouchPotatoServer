@@ -1,3 +1,4 @@
+from base64 import b16encode, b32decode
 from bencode import bencode, bdecode
 from couchpotato.core.downloaders.base import Downloader
 from couchpotato.core.helpers.encoding import isInt, ss
@@ -6,6 +7,7 @@ from hashlib import sha1
 from multipartpost import MultipartPostHandler
 import cookielib
 import httplib
+import json
 import re
 import time
 import urllib
@@ -37,6 +39,7 @@ class uTorrent(Downloader):
         if not filedata and data.get('type') == 'torrent':
             log.error('Failed sending torrent, no data')
             return False
+
         if data.get('type') == 'torrent_magnet':
             torrent_hash = re.findall('urn:btih:([\w]{32,40})', data.get('url'))[0].upper()
             torrent_params['trackers'] = '%0D%0A%0D%0A'.join(self.torrent_trackers)
@@ -44,6 +47,10 @@ class uTorrent(Downloader):
             info = bdecode(filedata)["info"]
             torrent_hash = sha1(bencode(info)).hexdigest().upper()
             torrent_filename = self.createFileName(data, filedata, movie)
+
+        # Convert base 32 to hex
+        if len(torrent_hash) == 32:
+            torrent_hash = b16encode(b32decode(torrent_hash))
 
         # Send request to uTorrent
         try:
@@ -63,6 +70,59 @@ class uTorrent(Downloader):
         except Exception, err:
             log.error('Failed to send torrent to uTorrent: %s', err)
             return False
+
+    def getAllDownloadStatus(self):
+
+        log.debug('Checking uTorrent download status.')
+
+        # Load host from config and split out port.
+        host = self.conf('host').split(':')
+        if not isInt(host[1]):
+            log.error('Config properties are not filled in correctly, port is missing.')
+            return False
+
+        try:
+            self.utorrent_api = uTorrentAPI(host[0], port = host[1], username = self.conf('username'), password = self.conf('password'))
+        except Exception, err:
+            log.error('Failed to get uTorrent object: %s', err)
+            return False
+
+        data = ''
+        try:
+            data = self.utorrent_api.get_status()
+            queue = json.loads(data)
+            if queue.get('error'):
+                log.error('Error getting data from uTorrent: %s', queue.get('error'))
+                return False
+
+        except Exception, err:
+            log.error('Failed to get status from uTorrent: %s', err)
+            return False
+
+        if queue.get('torrents', []) == []:
+            log.debug('Nothing in queue')
+            return False
+
+        statuses = []
+
+        # Get torrents
+        for item in queue.get('torrents', []):
+
+            # item[21] = Paused | Downloading | Seeding | Finished
+            status = 'busy'
+            if item[21] == 'Finished' or item[21] == 'Seeding':
+                status = 'completed'
+
+            statuses.append({
+                'id': item[0],
+                'name': item[2],
+                'status':  status,
+                'original_status': item[1],
+                'timeleft': item[10],
+            })
+
+        return statuses
+
 
 
 class uTorrentAPI(object):
@@ -94,9 +154,7 @@ class uTorrentAPI(object):
         try:
             open_request = self.opener.open(request)
             response = open_request.read()
-            log.debug('response: %s', response)
             if response:
-                log.debug('uTorrent action successfull')
                 return response
             else:
                 log.debug('Unknown failure sending command to uTorrent. Return text is: %s', response)
@@ -132,4 +190,8 @@ class uTorrentAPI(object):
 
     def pause_torrent(self, hash):
         action = "action=pause&hash=%s" % hash
+        return self._request(action)
+
+    def get_status(self):
+        action = "list=1"
         return self._request(action)

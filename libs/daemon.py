@@ -92,6 +92,7 @@ class Daemon():
         """
         Stop the daemon
         """
+
         # Get the pid from the pidfile
         try:
             pf = file(self.pidfile, 'r')
@@ -115,7 +116,6 @@ class Daemon():
             if err.find("No such process") > 0:
                 self.delpid()
             else:
-                print str(err)
                 sys.exit(1)
 
     def restart(self):

@@ -3,7 +3,7 @@ var CouchPotato = new Class({
 	Implements: [Events, Options],
 
 	defaults: {
-		page: 'wanted',
+		page: 'home',
 		action: 'index',
 		params: {}
 	},
@@ -24,8 +24,8 @@ var CouchPotato = new Class({
 
 		if(window.location.hash)
 			History.handleInitialState();
-
-		self.openPage(window.location.pathname);
+		else
+			self.openPage(window.location.pathname);
 
 		History.addEvent('change', self.openPage.bind(self));
 		self.c.addEvent('click:relay(a[href^=/]:not([target]))', self.pushState.bind(self));
@@ -135,7 +135,7 @@ var CouchPotato = new Class({
 			self.current_page.hide()
 
 		try {
-			var page = self.pages[page_name] || self.pages.Wanted;
+			var page = self.pages[page_name] || self.pages.Home;
 			page.open(action, params, current_url);
 			page.show();
 		}
@@ -342,7 +342,14 @@ var Route = new Class({
 	parse: function(){
 		var self = this;
 
-		var path = History.getPath().replace(Api.getOption('url'), '/').replace(App.getOption('base_url'), '/')
+		var rep = function(pa){
+			return pa.replace(Api.getOption('url'), '/').replace(App.getOption('base_url'), '/')
+		}
+
+		var path = rep(History.getPath())
+		if(path == '/' && location.hash){
+			path = rep(location.hash.replace('#', '/'))
+		}
 		self.current = path.replace(/^\/+|\/+$/g, '')
 		var url = self.current.split('/')
 

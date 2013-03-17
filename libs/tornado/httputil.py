@@ -16,14 +16,26 @@
 
 """HTTP utility code shared by clients and servers."""
 
-from __future__ import absolute_import, division, with_statement
+from __future__ import absolute_import, division, print_function, with_statement
 
-import urllib
+import datetime
+import numbers
 import re
+import time
 
 from tornado.escape import native_str, parse_qs_bytes, utf8
 from tornado.log import gen_log
-from tornado.util import b, ObjectDict
+from tornado.util import ObjectDict
+
+try:
+    from httplib import responses  # py2
+except ImportError:
+    from http.client import responses  # py3
+
+try:
+    from urllib import urlencode  # py2
+except ImportError:
+    from urllib.parse import urlencode  # py3
 
 
 class HTTPHeaders(dict):
@@ -34,7 +46,7 @@ class HTTPHeaders(dict):
     value per key, with multiple values joined by a comma.
 
     >>> h = HTTPHeaders({"content-type": "text/html"})
-    >>> h.keys()
+    >>> list(h.keys())
     ['Content-Type']
     >>> h["Content-Type"]
     'text/html'
@@ -47,7 +59,7 @@ class HTTPHeaders(dict):
     ['A=B', 'C=D']
 
     >>> for (k,v) in sorted(h.get_all()):
-    ...    print '%s: %s' % (k,v)
+    ...    print('%s: %s' % (k,v))
     ...
     Content-Type: text/html
     Set-Cookie: A=B
@@ -60,7 +72,7 @@ class HTTPHeaders(dict):
         self._as_list = {}
         self._last_key = None
         if (len(args) == 1 and len(kwargs) == 0 and
-            isinstance(args[0], HTTPHeaders)):
+                isinstance(args[0], HTTPHeaders)):
             # Copy constructor
             for k, v in args[0].get_all():
                 self.add(k, v)
@@ -76,7 +88,9 @@ class HTTPHeaders(dict):
         self._last_key = norm_name
         if norm_name in self:
             # bypass our override of __setitem__ since it modifies _as_list
-            dict.__setitem__(self, norm_name, self[norm_name] + ',' + value)
+            dict.__setitem__(self, norm_name,
+                             native_str(self[norm_name]) + ',' +
+                             native_str(value))
             self._as_list[norm_name].append(value)
         else:
             self[norm_name] = value
@@ -92,8 +106,8 @@ class HTTPHeaders(dict):
         If a header has multiple values, multiple pairs will be
         returned with the same name.
         """
-        for name, list in self._as_list.iteritems():
-            for value in list:
+        for name, values in self._as_list.items():
+            for value in values:
                 yield (name, value)
 
     def parse_line(self, line):
@@ -119,7 +133,7 @@ class HTTPHeaders(dict):
         """Returns a dictionary from HTTP header text.
 
         >>> h = HTTPHeaders.parse("Content-Type: text/html\\r\\nContent-Length: 42\\r\\n")
-        >>> sorted(h.iteritems())
+        >>> sorted(h.items())
         [('Content-Length', '42'), ('Content-Type', 'text/html')]
         """
         h = cls()
@@ -152,7 +166,7 @@ class HTTPHeaders(dict):
 
     def update(self, *args, **kwargs):
         # dict.update bypasses our __setitem__
-        for k, v in dict(*args, **kwargs).iteritems():
+        for k, v in dict(*args, **kwargs).items():
             self[k] = v
 
     def copy(self):
@@ -191,7 +205,7 @@ def url_concat(url, args):
         return url
     if url[-1] not in ('?', '&'):
         url += '&' if ('?' in url) else '?'
-    return url + urllib.urlencode(args)
+    return url + urlencode(args)
 
 
 class HTTPFile(ObjectDict):
@@ -216,7 +230,7 @@ def parse_body_arguments(content_type, body, arguments, files):
     """
     if content_type.startswith("application/x-www-form-urlencoded"):
         uri_arguments = parse_qs_bytes(native_str(body))
-        for name, values in uri_arguments.iteritems():
+        for name, values in uri_arguments.items():
             values = [v for v in values if v]
             if values:
                 arguments.setdefault(name, []).extend(values)
@@ -243,24 +257,24 @@ def parse_multipart_form_data(boundary, data, arguments, files):
     # xmpp).  I think we're also supposed to handle backslash-escapes
     # here but I'll save that until we see a client that uses them
     # in the wild.
-    if boundary.startswith(b('"')) and boundary.endswith(b('"')):
+    if boundary.startswith(b'"') and boundary.endswith(b'"'):
         boundary = boundary[1:-1]
-    final_boundary_index = data.rfind(b("--") + boundary + b("--"))
+    final_boundary_index = data.rfind(b"--" + boundary + b"--")
     if final_boundary_index == -1:
         gen_log.warning("Invalid multipart/form-data: no final boundary")
         return
-    parts = data[:final_boundary_index].split(b("--") + boundary + b("\r\n"))
+    parts = data[:final_boundary_index].split(b"--" + boundary + b"\r\n")
     for part in parts:
         if not part:
             continue
-        eoh = part.find(b("\r\n\r\n"))
+        eoh = part.find(b"\r\n\r\n")
         if eoh == -1:
             gen_log.warning("multipart/form-data missing headers")
             continue
         headers = HTTPHeaders.parse(part[:eoh].decode("utf-8"))
         disp_header = headers.get("Content-Disposition", "")
         disposition, disp_params = _parse_header(disp_header)
-        if disposition != "form-data" or not part.endswith(b("\r\n")):
+        if disposition != "form-data" or not part.endswith(b"\r\n"):
             gen_log.warning("Invalid multipart/form-data")
             continue
         value = part[eoh + 4:-2]
@@ -276,6 +290,26 @@ def parse_multipart_form_data(boundary, data, arguments, files):
         else:
             arguments.setdefault(name, []).append(value)
 
+
+def format_timestamp(ts):
+    """Formats a timestamp in the format used by HTTP.
+
+    The argument may be a numeric timestamp as returned by `time.time()`,
+    a time tuple as returned by `time.gmtime()`, or a `datetime.datetime`
+    object.
+
+    >>> format_timestamp(1359312200)
+    'Sun, 27 Jan 2013 18:43:20 GMT'
+    """
+    if isinstance(ts, (tuple, time.struct_time)):
+        pass
+    elif isinstance(ts, datetime.datetime):
+        ts = ts.utctimetuple()
+    elif isinstance(ts, numbers.Real):
+        ts = time.gmtime(ts)
+    else:
+        raise TypeError("unknown timestamp type: %r" % ts)
+    return time.strftime("%a, %d %b %Y %H:%M:%S GMT", ts)
 
 # _parseparam and _parse_header are copied and modified from python2.7's cgi.py
 # The original 2.7 version of this code did not correctly support some
@@ -300,7 +334,7 @@ def _parse_header(line):
 
     """
     parts = _parseparam(';' + line)
-    key = parts.next()
+    key = next(parts)
     pdict = {}
     for p in parts:
         i = p.find('=')
