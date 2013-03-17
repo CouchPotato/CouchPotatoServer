@@ -11,18 +11,19 @@ import json
 import re
 import time
 import traceback
+import urllib
 import urllib2
 import unicodedata
+from libs.werkzeug.urls import url_encode
 
 log = CPLog(__name__)
 
 
-class t411(TorrentProvider):
+class cPASbien(TorrentProvider):
 
     urls = {
-        'test': 'http://www.t411.me/',
-        'detail': 'http://www.t411.me/torrents/?id=%s',
-        'search': 'http://www.t411.me/torrents/search/?search=%s %s',
+        'test': 'http://www.cpasbien.me/',
+        'search': 'http://www.cpasbien.me/recherche/',
     }
 
     http_time_between_calls = 1 #seconds
@@ -38,87 +39,111 @@ class t411(TorrentProvider):
             if (headers['Location'] != 'login.php'):
                 return urllib2.HTTPRedirectHandler.http_error_302(self, req, fp, code, msg, headers)
             else:
-                raise t411.NotLoggedInHTTPError(req.get_full_url(), code, msg, headers, fp)
+                raise cPASbien.NotLoggedInHTTPError(req.get_full_url(), code, msg, headers, fp)
 
     def _search(self, movie, quality, results):
 
-        # Cookie login
+                # Cookie login
         if not self.login_opener and not self.login():
             return
 
-        TitleStringReal = ""
 
-        TitleStringReal = getTitle(movie['library'])
-
-
-        URL = (self.urls['search'] % (simplifyString(TitleStringReal), simplifyString(quality['identifier'] ))).replace('-',' ').replace(' ',' ').replace(' ',' ').replace(' ',' ').encode("utf8")
+        TitleStringReal = (getTitle(movie['library']) + ' ' + simplifyString(quality['identifier'] )).replace('-',' ').replace(' ',' ').replace(' ',' ').replace(' ',' ').encode("utf8")
+        #TitleStringReal = TitleStringReal.replace(' ','+')
+        
+        URL = (self.urls['search']).encode('UTF8')
         URL=unicodedata.normalize('NFD',unicode(URL,"utf8","replace"))
         URL=URL.encode('ascii','ignore')
-
         URL = urllib2.quote(URL.encode('utf8'), ":/?=")
-
-
-
-        data = self.getHTMLData(URL , opener = self.login_opener)
-
         
+        values = {
+          'champ_recherche' : TitleStringReal
+        }
+
+        data_tmp = urllib.urlencode(values)
+        req = urllib2.Request(URL, data_tmp )  # POST request doesn't not work
+        opener = self.login_opener
+        
+        data = urllib2.urlopen(req)
+
+        log.error(URL)
+        log.error(TitleStringReal)
+
+        id = 1000
 
         if data:
 
             cat_ids = self.getCatId(quality['identifier'])
             table_order = ['name', 'size', None, 'age', 'seeds', 'leechers']
 
-            log.debug('Il y a des donnee')
-
+            log.error('Il y a des donnee')
+            
             try:
                 html = BeautifulSoup(data)
 
-                resultdiv = html.find('table', attrs = {'class':'results'}).find('tbody')
+                resultdiv = html.find('div', attrs = {'id':'recherche'}).find('table').find('tbody')
 
                 for result in resultdiv.find_all('tr', recursive = False):
 
                     try:
+                        
+                        new = {}
 
-                        categorie = result.find_all('td')[0].find_all('img')[0]['class']                        
-                        insert = 0
-                    
-                        if categorie == ['cat-631']:
-                            insert = 1
-                        if categorie == ['cat-455']:
-                            insert = 1
-                     
-                        if insert == 1 :
-                     
-                            new = {}
-    
-                            id = result.find_all('td')[2].find_all('a')[0]['href'][1:].replace('torrents/nfo/?id=','')
-                            name = result.find_all('td')[1].find_all('a')[0]['title']
-                            url = ('http://www.t411.me/torrents/download/?id=%s' % id)
-                            detail_url = ('http://www.t411.me/torrents/?id=%s' % id)
+                        #id = result.find_all('td')[2].find_all('a')[0]['href'][1:].replace('torrents/nfo/?id=','')
+                        name = result.find_all('td')[0].find_all('a')[0].text
+                        
+                        detail_url = result.find_all('td')[0].find_all('a')[0]['href']
 
-                            size = result.find_all('td')[5].text
-                            age = result.find_all('td')[4].text
-                            seeder = result.find_all('td')[7].text
-                            leecher = result.find_all('td')[8].text
+                        tmp = result.find_all('td')[0].find_all('a')[0]['href']
+                        tmp = tmp.split('/')[6].replace('.html','.torrent')
+                        
+                        url = ('http://www.cpasbien.me/_torrents/%s' % tmp)
+
+
+                        size = result.find_all('td')[1].text
+                        #age = result.find_all('td')[4].text
+                        seeder = result.find_all('td')[2].find_all('span')[0].text
+                        leecher = result.find_all('td')[3].text
+                        age = '1 mois'
+
+                        verify = getTitle(movie['library']).split(' ')
+                        
+                        add = 1
+                        
+                        for verify_unit in verify:
+                            if (name.find(verify_unit) == -1) :
+                                add = 0
+
+                        def extra_check(item):
+                            return True
+
+                        if add == 1:
     
-                            def extra_check(item):
-                                return True
-    
-                            log.debug(name)
+                            log.error(name)
+                            log.error(url)
+                            log.error(detail_url)
+                            log.error(size)
+                            #log.error(age)
+                            log.error(seeder)
+                            log.error(leecher)
+                            
     
                             new['id'] = id
-                            new['name'] = name + ' french'
+                            new['name'] = name.strip()
                             new['url'] = url
                             new['detail_url'] = detail_url
+                            #new['score'] = score
                             new['size'] = self.parseSize(size)
                             new['age'] = self.ageToDays(age)
                             new['seeders'] = tryInt(seeder)
                             new['leechers'] = tryInt(leecher)
                             new['extra_check'] = extra_check
-                            new['download'] = self.loginDownload
+                            new['download'] = self.loginDownload                    
     
                             results.append(new)
-
+    
+                            id = id+1
+                        
                     except:
                         log.error('Failed parsing T411: %s', traceback.format_exc())
 
@@ -149,10 +174,10 @@ class t411(TorrentProvider):
 
     def login(self):
 
-        log.debug('Try login T411')
+        log.debug('Try login cPASbien')
 
         cookieprocessor = urllib2.HTTPCookieProcessor(cookielib.CookieJar())
-        opener = urllib2.build_opener(cookieprocessor, t411.PTPHTTPRedirectHandler())
+        opener = urllib2.build_opener(cookieprocessor, cPASbien.PTPHTTPRedirectHandler())
         opener.addheaders = [
             ('User-Agent', 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.1 (KHTML, like Gecko)'),
             ('Accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'),
@@ -164,23 +189,19 @@ class t411(TorrentProvider):
         ]
 
         try:
-            response = opener.open('http://www.t411.me/users/login/', self.getLoginParams())
+            response = opener.open('http://www.cpasbien.me', self.getLoginParams())
         except urllib2.URLError as e:
-            log.error('Login to T411 failed: %s' % e)
+            log.error('Login to cPASbien failed: %s' % e)
             return False
 
         if response.getcode() == 200:
-            log.debug('Login HTTP T411 status 200; seems successful')
+            log.debug('Login HTTP cPASbien status 200; seems successful')
             self.login_opener = opener
             return True
         else:
-            log.error('Login to T411 failed: returned code %d' % response.getcode())
+            log.error('Login to cPASbien failed: returned code %d' % response.getcode())
             return False
 
     def getLoginParams(self):
         return tryUrlencode({
-             'login': self.conf('username'),
-             'password': self.conf('password'),
-             'remember': '1',
-             'url': '/'
         })
