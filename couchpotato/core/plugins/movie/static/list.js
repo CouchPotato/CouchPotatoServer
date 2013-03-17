@@ -40,7 +40,7 @@ var MovieList = new Class({
 			}) : null
 		);
 
-		self.changeView(self.options.view || 'details');
+		self.changeView(self.getSavedView() || self.options.view || 'details');
 
 		self.getMovies();
 
@@ -432,7 +432,7 @@ var MovieList = new Class({
 
 	getSavedView: function(){
 		var self = this;
-		return Cookie.read(self.options.identifier+'_view') || 'thumbs';
+		return Cookie.read(self.options.identifier+'_view') || 'details';
 	},
 
 	search: function(){
