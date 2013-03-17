@@ -60,6 +60,6 @@ class OMGWTFNZBs(NZBProvider, RSS):
                 'size': tryInt(enclosure['length']) / 1024 / 1024,
                 'url': enclosure['url'],
                 'detail_url': self.getTextElement(nzb, 'link'),
-                'description': self.getTextElement(nzb, 'description')
+                'description': self.getTextElement(nzb, 'description'),
                 'extra_score': extra_score,
             })

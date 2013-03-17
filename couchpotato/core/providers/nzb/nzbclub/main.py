@@ -61,7 +61,7 @@ class NZBClub(NZBProvider, RSS):
                 'url': enclosure['url'].replace(' ', '_'),
                 'detail_url': self.getTextElement(nzb, "link"),
                 'get_more_info': self.getMoreInfo,
-                'extra_check': extra_check
+                'extra_check': extra_check,
                 'extra_score': extra_score,
             })
 
