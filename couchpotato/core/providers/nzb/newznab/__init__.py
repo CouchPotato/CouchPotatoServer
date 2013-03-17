@@ -30,7 +30,7 @@ config = [{
                     'default': 'nzb.su,dognzb.cr,nzbs.org,https://index.nzbgeek.info',
                     'description': 'The hostname of your newznab provider',
                 },
-                                {
+                {
                     'name': 'extra_score',
                     'advanced': True,
                     'label': 'Extra Score',
