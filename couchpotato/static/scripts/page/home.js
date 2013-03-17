@@ -38,8 +38,9 @@ Page.Home = new Class({
 			'limit': 18,
 			'title': 'Available soon',
 			'description': 'These are being searches for and should be available soon as they will be released on DVD in the next few weeks.',
-			'on_empty_element': new Element('div').grab(
-				new Element('span', {'text': 'There are no movies available soon'})
+			'on_empty_element': new Element('div').adopt(
+				new Element('h1', {'text': 'Available soon'}),
+				new Element('span', {'text': 'There are no movies available soon. Add some movies, so you have something to watch later.'})
 			),
 			'filter': {
 				'random': true

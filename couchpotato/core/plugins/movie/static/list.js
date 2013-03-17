@@ -509,7 +509,7 @@ var MovieList = new Class({
 	checkIfEmpty: function(){
 		var self = this;
 
-		var is_empty = self.movies.length == 0 && self.total_movies == 0;
+		var is_empty = self.movies.length == 0 && (self.total_movies == 0 || self.total_movies === undefined);
 
 		if(self.title)
 			self.title[is_empty ? 'hide' : 'show']()

@@ -1,6 +1,7 @@
 .movies {
 	padding: 60px 0 20px;
 	position: relative;
+	z-index: 3;
 }
 
 	.movies h2 {
@@ -523,7 +524,7 @@
 .movies .alph_nav {
 	transition: box-shadow .4s linear;
 	position: fixed;
-	z-index: 2;
+	z-index: 4;
 	top: 0;
 	padding: 100px 60px 7px;
 	width: 1080px;

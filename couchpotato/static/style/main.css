@@ -585,7 +585,7 @@ body > .spinner, .mask{
 	bottom: 0;
 	padding: 2px;
 	width: 240px;
-	z-index: 2;
+	z-index: 20;
 	overflow: hidden;
 	font-size: 14px;
 	font-weight: bold;
