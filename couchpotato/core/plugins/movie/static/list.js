@@ -27,10 +27,12 @@ var MovieList = new Class({
 
 		self.el = new Element('div.movies').adopt(
 			self.title = self.options.title ? new Element('h2', {
-				'text': self.options.title
+				'text': self.options.title,
+				'styles': {'display': 'none'}
 			}) : null,
 			self.description = self.options.description ? new Element('div.description', {
-				'html': self.options.description
+				'html': self.options.description,
+				'styles': {'display': 'none'}
 			}) : null,
 			self.movie_list = new Element('div'),
 			self.load_more = self.options.load_more ? new Element('a.load_more', {
@@ -511,6 +513,9 @@ var MovieList = new Class({
 
 		if(self.title)
 			self.title[is_empty ? 'hide' : 'show']()
+
+		if(self.description)
+			self.description[is_empty ? 'hide' : 'show']()
 
 		if(is_empty && self.options.on_empty_element){
 			self.el.grab(self.options.on_empty_element);
