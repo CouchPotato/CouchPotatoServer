@@ -5,14 +5,23 @@
 AppName={#MyAppName}
 AppVersion=2
 AppVerName={#MyAppName}
-DefaultDirName={pf}\{#MyAppName}
+DefaultDirName={userappdata}\{#MyAppName}\application
 DisableProgramGroupPage=yes
+DisableDirPage=yes
 UninstallDisplayIcon=./icon.ico
 SetupIconFile=./icon.ico
 OutputDir=./dist
 OutputBaseFilename={#MyAppName}-{#MyAppVer}.win32.installer
 AppPublisher=Your Mom
 AppPublisherURL=http://couchpota.to
+PrivilegesRequired=none
+WizardSmallImageFile=installer_icon.bmp
+WizardImageFile=installer_banner.bmp
+UsePreviousAppDir=no
+
+[Messages]
+WelcomeLabel1=Installing [name]!
+WelcomeLabel2=This wizard will install [name] to your AppData folder. It does this so it can use the build in updater without needing admin rights.
 
 [Files]
 Source: "./dist/{#MyAppName}-{#MyAppVer}.win32/*"; Flags: recursesubdirs; DestDir: "{app}"
