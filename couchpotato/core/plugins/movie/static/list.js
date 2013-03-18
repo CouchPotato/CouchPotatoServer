@@ -144,7 +144,7 @@ var MovieList = new Class({
 		var self = this;
 		var chars = '#ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
-		self.current_view = self.getSavedView();
+		self.current_view = self.getSavedView() || 'details';
 		self.el.addClass(self.current_view+'_list')
 
 		self.navigation = new Element('div.alph_nav').adopt(
@@ -434,7 +434,7 @@ var MovieList = new Class({
 
 	getSavedView: function(){
 		var self = this;
-		return Cookie.read(self.options.identifier+'_view') || 'details';
+		return Cookie.read(self.options.identifier+'_view');
 	},
 
 	search: function(){
