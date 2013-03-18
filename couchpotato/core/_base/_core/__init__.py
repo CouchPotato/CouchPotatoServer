@@ -30,6 +30,11 @@ config = [{
                     'description': 'The port I should listen to.',
                 },
                 {
+                    'name': 'host',
+                    'description': 'Hostname/IP clients should use to reference the server',
+                    'advanced': True,
+                },
+                {
                     'name': 'ssl_cert',
                     'description': 'Path to SSL server.crt',
                     'advanced': True,
