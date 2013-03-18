@@ -429,12 +429,12 @@ var MovieList = new Class({
 			.addClass(new_view+'_list')
 
 		self.current_view = new_view;
-		Cookie.write(self.options.identifier+'_view', new_view, {duration: 1000});
+		Cookie.write(self.options.identifier+'_view2', new_view, {duration: 1000});
 	},
 
 	getSavedView: function(){
 		var self = this;
-		return Cookie.read(self.options.identifier+'_view');
+		return Cookie.read(self.options.identifier+'_view2');
 	},
 
 	search: function(){
