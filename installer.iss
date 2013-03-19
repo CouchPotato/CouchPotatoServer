@@ -1,5 +1,5 @@
 #define MyAppName "CouchPotato"
-#define MyAppVer "2.0.7"
+#define MyAppVer "2.0.7.1"
 
 [Setup]
 AppName={#MyAppName}
@@ -22,6 +22,9 @@ UsePreviousAppDir=no
 [Messages]
 WelcomeLabel1=Installing [name]!
 WelcomeLabel2=This wizard will install [name] to your AppData folder. It does this so it can use the build in updater without needing admin rights.
+       
+[CustomMessages]
+LaunchProgram=Launch {#MyAppName} right now.
 
 [Files]
 Source: "./dist/{#MyAppName}-{#MyAppVer}.win32/*"; Flags: recursesubdirs; DestDir: "{app}"
@@ -32,6 +35,10 @@ Name: "{userstartup}\{#MyAppName}"; Filename: "{app}\{#MyAppName}.exe"; Tasks: s
 
 [Tasks]
 Name: "startup"; Description: "Run {#MyAppName} at startup"; Flags: unchecked
+
+[Run]
+Filename: {app}\{#MyAppName}.exe; Description: {cm:LaunchProgram,{#MyAppName}}; Flags: nowait postinstall skipifsilent
+
 
 [UninstallDelete]
 Type: filesandordirs; Name: "{app}\appdata"
