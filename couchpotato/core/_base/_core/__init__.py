@@ -94,13 +94,6 @@ config = [{
                     'label': 'File CHMOD',
                     'description': 'Same as Folder CHMOD but for files',
                 },
-                {
-                    'name': 'could_be_released',
-                    'default': 1,
-                    'type': 'bool',
-                    'label': 'Check Released',
-                    'description': 'Don\'t search if not released yet.',
-                },
             ],
         },
     ],
