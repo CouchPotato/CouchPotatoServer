@@ -94,7 +94,7 @@ class NZBGet(Downloader):
         for item in groups:
             log.debug('Found %s in NZBGet download queue', item['NZBFilename'])
             statuses.append({
-                'id': item['NZBID'],
+                'id': u'NZBGet_' + item['NZBID'],
                 'name': item['NZBFilename'],
                 'status': 'busy',
                 'original_status': 'DOWNLOADING' if item['ActiveDownloads'] > 0 else 'QUEUED',
@@ -105,7 +105,7 @@ class NZBGet(Downloader):
         for item in queue:
             log.debug('Found %s in NZBGet postprocessing queue', item['NZBFilename'])
             statuses.append({
-                'id': item['NZBID'],
+                'id': u'NZBGet_' + item['NZBID'],
                 'name': item['NZBFilename'],
                 'status': 'busy',
                 'original_status': item['Stage'],
@@ -115,7 +115,7 @@ class NZBGet(Downloader):
         for item in history:
             log.debug('Found %s in NZBGet history. ParStatus: %s, ScriptStatus: %s, Log: %s', (item['NZBFilename'] , item['ParStatus'], item['ScriptStatus'] , item['Log']))
             statuses.append({
-                'id': item['NZBID'],
+                'id': u'NZBGet_' + item['NZBID'],
                 'name': item['NZBFilename'],
                 'status': 'completed' if item['ParStatus'] == 'SUCCESS' and item['ScriptStatus'] == 'SUCCESS' else 'failed',
                 'original_status': item['ParStatus'] + ', ' + item['ScriptStatus'],
@@ -148,7 +148,7 @@ class NZBGet(Downloader):
 
         try:
             history = rpc.history()
-            if rpc.editqueue('HistoryDelete',0,"",[int(item['id'])]):
+            if rpc.editqueue('HistoryDelete',0,"",[int(item['id'][len('NZBGet_'):])]):
                 path = [hist['DestDir'] for hist in history if hist['NZBID'] == item['id']][0]
                 shutil.rmtree(path, True)
         except:
