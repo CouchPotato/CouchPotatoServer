@@ -15,6 +15,7 @@ import urllib
 import urllib2
 import unicodedata
 from libs.werkzeug.urls import url_encode
+from couchpotato.core.event import fireEvent
 
 log = CPLog(__name__)
 
@@ -61,10 +62,9 @@ class cPASbien(TorrentProvider):
         }
 
         data_tmp = urllib.urlencode(values)
-        req = urllib2.Request(URL, data_tmp )  # POST request doesn't not work
-        opener = self.login_opener
+        req = urllib2.Request(URL, data_tmp )
         
-        data = urllib2.urlopen(req)
+        data = urllib2.urlopen(req )
 
         log.error(URL)
         log.error(TitleStringReal)
@@ -94,17 +94,34 @@ class cPASbien(TorrentProvider):
                         
                         detail_url = result.find_all('td')[0].find_all('a')[0]['href']
 
-                        tmp = result.find_all('td')[0].find_all('a')[0]['href']
-                        tmp = tmp.split('/')[6].replace('.html','.torrent')
-                        
-                        url = ('http://www.cpasbien.me/_torrents/%s' % tmp)
+                        #on scrapp la page detail
+
+                        urldetail = detail_url.encode('UTF8')
+                        urldetail=unicodedata.normalize('NFD',unicode(urldetail,"utf8","replace"))
+                        urldetail=urldetail.encode('ascii','ignore')
+                        urldetail = urllib2.quote(urldetail.encode('utf8'), ":/?=")
+
+                        req = urllib2.Request(urldetail )  # POST request doesn't not work
+                        data_detail = urllib2.urlopen(req)
+
+                        url_download = ""
+
+                        if data_detail:
+                            
+                            html_detail = BeautifulSoup(data_detail)                                
+                            url_download = html_detail.find_all('div', attrs = {'class':'download-torrent'})[0].find_all('a')[0]['href']    
+                        else:
+                            tmp = result.find_all('td')[0].find_all('a')[0]['href']
+                            tmp = tmp.split('/')[6].replace('.html','.torrent')
+                            url_download = ('http://www.cpasbien.me/_torrents/%s' % tmp)
+
 
 
                         size = result.find_all('td')[1].text
                         #age = result.find_all('td')[4].text
                         seeder = result.find_all('td')[2].find_all('span')[0].text
                         leecher = result.find_all('td')[3].text
-                        age = '1 mois'
+                        age = '0'
 
                         verify = getTitle(movie['library']).split(' ')
                         
@@ -120,32 +137,36 @@ class cPASbien(TorrentProvider):
                         if add == 1:
     
                             log.error(name)
-                            log.error(url)
+                            log.error(url_download)
                             log.error(detail_url)
                             log.error(size)
                             #log.error(age)
                             log.error(seeder)
                             log.error(leecher)
-                            
     
                             new['id'] = id
                             new['name'] = name.strip()
-                            new['url'] = url
+                            new['url'] = url_download
                             new['detail_url'] = detail_url
-                            #new['score'] = score
+                           
                             new['size'] = self.parseSize(size)
                             new['age'] = self.ageToDays(age)
                             new['seeders'] = tryInt(seeder)
                             new['leechers'] = tryInt(leecher)
                             new['extra_check'] = extra_check
-                            new['download'] = self.loginDownload                    
+                            new['download'] = self.loginDownload             
+    
+                            #new['score'] = fireEvent('score.calculate', new, movie, single = True)
+    
+                            #log.error('score')
+                            #log.error(new['score'])
     
                             results.append(new)
     
                             id = id+1
                         
                     except:
-                        log.error('Failed parsing T411: %s', traceback.format_exc())
+                        log.error('Failed parsing cPASbien: %s', traceback.format_exc())
 
             except AttributeError:
                 log.debug('No search results found.')
@@ -189,7 +210,7 @@ class cPASbien(TorrentProvider):
         ]
 
         try:
-            response = opener.open('http://www.cpasbien.me', self.getLoginParams())
+            response = opener.open('http://www.cpasbien.me', tryUrlencode({'url': '/'}))
         except urllib2.URLError as e:
             log.error('Login to cPASbien failed: %s' % e)
             return False
@@ -201,7 +222,20 @@ class cPASbien(TorrentProvider):
         else:
             log.error('Login to cPASbien failed: returned code %d' % response.getcode())
             return False
-
-    def getLoginParams(self):
-        return tryUrlencode({
-        })
+        
+        
+    def loginDownload(self, url = '', nzb_id = ''):
+        values = {
+          'url' : '/'
+        }
+        data_tmp = urllib.urlencode(values)
+        req = urllib2.Request(url, data_tmp )
+        
+        try:
+            if not self.login_opener and not self.login():
+                log.error('Failed downloading from %s', self.getName())
+            return urllib2.urlopen(req).read()
+        except:
+            log.error('Failed downloading from %s: %s', (self.getName(), traceback.format_exc()))
+            
+            
