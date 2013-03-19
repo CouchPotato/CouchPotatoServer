@@ -165,7 +165,7 @@ class Searcher(Plugin):
 
             # See if better quality is available
             for release in movie['releases']:
-                if release['quality']['order'] < quality_type['quality']['order'] and release['status_id'] not in [available_status.get('id'), ignored_status.get('id')]:
+                if release['quality']['order'] <= quality_type['quality']['order'] and release['status_id'] not in [available_status.get('id'), ignored_status.get('id')]:
                     has_better_quality += 1
 
             # Don't search for quality lower then already available.
