@@ -65,7 +65,7 @@ class NZBVortex(Downloader):
         log.info('%s failed downloading, deleting...', item['name'])
 
         try:
-            self.call('nzb/%s/cancel' % item['id'][len('NZBVortex_'):len(item['id'])])
+            self.call('nzb/%s/cancel' % item['id'][len('NZBVortex_'):])
         except:
             log.error('Failed deleting: %s', traceback.format_exc(0))
             return False
