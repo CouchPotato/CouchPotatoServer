@@ -46,6 +46,10 @@ class IPTorrents(TorrentProvider):
 
                 entries = result_table.find_all('tr')
 
+                def extra_score(item):
+                    score = tryInt(self.conf('extra_score'))
+                    return score
+
                 for result in entries[1:]:
 
                     torrent = result.find_all('td')[1].find('a')
@@ -67,6 +71,7 @@ class IPTorrents(TorrentProvider):
                         'size': torrent_size,
                         'seeders': torrent_seeders,
                         'leechers': torrent_leechers,
+                        'extra_score': extra_score,
                     })
 
             except:

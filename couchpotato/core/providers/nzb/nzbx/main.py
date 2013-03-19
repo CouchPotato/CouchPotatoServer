@@ -26,6 +26,8 @@ class Nzbx(NZBProvider):
         nzbs = self.getJsonData(self.urls['search'] % arguments, headers = {'User-Agent': Env.getIdentifier()})
 
         for nzb in nzbs:
+            def extra_score(item):
+                return tryInt(self.conf('extra_score'))
 
             results.append({
                 'id': nzb['guid'],
@@ -34,5 +36,6 @@ class Nzbx(NZBProvider):
                 'name': nzb['name'],
                 'age': self.calculateAge(int(nzb['postdate'])),
                 'size': tryInt(nzb['size']) / 1024 / 1024,
-                'score': 5 if nzb['votes']['upvotes'] > nzb['votes']['downvotes'] else 0
+                'score': 5 if nzb['votes']['upvotes'] > nzb['votes']['downvotes'] else 0,
+                'extra_score': extra_score,
             })

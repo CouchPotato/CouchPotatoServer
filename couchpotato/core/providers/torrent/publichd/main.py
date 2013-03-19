@@ -52,6 +52,9 @@ class PublicHD(TorrentMagnetProvider):
 
                         url = parse_qs(info_url['href'])
 
+                        def extra_score(item):
+                            return tryInt(self.conf('extra_score'))
+
                         results.append({
                             'id': url['id'][0],
                             'name': info_url.string,
@@ -60,7 +63,8 @@ class PublicHD(TorrentMagnetProvider):
                             'size': self.parseSize(result.find_all('td')[7].string),
                             'seeders': tryInt(result.find_all('td')[4].string),
                             'leechers': tryInt(result.find_all('td')[5].string),
-                            'get_more_info': self.getMoreInfo
+                            'get_more_info': self.getMoreInfo,
+                            'extra_score': extra_score,
                         })
 
             except:

@@ -42,6 +42,10 @@ class TorrentDay(TorrentProvider):
         except: return
 
         for torrent in torrents:
+
+            def extra_score(item):
+                return tryInt(self.conf('extra_score'))
+
             results.append({
                 'id': torrent['id'],
                 'name': torrent['name'],
@@ -51,6 +55,7 @@ class TorrentDay(TorrentProvider):
                 'seeders': tryInt(torrent.get('seed')),
                 'leechers': tryInt(torrent.get('leech')),
                 'download': self.loginDownload,
+                'extra_score': extra_score,
             })
 
     def getLoginParams(self):
