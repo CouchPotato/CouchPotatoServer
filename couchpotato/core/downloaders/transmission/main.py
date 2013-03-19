@@ -62,7 +62,7 @@ class Transmission(Downloader):
             if torrent_params:
                 trpc.set_torrent(remote_torrent['torrent-added']['hashString'], torrent_params)
 
-            return True
+            return {'download_id': u'Transmission_' + remote_torrent['torrent-added']['hashString']}
         except Exception, err:
             log.error('Failed to change settings for transfer: %s', err)
             return False
