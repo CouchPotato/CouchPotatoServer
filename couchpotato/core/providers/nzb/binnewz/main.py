@@ -43,7 +43,7 @@ class BinNewzProvider(NZBProvider):
     cat_backup_id = None
     
     def _search(self, movie, quality, results):
-        nzbDownloaders = [ NZBIndex(), NZBClub(), BinSearch() ]
+        nzbDownloaders = [ NZBClub(), BinSearch(), NZBIndex() ]
         TitleStringReal = getTitle(movie['library']).encode("utf-8")
         moviequality = simplifyString(quality['identifier'])
         if moviequality in ("720p","1080p","bd50"):
