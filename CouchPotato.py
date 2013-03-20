@@ -1,4 +1,3 @@
-#dummy
 #!/usr/bin/env python
 from logging import handlers
 from os.path import dirname
