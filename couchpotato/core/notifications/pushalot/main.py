@@ -20,7 +20,7 @@ class Pushalot(Notification):
             'Body': toUnicode(message),
             'IsImportant': self.conf('important'),
             'IsSilent': self.conf('silent'),
-            'Image': toUnicode(self.getNotificationImage('medium')),
+            'Image': toUnicode(self.getNotificationImage('medium') + '?1'),
             'Source': toUnicode(self.default_title)
         }
 
