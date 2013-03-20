@@ -11,6 +11,7 @@ from subliminal.videos import Video
 import enzyme
 import os
 import re
+import threading
 import time
 import traceback
 
@@ -387,6 +388,11 @@ class Scanner(Plugin):
             # Notify parent & progress on something found
             if on_found:
                 on_found(group, total_found, total_found - len(processed_movies))
+
+            # Wait for all the async events calm down a bit
+            while threading.activeCount() > 100 and not self.shuttingDown():
+                log.debug('Too many threads active, waiting a few seconds')
+                time.sleep(10)
 
         if len(processed_movies) > 0:
             log.info('Found %s movies in the folder %s', (len(processed_movies), folder))
