@@ -116,13 +116,13 @@ def sizeScore(size):
 
 
 def providerScore(provider):
-    if provider in ['OMGWTFNZBs', 'PassThePopcorn', 'SceneAccess', 'TorrentLeech']:
-        return 20
 
-    if provider in ['Newznab']:
-        return 10
+    try:
+        score = tryInt(Env.setting('extra_score', section = provider.lower(), default = 0))
+    except:
+        score = 0
 
-    return 0
+    return score
 
 
 def duplicateScore(nzb_name, movie_name):

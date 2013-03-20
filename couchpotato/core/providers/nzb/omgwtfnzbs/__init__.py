@@ -27,6 +27,14 @@ config = [{
                     'label': 'Api Key',
                     'default': '',
                 },
+                {
+                    'name': 'extra_score',
+                    'advanced': True,
+                    'label': 'Extra Score',
+                    'default': 20,
+                    'type': 'int',
+                    'description': 'Starting score for each release found via this provider.',
+                }
             ],
         },
     ],

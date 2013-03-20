@@ -1,6 +1,6 @@
 from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.rss import RSS
-from couchpotato.core.helpers.variable import cleanHost, splitString
+from couchpotato.core.helpers.variable import cleanHost, splitString, tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.base import ResultList
 from couchpotato.core.providers.nzb.base import NZBProvider
@@ -76,6 +76,7 @@ class Newznab(NZBProvider, RSS):
                 'url': (self.getUrl(host['host'], self.urls['download']) % tryUrlencode(nzb_id)) + self.getApiExt(host),
                 'detail_url': '%sdetails/%s' % (cleanHost(host['host']), tryUrlencode(nzb_id)),
                 'content': self.getTextElement(nzb, 'description'),
+                'score': host['extra_score'],
             })
 
     def getHosts(self):
@@ -83,13 +84,15 @@ class Newznab(NZBProvider, RSS):
         uses = splitString(str(self.conf('use')))
         hosts = splitString(self.conf('host'))
         api_keys = splitString(self.conf('api_key'))
+        extra_score = splitString(self.conf('extra_score'))
 
         list = []
         for nr in range(len(hosts)):
             list.append({
                 'use': uses[nr],
                 'host': hosts[nr],
-                'api_key': api_keys[nr]
+                'api_key': api_keys[nr],
+                'extra_score': tryInt(extra_score[nr]) if len(extra_score) > nr else 0
             })
 
         return list
