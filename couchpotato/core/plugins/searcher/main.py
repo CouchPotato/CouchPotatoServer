@@ -157,7 +157,7 @@ class Searcher(Plugin):
 
         ret = False
         for quality_type in movie['profile']['types']:
-            if not self.couldBeReleased(quality_type['quality']['identifier'] in pre_releases, release_dates):
+            if not self.conf('always_search') and not self.couldBeReleased(quality_type['quality']['identifier'] in pre_releases, release_dates):
                 log.info('Too early to search for %s, %s', (quality_type['quality']['identifier'], default_title))
                 continue
 
