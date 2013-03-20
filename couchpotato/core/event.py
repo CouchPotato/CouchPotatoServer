@@ -110,7 +110,7 @@ def fireEvent(name, *args, **kwargs):
                 if isinstance(results[0], dict):
                     merged = {}
                     for result in results:
-                        merged = mergeDicts(merged, result)
+                        merged = mergeDicts(merged, result, prepend_list = True)
 
                     results = merged
                 # Lists

@@ -53,7 +53,7 @@ def getDataDir():
 def isDict(object):
     return isinstance(object, dict)
 
-def mergeDicts(a, b):
+def mergeDicts(a, b, prepend_list = False):
     assert isDict(a), isDict(b)
     dst = a.copy()
 
@@ -67,7 +67,7 @@ def mergeDicts(a, b):
                 if isDict(current_src[key]) and isDict(current_dst[key]):
                     stack.append((current_dst[key], current_src[key]))
                 elif isinstance(current_src[key], list) and isinstance(current_dst[key], list):
-                    current_dst[key].extend(current_src[key])
+                    current_dst[key] = current_src[key] + current_dst[key] if prepend_list else current_dst[key] + current_src[key]
                     current_dst[key] = removeListDuplicates(current_dst[key])
                 else:
                     current_dst[key] = current_src[key]
