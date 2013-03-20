@@ -12,6 +12,7 @@ import re
 import time
 import traceback
 import urllib2
+import urllib
 import unicodedata
 
 log = CPLog(__name__)
@@ -184,3 +185,21 @@ class t411(TorrentProvider):
              'remember': '1',
              'url': '/'
         })
+        
+        
+    def download(self, url = '', nzb_id = ''):
+        
+        if not self.login_opener and not self.login():
+            return
+        
+        values = {
+          'url' : '/'
+        }
+        data_tmp = urllib.urlencode(values)
+        req = urllib2.Request(url, data_tmp )
+        
+        try:
+            log.error('Failed downloading from %s', self.getName())
+            return urllib2.urlopen(req).read()
+        except:
+            log.error('Failed downloading from %s: %s', (self.getName(), traceback.format_exc()))
