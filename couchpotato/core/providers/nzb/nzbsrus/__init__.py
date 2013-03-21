@@ -42,6 +42,13 @@ config = [{
                     'type': 'int',
                     'default': 0,
                     'description': 'Starting score for each release found via this provider.',
+                },
+                {
+                    'name': 'title_search',
+                    'default': 1,
+                    'type': 'bool',
+                    'label': 'Force Title Search',
+                    'description': 'Only search based on title (less accurate)',
                 }
             ],
         },
