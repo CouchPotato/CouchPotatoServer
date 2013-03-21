@@ -200,8 +200,9 @@ class BinNewzProvider(NZBProvider):
                                 def extra_check(item):
                                     return True
                                 new['id'] = id
-                                new['name'] = searchItem + ' french ' + qualityStr +' '+ name +' ' + downloader.__class__.__name__ 
+                                new['name'] = name + ' french ' + searchItem +' '+ name +' ' + downloader.__class__.__name__ 
                                 new['url'] = binsearch_result.nzburl
+                                new['score']=50
                                 new['detail_url'] = binsearch_result.refererURL
                                 new['size'] = binsearch_result.sizeInMegs
                                 new['age'] = 10
