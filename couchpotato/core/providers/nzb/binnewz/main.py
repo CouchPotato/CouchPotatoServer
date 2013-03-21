@@ -44,7 +44,7 @@ class BinNewzProvider(NZBProvider):
     
     def _search(self, movie, quality, results):
         id=10000
-        nzbDownloaders = [NZBClub(), BinSearch(), NZBIndex() ]
+        nzbDownloaders = [BinSearch(), NZBIndex() ]
         TitleStringReal = getTitle(movie['library']).encode("utf-8")
         moviequality = simplifyString(quality['identifier'])
         movieyear = movie['library']['year']
