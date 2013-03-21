@@ -51,7 +51,9 @@ class NZBClub(NZBDownloader):
 
             nzbClubURL = "http://www.nzbclub.com/search.aspx?" + suffixURL
             
-            nzbClubSoup = BeautifulSoup( self.open(nzbClubURL).read().decode('cp1252').encode('utf-8'))
+            nzbClubSoup = BeautifulSoup( self.open(nzbClubURL).read().decode('utf-8','replace'))
+            type(nzbClubSoup)
+            repr(nzbClubSoup)
             sizeInMegs = None
             for row in nzbClubSoup.findAll(isResultRow):
                     sizeSpan = row.find(isInfoLabelSpan)
