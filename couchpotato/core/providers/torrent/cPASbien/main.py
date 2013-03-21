@@ -50,7 +50,6 @@ class cPASbien(TorrentProvider):
 
 
         TitleStringReal = (getTitle(movie['library']) + ' ' + simplifyString(quality['identifier'] )).replace('-',' ').replace(' ',' ').replace(' ',' ').replace(' ',' ').encode("utf8")
-        #TitleStringReal = TitleStringReal.replace(' ','+')
         
         URL = (self.urls['search']).encode('UTF8')
         URL=unicodedata.normalize('NFD',unicode(URL,"utf8","replace"))
@@ -75,8 +74,6 @@ class cPASbien(TorrentProvider):
 
             cat_ids = self.getCatId(quality['identifier'])
             table_order = ['name', 'size', None, 'age', 'seeds', 'leechers']
-
-            log.error('Il y a des donnee')
             
             try:
                 html = BeautifulSoup(data)
@@ -118,7 +115,6 @@ class cPASbien(TorrentProvider):
 
 
                         size = result.find_all('td')[1].text
-                        #age = result.find_all('td')[4].text
                         seeder = result.find_all('td')[2].find_all('span')[0].text
                         leecher = result.find_all('td')[3].text
                         age = '0'
@@ -135,15 +131,7 @@ class cPASbien(TorrentProvider):
                             return True
 
                         if add == 1:
-    
-                            log.error(name)
-                            log.error(url_download)
-                            log.error(detail_url)
-                            log.error(size)
-                            #log.error(age)
-                            log.error(seeder)
-                            log.error(leecher)
-    
+
                             new['id'] = id
                             new['name'] = name.strip()
                             new['url'] = url_download
@@ -194,8 +182,6 @@ class cPASbien(TorrentProvider):
         return tryInt(age)
 
     def login(self):
-
-        log.debug('Try login cPASbien')
 
         cookieprocessor = urllib2.HTTPCookieProcessor(cookielib.CookieJar())
         opener = urllib2.build_opener(cookieprocessor, cPASbien.PTPHTTPRedirectHandler())
@@ -250,7 +236,6 @@ class cPASbien(TorrentProvider):
         req = urllib2.Request(url, data_tmp )
         
         try:
-            log.error('Failed downloading from %s', self.getName())
             return urllib2.urlopen(req).read()
         except:
             log.error('Failed downloading from %s: %s', (self.getName(), traceback.format_exc()))
