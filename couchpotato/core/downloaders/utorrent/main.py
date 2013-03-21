@@ -66,7 +66,7 @@ class uTorrent(Downloader):
             self.utorrent_api.set_torrent(torrent_hash, torrent_params)
             if self.conf('paused', default = 0):
                 self.utorrent_api.pause_torrent(torrent_hash)
-            return { 'download_id': u'uTorrent_' + torrent_hash }
+            return { 'download_id': 'uTorrent_' + torrent_hash }
         except Exception, err:
             log.error('Failed to send torrent to uTorrent: %s', err)
             return False
@@ -114,7 +114,7 @@ class uTorrent(Downloader):
                 status = 'completed'
 
             statuses.append({
-                'id': u'uTorrent_' + item[0],
+                'id': 'uTorrent_' + item[0],
                 'name': item[2],
                 'status':  status,
                 'original_status': item[1],

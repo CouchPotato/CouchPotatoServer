@@ -54,7 +54,7 @@ class NZBGet(Downloader):
             log.info('NZB sent successfully to NZBGet')
             groups = rpc.listgroups()
             NZBID = [item['NZBID'] for item in groups if item['NZBFilename'] == nzbname][0]
-            return {'download_id': u'NZBGet_' + NZBID}
+            return {'download_id': 'NZBGet_' + NZBID}
         else:
             log.error('NZBGet could not add %s to the queue.', nzb_name)
             return False
@@ -117,7 +117,7 @@ class NZBGet(Downloader):
         for item in history:
             log.debug('Found %s in NZBGet history. ParStatus: %s, ScriptStatus: %s, Log: %s', (item['NZBFilename'] , item['ParStatus'], item['ScriptStatus'] , item['Log']))
             statuses.append({
-                'id': u'NZBGet_' + item['NZBID'],
+                'id': 'NZBGet_' + item['NZBID'],
                 'name': item['NZBFilename'],
                 'status': 'completed' if item['ParStatus'] == 'SUCCESS' and item['ScriptStatus'] == 'SUCCESS' else 'failed',
                 'original_status': item['ParStatus'] + ', ' + item['ScriptStatus'],

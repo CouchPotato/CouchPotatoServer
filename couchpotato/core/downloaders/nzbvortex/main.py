@@ -31,7 +31,7 @@ class NZBVortex(Downloader):
             
             raw_statuses = self.call('nzb')
             NZBID = [item['id'] for item in raw_statuses.get('nzbs', []) if item['name'] == nzb_filename][0]
-            return {'download_id': u'NZBVortex_' + NZBID}
+            return {'download_id': 'NZBVortex_' + NZBID}
         except:
             log.error('Something went wrong sending the NZB file: %s', traceback.format_exc())
             return False
@@ -51,7 +51,7 @@ class NZBVortex(Downloader):
                 status = 'failed'
 
             statuses.append({
-                'id': u'NZBVortex_' + item['id'],
+                'id': 'NZBVortex_' + item['id'],
                 'name': item['uiTitle'],
                 'status': status,
                 'original_status': item['state'],
