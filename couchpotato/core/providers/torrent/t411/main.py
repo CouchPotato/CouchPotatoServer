@@ -58,18 +58,12 @@ class t411(TorrentProvider):
 
         URL = urllib2.quote(URL.encode('utf8'), ":/?=")
 
-
-
         data = self.getHTMLData(URL , opener = self.login_opener)
-
-        
 
         if data:
 
             cat_ids = self.getCatId(quality['identifier'])
             table_order = ['name', 'size', None, 'age', 'seeds', 'leechers']
-
-            log.debug('Il y a des donnee')
 
             try:
                 html = BeautifulSoup(data)
@@ -104,8 +98,6 @@ class t411(TorrentProvider):
     
                             def extra_check(item):
                                 return True
-    
-                            log.debug(name)
     
                             new['id'] = id
                             new['name'] = name + ' french'
@@ -150,8 +142,6 @@ class t411(TorrentProvider):
 
     def login(self):
 
-        log.debug('Try login T411')
-
         cookieprocessor = urllib2.HTTPCookieProcessor(cookielib.CookieJar())
         opener = urllib2.build_opener(cookieprocessor, t411.PTPHTTPRedirectHandler())
         opener.addheaders = [
@@ -188,18 +178,13 @@ class t411(TorrentProvider):
         
         
     def download(self, url = '', nzb_id = ''):
-        
         if not self.login_opener and not self.login():
             return
         
-        values = {
-          'url' : '/'
-        }
-        data_tmp = urllib.urlencode(values)
-        req = urllib2.Request(url, data_tmp )
-        
         try:
-            log.error('Failed downloading from %s', self.getName())
-            return urllib2.urlopen(req).read()
+            return self.urlopen(url, opener = self.login_opener)
         except:
-            log.error('Failed downloading from %s: %s', (self.getName(), traceback.format_exc()))
+            log.error('Failed getting nzb from %s: %s', (self.getName(), traceback.format_exc()))
+
+        return 'try_next'
+        
