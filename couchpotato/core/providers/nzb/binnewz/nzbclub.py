@@ -51,11 +51,9 @@ class NZBClub(NZBDownloader):
 
             nzbClubURL = "http://www.nzbclub.com/search.aspx?" + suffixURL
             
-            nzbClubSoup = BeautifulSoup( self.open(nzbClubURL).read().decode('utf-8','ignore'))
-            
-            if nzbClubSoup:
-                sizeInMegs = None
-                for row in nzbClubSoup.findAll(isResultRow):
+            nzbClubSoup = BeautifulSoup( self.open(nzbClubURL))
+            sizeInMegs = None
+            for row in nzbClubSoup.findAll(isResultRow):
                     sizeSpan = row.find(isInfoLabelSpan)
                     sizeMatch = re.search("\[\s+([0-9]+\.[0-9]+)\s+(.)B ]", sizeSpan.text)
                     if not sizeMatch:
@@ -79,3 +77,5 @@ class NZBClub(NZBDownloader):
                     if downloadNZBImg:
                         downloadNZBLink = downloadNZBImg.parent
                         return NZBGetURLSearchResult( self, "http://www.nzbclub.com" + downloadNZBLink["href"], sizeInMegs, nzbClubURL)
+            
+                
