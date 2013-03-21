@@ -4,7 +4,7 @@ def start():
     return BinNewzProvider()
 
 config = [{
-    'name': 'binnewz',
+    'name': 'binnews',
     'groups': [
         {
             'tab': 'searcher',
@@ -17,6 +17,7 @@ config = [{
                 {
                     'name': 'enabled',
                     'type': 'enabler',
+                    'default': True
                 },
             ],
         },
