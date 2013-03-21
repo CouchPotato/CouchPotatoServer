@@ -272,3 +272,7 @@ class ResultList(list):
             new_result['provider_extra'] = ', %s' % new_result['provider_extra']
 
         log.info('Found: score(%(score)s) on %(provider)s%(provider_extra)s: %(name)s', new_result)
+
+    def isEmpty(self):
+        if (len(self.result_ids) < 1):
+            return True

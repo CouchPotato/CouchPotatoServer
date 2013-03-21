@@ -1,3 +1,5 @@
+from couchpotato.core.helpers.variable import tryFloat, mergeDicts, md5, \
+    possibleTitles, getTitle
 from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.rss import RSS
 from couchpotato.core.logger import CPLog
@@ -21,16 +23,28 @@ class Nzbsrus(NZBProvider, RSS):
     ]
     cat_backup_id = 240
 
+    idSearchFailed = False
+
     def _search(self, movie, quality, results):
 
         cat_id_string = '&'.join(['c%s=1' % x for x in self.getCatId(quality.get('identifier'))])
-        arguments = tryUrlencode({
-            'searchtext': 'imdb:' + movie['library']['identifier'][2:],
-            'uid': self.conf('userid'),
-            'key': self.conf('api_key'),
-            'age': Env.setting('retention', section = 'nzb'),
+        # Check if IMDB search failed or Force Title Search is On
+        if not (self.idSearchFailed or self.conf('title_search')):
+            arguments = tryUrlencode({
+                'searchtext': 'imdb:' + movie['library']['identifier'][2:],
+                'uid': self.conf('userid'),
+                'key': self.conf('api_key'),
+                'age': Env.setting('retention', section = 'nzb'),
 
-        })
+            })
+        else:
+            arguments = tryUrlencode({
+                'searchtext': getTitle(movie['library']) + '+' + str(movie['library']['year']),
+                'uid': self.conf('userid'),
+                'key': self.conf('api_key'),
+                'age': Env.setting('retention', section = 'nzb'),
+
+            })
 
         # check for english_only
         if self.conf('english_only'):
@@ -57,6 +71,12 @@ class Nzbsrus(NZBProvider, RSS):
                 'detail_url': self.urls['detail'] % nzb_id,
                 'description': self.getTextElement(nzb, 'addtext'),
             })
+        
+        if (results.isEmpty() and not self.idSearchFailed):
+            self.idSearchFailed = True
+            self._search(movie, quality, results)
+        if (self.idSearchFailed):
+            self.idSearchFailed = False
 
     def getApiExt(self):
         return '/%s/' % (self.conf('userid'))
