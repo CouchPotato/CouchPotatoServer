@@ -30,7 +30,7 @@ log = CPLog(__name__)
 import re
 import urllib
 import urllib2
-
+import traceback
 class BinNewzProvider(NZBProvider):
     
     urls = {
@@ -43,17 +43,29 @@ class BinNewzProvider(NZBProvider):
     cat_backup_id = None
     
     def _search(self, movie, quality, results):
-        nzbDownloaders = [ NZBClub(), BinSearch(), NZBIndex() ]
+        id=10000
+        nzbDownloaders = [NZBClub(), BinSearch(), NZBIndex() ]
         TitleStringReal = getTitle(movie['library']).encode("utf-8")
         moviequality = simplifyString(quality['identifier'])
+        movieyear = movie['library']['year']
+        listgenre = movie['library']['info']['genres']
         if moviequality in ("720p","1080p","bd50"):
-            cat='39'
+            if u"Animation" in listgenre:
+                cat='49'
+            else :
+                cat='39'
             minSize = 2000
         elif moviequality in ("dvdr"):
-            cat='23'
+            if u"Animation" in listgenre:
+                cat='48'
+            else :
+                cat='23'
             minSize = 3000
         else:
-            cat='6'
+            if u"Animation" in listgenre:
+                cat='27'
+            else :
+                cat='6'
             minSize = 500      
        
         data = urllib.urlencode({'b_submit': 'BinnewZ', 'cats[]' : cat, 'edSearchAll' : TitleStringReal, 'sections[]': ''})
@@ -79,7 +91,7 @@ class BinNewzProvider(NZBProvider):
                 name = cells[2].text.strip()
                 language = cells[3].find("img").get("src")
 
-                if not "_fr" in language:
+                if not "_fr" in language and not "_frq" in language:
                     continue
                                                 
   
@@ -138,6 +150,8 @@ class BinNewzProvider(NZBProvider):
                         newsgroup="alt.binaries.movies.divx.french.reposts"
                     elif newsgroup =="abmdf":
                         newsgroup="alt.binaries.movies.french"
+                    elif newsgroup =="abhdtvfrepost":
+                        newsgroup="alt.binaries.hdtv.french.repost"
                     else:
                         log.error(u"Unknown binnewz newsgroup: " + newsgroup)
                         continue
@@ -181,15 +195,14 @@ class BinNewzProvider(NZBProvider):
                     name = m.group(1) + " S" + m.group(2) + "E" + m.group(3) + m.group(4)
                     
                         
-                filenameLower = filename.lower()
-                                                
+                filenameLower = filename.lower()                                
                 searchItems = []
-                
-                if len(searchItems) == 0 and qualityStr == moviequality :
+                if len(searchItems) == 0 and qualityStr == moviequality and movieyear>=int(year)-1 and movieyear<=int(year)+1 :
                     searchItems.append( filename )
-                id=10000
                 for searchItem in searchItems:
+                    resultno=1
                     for downloader in nzbDownloaders:
+                        
                         log.info2("Searching for download : " + name + ", search string = "+ searchItem + " on " + downloader.__class__.__name__)
                         try:
                             binsearch_result =  downloader.search(searchItem, minSize, newsgroup )
@@ -197,10 +210,12 @@ class BinNewzProvider(NZBProvider):
                                 new={}
                                 binsearch_result.title = name
                                 binsearch_result.quality = quality
+                                if hasattr(binsearch_result,"postData"):
+                                    id=binsearch_result.postData
                                 def extra_check(item):
                                     return True
                                 new['id'] = id
-                                new['name'] = name + ' french ' + searchItem +' '+ name +' ' + downloader.__class__.__name__ 
+                                new['name'] = name + ' french ' +  qualityStr + ' '+ searchItem +' '+ name +' ' + downloader.__class__.__name__ 
                                 new['url'] = binsearch_result.nzburl
                                 new['score']=50
                                 new['detail_url'] = binsearch_result.refererURL
@@ -210,19 +225,35 @@ class BinNewzProvider(NZBProvider):
     
                                 results.append(new)
                                 
-                                id=id+1
+                                id=int(id)+1
+                                resultno=resultno+1
                                 log.info2("Found : " + searchItem + " on " + downloader.__class__.__name__)
-                                break
+                                if resultno==3:
+                                    break
                         except Exception, e:
-                            log.error("Searching from " + downloader.__class__.__name__ + " failed : " + str(e))
+                            log.error("Searching from " + downloader.__class__.__name__ + " failed : " + str(e) + traceback.format_exc())
+    
     def download(self, url = '', nzb_id = ''):
+        if 'binsearch' in url:
+            params = {'action': 'nzb'}
+            params[nzb_id] = 'on'
 
-        params = {'action': 'nzb'}
-        params[nzb_id] = 'on'
+            try:
+                return self.urlopen(url, params = params, show_error = False)
+            except:
+                log.error('Failed getting nzb from %s: %s', (self.getName(), traceback.format_exc()))
+                return 'try_next'
+        else:
+            values = {
+                    'url' : '/'
+            }
+            data_tmp = urllib.urlencode(values)
+            req = urllib2.Request(url, data_tmp )
+        
+            try:
+                #log.error('Failed downloading from %s', self.getName())
+                return urllib2.urlopen(req).read()
+            except:
+                log.error('Failed downloading from %s: %s', (self.getName(), traceback.format_exc()))
 
-        try:
-            return self.urlopen(url, params = params, show_error = False)
-        except:
-            log.error('Failed getting nzb from %s: %s', (self.getName()))
-
-        return 'try_next'
+                return 'try_next'

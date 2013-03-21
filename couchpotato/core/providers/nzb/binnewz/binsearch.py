@@ -38,7 +38,9 @@ class BinSearch(NZBDownloader):
 
             foundName = None
             sizeInMegs = None
-            for elem in binSearchSoup.findAll(lambda tag: tag.name=='tr' and tag.get('bgcolor') == '#FFFFFF' and 'size:' in tag.text):
+            for elem in binSearchSoup.findAll(lambda tag: tag.name=='tr' and (tag.get('bgcolor') == '#FFFFFF' or tag.get('bgcolor') == '#F6F7FA') and 'size:' in tag.text):
+                if foundName:
+                    break
                 for checkbox in elem.findAll(lambda tag: tag.name=='input' and tag.get('type') == 'checkbox'):
                     sizeStr = re.search("size:\s+([^B]*)B", elem.text).group(1).strip()
                     
@@ -54,7 +56,7 @@ class BinSearch(NZBDownloader):
                         break
                 
             if foundName:
-                postData = urllib.urlencode({foundName: 'on', 'action': 'nzb'})
-                nzbURL = "http://binsearch.info/fcgi/nzb.fcgi?adv_age=&" + suffixURL
+                postData = foundName
+                nzbURL = "https://binsearch.info/fcgi/nzb.fcgi?adv_age=&" + suffixURL
                 return NZBPostURLSearchResult( self, nzbURL, postData, sizeInMegs, binSearchURL )
                     
