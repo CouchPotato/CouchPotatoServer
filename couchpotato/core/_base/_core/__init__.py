@@ -70,7 +70,7 @@ config = [{
                     'name': 'development',
                     'default': 0,
                     'type': 'bool',
-                    'description': 'Disables some checks/downloads for faster reloading.',
+                    'description': 'Enable this if you\'re developing, and NOT in any other case, thanks.',
                 },
                 {
                     'name': 'data_dir',
