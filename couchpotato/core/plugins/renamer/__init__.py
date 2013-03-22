@@ -13,7 +13,7 @@ rename_options = {
         'thename': 'The Moviename',
         'year': 'Year (2011)',
         'first': 'First letter (M)',
-        'quality': 'Quality (720P)',
+        'quality': 'Quality (720p)',
         'video': 'Video (x264)',
         'audio': 'Audio (DTS)',
         'group': 'Releasegroup name',

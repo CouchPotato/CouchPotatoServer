@@ -22,7 +22,7 @@ config = [{
                     'name': 'quality',
                     'default': '720p',
                     'type': 'dropdown',
-                    'values': [('1080P', '1080p'), ('720P', '720p'), ('480P', '480p')],
+                    'values': [('1080p', '1080p'), ('720p', '720p'), ('480P', '480p')],
                 },
                 {
                     'name': 'name',
