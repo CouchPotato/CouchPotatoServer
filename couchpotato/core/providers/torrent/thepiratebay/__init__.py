@@ -17,13 +17,21 @@ config = [{
                 {
                     'name': 'enabled',
                     'type': 'enabler',
-                    'default': True
+                    'default': False,
                 },
                 {
                     'name': 'domain',
                     'advanced': True,
                     'label': 'Proxy server',
                     'description': 'Domain for requests, keep empty to let CouchPotato pick.',
+                },
+                {
+                    'name': 'extra_score',
+                    'advanced': True,
+                    'label': 'Extra Score',
+                    'type': 'int',
+                    'default': 0,
+                    'description': 'Starting score for each release found via this provider.',
                 }
             ],
         }

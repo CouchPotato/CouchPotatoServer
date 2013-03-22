@@ -18,10 +18,10 @@ class Pushalot(Notification):
             'AuthorizationToken': self.conf('auth_token'),
             'Title': self.default_title,
             'Body': toUnicode(message),
-            'LinkTitle': toUnicode("CouchPotato"),
-            'link': toUnicode("https://couchpota.to/"),
             'IsImportant': self.conf('important'),
             'IsSilent': self.conf('silent'),
+            'Image': toUnicode(self.getNotificationImage('medium') + '?1'),
+            'Source': toUnicode(self.default_title)
         }
 
         headers = {

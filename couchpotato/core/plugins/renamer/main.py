@@ -13,6 +13,7 @@ import errno
 import os
 import re
 import shutil
+import time
 import traceback
 
 log = CPLog(__name__)
@@ -275,6 +276,7 @@ class Renamer(Plugin):
                             for profile_type in movie.profile.types:
                                 if profile_type.quality_id == group['meta_data']['quality']['id'] and profile_type.finish:
                                     movie.status_id = done_status.get('id')
+                                    movie.last_edit = int(time.time())
                                     db.commit()
                     except Exception, e:
                         log.error('Failed marking movie finished: %s %s', (e, traceback.format_exc()))
@@ -316,8 +318,10 @@ class Renamer(Plugin):
                                 log.debug('Marking release as downloaded')
                                 try:
                                     release.status_id = downloaded_status.get('id')
+                                    release.last_edit = int(time.time())
                                 except Exception, e:
                                     log.error('Failed marking release as finished: %s %s', (e, traceback.format_exc()))
+
                                 db.commit()
 
                 # Remove leftover files
@@ -556,6 +560,7 @@ class Renamer(Plugin):
                         if rel.movie.status_id == done_status.get('id'):
                             log.debug('Found a completed movie with a snatched release : %s. Setting release status to ignored...' , default_title)
                             rel.status_id = ignored_status.get('id')
+                            rel.last_edit = int(time.time())
                             db.commit()
                             continue
 
@@ -580,6 +585,7 @@ class Renamer(Plugin):
                                         fireEvent('searcher.try_next_release', movie_id = rel.movie_id)
                                     else:
                                         rel.status_id = failed_status.get('id')
+                                        rel.last_edit = int(time.time())
                                         db.commit()
                                 elif item['status'] == 'completed':
                                     log.info('Download of %s completed!', item['name'])

@@ -1,10 +1,24 @@
 .movies {
 	padding: 60px 0 20px;
+	position: relative;
+	z-index: 3;
 }
 
 	.movies h2 {
 		margin-bottom: 20px;	
 	}
+	
+	.movies > .description {
+		position: absolute;
+		top: 30px;
+		right: 0;
+		font-style: italic;
+		text-shadow: none;
+		opacity: 0.8;
+	}
+		.movies:hover > .description {
+			opacity: 1;
+		}
 	
 	.movies.thumbs_list {
 		padding: 20px 0 20px;
@@ -272,7 +286,7 @@
 					text-align: right;
 					right: 0;
 					margin-right: 50px;
-					z-index: 2;
+					z-index: 1;
 				}
 	
 			.movies .data .quality .available,
@@ -303,6 +317,11 @@
 			line-height: 0;
 			margin-top: -25px;
 		}
+			.movies.thumbs_list .data .actions {
+				bottom: 8px;
+				right: 10px;
+			}
+		
 			.movies .data:hover .action { opacity: 0.6; }
 			.movies .data:hover .action:hover { opacity: 1; }
 			.movies.mass_edit_list .data .actions {
@@ -505,7 +524,7 @@
 .movies .alph_nav {
 	transition: box-shadow .4s linear;
 	position: fixed;
-	z-index: 2;
+	z-index: 4;
 	top: 0;
 	padding: 100px 60px 7px;
 	width: 1080px;

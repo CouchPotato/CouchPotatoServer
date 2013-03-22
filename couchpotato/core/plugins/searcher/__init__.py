@@ -40,6 +40,14 @@ config = [{
                     'type': 'dropdown',
                     'values': [('usenet & torrents', 'both'), ('usenet', 'nzb'), ('torrents', 'torrent')],
                 },
+                {
+                    'name': 'always_search',
+                    'default': False,
+                    'advanced': True,
+                    'type': 'bool',
+                    'label': 'Always search',
+                    'description': 'Search for movies even before there is a ETA. Enabling this will probably get you a lot of fakes.',
+                },
             ],
         }, {
             'tab': 'searcher',

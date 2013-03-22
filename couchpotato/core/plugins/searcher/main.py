@@ -157,7 +157,7 @@ class Searcher(Plugin):
 
         ret = False
         for quality_type in movie['profile']['types']:
-            if not self.couldBeReleased(quality_type['quality']['identifier'] in pre_releases, release_dates):
+            if not self.conf('always_search') and not self.couldBeReleased(quality_type['quality']['identifier'] in pre_releases, release_dates):
                 log.info('Too early to search for %s, %s', (quality_type['quality']['identifier'], default_title))
                 continue
 
@@ -209,6 +209,7 @@ class Searcher(Plugin):
                         db.add(rls)
                     else:
                         [db.delete(old_info) for old_info in rls.info]
+                        rls.last_edit = int(time.time())
 
                     db.commit()
 
@@ -293,7 +294,10 @@ class Searcher(Plugin):
                     db = get_session()
                     rls = db.query(Release).filter_by(identifier = md5(data['url'])).first()
                     if rls:
-                        rls.status_id = snatched_status.get('id')
+                        renamer_enabled = Env.setting('enabled', 'renamer')
+
+                        done_status = fireEvent('status.get', 'done', single = True)
+                        rls.status_id = done_status.get('id') if not renamer_enabled else snatched_status.get('id')
                         db.commit()
 
                         log_movie = '%s (%s) in %s' % (getTitle(movie['library']), movie['library']['year'], rls.quality.label)
@@ -301,26 +305,28 @@ class Searcher(Plugin):
                         log.info(snatch_message)
                         fireEvent('movie.snatched', message = snatch_message, data = rls.to_dict())
 
-                    # If renamer isn't used, mark movie done
-                    if not Env.setting('enabled', 'renamer'):
-                        active_status = fireEvent('status.get', 'active', single = True)
-                        done_status = fireEvent('status.get', 'done', single = True)
-                        try:
-                            if movie['status_id'] == active_status.get('id'):
-                                for profile_type in movie['profile']['types']:
-                                    if rls and profile_type['quality_id'] == rls.quality.id and profile_type['finish']:
-                                        log.info('Renamer disabled, marking movie as finished: %s', log_movie)
+                        # If renamer isn't used, mark movie done
+                        if not renamer_enabled:
+                            active_status = fireEvent('status.get', 'active', single = True)
+                            done_status = fireEvent('status.get', 'done', single = True)
+                            try:
+                                if movie['status_id'] == active_status.get('id'):
+                                    for profile_type in movie['profile']['types']:
+                                        if profile_type['quality_id'] == rls.quality.id and profile_type['finish']:
+                                            log.info('Renamer disabled, marking movie as finished: %s', log_movie)
 
-                                        # Mark release done
-                                        rls.status_id = done_status.get('id')
-                                        db.commit()
+                                            # Mark release done
+                                            rls.status_id = done_status.get('id')
+                                            rls.last_edit = int(time.time())
+                                            db.commit()
 
-                                        # Mark movie done
-                                        mvie = db.query(Movie).filter_by(id = movie['id']).first()
-                                        mvie.status_id = done_status.get('id')
-                                        db.commit()
-                        except:
-                            log.error('Failed marking movie finished, renamer disabled: %s', traceback.format_exc())
+                                            # Mark movie done
+                                            mvie = db.query(Movie).filter_by(id = movie['id']).first()
+                                            mvie.status_id = done_status.get('id')
+                                            mvie.last_edit = int(time.time())
+                                            db.commit()
+                            except:
+                                log.error('Failed marking movie finished, renamer disabled: %s', traceback.format_exc())
 
                 except:
                     log.error('Failed marking movie finished: %s', traceback.format_exc())

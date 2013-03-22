@@ -157,6 +157,7 @@ body > .spinner, .mask{
 .icon.folder { background-image: url('../images/icon.folder.png'); }
 .icon.imdb { background-image: url('../images/icon.imdb.png'); }
 .icon.refresh { background-image: url('../images/icon.refresh.png'); }
+.icon.readd { background-image: url('../images/icon.readd.png'); }
 .icon.rating { background-image: url('../images/icon.rating.png'); }
 .icon.files { background-image: url('../images/icon.files.png'); }
 .icon.info { background-image: url('../images/icon.info.png'); }
@@ -584,7 +585,7 @@ body > .spinner, .mask{
 	bottom: 0;
 	padding: 2px;
 	width: 240px;
-	z-index: 2;
+	z-index: 20;
 	overflow: hidden;
 	font-size: 14px;
 	font-weight: bold;

@@ -8,7 +8,7 @@ config = [{
     'groups': [
         {
             'tab': 'manage',
-            'label': 'movie library manager',
+            'label': 'Movie Library Manager',
             'description': 'Add your existing movie folders.',
             'options': [
                 {

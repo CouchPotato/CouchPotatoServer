@@ -17,7 +17,16 @@ config = [{
                 {
                     'name': 'enabled',
                     'type': 'enabler',
+                    'default': False,
                 },
+                {
+                    'name': 'extra_score',
+                    'advanced': True,
+                    'label': 'Extra Score',
+                    'type': 'int',
+                    'default': 0,
+                    'description': 'Starting score for each release found via this provider.',
+                }
             ],
         },
     ],
