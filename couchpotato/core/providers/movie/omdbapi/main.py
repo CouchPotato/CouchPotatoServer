@@ -20,8 +20,8 @@ class OMDBAPI(MovieProvider):
     http_time_between_calls = 0
 
     def __init__(self):
-        addEvent('movie.search', self.search)
-        addEvent('movie.info', self.getInfo)
+        #addEvent('movie.search', self.search, priority = 3)
+        addEvent('movie.info', self.getInfo, priority = 3)
 
     def search(self, q, limit = 12):
 

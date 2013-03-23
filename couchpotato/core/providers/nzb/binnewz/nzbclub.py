@@ -16,68 +16,67 @@
 # You should have received a copy of the GNU General Public License
 # along with Sick Beard.  If not, see <http://www.gnu.org/licenses/>.
 
-import urllib
-import re
 from bs4 import BeautifulSoup
 from nzbdownloader import NZBDownloader
 from nzbdownloader import NZBGetURLSearchResult
+from couchpotato.core.helpers.encoding import toUnicode,tryUrlencode
+from couchpotato.core.helpers.variable import tryInt
+from couchpotato.core.logger import CPLog
+from couchpotato.core.helpers.rss import RSS
+from couchpotato.core.providers.nzb.base import NZBProvider
+from dateutil.parser import parse
 import time
-
-def isResultRow(tag):
-    if tag and tag.has_key('class'):
-        rowClass = tag['class']
-        return rowClass[0] == 'rgRow' or rowClass[0] == 'rgAltRow'
-    return False
-
-def isInfoLabelSpan(tag):
-    if tag and tag.has_key('id'):
-        tagId = tag['id']
-        return tagId.endswith("_InfoLabel")
-    return False
-
-class NZBClub(NZBDownloader):
+log = CPLog(__name__)
+class NZBClub(NZBDownloader, NZBProvider, RSS):
     
-    def __init__(self):
-        NZBDownloader.__init__(self)
+    urls = {
+        'search': 'http://www.nzbclub.com/nzbfeed.aspx?%s',
+    }
+
+    http_time_between_calls = 4 #seconds
 
     def search(self, filename, minSize, newsgroup=None):
 
-        if newsgroup:
-            nzbClubURLs = [ urllib.urlencode({'q' : '"' + filename + '"', 'qg' : newsgroup }), urllib.urlencode({'q' : filename, 'qg' : newsgroup}) ]
-        else:
-            nzbClubURLs = [ urllib.urlencode({'q' : '"' + filename + '"'}), urllib.urlencode({'q' : filename}) ]
+        q = filename
+
+        params = tryUrlencode({
+            'q': q,
+            'qq': newsgroup,
+            'ig': 1,
+            'rpp': 200,
+            'st': 5,
+            'sp': 1,
+            'ns': 1,
+        })
         
-        for suffixURL in nzbClubURLs:
+        nzbs = self.getRSSData(self.urls['search'] % params)
 
-            nzbClubURL = "http://www.nzbclub.com/search.aspx?" + suffixURL
-            
-            nzbClubSoup = BeautifulSoup( self.open(nzbClubURL).read().decode('utf-8','replace'))
-            type(nzbClubSoup)
-            repr(nzbClubSoup)
-            sizeInMegs = None
-            for row in nzbClubSoup.findAll(isResultRow):
-                    sizeSpan = row.find(isInfoLabelSpan)
-                    sizeMatch = re.search("\[\s+([0-9]+\.[0-9]+)\s+(.)B ]", sizeSpan.text)
-                    if not sizeMatch:
-                        continue
+        for nzb in nzbs:
 
-                    sizeCount = float(sizeMatch.group(1))
-                    sizeUnit = sizeMatch.group(2)
-                    
-                    if sizeUnit == 'K':
-                        sizeInMegs = sizeCount / 1024
-                    elif sizeUnit == 'G':
-                        sizeInMegs = sizeCount * 1024
-                    else:
-                        sizeInMegs = sizeCount
-                        
-                    if minSize and sizeInMegs < minSize:
-                        # ignoring result : too small
-                        continue
+            nzbclub_id = tryInt(self.getTextElement(nzb, "link").split('/nzb_view/')[1].split('/')[0])
+            enclosure = self.getElement(nzb, "enclosure").attrib
+            size = enclosure['length']
+            date = self.getTextElement(nzb, "pubDate")
 
-                    downloadNZBImg = row.find("img", alt="Get NZB")
-                    if downloadNZBImg:
-                        downloadNZBLink = downloadNZBImg.parent
-                        return NZBGetURLSearchResult( self, "http://www.nzbclub.com" + downloadNZBLink["href"], sizeInMegs, nzbClubURL)
+            def extra_check(item):
+                full_description = self.getCache('nzbclub.%s' % nzbclub_id, item['detail_url'], cache_timeout = 25920000)
+
+                for ignored in ['ARCHIVE inside ARCHIVE', 'Incomplete', 'repair impossible']:
+                    if ignored in full_description:
+                        log.info('Wrong: Seems to be passworded or corrupted files: %s', item['name'])
+                #        return False
+
+                #return True
+            nzbid = nzbclub_id,
+                #'name': toUnicode(self.getTextElement(nzb, "title")),
+            age = self.calculateAge(int(time.mktime(parse(date).timetuple())))
+            sizeInMegs = (tryInt(size)/1024/1024)
+            downloadUrl = enclosure['url'].replace(' ', '_')
+            nzbClubURL = self.getTextElement(nzb, "link")
+                #'get_more_info': self.getMoreInfo,
+                #'extra_check': extra_check
+
+                   
+            return NZBGetURLSearchResult( self, downloadUrl, sizeInMegs, nzbClubURL, age, nzbid)
             
                 

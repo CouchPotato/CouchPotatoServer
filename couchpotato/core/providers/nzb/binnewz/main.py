@@ -21,8 +21,9 @@ from nzbclub import NZBClub
 from nzbindex import NZBIndex
 
 from bs4 import BeautifulSoup
-from couchpotato.core.helpers.variable import getTitle
+from couchpotato.core.helpers.variable import getTitle, splitString, tryInt
 from couchpotato.core.helpers.encoding import simplifyString
+from couchpotato.environment import Env
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.nzb.base import NZBProvider
 
@@ -43,8 +44,7 @@ class BinNewzProvider(NZBProvider):
     cat_backup_id = None
     
     def _search(self, movie, quality, results):
-        id=10000
-        nzbDownloaders = [BinSearch(), NZBIndex() ]
+        nzbDownloaders = [NZBClub(), BinSearch(), NZBIndex()]
         TitleStringReal = getTitle(movie['library']).encode("utf-8")
         moviequality = simplifyString(quality['identifier'])
         movieyear = movie['library']['year']
@@ -208,24 +208,20 @@ class BinNewzProvider(NZBProvider):
                             binsearch_result =  downloader.search(searchItem, minSize, newsgroup )
                             if binsearch_result:
                                 new={}
-                                binsearch_result.title = name
-                                binsearch_result.quality = quality
-                                if hasattr(binsearch_result,"postData"):
-                                    id=binsearch_result.postData
+                                
                                 def extra_check(item):
                                     return True
-                                new['id'] = id
+                                new['id'] =  binsearch_result.nzbid
                                 new['name'] = name + ' french ' +  qualityStr + ' '+ searchItem +' '+ name +' ' + downloader.__class__.__name__ 
                                 new['url'] = binsearch_result.nzburl
-                                new['score']=50
                                 new['detail_url'] = binsearch_result.refererURL
                                 new['size'] = binsearch_result.sizeInMegs
-                                new['age'] = 10
+                                new['score'] = Env.setting('extra_score', 'binnews', value = None, default = None)
+                                new['age'] = binsearch_result.age
                                 new['extra_check'] = extra_check
     
                                 results.append(new)
                                 
-                                id=int(id)+1
                                 resultno=resultno+1
                                 log.info2("Found : " + searchItem + " on " + downloader.__class__.__name__)
                                 if resultno==3:

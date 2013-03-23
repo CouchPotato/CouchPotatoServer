@@ -40,11 +40,12 @@ class NZBDownloader(object):
         
 class NZBSearchResult(object):
     
-    def __init__(self, downloader, sizeInMegs, refererURL):
+    def __init__(self, downloader, sizeInMegs, refererURL, age, nzbid):
         self.downloader = downloader
         self.refererURL = refererURL
         self.sizeInMegs = sizeInMegs
-        
+        self.age = age
+        self.nzbid = nzbid
     def readRequest(self, request):
         request.add_header('Accept-encoding', 'gzip')
         request.add_header('Referer', self.refererURL)
@@ -64,8 +65,8 @@ class NZBSearchResult(object):
         
 class NZBGetURLSearchResult( NZBSearchResult ):
 
-    def __init__(self, downloader, nzburl, sizeInMegs, refererURL):
-        NZBSearchResult.__init__(self, downloader, sizeInMegs, refererURL)
+    def __init__(self, downloader, nzburl, sizeInMegs, refererURL, age, nzbid):
+        NZBSearchResult.__init__(self, downloader, sizeInMegs, refererURL, age, nzbid)
         self.nzburl = nzburl
         
     def getNZB(self):
@@ -75,8 +76,8 @@ class NZBGetURLSearchResult( NZBSearchResult ):
 
 class NZBPostURLSearchResult( NZBSearchResult ):
 
-    def __init__(self, downloader, nzburl, postData, sizeInMegs, refererURL):
-        NZBSearchResult.__init__(self, downloader, sizeInMegs, refererURL)
+    def __init__(self, downloader, nzburl, postData, sizeInMegs, refererURL, age, nzbid):
+        NZBSearchResult.__init__(self, downloader, sizeInMegs, refererURL, age, nzbid)
         self.nzburl = nzburl
         self.postData = postData
         
@@ -87,8 +88,8 @@ class NZBPostURLSearchResult( NZBSearchResult ):
 
 class NZBDataSearchResult( NZBSearchResult ):
 
-    def __init__(self, nzbdata, sizeInMegs, refererURL):
-        NZBSearchResult.__init__(self, None, refererURL)
+    def __init__(self, nzbdata, sizeInMegs, refererURL, age, nzbid):
+        NZBSearchResult.__init__(self, None, refererURL, age, nzbid)
         self.nzbdata = nzbdata
 
     def getNZB(self):

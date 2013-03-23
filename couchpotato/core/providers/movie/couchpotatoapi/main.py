@@ -26,7 +26,7 @@ class CouchPotatoApi(MovieProvider):
         #addApiView('movie.suggest', self.suggestView)
 
         addEvent('movie.info', self.getInfo, priority = 2)
-        addEvent('movie.search', self.search, priority = 2)
+        #addEvent('movie.search', self.search, priority = 2)
         addEvent('movie.release_date', self.getReleaseDate)
         addEvent('movie.suggest', self.suggest)
         addEvent('movie.is_movie', self.isMovie)

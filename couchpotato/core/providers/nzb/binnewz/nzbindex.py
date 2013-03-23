@@ -18,31 +18,53 @@
 
 from bs4 import BeautifulSoup
 from nzbdownloader import NZBDownloader, NZBGetURLSearchResult
+from couchpotato.core.helpers.rss import RSS
+from couchpotato.core.helpers.encoding import toUnicode, tryUrlencode
+from couchpotato.core.helpers.variable import tryInt
+from couchpotato.core.logger import CPLog
+from couchpotato.core.providers.nzb.base import NZBProvider
+from couchpotato.environment import Env
+from dateutil.parser import parse
 import urllib
+import time
+log = CPLog(__name__)
 
-class NZBIndex(NZBDownloader):
+class NZBIndex(NZBDownloader,NZBProvider, RSS):
     
-    def __init__(self):
-        super(NZBIndex, self).__init__()
-        self.agreed = False
+    urls = {
+        'download': 'https://www.nzbindex.com/download/',
+        'search': 'https://www.nzbindex.com/rss/?%s',
+    }
 
-    def agree(self):
-        self.opener.open("http://www.nzbindex.nl/agree/", urllib.urlencode( {'agree' : 'I agree' } ) )
-        self.agreed = True
-
+    http_time_between_calls = 1 # Seconds
+    
     def search(self, filename, minSize, newsgroup=None):
         
-        if not self.agreed:
-            self.agree()
+        q = filename
+        arguments = tryUrlencode({
+            'q': q,
+            'age': Env.setting('retention', 'nzb'),
+            'sort': 'agedesc',
+            'minsize': minSize,
+            'rating': 1,
+            'max': 250,
+            'more': 1,
+            'complete': 1,
+        })
 
-        suffixURL = urllib.urlencode({'hidespam' : 1, 'more' : 0, 'max': '25', 'minsize' : minSize, 'q' : filename})
-        refererURL = "http://www.nzbindex.nl/search/?" + suffixURL
+        nzbs = self.getRSSData(self.urls['search'] % arguments)
+        nzbid = None
+        for nzb in nzbs:
 
-        nzbIndexSoup = BeautifulSoup( self.open(refererURL) )
+            enclosure = self.getElement(nzb, 'enclosure').attrib
+            nzbindex_id = int(self.getTextElement(nzb, "link").split('/')[4])
+
         
-        results = nzbIndexSoup.findAll("tr", {"class" : "odd"}) + nzbIndexSoup.findAll("tr", {"class" : "even"})
-                             
-        for tr in results:
-            nzblink = tr.find("a", text="Download")
+            nzbid = nzbindex_id 
+            age = self.calculateAge(int(time.mktime(parse(self.getTextElement(nzb, "pubDate")).timetuple())))
+            sizeInMegs = tryInt(enclosure['length']) / 1024 / 1024
+            downloadUrl = enclosure['url']
+            detailURL = enclosure['url'].replace('/download/', '/release/')
             
-            return NZBGetURLSearchResult(self, nzblink.get("href"), None, refererURL)
+        if nzbid:
+            return NZBGetURLSearchResult(self, downloadUrl, sizeInMegs, detailURL, age, nzbid)
