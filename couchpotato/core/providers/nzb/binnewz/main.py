@@ -48,28 +48,20 @@ class BinNewzProvider(NZBProvider):
         TitleStringReal = getTitle(movie['library']).encode("utf-8")
         moviequality = simplifyString(quality['identifier'])
         movieyear = movie['library']['year']
-        listgenre = movie['library']['info']['genres']
         if moviequality in ("720p","1080p","bd50"):
-            if u"Animation" in listgenre:
-                cat='49'
-            else :
-                cat='39'
+            cat1='39'
+            cat2='49'
             minSize = 2000
         elif moviequality in ("dvdr"):
-            if u"Animation" in listgenre:
-                cat='48'
-            else :
-                cat='23'
+            cat1='23'
+            cat2='48'
             minSize = 3000
         else:
-            if u"Animation" in listgenre:
-                cat='27'
-            else :
-                cat='6'
+            cat1='6'
+            cat2='27'
             minSize = 500      
-       
-        data = urllib.urlencode({'b_submit': 'BinnewZ', 'cats[]' : cat, 'edSearchAll' : TitleStringReal, 'sections[]': ''})
-        
+            
+        data = 'chkInit=1&edTitre='+TitleStringReal+'&chkTitre=on&chkFichier=on&chkCat=on&cats%5B%5D='+cat1+'&cats%5B%5D='+cat2+'&edAge=&edYear='
         try:
             soup = BeautifulSoup( urllib2.urlopen("http://www.binnews.in/_bin/search2.php", data) )
         except Exception, e:
@@ -197,7 +189,9 @@ class BinNewzProvider(NZBProvider):
                         
                 filenameLower = filename.lower()                                
                 searchItems = []
-                if len(searchItems) == 0 and qualityStr == moviequality and movieyear>=int(year)-1 and movieyear<=int(year)+1 :
+                if year =='':
+                    year = '1900'
+                if len(searchItems) == 0 and qualityStr == moviequality and movieyear==int(year):
                     searchItems.append( filename )
                 for searchItem in searchItems:
                     resultno=1
