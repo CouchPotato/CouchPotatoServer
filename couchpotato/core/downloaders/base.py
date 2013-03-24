@@ -1,5 +1,6 @@
 from base64 import b32decode, b16encode
 from couchpotato.core.event import addEvent
+from couchpotato.core.helpers.variable import mergeDicts
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.base import Provider
 import random
@@ -103,6 +104,12 @@ class Downloader(Provider):
         log.error('Failed converting magnet url to torrent: %s', (torrent_hash))
         return False
 
+    def downloadReturnId(self, download_id):
+        return {
+            'downloader': self.getName(),
+            'id': download_id
+        }
+
     def isDisabled(self, manual, data):
         return not self.isEnabled(manual, data)
 
@@ -116,3 +123,34 @@ class Downloader(Provider):
         return super(Downloader, self).isEnabled() and \
             ((d_manual and manual) or (d_manual is False)) and \
             (not data or self.isCorrectType(data.get('type')))
+
+
+class StatusList(list):
+
+    provider = None
+
+    def __init__(self, provider, **kwargs):
+
+        self.provider = provider
+        self.kwargs = kwargs
+
+        super(StatusList, self).__init__()
+
+    def extend(self, results):
+        for r in results:
+            self.append(r)
+
+    def append(self, result):
+        new_result = self.fillResult(result)
+        super(StatusList, self).append(new_result)
+
+    def fillResult(self, result):
+
+        defaults = {
+            'id': 0,
+            'status': 'busy',
+            'downloader': self.provider.getName(),
+        }
+
+        return mergeDicts(defaults, result)
+

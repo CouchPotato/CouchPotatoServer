@@ -1,4 +1,4 @@
-from couchpotato.core.downloaders.base import Downloader
+from couchpotato.core.downloaders.base import Downloader, StatusList
 from couchpotato.core.helpers.encoding import tryUrlencode, ss
 from couchpotato.core.helpers.variable import cleanHost, mergeDicts
 from couchpotato.core.logger import CPLog
@@ -17,8 +17,7 @@ class Sabnzbd(Downloader):
 
         log.info('Sending "%s" to SABnzbd.', data.get('name'))
 
-        params = {
-            'apikey': self.conf('api_key'),
+        req_params = {
             'cat': self.conf('category'),
             'mode': 'addurl',
             'nzbname': self.createNzbName(data, movie),
@@ -31,17 +30,15 @@ class Sabnzbd(Downloader):
 
             # If it's a .rar, it adds the .rar extension, otherwise it stays .nzb
             nzb_filename = self.createFileName(data, filedata, movie)
-            params['mode'] = 'addfile'
+            req_params['mode'] = 'addfile'
         else:
-            params['name'] = data.get('url')
-
-        url = cleanHost(self.conf('host')) + 'api?' + tryUrlencode(params)
+            req_params['name'] = data.get('url')
 
         try:
-            if params.get('mode') is 'addfile':
-                sab = self.urlopen(url, timeout = 60, params = {'nzbfile': (ss(nzb_filename), filedata)}, multipart = True, show_error = False, headers = {'User-Agent': Env.getIdentifier()})
+            if req_params.get('mode') is 'addfile':
+                sab_data = self.call(req_params, params = {'nzbfile': (ss(nzb_filename), filedata)}, multipart = True)
             else:
-                sab = self.urlopen(url, timeout = 60, show_error = False, headers = {'User-Agent': Env.getIdentifier()})
+                sab_data = self.call(req_params)
         except URLError:
             log.error('Failed sending release, probably wrong HOST: %s', traceback.format_exc(0))
             return False
@@ -49,17 +46,19 @@ class Sabnzbd(Downloader):
             log.error('Failed sending release, use API key, NOT the NZB key: %s', traceback.format_exc(0))
             return False
 
-        result = sab.strip()
-        if not result:
-            log.error('SABnzbd didn\'t return anything.')
+        if sab_data.get('error'):
+            log.error('Error getting data from SABNZBd: %s', sab_data.get('error'))
             return False
 
-        log.debug('Result text from SAB: %s', result[:40])
-        if result[:2] == 'ok':
+        log.debug('Result from SAB: %s', sab_data)
+        if sab_data.get('status'):
             log.info('NZB sent to SAB successfully.')
-            return True
+            if filedata:
+                return self.downloadReturnId(sab_data.get('nzo_ids')[0])
+            else:
+                return True
         else:
-            log.error(result[:40])
+            log.error(sab_data)
             return False
 
     def getAllDownloadStatus(self):
@@ -85,14 +84,13 @@ class Sabnzbd(Downloader):
             log.error('Failed getting history json: %s', traceback.format_exc(1))
             return False
 
-        statuses = []
+        statuses = StatusList(self)
 
         # Get busy releases
         for item in queue.get('slots', []):
             statuses.append({
                 'id': item['nzo_id'],
                 'name': item['filename'],
-                'status': 'busy',
                 'original_status': item['status'],
                 'timeleft': item['timeleft'] if not queue['paused'] else -1,
             })
@@ -133,21 +131,21 @@ class Sabnzbd(Downloader):
 
         return True
 
-    def call(self, params, use_json = True):
+    def call(self, request_params, use_json = True, **kwargs):
 
-        url = cleanHost(self.conf('host')) + 'api?' + tryUrlencode(mergeDicts(params, {
+        url = cleanHost(self.conf('host')) + 'api?' + tryUrlencode(mergeDicts(request_params, {
            'apikey': self.conf('api_key'),
            'output': 'json'
         }))
 
-        data = self.urlopen(url, timeout = 60, show_error = False, headers = {'User-Agent': Env.getIdentifier()})
+        data = self.urlopen(url, timeout = 60, show_error = False, headers = {'User-Agent': Env.getIdentifier()}, **kwargs)
         if use_json:
             d = json.loads(data)
             if d.get('error'):
                 log.error('Error getting data from SABNZBd: %s', d.get('error'))
                 return {}
 
-            return d[params['mode']]
+            return d.get(request_params['mode']) or d
         else:
             return data
 
