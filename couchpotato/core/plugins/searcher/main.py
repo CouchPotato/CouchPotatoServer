@@ -285,10 +285,10 @@ class Searcher(Plugin):
                 if filedata == 'try_next':
                     return filedata
 
-            successful = fireEvent('download', data = data, movie = movie, manual = manual, filedata = filedata, single = True)
+            download_result = fireEvent('download', data = data, movie = movie, manual = manual, filedata = filedata, single = True)
+            log.debug('Downloader result: %s', download_result)
 
-            if successful:
-
+            if download_result:
                 try:
                     # Mark release as snatched
                     db = get_session()
@@ -298,6 +298,13 @@ class Searcher(Plugin):
 
                         done_status = fireEvent('status.get', 'done', single = True)
                         rls.status_id = done_status.get('id') if not renamer_enabled else snatched_status.get('id')
+
+                        if not download_result == True: # if the result is not False nor True it is a dict with download_id - legacy
+                            rls_info = ReleaseInfo(
+                                identifier = 'download_id',
+                                value = toUnicode(download_result['download_id'])
+                            )
+                            rls.info.append(rls_info)
                         db.commit()
 
                         log_movie = '%s (%s) in %s' % (getTitle(movie['library']), movie['library']['year'], rls.quality.label)

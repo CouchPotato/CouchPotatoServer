@@ -28,8 +28,10 @@ class NZBVortex(Downloader):
         try:
             nzb_filename = self.createFileName(data, filedata, movie)
             self.call('nzb/add', params = {'file': (ss(nzb_filename), filedata)}, multipart = True)
-
-            return True
+            
+            raw_statuses = self.call('nzb')
+            NZBID = [item['id'] for item in raw_statuses.get('nzbs', []) if item['name'] == nzb_filename][0]
+            return {'download_id': 'NZBVortex_' + NZBID}
         except:
             log.error('Something went wrong sending the NZB file: %s', traceback.format_exc())
             return False
@@ -49,7 +51,7 @@ class NZBVortex(Downloader):
                 status = 'failed'
 
             statuses.append({
-                'id': item['id'],
+                'id': 'NZBVortex_' + item['id'],
                 'name': item['uiTitle'],
                 'status': status,
                 'original_status': item['state'],
@@ -63,7 +65,7 @@ class NZBVortex(Downloader):
         log.info('%s failed downloading, deleting...', item['name'])
 
         try:
-            self.call('nzb/%s/cancel' % item['id'])
+            self.call('nzb/%s/cancel' % item['id'][len('NZBVortex_'):])
         except:
             log.error('Failed deleting: %s', traceback.format_exc(0))
             return False
