@@ -11,7 +11,7 @@ config = [{
             'list': 'watchlist_providers',
             'name': 'letterboxd_automation',
             'label': 'Letterboxd',
-            'description': 'import movies from your <a href="http://letterboxd.com/">Letterboxd</a> watchlist',
+            'description': 'Import movies from any public <a href="http://letterboxd.com/">Letterboxd</a> watchlist',
             'options': [
                 {
                     'name': 'automation_enabled',
@@ -19,8 +19,14 @@ config = [{
                     'type': 'enabler',
                 },
                 {
-                    'name': 'automation_username',
+                    'name': 'automation_urls_use',
+                    'label': 'Use',
+                },
+                {
+                    'name': 'automation_urls',
                     'label': 'Username',
+                    'type': 'combined',
+                    'combine': ['automation_urls_use', 'automation_urls'],
                 },
             ],
         },
