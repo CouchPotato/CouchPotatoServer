@@ -15,7 +15,6 @@ class XBMC(Notification):
     use_json_notifications = {}
 
     def notify(self, message = '', data = {}, listener = None):
-        if self.isDisabled(): return
 
         hosts = splitString(self.conf('host'))
 

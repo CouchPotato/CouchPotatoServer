@@ -22,7 +22,7 @@ class Notification(Provider):
     dont_listen_to = []
 
     def __init__(self):
-        addEvent('notify.%s' % self.getName().lower(), self.notify)
+        addEvent('notify.%s' % self.getName().lower(), self._notify)
 
         addApiView(self.testNotifyName(), self.test)
 
@@ -35,12 +35,16 @@ class Notification(Provider):
         def notify(message = None, group = {}, data = None):
             if not self.conf('on_snatch', default = True) and listener == 'movie.snatched':
                 return
-            return self.notify(message = message, data = data if data else group, listener = listener)
+            return self._notify(message = message, data = data if data else group, listener = listener)
 
         return notify
 
     def getNotificationImage(self, size = 'small'):
         return 'https://raw.github.com/RuudBurger/CouchPotatoServer/master/couchpotato/static/images/notify.couch.%s.png' % size
+
+    def _notify(self, *args, **kwargs):
+        if self.isEnabled():
+            self.notify(*args, **kwargs)
 
     def notify(self, message = '', data = {}, listener = None):
         pass
@@ -51,7 +55,7 @@ class Notification(Provider):
 
         log.info('Sending test to %s', test_type)
 
-        success = self.notify(
+        success = self._notify(
             message = self.test_message,
             data = {},
             listener = 'test'

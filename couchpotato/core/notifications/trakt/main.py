@@ -14,7 +14,6 @@ class Trakt(Notification):
     listen_to = ['movie.downloaded']
 
     def notify(self, message = '', data = {}, listener = None):
-        if self.isDisabled(): return
 
         post_data = {
             'username': self.conf('automation_username'),

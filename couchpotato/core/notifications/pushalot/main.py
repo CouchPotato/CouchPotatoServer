@@ -12,7 +12,6 @@ class Pushalot(Notification):
     }
 
     def notify(self, message = '', data = {}, listener = None):
-        if self.isDisabled(): return
 
         data = {
             'AuthorizationToken': self.conf('auth_token'),
