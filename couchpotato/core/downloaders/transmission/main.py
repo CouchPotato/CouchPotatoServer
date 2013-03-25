@@ -7,6 +7,7 @@ import json
 import os.path
 import re
 import urllib2
+import shutil
 
 log = CPLog(__name__)
 
@@ -18,7 +19,7 @@ class Transmission(Downloader):
 
     def download(self, data, movie, filedata = None):
 
-        log.debug('Sending "%s" (%s) to Transmission.', (data.get('name'), data.get('type')))
+        log.info('Sending "%s" (%s) to Transmission.', (data.get('name'), data.get('type')))
 
         # Load host from config and split out port.
         host = self.conf('host').split(':')
@@ -41,8 +42,8 @@ class Transmission(Downloader):
         torrent_params = {}
         if self.conf('ratio'):
             torrent_params = {
-                'seedRatioLimit': self.conf('ratio'),
-                'seedRatioMode': self.conf('ratio')
+                'seedRatioLimit': self.conf('ratio') / 100,
+                'seedRatioMode': self.conf('ratiomode')
             }
 
         if not filedata and data.get('type') == 'torrent':
@@ -62,11 +63,98 @@ class Transmission(Downloader):
             if torrent_params:
                 trpc.set_torrent(remote_torrent['torrent-added']['hashString'], torrent_params)
 
+            log.info('Torrent sent to Transmission successfully.')
             return True
         except Exception, err:
             log.error('Failed to change settings for transfer: %s', err)
             return False
 
+    def getAllDownloadStatus(self):
+
+        log.debug('Checking Transmission download status.')
+
+        # Load host from config and split out port.
+        host = self.conf('host').split(':')
+        if not isInt(host[1]):
+            log.error('Config properties are not filled in correctly, port is missing.')
+            return False
+
+        # Go through Queue
+        try:
+            trpc = TransmissionRPC(host[0], port = host[1], username = self.conf('username'), password = self.conf('password'))
+            return_params = {
+                'fields': ['id', 'name', 'hashString', 'percentDone', 'status', 'eta', 'isFinished', 'downloadDir', 'uploadRatio']
+            }
+            queue = trpc.get_alltorrents(return_params)
+
+        except Exception, err:
+            log.error('Failed getting queue: %s', err)
+            return False
+
+        statuses = []
+        log.debug('%s', queue)
+
+        # Get torrents status
+            # CouchPotato Status
+                #status = 'busy'
+                #status = 'failed'
+                #status = 'completed'
+            # Transmission Status
+                #status = 0 => "Torrent is stopped"
+                #status = 1 => "Queued to check files"
+                #status = 2 => "Checking files"
+                #status = 3 => "Queued to download"
+                #status = 4 => "Downloading"
+                #status = 4 => "Queued to seed"
+                #status = 6 => "Seeding"
+        #To do :
+        #   add checking file
+        #   manage no peer in a range time => fail
+        for item in queue['torrents']:
+            log.debug('name=%s / id=%s / downloadDir=%s / hashString=%s / percentDone=%s / status=%s / eta=%s / uploadRatio=%s / confRatio=%s / isFinished=%s', (item['name'], item['id'], item['downloadDir'], item['hashString'], item['percentDone'], item['status'], item['eta'], item['uploadRatio'], self.conf('ratio'), item['isFinished'] ))
+            if not os.path.isdir(self.conf('renamerDirectory')):
+                log.debug('Directory of Renamer have to exist.')
+                return
+            if (item['percentDone'] * 100) >= 100 and (item['status'] == 6 or item['status'] == 0) and (item['uploadRatio'] * 100) > self.conf('ratio'):
+                try:
+                    doMove = True
+                    trpc.stop_torrent(item['hashString'], {})
+                    fixedDownloadDir = item['downloadDir'].rstrip(os.path.sep)
+                    if fixedDownloadDir == self.conf('directory', default = '').rstrip(os.path.sep):
+                        fixedDownloadDir = os.path.join(fixedDownloadDir,item['name']).rstrip(os.path.sep)
+                    if fixedDownloadDir == self.conf('directory', default = '').rstrip(os.path.sep):
+                        doMove = False
+                        log.error('Bad folder to move: %s', fixedDownloadDir)
+                    if not os.path.isdir(fixedDownloadDir):
+                        doMove = False
+                        log.error('Missing folder: %s', fixedDownloadDir)
+                    if doMove:
+                        log.info('Moving folder from "%s" to "%s"', (fixedDownloadDir, self.conf('renamerDirectory')))
+                        shutil.move(fixedDownloadDir, self.conf('renamerDirectory'))
+                        statuses.append({
+                            'name': item['downloadDir'],
+                            'status': 'completed',
+                            'original_status': item['status'],
+                            'timeleft': 0,
+                        })
+                        trpc.remove_torrent(item['hashString'], True, {})
+                except Exception, err:
+                    log.error('Failed to stop and remove torrent "%s" with error: %s', (item['name'], err))
+                    statuses.append({
+                        'name': item['downloadDir'],
+                        'status': 'busy',
+                        'original_status': item['status'],
+                        'timeleft': 0,
+                    })
+            else:
+                statuses.append({
+                    'name': item['downloadDir'],
+                    'status': 'busy',
+                    'original_status': item['status'],
+                    'timeleft': item['eta'],
+                })
+
+        return statuses
 
 class TransmissionRPC(object):
 
@@ -97,6 +185,7 @@ class TransmissionRPC(object):
         try:
             open_request = urllib2.urlopen(request)
             response = json.loads(open_request.read())
+            log.debug('request: %s', json.dumps(ojson))
             log.debug('response: %s', json.dumps(response))
             if response['result'] == 'success':
                 log.debug('Transmission action successfull')
@@ -145,4 +234,19 @@ class TransmissionRPC(object):
     def set_torrent(self, torrent_id, arguments):
         arguments['ids'] = torrent_id
         post_data = {'arguments': arguments, 'method': 'torrent-set', 'tag': self.tag}
+        return self._request(post_data)
+
+    def get_alltorrents(self, arguments):
+        post_data = {'arguments': arguments, 'method': 'torrent-get', 'tag': self.tag}
+        return self._request(post_data)
+
+    def stop_torrent(self, torrent_id, arguments):
+        arguments['ids'] = torrent_id
+        post_data = {'arguments': arguments, 'method': 'torrent-stop', 'tag': self.tag}
+        return self._request(post_data)
+
+    def remove_torrent(self, torrent_id, remove_local_data, arguments):
+        arguments['ids'] = torrent_id
+        arguments['delete-local-data'] = remove_local_data
+        post_data = {'arguments': arguments, 'method': 'torrent-remove', 'tag': self.tag}
         return self._request(post_data)

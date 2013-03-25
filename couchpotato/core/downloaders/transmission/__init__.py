@@ -44,11 +44,23 @@ config = [{
                     'description': 'Where should Transmission saved the downloaded files?',
                 },
                 {
+                    'name': 'renamerDirectory',
+                    'type': 'directory',
+                    'description': 'Where should Renamer scan',
+                },
+                {
                     'name': 'ratio',
                     'default': 10,
                     'type': 'int',
                     'advanced': True,
-                    'description': 'Stop transfer when reaching ratio',
+                    'description': 'Stop transfer when reaching ratio (in percent)',
+                },
+                {
+                    'name': 'ratiomode',
+                    'default': 0,
+                    'type': 'int',
+                    'advanced': True,
+                    'description': '0 = Use session limit, 1 = Use transfer limit, 2 = Disable limit.',
                 },
                 {
                     'name': 'manual',
