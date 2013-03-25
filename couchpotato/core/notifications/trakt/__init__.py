@@ -8,9 +8,10 @@ config = [{
     'groups': [
         {
             'tab': 'notifications',
-            'name': 'trakt_notification',
+            'list': 'notification_providers',
+            'name': 'trakt',
             'label': 'Trakt',
-            'description': 'add movies to your collection once downloaded',
+            'description': 'add movies to your collection once downloaded. Fill in your username and password in the <a href="../automation/">Automation Trakt settings</a>',
             'options': [
                 {
                     'name': 'notification_enabled',
@@ -22,20 +23,6 @@ config = [{
                     'label': 'Remove from watchlist',
                     'default': False,
                     'type': 'bool',
-                },
-                {
-                    'name': 'automation_api_key',
-                    'label': 'Apikey',
-                },
-                {
-                    'name': 'automation_username',
-                    'label': 'Username',
-                },
-                {
-                    'name': 'automation_password',
-                    'label': 'Password',
-                    'type': 'password',
-                    'description': 'Required even if your account is unprotected.',
                 },
             ],
         }

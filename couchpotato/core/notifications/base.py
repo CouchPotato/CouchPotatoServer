@@ -2,13 +2,15 @@ from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.request import jsonified
 from couchpotato.core.logger import CPLog
-from couchpotato.core.plugins.base import Plugin
+from couchpotato.core.providers.base import Provider
 from couchpotato.environment import Env
 
 log = CPLog(__name__)
 
 
-class Notification(Plugin):
+class Notification(Provider):
+
+    type = 'notification'
 
     default_title = Env.get('appname')
     test_message = 'ZOMG Lazors Pewpewpew!'
