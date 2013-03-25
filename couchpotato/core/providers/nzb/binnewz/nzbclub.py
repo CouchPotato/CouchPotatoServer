@@ -67,7 +67,7 @@ class NZBClub(NZBDownloader, NZBProvider, RSS):
                 #        return False
 
                 #return True
-            nzbid = nzbclub_id,
+            nzbid = nzbclub_id
                 #'name': toUnicode(self.getTextElement(nzb, "title")),
             age = self.calculateAge(int(time.mktime(parse(date).timetuple())))
             sizeInMegs = (tryInt(size)/1024/1024)
