@@ -2,7 +2,7 @@ from couchpotato import get_session
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
 from couchpotato.core.helpers.encoding import toUnicode, ss
-from couchpotato.core.helpers.request import jsonified
+from couchpotato.core.helpers.request import getParams, jsonified, getParam
 from couchpotato.core.helpers.variable import getExt, mergeDicts, getTitle, \
     getImdb
 from couchpotato.core.logger import CPLog
@@ -31,6 +31,17 @@ class Renamer(Plugin):
         })
 
         addEvent('renamer.scan', self.scan)
+        
+        addApiView('renamer.scanfolder', self.scanfolderView, docs = {
+            'desc': 'For the renamer to check for new files to rename in a specified folder',
+            'params': {
+                'movie_folder': {'desc': 'The folder of the movie to scan'},
+                'downloader' : {'desc': 'Optional: The downloader this movie has been downloaded with'},
+                'download_id': {'desc': 'Optional: The downloader\'s nzb/torrent ID'},
+            },
+        })
+
+        addEvent('renamer.scanfolder', self.scanfolder)
         addEvent('renamer.check_snatched', self.checkSnatched)
 
         addEvent('app.load', self.scan)
@@ -51,6 +62,26 @@ class Renamer(Plugin):
         })
 
     def scan(self):
+        self.scanfolder()
+
+    def scanfolderView(self):
+    
+        params = getParams()
+        movie_folder = params.get('movie_folder', None)
+        downloader = params.get('downloader', None)
+        download_id = params.get('download_id', None)
+
+        fireEventAsync('renamer.scanfolder', 
+            movie_folder = movie_folder, 
+            downloader = downloader, 
+            download_id = download_id
+        )
+
+        return jsonified({
+            'success': True
+        })
+        
+    def scanfolder(self, movie_folder = None, downloader = None, download_id = None):
 
         if self.isDisabled():
             return
@@ -59,18 +90,43 @@ class Renamer(Plugin):
             log.info('Renamer is already running, if you see this often, check the logs above for errors.')
             return
 
+        self.renaming_started = True
+
         # Check to see if the "to" folder is inside the "from" folder.
-        if not os.path.isdir(self.conf('from')) or not os.path.isdir(self.conf('to')):
+        if movie_folder and not os.path.isdir(movie_folder): # or not os.path.isdir(self.conf('from')) or not os.path.isdir(self.conf('to')):
             log.debug('"To" and "From" have to exist.')
             return
         elif self.conf('from') in self.conf('to'):
             log.error('The "to" can\'t be inside of the "from" folder. You\'ll get an infinite loop.')
             return
+        elif (movie_folder and movie_folder in [self.conf('to'), self.conf('from')]):
+            log.error('The "to" and "from" folders can\'t be inside of or the same as the provided movie folder.')
+            return
 
-        groups = fireEvent('scanner.scan', folder = self.conf('from'), single = True)
+        # make sure the movie folder name is included in the search
+        folder = None 
+        movie_files = []
+        if movie_folder:
+            log.info('Scanning movie folder %s...', movie_folder)
+            movie_folder = movie_folder.rstrip(os.path.sep)
+            folder = os.path.dirname(movie_folder)
 
-        self.renaming_started = True
+            # Get all files from the specified folder
+            try:
+                for root, folders, names in os.walk(movie_folder):
+                    movie_files.extend([os.path.join(root, name) for name in names])
+            except:
+                log.error('Failed getting files from %s: %s', (movie_folder, traceback.format_exc()))
 
+        groups = fireEvent('scanner.scan', folder = folder if folder else self.conf('from'), files = movie_files, downloader = downloader, download_id = download_id, single = True)
+
+        # Make sure only one movie was found if a download ID is provided
+        if downloader and download_id and not len(groups) == 1:
+            log.info('Download ID provided (%s), but more than one group found (%s). Ignoring Download ID...', (download_id, len(groups)))
+            downloader = None
+            download_id = None
+            groups = fireEvent('scanner.scan', folder = folder if folder else self.conf('from'), files = movie_files, single = True)
+                
         destination = self.conf('to')
         folder_name = self.conf('folder_name')
         file_name = self.conf('file_name')
@@ -597,7 +653,10 @@ class Renamer(Plugin):
                                         db.commit()
                                 elif item['status'] == 'completed':
                                     log.info('Download of %s completed!', item['name'])
-                                    scan_required = True
+                                    if item['id'] and item['downloader'] and item['folder']:
+                                        fireEventAsync('renamer.scanfolder', movie_folder = item['folder'], downloader = item['downloader'], download_id = item['id'])
+                                    else:
+                                        scan_required = True
 
                                 found = True
                                 break

@@ -5,6 +5,7 @@ from couchpotato.core.helpers.encoding import isInt, ss
 from couchpotato.core.logger import CPLog
 from hashlib import sha1
 from multipartpost import MultipartPostHandler
+from datetime import timedelta
 import cookielib
 import httplib
 import json
@@ -118,7 +119,8 @@ class uTorrent(Downloader):
                 'name': item[2],
                 'status':  status,
                 'original_status': item[1],
-                'timeleft': item[10],
+                'timeleft': str(timedelta(seconds = item[10])),
+                'folder': '', #no fucntion to get folder, but can be deduced with getSettings function.
             })
 
         return statuses
