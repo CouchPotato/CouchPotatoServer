@@ -148,7 +148,7 @@ class NZBGet(Downloader):
 
         try:
             history = rpc.history()
-            if rpc.editqueue('HistoryDelete', 0, "", [int(item['id'][len('NZBGet_'):])]):
+            if rpc.editqueue('HistoryDelete', 0, "", [tryInt(item['id'])]):
                 path = [hist['DestDir'] for hist in history if hist['NZBID'] == item['id']][0]
                 shutil.rmtree(path, True)
         except:
