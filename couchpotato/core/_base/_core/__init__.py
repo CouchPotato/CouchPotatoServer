@@ -46,6 +46,12 @@ config = [{
                     'description': 'Launch the browser when I start.',
                     'wizard': True,
                 },
+                {
+                    'name': 'disable_home-screen',
+                    'default': False,
+                    'type': 'bool',
+                    'description': 'Disable the \'Home\' screen, start old skool. (requires a hard-refresh!)',
+                },
             ],
         },
         {
