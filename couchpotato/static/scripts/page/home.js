@@ -23,7 +23,7 @@ Page.Home = new Class({
 			'identifier': 'snatched',
 			'load_more': false,
 			'view': 'list',
-			'actions': [MA.IMDB, MA.Trailer, MA.Files, MA.Release, MA.Edit, MA.Readd, MA.Refresh, MA.Delete],
+			'actions': [MA.IMDB, MA.Trailer, MA.Release, MA.Refresh, MA.Delete],
 			'title': 'Snatched & Available',
 			'on_empty_element': new Element('div'),
 			'filter': {
