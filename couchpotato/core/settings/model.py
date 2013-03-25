@@ -141,7 +141,7 @@ class Status(Entity):
 
 
 class Quality(Entity):
-    """Quality name of a release, DVD, 720P, DVD-Rip etc"""
+    """Quality name of a release, DVD, 720p, DVD-Rip etc"""
     using_options(order_by = 'order')
 
     identifier = Field(String(20), unique = True)
