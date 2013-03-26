@@ -134,10 +134,9 @@ body > .spinner, .mask{
     text-decoration: none;
     font-weight: bold;
     line-height: 1;
-    border-radius: 5px;
-	box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    border-radius: 2px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.3);
 	text-shadow: 0 -1px 1px rgba(0,0,0,0.25);
-	border-bottom: 1px solid rgba(0,0,0,0.25);
     cursor: pointer;
 }
 	.button.red { background-color: #ff0000; }

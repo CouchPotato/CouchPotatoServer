@@ -12,7 +12,6 @@ log = CPLog(__name__)
 class Email(Notification):
 
     def notify(self, message = '', data = {}, listener = None):
-        if self.isDisabled(): return
 
         # Extract all the settings from settings
         from_address = self.conf('from')
@@ -50,6 +49,5 @@ class Email(Notification):
             return True
         except:
             log.error('E-mail failed: %s', traceback.format_exc())
-            return False
 
         return False

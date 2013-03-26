@@ -12,7 +12,6 @@ class Toasty(Notification):
     }
 
     def notify(self, message = '', data = {}, listener = None):
-        if self.isDisabled(): return
 
         data = {
             'title': self.default_title,

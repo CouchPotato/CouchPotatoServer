@@ -1,5 +1,5 @@
 from base64 import b64encode
-from couchpotato.core.downloaders.base import Downloader
+from couchpotato.core.downloaders.base import Downloader, StatusList
 from couchpotato.core.helpers.encoding import tryUrlencode, ss
 from couchpotato.core.helpers.variable import cleanHost
 from couchpotato.core.logger import CPLog
@@ -29,7 +29,9 @@ class NZBVortex(Downloader):
             nzb_filename = self.createFileName(data, filedata, movie)
             self.call('nzb/add', params = {'file': (ss(nzb_filename), filedata)}, multipart = True)
 
-            return True
+            raw_statuses = self.call('nzb')
+            nzb_id = [item['id'] for item in raw_statuses.get('nzbs', []) if item['name'] == nzb_filename][0]
+            return self.downloadReturnId(nzb_id)
         except:
             log.error('Something went wrong sending the NZB file: %s', traceback.format_exc())
             return False
@@ -38,7 +40,7 @@ class NZBVortex(Downloader):
 
         raw_statuses = self.call('nzb')
 
-        statuses = []
+        statuses = StatusList(self)
         for item in raw_statuses.get('nzbs', []):
 
             # Check status

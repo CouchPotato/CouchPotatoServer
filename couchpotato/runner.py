@@ -190,9 +190,12 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
             version_control(db, repo, version = latest_db_version)
             current_db_version = db_version(db, repo)
 
-        if current_db_version < latest_db_version and not development:
-            log.info('Doing database upgrade. From %d to %d', (current_db_version, latest_db_version))
-            upgrade(db, repo)
+        if current_db_version < latest_db_version:
+            if development:
+                log.error('There is a database migration ready, but you are running development mode, so it won\'t be used. If you see this, you are stupid. Please disable development mode.')
+            else:
+                log.info('Doing database upgrade. From %d to %d', (current_db_version, latest_db_version))
+                upgrade(db, repo)
 
     # Configure Database
     from couchpotato.core.settings.model import setup

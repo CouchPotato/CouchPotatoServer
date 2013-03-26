@@ -9,7 +9,6 @@ log = CPLog(__name__)
 class NotifyMyWP(Notification):
 
     def notify(self, message = '', data = {}, listener = None):
-        if self.isDisabled(): return
 
         keys = splitString(self.conf('api_key'))
         p = PyNMWP(keys, self.conf('dev_key'))
