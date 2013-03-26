@@ -39,7 +39,7 @@
 		overflow: hidden;
 		width: 100%;
 		height: 180px;
-		transition: all 0.2s linear;
+		transition: all 0.6s cubic-bezier(0.9,0,0.1,1);
 	}
 
 		.movies.list_list .movie:not(.details_view),
@@ -95,7 +95,7 @@
 				width: 938px;
 				box-shadow: none;
 				border: 0;
-				background: none;
+				background: #4e5969;
 			}
 			
 			.movies.thumbs_list .data {
@@ -322,8 +322,8 @@
 				right: 10px;
 			}
 		
-			.movies .data:hover .action { opacity: 0.6; }
-			.movies .data:hover .action:hover { opacity: 1; }
+			.movies .movie:hover .action { opacity: 0.6; }
+			.movies .movie:hover .action:hover { opacity: 1; }
 			.movies.mass_edit_list .data .actions {
 				display: none;
 			}
@@ -338,8 +338,8 @@
 				opacity: 0;
 			}
 
-		.movies.list_list .movie:not(.details_view) .data:hover .actions,
-		.movies.mass_edit_list .data:hover .actions {
+		.movies.list_list .movie:not(.details_view):hover .actions,
+		.movies.mass_edit_list .movie:hover .actions {
 			margin: 0;
 			background: #4e5969;
 			top: 2px;
@@ -509,6 +509,29 @@
 
 						.movies .movie .releases .last_release > :first-child {
 							margin-left: -6px;
+						}
+				.movies .movie .trynext {
+					display: inline;
+					position: absolute;
+					right: 135px;
+					z-index: 2;
+					opacity: 0;
+					text-shadow: none;
+					background: #4e5969;
+				}
+					.movies .movie:hover .trynext {
+						opacity: 1;
+					}
+					
+					.movies .movie .trynext a {
+						background-position: 5px center;
+						padding: 0 5px 0 25px;
+						margin-right: 10px;
+						color: #FFF;
+						border-radius: 2px;
+					}
+						.movies .movie .trynext a:hover {
+							background-color: #369545;
 						}
 
 		.movies .load_more {

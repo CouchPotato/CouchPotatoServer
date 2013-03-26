@@ -11,7 +11,6 @@ class Pushover(Notification):
     app_token = 'YkxHMYDZp285L265L3IwH3LmzkTaCy'
 
     def notify(self, message = '', data = {}, listener = None):
-        if self.isDisabled(): return
 
         http_handler = HTTPSConnection("api.pushover.net:443")
 

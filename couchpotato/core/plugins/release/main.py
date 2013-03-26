@@ -160,13 +160,17 @@ class Release(Plugin):
 
         db = get_session()
         id = getParam('id')
-        status_snatched = fireEvent('status.add', 'snatched', single = True)
+
+        snatched_status = fireEvent('status.add', 'snatched', single = True)
+        done_status = fireEvent('status.get', 'done', single = True)
 
         rel = db.query(Relea).filter_by(id = id).first()
         if rel:
             item = {}
             for info in rel.info:
                 item[info.identifier] = info.value
+
+            fireEvent('notify.frontend', type = 'release.download', data = True, message = 'Snatching "%s"' % item['name'])
 
             # Get matching provider
             provider = fireEvent('provider.belongs_to', item['url'], provider = item.get('provider'), single = True)
@@ -182,8 +186,14 @@ class Release(Plugin):
             }), manual = True, single = True)
 
             if success:
-                rel.status_id = status_snatched.get('id')
-                db.commit()
+                db.expunge_all()
+                rel = db.query(Relea).filter_by(id = id).first() # Get release again
+
+                if rel.status_id != done_status.get('id'):
+                    rel.status_id = snatched_status.get('id')
+                    db.commit()
+
+                fireEvent('notify.frontend', type = 'release.download', data = True, message = 'Successfully snatched "%s"' % item['name'])
 
             return jsonified({
                 'success': success

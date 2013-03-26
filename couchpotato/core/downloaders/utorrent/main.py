@@ -1,6 +1,6 @@
 from base64 import b16encode, b32decode
 from bencode import bencode, bdecode
-from couchpotato.core.downloaders.base import Downloader
+from couchpotato.core.downloaders.base import Downloader, StatusList
 from couchpotato.core.helpers.encoding import isInt, ss
 from couchpotato.core.logger import CPLog
 from hashlib import sha1
@@ -66,7 +66,7 @@ class uTorrent(Downloader):
             self.utorrent_api.set_torrent(torrent_hash, torrent_params)
             if self.conf('paused', default = 0):
                 self.utorrent_api.pause_torrent(torrent_hash)
-            return True
+            return self.downloadReturnId(torrent_hash)
         except Exception, err:
             log.error('Failed to send torrent to uTorrent: %s', err)
             return False
@@ -103,7 +103,7 @@ class uTorrent(Downloader):
             log.debug('Nothing in queue')
             return False
 
-        statuses = []
+        statuses = StatusList(self)
 
         # Get torrents
         for item in queue.get('torrents', []):

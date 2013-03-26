@@ -13,7 +13,6 @@ class Notifo(Notification):
     url = 'https://api.notifo.com/v1/send_notification'
 
     def notify(self, message = '', data = {}, listener = None):
-        if self.isDisabled(): return
 
         try:
             params = {

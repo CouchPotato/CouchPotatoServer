@@ -571,8 +571,16 @@ class Renamer(Plugin):
 
                         found = False
                         for item in statuses:
-                            if item['name'] == nzbname or rel_dict['info']['name'] in item['name'] or getImdb(item['name']) == movie_dict['library']['identifier']:
+                            found_release = False
+                            if rel_dict['info'].get('download_id'):
+                                if item['id'] == rel_dict['info']['download_id'] and item['downloader'] == rel_dict['info']['download_downloader']:
+                                    log.debug('Found release by id: %s', item['id'])
+                                    found_release = True
+                            else:
+                                if item['name'] == nzbname or rel_dict['info']['name'] in item['name'] or getImdb(item['name']) == movie_dict['library']['identifier']:
+                                    found_release = True
 
+                            if found_release:
                                 timeleft = 'N/A' if item['timeleft'] == -1 else item['timeleft']
                                 log.debug('Found %s: %s, time to go: %s', (item['name'], item['status'].upper(), timeleft))
 

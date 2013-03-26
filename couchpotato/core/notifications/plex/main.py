@@ -46,7 +46,6 @@ class Plex(Notification):
         return True
 
     def notify(self, message = '', data = {}, listener = None):
-        if self.isDisabled(): return
 
         hosts = [x.strip() + ':3000' for x in self.conf('host').split(",")]
         successful = 0

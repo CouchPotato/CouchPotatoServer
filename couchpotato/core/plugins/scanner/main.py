@@ -11,6 +11,7 @@ from subliminal.videos import Video
 import enzyme
 import os
 import re
+import threading
 import time
 import traceback
 
@@ -74,7 +75,7 @@ class Scanner(Plugin):
         'hdtv': ['hdtv']
     }
 
-    clean = '[ _\,\.\(\)\[\]\-](french|swedisch|danish|dutch|swesub|spanish|german|ac3|dts|custom|dc|divx|divx5|dsr|dsrip|dutch|dvd|dvdr|dvdrip|dvdscr|dvdscreener|screener|dvdivx|cam|fragment|fs|hdtv|hdrip|hdtvrip|internal|limited|multisubs|ntsc|ogg|ogm|pal|pdtv|proper|repack|rerip|retail|r3|r5|bd5|se|svcd|swedish|german|read.nfo|nfofix|unrated|ws|telesync|ts|telecine|tc|brrip|bdrip|video_ts|audio_ts|480p|480i|576p|576i|720p|720i|1080p|1080i|hrhd|hrhdtv|hddvd|bluray|x264|h264|xvid|xvidvd|xxx|www.www|cd[1-9]|\[.*\])([ _\,\.\(\)\[\]\-]|$)'
+    clean = '[ _\,\.\(\)\[\]\-](extended.cut|directors.cut|french|swedisch|danish|dutch|swesub|spanish|german|ac3|dts|custom|dc|divx|divx5|dsr|dsrip|dutch|dvd|dvdr|dvdrip|dvdscr|dvdscreener|screener|dvdivx|cam|fragment|fs|hdtv|hdrip|hdtvrip|internal|limited|multisubs|ntsc|ogg|ogm|pal|pdtv|proper|repack|rerip|retail|r3|r5|bd5|se|svcd|swedish|german|read.nfo|nfofix|unrated|ws|telesync|ts|telecine|tc|brrip|bdrip|video_ts|audio_ts|480p|480i|576p|576i|720p|720i|1080p|1080i|hrhd|hrhdtv|hddvd|bluray|x264|h264|xvid|xvidvd|xxx|www.www|cd[1-9]|\[.*\])([ _\,\.\(\)\[\]\-]|$)'
     multipart_regex = [
         '[ _\.-]+cd[ _\.-]*([0-9a-d]+)', #*cd1
         '[ _\.-]+dvd[ _\.-]*([0-9a-d]+)', #*dvd1
@@ -387,6 +388,11 @@ class Scanner(Plugin):
             # Notify parent & progress on something found
             if on_found:
                 on_found(group, total_found, total_found - len(processed_movies))
+
+            # Wait for all the async events calm down a bit
+            while threading.activeCount() > 100 and not self.shuttingDown():
+                log.debug('Too many threads active, waiting a few seconds')
+                time.sleep(10)
 
         if len(processed_movies) > 0:
             log.info('Found %s movies in the folder %s', (len(processed_movies), folder))

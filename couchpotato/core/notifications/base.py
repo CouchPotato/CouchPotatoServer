@@ -2,13 +2,15 @@ from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.request import jsonified
 from couchpotato.core.logger import CPLog
-from couchpotato.core.plugins.base import Plugin
+from couchpotato.core.providers.base import Provider
 from couchpotato.environment import Env
 
 log = CPLog(__name__)
 
 
-class Notification(Plugin):
+class Notification(Provider):
+
+    type = 'notification'
 
     default_title = Env.get('appname')
     test_message = 'ZOMG Lazors Pewpewpew!'
@@ -20,7 +22,7 @@ class Notification(Plugin):
     dont_listen_to = []
 
     def __init__(self):
-        addEvent('notify.%s' % self.getName().lower(), self.notify)
+        addEvent('notify.%s' % self.getName().lower(), self._notify)
 
         addApiView(self.testNotifyName(), self.test)
 
@@ -33,12 +35,16 @@ class Notification(Plugin):
         def notify(message = None, group = {}, data = None):
             if not self.conf('on_snatch', default = True) and listener == 'movie.snatched':
                 return
-            return self.notify(message = message, data = data if data else group, listener = listener)
+            return self._notify(message = message, data = data if data else group, listener = listener)
 
         return notify
 
     def getNotificationImage(self, size = 'small'):
         return 'https://raw.github.com/RuudBurger/CouchPotatoServer/master/couchpotato/static/images/notify.couch.%s.png' % size
+
+    def _notify(self, *args, **kwargs):
+        if self.isEnabled():
+            self.notify(*args, **kwargs)
 
     def notify(self, message = '', data = {}, listener = None):
         pass
@@ -49,7 +55,7 @@ class Notification(Plugin):
 
         log.info('Sending test to %s', test_type)
 
-        success = self.notify(
+        success = self._notify(
             message = self.test_message,
             data = {},
             listener = 'test'
