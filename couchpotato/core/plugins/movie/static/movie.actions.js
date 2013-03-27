@@ -89,23 +89,10 @@ MA.Release = new Class({
 			}
 		});
 
-		if(self.movie.data.releases.length == 0){
+		if(self.movie.data.releases.length == 0)
 			self.el.hide()
-		}
-		else {
-
-			var releases = self.movie.data.releases.sortBy('-info.score');
-
-			for(x in releases){
-				var release = releases[x],
-					status = Status.get(release.status_id);
-
-				if((self.next_release && (status.identifier == 'ignored' || status.identifier == 'failed')) || (!self.next_release && status.identifier == 'available')){
-					self.showHelper();
-					break;
-				}
-			}
-		}
+		else
+			self.showHelper();
 
 	},
 

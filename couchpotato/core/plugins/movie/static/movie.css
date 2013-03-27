@@ -518,7 +518,12 @@
 					opacity: 0;
 					text-shadow: none;
 					background: #4e5969;
+					min-width: 300px;
+					text-align: right;
 				}
+					.wanted .movies .movie .trynext {
+						padding-right: 50px;
+					}
 					.movies .movie:hover .trynext {
 						opacity: 1;
 					}
