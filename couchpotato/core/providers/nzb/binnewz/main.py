@@ -191,7 +191,7 @@ class BinNewzProvider(NZBProvider):
                 searchItems = []
                 if year =='':
                     year = '1900'
-                if len(searchItems) == 0 and qualityStr == moviequality and movieyear==int(year):
+                if len(searchItems) == 0 and qualityStr == moviequality and movieyear>=int(year)-2 and movieyear<=int(year)+2:
                     searchItems.append( filename )
                 for searchItem in searchItems:
                     resultno=1
