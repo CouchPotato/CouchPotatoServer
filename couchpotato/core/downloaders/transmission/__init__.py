@@ -41,7 +41,7 @@ config = [{
                 {
                     'name': 'directory',
                     'type': 'directory',
-                    'description': 'Where should Transmission saved the downloaded files?',
+                    'description': 'Download to this directory. Keep empty for default Transmission download directory.',
                 },
                 {
                     'name': 'ratio',
