@@ -1,1 +1,78 @@
-{% extends "_desktop.html" %}
+<!doctype html>
+<html>
+	<head>
+		{% for url in fireEvent('clientscript.get_styles', as_html = True, location = 'front', single = True) %}
+		<link rel="stylesheet" href="{{ url_for('web.index') }}{{ url }}" type="text/css">{% endfor %}
+		{% for url in fireEvent('clientscript.get_scripts', as_html = True, location = 'front', single = True) %}
+		<script type="text/javascript" src="{{ url_for('web.index') }}{{ url }}"></script>{% endfor %}
+
+		{% for url in fireEvent('clientscript.get_scripts', as_html = True, location = 'head', single = True) %}
+		<script type="text/javascript" src="{{ url_for('web.index') }}{{ url }}"></script>{% endfor %}
+		{% for url in fireEvent('clientscript.get_styles', as_html = True, location = 'head', single = True) %}
+		<link rel="stylesheet" href="{{ url_for('web.index') }}{{ url }}" type="text/css">{% endfor %}
+
+		<link href="{{ url_for('web.static', filename='images/favicon.ico') }}" rel="icon" type="image/x-icon" />
+		<link rel="apple-touch-icon" href="{{ url_for('web.static', filename='images/homescreen.png') }}" />
+
+		<script type="text/javascript" src="https://www.youtube.com/player_api" defer="defer"></script>
+
+		<script type="text/javascript">
+			window.addEvent('domready', function() {
+				new Uniform();
+
+				Api.setup({
+					'url': {{ url_for('api.index')|tojson|safe }},
+					'path_sep': {{ sep|tojson|safe }},
+					'is_remote': false
+				});
+
+				$(document.body).set('data-api', window.location.protocol + '//' + window.location.host + Api.createUrl().replace('/default/', '/'));
+
+				// Catch errors
+				window.onerror = function(message, file, line){
+
+					p(message, file, line);
+
+					Api.request('logging.log', {
+						'data': {
+							'type': 'error',
+							'message': Browser.name + ' ' + Browser.version + ': \n' + message,
+							'page': window.location.href.replace(window.location.host, 'HOST'),
+							'file': file.replace(window.location.host, 'HOST'),
+							'line': line
+						}
+					});
+
+					return true;
+				}
+
+				Quality.setup({
+					'profiles': {{ fireEvent('profile.all', single = True)|tojson|safe }},
+					'qualities': {{ fireEvent('quality.all', single = True)|tojson|safe }}
+				});
+
+				Status.setup({{ fireEvent('status.all', single = True)|tojson|safe }});
+
+				File.Type.setup({{ fireEvent('file.types', single = True)|tojson|safe }});
+
+				App.setup({
+					'base_url': {{ url_for('web.index')|tojson|safe }},
+					'args': {{ env.get('args')|tojson|safe }},
+					'options': {{ ('%s' % env.get('options'))|tojson|safe }},
+					'app_dir': {{ env.get('app_dir')|tojson|safe }},
+					'data_dir': {{ env.get('data_dir')|tojson|safe }},
+					'pid': {{ env.getPid()|tojson|safe }},
+					'userscript_version': {{ fireEvent('userscript.get_version', single = True)|tojson|safe }}
+				});
+			})
+
+			{% if env.setting('show_wizard') %}
+				if(!window.location.href.contains('wizard'))
+					window.location = '{{ url_for('web.index') }}wizard/'
+			{% endif %}
+
+		</script>
+		<title>CouchPotato</title>
+	</head>
+	<body></body>
+</html>
