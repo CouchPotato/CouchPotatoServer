@@ -189,9 +189,22 @@ class BinNewzProvider(NZBProvider):
                         
                 filenameLower = filename.lower()                                
                 searchItems = []
+                if qualityStr=="":
+                    if source in ("Blu Ray-Rip", "HD DVD-Rip"):
+                        qualityStr="brrip"
+                    elif source =="DVDRip":
+                        qualityStr="dvdrip"
+                    elif source == "TS":
+                        qualityStr ="ts"
+                    elif source == "DVDSCR":
+                        qualityStr ="scr"
+                    elif source == "CAM":
+                        qualityStr ="cam"
+                    elif moviequality == "dvdr":
+                        qualityStr ="dvdr"
                 if year =='':
                     year = '1900'
-                if len(searchItems) == 0 and qualityStr == moviequality and movieyear>=int(year)-2 and movieyear<=int(year)+2:
+                if len(searchItems) == 0 and qualityStr == str(moviequality) and movieyear>=int(year)-2 and movieyear<=int(year)+2:
                     searchItems.append( filename )
                 for searchItem in searchItems:
                     resultno=1
