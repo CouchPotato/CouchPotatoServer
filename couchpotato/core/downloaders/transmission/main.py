@@ -6,6 +6,7 @@ import httplib
 import json
 import os.path
 import re
+import traceback
 import urllib2
 
 log = CPLog(__name__)
@@ -60,13 +61,16 @@ class Transmission(Downloader):
             else:
                 remote_torrent = trpc.add_torrent_file(b64encode(filedata), arguments = params)
 
+            if not remote_torrent:
+                return False
+
             # Change settings of added torrents
-            if torrent_params:
+            elif torrent_params:
                 trpc.set_torrent(remote_torrent['torrent-added']['hashString'], torrent_params)
 
             return self.downloadReturnId(remote_torrent['torrent-added']['hashString'])
-        except Exception, err:
-            log.error('Failed to change settings for transfer: %s', err)
+        except:
+            log.error('Failed to change settings for transfer: %s', traceback.format_exc())
             return False
 
 
