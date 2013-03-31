@@ -189,6 +189,9 @@ class Settings(object):
         self.set(section, option, (new_value if new_value else value).encode('unicode_escape'))
         self.save()
 
+        # After save (for re-interval etc)
+        fireEvent('setting.save.%s.%s.after' % (section, option), single = True)
+
         return jsonified({
             'success': True,
         })

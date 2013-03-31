@@ -35,12 +35,24 @@ class Renamer(Plugin):
 
         addEvent('app.load', self.scan)
         addEvent('app.load', self.checkSnatched)
+        addEvent('app.load', self.setCrons)
 
-        if self.conf('run_every') > 0:
-            fireEvent('schedule.interval', 'renamer.check_snatched', self.checkSnatched, minutes = self.conf('run_every'))
+        # Enable / disable interval
+        addEvent('setting.save.renamer.enabled.after', self.setCrons)
+        addEvent('setting.save.renamer.run_every.after', self.setCrons)
+        addEvent('setting.save.renamer.force_every.after', self.setCrons)
 
-        if self.conf('force_every') > 0:
-            fireEvent('schedule.interval', 'renamer.check_snatched_forced', self.scan, hours = self.conf('force_every'))
+    def setCrons(self):
+
+        fireEvent('schedule.remove', 'renamer.check_snatched')
+        if self.isEnabled() and self.conf('run_every') > 0:
+            fireEvent('schedule.interval', 'renamer.check_snatched', self.checkSnatched, minutes = self.conf('run_every'), single = True)
+
+        fireEvent('schedule.remove', 'renamer.check_snatched_forced')
+        if self.isEnabled() and self.conf('force_every') > 0:
+            fireEvent('schedule.interval', 'renamer.check_snatched_forced', self.scan, hours = self.conf('force_every'), single = True)
+
+        return True
 
     def scanView(self):
 
