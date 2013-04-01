@@ -7,7 +7,8 @@ from couchpotato.core.helpers.variable import getExt, mergeDicts, getTitle, \
     getImdb
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.core.settings.model import Library, File, Profile, Release, ReleaseInfo
+from couchpotato.core.settings.model import Library, File, Profile, Release, \
+    ReleaseInfo
 from couchpotato.environment import Env
 import errno
 import os
@@ -27,21 +28,15 @@ class Renamer(Plugin):
     def __init__(self):
 
         addApiView('renamer.scan', self.scanView, docs = {
-            'desc': 'For the renamer to check for new files to rename',
-        })
-
-        addEvent('renamer.scan', self.scan)
-        
-        addApiView('renamer.scanfolder', self.scanfolderView, docs = {
-            'desc': 'For the renamer to check for new files to rename in a specified folder',
+            'desc': 'For the renamer to check for new files to rename in a folder',
             'params': {
-                'movie_folder': {'desc': 'The folder of the movie to scan'},
+                'movie_folder': {'desc': 'Optional: The folder of the movie to scan. Keep empty for default renamer folder.'},
                 'downloader' : {'desc': 'Optional: The downloader this movie has been downloaded with'},
                 'download_id': {'desc': 'Optional: The downloader\'s nzb/torrent ID'},
             },
         })
 
-        addEvent('renamer.scanfolder', self.scanfolder)
+        addEvent('renamer.scan', self.scan)
         addEvent('renamer.check_snatched', self.checkSnatched)
 
         addEvent('app.load', self.scan)
@@ -67,33 +62,22 @@ class Renamer(Plugin):
 
     def scanView(self):
 
-        fireEventAsync('renamer.scan')
-
-        return jsonified({
-            'success': True
-        })
-
-    def scan(self):
-        self.scanfolder()
-
-    def scanfolderView(self):
-    
         params = getParams()
         movie_folder = params.get('movie_folder', None)
         downloader = params.get('downloader', None)
         download_id = params.get('download_id', None)
 
-        fireEventAsync('renamer.scanfolder', 
-            movie_folder = movie_folder, 
-            downloader = downloader, 
+        fireEventAsync('renamer.scan',
+            movie_folder = movie_folder,
+            downloader = downloader,
             download_id = download_id
         )
 
         return jsonified({
             'success': True
         })
-        
-    def scanfolder(self, movie_folder = None, downloader = None, download_id = None):
+
+    def scan(self, movie_folder = None, downloader = None, download_id = None):
 
         if self.isDisabled():
             return
@@ -116,7 +100,7 @@ class Renamer(Plugin):
             return
 
         # make sure the movie folder name is included in the search
-        folder = None 
+        folder = None
         movie_files = []
         if movie_folder:
             log.info('Scanning movie folder %s...', movie_folder)
@@ -133,24 +117,19 @@ class Renamer(Plugin):
         db = get_session()
 
         # Get the release with the downloader ID that was downloded by the downloader
-        download_quality = None
-        download_imdb_id = None
-        if downloader and download_id:
-            # NOTE TO RUUD: Don't really know how to do this better... but there must be a way...?
-            rlsnfo_dwnlds = db.query(ReleaseInfo).filter_by(identifier = 'download_downloader', value = downloader)
-            rlsnfo_ids = db.query(ReleaseInfo).filter_by(identifier = 'download_id', value = download_id)
-            for rlsnfo_dwnld in rlsnfo_dwnlds:
-                for rlsnfo_id in rlsnfo_ids:
-                    if rlsnfo_id.release == rlsnfo_dwnld.release:
-                        rls = rlsnfo_id.release
+        download_info = None
+        if download_id:
+            rls_info = db.query(ReleaseInfo).filter_by(identifier = 'download_id', value = download_id).first()
 
-            if rls:
-                download_imdb_id = rls.movie.library.identifier
-                download_quality = rls.quality.identifier
+            if rls_info:
+                download_info = {
+                    'imdb_id': rls_info.release.movie.library.identifier,
+                    'quality': rls_info.release.quality.identifier,
+                }
             else:
                 log.error('Download ID %s from downloader %s not found in releases', (download_id, downloader))
-                
-        groups = fireEvent('scanner.scan', folder = folder if folder else self.conf('from'), files = movie_files, download_quality = download_quality, download_imdb_id = download_imdb_id, single = True)
+
+        groups = fireEvent('scanner.scan', folder = folder if folder else self.conf('from'), files = movie_files, download_info = download_info, single = True)
 
         destination = self.conf('to')
         folder_name = self.conf('folder_name')
@@ -677,7 +656,7 @@ class Renamer(Plugin):
                                 elif item['status'] == 'completed':
                                     log.info('Download of %s completed!', item['name'])
                                     if item['id'] and item['downloader'] and item['folder']:
-                                        fireEventAsync('renamer.scanfolder', movie_folder = item['folder'], downloader = item['downloader'], download_id = item['id'])
+                                        fireEventAsync('renamer.scan', movie_folder = item['folder'], downloader = item['downloader'], download_id = item['id'])
                                     else:
                                         scan_required = True
 

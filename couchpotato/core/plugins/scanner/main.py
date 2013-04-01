@@ -101,7 +101,7 @@ class Scanner(Plugin):
         addEvent('scanner.name_year', self.getReleaseNameYear)
         addEvent('scanner.partnumber', self.getPartNumber)
 
-    def scan(self, folder = None, files = None, download_imdb_id = None, download_quality = None, simple = False, newer_than = 0, on_found = None):
+    def scan(self, folder = None, files = None, download_info = None, simple = False, newer_than = 0, on_found = None):
 
         folder = ss(os.path.normpath(folder))
 
@@ -312,12 +312,11 @@ class Scanner(Plugin):
             valid_files[identifier] = group
 
         del movie_files
-        
+
         # Make sure only one movie was found if a download ID is provided
-        if download_imdb_id and download_quality and not len(valid_files) == 1:
-            log.info('Download ID provided (%s), but more than one group found (%s). Ignoring Download ID...', (download_imdb_id, len(valid_files)))
-            download_imdb_id = None
-            download_quality = None
+        if download_info and not len(valid_files) == 1:
+            log.info('Download ID provided (%s), but more than one group found (%s). Ignoring Download ID...', (download_info.get('imdb_id'), len(valid_files)))
+            download_info = None
 
         # Determine file types
         processed_movies = {}
@@ -351,7 +350,7 @@ class Scanner(Plugin):
                 continue
 
             log.debug('Getting metadata for %s', identifier)
-            group['meta_data'] = self.getMetaData(group, folder = folder, download_quality = download_quality)
+            group['meta_data'] = self.getMetaData(group, folder = folder, download_info = download_info)
 
             # Subtitle meta
             group['subtitle_language'] = self.getSubtitleLanguage(group) if not simple else {}
@@ -381,7 +380,7 @@ class Scanner(Plugin):
             del group['unsorted_files']
 
             # Determine movie
-            group['library'] = self.determineMovie(group, download_imdb_id = download_imdb_id)
+            group['library'] = self.determineMovie(group, download_info = download_info)
             if not group['library']:
                 log.error('Unable to determine movie: %s', group['identifiers'])
             else:
@@ -406,7 +405,7 @@ class Scanner(Plugin):
 
         return processed_movies
 
-    def getMetaData(self, group, folder = '', download_quality = None):
+    def getMetaData(self, group, folder = '', download_info = None):
 
         data = {}
         files = list(group['files']['movie'])
@@ -431,11 +430,11 @@ class Scanner(Plugin):
         # Use the quality guess first, if that failes use the quality we wanted to download
         data['quality'] = fireEvent('quality.guess', files = files, extra = data, single = True)
         if not data['quality']:
-            if download_quality:
-                data['quality'] = fireEvent('quality.single', download_quality, single = True)
+            if download_info and download_info.get('quality'):
+                data['quality'] = fireEvent('quality.single', download_info.get('quality'), single = True)
             else:
                 data['quality'] = fireEvent('quality.single', 'dvdr' if group['is_dvd'] else 'dvdrip', single = True)
-        
+
         data['quality_type'] = 'HD' if data.get('resolution_width', 0) >= 1280 or data['quality'].get('hd') else 'SD'
 
         filename = re.sub('(.cp\(tt[0-9{7}]+\))', '', files[0])
@@ -510,11 +509,12 @@ class Scanner(Plugin):
 
         return detected_languages
 
-    def determineMovie(self, group, download_imdb_id = None):
+    def determineMovie(self, group, download_info = None):
+
         # Get imdb id from downloader
-        imdb_id = download_imdb_id
+        imdb_id = download_info and download_info.get('imdb_id')
         if imdb_id:
-            log.debug('Found movie via imdb id from it\'s download id: %s', download_imdb_id)
+            log.debug('Found movie via imdb id from it\'s download id: %s', download_info.get('imdb_id'))
 
         files = group['files']
 
