@@ -4,7 +4,7 @@ from couchpotato.core.helpers.encoding import toUnicode, simplifyString, ss
 from couchpotato.core.helpers.variable import getExt, getImdb, tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.core.settings.model import File, Movie, Release, ReleaseInfo
+from couchpotato.core.settings.model import File, Movie
 from enzyme.exceptions import NoParserError, ParseError
 from guessit import guess_movie_info
 from subliminal.videos import Video
@@ -101,7 +101,7 @@ class Scanner(Plugin):
         addEvent('scanner.name_year', self.getReleaseNameYear)
         addEvent('scanner.partnumber', self.getPartNumber)
 
-    def scan(self, folder = None, files = None, downloader = None, download_id = None, simple = False, newer_than = 0, on_found = None):
+    def scan(self, folder = None, files = None, download_imdb_id = None, download_quality = None, simple = False, newer_than = 0, on_found = None):
 
         folder = ss(os.path.normpath(folder))
 
@@ -127,24 +127,6 @@ class Scanner(Plugin):
             files = [ss(x) for x in files]
 
         db = get_session()
-
-        # Get the release with the downloader ID that was downloded by the downloader
-        download_quality = None
-        download_imdb_id = None
-        if downloader and download_id:
-            # NOTE TO RUUD: Don't really know how to do this better... but there must be a way...?
-            rlsnfo_dwnlds = db.query(ReleaseInfo).filter_by(identifier = 'download_downloader', value = downloader)
-            rlsnfo_ids = db.query(ReleaseInfo).filter_by(identifier = 'download_id', value = download_id)
-            for rlsnfo_dwnld in rlsnfo_dwnlds:
-                for rlsnfo_id in rlsnfo_ids:
-                    if rlsnfo_id.release == rlsnfo_dwnld.release:
-                        rls = rlsnfo_id.release
-
-            if rls:
-                download_imdb_id = rls.movie.library.identifier
-                download_quality = rls.quality.identifier
-            else:
-                log.error('Download ID %s from downloader %s not found in releases', (download_id, downloader))
 
         for file_path in files:
 
@@ -330,6 +312,12 @@ class Scanner(Plugin):
             valid_files[identifier] = group
 
         del movie_files
+        
+        # Make sure only one movie was found if a download ID is provided
+        if download_imdb_id and download_quality and not len(valid_files) == 1:
+            log.info('Download ID provided (%s), but more than one group found (%s). Ignoring Download ID...', (download_imdb_id, len(valid_files)))
+            download_imdb_id = None
+            download_quality = None
 
         # Determine file types
         processed_movies = {}
