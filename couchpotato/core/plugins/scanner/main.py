@@ -525,6 +525,8 @@ class Scanner(Plugin):
     def determineMovie(self, group, download_imdb_id = None):
         # Get imdb id from downloader
         imdb_id = download_imdb_id
+        if imdb_id:
+            log.debug('Found movie via imdb id from it\'s download id: %s', download_imdb_id)
 
         files = group['files']
 
