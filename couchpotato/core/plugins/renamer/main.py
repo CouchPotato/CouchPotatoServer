@@ -118,13 +118,23 @@ class Renamer(Plugin):
 
         # Get the release with the downloader ID that was downloded by the downloader
         download_info = None
-        if download_id:
-            rls_info = db.query(ReleaseInfo).filter_by(identifier = 'download_id', value = download_id).first()
+        if download_id and downloader:
+            rls = None
 
-            if rls_info:
+            rlsnfo_dwnlds = db.query(ReleaseInfo).filter_by(identifier = 'download_downloader', value = downloader).all()
+            rlsnfo_ids = db.query(ReleaseInfo).filter_by(identifier = 'download_id', value = download_id).all()
+
+            for rlsnfo_dwnld in rlsnfo_dwnlds:
+                for rlsnfo_id in rlsnfo_ids:
+                    if rlsnfo_id.release == rlsnfo_dwnld.release:
+                        rls = rlsnfo_id.release
+                        break
+                if rls: break
+
+            if rls:
                 download_info = {
-                    'imdb_id': rls_info.release.movie.library.identifier,
-                    'quality': rls_info.release.quality.identifier,
+                    'imdb_id': rls.movie.library.identifier,
+                    'quality': rls.quality.identifier,
                 }
             else:
                 log.error('Download ID %s from downloader %s not found in releases', (download_id, downloader))
@@ -582,6 +592,7 @@ class Renamer(Plugin):
             loge('Couldn\'t remove empty directory %s: %s', (folder, traceback.format_exc()))
 
     def checkSnatched(self):
+
         if self.checking_snatched:
             log.debug('Already checking snatched')
 
