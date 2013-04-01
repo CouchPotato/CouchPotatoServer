@@ -371,7 +371,7 @@ class Searcher(Plugin):
 
         return search_types
 
-    def correctMovie(self, nzb = {}, movie = {}, quality = {}, **kwargs):
+    def correctMovie(self, nzb = None, movie = None, quality = None, **kwargs):
 
         imdb_results = kwargs.get('imdb_results', False)
         retention = Env.setting('retention', section = 'nzb')
