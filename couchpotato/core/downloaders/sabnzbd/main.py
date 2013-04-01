@@ -3,6 +3,7 @@ from couchpotato.core.helpers.encoding import tryUrlencode, ss
 from couchpotato.core.helpers.variable import cleanHost, mergeDicts
 from couchpotato.core.logger import CPLog
 from couchpotato.environment import Env
+from datetime import timedelta
 from urllib2 import URLError
 import json
 import traceback
@@ -46,19 +47,15 @@ class Sabnzbd(Downloader):
             log.error('Failed sending release, use API key, NOT the NZB key: %s', traceback.format_exc(0))
             return False
 
-        if sab_data.get('error'):
-            log.error('Error getting data from SABNZBd: %s', sab_data.get('error'))
-            return False
-
         log.debug('Result from SAB: %s', sab_data)
-        if sab_data.get('status'):
+        if sab_data.get('status') and not sab_data.get('error'):
             log.info('NZB sent to SAB successfully.')
             if filedata:
                 return self.downloadReturnId(sab_data.get('nzo_ids')[0])
             else:
                 return True
         else:
-            log.error(sab_data)
+            log.error('Error getting data from SABNZBd: %s', sab_data)
             return False
 
     def getAllDownloadStatus(self):
@@ -109,7 +106,8 @@ class Sabnzbd(Downloader):
                 'name': item['name'],
                 'status': status,
                 'original_status': item['status'],
-                'timeleft': 0,
+                'timeleft': str(timedelta(seconds = 0)),
+                'folder': item['storage'],
             })
 
         return statuses
