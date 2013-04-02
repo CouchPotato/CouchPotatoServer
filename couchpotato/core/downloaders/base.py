@@ -150,6 +150,7 @@ class StatusList(list):
             'id': 0,
             'status': 'busy',
             'downloader': self.provider.getName(),
+            'folder': '',
         }
 
         return mergeDicts(defaults, result)
