@@ -14,8 +14,8 @@ class SuperTorrents(TorrentProvider):
         'test' : 'http://www.supertorrents.com/',
         'base_url' : 'http://www.supertorrents.com',
         'login' : 'http://www.supertorrents.com/login.php',
-        'search' : 'http://www.supertorrents.com/torrents/?c%d=1&incldead=0&search=%s'
-        'download' : 'http://www.supertorrents.com/download.php/%s'
+        'search' : 'http://www.supertorrents.com/torrents/?c%d=1&incldead=0&search=%s',
+        'download' : 'http://www.supertorrents.com/download.php/%s',
     }
 
     cat_ids = [
