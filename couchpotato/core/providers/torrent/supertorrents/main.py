@@ -10,7 +10,7 @@ log = CPLog(__name__)
 
 class SuperTorrents(TorrentProvider):
   
-  urls = {
+    urls = {
         'test' : 'http://www.supertorrents.com/',
         'base_url' : 'http://www.supertorrents.com',
         'login' : 'http://www.supertorrents.com/login.php',
@@ -20,18 +20,18 @@ class SuperTorrents(TorrentProvider):
 
     cat_ids = [
         ([9], ['DVDR']),
-        ([13], ['BluRay','720p','1080p','DVDRIP']) #'BluRay 720p' & 'BluRay 1080p' 
-        ([8], ['DVDrip,'cam',','ts','r5']),
+        ([13], ['BluRay','720p','1080p','DVDRIP']), #'BluRay 720p' & 'BluRay 1080p' 
+        ([8], ['DVDrip','cam','ts','r5']),
     ]
 
     http_time_between_calls = 1 #seconds
     cat_backup_id = None
 
-def _search(self, movie, quality, results):
-     url = self.urls['search'] % (tryUrlencode('%s %s' % (title.replace(':', ''), movie['library']['year'])), self.getCatId(quality['identifier'])[0])
-        data = self.getHTMLData(url, opener = self.login_opener)
+    def _search(self, movie, quality, results):
+      url = self.urls['search'] % (tryUrlencode('%s %s' % (title.replace(':', ''), movie['library']['year'])), self.getCatId(quality['identifier'])[0])
+      data = self.getHTMLData(url, opener = self.login_opener)
 
-        if data:
+      if data:
             html = BeautifulSoup(data)
 
             try:
@@ -55,7 +55,7 @@ def _search(self, movie, quality, results):
                         'download': self.loginDownload,
                         'size': self.parseSize(result.find_all('td')[4].string),
                         'seeders': tryInt(result.find('td')[7].find_all('span').string),
-                        'leechers': tryInt(result.find('td'[8].find_all('span').string),
+                        'leechers': tryInt(result.find('td'[8].find_all('span').string)),
                     })
 
             except:
@@ -63,7 +63,7 @@ def _search(self, movie, quality, results):
 
 
 
- def getLoginParams(self):
+    def getLoginParams(self):
         return tryUrlencode({
             'username': self.conf('username'),
             'password': self.conf('password'),
