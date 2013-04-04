@@ -128,27 +128,28 @@ class Transmission(Downloader):
                 try:
                     trpc.stop_torrent(item['hashString'], {})
 
-                    if not os.path.isdir(item['downloadDir']):
-                        raise Exception('Missing folder: %s' % item['downloadDir']) 
-                        
+                    if not os.path.isdir(os.path.join(item['downloadDir'], item['name'])):
+                        raise Exception('Missing folder: %s' % os.path.join(item['downloadDir'], item['name'])) 
+                    elif item['downloadDir'].rstrip(os.path.sep) in Env.setting('from', 'renamer').rstrip(os.path.sep):
+                        raise Exception('Transmission download folder should not be the same or in the renamer "from" folder!')
                     else:
-                        log.info('Moving folder from "%s" to "%s"', (item['downloadDir'], Env.setting('from', 'renamer')))
-                        shutil.move(item['downloadDir'], Env.setting('from', 'renamer'))
-                    
+                        log.info('Moving folder from "%s" to "%s"', (os.path.join(item['downloadDir'], item['name']), Env.setting('from', 'renamer')))
+                        shutil.move(os.path.join(item['downloadDir'], item['name']), Env.setting('from', 'renamer'))
+                   
                     statuses.append({
                         'id': item['hashString'],
-                        'name': item['downloadDir'],
+                        'name': item['name'],
                         'status': 'completed',
                         'original_status': item['status'],
                         'timeleft': str(timedelta(seconds = 0)),
-                        'folder': os.path.join(Env.setting('from', 'renamer'), os.path.basename(item['downloadDir'].rstrip(os.path.sep))),
+                        'folder': os.path.join(Env.setting('from', 'renamer'), item['name']),
                     })
                     trpc.remove_torrent(item['hashString'], True, {})
                 except Exception, err:
                     log.error('Failed to stop and remove torrent "%s" with error: %s', (item['name'], err))
                     statuses.append({
                         'id': item['hashString'],
-                        'name': item['downloadDir'],
+                        'name': item['name'],
                         'status': 'failed',
                         'original_status': item['status'],
                         'timeleft': str(timedelta(seconds = 0)),
@@ -156,7 +157,7 @@ class Transmission(Downloader):
             else:
                 statuses.append({
                     'id': item['hashString'],
-                    'name': item['downloadDir'],
+                    'name': item['name'],
                     'status': 'busy',
                     'original_status': item['status'],
                     'timeleft': str(timedelta(seconds = item['eta'])), # Is ETA in seconds??
