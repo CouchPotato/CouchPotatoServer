@@ -32,7 +32,6 @@ class Updater(Plugin):
         else:
             self.updater = SourceUpdater()
 
-        fireEvent('schedule.interval', 'updater.check', self.autoUpdate, hours = 6)
         addEvent('app.load', self.autoUpdate)
         addEvent('updater.info', self.info)
 
@@ -51,6 +50,15 @@ class Updater(Plugin):
             'desc': 'Check for available update',
             'return': {'type': 'see updater.info'}
         })
+
+        addEvent('setting.save.updater.enabled.after', self.setCrons)
+
+    def setCrons(self):
+
+        fireEvent('schedule.remove', 'updater.check', single = True)
+        if self.isEnabled():
+            fireEvent('schedule.interval', 'updater.check', self.autoUpdate, hours = 6)
+            self.autoUpdate() # Check after enabling
 
     def autoUpdate(self):
         if self.check() and self.conf('automatic') and not self.updater.update_failed:

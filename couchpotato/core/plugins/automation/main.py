@@ -10,10 +10,15 @@ class Automation(Plugin):
 
     def __init__(self):
 
-        fireEvent('schedule.interval', 'automation.add_movies', self.addMovies, hours = self.conf('hour', default = 12))
+        addEvent('app.load', self.setCrons)
 
         if not Env.get('dev'):
             addEvent('app.load', self.addMovies)
+
+        addEvent('setting.save.automation.hour.after', self.setCrons)
+
+    def setCrons(self):
+        fireEvent('schedule.interval', 'automation.add_movies', self.addMovies, hours = self.conf('hour', default = 12))
 
     def addMovies(self):
 
