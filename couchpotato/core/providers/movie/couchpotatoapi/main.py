@@ -5,6 +5,7 @@ from couchpotato.core.helpers.request import jsonified, getParams
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.movie.base import MovieProvider
 from couchpotato.core.settings.model import Movie
+from couchpotato.environment import Env
 import time
 
 log = CPLog(__name__)
@@ -96,4 +97,5 @@ class CouchPotatoApi(MovieProvider):
             'X-CP-Version': fireEvent('app.version', single = True),
             'X-CP-API': self.api_version,
             'X-CP-Time': time.time(),
+            'X-CP-Identifier': '+%s' % Env.setting('api_key', 'core')[:10], # Use first 10 as identifier, so we don't need to use IP address in api stats
         }

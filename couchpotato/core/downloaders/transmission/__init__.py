@@ -41,14 +41,21 @@ config = [{
                 {
                     'name': 'directory',
                     'type': 'directory',
-                    'description': 'Where should Transmission saved the downloaded files?',
+                    'description': 'Download to this directory. Keep empty for default Transmission download directory.',
                 },
                 {
                     'name': 'ratio',
                     'default': 10,
-                    'type': 'int',
+                    'type': 'float',
                     'advanced': True,
                     'description': 'Stop transfer when reaching ratio',
+                },
+                {
+                    'name': 'ratiomode',
+                    'default': 0,
+                    'type': 'int',
+                    'advanced': True,
+                    'description': '0 = Use session limit, 1 = Use transfer limit, 2 = Disable limit.',
                 },
                 {
                     'name': 'manual',

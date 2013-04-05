@@ -101,7 +101,7 @@ class Scanner(Plugin):
         addEvent('scanner.name_year', self.getReleaseNameYear)
         addEvent('scanner.partnumber', self.getPartNumber)
 
-    def scan(self, folder = None, files = None, simple = False, newer_than = 0, on_found = None):
+    def scan(self, folder = None, files = None, download_info = None, simple = False, newer_than = 0, return_ignored = True, on_found = None):
 
         folder = ss(os.path.normpath(folder))
 
@@ -119,8 +119,7 @@ class Scanner(Plugin):
             try:
                 files = []
                 for root, dirs, walk_files in os.walk(folder):
-                    for filename in walk_files:
-                        files.append(os.path.join(root, filename))
+                    files.extend(os.path.join(root, filename) for filename in walk_files)
             except:
                 log.error('Failed getting files from %s: %s', (folder, traceback.format_exc()))
         else:
@@ -178,16 +177,24 @@ class Scanner(Plugin):
 
 
         # Group files minus extension
+        ignored_identifiers = []
         for identifier, group in movie_files.iteritems():
             if identifier not in group['identifiers'] and len(identifier) > 0: group['identifiers'].append(identifier)
 
             log.debug('Grouping files: %s', identifier)
 
+            has_ignored = 0
             for file_path in group['unsorted_files']:
-                wo_ext = file_path[:-(len(getExt(file_path)) + 1)]
+                ext = getExt(file_path)
+                wo_ext = file_path[:-(len(ext) + 1)]
                 found_files = set([i for i in leftovers if wo_ext in i])
                 group['unsorted_files'].extend(found_files)
                 leftovers = leftovers - found_files
+
+                has_ignored += 1 if ext == 'ignore' else 0
+
+            if has_ignored > 0:
+                ignored_identifiers.append(identifier)
 
             # Break if CP wants to shut down
             if self.shuttingDown():
@@ -314,6 +321,11 @@ class Scanner(Plugin):
 
         del movie_files
 
+        # Make sure only one movie was found if a download ID is provided
+        if download_info and not len(valid_files) == 1:
+            log.info('Download ID provided (%s), but more than one group found (%s). Ignoring Download ID...', (download_info.get('imdb_id'), len(valid_files)))
+            download_info = None
+
         # Determine file types
         processed_movies = {}
         total_found = len(valid_files)
@@ -323,15 +335,17 @@ class Scanner(Plugin):
             except:
                 break
 
+            if return_ignored is False and identifier in ignored_identifiers:
+                log.debug('Ignore file found, ignoring release: %s' % identifier)
+                continue
+
             # Group extra (and easy) files first
-            # images = self.getImages(group['unsorted_files'])
             group['files'] = {
                 'movie_extra': self.getMovieExtras(group['unsorted_files']),
                 'subtitle': self.getSubtitles(group['unsorted_files']),
                 'subtitle_extra': self.getSubtitlesExtras(group['unsorted_files']),
                 'nfo': self.getNfo(group['unsorted_files']),
                 'trailer': self.getTrailers(group['unsorted_files']),
-                #'backdrop': images['backdrop'],
                 'leftover': set(group['unsorted_files']),
             }
 
@@ -346,7 +360,7 @@ class Scanner(Plugin):
                 continue
 
             log.debug('Getting metadata for %s', identifier)
-            group['meta_data'] = self.getMetaData(group, folder = folder)
+            group['meta_data'] = self.getMetaData(group, folder = folder, download_info = download_info)
 
             # Subtitle meta
             group['subtitle_language'] = self.getSubtitleLanguage(group) if not simple else {}
@@ -376,7 +390,7 @@ class Scanner(Plugin):
             del group['unsorted_files']
 
             # Determine movie
-            group['library'] = self.determineMovie(group)
+            group['library'] = self.determineMovie(group, download_info = download_info)
             if not group['library']:
                 log.error('Unable to determine movie: %s', group['identifiers'])
             else:
@@ -401,7 +415,7 @@ class Scanner(Plugin):
 
         return processed_movies
 
-    def getMetaData(self, group, folder = ''):
+    def getMetaData(self, group, folder = '', download_info = None):
 
         data = {}
         files = list(group['files']['movie'])
@@ -423,9 +437,13 @@ class Scanner(Plugin):
 
             if data.get('audio'): break
 
+        # Use the quality guess first, if that failes use the quality we wanted to download
         data['quality'] = fireEvent('quality.guess', files = files, extra = data, single = True)
         if not data['quality']:
-            data['quality'] = fireEvent('quality.single', 'dvdr' if group['is_dvd'] else 'dvdrip', single = True)
+            if download_info and download_info.get('quality'):
+                data['quality'] = fireEvent('quality.single', download_info.get('quality'), single = True)
+            else:
+                data['quality'] = fireEvent('quality.single', 'dvdr' if group['is_dvd'] else 'dvdrip', single = True)
 
         data['quality_type'] = 'HD' if data.get('resolution_width', 0) >= 1280 or data['quality'].get('hd') else 'SD'
 
@@ -501,17 +519,22 @@ class Scanner(Plugin):
 
         return detected_languages
 
-    def determineMovie(self, group):
-        imdb_id = None
+    def determineMovie(self, group, download_info = None):
+
+        # Get imdb id from downloader
+        imdb_id = download_info and download_info.get('imdb_id')
+        if imdb_id:
+            log.debug('Found movie via imdb id from it\'s download id: %s', download_info.get('imdb_id'))
 
         files = group['files']
 
         # Check for CP(imdb_id) string in the file paths
-        for cur_file in files['movie']:
-            imdb_id = self.getCPImdb(cur_file)
-            if imdb_id:
-                log.debug('Found movie via CP tag: %s', cur_file)
-                break
+        if not imdb_id:
+            for cur_file in files['movie']:
+                imdb_id = self.getCPImdb(cur_file)
+                if imdb_id:
+                    log.debug('Found movie via CP tag: %s', cur_file)
+                    break
 
         # Check and see if nfo contains the imdb-id
         if not imdb_id:
