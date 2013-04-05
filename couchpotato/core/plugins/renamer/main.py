@@ -10,6 +10,7 @@ from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Library, File, Profile, Release, \
     ReleaseInfo
 from couchpotato.environment import Env
+import linktastic.linktastic as linktastic
 import errno
 import os
 import re
@@ -523,7 +524,14 @@ class Renamer(Plugin):
     def moveFile(self, old, dest):
         dest = ss(dest)
         try:
-            shutil.move(old, dest)
+            if self.conf('file_action') == 'hardlink':
+                linktastic.link(old, dest)
+            elif self.conf('file_action') == 'symlink':
+                linktastic.symlink(old, dest)
+            elif self.conf('file_action') == 'copy':
+                shutil.copy(old, dest)
+            else:
+                shutil.move(old, dest)
 
             try:
                 os.chmod(dest, Env.getPermission('file'))
