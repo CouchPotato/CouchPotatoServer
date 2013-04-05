@@ -8,8 +8,9 @@ import httplib
 import json
 import os.path
 import re
-import urllib2
 import shutil
+import traceback
+import urllib2
 
 log = CPLog(__name__)
 
@@ -118,7 +119,7 @@ class Transmission(Downloader):
         #   manage no peer in a range time => fail
 
         for item in queue['torrents']:
-            log.debug('name=%s / id=%s / downloadDir=%s / hashString=%s / percentDone=%s / status=%s / eta=%s / uploadRatio=%s / confRatio=%s / isFinished=%s', (item['name'], item['id'], item['downloadDir'], item['hashString'], item['percentDone'], item['status'], item['eta'], item['uploadRatio'], self.conf('ratio'), item['isFinished'] ))
+            log.debug('name=%s / id=%s / downloadDir=%s / hashString=%s / percentDone=%s / status=%s / eta=%s / uploadRatio=%s / confRatio=%s / isFinished=%s', (item['name'], item['id'], item['downloadDir'], item['hashString'], item['percentDone'], item['status'], item['eta'], item['uploadRatio'], self.conf('ratio'), item['isFinished']))
 
             if not os.path.isdir(Env.setting('from', 'renamer')):
                 log.debug('Renamer folder has to exist.')
@@ -129,13 +130,13 @@ class Transmission(Downloader):
                     trpc.stop_torrent(item['hashString'], {})
 
                     if not os.path.isdir(os.path.join(item['downloadDir'], item['name'])):
-                        raise Exception('Missing folder: %s' % os.path.join(item['downloadDir'], item['name'])) 
+                        raise Exception('Missing folder: %s' % os.path.join(item['downloadDir'], item['name']))
                     elif item['downloadDir'].rstrip(os.path.sep) in Env.setting('from', 'renamer').rstrip(os.path.sep):
                         raise Exception('Transmission download folder should not be the same or in the renamer "from" folder!')
                     else:
                         log.info('Moving folder from "%s" to "%s"', (os.path.join(item['downloadDir'], item['name']), Env.setting('from', 'renamer')))
                         shutil.move(os.path.join(item['downloadDir'], item['name']), Env.setting('from', 'renamer'))
-                   
+
                     statuses.append({
                         'id': item['hashString'],
                         'name': item['name'],
