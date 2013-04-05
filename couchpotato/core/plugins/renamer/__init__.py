@@ -113,11 +113,12 @@ config = [{
                     'description': 'Replace all the spaces with a character. Example: ".", "-" (without quotes). Leave empty to use spaces.',
                 },
                 {
-                    'name': 'links',
-                    'default': '0',
+                    'name': 'file_action',
+                    'label': 'File Action',
+                    'default': 'move',
                     'type': 'dropdown',
-                    'values': [('Disable', 0), ('Hard link', 'hard'), ('Sym link', 'sym')],
-                    'description': 'Use <a href="http://en.wikipedia.org/wiki/Hard_link">hard links</a> or <a href="http://en.wikipedia.org/wiki/Sym_link">sym links</a> instead of moving files, ideal for Torrent users.',
+                    'values': [('Move', 'move'), ('Copy', 'copy'), ('Hard link', 'hardlink'), ('Sym link', 'symlink')],
+                    'description': 'Define which kind of file operation you want to use. Before you start using <a href="http://en.wikipedia.org/wiki/Hard_link">hard links</a> or <a href="http://en.wikipedia.org/wiki/Sym_link">sym links</a>, read about thire possible drawbacks.',
                     'advanced': True,
                 },
                 {

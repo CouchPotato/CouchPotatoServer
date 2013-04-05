@@ -524,10 +524,12 @@ class Renamer(Plugin):
     def moveFile(self, old, dest):
         dest = ss(dest)
         try:
-            if self.conf('link') == 'hard':
+            if self.conf('file_action') == 'hardlink':
                 linktastic.link(old, dest)
-            elif self.conf('link') == 'sym':
+            elif self.conf('file_action') == 'symlink':
                 linktastic.symlink(old, dest)
+            elif self.conf('file_action') == 'copy':
+                shutil.copy(old, dest)
             else:
                 shutil.move(old, dest)
 
