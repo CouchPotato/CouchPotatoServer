@@ -524,7 +524,7 @@ class Renamer(Plugin):
     def moveFile(self, old, dest):
         dest = ss(dest)
         try:
-            if self.conf('hardlink') and not self.conf('hardlink'):
+            if self.conf('hardlink') and not self.conf('symlink'):
                 linktastic.link(old, dest)
             elif self.conf('symlink') and not self.conf('hardlink'):
                 linktastic.symlink(old, dest)
