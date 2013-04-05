@@ -122,30 +122,20 @@ class Transmission(Downloader):
             log.debug('name=%s / id=%s / downloadDir=%s / hashString=%s / percentDone=%s / status=%s / eta=%s / uploadRatio=%s / confRatio=%s / isFinished=%s', (item['name'], item['id'], item['downloadDir'], item['hashString'], item['percentDone'], item['status'], item['eta'], item['uploadRatio'], self.conf('ratio'), item['isFinished']))
 
             if not os.path.isdir(Env.setting('from', 'renamer')):
-                log.debug('Renamer folder has to exist.')
+                log.error('Renamer "from" folder doesn\'t to exist.')
                 return
 
             if (item['percentDone'] * 100) >= 100 and (item['status'] == 6 or item['status'] == 0) and item['uploadRatio'] > self.conf('ratio'):
                 try:
                     trpc.stop_torrent(item['hashString'], {})
-
-                    if not os.path.isdir(os.path.join(item['downloadDir'], item['name'])):
-                        raise Exception('Missing folder: %s' % os.path.join(item['downloadDir'], item['name']))
-                    elif item['downloadDir'].rstrip(os.path.sep) in Env.setting('from', 'renamer').rstrip(os.path.sep):
-                        raise Exception('Transmission download folder should not be the same or in the renamer "from" folder!')
-                    else:
-                        log.info('Moving folder from "%s" to "%s"', (os.path.join(item['downloadDir'], item['name']), Env.setting('from', 'renamer')))
-                        shutil.move(os.path.join(item['downloadDir'], item['name']), Env.setting('from', 'renamer'))
-
                     statuses.append({
                         'id': item['hashString'],
                         'name': item['name'],
                         'status': 'completed',
                         'original_status': item['status'],
                         'timeleft': str(timedelta(seconds = 0)),
-                        'folder': os.path.join(Env.setting('from', 'renamer'), item['name']),
+                        'folder': os.path.join(item['downloadDir'], item['name']),
                     })
-                    trpc.remove_torrent(item['hashString'], True, {})
                 except Exception, err:
                     log.error('Failed to stop and remove torrent "%s" with error: %s', (item['name'], err))
                     statuses.append({
