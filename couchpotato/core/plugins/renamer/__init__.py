@@ -118,7 +118,7 @@ config = [{
                     'default': 'move',
                     'type': 'dropdown',
                     'values': [('Move', 'move'), ('Copy', 'copy'), ('Hard link', 'hardlink'), ('Sym link', 'symlink')],
-                    'description': 'Define which kind of file operation you want to use. Before you start using <a href="http://en.wikipedia.org/wiki/Hard_link">hard links</a> or <a href="http://en.wikipedia.org/wiki/Sym_link">sym links</a>, read about thire possible drawbacks.',
+                    'description': 'Define which kind of file operation you want to use. Before you start using <a href="http://en.wikipedia.org/wiki/Hard_link">hard links</a> or <a href="http://en.wikipedia.org/wiki/Sym_link">sym links</a>, PLEASE read about their possible drawbacks.',
                     'advanced': True,
                 },
                 {

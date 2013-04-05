@@ -101,7 +101,7 @@ class Scanner(Plugin):
         addEvent('scanner.name_year', self.getReleaseNameYear)
         addEvent('scanner.partnumber', self.getPartNumber)
 
-    def scan(self, folder = None, files = None, download_info = None, simple = False, newer_than = 0, on_found = None):
+    def scan(self, folder = None, files = None, download_info = None, simple = False, newer_than = 0, return_ignored = True, on_found = None):
 
         folder = ss(os.path.normpath(folder))
 
@@ -177,16 +177,24 @@ class Scanner(Plugin):
 
 
         # Group files minus extension
+        ignored_identifiers = []
         for identifier, group in movie_files.iteritems():
             if identifier not in group['identifiers'] and len(identifier) > 0: group['identifiers'].append(identifier)
 
             log.debug('Grouping files: %s', identifier)
 
+            has_ignored = 0
             for file_path in group['unsorted_files']:
-                wo_ext = file_path[:-(len(getExt(file_path)) + 1)]
+                ext = getExt(file_path)
+                wo_ext = file_path[:-(len(ext) + 1)]
                 found_files = set([i for i in leftovers if wo_ext in i])
                 group['unsorted_files'].extend(found_files)
                 leftovers = leftovers - found_files
+
+                has_ignored += 1 if ext == 'ignore' else 0
+
+            if has_ignored > 0:
+                ignored_identifiers.append(identifier)
 
             # Break if CP wants to shut down
             if self.shuttingDown():
@@ -327,15 +335,17 @@ class Scanner(Plugin):
             except:
                 break
 
+            if return_ignored is False and identifier in ignored_identifiers:
+                log.debug('Ignore file found, ignoring release: %s' % identifier)
+                continue
+
             # Group extra (and easy) files first
-            # images = self.getImages(group['unsorted_files'])
             group['files'] = {
                 'movie_extra': self.getMovieExtras(group['unsorted_files']),
                 'subtitle': self.getSubtitles(group['unsorted_files']),
                 'subtitle_extra': self.getSubtitlesExtras(group['unsorted_files']),
                 'nfo': self.getNfo(group['unsorted_files']),
                 'trailer': self.getTrailers(group['unsorted_files']),
-                #'backdrop': images['backdrop'],
                 'leftover': set(group['unsorted_files']),
             }
 

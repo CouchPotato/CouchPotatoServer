@@ -10,8 +10,8 @@ from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Library, File, Profile, Release, \
     ReleaseInfo
 from couchpotato.environment import Env
-import linktastic.linktastic as linktastic
 import errno
+import linktastic.linktastic as linktastic
 import os
 import re
 import shutil
@@ -140,7 +140,8 @@ class Renamer(Plugin):
             else:
                 log.error('Download ID %s from downloader %s not found in releases', (download_id, downloader))
 
-        groups = fireEvent('scanner.scan', folder = folder if folder else self.conf('from'), files = movie_files, download_info = download_info, single = True)
+        groups = fireEvent('scanner.scan', folder = folder if folder else self.conf('from'),
+                           files = movie_files, download_info = download_info, return_ignored = False, single = True)
 
         destination = self.conf('to')
         folder_name = self.conf('folder_name')
@@ -450,6 +451,9 @@ class Renamer(Plugin):
                         log.error('Failed moving the file "%s" : %s', (os.path.basename(src), traceback.format_exc()))
                         self.tagDir(group, 'failed_rename')
 
+            if self.conf('file_action') != 'move':
+                self.tagDir(group, 'renamed already')
+
             # Remove matching releases
             for release in remove_releases:
                 log.debug('Removing release %s', release.identifier)
@@ -495,31 +499,23 @@ class Renamer(Plugin):
 
         return rename_files
 
+    # This adds a file to ignore / tag a release so it is ignored later
     def tagDir(self, group, tag):
 
-        rename_files = {}
+        ignore_file = None
+        for movie_file in sorted(list(group['files']['movie'])):
+            ignore_file = '%s.ignore' % os.path.splitext(movie_file)[0]
+            break
 
-        if group['dirname']:
-            rename_files[group['parentdir']] = group['parentdir'].replace(group['dirname'], '_%s_%s' % (tag.upper(), group['dirname']))
-        else: # Add it to filename
-            for file_type in group['files']:
-                for rename_me in group['files'][file_type]:
-                    filename = os.path.basename(rename_me)
-                    rename_files[rename_me] = rename_me.replace(filename, '_%s_%s' % (tag.upper(), filename))
+        text = """This file is from CouchPotato
+It has marked this release as "%s"
+This file hides the release from the renamer
+Remove it if you want it to be renamed (again, or at least let it try again)
+""" % tag
 
-        for src in rename_files:
-            if rename_files[src]:
-                dst = rename_files[src]
-                log.info('Renaming "%s" to "%s"', (src, dst))
+        if ignore_file:
+            self.createFile(ignore_file, text)
 
-                # Create dir
-                self.makeDir(os.path.dirname(dst))
-
-                try:
-                    self.moveFile(src, dst)
-                except:
-                    log.error('Failed moving the file "%s" : %s', (os.path.basename(src), traceback.format_exc()))
-                    raise
 
     def moveFile(self, old, dest):
         dest = ss(dest)
