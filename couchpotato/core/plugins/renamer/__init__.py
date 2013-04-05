@@ -113,6 +113,20 @@ config = [{
                     'description': 'Replace all the spaces with a character. Example: ".", "-" (without quotes). Leave empty to use spaces.',
                 },
                 {
+                    'name': 'hardlink',
+                    'type': 'bool',
+                    'description': 'Use <a href="http://en.wikipedia.org/wiki/Hard_link">hard links</a> instead of moving files, ideal for Torrent users. NOTE: From location and to location needs to be on the same drive/partition.',
+                    'default': False,
+                    'advanced': True,
+                },
+                {
+                    'name': 'symlink',
+                    'type': 'bool',
+                    'description': 'Use <a href="http://en.wikipedia.org/wiki/Sym_link">sym links</a> instead of moving files.',
+                    'default': False,
+                    'advanced': True,
+                },
+                {
                     'advanced': True,
                     'name': 'ntfs_permission',
                     'label': 'NTFS Permission',
