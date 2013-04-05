@@ -86,11 +86,9 @@ class Renamer(Plugin):
             log.info('Renamer is already running, if you see this often, check the logs above for errors.')
             return
 
-        self.renaming_started = True
-
         # Check to see if the "to" folder is inside the "from" folder.
         if movie_folder and not os.path.isdir(movie_folder) or not os.path.isdir(self.conf('from')) or not os.path.isdir(self.conf('to')):
-            log.debug('"To" and "From" have to exist.')
+            log.error('"To" and "From" have to exist.')
             return
         elif self.conf('from') in self.conf('to'):
             log.error('The "to" can\'t be inside of the "from" folder. You\'ll get an infinite loop.')
@@ -98,6 +96,8 @@ class Renamer(Plugin):
         elif (movie_folder and movie_folder in [self.conf('to'), self.conf('from')]):
             log.error('The "to" and "from" folders can\'t be inside of or the same as the provided movie folder.')
             return
+
+        self.renaming_started = True
 
         # make sure the movie folder name is included in the search
         folder = None
