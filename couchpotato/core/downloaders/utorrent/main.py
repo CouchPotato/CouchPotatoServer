@@ -143,6 +143,7 @@ class uTorrent(Downloader):
             status = 'busy'
             if item[21] == 'Finished' or item[21] == 'Seeding':
                 status = 'completed'
+                self.utorrent_api.stop_torrent(torrent_hash)
 
             if settings_dict['dir_add_label']:
                 release_folder = os.path.join(download_folder, item[11], item[2])
@@ -227,6 +228,10 @@ class uTorrentAPI(object):
 
     def pause_torrent(self, hash):
         action = "action=pause&hash=%s" % hash
+        return self._request(action)
+
+    def stop_torrent(self, hash):
+        action = "action=stop&hash=%s" % hash
         return self._request(action)
 
     def get_status(self):
