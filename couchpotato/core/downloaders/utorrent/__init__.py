@@ -43,6 +43,24 @@ config = [{
                     'description': 'Add the torrent paused.',
                 },
                 {
+                    'name': 'waitseeding',
+                    'type': 'bool',
+                    'default': False,
+                    'description': 'Wait end of seeding before doing anything.',
+                },
+                {
+                    'name': 'autostop',
+                    'type': 'bool',
+                    'default': False,
+                    'description': 'Stop the torrent in uTorrent at end of seeding. (waitseeding required)',
+                },
+                {
+                    'name': 'autoremove',
+                    'type': 'bool',
+                    'default': False,
+                    'description': 'Remove the torrent from uTorrent at end of seeding. (waitseeding & autostop required)',
+                },
+                {
                     'name': 'manual',
                     'default': 0,
                     'type': 'bool',

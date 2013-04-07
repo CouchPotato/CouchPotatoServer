@@ -107,6 +107,7 @@ class uTorrent(Downloader):
 
         statuses = StatusList(self)
         download_folder = ''
+        default_ratio = 500
         settings_dict = {}
 
         try:
@@ -131,6 +132,10 @@ class uTorrent(Downloader):
             else:
                 log.info('No download folder set in uTorrent. Please set a download folder')
                 return False
+            
+            # Get default ratio settings (per mils)
+            if settings_dict['seed_ratio']:
+                default_ratio = settings_dict['seed_ratio']
 
         except Exception, err:
             log.error('Failed to get settings from uTorrent: %s', err)
@@ -139,11 +144,23 @@ class uTorrent(Downloader):
         # Get torrents
         for item in queue.get('torrents', []):
 
-            # item[21] = Paused | Downloading | Seeding | Finished
             status = 'busy'
-            if item[21] == 'Finished' or item[21] == 'Seeding':
-                status = 'completed'
-                self.utorrent_api.stop_torrent(torrent_hash)
+            # item[21] = Paused | Downloading | Seeding | Finished | Stopped
+            # if item[21] == 'Finished' or item[21] == 'Seeding':
+            # http://www.utorrent.com/community/developers/webapi#devs6
+            # item[1] = 160 | 201 | Seeding | Finished | 136
+            # item[4] = pervent downloaded
+            # item[7] = current ratio
+            if self.conf('waitseeding', default = 0):
+                if item[4] == 1000 and item[7] >= default_ratio:
+                    status = 'completed'
+                    if self.conf('autostop', default = 0):
+                        self.utorrent_api.stop_torrent(torrent_hash)
+                        if self.conf('autoremove', default = 0):
+                            self.utorrent_api.remove_torrent(torrent_hash)
+            else:
+                if item[4] == 1000:
+                    status = 'completed'
 
             if settings_dict['dir_add_label']:
                 release_folder = os.path.join(download_folder, item[11], item[2])
@@ -232,6 +249,10 @@ class uTorrentAPI(object):
 
     def stop_torrent(self, hash):
         action = "action=stop&hash=%s" % hash
+        return self._request(action)
+
+    def remove_torrent(self, hash):
+        action = "action=remove&hash=%s" % hash
         return self._request(action)
 
     def get_status(self):
