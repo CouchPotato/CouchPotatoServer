@@ -52,9 +52,7 @@ class NZBGet(Downloader):
 
         if xml_response:
             log.info('NZB sent successfully to NZBGet')
-            groups = rpc.listgroups()
-            nzb_id = [item['NZBID'] for item in groups if item['NZBFilename'] == nzb_name][0]
-            return self.downloadReturnId(nzb_id)
+            return True
         else:
             log.error('NZBGet could not add %s to the queue.', nzb_name)
             return False
