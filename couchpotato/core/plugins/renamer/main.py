@@ -89,7 +89,8 @@ class Renamer(Plugin):
 
         # Check to see if the "to" folder is inside the "from" folder.
         if movie_folder and not os.path.isdir(movie_folder) or not os.path.isdir(self.conf('from')) or not os.path.isdir(self.conf('to')):
-            log.error('"To" and "From" have to exist.')
+            l = log.debug if movie_folder else log.error
+            l('Both the "To" and "From" have to exist.')
             return
         elif self.conf('from') in self.conf('to'):
             log.error('The "to" can\'t be inside of the "from" folder. You\'ll get an infinite loop.')
