@@ -10,8 +10,8 @@ from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Library, File, Profile, Release, \
     ReleaseInfo
 from couchpotato.environment import Env
+from linktastic.linktastic import link, symlink
 import errno
-import linktastic.linktastic as linktastic
 import os
 import re
 import shutil
@@ -521,9 +521,9 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         dest = ss(dest)
         try:
             if self.conf('file_action') == 'hardlink':
-                linktastic.link(old, dest)
+                link(old, dest)
             elif self.conf('file_action') == 'symlink':
-                linktastic.symlink(old, dest)
+                symlink(old, dest)
             elif self.conf('file_action') == 'copy':
                 shutil.copy(old, dest)
             else:
