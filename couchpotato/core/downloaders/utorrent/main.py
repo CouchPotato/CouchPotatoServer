@@ -151,15 +151,24 @@ class uTorrent(Downloader):
             # item[1] = 160 | 201 | Seeding | Finished | 136
             # item[4] = pervent downloaded
             # item[7] = current ratio
+            torrent_params = {}
             if self.conf('waitseeding', default = 0):
                 if item[4] == 1000 and item[7] >= default_ratio:
+                    if self.conf('archivelabel'):
+                        torrent_params['label'] = self.conf('archivelabel')
+                        self.utorrent_api.set_torrent(torrent_hash, torrent_params)
                     status = 'completed'
+                    if item[4] == 1000 and item[7] >= default_ratio:
+                        self.utorrent_api.stop_torrent(torrent_hash)
                     if self.conf('autostop', default = 0):
                         self.utorrent_api.stop_torrent(torrent_hash)
                         if self.conf('autoremove', default = 0):
                             self.utorrent_api.remove_torrent(torrent_hash)
             else:
                 if item[4] == 1000:
+                    if self.conf('archivelabel'):
+                        torrent_params['label'] = self.conf('archivelabel')
+                        self.utorrent_api.set_torrent(torrent_hash, torrent_params)
                     status = 'completed'
 
             if settings_dict['dir_add_label']:

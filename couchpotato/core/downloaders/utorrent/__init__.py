@@ -37,6 +37,10 @@ config = [{
                     'description': 'Label to add torrent as.',
                 },
                 {
+                    'name': 'archivelabel',
+                    'description': 'Label to keep torrent.',
+                },
+                {
                     'name': 'paused',
                     'type': 'bool',
                     'default': False,
