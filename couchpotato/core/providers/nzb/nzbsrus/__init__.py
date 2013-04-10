@@ -35,6 +35,14 @@ config = [{
                     'label': 'English only',
                     'description': 'Only search for English spoken movies on Nzbsrus',
                 },
+                {
+                    'name': 'extra_score',
+                    'advanced': True,
+                    'label': 'Extra Score',
+                    'type': 'int',
+                    'default': 0,
+                    'description': 'Starting score for each release found via this provider.',
+                }
             ],
         },
     ],

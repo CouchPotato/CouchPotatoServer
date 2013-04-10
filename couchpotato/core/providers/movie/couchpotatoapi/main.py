@@ -5,6 +5,7 @@ from couchpotato.core.helpers.request import jsonified, getParams
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.movie.base import MovieProvider
 from couchpotato.core.settings.model import Movie
+from couchpotato.environment import Env
 import time
 
 log = CPLog(__name__)
@@ -17,7 +18,7 @@ class CouchPotatoApi(MovieProvider):
         'info': 'https://couchpota.to/api/info/%s/',
         'is_movie': 'https://couchpota.to/api/ismovie/%s/',
         'eta': 'https://couchpota.to/api/eta/%s/',
-        'suggest': 'https://couchpota.to/api/suggest/%s/%s/',
+        'suggest': 'https://couchpota.to/api/suggest/',
     }
     http_time_between_calls = 0
     api_version = 1
@@ -28,6 +29,7 @@ class CouchPotatoApi(MovieProvider):
         addEvent('movie.info', self.getInfo, priority = 1)
         addEvent('movie.search', self.search, priority = 1)
         addEvent('movie.release_date', self.getReleaseDate)
+        addEvent('movie.suggest', self.suggest)
         addEvent('movie.is_movie', self.isMovie)
 
     def search(self, q, limit = 12):
@@ -63,8 +65,10 @@ class CouchPotatoApi(MovieProvider):
         return dates
 
     def suggest(self, movies = [], ignore = []):
-
-        suggestions = self.getJsonData(self.urls['suggest'] % (','.join(movies), ','.join(ignore)))
+        suggestions = self.getJsonData(self.urls['suggest'], params = {
+            'movies': ','.join(movies),
+            #'ignore': ','.join(ignore),
+        })
         log.info('Found Suggestions for %s', (suggestions))
 
         return suggestions
@@ -93,4 +97,5 @@ class CouchPotatoApi(MovieProvider):
             'X-CP-Version': fireEvent('app.version', single = True),
             'X-CP-API': self.api_version,
             'X-CP-Time': time.time(),
+            'X-CP-Identifier': '+%s' % Env.setting('api_key', 'core')[:10], # Use first 10 as identifier, so we don't need to use IP address in api stats
         }

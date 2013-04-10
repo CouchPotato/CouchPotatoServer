@@ -82,7 +82,7 @@ Page.Wizard = new Class({
 									'target': self.el
 								},
 								'onComplete': function(){
-									window.location = App.createUrl();
+									window.location = App.createUrl('wanted');
 								}
 							});
 						}

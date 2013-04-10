@@ -1,4 +1,5 @@
 from couchpotato.core.helpers.encoding import toUnicode
+from couchpotato.core.helpers.variable import splitString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
 from email.mime.text import MIMEText
@@ -11,7 +12,6 @@ log = CPLog(__name__)
 class Email(Notification):
 
     def notify(self, message = '', data = {}, listener = None):
-        if self.isDisabled(): return
 
         # Extract all the settings from settings
         from_address = self.conf('from')
@@ -39,7 +39,7 @@ class Email(Notification):
 
             # Send the e-mail
             log.debug("Sending the email")
-            mailserver.sendmail(from_address, to_address, message.as_string())
+            mailserver.sendmail(from_address, splitString(to_address), message.as_string())
 
             # Close the SMTP connection
             mailserver.quit()
@@ -49,6 +49,5 @@ class Email(Notification):
             return True
         except:
             log.error('E-mail failed: %s', traceback.format_exc())
-            return False
 
         return False

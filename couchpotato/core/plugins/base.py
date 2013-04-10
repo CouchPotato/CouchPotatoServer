@@ -240,7 +240,6 @@ class Plugin(object):
                     del kwargs['cache_timeout']
 
                 data = self.urlopen(url, **kwargs)
-
                 if data:
                     self.setCache(cache_key, data, timeout = cache_timeout)
                 return data

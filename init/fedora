@@ -14,6 +14,11 @@
 prog=couchpotato
 lockfile=/var/lock/subsys/$prog
 
+# Source couchpotato configuration
+if [ -f /etc/sysconfig/couchpotato ]; then
+        . /etc/sysconfig/couchpotato
+fi
+
 ## Edit user configuation in /etc/sysconfig/couchpotato to change
 ## the defaults
 username=${CP_USER-couchpotato}
@@ -21,11 +26,6 @@ homedir=${CP_HOME-/opt/couchpotato}
 datadir=${CP_DATA-~/.couchpotato}
 pidfile=${CP_PIDFILE-/var/run/couchpotato/couchpotato.pid}
 ##
-
-# Source couchpotato configuration
-if [ -f /etc/sysconfig/couchpotato ]; then
-        . /etc/sysconfig/couchpotato
-fi
 
 pidpath=`dirname ${pidfile}`
 options=" --daemon --pid_file=${pidfile} --data_dir=${datadir}"

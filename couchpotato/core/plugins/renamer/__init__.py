@@ -1,4 +1,5 @@
 from couchpotato.core.plugins.renamer.main import Renamer
+import os
 
 def start():
     return Renamer()
@@ -12,7 +13,7 @@ rename_options = {
         'thename': 'The Moviename',
         'year': 'Year (2011)',
         'first': 'First letter (M)',
-        'quality': 'Quality (720P)',
+        'quality': 'Quality (720p)',
         'video': 'Video (x264)',
         'audio': 'Audio (DTS)',
         'group': 'Releasegroup name',
@@ -110,6 +111,24 @@ config = [{
                     'name': 'separator',
                     'label': 'Separator',
                     'description': 'Replace all the spaces with a character. Example: ".", "-" (without quotes). Leave empty to use spaces.',
+                },
+                {
+                    'name': 'file_action',
+                    'label': 'File Action',
+                    'default': 'move',
+                    'type': 'dropdown',
+                    'values': [('Move', 'move'), ('Copy', 'copy'), ('Hard link', 'hardlink'), ('Sym link', 'symlink')],
+                    'description': 'Define which kind of file operation you want to use. Before you start using <a href="http://en.wikipedia.org/wiki/Hard_link">hard links</a> or <a href="http://en.wikipedia.org/wiki/Sym_link">sym links</a>, PLEASE read about their possible drawbacks.',
+                    'advanced': True,
+                },
+                {
+                    'advanced': True,
+                    'name': 'ntfs_permission',
+                    'label': 'NTFS Permission',
+                    'type': 'bool',
+                    'hidden': os.name != 'nt',
+                    'description': 'Set permission of moved files to that of destination folder (Windows NTFS only).',
+                    'default': False,
                 },
             ],
         }, {

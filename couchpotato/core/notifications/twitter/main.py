@@ -32,7 +32,6 @@ class Twitter(Notification):
         addApiView('notify.%s.credentials' % self.getName().lower(), self.getCredentials)
 
     def notify(self, message = '', data = {}, listener = None):
-        if self.isDisabled(): return
 
         api = Api(self.consumer_key, self.consumer_secret, self.conf('access_token_key'), self.conf('access_token_secret'))
 

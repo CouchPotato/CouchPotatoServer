@@ -80,6 +80,12 @@ a:hover { color: #f3f3f3; }
 	padding: 80px 0 10px;
 }
 
+h2 {
+	font-size: 30px;
+	padding: 0;
+	margin: 20px 0 0 0;
+}
+
 .footer {
 	text-align:center;
 	padding: 50px 0 0 0;
@@ -128,10 +134,9 @@ body > .spinner, .mask{
     text-decoration: none;
     font-weight: bold;
     line-height: 1;
-    border-radius: 5px;
-	box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    border-radius: 2px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.3);
 	text-shadow: 0 -1px 1px rgba(0,0,0,0.25);
-	border-bottom: 1px solid rgba(0,0,0,0.25);
     cursor: pointer;
 }
 	.button.red { background-color: #ff0000; }
@@ -151,6 +156,7 @@ body > .spinner, .mask{
 .icon.folder { background-image: url('../images/icon.folder.png'); }
 .icon.imdb { background-image: url('../images/icon.imdb.png'); }
 .icon.refresh { background-image: url('../images/icon.refresh.png'); }
+.icon.readd { background-image: url('../images/icon.readd.png'); }
 .icon.rating { background-image: url('../images/icon.rating.png'); }
 .icon.files { background-image: url('../images/icon.files.png'); }
 .icon.info { background-image: url('../images/icon.info.png'); }
@@ -578,7 +584,7 @@ body > .spinner, .mask{
 	bottom: 0;
 	padding: 2px;
 	width: 240px;
-	z-index: 2;
+	z-index: 20;
 	overflow: hidden;
 	font-size: 14px;
 	font-weight: bold;

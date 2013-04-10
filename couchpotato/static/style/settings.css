@@ -133,6 +133,7 @@
 			display: inline-block;
 			vertical-align: middle;
 			padding-left: 2%;
+			line-height: 14px;
 		}
 
 			.page .check + .formHint {
@@ -142,6 +143,7 @@
 				padding-left: 1% !important;
 				height: 24px;
 				vertical-align: middle;
+				line-height: 24px;
 			}
 
 		.page .ctrlHolder label {
@@ -513,8 +515,21 @@
 			display: none;
 		}
 		.page .combined_table .head abbr.host {
-			margin-right: 197px;
+			margin-right: 190px;
 		}
+		.page .combined_table .head abbr.api_key {
+			margin-right: 171px;
+		}
+		.page .combined_table .head .extra_score,
+		.page .combined_table .extra_score {
+			width: 70px;
+			text-align: center;
+			display: none;
+		}
+			.page.show_advanced .combined_table .head .extra_score,
+			.page.show_advanced .combined_table .extra_score {
+				display: inline-block;
+			}
 
 	.page .combined_table .ctrlHolder {
 		padding-top: 2px;

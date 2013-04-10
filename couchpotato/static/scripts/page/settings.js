@@ -297,7 +297,7 @@ Page.Settings = new Class({
 
 		return group_el
 	},
-	
+
 	createList: function(content_container){
 		return new Element('div.option_list').grab(
 			new Element('h3', {
@@ -1283,6 +1283,7 @@ Option.Combined = new Class({
 		self.values = {}
 		self.inputs = {}
 		self.items = []
+		self.labels = {}
 
 		self.options.combine.each(function(name){
 
@@ -1302,9 +1303,10 @@ Option.Combined = new Class({
 		var head = new Element('div.head').inject(self.combined_list)
 
 		Object.each(self.inputs, function(input, name){
+			self.labels[name] = input.getPrevious().get('text')
 			new Element('abbr', {
 				'class': name,
-				'text': input.getPrevious().get('text'),
+				'text': self.labels[name],
 				//'title': input.getNext().get('text')
 			}).inject(head)
 		})
@@ -1367,7 +1369,7 @@ Option.Combined = new Class({
 				value_count++;
 				new Element('input[type=text].inlay.'+name, {
 					'value': value,
-					'placeholder': name,
+					'placeholder': self.labels[name] || name,
 					'events': {
 						'keyup': self.saveCombined.bind(self),
 						'change': self.saveCombined.bind(self)

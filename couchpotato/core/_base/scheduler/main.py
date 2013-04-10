@@ -16,51 +16,19 @@ class Scheduler(Plugin):
 
         addEvent('schedule.cron', self.cron)
         addEvent('schedule.interval', self.interval)
-        addEvent('schedule.start', self.start)
-        addEvent('schedule.restart', self.start)
-
-        addEvent('app.load', self.start)
+        addEvent('schedule.remove', self.remove)
 
         self.sched = Sched(misfire_grace_time = 60)
-
-    def remove(self, identifier):
-        for type in ['interval', 'cron']:
-            try:
-                self.sched.unschedule_job(getattr(self, type)[identifier]['job'])
-                log.debug('%s unscheduled %s', (type.capitalize(), identifier))
-            except:
-                pass
-
-    def start(self):
-
-        # Stop all running
-        self.stop()
-
-        # Crons
-        for identifier in self.crons:
-            try:
-                self.remove(identifier)
-                cron = self.crons[identifier]
-                job = self.sched.add_cron_job(cron['handle'], day = cron['day'], hour = cron['hour'], minute = cron['minute'])
-                cron['job'] = job
-            except ValueError, e:
-                log.error('Failed adding cronjob: %s', e)
-
-        # Intervals
-        for identifier in self.intervals:
-            try:
-                self.remove(identifier)
-                interval = self.intervals[identifier]
-                job = self.sched.add_interval_job(interval['handle'], hours = interval['hours'], minutes = interval['minutes'], seconds = interval['seconds'])
-                interval['job'] = job
-            except ValueError, e:
-                log.error('Failed adding interval cronjob: %s', e)
-
-        # Start it
-        log.debug('Starting scheduler')
         self.sched.start()
         self.started = True
-        log.debug('Scheduler started')
+
+    def remove(self, identifier):
+        for cron_type in ['intervals', 'crons']:
+            try:
+                self.sched.unschedule_job(getattr(self, cron_type)[identifier]['job'])
+                log.debug('%s unscheduled %s', (cron_type.capitalize(), identifier))
+            except:
+                pass
 
     def doShutdown(self):
         super(Scheduler, self).doShutdown()
@@ -82,6 +50,7 @@ class Scheduler(Plugin):
             'day': day,
             'hour': hour,
             'minute': minute,
+            'job': self.sched.add_cron_job(handle, day = day, hour = hour, minute = minute)
         }
 
     def interval(self, identifier = '', handle = None, hours = 0, minutes = 0, seconds = 0):
@@ -93,4 +62,5 @@ class Scheduler(Plugin):
             'hours': hours,
             'minutes': minutes,
             'seconds': seconds,
+            'job': self.sched.add_interval_job(handle, hours = hours, minutes = minutes, seconds = seconds)
         }

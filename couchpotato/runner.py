@@ -190,9 +190,12 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
             version_control(db, repo, version = latest_db_version)
             current_db_version = db_version(db, repo)
 
-        if current_db_version < latest_db_version and not development:
-            log.info('Doing database upgrade. From %d to %d', (current_db_version, latest_db_version))
-            upgrade(db, repo)
+        if current_db_version < latest_db_version:
+            if development:
+                log.error('There is a database migration ready, but you are running development mode, so it won\'t be used. If you see this, you are stupid. Please disable development mode.')
+            else:
+                log.info('Doing database upgrade. From %d to %d', (current_db_version, latest_db_version))
+                upgrade(db, repo)
 
     # Configure Database
     from couchpotato.core.settings.model import setup
@@ -209,11 +212,12 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
 
     # Basic config
     app.secret_key = api_key
+    host = Env.setting('host', default = '0.0.0.0')
     # app.debug = development
     config = {
         'use_reloader': reloader,
         'port': tryInt(Env.setting('port', default = 5000)),
-        'host': Env.setting('host', default = ''),
+        'host': host if host and len(host) > 0 else '0.0.0.0',
         'ssl_cert': Env.setting('ssl_cert', default = None),
         'ssl_key': Env.setting('ssl_key', default = None),
     }
@@ -244,7 +248,8 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
         (r'.*', FallbackHandler, dict(fallback = web_container)),
     ],
         log_function = lambda x : None,
-        debug = config['use_reloader']
+        debug = config['use_reloader'],
+        gzip = True,
     )
 
     if config['ssl_cert'] and config['ssl_key']:

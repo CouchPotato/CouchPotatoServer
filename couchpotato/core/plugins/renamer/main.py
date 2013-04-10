@@ -2,17 +2,20 @@ from couchpotato import get_session
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
 from couchpotato.core.helpers.encoding import toUnicode, ss
-from couchpotato.core.helpers.request import jsonified
+from couchpotato.core.helpers.request import getParams, jsonified
 from couchpotato.core.helpers.variable import getExt, mergeDicts, getTitle, \
     getImdb
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.core.settings.model import Library, File, Profile, Release
+from couchpotato.core.settings.model import Library, File, Profile, Release, \
+    ReleaseInfo
 from couchpotato.environment import Env
 import errno
+import linktastic.linktastic as linktastic
 import os
 import re
 import shutil
+import time
 import traceback
 
 log = CPLog(__name__)
@@ -26,7 +29,12 @@ class Renamer(Plugin):
     def __init__(self):
 
         addApiView('renamer.scan', self.scanView, docs = {
-            'desc': 'For the renamer to check for new files to rename',
+            'desc': 'For the renamer to check for new files to rename in a folder',
+            'params': {
+                'movie_folder': {'desc': 'Optional: The folder of the movie to scan. Keep empty for default renamer folder.'},
+                'downloader' : {'desc': 'Optional: The downloader this movie has been downloaded with'},
+                'download_id': {'desc': 'Optional: The downloader\'s nzb/torrent ID'},
+            },
         })
 
         addEvent('renamer.scan', self.scan)
@@ -34,22 +42,43 @@ class Renamer(Plugin):
 
         addEvent('app.load', self.scan)
         addEvent('app.load', self.checkSnatched)
+        addEvent('app.load', self.setCrons)
 
-        if self.conf('run_every') > 0:
-            fireEvent('schedule.interval', 'renamer.check_snatched', self.checkSnatched, minutes = self.conf('run_every'))
+        # Enable / disable interval
+        addEvent('setting.save.renamer.enabled.after', self.setCrons)
+        addEvent('setting.save.renamer.run_every.after', self.setCrons)
+        addEvent('setting.save.renamer.force_every.after', self.setCrons)
 
-        if self.conf('force_every') > 0:
-            fireEvent('schedule.interval', 'renamer.check_snatched_forced', self.scan, hours = self.conf('force_every'))
+    def setCrons(self):
+
+        fireEvent('schedule.remove', 'renamer.check_snatched')
+        if self.isEnabled() and self.conf('run_every') > 0:
+            fireEvent('schedule.interval', 'renamer.check_snatched', self.checkSnatched, minutes = self.conf('run_every'), single = True)
+
+        fireEvent('schedule.remove', 'renamer.check_snatched_forced')
+        if self.isEnabled() and self.conf('force_every') > 0:
+            fireEvent('schedule.interval', 'renamer.check_snatched_forced', self.scan, hours = self.conf('force_every'), single = True)
+
+        return True
 
     def scanView(self):
 
-        fireEventAsync('renamer.scan')
+        params = getParams()
+        movie_folder = params.get('movie_folder', None)
+        downloader = params.get('downloader', None)
+        download_id = params.get('download_id', None)
+
+        fireEventAsync('renamer.scan',
+            movie_folder = movie_folder,
+            downloader = downloader,
+            download_id = download_id
+        )
 
         return jsonified({
             'success': True
         })
 
-    def scan(self):
+    def scan(self, movie_folder = None, downloader = None, download_id = None):
 
         if self.isDisabled():
             return
@@ -59,16 +88,60 @@ class Renamer(Plugin):
             return
 
         # Check to see if the "to" folder is inside the "from" folder.
-        if not os.path.isdir(self.conf('from')) or not os.path.isdir(self.conf('to')):
-            log.debug('"To" and "From" have to exist.')
+        if movie_folder and not os.path.isdir(movie_folder) or not os.path.isdir(self.conf('from')) or not os.path.isdir(self.conf('to')):
+            log.error('"To" and "From" have to exist.')
             return
         elif self.conf('from') in self.conf('to'):
             log.error('The "to" can\'t be inside of the "from" folder. You\'ll get an infinite loop.')
             return
-
-        groups = fireEvent('scanner.scan', folder = self.conf('from'), single = True)
+        elif (movie_folder and movie_folder in [self.conf('to'), self.conf('from')]):
+            log.error('The "to" and "from" folders can\'t be inside of or the same as the provided movie folder.')
+            return
 
         self.renaming_started = True
+
+        # make sure the movie folder name is included in the search
+        folder = None
+        movie_files = []
+        if movie_folder:
+            log.info('Scanning movie folder %s...', movie_folder)
+            movie_folder = movie_folder.rstrip(os.path.sep)
+            folder = os.path.dirname(movie_folder)
+
+            # Get all files from the specified folder
+            try:
+                for root, folders, names in os.walk(movie_folder):
+                    movie_files.extend([os.path.join(root, name) for name in names])
+            except:
+                log.error('Failed getting files from %s: %s', (movie_folder, traceback.format_exc()))
+
+        db = get_session()
+
+        # Get the release with the downloader ID that was downloded by the downloader
+        download_info = None
+        if download_id and downloader:
+            rls = None
+
+            rlsnfo_dwnlds = db.query(ReleaseInfo).filter_by(identifier = 'download_downloader', value = downloader).all()
+            rlsnfo_ids = db.query(ReleaseInfo).filter_by(identifier = 'download_id', value = download_id).all()
+
+            for rlsnfo_dwnld in rlsnfo_dwnlds:
+                for rlsnfo_id in rlsnfo_ids:
+                    if rlsnfo_id.release == rlsnfo_dwnld.release:
+                        rls = rlsnfo_id.release
+                        break
+                if rls: break
+
+            if rls:
+                download_info = {
+                    'imdb_id': rls.movie.library.identifier,
+                    'quality': rls.quality.identifier,
+                }
+            else:
+                log.error('Download ID %s from downloader %s not found in releases', (download_id, downloader))
+
+        groups = fireEvent('scanner.scan', folder = folder if folder else self.conf('from'),
+                           files = movie_files, download_info = download_info, return_ignored = False, single = True)
 
         destination = self.conf('to')
         folder_name = self.conf('folder_name')
@@ -82,8 +155,6 @@ class Renamer(Plugin):
         active_status = fireEvent('status.get', 'active', single = True)
         downloaded_status = fireEvent('status.get', 'downloaded', single = True)
         snatched_status = fireEvent('status.get', 'snatched', single = True)
-
-        db = get_session()
 
         for group_identifier in groups:
 
@@ -170,15 +241,15 @@ class Renamer(Plugin):
                         replacements['cd_nr'] = cd if multiple else ''
 
                         # Naming
-                        final_folder_name = self.doReplace(folder_name, replacements)
-                        final_file_name = self.doReplace(file_name, replacements)
+                        final_folder_name = self.doReplace(folder_name, replacements).lstrip('. ')
+                        final_file_name = self.doReplace(file_name, replacements).lstrip('. ')
                         replacements['filename'] = final_file_name[:-(len(getExt(final_file_name)) + 1)]
 
                         # Meta naming
                         if file_type is 'trailer':
-                            final_file_name = self.doReplace(trailer_name, replacements, remove_multiple = True)
+                            final_file_name = self.doReplace(trailer_name, replacements, remove_multiple = True).lstrip('. ')
                         elif file_type is 'nfo':
-                            final_file_name = self.doReplace(nfo_name, replacements, remove_multiple = True)
+                            final_file_name = self.doReplace(nfo_name, replacements, remove_multiple = True).lstrip('. ')
 
                         # Seperator replace
                         if separator:
@@ -275,6 +346,7 @@ class Renamer(Plugin):
                             for profile_type in movie.profile.types:
                                 if profile_type.quality_id == group['meta_data']['quality']['id'] and profile_type.finish:
                                     movie.status_id = done_status.get('id')
+                                    movie.last_edit = int(time.time())
                                     db.commit()
                     except Exception, e:
                         log.error('Failed marking movie finished: %s %s', (e, traceback.format_exc()))
@@ -316,8 +388,10 @@ class Renamer(Plugin):
                                 log.debug('Marking release as downloaded')
                                 try:
                                     release.status_id = downloaded_status.get('id')
+                                    release.last_edit = int(time.time())
                                 except Exception, e:
                                     log.error('Failed marking release as finished: %s %s', (e, traceback.format_exc()))
+
                                 db.commit()
 
                 # Remove leftover files
@@ -377,6 +451,9 @@ class Renamer(Plugin):
                         log.error('Failed moving the file "%s" : %s', (os.path.basename(src), traceback.format_exc()))
                         self.tagDir(group, 'failed_rename')
 
+            if self.conf('file_action') != 'move':
+                self.tagDir(group, 'renamed already')
+
             # Remove matching releases
             for release in remove_releases:
                 log.debug('Removing release %s', release.identifier)
@@ -422,39 +499,40 @@ class Renamer(Plugin):
 
         return rename_files
 
+    # This adds a file to ignore / tag a release so it is ignored later
     def tagDir(self, group, tag):
 
-        rename_files = {}
+        ignore_file = None
+        for movie_file in sorted(list(group['files']['movie'])):
+            ignore_file = '%s.ignore' % os.path.splitext(movie_file)[0]
+            break
 
-        if group['dirname']:
-            rename_files[group['parentdir']] = group['parentdir'].replace(group['dirname'], '_%s_%s' % (tag.upper(), group['dirname']))
-        else: # Add it to filename
-            for file_type in group['files']:
-                for rename_me in group['files'][file_type]:
-                    filename = os.path.basename(rename_me)
-                    rename_files[rename_me] = rename_me.replace(filename, '_%s_%s' % (tag.upper(), filename))
+        text = """This file is from CouchPotato
+It has marked this release as "%s"
+This file hides the release from the renamer
+Remove it if you want it to be renamed (again, or at least let it try again)
+""" % tag
 
-        for src in rename_files:
-            if rename_files[src]:
-                dst = rename_files[src]
-                log.info('Renaming "%s" to "%s"', (src, dst))
+        if ignore_file:
+            self.createFile(ignore_file, text)
 
-                # Create dir
-                self.makeDir(os.path.dirname(dst))
-
-                try:
-                    self.moveFile(src, dst)
-                except:
-                    log.error('Failed moving the file "%s" : %s', (os.path.basename(src), traceback.format_exc()))
-                    raise
 
     def moveFile(self, old, dest):
         dest = ss(dest)
         try:
-            shutil.move(old, dest)
+            if self.conf('file_action') == 'hardlink':
+                linktastic.link(old, dest)
+            elif self.conf('file_action') == 'symlink':
+                linktastic.symlink(old, dest)
+            elif self.conf('file_action') == 'copy':
+                shutil.copy(old, dest)
+            else:
+                shutil.move(old, dest)
 
             try:
                 os.chmod(dest, Env.getPermission('file'))
+                if os.name == 'nt' and self.conf('ntfs_permission'):
+                    os.popen('icacls "' + dest + '"* /reset /T')
             except:
                 log.error('Failed setting permissions for file: %s, %s', (dest, traceback.format_exc(1)))
 
@@ -518,6 +596,7 @@ class Renamer(Plugin):
             loge('Couldn\'t remove empty directory %s: %s', (folder, traceback.format_exc()))
 
     def checkSnatched(self):
+
         if self.checking_snatched:
             log.debug('Already checking snatched')
 
@@ -554,6 +633,7 @@ class Renamer(Plugin):
                         if rel.movie.status_id == done_status.get('id'):
                             log.debug('Found a completed movie with a snatched release : %s. Setting release status to ignored...' , default_title)
                             rel.status_id = ignored_status.get('id')
+                            rel.last_edit = int(time.time())
                             db.commit()
                             continue
 
@@ -564,8 +644,16 @@ class Renamer(Plugin):
 
                         found = False
                         for item in statuses:
-                            if item['name'] == nzbname or getImdb(item['name']) == movie_dict['library']['identifier']:
+                            found_release = False
+                            if rel_dict['info'].get('download_id'):
+                                if item['id'] == rel_dict['info']['download_id'] and item['downloader'] == rel_dict['info']['download_downloader']:
+                                    log.debug('Found release by id: %s', item['id'])
+                                    found_release = True
+                            else:
+                                if item['name'] == nzbname or rel_dict['info']['name'] in item['name'] or getImdb(item['name']) == movie_dict['library']['identifier']:
+                                    found_release = True
 
+                            if found_release:
                                 timeleft = 'N/A' if item['timeleft'] == -1 else item['timeleft']
                                 log.debug('Found %s: %s, time to go: %s', (item['name'], item['status'].upper(), timeleft))
 
@@ -578,10 +666,14 @@ class Renamer(Plugin):
                                         fireEvent('searcher.try_next_release', movie_id = rel.movie_id)
                                     else:
                                         rel.status_id = failed_status.get('id')
+                                        rel.last_edit = int(time.time())
                                         db.commit()
                                 elif item['status'] == 'completed':
                                     log.info('Download of %s completed!', item['name'])
-                                    scan_required = True
+                                    if item['id'] and item['downloader'] and item['folder']:
+                                        fireEventAsync('renamer.scan', movie_folder = item['folder'], downloader = item['downloader'], download_id = item['id'])
+                                    else:
+                                        scan_required = True
 
                                 found = True
                                 break
