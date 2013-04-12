@@ -529,7 +529,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                 shutil.copy(old, dest)
             elif self.conf('file_action') == 'move_symlink':
                 shutil.move(old, dest)
-                linktastic.symlink(dest, old)
+                symlink(dest, old)
             else:
                 shutil.move(old, dest)
 
