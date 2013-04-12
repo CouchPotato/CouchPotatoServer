@@ -25,7 +25,18 @@ Page.Home = new Class({
 			'view': 'list',
 			'actions': [MA.IMDB, MA.Trailer, MA.Release, MA.Refresh, MA.Delete],
 			'title': 'Snatched & Available',
-			'on_empty_element': new Element('div'),
+			'description': 'These movies have been snatched or have finished downloading',
+			'on_empty_element': new Element('div').adopt(
+				new Element('h2', {'text': 'Snatched & Available'}),
+				new Element('span', {
+					'html': 'No snatched movies or anything!? Damn.. <a>Maybe add a movie.</a>',
+					'events': {
+						'click': function(){
+							$(document.body).getElement('.search_form input').focus();
+						}
+					}
+				})
+			),
 			'filter': {
 				'release_status': 'snatched,available'
 			}
@@ -39,7 +50,7 @@ Page.Home = new Class({
 			'title': 'Available soon',
 			'description': 'These are being searched for and should be available soon as they will be released on DVD in the next few weeks.',
 			'on_empty_element': new Element('div').adopt(
-				new Element('h1', {'text': 'Available soon'}),
+				new Element('h2', {'text': 'Available soon'}),
 				new Element('span', {'text': 'There are no movies available soon. Add some movies, so you have something to watch later.'})
 			),
 			'filter': {
@@ -58,10 +69,10 @@ Page.Home = new Class({
 			'limit': 50,
 			'title': 'Still not available',
 			'description': 'Try another quality profile or maybe add more providers in <a href="'+App.createUrl('settings/searcher/providers/')+'">Settings</a>.',
-			'on_empty_element': new Element('div'),
 			'filter': {
 				'late': true
 			},
+			'loader': false,
 			'load_more': false,
 			'view': 'list',
 			'actions': [MA.IMDB, MA.Trailer, MA.Edit, MA.Refresh, MA.Delete],
