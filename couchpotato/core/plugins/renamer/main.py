@@ -118,7 +118,7 @@ class Renamer(Plugin):
 
         db = get_session()
 
-        # Get the release with the downloader ID that was downloded by the downloader
+        # Get the release with the downloader ID that was downloaded by the downloader
         download_info = None
         if download_id and downloader:
             rls = None
@@ -137,6 +137,7 @@ class Renamer(Plugin):
                 download_info = {
                     'imdb_id': rls.movie.library.identifier,
                     'quality': rls.quality.identifier,
+                    'is_torrent': any(downloader_type in fireEvent('download.downloader_type', downloader = downloader) for downloader_type in ['torrent', 'torrent_magnet'])
                 }
             else:
                 log.error('Download ID %s from downloader %s not found in releases', (download_id, downloader))
@@ -446,13 +447,13 @@ class Renamer(Plugin):
                     self.makeDir(os.path.dirname(dst))
 
                     try:
-                        self.moveFile(src, dst)
+                        self.moveFile(src, dst, forcemove = not (download_info and download_info.get('is_torrent')))
                         group['renamed_files'].append(dst)
                     except:
                         log.error('Failed moving the file "%s" : %s', (os.path.basename(src), traceback.format_exc()))
                         self.tagDir(group, 'failed_rename')
 
-            if self.conf('file_action') != 'move':
+            if self.conf('file_action') != 'move' and download_info and download_info.get('is_torrent'):
                 self.tagDir(group, 'renamed already')
 
             # Remove matching releases
@@ -518,10 +519,12 @@ Remove it if you want it to be renamed (again, or at least let it try again)
             self.createFile(ignore_file, text)
 
 
-    def moveFile(self, old, dest):
+    def moveFile(self, old, dest, forcemove = False):
         dest = ss(dest)
         try:
-            if self.conf('file_action') == 'hardlink':
+            if forcemove:
+                shutil.move(old, dest)
+            elif self.conf('file_action') == 'hardlink':
                 link(old, dest)
             elif self.conf('file_action') == 'symlink':
                 symlink(old, dest)
