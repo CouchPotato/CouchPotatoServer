@@ -45,7 +45,7 @@ class BinNewzProvider(NZBProvider):
     
     def _search(self, movie, quality, results):
         nzbDownloaders = [NZBClub(), BinSearch(), NZBIndex()]
-        TitleStringReal = getTitle(movie['library']).encode("utf-8")
+        TitleStringReal = (getTitle(movie['library']).encode("utf-8")).replace('-',' ')
         moviequality = simplifyString(quality['identifier'])
         movieyear = movie['library']['year']
         if moviequality in ("720p","1080p","bd50"):
