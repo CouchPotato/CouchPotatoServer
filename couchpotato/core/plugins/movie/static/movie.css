@@ -4,7 +4,33 @@
 	z-index: 3;
 }
 
-	.movies h2 {
+	.movies .loading {
+		display: block;
+		padding: 20px 0 0 0;
+		width: 100%;
+		z-index: 3;
+		transition: all .4s cubic-bezier(0.9,0,0.1,1);
+		height: 40px;
+		opacity: 1;
+		position: absolute;
+		text-align: center;
+	}
+		.movies .loading.hide {
+			height: 0;
+			padding: 20px 0 0 0;
+			opacity: 0;
+			margin-top: -20px;
+		}
+		
+		.movies .loading .spinner {
+			display: inline-block;
+		}
+		
+		.movies .loading .message {
+			margin: 0 20px;
+		}
+
+	.movies > h2 {
 		margin-bottom: 20px;	
 	}
 	
@@ -27,6 +53,7 @@
 	.home .movies {
 		padding-top: 6px;
 	}
+	
 
 	.movies.mass_edit_list {
 		padding-top: 90px;
