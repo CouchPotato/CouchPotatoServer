@@ -99,7 +99,9 @@ class Dashboard(Plugin):
         movies = []
         for movie in all_movies:
             pp = profile_pre.get(movie.profile.id)
-            eta = movie.library.info.get('release_date', {}) or {}
+            eta = {}
+            if movie.library.info:
+                eta = movie.library.info.get('release_date', {})
             coming_soon = False
 
             # Theater quality
