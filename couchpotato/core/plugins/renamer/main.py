@@ -421,7 +421,7 @@ class Renamer(Plugin):
                         os.remove(src)
 
                         parent_dir = os.path.normpath(os.path.dirname(src))
-                        if delete_folders.count(parent_dir) == 0 and os.path.isdir(parent_dir) and destination != parent_dir:
+                        if delete_folders.count(parent_dir) == 0 and os.path.isdir(parent_dir) and not parent_dir in [destination, movie_folder] and not self.conf('from') in parent_dir:
                             delete_folders.append(parent_dir)
 
                 except:
