@@ -39,6 +39,8 @@ class Downloader(Provider):
         addEvent('download.enabled_types', self.getEnabledDownloadType)
         addEvent('download.status', self._getAllDownloadStatus)
         addEvent('download.remove_failed', self._removeFailed)
+        addEvent('download.pause', self._pause)
+        addEvent('download.process_complete', self._processComplete)
 
     def getEnabledDownloadType(self):
         for download_type in self.type:
@@ -65,12 +67,28 @@ class Downloader(Provider):
         if self.isDisabled(manual = True, data = {}):
             return
 
-        if self.conf('delete_failed', default = True):
-            return self.removeFailed(item)
+        if item and item.get('downloader') == self.getName():
+            if self.conf('delete_failed'):
+                return self.removeFailed(item)
 
-        return False
+            return False
+        return
 
     def removeFailed(self, item):
+        return
+
+    def _processComplete(self, item):
+        if self.isDisabled(manual = True, data = {}):
+            return
+
+        if item and item.get('downloader') == self.getName():
+            if self.conf('remove_complete'):
+                return self.processComplete(item = item, delete_files = self.conf('delete_files'))
+
+            return False
+        return
+
+    def processComplete(self, item, delete_files):
         return
 
     def isCorrectType(self, item_type):
@@ -124,6 +142,17 @@ class Downloader(Provider):
             ((d_manual and manual) or (d_manual is False)) and \
             (not data or self.isCorrectType(data.get('type')))
 
+    def _pause(self, item, pause = True):
+        if self.isDisabled(manual = True, data = {}):
+            return
+
+        if item and item.get('downloader') == self.getName():
+            self.pause(item, pause)
+            return True
+        return
+
+    def pause(self, item, pause):
+        return
 
 class StatusList(list):
 

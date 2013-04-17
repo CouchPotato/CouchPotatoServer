@@ -1,4 +1,4 @@
-var CouchPotato = new Class({
+﻿var CouchPotato = new Class({
 
 	Implements: [Events, Options],
 
@@ -179,7 +179,7 @@ var CouchPotato = new Class({
 	shutdown: function(){
 		var self = this;
 
-		self.blockPage('You have shutdown. This is what suppose to happen ;)');
+		self.blockPage('You have shutdown. This is what is supposed to happen ;)');
 		Api.request('app.shutdown', {
 			'onComplete': self.blockPage.bind(self)
 		});

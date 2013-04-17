@@ -37,6 +37,28 @@ config = [{
                     'description': 'Label to add torrent as.',
                 },
                 {
+                    'name': 'seeding',
+                    'label': 'Seeding support',
+                    'default': True,
+                    'type': 'bool',
+                    'description': '(Hard)links/copies after download is complete (if enabled in renamer), wait for seeding to finish before (re)moving. Stop seeding manually in uTorrent, or check the option Queueing->When uTorrent reaches the seeding goal->Limit the upload rate and set it to 0 to stop seeding after the seeding goal set in the torrent providers is met.',
+                },                
+                {
+                    'name': 'remove_complete',
+                    'label': 'Remove torrent',
+                    'default': True,
+                    'type': 'bool',
+                    'description': 'Remove the torrent from uTorrent after it finished seeding.',
+                },                
+                {
+                    'name': 'delete_files',
+                    'label': 'Remove files',
+                    'default': True,
+                    'type': 'bool',
+                    'advanced': True,
+                    'description': 'Also remove the leftover files.',
+                },
+                {
                     'name': 'paused',
                     'type': 'bool',
                     'default': False,

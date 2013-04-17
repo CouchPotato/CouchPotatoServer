@@ -26,6 +26,20 @@ config = [{
                     'description': 'Domain for requests, keep empty to let CouchPotato pick.',
                 },
                 {
+                    'name': 'seed_ratio',
+                    'label': 'Seed ratio',
+                    'type': 'float',
+                    'default': 1,
+                    'description': 'Torrent will not be (re)moved until this seed ratio is met.',
+                },
+                {
+                    'name': 'seed_time',
+                    'label': 'Seed time',
+                    'type': 'int',
+                    'default': 40,
+                    'description': 'Torrent will not be (re)moved until this seed time (in hours) is met.',
+                },
+                {
                     'name': 'extra_score',
                     'advanced': True,
                     'label': 'Extra Score',
