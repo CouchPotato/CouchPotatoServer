@@ -32,6 +32,10 @@ try:
 except ImportError:
     from http.client import responses  # py3
 
+# responses is unused in this file, but we re-export it to other files.
+# Reference it so pyflakes doesn't complain.
+responses
+
 try:
     from urllib import urlencode  # py2
 except ImportError:
@@ -39,11 +43,12 @@ except ImportError:
 
 
 class HTTPHeaders(dict):
-    """A dictionary that maintains Http-Header-Case for all keys.
+    """A dictionary that maintains ``Http-Header-Case`` for all keys.
 
     Supports multiple values per key via a pair of new methods,
-    add() and get_list().  The regular dictionary interface returns a single
-    value per key, with multiple values joined by a comma.
+    `add()` and `get_list()`.  The regular dictionary interface
+    returns a single value per key, with multiple values joined by a
+    comma.
 
     >>> h = HTTPHeaders({"content-type": "text/html"})
     >>> list(h.keys())
@@ -209,13 +214,14 @@ def url_concat(url, args):
 
 
 class HTTPFile(ObjectDict):
-    """Represents an HTTP file. For backwards compatibility, its instance
-    attributes are also accessible as dictionary keys.
+    """Represents a file uploaded via a form.
 
-    :ivar filename:
-    :ivar body:
-    :ivar content_type: The content_type comes from the provided HTTP header
-        and should not be trusted outright given that it can be easily forged.
+    For backwards compatibility, its instance attributes are also
+    accessible as dictionary keys.
+
+    * ``filename``
+    * ``body``
+    * ``content_type``
     """
     pass
 
@@ -223,15 +229,15 @@ class HTTPFile(ObjectDict):
 def parse_body_arguments(content_type, body, arguments, files):
     """Parses a form request body.
 
-    Supports "application/x-www-form-urlencoded" and "multipart/form-data".
-    The content_type parameter should be a string and body should be
-    a byte string.  The arguments and files parameters are dictionaries
-    that will be updated with the parsed contents.
+    Supports ``application/x-www-form-urlencoded`` and
+    ``multipart/form-data``.  The ``content_type`` parameter should be
+    a string and ``body`` should be a byte string.  The ``arguments``
+    and ``files`` parameters are dictionaries that will be updated
+    with the parsed contents.
     """
     if content_type.startswith("application/x-www-form-urlencoded"):
-        uri_arguments = parse_qs_bytes(native_str(body))
+        uri_arguments = parse_qs_bytes(native_str(body), keep_blank_values=True)
         for name, values in uri_arguments.items():
-            values = [v for v in values if v]
             if values:
                 arguments.setdefault(name, []).extend(values)
     elif content_type.startswith("multipart/form-data"):
@@ -246,9 +252,9 @@ def parse_body_arguments(content_type, body, arguments, files):
 
 
 def parse_multipart_form_data(boundary, data, arguments, files):
-    """Parses a multipart/form-data body.
+    """Parses a ``multipart/form-data`` body.
 
-    The boundary and data parameters are both byte strings.
+    The ``boundary`` and ``data`` parameters are both byte strings.
     The dictionaries given in the arguments and files parameters
     will be updated with the contents of the body.
     """
@@ -294,8 +300,8 @@ def parse_multipart_form_data(boundary, data, arguments, files):
 def format_timestamp(ts):
     """Formats a timestamp in the format used by HTTP.
 
-    The argument may be a numeric timestamp as returned by `time.time()`,
-    a time tuple as returned by `time.gmtime()`, or a `datetime.datetime`
+    The argument may be a numeric timestamp as returned by `time.time`,
+    a time tuple as returned by `time.gmtime`, or a `datetime.datetime`
     object.
 
     >>> format_timestamp(1359312200)
@@ -314,6 +320,8 @@ def format_timestamp(ts):
 # _parseparam and _parse_header are copied and modified from python2.7's cgi.py
 # The original 2.7 version of this code did not correctly support some
 # combinations of semicolons and double quotes.
+
+
 def _parseparam(s):
     while s[:1] == ';':
         s = s[1:]

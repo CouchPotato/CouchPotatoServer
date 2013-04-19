@@ -2,7 +2,7 @@
 from __future__ import absolute_import, division, print_function, with_statement
 
 from tornado.escape import utf8, _unicode, native_str
-from tornado.httpclient import HTTPRequest, HTTPResponse, HTTPError, AsyncHTTPClient, main, _RequestProxy
+from tornado.httpclient import HTTPResponse, HTTPError, AsyncHTTPClient, main, _RequestProxy
 from tornado.httputil import HTTPHeaders
 from tornado.iostream import IOStream, SSLIOStream
 from tornado.netutil import Resolver, OverrideResolver
@@ -92,10 +92,12 @@ class SimpleAsyncHTTPClient(AsyncHTTPClient):
                 request, callback = self.queue.popleft()
                 key = object()
                 self.active[key] = (request, callback)
-                _HTTPConnection(self.io_loop, self, request,
-                                functools.partial(self._release_fetch, key),
-                                callback,
-                                self.max_buffer_size, self.resolver)
+                release_callback = functools.partial(self._release_fetch, key)
+                self._handle_request(request, release_callback, callback)
+
+    def _handle_request(self, request, release_callback, final_callback):
+        _HTTPConnection(self.io_loop, self, request, release_callback,
+                        final_callback, self.max_buffer_size, self.resolver)
 
     def _release_fetch(self, key):
         del self.active[key]
@@ -150,13 +152,24 @@ class _HTTPConnection(object):
                 # so restrict to ipv4 by default.
                 af = socket.AF_INET
 
-            self.resolver.getaddrinfo(
-                host, port, af, socket.SOCK_STREAM, 0, 0,
-                callback=self._on_resolve)
+            self.resolver.resolve(host, port, af, callback=self._on_resolve)
 
-    def _on_resolve(self, future):
-        af, socktype, proto, canonname, sockaddr = future.result()[0]
+    def _on_resolve(self, addrinfo):
+        self.stream = self._create_stream(addrinfo)
+        timeout = min(self.request.connect_timeout, self.request.request_timeout)
+        if timeout:
+            self._timeout = self.io_loop.add_timeout(
+                self.start_time + timeout,
+                stack_context.wrap(self._on_timeout))
+        self.stream.set_close_callback(self._on_close)
+        # ipv6 addresses are broken (in self.parsed.hostname) until
+        # 2.7, here is correctly parsed value calculated in __init__
+        sockaddr = addrinfo[0][1]
+        self.stream.connect(sockaddr, self._on_connect,
+                            server_hostname=self.parsed_hostname)
 
+    def _create_stream(self, addrinfo):
+        af = addrinfo[0][0]
         if self.parsed.scheme == "https":
             ssl_options = {}
             if self.request.validate_cert:
@@ -189,24 +202,14 @@ class _HTTPConnection(object):
                 # information.
                 ssl_options["ssl_version"] = ssl.PROTOCOL_SSLv3
 
-            self.stream = SSLIOStream(socket.socket(af, socktype, proto),
-                                      io_loop=self.io_loop,
-                                      ssl_options=ssl_options,
-                                      max_buffer_size=self.max_buffer_size)
+            return SSLIOStream(socket.socket(af),
+                               io_loop=self.io_loop,
+                               ssl_options=ssl_options,
+                               max_buffer_size=self.max_buffer_size)
         else:
-            self.stream = IOStream(socket.socket(af, socktype, proto),
-                                   io_loop=self.io_loop,
-                                   max_buffer_size=self.max_buffer_size)
-        timeout = min(self.request.connect_timeout, self.request.request_timeout)
-        if timeout:
-            self._timeout = self.io_loop.add_timeout(
-                self.start_time + timeout,
-                stack_context.wrap(self._on_timeout))
-        self.stream.set_close_callback(self._on_close)
-        # ipv6 addresses are broken (in self.parsed.hostname) until
-        # 2.7, here is correctly parsed value calculated in __init__
-        self.stream.connect(sockaddr, self._on_connect,
-                            server_hostname=self.parsed_hostname)
+            return IOStream(socket.socket(af),
+                            io_loop=self.io_loop,
+                            max_buffer_size=self.max_buffer_size)
 
     def _on_timeout(self):
         self._timeout = None
@@ -246,6 +249,9 @@ class _HTTPConnection(object):
             username = self.request.auth_username
             password = self.request.auth_password or ''
         if username is not None:
+            if self.request.auth_mode not in (None, "basic"):
+                raise ValueError("unsupported auth_mode %s",
+                                 self.request.auth_mode)
             auth = utf8(username) + b":" + utf8(password)
             self.request.headers["Authorization"] = (b"Basic " +
                                                      base64.b64encode(auth))
@@ -414,7 +420,7 @@ class _HTTPConnection(object):
             self.final_callback = None
             self._release()
             self.client.fetch(new_request, final_callback)
-            self.stream.close()
+            self._on_end_request()
             return
         if self._decompressor:
             data = (self._decompressor.decompress(data) +
@@ -434,6 +440,9 @@ class _HTTPConnection(object):
                                 buffer=buffer,
                                 effective_url=self.request.url)
         self._run_callback(response)
+        self._on_end_request()
+
+    def _on_end_request(self):
         self.stream.close()
 
     def _on_chunk_length(self, data):

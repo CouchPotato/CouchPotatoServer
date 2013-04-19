@@ -241,7 +241,8 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     from tornado.ioloop import IOLoop
     web_container = WSGIContainer(app)
     web_container._log = _log
-    loop = IOLoop.instance()
+    loop = IOLoop.current()
+
 
     application = Application([
         (r'%s/api/%s/nonblock/(.*)/' % (url_base, api_key), NonBlockHandler),
