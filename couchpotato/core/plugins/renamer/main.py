@@ -647,13 +647,12 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                                     pass
                                 elif item['status'] == 'failed':
                                     fireEvent('download.remove_failed', item, single = True)
+                                    rel.status_id = failed_status.get('id')
+                                    rel.last_edit = int(time.time())
+                                    db.commit()
 
                                     if self.conf('next_on_failed'):
                                         fireEvent('searcher.try_next_release', movie_id = rel.movie_id)
-                                    else:
-                                        rel.status_id = failed_status.get('id')
-                                        rel.last_edit = int(time.time())
-                                        db.commit()
                                 elif item['status'] == 'completed':
                                     log.info('Download of %s completed!', item['name'])
                                     if item['id'] and item['downloader'] and item['folder']:
