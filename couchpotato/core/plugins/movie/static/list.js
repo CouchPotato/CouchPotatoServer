@@ -6,6 +6,7 @@ var MovieList = new Class({
 		navigation: true,
 		limit: 50,
 		load_more: true,
+		loader: true,
 		menu: [],
 		add_new: false
 	},
@@ -251,7 +252,7 @@ var MovieList = new Class({
 			'data': Object.merge({
 				'status': self.options.status
 			}, self.filter),
-			'onComplete': function(json){
+			'onSuccess': function(json){
 
 				json.chars.split('').each(function(c){
 					self.letters[c.capitalize()].addClass('available')
@@ -475,12 +476,39 @@ var MovieList = new Class({
 			self.load_more.set('text', 'loading...');
 		}
 
+		if(self.movies.length == 0 && self.options.loader){
+
+			self.loader_first = new Element('div.loading').adopt(
+				new Element('div.message', {'text': self.options.title ? 'Loading \'' + self.options.title + '\'' : 'Loading...'})
+			).inject(self.el, 'top');
+
+			createSpinner(self.loader_first, {
+				radius: 4,
+				length: 4,
+				width: 1
+			});
+
+			self.el.setStyle('min-height', 93);
+
+		}
+
 		Api.request(self.options.api_call || 'movie.list', {
 			'data': Object.merge({
 				'status': self.options.status,
 				'limit_offset': self.options.limit + ',' + self.offset
 			}, self.filter),
-			'onComplete': function(json){
+			'onSuccess': function(json){
+
+				if(self.loader_first){
+					var lf = self.loader_first;
+					self.loader_first.addClass('hide')
+					self.loader_first = null;
+					setTimeout(function(){
+						lf.destroy();
+					}, 20000);
+					self.el.setStyle('min-height', null);
+				}
+
 				self.store(json.movies);
 				self.addMovies(json.movies, json.total);
 				if(self.scrollspy) {
@@ -488,7 +516,7 @@ var MovieList = new Class({
 					self.scrollspy.start();
 				}
 
-				self.checkIfEmpty()
+				self.checkIfEmpty();
 			}
 		});
 	},
@@ -518,7 +546,7 @@ var MovieList = new Class({
 			self.description[is_empty ? 'hide' : 'show']()
 
 		if(is_empty && self.options.on_empty_element){
-			self.el.grab(self.options.on_empty_element);
+			self.options.on_empty_element.inject(self.loader_first || self.title || self.movie_list, 'after');
 
 			if(self.navigation)
 				self.navigation.hide();
