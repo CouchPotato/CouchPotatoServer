@@ -18,6 +18,7 @@ log = CPLog(__name__)
 class Manage(Plugin):
 
     in_progress = False
+    parse_failure_count = 0
 
     def __init__(self):
 
@@ -169,6 +170,7 @@ class Manage(Plugin):
 
         fireEvent('notify.frontend', type = 'manage.updating', data = False)
         self.in_progress = False
+        self.parse_failure_count = 0
 
     def createAddToLibrary(self, folder, added_identifiers = []):
         def addToLibrary(group, total_found, to_go):
@@ -185,6 +187,13 @@ class Manage(Plugin):
                 # Add it to release and update the info
                 fireEvent('release.add', group = group)
                 fireEventAsync('library.update', identifier = identifier, on_complete = self.createAfterUpdate(folder, identifier))
+            else:
+                # Was unable to parse movie title, update progress and give user error message.
+                self.parse_failure_count += 1
+                self.in_progress[folder]['to_go'] = self.in_progress[folder]['to_go'] - 1
+                fireEvent('notify.frontend', type = 'movie.parse_failed', data = True,
+                    message = None if self.parse_failure_count > 3 
+                    else 'Failed to parse some movie titles in %s, please consult logs for a complete list.' % folder)
 
         return addToLibrary
 
