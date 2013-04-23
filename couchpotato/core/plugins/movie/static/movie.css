@@ -201,7 +201,8 @@
 
 			.movies .info .title {
 				display: inline;
-				position: absolute;
+				position: relative;
+				float: left;
 				font-size: 28px;
 				font-weight: bold;
 				margin-bottom: 10px;
@@ -264,8 +265,7 @@
 				}
 
 			.movies .info .description {
-				position: absolute;
-				top: 30px;
+				position: relative;
 				clear: both;
 				height: 80px;
 				overflow: hidden;
