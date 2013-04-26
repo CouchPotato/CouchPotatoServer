@@ -58,7 +58,7 @@ class NZBGet(Downloader):
             file_id = [item['LastID'] for item in groups if item['NZBFilename'] == nzb_name]
             confirmed = rpc.editqueue("GroupSetParameter", 0, couchpotato_id, file_id)
             if confirmed:
-                log.debug('couchpotato parameter set in nzbget download') 
+                log.debug('couchpotato parameter set in nzbget download')
             return self.downloadReturnId(nzb_id)
         else:
             log.error('NZBGet could not add %s to the queue.', nzb_name)
@@ -101,11 +101,11 @@ class NZBGet(Downloader):
         for item in groups:
             log.debug('Found %s in NZBGet download queue', item['NZBFilename'])
             try:
-                NZB_ID = [param['Value'] for param in item['Parameters'] if param['Name'] == 'couchpotato'][0]
+                nzb_id = [param['Value'] for param in item['Parameters'] if param['Name'] == 'couchpotato'][0]
             except:
-                NZB_ID = item['NZBID'],
+                nzb_id = item['NZBID'],
             statuses.append({
-                'id': NZB_ID,
+                'id': nzb_id,
                 'name': item['NZBFilename'],
                 'original_status': 'DOWNLOADING' if item['ActiveDownloads'] > 0 else 'QUEUED',
                 # Seems to have no native API function for time left. This will return the time left after NZBGet started downloading this item
@@ -124,11 +124,11 @@ class NZBGet(Downloader):
         for item in history:
             log.debug('Found %s in NZBGet history. ParStatus: %s, ScriptStatus: %s, Log: %s', (item['NZBFilename'] , item['ParStatus'], item['ScriptStatus'] , item['Log']))
             try:
-                NZB_ID = [param['Value'] for param in item['Parameters'] if param['Name'] == 'couchpotato'][0]
+                nzb_id = [param['Value'] for param in item['Parameters'] if param['Name'] == 'couchpotato'][0]
             except:
-                NZB_ID = item['NZBID'],
+                nzb_id = item['NZBID'],
             statuses.append({
-                'id': NZB_ID,
+                'id': nzb_id,
                 'name': item['NZBFilename'],
                 'status': 'completed' if item['ParStatus'] == 'SUCCESS' and item['ScriptStatus'] == 'SUCCESS' else 'failed',
                 'original_status': item['ParStatus'] + ', ' + item['ScriptStatus'],
