@@ -39,13 +39,6 @@ class Downloader(Provider):
         addEvent('download.enabled_types', self.getEnabledDownloadType)
         addEvent('download.status', self._getAllDownloadStatus)
         addEvent('download.remove_failed', self._removeFailed)
-        addEvent('download.downloader_type', self.getDownloaderType)
-
-    def getDownloaderType(self, downloader):
-        if self.getName() == downloader:
-            return self.type
-
-        return []
 
     def getEnabledDownloadType(self):
         for download_type in self.type:

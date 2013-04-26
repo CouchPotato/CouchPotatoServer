@@ -70,15 +70,14 @@ class Renamer(Plugin):
 
         fireEventAsync('renamer.scan',
             movie_folder = movie_folder,
-            downloader = downloader,
-            download_id = download_id
+            download_info = {'id': download_id, 'downloader': downloader} if download_id else None
         )
 
         return jsonified({
             'success': True
         })
 
-    def scan(self, movie_folder = None, downloader = None, download_id = None):
+    def scan(self, movie_folder = None, download_info = None):
 
         if self.isDisabled():
             return
@@ -118,8 +117,8 @@ class Renamer(Plugin):
 
         db = get_session()
 
-        # Get the download info stored in the downloaded release
-        download_info = self.getDownloadInfo(download_id = download_id, downloader = downloader)
+        # Extend the download info with info stored in the downloaded release
+        download_info = self.extendDownloadInfo(download_info)
 
         groups = fireEvent('scanner.scan', folder = folder if folder else self.conf('from'),
                            files = files, download_info = download_info, return_ignored = False, single = True)
@@ -377,7 +376,7 @@ class Renamer(Plugin):
 
                 # Remove leftover files
                 if self.conf('cleanup') and not self.conf('move_leftover') and remove_leftovers and \
-                        not (self.conf('file_action') != 'move' and download_info and download_info.get('is_torrent')):
+                        not (self.conf('file_action') != 'move' and self.downloadIsTorrent(download_info)):
                     log.debug('Removing leftover files')
                     for current_file in group['files']['leftover']:
                         remove_files.append(current_file)
@@ -427,13 +426,13 @@ class Renamer(Plugin):
                     self.makeDir(os.path.dirname(dst))
 
                     try:
-                        self.moveFile(src, dst, forcemove = not (download_info and download_info.get('is_torrent')))
+                        self.moveFile(src, dst, forcemove = not self.downloadIsTorrent(download_info))
                         group['renamed_files'].append(dst)
                     except:
                         log.error('Failed moving the file "%s" : %s', (os.path.basename(src), traceback.format_exc()))
                         self.tagDir(group, 'failed_rename')
 
-            if self.conf('file_action') != 'move' and download_info and download_info.get('is_torrent'):
+            if self.conf('file_action') != 'move' and self.downloadIsTorrent(download_info):
                 self.tagDir(group, 'renamed already')
 
             # Remove matching releases
@@ -657,7 +656,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                                 elif item['status'] == 'completed':
                                     log.info('Download of %s completed!', item['name'])
                                     if item['id'] and item['downloader'] and item['folder']:
-                                        fireEvent('renamer.scan', movie_folder = item['folder'], downloader = item['downloader'], download_id = item['id'])
+                                        fireEventAsync('renamer.scan', movie_folder = item['folder'], download_info = item)
                                     else:
                                         scan_required = True
 
@@ -677,34 +676,37 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
         return True
 
-    def getDownloadInfo(self, download_id, downloader):
-    
-        rls = None 
-        download_info = None
-    
-        if download_id and downloader:
-    
+    def extendDownloadInfo(self, download_info):
+
+        rls = None
+
+        if download_info and download_info.get('id') and download_info.get('downloader'):
+
             db = get_session()
-    
-            rlsnfo_dwnlds = db.query(ReleaseInfo).filter_by(identifier = 'download_downloader', value = downloader).all()
-            rlsnfo_ids = db.query(ReleaseInfo).filter_by(identifier = 'download_id', value = download_id).all()
-    
+
+            rlsnfo_dwnlds = db.query(ReleaseInfo).filter_by(identifier = 'download_downloader', value = download_info.get('downloader')).all()
+            rlsnfo_ids = db.query(ReleaseInfo).filter_by(identifier = 'download_id', value = download_info.get('id')).all()
+
             for rlsnfo_dwnld in rlsnfo_dwnlds:
                 for rlsnfo_id in rlsnfo_ids:
                     if rlsnfo_id.release == rlsnfo_dwnld.release:
                         rls = rlsnfo_id.release
                         break
                 if rls: break
-    
+
             if not rls:
-                log.error('Download ID %s from downloader %s not found in releases', (download_id, downloader))
-    
+                log.error('Download ID %s from downloader %s not found in releases', (download_info.get('id'), download_info.get('downloader')))
+
         if rls:
-            download_info = {
+
+            rls_dict = rls.to_dict({'info':{}})
+            download_info.update({
                 'imdb_id': rls.movie.library.identifier,
                 'quality': rls.quality.identifier,
-                'is_torrent': any(downloader_type in fireEvent('download.downloader_type', downloader = downloader) for downloader_type in ['torrent', 'torrent_magnet'])
-            }
-    
+                'type': rls_dict.get('info', {}).get('type')
+            })
+
         return download_info
 
+    def downloadIsTorrent(self, download_info):
+        return download_info and download_info.get('type') in ['torrent', 'torrent_magnet']
