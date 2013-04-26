@@ -384,8 +384,9 @@ class Searcher(Plugin):
         movie_words = re.split('\W+', simplifyString(movie_name))
         nzb_name = simplifyString(nzb['name'])
         nzb_words = re.split('\W+', nzb_name)
-        required_words = splitString(self.conf('required_words').lower())
 
+        # Make sure it has required words
+        required_words = splitString(self.conf('required_words').lower())
         req_match = 0
         for req_set in required_words:
             req = splitString(req_set, '&')
@@ -395,19 +396,24 @@ class Searcher(Plugin):
             log.info2("Wrong: Required word missing: %s" % nzb['name'])
             return False
 
+        # Ignore releases
         ignored_words = splitString(self.conf('ignored_words').lower())
-        blacklisted = list(set(nzb_words) & set(ignored_words) - set(movie_words))
-        if self.conf('ignored_words') and blacklisted:
-            log.info2("Wrong: '%s' blacklisted words: %s" % (nzb['name'], ", ".join(blacklisted)))
+        ignored_match = 0
+        for ignored_set in ignored_words:
+            ignored = splitString(ignored_set, '&')
+            ignored_match += len(list(set(nzb_words) & set(ignored))) == len(ignored)
+
+        if self.conf('ignored_words') and ignored_match:
+            log.info2("Wrong: '%s' contains 'ignored words'" % (nzb['name']))
             return False
 
+        # Ignore porn stuff
         pron_tags = ['xxx', 'sex', 'anal', 'tits', 'fuck', 'porn', 'orgy', 'milf', 'boobs', 'erotica', 'erotic']
         pron_words = list(set(nzb_words) & set(pron_tags) - set(movie_words))
         if pron_words:
             log.info('Wrong: %s, probably pr0n', (nzb['name']))
             return False
 
-        #qualities = fireEvent('quality.all', single = True)
         preferred_quality = fireEvent('quality.single', identifier = quality['identifier'], single = True)
 
         # Contains lower quality string
