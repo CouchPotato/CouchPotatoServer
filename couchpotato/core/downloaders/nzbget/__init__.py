@@ -27,6 +27,8 @@ config = [{
                 {
                     'name': 'username',
                     'default': 'nzbget',
+                    'advanced': True,
+                    'description': 'Set a different username to connect. Default: nzbget',
                 },
                 {
                     'name': 'password',
