@@ -103,7 +103,7 @@ class Renamer(Plugin):
 
         # make sure the movie folder name is included in the search
         folder = None
-        movie_files = []
+        files = []
         if movie_folder:
             log.info('Scanning movie folder %s...', movie_folder)
             movie_folder = movie_folder.rstrip(os.path.sep)
@@ -112,37 +112,17 @@ class Renamer(Plugin):
             # Get all files from the specified folder
             try:
                 for root, folders, names in os.walk(movie_folder):
-                    movie_files.extend([os.path.join(root, name) for name in names])
+                    files.extend([os.path.join(root, name) for name in names])
             except:
                 log.error('Failed getting files from %s: %s', (movie_folder, traceback.format_exc()))
 
         db = get_session()
 
-        # Get the release with the downloader ID that was downloded by the downloader
-        download_info = None
-        if download_id and downloader:
-            rls = None
-
-            rlsnfo_dwnlds = db.query(ReleaseInfo).filter_by(identifier = 'download_downloader', value = downloader).all()
-            rlsnfo_ids = db.query(ReleaseInfo).filter_by(identifier = 'download_id', value = download_id).all()
-
-            for rlsnfo_dwnld in rlsnfo_dwnlds:
-                for rlsnfo_id in rlsnfo_ids:
-                    if rlsnfo_id.release == rlsnfo_dwnld.release:
-                        rls = rlsnfo_id.release
-                        break
-                if rls: break
-
-            if rls:
-                download_info = {
-                    'imdb_id': rls.movie.library.identifier,
-                    'quality': rls.quality.identifier,
-                }
-            else:
-                log.error('Download ID %s from downloader %s not found in releases', (download_id, downloader))
+        # Get the download info stored in the downloaded release
+        download_info = self.getDownloadInfo(download_id = download_id, downloader = downloader)
 
         groups = fireEvent('scanner.scan', folder = folder if folder else self.conf('from'),
-                           files = movie_files, download_info = download_info, return_ignored = False, single = True)
+                           files = files, download_info = download_info, return_ignored = False, single = True)
 
         destination = self.conf('to')
         folder_name = self.conf('folder_name')
@@ -375,7 +355,7 @@ class Renamer(Plugin):
                             else:
                                 log.info('Better quality release already exists for %s, with quality %s', (movie.library.titles[0].title, release.quality.label))
 
-                                # Add _EXISTS_ to the parent dir
+                                # Add exists tag to the .ignore file
                                 self.tagDir(group, 'exists')
 
                                 # Notify on rename fail
@@ -396,7 +376,8 @@ class Renamer(Plugin):
                                 db.commit()
 
                 # Remove leftover files
-                if self.conf('cleanup') and not self.conf('move_leftover') and remove_leftovers:
+                if self.conf('cleanup') and not self.conf('move_leftover') and remove_leftovers and \
+                        not (self.conf('file_action') != 'move' and download_info and download_info.get('is_torrent')):
                     log.debug('Removing leftover files')
                     for current_file in group['files']['leftover']:
                         remove_files.append(current_file)
@@ -446,13 +427,13 @@ class Renamer(Plugin):
                     self.makeDir(os.path.dirname(dst))
 
                     try:
-                        self.moveFile(src, dst)
+                        self.moveFile(src, dst, forcemove = not (download_info and download_info.get('is_torrent')))
                         group['renamed_files'].append(dst)
                     except:
                         log.error('Failed moving the file "%s" : %s', (os.path.basename(src), traceback.format_exc()))
                         self.tagDir(group, 'failed_rename')
 
-            if self.conf('file_action') != 'move':
+            if self.conf('file_action') != 'move' and download_info and download_info.get('is_torrent'):
                 self.tagDir(group, 'renamed already')
 
             # Remove matching releases
@@ -518,10 +499,12 @@ Remove it if you want it to be renamed (again, or at least let it try again)
             self.createFile(ignore_file, text)
 
 
-    def moveFile(self, old, dest):
+    def moveFile(self, old, dest, forcemove = False):
         dest = ss(dest)
         try:
-            if self.conf('file_action') == 'hardlink':
+            if forcemove:
+                shutil.move(old, dest)
+            elif self.conf('file_action') == 'hardlink':
                 link(old, dest)
             elif self.conf('file_action') == 'symlink':
                 symlink(old, dest)
@@ -665,17 +648,16 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                                     pass
                                 elif item['status'] == 'failed':
                                     fireEvent('download.remove_failed', item, single = True)
+                                    rel.status_id = failed_status.get('id')
+                                    rel.last_edit = int(time.time())
+                                    db.commit()
 
                                     if self.conf('next_on_failed'):
                                         fireEvent('searcher.try_next_release', movie_id = rel.movie_id)
-                                    else:
-                                        rel.status_id = failed_status.get('id')
-                                        rel.last_edit = int(time.time())
-                                        db.commit()
                                 elif item['status'] == 'completed':
                                     log.info('Download of %s completed!', item['name'])
                                     if item['id'] and item['downloader'] and item['folder']:
-                                        fireEventAsync('renamer.scan', movie_folder = item['folder'], downloader = item['downloader'], download_id = item['id'])
+                                        fireEvent('renamer.scan', movie_folder = item['folder'], downloader = item['downloader'], download_id = item['id'])
                                     else:
                                         scan_required = True
 
@@ -694,3 +676,35 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         self.checking_snatched = False
 
         return True
+
+    def getDownloadInfo(self, download_id, downloader):
+    
+        rls = None 
+        download_info = None
+    
+        if download_id and downloader:
+    
+            db = get_session()
+    
+            rlsnfo_dwnlds = db.query(ReleaseInfo).filter_by(identifier = 'download_downloader', value = downloader).all()
+            rlsnfo_ids = db.query(ReleaseInfo).filter_by(identifier = 'download_id', value = download_id).all()
+    
+            for rlsnfo_dwnld in rlsnfo_dwnlds:
+                for rlsnfo_id in rlsnfo_ids:
+                    if rlsnfo_id.release == rlsnfo_dwnld.release:
+                        rls = rlsnfo_id.release
+                        break
+                if rls: break
+    
+            if not rls:
+                log.error('Download ID %s from downloader %s not found in releases', (download_id, downloader))
+    
+        if rls:
+            download_info = {
+                'imdb_id': rls.movie.library.identifier,
+                'quality': rls.quality.identifier,
+                'is_torrent': any(downloader_type in fireEvent('download.downloader_type', downloader = downloader) for downloader_type in ['torrent', 'torrent_magnet'])
+            }
+    
+        return download_info
+
