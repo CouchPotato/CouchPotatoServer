@@ -119,7 +119,7 @@ class Renamer(Plugin):
         db = get_session()
 
         # Get the download info stored in the downloaded release
-        download_info = getDownloadInfo(download_id = download_id, downloader = downloader)
+        download_info = self.getDownloadInfo(download_id = download_id, downloader = downloader)
 
         groups = fireEvent('scanner.scan', folder = folder if folder else self.conf('from'),
                            files = files, download_info = download_info, return_ignored = False, single = True)
@@ -355,7 +355,7 @@ class Renamer(Plugin):
                             else:
                                 log.info('Better quality release already exists for %s, with quality %s', (movie.library.titles[0].title, release.quality.label))
 
-                                # Add _EXISTS_ to the parent dir
+                                # Add exists tag to the .ignore file
                                 self.tagDir(group, 'exists')
 
                                 # Notify on rename fail
@@ -376,7 +376,8 @@ class Renamer(Plugin):
                                 db.commit()
 
                 # Remove leftover files
-                if self.conf('cleanup') and not self.conf('move_leftover') and remove_leftovers:
+                if self.conf('cleanup') and not self.conf('move_leftover') and remove_leftovers and \
+                        not (self.conf('file_action') != 'move' and download_info and download_info.get('is_torrent')):
                     log.debug('Removing leftover files')
                     for current_file in group['files']['leftover']:
                         remove_files.append(current_file)
@@ -676,34 +677,34 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
         return True
 
-def getDownloadInfo(self, download_id, downloader):
-
-    rls = None 
-    download_info = None
-
-    if download_id and downloader:
-
-        db = get_session()
-
-        rlsnfo_dwnlds = db.query(ReleaseInfo).filter_by(identifier = 'download_downloader', value = downloader).all()
-        rlsnfo_ids = db.query(ReleaseInfo).filter_by(identifier = 'download_id', value = download_id).all()
-
-        for rlsnfo_dwnld in rlsnfo_dwnlds:
-            for rlsnfo_id in rlsnfo_ids:
-                if rlsnfo_id.release == rlsnfo_dwnld.release:
-                    rls = rlsnfo_id.release
-                    break
-            if rls: break
-
-        if not rls:
-            log.error('Download ID %s from downloader %s not found in releases', (download_id, downloader))
-
-    if rls:
-        download_info = {
-            'imdb_id': rls.movie.library.identifier,
-            'quality': rls.quality.identifier,
-            'is_torrent': any(downloader_type in fireEvent('download.downloader_type', downloader = downloader) for downloader_type in ['torrent', 'torrent_magnet'])
-        }
-
-    return download_info
+    def getDownloadInfo(self, download_id, downloader):
+    
+        rls = None 
+        download_info = None
+    
+        if download_id and downloader:
+    
+            db = get_session()
+    
+            rlsnfo_dwnlds = db.query(ReleaseInfo).filter_by(identifier = 'download_downloader', value = downloader).all()
+            rlsnfo_ids = db.query(ReleaseInfo).filter_by(identifier = 'download_id', value = download_id).all()
+    
+            for rlsnfo_dwnld in rlsnfo_dwnlds:
+                for rlsnfo_id in rlsnfo_ids:
+                    if rlsnfo_id.release == rlsnfo_dwnld.release:
+                        rls = rlsnfo_id.release
+                        break
+                if rls: break
+    
+            if not rls:
+                log.error('Download ID %s from downloader %s not found in releases', (download_id, downloader))
+    
+        if rls:
+            download_info = {
+                'imdb_id': rls.movie.library.identifier,
+                'quality': rls.quality.identifier,
+                'is_torrent': any(downloader_type in fireEvent('download.downloader_type', downloader = downloader) for downloader_type in ['torrent', 'torrent_magnet'])
+            }
+    
+        return download_info
 
