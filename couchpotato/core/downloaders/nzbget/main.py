@@ -164,9 +164,9 @@ class NZBGet(Downloader):
             history = rpc.history()
             for hist in history:
                 if hist['Parameters'] and hist['Parameters']['couchpotato'] and hist['Parameters']['couchpotato'] == item['id']:
-                    NZBID = hist['ID']
+                    nzb_id = hist['ID']
                     path = hist['DestDir']
-            if rpc.editqueue('HistoryDelete', 0, "", [tryInt(NZBID)]):
+            if rpc.editqueue('HistoryDelete', 0, "", [tryInt(nzb_id)]):
                 shutil.rmtree(path, True)
         except:
             log.error('Failed deleting: %s', traceback.format_exc(0))
