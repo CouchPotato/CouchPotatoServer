@@ -16,7 +16,7 @@ class NZBGet(Downloader):
 
     type = ['nzb']
 
-    url = 'http://%(username):%(password)s@%(host)s/xmlrpc'
+    url = 'http://%(username)s:%(password)s@%(host)s/xmlrpc'
 
     def download(self, data = {}, movie = {}, filedata = None):
 
@@ -103,7 +103,7 @@ class NZBGet(Downloader):
             try:
                 nzb_id = [param['Value'] for param in item['Parameters'] if param['Name'] == 'couchpotato'][0]
             except:
-                nzb_id = item['NZBID'],
+                nzb_id = item['NZBID']
             statuses.append({
                 'id': nzb_id,
                 'name': item['NZBFilename'],
@@ -126,7 +126,7 @@ class NZBGet(Downloader):
             try:
                 nzb_id = [param['Value'] for param in item['Parameters'] if param['Name'] == 'couchpotato'][0]
             except:
-                nzb_id = item['NZBID'],
+                nzb_id = item['NZBID']
             statuses.append({
                 'id': nzb_id,
                 'name': item['NZBFilename'],
