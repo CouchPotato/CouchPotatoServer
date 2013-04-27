@@ -25,6 +25,7 @@ class StatusPlugin(Plugin):
         'available': 'Available',
         'suggest': 'Suggest',
     }
+    status_cached = {}
 
     def __init__(self):
         addEvent('status.add', self.add)
@@ -32,6 +33,7 @@ class StatusPlugin(Plugin):
         addEvent('status.get_by_id', self.getById)
         addEvent('status.all', self.all)
         addEvent('app.initialize', self.fill)
+        addEvent('app.load', self.all)
 
         addApiView('status.list', self.list, docs = {
             'desc': 'Check for available update',
@@ -67,10 +69,15 @@ class StatusPlugin(Plugin):
             s = status.to_dict()
             temp.append(s)
 
-        #db.close()
+            # Update cache
+            self.status_cached[status.identifier] = s
+
         return temp
 
     def add(self, identifier):
+
+        if self.status_cached.get(identifier):
+            return self.status_cached.get(identifier)
 
         db = get_session()
 
@@ -85,7 +92,7 @@ class StatusPlugin(Plugin):
 
         status_dict = s.to_dict()
 
-        #db.close()
+        self.status_cached[identifier] = status_dict
         return status_dict
 
     def fill(self):
