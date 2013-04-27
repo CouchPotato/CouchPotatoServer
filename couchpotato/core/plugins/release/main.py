@@ -41,6 +41,7 @@ class Release(Plugin):
         addEvent('release.clean', self.clean)
 
     def add(self, group):
+
         db = get_session()
 
         identifier = '%s.%s.%s' % (group['library']['identifier'], group['meta_data'].get('audio', 'unknown'), group['meta_data']['quality']['identifier'])
@@ -76,15 +77,19 @@ class Release(Plugin):
             db.commit()
 
         # Add each file type
+        added_files = []
         for type in group['files']:
             for cur_file in group['files'][type]:
                 added_file = self.saveFile(cur_file, type = type, include_media_info = type is 'movie')
-                try:
-                    added_file = db.query(File).filter_by(id = added_file.get('id')).one()
-                    rel.files.append(added_file)
-                    db.commit()
-                except Exception, e:
-                    log.debug('Failed to attach "%s" to release: %s', (cur_file, e))
+                added_files.append(added_file.get('id'))
+
+        # Add the release files in batch
+        try:
+            added_files = db.query(File).filter(or_(*[File.id == x for x in added_files])).all()
+            rel.files.append(added_files)
+            db.commit()
+        except Exception, e:
+            log.debug('Failed to attach "%s" to release: %s', (cur_file, e))
 
         fireEvent('movie.restatus', movie.id)
 
