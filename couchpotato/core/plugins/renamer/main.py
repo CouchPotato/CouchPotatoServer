@@ -131,10 +131,8 @@ class Renamer(Plugin):
         separator = self.conf('separator')
 
         # Statusses
-        done_status = fireEvent('status.get', 'done', single = True)
-        active_status = fireEvent('status.get', 'active', single = True)
-        downloaded_status = fireEvent('status.get', 'downloaded', single = True)
-        snatched_status = fireEvent('status.get', 'snatched', single = True)
+        done_status, active_status, downloaded_status, snatched_status = \
+            fireEvent('status.get', ['done', 'active', 'downloaded', 'snatched'], single = True)
 
         for group_identifier in groups:
 
@@ -588,11 +586,8 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
         self.checking_snatched = True
 
-        snatched_status = fireEvent('status.get', 'snatched', single = True)
-        ignored_status = fireEvent('status.get', 'ignored', single = True)
-        failed_status = fireEvent('status.get', 'failed', single = True)
-
-        done_status = fireEvent('status.get', 'done', single = True)
+        snatched_status, ignored_status, failed_status, done_status = \
+            fireEvent('status.get', ['snatched', 'ignored', 'failed', 'done'], single = True)
 
         db = get_session()
         rels = db.query(Release).filter_by(status_id = snatched_status.get('id')).all()

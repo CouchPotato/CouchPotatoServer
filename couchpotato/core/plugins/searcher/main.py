@@ -146,8 +146,7 @@ class Searcher(Plugin):
 
         pre_releases = fireEvent('quality.pre_releases', single = True)
         release_dates = fireEvent('library.update_release_date', identifier = movie['library']['identifier'], merge = True)
-        available_status = fireEvent('status.get', 'available', single = True)
-        ignored_status = fireEvent('status.get', 'ignored', single = True)
+        available_status, ignored_status = fireEvent('status.get', ['available', 'ignored'], single = True)
 
         found_releases = []
 

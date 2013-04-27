@@ -46,8 +46,10 @@ class Release(Plugin):
 
         identifier = '%s.%s.%s' % (group['library']['identifier'], group['meta_data'].get('audio', 'unknown'), group['meta_data']['quality']['identifier'])
 
+
+        done_status, snatched_status = fireEvent('status.get', ['done', 'snatched'], single = True)
+
         # Add movie
-        done_status = fireEvent('status.get', 'done', single = True)
         movie = db.query(Movie).filter_by(library_id = group['library'].get('id')).first()
         if not movie:
             movie = Movie(
@@ -59,7 +61,6 @@ class Release(Plugin):
             db.commit()
 
         # Add Release
-        snatched_status = fireEvent('status.get', 'snatched', single = True)
         rel = db.query(Relea).filter(
             or_(
                 Relea.identifier == identifier,
@@ -152,8 +153,7 @@ class Release(Plugin):
 
         rel = db.query(Relea).filter_by(id = id).first()
         if rel:
-            ignored_status = fireEvent('status.get', 'ignored', single = True)
-            available_status = fireEvent('status.get', 'available', single = True)
+            ignored_status, available_status = fireEvent('status.get', ['ignored', 'available'], single = True)
             rel.status_id = available_status.get('id') if rel.status_id is ignored_status.get('id') else ignored_status.get('id')
             db.commit()
 
@@ -166,8 +166,7 @@ class Release(Plugin):
         db = get_session()
         id = getParam('id')
 
-        snatched_status = fireEvent('status.add', 'snatched', single = True)
-        done_status = fireEvent('status.get', 'done', single = True)
+        snatched_status, done_status = fireEvent('status.get', ['snatched', 'done'], single = True)
 
         rel = db.query(Relea).filter_by(id = id).first()
         if rel:
