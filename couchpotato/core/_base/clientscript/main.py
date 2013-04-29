@@ -110,6 +110,7 @@ class ClientScript(Plugin):
             else:
                 data = cssmin(f)
                 data = data.replace('../images/', '../static/images/')
+                data = data.replace('../fonts/', '../static/fonts/')
 
             raw.append({'file': file_path, 'date': int(os.path.getmtime(file_path)), 'data': data})
 
