@@ -1,5 +1,9 @@
+.page.settings {
+	min-width: 960px;	
+}
+
 .page.settings:after {
-	content: ".";
+	content: "";
 	display: block;
 	clear: both;
 	visibility: hidden;
@@ -9,15 +13,15 @@
 
 	.page.settings .tabs {
 		float: left;
-		width: 20%;
-		font-size: 20px;
+		width: 14.7%;
+		font-size: 17px;
 		text-align: right;
 		list-style: none;
-		padding: 40px 0;
+		padding: 35px 0;
 		margin: 0;
 		min-height: 470px;
 		background-image: -*-linear-gradient(
-		    20deg,
+		    14deg,
 		    rgba(0,0,0,0) 50%,
 		    rgba(0,0,0,0.3) 100%
 		);
@@ -60,9 +64,9 @@
 
 
 	.page.settings .containers {
-		width: 80%;
+		width: 84%;
 		float: left;
-		padding: 20px 2%;
+		padding: 40px 2%;
 		min-height: 300px;
 	}
 
@@ -240,7 +244,7 @@
 		display: block;
 		text-align: right;
 		height: 20px;
-		margin: 0;
+		margin: 0 0 -37px;
 	}
 		.page .advanced_toggle span { padding: 0 5px; }
 		.page.show_advanced .advanced_toggle {

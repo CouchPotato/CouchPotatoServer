@@ -61,7 +61,7 @@ var CouchPotato = new Class({
 				new Element('div').adopt(
 					self.block.navigation = new Block.Navigation(self, {}),
 					self.block.search = new Block.Search(self, {}),
-					self.block.more = new Block.Menu(self, {})
+					self.block.more = new Block.Menu(self, {'button_class': 'icon2.cog'})
 				)
 			),
 			self.content = new Element('div.content'),

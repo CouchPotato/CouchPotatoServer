@@ -43,7 +43,10 @@ var MovieList = new Class({
 			}) : null
 		);
 
-		self.changeView(self.getSavedView() || self.options.view || 'details');
+		if($(window).getSize().x < 480)
+			self.changeView('list');
+		else
+			self.changeView(self.getSavedView() || self.options.view || 'details');
 
 		self.getMovies();
 
@@ -121,7 +124,7 @@ var MovieList = new Class({
 
 		if(!self.navigation_counter) return;
 
-		self.navigation_counter.set('text', (count || 0));
+		self.navigation_counter.set('text', (count || 0) + ' movies');
 
 	},
 
@@ -146,64 +149,67 @@ var MovieList = new Class({
 		var chars = '#ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
 		self.current_view = self.getSavedView() || 'details';
-		self.el.addClass(self.current_view+'_list')
+		self.el.addClass(self.current_view+'_list with_navigation')
 
-		self.navigation = new Element('div.alph_nav').adopt(
-			self.navigation_actions = new Element('ul.inlay.actions.reversed'),
-			self.navigation_counter = new Element('span.counter[title=Total]'),
-			self.navigation_alpha = new Element('ul.numbers', {
-				'events': {
-					'click:relay(li)': function(e, el){
-						self.movie_list.empty()
-						self.activateLetter(el.get('data-letter'))
-						self.getMovies()
+		self.navigation = new Element('div.alph_nav').grab(
+			new Element('div').adopt(
+				self.navigation_alpha = new Element('ul.numbers', {
+					'events': {
+						'click:relay(li)': function(e, el){
+							self.movie_list.empty()
+							self.activateLetter(el.get('data-letter'))
+							self.getMovies()
+						}
 					}
-				}
-			}),
-			self.navigation_search_input = new Element('input.inlay', {
-				'placeholder': 'Search',
-				'events': {
-					'keyup': self.search.bind(self),
-					'change': self.search.bind(self)
-				}
-			}),
-			self.navigation_menu = new Block.Menu(self),
-			self.mass_edit_form = new Element('div.mass_edit_form').adopt(
-				new Element('span.select').adopt(
-					self.mass_edit_select = new Element('input[type=checkbox].inlay', {
-						'events': {
-							'change': self.massEditToggleAll.bind(self)
-						}
-					}),
-					self.mass_edit_selected = new Element('span.count', {'text': 0}),
-					self.mass_edit_selected_label = new Element('span', {'text': 'selected'})
-				),
-				new Element('div.quality').adopt(
-					self.mass_edit_quality = new Element('select'),
-					new Element('a.button.orange', {
-						'text': 'Change quality',
-						'events': {
-							'click': self.changeQualitySelected.bind(self)
-						}
-					})
-				),
-				new Element('div.delete').adopt(
-					new Element('span[text=or]'),
-					new Element('a.button.red', {
-						'text': 'Delete',
-						'events': {
-							'click': self.deleteSelected.bind(self)
-						}
-					})
-				),
-				new Element('div.refresh').adopt(
-					new Element('span[text=or]'),
-					new Element('a.button.green', {
-						'text': 'Refresh',
-						'events': {
-							'click': self.refreshSelected.bind(self)
-						}
-					})
+				}),
+				self.navigation_counter = new Element('span.counter[title=Total]'),
+				self.navigation_actions = new Element('ul.inlay.actions.reversed'),
+				self.navigation_search_input = new Element('input.search.inlay', {
+					'title': 'Search through ' + self.options.identifier,
+					'placeholder': 'Search through ' + self.options.identifier,
+					'events': {
+						'keyup': self.search.bind(self),
+						'change': self.search.bind(self)
+					}
+				}),
+				self.navigation_menu = new Block.Menu(self),
+				self.mass_edit_form = new Element('div.mass_edit_form').adopt(
+					new Element('span.select').adopt(
+						self.mass_edit_select = new Element('input[type=checkbox].inlay', {
+							'events': {
+								'change': self.massEditToggleAll.bind(self)
+							}
+						}),
+						self.mass_edit_selected = new Element('span.count', {'text': 0}),
+						self.mass_edit_selected_label = new Element('span', {'text': 'selected'})
+					),
+					new Element('div.quality').adopt(
+						self.mass_edit_quality = new Element('select'),
+						new Element('a.button.orange', {
+							'text': 'Change quality',
+							'events': {
+								'click': self.changeQualitySelected.bind(self)
+							}
+						})
+					),
+					new Element('div.delete').adopt(
+						new Element('span[text=or]'),
+						new Element('a.button.red', {
+							'text': 'Delete',
+							'events': {
+								'click': self.deleteSelected.bind(self)
+							}
+						})
+					),
+					new Element('div.refresh').adopt(
+						new Element('span[text=or]'),
+						new Element('a.button.green', {
+							'text': 'Refresh',
+							'events': {
+								'click': self.refreshSelected.bind(self)
+							}
+						})
+					)
 				)
 			)
 		).inject(self.el, 'top');
@@ -543,7 +549,7 @@ var MovieList = new Class({
 			self.title[is_empty ? 'hide' : 'show']()
 
 		if(self.description)
-			self.description[is_empty ? 'hide' : 'show']()
+			self.description.setStyle('display', [is_empty ? 'none' : ''])
 
 		if(is_empty && self.options.on_empty_element){
 			self.options.on_empty_element.inject(self.loader_first || self.title || self.movie_list, 'after');

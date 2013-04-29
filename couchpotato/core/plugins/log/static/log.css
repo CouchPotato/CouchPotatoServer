@@ -5,7 +5,7 @@
 	margin: 0;
 	font-size: 20px;
 	position: fixed;
-	width: 960px;
+	width: 100%;
 	bottom: 0;
 	background: #4E5969;
 }
@@ -24,7 +24,17 @@
 		.page.log .nav li.active {
 			font-weight: bold;
 			cursor: default;
-			font-size: 30px;
+			background: rgba(255,255,255,.1);
+		}
+		
+		@media all and (max-width: 480px) {
+			.page.log .nav {
+				font-size: 14px;
+			}
+			
+				.page.log .nav li {
+					padding: 5px;
+				}
 		}
 
 .page.log .loading {
