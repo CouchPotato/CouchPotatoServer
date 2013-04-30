@@ -507,8 +507,8 @@ body > .spinner, .mask{
 		border-radius:30px;
 
 		box-shadow: 0 1px 1px rgba(0,0,0,0.35), inset 0 1px 0px rgba(255,255,255,0.20);
-		background: url('../images/sprite.png') no-repeat 94% -53px, -*-linear-gradient(
-		    270deg,
+		background: url('../images/sprite.png') no-repeat 94% -53px, linear-gradient(
+		    180deg,
 		    #5b9bd1 0%,
 		    #406db8 100%
 		);
@@ -583,8 +583,8 @@ body > .spinner, .mask{
 	border: 1px solid #252930;
 	box-shadow: inset 0 1px 0px rgba(255,255,255,0.20), 0 0 3px rgba(0,0,0, 0.2);
 	background: rgb(55,62,74);
-	background-image: -*-linear-gradient(
-	    90deg,
+	background-image: linear-gradient(
+	    0,
 	    rgb(55,62,74) 0%,
 	    rgb(73,83,98) 100%
 	);
@@ -664,8 +664,8 @@ body > .spinner, .mask{
 	box-shadow: 0 20px 20px -5px rgba(0,0,0,0.1);
 	text-align: center;
 	color: #000;
-	background-image: -*-linear-gradient(
-	    45deg,
+	background-image: linear-gradient(
+	    -45deg,
 	    rgb(200,200,200) 0%,
 	    rgb(255,255,255) 100%
 	);
@@ -725,8 +725,8 @@ body > .spinner, .mask{
 		overflow: hidden;
 		transition: all .6s cubic-bezier(0.9,0,0.1,1);
 		box-shadow: 0 1px 1px rgba(0,0,0,0.35), inset 0 1px 0px rgba(255,255,255,0.20);
-		background-image: -*-linear-gradient(
-		    270deg,
+		background-image: linear-gradient(
+		    180deg,
 		    #5b9bd1 0%,
 		    #406db8 100%
 		);
