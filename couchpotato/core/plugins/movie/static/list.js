@@ -255,18 +255,19 @@ var MovieList = new Class({
 		});
 
 		// Get available chars and highlight
-		Api.request('movie.available_chars', {
-			'data': Object.merge({
-				'status': self.options.status
-			}, self.filter),
-			'onSuccess': function(json){
-
-				json.chars.split('').each(function(c){
-					self.letters[c.capitalize()].addClass('available')
-				})
-
-			}
-		});
+		if(self.navigation.isDisplayed() || self.navigation.isVisible())
+			Api.request('movie.available_chars', {
+				'data': Object.merge({
+					'status': self.options.status
+				}, self.filter),
+				'onSuccess': function(json){
+	
+					json.chars.split('').each(function(c){
+						self.letters[c.capitalize()].addClass('available')
+					})
+	
+				}
+			});
 
 		// Add menu or hide
 		if (self.options.menu.length > 0)
@@ -274,17 +275,7 @@ var MovieList = new Class({
 				self.navigation_menu.addLink(menu_item);
 			})
 		else
-			self.navigation_menu.hide()
-
-		self.nav_scrollspy = new ScrollSpy({
-			min: 10,
-			onEnter: function(){
-				self.navigation.addClass('float')
-			},
-			onLeave: function(){
-				self.navigation.removeClass('float')
-			}
-		});
+			self.navigation_menu.hide();
 
 	},
 

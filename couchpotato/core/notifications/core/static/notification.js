@@ -28,14 +28,10 @@ var NotificationBase = new Class({
 			$(App.block.notification).inject(App.getBlock('search'), 'after');
 			self.badge = new Element('div.badge').inject(App.block.notification, 'top').hide();
 
-			/* App.getBlock('notification').addLink(new Element('a.more', {
-				'href': App.createUrl('notifications'),
-				'text': 'Show older notifications'
-			})); */
 		});
 
 		window.addEvent('load', function(){
-			self.startInterval.delay(Browser.safari ? 100 : 0, self)
+			self.startInterval.delay(2000, self)
 		});
 
 	},

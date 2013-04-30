@@ -30,7 +30,7 @@ Page.Wanted = new Class({
 			$(self.wanted).inject(self.el);
 
 			// Check if search is in progress
-			self.startProgressInterval();
+			self.startProgressInterval.delay(4000, self);
 		}
 
 	},
