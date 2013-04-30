@@ -8,7 +8,8 @@ var MovieList = new Class({
 		load_more: true,
 		loader: true,
 		menu: [],
-		add_new: false
+		add_new: false,
+		force_view: false
 	},
 
 	movies: [],
@@ -43,7 +44,7 @@ var MovieList = new Class({
 			}) : null
 		);
 
-		if($(window).getSize().x < 480)
+		if($(window).getSize().x < 480 && !self.options.force_view)
 			self.changeView('list');
 		else
 			self.changeView(self.getSavedView() || self.options.view || 'details');

@@ -59,6 +59,7 @@ Page.Home = new Class({
 			'actions': [MA.IMDB, MA.Refresh],
 			'load_more': false,
 			'view': 'thumbs',
+			'force_view': true,
 			'api_call': 'dashboard.soon'
 		});
 
