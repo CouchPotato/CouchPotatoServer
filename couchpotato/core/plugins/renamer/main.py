@@ -4,7 +4,7 @@ from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
 from couchpotato.core.helpers.encoding import toUnicode, ss
 from couchpotato.core.helpers.request import getParams, jsonified
 from couchpotato.core.helpers.variable import getExt, mergeDicts, getTitle, \
-    getImdb
+    getImdb, link, symlink
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Library, File, Profile, Release, \
@@ -18,19 +18,6 @@ import time
 import traceback
 
 log = CPLog(__name__)
-
-# Windows hack for (sym)links
-def winLink(src, dst): 
-    import ctypes 
-    if ctypes.windll.kernel32.CreateHardLinkW(unicode(dst), unicode(src), 0) == 0: raise ctypes.WinError()
-
-def winSymlink(src, dst):
-    import ctypes 
-    if ctypes.windll.kernel32.CreateSymbolicLinkW(unicode(dst), unicode(src), 1 if os.path.isdir(src) else 0) in [0, 1280]: raise ctypes.WinError()
-
-if os.name == 'nt':
-    os.link = winLink
-    os.symlink = winSymlink
 
 class Renamer(Plugin):
 
@@ -513,14 +500,14 @@ Remove it if you want it to be renamed (again, or at least let it try again)
             if forcemove:
                 shutil.move(old, dest)
             elif self.conf('file_action') == 'hardlink':
-                os.link(old, dest)
+                link(old, dest)
             elif self.conf('file_action') == 'symlink':
-                os.symlink(old, dest)
+                symlink(old, dest)
             elif self.conf('file_action') == 'copy':
                 shutil.copy(old, dest)
             elif self.conf('file_action') == 'move_symlink':
                 shutil.move(old, dest)
-                os.symlink(dest, old)
+                symlink(dest, old)
             else:
                 shutil.move(old, dest)
 
