@@ -252,6 +252,14 @@
 					top: -5px;
 					position: relative;
 				}
+				
+				.movies.thumbs_list .info .title span {
+					white-space: normal;
+					overflow: auto;
+					height: auto;
+					text-align: left;
+				}
+				
 				.movies.list_list .movie:not(.details_view) .info .title,
 				.movies.mass_edit_list .info .title {
 					font-size: 16px;
@@ -407,8 +415,9 @@
 				display: inline-block;
 			}
 			.movies.thumbs_list .data .actions {
-				bottom: 8px;
+				bottom: 2px;
 				right: 10px;
+				top: auto;
 			}
 		
 			.movies .movie:hover .action { opacity: 0.6; }
