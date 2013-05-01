@@ -639,71 +639,74 @@ body > .spinner, .mask{
 .more_menu {
 	display: inline-block;
 	vertical-align: middle;
+	overflow: visible;
 }
 
-.more_menu > a {
-	display: block;
-	background: url('../images/sprite.png') no-repeat center -137px;
-	height: 25px;
-	width: 25px;
-	border: 1px solid rgba(0,0,0,0.3);
-	transition: all 0.3s ease-in-out;
-}
-.more_menu.show > a:not(:active), .more_menu > a:hover:not(:active) {
-	background-color: #406db8;
-}
-
-.more_menu .wrapper {
-	display: none;
-	background: rgba(255,255,255,0.98);
-	padding: 4px;
-	position: absolute;
-	z-index: 90;
-	margin: 32px 0 0 -145px;
-	width: 185px;
-	box-shadow: 0 20px 20px -5px rgba(0,0,0,0.1);
-	text-align: center;
-	color: #000;
-	background-image: linear-gradient(
-	    -45deg,
-	    rgb(200,200,200) 0%,
-	    rgb(255,255,255) 100%
-	);
-}
-
-	.more_menu.show .wrapper {
+	.more_menu > a {
 		display: block;
+		background: url('../images/sprite.png') no-repeat center -137px;
+		height: 25px;
+		width: 25px;
+		border: 1px solid rgba(0,0,0,0.3);
+		transition: all 0.3s ease-in-out;
 	}
-
-	.more_menu ul {
-		padding: 0;
-		margin: 0;
-		list-style: none;
+		.more_menu.show > a:not(:active), .more_menu > a:hover:not(:active) {
+			background-color: #406db8;
+		}
+	
+	.more_menu .wrapper {
+		display: none;
+		background: rgba(255,255,255,0.98);
+		top: 0;
+		right: 0;
+		padding: 4px;
+		margin: 26px 0 0 0;
+		position: absolute;
+		z-index: 90;
+		width: 185px;
+		box-shadow: 0 20px 20px -5px rgba(0,0,0,0.1);
+		text-align: center;
+		color: #000;
+		background-image: linear-gradient(
+		    -45deg,
+		    rgb(200,200,200) 0%,
+		    rgb(255,255,255) 100%
+		);
 	}
-
-	.more_menu .wrapper li {
-		width: 100%;
-		height: auto;
-	}
-
-		.more_menu .wrapper li a {
+	
+		.more_menu.show .wrapper {
 			display: block;
-			border-bottom: 1px solid rgba(255,255,255,0.2);
-			box-shadow: none;
-			font-weight: normal;
-			font-size: 11px;
-			text-transform: uppercase;
-			letter-spacing: 1px;
-			padding: 3px 0;
-			color: #000;
 		}
-
-		.more_menu .wrapper li:last-child a {
-			border: none;
+	
+		.more_menu ul {
+			padding: 0;
+			margin: 0;
+			list-style: none;
 		}
-		.more_menu .wrapper li a:hover {
-			background: rgba(0,0,0,0.05);
+	
+		.more_menu .wrapper li {
+			width: 100%;
+			height: auto;
 		}
+	
+			.more_menu .wrapper li a {
+				display: block;
+				border-bottom: 1px solid rgba(255,255,255,0.2);
+				box-shadow: none;
+				font-weight: normal;
+				font-size: 11px;
+				text-transform: uppercase;
+				letter-spacing: 1px;
+				padding: 3px 0;
+				color: #000;
+			}
+	
+			.more_menu .wrapper li:last-child a {
+				border: none;
+			}
+			.more_menu .wrapper li a:hover {
+				background: rgba(0,0,0,0.05);
+			}
 			
 .messages {
 	position: fixed;

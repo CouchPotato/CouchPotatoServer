@@ -48,7 +48,7 @@ var MovieList = new Class({
 			self.changeView('list');
 		else
 			self.changeView(self.getSavedView() || self.options.view || 'details');
-
+		
 		self.getMovies();
 
 		App.addEvent('movie.added', self.movieAdded.bind(self))
@@ -149,8 +149,7 @@ var MovieList = new Class({
 		var self = this;
 		var chars = '#ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
-		self.current_view = self.getSavedView() || 'details';
-		self.el.addClass(self.current_view+'_list with_navigation')
+		self.el.addClass('with_navigation')
 
 		self.navigation = new Element('div.alph_nav').grab(
 			new Element('div').adopt(
