@@ -464,19 +464,20 @@ body > .spinner, .mask{
 				text-align: center;
 			}
 
-	.header .message.update {
+	.message.update {
 		text-align: center;
-		position: relative;
-		top: -70px;
-		padding: 2px 0;
+		position: fixed;
+		padding: 10px;
 		background: #ff6134;
-		font-size: 12px;
-	    border-radius: 0 0 5px 5px;
-		box-shadow: 0 2px 1px rgba(0,0,0, 0.3);
+		font-size: 15px;
+		bottom: 0;
+		left: 0;
+		width: 100%;
+		z-index: 19;
 	}
 
-		.header .message a {
-			padding: 0 10px;
+		.message.update a {
+			padding: 0 5px;
 		}
 
 /*** Global Styles ***/

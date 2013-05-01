@@ -84,7 +84,7 @@ var UpdaterBase = new Class({
 					'click': self.doUpdate.bind(self)
 				}
 			})
-		).inject($(document.body).getElement('.header'))
+		).inject(document.body)
 	},
 
 	doUpdate: function(){
