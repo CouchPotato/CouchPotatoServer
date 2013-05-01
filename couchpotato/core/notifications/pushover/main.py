@@ -18,7 +18,9 @@ class Pushover(Notification):
             'user': self.conf('user_key'),
             'token': self.app_token,
             'message': toUnicode(message),
-            'priority': self.conf('priority')
+            'priority': self.conf('priority'),
+            'url': toUnicode("http://www.imdb.com/title/%s" % data['library']['identifier']) if data else "",
+            'url_title': toUnicode("%s on IMDb" %  data['library']['titles'][0]['title']) if data else ""
         }
 
         http_handler.request('POST',
