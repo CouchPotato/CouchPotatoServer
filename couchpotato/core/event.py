@@ -105,6 +105,8 @@ def fireEvent(name, *args, **kwargs):
 
                 # Dict
                 if isinstance(results[0], dict):
+                    results.reverse()
+
                     merged = {}
                     for result in results:
                         merged = mergeDicts(merged, result, prepend_list = True)
