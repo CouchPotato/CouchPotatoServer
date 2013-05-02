@@ -254,8 +254,6 @@ class GitUpdater(BaseUpdater):
 
 class SourceUpdater(BaseUpdater):
 
-    update_url = 'https://couchpota.to/updates/source.php?repo=%s&name=%s&branch=%s'
-
     def __init__(self):
 
         # Create version file in cache
@@ -263,13 +261,10 @@ class SourceUpdater(BaseUpdater):
         if not os.path.isfile(self.version_file):
             self.createFile(self.version_file, json.dumps(self.latestCommit()))
 
-        addEvent('app.load', self.doUpdate)
-
     def doUpdate(self):
 
         try:
-            url = self.update_url % (self.repo_user, self.repo_name, self.branch)
-            download_data = json.loads(self.urlopen(url))
+            download_data = fireEvent('cp.source_url', repo = self.repo_user, repo_name = self.repo_name, branch = self.branch, single = True)
             destination = os.path.join(Env.get('cache_dir'), self.update_version.get('hash')) + '.' + download_data.get('type')
 
             extracted_path = os.path.join(Env.get('cache_dir'), 'temp_updater')
