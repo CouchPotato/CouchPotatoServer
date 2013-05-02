@@ -139,6 +139,10 @@
 			padding-left: 2%;
 			line-height: 14px;
 		}
+		
+			.page .check {
+				margin-top: 6px;
+			}
 
 			.page .check + .formHint {
 				float: none;
@@ -166,6 +170,10 @@
 	.page .option_list {
 		margin-bottom: 20px;
 	}
+	
+		.page .option_list .check {
+			margin-top: 5px;
+		}
 	
 		.page .option_list .enabler {
 			padding: 0;
@@ -246,6 +254,9 @@
 		height: 20px;
 		margin: 0 0 -37px;
 	}
+		.page .advanced_toggle .check {
+			margin: 0;
+		}
 		.page .advanced_toggle span { padding: 0 5px; }
 		.page.show_advanced .advanced_toggle {
 			color: #edc07f;
@@ -544,6 +555,9 @@
 	.page .combined_table .ctrlHolder > * {
 		margin: 0 10px 0 0;
 	}
+		.page .combined_table .ctrlHolder > .check {
+			margin-top: 6px;
+		}
 
 	.page .combined_table .ctrlHolder .delete {
 		display: none;

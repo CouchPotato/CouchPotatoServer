@@ -61,6 +61,10 @@
 				margin-right: 10px;
 			}
 
+			.profile .type .check {
+				margin-top: -1px;
+			}
+
 			.profile .quality_type select {
 				width: 186px;
 				margin-left: -1px;

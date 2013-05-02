@@ -484,7 +484,8 @@ body > .spinner, .mask{
 /*** Global Styles ***/
 .check {
 	display: inline-block;
-	vertical-align: middle;
+	vertical-align: top;
+	margin-top: 4px;
 	height: 16px;
 	width: 16px;
 	cursor: pointer;
