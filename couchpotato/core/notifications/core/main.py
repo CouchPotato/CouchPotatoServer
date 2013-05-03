@@ -118,15 +118,14 @@ class CoreNotifier(Notification):
 
         messages = fireEvent('cp.messages', last_check = last_check, single = True)
 
-        last_time = 0
         for message in messages:
             if message.get('time') > last_check:
                 fireEvent('core.message', message = message.get('message'), data = message)
 
-            if last_time < message.get('time'):
-                last_time = message.get('time')
+            if last_check < message.get('time'):
+                last_check = message.get('time')
 
-        Env.prop(prop_name, value = last_time)
+        Env.prop(prop_name, value = last_check)
 
     def notify(self, message = '', data = {}, listener = None):
 
