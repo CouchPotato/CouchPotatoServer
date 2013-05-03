@@ -22,6 +22,8 @@ This module lets you run applications and libraries written for
 Twisted in a Tornado application.  It can be used in two modes,
 depending on which library's underlying event loop you want to use.
 
+This module has been tested with Twisted versions 11.0.0 and newer.
+
 Twisted on Tornado
 ------------------
 
@@ -60,26 +62,33 @@ reactor.  Recommended usage::
     reactor.run()
 
 `TwistedIOLoop` always uses the global Twisted reactor.
-
-This module has been tested with Twisted versions 11.0.0 and newer.
 """
 
 from __future__ import absolute_import, division, print_function, with_statement
 
-import functools
 import datetime
+import functools
+import socket
 
+import twisted.internet.abstract
 from twisted.internet.posixbase import PosixReactorBase
 from twisted.internet.interfaces import \
     IReactorFDSet, IDelayedCall, IReactorTime, IReadDescriptor, IWriteDescriptor
 from twisted.python import failure, log
 from twisted.internet import error
+import twisted.names.cache
+import twisted.names.client
+import twisted.names.hosts
+import twisted.names.resolve
 
 from zope.interface import implementer
 
-import tornado
+from tornado.concurrent import return_future
+from tornado.escape import utf8
+from tornado import gen
 import tornado.ioloop
 from tornado.log import app_log
+from tornado.netutil import Resolver
 from tornado.stack_context import NullContext, wrap
 from tornado.ioloop import IOLoop
 
@@ -140,7 +149,7 @@ class TornadoReactor(PosixReactorBase):
     """
     def __init__(self, io_loop=None):
         if not io_loop:
-            io_loop = tornado.ioloop.IOLoop.instance()
+            io_loop = tornado.ioloop.IOLoop.current()
         self._io_loop = io_loop
         self._readers = {}  # map of reader objects to fd
         self._writers = {}  # map of writer objects to fd
@@ -177,8 +186,12 @@ class TornadoReactor(PosixReactorBase):
     def callFromThread(self, f, *args, **kw):
         """See `twisted.internet.interfaces.IReactorThreads.callFromThread`"""
         assert callable(f), "%s is not callable" % f
-        p = functools.partial(f, *args, **kw)
-        self._io_loop.add_callback(p)
+        with NullContext():
+            # This NullContext is mainly for an edge case when running
+            # TwistedIOLoop on top of a TornadoReactor.
+            # TwistedIOLoop.add_callback uses reactor.callFromThread and
+            # should not pick up additional StackContexts along the way.
+            self._io_loop.add_callback(f, *args, **kw)
 
     # We don't need the waker code from the super class, Tornado uses
     # its own waker.
@@ -344,7 +357,7 @@ class _TestReactor(TornadoReactor):
 def install(io_loop=None):
     """Install this package as the default Twisted reactor."""
     if not io_loop:
-        io_loop = tornado.ioloop.IOLoop.instance()
+        io_loop = tornado.ioloop.IOLoop.current()
     reactor = TornadoReactor(io_loop)
     from twisted.internet.main import installReactor
     installReactor(reactor)
@@ -383,18 +396,21 @@ class _FD(object):
 class TwistedIOLoop(tornado.ioloop.IOLoop):
     """IOLoop implementation that runs on Twisted.
 
-    Uses the global Twisted reactor.  It is possible to create multiple
-    TwistedIOLoops in the same process, but it doesn't really make sense
-    because they will all run in the same thread.
+    Uses the global Twisted reactor by default.  To create multiple
+    `TwistedIOLoops` in the same process, you must pass a unique reactor
+    when constructing each one.
 
     Not compatible with `tornado.process.Subprocess.set_exit_callback`
     because the ``SIGCHLD`` handlers used by Tornado and Twisted conflict
     with each other.
     """
-    def initialize(self):
-        from twisted.internet import reactor
+    def initialize(self, reactor=None):
+        if reactor is None:
+            import twisted.internet.reactor
+            reactor = twisted.internet.reactor
         self.reactor = reactor
         self.fds = {}
+        self.reactor.callWhenRunning(self.make_current)
 
     def close(self, all_fds=False):
         self.reactor.removeAll()
@@ -456,13 +472,14 @@ class TwistedIOLoop(tornado.ioloop.IOLoop):
         if isinstance(deadline, (int, long, float)):
             delay = max(deadline - self.time(), 0)
         elif isinstance(deadline, datetime.timedelta):
-            delay = deadline.total_seconds()
+            delay = tornado.ioloop._Timeout.timedelta_to_seconds(deadline)
         else:
             raise TypeError("Unsupported deadline %r")
         return self.reactor.callLater(delay, self._run_callback, wrap(callback))
 
     def remove_timeout(self, timeout):
-        timeout.cancel()
+        if timeout.active():
+            timeout.cancel()
 
     def add_callback(self, callback, *args, **kwargs):
         self.reactor.callFromThread(self._run_callback,
@@ -470,3 +487,58 @@ class TwistedIOLoop(tornado.ioloop.IOLoop):
 
     def add_callback_from_signal(self, callback, *args, **kwargs):
         self.add_callback(callback, *args, **kwargs)
+
+
+class TwistedResolver(Resolver):
+    """Twisted-based asynchronous resolver.
+
+    This is a non-blocking and non-threaded resolver.  It is
+    recommended only when threads cannot be used, since it has
+    limitations compared to the standard ``getaddrinfo``-based
+    `~tornado.netutil.Resolver` and
+    `~tornado.netutil.ThreadedResolver`.  Specifically, it returns at
+    most one result, and arguments other than ``host`` and ``family``
+    are ignored.  It may fail to resolve when ``family`` is not
+    ``socket.AF_UNSPEC``.
+
+    Requires Twisted 12.1 or newer.
+    """
+    def initialize(self, io_loop=None):
+        self.io_loop = io_loop or IOLoop.current()
+        # partial copy of twisted.names.client.createResolver, which doesn't
+        # allow for a reactor to be passed in.
+        self.reactor = tornado.platform.twisted.TornadoReactor(io_loop)
+
+        host_resolver = twisted.names.hosts.Resolver('/etc/hosts')
+        cache_resolver = twisted.names.cache.CacheResolver(reactor=self.reactor)
+        real_resolver = twisted.names.client.Resolver('/etc/resolv.conf',
+                                                      reactor=self.reactor)
+        self.resolver = twisted.names.resolve.ResolverChain(
+            [host_resolver, cache_resolver, real_resolver])
+
+    @gen.coroutine
+    def resolve(self, host, port, family=0):
+        # getHostByName doesn't accept IP addresses, so if the input
+        # looks like an IP address just return it immediately.
+        if twisted.internet.abstract.isIPAddress(host):
+            resolved = host
+            resolved_family = socket.AF_INET
+        elif twisted.internet.abstract.isIPv6Address(host):
+            resolved = host
+            resolved_family = socket.AF_INET6
+        else:
+            deferred = self.resolver.getHostByName(utf8(host))
+            resolved = yield gen.Task(deferred.addCallback)
+            if twisted.internet.abstract.isIPAddress(resolved):
+                resolved_family = socket.AF_INET
+            elif twisted.internet.abstract.isIPv6Address(resolved):
+                resolved_family = socket.AF_INET6
+            else:
+                resolved_family = socket.AF_UNSPEC
+        if family != socket.AF_UNSPEC and family != resolved_family:
+            raise Exception('Requested socket family %d but got %d' %
+                            (family, resolved_family))
+        result = [
+            (resolved_family, (resolved, port)),
+        ]
+        raise gen.Return(result)

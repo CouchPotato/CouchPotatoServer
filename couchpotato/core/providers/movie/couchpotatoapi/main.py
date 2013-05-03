@@ -2,6 +2,7 @@ from couchpotato import get_session
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.request import jsonified, getParams
+from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.movie.base import MovieProvider
 from couchpotato.core.settings.model import Movie
@@ -19,18 +20,36 @@ class CouchPotatoApi(MovieProvider):
         'is_movie': 'https://couchpota.to/api/ismovie/%s/',
         'eta': 'https://couchpota.to/api/eta/%s/',
         'suggest': 'https://couchpota.to/api/suggest/',
+        'updater': 'https://couchpota.to/api/updater/?%s',
+        'messages': 'https://couchpota.to/api/messages/?%s',
     }
     http_time_between_calls = 0
     api_version = 1
 
     def __init__(self):
-        #addApiView('movie.suggest', self.suggestView)
-
         addEvent('movie.info', self.getInfo, priority = 1)
         addEvent('movie.search', self.search, priority = 1)
         addEvent('movie.release_date', self.getReleaseDate)
         addEvent('movie.suggest', self.suggest)
         addEvent('movie.is_movie', self.isMovie)
+
+        addEvent('cp.source_url', self.getSourceUrl)
+        addEvent('cp.messages', self.getMessages)
+
+    def getMessages(self, last_check = 0):
+
+        data = self.getJsonData(self.urls['messages'] % tryUrlencode({
+            'last_check': last_check,
+        }), headers = self.getRequestHeaders(), cache_timeout = 10)
+
+        return data
+
+    def getSourceUrl(self, repo = None, repo_name = None, branch = None):
+        return self.getJsonData(self.urls['updater'] % tryUrlencode({
+            'repo': repo,
+            'name': repo_name,
+            'branch': branch,
+        }), headers = self.getRequestHeaders())
 
     def search(self, q, limit = 12):
         return self.getJsonData(self.urls['search'] % tryUrlencode(q), headers = self.getRequestHeaders())

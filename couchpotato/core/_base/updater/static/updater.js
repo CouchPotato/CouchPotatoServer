@@ -5,7 +5,7 @@ var UpdaterBase = new Class({
 	initialize: function(){
 		var self = this;
 
-		App.addEvent('load', self.info.bind(self, 1000))
+		App.addEvent('load', self.info.bind(self, 2000))
 		App.addEvent('unload', function(){
 			if(self.timer)
 				clearTimeout(self.timer);
@@ -84,7 +84,7 @@ var UpdaterBase = new Class({
 					'click': self.doUpdate.bind(self)
 				}
 			})
-		).inject($(document.body).getElement('.header'))
+		).inject(document.body)
 	},
 
 	doUpdate: function(){

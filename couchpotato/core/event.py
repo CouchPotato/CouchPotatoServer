@@ -16,10 +16,8 @@ def runHandler(name, handler, *args, **kwargs):
 
 def addEvent(name, handler, priority = 100):
 
-    if events.get(name):
-        e = events[name]
-    else:
-        e = events[name] = Event(name = name, threads = 10, exc_info = True, traceback = True, lock = threading.RLock())
+    if not events.get(name):
+        events[name] = []
 
     def createHandle(*args, **kwargs):
 
@@ -35,7 +33,10 @@ def addEvent(name, handler, priority = 100):
 
         return h
 
-    e.handle(createHandle, priority = priority)
+    events[name].append({
+        'handler': createHandle,
+        'priority': priority,
+    })
 
 def removeEvent(name, handler):
     e = events[name]
@@ -43,6 +44,12 @@ def removeEvent(name, handler):
 
 def fireEvent(name, *args, **kwargs):
     if not events.get(name): return
+
+    e = Event(name = name, threads = 10, asynch = kwargs.get('async', False), exc_info = True, traceback = True, lock = threading.RLock())
+
+    for event in events[name]:
+        e.handle(event['handler'], priority = event['priority'])
+
     #log.debug('Firing event %s', name)
     try:
 
@@ -52,6 +59,7 @@ def fireEvent(name, *args, **kwargs):
             'single': False, # Return single handler
             'merge': False, # Merge items
             'in_order': False, # Fire them in specific order, waits for the other to finish
+            'async': False
         }
 
         # Do options
@@ -62,22 +70,12 @@ def fireEvent(name, *args, **kwargs):
                 options[x] = val
             except: pass
 
-        e = events[name]
-
-        # Lock this event
-        e.lock.acquire()
-
-        e.asynchronous = False
-
         # Make sure only 1 event is fired at a time when order is wanted
         kwargs['event_order_lock'] = threading.RLock() if options['in_order'] or options['single'] else None
         kwargs['event_return_on_result'] = options['single']
 
         # Fire
         result = e(*args, **kwargs)
-
-        # Release lock for this event
-        e.lock.release()
 
         if options['single'] and not options['merge']:
             results = None
@@ -104,10 +102,11 @@ def fireEvent(name, *args, **kwargs):
 
             # Merge
             if options['merge'] and len(results) > 0:
-                results.reverse() # Priority 1 is higher then 100
 
                 # Dict
                 if isinstance(results[0], dict):
+                    results.reverse()
+
                     merged = {}
                     for result in results:
                         merged = mergeDicts(merged, result, prepend_list = True)
@@ -140,13 +139,8 @@ def fireEvent(name, *args, **kwargs):
         log.error('%s: %s', (name, traceback.format_exc()))
 
 def fireEventAsync(*args, **kwargs):
-    try:
-        my_thread = threading.Thread(target = fireEvent, args = args, kwargs = kwargs)
-        my_thread.setDaemon(True)
-        my_thread.start()
-        return True
-    except Exception, e:
-        log.error('%s: %s', (args[0], e))
+    kwargs['async'] = True
+    fireEvent(*args, **kwargs)
 
 def errorHandler(error):
     etype, value, tb = error

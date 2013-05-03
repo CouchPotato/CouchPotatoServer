@@ -126,12 +126,14 @@ var Movie = new Class({
 			self.thumbnail = File.Select.single('poster', self.data.library.files),
 			self.data_container = new Element('div.data.inlay.light').adopt(
 				self.info_container = new Element('div.info').adopt(
-					self.title = new Element('div.title', {
-						'text': self.getTitle() || 'n/a'
-					}),
-					self.year = new Element('div.year', {
-						'text': self.data.library.year || 'n/a'
-					}),
+					new Element('div.title').adopt(
+						self.title = new Element('span', {
+							'text': self.getTitle() || 'n/a'
+						}),
+						self.year = new Element('div.year', {
+							'text': self.data.library.year || 'n/a'
+						})
+					),
 					self.rating = new Element('div.rating.icon', {
 						'text': self.data.library.rating
 					}),

@@ -41,14 +41,14 @@ def bind_sockets(port, address=None, family=socket.AF_UNSPEC, backlog=128, flags
     Address may be either an IP address or hostname.  If it's a hostname,
     the server will listen on all IP addresses associated with the
     name.  Address may be an empty string or None to listen on all
-    available interfaces.  Family may be set to either socket.AF_INET
-    or socket.AF_INET6 to restrict to ipv4 or ipv6 addresses, otherwise
+    available interfaces.  Family may be set to either `socket.AF_INET`
+    or `socket.AF_INET6` to restrict to IPv4 or IPv6 addresses, otherwise
     both will be used if available.
 
     The ``backlog`` argument has the same meaning as for
-    ``socket.listen()``.
+    `socket.listen() <socket.socket.listen>`.
 
-    ``flags`` is a bitmask of AI_* flags to ``getaddrinfo``, like
+    ``flags`` is a bitmask of AI_* flags to `~socket.getaddrinfo`, like
     ``socket.AI_PASSIVE | socket.AI_NUMERICHOST``.
     """
     sockets = []
@@ -119,16 +119,16 @@ if hasattr(socket, 'AF_UNIX'):
 
 
 def add_accept_handler(sock, callback, io_loop=None):
-    """Adds an ``IOLoop`` event handler to accept new connections on ``sock``.
+    """Adds an `.IOLoop` event handler to accept new connections on ``sock``.
 
     When a connection is accepted, ``callback(connection, address)`` will
     be run (``connection`` is a socket object, and ``address`` is the
     address of the other end of the connection).  Note that this signature
     is different from the ``callback(fd, events)`` signature used for
-    ``IOLoop`` handlers.
+    `.IOLoop` handlers.
     """
     if io_loop is None:
-        io_loop = IOLoop.instance()
+        io_loop = IOLoop.current()
 
     def accept_handler(fd, events):
         while True:
@@ -142,7 +142,41 @@ def add_accept_handler(sock, callback, io_loop=None):
     io_loop.add_handler(sock.fileno(), accept_handler, IOLoop.READ)
 
 
+def is_valid_ip(ip):
+    """Returns true if the given string is a well-formed IP address.
+
+    Supports IPv4 and IPv6.
+    """
+    try:
+        res = socket.getaddrinfo(ip, 0, socket.AF_UNSPEC,
+                                 socket.SOCK_STREAM,
+                                 0, socket.AI_NUMERICHOST)
+        return bool(res)
+    except socket.gaierror as e:
+        if e.args[0] == socket.EAI_NONAME:
+            return False
+        raise
+    return True
+
+
 class Resolver(Configurable):
+    """Configurable asynchronous DNS resolver interface.
+
+    By default, a blocking implementation is used (which simply calls
+    `socket.getaddrinfo`).  An alternative implementation can be
+    chosen with the `Resolver.configure <.Configurable.configure>`
+    class method::
+
+        Resolver.configure('tornado.netutil.ThreadedResolver')
+
+    The implementations of this interface included with Tornado are
+
+    * `tornado.netutil.BlockingResolver`
+    * `tornado.netutil.ThreadedResolver`
+    * `tornado.netutil.OverrideResolver`
+    * `tornado.platform.twisted.TwistedResolver`
+    * `tornado.platform.caresresolver.CaresResolver`
+    """
     @classmethod
     def configurable_base(cls):
         return Resolver
@@ -151,39 +185,63 @@ class Resolver(Configurable):
     def configurable_default(cls):
         return BlockingResolver
 
-    def getaddrinfo(self, *args, **kwargs):
+    def resolve(self, host, port, family=socket.AF_UNSPEC, callback=None):
         """Resolves an address.
 
-        The arguments to this function are the same as to
-        `socket.getaddrinfo`, with the addition of an optional
-        keyword-only ``callback`` argument.
+        The ``host`` argument is a string which may be a hostname or a
+        literal IP address.
 
-        Returns a `Future` whose result is the same as the return
-        value of `socket.getaddrinfo`.  If a callback is passed,
-        it will be run with the `Future` as an argument when it
-        is complete.
+        Returns a `.Future` whose result is a list of (family,
+        address) pairs, where address is a tuple suitable to pass to
+        `socket.connect <socket.socket.connect>` (i.e. a ``(host,
+        port)`` pair for IPv4; additional fields may be present for
+        IPv6). If a ``callback`` is passed, it will be run with the
+        result as an argument when it is complete.
         """
         raise NotImplementedError()
 
 
 class ExecutorResolver(Resolver):
     def initialize(self, io_loop=None, executor=None):
-        self.io_loop = io_loop or IOLoop.instance()
+        self.io_loop = io_loop or IOLoop.current()
         self.executor = executor or dummy_executor
 
     @run_on_executor
-    def getaddrinfo(self, *args, **kwargs):
-        return socket.getaddrinfo(*args, **kwargs)
+    def resolve(self, host, port, family=socket.AF_UNSPEC):
+        addrinfo = socket.getaddrinfo(host, port, family)
+        results = []
+        for family, socktype, proto, canonname, address in addrinfo:
+            results.append((family, address))
+        return results
+
 
 class BlockingResolver(ExecutorResolver):
+    """Default `Resolver` implementation, using `socket.getaddrinfo`.
+
+    The `.IOLoop` will be blocked during the resolution, although the
+    callback will not be run until the next `.IOLoop` iteration.
+    """
     def initialize(self, io_loop=None):
         super(BlockingResolver, self).initialize(io_loop=io_loop)
 
+
 class ThreadedResolver(ExecutorResolver):
+    """Multithreaded non-blocking `Resolver` implementation.
+
+    Requires the `concurrent.futures` package to be installed
+    (available in the standard library since Python 3.2,
+    installable with ``pip install futures`` in older versions).
+
+    The thread pool size can be configured with::
+
+        Resolver.configure('tornado.netutil.ThreadedResolver',
+                           num_threads=10)
+    """
     def initialize(self, io_loop=None, num_threads=10):
         from concurrent.futures import ThreadPoolExecutor
         super(ThreadedResolver, self).initialize(
             io_loop=io_loop, executor=ThreadPoolExecutor(num_threads))
+
 
 class OverrideResolver(Resolver):
     """Wraps a resolver with a mapping of overrides.
@@ -197,13 +255,12 @@ class OverrideResolver(Resolver):
         self.resolver = resolver
         self.mapping = mapping
 
-    def getaddrinfo(self, host, port, *args, **kwargs):
+    def resolve(self, host, port, *args, **kwargs):
         if (host, port) in self.mapping:
             host, port = self.mapping[(host, port)]
         elif host in self.mapping:
             host = self.mapping[host]
-        return self.resolver.getaddrinfo(host, port, *args, **kwargs)
-
+        return self.resolver.resolve(host, port, *args, **kwargs)
 
 
 # These are the keyword arguments to ssl.wrap_socket that must be translated
@@ -212,20 +269,22 @@ class OverrideResolver(Resolver):
 _SSL_CONTEXT_KEYWORDS = frozenset(['ssl_version', 'certfile', 'keyfile',
                                    'cert_reqs', 'ca_certs', 'ciphers'])
 
+
 def ssl_options_to_context(ssl_options):
-    """Try to Convert an ssl_options dictionary to an SSLContext object.
+    """Try to convert an ``ssl_options`` dictionary to an
+    `~ssl.SSLContext` object.
 
     The ``ssl_options`` dictionary contains keywords to be passed to
-    `ssl.wrap_sockets`.  In Python 3.2+, `ssl.SSLContext` objects can
+    `ssl.wrap_socket`.  In Python 3.2+, `ssl.SSLContext` objects can
     be used instead.  This function converts the dict form to its
-    `SSLContext` equivalent, and may be used when a component which
-    accepts both forms needs to upgrade to the `SSLContext` version
+    `~ssl.SSLContext` equivalent, and may be used when a component which
+    accepts both forms needs to upgrade to the `~ssl.SSLContext` version
     to use features like SNI or NPN.
     """
     if isinstance(ssl_options, dict):
         assert all(k in _SSL_CONTEXT_KEYWORDS for k in ssl_options), ssl_options
     if (not hasattr(ssl, 'SSLContext') or
-        isinstance(ssl_options, ssl.SSLContext)):
+            isinstance(ssl_options, ssl.SSLContext)):
         return ssl_options
     context = ssl.SSLContext(
         ssl_options.get('ssl_version', ssl.PROTOCOL_SSLv23))
@@ -241,12 +300,12 @@ def ssl_options_to_context(ssl_options):
 
 
 def ssl_wrap_socket(socket, ssl_options, server_hostname=None, **kwargs):
-    """Returns an `ssl.SSLSocket` wrapping the given socket.
+    """Returns an ``ssl.SSLSocket`` wrapping the given socket.
 
     ``ssl_options`` may be either a dictionary (as accepted by
-    `ssl_options_to_context) or an `ssl.SSLContext` object.
-    Additional keyword arguments are passed to `wrap_socket`
-    (either the `SSLContext` method or the `ssl` module function
+    `ssl_options_to_context`) or an `ssl.SSLContext` object.
+    Additional keyword arguments are passed to ``wrap_socket``
+    (either the `~ssl.SSLContext` method or the `ssl` module function
     as appropriate).
     """
     context = ssl_options_to_context(ssl_options)
@@ -262,7 +321,7 @@ def ssl_wrap_socket(socket, ssl_options, server_hostname=None, **kwargs):
     else:
         return ssl.wrap_socket(socket, **dict(context, **kwargs))
 
-if hasattr(ssl, 'match_hostname'):  # python 3.2+
+if hasattr(ssl, 'match_hostname') and hasattr(ssl, 'CertificateError'):  # python 3.2+
     ssl_match_hostname = ssl.match_hostname
     SSLCertificateError = ssl.CertificateError
 else:
@@ -271,7 +330,6 @@ else:
     # https://bitbucket.org/brandon/backports.ssl_match_hostname
     class SSLCertificateError(ValueError):
         pass
-
 
     def _dnsname_to_pat(dn):
         pats = []
@@ -285,7 +343,6 @@ else:
                 frag = re.escape(frag)
                 pats.append(frag.replace(r'\*', '[^.]*'))
         return re.compile(r'\A' + r'\.'.join(pats) + r'\Z', re.IGNORECASE)
-
 
     def ssl_match_hostname(cert, hostname):
         """Verify that *cert* (in decoded format as returned by

@@ -22,10 +22,15 @@ class Trailer(Plugin):
             return False
 
         for trailer in trailers.get(self.conf('quality'), []):
-            filename = self.conf('name').replace('<filename>', group['filename']) + ('.%s' % getExt(trailer))
+
+            ext = getExt(trailer)
+            filename = self.conf('name').replace('<filename>', group['filename']) + ('.%s' % ('mp4' if len(ext) > 5 else ext))
             destination = os.path.join(group['destination_dir'], filename)
             if not os.path.isfile(destination):
-                fireEvent('file.download', url = trailer, dest = destination, urlopen_kwargs = {'headers': {'User-Agent': 'Quicktime'}}, single = True)
+                trailer_file = fireEvent('file.download', url = trailer, dest = destination, urlopen_kwargs = {'headers': {'User-Agent': 'Quicktime'}}, single = True)
+                if os.path.getsize(trailer_file) < (1024 * 1024): # Don't trust small trailers (1MB), try next one
+                    os.unlink(trailer_file)
+                    continue
             else:
                 log.debug('Trailer already exists: %s', destination)
 

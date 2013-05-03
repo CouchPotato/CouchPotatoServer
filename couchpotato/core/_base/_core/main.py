@@ -79,7 +79,7 @@ class Core(Plugin):
 
         def shutdown():
             self.initShutdown()
-        IOLoop.instance().add_callback(shutdown)
+        IOLoop.current().add_callback(shutdown)
 
         return 'shutdown'
 
@@ -89,7 +89,7 @@ class Core(Plugin):
 
         def restart():
             self.initShutdown(restart = True)
-        IOLoop.instance().add_callback(restart)
+        IOLoop.current().add_callback(restart)
 
         return 'restarting'
 
@@ -128,7 +128,7 @@ class Core(Plugin):
         log.debug('Save to shutdown/restart')
 
         try:
-            IOLoop.instance().stop()
+            IOLoop.current().stop()
         except RuntimeError:
             pass
         except:
