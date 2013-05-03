@@ -1,6 +1,6 @@
 var MovieList = new Class({
 
-	Implements: [Options],
+	Implements: [Events, Options],
 
 	options: {
 		navigation: true,
@@ -44,7 +44,7 @@ var MovieList = new Class({
 			}) : null
 		);
 
-		if($(window).getSize().x < 480 && !self.options.force_view)
+		if($(window).getSize().x <= 480 && !self.options.force_view)
 			self.changeView('list');
 		else
 			self.changeView(self.getSavedView() || self.options.view || 'details');
@@ -514,6 +514,7 @@ var MovieList = new Class({
 				}
 
 				self.checkIfEmpty();
+				self.fireEvent('loaded');
 			}
 		});
 	},

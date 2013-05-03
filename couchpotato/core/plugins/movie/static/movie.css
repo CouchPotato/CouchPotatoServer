@@ -98,21 +98,20 @@
 		}
 		
 		.movies.thumbs_list .movie {
-			width: 151px;
-			height: 230px;
+			width: 16.66667%;
+			height: auto;
 			display: inline-block;
-			margin: 0 8px 8px 0;
+			margin: 0;
 			padding: 0;
 			vertical-align: top;
+			border-radius: 0;
+			box-shadow: none;
+			border: 0;
 		}
-		
-			@media all and (max-width: 480px) {
+			
+			@media all and (max-width: 800px) {
 				.movies.thumbs_list .movie {
-					width: 90px;
-					height: 137px;
-					display: inline-block;
-					margin: 0 8px 8px 0;
-					padding: 0;
+					width: 25%;
 				}
 			}
 
@@ -157,7 +156,9 @@
 			}
 			
 			.movies.thumbs_list .data {
+				position: absolute;
 				left: 0;
+				top: 0;
 				width: 100%;
 				padding: 10px;
 				height: 100%;
@@ -202,8 +203,11 @@
 			height: 100%;
 			border-radius: 4px 0 0 4px;
 			transition: all .6s cubic-bezier(0.9,0,0.1,1);
-
 		}
+			.movies.thumbs_list .poster {
+				position: relative;
+				border-radius: 0;
+			}
 			.movies.list_list .movie:not(.details_view) .poster,
 			.movies.mass_edit_list .poster {
 				width: 20px;
@@ -217,13 +221,21 @@
 			.movies.thumbs_list .poster {
 				width: 100%;
 				height: 100%;
+				transition: none;
 			}
 
 		.movies .poster img,
 		.options .poster img {
-			width: 101%;
-			height: 101%;
+			width: 100%;
+			height: 100%;
 		}
+			.movies.thumbs_list .poster img {
+				height: auto;
+				width: 100%;
+				top: 0;
+				bottom: 0;
+				border-radius: 0;
+			}
 		
 			.movies .info {
 				position: relative;
@@ -260,6 +272,15 @@
 					height: auto;
 					text-align: left;
 				}
+				
+					@media all and (max-width: 480px) {
+						.movies.thumbs_list .movie .info .title span,
+						.movies.thumbs_list .movie .info .year {
+							font-size: 15px;
+							line-height: 15px;
+							overflow: hidden;
+						}
+					}
 				
 				.movies.list_list .movie:not(.details_view) .info .title,
 				.movies.mass_edit_list .info .title {
@@ -423,9 +444,6 @@
 		
 			.movies .movie:hover .action { opacity: 0.6; }
 			.movies .movie:hover .action:hover { opacity: 1; }
-			.movies.mass_edit_list .data .actions {
-				display: none;
-			}
 
 			.movies .data .action {
 				background-repeat: no-repeat;
@@ -434,6 +452,10 @@
 				width: 26px;
 				height: 26px;
 				padding: 3px;
+			}
+			
+			.movies.mass_edit_list .movie .data .actions {
+				display: none;
 			}
 
 		.movies.list_list .movie:not(.details_view):hover .actions,
@@ -625,6 +647,12 @@
 					padding: 3px 0;
 					top: 0;
 				}
+				
+					@media all and (max-width: 480px) {
+						.movies .movie .trynext {
+							display: none;
+						}
+					}
 					.movies.mass_edit_list .trynext { display: none; }
 					.wanted .movies .movie .trynext {
 						padding-right: 50px;
