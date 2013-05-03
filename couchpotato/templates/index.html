@@ -20,14 +20,16 @@
 		<script type="text/javascript" src="https://www.youtube.com/player_api" defer="defer"></script>
 
 		<script type="text/javascript">
-			window.addEvent('load', function() {
-
-				setTimeout(function(){
-					window.scrollTo(0, 1);
-					window.scrollTo(0, 0);
-				}, 100);
-
-			});
+		
+			if($(window).getSize().x <= 480)
+				window.addEvent('load', function() {
+	
+					setTimeout(function(){
+						window.scrollTo(0, 1);
+						window.scrollTo(0, 0);
+					}, 100);
+	
+				});
 
 			window.addEvent('domready', function() {
 				new Uniform();
