@@ -160,6 +160,7 @@ body > .spinner, .mask{
 .icon2.eye-open:before { content: "\e09d"; }
 .icon2.search:before { content: "\e03e"; }
 .icon2.return-key:before { content: "\e111"; }
+.icon2.close:before { content: "\e04e"; }
 .icon2.menu:before { 
 	content: "\e076  \e076  \e076"; 
 	line-height: 6px;
@@ -715,43 +716,51 @@ body > .spinner, .mask{
 	position: fixed;
 	right: 0;
 	bottom: 0;
-	padding: 2px;
-	width: 240px;
+	width: 320px;
 	z-index: 20;
 	overflow: hidden;
 	font-size: 14px;
 	font-weight: bold;
 }
+	@media all and (max-width: 480px) {
+		.messages {
+			width: 100%;
+		}
+	}
 
 	.messages .message {
-		text-align: center;
-		border-radius: 2px;
-		margin: 2px 0 0 0;
-		height: 0;
 		overflow: hidden;
 		transition: all .6s cubic-bezier(0.9,0,0.1,1);
-		box-shadow: 0 1px 1px rgba(0,0,0,0.35), inset 0 1px 0px rgba(255,255,255,0.20);
-		background-image: linear-gradient(
-		    180deg,
-		    #5b9bd1 0%,
-		    #406db8 100%
-		);
+		background: #5b9bd1;
 		width: 100%;
-		padding: 0 5px;
-		visibility: hidden;
+		position: relative;
+		margin: 1px 0 0;
 		max-height: 0;
+		padding: 0 30px 0 20px;
+		font-size: 1.1em;
+		font-weight: normal;
+		transform: scale(0);
 	}
+		.messages .message.sticky {
+			background-color: #c84040;
+		}
 		.messages .message.show {
-			visibility: visible;
-			height: auto;
-			padding-top: 3px;
-			padding-bottom: 3px;
-			min-height: 1px;
-			max-height: 400px;
+			max-height: 100px;
+			padding: 15px 30px 15px 20px;
+			transform: scale(1);
 		}
 		.messages .message.hide {
-			margin-left: 240px;
-			opacity: 0;
+			max-height: 0;
+			padding: 0 20px;
+			margin: 0;
+			transform: scale(0);
+		}
+		.messages .close {
+			position: absolute;
+			padding: 10px 8px;
+			top: 0;
+			right: 0;
+			color: #FFF;
 		}
 		
 /* Fonts */
