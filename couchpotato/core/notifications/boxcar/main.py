@@ -11,7 +11,6 @@ class Boxcar(Notification):
     url = 'https://boxcar.io/devices/providers/7MNNXY3UIzVBwvzkKwkC/notifications'
 
     def notify(self, message = '', data = {}, listener = None):
-        if self.isDisabled(): return
 
         try:
             message = message.strip()

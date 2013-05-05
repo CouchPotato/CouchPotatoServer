@@ -9,27 +9,12 @@ Page.Wizard = new Class({
 	headers: {
 		'welcome': {
 			'title': 'Welcome to the new CouchPotato',
-			'description': 'To get started, fill in each of the following settings as much as you can. <br />Maybe first start with importing your movies from the previous CouchPotato',
+			'description': 'To get started, fill in each of the following settings as much as you can.',
 			'content': new Element('div', {
 				'styles': {
 					'margin': '0 0 0 30px'
 				}
-			}).adopt(
-				new Element('div', {
-					'html': 'Select the <strong>data.db</strong>. It should be in your CouchPotato root directory.'
-				}),
-				self.import_iframe = new Element('iframe', {
-					'styles': {
-						'height': 40,
-						'width': 300,
-						'border': 0,
-						'overflow': 'hidden'
-					}
-				})
-			),
-			'event': function(){
-				self.import_iframe.set('src', Api.createUrl('v1.import'))
-			}
+			})
 		},
 		'general': {
 			'title': 'General',
@@ -178,7 +163,7 @@ Page.Wizard = new Class({
 							'href': App.createUrl('wizard/'+group),
 							'text': (self.headers[group].label || group).capitalize()
 						})
-					).inject(tabs);
+					).inject(tabs)
 
 				}
 				else
@@ -214,13 +199,7 @@ Page.Wizard = new Class({
 		self.el.getElement('.t_searcher').hide();
 
 		// Add pointer
-		new Element('.tab_wrapper').wraps(tabs).adopt(
-			self.pointer = new Element('.pointer', {
-				'tween': {
-					'transition': 'quint:in:out'
-				}
-			})
-		);
+		new Element('.tab_wrapper').wraps(tabs);
 
 		// Add nav
 		var minimum = self.el.getSize().y-window.getSize().y;
@@ -232,16 +211,18 @@ Page.Wizard = new Class({
 			if(!t) return;
 
 			var func = function(){
-				var ct = t.getCoordinates();
-				self.pointer.tween('left', ct.left+(ct.width/2)-(self.pointer.getWidth()/2));
+				// Activate all previous ones
+				self.groups.each(function(groups2, nr2){
+					var t2 = self.el.getElement('.t_'+groups2);
+						t2[nr2 > nr ? 'removeClass' : 'addClass' ]('done');
+				})
 				g.tween('opacity', 1);
 			}
 
 			if(nr == 0)
 				func();
 
-
-			var ss = new ScrollSpy( {
+			new ScrollSpy( {
 				min: function(){
 					var c = g.getCoordinates();
 					var top = c.top-(window.getSize().y/2);

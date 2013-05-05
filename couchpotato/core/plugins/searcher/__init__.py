@@ -25,12 +25,13 @@ config = [{
                     'label': 'Required words',
                     'default': '',
                     'placeholder': 'Example: DTS, AC3 & English',
-                    'description': 'Ignore releases that don\'t contain at least one set of words. Sets are separated by "," and each word within a set must be separated with "&"'
+                    'description': 'A release should contain at least one set of words. Sets are separated by "," and each word within a set must be separated with "&"'
                 },
                 {
                     'name': 'ignored_words',
                     'label': 'Ignored words',
                     'default': 'german, dutch, french, truefrench, danish, swedish, spanish, italian, korean, dubbed, swesub, korsub, dksubs',
+                    'description': 'Ignores releases that match any of these sets. (Works like explained above)'
                 },
                 {
                     'name': 'preferred_method',
@@ -39,6 +40,14 @@ config = [{
                     'default': 'both',
                     'type': 'dropdown',
                     'values': [('usenet & torrents', 'both'), ('usenet', 'nzb'), ('torrents', 'torrent')],
+                },
+                {
+                    'name': 'always_search',
+                    'default': False,
+                    'advanced': True,
+                    'type': 'bool',
+                    'label': 'Always search',
+                    'description': 'Search for movies even before there is a ETA. Enabling this will probably get you a lot of fakes.',
                 },
             ],
         }, {

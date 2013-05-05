@@ -76,7 +76,7 @@ class LibraryTitle(Entity):
 
     title = Field(Unicode)
     simple_title = Field(Unicode, index = True)
-    default = Field(Boolean, index = True)
+    default = Field(Boolean, default = False, index = True)
 
     language = OneToMany('Language')
     libraries = ManyToOne('Library')
@@ -141,12 +141,12 @@ class Status(Entity):
 
 
 class Quality(Entity):
-    """Quality name of a release, DVD, 720P, DVD-Rip etc"""
+    """Quality name of a release, DVD, 720p, DVD-Rip etc"""
     using_options(order_by = 'order')
 
     identifier = Field(String(20), unique = True)
     label = Field(Unicode(20))
-    order = Field(Integer, index = True)
+    order = Field(Integer, default = 0, index = True)
 
     size_min = Field(Integer)
     size_max = Field(Integer)
@@ -160,21 +160,27 @@ class Profile(Entity):
     using_options(order_by = 'order')
 
     label = Field(Unicode(50))
-    order = Field(Integer, index = True)
-    core = Field(Boolean)
-    hide = Field(Boolean)
+    order = Field(Integer, default = 0, index = True)
+    core = Field(Boolean, default = False)
+    hide = Field(Boolean, default = False)
 
     movie = OneToMany('Movie')
     types = OneToMany('ProfileType', cascade = 'all, delete-orphan')
 
+    def to_dict(self, deep = {}, exclude = []):
+        orig_dict = super(Profile, self).to_dict(deep = deep, exclude = exclude)
+        orig_dict['core'] = orig_dict.get('core') or False
+        orig_dict['hide'] = orig_dict.get('hide') or False
+
+        return orig_dict
 
 class ProfileType(Entity):
     """"""
     using_options(order_by = 'order')
 
-    order = Field(Integer, index = True)
-    finish = Field(Boolean)
-    wait_for = Field(Integer)
+    order = Field(Integer, default = 0, index = True)
+    finish = Field(Boolean, default = True)
+    wait_for = Field(Integer, default = 0)
 
     quality = ManyToOne('Quality')
     profile = ManyToOne('Profile')
@@ -185,7 +191,7 @@ class File(Entity):
 
     path = Field(Unicode(255), nullable = False, unique = True)
     part = Field(Integer, default = 1)
-    available = Field(Boolean)
+    available = Field(Boolean, default = True)
 
     type = ManyToOne('FileType')
     properties = OneToMany('FileProperty')

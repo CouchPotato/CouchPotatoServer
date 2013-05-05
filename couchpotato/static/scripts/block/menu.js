@@ -15,7 +15,7 @@ Block.Menu = new Class({
 			self.wrapper = new Element('div.wrapper').adopt(
 				self.more_option_ul = new Element('ul')
 			),
-			new Element('a.button.onlay', {
+			new Element('a.button.onlay' + (self.options.button_class ? '.' + self.options.button_class : ''), {
 				'events': {
 					'click': function(){
 						self.el.toggleClass('show')

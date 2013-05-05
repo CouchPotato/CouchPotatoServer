@@ -2,12 +2,13 @@ from couchpotato import get_session
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
 from couchpotato.core.helpers.encoding import toUnicode, ss
-from couchpotato.core.helpers.request import jsonified
+from couchpotato.core.helpers.request import getParams, jsonified
 from couchpotato.core.helpers.variable import getExt, mergeDicts, getTitle, \
-    getImdb
+    getImdb, link, symlink
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.core.settings.model import Library, File, Profile, Release
+from couchpotato.core.settings.model import Library, File, Profile, Release, \
+    ReleaseInfo
 from couchpotato.environment import Env
 import errno
 import os
@@ -18,7 +19,6 @@ import traceback
 
 log = CPLog(__name__)
 
-
 class Renamer(Plugin):
 
     renaming_started = False
@@ -27,7 +27,12 @@ class Renamer(Plugin):
     def __init__(self):
 
         addApiView('renamer.scan', self.scanView, docs = {
-            'desc': 'For the renamer to check for new files to rename',
+            'desc': 'For the renamer to check for new files to rename in a folder',
+            'params': {
+                'movie_folder': {'desc': 'Optional: The folder of the movie to scan. Keep empty for default renamer folder.'},
+                'downloader' : {'desc': 'Optional: The downloader this movie has been downloaded with'},
+                'download_id': {'desc': 'Optional: The downloader\'s nzb/torrent ID'},
+            },
         })
 
         addEvent('renamer.scan', self.scan)
@@ -35,22 +40,42 @@ class Renamer(Plugin):
 
         addEvent('app.load', self.scan)
         addEvent('app.load', self.checkSnatched)
+        addEvent('app.load', self.setCrons)
 
-        if self.conf('run_every') > 0:
-            fireEvent('schedule.interval', 'renamer.check_snatched', self.checkSnatched, minutes = self.conf('run_every'))
+        # Enable / disable interval
+        addEvent('setting.save.renamer.enabled.after', self.setCrons)
+        addEvent('setting.save.renamer.run_every.after', self.setCrons)
+        addEvent('setting.save.renamer.force_every.after', self.setCrons)
 
-        if self.conf('force_every') > 0:
-            fireEvent('schedule.interval', 'renamer.check_snatched_forced', self.scan, hours = self.conf('force_every'))
+    def setCrons(self):
+
+        fireEvent('schedule.remove', 'renamer.check_snatched')
+        if self.isEnabled() and self.conf('run_every') > 0:
+            fireEvent('schedule.interval', 'renamer.check_snatched', self.checkSnatched, minutes = self.conf('run_every'), single = True)
+
+        fireEvent('schedule.remove', 'renamer.check_snatched_forced')
+        if self.isEnabled() and self.conf('force_every') > 0:
+            fireEvent('schedule.interval', 'renamer.check_snatched_forced', self.scan, hours = self.conf('force_every'), single = True)
+
+        return True
 
     def scanView(self):
 
-        fireEventAsync('renamer.scan')
+        params = getParams()
+        movie_folder = params.get('movie_folder', None)
+        downloader = params.get('downloader', None)
+        download_id = params.get('download_id', None)
+
+        fireEventAsync('renamer.scan',
+            movie_folder = movie_folder,
+            download_info = {'id': download_id, 'downloader': downloader} if download_id else None
+        )
 
         return jsonified({
             'success': True
         })
 
-    def scan(self):
+    def scan(self, movie_folder = None, download_info = None):
 
         if self.isDisabled():
             return
@@ -60,16 +85,41 @@ class Renamer(Plugin):
             return
 
         # Check to see if the "to" folder is inside the "from" folder.
-        if not os.path.isdir(self.conf('from')) or not os.path.isdir(self.conf('to')):
-            log.debug('"To" and "From" have to exist.')
+        if movie_folder and not os.path.isdir(movie_folder) or not os.path.isdir(self.conf('from')) or not os.path.isdir(self.conf('to')):
+            l = log.debug if movie_folder else log.error
+            l('Both the "To" and "From" have to exist.')
             return
         elif self.conf('from') in self.conf('to'):
             log.error('The "to" can\'t be inside of the "from" folder. You\'ll get an infinite loop.')
             return
-
-        groups = fireEvent('scanner.scan', folder = self.conf('from'), single = True)
+        elif (movie_folder and movie_folder in [self.conf('to'), self.conf('from')]):
+            log.error('The "to" and "from" folders can\'t be inside of or the same as the provided movie folder.')
+            return
 
         self.renaming_started = True
+
+        # make sure the movie folder name is included in the search
+        folder = None
+        files = []
+        if movie_folder:
+            log.info('Scanning movie folder %s...', movie_folder)
+            movie_folder = movie_folder.rstrip(os.path.sep)
+            folder = os.path.dirname(movie_folder)
+
+            # Get all files from the specified folder
+            try:
+                for root, folders, names in os.walk(movie_folder):
+                    files.extend([os.path.join(root, name) for name in names])
+            except:
+                log.error('Failed getting files from %s: %s', (movie_folder, traceback.format_exc()))
+
+        db = get_session()
+
+        # Extend the download info with info stored in the downloaded release
+        download_info = self.extendDownloadInfo(download_info)
+
+        groups = fireEvent('scanner.scan', folder = folder if folder else self.conf('from'),
+                           files = files, download_info = download_info, return_ignored = False, single = True)
 
         destination = self.conf('to')
         folder_name = self.conf('folder_name')
@@ -79,12 +129,8 @@ class Renamer(Plugin):
         separator = self.conf('separator')
 
         # Statusses
-        done_status = fireEvent('status.get', 'done', single = True)
-        active_status = fireEvent('status.get', 'active', single = True)
-        downloaded_status = fireEvent('status.get', 'downloaded', single = True)
-        snatched_status = fireEvent('status.get', 'snatched', single = True)
-
-        db = get_session()
+        done_status, active_status, downloaded_status, snatched_status = \
+            fireEvent('status.get', ['done', 'active', 'downloaded', 'snatched'], single = True)
 
         for group_identifier in groups:
 
@@ -304,7 +350,7 @@ class Renamer(Plugin):
                             else:
                                 log.info('Better quality release already exists for %s, with quality %s', (movie.library.titles[0].title, release.quality.label))
 
-                                # Add _EXISTS_ to the parent dir
+                                # Add exists tag to the .ignore file
                                 self.tagDir(group, 'exists')
 
                                 # Notify on rename fail
@@ -325,7 +371,8 @@ class Renamer(Plugin):
                                 db.commit()
 
                 # Remove leftover files
-                if self.conf('cleanup') and not self.conf('move_leftover') and remove_leftovers:
+                if self.conf('cleanup') and not self.conf('move_leftover') and remove_leftovers and \
+                        not (self.conf('file_action') != 'move' and self.downloadIsTorrent(download_info)):
                     log.debug('Removing leftover files')
                     for current_file in group['files']['leftover']:
                         remove_files.append(current_file)
@@ -350,7 +397,7 @@ class Renamer(Plugin):
                         os.remove(src)
 
                         parent_dir = os.path.normpath(os.path.dirname(src))
-                        if delete_folders.count(parent_dir) == 0 and os.path.isdir(parent_dir) and destination != parent_dir:
+                        if delete_folders.count(parent_dir) == 0 and os.path.isdir(parent_dir) and not parent_dir in [destination, movie_folder] and not self.conf('from') in parent_dir:
                             delete_folders.append(parent_dir)
 
                 except:
@@ -375,11 +422,14 @@ class Renamer(Plugin):
                     self.makeDir(os.path.dirname(dst))
 
                     try:
-                        self.moveFile(src, dst)
+                        self.moveFile(src, dst, forcemove = not self.downloadIsTorrent(download_info))
                         group['renamed_files'].append(dst)
                     except:
                         log.error('Failed moving the file "%s" : %s', (os.path.basename(src), traceback.format_exc()))
                         self.tagDir(group, 'failed_rename')
+
+            if self.conf('file_action') != 'move' and self.downloadIsTorrent(download_info):
+                self.tagDir(group, 'renamed already')
 
             # Remove matching releases
             for release in remove_releases:
@@ -426,36 +476,40 @@ class Renamer(Plugin):
 
         return rename_files
 
+    # This adds a file to ignore / tag a release so it is ignored later
     def tagDir(self, group, tag):
 
-        rename_files = {}
+        ignore_file = None
+        for movie_file in sorted(list(group['files']['movie'])):
+            ignore_file = '%s.ignore' % os.path.splitext(movie_file)[0]
+            break
 
-        if group['dirname']:
-            rename_files[group['parentdir']] = group['parentdir'].replace(group['dirname'], '_%s_%s' % (tag.upper(), group['dirname']))
-        else: # Add it to filename
-            for file_type in group['files']:
-                for rename_me in group['files'][file_type]:
-                    filename = os.path.basename(rename_me)
-                    rename_files[rename_me] = rename_me.replace(filename, '_%s_%s' % (tag.upper(), filename))
+        text = """This file is from CouchPotato
+It has marked this release as "%s"
+This file hides the release from the renamer
+Remove it if you want it to be renamed (again, or at least let it try again)
+""" % tag
 
-        for src in rename_files:
-            if rename_files[src]:
-                dst = rename_files[src]
-                log.info('Renaming "%s" to "%s"', (src, dst))
+        if ignore_file:
+            self.createFile(ignore_file, text)
 
-                # Create dir
-                self.makeDir(os.path.dirname(dst))
 
-                try:
-                    self.moveFile(src, dst)
-                except:
-                    log.error('Failed moving the file "%s" : %s', (os.path.basename(src), traceback.format_exc()))
-                    raise
-
-    def moveFile(self, old, dest):
+    def moveFile(self, old, dest, forcemove = False):
         dest = ss(dest)
         try:
-            shutil.move(old, dest)
+            if forcemove:
+                shutil.move(old, dest)
+            elif self.conf('file_action') == 'hardlink':
+                link(old, dest)
+            elif self.conf('file_action') == 'symlink':
+                symlink(old, dest)
+            elif self.conf('file_action') == 'copy':
+                shutil.copy(old, dest)
+            elif self.conf('file_action') == 'move_symlink':
+                shutil.move(old, dest)
+                symlink(dest, old)
+            else:
+                shutil.move(old, dest)
 
             try:
                 os.chmod(dest, Env.getPermission('file'))
@@ -524,16 +578,14 @@ class Renamer(Plugin):
             loge('Couldn\'t remove empty directory %s: %s', (folder, traceback.format_exc()))
 
     def checkSnatched(self):
+
         if self.checking_snatched:
             log.debug('Already checking snatched')
 
         self.checking_snatched = True
 
-        snatched_status = fireEvent('status.get', 'snatched', single = True)
-        ignored_status = fireEvent('status.get', 'ignored', single = True)
-        failed_status = fireEvent('status.get', 'failed', single = True)
-
-        done_status = fireEvent('status.get', 'done', single = True)
+        snatched_status, ignored_status, failed_status, done_status = \
+            fireEvent('status.get', ['snatched', 'ignored', 'failed', 'done'], single = True)
 
         db = get_session()
         rels = db.query(Release).filter_by(status_id = snatched_status.get('id')).all()
@@ -571,8 +623,16 @@ class Renamer(Plugin):
 
                         found = False
                         for item in statuses:
-                            if item['name'] == nzbname or rel_dict['info']['name'] in item['name'] or getImdb(item['name']) == movie_dict['library']['identifier']:
+                            found_release = False
+                            if rel_dict['info'].get('download_id'):
+                                if item['id'] == rel_dict['info']['download_id'] and item['downloader'] == rel_dict['info']['download_downloader']:
+                                    log.debug('Found release by id: %s', item['id'])
+                                    found_release = True
+                            else:
+                                if item['name'] == nzbname or rel_dict['info']['name'] in item['name'] or getImdb(item['name']) == movie_dict['library']['identifier']:
+                                    found_release = True
 
+                            if found_release:
                                 timeleft = 'N/A' if item['timeleft'] == -1 else item['timeleft']
                                 log.debug('Found %s: %s, time to go: %s', (item['name'], item['status'].upper(), timeleft))
 
@@ -580,16 +640,18 @@ class Renamer(Plugin):
                                     pass
                                 elif item['status'] == 'failed':
                                     fireEvent('download.remove_failed', item, single = True)
+                                    rel.status_id = failed_status.get('id')
+                                    rel.last_edit = int(time.time())
+                                    db.commit()
 
                                     if self.conf('next_on_failed'):
                                         fireEvent('searcher.try_next_release', movie_id = rel.movie_id)
-                                    else:
-                                        rel.status_id = failed_status.get('id')
-                                        rel.last_edit = int(time.time())
-                                        db.commit()
                                 elif item['status'] == 'completed':
                                     log.info('Download of %s completed!', item['name'])
-                                    scan_required = True
+                                    if item['id'] and item['downloader'] and item['folder']:
+                                        fireEventAsync('renamer.scan', movie_folder = item['folder'], download_info = item)
+                                    else:
+                                        scan_required = True
 
                                 found = True
                                 break
@@ -606,3 +668,38 @@ class Renamer(Plugin):
         self.checking_snatched = False
 
         return True
+
+    def extendDownloadInfo(self, download_info):
+
+        rls = None
+
+        if download_info and download_info.get('id') and download_info.get('downloader'):
+
+            db = get_session()
+
+            rlsnfo_dwnlds = db.query(ReleaseInfo).filter_by(identifier = 'download_downloader', value = download_info.get('downloader')).all()
+            rlsnfo_ids = db.query(ReleaseInfo).filter_by(identifier = 'download_id', value = download_info.get('id')).all()
+
+            for rlsnfo_dwnld in rlsnfo_dwnlds:
+                for rlsnfo_id in rlsnfo_ids:
+                    if rlsnfo_id.release == rlsnfo_dwnld.release:
+                        rls = rlsnfo_id.release
+                        break
+                if rls: break
+
+            if not rls:
+                log.error('Download ID %s from downloader %s not found in releases', (download_info.get('id'), download_info.get('downloader')))
+
+        if rls:
+
+            rls_dict = rls.to_dict({'info':{}})
+            download_info.update({
+                'imdb_id': rls.movie.library.identifier,
+                'quality': rls.quality.identifier,
+                'type': rls_dict.get('info', {}).get('type')
+            })
+
+        return download_info
+
+    def downloadIsTorrent(self, download_info):
+        return download_info and download_info.get('type') in ['torrent', 'torrent_magnet']

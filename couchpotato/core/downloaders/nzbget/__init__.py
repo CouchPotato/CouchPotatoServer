@@ -25,6 +25,12 @@ config = [{
                     'description': 'Hostname with port. Usually <strong>localhost:6789</strong>',
                 },
                 {
+                    'name': 'username',
+                    'default': 'nzbget',
+                    'advanced': True,
+                    'description': 'Set a different username to connect. Default: nzbget',
+                },
+                {
                     'name': 'password',
                     'type': 'password',
                     'description': 'Default NZBGet password is <i>tegbzn6789</i>',
@@ -47,6 +53,12 @@ config = [{
                     'type': 'bool',
                     'advanced': True,
                     'description': 'Disable this downloader for automated searches, but use it when I manually send a release.',
+                },
+                {
+                    'name': 'delete_failed',
+                    'default': True,
+                    'type': 'bool',
+                    'description': 'Delete a release after the download has failed.',
                 },
             ],
         }

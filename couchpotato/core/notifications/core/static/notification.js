@@ -21,20 +21,17 @@ var NotificationBase = new Class({
 		App.addEvent('load', function(){
 
 			App.block.notification = new Block.Menu(self, {
+				'button_class': 'icon2.eye-open',
 				'class': 'notification_menu',
 				'onOpen': self.markAsRead.bind(self)
 			})
 			$(App.block.notification).inject(App.getBlock('search'), 'after');
 			self.badge = new Element('div.badge').inject(App.block.notification, 'top').hide();
 
-			/* App.getBlock('notification').addLink(new Element('a.more', {
-				'href': App.createUrl('notifications'),
-				'text': 'Show older notifications'
-			})); */
 		});
 
 		window.addEvent('load', function(){
-			self.startInterval.delay(Browser.safari ? 100 : 0, self)
+			self.startInterval.delay($(window).getSize().x <= 480 ? 2000 : 300, self)
 		});
 
 	},
@@ -47,14 +44,19 @@ var NotificationBase = new Class({
 
 		result.el = App.getBlock('notification').addLink(
 			new Element('span.'+(result.read ? 'read' : '' )).adopt(
-				new Element('span.message', {'text': result.message}),
+				new Element('span.message', {'html': result.message}),
 				new Element('span.added', {'text': added.timeDiffInWords(), 'title': added})
 			)
 		, 'top');
 		self.notifications.include(result);
 
-		if(!result.read)
+		if(result.data.important !== undefined && !result.read){
+			var sticky = true
+			App.fireEvent('message', [result.message, sticky, result])
+		}
+		else if(!result.read){
 			self.setBadge(self.notifications.filter(function(n){ return !n.read}).length)
+		}
 
 	},
 
@@ -64,20 +66,26 @@ var NotificationBase = new Class({
 		self.badge[value ? 'show' : 'hide']()
 	},
 
-	markAsRead: function(){
-		var self = this;
+	markAsRead: function(force_ids){
+		var self = this,
+			ids = force_ids;
 
-		var rn = self.notifications.filter(function(n){
-			return !n.read
-		})
+		if(!force_ids) {
+			var rn = self.notifications.filter(function(n){
+				return !n.read && n.data.important === undefined
+			})
 
-		var ids = []
-		rn.each(function(n){
-			ids.include(n.id)
-		})
+			var ids = []
+			rn.each(function(n){
+				ids.include(n.id)
+			})
+		}
 
 		if(ids.length > 0)
 			Api.request('notification.markread', {
+				'data': {
+					'ids': ids.join(',')
+				},
 				'onSuccess': function(){
 					self.setBadge('')
 				}
@@ -93,10 +101,19 @@ var NotificationBase = new Class({
 			return;
 		}
 
-		Api.request('notification.listener', {
+		self.request = Api.request('notification.listener', {
     		'data': {'init':true},
     		'onSuccess': self.processData.bind(self)
 		}).send()
+
+		setInterval(function(){
+
+			if(self.request && self.request.isRunning()){
+				self.request.cancel();
+				self.startPoll()
+			}
+
+		}, 120000);
 
 	},
 
@@ -143,26 +160,41 @@ var NotificationBase = new Class({
 		self.startPoll()
 	},
 
-	showMessage: function(message){
+	showMessage: function(message, sticky, data){
 		var self = this;
 
 		if(!self.message_container)
 			self.message_container = new Element('div.messages').inject(document.body);
 
-		var new_message = new Element('div.message', {
-			'text': message
-		}).inject(self.message_container);
+		var new_message = new Element('div', {
+			'class': 'message' + (sticky ? ' sticky' : ''),
+			'html': message
+		}).inject(self.message_container, 'top');
 
 		setTimeout(function(){
 			new_message.addClass('show')
 		}, 10);
 
-		setTimeout(function(){
+		var hide_message = function(){
 			new_message.addClass('hide')
 			setTimeout(function(){
 				new_message.destroy();
 			}, 1000);
-		}, 4000);
+		}
+
+		if(sticky)
+			new_message.grab(
+				new Element('a.close.icon2', {
+					'events': {
+						'click': function(){
+							self.markAsRead([data.id]);
+							hide_message();
+						}
+					}
+				})
+			);
+		else
+			setTimeout(hide_message, 4000);
 
 	},
 

@@ -9,6 +9,8 @@ from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.plugins.scanner.main import Scanner
 from couchpotato.core.settings.model import FileType, File
 from couchpotato.environment import Env
+from flask.helpers import send_file
+from werkzeug.exceptions import NotFound
 import os.path
 import time
 import traceback
@@ -71,7 +73,7 @@ class FileManager(Plugin):
             db = get_session()
             for root, dirs, walk_files in os.walk(Env.get('cache_dir')):
                 for filename in walk_files:
-                    if root == python_cache or 'minified' in filename: continue
+                    if root == python_cache or 'minified' in filename or 'version' in filename: continue
                     file_path = os.path.join(root, filename)
                     f = db.query(File).filter(File.path == toUnicode(file_path)).first()
                     if not f:
@@ -81,11 +83,13 @@ class FileManager(Plugin):
 
     def showCacheFile(self, filename = ''):
 
-        cache_dir = Env.get('cache_dir')
-        filename = os.path.basename(filename)
+        file_path = os.path.join(Env.get('cache_dir'), os.path.basename(filename))
 
-        from flask.helpers import send_from_directory
-        return send_from_directory(cache_dir, filename)
+        if not os.path.isfile(file_path):
+            log.error('File "%s" not found', file_path)
+            raise NotFound()
+
+        return send_file(file_path, conditional = True)
 
     def download(self, url = '', dest = None, overwrite = False, urlopen_kwargs = {}):
 

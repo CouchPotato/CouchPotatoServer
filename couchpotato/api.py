@@ -11,16 +11,12 @@ api_nonblock = {}
 
 class NonBlockHandler(RequestHandler):
 
-    def __init__(self, application, request, **kwargs):
-        cls = NonBlockHandler
-        cls.stoppers = []
-        super(NonBlockHandler, self).__init__(application, request, **kwargs)
+    stoppers = []
 
     @asynchronous
     def get(self, route):
-        cls = NonBlockHandler
         start, stop = api_nonblock[route]
-        cls.stoppers.append(stop)
+        self.stoppers.append(stop)
 
         start(self.onNewMessage, last_id = self.get_argument("last_id", None))
 
@@ -30,12 +26,11 @@ class NonBlockHandler(RequestHandler):
         self.finish(response)
 
     def on_connection_close(self):
-        cls = NonBlockHandler
 
-        for stop in cls.stoppers:
+        for stop in self.stoppers:
             stop(self.onNewMessage)
 
-        cls.stoppers = []
+        self.stoppers = []
 
 
 def addApiView(route, func, static = False, docs = None, **kwargs):

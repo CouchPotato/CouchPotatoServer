@@ -89,41 +89,22 @@ MA.Release = new Class({
 			}
 		});
 
-		if(self.movie.data.releases.length == 0){
+		if(self.movie.data.releases.length == 0)
 			self.el.hide()
-		}
-		else {
-
-			var buttons_done = false;
-
-			self.movie.data.releases.sortBy('-info.score').each(function(release){
-				if(buttons_done) return;
-
-				var status = Status.get(release.status_id);
-
-				if((self.next_release && (status.identifier == 'ignored' || status.identifier == 'failed')) || (!self.next_release && status.identifier == 'available')){
-					self.hide_on_click = false;
-					self.show();
-					buttons_done = true;
-				}
-
-			});
-
-		}
+		else
+			self.showHelper();
 
 	},
 
-	show: function(e){
+	createReleases: function(){
 		var self = this;
-		if(e)
-			(e).preventDefault();
 
 		if(!self.options_container){
 			self.options_container = new Element('div.options').adopt(
 				self.release_container = new Element('div.releases.table').adopt(
 					self.trynext_container = new Element('div.buttons.try_container')
 				)
-			).inject(self.movie, 'top');
+			);
 
 			// Header
 			new Element('div.item.head').adopt(
@@ -238,7 +219,69 @@ MA.Release = new Class({
 
 		}
 
+	},
+
+	show: function(e){
+		var self = this;
+		if(e)
+			(e).preventDefault();
+
+		self.createReleases();
+		self.options_container.inject(self.movie, 'top');
 		self.movie.slide('in', self.options_container);
+	},
+
+	showHelper: function(e){
+		var self = this;
+		if(e)
+			(e).preventDefault();
+
+		self.createReleases();
+		self.trynext_container = new Element('div.buttons.trynext').inject(self.movie.info_container);
+
+		if(self.next_release || self.last_release){
+
+			self.trynext_container.adopt(
+				self.next_release ? [new Element('a.icon.readd', {
+					'text': self.last_release ? 'Download another release' : 'Download the best release',
+					'events': {
+						'click': self.tryNextRelease.bind(self)
+					}
+				}),
+				new Element('a.icon.download', {
+					'text': 'pick one yourself',
+					'events': {
+						'click': function(){
+							self.movie.quality.fireEvent('click');
+						}
+					}
+				})] : null,
+				new Element('a.icon.completed', {
+					'text': 'mark this movie done',
+					'events': {
+						'click': function(){
+							Api.request('movie.delete', {
+								'data': {
+									'id': self.movie.get('id'),
+									'delete_from': 'wanted'
+								},
+								'onComplete': function(){
+									var movie = $(self.movie);
+									movie.set('tween', {
+										'duration': 300,
+										'onComplete': function(){
+											self.movie.destroy()
+										}
+									});
+									movie.tween('height', 0);
+								}
+							});
+						}
+					}
+				})
+			)
+		}
+
 	},
 
 	get: function(release, type){
@@ -251,14 +294,15 @@ MA.Release = new Class({
 		var release_el = self.release_container.getElement('#release_'+release.id),
 			icon = release_el.getElement('.download.icon');
 
-		icon.addClass('spinner');
+		self.movie.busy(true);
 
 		Api.request('release.download', {
 			'data': {
 				'id': release.id
 			},
 			'onComplete': function(json){
-				icon.removeClass('spinner')
+				self.movie.busy(false);
+
 				if(json.success)
 					icon.addClass('completed');
 				else
@@ -280,6 +324,8 @@ MA.Release = new Class({
 
 	tryNextRelease: function(movie_id){
 		var self = this;
+
+		self.createReleases();
 
 		if(self.last_release)
 			self.ignore(self.last_release);

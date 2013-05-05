@@ -7,33 +7,30 @@ Block.Search = new Class({
 	create: function(){
 		var self = this;
 
+		var focus_timer = 0;
 		self.el = new Element('div.search_form').adopt(
 			new Element('div.input').adopt(
-				self.input = new Element('input.inlay', {
+				self.input = new Element('input', {
 					'placeholder': 'Search & add a new movie',
 					'events': {
 						'keyup': self.keyup.bind(self),
 						'focus': function(){
+							if(focus_timer) clearTimeout(focus_timer);
 							self.el.addClass('focused')
 							if(this.get('value'))
 								self.hideResults(false)
 						},
 						'blur': function(){
-							(function(){
+							focus_timer = (function(){
 								self.el.removeClass('focused')
-							}).delay(2000);
+							}).delay(100);
 						}
 					}
 				}),
-				new Element('span.enter', {
+				new Element('a.icon2', {
 					'events': {
-						'click': self.keyup.bind(self)
-					},
-					'text':'Enter'
-				}),
-				new Element('a', {
-					'events': {
-						'click': self.clear.bind(self)
+						'click': self.clear.bind(self),
+						'touchend': self.clear.bind(self)
 					}
 				})
 			),
@@ -59,13 +56,21 @@ Block.Search = new Class({
 		var self = this;
 		(e).preventDefault();
 
-		self.last_q = '';
-		self.input.set('value', '');
-		self.input.focus()
+		if(self.last_q === ''){
+			self.input.blur()
+			self.last_q = null;
+		}
+		else {
 
-		self.movies = []
-		self.results.empty()
-		self.el.removeClass('filled')
+			self.last_q = '';
+			self.input.set('value', '');
+			self.input.focus()
+
+			self.movies = []
+			self.results.empty()
+			self.el.removeClass('filled')
+
+		}
 	},
 
 	hideResults: function(bool){
@@ -92,8 +97,10 @@ Block.Search = new Class({
 
 		self.el[self.q() ? 'addClass' : 'removeClass']('filled')
 
-		if(self.q() != self.last_q && (['enter'].indexOf(e.key) > -1 || e.type == 'click'))
-			self.autocomplete()
+		if(self.q() != self.last_q){
+			if(self.autocomplete_timer) clearTimeout(self.autocomplete_timer)
+			self.autocomplete_timer = self.autocomplete.delay(300, self)
+		}
 
 	},
 
@@ -197,6 +204,11 @@ Block.Search.Item = new Class({
 		self.el = new Element('div.movie_result', {
 			'id': info.imdb
 		}).adopt(
+			self.thumbnail = info.images && info.images.poster.length > 0 ? new Element('img.thumbnail', {
+				'src': info.images.poster[0],
+				'height': null,
+				'width': null
+			}) : null,
 			self.options_el = new Element('div.options.inlay'),
 			self.data_container = new Element('div.data', {
 				'tween': {
@@ -207,11 +219,6 @@ Block.Search.Item = new Class({
 					'click': self.showOptions.bind(self)
 				}
 			}).adopt(
-				self.thumbnail = info.images && info.images.poster.length > 0 ? new Element('img.thumbnail', {
-					'src': info.images.poster[0],
-					'height': null,
-					'width': null
-				}) : null,
 				new Element('div.info').adopt(
 					self.title = new Element('h2', {
 						'text': info.titles[0]
@@ -219,28 +226,11 @@ Block.Search.Item = new Class({
 						self.year = info.year ? new Element('span.year', {
 							'text': info.year
 						}) : null
-					),
-					self.tagline = new Element('span.tagline', {
-						'text': info.tagline ? info.tagline : info.plot,
-						'title': info.tagline ? info.tagline : info.plot
-					}),
-					self.director = self.info.director ?  new Element('span.director', {
-						'text': 'Director:' + info.director
-					}) : null,
-					self.starring = info.actors ? new Element('span.actors', {
-						'text': 'Starring:'
-					}) : null
+					)
 				)
 			)
 		)
 
-		if(info.actors){
-			Object.each(info.actors, function(actor){
-				new Element('span', {
-					'text': actor
-				}).inject(self.starring)
-			})
-		}
 
 		info.titles.each(function(title){
 			self.alternativeTitle({
@@ -319,12 +309,9 @@ Block.Search.Item = new Class({
 			}
 
 			self.options_el.grab(
-				new Element('div').adopt(
-					self.thumbnail = (info.images && info.images.poster.length > 0) ? new Element('img.thumbnail', {
-						'src': info.images.poster[0],
-						'height': null,
-						'width': null
-					}) : null,
+				new Element('div', {
+					'class': self.info.in_wanted && self.info.in_wanted.profile || in_library ? 'in_library_wanted' : ''
+				}).adopt(
 					self.info.in_wanted && self.info.in_wanted.profile ? new Element('span.in_wanted', {
 						'text': 'Already in wanted list: ' + self.info.in_wanted.profile.label
 					}) : (in_library ? new Element('span.in_library', {

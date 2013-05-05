@@ -1,5 +1,9 @@
+.page.settings {
+	min-width: 960px;	
+}
+
 .page.settings:after {
-	content: ".";
+	content: "";
 	display: block;
 	clear: both;
 	visibility: hidden;
@@ -9,15 +13,15 @@
 
 	.page.settings .tabs {
 		float: left;
-		width: 20%;
-		font-size: 20px;
+		width: 14.7%;
+		font-size: 17px;
 		text-align: right;
 		list-style: none;
-		padding: 40px 0;
+		padding: 35px 0;
 		margin: 0;
 		min-height: 470px;
-		background-image: -*-linear-gradient(
-		    20deg,
+		background-image: linear-gradient(
+		    76deg,
 		    rgba(0,0,0,0) 50%,
 		    rgba(0,0,0,0.3) 100%
 		);
@@ -60,9 +64,9 @@
 
 
 	.page.settings .containers {
-		width: 80%;
+		width: 84%;
 		float: left;
-		padding: 20px 2%;
+		padding: 40px 0 40px 2%;
 		min-height: 300px;
 	}
 
@@ -133,7 +137,12 @@
 			display: inline-block;
 			vertical-align: middle;
 			padding-left: 2%;
+			line-height: 14px;
 		}
+		
+			.page .check {
+				margin-top: 6px;
+			}
 
 			.page .check + .formHint {
 				float: none;
@@ -142,6 +151,7 @@
 				padding-left: 1% !important;
 				height: 24px;
 				vertical-align: middle;
+				line-height: 24px;
 			}
 
 		.page .ctrlHolder label {
@@ -160,6 +170,10 @@
 	.page .option_list {
 		margin-bottom: 20px;
 	}
+	
+		.page .option_list .check {
+			margin-top: 5px;
+		}
 	
 		.page .option_list .enabler {
 			padding: 0;
@@ -238,8 +252,11 @@
 		display: block;
 		text-align: right;
 		height: 20px;
-		margin: 0;
+		margin: 0 0 -37px;
 	}
+		.page .advanced_toggle .check {
+			margin: 0;
+		}
 		.page .advanced_toggle span { padding: 0 5px; }
 		.page.show_advanced .advanced_toggle {
 			color: #edc07f;
@@ -437,16 +454,16 @@
 				border-radius: 2px;
 			}
 			.page .tag_input > ul:hover > li.choice {
-				background: -*-linear-gradient(
-				    270deg,
+				background: linear-gradient(
+				    180deg,
 				    rgba(255,255,255,0.3) 0%,
 				    rgba(255,255,255,0.1) 100%
 				);
 			}
 			.page .tag_input > ul > li.choice:hover,
 			.page .tag_input > ul > li.choice.selected {
-				background: -*-linear-gradient(
-				    270deg,
+				background: linear-gradient(
+				    180deg,
 				    #5b9bd1 0%,
 				    #406db8 100%
 				);
@@ -484,8 +501,8 @@
 				margin: -9px 0 0 -16px;
 				border-radius: 30px 30px 0 0;
 				cursor: pointer;
-				background: url('../images/icon.delete.png') no-repeat center 2px, -*-linear-gradient(
-				   270deg,
+				background: url('../images/icon.delete.png') no-repeat center 2px, linear-gradient(
+					180deg,
 				    #5b9bd1 0%,
 				    #5b9bd1 100%
 				);
@@ -513,8 +530,21 @@
 			display: none;
 		}
 		.page .combined_table .head abbr.host {
-			margin-right: 197px;
+			margin-right: 190px;
 		}
+		.page .combined_table .head abbr.api_key {
+			margin-right: 171px;
+		}
+		.page .combined_table .head .extra_score,
+		.page .combined_table .extra_score {
+			width: 70px;
+			text-align: center;
+			display: none;
+		}
+			.page.show_advanced .combined_table .head .extra_score,
+			.page.show_advanced .combined_table .extra_score {
+				display: inline-block;
+			}
 
 	.page .combined_table .ctrlHolder {
 		padding-top: 2px;
@@ -525,6 +555,9 @@
 	.page .combined_table .ctrlHolder > * {
 		margin: 0 10px 0 0;
 	}
+		.page .combined_table .ctrlHolder > .check {
+			margin-top: 6px;
+		}
 
 	.page .combined_table .ctrlHolder .delete {
 		display: none;

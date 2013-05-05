@@ -13,7 +13,6 @@ class Prowl(Notification):
     }
 
     def notify(self, message = '', data = {}, listener = None):
-        if self.isDisabled(): return
 
         data = {
             'apikey': self.conf('api_key'),
