@@ -22,7 +22,10 @@ var Movie = new Class({
 	addEvents: function(){
 		var self = this;
 
-		App.addEvent('movie.update.'+self.data.id, self.update.bind(self));
+		App.addEvent('movie.update.'+self.data.id, function(notification){
+			self.busy(false)
+			self.update.delay(2000, self, notification);
+		});
 
 		['movie.busy', 'searcher.started'].each(function(listener){
 			App.addEvent(listener+'.'+self.data.id, function(notification){
@@ -57,17 +60,19 @@ var Movie = new Class({
 		var self = this;
 
 		if(!set_busy){
-			if(self.spinner){
-				self.mask.fade('out');
-				setTimeout(function(){
-					if(self.mask)
-						self.mask.destroy();
-					if(self.spinner)
-						self.spinner.el.destroy();
-					self.spinner = null;
-					self.mask = null;
-				}, 400);
-			}
+			setTimeout(function(){
+				if(self.spinner){
+					self.mask.fade('out');
+					setTimeout(function(){
+						if(self.mask)
+							self.mask.destroy();
+						if(self.spinner)
+							self.spinner.el.destroy();
+						self.spinner = null;
+						self.mask = null;
+					}, 400);
+				}
+			}, 1000)
 		}
 		else if(!self.spinner) {
 			self.createMask();
