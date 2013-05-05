@@ -87,7 +87,7 @@ class Release(Plugin):
         # Add the release files in batch
         try:
             added_files = db.query(File).filter(or_(*[File.id == x for x in added_files])).all()
-            rel.files.append(added_files)
+            rel.files.extend(added_files)
             db.commit()
         except Exception, e:
             log.debug('Failed to attach "%s" to release: %s', (cur_file, e))
