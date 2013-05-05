@@ -309,7 +309,9 @@ Block.Search.Item = new Class({
 			}
 
 			self.options_el.grab(
-				new Element('div').adopt(
+				new Element('div', {
+					'class': self.info.in_wanted && self.info.in_wanted.profile || in_library ? 'in_library_wanted' : ''
+				}).adopt(
 					self.info.in_wanted && self.info.in_wanted.profile ? new Element('span.in_wanted', {
 						'text': 'Already in wanted list: ' + self.info.in_wanted.profile.label
 					}) : (in_library ? new Element('span.in_library', {
