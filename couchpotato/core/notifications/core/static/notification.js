@@ -101,10 +101,19 @@ var NotificationBase = new Class({
 			return;
 		}
 
-		Api.request('notification.listener', {
+		self.request = Api.request('notification.listener', {
     		'data': {'init':true},
     		'onSuccess': self.processData.bind(self)
 		}).send()
+
+		setInterval(function(){
+
+			if(self.request && self.request.isRunning()){
+				self.request.cancel();
+				self.startPoll()
+			}
+
+		}, 120000);
 
 	},
 
