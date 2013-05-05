@@ -1,4 +1,5 @@
 from couchpotato.core.helpers.encoding import toUnicode, tryUrlencode
+from couchpotato.core.helpers.variable import getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
 from httplib import HTTPSConnection
@@ -14,17 +15,23 @@ class Pushover(Notification):
 
         http_handler = HTTPSConnection("api.pushover.net:443")
 
-        data = {
+        api_data = {
             'user': self.conf('user_key'),
             'token': self.app_token,
             'message': toUnicode(message),
-            'priority': self.conf('priority')
+            'priority': self.conf('priority'),
         }
+
+        if data and data.get('library'):
+            api_data.extend({
+                'url': toUnicode('http://www.imdb.com/title/%s/' % data['library']['identifier']),
+                'url_title': toUnicode('%s on IMDb' % getTitle(data['library'])),
+            })
 
         http_handler.request('POST',
             "/1/messages.json",
             headers = {'Content-type': 'application/x-www-form-urlencoded'},
-            body = tryUrlencode(data)
+            body = tryUrlencode(api_data)
         )
 
         response = http_handler.getresponse()
