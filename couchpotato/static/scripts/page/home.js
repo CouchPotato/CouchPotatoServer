@@ -65,31 +65,37 @@ Page.Home = new Class({
 
 		// Make all thumbnails the same size
 		self.soon_list.addEvent('loaded', function(){
-			var images = $(self.soon_list).getElements('img'),
+			var images = $(self.soon_list).getElements('.poster'),
 				timer,
-				lowest = null;
+				highest = 100;
 
-			images.addEvent('load', function(){
-				var height = this.getSize().y;
-				if(!lowest || lowest > height){
-					lowest = height;
-					if(timer) clearTimeout(timer);
-					timer = (function(){
-						images.getParent().setStyle('height', lowest);
-					}).delay(300)
-				}
+			images.each(function(img_container){
+				img_container.getElements('img').addEvent('load', function(){
+					var img = this,
+						height = img.getSize().y;
+					if(!highest || highest < height){
+						highest = height;
+						if(timer) clearTimeout(timer);
+						timer = (function(){
+							images.setStyle('height', highest);
+						}).delay(300);
+					}
+				});
 			});
 
 			$(window).addEvent('resize', function(){
 				if(timer) clearTimeout(timer);
 				timer = (function(){
-					var lowest;
-					images.each(function(img){
+					var highest = 100;
+					images.each(function(img_container){
+						var img = img_container.getElement('img');
+						if(!img) return
+
 						var height = img.getSize().y;
-						if(!lowest || lowest > height)
-							lowest = height;
+						if(!highest || highest < height)
+							highest = height;
 					});
-					images.getParent().setStyle('height', lowest);
+					images.setStyle('height', highest);
 				}).delay(300);
 			});
 		});

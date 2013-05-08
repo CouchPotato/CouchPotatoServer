@@ -11,7 +11,6 @@
 	
 	.movies.thumbs_list > div:not(.description) {
 		margin-right: -4px;
-		text-align: center;
 	}
 	
 	.movies .loading {
@@ -165,14 +164,6 @@
 				background: none;
 				transition: none;
 			}
-			
-				.movies.thumbs_list .movie.no_thumbnail .data { background-image: linear-gradient(-30deg, rgba(255, 0, 85, .2) 0,rgba(125, 185, 235, .2) 100%);
-				}
-				.movies.thumbs_list .movie.no_thumbnail:nth-child(2n+6) .data { background-image: linear-gradient(-20deg, rgba(125, 0, 215, .2) 0, rgba(4, 55, 5, .7) 100%); }
-				.movies.thumbs_list .movie.no_thumbnail:nth-child(3n+6) .data { background-image: linear-gradient(-30deg, rgba(155, 0, 85, .2) 0,rgba(25, 185, 235, .7) 100%); }
-				.movies.thumbs_list .movie.no_thumbnail:nth-child(4n+6) .data { background-image: linear-gradient(-30deg, rgba(115, 5, 235, .2) 0, rgba(55, 180, 5, .7) 100%); }
-				.movies.thumbs_list .movie.no_thumbnail:nth-child(5n+6) .data { background-image: linear-gradient(-30deg, rgba(35, 15, 215, .2) 0, rgba(135, 215, 115, .7) 100%); }
-				.movies.thumbs_list .movie.no_thumbnail:nth-child(6n+6) .data { background-image: linear-gradient(-30deg, rgba(35, 15, 215, .2) 0, rgba(135, 15, 115, .7) 100%); }
 				
 				.movies.thumbs_list .movie:hover .data {
 					background: rgba(0,0,0,0.9);
@@ -222,7 +213,13 @@
 				width: 100%;
 				height: 100%;
 				transition: none;
+				background: no-repeat center;
+				background-size: cover;
 			}
+				.movies.thumbs_list .no_thumbnail .empty_file {
+					width: 100%;
+					height: 100%;
+				}
 
 		.movies .poster img,
 		.options .poster img {
@@ -235,6 +232,7 @@
 				top: 0;
 				bottom: 0;
 				border-radius: 0;
+				opacity: 0;
 			}
 		
 			.movies .info {
