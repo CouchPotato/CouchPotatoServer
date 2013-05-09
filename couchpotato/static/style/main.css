@@ -425,11 +425,20 @@ body > .spinner, .mask{
 	}
 
 		.header .notification_menu ul {
-			min-height: 80px;
+			min-height: 60px;
 			max-height: 300px;
 			overflow: auto;
-			text-align: center;
 		}
+			.header .notification_menu ul:empty:after {
+				content: 'No notifications (yet)';
+				text-align: center;
+				width: 100%;
+				position: absolute;
+				padding: 18px 0;
+				font-size: 15px;
+				font-style: italic;
+				opacity: .4;
+			}
 
 		.header .notification_menu li > span {
 			padding: 5px;
