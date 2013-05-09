@@ -11,20 +11,6 @@ Page.Settings = new Class({
 	current: 'about',
 	has_tab: false,
 
-	initialize: function(options){
-		var self = this;
-		self.parent(options);
-
-		// Add to more menu
-		if(self.name == 'settings')
-			App.getBlock('more').addLink(new Element('a', {
-				'href': App.createUrl(self.name),
-				'text': self.name.capitalize(),
-				'title': self.title
-			}), 'top')
-
-	},
-
 	open: function(action, params){
 		var self = this;
 		self.action = action == 'index' ? self.default_action : action;

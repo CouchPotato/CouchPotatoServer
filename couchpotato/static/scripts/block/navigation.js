@@ -67,12 +67,12 @@ Block.Navigation = new Class({
 		if(!self.added){
 
 			new Element('li.separator').inject(self.nav);
-			body.getElements('.header .more_menu.menu li a').each(function(el, nr){
-				if([0, 1, 2, 5].indexOf(nr) > -1){
-					self.nav.grab(
-						new Element('li').grab(el.clone().cloneEvents(el))
-					);
-				}
+			body.getElements('.header .more_menu.menu li a, .header .more_menu.menu li span.separator').each(function(el, nr){
+				if(nr <= 2) return;
+				if(el.get('tag') == 'a')
+					self.nav.grab(new Element('li').grab(el.clone().cloneEvents(el)));
+				else	
+					self.nav.grab(new Element('li.separator'));
 			});
 
 			self.added = true;

@@ -28,10 +28,8 @@ var NotificationBase = new Class({
 			$(App.block.notification).inject(App.getBlock('search'), 'after');
 			self.badge = new Element('div.badge').inject(App.block.notification, 'top').hide();
 
-		});
+			self.startInterval.delay($(window).getSize().x <= 480 ? 2000 : 1000, self);
 
-		window.addEvent('load', function(){
-			self.startInterval.delay($(window).getSize().x <= 480 ? 2000 : 300, self)
 		});
 
 	},

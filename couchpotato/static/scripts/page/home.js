@@ -78,7 +78,7 @@ Page.Home = new Class({
 						if(timer) clearTimeout(timer);
 						timer = (function(){
 							images.setStyle('height', highest);
-						}).delay(300);
+						}).delay(50);
 					}
 				});
 			});

@@ -100,10 +100,8 @@ MA.Release = new Class({
 		var self = this;
 
 		if(!self.options_container){
-			self.options_container = new Element('div.options').adopt(
-				self.release_container = new Element('div.releases.table').adopt(
-					self.trynext_container = new Element('div.buttons.try_container')
-				)
+			self.options_container = new Element('div.options').grab(
+				self.release_container = new Element('div.releases.table')
 			);
 
 			// Header
@@ -190,7 +188,9 @@ MA.Release = new Class({
 				self.release_container.getElement('#release_'+self.next_release.id).addClass('next_release');
 			}
 
-			if(self.next_release || self.last_release){
+			if(self.next_release || (self.last_release && ['ignored', 'failed'].indexOf(self.last_release.status.identifier) === false)){
+				
+				self.trynext_container = new Element('div.buttons.try_container').inject(self.release_container, 'top');
 
 				self.trynext_container.adopt(
 					new Element('span.or', {
@@ -237,9 +237,10 @@ MA.Release = new Class({
 			(e).preventDefault();
 
 		self.createReleases();
-		self.trynext_container = new Element('div.buttons.trynext').inject(self.movie.info_container);
 
-		if(self.next_release || self.last_release){
+		if(self.next_release || (self.last_release && ['ignored', 'failed'].indexOf(self.last_release.status.identifier) === false)){
+
+			self.trynext_container = new Element('div.buttons.trynext').inject(self.movie.info_container);
 
 			self.trynext_container.adopt(
 				self.next_release ? [new Element('a.icon.readd', {
