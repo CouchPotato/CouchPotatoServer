@@ -98,6 +98,9 @@ Block.Search = new Class({
 		self.el[self.q() ? 'addClass' : 'removeClass']('filled')
 
 		if(self.q() != self.last_q){
+			if(self.api_request && self.api_request.isRunning())
+				self.api_request.cancel();
+
 			if(self.autocomplete_timer) clearTimeout(self.autocomplete_timer)
 			self.autocomplete_timer = self.autocomplete.delay(300, self)
 		}
@@ -116,12 +119,9 @@ Block.Search = new Class({
 	},
 
 	list: function(){
-		var self = this;
-
-		if(self.api_request && self.api_request.running) return
-
-		var q = self.q();
-		var cache = self.cache[q];
+		var self = this,
+			q = self.q(),
+			cache = self.cache[q];
 
 		self.hideResults(false);
 
@@ -163,9 +163,6 @@ Block.Search = new Class({
 				m.showOptions()
 
 		});
-
-		if(q != self.q())
-			self.list()
 
 		// Calculate result heights
 		var w = window.getSize(),

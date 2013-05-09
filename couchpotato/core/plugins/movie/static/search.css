@@ -45,7 +45,7 @@
 				border-radius: 0;
 				display: block;
 				border: 0;
-				background: rgba(255,255,255,.08);
+				background: none;
 				color: #FFF;
 				font-size: 25px;
 				height: 100%;
@@ -105,7 +105,7 @@
 		background: #5c697b;
 		margin: 4px 0 0;
 		width: 470px;
-		min-height: 140px;
+		min-height: 50px;
 		box-shadow: 0 20px 20px -10px rgba(0,0,0,0.55);
 		display: none;
 	}
