@@ -25,12 +25,21 @@ class Goodfilms(Automation):
 
     def getWatchlist(self):
 
-        url = self.url % self.conf('automation_username')
-        soup = BeautifulSoup(self.getHTMLData(url))
-
         movies = []
+        page = 0
 
-        for movie in soup.find_all('div', attrs = { 'class': 'movie', 'data-film-title': True }):
-            movies.append({ 'title': movie['data-film-title'], 'year': movie['data-film-year'] })
+        while 1 == 1:
+            page += 1
+            url = self.url % (self.conf('automation_username'), page)
+
+            soup = BeautifulSoup(self.getHTMLData(url))
+
+            this_watch_list = soup.find_all('div', attrs={ 'class': 'movie', 'data-film-title': True })
+
+            if not this_watch_list:
+                break
+
+            for movie in this_watch_list:
+                movies.append({ 'title': movie['data-film-title'], 'year': movie['data-film-year'] })
 
         return movies
