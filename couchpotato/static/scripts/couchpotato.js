@@ -68,28 +68,42 @@ var CouchPotato = new Class({
 			self.block.footer = new Block.Footer(self, {})
 		);
 
-		[new Element('a.orange', {
-			'text': 'Restart',
-			'events': {
-				'click': self.restartQA.bind(self)
-			}
-		}),
-		new Element('a.red', {
-			'text': 'Shutdown',
-			'events': {
-				'click': self.shutdownQA.bind(self)
-			}
-		}),
-		new Element('a', {
-			'text': 'Update to latest',
-			'events': {
-				'click': self.checkForUpdate.bind(self, null)
-			}
-		}),
-		new Element('a', {
-			'text': 'Run install wizard',
-			'href': App.createUrl('wizard')
-		})].each(function(a){
+		var setting_links = [
+			new Element('a', {
+				'text': 'About CouchPotato',
+				'href': App.createUrl('settings/about')
+			}),
+			new Element('a', {
+				'text': 'Check for Updates',
+				'events': {
+					'click': self.checkForUpdate.bind(self, null)
+				}
+			}),
+			new Element('span.separator'),
+			new Element('a', {
+				'text': 'Settings',
+				'href': App.createUrl('settings/general')
+			}),
+			new Element('a', {
+				'text': 'Logs',
+				'href': App.createUrl('log')
+			}),
+			new Element('span.separator'),
+			new Element('a', {
+				'text': 'Restart',
+				'events': {
+					'click': self.restartQA.bind(self)
+				}
+			}),
+			new Element('a', {
+				'text': 'Shutdown',
+				'events': {
+					'click': self.shutdownQA.bind(self)
+				}
+			})
+		]
+		
+		setting_links.each(function(a){
 			self.block.more.addLink(a)
 		})
 

@@ -13,10 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from rules import prefixRegex, rules as tr_rules
 import cssutils
 import re
-from rules import rules as tr_rules
-from rules import prefixRegex
 
 
 keyframesRegex = re.compile(r'@keyframes\s?\w+\s?{(.*)}')
@@ -83,12 +82,11 @@ def magic(ruleset, debug, minify, filt, parser):
     if not cssText: # blank rules return None so return an empty string
         return
     if minify or not hasattr(ruleset, 'style'):
-        return unicode(cssText)
-    return unicode(cssText) + '\n'
+        return cssText
+    return cssText + '\n'
 
 
 def process(string, debug = False, minify = False, filt = ['webkit', 'moz', 'o', 'ms'], **prefs):
-    loglevel = 'DEBUG' if debug else 'ERROR'
     parser = cssutils.CSSParser(loglevel = 'CRITICAL')
     if minify:
         cssutils.ser.prefs.useMinified()

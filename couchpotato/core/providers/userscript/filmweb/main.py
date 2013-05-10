@@ -4,7 +4,9 @@ import re
 
 class Filmweb(UserscriptBase):
 
-    includes = ['http://www.filmweb.pl/*']
+    version = 2
+
+    includes = ['http://www.filmweb.pl/film/*']
 
     def getMovie(self, url):
 

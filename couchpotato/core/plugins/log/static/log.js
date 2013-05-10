@@ -6,19 +6,6 @@ Page.Log = new Class({
 	title: 'Show recent logs.',
 	has_tab: false,
 
-	initialize: function(options){
-		var self = this;
-		self.parent(options)
-
-
-		App.getBlock('more').addLink(new Element('a', {
-			'href': App.createUrl(self.name),
-			'text': self.name.capitalize(),
-			'title': self.title
-		}))
-
-	},
-
 	indexAction: function(){
 		var self = this;
 

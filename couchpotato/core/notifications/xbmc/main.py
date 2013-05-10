@@ -13,6 +13,7 @@ class XBMC(Notification):
 
     listen_to = ['renamer.after']
     use_json_notifications = {}
+    http_time_between_calls = 0
 
     def notify(self, message = '', data = {}, listener = None):
 

@@ -11,7 +11,7 @@ var Movie = new Class({
 		self.view = options.view || 'details';
 		self.list = list;
 
-		self.el = new Element('div.movie.inlay');
+		self.el = new Element('div.movie');
 
 		self.profile = Quality.getProfile(data.profile_id) || {};
 		self.parent(self, options);
@@ -139,9 +139,6 @@ var Movie = new Class({
 							'text': self.data.library.year || 'n/a'
 						})
 					),
-					self.rating = new Element('div.rating.icon', {
-						'text': self.data.library.rating
-					}),
 					self.description = new Element('div.description', {
 						'text': self.data.library.plot
 					}),
@@ -149,8 +146,8 @@ var Movie = new Class({
 						'events': {
 							'click': function(e){
 								var releases = self.el.getElement('.actions .releases');
-									if(releases)
-										releases.fireEvent('click', [e])
+								if(releases.isVisible())
+									releases.fireEvent('click', [e])
 							}
 						}
 					})
@@ -198,9 +195,6 @@ var Movie = new Class({
 			if(action.el)
 				self.actions.adopt(action)
 		});
-
-		if(!self.data.library.rating)
-			self.rating.hide();
 
 	},
 
