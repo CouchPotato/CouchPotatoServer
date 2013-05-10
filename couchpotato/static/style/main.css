@@ -108,7 +108,7 @@ body > .spinner, .mask{
 	}
 
 .button {
-    background: #5082bc url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAyCAYAAACd+7GKAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAClJREFUeNpi/v//vwMTAwPDfzjBgMpFI/7hFSOT9Y8qRuF3JLoHAQIMAHYtMmRA+CugAAAAAElFTkSuQmCC") repeat-x;
+    background: #5082bc;
     padding: 5px 10px 6px;
     color: #fff;
     text-decoration: none;
@@ -154,6 +154,7 @@ body > .spinner, .mask{
 	line-height: 1;
 	-webkit-font-smoothing: antialiased;
 	font-size: 15px;
+	color: #FFF;
 }
 
 .icon2.cog:before { content: "\e109"; }
@@ -161,6 +162,30 @@ body > .spinner, .mask{
 .icon2.search:before { content: "\e03e"; }
 .icon2.return-key:before { content: "\e111"; }
 .icon2.close:before { content: "\e04e"; }
+.icon2.trailer:before { content: "\e0e9"; }
+.icon2.download:before { content: "\e0c3"; }
+.icon2.edit:before { content: "\e068"; }
+.icon2.refresh:before { content: "\e04f"; font-weight: bold; }
+.icon2.delete:before { content: "\e04e"; }
+.icon2.directory:before { content: "\e097"; }
+.icon2.completed:before { content: "\e070"; }
+.icon2.info:before { content: "\e089"; }
+.icon2.attention:before { content: "\e009"; }
+.icon2.readd:before { 
+	display: inline-block; 
+	content: "\e04b"; 
+	transform: scale(-1, 1);
+}
+.icon2.imdb:before {
+	content: "IMDb";
+	color: #444;
+	padding: 2px;
+	border-radius: 3px;
+	background-color: #fbec98;
+	font: bold 8px Arial;
+	position: relative;
+	top: -3px;
+}
 .icon2.menu:before { 
 	content: "\e076  \e076  \e076"; 
 	line-height: 6px;
@@ -502,14 +527,7 @@ body > .spinner, .mask{
 	.select .selection {
 		display: inline-block;
 		padding: 0 30px 0 20px;
-		border-radius:30px;
-
-		box-shadow: 0 1px 1px rgba(0,0,0,0.35), inset 0 1px 0px rgba(255,255,255,0.20);
-		background: url('../images/sprite.png') no-repeat 94% -53px, linear-gradient(
-		    180deg,
-		    #5b9bd1 0%,
-		    #406db8 100%
-		);
+		background: #5b9bd1 url('../images/sprite.png') no-repeat 94% -53px;
 	}
 
 		.select .selection .selectionDisplay {
@@ -529,11 +547,9 @@ body > .spinner, .mask{
 	.select .list {
 		display: none;
 	  	background: #282d34;
-	  	border: 1px solid #1f242b;
 		position: absolute;
-		margin: 28px 0 0 0;
+		margin: 25px 0 0 0;
 		box-shadow: 0 20px 20px -10px rgba(0,0,0,0.4);
-		border-radius:3px;
 		z-index: 3;
 	}
 		.select.active .list {

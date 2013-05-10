@@ -862,7 +862,7 @@ Option.Directories = new Class({
 			$(dir).addClass('is_empty');
 
 		// Add remove button
-		new Element('a.icon.delete', {
+		new Element('a.icon2.delete', {
 			'events': {
 				'click': self.delItem.bind(self, dir)
 			}
@@ -1371,7 +1371,7 @@ Option.Combined = new Class({
 
 		item[value_empty == value_count ? 'addClass' : 'removeClass']('is_empty');
 
-		new Element('a.icon.delete', {
+		new Element('a.icon2.delete', {
 			'events': {
 				'click': self.deleteCombinedItem.bind(self)
 			}

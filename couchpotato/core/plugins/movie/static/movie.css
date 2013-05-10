@@ -412,13 +412,14 @@
 
 		.movies .data .actions {
 			position: absolute;
-			bottom: 20px;
+			bottom: 17px;
 			right: 20px;
 			line-height: 0;
 			top: 0;
+			display: block;
+			width: auto;
 			opacity: 0;
 			display: none;
-			width: 0;
 		}
 			@media all and (max-width: 480px) {
 				.movies .data .actions {
@@ -429,7 +430,6 @@
 			.movies .movie:hover .data .actions {
 				opacity: 1;
 				display: inline-block;
-				width: auto;
 			}
 		
 			.movies.details_list .data .actions {
@@ -451,14 +451,24 @@
 			.movies .movie:hover .action:hover { opacity: 1; }
 
 			.movies .data .action {
-				background-repeat: no-repeat;
-				background-position: center;
 				display: inline-block;
-				width: 26px;
-				height: 26px;
-				padding: 3px;
+				height: 22px;
+				min-width: 33px;
+				padding: 0 5px;
+				line-height: 26px;
+				text-align: center;
+				font-size: 13px;
+				color: #FFF;
+				margin-left: 1px;
 			}
-			
+				.movies .data .action.trailer { color: #FFF; }
+				.movies .data .action.download { color: #b9dec0; }
+				.movies .data .action.edit { color: #c6b589; }
+				.movies .data .action.refresh { color: #cbeecc; }
+				.movies .data .action.delete { color: #e9b0b0; }
+				.movies .data .action.directory { color: #ffed92; }
+				.movies .data .action.readd { color: #c2fac5; }
+		
 			.movies.mass_edit_list .movie .data .actions {
 				display: none;
 			}
@@ -524,8 +534,10 @@
 						text-decoration: line-through;
 						color: rgba(255,255,255,0.4);
 					}
-					.movies .options .table .item.ignored .delete {
-						background-image: url('../images/icon.undo.png');
+					.movies .options .table .item.ignored .delete:before {
+						display: inline-block; 
+						content: "\e04b"; 
+						transform: scale(-1, 1);
 					}
 
 				.movies .options .table .item:last-child { border: 0; }
@@ -571,10 +583,12 @@
 							width: 30px !important;
 							height: 20px;
 							opacity: 0.8;
+							line-height: 25px;
 						}
-						.movies .options .table a:hover {
-							opacity: 1;
-						}
+						.movies .options .table a:hover { opacity: 1; }
+						.movies .options .table a.download { color: #a7fbaf; }
+						.movies .options .table a.delete { color: #fda3a3; }
+						.movies .options .table .ignored a.delete { color: #b5fda3; }
 
 				.movies .options .table .head > * {
 					font-weight: bold;
@@ -642,11 +656,10 @@
 				.movies .movie .trynext {
 					display: inline;
 					position: absolute;
-					right: 145px;
+					right: 180px;
 					z-index: 2;
 					opacity: 0;
 					background: #4e5969;
-					min-width: 300px;
 					text-align: right;
 					height: 100%;
 					top: 0;
@@ -659,7 +672,7 @@
 					}
 					.movies.mass_edit_list .trynext { display: none; }
 					.wanted .movies .movie .trynext {
-						padding-right: 50px;
+						padding-right: 30px;
 					}
 					.movies .movie:hover .trynext {
 						opacity: 1;
@@ -667,7 +680,7 @@
 					
 					.movies.details_list .movie .trynext {
 						background: #47515f;
-						padding: 2px 0;
+						padding: 0;
 						right: 0;
 						height: 25px;
 					}
@@ -678,8 +691,14 @@
 						margin-right: 10px;
 						color: #FFF;
 						height: 100%;
-						line-height: 30px;
+						line-height: 27px;
+						font-family: OpenSans, "Helvetica Neue", Helvetica, Arial, Geneva, sans-serif;
 					}
+						.movies .movie .trynext a:before {
+							margin: 2px 0 0 -20px;
+							position: absolute;
+							font-family: 'Elusive-Icons';
+						}
 						.movies.details_list .movie .trynext a {
 							line-height: 23px;
 						}

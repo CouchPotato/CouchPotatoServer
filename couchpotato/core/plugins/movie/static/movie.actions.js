@@ -1,6 +1,6 @@
 var MovieAction = new Class({
 
-	class_name: 'action icon',
+	class_name: 'action icon2',
 
 	initialize: function(movie){
 		var self = this;
@@ -82,7 +82,7 @@ MA.Release = new Class({
 	create: function(){
 		var self = this;
 
-		self.el = new Element('a.releases.icon.download', {
+		self.el = new Element('a.releases.download', {
 			'title': 'Show the releases that are available for ' + self.movie.getTitle(),
 			'events': {
 				'click': self.show.bind(self)
@@ -147,11 +147,11 @@ MA.Release = new Class({
 					new Element('span.age', {'text': self.get(release, 'age')}),
 					new Element('span.score', {'text': self.get(release, 'score')}),
 					new Element('span.provider', { 'text': provider, 'title': provider }),
-					release.info['detail_url'] ? new Element('a.info.icon', {
+					release.info['detail_url'] ? new Element('a.info.icon2', {
 						'href': release.info['detail_url'],
 						'target': '_blank'
-					}) : null,
-					new Element('a.download.icon', {
+					}) : new Element('a'),
+					new Element('a.download.icon2', {
 						'events': {
 							'click': function(e){
 								(e).preventDefault();
@@ -160,7 +160,7 @@ MA.Release = new Class({
 							}
 						}
 					}),
-					new Element('a.delete.icon', {
+					new Element('a.delete.icon2', {
 						'events': {
 							'click': function(e){
 								(e).preventDefault();
@@ -243,13 +243,13 @@ MA.Release = new Class({
 			self.trynext_container = new Element('div.buttons.trynext').inject(self.movie.info_container);
 
 			self.trynext_container.adopt(
-				self.next_release ? [new Element('a.icon.readd', {
+				self.next_release ? [new Element('a.icon2.readd', {
 					'text': self.last_release ? 'Download another release' : 'Download the best release',
 					'events': {
 						'click': self.tryNextRelease.bind(self)
 					}
 				}),
-				new Element('a.icon.download', {
+				new Element('a.icon2.download', {
 					'text': 'pick one yourself',
 					'events': {
 						'click': function(){
@@ -257,7 +257,7 @@ MA.Release = new Class({
 						}
 					}
 				})] : null,
-				new Element('a.icon.completed', {
+				new Element('a.icon2.completed', {
 					'text': 'mark this movie done',
 					'events': {
 						'click': function(){
@@ -293,7 +293,7 @@ MA.Release = new Class({
 		var self = this;
 
 		var release_el = self.release_container.getElement('#release_'+release.id),
-			icon = release_el.getElement('.download.icon');
+			icon = release_el.getElement('.download.icon2');
 
 		self.movie.busy(true);
 

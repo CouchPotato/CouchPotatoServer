@@ -139,9 +139,6 @@ var Movie = new Class({
 							'text': self.data.library.year || 'n/a'
 						})
 					),
-					self.rating = new Element('div.rating.icon', {
-						'text': self.data.library.rating
-					}),
 					self.description = new Element('div.description', {
 						'text': self.data.library.plot
 					}),
@@ -198,9 +195,6 @@ var Movie = new Class({
 			if(action.el)
 				self.actions.adopt(action)
 		});
-
-		if(!self.data.library.rating)
-			self.rating.hide();
 
 	},
 

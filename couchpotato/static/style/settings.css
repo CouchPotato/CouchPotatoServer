@@ -252,7 +252,7 @@
 		display: block;
 		text-align: right;
 		height: 20px;
-		margin: 0 0 -37px;
+		margin: 0 0 -38px;
 	}
 		.page .advanced_toggle .check {
 			margin: 0;
@@ -262,18 +262,24 @@
 			color: #edc07f;
 		}
 
-	.page .directory {
+	.page form .directory {
 		display: inline-block;
 		padding: 0 4% 0 4px;
 		font-size: 13px;
 		width: 30%;
-		background-image: url('../images/icon.folder.gif');
-		background-repeat: no-repeat;
-		background-position: 97% center;
 		overflow: hidden;
 		vertical-align: top;
+		position: relative;
 	}
-		.page .directory > span {
+		.page form .directory:after {
+			content: "\e097";
+			position: absolute;
+			right: 7px;
+			top: 2px;
+			font-family: 'Elusive-Icons';
+			color: #f5e39c;
+		}
+		.page form .directory > span {
 			height: 25px;
 			display: inline-block;
 			float: right;
@@ -281,15 +287,19 @@
 			white-space: nowrap;
 			cursor: pointer;
 		}
+			.page form .directory span:empty:before {
+				content: 'No folder selected';
+				font-style: italic;
+				opacity: .3;
+			}
 
 	.page .directory_list {
 		z-index: 2;
 		position: absolute;
 		width: 450px;
-		margin: 28px 0 20px 18%;
+		margin: 28px 0 20px 18.4%;
 		background: #5c697b;
-		border-radius: 3px;
-		box-shadow: 0 0 50px rgba(0,0,0,0.55);
+		box-shadow: 0 20px 40px -20px rgba(0,0,0,0.55);
 	}
 
 		.page .directory_list .pointer {
@@ -299,7 +309,7 @@
 			display: block;
 			position: absolute;
 			width: 0px;
-			margin: -6px 0 0 22%;
+			margin: -6px 0 0 45%;
 		}
 
 	.page .directory_list ul {
@@ -311,11 +321,14 @@
 	}
 
 		.page .directory_list li {
-			padding: 4px 10px;
+			padding: 4px 30px 4px 10px;
 			cursor: pointer;
 			margin: 0 !important;
 			border-top: 1px solid rgba(255,255,255,0.1);
 			background: url('../images/right.arrow.png') no-repeat 98% center;
+			overflow: hidden;
+			white-space: nowrap;
+			text-overflow: ellipsis;
 		}
 		.page .directory_list li:last-child {
 			border-bottom: 1px solid rgba(255,255,255,0.1);
@@ -341,7 +354,10 @@
 	.page .directory_list .actions {
 		clear: both;
 		padding: 4% 4% 2%;
-		min-height: 25px;
+		min-height: 45px;
+		position: relative;
+		width: 100%;
+		text-align: right;
 	}
 
 		.page .directory_list .actions label {
@@ -350,7 +366,7 @@
 			padding: 0;
 		}
 			.page .directory_list .actions .inlay {
-				margin: -2px 0 0 7px;
+				margin: 0 0 0 7px;
 			}
 
 		.page .directory_list .actions .back {
@@ -360,6 +376,9 @@
 			padding: 0;
 			line-height: 120%;
 			vertical-align: top;
+			position: absolute;
+			text-align: left;
+			left: 4%;
 		}
 
 	.page .directory_list .actions:last-child {
@@ -373,10 +392,10 @@
 		}
 
 		.page .directory_list .actions:last-child > .clear {
-			left: -90%;
-			position: relative;
-	background-color: #af3128;
-}
+			left: 4%;
+			position: absolute;
+			background-color: #af3128;
+		}
 
 		.page .directory_list .actions:last-child > .cancel {
 			font-weight: bold;
@@ -563,8 +582,10 @@
 		display: none;
 		width: 22px;
 		height: 22px;
+		line-height: 22px;
+		text-align: center;
 		vertical-align: middle;
-		background-position: left center;
+		color: #fe3d3d;
 	}
 	.page .combined_table .ctrlHolder:hover .delete {
 		display: inline-block;
