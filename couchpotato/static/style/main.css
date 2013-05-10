@@ -7,6 +7,7 @@ body, html {
 	margin: 0;
 	padding: 0;
 	background: #4e5969;
+	-webkit-font-smoothing: subpixel-antialiased;
 }
 	body { overflow-y: scroll; }
 	body.noscroll { overflow: hidden; }
