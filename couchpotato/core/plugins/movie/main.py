@@ -108,9 +108,8 @@ class MoviePlugin(Plugin):
         now = time.time()
         week = 262080
 
-        done_status = fireEvent('status.get', 'done', single = True)
-        available_status = fireEvent('status.get', 'available', single = True)
-        snatched_status = fireEvent('status.get', 'snatched', single = True)
+        done_status, available_status, snatched_status = \
+            fireEvent('status.get', ['done', 'available', 'snatched'], single = True)
 
         db = get_session()
 
@@ -316,7 +315,7 @@ class MoviePlugin(Plugin):
                 for title in movie.library.titles:
                     if title.default: default_title = title.title
 
-                fireEvent('notify.frontend', type = 'movie.busy.%s' % id, data = True, message = 'Updating "%s"' % default_title)
+                fireEvent('notify.frontend', type = 'movie.busy.%s' % id, data = True)
                 fireEventAsync('library.update', identifier = movie.library.identifier, default_title = default_title, force = True, on_complete = self.createOnComplete(id))
 
 
@@ -367,11 +366,8 @@ class MoviePlugin(Plugin):
         library = fireEvent('library.add', single = True, attrs = params, update_after = update_library)
 
         # Status
-        status_active = fireEvent('status.add', 'active', single = True)
-        snatched_status = fireEvent('status.add', 'snatched', single = True)
-        ignored_status = fireEvent('status.add', 'ignored', single = True)
-        done_status = fireEvent('status.add', 'done', single = True)
-        downloaded_status = fireEvent('status.add', 'downloaded', single = True)
+        status_active, snatched_status, ignored_status, done_status, downloaded_status = \
+            fireEvent('status.get', ['active', 'snatched', 'ignored', 'done', 'downloaded'], single = True)
 
         default_profile = fireEvent('profile.default', single = True)
 
@@ -549,8 +545,7 @@ class MoviePlugin(Plugin):
 
     def restatus(self, movie_id):
 
-        active_status = fireEvent('status.get', 'active', single = True)
-        done_status = fireEvent('status.get', 'done', single = True)
+        active_status, done_status = fireEvent('status.get', ['active', 'done'], single = True)
 
         db = get_session()
 

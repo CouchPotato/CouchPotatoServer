@@ -1,6 +1,9 @@
 <!doctype html>
 <html>
 	<head>
+	    <meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=no;"/>
+		<meta name="apple-mobile-web-app-capable" content="yes">
+
 		{% for url in fireEvent('clientscript.get_styles', as_html = True, location = 'front', single = True) %}
 		<link rel="stylesheet" href="{{ url_for('web.index') }}{{ url }}" type="text/css">{% endfor %}
 		{% for url in fireEvent('clientscript.get_scripts', as_html = True, location = 'front', single = True) %}
@@ -17,6 +20,17 @@
 		<script type="text/javascript" src="https://www.youtube.com/player_api" defer="defer"></script>
 
 		<script type="text/javascript">
+		
+			if($(window).getSize().x <= 480)
+				window.addEvent('load', function() {
+	
+					setTimeout(function(){
+						window.scrollTo(0, 1);
+						window.scrollTo(0, 0);
+					}, 100);
+	
+				});
+
 			window.addEvent('domready', function() {
 				new Uniform();
 

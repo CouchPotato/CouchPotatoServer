@@ -1,21 +1,13 @@
 #!/usr/bin/env python
 """Support classes for automated testing.
 
-This module contains three parts:
+* `AsyncTestCase` and `AsyncHTTPTestCase`:  Subclasses of unittest.TestCase
+  with additional support for testing asynchronous (`.IOLoop` based) code.
 
-* `AsyncTestCase`/`AsyncHTTPTestCase`:  Subclasses of unittest.TestCase
-  with additional support for testing asynchronous (IOLoop-based) code.
-
-* `LogTrapTestCase`:  Subclass of unittest.TestCase that discards log output
-  from tests that pass and only produces output for failing tests.
+* `ExpectLog` and `LogTrapTestCase`: Make test logs less spammy.
 
 * `main()`: A simple test runner (wrapper around unittest.main()) with support
   for the tornado.autoreload module to rerun the tests when code changes.
-
-These components may be used together or independently.  In particular,
-it is safe to combine AsyncTestCase and LogTrapTestCase via multiple
-inheritance.  See the docstrings for each class/function below for more
-information.
 """
 
 from __future__ import absolute_import, division, print_function, with_statement
@@ -46,12 +38,11 @@ import re
 import signal
 import socket
 import sys
-import types
 
 try:
-    from io import StringIO  # py3
-except ImportError:
     from cStringIO import StringIO  # py2
+except ImportError:
+    from io import StringIO  # py3
 
 # Tornado's own test suite requires the updated unittest module
 # (either py27+ or unittest2) so tornado.test.util enforces
@@ -91,30 +82,53 @@ def bind_unused_port():
     return sock, port
 
 
+def get_async_test_timeout():
+    """Get the global timeout setting for async tests.
+
+    Returns a float, the timeout in seconds.
+    """
+    try:
+        return float(os.environ.get('ASYNC_TEST_TIMEOUT'))
+    except (ValueError, TypeError):
+        return 5
+
+
 class AsyncTestCase(unittest.TestCase):
-    """TestCase subclass for testing IOLoop-based asynchronous code.
+    """`~unittest.TestCase` subclass for testing `.IOLoop`-based
+    asynchronous code.
 
-    The unittest framework is synchronous, so the test must be complete
-    by the time the test method returns.  This method provides the stop()
-    and wait() methods for this purpose.  The test method itself must call
-    self.wait(), and asynchronous callbacks should call self.stop() to signal
-    completion.
+    The unittest framework is synchronous, so the test must be
+    complete by the time the test method returns.  This class provides
+    the `stop()` and `wait()` methods for this purpose.  The test
+    method itself must call ``self.wait()``, and asynchronous
+    callbacks should call ``self.stop()`` to signal completion.
+    Alternately, the `gen_test` decorator can be used to use yield points
+    from the `tornado.gen` module.
 
-    By default, a new IOLoop is constructed for each test and is available
-    as self.io_loop.  This IOLoop should be used in the construction of
+    By default, a new `.IOLoop` is constructed for each test and is available
+    as ``self.io_loop``.  This `.IOLoop` should be used in the construction of
     HTTP clients/servers, etc.  If the code being tested requires a
-    global IOLoop, subclasses should override get_new_ioloop to return it.
+    global `.IOLoop`, subclasses should override `get_new_ioloop` to return it.
 
-    The IOLoop's start and stop methods should not be called directly.
-    Instead, use self.stop self.wait.  Arguments passed to self.stop are
-    returned from self.wait.  It is possible to have multiple
-    wait/stop cycles in the same test.
+    The `.IOLoop`'s ``start`` and ``stop`` methods should not be
+    called directly.  Instead, use `self.stop <stop>` and `self.wait
+    <wait>`.  Arguments passed to ``self.stop`` are returned from
+    ``self.wait``.  It is possible to have multiple ``wait``/``stop``
+    cycles in the same test.
 
     Example::
 
-        # This test uses an asynchronous style similar to most async
-        # application code.
+        # This test uses argument passing between self.stop and self.wait.
         class MyTestCase(AsyncTestCase):
+            def test_http_fetch(self):
+                client = AsyncHTTPClient(self.io_loop)
+                client.fetch("http://www.tornadoweb.org/", self.stop)
+                response = self.wait()
+                # Test contents of response
+                self.assertIn("FriendFeed", response.body)
+
+        # This test uses an explicit callback-based style.
+        class MyTestCase2(AsyncTestCase):
             def test_http_fetch(self):
                 client = AsyncHTTPClient(self.io_loop)
                 client.fetch("http://www.tornadoweb.org/", self.handle_fetch)
@@ -128,19 +142,6 @@ class AsyncTestCase(unittest.TestCase):
                 # self.wait() in test_http_fetch() via stack_context.
                 self.assertIn("FriendFeed", response.body)
                 self.stop()
-
-        # This test uses the argument passing between self.stop and self.wait
-        # for a simpler, more synchronous style.
-        # This style is recommended over the preceding example because it
-        # keeps the assertions in the test method itself, and is therefore
-        # less sensitive to the subtleties of stack_context.
-        class MyTestCase2(AsyncTestCase):
-            def test_http_fetch(self):
-                client = AsyncHTTPClient(self.io_loop)
-                client.fetch("http://www.tornadoweb.org/", self.stop)
-                response = self.wait()
-                # Test contents of response
-                self.assertIn("FriendFeed", response.body)
     """
     def __init__(self, *args, **kwargs):
         super(AsyncTestCase, self).__init__(*args, **kwargs)
@@ -165,16 +166,21 @@ class AsyncTestCase(unittest.TestCase):
             # set FD_CLOEXEC on its file descriptors)
             self.io_loop.close(all_fds=True)
         super(AsyncTestCase, self).tearDown()
+        # In case an exception escaped or the StackContext caught an exception
+        # when there wasn't a wait() to re-raise it, do so here.
+        # This is our last chance to raise an exception in a way that the
+        # unittest machinery understands.
+        self.__rethrow()
 
     def get_new_ioloop(self):
-        """Creates a new IOLoop for this test.  May be overridden in
-        subclasses for tests that require a specific IOLoop (usually
-        the singleton).
+        """Creates a new `.IOLoop` for this test.  May be overridden in
+        subclasses for tests that require a specific `.IOLoop` (usually
+        the singleton `.IOLoop.instance()`).
         """
         return IOLoop()
 
     def _handle_exception(self, typ, value, tb):
-        self.__failure = sys.exc_info()
+        self.__failure = (typ, value, tb)
         self.stop()
         return True
 
@@ -187,16 +193,18 @@ class AsyncTestCase(unittest.TestCase):
     def run(self, result=None):
         with ExceptionStackContext(self._handle_exception):
             super(AsyncTestCase, self).run(result)
-        # In case an exception escaped super.run or the StackContext caught
-        # an exception when there wasn't a wait() to re-raise it, do so here.
+        # As a last resort, if an exception escaped super.run() and wasn't
+        # re-raised in tearDown, raise it here.  This will cause the
+        # unittest run to fail messily, but that's better than silently
+        # ignoring an error.
         self.__rethrow()
 
     def stop(self, _arg=None, **kwargs):
-        """Stops the ioloop, causing one pending (or future) call to wait()
+        """Stops the `.IOLoop`, causing one pending (or future) call to `wait()`
         to return.
 
-        Keyword arguments or a single positional argument passed to stop() are
-        saved and will be returned by wait().
+        Keyword arguments or a single positional argument passed to `stop()` are
+        saved and will be returned by `wait()`.
         """
         assert _arg is None or not kwargs
         self.__stop_args = kwargs or _arg
@@ -205,14 +213,19 @@ class AsyncTestCase(unittest.TestCase):
             self.__running = False
         self.__stopped = True
 
-    def wait(self, condition=None, timeout=5):
-        """Runs the IOLoop until stop is called or timeout has passed.
+    def wait(self, condition=None, timeout=None):
+        """Runs the `.IOLoop` until stop is called or timeout has passed.
 
-        In the event of a timeout, an exception will be thrown.
+        In the event of a timeout, an exception will be thrown. The default
+        timeout is 5 seconds; it may be overridden with a ``timeout`` keyword
+        argument or globally with the ASYNC_TEST_TIMEOUT environment variable.
 
-        If condition is not None, the IOLoop will be restarted after stop()
-        until condition() returns true.
+        If ``condition`` is not None, the `.IOLoop` will be restarted
+        after `stop()` until ``condition()`` returns true.
         """
+        if timeout is None:
+            timeout = get_async_test_timeout()
+
         if not self.__stopped:
             if timeout:
                 def timeout_func():
@@ -244,9 +257,9 @@ class AsyncTestCase(unittest.TestCase):
 class AsyncHTTPTestCase(AsyncTestCase):
     """A test case that starts up an HTTP server.
 
-    Subclasses must override get_app(), which returns the
-    tornado.web.Application (or other HTTPServer callback) to be tested.
-    Tests will typically use the provided self.http_client to fetch
+    Subclasses must override `get_app()`, which returns the
+    `tornado.web.Application` (or other `.HTTPServer` callback) to be tested.
+    Tests will typically use the provided ``self.http_client`` to fetch
     URLs from this server.
 
     Example::
@@ -283,17 +296,17 @@ class AsyncHTTPTestCase(AsyncTestCase):
 
     def get_app(self):
         """Should be overridden by subclasses to return a
-        tornado.web.Application or other HTTPServer callback.
+        `tornado.web.Application` or other `.HTTPServer` callback.
         """
         raise NotImplementedError()
 
     def fetch(self, path, **kwargs):
         """Convenience method to synchronously fetch a url.
 
-        The given path will be appended to the local server's host and port.
-        Any additional kwargs will be passed directly to
-        AsyncHTTPClient.fetch (and so could be used to pass method="POST",
-        body="...", etc).
+        The given path will be appended to the local server's host and
+        port.  Any additional kwargs will be passed directly to
+        `.AsyncHTTPClient.fetch` (and so could be used to pass
+        ``method="POST"``, ``body="..."``, etc).
         """
         self.http_client.fetch(self.get_url(path), self.stop, **kwargs)
         return self.wait()
@@ -357,34 +370,58 @@ class AsyncHTTPSTestCase(AsyncHTTPTestCase):
         return 'https'
 
 
-def gen_test(f):
-    """Testing equivalent of ``@gen.engine``, to be applied to test methods.
+def gen_test(func=None, timeout=None):
+    """Testing equivalent of ``@gen.coroutine``, to be applied to test methods.
 
-    ``@gen.engine`` cannot be used on tests because the `IOLoop` is not
+    ``@gen.coroutine`` cannot be used on tests because the `.IOLoop` is not
     already running.  ``@gen_test`` should be applied to test methods
     on subclasses of `AsyncTestCase`.
 
-    Note that unlike most uses of ``@gen.engine``, ``@gen_test`` can
-    detect automatically when the function finishes cleanly so there
-    is no need to run a callback to signal completion.
-
     Example::
+
         class MyTest(AsyncHTTPTestCase):
             @gen_test
             def test_something(self):
                 response = yield gen.Task(self.fetch('/'))
 
+    By default, ``@gen_test`` times out after 5 seconds. The timeout may be
+    overridden globally with the ASYNC_TEST_TIMEOUT environment variable,
+    or for each test with the ``timeout`` keyword argument::
+
+        class MyTest(AsyncHTTPTestCase):
+            @gen_test(timeout=10)
+            def test_something_slow(self):
+                response = yield gen.Task(self.fetch('/'))
+
+    If both the environment variable and the parameter are set, ``gen_test``
+    uses the maximum of the two.
     """
-    @functools.wraps(f)
-    def wrapper(self, *args, **kwargs):
-        result = f(self, *args, **kwargs)
-        if result is None:
-            return
-        assert isinstance(result, types.GeneratorType)
-        runner = gen.Runner(result, self.stop)
-        runner.run()
-        self.wait()
-    return wrapper
+    if timeout is None:
+        timeout = get_async_test_timeout()
+
+    def wrap(f):
+        f = gen.coroutine(f)
+
+        @functools.wraps(f)
+        def wrapper(self):
+            return self.io_loop.run_sync(
+                functools.partial(f, self), timeout=timeout)
+        return wrapper
+
+    if func is not None:
+        # Used like:
+        #     @gen_test
+        #     def f(self):
+        #         pass
+        return wrap(func)
+    else:
+        # Used like @gen_test(timeout=10)
+        return wrap
+
+
+# Without this attribute, nosetests will try to run gen_test as a test
+# anywhere it is imported.
+gen_test.__test__ = False
 
 
 class LogTrapTestCase(unittest.TestCase):
@@ -395,13 +432,13 @@ class LogTrapTestCase(unittest.TestCase):
     the test succeeds, so this class can be useful to minimize the noise.
     Simply use it as a base class for your test case.  It is safe to combine
     with AsyncTestCase via multiple inheritance
-    ("class MyTestCase(AsyncHTTPTestCase, LogTrapTestCase):")
+    (``class MyTestCase(AsyncHTTPTestCase, LogTrapTestCase):``)
 
-    This class assumes that only one log handler is configured and that
-    it is a StreamHandler.  This is true for both logging.basicConfig
-    and the "pretty logging" configured by tornado.options.  It is not
-    compatible with other log buffering mechanisms, such as those provided
-    by some test runners.
+    This class assumes that only one log handler is configured and
+    that it is a `~logging.StreamHandler`.  This is true for both
+    `logging.basicConfig` and the "pretty logging" configured by
+    `tornado.options`.  It is not compatible with other log buffering
+    mechanisms, such as those provided by some test runners.
     """
     def run(self, result=None):
         logger = logging.getLogger()
@@ -409,7 +446,7 @@ class LogTrapTestCase(unittest.TestCase):
             logging.basicConfig()
         handler = logger.handlers[0]
         if (len(logger.handlers) > 1 or
-            not isinstance(handler, logging.StreamHandler)):
+                not isinstance(handler, logging.StreamHandler)):
             # Logging has been configured in a way we don't recognize,
             # so just leave it alone.
             super(LogTrapTestCase, self).run(result)
@@ -486,10 +523,11 @@ def main(**kwargs):
     be specified.
 
     Projects with many tests may wish to define a test script like
-    tornado/test/runtests.py.  This script should define a method all()
-    which returns a test suite and then call tornado.testing.main().
-    Note that even when a test script is used, the all() test suite may
-    be overridden by naming a single test on the command line::
+    ``tornado/test/runtests.py``.  This script should define a method
+    ``all()`` which returns a test suite and then call
+    `tornado.testing.main()`.  Note that even when a test script is
+    used, the ``all()`` test suite may be overridden by naming a
+    single test on the command line::
 
         # Runs all tests
         python -m tornado.test.runtests

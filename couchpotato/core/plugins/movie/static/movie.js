@@ -11,7 +11,7 @@ var Movie = new Class({
 		self.view = options.view || 'details';
 		self.list = list;
 
-		self.el = new Element('div.movie.inlay');
+		self.el = new Element('div.movie');
 
 		self.profile = Quality.getProfile(data.profile_id) || {};
 		self.parent(self, options);
@@ -22,7 +22,10 @@ var Movie = new Class({
 	addEvents: function(){
 		var self = this;
 
-		App.addEvent('movie.update.'+self.data.id, self.update.bind(self));
+		App.addEvent('movie.update.'+self.data.id, function(notification){
+			self.busy(false)
+			self.update.delay(2000, self, notification);
+		});
 
 		['movie.busy', 'searcher.started'].each(function(listener){
 			App.addEvent(listener+'.'+self.data.id, function(notification){
@@ -57,17 +60,19 @@ var Movie = new Class({
 		var self = this;
 
 		if(!set_busy){
-			if(self.spinner){
-				self.mask.fade('out');
-				setTimeout(function(){
-					if(self.mask)
-						self.mask.destroy();
-					if(self.spinner)
-						self.spinner.el.destroy();
-					self.spinner = null;
-					self.mask = null;
-				}, 400);
-			}
+			setTimeout(function(){
+				if(self.spinner){
+					self.mask.fade('out');
+					setTimeout(function(){
+						if(self.mask)
+							self.mask.destroy();
+						if(self.spinner)
+							self.spinner.el.destroy();
+						self.spinner = null;
+						self.mask = null;
+					}, 400);
+				}
+			}, 1000)
 		}
 		else if(!self.spinner) {
 			self.createMask();
@@ -126,15 +131,14 @@ var Movie = new Class({
 			self.thumbnail = File.Select.single('poster', self.data.library.files),
 			self.data_container = new Element('div.data.inlay.light').adopt(
 				self.info_container = new Element('div.info').adopt(
-					self.title = new Element('div.title', {
-						'text': self.getTitle() || 'n/a'
-					}),
-					self.year = new Element('div.year', {
-						'text': self.data.library.year || 'n/a'
-					}),
-					self.rating = new Element('div.rating.icon', {
-						'text': self.data.library.rating
-					}),
+					new Element('div.title').adopt(
+						self.title = new Element('span', {
+							'text': self.getTitle() || 'n/a'
+						}),
+						self.year = new Element('div.year', {
+							'text': self.data.library.year || 'n/a'
+						})
+					),
 					self.description = new Element('div.description', {
 						'text': self.data.library.plot
 					}),
@@ -142,8 +146,8 @@ var Movie = new Class({
 						'events': {
 							'click': function(e){
 								var releases = self.el.getElement('.actions .releases');
-									if(releases)
-										releases.fireEvent('click', [e])
+								if(releases.isVisible())
+									releases.fireEvent('click', [e])
 							}
 						}
 					})
@@ -191,9 +195,6 @@ var Movie = new Class({
 			if(action.el)
 				self.actions.adopt(action)
 		});
-
-		if(!self.data.library.rating)
-			self.rating.hide();
 
 	},
 

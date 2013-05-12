@@ -25,6 +25,12 @@ config = [{
                     'description': 'Hostname with port. Usually <strong>localhost:6789</strong>',
                 },
                 {
+                    'name': 'username',
+                    'default': 'nzbget',
+                    'advanced': True,
+                    'description': 'Set a different username to connect. Default: nzbget',
+                },
+                {
                     'name': 'password',
                     'type': 'password',
                     'description': 'Default NZBGet password is <i>tegbzn6789</i>',

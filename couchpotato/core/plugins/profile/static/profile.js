@@ -24,7 +24,7 @@ var Profile = new Class({
 		var data = self.data;
 
 		self.el = new Element('div.profile').adopt(
-			self.delete_button = new Element('span.delete.icon', {
+			self.delete_button = new Element('span.delete.icon2', {
 				'events': {
 					'click': self.del.bind(self)
 				}
@@ -256,7 +256,7 @@ Profile.Type = new Class({
 					}
 				})
 			),
-			new Element('span.delete.icon', {
+			new Element('span.delete.icon2', {
 				'events': {
 					'click': self.del.bind(self)
 				}

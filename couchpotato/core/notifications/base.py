@@ -18,6 +18,7 @@ class Notification(Provider):
     listen_to = [
         'renamer.after', 'movie.snatched',
         'updater.available', 'updater.updated',
+        'core.message',
     ]
     dont_listen_to = []
 

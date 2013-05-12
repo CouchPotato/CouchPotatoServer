@@ -35,8 +35,11 @@ class ThePirateBay(TorrentMagnetProvider):
         'https://piratereverse.info',
         'https://tpb.pirateparty.org.uk',
         'https://argumentomteemigreren.nl',
-        'https://livepirate.com/',
-        'https://www.getpirate.com/',
+        'https://livepirate.com',
+        'https://www.getpirate.com',
+        'https://tpb.partipirate.org',
+        'https://tpb.piraten.lu',
+        'https://kuiken.co',
     ]
 
     def __init__(self):

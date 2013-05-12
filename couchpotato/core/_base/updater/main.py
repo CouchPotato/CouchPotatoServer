@@ -15,6 +15,7 @@ import tarfile
 import time
 import traceback
 import version
+import zipfile
 
 log = CPLog(__name__)
 
@@ -263,11 +264,11 @@ class SourceUpdater(BaseUpdater):
     def doUpdate(self):
 
         try:
-            url = 'https://github.com/%s/%s/tarball/%s' % (self.repo_user, self.repo_name, self.branch)
-            destination = os.path.join(Env.get('cache_dir'), self.update_version.get('hash') + '.tar.gz')
-            extracted_path = os.path.join(Env.get('cache_dir'), 'temp_updater')
+            download_data = fireEvent('cp.source_url', repo = self.repo_user, repo_name = self.repo_name, branch = self.branch, single = True)
+            destination = os.path.join(Env.get('cache_dir'), self.update_version.get('hash')) + '.' + download_data.get('type')
 
-            destination = fireEvent('file.download', url = url, dest = destination, single = True)
+            extracted_path = os.path.join(Env.get('cache_dir'), 'temp_updater')
+            destination = fireEvent('file.download', url = download_data.get('url'), dest = destination, single = True)
 
             # Cleanup leftover from last time
             if os.path.isdir(extracted_path):
@@ -275,9 +276,14 @@ class SourceUpdater(BaseUpdater):
             self.makeDir(extracted_path)
 
             # Extract
-            tar = tarfile.open(destination)
-            tar.extractall(path = extracted_path)
-            tar.close()
+            if download_data.get('type') == 'zip':
+                zip = zipfile.ZipFile(destination)
+                zip.extractall(extracted_path)
+            else:
+                tar = tarfile.open(destination)
+                tar.extractall(path = extracted_path)
+                tar.close()
+
             os.remove(destination)
 
             if self.replaceWith(os.path.join(extracted_path, os.listdir(extracted_path)[0])):

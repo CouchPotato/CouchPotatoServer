@@ -29,7 +29,7 @@ config = [{
                     'label': 'Naming',
                     'default': '<filename>-trailer',
                     'advanced': True,
-                    'description': 'Use <filename> to use above settings.'
+                    'description': 'Use <strong>&lt;filename&gt;</strong> to use above settings.'
                 },
             ],
         },

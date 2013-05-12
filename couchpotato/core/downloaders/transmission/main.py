@@ -8,8 +8,9 @@ import httplib
 import json
 import os.path
 import re
-import urllib2
 import shutil
+import traceback
+import urllib2
 
 log = CPLog(__name__)
 
@@ -118,37 +119,28 @@ class Transmission(Downloader):
         #   manage no peer in a range time => fail
 
         for item in queue['torrents']:
-            log.debug('name=%s / id=%s / downloadDir=%s / hashString=%s / percentDone=%s / status=%s / eta=%s / uploadRatio=%s / confRatio=%s / isFinished=%s', (item['name'], item['id'], item['downloadDir'], item['hashString'], item['percentDone'], item['status'], item['eta'], item['uploadRatio'], self.conf('ratio'), item['isFinished'] ))
+            log.debug('name=%s / id=%s / downloadDir=%s / hashString=%s / percentDone=%s / status=%s / eta=%s / uploadRatio=%s / confRatio=%s / isFinished=%s', (item['name'], item['id'], item['downloadDir'], item['hashString'], item['percentDone'], item['status'], item['eta'], item['uploadRatio'], self.conf('ratio'), item['isFinished']))
 
             if not os.path.isdir(Env.setting('from', 'renamer')):
-                log.debug('Renamer folder has to exist.')
+                log.error('Renamer "from" folder doesn\'t to exist.')
                 return
 
             if (item['percentDone'] * 100) >= 100 and (item['status'] == 6 or item['status'] == 0) and item['uploadRatio'] > self.conf('ratio'):
                 try:
                     trpc.stop_torrent(item['hashString'], {})
-
-                    if not os.path.isdir(item['downloadDir']):
-                        raise Exception('Missing folder: %s' % item['downloadDir']) 
-                        
-                    else:
-                        log.info('Moving folder from "%s" to "%s"', (item['downloadDir'], Env.setting('from', 'renamer')))
-                        shutil.move(item['downloadDir'], Env.setting('from', 'renamer'))
-                    
                     statuses.append({
                         'id': item['hashString'],
-                        'name': item['downloadDir'],
+                        'name': item['name'],
                         'status': 'completed',
                         'original_status': item['status'],
                         'timeleft': str(timedelta(seconds = 0)),
-                        'folder': os.path.join(Env.setting('from', 'renamer'), os.path.basename(item['downloadDir'].rstrip(os.path.sep))),
+                        'folder': os.path.join(item['downloadDir'], item['name']),
                     })
-                    trpc.remove_torrent(item['hashString'], True, {})
                 except Exception, err:
                     log.error('Failed to stop and remove torrent "%s" with error: %s', (item['name'], err))
                     statuses.append({
                         'id': item['hashString'],
-                        'name': item['downloadDir'],
+                        'name': item['name'],
                         'status': 'failed',
                         'original_status': item['status'],
                         'timeleft': str(timedelta(seconds = 0)),
@@ -156,7 +148,7 @@ class Transmission(Downloader):
             else:
                 statuses.append({
                     'id': item['hashString'],
-                    'name': item['downloadDir'],
+                    'name': item['name'],
                     'status': 'busy',
                     'original_status': item['status'],
                     'timeleft': str(timedelta(seconds = item['eta'])), # Is ETA in seconds??

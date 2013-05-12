@@ -1,12 +1,13 @@
 from couchpotato import get_session
 from couchpotato.api import addApiView, addNonBlockApiView
-from couchpotato.core.event import addEvent
+from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.request import jsonified, getParam
 from couchpotato.core.helpers.variable import tryInt, splitString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
 from couchpotato.core.settings.model import Notification as Notif
+from couchpotato.environment import Env
 from sqlalchemy.sql.expression import or_
 import threading
 import time
@@ -20,11 +21,6 @@ class CoreNotifier(Notification):
     m_lock = threading.Lock()
     messages = []
     listeners = []
-
-    listen_to = [
-        'renamer.after', 'movie.snatched',
-        'updater.available', 'updater.updated',
-    ]
 
     def __init__(self):
         super(CoreNotifier, self).__init__()
@@ -54,7 +50,10 @@ class CoreNotifier(Notification):
         addNonBlockApiView('notification.listener', (self.addListener, self.removeListener))
         addApiView('notification.listener', self.listener)
 
+        fireEvent('schedule.interval', 'core.check_messages', self.checkMessages, hours = 12, single = True)
+
         addEvent('app.load', self.clean)
+        addEvent('app.load', self.checkMessages)
 
     def clean(self):
 
@@ -111,6 +110,22 @@ class CoreNotifier(Notification):
             'empty': len(notifications) == 0,
             'notifications': notifications
         })
+
+    def checkMessages(self):
+
+        prop_name = 'messages.last_check'
+        last_check = tryInt(Env.prop(prop_name, default = 0))
+
+        messages = fireEvent('cp.messages', last_check = last_check, single = True)
+
+        for message in messages:
+            if message.get('time') > last_check:
+                fireEvent('core.message', message = message.get('message'), data = message)
+
+            if last_check < message.get('time'):
+                last_check = message.get('time')
+
+        Env.prop(prop_name, value = last_check)
 
     def notify(self, message = '', data = {}, listener = None):
 

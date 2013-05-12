@@ -185,6 +185,8 @@ class Manage(Plugin):
                 # Add it to release and update the info
                 fireEvent('release.add', group = group)
                 fireEventAsync('library.update', identifier = identifier, on_complete = self.createAfterUpdate(folder, identifier))
+            else:
+                self.in_progress[folder]['to_go'] = self.in_progress[folder]['to_go'] - 1
 
         return addToLibrary
 

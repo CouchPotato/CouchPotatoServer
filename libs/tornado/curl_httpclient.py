@@ -14,7 +14,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-"""Blocking and non-blocking HTTP client implementations using pycurl."""
+"""Non-blocking HTTP client implementation using pycurl."""
 
 from __future__ import absolute_import, division, print_function, with_statement
 
@@ -30,7 +30,8 @@ from tornado.log import gen_log
 from tornado import stack_context
 
 from tornado.escape import utf8, native_str
-from tornado.httpclient import HTTPRequest, HTTPResponse, HTTPError, AsyncHTTPClient, main, _RequestProxy
+from tornado.httpclient import HTTPResponse, HTTPError, AsyncHTTPClient, main
+from tornado.util import bytes_type
 
 try:
     from io import BytesIO  # py3
@@ -171,7 +172,7 @@ class CurlAsyncHTTPClient(AsyncHTTPClient):
         # libcurl is ready.  After each timeout, resync the scheduled
         # timeout with libcurl's current state.
         new_timeout = self._multi.timeout()
-        if new_timeout != -1:
+        if new_timeout >= 0:
             self._set_timeout(new_timeout)
 
     def _handle_force_timeout(self):
@@ -319,7 +320,7 @@ def _curl_setup_request(curl, request, buffer, headers):
         write_function = request.streaming_callback
     else:
         write_function = buffer.write
-    if type(b'') is type(''):  # py2
+    if bytes_type is str:  # py2
         curl.setopt(pycurl.WRITEFUNCTION, write_function)
     else:  # py3
         # Upstream pycurl doesn't support py3, but ubuntu 12.10 includes
@@ -410,7 +411,14 @@ def _curl_setup_request(curl, request, buffer, headers):
 
     if request.auth_username is not None:
         userpwd = "%s:%s" % (request.auth_username, request.auth_password or '')
-        curl.setopt(pycurl.HTTPAUTH, pycurl.HTTPAUTH_BASIC)
+
+        if request.auth_mode is None or request.auth_mode == "basic":
+            curl.setopt(pycurl.HTTPAUTH, pycurl.HTTPAUTH_BASIC)
+        elif request.auth_mode == "digest":
+            curl.setopt(pycurl.HTTPAUTH, pycurl.HTTPAUTH_DIGEST)
+        else:
+            raise ValueError("Unsupported auth_mode %s" % request.auth_mode)
+
         curl.setopt(pycurl.USERPWD, native_str(userpwd))
         gen_log.debug("%s %s (username: %r)", request.method, request.url,
                       request.auth_username)
