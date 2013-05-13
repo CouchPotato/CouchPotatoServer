@@ -1,13 +1,13 @@
+from bs4 import BeautifulSoup
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.automation.base import Automation
-from bs4 import BeautifulSoup
 
 log = CPLog(__name__)
 
 
 class Goodfilms(Automation):
 
-    url = 'http://goodfil.ms/%s/queue'
+    url = 'http://goodfil.ms/%s/queue?page=%d&without_layout=1'
 
     def getIMDBids(self):
 
@@ -25,12 +25,25 @@ class Goodfilms(Automation):
 
     def getWatchlist(self):
 
-        url = self.url % self.conf('automation_username')
-        soup = BeautifulSoup(self.getHTMLData(url))
-
         movies = []
+        page = 1
 
-        for movie in soup.find_all('div', attrs = { 'class': 'movie', 'data-film-title': True }):
-            movies.append({ 'title': movie['data-film-title'], 'year': movie['data-film-year'] })
+        while True:
+            url = self.url % (self.conf('automation_username'), page)
+            data = self.getHTMLData(url)
+            soup = BeautifulSoup(data)
+
+            this_watch_list = soup.find_all('div', attrs = { 'class': 'movie', 'data-film-title': True })
+
+            if not this_watch_list: # No Movies
+                break
+
+            for movie in this_watch_list:
+                movies.append({ 'title': movie['data-film-title'], 'year': movie['data-film-year'] })
+
+            if not 'next page' in data.lower():
+                break
+
+            page += 1
 
         return movies
