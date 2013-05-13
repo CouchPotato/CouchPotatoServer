@@ -174,8 +174,6 @@ class MoviePlugin(Plugin):
         if release_status and len(release_status) > 0:
             q = q.filter(or_(*[Release.status.has(identifier = s) for s in release_status]))
 
-        total_count = q.count()
-
         filter_or = []
         if starts_with:
             starts_with = toUnicode(starts_with.lower())
@@ -192,6 +190,8 @@ class MoviePlugin(Plugin):
 
         if filter_or:
             q = q.filter(or_(*filter_or))
+
+        total_count = q.count()
 
         if order == 'release_order':
             q = q.order_by(desc(Release.last_edit))
