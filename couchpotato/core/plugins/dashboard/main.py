@@ -73,7 +73,7 @@ class Dashboard(Plugin):
             profile_pre[profile.get('id')] = contains
 
         # Get all active movies
-        active_status = fireEvent('status.get', 'active', single = True)
+        active_status, snatched_status, downloaded_status, available_status = fireEvent('status.get', ['active', 'snatched', 'downloaded', 'available'], single = True)
         subq = db.query(Movie).filter(Movie.status_id == active_status.get('id')).subquery()
 
         q = db.query(Movie).join((subq, subq.c.id == Movie.id)) \
@@ -108,6 +108,14 @@ class Dashboard(Plugin):
             if pp.get('dvd') and fireEvent('searcher.could_be_released', False, eta, single = True):
                 coming_soon = True
 
+            # Skip if movie is snatched/downloaded/available
+            skip = False
+            for release in movie.releases:
+                if release.status_id in [snatched_status.get('id'), downloaded_status.get('id'), available_status.get('id')]:
+                    skip = True
+                    break
+            if skip:
+                continue
 
             if coming_soon:
                 temp = movie.to_dict({
