@@ -61,35 +61,49 @@ var CouchPotato = new Class({
 				new Element('div').adopt(
 					self.block.navigation = new Block.Navigation(self, {}),
 					self.block.search = new Block.Search(self, {}),
-					self.block.more = new Block.Menu(self, {})
+					self.block.more = new Block.Menu(self, {'button_class': 'icon2.cog'})
 				)
 			),
 			self.content = new Element('div.content'),
 			self.block.footer = new Block.Footer(self, {})
 		);
 
-		[new Element('a.orange', {
-			'text': 'Restart',
-			'events': {
-				'click': self.restartQA.bind(self)
-			}
-		}),
-		new Element('a.red', {
-			'text': 'Shutdown',
-			'events': {
-				'click': self.shutdownQA.bind(self)
-			}
-		}),
-		new Element('a', {
-			'text': 'Update to latest',
-			'events': {
-				'click': self.checkForUpdate.bind(self, null)
-			}
-		}),
-		new Element('a', {
-			'text': 'Run install wizard',
-			'href': App.createUrl('wizard')
-		})].each(function(a){
+		var setting_links = [
+			new Element('a', {
+				'text': 'About CouchPotato',
+				'href': App.createUrl('settings/about')
+			}),
+			new Element('a', {
+				'text': 'Check for Updates',
+				'events': {
+					'click': self.checkForUpdate.bind(self, null)
+				}
+			}),
+			new Element('span.separator'),
+			new Element('a', {
+				'text': 'Settings',
+				'href': App.createUrl('settings/general')
+			}),
+			new Element('a', {
+				'text': 'Logs',
+				'href': App.createUrl('log')
+			}),
+			new Element('span.separator'),
+			new Element('a', {
+				'text': 'Restart',
+				'events': {
+					'click': self.restartQA.bind(self)
+				}
+			}),
+			new Element('a', {
+				'text': 'Shutdown',
+				'events': {
+					'click': self.shutdownQA.bind(self)
+				}
+			})
+		]
+		
+		setting_links.each(function(a){
 			self.block.more.addLink(a)
 		})
 
@@ -285,23 +299,15 @@ var CouchPotato = new Class({
 
 	createUserscriptButtons: function(){
 
-		var userscript = false;
-		try {
-			if(Components.interfaces.gmIGreasemonkeyService)
-				userscript = true
-		}
-		catch(e){
-			userscript = Browser.chrome === true;
-		}
-
 		var host_url = window.location.protocol + '//' + window.location.host;
 
 		return new Element('div.group_userscript').adopt(
-			(userscript ? [new Element('a.userscript.button', {
+			new Element('a.userscript.button', {
 				'text': 'Install userscript',
 				'href': Api.createUrl('userscript.get')+randomString()+'/couchpotato.user.js',
-				'target': '_self'
-			}), new Element('span.or[text=or]')] : null),
+				'target': '_blank'
+			}),
+			new Element('span.or[text=or]'),
 			new Element('span.bookmarklet').adopt(
 				new Element('a.button.orange', {
 					'text': '+CouchPotato',

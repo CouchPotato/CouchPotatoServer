@@ -63,28 +63,19 @@ var UserscriptSettingTab = new Class({
 		self.settings = App.getPage('Settings')
 		self.settings.addEvent('create', function(){
 
-			// See if userscript can be installed
-			var userscript = false;
-			try {
-				if(Components.interfaces.gmIGreasemonkeyService)
-					userscript = true
-			}
-			catch(e){
-				userscript = Browser.chrome === true;
-			}
-
 			var host_url = window.location.protocol + '//' + window.location.host;
 
 			self.settings.createGroup({
 				'name': 'userscript',
-				'label': 'Install the bookmarklet' + (userscript ? ' or userscript' : ''),
+				'label': 'Install the bookmarklet or userscript',
 				'description': 'Easily add movies via imdb.com, appletrailers and more'
 			}).inject(self.settings.tabs.automation.content, 'top').adopt(
-				(userscript ? [new Element('a.userscript.button', {
+				new Element('a.userscript.button', {
 					'text': 'Install userscript',
 					'href': Api.createUrl('userscript.get')+randomString()+'/couchpotato.user.js',
-					'target': '_self'
-				}), new Element('span.or[text=or]')] : null),
+					'target': '_blank'
+				}), 
+				new Element('span.or[text=or]'),
 				new Element('span.bookmarklet').adopt(
 					new Element('a.button.green', {
 						'text': '+CouchPotato',

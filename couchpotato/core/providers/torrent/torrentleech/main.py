@@ -74,3 +74,6 @@ class TorrentLeech(TorrentProvider):
             'remember_me': 'on',
             'login': 'submit',
         })
+
+    def loginSuccess(self, output):
+        return '/user/account/logout' in output.lower() or 'welcome back' in output.lower()

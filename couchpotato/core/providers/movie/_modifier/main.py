@@ -52,8 +52,7 @@ class MovieResultModifier(Plugin):
             if l:
 
                 # Statuses
-                active_status = fireEvent('status.get', 'active', single = True)
-                done_status = fireEvent('status.get', 'done', single = True)
+                active_status, done_status = fireEvent('status.get', ['active', 'done'], single = True)
 
                 for movie in l.movies:
                     if movie.status_id == active_status['id']:

@@ -1,10 +1,11 @@
 from couchpotato.core.event import addEvent
+from couchpotato.core.helpers.encoding import ss
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
-from minify.cssmin import cssmin
 from minify.jsmin import jsmin
+import cssprefixer
 import os
 import traceback
 
@@ -23,7 +24,6 @@ class ClientScript(Plugin):
         'script': [
             'scripts/library/mootools.js',
             'scripts/library/mootools_more.js',
-            'scripts/library/prefix_free.js',
             'scripts/library/uniform.js',
             'scripts/library/form_replacement/form_check.js',
             'scripts/library/form_replacement/form_radio.js',
@@ -69,7 +69,8 @@ class ClientScript(Plugin):
         addEvent('clientscript.get_styles', self.getStyles)
         addEvent('clientscript.get_scripts', self.getScripts)
 
-        addEvent('app.load', self.minify)
+        if not Env.get('dev'):
+            addEvent('app.load', self.minify)
 
         self.addCore()
 
@@ -108,8 +109,10 @@ class ClientScript(Plugin):
             if file_type == 'script':
                 data = jsmin(f)
             else:
-                data = cssmin(f)
+                data = cssprefixer.process(f, debug = False, minify = True)
                 data = data.replace('../images/', '../static/images/')
+                data = data.replace('../fonts/', '../static/fonts/')
+                data = data.replace('../../static/', '../static/') # Replace inside plugins
 
             raw.append({'file': file_path, 'date': int(os.path.getmtime(file_path)), 'data': data})
 
@@ -119,7 +122,7 @@ class ClientScript(Plugin):
             data += self.comment.get(file_type) % (r.get('file'), r.get('date'))
             data += r.get('data') + '\n\n'
 
-        self.createFile(out, data.strip())
+        self.createFile(out, ss(data.strip()))
 
         if not self.minified.get(file_type):
             self.minified[file_type] = {}

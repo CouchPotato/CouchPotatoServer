@@ -7,36 +7,24 @@ var Question = new Class( {
 		self.hint = hint
 		self.answers = answers
 
-		self.createQuestion()
+		self.createQuestion();
 		self.answers.each(function(answer) {
 			self.createAnswer(answer)
 		})
-		self.createMask()
 
-	},
-
-	createMask : function() {
-		var self = this
-
-		self.mask = new Element('div.mask').fade('hide').inject(document.body).fade('in');
 	},
 
 	createQuestion : function() {
+		var self = this;
 
-		this.container = new Element('div', {
-			'class' : 'question'
-		}).adopt(
+		self.container = new Element('div.mask.question').adopt(
 			new Element('h3', {
 				'html': this.question
 			}),
 			new Element('div.hint', {
 				'html': this.hint
 			})
-		).inject(document.body)
-
-		this.container.position( {
-			'position' : 'center'
-		});
+		).fade('hide').inject(document.body).fade('in')
 
 	},
 
@@ -59,17 +47,15 @@ var Question = new Class( {
 						(options.onComplete || function(){})()
 						self.close();
 					}
-				})).send();	
+				})).send();
 			});
 		}
 	},
 
 	close : function() {
 		var self = this;
-		self.mask.fade('out');
-		(function(){self.mask.destroy()}).delay(1000);
-		
-		this.container.destroy();
+		self.container.fade('out');
+		(function(){self.container.destroy()}).delay(1000);
 	},
 
 	toElement : function() {
