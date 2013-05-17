@@ -179,7 +179,7 @@ class YarrProvider(Provider):
                     if hostname in download_url:
                         return self
         except:
-            log.debug('Url % s doesn\'t belong to %s', (url, self.getName()))
+            log.debug('Url %s doesn\'t belong to %s', (url, self.getName()))
 
         return
 
