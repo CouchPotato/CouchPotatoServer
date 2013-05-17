@@ -133,7 +133,7 @@ var MovieList = new Class({
 			self.empty_message = null;
 		}
 
-		if(count == 0 && !self.empty_message){
+		if(self.total_movies && count == 0 && !self.empty_message){
 			var message = (self.filter.search ? 'for "'+self.filter.search+'"' : '') +
 				(self.filter.starts_with ? ' in <strong>'+self.filter.starts_with+'</strong>' : '');
 
