@@ -8,7 +8,6 @@ import httplib
 import json
 import os.path
 import re
-import shutil
 import traceback
 import urllib2
 

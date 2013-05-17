@@ -946,10 +946,11 @@
 
 .movies .empty_wanted {
 	background-image: url('../images/emptylist.png');
+	background-position: 80% 0;
 	height: 750px;
-	width: 800px;
+	width: 100%;
+	max-width: 900px;
 	padding-top: 260px;
-	margin-top: -50px;
 }
 
 .movies .empty_manage {

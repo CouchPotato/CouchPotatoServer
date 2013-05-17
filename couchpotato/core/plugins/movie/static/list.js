@@ -504,7 +504,7 @@ var MovieList = new Class({
 		Api.request(self.options.api_call || 'movie.list', {
 			'data': Object.merge({
 				'status': self.options.status,
-				'limit_offset': self.options.limit + ',' + self.offset
+				'limit_offset': self.options.limit ? self.options.limit + ',' + self.offset : null
 			}, self.filter),
 			'onSuccess': function(json){
 				

@@ -23,7 +23,7 @@ class Pushover(Notification):
         }
 
         if data and data.get('library'):
-            api_data.extend({
+            api_data.update({
                 'url': toUnicode('http://www.imdb.com/title/%s/' % data['library']['identifier']),
                 'url_title': toUnicode('%s on IMDb' % getTitle(data['library'])),
             })

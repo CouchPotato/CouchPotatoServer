@@ -188,29 +188,30 @@ class QualityPlugin(Plugin):
                     return self.setCache(hash, quality)
 
         # Try again with loose testing
-        quality = self.guessLoose(hash, extra = extra)
+        quality = self.guessLoose(hash, files = files, extra = extra)
         if quality:
             return self.setCache(hash, quality)
 
         log.debug('Could not identify quality for: %s', files)
         return None
 
-    def guessLoose(self, hash, extra):
+    def guessLoose(self, hash, files = None, extra = None):
 
-        for quality in self.all():
+        if extra:
+            for quality in self.all():
 
-            # Check width resolution, range 20
-            if (quality.get('width', 720) - 20) <= extra.get('resolution_width', 0) <= (quality.get('width', 720) + 20):
-                log.debug('Found %s via resolution_width: %s == %s', (quality['identifier'], quality.get('width', 720), extra.get('resolution_width', 0)))
-                return self.setCache(hash, quality)
+                # Check width resolution, range 20
+                if quality.get('width') and (quality.get('width') - 20) <= extra.get('resolution_width', 0) <= (quality.get('width') + 20):
+                    log.debug('Found %s via resolution_width: %s == %s', (quality['identifier'], quality.get('width'), extra.get('resolution_width', 0)))
+                    return self.setCache(hash, quality)
 
-            # Check height resolution, range 20
-            if (quality.get('height', 480) - 20) <= extra.get('resolution_height', 0) <= (quality.get('height', 480) + 20):
-                log.debug('Found %s via resolution_height: %s == %s', (quality['identifier'], quality.get('height', 480), extra.get('resolution_height', 0)))
-                return self.setCache(hash, quality)
+                # Check height resolution, range 20
+                if quality.get('height') and (quality.get('height') - 20) <= extra.get('resolution_height', 0) <= (quality.get('height') + 20):
+                    log.debug('Found %s via resolution_height: %s == %s', (quality['identifier'], quality.get('height'), extra.get('resolution_height', 0)))
+                    return self.setCache(hash, quality)
 
-        if 480 <= extra.get('resolution_width', 0) <= 720:
-            log.debug('Found as dvdrip')
-            return self.setCache(hash, self.single('dvdrip'))
+            if 480 <= extra.get('resolution_width', 0) <= 720:
+                log.debug('Found as dvdrip')
+                return self.setCache(hash, self.single('dvdrip'))
 
         return None
