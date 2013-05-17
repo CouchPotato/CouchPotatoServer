@@ -192,6 +192,9 @@ var MovieList = new Class({
 			),
 			new Element('div.menus').adopt(
 				self.navigation_counter = new Element('span.counter[title=Total]'),
+				self.filter_menu = new Block.Menu(self, {
+					'class': 'filter'
+				}),
 				self.navigation_actions = new Element('ul.actions', {
 					'events': {
 						'click:relay(li)': function(e, el){
@@ -199,13 +202,10 @@ var MovieList = new Class({
 							self.navigation_actions.getElements('.'+a).removeClass(a);
 							self.changeView(el.get('data-view'));
 							this.addClass(a);
-							
+
 							el.inject(el.getParent(), 'top')
 						}
 					}
-				}),
-				self.filter_menu = new Block.Menu(self, {
-					'class': 'filter'
 				}),
 				self.navigation_menu = new Block.Menu(self, {
 					'class': 'extra'
@@ -232,6 +232,10 @@ var MovieList = new Class({
 				}
 			})
 		).addClass('search');
+
+		self.filter_menu.addEvent('open', function(){
+			self.navigation_search_input.focus();
+		});
 
 		self.filter_menu.addLink(
 			self.navigation_alpha = new Element('ul.numbers', {
@@ -507,7 +511,7 @@ var MovieList = new Class({
 				'limit_offset': self.options.limit ? self.options.limit + ',' + self.offset : null
 			}, self.filter),
 			'onSuccess': function(json){
-				
+
 				if(reset)
 					self.movie_list.empty();
 
