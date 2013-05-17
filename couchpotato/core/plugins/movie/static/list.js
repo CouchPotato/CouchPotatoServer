@@ -14,6 +14,7 @@ var MovieList = new Class({
 
 	movies: [],
 	movies_added: {},
+	total_movies: 0,
 	letters: {},
 	filter: null,
 
@@ -23,7 +24,7 @@ var MovieList = new Class({
 
 		self.offset = 0;
 		self.filter = self.options.filter || {
-			'startswith': null,
+			'starts_with': null,
 			'search': null
 		}
 
@@ -115,7 +116,7 @@ var MovieList = new Class({
 			self.createMovie(movie);
 		});
 
-		self.total_movies = total;
+		self.total_movies += total;
 		self.setCounter(total);
 
 	},
@@ -126,6 +127,38 @@ var MovieList = new Class({
 		if(!self.navigation_counter) return;
 
 		self.navigation_counter.set('text', (count || 0) + ' movies');
+
+		if (self.empty_message) {
+			self.empty_message.destroy();
+			self.empty_message = null;
+		}
+
+		if(count == 0 && !self.empty_message){
+			var message = (self.filter.search ? 'for "'+self.filter.search+'"' : '') +
+				(self.filter.starts_with ? ' in <strong>'+self.filter.starts_with+'</strong>' : '');
+
+			self.empty_message = new Element('.message', {
+				'html': 'No movies found ' + message + '.<br/>'
+			}).grab(
+				new Element('a', {
+					'text': 'Reset filter',
+					'events': {
+						'click': function(){
+							self.filter = {
+								'starts_with': null,
+								'search': null
+							};
+							self.navigation_search_input.set('value', '');
+							self.reset();
+							self.activateLetter();
+							self.getMovies(true);
+							self.last_search_value = '';
+						}
+					}
+				})
+			).inject(self.movie_list);
+
+		}
 
 	},
 

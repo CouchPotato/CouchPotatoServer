@@ -9,6 +9,18 @@
 		clear: both;
 	}
 	
+		.movies > div .message {
+			display: block;
+			padding: 20px;
+			font-size: 20px;
+			color: white;
+			text-align: center;
+		}
+		.movies > div .message a {
+			padding: 20px;
+			display: block;
+		}
+	
 	.movies.thumbs_list > div:not(.description) {
 		margin-right: -4px;
 	}
