@@ -133,6 +133,7 @@ class Dashboard(Plugin):
                 if len(movies) >= limit:
                     break
 
+        db.expire_all()
         return jsonified({
             'success': True,
             'empty': len(movies) == 0,
