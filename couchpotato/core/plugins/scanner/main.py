@@ -440,11 +440,14 @@ class Scanner(Plugin):
             if data.get('audio'): break
 
         # Use the quality guess first, if that failes use the quality we wanted to download
-        data['quality'] = fireEvent('quality.guess', files = files, extra = data, single = True)
+        data['quality'] = None
+        if download_info and download_info.get('quality'):
+            data['quality'] = fireEvent('quality.single', download_info.get('quality'), single = True)
+
         if not data['quality']:
-            if download_info and download_info.get('quality'):
-                data['quality'] = fireEvent('quality.single', download_info.get('quality'), single = True)
-            else:
+            data['quality'] = fireEvent('quality.guess', files = files, extra = data, single = True)
+
+            if not data['quality']:
                 data['quality'] = fireEvent('quality.single', 'dvdr' if group['is_dvd'] else 'dvdrip', single = True)
 
         data['quality_type'] = 'HD' if data.get('resolution_width', 0) >= 1280 or data['quality'].get('hd') else 'SD'
