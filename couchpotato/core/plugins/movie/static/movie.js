@@ -23,7 +23,8 @@ var Movie = new Class({
 		var self = this;
 
 		App.addEvent('movie.update.'+self.data.id, function(notification){
-			self.busy(false)
+			self.busy(false);
+			self.removeView();
 			self.update.delay(2000, self, notification);
 		});
 
@@ -107,6 +108,7 @@ var Movie = new Class({
 
 		self.data = notification.data;
 		self.el.empty();
+		self.removeView();
 
 		self.profile = Quality.getProfile(self.data.profile_id) || {};
 		self.create();
@@ -238,10 +240,10 @@ var Movie = new Class({
 
 		if(direction == 'in'){
 			self.temp_view = self.view;
-			self.changeView('details')
+			self.changeView('details');
 
 			self.el.addEvent('outerClick', function(){
-				self.removeView()
+				self.removeView();
 				self.slide('out')
 			})
 			el.show();

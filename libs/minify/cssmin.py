@@ -200,24 +200,3 @@ def cssmin(css, wrap = None):
     css = css.replace("___PSEUDOCLASSBMH___", '"\\"}\\""')
     css = condense_semicolons(css)
     return css.strip()
-
-
-def main():
-    import optparse
-    import sys
-
-    p = optparse.OptionParser(
-        prog = "cssmin", version = __version__,
-        usage = "%prog [--wrap N]",
-        description = """Reads raw CSS from stdin, and writes compressed CSS to stdout.""")
-
-    p.add_option(
-        '-w', '--wrap', type = 'int', default = None, metavar = 'N',
-        help = "Wrap output to approximately N chars per line.")
-
-    options, args = p.parse_args()
-    sys.stdout.write(cssmin(sys.stdin.read(), wrap = options.wrap))
-
-
-if __name__ == '__main__':
-    main()

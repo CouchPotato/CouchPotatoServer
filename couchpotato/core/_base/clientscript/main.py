@@ -4,9 +4,11 @@ from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
+from minify.cssmin import cssmin
 from minify.jsmin import jsmin
-import cssprefixer
 import os
+import re
+import time
 import traceback
 
 log = CPLog(__name__)
@@ -109,7 +111,8 @@ class ClientScript(Plugin):
             if file_type == 'script':
                 data = jsmin(f)
             else:
-                data = cssprefixer.process(f, debug = False, minify = True)
+                data = self.prefix(f)
+                data = cssmin(f)
                 data = data.replace('../images/', '../static/images/')
                 data = data.replace('../fonts/', '../static/fonts/')
                 data = data.replace('../../static/', '../static/') # Replace inside plugins
@@ -122,7 +125,7 @@ class ClientScript(Plugin):
             data += self.comment.get(file_type) % (r.get('file'), r.get('date'))
             data += r.get('data') + '\n\n'
 
-        self.createFile(out, ss(data.strip()))
+        self.createFile(out, data.strip())
 
         if not self.minified.get(file_type):
             self.minified[file_type] = {}
@@ -170,3 +173,28 @@ class ClientScript(Plugin):
         if not self.paths[type].get(location):
             self.paths[type][location] = []
         self.paths[type][location].append(file_path)
+
+    prefix_properties = ['border-radius', 'transform', 'transition', 'box-shadow']
+    prefix_tags = ['ms', 'moz', 'webkit']
+    def prefix(self, data):
+
+        trimmed_data = re.sub('(\t|\n|\r)+', '', data)
+
+        new_data = ''
+        colon_split = trimmed_data.split(';')
+        for splt in colon_split:
+            curl_split = splt.strip().split('{')
+            for curly in curl_split:
+                curly = curly.strip()
+                for prop in self.prefix_properties:
+                    if curly[:len(prop) + 1] == prop + ':':
+                        for tag in self.prefix_tags:
+                            new_data += ' -%s-%s; ' % (tag, curly)
+
+                new_data += curly + (' { ' if len(curl_split) > 1 else ' ')
+
+            new_data += '; '
+
+        new_data = new_data.replace('{ ;', '; ').replace('} ;', '} ')
+
+        return new_data

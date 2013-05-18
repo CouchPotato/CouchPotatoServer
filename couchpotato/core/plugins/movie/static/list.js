@@ -14,6 +14,7 @@ var MovieList = new Class({
 
 	movies: [],
 	movies_added: {},
+	total_movies: 0,
 	letters: {},
 	filter: null,
 
@@ -23,7 +24,7 @@ var MovieList = new Class({
 
 		self.offset = 0;
 		self.filter = self.options.filter || {
-			'startswith': null,
+			'starts_with': null,
 			'search': null
 		}
 
@@ -62,7 +63,8 @@ var MovieList = new Class({
 			self.movies.each(function(movie){
 				if(movie.get('id') == notification.data.id){
 					movie.destroy();
-					delete self.movies_added[notification.data.id]
+					delete self.movies_added[notification.data.id];
+					self.setCounter(self.counter_count-1);
 				}
 			})
 		}
@@ -76,6 +78,7 @@ var MovieList = new Class({
 		if(self.options.add_new && !self.movies_added[notification.data.id] && notification.data.status.identifier == self.options.status){
 			window.scroll(0,0);
 			self.createMovie(notification.data, 'top');
+			self.setCounter(self.counter_count+1);
 
 			self.checkIfEmpty();
 		}
@@ -115,7 +118,7 @@ var MovieList = new Class({
 			self.createMovie(movie);
 		});
 
-		self.total_movies = total;
+		self.total_movies += total;
 		self.setCounter(total);
 
 	},
@@ -125,7 +128,40 @@ var MovieList = new Class({
 
 		if(!self.navigation_counter) return;
 
+		self.counter_count = count;
 		self.navigation_counter.set('text', (count || 0) + ' movies');
+
+		if (self.empty_message) {
+			self.empty_message.destroy();
+			self.empty_message = null;
+		}
+
+		if(self.total_movies && count == 0 && !self.empty_message){
+			var message = (self.filter.search ? 'for "'+self.filter.search+'"' : '') +
+				(self.filter.starts_with ? ' in <strong>'+self.filter.starts_with+'</strong>' : '');
+
+			self.empty_message = new Element('.message', {
+				'html': 'No movies found ' + message + '.<br/>'
+			}).grab(
+				new Element('a', {
+					'text': 'Reset filter',
+					'events': {
+						'click': function(){
+							self.filter = {
+								'starts_with': null,
+								'search': null
+							};
+							self.navigation_search_input.set('value', '');
+							self.reset();
+							self.activateLetter();
+							self.getMovies(true);
+							self.last_search_value = '';
+						}
+					}
+				})
+			).inject(self.movie_list);
+
+		}
 
 	},
 
@@ -192,6 +228,9 @@ var MovieList = new Class({
 			),
 			new Element('div.menus').adopt(
 				self.navigation_counter = new Element('span.counter[title=Total]'),
+				self.filter_menu = new Block.Menu(self, {
+					'class': 'filter'
+				}),
 				self.navigation_actions = new Element('ul.actions', {
 					'events': {
 						'click:relay(li)': function(e, el){
@@ -199,13 +238,14 @@ var MovieList = new Class({
 							self.navigation_actions.getElements('.'+a).removeClass(a);
 							self.changeView(el.get('data-view'));
 							this.addClass(a);
-							
-							el.inject(el.getParent(), 'top')
+
+							el.inject(el.getParent(), 'top');
+							el.getSiblings().hide()
+							setTimeout(function(){
+								el.getSiblings().setStyle('display', null);
+							}, 100)
 						}
 					}
-				}),
-				self.filter_menu = new Block.Menu(self, {
-					'class': 'filter'
 				}),
 				self.navigation_menu = new Block.Menu(self, {
 					'class': 'extra'
@@ -232,6 +272,10 @@ var MovieList = new Class({
 				}
 			})
 		).addClass('search');
+
+		self.filter_menu.addEvent('open', function(){
+			self.navigation_search_input.focus();
+		});
 
 		self.filter_menu.addLink(
 			self.navigation_alpha = new Element('ul.numbers', {
@@ -336,14 +380,14 @@ var MovieList = new Class({
 							self.movies.each(function(movie){
 								if (movie.isSelected()){
 									$(movie).destroy()
-									erase_movies.include(movie)
+									erase_movies.include(movie);
 								}
 							});
 
 							erase_movies.each(function(movie){
 								self.movies.erase(movie);
-
-								movie.destroy()
+								movie.destroy();
+								self.setCounter(self.counter_count-1);
 							});
 
 							self.calculateSelected();
@@ -504,10 +548,10 @@ var MovieList = new Class({
 		Api.request(self.options.api_call || 'movie.list', {
 			'data': Object.merge({
 				'status': self.options.status,
-				'limit_offset': self.options.limit + ',' + self.offset
+				'limit_offset': self.options.limit ? self.options.limit + ',' + self.offset : null
 			}, self.filter),
 			'onSuccess': function(json){
-				
+
 				if(reset)
 					self.movie_list.empty();
 

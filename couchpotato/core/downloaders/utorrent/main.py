@@ -3,13 +3,13 @@ from bencode import bencode, bdecode
 from couchpotato.core.downloaders.base import Downloader, StatusList
 from couchpotato.core.helpers.encoding import isInt, ss
 from couchpotato.core.logger import CPLog
+from datetime import timedelta
 from hashlib import sha1
 from multipartpost import MultipartPostHandler
-from datetime import timedelta
-import os
 import cookielib
 import httplib
 import json
+import os
 import re
 import time
 import urllib
@@ -121,7 +121,8 @@ class uTorrent(Downloader):
                     settings_dict[item[0]] = True if item[2] == 'true' else False
                 elif item[1] == 2: # string
                     settings_dict[item[0]] = item[2]
-            log.debug('uTorrent settings: %s', settings_dict)
+
+            log.debug('uTorrent settings: %s, %s', (settings_dict['dir_completed_download_flag'], settings_dict['dir_active_download_flag']))
 
             # Get the download path from the uTorrent settings
             if settings_dict['dir_completed_download_flag']:
@@ -134,7 +135,7 @@ class uTorrent(Downloader):
 
         except Exception, err:
             log.error('Failed to get settings from uTorrent: %s', err)
-            return False            
+            return False
 
         # Get torrents
         for item in queue.get('torrents', []):
@@ -155,7 +156,7 @@ class uTorrent(Downloader):
                 'status':  status,
                 'original_status': item[1],
                 'timeleft': str(timedelta(seconds = item[10])),
-                'folder': release_folder, 
+                'folder': release_folder,
             })
 
         return statuses

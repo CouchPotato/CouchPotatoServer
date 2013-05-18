@@ -30,6 +30,12 @@ var CouchPotato = new Class({
 		History.addEvent('change', self.openPage.bind(self));
 		self.c.addEvent('click:relay(a[href^=/]:not([target]))', self.pushState.bind(self));
 		self.c.addEvent('click:relay(a[href^=http])', self.openDerefered.bind(self));
+		
+		// Check if device is touchenabled
+		self.touch_device = 'ontouchstart' in document.documentElement;
+		if(self.touch_device)
+			self.c.addClass('touch_enabled');
+
 	},
 
 	getOption: function(name){

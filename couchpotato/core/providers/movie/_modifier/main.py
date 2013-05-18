@@ -4,12 +4,32 @@ from couchpotato.core.helpers.variable import mergeDicts, randomString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Library
+import copy
 import traceback
 
 log = CPLog(__name__)
 
 
 class MovieResultModifier(Plugin):
+
+    default_info = {
+        'tmdb_id': 0,
+        'titles': [],
+        'original_title': '',
+        'year': 0,
+        'images': {
+            'poster': [],
+            'backdrop': [],
+            'poster_original': [],
+            'backdrop_original': []
+        },
+        'runtime': 0,
+        'plot': '',
+        'tagline': '',
+        'imdb': '',
+        'genres': [],
+        'release_date': {}
+    }
 
     def __init__(self):
         addEvent('result.modify.movie.search', self.combineOnIMDB)
@@ -67,6 +87,9 @@ class MovieResultModifier(Plugin):
         return temp
 
     def checkLibrary(self, result):
+
+        result = mergeDicts(copy.deepcopy(self.default_info), copy.deepcopy(result))
+
         if result and result.get('imdb'):
             return mergeDicts(result, self.getLibraryTags(result['imdb']))
         return result
