@@ -51,6 +51,14 @@ config = [{
                     'description': 'Stop transfer when reaching ratio',
                 },
                 {
+                    'name': 'createfolder',
+                    'label': 'Create Folder',
+                    'default': 1,
+                    'type': 'bool',
+                    'advanced': True,
+                    'description': 'Create the torrent folder upon snatch. Uncheck if Transmission runs as a different user.',
+                },
+                {
                     'name': 'ratiomode',
                     'default': 0,
                     'type': 'int',
