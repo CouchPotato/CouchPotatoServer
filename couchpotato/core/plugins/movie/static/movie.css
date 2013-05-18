@@ -268,6 +268,11 @@
 					top: 0;
 					margin: 0;
 				}
+					.touch_enabled .movies.list_list .info .title {
+						display: inline-block;
+						padding-right: 55px;
+					}
+				
 				.movies .info .title span {
 					display: inline-block;
 					text-overflow: ellipsis;
@@ -339,6 +344,10 @@
 					right: auto;
 					color: #FFF;
 				}
+				
+				.touch_enabled .movies.list_list .movie .info .year {
+					font-size: 1em;
+				}
 
 			.movies .info .description {
 				top: 30px;
@@ -365,6 +374,13 @@
 		
 			.movies.list_list .movie:hover .data .quality {
 				display: none;
+			}
+		
+			.touch_enabled .movies.list_list .movie .data .quality {
+				position: relative;
+				display: inline-block;
+				margin: 0;
+				top: -4px;
 			}
 		
 			@media all and (max-width: 480px) {
@@ -439,7 +455,8 @@
 				}
 			}
 		
-			.movies .movie:hover .data .actions {
+			.movies .movie:hover .data .actions,
+			.touch_enabled .movies .movie .data .actions {
 				opacity: 1;
 				display: inline-block;
 			}
@@ -676,6 +693,9 @@
 					height: 100%;
 					top: 0;
 				}
+					.touch_enabled .movies .movie .trynext {
+						display: none;
+					}
 				
 					@media all and (max-width: 480px) {
 						.movies .movie .trynext {
@@ -686,7 +706,8 @@
 					.wanted .movies .movie .trynext {
 						padding-right: 30px;
 					}
-					.movies .movie:hover .trynext {
+					.movies .movie:hover .trynext,
+					.touch_enabled .movies.details_list .movie .trynext {
 						opacity: 1;
 					}
 					
@@ -717,7 +738,8 @@
 						.movies .movie .trynext a:last-child {
 							margin: 0;
 						}
-						.movies .movie .trynext a:hover {
+						.movies .movie .trynext a:hover,
+						.touch_enabled .movies .movie .trynext a {
 							background-color: #369545;
 						}
 

@@ -236,7 +236,11 @@ var MovieList = new Class({
 							self.changeView(el.get('data-view'));
 							this.addClass(a);
 
-							el.inject(el.getParent(), 'top')
+							el.inject(el.getParent(), 'top');
+							el.getSiblings().hide()
+							setTimeout(function(){
+								el.getSiblings().setStyle('display', null);
+							}, 100)
 						}
 					}
 				}),
