@@ -74,13 +74,13 @@ class Automation(Provider):
             req_match += len(list(set(movie_genres) & set(req))) == len(req)
 
         if self.getMinimal('required_genres') and req_match == 0:
-            log.info2("Required genre(s) missing for %s" % movie['original_title'])
+            log.info2('Required genre(s) missing for %s', movie['original_title'])
             return False
 
         for ign_set in ignored_genres:
             ign = splitString(ign_set, '&')
             if len(list(set(movie_genres) & set(ign))) == len(ign):
-                log.info2("%s has blacklisted genre(s): %s" % (movie['original_title'], ign))
+                log.info2('%s has blacklisted genre(s): %s', (movie['original_title'], ign))
                 return False
 
         return True

@@ -9,6 +9,18 @@
 		clear: both;
 	}
 	
+		.movies > div .message {
+			display: block;
+			padding: 20px;
+			font-size: 20px;
+			color: white;
+			text-align: center;
+		}
+		.movies > div .message a {
+			padding: 20px;
+			display: block;
+		}
+	
 	.movies.thumbs_list > div:not(.description) {
 		margin-right: -4px;
 	}
@@ -825,6 +837,8 @@
 		vertical-align: top;
 		z-index: 200;
 		position: relative;
+		border: 1px solid rgba(255,255,255,.07);
+		border-width: 0 1px;
 	}
 		.movies .alph_nav .actions:hover {
 			box-shadow: 0 100px 20px -10px rgba(0,0,0,0.55);
@@ -927,8 +941,6 @@
 		}
 	
 		.movies .alph_nav .more_menu.filter {
-			border: 1px solid rgba(255,255,255,.07);
-			border-width: 0 1px;
 		}
 		
 			.movies .alph_nav .more_menu.filter > a:before {
@@ -940,7 +952,7 @@
 			}
 			
 			.movies .alph_nav .more_menu.filter .wrapper {
-				right: 45px;
+				right: 88px;
 				width: 300px;
 			}
 

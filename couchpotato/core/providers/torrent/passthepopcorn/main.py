@@ -58,7 +58,7 @@ class PassThePopcorn(TorrentProvider):
 
     class PTPHTTPRedirectHandler(urllib2.HTTPRedirectHandler):
         def http_error_302(self, req, fp, code, msg, headers):
-            log.debug("302 detected; redirected to %s" % headers['Location'])
+            log.debug("302 detected; redirected to %s", headers['Location'])
             if (headers['Location'] != 'login.php'):
                 return urllib2.HTTPRedirectHandler.http_error_302(self, req, fp, code, msg, headers)
             else:
@@ -84,7 +84,7 @@ class PassThePopcorn(TorrentProvider):
             txt = self.urlopen(url, opener = self.login_opener)
             res = json.loads(txt)
         except:
-            log.error('Search on PassThePopcorn.me (%s) failed (could not decode JSON)' % params)
+            log.error('Search on PassThePopcorn.me (%s) failed (could not decode JSON)', params)
             return
 
         try:
@@ -96,10 +96,10 @@ class PassThePopcorn(TorrentProvider):
 
             for ptpmovie in res['Movies']:
                 if not 'Torrents' in ptpmovie:
-                    log.debug('Movie %s (%s) has NO torrents' % (ptpmovie['Title'], ptpmovie['Year']))
+                    log.debug('Movie %s (%s) has NO torrents', (ptpmovie['Title'], ptpmovie['Year']))
                     continue
 
-                log.debug('Movie %s (%s) has %d torrents' % (ptpmovie['Title'], ptpmovie['Year'], len(ptpmovie['Torrents'])))
+                log.debug('Movie %s (%s) has %d torrents', (ptpmovie['Title'], ptpmovie['Year'], len(ptpmovie['Torrents'])))
                 for torrent in ptpmovie['Torrents']:
                     torrent_id = tryInt(torrent['Id'])
                     torrentdesc = '%s %s %s' % (torrent['Resolution'], torrent['Source'], torrent['Codec'])
@@ -151,7 +151,7 @@ class PassThePopcorn(TorrentProvider):
         try:
             response = opener.open(self.urls['login'], self.getLoginParams())
         except urllib2.URLError as e:
-            log.error('Login to PassThePopcorn failed: %s' % e)
+            log.error('Login to PassThePopcorn failed: %s', e)
             return False
 
         if response.getcode() == 200:
@@ -159,7 +159,7 @@ class PassThePopcorn(TorrentProvider):
             self.login_opener = opener
             return True
         else:
-            log.error('Login to PassThePopcorn failed: returned code %d' % response.getcode())
+            log.error('Login to PassThePopcorn failed: returned code %d', response.getcode())
             return False
 
     def torrentMeetsQualitySpec(self, torrent, quality):
@@ -172,7 +172,7 @@ class PassThePopcorn(TorrentProvider):
             seen_one = False
 
             if not field in torrent:
-                log.debug('Torrent with ID %s has no field "%s"; cannot apply post-search-filter for quality "%s"' % (torrent['Id'], field, quality))
+                log.debug('Torrent with ID %s has no field "%s"; cannot apply post-search-filter for quality "%s"', (torrent['Id'], field, quality))
                 continue
 
             for spec in specs:

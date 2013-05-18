@@ -104,8 +104,6 @@ class ClientScript(Plugin):
         out_name = 'minified_' + out
         out = os.path.join(cache, out_name)
 
-        start = time.time()
-
         raw = []
         for file_path in files:
             f = open(file_path, 'r').read()
@@ -121,15 +119,13 @@ class ClientScript(Plugin):
 
             raw.append({'file': file_path, 'date': int(os.path.getmtime(file_path)), 'data': data})
 
-        print file_type, time.time() - start
-
         # Combine all files together with some comments
         data = ''
         for r in raw:
             data += self.comment.get(file_type) % (r.get('file'), r.get('date'))
             data += r.get('data') + '\n\n'
 
-        self.createFile(out, ss(data.strip()))
+        self.createFile(out, data.strip())
 
         if not self.minified.get(file_type):
             self.minified[file_type] = {}

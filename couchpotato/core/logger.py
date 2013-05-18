@@ -1,6 +1,5 @@
 import logging
 import re
-import traceback
 
 class CPLog(object):
 

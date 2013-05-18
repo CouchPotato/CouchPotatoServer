@@ -336,7 +336,7 @@ class Scanner(Plugin):
                 break
 
             if return_ignored is False and identifier in ignored_identifiers:
-                log.debug('Ignore file found, ignoring release: %s' % identifier)
+                log.debug('Ignore file found, ignoring release: %s', identifier)
                 continue
 
             # Group extra (and easy) files first
