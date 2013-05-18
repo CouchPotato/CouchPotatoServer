@@ -4,6 +4,7 @@ from couchpotato.core.helpers.variable import mergeDicts, randomString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Library
+import copy
 import traceback
 
 log = CPLog(__name__)
@@ -87,7 +88,7 @@ class MovieResultModifier(Plugin):
 
     def checkLibrary(self, result):
 
-        result = mergeDicts(self.default_info, result)
+        result = mergeDicts(copy.deepcopy(self.default_info), copy.deepcopy(result))
 
         if result and result.get('imdb'):
             return mergeDicts(result, self.getLibraryTags(result['imdb']))
