@@ -11,6 +11,25 @@ log = CPLog(__name__)
 
 class MovieResultModifier(Plugin):
 
+    default_info = {
+        'tmdb_id': 0,
+        'titles': [],
+        'original_title': '',
+        'year': 0,
+        'images': {
+            'poster': [],
+            'backdrop': [],
+            'poster_original': [],
+            'backdrop_original': []
+        },
+        'runtime': 0,
+        'plot': '',
+        'tagline': '',
+        'imdb': '',
+        'genres': [],
+        'release_date': {}
+    }
+
     def __init__(self):
         addEvent('result.modify.movie.search', self.combineOnIMDB)
         addEvent('result.modify.movie.info', self.checkLibrary)
@@ -67,6 +86,9 @@ class MovieResultModifier(Plugin):
         return temp
 
     def checkLibrary(self, result):
+
+        result = mergeDicts(self.default_info, result)
+
         if result and result.get('imdb'):
             return mergeDicts(result, self.getLibraryTags(result['imdb']))
         return result

@@ -170,10 +170,11 @@ class TheMovieDb(MovieProvider):
             'runtime': movie.get('runtime'),
             'released': movie.get('released'),
             'year': year,
-            'plot': movie.get('overview', ''),
-            'tagline': '',
+            'plot': movie.get('overview'),
             'genres': genres,
         }
+
+        movie_data = dict((k, v) for k, v in movie_data.iteritems() if v)
 
         # Add alternative names
         for alt in ['original_name', 'alternative_name']:
