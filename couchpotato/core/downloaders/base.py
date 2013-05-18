@@ -3,6 +3,7 @@ from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.variable import mergeDicts
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.base import Provider
+import os
 import random
 import re
 
@@ -123,6 +124,36 @@ class Downloader(Provider):
         return super(Downloader, self).isEnabled() and \
             ((d_manual and manual) or (d_manual is False)) and \
             (not data or self.isCorrectType(data.get('type')))
+
+    def convertFolder(self, folder, to_local = True):
+        convert = self.conf('remote_folder')
+        if not convert:
+            return folder
+
+        convert = [x.strip().rstrip('\\/') for x in convert.split(',')]
+
+        if not len(convert) == 2:
+            log.error('Unexpected number of paths in the remote_folder setting: %z', len(convert))
+            return folder
+
+        if to_local and not convert[0] in folder:
+            log.error('Remote base folder from the remote_folder setting: %s not found in the path returned by the downloader: %s', (convert[0], folder))
+            return folder
+
+        if not to_local and not convert[1] in folder:
+            log.error('Local base folder from the remote_folder setting: %s not found in the path to be sent to the downloader: %s', (convert[0], folder))
+            return folder
+
+        if not os.path.isdir(convert[1]):
+            log.error('Local base folder from the remote_folder setting: %s is not a path on this computer', convert[1])
+            return folder
+
+        if to_local:
+            new_folder = os.path.normpath(folder.replace(convert[0], convert[1]))
+        else:
+            new_folder = os.path.normpath(folder.replace(convert[1], convert[0]))
+
+        return new_folder
 
 
 class StatusList(list):

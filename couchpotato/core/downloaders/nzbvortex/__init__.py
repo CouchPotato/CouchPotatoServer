@@ -29,6 +29,13 @@ config = [{
                     'label': 'Api Key',
                 },
                 {
+                    'name': 'replace_folder',
+                    'label': 'Replace folder base',
+                    'advanced': True,
+                    'placeholder': 'Example: /home/, X:\\',
+                    'description': 'Replace the first folder base with the second in downloaded movie paths. Use if the downloader is on a different computer to convert the paths.',
+                },
+                {
                     'name': 'manual',
                     'default': False,
                     'type': 'bool',

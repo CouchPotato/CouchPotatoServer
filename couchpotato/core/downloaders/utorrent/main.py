@@ -121,7 +121,7 @@ class uTorrent(Downloader):
                 'status':  status,
                 'original_status': item[1],
                 'timeleft': str(timedelta(seconds = item[10])),
-                'folder': item[26],
+                'folder': self.convertFolder(item[26]),
             })
 
         return statuses
