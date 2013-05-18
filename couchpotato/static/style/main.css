@@ -35,11 +35,21 @@ input:focus, textarea:focus {
 	outline: none;
 }
 
-input:-moz-placeholder, textarea:-moz-placeholder {
-	color: rgba(255, 255, 255, 0.6);
+::-moz-placeholder {
+	color: rgba(255, 255, 255, 0.5);
+	font-style: italic;
 }
-::-webkit-input-placeholder, ::-webkit-textarea-placeholder {
-	color: rgba(255, 255, 255, 0.6);
+input:-moz-placeholder {
+	color: rgba(255, 255, 255, 0.5);
+	font-style: italic;
+}
+::-webkit-input-placeholder {
+	color: rgba(255, 255, 255, 0.5);
+	font-style: italic;
+}
+:-ms-input-placeholder {
+	color: rgba(255, 255, 255, 0.5) !important;
+	font-style: italic;
 }
 
 a img {
