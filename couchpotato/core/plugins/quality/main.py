@@ -164,7 +164,6 @@ class QualityPlugin(Plugin):
         if cached and extra is {}: return cached
 
         for cur_file in files:
-            size = (os.path.getsize(cur_file) / 1024 / 1024) if os.path.isfile(cur_file) else 0
             words = re.split('\W+', cur_file.lower())
 
             for quality in self.all():
