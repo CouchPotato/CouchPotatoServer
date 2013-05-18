@@ -62,7 +62,7 @@ class Provider(Plugin):
         cache_key = '%s%s' % (md5(url), md5('%s' % kwargs.get('params', {})))
         data = self.getCache(cache_key, url, **kwargs)
 
-        if data:
+        if data and len(data) > 0:
             try:
                 data = XMLTree.fromstring(data)
                 return self.getElements(data, item_path)

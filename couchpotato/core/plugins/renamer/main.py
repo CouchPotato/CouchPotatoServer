@@ -204,6 +204,7 @@ class Renamer(Plugin):
                     cd = 1 if multiple else 0
 
                     for current_file in sorted(list(group['files'][file_type])):
+                        current_file = toUnicode(current_file)
 
                         # Original filename
                         replacements['original'] = os.path.splitext(os.path.basename(current_file))[0]

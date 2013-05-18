@@ -62,7 +62,7 @@ class Updater(Plugin):
             self.autoUpdate() # Check after enabling
 
     def autoUpdate(self):
-        if self.check() and self.conf('automatic') and not self.updater.update_failed:
+        if self.isEnabled() and self.check() and self.conf('automatic') and not self.updater.update_failed:
             if self.updater.doUpdate():
 
                 # Notify before restarting

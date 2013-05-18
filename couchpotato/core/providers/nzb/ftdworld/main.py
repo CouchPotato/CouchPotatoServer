@@ -3,7 +3,6 @@ from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.nzb.base import NZBProvider
 from couchpotato.environment import Env
-from dateutil.parser import parse
 import json
 import traceback
 
