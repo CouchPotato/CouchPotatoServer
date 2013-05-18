@@ -38,7 +38,8 @@ class Renamer(Plugin):
         addEvent('renamer.scan', self.scan)
         addEvent('renamer.check_snatched', self.checkSnatched)
 
-        addEvent('app.load', self.scan)
+        if self.conf('force_every') > 0:
+            addEvent('app.load', self.scan)
         addEvent('app.load', self.checkSnatched)
         addEvent('app.load', self.setCrons)
 
