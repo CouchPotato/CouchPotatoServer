@@ -503,7 +503,8 @@
 			}
 
 		.movies.list_list .movie:not(.details_view):hover .actions,
-		.movies.mass_edit_list .movie:hover .actions {
+		.movies.mass_edit_list .movie:hover .actions,
+		.touch_enabled .movies.list_list .movie:not(.details_view) .actions {
 			margin: 0;
 			background: #4e5969;
 			top: 2px;
@@ -521,8 +522,6 @@
 			left: 120px;
 			right: 0;
 		}
-			.movies .delete_container .cancel {
-			}
 			.movies .delete_container .or {
 				padding: 10px;
 			}
