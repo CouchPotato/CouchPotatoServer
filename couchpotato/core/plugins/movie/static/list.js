@@ -63,7 +63,8 @@ var MovieList = new Class({
 			self.movies.each(function(movie){
 				if(movie.get('id') == notification.data.id){
 					movie.destroy();
-					delete self.movies_added[notification.data.id]
+					delete self.movies_added[notification.data.id];
+					self.setCounter(self.counter_count-1);
 				}
 			})
 		}
@@ -77,6 +78,7 @@ var MovieList = new Class({
 		if(self.options.add_new && !self.movies_added[notification.data.id] && notification.data.status.identifier == self.options.status){
 			window.scroll(0,0);
 			self.createMovie(notification.data, 'top');
+			self.setCounter(self.counter_count+1);
 
 			self.checkIfEmpty();
 		}
@@ -126,6 +128,7 @@ var MovieList = new Class({
 
 		if(!self.navigation_counter) return;
 
+		self.counter_count = count;
 		self.navigation_counter.set('text', (count || 0) + ' movies');
 
 		if (self.empty_message) {
@@ -377,14 +380,14 @@ var MovieList = new Class({
 							self.movies.each(function(movie){
 								if (movie.isSelected()){
 									$(movie).destroy()
-									erase_movies.include(movie)
+									erase_movies.include(movie);
 								}
 							});
 
 							erase_movies.each(function(movie){
 								self.movies.erase(movie);
-
-								movie.destroy()
+								movie.destroy();
+								self.setCounter(self.counter_count-1);
 							});
 
 							self.calculateSelected();
