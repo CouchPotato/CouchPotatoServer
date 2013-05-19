@@ -81,16 +81,16 @@ config = [{
                     'default': 1,
                     'type': 'int',
                     'unit': 'min(s)',
-                    'description': 'Detect movie status every X minutes. Will start the renamer if movie is <strong>completed</strong> or handle <strong>failed</strong> download if these options are enabled',
+                    'description': 'Detect movie status every X minutes (0 to disable). Will start the renamer if movie is <strong>completed</strong> or handle <strong>failed</strong> download if these options are enabled',
                 },
                 {
                     'advanced': True,
                     'name': 'force_every',
                     'label': 'Force every',
-                    'default': 2,
+                    'default': 0,
                     'type': 'int',
                     'unit': 'hour(s)',
-                    'description': 'Forces the renamer to scan every X hours',
+                    'description': 'Forces the renamer to process files in the \'From\' folder every X hours (0 to disable). This includes files added manually, <strong>but</strong> also <strong>incomplete</strong> or <strong>seeding</strong> torrents (!).',
                 },
                 {
                     'advanced': True,
@@ -102,7 +102,7 @@ config = [{
                 {
                     'name': 'move_leftover',
                     'type': 'bool',
-                    'description': 'Move all leftover file after renaming, to the movie folder.',
+                    'description': 'Move all leftover files after renaming, to the movie folder.',
                     'default': False,
                     'advanced': True,
                 },
