@@ -63,14 +63,6 @@ config = [{
                     'description': 'Require staff-approval for releases to be accepted.'
                 },
                 {
-                    'name': 'require_bluray',
-                    'advanced': True,
-                    'type': 'bool',
-                    'label': 'Require Blu-ray',
-                    'default': 0,
-                    'description': 'Require source to be Blu-ray for releases to be accepted.'
-                },
-                {
                     'name': 'extra_score',
                     'advanced': True,
                     'label': 'Extra Score',

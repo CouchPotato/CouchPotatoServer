@@ -108,13 +108,11 @@ class PassThePopcorn(TorrentProvider):
                     if 'GoldenPopcorn' in torrent and torrent['GoldenPopcorn']:
                         torrentdesc += ' HQ'
                         if self.conf('prefer_golden'):
-                            torrentscore += 100
-                            log.debug('Config: Prefer Golden Popcorn is active, awarding torrent 100 points')
+                            torrentscore += 200
                     if 'Scene' in torrent and torrent['Scene']:
                         torrentdesc += ' Scene'
                         if self.conf('prefer_scene'):
                             torrentscore += 50
-                            log.debug('Config: Prefer Scene release is active, awarding torrent 50 points')
                     if 'RemasterTitle' in torrent and torrent['RemasterTitle']:
                         torrentdesc += self.htmlToASCII(' %s' % torrent['RemasterTitle'])
 
@@ -179,13 +177,9 @@ class PassThePopcorn(TorrentProvider):
 
         reqs = self.post_search_filters[quality].copy()
 
-        if self.conf('require_bluray'):
-            reqs['Source'] = ['Blu-ray']
-            log.debug('Config: Require Blu-ray source is activated')
-
         if self.conf('require_approval'):
-            reqs['Checked'] = ['true']
             log.debug('Config: Require staff-approval activated')
+            reqs['Checked'] = ['true']
 
         for field, specs in reqs.items():
             matches_one = False
