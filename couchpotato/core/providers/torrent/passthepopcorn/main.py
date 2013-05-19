@@ -103,11 +103,18 @@ class PassThePopcorn(TorrentProvider):
                 for torrent in ptpmovie['Torrents']:
                     torrent_id = tryInt(torrent['Id'])
                     torrentdesc = '%s %s %s' % (torrent['Resolution'], torrent['Source'], torrent['Codec'])
+                    torrentscore = 0
 
                     if 'GoldenPopcorn' in torrent and torrent['GoldenPopcorn']:
                         torrentdesc += ' HQ'
+                        if self.conf('prefer_golden'):
+                            torrentscore += 100
+                            log.debug('Config: Prefer Golden Popcorn is active, awarding torrent 100 points')
                     if 'Scene' in torrent and torrent['Scene']:
                         torrentdesc += ' Scene'
+                        if self.conf('prefer_scene'):
+                            torrentscore += 50
+                            log.debug('Config: Prefer Scene release is active, awarding torrent 50 points')
                     if 'RemasterTitle' in torrent and torrent['RemasterTitle']:
                         torrentdesc += self.htmlToASCII(' %s' % torrent['RemasterTitle'])
 
@@ -115,18 +122,21 @@ class PassThePopcorn(TorrentProvider):
                     torrent_name = re.sub('[^A-Za-z0-9\-_ \(\).]+', '', '%s (%s) - %s' % (movie_title, ptpmovie['Year'], torrentdesc))
 
                     def extra_check(item):
-                        return self.torrentMeetsQualitySpec(item, type)
+                        return self.torrentMeetsQualitySpec(item, quality_id)
 
                     results.append({
                         'id': torrent_id,
                         'name': torrent_name,
+                        'Source': torrent['Source'],
+                        'Checked': 'true' if torrent['Checked'] else 'false',
+                        'Resolution': torrent['Resolution'],
                         'url': '%s?action=download&id=%d&authkey=%s&torrent_pass=%s' % (self.urls['torrent'], torrent_id, authkey, passkey),
                         'detail_url': self.urls['detail'] % torrent_id,
                         'date': tryInt(time.mktime(parse(torrent['UploadTime']).timetuple())),
                         'size': tryInt(torrent['Size']) / (1024 * 1024),
                         'seeders': tryInt(torrent['Seeders']),
                         'leechers': tryInt(torrent['Leechers']),
-                        'score': 50 if torrent['GoldenPopcorn'] else 0,
+                        'score': torrentscore,
                         'extra_check': extra_check,
                         'download': self.loginDownload,
                     })
@@ -167,7 +177,17 @@ class PassThePopcorn(TorrentProvider):
         if not quality in self.post_search_filters:
             return True
 
-        for field, specs in self.post_search_filters[quality].items():
+        reqs = self.post_search_filters[quality].copy()
+
+        if self.conf('require_bluray'):
+            reqs['Source'] = ['Blu-ray']
+            log.debug('Config: Require Blu-ray source is activated')
+
+        if self.conf('require_approval'):
+            reqs['Checked'] = ['true']
+            log.debug('Config: Require staff-approval activated')
+
+        for field, specs in reqs.items():
             matches_one = False
             seen_one = False
 
@@ -182,11 +202,14 @@ class PassThePopcorn(TorrentProvider):
                         return False
                 else:
                     # a positive rule; if any of the possible positive values match the field, return True
+                    log.debug('Checking if torrents field %s equals %s' % (field, spec))
                     seen_one = True
                     if torrent[field] == spec:
+                        log.debug('Torrent satisfied %s == %s' % (field, spec))
                         matches_one = True
 
             if seen_one and not matches_one:
+                log.debug('Torrent did not satisfy requirements, ignoring')
                 return False
 
         return True
