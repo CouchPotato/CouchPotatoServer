@@ -107,7 +107,7 @@ class Sabnzbd(Downloader):
                 'status': status,
                 'original_status': item['status'],
                 'timeleft': str(timedelta(seconds = 0)),
-                'folder': item['storage'],
+                'folder': self.convertFolder(item['storage']),
             })
 
         return statuses

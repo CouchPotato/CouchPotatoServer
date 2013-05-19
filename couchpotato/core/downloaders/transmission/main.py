@@ -41,7 +41,7 @@ class Transmission(Downloader):
             # Create the empty folder to download too
             self.makeDir(folder_path)
 
-            params['download-dir'] = folder_path
+            params['download-dir'] = self.convertFolder(folder_path, to_local = False)
 
         torrent_params = {}
         if self.conf('ratio'):
@@ -133,7 +133,7 @@ class Transmission(Downloader):
                         'status': 'completed',
                         'original_status': item['status'],
                         'timeleft': str(timedelta(seconds = 0)),
-                        'folder': os.path.join(item['downloadDir'], item['name']),
+                        'folder': self.convertFolder(os.path.join(item['downloadDir'], item['name'])),
                     })
                 except Exception, err:
                     log.error('Failed to stop and remove torrent "%s" with error: %s', (item['name'], err))

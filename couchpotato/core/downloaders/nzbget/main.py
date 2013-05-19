@@ -133,7 +133,7 @@ class NZBGet(Downloader):
                 'status': 'completed' if item['ParStatus'] == 'SUCCESS' and item['ScriptStatus'] == 'SUCCESS' else 'failed',
                 'original_status': item['ParStatus'] + ', ' + item['ScriptStatus'],
                 'timeleft': str(timedelta(seconds = 0)),
-                'folder': item['DestDir']
+                'folder': self.convertFolder(item['DestDir'])
             })
 
         return statuses
