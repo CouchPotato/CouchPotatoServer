@@ -9,7 +9,6 @@ from multipartpost import MultipartPostHandler
 import cookielib
 import httplib
 import json
-import os
 import re
 import time
 import urllib
