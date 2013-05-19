@@ -106,36 +106,6 @@ class uTorrent(Downloader):
             return False
 
         statuses = StatusList(self)
-        download_folder = ''
-        settings_dict = {}
-
-        try:
-            data = self.utorrent_api.get_settings()
-            utorrent_settings = json.loads(data)
-
-            # Create settings dict
-            for item in utorrent_settings['settings']:
-                if item[1] == 0: # int
-                    settings_dict[item[0]] = int(item[2] if not item[2].strip() == '' else '0')
-                elif item[1] == 1: # bool
-                    settings_dict[item[0]] = True if item[2] == 'true' else False
-                elif item[1] == 2: # string
-                    settings_dict[item[0]] = item[2]
-
-            log.debug('uTorrent settings: %s, %s', (settings_dict['dir_completed_download_flag'], settings_dict['dir_active_download_flag']))
-
-            # Get the download path from the uTorrent settings
-            if settings_dict['dir_completed_download_flag']:
-                download_folder = settings_dict['dir_completed_download']
-            elif settings_dict['dir_active_download_flag']:
-                download_folder = settings_dict['dir_active_download']
-            else:
-                log.info('No download folder set in uTorrent. Please set a download folder')
-                return False
-
-        except Exception, err:
-            log.error('Failed to get settings from uTorrent: %s', err)
-            return False
 
         # Get torrents
         for item in queue.get('torrents', []):
@@ -145,18 +115,13 @@ class uTorrent(Downloader):
             if item[21] == 'Finished' or item[21] == 'Seeding':
                 status = 'completed'
 
-            if settings_dict['dir_add_label']:
-                release_folder = os.path.join(download_folder, item[11], item[2])
-            else:
-                release_folder = os.path.join(download_folder, item[2])
-
             statuses.append({
                 'id': item[0],
                 'name': item[2],
                 'status':  status,
                 'original_status': item[1],
                 'timeleft': str(timedelta(seconds = item[10])),
-                'folder': release_folder,
+                'folder': item[26],
             })
 
         return statuses
@@ -236,4 +201,22 @@ class uTorrentAPI(object):
 
     def get_settings(self):
         action = "action=getsettings"
-        return self._request(action)
+        settings_dict = {}
+        try:
+            utorrent_settings = json.loads(self._request(action))
+
+            # Create settings dict
+            for item in utorrent_settings['settings']:
+                if item[1] == 0: # int
+                    settings_dict[item[0]] = int(item[2] if not item[2].strip() == '' else '0')
+                elif item[1] == 1: # bool
+                    settings_dict[item[0]] = True if item[2] == 'true' else False
+                elif item[1] == 2: # string
+                    settings_dict[item[0]] = item[2]
+
+            #log.debug('uTorrent settings: %s', settings_dict)
+
+        except Exception, err:
+            log.error('Failed to get settings from uTorrent: %s', err)
+
+        return settings_dict
