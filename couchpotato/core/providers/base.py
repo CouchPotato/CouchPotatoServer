@@ -104,7 +104,7 @@ class YarrProvider(Provider):
         try:
             cookiejar = cookielib.CookieJar()
             opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookiejar))
-            opener.addheaders = []
+            opener.addheaders = [('User-agent', 'Mozilla/5.0')]
             urllib2.install_opener(opener)
             log.info2('Logging into %s', self.urls['login'])
             f = opener.open(self.urls['login'], self.getLoginParams())
