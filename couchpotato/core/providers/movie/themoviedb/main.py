@@ -80,9 +80,11 @@ class TheMovieDb(MovieProvider):
                         nr += 1
                         if nr == limit:
                             break
-
-                    log.info('Found: %s', [result['titles'][0] + ' (' + str(result['year']) + ')' for result in results])
-
+                    for result in results:
+                        if 'year' in result:
+                            log.info('Found: %s', [result['titles'][0] + ' (' + str(result['year']) + ')'])
+                        else:
+                            log.info('Found: %s', [result['titles'][0]])
                     self.setCache(cache_key, results)
                     return results
                 except SyntaxError, e:
