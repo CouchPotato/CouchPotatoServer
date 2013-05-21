@@ -13,7 +13,7 @@ class KickAssTorrents(TorrentMagnetProvider):
     urls = {
         'test': 'https://kat.ph/',
         'detail': 'https://kat.ph/%s',
-        'search': 'https://kat.ph/%s-i%s/',
+        'search': 'http://kat.ph/%s-i%s/',
     }
 
     cat_ids = [
