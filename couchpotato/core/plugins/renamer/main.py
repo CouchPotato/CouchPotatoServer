@@ -62,11 +62,14 @@ class Renamer(Plugin):
     def scanView(self):
 
         params = getParams()
+        async = tryInt(params.get('async', None))
         movie_folder = params.get('movie_folder', None)
         downloader = params.get('downloader', None)
         download_id = params.get('download_id', None)
 
-        fireEventAsync('renamer.scan',
+        fire_handle = fireEvent if not async else fireEventAsync
+
+        fire_handle('renamer.scan',
             movie_folder = movie_folder,
             download_info = {'id': download_id, 'downloader': downloader} if download_id else None
         )
