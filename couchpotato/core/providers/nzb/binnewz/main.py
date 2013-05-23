@@ -177,6 +177,7 @@ class BinNewzProvider(NZBProvider):
                 if m:
                     name = m.group(1)
                     dateStr = m.group(2)
+                    year = dateStr[-5:].strip(")").strip("/")
     
                 m =  re.search("(.+)\s+S(\d{2})\s+E(\d{2})(.*)", name)
                 if m:
