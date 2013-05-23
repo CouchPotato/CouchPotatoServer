@@ -45,7 +45,7 @@ class BinNewzProvider(NZBProvider):
     
     def _search(self, movie, quality, results):
         nzbDownloaders = [NZBClub(), BinSearch(), NZBIndex()]
-        TitleStringReal = (getTitle(movie['library']).encode("utf-8")).replace('-',' ')
+        MovieTitles = movie['library']['info']['titles']
         moviequality = simplifyString(quality['identifier'])
         movieyear = movie['library']['year']
         if moviequality in ("720p","1080p","bd50"):
@@ -61,181 +61,183 @@ class BinNewzProvider(NZBProvider):
             cat2='27'
             minSize = 500      
             
-        data = 'chkInit=1&edTitre='+TitleStringReal+'&chkTitre=on&chkFichier=on&chkCat=on&cats%5B%5D='+cat1+'&cats%5B%5D='+cat2+'&edAge=&edYear='
-        try:
-            soup = BeautifulSoup( urllib2.urlopen("http://www.binnews.in/_bin/search2.php", data) )
-        except Exception, e:
-            log.error(u"Error trying to load BinNewz response: "+e)
-            return []
+        for MovieTitle in MovieTitles:
+            TitleStringReal = str(MovieTitle.encode("utf-8").replace('-',' '))
+            data = 'chkInit=1&edTitre='+TitleStringReal+'&chkTitre=on&chkFichier=on&chkCat=on&cats%5B%5D='+cat1+'&cats%5B%5D='+cat2+'&edAge=&edYear='
+            try:
+                soup = BeautifulSoup( urllib2.urlopen("http://www.binnews.in/_bin/search2.php", data) )
+            except Exception, e:
+                log.error(u"Error trying to load BinNewz response: "+e)
+                return []
+            
+            #results = []
+    
+            tables = soup.findAll("table", id="tabliste")
+            for table in tables:
+    
+                rows = table.findAll("tr")
+                for row in rows:
+                    
+                    cells = row.select("> td")
+                    if (len(cells) < 11):
+                        continue
+    
+                    name = cells[2].text.strip()
+                    language = cells[3].find("img").get("src")
+    
+                    if not "_fr" in language and not "_frq" in language:
+                        continue
+                                                    
+      
+                    # blacklist_groups = [ "alt.binaries.multimedia" ]
+                    blacklist_groups = []                
+                    
+                    newgroupLink = cells[4].find("a")
+                    newsgroup = None
+                    if newgroupLink.contents:
+                        newsgroup = newgroupLink.contents[0]
+                        if newsgroup == "abmulti":
+                            newsgroup = "alt.binaries.multimedia"
+                        elif newsgroup == "abtvseries":
+                            newsgroup = "alt.binaries.tvseries"
+                        elif newsgroup == "abtv":
+                            newsgroup = "alt.binaries.tv"
+                        elif newsgroup == "a.b.teevee":
+                            newsgroup = "alt.binaries.teevee"
+                        elif newsgroup == "abstvdivxf":
+                            newsgroup = "alt.binaries.series.tv.divx.french"
+                        elif newsgroup == "abhdtvx264fr":
+                            newsgroup = "alt.binaries.hdtv.x264.french"
+                        elif newsgroup == "abmom":
+                            newsgroup = "alt.binaries.mom"  
+                        elif newsgroup == "abhdtv":
+                            newsgroup = "alt.binaries.hdtv"
+                        elif newsgroup == "abboneless":
+                            newsgroup = "alt.binaries.boneless"
+                        elif newsgroup == "abhdtvf":
+                            newsgroup = "alt.binaries.hdtv.french"
+                        elif newsgroup == "abhdtvx264":
+                            newsgroup = "alt.binaries.hdtv.x264"
+                        elif newsgroup == "absuperman":
+                            newsgroup = "alt.binaries.superman"
+                        elif newsgroup == "abechangeweb":
+                            newsgroup = "alt.binaries.echange-web"
+                        elif newsgroup == "abmdfvost":
+                            newsgroup = "alt.binaries.movies.divx.french.vost"
+                        elif newsgroup == "abdvdr":
+                            newsgroup = "alt.binaries.dvdr"
+                        elif newsgroup == "abmzeromov":
+                            newsgroup = "alt.binaries.movies.zeromovies"
+                        elif newsgroup == "abcfaf":
+                            newsgroup = "alt.binaries.cartoons.french.animes-fansub"
+                        elif newsgroup == "abcfrench":
+                            newsgroup = "alt.binaries.cartoons.french"
+                        elif newsgroup == "abgougouland":
+                            newsgroup = "alt.binaries.gougouland"
+                        elif newsgroup == "abroger":
+                            newsgroup = "alt.binaries.roger"
+                        elif newsgroup == "abtatu":
+                            newsgroup = "alt.binaries.tatu"
+                        elif newsgroup =="abstvf":
+                            newsgroup = "alt.binaries.series.tv.french"
+                        elif newsgroup =="abmdfreposts":
+                            newsgroup="alt.binaries.movies.divx.french.reposts"
+                        elif newsgroup =="abmdf":
+                            newsgroup="alt.binaries.movies.french"
+                        elif newsgroup =="abhdtvfrepost":
+                            newsgroup="alt.binaries.hdtv.french.repost"
+                        else:
+                            log.error(u"Unknown binnewz newsgroup: " + newsgroup)
+                            continue
+                        
+                        if newsgroup in blacklist_groups:
+                            log.error(u"Ignoring result, newsgroup is blacklisted: " + newsgroup)
+                            continue
+       
+                    filename =  cells[5].contents[0]
         
-        #results = []
-
-        tables = soup.findAll("table", id="tabliste")
-        for table in tables:
-
-            rows = table.findAll("tr")
-            for row in rows:
-                
-                cells = row.select("> td")
-                if (len(cells) < 11):
-                    continue
-
-                name = cells[2].text.strip()
-                language = cells[3].find("img").get("src")
-
-                if not "_fr" in language and not "_frq" in language:
-                    continue
-                                                
-  
-                # blacklist_groups = [ "alt.binaries.multimedia" ]
-                blacklist_groups = []                
-                
-                newgroupLink = cells[4].find("a")
-                newsgroup = None
-                if newgroupLink.contents:
-                    newsgroup = newgroupLink.contents[0]
-                    if newsgroup == "abmulti":
-                        newsgroup = "alt.binaries.multimedia"
-                    elif newsgroup == "abtvseries":
-                        newsgroup = "alt.binaries.tvseries"
-                    elif newsgroup == "abtv":
-                        newsgroup = "alt.binaries.tv"
-                    elif newsgroup == "a.b.teevee":
-                        newsgroup = "alt.binaries.teevee"
-                    elif newsgroup == "abstvdivxf":
-                        newsgroup = "alt.binaries.series.tv.divx.french"
-                    elif newsgroup == "abhdtvx264fr":
-                        newsgroup = "alt.binaries.hdtv.x264.french"
-                    elif newsgroup == "abmom":
-                        newsgroup = "alt.binaries.mom"  
-                    elif newsgroup == "abhdtv":
-                        newsgroup = "alt.binaries.hdtv"
-                    elif newsgroup == "abboneless":
-                        newsgroup = "alt.binaries.boneless"
-                    elif newsgroup == "abhdtvf":
-                        newsgroup = "alt.binaries.hdtv.french"
-                    elif newsgroup == "abhdtvx264":
-                        newsgroup = "alt.binaries.hdtv.x264"
-                    elif newsgroup == "absuperman":
-                        newsgroup = "alt.binaries.superman"
-                    elif newsgroup == "abechangeweb":
-                        newsgroup = "alt.binaries.echange-web"
-                    elif newsgroup == "abmdfvost":
-                        newsgroup = "alt.binaries.movies.divx.french.vost"
-                    elif newsgroup == "abdvdr":
-                        newsgroup = "alt.binaries.dvdr"
-                    elif newsgroup == "abmzeromov":
-                        newsgroup = "alt.binaries.movies.zeromovies"
-                    elif newsgroup == "abcfaf":
-                        newsgroup = "alt.binaries.cartoons.french.animes-fansub"
-                    elif newsgroup == "abcfrench":
-                        newsgroup = "alt.binaries.cartoons.french"
-                    elif newsgroup == "abgougouland":
-                        newsgroup = "alt.binaries.gougouland"
-                    elif newsgroup == "abroger":
-                        newsgroup = "alt.binaries.roger"
-                    elif newsgroup == "abtatu":
-                        newsgroup = "alt.binaries.tatu"
-                    elif newsgroup =="abstvf":
-                        newsgroup = "alt.binaries.series.tv.french"
-                    elif newsgroup =="abmdfreposts":
-                        newsgroup="alt.binaries.movies.divx.french.reposts"
-                    elif newsgroup =="abmdf":
-                        newsgroup="alt.binaries.movies.french"
-                    elif newsgroup =="abhdtvfrepost":
-                        newsgroup="alt.binaries.hdtv.french.repost"
-                    else:
-                        log.error(u"Unknown binnewz newsgroup: " + newsgroup)
-                        continue
-                    
-                    if newsgroup in blacklist_groups:
-                        log.error(u"Ignoring result, newsgroup is blacklisted: " + newsgroup)
-                        continue
-   
-                filename =  cells[5].contents[0]
+                    m =  re.search("^(.+)\s+{(.*)}$", name)
+                    qualityStr = ""
+                    if m:
+                        name = m.group(1)
+                        qualityStr = m.group(2)
+        
+                    m =  re.search("^(.+)\s+\[(.*)\]$", name)
+                    source = None
+                    if m:
+                        name = m.group(1)
+                        source = m.group(2)
     
-                m =  re.search("^(.+)\s+{(.*)}$", name)
-                qualityStr = ""
-                if m:
-                    name = m.group(1)
-                    qualityStr = m.group(2)
-    
-                m =  re.search("^(.+)\s+\[(.*)\]$", name)
-                source = None
-                if m:
-                    name = m.group(1)
-                    source = m.group(2)
-
-                m =  re.search("(.+)\(([0-9]{4})\)", name)
-                year = ""
-                if m:
-                    name = m.group(1)
-                    year = m.group(2)
-    
-                m =  re.search("(.+)\((\d{2}/\d{2}/\d{4})\)", name)
-                dateStr = ""
-                if m:
-                    name = m.group(1)
-                    dateStr = m.group(2)
-                    year = dateStr[-5:].strip(")").strip("/")
-    
-                m =  re.search("(.+)\s+S(\d{2})\s+E(\d{2})(.*)", name)
-                if m:
-                    name = m.group(1) + " S" + m.group(2) + "E" + m.group(3) + m.group(4)
-    
-                m =  re.search("(.+)\s+S(\d{2})\s+Ep(\d{2})(.*)", name)
-                if m:
-                    name = m.group(1) + " S" + m.group(2) + "E" + m.group(3) + m.group(4)
-                    
+                    m =  re.search("(.+)\(([0-9]{4})\)", name)
+                    year = ""
+                    if m:
+                        name = m.group(1)
+                        year = m.group(2)
+        
+                    m =  re.search("(.+)\((\d{2}/\d{2}/\d{4})\)", name)
+                    dateStr = ""
+                    if m:
+                        name = m.group(1)
+                        dateStr = m.group(2)
+                        year = dateStr[-5:].strip(")").strip("/")
+        
+                    m =  re.search("(.+)\s+S(\d{2})\s+E(\d{2})(.*)", name)
+                    if m:
+                        name = m.group(1) + " S" + m.group(2) + "E" + m.group(3) + m.group(4)
+        
+                    m =  re.search("(.+)\s+S(\d{2})\s+Ep(\d{2})(.*)", name)
+                    if m:
+                        name = m.group(1) + " S" + m.group(2) + "E" + m.group(3) + m.group(4)
                         
-                filenameLower = filename.lower()                                
-                searchItems = []
-                if qualityStr=="":
-                    if source in ("Blu Ray-Rip", "HD DVD-Rip"):
-                        qualityStr="brrip"
-                    elif source =="DVDRip":
-                        qualityStr="dvdrip"
-                    elif source == "TS":
-                        qualityStr ="ts"
-                    elif source == "DVDSCR":
-                        qualityStr ="scr"
-                    elif source == "CAM":
-                        qualityStr ="cam"
-                    elif moviequality == "dvdr":
-                        qualityStr ="dvdr"
-                if year =='':
-                    year = '1900'
-                if len(searchItems) == 0 and qualityStr == str(moviequality) and movieyear>=int(year)-2 and movieyear<=int(year)+2:
-                    searchItems.append( filename )
-                for searchItem in searchItems:
-                    resultno=1
-                    for downloader in nzbDownloaders:
-                        
-                        log.info2("Searching for download : " + name + ", search string = "+ searchItem + " on " + downloader.__class__.__name__)
-                        try:
-                            binsearch_result =  downloader.search(searchItem, minSize, newsgroup )
-                            if binsearch_result:
-                                new={}
-                                
-                                def extra_check(item):
-                                    return True
-                                new['id'] =  binsearch_result.nzbid
-                                new['name'] = name + ' french ' +  qualityStr + ' '+ searchItem +' '+ name +' ' + downloader.__class__.__name__ 
-                                new['url'] = binsearch_result.nzburl
-                                new['detail_url'] = binsearch_result.refererURL
-                                new['size'] = binsearch_result.sizeInMegs
-                                new['score'] = Env.setting('extra_score', 'binnews', value = None, default = None)
-                                new['age'] = binsearch_result.age
-                                new['extra_check'] = extra_check
-    
-                                results.append(new)
-                                
-                                resultno=resultno+1
-                                log.info2("Found : " + searchItem + " on " + downloader.__class__.__name__)
-                                if resultno==3:
-                                    break
-                        except Exception, e:
-                            log.error("Searching from " + downloader.__class__.__name__ + " failed : " + str(e) + traceback.format_exc())
+                            
+                    filenameLower = filename.lower()                                
+                    searchItems = []
+                    if qualityStr=="":
+                        if source in ("Blu Ray-Rip", "HD DVD-Rip"):
+                            qualityStr="brrip"
+                        elif source =="DVDRip":
+                            qualityStr="dvdrip"
+                        elif source == "TS":
+                            qualityStr ="ts"
+                        elif source == "DVDSCR":
+                            qualityStr ="scr"
+                        elif source == "CAM":
+                            qualityStr ="cam"
+                        elif moviequality == "dvdr":
+                            qualityStr ="dvdr"
+                    if year =='':
+                        year = '1900'
+                    if len(searchItems) == 0 and qualityStr == str(moviequality) and movieyear>=int(year)-2 and movieyear<=int(year)+2:
+                        searchItems.append( filename )
+                    for searchItem in searchItems:
+                        resultno=1
+                        for downloader in nzbDownloaders:
+                            
+                            log.info2("Searching for download : " + name + ", search string = "+ searchItem + " on " + downloader.__class__.__name__)
+                            try:
+                                binsearch_result =  downloader.search(searchItem, minSize, newsgroup )
+                                if binsearch_result:
+                                    new={}
+                                    
+                                    def extra_check(item):
+                                        return True
+                                    new['id'] =  binsearch_result.nzbid
+                                    new['name'] = name + ' french ' +  qualityStr + ' '+ searchItem +' '+ name +' ' + downloader.__class__.__name__ 
+                                    new['url'] = binsearch_result.nzburl
+                                    new['detail_url'] = binsearch_result.refererURL
+                                    new['size'] = binsearch_result.sizeInMegs
+                                    new['score'] = Env.setting('extra_score', 'binnews', value = None, default = None)
+                                    new['age'] = binsearch_result.age
+                                    new['extra_check'] = extra_check
+        
+                                    results.append(new)
+                                    
+                                    resultno=resultno+1
+                                    log.info2("Found : " + searchItem + " on " + downloader.__class__.__name__)
+                                    if resultno==3:
+                                        break
+                            except Exception, e:
+                                log.error("Searching from " + downloader.__class__.__name__ + " failed : " + str(e) + traceback.format_exc())
     
     def download(self, url = '', nzb_id = ''):
         if 'binsearch' in url:
