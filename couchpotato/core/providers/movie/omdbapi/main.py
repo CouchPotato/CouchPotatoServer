@@ -86,7 +86,7 @@ class OMDBAPI(MovieProvider):
             movie_data = {
                 'via_imdb': True,
                 'titles': [movie.get('Title')] if movie.get('Title') else [],
-                'original_title': movie.get('Title', ''),
+                'original_title': movie.get('Title'),
                 'images': {
                     'poster': [movie.get('Poster', '')] if movie.get('Poster') and len(movie.get('Poster', '')) > 4 else [],
                 },
@@ -96,14 +96,15 @@ class OMDBAPI(MovieProvider):
                 },
                 'imdb': str(movie.get('imdbID', '')),
                 'runtime': self.runtimeToMinutes(movie.get('Runtime', '')),
-                'released': movie.get('Released', ''),
+                'released': movie.get('Released'),
                 'year': year if isinstance(year, (int)) else None,
-                'plot': movie.get('Plot', ''),
+                'plot': movie.get('Plot'),
                 'genres': splitString(movie.get('Genre', '')),
                 'directors': splitString(movie.get('Director', '')),
                 'writers': splitString(movie.get('Writer', '')),
                 'actors': splitString(movie.get('Actors', '')),
             }
+            movie_data = dict((k, v) for k, v in movie_data.iteritems() if v)
         except:
             log.error('Failed parsing IMDB API json: %s', traceback.format_exc())
 

@@ -3,10 +3,9 @@ from bencode import bencode, bdecode
 from couchpotato.core.downloaders.base import Downloader, StatusList
 from couchpotato.core.helpers.encoding import isInt, ss
 from couchpotato.core.logger import CPLog
+from datetime import timedelta
 from hashlib import sha1
 from multipartpost import MultipartPostHandler
-from datetime import timedelta
-import os
 import cookielib
 import httplib
 import json
@@ -171,18 +170,13 @@ class uTorrent(Downloader):
                         self.utorrent_api.set_torrent(torrent_hash, torrent_params)
                     status = 'completed'
 
-            if settings_dict['dir_add_label']:
-                release_folder = os.path.join(download_folder, item[11], item[2])
-            else:
-                release_folder = os.path.join(download_folder, item[2])
-
             statuses.append({
                 'id': item[0],
                 'name': item[2],
                 'status':  status,
                 'original_status': item[1],
                 'timeleft': str(timedelta(seconds = item[10])),
-                'folder': release_folder, 
+                'folder': item[26],
             })
 
         return statuses
@@ -270,4 +264,22 @@ class uTorrentAPI(object):
 
     def get_settings(self):
         action = "action=getsettings"
-        return self._request(action)
+        settings_dict = {}
+        try:
+            utorrent_settings = json.loads(self._request(action))
+
+            # Create settings dict
+            for item in utorrent_settings['settings']:
+                if item[1] == 0: # int
+                    settings_dict[item[0]] = int(item[2] if not item[2].strip() == '' else '0')
+                elif item[1] == 1: # bool
+                    settings_dict[item[0]] = True if item[2] == 'true' else False
+                elif item[1] == 2: # string
+                    settings_dict[item[0]] = item[2]
+
+            #log.debug('uTorrent settings: %s', settings_dict)
+
+        except Exception, err:
+            log.error('Failed to get settings from uTorrent: %s', err)
+
+        return settings_dict

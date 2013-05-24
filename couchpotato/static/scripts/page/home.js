@@ -39,14 +39,15 @@ Page.Home = new Class({
 			),
 			'filter': {
 				'release_status': 'snatched,available'
-			}
+			},
+			'limit': null
 		});
 
 		// Coming Soon
 		self.soon_list = new MovieList({
 			'navigation': false,
 			'identifier': 'soon',
-			'limit': 18,
+			'limit': 12,
 			'title': 'Available soon',
 			'description': 'These are being searched for and should be available soon as they will be released on DVD in the next few weeks.',
 			'on_empty_element': new Element('div').adopt(
@@ -59,7 +60,45 @@ Page.Home = new Class({
 			'actions': [MA.IMDB, MA.Refresh],
 			'load_more': false,
 			'view': 'thumbs',
+			'force_view': true,
 			'api_call': 'dashboard.soon'
+		});
+
+		// Make all thumbnails the same size
+		self.soon_list.addEvent('loaded', function(){
+			var images = $(self.soon_list).getElements('.poster'),
+				timer,
+				highest = 100;
+
+			images.each(function(img_container){
+				img_container.getElements('img').addEvent('load', function(){
+					var img = this,
+						height = img.getSize().y;
+					if(!highest || highest < height){
+						highest = height;
+						if(timer) clearTimeout(timer);
+						timer = (function(){
+							images.setStyle('height', highest);
+						}).delay(50);
+					}
+				});
+			});
+
+			$(window).addEvent('resize', function(){
+				if(timer) clearTimeout(timer);
+				timer = (function(){
+					var highest = 100;
+					images.each(function(img_container){
+						var img = img_container.getElement('img');
+						if(!img) return
+
+						var height = img.getSize().y;
+						if(!highest || highest < height)
+							highest = height;
+					});
+					images.setStyle('height', highest);
+				}).delay(300);
+			});
 		});
 
 		// Still not available

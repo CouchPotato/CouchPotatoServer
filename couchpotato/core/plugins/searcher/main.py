@@ -146,8 +146,7 @@ class Searcher(Plugin):
 
         pre_releases = fireEvent('quality.pre_releases', single = True)
         release_dates = fireEvent('library.update_release_date', identifier = movie['library']['identifier'], merge = True)
-        available_status = fireEvent('status.get', 'available', single = True)
-        ignored_status = fireEvent('status.get', 'ignored', single = True)
+        available_status, ignored_status = fireEvent('status.get', ['available', 'ignored'], single = True)
 
         found_releases = []
 
@@ -393,7 +392,7 @@ class Searcher(Plugin):
             req_match += len(list(set(nzb_words) & set(req))) == len(req)
 
         if self.conf('required_words') and req_match == 0:
-            log.info2("Wrong: Required word missing: %s" % nzb['name'])
+            log.info2('Wrong: Required word missing: %s', nzb['name'])
             return False
 
         # Ignore releases
@@ -404,7 +403,7 @@ class Searcher(Plugin):
             ignored_match += len(list(set(nzb_words) & set(ignored))) == len(ignored)
 
         if self.conf('ignored_words') and ignored_match:
-            log.info2("Wrong: '%s' contains 'ignored words'" % (nzb['name']))
+            log.info2("Wrong: '%s' contains 'ignored words'", (nzb['name']))
             return False
 
         # Ignore porn stuff
@@ -463,7 +462,7 @@ class Searcher(Plugin):
                     if len(movie_words) <= 2 and self.correctYear([nzb['name']], movie['library']['year'], 0):
                         return True
 
-        log.info("Wrong: %s, undetermined naming. Looking for '%s (%s)'" % (nzb['name'], movie_name, movie['library']['year']))
+        log.info("Wrong: %s, undetermined naming. Looking for '%s (%s)'", (nzb['name'], movie_name, movie['library']['year']))
         return False
 
     def containsOtherQuality(self, nzb, movie_year = None, preferred_quality = {}):

@@ -62,6 +62,7 @@ class ProfilePlugin(Plugin):
         for profile in profiles:
             temp.append(profile.to_dict(self.to_dict))
 
+        db.expire_all()
         return temp
 
     def save(self):
@@ -109,6 +110,7 @@ class ProfilePlugin(Plugin):
         default = db.query(Profile).first()
         default_dict = default.to_dict(self.to_dict)
 
+        db.expire_all()
         return default_dict
 
     def saveOrder(self):
@@ -151,6 +153,7 @@ class ProfilePlugin(Plugin):
         except Exception, e:
             message = log.error('Failed deleting Profile: %s', e)
 
+        db.expire_all()
         return jsonified({
             'success': success,
             'message': message

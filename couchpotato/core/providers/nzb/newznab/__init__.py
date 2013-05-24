@@ -40,7 +40,7 @@ config = [{
                 },
                 {
                     'name': 'api_key',
-                    'default': ',,,',
+                    'default': ',,,,,',
                     'label': 'Api Key',
                     'description': 'Can be found on your profile page',
                     'type': 'combined',

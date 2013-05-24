@@ -25,13 +25,14 @@ class StatusPlugin(Plugin):
         'available': 'Available',
         'suggest': 'Suggest',
     }
+    status_cached = {}
 
     def __init__(self):
-        addEvent('status.add', self.add)
-        addEvent('status.get', self.add) # Alias for .add
+        addEvent('status.get', self.get)
         addEvent('status.get_by_id', self.getById)
         addEvent('status.all', self.all)
         addEvent('app.initialize', self.fill)
+        addEvent('app.load', self.all) # Cache all statuses
 
         addApiView('status.list', self.list, docs = {
             'desc': 'Check for available update',
@@ -67,26 +68,40 @@ class StatusPlugin(Plugin):
             s = status.to_dict()
             temp.append(s)
 
-        #db.close()
+            # Update cache
+            self.status_cached[status.identifier] = s
+
         return temp
 
-    def add(self, identifier):
+    def get(self, identifiers):
+
+        if not isinstance(identifiers, (list)):
+            identifiers = [identifiers]
 
         db = get_session()
+        return_list = []
 
-        s = db.query(Status).filter_by(identifier = identifier).first()
-        if not s:
-            s = Status(
-                identifier = identifier,
-                label = toUnicode(identifier.capitalize())
-            )
-            db.add(s)
-            db.commit()
+        for identifier in identifiers:
 
-        status_dict = s.to_dict()
+            if self.status_cached.get(identifier):
+                return_list.append(self.status_cached.get(identifier))
+                continue
 
-        #db.close()
-        return status_dict
+            s = db.query(Status).filter_by(identifier = identifier).first()
+            if not s:
+                s = Status(
+                    identifier = identifier,
+                    label = toUnicode(identifier.capitalize())
+                )
+                db.add(s)
+                db.commit()
+
+            status_dict = s.to_dict()
+
+            self.status_cached[identifier] = status_dict
+            return_list.append(status_dict)
+
+        return return_list if len(identifiers) > 1 else return_list[0]
 
     def fill(self):
 

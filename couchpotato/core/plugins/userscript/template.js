@@ -1,4 +1,9 @@
 // ==UserScript==
+//
+// If you can read this, you need to enable or install the Greasemonkey add-on for firefox
+// If you are using Chrome, download this file and drag it to the extensions tab
+// Other browsers, use the bookmarklet
+//
 // @name        CouchPotato UserScript
 // @description Add movies like a real CouchPotato
 // @grant       none

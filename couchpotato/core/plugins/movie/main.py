@@ -108,9 +108,8 @@ class MoviePlugin(Plugin):
         now = time.time()
         week = 262080
 
-        done_status = fireEvent('status.get', 'done', single = True)
-        available_status = fireEvent('status.get', 'available', single = True)
-        snatched_status = fireEvent('status.get', 'snatched', single = True)
+        done_status, available_status, snatched_status = \
+            fireEvent('status.get', ['done', 'available', 'snatched'], single = True)
 
         db = get_session()
 
@@ -119,11 +118,12 @@ class MoviePlugin(Plugin):
             .filter(Movie.status_id == done_status.get('id'), Movie.last_edit < (now - week)) \
             .all()
 
-        #
         for movie in movies:
             for rel in movie.releases:
                 if rel.status_id in [available_status.get('id'), snatched_status.get('id')]:
                     fireEvent('release.delete', id = rel.id, single = True)
+
+        db.expire_all()
 
     def getView(self):
 
@@ -150,6 +150,7 @@ class MoviePlugin(Plugin):
         if m:
             results = m.to_dict(self.default_dict)
 
+        db.expire_all()
         return results
 
     def list(self, status = None, release_status = None, limit_offset = None, starts_with = None, search = None, order = None):
@@ -175,8 +176,6 @@ class MoviePlugin(Plugin):
         if release_status and len(release_status) > 0:
             q = q.filter(or_(*[Release.status.has(identifier = s) for s in release_status]))
 
-        total_count = q.count()
-
         filter_or = []
         if starts_with:
             starts_with = toUnicode(starts_with.lower())
@@ -193,6 +192,8 @@ class MoviePlugin(Plugin):
 
         if filter_or:
             q = q.filter(or_(*filter_or))
+
+        total_count = q.count()
 
         if order == 'release_order':
             q = q.order_by(desc(Release.last_edit))
@@ -217,15 +218,14 @@ class MoviePlugin(Plugin):
         results = q2.all()
         movies = []
         for movie in results:
-            temp = movie.to_dict({
+            movies.append(movie.to_dict({
                 'profile': {'types': {}},
                 'releases': {'files':{}, 'info': {}},
                 'library': {'titles': {}, 'files':{}},
                 'files': {},
-            })
-            movies.append(temp)
+            }))
 
-        #db.close()
+        db.expire_all()
         return (total_count, movies)
 
     def availableChars(self, status = None, release_status = None):
@@ -260,7 +260,7 @@ class MoviePlugin(Plugin):
             if char not in chars:
                 chars += str(char)
 
-        #db.close()
+        db.expire_all()
         return ''.join(sorted(chars, key = str.lower))
 
     def listView(self):
@@ -316,11 +316,10 @@ class MoviePlugin(Plugin):
                 for title in movie.library.titles:
                     if title.default: default_title = title.title
 
-                fireEvent('notify.frontend', type = 'movie.busy.%s' % id, data = True, message = 'Updating "%s"' % default_title)
+                fireEvent('notify.frontend', type = 'movie.busy.%s' % id, data = True)
                 fireEventAsync('library.update', identifier = movie.library.identifier, default_title = default_title, force = True, on_complete = self.createOnComplete(id))
 
-
-        #db.close()
+        db.expire_all()
         return jsonified({
             'success': True,
         })
@@ -367,11 +366,8 @@ class MoviePlugin(Plugin):
         library = fireEvent('library.add', single = True, attrs = params, update_after = update_library)
 
         # Status
-        status_active = fireEvent('status.add', 'active', single = True)
-        snatched_status = fireEvent('status.add', 'snatched', single = True)
-        ignored_status = fireEvent('status.add', 'ignored', single = True)
-        done_status = fireEvent('status.add', 'done', single = True)
-        downloaded_status = fireEvent('status.add', 'downloaded', single = True)
+        status_active, snatched_status, ignored_status, done_status, downloaded_status = \
+            fireEvent('status.get', ['active', 'snatched', 'ignored', 'done', 'downloaded'], single = True)
 
         default_profile = fireEvent('profile.default', single = True)
 
@@ -432,7 +428,7 @@ class MoviePlugin(Plugin):
         if added:
             fireEvent('notify.frontend', type = 'movie.added', data = movie_dict, message = 'Successfully added "%s" to your wanted list.' % params.get('title', ''))
 
-        #db.close()
+        db.expire_all()
         return movie_dict
 
 
@@ -482,7 +478,7 @@ class MoviePlugin(Plugin):
             movie_dict = m.to_dict(self.default_dict)
             fireEventAsync('searcher.single', movie_dict, on_complete = self.createNotifyFront(movie_id))
 
-        #db.close()
+        db.expire_all()
         return jsonified({
             'success': True,
         })
@@ -544,13 +540,12 @@ class MoviePlugin(Plugin):
             if deleted:
                 fireEvent('notify.frontend', type = 'movie.deleted', data = movie.to_dict())
 
-        #db.close()
+        db.expire_all()
         return True
 
     def restatus(self, movie_id):
 
-        active_status = fireEvent('status.get', 'active', single = True)
-        done_status = fireEvent('status.get', 'done', single = True)
+        active_status, done_status = fireEvent('status.get', ['active', 'done'], single = True)
 
         db = get_session()
 
@@ -573,7 +568,6 @@ class MoviePlugin(Plugin):
             m.status_id = active_status.get('id') if move_to_wanted else done_status.get('id')
 
         db.commit()
-        #db.close()
 
         return True
 
@@ -583,6 +577,7 @@ class MoviePlugin(Plugin):
             db = get_session()
             movie = db.query(Movie).filter_by(id = movie_id).first()
             fireEventAsync('searcher.single', movie.to_dict(self.default_dict), on_complete = self.createNotifyFront(movie_id))
+            db.expire_all()
 
         return onComplete
 
@@ -593,5 +588,6 @@ class MoviePlugin(Plugin):
             db = get_session()
             movie = db.query(Movie).filter_by(id = movie_id).first()
             fireEvent('notify.frontend', type = 'movie.update.%s' % movie.id, data = movie.to_dict(self.default_dict))
+            db.expire_all()
 
         return notifyFront

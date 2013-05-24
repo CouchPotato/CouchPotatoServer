@@ -1,17 +1,18 @@
 .page.log .nav {
 	display: block;
 	text-align: center;
-	padding: 20px 0;
+	padding: 0 0 30px;
 	margin: 0;
 	font-size: 20px;
 	position: fixed;
-	width: 960px;
+	width: 100%;
 	bottom: 0;
+	left: 0;
 	background: #4E5969;
 }
 
 	.page.log .nav li {
-		display: inline;
+		display: inline-block;
 		padding: 5px 10px;
 		margin: 0;
 		cursor: pointer;
@@ -24,7 +25,17 @@
 		.page.log .nav li.active {
 			font-weight: bold;
 			cursor: default;
-			font-size: 30px;
+			background: rgba(255,255,255,.1);
+		}
+		
+		@media all and (max-width: 480px) {
+			.page.log .nav {
+				font-size: 14px;
+			}
+			
+				.page.log .nav li {
+					padding: 5px;
+				}
 		}
 
 .page.log .loading {

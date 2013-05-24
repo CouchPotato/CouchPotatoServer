@@ -16,7 +16,7 @@ class NZBGet(Downloader):
 
     type = ['nzb']
 
-    url = 'http://%(username):%(password)s@%(host)s/xmlrpc'
+    url = 'http://%(username)s:%(password)s@%(host)s/xmlrpc'
 
     def download(self, data = {}, movie = {}, filedata = None):
 
@@ -103,7 +103,7 @@ class NZBGet(Downloader):
             try:
                 nzb_id = [param['Value'] for param in item['Parameters'] if param['Name'] == 'couchpotato'][0]
             except:
-                nzb_id = item['NZBID'],
+                nzb_id = item['NZBID']
             statuses.append({
                 'id': nzb_id,
                 'name': item['NZBFilename'],
@@ -126,7 +126,7 @@ class NZBGet(Downloader):
             try:
                 nzb_id = [param['Value'] for param in item['Parameters'] if param['Name'] == 'couchpotato'][0]
             except:
-                nzb_id = item['NZBID'],
+                nzb_id = item['NZBID']
             statuses.append({
                 'id': nzb_id,
                 'name': item['NZBFilename'],
@@ -164,9 +164,9 @@ class NZBGet(Downloader):
             history = rpc.history()
             for hist in history:
                 if hist['Parameters'] and hist['Parameters']['couchpotato'] and hist['Parameters']['couchpotato'] == item['id']:
-                    NZBID = hist['ID']
+                    nzb_id = hist['ID']
                     path = hist['DestDir']
-            if rpc.editqueue('HistoryDelete', 0, "", [tryInt(NZBID)]):
+            if rpc.editqueue('HistoryDelete', 0, "", [tryInt(nzb_id)]):
                 shutil.rmtree(path, True)
         except:
             log.error('Failed deleting: %s', traceback.format_exc(0))
