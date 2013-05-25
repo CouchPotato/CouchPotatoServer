@@ -18,21 +18,30 @@ class XBMC(Notification):
     def notify(self, message = '', data = {}, listener = None):
 
         hosts = splitString(self.conf('host'))
+        only_first = self.conf('only_first')
 
         successful = 0
-        for host in hosts:
+        for index in range(len(hosts)):
 
-            if self.use_json_notifications.get(host) is None:
-                self.getXBMCJSONversion(host, message = message)
+            if self.use_json_notifications.get(hosts[index]) is None:
+                self.getXBMCJSONversion(hosts[index], message = message)
 
-            if self.use_json_notifications.get(host):
-                response = self.request(host, [
-                    ('GUI.ShowNotification', {'title': self.default_title, 'message': message, 'image': self.getNotificationImage('small')}),
-                    ('VideoLibrary.Scan', {}),
-                ])
+            if self.use_json_notifications.get(hosts[index]):
+                if (only_first and index == 0) or (not only_first):
+                    response = self.request(hosts[index], [
+                        ('GUI.ShowNotification', {'title': self.default_title, 'message': message, 'image': self.getNotificationImage('small')}),
+                        ('VideoLibrary.Scan', {}),
+                    ])
+                else:
+                    response = self.request(hosts[index], [
+                        ('GUI.ShowNotification', {'title': self.default_title, 'message': message, 'image': self.getNotificationImage('small')}),
+                    ])
             else:
-                response = self.notifyXBMCnoJSON(host, {'title':self.default_title, 'message':message})
-                response += self.request(host, [('VideoLibrary.Scan', {})])
+                if (only_first and index == 0) or (not only_first):
+                    response = self.notifyXBMCnoJSON(hosts[index], {'title':self.default_title, 'message':message})
+                    response += self.request(hosts[index], [('VideoLibrary.Scan', {})])
+                else:
+                    response = self.notifyXBMCnoJSON(hosts[index], {'title':self.default_title, 'message':message})
 
             try:
                 for result in response:

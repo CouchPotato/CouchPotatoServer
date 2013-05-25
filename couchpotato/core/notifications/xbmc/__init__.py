@@ -31,6 +31,13 @@ config = [{
                     'default': '',
                     'type': 'password',
                 },
+                {   
+                    'name': 'only_first',
+                    'default': 0,
+                    'type': 'bool',
+                    'advanced': True,
+                    'description': 'Only update the first host when movie snached, usefull for synced XBMC',
+                },
                 {
                     'name': 'on_snatch',
                     'default': 0,
