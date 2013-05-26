@@ -18,7 +18,6 @@ class XBMC(Notification):
     def notify(self, message = '', data = {}, listener = None):
 
         hosts = splitString(self.conf('host'))
-        only_first = self.conf('only_first')
 
         successful = 0
         for host in hosts:
