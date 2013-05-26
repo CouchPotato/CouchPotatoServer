@@ -21,27 +21,25 @@ class XBMC(Notification):
         only_first = self.conf('only_first')
 
         successful = 0
-        for index in range(len(hosts)):
+        for host in hosts:
 
-            if self.use_json_notifications.get(hosts[index]) is None:
-                self.getXBMCJSONversion(hosts[index], message = message)
+            if self.use_json_notifications.get(host) is None:
+                self.getXBMCJSONversion(host, message = message)
 
-            if self.use_json_notifications.get(hosts[index]):
-                if (only_first and index == 0) or (not only_first):
-                    response = self.request(hosts[index], [
-                        ('GUI.ShowNotification', {'title': self.default_title, 'message': message, 'image': self.getNotificationImage('small')}),
+            if self.use_json_notifications.get(host):
+                response = self.request(host, [
+                    ('GUI.ShowNotification', {'title': self.default_title, 'message': message, 'image': self.getNotificationImage('small')}),
+                ])
+
+                if not self.conf('only_first') or hosts.index(host) == 0:
+                    response = self.request(host, [
                         ('VideoLibrary.Scan', {}),
                     ])
-                else:
-                    response = self.request(hosts[index], [
-                        ('GUI.ShowNotification', {'title': self.default_title, 'message': message, 'image': self.getNotificationImage('small')}),
-                    ])
             else:
-                if (only_first and index == 0) or (not only_first):
-                    response = self.notifyXBMCnoJSON(hosts[index], {'title':self.default_title, 'message':message})
-                    response += self.request(hosts[index], [('VideoLibrary.Scan', {})])
-                else:
-                    response = self.notifyXBMCnoJSON(hosts[index], {'title':self.default_title, 'message':message})
+                response = self.notifyXBMCnoJSON(host, {'title':self.default_title, 'message':message})
+
+                if not self.conf('only_first') or hosts.index(host) == 0:
+                    response += self.request(host, [('VideoLibrary.Scan', {})])
 
             try:
                 for result in response:
@@ -53,7 +51,7 @@ class XBMC(Notification):
             except:
                 log.error('Failed parsing results: %s', traceback.format_exc())
 
-        return successful == len(hosts) * 2
+        return successful == len(hosts) + (self.conf('only_first') ? 1 : len(hosts))
 
     def getXBMCJSONversion(self, host, message = ''):
 
