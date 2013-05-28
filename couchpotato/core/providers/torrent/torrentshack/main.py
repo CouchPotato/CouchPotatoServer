@@ -72,4 +72,4 @@ class TorrentShack(TorrentProvider):
         })
 
     def loginSuccess(self, output):
-        return '/logout.php' in output.lower()
+        return 'logout.php' in output.lower()
