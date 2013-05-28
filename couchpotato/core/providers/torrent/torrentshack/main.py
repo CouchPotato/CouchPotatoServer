@@ -44,21 +44,29 @@ class TorrentShack(TorrentProvider):
 
                 entries = result_table.find_all('tr', attrs = {'class' : 'torrent'})
 
-                for result in entries[1:]:
+                for result in entries:
 
                     link = result.find('span', attrs = {'class' : 'torrent_name_link'}).parent
                     url = result.find('td', attrs = {'class' : 'torrent_td'}).find('a')
 
-                    results.append({
-                        'id': link['href'].replace('torrents.php?torrentid=', ''),
-                        'name': link.span.string,
-                        'url': self.urls['download'] % url['href'],
-                        'detail_url': self.urls['download'] % link['href'],
-                        'download': self.loginDownload,
-                        'size': self.parseSize(result.find_all('td')[4].string),
-                        'seeders': tryInt(result.find_all('td')[6].string),
-                        'leechers': tryInt(result.find_all('td')[7].string),
-                    })
+                    extra_info = ''
+                    if result.find('span', attrs = {'class' : 'torrent_extra_info'}):
+                        extra_info = result.find('span', attrs = {'class' : 'torrent_extra_info'}).text
+
+                    if not self.conf('scene only') or extra_info != '[NotScene]':
+                        results.append({
+                            'id': link['href'].replace('torrents.php?torrentid=', ''),
+                            'name': unicode(link.span.string).translate({ord(u'\xad'): None}),
+                            'url': self.urls['download'] % url['href'],
+                            'detail_url': self.urls['download'] % link['href'],
+                            'download': self.loginDownload,
+                            'size': self.parseSize(result.find_all('td')[4].string),
+                            'seeders': tryInt(result.find_all('td')[6].string),
+                            'leechers': tryInt(result.find_all('td')[7].string),
+                        })
+                        log.info('Adding release %s' % unicode(link.span.string).translate({ord(u'\xad'): None}))
+                    else:
+                        log.info('Not adding release %s [NotScene]' % unicode(link.span.string).translate({ord(u'\xad'): None}))
 
             except:
                 log.error('Failed to parsing %s: %s', (self.getName(), traceback.format_exc()))
