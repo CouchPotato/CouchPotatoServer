@@ -29,6 +29,11 @@ config = [{
                     'type': 'password',
                 },
                 {
+                    'name': 'scene only',
+                    'type': 'bool',
+                    'default': False
+                },
+                {
                     'name': 'extra_score',
                     'advanced': True,
                     'label': 'Extra Score',
