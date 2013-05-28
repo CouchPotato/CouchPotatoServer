@@ -36,12 +36,7 @@ class Transmission(Downloader):
 
         if len(self.conf('directory', default = '')) > 0:
             folder_name = self.createFileName(data, filedata, movie)[:-len(data.get('type')) - 1]
-            folder_path = os.path.join(self.conf('directory', default = ''), folder_name).rstrip(os.path.sep)
-
-            # Create the empty folder to download too
-            self.makeDir(folder_path)
-
-            params['download-dir'] = folder_path
+            params['download-dir'] = os.path.join(self.conf('directory', default = ''), folder_name).rstrip(os.path.sep)
 
         torrent_params = {}
         if self.conf('ratio'):
@@ -93,10 +88,12 @@ class Transmission(Downloader):
                 'fields': ['id', 'name', 'hashString', 'percentDone', 'status', 'eta', 'isFinished', 'downloadDir', 'uploadRatio']
             }
             queue = trpc.get_alltorrents(return_params)
-
         except Exception, err:
             log.error('Failed getting queue: %s', err)
             return False
+
+        if not queue:
+            return []
 
         statuses = StatusList(self)
 
