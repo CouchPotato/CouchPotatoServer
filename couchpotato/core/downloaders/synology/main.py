@@ -11,7 +11,7 @@ log = CPLog(__name__)
 
 class Synology(Downloader):
 
-    type = ['torrent_magnet']
+    type = ['torrent', 'torrent_magnet']
     log = CPLog(__name__)
 
     def download(self, data, movie, filedata = None):
@@ -22,10 +22,6 @@ class Synology(Downloader):
         host = self.conf('host').split(':')
         if not isInt(host[1]):
             log.error('Config properties are not filled in correctly, port is missing.')
-            return False
-
-        if data.get('type') == 'torrent':
-            log.error('Can\'t add binary torrent file')
             return False
 
         try:
@@ -71,15 +67,15 @@ class SynologyRPC(object):
         return self._req(self.auth_url, args)
 
     def _req(self, url, args):
-        req_url = url + '?' + urllib.urlencode(args)
+        req = urllib2.Request(url, urllib.urlencode(args))
         try:
-            req_open = urllib2.urlopen(req_url)
+            req_open = urllib2.urlopen(req)
             response = json.loads(req_open.read())
             if response['success'] == True:
                 log.info('Synology action successfull')
             return response
         except httplib.InvalidURL, err:
-            log.error('Invalid Transmission host, check your config %s', err)
+            log.error('Invalid Synology host, check your config %s', err)
             return False
         except urllib2.HTTPError, err:
             log.error('SynologyRPC HTTPError: %s', err)
@@ -93,7 +89,7 @@ class SynologyRPC(object):
         response = {}
         # login
         login = self._login()
-        if len(login) > 0 and login['success'] == True:
+        if login and login['success'] == True:
             log.info('Login success, adding torrent')
             args = {'api':'SYNO.DownloadStation.Task', 'version':1, 'method':'create', 'uri':torrent, '_sid':self.sid}
             response = self._req(self.download_url, args)
@@ -101,5 +97,3 @@ class SynologyRPC(object):
         else:
             log.error('Couldn\'t login to Synology, %s', login)
         return response
-
-
