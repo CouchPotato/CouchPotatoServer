@@ -5,7 +5,6 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.torrent.base import TorrentProvider
 import traceback
 
-
 log = CPLog(__name__)
 
 
@@ -31,7 +30,7 @@ class TorrentShack(TorrentProvider):
 
     def _searchOnTitle(self, title, movie, quality, results):
 
-        url = self.urls['search'] % (tryUrlencode('%s %s' % (title.replace(':', ''), movie['library']['year'])), self.getCatId(quality['identifier'])[0])
+        url = self.urls['search'] % (tryUrlencode('"%s" %s' % (title.replace(':', ''), movie['library']['year'])), self.getCatId(quality['identifier'])[0])
         data = self.getHTMLData(url, opener = self.login_opener)
 
         if data:
@@ -53,7 +52,7 @@ class TorrentShack(TorrentProvider):
                     if result.find('span', attrs = {'class' : 'torrent_extra_info'}):
                         extra_info = result.find('span', attrs = {'class' : 'torrent_extra_info'}).text
 
-                    if not self.conf('scene only') or extra_info != '[NotScene]':
+                    if not self.conf('scene_only') or extra_info != '[NotScene]':
                         results.append({
                             'id': link['href'].replace('torrents.php?torrentid=', ''),
                             'name': unicode(link.span.string).translate({ord(u'\xad'): None}),
@@ -64,7 +63,6 @@ class TorrentShack(TorrentProvider):
                             'seeders': tryInt(result.find_all('td')[6].string),
                             'leechers': tryInt(result.find_all('td')[7].string),
                         })
-                        log.info('Adding release %s' % unicode(link.span.string).translate({ord(u'\xad'): None}))
                     else:
                         log.info('Not adding release %s [NotScene]' % unicode(link.span.string).translate({ord(u'\xad'): None}))
 

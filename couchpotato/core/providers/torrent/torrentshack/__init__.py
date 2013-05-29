@@ -12,7 +12,6 @@ config = [{
             'list': 'torrent_providers',
             'name': 'TorrentShack',
             'description': 'See <a href="http://www.torrentshack.net/">TorrentShack</a>',
-            'wizard': True,
             'options': [
                 {
                     'name': 'enabled',
@@ -29,9 +28,10 @@ config = [{
                     'type': 'password',
                 },
                 {
-                    'name': 'scene only',
+                    'name': 'scene_only',
                     'type': 'bool',
-                    'default': False
+                    'default': False,
+                    'description': 'Only allow scene releases.'
                 },
                 {
                     'name': 'extra_score',
