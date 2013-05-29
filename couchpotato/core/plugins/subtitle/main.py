@@ -59,7 +59,7 @@ class Subtitle(Plugin):
 
             for d_sub in downloaded:
                 log.info('Found subtitle (%s): %s', (d_sub.language.alpha2, files))
-                group['files']['subtitle'].add(d_sub.path)
+                group['files']['subtitle'].append(d_sub.path)
                 group['subtitle_language'][d_sub.path] = [d_sub.language.alpha2]
 
             return True
