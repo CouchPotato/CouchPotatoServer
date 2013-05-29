@@ -159,7 +159,7 @@ class Renamer(Plugin):
                 movie_title = getTitle(library)
 
                 # Find subtitle for renaming
-                fireEvent('renamer.before', group)
+                group = fireEvent('renamer.before', group)
 
                 # Remove weird chars from moviename
                 movie_name = re.sub(r"[\x00\/\\:\*\?\"<>\|]", '', movie_title)

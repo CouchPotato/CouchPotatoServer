@@ -62,12 +62,12 @@ class Subtitle(Plugin):
                 group['files']['subtitle'].add(d_sub.path)
                 group['subtitle_language'][d_sub.path] = [d_sub.language.alpha2]
 
-            return True
+            return group
 
         except:
             log.error('Failed searching for subtitle: %s', (traceback.format_exc()))
 
-        return False
+        return group
 
     def getLanguages(self):
         return splitString(self.conf('languages'))
