@@ -34,6 +34,7 @@ class Updater(Plugin):
             self.updater = SourceUpdater()
 
         addEvent('app.load', self.autoUpdate)
+        addEvent('app.load', self.setCrons)
         addEvent('updater.info', self.info)
 
         addApiView('updater.info', self.getInfo, docs = {
