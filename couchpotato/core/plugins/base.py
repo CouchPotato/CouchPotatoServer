@@ -105,7 +105,7 @@ class Plugin(object):
         if not params: params = {}
 
         # Fill in some headers
-        headers['Referer'] = headers.get('Referer', urlparse(url).hostname)
+        #headers['Referer'] = headers.get('Referer', urlparse(url).hostname)
         headers['Host'] = headers.get('Host', urlparse(url).hostname)
         headers['User-Agent'] = headers.get('User-Agent', self.user_agent)
         headers['Accept-encoding'] = headers.get('Accept-encoding', 'gzip')
