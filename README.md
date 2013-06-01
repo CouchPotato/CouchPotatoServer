@@ -1,4 +1,4 @@
-CouchPotato Server
+CouchPotato Server VF
 =====
 
 CouchPotato (CP) is an automatic NZB and torrent downloader. You can keep a "movies I want"-list and it will search for NZBs/torrents of these movies every X hours.
