@@ -14,13 +14,13 @@ log = CPLog(__name__)
 class CouchPotatoApi(MovieProvider):
 
     urls = {
-        'search': 'https://couchpota.to/api/search/%s/',
-        'info': 'https://couchpota.to/api/info/%s/',
-        'is_movie': 'https://couchpota.to/api/ismovie/%s/',
-        'eta': 'https://couchpota.to/api/eta/%s/',
-        'suggest': 'https://couchpota.to/api/suggest/',
-        'updater': 'https://couchpota.to/api/updater/?%s',
-        'messages': 'https://couchpota.to/api/messages/?%s',
+        'search': 'https://api.couchpota.to/search/%s/',
+        'info': 'https://api.couchpota.to/info/%s/',
+        'is_movie': 'https://api.couchpota.to/ismovie/%s/',
+        'eta': 'https://api.couchpota.to/eta/%s/',
+        'suggest': 'https://api.couchpota.to/suggest/',
+        'updater': 'https://api.couchpota.to/updater/?%s',
+        'messages': 'https://api.couchpota.to/messages/?%s',
     }
     http_time_between_calls = 0
     api_version = 1

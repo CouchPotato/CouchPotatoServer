@@ -1,2 +1,5 @@
 eclipse.preferences.version=1
+encoding//libs/subliminal/core.py=utf-8
+encoding//libs/subliminal/services/__init__.py=utf-8
+encoding//libs/subliminal/services/addic7ed.py=utf-8
 encoding//libs/themoviedb/tmdb.py=utf-8
