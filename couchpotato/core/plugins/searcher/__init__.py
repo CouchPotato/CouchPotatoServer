@@ -20,6 +20,12 @@ config = [{
                     'default': '',
                     'description': 'These words will give the releases a higher score.'
                 },
+                                {
+                    'name': 'preferred_spotter',
+                    'label': 'Preferred Spotter',
+                    'default': '',
+                    'description': 'These spotter names get a higher score.'
+                },
                 {
                     'name': 'required_words',
                     'label': 'Required words',

@@ -49,14 +49,26 @@ class Newznab(NZBProvider, RSS):
         url = '%s&%s' % (self.getUrl(host['host'], self.urls['search']), arguments)
 
         nzbs = self.getRSSData(url, cache_timeout = 1800, headers = {'User-Agent': Env.getIdentifier()})
-
+        
         for nzb in nzbs:
 
             date = None
+            poster = None
             for item in nzb:
+                if date and poster:
+                    break
                 if item.attrib.get('name') == 'usenetdate':
                     date = item.attrib.get('value')
                     break
+                # Get the name of the person who posts the spot
+                if item.attrib.get('name') == 'poster':
+                    # Split the value so we only get the name
+                    spotter = item.attrib.get('value').split("@")[0]
+                    
+                    # Debug
+                    #f.write("\n" + spotter)
+                    
+                    continue
 
             if not date:
                 date = self.getTextElement(nzb, 'pubDate')
@@ -71,6 +83,7 @@ class Newznab(NZBProvider, RSS):
                 'id': nzb_id,
                 'provider_extra': urlparse(host['host']).hostname or host['host'],
                 'name': self.getTextElement(nzb, 'title'),
+                'spotter': spotter,
                 'age': self.calculateAge(int(time.mktime(parse(date).timetuple()))),
                 'size': int(self.getElement(nzb, 'enclosure').attrib['length']) / 1024 / 1024,
                 'url': (self.getUrl(host['host'], self.urls['download']) % tryUrlencode(nzb_id)) + self.getApiExt(host),
@@ -79,6 +92,7 @@ class Newznab(NZBProvider, RSS):
                 'score': host['extra_score'],
             })
 
+            
     def getHosts(self):
 
         uses = splitString(str(self.conf('use')))
