@@ -2,7 +2,6 @@ from couchpotato import get_session
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.request import jsonified, getParams
-from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.movie.base import MovieProvider
 from couchpotato.core.settings.model import Movie
@@ -15,13 +14,13 @@ log = CPLog(__name__)
 class CouchPotatoApi(MovieProvider):
 
     urls = {
-        'search': 'https://couchpota.to/api/search/%s/',
-        'info': 'https://couchpota.to/api/info/%s/',
-        'is_movie': 'https://couchpota.to/api/ismovie/%s/',
-        'eta': 'https://couchpota.to/api/eta/%s/',
-        'suggest': 'https://couchpota.to/api/suggest/',
-        'updater': 'https://couchpota.to/api/updater/?%s',
-        'messages': 'https://couchpota.to/api/messages/?%s',
+        'search': 'https://api.couchpota.to/search/%s/',
+        'info': 'https://api.couchpota.to/info/%s/',
+        'is_movie': 'https://api.couchpota.to/ismovie/%s/',
+        'eta': 'https://api.couchpota.to/eta/%s/',
+        'suggest': 'https://api.couchpota.to/suggest/',
+        'updater': 'https://api.couchpota.to/updater/?%s',
+        'messages': 'https://api.couchpota.to/messages/?%s',
     }
     http_time_between_calls = 0
     api_version = 1
@@ -71,7 +70,8 @@ class CouchPotatoApi(MovieProvider):
             return
 
         result = self.getJsonData(self.urls['info'] % identifier, headers = self.getRequestHeaders())
-        if result: return result
+        if result:
+            return dict((k, v) for k, v in result.iteritems() if v)
 
         return {}
 

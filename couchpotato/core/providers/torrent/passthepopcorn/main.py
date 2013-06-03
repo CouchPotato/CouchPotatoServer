@@ -58,7 +58,7 @@ class PassThePopcorn(TorrentProvider):
 
     class PTPHTTPRedirectHandler(urllib2.HTTPRedirectHandler):
         def http_error_302(self, req, fp, code, msg, headers):
-            log.debug("302 detected; redirected to %s" % headers['Location'])
+            log.debug("302 detected; redirected to %s", headers['Location'])
             if (headers['Location'] != 'login.php'):
                 return urllib2.HTTPRedirectHandler.http_error_302(self, req, fp, code, msg, headers)
             else:
@@ -84,7 +84,7 @@ class PassThePopcorn(TorrentProvider):
             txt = self.urlopen(url, opener = self.login_opener)
             res = json.loads(txt)
         except:
-            log.error('Search on PassThePopcorn.me (%s) failed (could not decode JSON)' % params)
+            log.error('Search on PassThePopcorn.me (%s) failed (could not decode JSON)', params)
             return
 
         try:
@@ -96,18 +96,23 @@ class PassThePopcorn(TorrentProvider):
 
             for ptpmovie in res['Movies']:
                 if not 'Torrents' in ptpmovie:
-                    log.debug('Movie %s (%s) has NO torrents' % (ptpmovie['Title'], ptpmovie['Year']))
+                    log.debug('Movie %s (%s) has NO torrents', (ptpmovie['Title'], ptpmovie['Year']))
                     continue
 
-                log.debug('Movie %s (%s) has %d torrents' % (ptpmovie['Title'], ptpmovie['Year'], len(ptpmovie['Torrents'])))
+                log.debug('Movie %s (%s) has %d torrents', (ptpmovie['Title'], ptpmovie['Year'], len(ptpmovie['Torrents'])))
                 for torrent in ptpmovie['Torrents']:
                     torrent_id = tryInt(torrent['Id'])
                     torrentdesc = '%s %s %s' % (torrent['Resolution'], torrent['Source'], torrent['Codec'])
+                    torrentscore = 0
 
                     if 'GoldenPopcorn' in torrent and torrent['GoldenPopcorn']:
                         torrentdesc += ' HQ'
+                        if self.conf('prefer_golden'):
+                            torrentscore += 200
                     if 'Scene' in torrent and torrent['Scene']:
                         torrentdesc += ' Scene'
+                        if self.conf('prefer_scene'):
+                            torrentscore += 50
                     if 'RemasterTitle' in torrent and torrent['RemasterTitle']:
                         torrentdesc += self.htmlToASCII(' %s' % torrent['RemasterTitle'])
 
@@ -115,18 +120,21 @@ class PassThePopcorn(TorrentProvider):
                     torrent_name = re.sub('[^A-Za-z0-9\-_ \(\).]+', '', '%s (%s) - %s' % (movie_title, ptpmovie['Year'], torrentdesc))
 
                     def extra_check(item):
-                        return self.torrentMeetsQualitySpec(item, type)
+                        return self.torrentMeetsQualitySpec(item, quality_id)
 
                     results.append({
                         'id': torrent_id,
                         'name': torrent_name,
+                        'Source': torrent['Source'],
+                        'Checked': 'true' if torrent['Checked'] else 'false',
+                        'Resolution': torrent['Resolution'],
                         'url': '%s?action=download&id=%d&authkey=%s&torrent_pass=%s' % (self.urls['torrent'], torrent_id, authkey, passkey),
                         'detail_url': self.urls['detail'] % torrent_id,
                         'date': tryInt(time.mktime(parse(torrent['UploadTime']).timetuple())),
                         'size': tryInt(torrent['Size']) / (1024 * 1024),
                         'seeders': tryInt(torrent['Seeders']),
                         'leechers': tryInt(torrent['Leechers']),
-                        'score': 50 if torrent['GoldenPopcorn'] else 0,
+                        'score': torrentscore,
                         'extra_check': extra_check,
                         'download': self.loginDownload,
                     })
@@ -151,7 +159,7 @@ class PassThePopcorn(TorrentProvider):
         try:
             response = opener.open(self.urls['login'], self.getLoginParams())
         except urllib2.URLError as e:
-            log.error('Login to PassThePopcorn failed: %s' % e)
+            log.error('Login to PassThePopcorn failed: %s', e)
             return False
 
         if response.getcode() == 200:
@@ -159,7 +167,7 @@ class PassThePopcorn(TorrentProvider):
             self.login_opener = opener
             return True
         else:
-            log.error('Login to PassThePopcorn failed: returned code %d' % response.getcode())
+            log.error('Login to PassThePopcorn failed: returned code %d', response.getcode())
             return False
 
     def torrentMeetsQualitySpec(self, torrent, quality):
@@ -167,12 +175,18 @@ class PassThePopcorn(TorrentProvider):
         if not quality in self.post_search_filters:
             return True
 
-        for field, specs in self.post_search_filters[quality].items():
+        reqs = self.post_search_filters[quality].copy()
+
+        if self.conf('require_approval'):
+            log.debug('Config: Require staff-approval activated')
+            reqs['Checked'] = ['true']
+
+        for field, specs in reqs.items():
             matches_one = False
             seen_one = False
 
             if not field in torrent:
-                log.debug('Torrent with ID %s has no field "%s"; cannot apply post-search-filter for quality "%s"' % (torrent['Id'], field, quality))
+                log.debug('Torrent with ID %s has no field "%s"; cannot apply post-search-filter for quality "%s"', (torrent['Id'], field, quality))
                 continue
 
             for spec in specs:
@@ -182,11 +196,14 @@ class PassThePopcorn(TorrentProvider):
                         return False
                 else:
                     # a positive rule; if any of the possible positive values match the field, return True
+                    log.debug('Checking if torrents field %s equals %s' % (field, spec))
                     seen_one = True
                     if torrent[field] == spec:
+                        log.debug('Torrent satisfied %s == %s' % (field, spec))
                         matches_one = True
 
             if seen_one and not matches_one:
+                log.debug('Torrent did not satisfy requirements, ignoring')
                 return False
 
         return True

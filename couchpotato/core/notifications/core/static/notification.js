@@ -31,8 +31,8 @@ var NotificationBase = new Class({
 		});
 
 		window.addEvent('load', function(){
-			self.startInterval.delay($(window).getSize().x <= 480 ? 2000 : 300, self)
-		});
+			self.startInterval.delay($(window).getSize().x <= 480 ? 2000 : 100, self);
+		})
 
 	},
 

@@ -11,7 +11,7 @@ var Movie = new Class({
 		self.view = options.view || 'details';
 		self.list = list;
 
-		self.el = new Element('div.movie.inlay');
+		self.el = new Element('div.movie');
 
 		self.profile = Quality.getProfile(data.profile_id) || {};
 		self.parent(self, options);
@@ -23,7 +23,8 @@ var Movie = new Class({
 		var self = this;
 
 		App.addEvent('movie.update.'+self.data.id, function(notification){
-			self.busy(false)
+			self.busy(false);
+			self.removeView();
 			self.update.delay(2000, self, notification);
 		});
 
@@ -107,6 +108,7 @@ var Movie = new Class({
 
 		self.data = notification.data;
 		self.el.empty();
+		self.removeView();
 
 		self.profile = Quality.getProfile(self.data.profile_id) || {};
 		self.create();
@@ -139,9 +141,6 @@ var Movie = new Class({
 							'text': self.data.library.year || 'n/a'
 						})
 					),
-					self.rating = new Element('div.rating.icon', {
-						'text': self.data.library.rating
-					}),
 					self.description = new Element('div.description', {
 						'text': self.data.library.plot
 					}),
@@ -149,8 +148,8 @@ var Movie = new Class({
 						'events': {
 							'click': function(e){
 								var releases = self.el.getElement('.actions .releases');
-									if(releases)
-										releases.fireEvent('click', [e])
+								if(releases.isVisible())
+									releases.fireEvent('click', [e])
 							}
 						}
 					})
@@ -199,9 +198,6 @@ var Movie = new Class({
 				self.actions.adopt(action)
 		});
 
-		if(!self.data.library.rating)
-			self.rating.hide();
-
 	},
 
 	addQuality: function(quality_id){
@@ -244,10 +240,10 @@ var Movie = new Class({
 
 		if(direction == 'in'){
 			self.temp_view = self.view;
-			self.changeView('details')
+			self.changeView('details');
 
 			self.el.addEvent('outerClick', function(){
-				self.removeView()
+				self.removeView();
 				self.slide('out')
 			})
 			el.show();

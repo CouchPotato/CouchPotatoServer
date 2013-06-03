@@ -4,7 +4,7 @@ from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
 from couchpotato.core.helpers.encoding import toUnicode, ss
 from couchpotato.core.helpers.request import getParams, jsonified
 from couchpotato.core.helpers.variable import getExt, mergeDicts, getTitle, \
-    getImdb, link, symlink
+    getImdb, link, symlink, tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Library, File, Profile, Release, \
@@ -25,10 +25,10 @@ class Renamer(Plugin):
     checking_snatched = False
 
     def __init__(self):
-
         addApiView('renamer.scan', self.scanView, docs = {
             'desc': 'For the renamer to check for new files to rename in a folder',
             'params': {
+                'async': {'desc': 'Optional: Set to 1 if you dont want to fire the renamer.scan asynchronous.'},
                 'movie_folder': {'desc': 'Optional: The folder of the movie to scan. Keep empty for default renamer folder.'},
                 'downloader' : {'desc': 'Optional: The downloader this movie has been downloaded with'},
                 'download_id': {'desc': 'Optional: The downloader\'s nzb/torrent ID'},
@@ -62,11 +62,14 @@ class Renamer(Plugin):
     def scanView(self):
 
         params = getParams()
+        async = tryInt(params.get('async', None))
         movie_folder = params.get('movie_folder', None)
         downloader = params.get('downloader', None)
         download_id = params.get('download_id', None)
 
-        fireEventAsync('renamer.scan',
+        fire_handle = fireEvent if not async else fireEventAsync
+
+        fire_handle('renamer.scan',
             movie_folder = movie_folder,
             download_info = {'id': download_id, 'downloader': downloader} if download_id else None
         )
@@ -204,6 +207,7 @@ class Renamer(Plugin):
                     cd = 1 if multiple else 0
 
                     for current_file in sorted(list(group['files'][file_type])):
+                        current_file = toUnicode(current_file)
 
                         # Original filename
                         replacements['original'] = os.path.splitext(os.path.basename(current_file))[0]

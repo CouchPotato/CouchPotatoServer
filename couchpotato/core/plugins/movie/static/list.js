@@ -14,6 +14,7 @@ var MovieList = new Class({
 
 	movies: [],
 	movies_added: {},
+	total_movies: 0,
 	letters: {},
 	filter: null,
 
@@ -23,7 +24,7 @@ var MovieList = new Class({
 
 		self.offset = 0;
 		self.filter = self.options.filter || {
-			'startswith': null,
+			'starts_with': null,
 			'search': null
 		}
 
@@ -48,7 +49,7 @@ var MovieList = new Class({
 			self.changeView('list');
 		else
 			self.changeView(self.getSavedView() || self.options.view || 'details');
-		
+
 		self.getMovies();
 
 		App.addEvent('movie.added', self.movieAdded.bind(self))
@@ -62,7 +63,8 @@ var MovieList = new Class({
 			self.movies.each(function(movie){
 				if(movie.get('id') == notification.data.id){
 					movie.destroy();
-					delete self.movies_added[notification.data.id]
+					delete self.movies_added[notification.data.id];
+					self.setCounter(self.counter_count-1);
 				}
 			})
 		}
@@ -76,6 +78,7 @@ var MovieList = new Class({
 		if(self.options.add_new && !self.movies_added[notification.data.id] && notification.data.status.identifier == self.options.status){
 			window.scroll(0,0);
 			self.createMovie(notification.data, 'top');
+			self.setCounter(self.counter_count+1);
 
 			self.checkIfEmpty();
 		}
@@ -115,7 +118,7 @@ var MovieList = new Class({
 			self.createMovie(movie);
 		});
 
-		self.total_movies = total;
+		self.total_movies += total;
 		self.setCounter(total);
 
 	},
@@ -125,7 +128,40 @@ var MovieList = new Class({
 
 		if(!self.navigation_counter) return;
 
+		self.counter_count = count;
 		self.navigation_counter.set('text', (count || 0) + ' movies');
+
+		if (self.empty_message) {
+			self.empty_message.destroy();
+			self.empty_message = null;
+		}
+
+		if(self.total_movies && count == 0 && !self.empty_message){
+			var message = (self.filter.search ? 'for "'+self.filter.search+'"' : '') +
+				(self.filter.starts_with ? ' in <strong>'+self.filter.starts_with+'</strong>' : '');
+
+			self.empty_message = new Element('.message', {
+				'html': 'No movies found ' + message + '.<br/>'
+			}).grab(
+				new Element('a', {
+					'text': 'Reset filter',
+					'events': {
+						'click': function(){
+							self.filter = {
+								'starts_with': null,
+								'search': null
+							};
+							self.navigation_search_input.set('value', '');
+							self.reset();
+							self.activateLetter();
+							self.getMovies(true);
+							self.last_search_value = '';
+						}
+					}
+				})
+			).inject(self.movie_list);
+
+		}
 
 	},
 
@@ -151,66 +187,69 @@ var MovieList = new Class({
 
 		self.el.addClass('with_navigation')
 
-		self.navigation = new Element('div.alph_nav').grab(
-			new Element('div').adopt(
-				self.navigation_alpha = new Element('ul.numbers', {
+		self.navigation = new Element('div.alph_nav').adopt(
+			self.mass_edit_form = new Element('div.mass_edit_form').adopt(
+				new Element('span.select').adopt(
+					self.mass_edit_select = new Element('input[type=checkbox].inlay', {
+						'events': {
+							'change': self.massEditToggleAll.bind(self)
+						}
+					}),
+					self.mass_edit_selected = new Element('span.count', {'text': 0}),
+					self.mass_edit_selected_label = new Element('span', {'text': 'selected'})
+				),
+				new Element('div.quality').adopt(
+					self.mass_edit_quality = new Element('select'),
+					new Element('a.button.orange', {
+						'text': 'Change quality',
+						'events': {
+							'click': self.changeQualitySelected.bind(self)
+						}
+					})
+				),
+				new Element('div.delete').adopt(
+					new Element('span[text=or]'),
+					new Element('a.button.red', {
+						'text': 'Delete',
+						'events': {
+							'click': self.deleteSelected.bind(self)
+						}
+					})
+				),
+				new Element('div.refresh').adopt(
+					new Element('span[text=or]'),
+					new Element('a.button.green', {
+						'text': 'Refresh',
+						'events': {
+							'click': self.refreshSelected.bind(self)
+						}
+					})
+				)
+			),
+			new Element('div.menus').adopt(
+				self.navigation_counter = new Element('span.counter[title=Total]'),
+				self.filter_menu = new Block.Menu(self, {
+					'class': 'filter'
+				}),
+				self.navigation_actions = new Element('ul.actions', {
 					'events': {
 						'click:relay(li)': function(e, el){
-							self.movie_list.empty()
-							self.activateLetter(el.get('data-letter'))
-							self.getMovies()
+							var a = 'active';
+							self.navigation_actions.getElements('.'+a).removeClass(a);
+							self.changeView(el.get('data-view'));
+							this.addClass(a);
+
+							el.inject(el.getParent(), 'top');
+							el.getSiblings().hide()
+							setTimeout(function(){
+								el.getSiblings().setStyle('display', null);
+							}, 100)
 						}
 					}
 				}),
-				self.navigation_counter = new Element('span.counter[title=Total]'),
-				self.navigation_actions = new Element('ul.inlay.actions.reversed'),
-				self.navigation_search_input = new Element('input.search.inlay', {
-					'title': 'Search through ' + self.options.identifier,
-					'placeholder': 'Search through ' + self.options.identifier,
-					'events': {
-						'keyup': self.search.bind(self),
-						'change': self.search.bind(self)
-					}
-				}),
-				self.navigation_menu = new Block.Menu(self),
-				self.mass_edit_form = new Element('div.mass_edit_form').adopt(
-					new Element('span.select').adopt(
-						self.mass_edit_select = new Element('input[type=checkbox].inlay', {
-							'events': {
-								'change': self.massEditToggleAll.bind(self)
-							}
-						}),
-						self.mass_edit_selected = new Element('span.count', {'text': 0}),
-						self.mass_edit_selected_label = new Element('span', {'text': 'selected'})
-					),
-					new Element('div.quality').adopt(
-						self.mass_edit_quality = new Element('select'),
-						new Element('a.button.orange', {
-							'text': 'Change quality',
-							'events': {
-								'click': self.changeQualitySelected.bind(self)
-							}
-						})
-					),
-					new Element('div.delete').adopt(
-						new Element('span[text=or]'),
-						new Element('a.button.red', {
-							'text': 'Delete',
-							'events': {
-								'click': self.deleteSelected.bind(self)
-							}
-						})
-					),
-					new Element('div.refresh').adopt(
-						new Element('span[text=or]'),
-						new Element('a.button.green', {
-							'text': 'Refresh',
-							'events': {
-								'click': self.refreshSelected.bind(self)
-							}
-						})
-					)
-				)
+				self.navigation_menu = new Block.Menu(self, {
+					'class': 'extra'
+				})
 			)
 		).inject(self.el, 'top');
 
@@ -223,20 +262,39 @@ var MovieList = new Class({
 			}).inject(self.mass_edit_quality)
 		});
 
+		self.filter_menu.addLink(
+			self.navigation_search_input = new Element('input', {
+				'title': 'Search through ' + self.options.identifier,
+				'placeholder': 'Search through ' + self.options.identifier,
+				'events': {
+					'keyup': self.search.bind(self),
+					'change': self.search.bind(self)
+				}
+			})
+		).addClass('search');
+
+		self.filter_menu.addEvent('open', function(){
+			self.navigation_search_input.focus();
+		});
+
+		self.filter_menu.addLink(
+			self.navigation_alpha = new Element('ul.numbers', {
+				'events': {
+					'click:relay(li.available)': function(e, el){
+						self.activateLetter(el.get('data-letter'))
+						self.getMovies(true)
+					}
+				}
+			})
+		);
+
 		// Actions
 		['mass_edit', 'details', 'list'].each(function(view){
-			self.navigation_actions.adopt(
-				new Element('li.'+view+(self.current_view == view ? '.active' : '')+'[data-view='+view+']', {
-					'events': {
-						'click': function(e){
-							var a = 'active';
-							self.navigation_actions.getElements('.'+a).removeClass(a);
-							self.changeView(this.get('data-view'));
-							this.addClass(a);
-						}
-					}
-				}).adopt(new Element('span'))
-			)
+			var current = self.current_view == view;
+			new Element('li', {
+				'class': 'icon2 ' + view + (current ?  ' active ' : ''),
+				'data-view': view
+			}).inject(self.navigation_actions, current ? 'top' : 'bottom');
 		});
 
 		// All
@@ -260,11 +318,11 @@ var MovieList = new Class({
 					'status': self.options.status
 				}, self.filter),
 				'onSuccess': function(json){
-	
+
 					json.chars.split('').each(function(c){
 						self.letters[c.capitalize()].addClass('available')
 					})
-	
+
 				}
 			});
 
@@ -322,14 +380,14 @@ var MovieList = new Class({
 							self.movies.each(function(movie){
 								if (movie.isSelected()){
 									$(movie).destroy()
-									erase_movies.include(movie)
+									erase_movies.include(movie);
 								}
 							});
 
 							erase_movies.each(function(movie){
 								self.movies.erase(movie);
-
-								movie.destroy()
+								movie.destroy();
+								self.setCounter(self.counter_count-1);
 							});
 
 							self.calculateSelected();
@@ -448,8 +506,7 @@ var MovieList = new Class({
 			self.activateLetter();
 			self.filter.search = search_value;
 
-			self.movie_list.empty();
-			self.getMovies();
+			self.getMovies(true);
 
 			self.last_search_value = search_value;
 
@@ -461,11 +518,10 @@ var MovieList = new Class({
 		var self = this;
 
 		self.reset();
-		self.movie_list.empty();
-		self.getMovies();
+		self.getMovies(true);
 	},
 
-	getMovies: function(){
+	getMovies: function(reset){
 		var self = this;
 
 		if(self.scrollspy){
@@ -492,9 +548,12 @@ var MovieList = new Class({
 		Api.request(self.options.api_call || 'movie.list', {
 			'data': Object.merge({
 				'status': self.options.status,
-				'limit_offset': self.options.limit + ',' + self.offset
+				'limit_offset': self.options.limit ? self.options.limit + ',' + self.offset : null
 			}, self.filter),
 			'onSuccess': function(json){
+
+				if(reset)
+					self.movie_list.empty();
 
 				if(self.loader_first){
 					var lf = self.loader_first;

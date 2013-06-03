@@ -139,8 +139,13 @@ def fireEvent(name, *args, **kwargs):
         log.error('%s: %s', (name, traceback.format_exc()))
 
 def fireEventAsync(*args, **kwargs):
-    kwargs['async'] = True
-    fireEvent(*args, **kwargs)
+    try:
+        t = threading.Thread(target = fireEvent, args = args, kwargs = kwargs)
+        t.setDaemon(True)
+        t.start()
+        return True
+    except Exception, e:
+        log.error('%s: %s', (args[0], e))
 
 def errorHandler(error):
     etype, value, tb = error

@@ -35,10 +35,10 @@ class Rottentomatoes(Automation, RSS):
                 name = result.group(0)
 
                 if rating < tryInt(self.conf('tomatometer_percent')):
-                    log.info2('%s seems to be rotten...' % name)
+                    log.info2('%s seems to be rotten...', name)
                 else:
 
-                    log.info2('Found %s fresh enough movies, enqueuing: %s' % (rating, name))
+                    log.info2('Found %s fresh enough movies, enqueuing: %s', (rating, name))
                     year = datetime.datetime.now().strftime("%Y")
                     imdb = self.search(name, year)
 

@@ -11,20 +11,6 @@ Page.Settings = new Class({
 	current: 'about',
 	has_tab: false,
 
-	initialize: function(options){
-		var self = this;
-		self.parent(options);
-
-		// Add to more menu
-		if(self.name == 'settings')
-			App.getBlock('more').addLink(new Element('a', {
-				'href': App.createUrl(self.name),
-				'text': self.name.capitalize(),
-				'title': self.title
-			}), 'top')
-
-	},
-
 	open: function(action, params){
 		var self = this;
 		self.action = action == 'index' ? self.default_action : action;
@@ -876,7 +862,7 @@ Option.Directories = new Class({
 			$(dir).addClass('is_empty');
 
 		// Add remove button
-		new Element('a.icon.delete', {
+		new Element('a.icon2.delete', {
 			'events': {
 				'click': self.delItem.bind(self, dir)
 			}
@@ -1385,7 +1371,7 @@ Option.Combined = new Class({
 
 		item[value_empty == value_count ? 'addClass' : 'removeClass']('is_empty');
 
-		new Element('a.icon.delete', {
+		new Element('a.icon2.delete', {
 			'events': {
 				'click': self.deleteCombinedItem.bind(self)
 			}

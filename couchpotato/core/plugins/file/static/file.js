@@ -1,11 +1,11 @@
 var File = new Class({
 
-	initialize: function(file){
+	initialize: function(type, file){
 		var self = this;
 
 		if(!file){
 			self.empty = true;
-			self.el = new Element('div');
+			self.el = new Element('div.empty_file.'+type);
 			return
 		}
 
@@ -22,7 +22,10 @@ var File = new Class({
 		var file_name = self.data.path.replace(/^.*[\\\/]/, '');
 
 		self.el = new Element('div', {
-			'class': 'type_image ' + self.type.identifier
+			'class': 'type_image ' + self.type.identifier,
+			'styles': {
+				'background-image': 'url('+Api.createUrl('file.cache') + file_name+')'
+			}
 		}).adopt(
 			new Element('img', {
 				'src': Api.createUrl('file.cache') + file_name
@@ -45,7 +48,7 @@ var FileSelect = new Class({
 		});
 
 		if(single)
-			return new File(results.pop());
+			return new File(type, results.pop());
 
 		return results;
 
