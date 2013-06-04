@@ -5,7 +5,6 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.torrent.base import TorrentProvider
 import traceback
 
-
 log = CPLog(__name__)
 
 
@@ -15,8 +14,8 @@ class IPTorrents(TorrentProvider):
         'test' : 'http://www.iptorrents.com/',
         'base_url' : 'http://www.iptorrents.com',
         'login' : 'http://www.iptorrents.com/torrents/',
-        'search' : 'http://www.iptorrents.com/torrents/?l%d=1%s&q=%s&qf=ti',
         'login_check': 'http://www.iptorrents.com/inbox.php',
+        'search' : 'http://www.iptorrents.com/torrents/?l%d=1%s&q=%s&qf=ti&p=%d',
     }
 
     cat_ids = [
@@ -33,45 +32,59 @@ class IPTorrents(TorrentProvider):
 
         freeleech = '' if not self.conf('freeleech') else '&free=on'
 
-        url = self.urls['search'] % (self.getCatId(quality['identifier'])[0], freeleech, tryUrlencode('%s %s' % (title.replace(':', ''), movie['library']['year'])))
-        data = self.getHTMLData(url, opener = self.login_opener)
+        pages = 1
+        current_page = 1
+        while current_page <= pages and not self.shuttingDown():
 
-        if data:
-            html = BeautifulSoup(data)
+            url = self.urls['search'] % (self.getCatId(quality['identifier'])[0], freeleech, tryUrlencode('%s %s' % (title.replace(':', ''), movie['library']['year'])), current_page)
+            data = self.getHTMLData(url, opener = self.login_opener)
 
-            try:
-                result_table = html.find('table', attrs = {'class' : 'torrents'})
+            if data:
+                html = BeautifulSoup(data)
 
-                if not result_table or 'nothing found!' in data.lower():
-                    return
+                try:
+                    page_nav = html.find('span', attrs = {'class' : 'page_nav'})
+                    if page_nav:
+                        next_link = page_nav.find("a", text = "Next")
+                        if next_link:
+                            final_page_link = next_link.previous_sibling.previous_sibling
+                            pages = int(final_page_link.string)
 
-                entries = result_table.find_all('tr')
+                    result_table = html.find('table', attrs = {'class' : 'torrents'})
 
-                for result in entries[1:]:
+                    if not result_table or 'nothing found!' in data.lower():
+                        return
 
-                    torrent = result.find_all('td')[1].find('a')
+                    entries = result_table.find_all('tr')
 
-                    torrent_id = torrent['href'].replace('/details.php?id=', '')
-                    torrent_name = torrent.string
-                    torrent_download_url = self.urls['base_url'] + (result.find_all('td')[3].find('a'))['href'].replace(' ', '.')
-                    torrent_details_url = self.urls['base_url'] + torrent['href']
-                    torrent_size = self.parseSize(result.find_all('td')[5].string)
-                    torrent_seeders = tryInt(result.find('td', attrs = {'class' : 'ac t_seeders'}).string)
-                    torrent_leechers = tryInt(result.find('td', attrs = {'class' : 'ac t_leechers'}).string)
+                    for result in entries[1:]:
 
-                    results.append({
-                        'id': torrent_id,
-                        'name': torrent_name,
-                        'url': torrent_download_url,
-                        'detail_url': torrent_details_url,
-                        'download': self.loginDownload,
-                        'size': torrent_size,
-                        'seeders': torrent_seeders,
-                        'leechers': torrent_leechers,
-                    })
+                        torrent = result.find_all('td')[1].find('a')
 
-            except:
-                log.error('Failed to parsing %s: %s', (self.getName(), traceback.format_exc()))
+                        torrent_id = torrent['href'].replace('/details.php?id=', '')
+                        torrent_name = torrent.string
+                        torrent_download_url = self.urls['base_url'] + (result.find_all('td')[3].find('a'))['href'].replace(' ', '.')
+                        torrent_details_url = self.urls['base_url'] + torrent['href']
+                        torrent_size = self.parseSize(result.find_all('td')[5].string)
+                        torrent_seeders = tryInt(result.find('td', attrs = {'class' : 'ac t_seeders'}).string)
+                        torrent_leechers = tryInt(result.find('td', attrs = {'class' : 'ac t_leechers'}).string)
+
+                        results.append({
+                            'id': torrent_id,
+                            'name': torrent_name,
+                            'url': torrent_download_url,
+                            'detail_url': torrent_details_url,
+                            'download': self.loginDownload,
+                            'size': torrent_size,
+                            'seeders': torrent_seeders,
+                            'leechers': torrent_leechers,
+                        })
+
+                except:
+                    log.error('Failed to parsing %s: %s', (self.getName(), traceback.format_exc()))
+                    break
+
+            current_page += 1
 
     def getLoginParams(self):
         return tryUrlencode({
