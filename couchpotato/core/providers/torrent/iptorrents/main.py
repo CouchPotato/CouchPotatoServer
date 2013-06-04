@@ -15,7 +15,7 @@ class IPTorrents(TorrentProvider):
         'test' : 'http://www.iptorrents.com/',
         'base_url' : 'http://www.iptorrents.com',
         'login' : 'http://www.iptorrents.com/torrents/',
-        'search' : 'http://www.iptorrents.com/torrents/?l%d=1%s&q=%s&qf=ti',
+        'search' : 'http://www.iptorrents.com/torrents/?l%d=1%s&q=%s&qf=ti&p=%d',
     }
 
     cat_ids = [
@@ -32,42 +32,57 @@ class IPTorrents(TorrentProvider):
 
         freeleech = '' if not self.conf('freeleech') else '&free=on'
 
-        url = self.urls['search'] % (self.getCatId(quality['identifier'])[0], freeleech, tryUrlencode('%s %s' % (title.replace(':', ''), movie['library']['year'])))
+        url = self.urls['search'] % (self.getCatId(quality['identifier'])[0], freeleech, tryUrlencode('%s %s' % (title.replace(':', ''), movie['library']['year'])), 1)
         data = self.getHTMLData(url, opener = self.login_opener)
 
         if data:
             html = BeautifulSoup(data)
 
             try:
-                result_table = html.find('table', attrs = {'class' : 'torrents'})
+								page_nav = html.find('span', attrs = {'class' : 'page_nav'})
+								count = 1
+								if page_nav:
+								    next_link = page_nav.find("a", text="Next")
+								    final_page_link = next_link.previous_sibling.previous_sibling
+								    count = int(final_page_link.string)
 
-                if not result_table or 'nothing found!' in data.lower():
-                    return
+								for page_num in range(1, count+1):
+										if page_num != 1:
+												url = self.urls['search'] % (self.getCatId(quality['identifier'])[0], freeleech, tryUrlencode('%s %s' % (title.replace(':', ''), movie['library']['year'])), page_num)
+												data = self.getHTMLData(url, opener = self.login_opener)
+												if data:
+														html = BeautifulSoup(data)
+												else:
+														raise Exception('Failed to load page %d from IPTorrents at URL %s' % (page_num, url))
+										result_table = html.find('table', attrs = {'class' : 'torrents'})
 
-                entries = result_table.find_all('tr')
+										if not result_table or 'nothing found!' in data.lower():
+												return
 
-                for result in entries[1:]:
+										entries = result_table.find_all('tr')
 
-                    torrent = result.find_all('td')[1].find('a')
+										for result in entries[1:]:
 
-                    torrent_id = torrent['href'].replace('/details.php?id=', '')
-                    torrent_name = torrent.string
-                    torrent_download_url = self.urls['base_url'] + (result.find_all('td')[3].find('a'))['href'].replace(' ', '.')
-                    torrent_details_url = self.urls['base_url'] + torrent['href']
-                    torrent_size = self.parseSize(result.find_all('td')[5].string)
-                    torrent_seeders = tryInt(result.find('td', attrs = {'class' : 'ac t_seeders'}).string)
-                    torrent_leechers = tryInt(result.find('td', attrs = {'class' : 'ac t_leechers'}).string)
+												torrent = result.find_all('td')[1].find('a')
 
-                    results.append({
-                        'id': torrent_id,
-                        'name': torrent_name,
-                        'url': torrent_download_url,
-                        'detail_url': torrent_details_url,
-                        'download': self.loginDownload,
-                        'size': torrent_size,
-                        'seeders': torrent_seeders,
-                        'leechers': torrent_leechers,
-                    })
+												torrent_id = torrent['href'].replace('/details.php?id=', '')
+												torrent_name = torrent.string
+												torrent_download_url = self.urls['base_url'] + (result.find_all('td')[3].find('a'))['href'].replace(' ', '.')
+												torrent_details_url = self.urls['base_url'] + torrent['href']
+												torrent_size = self.parseSize(result.find_all('td')[5].string)
+												torrent_seeders = tryInt(result.find('td', attrs = {'class' : 'ac t_seeders'}).string)
+												torrent_leechers = tryInt(result.find('td', attrs = {'class' : 'ac t_leechers'}).string)
+
+												results.append({
+														'id': torrent_id,
+														'name': torrent_name,
+														'url': torrent_download_url,
+														'detail_url': torrent_details_url,
+														'download': self.loginDownload,
+														'size': torrent_size,
+														'seeders': torrent_seeders,
+														'leechers': torrent_leechers,
+												})
 
             except:
                 log.error('Failed to parsing %s: %s', (self.getName(), traceback.format_exc()))
