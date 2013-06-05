@@ -81,9 +81,9 @@ class YarrProvider(Provider):
 
     cat_ids = []
 
-    sizeGb = ['gb', 'gib']
-    sizeMb = ['mb', 'mib']
-    sizeKb = ['kb', 'kib']
+    sizeGb = ['gb', 'gib', 'go']
+    sizeMb = ['mb', 'mib', 'mo']
+    sizeKb = ['kb', 'kib', 'ko']
 
     login_opener = None
 
