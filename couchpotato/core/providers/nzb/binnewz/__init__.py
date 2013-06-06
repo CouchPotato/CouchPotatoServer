@@ -1,16 +1,16 @@
-from .main import BinNewzProvider
+from .main import BinNewz
 
 def start():
-    return BinNewzProvider()
+    return BinNewz()
 
 config = [{
-    'name': 'binnews',
+    'name': 'binnewz',
     'groups': [
         {
             'tab': 'searcher',
             'subtab': 'providers',
             'list': 'nzb_providers',
-            'name': 'binnews',
+            'name': 'binnewz',
             'description': 'Free provider, lots of french nzbs. See <a href="http://www.binnews.in/">binnewz</a>',
             'wizard': True,
             'options': [

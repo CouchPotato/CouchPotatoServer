@@ -20,7 +20,7 @@ from couchpotato.core.event import fireEvent
 log = CPLog(__name__)
 
 
-class cPASbien(TorrentProvider):
+class cpasbien(TorrentProvider):
 
     urls = {
         'test': 'http://www.cpasbien.me/',
@@ -65,9 +65,7 @@ class cPASbien(TorrentProvider):
         
         data = urllib2.urlopen(req )
 
-        log.error(URL)
-        log.error(TitleStringReal)
-
+       
         id = 1000
 
         if data:
@@ -184,7 +182,7 @@ class cPASbien(TorrentProvider):
     def login(self):
 
         cookieprocessor = urllib2.HTTPCookieProcessor(cookielib.CookieJar())
-        opener = urllib2.build_opener(cookieprocessor, cPASbien.PTPHTTPRedirectHandler())
+        opener = urllib2.build_opener(cookieprocessor, cpasbien.PTPHTTPRedirectHandler())
         opener.addheaders = [
             ('User-Agent', 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.1 (KHTML, like Gecko)'),
             ('Accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'),

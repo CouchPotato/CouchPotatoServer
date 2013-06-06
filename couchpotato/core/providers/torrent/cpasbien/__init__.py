@@ -1,7 +1,7 @@
-from .main import cPASbien
+from .main import cpasbien
 
 def start():
-    return cPASbien()
+    return cpasbien()
 
 config = [{
     'name': 'cpasbien',

@@ -25,6 +25,7 @@ from couchpotato.core.helpers.variable import getTitle, splitString, tryInt
 from couchpotato.core.helpers.encoding import simplifyString
 from couchpotato.environment import Env
 from couchpotato.core.logger import CPLog
+from couchpotato.core.helpers import namer_check
 from couchpotato.core.providers.nzb.base import NZBProvider
 
 log = CPLog(__name__)
@@ -32,7 +33,7 @@ import re
 import urllib
 import urllib2
 import traceback
-class BinNewzProvider(NZBProvider):
+class BinNewz(NZBProvider):
     
     urls = {
         'download': 'http://www.binnews.in/',
@@ -83,6 +84,9 @@ class BinNewzProvider(NZBProvider):
                         continue
     
                     name = cells[2].text.strip()
+                    testname=namer_check.correctName(name,movie)
+                    if testname==0:
+                        continue
                     language = cells[3].find("img").get("src")
     
                     if not "_fr" in language and not "_frq" in language:
@@ -146,6 +150,22 @@ class BinNewzProvider(NZBProvider):
                             newsgroup="alt.binaries.movies.french"
                         elif newsgroup =="abhdtvfrepost":
                             newsgroup="alt.binaries.hdtv.french.repost"
+                        elif newsgroup == "abmmkv":
+                            newsgroup = "alt.binaries.movies.mkv"
+                        elif newsgroup == "abf-tv":
+                            newsgroup = "alt.binaries.french-tv"
+                        elif newsgroup == "abmdfo":
+                            newsgroup = "alt.binaries.movies.divx.french.old"
+                        elif newsgroup == "abmf":
+                            newsgroup = "alt.binaries.movies.french"
+                        elif newsgroup == "ab.movies":
+                            newsgroup = "alt.binaries.movies"
+                        elif newsgroup == "a.b.french":
+                            newsgroup = "alt.binaries.french"
+                        elif newsgroup == "a.b.3d":
+                            newsgroup = "alt.binaries.3d"
+                        elif newsgroup == "ab.dvdrip":
+                            newsgroup = "alt.binaries.dvdrip"
                         else:
                             log.error(u"Unknown binnewz newsgroup: " + newsgroup)
                             continue
@@ -207,7 +227,7 @@ class BinNewzProvider(NZBProvider):
                             qualityStr ="dvdr"
                     if year =='':
                         year = '1900'
-                    if len(searchItems) == 0 and qualityStr == str(moviequality) and movieyear>=int(year)-2 and movieyear<=int(year)+2:
+                    if len(searchItems) == 0 and qualityStr == str(moviequality) and movieyear>=int(year)-1 and movieyear<=int(year)+1:
                         searchItems.append( filename )
                     for searchItem in searchItems:
                         resultno=1
@@ -226,7 +246,6 @@ class BinNewzProvider(NZBProvider):
                                     new['url'] = binsearch_result.nzburl
                                     new['detail_url'] = binsearch_result.refererURL
                                     new['size'] = binsearch_result.sizeInMegs
-                                    new['score'] = Env.setting('extra_score', 'binnews', value = None, default = None)
                                     new['age'] = binsearch_result.age
                                     new['extra_check'] = extra_check
         

@@ -9,11 +9,12 @@ from datetime import datetime
 from bs4 import BeautifulSoup
 from couchpotato.core.helpers.variable import getTitle, tryInt
 from couchpotato.core.logger import CPLog
-from couchpotato.core.helpers.encoding import simplifyString, tryUrlencode
+from couchpotato.core.helpers.encoding import simplifyString, tryUrlencode, toUnicode
 from couchpotato.core.helpers.variable import getTitle, mergeDicts
+from couchpotato.core.helpers import namer_check
 from couchpotato.core.providers.torrent.base import TorrentProvider
 from dateutil.parser import parse
-
+from guessit import guess_movie_info
 from couchpotato.core.event import fireEvent
 
 log = CPLog(__name__)
@@ -24,7 +25,7 @@ class gks(TorrentProvider):
         'test': 'https://gks.gs/',
         'search': 'https://gks.gs/',
     }
-
+    
     http_time_between_calls = 1 #seconds
     cat_backup_id = None
      
@@ -34,17 +35,26 @@ class gks(TorrentProvider):
         moviequality = simplifyString(quality['identifier'])
         movieyear = movie['library']['year']
         for MovieTitle in MovieTitles:
-            TitleStringReal = str(MovieTitle.encode("utf-8").replace('-',' '))
+            TitleStringReal = str(MovieTitle.encode("latin-1").replace('-',' '))
             if moviequality in ['720p']:
                 results.append( urllib.urlencode( {'q': TitleStringReal, 'category' : 15, 'ak' : self.conf('userkey')} ) + "&order=desc&sort=normal&exact" )
+                results.append( urllib.urlencode( {'q': simplifyString(TitleStringReal), 'category' : 15, 'ak' : self.conf('userkey')} ) + "&order=desc&sort=normal&exact" )
+            
             elif moviequality in ['1080p']:
                  results.append( urllib.urlencode( {'q': TitleStringReal, 'category' : 16, 'ak' : self.conf('userkey')} ) + "&order=desc&sort=normal&exact" )
+                 results.append( urllib.urlencode( {'q': simplifyString(TitleStringReal), 'category' : 16, 'ak' : self.conf('userkey')} ) + "&order=desc&sort=normal&exact" )
+            
             elif moviequality in ['dvd-r']:
                 results.append( urllib.urlencode( {'q': TitleStringReal, 'category' : 19, 'ak' : self.conf('userkey')} ) + "&order=desc&sort=normal&exact" )
+                results.append( urllib.urlencode( {'q': simplifyString(TitleStringReal), 'category' : 19, 'ak' : self.conf('userkey')} ) + "&order=desc&sort=normal&exact" )
+            
             elif moviequality in ['br-disk']:
                 results.append( urllib.urlencode( {'q': TitleStringReal, 'category' : 17, 'ak' : self.conf('userkey')} ) + "&order=desc&sort=normal&exact" )
+                results.append( urllib.urlencode( {'q': simplifyString(TitleStringReal), 'category' : 17, 'ak' : self.conf('userkey')} ) + "&order=desc&sort=normal&exact" )
+            
             else:
                  results.append( urllib.urlencode( {'q': TitleStringReal, 'category' : 5, 'ak' : self.conf('userkey')} ) + "&order=desc&sort=normal&exact" )
+                 results.append( urllib.urlencode( {'q': simplifyString(TitleStringReal), 'category' : 5, 'ak' : self.conf('userkey')} ) + "&order=desc&sort=normal&exact" )
             
         return results
                    
@@ -52,8 +62,7 @@ class gks(TorrentProvider):
         searchStrings= self.getSearchParams(movie,quality)
         for searchString in searchStrings:
             searchUrl = self.urls['search']+'rdirect.php?type=search&'+searchString
-            log.info(u"Search URL: " + searchUrl)
-            
+                        
             data = self.getHTMLData(searchUrl)
             if "bad key" in str(data).lower() :
                 log.error(u"GKS key invalid, check your config")
@@ -85,16 +94,12 @@ class gks(TorrentProvider):
                     title=text.strip().lower()
                                         
                     if "aucun resultat" in title.lower() :
-                        log.info(u"No results found in " + searchUrl)
+                        log.debug("No results found trying another if there is one")
                         continue
                     else :
-                        
-                        #MovieTitles = movie['library']['info']['titles']
-                        #testname=0
-                        #for movietitle in MovieTitles:
-                        #    testname += self.correctName(title,movietitle)
-                        #if testname==0:
-                        #    continue
+                        testname=namer_check.correctName(title,movie)
+                        if testname==0:
+                            continue
                         text = ""
                         for child_node in item.getElementsByTagName('link')[0].childNodes:
                             if child_node.nodeType in (Node.CDATA_SECTION_NODE, Node.TEXT_NODE):
@@ -149,33 +154,7 @@ class gks(TorrentProvider):
         delta=abs((datetime.now() - date).days)
 
         return tryInt(delta)
-    
-    def correctName(self, check_name, movie_name):
-
-        check_names = [check_name]
-
-        # Match names between "
-        try: check_names.append(re.search(r'([\'"])[^\1]*\1', check_name).group(0))
-        except: pass
-
-        # Match longest name between []
-        try: check_names.append(max(check_name.split('['), key = len))
-        except: pass
-
-        for check_name in list(set(check_names)):
-            check_movie = fireEvent('scanner.name_year', check_name, single = True)
-
-            try:
-                check_words = filter(None, re.split('\W+', check_movie.get('name', '')))
-                movie_words = filter(None, re.split('\W+', simplifyString(movie_name)))
-
-                if len(check_words) > 0 and len(movie_words) > 0 and len(list(set(check_words) - set(movie_words))) == 0:
-                    return 1
-            except:
-                pass
-
-        return 0
-    
+        
     def download(self, url = '', nzb_id = ''):
                 values = {
                         'url' : '/'
