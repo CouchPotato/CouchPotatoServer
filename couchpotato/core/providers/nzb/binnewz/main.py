@@ -227,7 +227,7 @@ class BinNewz(NZBProvider):
                             qualityStr ="dvdr"
                     if year =='':
                         year = '1900'
-                    if len(searchItems) == 0 and qualityStr == str(moviequality) and movieyear>=int(year)-1 and movieyear<=int(year)+1:
+                    if len(searchItems) == 0 and qualityStr == str(moviequality):
                         searchItems.append( filename )
                     for searchItem in searchItems:
                         resultno=1
