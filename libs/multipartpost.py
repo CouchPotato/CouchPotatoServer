@@ -81,7 +81,10 @@ class MultipartPostHandler(urllib2.BaseHandler):
             buffer += 'Content-Disposition: form-data; name="%s"; filename="%s"\r\n' % (key, filename)
             buffer += 'Content-Type: %s\r\n' % contenttype
             # buffer += 'Content-Length: %s\r\n' % file_size
-            buffer += '\r\n' + data_in + '\r\n'
+            try:
+                buffer += '\r\n' + data_in + '\r\n'
+            except Exception as e:
+                raise e
         buffer += '--%s--\r\n\r\n' % boundary
         return boundary, buffer
 
