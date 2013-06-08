@@ -56,7 +56,7 @@ class TheMovieDb(MovieProvider):
         if self.isDisabled():
             return False
 
-        search_string = simplifyString(q)
+        search_string = q
         cache_key = 'tmdb.cache.%s.%s' % (search_string, limit)
         results = self.getCache(cache_key)
 
