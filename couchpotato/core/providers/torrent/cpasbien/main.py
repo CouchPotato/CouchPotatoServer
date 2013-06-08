@@ -41,7 +41,7 @@ class cpasbien(TorrentProvider):
             if (headers['Location'] != 'login.php'):
                 return urllib2.HTTPRedirectHandler.http_error_302(self, req, fp, code, msg, headers)
             else:
-                raise cPASbien.NotLoggedInHTTPError(req.get_full_url(), code, msg, headers, fp)
+                raise cpasbien.NotLoggedInHTTPError(req.get_full_url(), code, msg, headers, fp)
 
     def _search(self, movie, quality, results):
 
