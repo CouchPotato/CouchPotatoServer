@@ -279,6 +279,7 @@ class SourceUpdater(BaseUpdater):
             if download_data.get('type') == 'zip':
                 zip = zipfile.ZipFile(destination)
                 zip.extractall(extracted_path)
+                zip.close()
             else:
                 tar = tarfile.open(destination)
                 tar.extractall(path = extracted_path)
