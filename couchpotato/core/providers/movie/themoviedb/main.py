@@ -56,7 +56,7 @@ class TheMovieDb(MovieProvider):
         if self.isDisabled():
             return False
 
-        search_string = q.encode("utf-8")
+        search_string = q
         cache_key = 'tmdb.cache.%s.%s' % (search_string, limit)
         results = self.getCache(cache_key)
 
@@ -85,7 +85,7 @@ class TheMovieDb(MovieProvider):
                             log.info('Found: %s', [result['titles'][0] + ' (' + str(result['year']) + ')'])
                         else:
                             log.info('Found: %s', [result['titles'][0]])
-                    self.setCache(cache_key, results)
+                    self.setCache(cache_key.encode('utf-8'), results)
                     return results
                 except SyntaxError, e:
                     log.error('Failed to parse XML response: %s', e)
