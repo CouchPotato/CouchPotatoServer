@@ -582,7 +582,7 @@ class Scanner(Plugin):
                 movie = fireEvent('movie.by_hash', file = cur_file, merge = True)
 
                 if len(movie) > 0:
-                    imdb_id = movie[0]['imdb']
+                    imdb_id = movie[0].get('imdb')
                     if imdb_id:
                         log.debug('Found movie via OpenSubtitleHash: %s', cur_file)
                         break
@@ -600,7 +600,7 @@ class Scanner(Plugin):
                         movie = fireEvent('movie.search', q = '%(name)s %(year)s' % name_year, merge = True, limit = 1)
 
                         if len(movie) > 0:
-                            imdb_id = movie[0]['imdb']
+                            imdb_id = movie[0].get('imdb')
                             log.debug('Found movie via search: %s', cur_file)
                             if imdb_id: break
                 else:
