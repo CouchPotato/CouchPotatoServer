@@ -1,21 +1,13 @@
 from xml.dom.minidom import parseString
 from xml.dom.minidom import Node
-import cookielib
 import urllib
 import urllib2
-import re
-import time
 from datetime import datetime
-from bs4 import BeautifulSoup
-from couchpotato.core.helpers.variable import getTitle, tryInt
+from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
-from couchpotato.core.helpers.encoding import simplifyString, tryUrlencode, toUnicode
-from couchpotato.core.helpers.variable import getTitle, mergeDicts
+from couchpotato.core.helpers.encoding import simplifyString
 from couchpotato.core.helpers import namer_check
 from couchpotato.core.providers.torrent.base import TorrentProvider
-from dateutil.parser import parse
-from guessit import guess_movie_info
-from couchpotato.core.event import fireEvent
 
 log = CPLog(__name__)
 
@@ -33,7 +25,6 @@ class gks(TorrentProvider):
         results = []
         MovieTitles = movie['library']['info']['titles']
         moviequality = simplifyString(quality['identifier'])
-        movieyear = movie['library']['year']
         for MovieTitle in MovieTitles:
             TitleStringReal = str(MovieTitle.encode("latin-1").replace('-',' '))
             if moviequality in ['720p']:
@@ -41,8 +32,8 @@ class gks(TorrentProvider):
                 results.append( urllib.urlencode( {'q': simplifyString(TitleStringReal), 'category' : 15, 'ak' : self.conf('userkey')} ) + "&order=desc&sort=normal&exact" )
             
             elif moviequality in ['1080p']:
-                 results.append( urllib.urlencode( {'q': TitleStringReal, 'category' : 16, 'ak' : self.conf('userkey')} ) + "&order=desc&sort=normal&exact" )
-                 results.append( urllib.urlencode( {'q': simplifyString(TitleStringReal), 'category' : 16, 'ak' : self.conf('userkey')} ) + "&order=desc&sort=normal&exact" )
+                results.append( urllib.urlencode( {'q': TitleStringReal, 'category' : 16, 'ak' : self.conf('userkey')} ) + "&order=desc&sort=normal&exact" )
+                results.append( urllib.urlencode( {'q': simplifyString(TitleStringReal), 'category' : 16, 'ak' : self.conf('userkey')} ) + "&order=desc&sort=normal&exact" )
             
             elif moviequality in ['dvd-r']:
                 results.append( urllib.urlencode( {'q': TitleStringReal, 'category' : 19, 'ak' : self.conf('userkey')} ) + "&order=desc&sort=normal&exact" )
@@ -53,8 +44,8 @@ class gks(TorrentProvider):
                 results.append( urllib.urlencode( {'q': simplifyString(TitleStringReal), 'category' : 17, 'ak' : self.conf('userkey')} ) + "&order=desc&sort=normal&exact" )
             
             else:
-                 results.append( urllib.urlencode( {'q': TitleStringReal, 'category' : 5, 'ak' : self.conf('userkey')} ) + "&order=desc&sort=normal&exact" )
-                 results.append( urllib.urlencode( {'q': simplifyString(TitleStringReal), 'category' : 5, 'ak' : self.conf('userkey')} ) + "&order=desc&sort=normal&exact" )
+                results.append( urllib.urlencode( {'q': TitleStringReal, 'category' : 5, 'ak' : self.conf('userkey')} ) + "&order=desc&sort=normal&exact" )
+                results.append( urllib.urlencode( {'q': simplifyString(TitleStringReal), 'category' : 5, 'ak' : self.conf('userkey')} ) + "&order=desc&sort=normal&exact" )
             
         return results
                    
