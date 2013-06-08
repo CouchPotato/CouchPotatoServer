@@ -16,6 +16,7 @@ import urllib2
 import unicodedata
 from libs.werkzeug.urls import url_encode
 from couchpotato.core.event import fireEvent
+from couchpotato.core.helpers import namer_check
 
 log = CPLog(__name__)
 
@@ -86,7 +87,9 @@ class cpasbien(TorrentProvider):
 
                         #id = result.find_all('td')[2].find_all('a')[0]['href'][1:].replace('torrents/nfo/?id=','')
                         name = result.find_all('td')[0].find_all('a')[0].text
-                        
+                        testname=namer_check.correctName(name,movie)
+                        if testname==0:
+                            continue
                         detail_url = result.find_all('td')[0].find_all('a')[0]['href']
 
                         #on scrapp la page detail
