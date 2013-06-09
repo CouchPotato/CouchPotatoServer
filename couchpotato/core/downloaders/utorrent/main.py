@@ -105,14 +105,70 @@ class uTorrent(Downloader):
             return False
 
         statuses = StatusList(self)
+        download_folder = ''
+        default_ratio = 500
+        settings_dict = {}
+
+        try:
+            data = self.utorrent_api.get_settings()
+            utorrent_settings = json.loads(data)
+
+            # Create settings dict
+            for item in utorrent_settings['settings']:
+                if item[1] == 0: # int
+                    settings_dict[item[0]] = int(item[2] if not item[2].strip() == '' else '0')
+                elif item[1] == 1: # bool
+                    settings_dict[item[0]] = True if item[2] == 'true' else False
+                elif item[1] == 2: # string
+                    settings_dict[item[0]] = item[2]
+            log.debug('uTorrent settings: %s', settings_dict)
+
+            # Get the download path from the uTorrent settings
+            if settings_dict['dir_completed_download_flag']:
+                download_folder = settings_dict['dir_completed_download']
+            elif settings_dict['dir_active_download_flag']:
+                download_folder = settings_dict['dir_active_download']
+            else:
+                log.info('No download folder set in uTorrent. Please set a download folder')
+                return False
+            
+            # Get default ratio settings (per mils)
+            if settings_dict['seed_ratio']:
+                default_ratio = settings_dict['seed_ratio']
+
+        except Exception, err:
+            log.error('Failed to get settings from uTorrent: %s', err)
+            return False            
 
         # Get torrents
         for item in queue.get('torrents', []):
 
-            # item[21] = Paused | Downloading | Seeding | Finished
             status = 'busy'
-            if item[21] == 'Finished' or item[21] == 'Seeding':
-                status = 'completed'
+            # item[21] = Paused | Downloading | Seeding | Finished | Stopped
+            # if item[21] == 'Finished' or item[21] == 'Seeding':
+            # http://www.utorrent.com/community/developers/webapi#devs6
+            # item[1] = 160 | 201 | Seeding | Finished | 136
+            # item[4] = pervent downloaded
+            # item[7] = current ratio
+            torrent_params = {}
+            if self.conf('waitseeding', default = 0):
+                if item[4] == 1000 and item[7] >= default_ratio:
+                    if self.conf('archivelabel'):
+                        torrent_params['label'] = self.conf('archivelabel')
+                        self.utorrent_api.set_torrent(torrent_hash, torrent_params)
+                    status = 'completed'
+                    if item[4] == 1000 and item[7] >= default_ratio:
+                        self.utorrent_api.stop_torrent(torrent_hash)
+                    if self.conf('autostop', default = 0):
+                        self.utorrent_api.stop_torrent(torrent_hash)
+                        if self.conf('autoremove', default = 0):
+                            self.utorrent_api.remove_torrent(torrent_hash)
+            else:
+                if item[4] == 1000:
+                    if self.conf('archivelabel'):
+                        torrent_params['label'] = self.conf('archivelabel')
+                        self.utorrent_api.set_torrent(torrent_hash, torrent_params)
+                    status = 'completed'
 
             statuses.append({
                 'id': item[0],
@@ -192,6 +248,14 @@ class uTorrentAPI(object):
 
     def pause_torrent(self, hash):
         action = "action=pause&hash=%s" % hash
+        return self._request(action)
+
+    def stop_torrent(self, hash):
+        action = "action=stop&hash=%s" % hash
+        return self._request(action)
+
+    def remove_torrent(self, hash):
+        action = "action=remove&hash=%s" % hash
         return self._request(action)
 
     def get_status(self):
