@@ -28,6 +28,7 @@ class Plugin(object):
 
     _needs_shutdown = False
 
+    user_agent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:24.0) Gecko/20130519 Firefox/24.0'
     http_last_use = {}
     http_time_between_calls = 0
     http_failed_request = {}
@@ -104,12 +105,13 @@ class Plugin(object):
         if not params: params = {}
 
         # Fill in some headers
-        headers['Referer'] = headers.get('Referer', urlparse(url).hostname)
-        headers['Host'] = headers.get('Host', urlparse(url).hostname)
-        headers['User-Agent'] = headers.get('User-Agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.7; rv:10.0.2) Gecko/20100101 Firefox/10.0.2')
-        headers['Accept-encoding'] = headers.get('Accept-encoding', 'gzip')
+        parsed_url = urlparse(url)
+        host = parsed_url.hostname
 
-        host = urlparse(url).hostname
+        headers['Referer'] = headers.get('Referer', '%s://%s' % (parsed_url.scheme, host))
+        headers['Host'] = headers.get('Host', host)
+        headers['User-Agent'] = headers.get('User-Agent', self.user_agent)
+        headers['Accept-encoding'] = headers.get('Accept-encoding', 'gzip')
 
         # Don't try for failed requests
         if self.http_failed_disabled.get(host, 0) > 0:
@@ -138,7 +140,7 @@ class Plugin(object):
 
                 response = opener.open(request, timeout = timeout)
             else:
-                log.info('Opening url: %s, params: %s', (url, [x for x in params.iterkeys()]))
+                log.info('Opening url: %s, params: %s', (url, [x for x in params.iterkeys()] if isinstance(params, dict) else 'with data'))
                 data = tryUrlencode(params) if len(params) > 0 else None
                 request = urllib2.Request(url, data, headers)
 
@@ -256,7 +258,7 @@ class Plugin(object):
 
     def createNzbName(self, data, movie):
         tag = self.cpTag(movie)
-        return '%s%s' % (toSafeString(data.get('name')[:127 - len(tag)]), tag)
+        return '%s%s' % (toSafeString(data.get('name')[:63 - len(tag)]), tag)
 
     def createFileName(self, data, filedata, movie):
         name = os.path.join(self.createNzbName(data, movie))

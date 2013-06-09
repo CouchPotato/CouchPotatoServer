@@ -33,7 +33,7 @@ class Updater(Plugin):
         else:
             self.updater = SourceUpdater()
 
-        addEvent('app.load', self.autoUpdate)
+        addEvent('app.load', self.setCrons)
         addEvent('updater.info', self.info)
 
         addApiView('updater.info', self.getInfo, docs = {
@@ -80,8 +80,8 @@ class Updater(Plugin):
 
         return False
 
-    def check(self):
-        if self.isDisabled():
+    def check(self, force = False):
+        if not force and self.isDisabled():
             return
 
         if self.updater.check():
@@ -100,7 +100,7 @@ class Updater(Plugin):
 
     def checkView(self):
         return jsonified({
-            'update_available': self.check(),
+            'update_available': self.check(force = True),
             'info': self.updater.info()
         })
 
@@ -279,6 +279,7 @@ class SourceUpdater(BaseUpdater):
             if download_data.get('type') == 'zip':
                 zip = zipfile.ZipFile(destination)
                 zip.extractall(extracted_path)
+                zip.close()
             else:
                 tar = tarfile.open(destination)
                 tar.extractall(path = extracted_path)

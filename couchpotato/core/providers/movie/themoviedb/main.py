@@ -37,7 +37,7 @@ class TheMovieDb(MovieProvider):
                 if raw:
                     try:
                         results = self.parseMovie(raw)
-                        log.info('Found: %s', results['titles'][0] + ' (' + str(results['year']) + ')')
+                        log.info('Found: %s', results['titles'][0] + ' (' + str(results.get('year', 0)) + ')')
 
                         self.setCache(cache_key, results)
                         return results
@@ -81,7 +81,7 @@ class TheMovieDb(MovieProvider):
                         if nr == limit:
                             break
 
-                    log.info('Found: %s', [result['titles'][0] + ' (' + str(result['year']) + ')' for result in results])
+                    log.info('Found: %s', [result['titles'][0] + ' (' + str(result.get('year', 0)) + ')' for result in results])
 
                     self.setCache(cache_key, results)
                     return results
