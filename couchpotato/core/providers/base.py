@@ -127,9 +127,12 @@ class YarrProvider(Provider):
 
     def loginDownload(self, url = '', nzb_id = ''):
         try:
-            if not self.login_opener and not self.login():
+            if not self.login():
                 log.error('Failed downloading from %s', self.getName())
-            return self.urlopen(url, opener = self.login_opener)
+            else:
+                result = self.urlopen(url, opener = self.login_opener)
+                del self.login_opener
+                return result
         except:
             log.error('Failed downloading from %s: %s', (self.getName(), traceback.format_exc()))
 
@@ -150,7 +153,7 @@ class YarrProvider(Provider):
             return []
 
         # Login if needed
-        if self.urls.get('login') and (not self.login_opener and not self.login()):
+        if self.urls.get('login') and not self.login():
             log.error('Failed to login to: %s', self.getName())
             return []
 
@@ -166,6 +169,7 @@ class YarrProvider(Provider):
             for title in possibleTitles(getTitle(movie['library'])):
                 self._searchOnTitle(title, movie, quality, results)
 
+        del self.login_opener
         return results
 
     def belongsTo(self, url, provider = None, host = None):
