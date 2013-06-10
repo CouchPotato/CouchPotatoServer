@@ -186,7 +186,7 @@ class PassThePopcorn(TorrentProvider):
             seen_one = False
 
             if not field in torrent:
-                log.debug('Torrent with ID %s has no field "%s"; cannot apply post-search-filter for quality "%s"', (torrent['Id'], field, quality))
+                log.debug('Torrent with ID %s has no field "%s"; cannot apply post-search-filter for quality "%s"', (torrent['id'], field, quality))
                 continue
 
             for spec in specs:
