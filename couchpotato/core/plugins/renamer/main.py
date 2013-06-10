@@ -183,6 +183,7 @@ class Renamer(Plugin):
                      'source': group['meta_data']['source'],
                      'resolution_width': group['meta_data'].get('resolution_width'),
                      'resolution_height': group['meta_data'].get('resolution_height'),
+                     'audio_channels': group['meta_data'].get('audio_channels'),
                      'imdb_id': library['identifier'],
                      'cd': '',
                      'cd_nr': '',
