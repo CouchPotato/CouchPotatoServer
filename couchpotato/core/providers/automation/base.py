@@ -51,6 +51,7 @@ class Automation(Provider):
 
     def isMinimalMovie(self, movie):
         if not movie.get('rating'):
+            log.info('ignoring %s as no rating is available for.', (movie['original_title']))
             return False
 
         if movie['rating'] and movie['rating'].get('imdb'):
