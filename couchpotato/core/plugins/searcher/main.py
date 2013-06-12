@@ -2,7 +2,6 @@ from couchpotato import get_session
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
 from couchpotato.core.helpers.encoding import simplifyString, toUnicode
-from couchpotato.core.helpers.request import jsonified, getParam
 from couchpotato.core.helpers.variable import md5, getTitle, splitString, \
     possibleTitles
 from couchpotato.core.logger import CPLog
@@ -67,15 +66,15 @@ class Searcher(Plugin):
         else:
             fireEvent('notify.frontend', type = 'searcher.already_started', data = True, message = 'Full search already in progress')
 
-        return jsonified({
+        return {
             'success': not in_progress
-        })
+        }
 
     def getProgress(self):
 
-        return jsonified({
+        return {
             'progress': self.in_progress
-        })
+        }
 
     def allMovies(self):
 
@@ -586,13 +585,13 @@ class Searcher(Plugin):
 
         return False
 
-    def tryNextReleaseView(self):
+    def tryNextReleaseView(self, id = None, **kwargs):
 
-        trynext = self.tryNextRelease(getParam('id'))
+        trynext = self.tryNextRelease(id)
 
-        return jsonified({
+        return {
             'success': trynext
-        })
+        }
 
     def tryNextRelease(self, movie_id, manual = False):
 

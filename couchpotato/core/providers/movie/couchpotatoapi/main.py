@@ -1,7 +1,6 @@
 from couchpotato import get_session
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import tryUrlencode
-from couchpotato.core.helpers.request import jsonified, getParams
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.movie.base import MovieProvider
 from couchpotato.core.settings.model import Movie
@@ -92,11 +91,10 @@ class CouchPotatoApi(MovieProvider):
 
         return suggestions
 
-    def suggestView(self):
+    def suggestView(self, **kwargs):
 
-        params = getParams()
-        movies = params.get('movies')
-        ignore = params.get('ignore', [])
+        movies = kwargs.get('movies')
+        ignore = kwargs.get('ignore', [])
 
         if not movies:
             db = get_session()
@@ -105,11 +103,11 @@ class CouchPotatoApi(MovieProvider):
 
         suggestions = self.suggest(movies, ignore)
 
-        return jsonified({
+        return {
             'success': True,
             'count': len(suggestions),
             'suggestions': suggestions
-        })
+        }
 
     def getRequestHeaders(self):
         return {

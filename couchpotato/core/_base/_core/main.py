@@ -1,6 +1,5 @@
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, addEvent
-from couchpotato.core.helpers.request import jsonified
 from couchpotato.core.helpers.variable import cleanHost, md5
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
@@ -69,9 +68,9 @@ class Core(Plugin):
         return True
 
     def available(self):
-        return jsonified({
+        return {
             'success': True
-        })
+        }
 
     def shutdown(self):
         if self.shutdown_started:
@@ -156,10 +155,10 @@ class Core(Plugin):
             host = 'localhost'
         port = Env.setting('port')
 
-        return '%s:%d%s' % (cleanHost(host).rstrip('/'), int(port), '/' + Env.setting('url_base').lstrip('/') if Env.setting('url_base') else '')
+        return '%s:%d%s' % (cleanHost(host).rstrip('/'), int(port), Env.get('web_base'))
 
     def createApiUrl(self):
-        return '%s/api/%s' % (self.createBaseUrl(), Env.setting('api_key'))
+        return '%sapi/%s' % (self.createBaseUrl(), Env.setting('api_key'))
 
     def version(self):
         ver = fireEvent('updater.info', single = True)
@@ -171,9 +170,9 @@ class Core(Plugin):
         return '%s - %s-%s - v2' % (platf, ver.get('version')['type'], ver.get('version')['hash'])
 
     def versionView(self):
-        return jsonified({
+        return {
             'version': self.version()
-        })
+        }
 
     def signalHandler(self):
         if Env.get('daemonized'): return

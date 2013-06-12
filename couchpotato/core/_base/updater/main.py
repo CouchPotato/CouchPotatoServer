@@ -1,7 +1,6 @@
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
 from couchpotato.core.helpers.encoding import ss
-from couchpotato.core.helpers.request import jsonified
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
@@ -36,7 +35,7 @@ class Updater(Plugin):
         addEvent('app.load', self.setCrons)
         addEvent('updater.info', self.info)
 
-        addApiView('updater.info', self.getInfo, docs = {
+        addApiView('updater.info', self.info, docs = {
             'desc': 'Get updater information',
             'return': {
                 'type': 'object',
@@ -92,17 +91,14 @@ class Updater(Plugin):
 
         return False
 
-    def info(self):
+    def info(self, **kwargs):
         return self.updater.info()
 
-    def getInfo(self):
-        return jsonified(self.updater.info())
-
     def checkView(self):
-        return jsonified({
+        return {
             'update_available': self.check(force = True),
             'info': self.updater.info()
-        })
+        }
 
     def doUpdateView(self):
 
@@ -119,9 +115,9 @@ class Updater(Plugin):
             if not success:
                 success = True
 
-        return jsonified({
+        return {
             'success': success
-        })
+        }
 
 
 class BaseUpdater(Plugin):
@@ -137,9 +133,6 @@ class BaseUpdater(Plugin):
 
     def doUpdate(self):
         pass
-
-    def getInfo(self):
-        return jsonified(self.info())
 
     def info(self):
         return {

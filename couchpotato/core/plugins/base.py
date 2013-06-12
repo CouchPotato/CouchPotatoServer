@@ -1,12 +1,12 @@
 from StringIO import StringIO
-from couchpotato import addView
 from couchpotato.core.event import fireEvent, addEvent
 from couchpotato.core.helpers.encoding import tryUrlencode, ss, toSafeString
 from couchpotato.core.helpers.variable import getExt, md5
 from couchpotato.core.logger import CPLog
 from couchpotato.environment import Env
-from flask.templating import render_template_string
 from multipartpost import MultipartPostHandler
+from tornado import template
+from tornado.web import StaticFileHandler
 from urlparse import urlparse
 import cookielib
 import glob
@@ -44,34 +44,36 @@ class Plugin(object):
     def getName(self):
         return self.__class__.__name__
 
-    def renderTemplate(self, parent_file, template, **params):
+    def renderTemplate(self, parent_file, templ, **params):
 
-        template = open(os.path.join(os.path.dirname(parent_file), template), 'r').read()
-        return render_template_string(template, **params)
+        t = template.Template(open(os.path.join(os.path.dirname(parent_file), templ), 'r').read())
+        return t.generate(**params)
 
     def registerStatic(self, plugin_file, add_to_head = True):
 
         # Register plugin path
         self.plugin_path = os.path.dirname(plugin_file)
+        static_folder = os.path.join(self.plugin_path, 'static')
+
+        if not os.path.isdir(static_folder):
+            return
 
         # Get plugin_name from PluginName
         s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', self.__class__.__name__)
         class_name = re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
 
+        # View path
         path = 'api/%s/static/%s/' % (Env.setting('api_key'), class_name)
-        addView(path + '<path:filename>', self.showStatic, static = True)
 
+        # Add handler to Tornado
+        Env.get('app').add_handlers(".*$", [(Env.get('web_base') + path + '(.*)', StaticFileHandler, {'path': static_folder})])
+
+        # Register for HTML <HEAD>
         if add_to_head:
             for f in glob.glob(os.path.join(self.plugin_path, 'static', '*')):
                 ext = getExt(f)
                 if ext in ['js', 'css']:
                     fireEvent('register_%s' % ('script' if ext in 'js' else 'style'), path + os.path.basename(f), f)
-
-    def showStatic(self, filename):
-        d = os.path.join(self.plugin_path, 'static')
-
-        from flask.helpers import send_from_directory
-        return send_from_directory(d, filename)
 
     def createFile(self, path, content, binary = False):
         path = ss(path)

@@ -1,13 +1,12 @@
 from argparse import ArgumentParser
-from couchpotato import web
-from couchpotato.api import api, NonBlockHandler
+from cache import FileSystemCache
+from couchpotato import KeyHandler
+from couchpotato.api import NonBlockHandler, ApiHandler
 from couchpotato.core.event import fireEventAsync, fireEvent
 from couchpotato.core.helpers.variable import getDataDir, tryInt
 from logging import handlers
 from tornado.httpserver import HTTPServer
-from tornado.web import Application, FallbackHandler
-from tornado.wsgi import WSGIContainer
-from werkzeug.contrib.cache import FileSystemCache
+from tornado.web import Application, StaticFileHandler, RedirectHandler
 import locale
 import logging
 import os.path
@@ -172,11 +171,6 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     db = Env.get('db_path')
     db_exists = os.path.isfile(db_path)
 
-    # Load configs & plugins
-    loader = Env.get('loader')
-    loader.preload(root = base_path)
-    loader.run()
-
     # Load migrations
     if db_exists:
 
@@ -201,17 +195,16 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     from couchpotato.core.settings.model import setup
     setup()
 
-    # Fill database with needed stuff
-    if not db_exists:
-        fireEvent('app.initialize', in_order = True)
-
     # Create app
-    from couchpotato import app
+    from couchpotato import WebHandler
+    web_base = ('/' + Env.setting('url_base').lstrip('/') + '/') if Env.setting('url_base') else '/'
+    Env.set('web_base', web_base)
+
     api_key = Env.setting('api_key')
-    url_base = '/' + Env.setting('url_base').lstrip('/') if Env.setting('url_base') else ''
+    api_base = r'%sapi/%s/' % (web_base, api_key)
+    Env.set('api_base', api_base)
 
     # Basic config
-    app.secret_key = api_key
     host = Env.setting('host', default = '0.0.0.0')
     # app.debug = development
     config = {
@@ -222,36 +215,61 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
         'ssl_key': Env.setting('ssl_key', default = None),
     }
 
-    # Static path
-    app.static_folder = os.path.join(base_path, 'couchpotato', 'static')
-    web.add_url_rule('api/%s/static/<path:filename>' % api_key,
-                      endpoint = 'static',
-                      view_func = app.send_static_file)
 
-    # Register modules
-    app.register_blueprint(web, url_prefix = '%s/' % url_base)
-    app.register_blueprint(api, url_prefix = '%s/api/%s/' % (url_base, api_key))
+    # Load the app
+    application = Application([],
+        log_function = lambda x : None,
+        debug = config['use_reloader'],
+        gzip = True,
+    )
+    Env.set('app', application)
+
+
+    # Request handlers
+    application.add_handlers(".*$", [
+        (r'%snonblock/(.*)/' % api_base, NonBlockHandler),
+
+        # API handlers
+        (r'%s(.*)/' % api_base, ApiHandler), # Main API handler
+        (r'%sgetkey/' % web_base, KeyHandler), # Get API key
+        (r'%s' % api_base, RedirectHandler, {"url": web_base + 'docs/'}), # API docs
+
+        # Catch all webhandlers
+        (r'%s(.*)/' % web_base, WebHandler),
+        (r'%s(.*)' % web_base, WebHandler),
+        (r'(.*)', WebHandler),
+    ])
+
+    # Static paths
+    static_path = '%sstatic/' % api_base
+    for dir_name in ['fonts', 'images', 'scripts', 'style']:
+        application.add_handlers(".*$", [
+             ('%s%s/(.*)' % (static_path, dir_name), StaticFileHandler, {'path': os.path.join(base_path, 'couchpotato', 'static', dir_name)})
+        ])
+    Env.set('static_path', static_path);
+
+
+    # Load configs & plugins
+    loader = Env.get('loader')
+    loader.preload(root = base_path)
+    loader.run()
+
+
+    # Fill database with needed stuff
+    if not db_exists:
+        fireEvent('app.initialize', in_order = True)
+
+
+    # Go go go!
+    from tornado.ioloop import IOLoop
+    loop = IOLoop.current()
+
 
     # Some logging and fire load event
     try: log.info('Starting server on port %(port)s', config)
     except: pass
     fireEventAsync('app.load')
 
-    # Go go go!
-    from tornado.ioloop import IOLoop
-    web_container = WSGIContainer(app)
-    web_container._log = _log
-    loop = IOLoop.current()
-
-
-    application = Application([
-        (r'%s/api/%s/nonblock/(.*)/' % (url_base, api_key), NonBlockHandler),
-        (r'.*', FallbackHandler, dict(fallback = web_container)),
-    ],
-        log_function = lambda x : None,
-        debug = config['use_reloader'],
-        gzip = True,
-    )
 
     if config['ssl_cert'] and config['ssl_key']:
         server = HTTPServer(application, no_keep_alive = True, ssl_options = {

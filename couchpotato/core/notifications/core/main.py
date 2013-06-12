@@ -2,7 +2,6 @@ from couchpotato import get_session
 from couchpotato.api import addApiView, addNonBlockApiView
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import toUnicode
-from couchpotato.core.helpers.request import jsonified, getParam
 from couchpotato.core.helpers.variable import tryInt, splitString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
@@ -62,11 +61,9 @@ class CoreNotifier(Notification):
         db.commit()
 
 
-    def markAsRead(self):
+    def markAsRead(self, ids = None):
 
-        ids = None
-        if getParam('ids'):
-            ids = splitString(getParam('ids'))
+        ids = splitString(ids) if ids else None
 
         db = get_session()
 
@@ -79,14 +76,13 @@ class CoreNotifier(Notification):
 
         db.commit()
 
-        return jsonified({
+        return {
             'success': True
-        })
+        }
 
-    def listView(self):
+    def listView(self, limit_offset = None, **kwargs):
 
         db = get_session()
-        limit_offset = getParam('limit_offset', None)
 
         q = db.query(Notif)
 
@@ -105,11 +101,11 @@ class CoreNotifier(Notification):
             ndict['type'] = 'notification'
             notifications.append(ndict)
 
-        return jsonified({
+        return {
             'success': True,
             'empty': len(notifications) == 0,
             'notifications': notifications
-        })
+        }
 
     def checkMessages(self):
 
@@ -219,12 +215,12 @@ class CoreNotifier(Notification):
 
         return recent or []
 
-    def listener(self):
+    def listener(self, init = False, **kwargs):
 
         messages = []
 
         # Get unread
-        if getParam('init'):
+        if init:
             db = get_session()
 
             notifications = db.query(Notif) \
@@ -235,7 +231,7 @@ class CoreNotifier(Notification):
                 ndict['type'] = 'notification'
                 messages.append(ndict)
 
-        return jsonified({
+        return {
             'success': True,
             'result': messages,
-        })
+        }

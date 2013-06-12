@@ -1,13 +1,12 @@
 from couchpotato import get_session
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent
-from couchpotato.core.helpers.request import jsonified, getParams
 from couchpotato.core.helpers.variable import splitString, tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Movie
 from sqlalchemy.orm import joinedload_all
-import random
+import random as rndm
 import time
 
 log = CPLog(__name__)
@@ -43,14 +42,13 @@ class Dashboard(Plugin):
 
         suggestions = fireEvent('movie.suggest', movies = identifiers, single = True)
 
-        return jsonified({
+        return {
             'result': True,
             'suggestions': suggestions
-        })
+        }
 
-    def getSoonView(self):
+    def getSoonView(self, limit_offset = None, random = False, late = False, **kwargs):
 
-        params = getParams()
         db = get_session()
         now = time.time()
 
@@ -85,7 +83,6 @@ class Dashboard(Plugin):
             .options(joinedload_all('files'))
 
         # Add limit
-        limit_offset = params.get('limit_offset')
         limit = 12
         if limit_offset:
             splt = splitString(limit_offset) if isinstance(limit_offset, (str, unicode)) else limit_offset
@@ -93,8 +90,8 @@ class Dashboard(Plugin):
 
         all_movies = q.all()
 
-        if params.get('random', False):
-            random.shuffle(all_movies)
+        if random:
+            rndm.shuffle(all_movies)
 
         movies = []
         for movie in all_movies:
@@ -126,18 +123,18 @@ class Dashboard(Plugin):
                 })
 
                 # Don't list older movies
-                if ((not params.get('late') and (not eta.get('dvd') or (eta.get('dvd') and eta.get('dvd') > (now - 2419200)))) or \
-                        (params.get('late') and eta.get('dvd') and eta.get('dvd') < (now - 2419200))):
+                if ((not late and (not eta.get('dvd') or (eta.get('dvd') and eta.get('dvd') > (now - 2419200)))) or \
+                        (late and eta.get('dvd') and eta.get('dvd') < (now - 2419200))):
                     movies.append(temp)
 
                 if len(movies) >= limit:
                     break
 
         db.expire_all()
-        return jsonified({
+        return {
             'success': True,
             'empty': len(movies) == 0,
             'movies': movies,
-        })
+        }
 
     getLateView = getSoonView

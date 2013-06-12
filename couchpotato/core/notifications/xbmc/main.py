@@ -1,8 +1,8 @@
 from couchpotato.core.helpers.variable import splitString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
-from flask.helpers import json
 import base64
+import json
 import traceback
 import urllib
 

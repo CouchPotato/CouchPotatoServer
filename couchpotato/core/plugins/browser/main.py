@@ -1,5 +1,4 @@
 from couchpotato.api import addApiView
-from couchpotato.core.helpers.request import getParam, jsonified
 from couchpotato.core.helpers.variable import getUserDir
 from couchpotato.core.plugins.base import Plugin
 import ctypes
@@ -63,16 +62,15 @@ class FileBrowser(Plugin):
 
         return driveletters
 
-    def view(self):
+    def view(self, path = '/', show_hidden = True, **kwargs):
 
-        path = getParam('path', '/')
         home = getUserDir()
 
         if not path:
             path = home
 
         try:
-            dirs = self.getDirectories(path = path, show_hidden = getParam('show_hidden', True))
+            dirs = self.getDirectories(path = path, show_hidden = show_hidden)
         except:
             dirs = []
 
@@ -82,14 +80,14 @@ class FileBrowser(Plugin):
         elif parent != '/' and parent[-2:] != ':\\':
             parent += os.path.sep
 
-        return jsonified({
+        return {
             'is_root': path == '/',
             'empty': len(dirs) == 0,
             'parent': parent,
             'home': home + os.path.sep,
             'platform': os.name,
             'dirs': dirs,
-        })
+        }
 
 
     def is_hidden(self, filepath):
