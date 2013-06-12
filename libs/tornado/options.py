@@ -61,6 +61,7 @@ instances to define isolated sets of options, such as for subcommands.
 from __future__ import absolute_import, division, print_function, with_statement
 
 import datetime
+import numbers
 import re
 import sys
 import os
@@ -100,6 +101,55 @@ class OptionParser(object):
             return self._options[name].set(value)
         raise AttributeError("Unrecognized option %r" % name)
 
+    def __iter__(self):
+        return iter(self._options)
+
+    def __getitem__(self, item):
+        return self._options[item].value()
+
+    def items(self):
+        """A sequence of (name, value) pairs.
+
+        .. versionadded:: 3.1
+        """
+        return [(name, opt.value()) for name, opt in self._options.items()]
+
+    def groups(self):
+        """The set of option-groups created by ``define``.
+
+        .. versionadded:: 3.1
+        """
+        return set(opt.group_name for opt in self._options.values())
+
+    def group_dict(self, group):
+        """The names and values of options in a group.
+
+        Useful for copying options into Application settings::
+
+            from tornado.options import define, parse_command_line, options
+
+            define('template_path', group='application')
+            define('static_path', group='application')
+
+            parse_command_line()
+
+            application = Application(
+                handlers, **options.group_dict('application'))
+
+        .. versionadded:: 3.1
+        """
+        return dict(
+            (name, opt.value()) for name, opt in self._options.items()
+            if not group or group == opt.group_name)
+
+    def as_dict(self):
+        """The names and values of all options.
+
+        .. versionadded:: 3.1
+        """
+        return dict(
+            (name, opt.value()) for name, opt in self._options.items())
+
     def define(self, name, default=None, type=None, help=None, metavar=None,
                multiple=False, group=None, callback=None):
         """Defines a new command line option.
@@ -138,8 +188,8 @@ class OptionParser(object):
         by later flags.
         """
         if name in self._options:
-            raise Error("Option %r already defined in %s", name,
-                        self._options[name].file_name)
+            raise Error("Option %r already defined in %s" %
+                        (name, self._options[name].file_name))
         frame = sys._getframe(0)
         options_file = frame.f_code.co_filename
         file_name = frame.f_back.f_code.co_filename
@@ -339,7 +389,7 @@ class _Option(object):
         if self.multiple:
             self._value = []
             for part in value.split(","):
-                if self.type in (int, long):
+                if issubclass(self.type, numbers.Integral):
                     # allow ranges of the form X:Y (inclusive at both ends)
                     lo, _, hi = part.partition(":")
                     lo = _parse(lo)
@@ -359,11 +409,11 @@ class _Option(object):
                 raise Error("Option %r is required to be a list of %s" %
                             (self.name, self.type.__name__))
             for item in value:
-                if item != None and not isinstance(item, self.type):
+                if item is not None and not isinstance(item, self.type):
                     raise Error("Option %r is required to be a list of %s" %
                                 (self.name, self.type.__name__))
         else:
-            if value != None and not isinstance(value, self.type):
+            if value is not None and not isinstance(value, self.type):
                 raise Error("Option %r is required to be a %s (%s given)" %
                             (self.name, self.type.__name__, type(value)))
         self._value = value

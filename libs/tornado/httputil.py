@@ -18,9 +18,11 @@
 
 from __future__ import absolute_import, division, print_function, with_statement
 
+import calendar
+import collections
 import datetime
+import email.utils
 import numbers
-import re
 import time
 
 from tornado.escape import native_str, parse_qs_bytes, utf8
@@ -40,6 +42,37 @@ try:
     from urllib import urlencode  # py2
 except ImportError:
     from urllib.parse import urlencode  # py3
+
+
+class _NormalizedHeaderCache(dict):
+    """Dynamic cached mapping of header names to Http-Header-Case.
+
+    Implemented as a dict subclass so that cache hits are as fast as a
+    normal dict lookup, without the overhead of a python function
+    call.
+
+    >>> normalized_headers = _NormalizedHeaderCache(10)
+    >>> normalized_headers["coNtent-TYPE"]
+    'Content-Type'
+    """
+    def __init__(self, size):
+        super(_NormalizedHeaderCache, self).__init__()
+        self.size = size
+        self.queue = collections.deque()
+
+    def __missing__(self, key):
+        normalized = "-".join([w.capitalize() for w in key.split("-")])
+        self[key] = normalized
+        self.queue.append(key)
+        if len(self.queue) > self.size:
+            # Limit the size of the cache.  LRU would be better, but this
+            # simpler approach should be fine.  In Python 2.7+ we could
+            # use OrderedDict (or in 3.2+, @functools.lru_cache).
+            old_key = self.queue.popleft()
+            del self[old_key]
+        return normalized
+
+_normalized_headers = _NormalizedHeaderCache(1000)
 
 
 class HTTPHeaders(dict):
@@ -89,7 +122,7 @@ class HTTPHeaders(dict):
 
     def add(self, name, value):
         """Adds a new value for the given key."""
-        norm_name = HTTPHeaders._normalize_name(name)
+        norm_name = _normalized_headers[name]
         self._last_key = norm_name
         if norm_name in self:
             # bypass our override of __setitem__ since it modifies _as_list
@@ -102,7 +135,7 @@ class HTTPHeaders(dict):
 
     def get_list(self, name):
         """Returns all values for the given header as a list."""
-        norm_name = HTTPHeaders._normalize_name(name)
+        norm_name = _normalized_headers[name]
         return self._as_list.get(norm_name, [])
 
     def get_all(self):
@@ -150,24 +183,24 @@ class HTTPHeaders(dict):
     # dict implementation overrides
 
     def __setitem__(self, name, value):
-        norm_name = HTTPHeaders._normalize_name(name)
+        norm_name = _normalized_headers[name]
         dict.__setitem__(self, norm_name, value)
         self._as_list[norm_name] = [value]
 
     def __getitem__(self, name):
-        return dict.__getitem__(self, HTTPHeaders._normalize_name(name))
+        return dict.__getitem__(self, _normalized_headers[name])
 
     def __delitem__(self, name):
-        norm_name = HTTPHeaders._normalize_name(name)
+        norm_name = _normalized_headers[name]
         dict.__delitem__(self, norm_name)
         del self._as_list[norm_name]
 
     def __contains__(self, name):
-        norm_name = HTTPHeaders._normalize_name(name)
+        norm_name = _normalized_headers[name]
         return dict.__contains__(self, norm_name)
 
     def get(self, name, default=None):
-        return dict.get(self, HTTPHeaders._normalize_name(name), default)
+        return dict.get(self, _normalized_headers[name], default)
 
     def update(self, *args, **kwargs):
         # dict.update bypasses our __setitem__
@@ -177,26 +210,6 @@ class HTTPHeaders(dict):
     def copy(self):
         # default implementation returns dict(self), not the subclass
         return HTTPHeaders(self)
-
-    _NORMALIZED_HEADER_RE = re.compile(r'^[A-Z0-9][a-z0-9]*(-[A-Z0-9][a-z0-9]*)*$')
-    _normalized_headers = {}
-
-    @staticmethod
-    def _normalize_name(name):
-        """Converts a name to Http-Header-Case.
-
-        >>> HTTPHeaders._normalize_name("coNtent-TYPE")
-        'Content-Type'
-        """
-        try:
-            return HTTPHeaders._normalized_headers[name]
-        except KeyError:
-            if HTTPHeaders._NORMALIZED_HEADER_RE.match(name):
-                normalized = name
-            else:
-                normalized = "-".join([w.capitalize() for w in name.split("-")])
-            HTTPHeaders._normalized_headers[name] = normalized
-            return normalized
 
 
 def url_concat(url, args):
@@ -224,6 +237,77 @@ class HTTPFile(ObjectDict):
     * ``content_type``
     """
     pass
+
+
+def _parse_request_range(range_header):
+    """Parses a Range header.
+
+    Returns either ``None`` or tuple ``(start, end)``.
+    Note that while the HTTP headers use inclusive byte positions,
+    this method returns indexes suitable for use in slices.
+
+    >>> start, end = _parse_request_range("bytes=1-2")
+    >>> start, end
+    (1, 3)
+    >>> [0, 1, 2, 3, 4][start:end]
+    [1, 2]
+    >>> _parse_request_range("bytes=6-")
+    (6, None)
+    >>> _parse_request_range("bytes=-6")
+    (-6, None)
+    >>> _parse_request_range("bytes=-0")
+    (None, 0)
+    >>> _parse_request_range("bytes=")
+    (None, None)
+    >>> _parse_request_range("foo=42")
+    >>> _parse_request_range("bytes=1-2,6-10")
+
+    Note: only supports one range (ex, ``bytes=1-2,6-10`` is not allowed).
+
+    See [0] for the details of the range header.
+
+    [0]: http://greenbytes.de/tech/webdav/draft-ietf-httpbis-p5-range-latest.html#byte.ranges
+    """
+    unit, _, value = range_header.partition("=")
+    unit, value = unit.strip(), value.strip()
+    if unit != "bytes":
+        return None
+    start_b, _, end_b = value.partition("-")
+    try:
+        start = _int_or_none(start_b)
+        end = _int_or_none(end_b)
+    except ValueError:
+        return None
+    if end is not None:
+        if start is None:
+            if end != 0:
+                start = -end
+                end = None
+        else:
+            end += 1
+    return (start, end)
+
+
+def _get_content_range(start, end, total):
+    """Returns a suitable Content-Range header:
+
+    >>> print(_get_content_range(None, 1, 4))
+    bytes 0-0/4
+    >>> print(_get_content_range(1, 3, 4))
+    bytes 1-2/4
+    >>> print(_get_content_range(None, None, 4))
+    bytes 0-3/4
+    """
+    start = start or 0
+    end = (end or total) - 1
+    return "bytes %s-%s/%s" % (start, end, total)
+
+
+def _int_or_none(val):
+    val = val.strip()
+    if val == "":
+        return None
+    return int(val)
 
 
 def parse_body_arguments(content_type, body, arguments, files):
@@ -307,15 +391,15 @@ def format_timestamp(ts):
     >>> format_timestamp(1359312200)
     'Sun, 27 Jan 2013 18:43:20 GMT'
     """
-    if isinstance(ts, (tuple, time.struct_time)):
+    if isinstance(ts, numbers.Real):
         pass
+    elif isinstance(ts, (tuple, time.struct_time)):
+        ts = calendar.timegm(ts)
     elif isinstance(ts, datetime.datetime):
-        ts = ts.utctimetuple()
-    elif isinstance(ts, numbers.Real):
-        ts = time.gmtime(ts)
+        ts = calendar.timegm(ts.utctimetuple())
     else:
         raise TypeError("unknown timestamp type: %r" % ts)
-    return time.strftime("%a, %d %b %Y %H:%M:%S GMT", ts)
+    return email.utils.formatdate(ts, usegmt=True)
 
 # _parseparam and _parse_header are copied and modified from python2.7's cgi.py
 # The original 2.7 version of this code did not correctly support some

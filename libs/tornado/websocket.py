@@ -35,6 +35,7 @@ from tornado.concurrent import Future
 from tornado.escape import utf8, native_str
 from tornado import httpclient
 from tornado.ioloop import IOLoop
+from tornado.iostream import StreamClosedError
 from tornado.log import gen_log, app_log
 from tornado.netutil import Resolver
 from tornado import simple_httpclient
@@ -226,6 +227,22 @@ class WebSocketHandler(tornado.web.RequestHandler):
         removed in a future version of Tornado.
         """
         return False
+
+    def set_nodelay(self, value):
+        """Set the no-delay flag for this stream.
+
+        By default, small messages may be delayed and/or combined to minimize
+        the number of packets sent.  This can sometimes cause 200-500ms delays
+        due to the interaction between Nagle's algorithm and TCP delayed
+        ACKs.  To reduce this delay (at the expense of possibly increasing
+        bandwidth usage), call ``self.set_nodelay(True)`` once the websocket
+        connection is established.
+
+        See `.BaseIOStream.set_nodelay` for additional details.
+
+        .. versionadded:: 3.1
+        """
+        self.stream.set_nodelay(value)
 
     def get_websocket_scheme(self):
         """Return the url scheme used for this request, either "ws" or "wss".
@@ -572,7 +589,10 @@ class WebSocketProtocol13(WebSocketProtocol):
             opcode = 0x1
         message = tornado.escape.utf8(message)
         assert isinstance(message, bytes_type)
-        self._write_frame(True, opcode, message)
+        try:
+            self._write_frame(True, opcode, message)
+        except StreamClosedError:
+            self._abort()
 
     def write_ping(self, data):
         """Send ping frame."""
@@ -580,7 +600,10 @@ class WebSocketProtocol13(WebSocketProtocol):
         self._write_frame(True, 0x9, data)
 
     def _receive_frame(self):
-        self.stream.read_bytes(2, self._on_frame_start)
+        try:
+            self.stream.read_bytes(2, self._on_frame_start)
+        except StreamClosedError:
+            self._abort()
 
     def _on_frame_start(self, data):
         header, payloadlen = struct.unpack("BB", data)
@@ -598,34 +621,46 @@ class WebSocketProtocol13(WebSocketProtocol):
             # control frames must have payload < 126
             self._abort()
             return
-        if payloadlen < 126:
-            self._frame_length = payloadlen
+        try:
+            if payloadlen < 126:
+                self._frame_length = payloadlen
+                if self._masked_frame:
+                    self.stream.read_bytes(4, self._on_masking_key)
+                else:
+                    self.stream.read_bytes(self._frame_length, self._on_frame_data)
+            elif payloadlen == 126:
+                self.stream.read_bytes(2, self._on_frame_length_16)
+            elif payloadlen == 127:
+                self.stream.read_bytes(8, self._on_frame_length_64)
+        except StreamClosedError:
+            self._abort()
+
+    def _on_frame_length_16(self, data):
+        self._frame_length = struct.unpack("!H", data)[0]
+        try:
             if self._masked_frame:
                 self.stream.read_bytes(4, self._on_masking_key)
             else:
                 self.stream.read_bytes(self._frame_length, self._on_frame_data)
-        elif payloadlen == 126:
-            self.stream.read_bytes(2, self._on_frame_length_16)
-        elif payloadlen == 127:
-            self.stream.read_bytes(8, self._on_frame_length_64)
-
-    def _on_frame_length_16(self, data):
-        self._frame_length = struct.unpack("!H", data)[0]
-        if self._masked_frame:
-            self.stream.read_bytes(4, self._on_masking_key)
-        else:
-            self.stream.read_bytes(self._frame_length, self._on_frame_data)
+        except StreamClosedError:
+            self._abort()
 
     def _on_frame_length_64(self, data):
         self._frame_length = struct.unpack("!Q", data)[0]
-        if self._masked_frame:
-            self.stream.read_bytes(4, self._on_masking_key)
-        else:
-            self.stream.read_bytes(self._frame_length, self._on_frame_data)
+        try:
+            if self._masked_frame:
+                self.stream.read_bytes(4, self._on_masking_key)
+            else:
+                self.stream.read_bytes(self._frame_length, self._on_frame_data)
+        except StreamClosedError:
+            self._abort()
 
     def _on_masking_key(self, data):
         self._frame_mask = data
-        self.stream.read_bytes(self._frame_length, self._on_masked_frame_data)
+        try:
+            self.stream.read_bytes(self._frame_length, self._on_masked_frame_data)
+        except StreamClosedError:
+            self._abort()
 
     def _apply_mask(self, mask, data):
         mask = array.array("B", mask)
@@ -744,12 +779,14 @@ class WebSocketClientConnection(simple_httpclient._HTTPConnection):
             'Sec-WebSocket-Version': '13',
         })
 
+        self.resolver = Resolver(io_loop=io_loop)
         super(WebSocketClientConnection, self).__init__(
             io_loop, None, request, lambda: None, self._on_http_response,
-            104857600, Resolver(io_loop=io_loop))
+            104857600, self.resolver)
 
     def _on_close(self):
         self.on_message(None)
+        self.resolver.close()
 
     def _on_http_response(self, response):
         if not self.connect_future.done():
@@ -757,7 +794,7 @@ class WebSocketClientConnection(simple_httpclient._HTTPConnection):
                 self.connect_future.set_exception(response.error)
             else:
                 self.connect_future.set_exception(WebSocketError(
-                        "Non-websocket response"))
+                    "Non-websocket response"))
 
     def _handle_1xx(self, code):
         assert code == 101
