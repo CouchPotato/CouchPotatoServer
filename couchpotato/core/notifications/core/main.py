@@ -10,6 +10,7 @@ from couchpotato.environment import Env
 from sqlalchemy.sql.expression import or_
 import threading
 import time
+import traceback
 import uuid
 
 log = CPLog(__name__)
@@ -146,6 +147,8 @@ class CoreNotifier(Notification):
 
     def frontend(self, type = 'notification', data = {}, message = None):
 
+        log.debug('Notifying frontend')
+
         self.m_lock.acquire()
         notification = {
             'message_id': str(uuid.uuid4()),
@@ -164,10 +167,13 @@ class CoreNotifier(Notification):
                     'result': [notification],
                 })
             except:
+                log.debug('Failed sending to listener: %s', traceback.format_exc())
                 break
 
         self.m_lock.release()
         self.cleanMessages()
+
+        log.debug('Done notifying frontend')
 
     def addListener(self, callback, last_id = None):
 
@@ -190,9 +196,11 @@ class CoreNotifier(Notification):
                 if listener == callback:
                     self.listeners.remove(list_tuple)
             except:
-                pass
+                log.debug('Failed removing listener: %s', traceback.format_exc())
 
     def cleanMessages(self):
+
+        log.debug('Cleaning messages')
         self.m_lock.acquire()
 
         for message in self.messages:
@@ -200,8 +208,11 @@ class CoreNotifier(Notification):
                 self.messages.remove(message)
 
         self.m_lock.release()
+        log.debug('Done cleaning messages')
 
     def getMessages(self, last_id):
+
+        log.debug('Getting messages with id: %s', last_id)
         self.m_lock.acquire()
 
         recent = []
@@ -212,6 +223,7 @@ class CoreNotifier(Notification):
             recent = self.messages[index:]
 
         self.m_lock.release()
+        log.debug('Returning for %s %s messages', (last_id, len(recent or [])))
 
         return recent or []
 
