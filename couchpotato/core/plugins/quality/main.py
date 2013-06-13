@@ -18,6 +18,7 @@ class QualityPlugin(Plugin):
 
     qualities = [
         {'identifier': 'bd50', 'hd': True, 'size': (15000, 60000), 'label': 'BR-Disk', 'alternative': ['bd25'], 'allow': ['1080p'], 'ext':[], 'tags': ['bdmv', 'certificate', ('complete', 'bluray')]},
+        {'identifier': 'remux', 'hd': True, 'size': (15000, 60000), 'label': 'Remux', 'alternative': [], 'allow': ['1080p'], 'ext':['mkv', 'ts']},
         {'identifier': '1080p', 'hd': True, 'size': (5000, 20000), 'label': '1080p', 'width': 1920, 'height': 1080, 'alternative': [], 'allow': [], 'ext':['mkv', 'm2ts'], 'tags': ['m2ts']},
         {'identifier': '720p', 'hd': True, 'size': (3500, 10000), 'label': '720p', 'width': 1280, 'height': 720, 'alternative': [], 'allow': [], 'ext':['mkv', 'ts']},
         {'identifier': 'brrip', 'hd': True, 'size': (700, 7000), 'label': 'BR-Rip', 'alternative': ['bdrip'], 'allow': ['720p', '1080p'], 'ext':['avi']},
