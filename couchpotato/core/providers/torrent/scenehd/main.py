@@ -13,6 +13,7 @@ class SceneHD(TorrentProvider):
     urls = {
         'test': 'https://scenehd.org/',
         'login' : 'https://scenehd.org/takelogin.php',
+        'login_check': 'https://scenehd.org/my.php',
         'detail': 'https://scenehd.org/details.php?id=%s',
         'search': 'https://scenehd.org/browse.php?ajax',
         'download': 'https://scenehd.org/download.php?id=%s',
@@ -75,3 +76,9 @@ class SceneHD(TorrentProvider):
             'password': self.conf('password'),
             'ssl': 'yes',
         })
+
+    def loginSuccess(self, output):
+        return 'logout.php' in output.lower()
+
+    loginCheckSuccess = loginSuccess
+
