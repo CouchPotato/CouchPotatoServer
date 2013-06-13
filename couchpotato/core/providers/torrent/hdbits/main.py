@@ -16,6 +16,7 @@ class HDBits(TorrentProvider):
         'detail' : 'https://hdbits.org/details.php?id=%s&source=browse',
         'search' : 'https://hdbits.org/json_search.php?imdb=%s',
         'download' : 'https://hdbits.org/download.php/%s.torrent?id=%s&passkey=%s&source=details.browse',
+        'login_check': 'http://hdbits.org/inbox.php',
     }
 
     http_time_between_calls = 1 #seconds
@@ -53,3 +54,5 @@ class HDBits(TorrentProvider):
 
     def loginSuccess(self, output):
         return '/logout.php' in output.lower()
+
+    loginCheckSuccess = loginSuccess

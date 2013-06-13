@@ -16,6 +16,7 @@ class IPTorrents(TorrentProvider):
         'base_url' : 'http://www.iptorrents.com',
         'login' : 'http://www.iptorrents.com/torrents/',
         'search' : 'http://www.iptorrents.com/torrents/?l%d=1%s&q=%s&qf=ti',
+        'login_check': 'http://www.iptorrents.com/inbox.php',
     }
 
     cat_ids = [
@@ -72,12 +73,15 @@ class IPTorrents(TorrentProvider):
             except:
                 log.error('Failed to parsing %s: %s', (self.getName(), traceback.format_exc()))
 
-    def loginSuccess(self, output):
-        return 'don\'t have an account' not in output.lower()
-
     def getLoginParams(self):
         return tryUrlencode({
             'username': self.conf('username'),
             'password': self.conf('password'),
             'login': 'submit',
         })
+
+    def loginSuccess(self, output):
+        return 'don\'t have an account' not in output.lower()
+
+    def loginCheckSuccess(self, output):
+        return '/logout.php' in output.lower()

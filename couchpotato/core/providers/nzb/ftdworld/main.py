@@ -16,6 +16,7 @@ class FTDWorld(NZBProvider):
         'detail': 'http://ftdworld.net/spotinfo.php?id=%s',
         'download': 'http://ftdworld.net/cgi-bin/nzbdown.pl?fileID=%s',
         'login': 'http://ftdworld.net/api/login.php',
+        'login_check': 'http://ftdworld.net/api/login.php',
     }
 
     http_time_between_calls = 3 #seconds
@@ -78,3 +79,6 @@ class FTDWorld(NZBProvider):
             return json.loads(output).get('goodToGo', False)
         except:
             return False
+
+    loginCheckSuccess = loginSuccess
+

@@ -86,6 +86,7 @@ class YarrProvider(Provider):
     sizeKb = ['kb', 'kib']
 
     login_opener = None
+    last_login_check = 0
 
     def __init__(self):
         addEvent('provider.enabled_types', self.getEnabledProviderType)
@@ -100,6 +101,22 @@ class YarrProvider(Provider):
             return []
 
     def login(self):
+
+        # Check if we are still logged in every hour
+        now = time.time()
+        if self.login_opener and self.last_login_check < (now - 3600):
+            try:
+                output = self.urlopen(self.urls['login_check'])
+                if self.loginCheckSuccess(output):
+                    self.last_login_check = now
+                    return True
+                else:
+                    self.login_opener = None
+            except:
+                self.login_opener = None
+
+        if self.login_opener:
+            return True
 
         try:
             cookiejar = cookielib.CookieJar()
@@ -119,15 +136,19 @@ class YarrProvider(Provider):
         except:
             error = traceback.format_exc()
 
+        self.login_opener = None
         log.error('Failed to login %s: %s', (self.getName(), error))
         return False
 
     def loginSuccess(self, output):
         return True
 
+    def loginCheckSuccess(self, output):
+        return True
+
     def loginDownload(self, url = '', nzb_id = ''):
         try:
-            if not self.login_opener and not self.login():
+            if not self.login():
                 log.error('Failed downloading from %s', self.getName())
             return self.urlopen(url, opener = self.login_opener)
         except:
