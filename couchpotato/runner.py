@@ -14,6 +14,7 @@ import os.path
 import shutil
 import sys
 import time
+import traceback
 import warnings
 
 def getOptions(base_path, args):
@@ -289,10 +290,11 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
             server.listen(config['port'], config['host'])
             loop.start()
         except Exception, e:
+            log.error('Failed starting: %s', traceback.format_exc())
             try:
                 nr, msg = e
                 if nr == 48:
-                    log.info('Already in use, try %s more time after few seconds', restart_tries)
+                    log.info('Port (%s) needed for CouchPotato is already in use, try %s more time after few seconds', (config.get('port'), restart_tries))
                     time.sleep(1)
                     restart_tries -= 1
 
