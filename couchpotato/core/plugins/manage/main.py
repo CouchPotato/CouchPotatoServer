@@ -45,9 +45,7 @@ class Manage(Plugin):
         })
 
         if not Env.get('dev'):
-            def updateLibrary():
-                self.updateLibrary(full = False)
-            addEvent('app.load', updateLibrary)
+            addEvent('app.load', self.updateLibraryQuick)
 
     def getProgress(self):
         return {
@@ -62,6 +60,8 @@ class Manage(Plugin):
             'success': True
         }
 
+    def updateLibraryQuick(self):
+        return self.updateLibrary(full = False)
 
     def updateLibrary(self, full = True):
         last_update = float(Env.prop('manage.last_update', default = 0))
