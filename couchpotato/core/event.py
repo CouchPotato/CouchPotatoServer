@@ -23,16 +23,19 @@ def addEvent(name, handler, priority = 100):
 
         try:
             # Open handler
-            parent = handler.im_self
-            bc = hasattr(parent, 'beforeCall')
-            if bc: parent.beforeCall(handler)
+            has_parent = hasattr(handler, 'im_self')
+            if has_parent:
+                parent = handler.im_self
+                bc = hasattr(parent, 'beforeCall')
+                if bc: parent.beforeCall(handler)
 
             # Main event
             h = runHandler(name, handler, *args, **kwargs)
 
             # Close handler
-            ac = hasattr(parent, 'afterCall')
-            if ac: parent.afterCall(handler)
+            if has_parent:
+                ac = hasattr(parent, 'afterCall')
+                if ac: parent.afterCall(handler)
         except:
             log.error('Failed creating handler %s %s: %s', (name, handler, traceback.format_exc()))
 
