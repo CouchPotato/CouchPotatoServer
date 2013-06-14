@@ -5,7 +5,7 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.plugins.score.scores import nameScore, nameRatioScore, \
     sizeScore, providerScore, duplicateScore, partialIgnoredScore, namePositionScore, \
-    halfMultipartScore
+    halfMultipartScore, spotterScore
 
 log = CPLog(__name__)
 
@@ -45,6 +45,11 @@ class Score(Plugin):
 
         # Ignore single downloads from multipart
         score += halfMultipartScore(nzb['name'])
+
+        # Check if there is a preferred spotter
+        # If spotter value is empty, then it is not on spotweb
+        if nzb.has_key('spotter'):
+            score += spotterScore(nzb['spotter'])
 
         # Extra provider specific check
         extra_score = nzb.get('extra_score')

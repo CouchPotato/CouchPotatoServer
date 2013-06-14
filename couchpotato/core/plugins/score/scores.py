@@ -49,6 +49,24 @@ def nameScore(name, year):
 
     return score
 
+def spotterScore(spotter):
+    """
+    Check if the spotter is in the preferred_spotter list, because they will get a
+    higher score
+    """
+    
+    score = 0
+    # The name of the spotter in lower case
+    spotter = spotter.lower()
+    
+    # Check if the spotter is present
+    preferred_spotter = [x.strip() for x in Env.setting('preferred_spotter', section = 'searcher').split(',')]
+
+    for sp in preferred_spotter:
+        if sp.strip() and sp.strip().lower() in spotter:
+            score = score + 800
+
+    return score
 
 def nameRatioScore(nzb_name, movie_name):
     nzb_words = re.split('\W+', fireEvent('scanner.create_file_identifier', nzb_name, single = True))
