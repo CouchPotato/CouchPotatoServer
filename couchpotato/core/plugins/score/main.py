@@ -47,7 +47,9 @@ class Score(Plugin):
         score += halfMultipartScore(nzb['name'])
 
         # Check if there is a preferred spotter
-        score += spotterScore(nzb['spotter'])
+        # If spotter value is empty, then it is not on spotweb
+        if nzb.has_key('spotter'):
+            score += spotterScore(nzb['spotter'])
 
         # Extra provider specific check
         extra_score = nzb.get('extra_score')

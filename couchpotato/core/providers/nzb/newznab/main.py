@@ -10,6 +10,7 @@ from urllib2 import HTTPError
 from urlparse import urlparse
 import time
 import traceback
+from pprint import pprint
 
 log = CPLog(__name__)
 
@@ -49,11 +50,12 @@ class Newznab(NZBProvider, RSS):
         url = '%s&%s' % (self.getUrl(host['host'], self.urls['search']), arguments)
 
         nzbs = self.getRSSData(url, cache_timeout = 1800, headers = {'User-Agent': Env.getIdentifier()})
-        
-        for nzb in nzbs:
+              
 
+        for nzb in nzbs:   
+                       
             date = None
-            poster = None
+            spotter = None
             for item in nzb:
                 if date and poster:
                     break
@@ -62,13 +64,12 @@ class Newznab(NZBProvider, RSS):
                     break
                 # Get the name of the person who posts the spot
                 if item.attrib.get('name') == 'poster':
-                    # Split the value so we only get the name
-                    spotter = item.attrib.get('value').split("@")[0]
-                    
-                    # Debug
-                    #f.write("\n" + spotter)
-                    
-                    continue
+                    # We only want spotnet posters, so it does not break
+                    # other newznab providers
+                    if "@spot.net" in item.attrib.get('value'):
+                        # Split the value so we only get the name
+                        spotter = item.attrib.get('value').split("@")[0]
+                        continue
 
             if not date:
                 date = self.getTextElement(nzb, 'pubDate')

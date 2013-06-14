@@ -64,7 +64,7 @@ def spotterScore(spotter):
 
     for sp in preferred_spotter:
         if sp.strip() and sp.strip().lower() in spotter:
-            score = score + 500
+            score = score + 800
 
     return score
 

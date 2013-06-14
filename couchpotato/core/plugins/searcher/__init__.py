@@ -24,7 +24,7 @@ config = [{
                     'name': 'preferred_spotter',
                     'label': 'Preferred Spotter',
                     'default': '',
-                    'description': 'These spotter names get a higher score.'
+                    'description': 'These Spotweb spotter names get a higher score.'
                 },
                 {
                     'name': 'required_words',
