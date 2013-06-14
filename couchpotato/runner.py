@@ -3,6 +3,7 @@ from cache import FileSystemCache
 from couchpotato import KeyHandler
 from couchpotato.api import NonBlockHandler, ApiHandler
 from couchpotato.core.event import fireEventAsync, fireEvent
+from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.variable import getDataDir, tryInt
 from logging import handlers
 from tornado.httpserver import HTTPServer
@@ -74,23 +75,25 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     if not encoding or encoding in ('ANSI_X3.4-1968', 'US-ASCII', 'ASCII'):
         encoding = 'UTF-8'
 
+    Env.set('encoding', encoding)
+
     # Do db stuff
-    db_path = os.path.join(data_dir, 'couchpotato.db')
+    db_path = toUnicode(os.path.join(data_dir, 'couchpotato.db'))
 
     # Backup before start and cleanup old databases
-    new_backup = os.path.join(data_dir, 'db_backup', str(int(time.time())))
+    new_backup = toUnicode(os.path.join(data_dir, 'db_backup', str(int(time.time()))))
 
     # Create path and copy
     if not os.path.isdir(new_backup): os.makedirs(new_backup)
     src_files = [options.config_file, db_path, db_path + '-shm', db_path + '-wal']
     for src_file in src_files:
         if os.path.isfile(src_file):
-            shutil.copy2(src_file, os.path.join(new_backup, os.path.basename(src_file)))
+            shutil.copy2(src_file, toUnicode(os.path.join(new_backup, os.path.basename(src_file))))
 
     # Remove older backups, keep backups 3 days or at least 3
     backups = []
     for directory in os.listdir(os.path.dirname(new_backup)):
-        backup = os.path.join(os.path.dirname(new_backup), directory)
+        backup = toUnicode(os.path.join(os.path.dirname(new_backup), directory))
         if os.path.isdir(backup):
             backups.append(backup)
 
@@ -99,7 +102,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
         if total_backups > 3:
             if tryInt(os.path.basename(backup)) < time.time() - 259200:
                 for src_file in src_files:
-                    b_file = os.path.join(backup, os.path.basename(src_file))
+                    b_file = toUnicode(os.path.join(backup, os.path.basename(src_file)))
                     if os.path.isfile(b_file):
                         os.remove(b_file)
                 os.rmdir(backup)
@@ -107,13 +110,12 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
 
 
     # Register environment settings
-    Env.set('encoding', encoding)
-    Env.set('app_dir', base_path)
-    Env.set('data_dir', data_dir)
-    Env.set('log_path', os.path.join(log_dir, 'CouchPotato.log'))
-    Env.set('db_path', 'sqlite:///' + db_path)
-    Env.set('cache_dir', os.path.join(data_dir, 'cache'))
-    Env.set('cache', FileSystemCache(os.path.join(Env.get('cache_dir'), 'python')))
+    Env.set('app_dir', toUnicode(base_path))
+    Env.set('data_dir', toUnicode(data_dir))
+    Env.set('log_path', toUnicode(os.path.join(log_dir, 'CouchPotato.log')))
+    Env.set('db_path', toUnicode('sqlite:///' + db_path))
+    Env.set('cache_dir', toUnicode(os.path.join(data_dir, 'cache')))
+    Env.set('cache', FileSystemCache(toUnicode(os.path.join(Env.get('cache_dir'), 'python'))))
     Env.set('console_log', options.console_log)
     Env.set('quiet', options.quiet)
     Env.set('desktop', desktop)
@@ -169,13 +171,13 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
 
     # Check if database exists
     db = Env.get('db_path')
-    db_exists = os.path.isfile(db_path)
+    db_exists = os.path.isfile(toUnicode(db_path))
 
     # Load migrations
     if db_exists:
 
         from migrate.versioning.api import version_control, db_version, version, upgrade
-        repo = os.path.join(base_path, 'couchpotato', 'core', 'migration')
+        repo = toUnicode(os.path.join(base_path, 'couchpotato', 'core', 'migration'))
 
         latest_db_version = version(repo)
         try:
@@ -244,14 +246,14 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     static_path = '%sstatic/' % api_base
     for dir_name in ['fonts', 'images', 'scripts', 'style']:
         application.add_handlers(".*$", [
-             ('%s%s/(.*)' % (static_path, dir_name), StaticFileHandler, {'path': os.path.join(base_path, 'couchpotato', 'static', dir_name)})
+             ('%s%s/(.*)' % (static_path, dir_name), StaticFileHandler, {'path': toUnicode(os.path.join(base_path, 'couchpotato', 'static', dir_name))})
         ])
     Env.set('static_path', static_path);
 
 
     # Load configs & plugins
     loader = Env.get('loader')
-    loader.preload(root = base_path)
+    loader.preload(root = toUnicode(base_path))
     loader.run()
 
 
