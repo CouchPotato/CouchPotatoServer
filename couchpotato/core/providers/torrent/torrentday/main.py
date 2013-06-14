@@ -51,7 +51,6 @@ class TorrentDay(TorrentProvider):
                 'size': self.parseSize(torrent.get('size')),
                 'seeders': tryInt(torrent.get('seed')),
                 'leechers': tryInt(torrent.get('leech')),
-                'download': self.loginDownload,
             })
 
     def getLoginParams(self):

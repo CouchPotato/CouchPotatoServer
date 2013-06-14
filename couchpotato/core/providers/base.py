@@ -275,7 +275,7 @@ class ResultList(list):
             'id': 0,
             'type': self.provider.type,
             'provider': self.provider.getName(),
-            'download': self.provider.download,
+            'download': self.provider.loginDownload if self.provider.urls.get('login') else self.provider.download,
             'url': '',
             'name': '',
             'age': 0,

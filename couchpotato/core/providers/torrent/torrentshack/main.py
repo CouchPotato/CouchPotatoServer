@@ -59,7 +59,6 @@ class TorrentShack(TorrentProvider):
                             'name': unicode(link.span.string).translate({ord(u'\xad'): None}),
                             'url': self.urls['download'] % url['href'],
                             'detail_url': self.urls['download'] % link['href'],
-                            'download': self.loginDownload,
                             'size': self.parseSize(result.find_all('td')[4].string),
                             'seeders': tryInt(result.find_all('td')[6].string),
                             'leechers': tryInt(result.find_all('td')[7].string),

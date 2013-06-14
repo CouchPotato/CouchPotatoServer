@@ -74,7 +74,6 @@ class IPTorrents(TorrentProvider):
                             'name': torrent_name,
                             'url': torrent_download_url,
                             'detail_url': torrent_details_url,
-                            'download': self.loginDownload,
                             'size': torrent_size,
                             'seeders': torrent_seeders,
                             'leechers': torrent_leechers,

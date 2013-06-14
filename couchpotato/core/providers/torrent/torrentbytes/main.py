@@ -60,7 +60,6 @@ class TorrentBytes(TorrentProvider):
                         'name': link.contents[0],
                         'url': self.urls['download'] % (torrent_id, link.contents[0]),
                         'detail_url': self.urls['detail'] % torrent_id,
-                        'download': self.loginDownload,
                         'size': self.parseSize(cells[6].contents[0] + cells[6].contents[2]),
                         'seeders': tryInt(cells[8].find('span').contents[0]),
                         'leechers': tryInt(cells[9].find('span').contents[0]),

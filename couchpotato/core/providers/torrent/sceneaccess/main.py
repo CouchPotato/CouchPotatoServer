@@ -67,7 +67,6 @@ class SceneAccess(TorrentProvider):
                         'size': self.parseSize(result.find('td', attrs = {'class' : 'ttr_size'}).contents[0]),
                         'seeders': tryInt(result.find('td', attrs = {'class' : 'ttr_seeders'}).find('a').string),
                         'leechers': tryInt(leechers.string) if leechers else 0,
-                        'download': self.loginDownload,
                         'get_more_info': self.getMoreInfo,
                     })
 

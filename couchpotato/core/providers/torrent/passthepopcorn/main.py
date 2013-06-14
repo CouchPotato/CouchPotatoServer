@@ -116,7 +116,6 @@ class PassThePopcorn(TorrentProvider):
                         'leechers': tryInt(torrent['Leechers']),
                         'score': torrentscore,
                         'extra_check': extra_check,
-                        'download': self.loginDownload,
                     })
 
         except:

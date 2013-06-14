@@ -58,7 +58,6 @@ class SceneHD(TorrentProvider):
                         'seeders': tryInt(all_cells[10].find('a').string),
                         'leechers': tryInt(leechers),
                         'url': self.urls['download'] % torrent_id,
-                        'download': self.loginDownload,
                         'description': all_cells[1].find('a')['href'],
                     })
 
