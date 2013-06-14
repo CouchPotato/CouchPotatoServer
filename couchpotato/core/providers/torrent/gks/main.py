@@ -26,7 +26,10 @@ class gks(TorrentProvider):
         MovieTitles = movie['library']['info']['titles']
         moviequality = simplifyString(quality['identifier'])
         for MovieTitle in MovieTitles:
-            TitleStringReal = str(MovieTitle.encode("latin-1").replace('-',' '))
+            try:
+                TitleStringReal = str(MovieTitle.encode("latin-1").replace('-',' '))
+            except:
+                TitleStringReal = str(MovieTitle.encode("utf-8").replace('-',' '))
             if moviequality in ['720p']:
                 results.append( urllib.urlencode( {'q': TitleStringReal, 'category' : 15, 'ak' : self.conf('userkey')} ) + "&order=desc&sort=normal&exact" )
                 results.append( urllib.urlencode( {'q': simplifyString(TitleStringReal), 'category' : 15, 'ak' : self.conf('userkey')} ) + "&order=desc&sort=normal&exact" )
