@@ -105,12 +105,13 @@ class Plugin(object):
         if not params: params = {}
 
         # Fill in some headers
-        headers['Referer'] = headers.get('Referer', urlparse(url).hostname)
-        headers['Host'] = headers.get('Host', urlparse(url).hostname)
+        parsed_url = urlparse(url)
+        host = parsed_url.hostname
+
+        headers['Referer'] = headers.get('Referer', '%s://%s' % (parsed_url.scheme, host))
+        headers['Host'] = headers.get('Host', host)
         headers['User-Agent'] = headers.get('User-Agent', self.user_agent)
         headers['Accept-encoding'] = headers.get('Accept-encoding', 'gzip')
-
-        host = urlparse(url).hostname
 
         # Don't try for failed requests
         if self.http_failed_disabled.get(host, 0) > 0:

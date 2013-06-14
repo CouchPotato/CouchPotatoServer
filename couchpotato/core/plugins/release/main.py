@@ -180,7 +180,7 @@ class Release(Plugin):
             provider = fireEvent('provider.belongs_to', item['url'], provider = item.get('provider'), single = True)
 
             if item['type'] != 'torrent_magnet':
-                item['download'] = provider.download
+                item['download'] = provider.loginDownload if provider.urls.get('login') else provider.download
 
             success = fireEvent('searcher.download', data = item, movie = rel.movie.to_dict({
                 'profile': {'types': {'quality': {}}},
