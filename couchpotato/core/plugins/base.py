@@ -114,6 +114,8 @@ class Plugin(object):
         headers['Host'] = headers.get('Host', host)
         headers['User-Agent'] = headers.get('User-Agent', self.user_agent)
         headers['Accept-encoding'] = headers.get('Accept-encoding', 'gzip')
+        headers['Connection'] = headers.get('Connection', 'keep-alive')
+        headers['Cache-Control'] = headers.get('Cache-Control', 'max-age=0')
 
         # Don't try for failed requests
         if self.http_failed_disabled.get(host, 0) > 0:
@@ -130,6 +132,10 @@ class Plugin(object):
         self.wait(host)
         try:
 
+            # Make sure opener has the correct headers
+            if opener:
+                opener.add_headers = headers
+
             if multipart:
                 log.info('Opening multipart url: %s, params: %s', (url, [x for x in params.iterkeys()] if isinstance(params, dict) else 'with data'))
                 request = urllib2.Request(url, params, headers)
@@ -143,7 +149,12 @@ class Plugin(object):
                 response = opener.open(request, timeout = timeout)
             else:
                 log.info('Opening url: %s, params: %s', (url, [x for x in params.iterkeys()] if isinstance(params, dict) else 'with data'))
-                data = tryUrlencode(params) if len(params) > 0 else None
+
+                if isinstance(params, (str, unicode)) and len(params) > 0:
+                    data = params
+                else:
+                    data = tryUrlencode(params) if len(params) > 0 else None
+
                 request = urllib2.Request(url, data, headers)
 
                 if opener:
@@ -156,8 +167,10 @@ class Plugin(object):
                 buf = StringIO(response.read())
                 f = gzip.GzipFile(fileobj = buf)
                 data = f.read()
+                f.close()
             else:
                 data = response.read()
+            response.close()
 
             self.http_failed_request[host] = 0
         except IOError:
@@ -230,7 +243,7 @@ class Plugin(object):
 
     def getCache(self, cache_key, url = None, **kwargs):
         cache_key = md5(ss(cache_key))
-        cache = Env.get('cache').get(cache_key)
+        cache = None #Env.get('cache').get(cache_key)
         if cache:
             if not Env.get('dev'): log.debug('Getting cache %s', cache_key)
             return cache

@@ -29,10 +29,6 @@ class SceneHD(TorrentProvider):
         })
         url = "%s&%s" % (self.urls['search'], arguments)
 
-        # Cookie login
-        if not self.login():
-            return
-
         data = self.getHTMLData(url, opener = self.login_opener)
 
         if data:

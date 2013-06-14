@@ -13,7 +13,7 @@ class SceneAccess(TorrentProvider):
     urls = {
         'test': 'https://www.sceneaccess.eu/',
         'login': 'https://www.sceneaccess.eu/login',
-        'login_check': 'https://sceneaccess.eu/inbox',
+        'login_check': 'https://www.sceneaccess.eu/inbox',
         'detail': 'https://www.sceneaccess.eu/details?id=%s',
         'search': 'https://www.sceneaccess.eu/browse?method=2&c%d=%d',
         'download': 'https://www.sceneaccess.eu/%s',
@@ -40,9 +40,6 @@ class SceneAccess(TorrentProvider):
         })
         url = "%s&%s" % (url, arguments)
 
-        # Do login for the cookies
-        if not self.login():
-            return
 
         data = self.getHTMLData(url, opener = self.login_opener)
 

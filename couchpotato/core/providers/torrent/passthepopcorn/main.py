@@ -3,13 +3,11 @@ from couchpotato.core.helpers.variable import getTitle, tryInt, mergeDicts
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.torrent.base import TorrentProvider
 from dateutil.parser import parse
-import cookielib
 import htmlentitydefs
 import json
 import re
 import time
 import traceback
-import urllib2
 
 log = CPLog(__name__)
 
@@ -24,6 +22,8 @@ class PassThePopcorn(TorrentProvider):
          'login_check': 'https://tls.passthepopcorn.me/ajax.php?action=login',
          'search': 'https://tls.passthepopcorn.me/search/%s/0/7/%d'
     }
+
+    http_time_between_calls = 2
 
     quality_search_params = {
         'bd50':     {'media': 'Blu-ray', 'format': 'BD50'},
@@ -64,17 +64,8 @@ class PassThePopcorn(TorrentProvider):
             'searchstr': movie['library']['identifier']
         })
 
-        # Do login for the cookies
-        if not self.login():
-            return
-
-        try:
-            url = '%s?json=noredirect&%s' % (self.urls['torrent'], tryUrlencode(params))
-            txt = self.urlopen(url, opener = self.login_opener)
-            res = json.loads(txt)
-        except:
-            log.error('Search on PassThePopcorn.me (%s) failed (could not decode JSON)', params)
-            return
+        url = '%s?json=noredirect&%s' % (self.urls['torrent'], tryUrlencode(params))
+        res = self.getJsonData(url, opener = self.login_opener)
 
         try:
             if not 'Movies' in res:

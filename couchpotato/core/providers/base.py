@@ -106,7 +106,7 @@ class YarrProvider(Provider):
         now = time.time()
         if self.login_opener and self.last_login_check < (now - 3600):
             try:
-                output = self.urlopen(self.urls['login_check'])
+                output = self.urlopen(self.urls['login_check'], opener = self.login_opener)
                 if self.loginCheckSuccess(output):
                     self.last_login_check = now
                     return True
@@ -121,14 +121,10 @@ class YarrProvider(Provider):
         try:
             cookiejar = cookielib.CookieJar()
             opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookiejar))
-            opener.addheaders = [('User-Agent', self.user_agent)]
-            urllib2.install_opener(opener)
-            log.info2('Logging into %s', self.urls['login'])
-            f = opener.open(self.urls['login'], self.getLoginParams())
-            output = f.read()
-            f.close()
+            output = self.urlopen(self.urls['login'], params = self.getLoginParams(), opener = opener)
 
             if self.loginSuccess(output):
+                self.last_login_check = now
                 self.login_opener = opener
                 return True
 
@@ -171,7 +167,7 @@ class YarrProvider(Provider):
             return []
 
         # Login if needed
-        if self.urls.get('login') and (not self.login_opener and not self.login()):
+        if self.urls.get('login') and not self.login():
             log.error('Failed to login to: %s', self.getName())
             return []
 
