@@ -4,8 +4,8 @@ from couchpotato.core.logger import CPLog
 import json
 import requests
 
-
 log = CPLog(__name__)
+
 
 class Synology(Downloader):
 
@@ -28,14 +28,14 @@ class Synology(Downloader):
             srpc = SynologyRPC(host[0], host[1], self.conf('username'), self.conf('password'))
             if data['type'] == 'torrent_magnet':
                 log.info('Adding torrent URL %s', data['url'])
-                response = srpc.create_task(url=data['url'])
+                response = srpc.create_task(url = data['url'])
             elif data['type'] == 'torrent':
                 log.info('Adding torrent')
                 if not filedata:
                     log.error('No torrent data found')
                 else:
                     filename = data['name'] + '.' + data['type']
-                    response = srpc.create_task(filename=filename, filedata=filedata)
+                    response = srpc.create_task(filename = filename, filedata = filedata)
         except Exception, err:
             log.error('Exception while adding torrent: %s', err)
         finally:
@@ -75,10 +75,10 @@ class SynologyRPC(object):
         args = {'api':'SYNO.API.Auth', 'version':1, 'method':'logout', 'session':self.session_name, '_sid':self.sid}
         return self._req(self.auth_url, args)
 
-    def _req(self, url, args, files=None):
+    def _req(self, url, args, files = None):
         response = {'success': False}
         try:
-            req = requests.post(url, data=args, files=files)
+            req = requests.post(url, data = args, files = files)
             req.raise_for_status()
             response = json.loads(req.text)
             if response['success'] == True:
@@ -93,7 +93,7 @@ class SynologyRPC(object):
         finally:
             return response
 
-    def create_task(self, url=None, filename=None, filedata=None):
+    def create_task(self, url = None, filename = None, filedata = None):
         ''' Creates new download task in Synology DownloadStation. Either specify
         url or pair (filename, filedata).
 
@@ -109,13 +109,13 @@ class SynologyRPC(object):
             if url:
                 log.info('Login success, adding torrent URI')
                 args['uri'] = url
-                response = self._req(self.download_url, args=args)
+                response = self._req(self.download_url, args = args)
                 log.info('Response: %s', response)
                 result = response['success']
             elif filename and filedata:
                 log.info('Login success, adding torrent')
                 files = {'file': (filename, filedata)}
-                response = self._req(self.download_url, args=args, files=files)
+                response = self._req(self.download_url, args = args, files = files)
                 log.info('Response: %s', response)
                 result = response['success']
             else:
