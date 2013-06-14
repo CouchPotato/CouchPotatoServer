@@ -51,7 +51,7 @@ def removeEvent(name, handler):
     e -= handler
 
 def fireEvent(name, *args, **kwargs):
-    if not events.get(name): return
+    if not events.has_key(name): return
 
     e = Event(name = name, threads = 10, asynch = kwargs.get('async', False), exc_info = True, traceback = True, lock = threading.RLock())
 
