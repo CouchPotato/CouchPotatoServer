@@ -1,5 +1,5 @@
 # firebird/base.py
-# Copyright (C) 2005-2012 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -135,7 +135,7 @@ class VARCHAR(_StringType, sqltypes.VARCHAR):
     __visit_name__ = 'VARCHAR'
 
     def __init__(self, length = None, **kwargs):
-        super(VARCHAR, self).__init__(length=length, **kwargs) 
+        super(VARCHAR, self).__init__(length=length, **kwargs)
 
 class CHAR(_StringType, sqltypes.CHAR):
     """Firebird CHAR type"""
@@ -164,7 +164,7 @@ ischema_names = {
     }
 
 
-# TODO: date conversion types (should be implemented as _FBDateTime, 
+# TODO: date conversion types (should be implemented as _FBDateTime,
 # _FBDate, etc. as bind/result functionality is required)
 
 class FBTypeCompiler(compiler.GenericTypeCompiler):
@@ -198,7 +198,7 @@ class FBTypeCompiler(compiler.GenericTypeCompiler):
 
 
 class FBCompiler(sql.compiler.SQLCompiler):
-    """Firebird specific idiosincrasies"""
+    """Firebird specific idiosyncrasies"""
 
     def visit_mod(self, binary, **kw):
         # Firebird lacks a builtin modulo operator, but there is
@@ -293,7 +293,7 @@ class FBCompiler(sql.compiler.SQLCompiler):
 
 
 class FBDDLCompiler(sql.compiler.DDLCompiler):
-    """Firebird syntactic idiosincrasies"""
+    """Firebird syntactic idiosyncrasies"""
 
     def visit_create_sequence(self, create):
         """Generate a ``CREATE GENERATOR`` statement for the sequence."""
@@ -339,7 +339,7 @@ class FBExecutionContext(default.DefaultExecutionContext):
         """Get the next value from the sequence using ``gen_id()``."""
 
         return self._execute_scalar(
-                "SELECT gen_id(%s, 1) FROM rdb$database" % 
+                "SELECT gen_id(%s, 1) FROM rdb$database" %
                 self.dialect.identifier_preparer.format_sequence(seq),
                 type_
                 )
@@ -418,7 +418,7 @@ class FBDialect(default.DefaultDialect):
             return name
 
     def has_table(self, connection, table_name, schema=None):
-        """Return ``True`` if the given table exists, ignoring 
+        """Return ``True`` if the given table exists, ignoring
         the `schema`."""
 
         tblqry = """
@@ -489,8 +489,8 @@ class FBDialect(default.DefaultDialect):
         return pkfields
 
     @reflection.cache
-    def get_column_sequence(self, connection, 
-                                table_name, column_name, 
+    def get_column_sequence(self, connection,
+                                table_name, column_name,
                                 schema=None, **kw):
         tablename = self.denormalize_name(table_name)
         colname = self.denormalize_name(column_name)
@@ -528,7 +528,7 @@ class FBDialect(default.DefaultDialect):
                             COALESCE(cs.rdb$bytes_per_character,1) AS flen,
                         f.rdb$field_precision AS fprec,
                         f.rdb$field_scale AS fscale,
-                        COALESCE(r.rdb$default_source, 
+                        COALESCE(r.rdb$default_source,
                                 f.rdb$default_source) AS fdefault
         FROM rdb$relation_fields r
              JOIN rdb$fields f ON r.rdb$field_source=f.rdb$field_name
@@ -563,7 +563,7 @@ class FBDialect(default.DefaultDialect):
                 coltype = sqltypes.NULLTYPE
             elif colspec == 'INT64':
                 coltype = coltype(
-                                precision=row['fprec'], 
+                                precision=row['fprec'],
                                 scale=row['fscale'] * -1)
             elif colspec in ('VARYING', 'CSTRING'):
                 coltype = coltype(row['flen'])
@@ -582,7 +582,7 @@ class FBDialect(default.DefaultDialect):
             if row['fdefault'] is not None:
                 # the value comes down as "DEFAULT 'value'": there may be
                 # more than one whitespace around the "DEFAULT" keyword
-                # and it may also be lower case 
+                # and it may also be lower case
                 # (see also http://tracker.firebirdsql.org/browse/CORE-356)
                 defexpr = row['fdefault'].lstrip()
                 assert defexpr[:8].rstrip().upper() == \

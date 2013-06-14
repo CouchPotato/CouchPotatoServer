@@ -1,22 +1,17 @@
 # ext/sqlsoup.py
-# Copyright (C) 2005-2012 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 
 """
 
-.. note:: 
-
-   SQLSoup is now its own project.  Documentation
-   and project status are available at:
-   
-   http://pypi.python.org/pypi/sqlsoup
-
-   http://readthedocs.org/docs/sqlsoup
-   
-   SQLSoup will no longer be included with SQLAlchemy as of 
-   version 0.8.
+.. versionchanged:: 0.8
+    SQLSoup is now its own project.  Documentation
+    and project status are available at:
+    http://pypi.python.org/pypi/sqlsoup and
+    http://readthedocs.org/docs/sqlsoup\ .
+    SQLSoup will no longer be included with SQLAlchemy.
 
 
 Introduction
@@ -62,7 +57,7 @@ Loading objects is as easy as this::
     >>> users
     [
         MappedUsers(name=u'Joe Student',email=u'student@example.edu',
-                password=u'student',classname=None,admin=0), 
+                password=u'student',classname=None,admin=0),
         MappedUsers(name=u'Bhargan Basepair',email=u'basepair@example.edu',
                 password=u'basepair',classname=None,admin=1)
     ]
@@ -72,7 +67,7 @@ Of course, letting the database do the sort is better::
     >>> db.users.order_by(db.users.name).all()
     [
         MappedUsers(name=u'Bhargan Basepair',email=u'basepair@example.edu',
-            password=u'basepair',classname=None,admin=1), 
+            password=u'basepair',classname=None,admin=1),
         MappedUsers(name=u'Joe Student',email=u'student@example.edu',
             password=u'student',classname=None,admin=0)
     ]
@@ -91,7 +86,7 @@ we're at it::
     >>> db.users.filter(where).order_by(desc(db.users.name)).all()
     [
         MappedUsers(name=u'Joe Student',email=u'student@example.edu',
-            password=u'student',classname=None,admin=0), 
+            password=u'student',classname=None,admin=0),
         MappedUsers(name=u'Bhargan Basepair',email=u'basepair@example.edu',
             password=u'basepair',classname=None,admin=1)
     ]
@@ -217,15 +212,15 @@ with `with_labels`, to disambiguate columns with their table name
 (.c is short for .columns)::
 
     >>> db.with_labels(join1).c.keys()
-    [u'users_name', u'users_email', u'users_password', 
-        u'users_classname', u'users_admin', u'loans_book_id', 
+    [u'users_name', u'users_email', u'users_password',
+        u'users_classname', u'users_admin', u'loans_book_id',
         u'loans_user_name', u'loans_loan_date']
 
 You can also join directly to a labeled object::
 
     >>> labeled_loans = db.with_labels(db.loans)
     >>> db.join(db.users, labeled_loans, isouter=True).c.keys()
-    [u'name', u'email', u'password', u'classname', 
+    [u'name', u'email', u'password', u'classname',
         u'admin', u'loans_book_id', u'loans_user_name', u'loans_loan_date']
 
 
@@ -256,8 +251,8 @@ accepts in normal mapper definition:
 Advanced Use
 ============
 
-Sessions, Transations and Application Integration
--------------------------------------------------
+Sessions, Transactions and Application Integration
+---------------------------------------------------
 
 .. note::
 
@@ -472,8 +467,8 @@ def _class_for_table(session, engine, selectable, base_cls, mapper_kwargs):
     selectable = expression._clause_element_as_expr(selectable)
     mapname = 'Mapped' + _selectable_name(selectable)
     # Py2K
-    if isinstance(mapname, unicode): 
-        engine_encoding = engine.dialect.encoding 
+    if isinstance(mapname, unicode):
+        engine_encoding = engine.dialect.encoding
         mapname = mapname.encode(engine_encoding)
     # end Py2K
 
@@ -492,7 +487,7 @@ def _class_for_table(session, engine, selectable, base_cls, mapper_kwargs):
             raise TypeError('unable to compare with %s' % o.__class__)
         return t1, t2
 
-    # python2/python3 compatible system of 
+    # python2/python3 compatible system of
     # __cmp__ - __lt__ + __eq__
 
     def __lt__(self, o):
@@ -529,15 +524,15 @@ class SqlSoup(object):
     def __init__(self, engine_or_metadata, base=object, session=None):
         """Initialize a new :class:`.SqlSoup`.
 
-        :param engine_or_metadata: a string database URL, :class:`.Engine` 
+        :param engine_or_metadata: a string database URL, :class:`.Engine`
           or :class:`.MetaData` object to associate with. If the
           argument is a :class:`.MetaData`, it should be *bound*
           to an :class:`.Engine`.
-        :param base: a class which will serve as the default class for 
+        :param base: a class which will serve as the default class for
           returned mapped classes.  Defaults to ``object``.
         :param session: a :class:`.ScopedSession` or :class:`.Session` with
           which to associate ORM operations for this :class:`.SqlSoup` instance.
-          If ``None``, a :class:`.ScopedSession` that's local to this 
+          If ``None``, a :class:`.ScopedSession` that's local to this
           module is used.
 
         """
@@ -550,7 +545,7 @@ class SqlSoup(object):
         elif isinstance(engine_or_metadata, (basestring, Engine)):
             self._metadata = MetaData(engine_or_metadata)
         else:
-            raise ArgumentError("invalid engine or metadata argument %r" % 
+            raise ArgumentError("invalid engine or metadata argument %r" %
                                 engine_or_metadata)
 
         self._cache = {}
@@ -572,7 +567,7 @@ class SqlSoup(object):
         """Execute a SQL statement.
 
         The statement may be a string SQL string,
-        an :func:`.expression.select` construct, or an :func:`.expression.text` 
+        an :func:`.expression.select` construct, or an :func:`.expression.text`
         construct.
 
         """
@@ -599,7 +594,7 @@ class SqlSoup(object):
         self.session.flush()
 
     def rollback(self):
-        """Rollback the current transction.
+        """Rollback the current transaction.
 
         See :meth:`.Session.rollback`.
 
@@ -635,14 +630,14 @@ class SqlSoup(object):
         """
         self.session.expunge_all()
 
-    def map_to(self, attrname, tablename=None, selectable=None, 
+    def map_to(self, attrname, tablename=None, selectable=None,
                     schema=None, base=None, mapper_args=util.immutabledict()):
         """Configure a mapping to the given attrname.
 
-        This is the "master" method that can be used to create any 
+        This is the "master" method that can be used to create any
         configuration.
 
-        (new in 0.6.6)
+        .. versionadded:: 0.6.6
 
         :param attrname: String attribute name which will be
           established as an attribute on this :class:.`.SqlSoup`
@@ -682,10 +677,10 @@ class SqlSoup(object):
                 raise ArgumentError("'tablename' and 'selectable' "
                                     "arguments are mutually exclusive")
 
-            selectable = Table(tablename, 
-                                        self._metadata, 
-                                        autoload=True, 
-                                        autoload_with=self.bind, 
+            selectable = Table(tablename,
+                                        self._metadata,
+                                        autoload=True,
+                                        autoload_with=self.bind,
                                         schema=schema or self.schema)
         elif schema:
             raise ArgumentError("'tablename' argument is required when "
@@ -723,8 +718,9 @@ class SqlSoup(object):
     def map(self, selectable, base=None, **mapper_args):
         """Map a selectable directly.
 
-        The class and its mapping are not cached and will
-        be discarded once dereferenced (as of 0.6.6).
+        .. versionchanged:: 0.6.6
+            The class and its mapping are not cached and will
+            be discarded once dereferenced.
 
         :param selectable: an :func:`.expression.select` construct.
         :param base: a Python class which will be used as the
@@ -746,11 +742,12 @@ class SqlSoup(object):
         )
 
     def with_labels(self, selectable, base=None, **mapper_args):
-        """Map a selectable directly, wrapping the 
+        """Map a selectable directly, wrapping the
         selectable in a subquery with labels.
 
-        The class and its mapping are not cached and will
-        be discarded once dereferenced (as of 0.6.6).
+        .. versionchanged:: 0.6.6
+            The class and its mapping are not cached and will
+            be discarded once dereferenced.
 
         :param selectable: an :func:`.expression.select` construct.
         :param base: a Python class which will be used as the
@@ -769,12 +766,13 @@ class SqlSoup(object):
                             select(use_labels=True).
                             alias('foo'), base=base, **mapper_args)
 
-    def join(self, left, right, onclause=None, isouter=False, 
+    def join(self, left, right, onclause=None, isouter=False,
                 base=None, **mapper_args):
         """Create an :func:`.expression.join` and map to it.
 
-        The class and its mapping are not cached and will
-        be discarded once dereferenced (as of 0.6.6).
+        .. versionchanged:: 0.6.6
+            The class and its mapping are not cached and will
+            be discarded once dereferenced.
 
         :param left: a mapped class or table object.
         :param right: a mapped class or table object.
@@ -794,7 +792,7 @@ class SqlSoup(object):
         return self.map(j, base=base, **mapper_args)
 
     def entity(self, attr, schema=None):
-        """Return the named entity from this :class:`.SqlSoup`, or 
+        """Return the named entity from this :class:`.SqlSoup`, or
         create if not present.
 
         For more generalized mapping, see :meth:`.map_to`.

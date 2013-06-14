@@ -1,5 +1,5 @@
 # connectors/pyodbc.py
-# Copyright (C) 2005-2012 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -37,6 +37,10 @@ class PyODBCConnector(Connector):
     # if the libessqlsrv.so is detected
     easysoft = False
 
+    def __init__(self, supports_unicode_binds=None, **kw):
+        super(PyODBCConnector, self).__init__(**kw)
+        self._user_supports_unicode_binds = supports_unicode_binds
+
     @classmethod
     def dbapi(cls):
         return __import__('pyodbc')
@@ -66,7 +70,7 @@ class PyODBCConnector(Connector):
                 if 'port' in keys and not 'port' in query:
                     port = ',%d' % int(keys.pop('port'))
 
-                connectors = ["DRIVER={%s}" % 
+                connectors = ["DRIVER={%s}" %
                                 keys.pop('driver', self.pyodbc_driver_name),
                               'Server=%s%s' % (keys.pop('host', ''), port),
                               'Database=%s' % keys.pop('database', '') ]
@@ -79,9 +83,9 @@ class PyODBCConnector(Connector):
                 connectors.append("Trusted_Connection=Yes")
 
             # if set to 'Yes', the ODBC layer will try to automagically
-            # convert textual data from your database encoding to your 
-            # client encoding.  This should obviously be set to 'No' if 
-            # you query a cp1253 encoded database from a latin1 client... 
+            # convert textual data from your database encoding to your
+            # client encoding.  This should obviously be set to 'No' if
+            # you query a cp1253 encoded database from a latin1 client...
             if 'odbc_autotranslate' in keys:
                 connectors.append("AutoTranslate=%s" %
                                     keys.pop("odbc_autotranslate"))
@@ -119,8 +123,12 @@ class PyODBCConnector(Connector):
         # have not tried pyodbc + python3.1 yet.
         # Py2K
         self.supports_unicode_statements = not self.freetds and not self.easysoft
-        self.supports_unicode_binds =  (not self.freetds or 
-                                            self.freetds_driver_version >= '0.91') and not self.easysoft
+        if self._user_supports_unicode_binds is not None:
+            self.supports_unicode_binds = self._user_supports_unicode_binds
+        else:
+            self.supports_unicode_binds = (not self.freetds or
+                                            self.freetds_driver_version >= '0.91'
+                                            ) and not self.easysoft
         # end Py2K
 
         # run other initialization which asks for user name, etc.

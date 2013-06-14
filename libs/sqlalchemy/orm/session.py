@@ -1,5 +1,5 @@
 # orm/session.py
-# Copyright (C) 2005-2012 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -68,9 +68,9 @@ def sessionmaker(bind=None, class_=None, autoflush=True, autocommit=False,
         Session.configure(bind=create_engine('sqlite:///foo.db'))
 
         sess = Session()
-    
+
     For options, see the constructor options for :class:`.Session`.
-    
+
     """
     kwargs['bind'] = bind
     kwargs['autoflush'] = autoflush
@@ -103,39 +103,79 @@ def sessionmaker(bind=None, class_=None, autoflush=True, autocommit=False,
 
 
 class SessionTransaction(object):
-    """A Session-level transaction.
+    """A :class:`.Session`-level transaction.
 
-    This corresponds to one or more Core :class:`~.engine.base.Transaction`
-    instances behind the scenes, with one :class:`~.engine.base.Transaction`
-    per :class:`~.engine.base.Engine` in use.
+    :class:`.SessionTransaction` is a mostly behind-the-scenes object
+    not normally referenced directly by application code.   It coordinates
+    among multiple :class:`.Connection` objects, maintaining a database
+    transaction for each one individually, committing or rolling them
+    back all at once.   It also provides optional two-phase commit behavior
+    which can augment this coordination operation.
 
-    Direct usage of :class:`.SessionTransaction` is not typically 
-    necessary as of SQLAlchemy 0.4; use the :meth:`.Session.rollback` and 
-    :meth:`.Session.commit` methods on :class:`.Session` itself to 
-    control the transaction.
-    
-    The current instance of :class:`.SessionTransaction` for a given
-    :class:`.Session` is available via the :attr:`.Session.transaction`
-    attribute.
+    The :attr:`.Session.transaction` attribute of :class:`.Session` refers to the
+    current :class:`.SessionTransaction` object in use, if any.
 
-    The :class:`.SessionTransaction` object is **not** thread-safe.
+
+    A :class:`.SessionTransaction` is associated with a :class:`.Session`
+    in its default mode of ``autocommit=False`` immediately, associated
+    with no database connections.  As the :class:`.Session` is called upon
+    to emit SQL on behalf of various :class:`.Engine` or :class:`.Connection`
+    objects, a corresponding :class:`.Connection` and associated :class:`.Transaction`
+    is added to a collection within the :class:`.SessionTransaction` object,
+    becoming one of the connection/transaction pairs maintained by the
+    :class:`.SessionTransaction`.
+
+    The lifespan of the :class:`.SessionTransaction` ends when the
+    :meth:`.Session.commit`, :meth:`.Session.rollback` or :meth:`.Session.close`
+    methods are called.  At this point, the :class:`.SessionTransaction` removes
+    its association with its parent :class:`.Session`.   A :class:`.Session`
+    that is in ``autocommit=False`` mode will create a new
+    :class:`.SessionTransaction` to replace it immediately, whereas a
+    :class:`.Session` that's in ``autocommit=True``
+    mode will remain without a :class:`.SessionTransaction` until the
+    :meth:`.Session.begin` method is called.
+
+    Another detail of :class:`.SessionTransaction` behavior is that it is
+    capable of "nesting".  This means that the :meth:`.begin` method can
+    be called while an existing :class:`.SessionTransaction` is already present,
+    producing a new :class:`.SessionTransaction` that temporarily replaces
+    the parent :class:`.SessionTransaction`.   When a :class:`.SessionTransaction`
+    is produced as nested, it assigns itself to the :attr:`.Session.transaction`
+    attribute.  When it is ended via :meth:`.Session.commit` or :meth:`.Session.rollback`,
+    it restores its parent :class:`.SessionTransaction` back onto the
+    :attr:`.Session.transaction` attribute.  The
+    behavior is effectively a stack, where :attr:`.Session.transaction` refers
+    to the current head of the stack.
+
+    The purpose of this stack is to allow nesting of :meth:`.rollback` or
+    :meth:`.commit` calls in context with various flavors of :meth:`.begin`.
+    This nesting behavior applies to when :meth:`.Session.begin_nested`
+    is used to emit a SAVEPOINT transaction, and is also used to produce
+    a so-called "subtransaction" which allows a block of code to use a
+    begin/rollback/commit sequence regardless of whether or not its enclosing
+    code block has begun a transaction.  The :meth:`.flush` method, whether called
+    explicitly or via autoflush, is the primary consumer of the "subtransaction"
+    feature, in that it wishes to guarantee that it works within in a transaction block
+    regardless of whether or not the :class:`.Session` is in transactional mode
+    when the method is called.
 
     See also:
-    
+
     :meth:`.Session.rollback`
-    
+
     :meth:`.Session.commit`
 
+    :meth:`.Session.begin`
+
+    :meth:`.Session.begin_nested`
+
     :attr:`.Session.is_active`
-    
+
     :meth:`.SessionEvents.after_commit`
-    
+
     :meth:`.SessionEvents.after_rollback`
-    
+
     :meth:`.SessionEvents.after_soft_rollback`
-    
-    .. index::
-      single: thread safety; SessionTransaction
 
     """
 
@@ -211,6 +251,7 @@ class SessionTransaction(object):
         if not self._is_transaction_boundary:
             self._new = self._parent._new
             self._deleted = self._parent._deleted
+            self._key_switches = self._parent._key_switches
             return
 
         if not self.session._flushing:
@@ -218,6 +259,7 @@ class SessionTransaction(object):
 
         self._new = weakref.WeakKeyDictionary()
         self._deleted = weakref.WeakKeyDictionary()
+        self._key_switches = weakref.WeakKeyDictionary()
 
     def _restore_snapshot(self):
         assert self._is_transaction_boundary
@@ -227,11 +269,16 @@ class SessionTransaction(object):
             if s.key:
                 del s.key
 
+        for s, (oldkey, newkey) in self._key_switches.items():
+            self.session.identity_map.discard(s)
+            s.key = oldkey
+            self.session.identity_map.replace(s)
+
         for s in set(self._deleted).union(self.session._deleted):
             if s.deleted:
                 #assert s in self._deleted
                 del s.deleted
-            self.session._update_impl(s)
+            self.session._update_impl(s, discard_existing=True)
 
         assert not self.session._deleted
 
@@ -294,7 +341,15 @@ class SessionTransaction(object):
                 subtransaction.commit()
 
         if not self.session._flushing:
-            self.session.flush()
+            for _flush_guard in xrange(100):
+                if self.session._is_clean():
+                    break
+                self.session.flush()
+            else:
+                raise exc.FlushError(
+                        "Over 100 subsequent flushes have occurred within "
+                        "session.commit() - is an after_flush() hook "
+                        "creating new objects?")
 
         if self._parent is None and self.session.twophase:
             try:
@@ -417,19 +472,19 @@ class Session(object):
         '__contains__', '__iter__', 'add', 'add_all', 'begin', 'begin_nested',
         'close', 'commit', 'connection', 'delete', 'execute', 'expire',
         'expire_all', 'expunge', 'expunge_all', 'flush', 'get_bind',
-        'is_modified', 
-        'merge', 'query', 'refresh', 'rollback', 
+        'is_modified',
+        'merge', 'query', 'refresh', 'rollback',
         'scalar')
 
 
     def __init__(self, bind=None, autoflush=True, expire_on_commit=True,
                 _enable_transaction_accounting=True,
-                 autocommit=False, twophase=False, 
+                 autocommit=False, twophase=False,
                  weak_identity_map=True, binds=None, extension=None,
                  query_cls=query.Query):
         """Construct a new Session.
 
-        See also the :func:`.sessionmaker` function which is used to 
+        See also the :func:`.sessionmaker` function which is used to
         generate a :class:`.Session`-producing callable with a given
         set of arguments.
 
@@ -448,7 +503,7 @@ class Session(object):
           by any of these methods, the ``Session`` is ready for the next usage,
           which will again acquire and maintain a new connection/transaction.
 
-        :param autoflush: When ``True``, all query operations will issue a 
+        :param autoflush: When ``True``, all query operations will issue a
            ``flush()`` call to this ``Session`` before proceeding. This is a
            convenience feature so that ``flush()`` need not be called repeatedly
            in order for database queries to retrieve results. It's typical that
@@ -496,7 +551,7 @@ class Session(object):
            attribute/object access subsequent to a completed transaction will load
            from the most recent database state.
 
-        :param extension: An optional 
+        :param extension: An optional
            :class:`~.SessionExtension` instance, or a list
            of such instances, which will receive pre- and post- commit and flush
            events, as well as a post-rollback event. **Deprecated.**
@@ -514,9 +569,9 @@ class Session(object):
             be called. This allows each database to roll back the entire
             transaction, before each transaction is committed.
 
-        :param weak_identity_map:  Defaults to ``True`` - when set to 
-           ``False``, objects placed in the :class:`.Session` will be 
-           strongly referenced until explicitly removed or the 
+        :param weak_identity_map:  Defaults to ``True`` - when set to
+           ``False``, objects placed in the :class:`.Session` will be
+           strongly referenced until explicitly removed or the
            :class:`.Session` is closed.  **Deprecated** - this option
            is obsolete.
 
@@ -573,7 +628,7 @@ class Session(object):
         transaction or nested transaction, an error is raised, unless
         ``subtransactions=True`` or ``nested=True`` is specified.
 
-        The ``subtransactions=True`` flag indicates that this :meth:`~.Session.begin` 
+        The ``subtransactions=True`` flag indicates that this :meth:`~.Session.begin`
         can create a subtransaction if a transaction is already in progress.
         For documentation on subtransactions, please see :ref:`session_subtransactions`.
 
@@ -631,7 +686,7 @@ class Session(object):
 
         By default, the :class:`.Session` also expires all database
         loaded state on all ORM-managed attributes after transaction commit.
-        This so that subsequent operations load the most recent 
+        This so that subsequent operations load the most recent
         data from the database.   This behavior can be disabled using
         the ``expire_on_commit=False`` option to :func:`.sessionmaker` or
         the :class:`.Session` constructor.
@@ -672,11 +727,11 @@ class Session(object):
 
         self.transaction.prepare()
 
-    def connection(self, mapper=None, clause=None, 
-                        bind=None, 
-                        close_with_result=False, 
+    def connection(self, mapper=None, clause=None,
+                        bind=None,
+                        close_with_result=False,
                         **kw):
-        """Return a :class:`.Connection` object corresponding to this 
+        """Return a :class:`.Connection` object corresponding to this
         :class:`.Session` object's transactional state.
 
         If this :class:`.Session` is configured with ``autocommit=False``,
@@ -684,13 +739,13 @@ class Session(object):
         is returned, or if no transaction is in progress, a new one is begun
         and the :class:`.Connection` returned (note that no transactional state
         is established with the DBAPI until the first SQL statement is emitted).
-        
+
         Alternatively, if this :class:`.Session` is configured with ``autocommit=True``,
-        an ad-hoc :class:`.Connection` is returned using :meth:`.Engine.contextual_connect` 
+        an ad-hoc :class:`.Connection` is returned using :meth:`.Engine.contextual_connect`
         on the underlying :class:`.Engine`.
 
         Ambiguity in multi-bind or unbound :class:`.Session` objects can be resolved through
-        any of the optional keyword arguments.   This ultimately makes usage of the 
+        any of the optional keyword arguments.   This ultimately makes usage of the
         :meth:`.get_bind` method for resolution.
 
         :param bind:
@@ -705,27 +760,27 @@ class Session(object):
           ``clause``.
 
         :param clause:
-            A :class:`.ClauseElement` (i.e. :func:`~.sql.expression.select`, 
-            :func:`~.sql.expression.text`, 
+            A :class:`.ClauseElement` (i.e. :func:`~.sql.expression.select`,
+            :func:`~.sql.expression.text`,
             etc.) which will be used to locate a bind, if a bind
             cannot otherwise be identified.
 
         :param close_with_result: Passed to :meth:`Engine.connect`, indicating
           the :class:`.Connection` should be considered "single use", automatically
-          closing when the first result set is closed.  This flag only has 
+          closing when the first result set is closed.  This flag only has
           an effect if this :class:`.Session` is configured with ``autocommit=True``
           and does not already have a  transaction in progress.
 
         :param \**kw:
           Additional keyword arguments are sent to :meth:`get_bind()`,
-          allowing additional arguments to be passed to custom 
+          allowing additional arguments to be passed to custom
           implementations of :meth:`get_bind`.
 
         """
         if bind is None:
             bind = self.get_bind(mapper, clause=clause, **kw)
 
-        return self._connection_for_bind(bind, 
+        return self._connection_for_bind(bind,
                                         close_with_result=close_with_result)
 
     def _connection_for_bind(self, engine, **kwargs):
@@ -735,49 +790,99 @@ class Session(object):
             return engine.contextual_connect(**kwargs)
 
     def execute(self, clause, params=None, mapper=None, bind=None, **kw):
-        """Execute a clause within the current transaction.
+        """Execute a SQL expression construct or string statement within
+        the current transaction.
 
         Returns a :class:`.ResultProxy` representing
         results of the statement execution, in the same manner as that of an
         :class:`.Engine` or
         :class:`.Connection`.
 
+        E.g.::
+
+            result = session.execute(
+                        user_table.select().where(user_table.c.id == 5)
+                    )
+
         :meth:`~.Session.execute` accepts any executable clause construct, such
         as :func:`~.sql.expression.select`,
         :func:`~.sql.expression.insert`,
         :func:`~.sql.expression.update`,
         :func:`~.sql.expression.delete`, and
-        :func:`~.sql.expression.text`, and additionally accepts
-        plain strings that represent SQL statements. If a plain string is
-        passed, it is first converted to a
-        :func:`~.sql.expression.text` construct, which here means
-        that bind parameters should be specified using the format ``:param``.
-        If raw DBAPI statement execution is desired, use :meth:`.Session.connection`
-        to acquire a :class:`.Connection`, then call its :meth:`~.Connection.execute`
-        method.
+        :func:`~.sql.expression.text`.  Plain SQL strings can be passed
+        as well, which in the case of :meth:`.Session.execute` only
+        will be interpreted the same as if it were passed via a :func:`~.expression.text`
+        construct.  That is, the following usage::
+
+            result = session.execute(
+                        "SELECT * FROM user WHERE id=:param",
+                        {"param":5}
+                    )
+
+        is equivalent to::
+
+            from sqlalchemy import text
+            result = session.execute(
+                        text("SELECT * FROM user WHERE id=:param"),
+                        {"param":5}
+                    )
+
+        The second positional argument to :meth:`.Session.execute` is an
+        optional parameter set.  Similar to that of :meth:`.Connection.execute`, whether this
+        is passed as a single dictionary, or a list of dictionaries, determines
+        whether the DBAPI cursor's ``execute()`` or ``executemany()`` is used to execute the
+        statement.   An INSERT construct may be invoked for a single row::
+
+            result = session.execute(users.insert(), {"id": 7, "name": "somename"})
+
+        or for multiple rows::
+
+            result = session.execute(users.insert(), [
+                                    {"id": 7, "name": "somename7"},
+                                    {"id": 8, "name": "somename8"},
+                                    {"id": 9, "name": "somename9"}
+                                ])
 
         The statement is executed within the current transactional context of
-        this :class:`.Session`, using the same behavior as that of
-        the :meth:`.Session.connection` method to determine the active
-        :class:`.Connection`.   The ``close_with_result`` flag is
-        set to ``True`` so that an ``autocommit=True`` :class:`.Session`
-        with no active transaction will produce a result that auto-closes
-        the underlying :class:`.Connection`.
-        
+        this :class:`.Session`.   The :class:`.Connection` which is used
+        to execute the statement can also be acquired directly by
+        calling the :meth:`.Session.connection` method.  Both methods use
+        a rule-based resolution scheme in order to determine the
+        :class:`.Connection`, which in the average case is derived directly
+        from the "bind" of the :class:`.Session` itself, and in other cases
+        can be based on the :func:`.mapper`
+        and :class:`.Table` objects passed to the method; see the documentation
+        for :meth:`.Session.get_bind` for a full description of this scheme.
+
+        The :meth:`.Session.execute` method does *not* invoke autoflush.
+
+        The :class:`.ResultProxy` returned by the :meth:`.Session.execute`
+        method is returned with the "close_with_result" flag set to true;
+        the significance of this flag is that if this :class:`.Session` is
+        autocommitting and does not have a transaction-dedicated :class:`.Connection`
+        available, a temporary :class:`.Connection` is established for the
+        statement execution, which is closed (meaning, returned to the connection
+        pool) when the :class:`.ResultProxy` has consumed all available data.
+        This applies *only* when the :class:`.Session` is configured with
+        autocommit=True and no transaction has been started.
+
         :param clause:
-            A :class:`.ClauseElement` (i.e. :func:`~.sql.expression.select`, 
-            :func:`~.sql.expression.text`, etc.) or string SQL statement to be executed.  The clause
-            will also be used to locate a bind, if this :class:`.Session`
-            is not bound to a single engine already, and the ``mapper``
-            and ``bind`` arguments are not passed.
+            An executable statement (i.e. an :class:`.Executable` expression
+            such as :func:`.expression.select`) or string SQL statement
+            to be executed.
 
         :param params:
-            Optional dictionary of bind names mapped to values.
+            Optional dictionary, or list of dictionaries, containing
+            bound parameter values.   If a single dictionary, single-row
+            execution occurs; if a list of dictionaries, an
+            "executemany" will be invoked.  The keys in each dictionary
+            must correspond to parameter names present in the statement.
 
         :param mapper:
           Optional :func:`.mapper` or mapped class, used to identify
           the appropriate bind.  This argument takes precedence over
-          ``clause`` when locating a bind.
+          ``clause`` when locating a bind.   See :meth:`.Session.get_bind`
+          for more details.
 
         :param bind:
           Optional :class:`.Engine` to be used as the bind.  If
@@ -785,11 +890,22 @@ class Session(object):
           that connection will be used.  This argument takes
           precedence over ``mapper`` and ``clause`` when locating
           a bind.
-          
+
         :param \**kw:
-          Additional keyword arguments are sent to :meth:`get_bind()`,
-          allowing additional arguments to be passed to custom 
-          implementations of :meth:`get_bind`.
+          Additional keyword arguments are sent to :meth:`.Session.get_bind()`
+          to allow extensibility of "bind" schemes.
+
+        .. seealso::
+
+            :ref:`sqlexpression_toplevel` - Tutorial on using Core SQL
+            constructs.
+
+            :ref:`connections_toplevel` - Further information on direct
+            statement execution.
+
+            :meth:`.Connection.execute` - core level statement execution
+            method, which is :meth:`.Session.execute` ultimately uses
+            in order to execute the statement.
 
         """
         clause = expression._literal_as_text(clause)
@@ -881,39 +997,39 @@ class Session(object):
 
     def get_bind(self, mapper=None, clause=None):
         """Return a "bind" to which this :class:`.Session` is bound.
-        
-        The "bind" is usually an instance of :class:`.Engine`, 
+
+        The "bind" is usually an instance of :class:`.Engine`,
         except in the case where the :class:`.Session` has been
         explicitly bound directly to a :class:`.Connection`.
 
-        For a multiply-bound or unbound :class:`.Session`, the 
-        ``mapper`` or ``clause`` arguments are used to determine the 
+        For a multiply-bound or unbound :class:`.Session`, the
+        ``mapper`` or ``clause`` arguments are used to determine the
         appropriate bind to return.
-        
+
         Note that the "mapper" argument is usually present
         when :meth:`.Session.get_bind` is called via an ORM
-        operation such as a :meth:`.Session.query`, each 
-        individual INSERT/UPDATE/DELETE operation within a 
+        operation such as a :meth:`.Session.query`, each
+        individual INSERT/UPDATE/DELETE operation within a
         :meth:`.Session.flush`, call, etc.
-        
+
         The order of resolution is:
-        
+
         1. if mapper given and session.binds is present,
            locate a bind based on mapper.
         2. if clause given and session.binds is present,
            locate a bind based on :class:`.Table` objects
            found in the given clause present in session.binds.
         3. if session.bind is present, return that.
-        4. if clause given, attempt to return a bind 
+        4. if clause given, attempt to return a bind
            linked to the :class:`.MetaData` ultimately
            associated with the clause.
         5. if mapper given, attempt to return a bind
-           linked to the :class:`.MetaData` ultimately 
+           linked to the :class:`.MetaData` ultimately
            associated with the :class:`.Table` or other
            selectable to which the mapper is mapped.
         6. No bind can be found, :class:`.UnboundExecutionError`
            is raised.
-         
+
         :param mapper:
           Optional :func:`.mapper` mapped class or instance of
           :class:`.Mapper`.   The bind can be derived from a :class:`.Mapper`
@@ -923,11 +1039,11 @@ class Session(object):
           is mapped for a bind.
 
         :param clause:
-            A :class:`.ClauseElement` (i.e. :func:`~.sql.expression.select`, 
-            :func:`~.sql.expression.text`, 
+            A :class:`.ClauseElement` (i.e. :func:`~.sql.expression.select`,
+            :func:`~.sql.expression.text`,
             etc.).  If the ``mapper`` argument is not present or could not produce
             a bind, the given expression construct will be searched for a bound
-            element, typically a :class:`.Table` associated with bound 
+            element, typically a :class:`.Table` associated with bound
             :class:`.MetaData`.
 
         """
@@ -982,23 +1098,23 @@ class Session(object):
     @util.contextmanager
     def no_autoflush(self):
         """Return a context manager that disables autoflush.
-        
+
         e.g.::
-        
+
             with session.no_autoflush:
-                
+
                 some_object = SomeClass()
                 session.add(some_object)
                 # won't autoflush
                 some_object.related_thing = session.query(SomeRelated).first()
-        
+
         Operations that proceed within the ``with:`` block
         will not be subject to flushes occurring upon query
         access.  This is useful when initializing a series
         of objects which involve existing database queries,
         where the uncompleted object should not yet be flushed.
-        
-        New in 0.7.6.
+
+        .. versionadded:: 0.7.6
 
         """
         autoflush = self.autoflush
@@ -1035,10 +1151,10 @@ class Session(object):
         mode is turned on.
 
         :param attribute_names: optional.  An iterable collection of
-          string attribute names indicating a subset of attributes to 
+          string attribute names indicating a subset of attributes to
           be refreshed.
 
-        :param lockmode: Passed to the :class:`~sqlalchemy.orm.query.Query` 
+        :param lockmode: Passed to the :class:`~sqlalchemy.orm.query.Query`
           as used by :meth:`~sqlalchemy.orm.query.Query.with_lockmode`.
 
         """
@@ -1060,22 +1176,22 @@ class Session(object):
     def expire_all(self):
         """Expires all persistent instances within this Session.
 
-        When any attributes on a persistent instance is next accessed, 
+        When any attributes on a persistent instance is next accessed,
         a query will be issued using the
         :class:`.Session` object's current transactional context in order to
         load all expired attributes for the given instance.   Note that
-        a highly isolated transaction will return the same values as were 
+        a highly isolated transaction will return the same values as were
         previously read in that same transaction, regardless of changes
         in database state outside of that transaction.
 
-        To expire individual objects and individual attributes 
+        To expire individual objects and individual attributes
         on those objects, use :meth:`Session.expire`.
 
-        The :class:`.Session` object's default behavior is to 
+        The :class:`.Session` object's default behavior is to
         expire all state whenever the :meth:`Session.rollback`
         or :meth:`Session.commit` methods are called, so that new
         state can be loaded for the new transaction.   For this reason,
-        calling :meth:`Session.expire_all` should not be needed when 
+        calling :meth:`Session.expire_all` should not be needed when
         autocommit is ``False``, assuming the transaction is isolated.
 
         """
@@ -1089,14 +1205,14 @@ class Session(object):
         attribute is next accessed, a query will be issued to the
         :class:`.Session` object's current transactional context in order to
         load all expired attributes for the given instance.   Note that
-        a highly isolated transaction will return the same values as were 
+        a highly isolated transaction will return the same values as were
         previously read in that same transaction, regardless of changes
         in database state outside of that transaction.
 
         To expire all objects in the :class:`.Session` simultaneously,
         use :meth:`Session.expire_all`.
 
-        The :class:`.Session` object's default behavior is to 
+        The :class:`.Session` object's default behavior is to
         expire all state whenever the :meth:`Session.rollback`
         or :meth:`Session.commit` methods are called, so that new
         state can be loaded for the new transaction.   For this reason,
@@ -1210,10 +1326,15 @@ class Session(object):
             if state.key is None:
                 state.key = instance_key
             elif state.key != instance_key:
-                # primary key switch. use discard() in case another 
-                # state has already replaced this one in the identity 
+                # primary key switch. use discard() in case another
+                # state has already replaced this one in the identity
                 # map (see test/orm/test_naturalpks.py ReversePKsTest)
                 self.identity_map.discard(state)
+                if state in self.transaction._key_switches:
+                    orig_key = self.transaction._key_switches[state][0]
+                else:
+                    orig_key = state.key
+                self.transaction._key_switches[state] = (orig_key, instance_key)
                 state.key = instance_key
 
             self.identity_map.replace(state)
@@ -1261,8 +1382,8 @@ class Session(object):
 
         mapper = _state_mapper(state)
         for o, m, st_, dct_ in mapper.cascade_iterator(
-                                    'save-update', 
-                                    state, 
+                                    'save-update',
+                                    state,
                                     halt_on=self._contains_state):
             self._save_or_update_impl(st_)
 
@@ -1285,7 +1406,7 @@ class Session(object):
         if state in self._deleted:
             return
 
-        # ensure object is attached to allow the 
+        # ensure object is attached to allow the
         # cascade operation to load deferred attributes
         # and collections
         self._attach(state)
@@ -1303,19 +1424,46 @@ class Session(object):
             self._delete_impl(st_)
 
     def merge(self, instance, load=True, **kw):
-        """Copy the state an instance onto the persistent instance with the
-        same identifier.
+        """Copy the state of a given instance into a corresponding instance
+        within this :class:`.Session`.
 
-        If there is no persistent instance currently associated with the
-        session, it will be loaded.  Return the persistent instance. If the
-        given instance is unsaved, save a copy of and return it as a newly
-        persistent instance. The given instance does not become associated
-        with the session.
+        :meth:`.Session.merge` examines the primary key attributes of the
+        source instance, and attempts to reconcile it with an instance of the
+        same primary key in the session.   If not found locally, it attempts
+        to load the object from the database based on primary key, and if
+        none can be located, creates a new instance.  The state of each attribute
+        on the source instance is then copied to the target instance.
+        The resulting target instance is then returned by the method; the
+        original source instance is left unmodified, and un-associated with the
+        :class:`.Session` if not already.
 
         This operation cascades to associated instances if the association is
         mapped with ``cascade="merge"``.
 
         See :ref:`unitofwork_merging` for a detailed discussion of merging.
+
+        :param instance: Instance to be merged.
+        :param load: Boolean, when False, :meth:`.merge` switches into
+         a "high performance" mode which causes it to forego emitting history
+         events as well as all database access.  This flag is used for
+         cases such as transferring graphs of objects into a :class:`.Session`
+         from a second level cache, or to transfer just-loaded objects
+         into the :class:`.Session` owned by a worker thread or process
+         without re-querying the database.
+
+         The ``load=False`` use case adds the caveat that the given
+         object has to be in a "clean" state, that is, has no pending changes
+         to be flushed - even if the incoming object is detached from any
+         :class:`.Session`.   This is so that when
+         the merge operation populates local attributes and
+         cascades to related objects and
+         collections, the values can be "stamped" onto the
+         target object as is, without generating any history or attribute
+         events, and without the need to reconcile the incoming data with
+         any existing related objects or collections that might not
+         be loaded.  The resulting objects from ``load=False`` are always
+         produced as "clean", so it is only appropriate that the given objects
+         should be "clean" as well, else this suggests a mis-use of the method.
 
         """
         if 'dont_load' in kw:
@@ -1334,8 +1482,8 @@ class Session(object):
         try:
             self.autoflush = False
             return self._merge(
-                            attributes.instance_state(instance), 
-                            attributes.instance_dict(instance), 
+                            attributes.instance_state(instance),
+                            attributes.instance_dict(instance),
                             load=load, _recursive=_recursive)
         finally:
             self.autoflush = autoflush
@@ -1373,7 +1521,7 @@ class Session(object):
             new_instance = True
 
         elif not _none_set.issubset(key[1]) or \
-                    (mapper.allow_partial_pks and 
+                    (mapper.allow_partial_pks and
                     not _none_set.issuperset(key[1])):
             merged = self.query(mapper.class_).get(key[1])
         else:
@@ -1397,14 +1545,14 @@ class Session(object):
             # version check if applicable
             if mapper.version_id_col is not None:
                 existing_version = mapper._get_state_attr_by_column(
-                            state, 
-                            state_dict, 
+                            state,
+                            state_dict,
                             mapper.version_id_col,
                             passive=attributes.PASSIVE_NO_INITIALIZE)
 
                 merged_version = mapper._get_state_attr_by_column(
-                            merged_state, 
-                            merged_dict, 
+                            merged_state,
+                            merged_dict,
                             mapper.version_id_col,
                             passive=attributes.PASSIVE_NO_INITIALIZE)
 
@@ -1426,8 +1574,8 @@ class Session(object):
             merged_state.load_options = state.load_options
 
             for prop in mapper.iterate_properties:
-                prop.merge(self, state, state_dict, 
-                                merged_state, merged_dict, 
+                prop.merge(self, state, state_dict,
+                                merged_state, merged_dict,
                                 load, _recursive)
 
         if not load:
@@ -1465,7 +1613,7 @@ class Session(object):
             self._new[state] = state.obj()
             state.insert_order = len(self._new)
 
-    def _update_impl(self, state):
+    def _update_impl(self, state, discard_existing=False):
         if (self.identity_map.contains_state(state) and
             state not in self._deleted):
             return
@@ -1481,6 +1629,10 @@ class Session(object):
                 "function to send this object back to the transient state." %
                 mapperutil.state_str(state)
             )
+        if discard_existing:
+            existing = self.identity_map.get(state.key)
+            if existing is not None:
+                self.identity_map.discard(attributes.instance_state(existing))
         self._attach(state)
         self._deleted.pop(state, None)
         self.identity_map.add(state)
@@ -1555,7 +1707,7 @@ class Session(object):
 
         Database operations will be issued in the current transactional
         context and do not affect the state of the transaction, unless an
-        error occurs, in which case the entire transaction is rolled back. 
+        error occurs, in which case the entire transaction is rolled back.
         You may flush() as often as you like within a transaction to move
         changes from Python to the database's transaction buffer.
 
@@ -1563,19 +1715,14 @@ class Session(object):
         will create a transaction on the fly that surrounds the entire set of
         operations int the flush.
 
-        objects
-          Optional; a list or tuple collection.  Restricts the flush operation
-          to only these objects, rather than all pending changes.
-          Deprecated - this flag prevents the session from properly maintaining
-          accounting among inter-object relations and can cause invalid results.
+        :param objects: Optional; restricts the flush operation to operate
+          only on elements that are in the given collection.
+
+          This feature is for an extremely narrow set of use cases where
+          particular objects may need to be operated upon before the
+          full flush() occurs.  It is not intended for general use.
 
         """
-
-        if objects:
-            util.warn_deprecated(
-                "The 'objects' argument to session.flush() is deprecated; "
-                "Please do not add objects to the session which should not "
-                "yet be persisted.")
 
         if self._flushing:
             raise sa_exc.InvalidRequestError("Session is already flushing")
@@ -1677,42 +1824,41 @@ class Session(object):
             raise
 
 
-    def is_modified(self, instance, include_collections=True, 
+    def is_modified(self, instance, include_collections=True,
                             passive=attributes.PASSIVE_OFF):
-        """Return ``True`` if the given instance has locally 
+        """Return ``True`` if the given instance has locally
         modified attributes.
 
         This method retrieves the history for each instrumented
         attribute on the instance and performs a comparison of the current
         value to its previously committed value, if any.
-        
+
         It is in effect a more expensive and accurate
-        version of checking for the given instance in the 
-        :attr:`.Session.dirty` collection; a full test for 
+        version of checking for the given instance in the
+        :attr:`.Session.dirty` collection; a full test for
         each attribute's net "dirty" status is performed.
-        
+
         E.g.::
-        
+
             return session.is_modified(someobject, passive=True)
-            
-        .. note:: 
-          
-           In SQLAlchemy 0.7 and earlier, the ``passive`` 
-           flag should **always** be explicitly set to ``True``. 
-           The current default value of :data:`.attributes.PASSIVE_OFF`
-           for this flag is incorrect, in that it loads unloaded
-           collections and attributes which by definition 
-           have no modified state, and furthermore trips off 
-           autoflush which then causes all subsequent, possibly
-           modified attributes to lose their modified state.   
-           The default value of the flag will be changed in 0.8.
-           
+
+        .. versionchanged:: 0.8
+            In SQLAlchemy 0.7 and earlier, the ``passive``
+            flag should **always** be explicitly set to ``True``.
+            The current default value of :data:`.attributes.PASSIVE_OFF`
+            for this flag is incorrect, in that it loads unloaded
+            collections and attributes which by definition
+            have no modified state, and furthermore trips off
+            autoflush which then causes all subsequent, possibly
+            modified attributes to lose their modified state.
+            The default value of the flag will be changed in 0.8.
+
         A few caveats to this method apply:
 
-        * Instances present in the :attr:`.Session.dirty` collection may report 
-          ``False`` when tested with this method.  This is because 
+        * Instances present in the :attr:`.Session.dirty` collection may report
+          ``False`` when tested with this method.  This is because
           the object may have received change events via attribute
-          mutation, thus placing it in :attr:`.Session.dirty`, 
+          mutation, thus placing it in :attr:`.Session.dirty`,
           but ultimately the state is the same as that loaded from
           the database, resulting in no net change here.
         * Scalar attributes may not have recorded the previously set
@@ -1724,36 +1870,37 @@ class Session(object):
           it skips the expense of a SQL call if the old value isn't present,
           based on the assumption that an UPDATE of the scalar value is
           usually needed, and in those few cases where it isn't, is less
-          expensive on average than issuing a defensive SELECT. 
+          expensive on average than issuing a defensive SELECT.
 
           The "old" value is fetched unconditionally only if the attribute
           container has the ``active_history`` flag set to ``True``. This flag
           is set typically for primary key attributes and scalar object references
-          that are not a simple many-to-one.  To set this flag for 
+          that are not a simple many-to-one.  To set this flag for
           any arbitrary mapped column, use the ``active_history`` argument
           with :func:`.column_property`.
-          
+
         :param instance: mapped instance to be tested for pending changes.
         :param include_collections: Indicates if multivalued collections should be
          included in the operation.  Setting this to ``False`` is a way to detect
          only local-column based properties (i.e. scalar columns or many-to-one
          foreign keys) that would result in an UPDATE for this instance upon
          flush.
-        :param passive: Indicates if unloaded attributes and 
-         collections should be loaded in the course of performing 
+        :param passive: Indicates if unloaded attributes and
+         collections should be loaded in the course of performing
          this test.  If set to ``False``, or left at its default
          value of :data:`.PASSIVE_OFF`, unloaded attributes
-         will be loaded.  If set to ``True`` or 
-         :data:`.PASSIVE_NO_INITIALIZE`, unloaded 
-         collections and attributes will remain unloaded.  As 
+         will be loaded.  If set to ``True`` or
+         :data:`.PASSIVE_NO_INITIALIZE`, unloaded
+         collections and attributes will remain unloaded.  As
          noted previously, the existence of this flag here
-         is a bug, as unloaded attributes by definition have 
+         is a bug, as unloaded attributes by definition have
          no changes, and the load operation also triggers an
          autoflush which then cancels out subsequent changes.
-         This flag should **always be set to 
-         True**.  In 0.8 the flag will be deprecated and the default
-         set to ``True``.
+         This flag should **always be set to True**.
 
+         .. versionchanged:: 0.8
+             The flag will be deprecated and the default
+             set to ``True``.
 
         """
         try:
@@ -1770,7 +1917,7 @@ class Session(object):
         for attr in state.manager.attributes:
             if \
                 (
-                    not include_collections and 
+                    not include_collections and
                     hasattr(attr.impl, 'get_collection')
                 ) or not hasattr(attr.impl, 'get_history'):
                 continue
@@ -1784,33 +1931,71 @@ class Session(object):
 
     @property
     def is_active(self):
-        """True if this :class:`.Session` has an active transaction.
-        
-        This indicates if the :class:`.Session` is capable of emitting
-        SQL, as from the :meth:`.Session.execute`, :meth:`.Session.query`,
-        or :meth:`.Session.flush` methods.   If False, it indicates 
-        that the innermost transaction has been rolled back, but enclosing
-        :class:`.SessionTransaction` objects remain in the transactional
-        stack, which also must be rolled back.
-        
-        This flag is generally only useful with a :class:`.Session`
-        configured in its default mode of ``autocommit=False``.
+        """True if this :class:`.Session` is in "transaction mode" and
+        is not in "partial rollback" state.
+
+        The :class:`.Session` in its default mode of ``autocommit=False``
+        is essentially always in "transaction mode", in that a
+        :class:`.SessionTransaction` is associated with it as soon as
+        it is instantiated.  This :class:`.SessionTransaction` is immediately
+        replaced with a new one as soon as it is ended, due to a rollback,
+        commit, or close operation.
+
+        "Transaction mode" does *not* indicate whether
+        or not actual database connection resources are in use;  the
+        :class:`.SessionTransaction` object coordinates among zero or more
+        actual database transactions, and starts out with none, accumulating
+        individual DBAPI connections as different data sources are used
+        within its scope.   The best way to track when a particular
+        :class:`.Session` has actually begun to use DBAPI resources is to
+        implement a listener using the :meth:`.SessionEvents.after_begin`
+        method, which will deliver both the :class:`.Session` as well as the
+        target :class:`.Connection` to a user-defined event listener.
+
+        The "partial rollback" state refers to when an "inner" transaction,
+        typically used during a flush, encounters an error and emits
+        a rollback of the DBAPI connection.  At this point, the :class:`.Session`
+        is in "partial rollback" and awaits for the user to call :meth:`.rollback`,
+        in order to close out the transaction stack.  It is in this "partial
+        rollback" period that the :attr:`.is_active` flag returns False.  After
+        the call to :meth:`.rollback`, the :class:`.SessionTransaction` is replaced
+        with a new one and :attr:`.is_active` returns ``True`` again.
+
+        When a :class:`.Session` is used in ``autocommit=True`` mode, the
+        :class:`.SessionTransaction` is only instantiated within the scope
+        of a flush call, or when :meth:`.Session.begin` is called.  So
+        :attr:`.is_active` will always be ``False`` outside of a flush or
+        :meth:`.begin` block in this mode, and will be ``True`` within the
+        :meth:`.begin` block as long as it doesn't enter "partial rollback"
+        state.
+
+        From all the above, it follows that the only purpose to this flag is
+        for application frameworks that wish to detect is a "rollback" is
+        necessary within a generic error handling routine, for :class:`.Session`
+        objects that would otherwise be in "partial rollback" mode.  In
+        a typical integration case, this is also not necessary as it is standard
+        practice to emit :meth:`.Session.rollback` unconditionally within the
+        outermost exception catch.
+
+        To track the transactional state of a :class:`.Session` fully,
+        use event listeners, primarily the :meth:`.SessionEvents.after_begin`,
+        :meth:`.SessionEvents.after_commit`, :meth:`.SessionEvents.after_rollback`
+        and related events.
 
         """
-
         return self.transaction and self.transaction.is_active
 
     identity_map = None
     """A mapping of object identities to objects themselves.
-    
+
     Iterating through ``Session.identity_map.values()`` provides
-    access to the full set of persistent objects (i.e., those 
+    access to the full set of persistent objects (i.e., those
     that have row identity) currently in the session.
-    
+
     See also:
-    
+
     :func:`.identity_key` - operations involving identity keys.
-    
+
     """
 
     @property
@@ -1826,9 +2011,9 @@ class Session(object):
     @property
     def dirty(self):
         """The set of all persistent instances considered dirty.
-        
+
         E.g.::
-        
+
             some_mapped_object in session.dirty
 
         Instances are considered dirty when they were modified but not
@@ -1869,7 +2054,7 @@ _sessions = weakref.WeakValueDictionary()
 def make_transient(instance):
     """Make the given instance 'transient'.
 
-    This will remove its association with any 
+    This will remove its association with any
     session and additionally will remove its "identity key",
     such that it's as though the object were newly constructed,
     except retaining its values.   It also resets the
@@ -1877,7 +2062,7 @@ def make_transient(instance):
     had been explicitly deleted by its session.
 
     Attributes which were "expired" or deferred at the
-    instance level are reverted to undefined, and 
+    instance level are reverted to undefined, and
     will not trigger any loads.
 
     """
@@ -1886,7 +2071,7 @@ def make_transient(instance):
     if s:
         s._expunge_state(state)
 
-    # remove expired state and 
+    # remove expired state and
     # deferred callables
     state.callables.clear()
     if state.key:
