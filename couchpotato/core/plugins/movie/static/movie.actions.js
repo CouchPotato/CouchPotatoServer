@@ -136,7 +136,7 @@ MA.Release = new Class({
 				}
 
 				// Create release
-				new Element('div', {
+				var item = new Element('div', {
 					'class': 'item '+status.identifier,
 					'id': 'release_'+release.id
 				}).adopt(
@@ -165,22 +165,12 @@ MA.Release = new Class({
 							'click': function(e){
 								(e).preventDefault();
 								self.ignore(release);
-								if(this.getParent('.item').hasClass('failed')){
-									this.getParent('.item').toggleClass('failed');
-									this.parentNode.getElementsByTagName('span')[1].innerHTML = 'available';
-								}
-								else if(this.getParent('.item').hasClass('ignored')){
-									this.getParent('.item').toggleClass('ignored');
-									this.parentNode.getElementsByTagName('span')[1].innerHTML = 'available';
-								}
-								else {
-									this.getParent('.item').toggleClass('ignored');
-									this.parentNode.getElementsByTagName('span')[1].innerHTML = 'ignored';
-								}
 							}
 						}
 					})
-				).inject(self.release_container)
+				).inject(self.release_container);
+
+				release['el'] = item;
 
 				if(status.identifier == 'ignored' || status.identifier == 'failed' || status.identifier == 'snatched'){
 					if(!self.last_release || (self.last_release && self.last_release.status.identifier != 'snatched' && status.identifier == 'snatched'))
@@ -329,6 +319,17 @@ MA.Release = new Class({
 		Api.request('release.ignore', {
 			'data': {
 				'id': release.id
+			},
+			'onComplete': function(){
+				var el = release.el;
+				if(el.hasClass('failed') || el.hasClass('ignored')){
+					el.removeClass('failed').removeClass('ignored');
+					el.getElement('.release_status').set('text', 'available');
+				}
+				else {
+					el.addClass('ignored');
+					el.getElement('.release_status').set('text', 'ignored');
+				}
 			}
 		})
 
