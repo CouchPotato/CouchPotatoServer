@@ -143,6 +143,10 @@ class Renamer(Plugin):
             remove_releases = []
 
             movie_title = getTitle(group['library'])
+            try:
+                destination = group['category']['path']
+            except:
+                destination = self.conf('to')
 
             # Add _UNKNOWN_ if no library item is connected
             if not group['library'] or not movie_title:
