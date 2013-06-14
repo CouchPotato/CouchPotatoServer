@@ -34,7 +34,7 @@ def addEvent(name, handler, priority = 100):
             ac = hasattr(parent, 'afterCall')
             if ac: parent.afterCall(handler)
         except:
-            log.error('Failed creating handler %s: %s', (name, traceback.format_exc()))
+            log.error('Failed creating handler %s %s: %s', (name, handler, traceback.format_exc()))
 
         return h
 
