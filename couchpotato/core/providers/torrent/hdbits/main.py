@@ -31,7 +31,7 @@ class HDBits(TorrentProvider):
                     results.append({
                         'id': result['id'],
                         'name': result['title'],
-                        'url': self.urls['download'] % (result['title'], result['id'], self.conf('passkey')),
+                        'url': self.urls['download'] % (result['id'], result['id'], self.conf('passkey')),
                         'detail_url': self.urls['detail'] % result['id'],
                         'size': self.parseSize(result['size']),
                         'seeders': tryInt(result['seeder']),
