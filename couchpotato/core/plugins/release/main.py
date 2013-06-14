@@ -149,8 +149,8 @@ class Release(Plugin):
 
         rel = db.query(Relea).filter_by(id = id).first()
         if rel:
-            ignored_status, available_status = fireEvent('status.get', ['ignored', 'available'], single = True)
-            rel.status_id = available_status.get('id') if rel.status_id is ignored_status.get('id') else ignored_status.get('id')
+            ignored_status, failed_status, available_status = fireEvent('status.get', ['ignored', 'failed', 'available'], single = True)
+            rel.status_id = available_status.get('id') if rel.status_id in [ignored_status.get('id'), failed_status.get('id')] else ignored_status.get('id')
             db.commit()
 
         return {

@@ -145,7 +145,7 @@ class Searcher(Plugin):
 
         pre_releases = fireEvent('quality.pre_releases', single = True)
         release_dates = fireEvent('library.update_release_date', identifier = movie['library']['identifier'], merge = True)
-        available_status, ignored_status = fireEvent('status.get', ['available', 'ignored'], single = True)
+        available_status, ignored_status, failed_status = fireEvent('status.get', ['available', 'ignored', 'failed'], single = True)
 
         found_releases = []
         too_early_to_search = []
@@ -169,7 +169,7 @@ class Searcher(Plugin):
 
             # See if better quality is available
             for release in movie['releases']:
-                if release['quality']['order'] <= quality_type['quality']['order'] and release['status_id'] not in [available_status.get('id'), ignored_status.get('id')]:
+                if release['quality']['order'] <= quality_type['quality']['order'] and release['status_id'] not in [available_status.get('id'), ignored_status.get('id'), failed_status.get('id')]:
                     has_better_quality += 1
 
             # Don't search for quality lower then already available.
