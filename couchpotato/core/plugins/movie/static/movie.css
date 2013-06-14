@@ -568,6 +568,16 @@
 						transform: scale(-1, 1);
 					}
 
+					.movies .options .table .item.failed span {
+						text-decoration: line-through;
+						color: rgba(255,255,255,0.4);
+					}
+					.movies .options .table .item.failed .delete:before {
+						display: inline-block; 
+						content: "\e04b"; 
+						transform: scale(-1, 1);
+					}
+
 				.movies .options .table .item:last-child { border: 0; }
 				.movies .options .table .item:nth-child(even) {
 					background: rgba(255,255,255,0.05);
@@ -617,6 +627,7 @@
 						.movies .options .table a.download { color: #a7fbaf; }
 						.movies .options .table a.delete { color: #fda3a3; }
 						.movies .options .table .ignored a.delete { color: #b5fda3; }
+						.movies .options .table .failed a.delete { color: #b5fda3; }
 
 				.movies .options .table .head > * {
 					font-weight: bold;

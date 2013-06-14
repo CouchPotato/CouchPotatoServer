@@ -165,7 +165,18 @@ MA.Release = new Class({
 							'click': function(e){
 								(e).preventDefault();
 								self.ignore(release);
-								this.getParent('.item').toggleClass('ignored')
+								if(this.getParent('.item').hasClass('failed')){
+									this.getParent('.item').toggleClass('failed');
+									this.parentNode.getElementsByTagName('span')[1].innerHTML = 'available';
+								}
+								else if(this.getParent('.item').hasClass('ignored')){
+									this.getParent('.item').toggleClass('ignored');
+									this.parentNode.getElementsByTagName('span')[1].innerHTML = 'available';
+								}
+								else {
+									this.getParent('.item').toggleClass('ignored');
+									this.parentNode.getElementsByTagName('span')[1].innerHTML = 'ignored';
+								}
 							}
 						}
 					})
@@ -189,7 +200,7 @@ MA.Release = new Class({
 			}
 
 			if(self.next_release || (self.last_release && ['ignored', 'failed'].indexOf(self.last_release.status.identifier) === false)){
-				
+
 				self.trynext_container = new Element('div.buttons.try_container').inject(self.release_container, 'top');
 
 				self.trynext_container.adopt(
