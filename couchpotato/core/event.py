@@ -138,8 +138,6 @@ def fireEvent(name, *args, **kwargs):
             options['on_complete']()
 
         return results
-    except KeyError, e:
-        pass
     except Exception:
         log.error('%s: %s', (name, traceback.format_exc()))
 
