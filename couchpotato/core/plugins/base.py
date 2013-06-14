@@ -108,7 +108,7 @@ class Plugin(object):
 
         # Fill in some headers
         parsed_url = urlparse(url)
-        host = parsed_url.hostname
+        host = '%s%s' % (parsed_url.hostname, (':' + str(parsed_url.port) if parsed_url.port else ''))
 
         headers['Referer'] = headers.get('Referer', '%s://%s' % (parsed_url.scheme, host))
         headers['Host'] = headers.get('Host', host)
