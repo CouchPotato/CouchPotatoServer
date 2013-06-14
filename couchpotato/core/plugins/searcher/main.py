@@ -157,11 +157,12 @@ class Searcher(Plugin):
 
         fireEvent('notify.frontend', type = 'searcher.started.%s' % movie['id'], data = True, message = 'Searching for "%s"' % default_title)
 
+        no_quality_match = []
 
         ret = False
         for quality_type in movie['profile']['types']:
             if not self.conf('always_search') and not self.couldBeReleased(quality_type['quality']['identifier'] in pre_releases, release_dates):
-                log.info('Too early to search for %s, %s', (quality_type['quality']['identifier'], default_title))
+                no_quality_match.append(quality_type['quality']['identifier'])
                 continue
 
             has_better_quality = 0
@@ -267,6 +268,7 @@ class Searcher(Plugin):
             # Break if CP wants to shut down
             if self.shuttingDown() or ret:
                 break
+        log.info('Too early to search for %s, %s', (no_quality_match, default_title))
 
         fireEvent('notify.frontend', type = 'searcher.ended.%s' % movie['id'], data = True)
 
