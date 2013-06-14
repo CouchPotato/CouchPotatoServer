@@ -37,6 +37,7 @@ class Plugin(object):
     def registerPlugin(self):
         addEvent('app.do_shutdown', self.doShutdown)
         addEvent('plugin.running', self.isRunning)
+        self._running = []
 
     def conf(self, attr, value = None, default = None):
         return Env.setting(attr, self.getName().lower(), value = value, default = default)
@@ -225,9 +226,6 @@ class Plugin(object):
         self._needs_shutdown = value
 
     def isRunning(self, value = None, boolean = True):
-
-        if not hasattr(self, '_running'):
-            self._running = []
 
         if value is None:
             return self._running
