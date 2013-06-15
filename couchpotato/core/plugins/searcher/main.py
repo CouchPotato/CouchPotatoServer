@@ -240,7 +240,7 @@ class Searcher(Plugin):
                         log.info('Ignored, waiting %s days: %s', (quality_type.get('wait_for'), nzb['name']))
                         continue
 
-                    if nzb['status_id'] == ignored_status.get('id'):
+                    if nzb['status_id'] in [ignored_status.get('id'), failed_status.get('id')]:
                         log.info('Ignored: %s', nzb['name'])
                         continue
 
@@ -599,8 +599,7 @@ class Searcher(Plugin):
 
     def tryNextRelease(self, movie_id, manual = False):
 
-        snatched_status = fireEvent('status.get', 'snatched', single = True)
-        ignored_status = fireEvent('status.get', 'ignored', single = True)
+        snatched_status, ignored_status = fireEvent('status.get', ['snatched', 'ignored'], single = True)
 
         try:
             db = get_session()
