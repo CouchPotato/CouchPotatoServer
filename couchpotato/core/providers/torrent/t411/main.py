@@ -48,9 +48,9 @@ class t411(TorrentProvider):
         moviequality = simplifyString(quality['identifier'])
         for MovieTitle in MovieTitles:
             try:
-                TitleStringReal = str(MovieTitle.encode("latin-1").replace('-',' ').replace(':',''))
+                TitleStringReal = str(MovieTitle.encode("latin-1").replace('-',' '))
             except:
-                TitleStringReal = str(MovieTitle.encode("utf-8").replace('-',' ').replace(':',''))
+                TitleStringReal = str(MovieTitle.encode("utf-8").replace('-',' '))
             if moviequality in ['720p']:
                 results.append(urllib.urlencode( {'search': TitleStringReal, 'cat' : 210, 'submit' : 'Recherche', 'subcat': 631 } ) + "&term%5B17%5D%5B%5D=541&term%5B17%5D%5B%5D=542&term%5B17%5D%5B%5D=719&term%5B7%5D%5B%5D=15")
                 results.append(urllib.urlencode( {'search': simplifyString(TitleStringReal), 'cat' : 210, 'submit' : 'Recherche', 'subcat': 631 } ) + "&term%5B17%5D%5B%5D=541&term%5B17%5D%5B%5D=542&term%5B17%5D%5B%5D=719&term%5B7%5D%5B%5D=15")
