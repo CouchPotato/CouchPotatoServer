@@ -46,6 +46,7 @@ class ApiHandler(RequestHandler):
     def get(self, route):
         if not api.get(route):
             self.write('API call doesn\'t seem to exist')
+            return
 
         kwargs = {}
         for x in self.request.arguments:
