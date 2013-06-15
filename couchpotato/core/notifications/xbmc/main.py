@@ -28,11 +28,17 @@ class XBMC(Notification):
             if self.use_json_notifications.get(host):
                 response = self.request(host, [
                     ('GUI.ShowNotification', {'title': self.default_title, 'message': message, 'image': self.getNotificationImage('small')}),
-                    ('VideoLibrary.Scan', {}),
                 ])
+
+                if not self.conf('only_first') or hosts.index(host) == 0:
+                    response = self.request(host, [
+                        ('VideoLibrary.Scan', {}),
+                    ])
             else:
                 response = self.notifyXBMCnoJSON(host, {'title':self.default_title, 'message':message})
-                response += self.request(host, [('VideoLibrary.Scan', {})])
+
+                if not self.conf('only_first') or hosts.index(host) == 0:
+                    response += self.request(host, [('VideoLibrary.Scan', {})])
 
             try:
                 for result in response:
@@ -44,7 +50,7 @@ class XBMC(Notification):
             except:
                 log.error('Failed parsing results: %s', traceback.format_exc())
 
-        return successful == len(hosts) * 2
+        return successful == len(hosts) + (self.conf('only_first') ? 1 : len(hosts))
 
     def getXBMCJSONversion(self, host, message = ''):
 
