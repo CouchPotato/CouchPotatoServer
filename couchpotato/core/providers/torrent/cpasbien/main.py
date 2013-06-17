@@ -14,7 +14,6 @@ import traceback
 import urllib
 import urllib2
 import unicodedata
-from libs.werkzeug.urls import url_encode
 from couchpotato.core.event import fireEvent
 from couchpotato.core.helpers import namer_check
 
