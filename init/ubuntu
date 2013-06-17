@@ -45,6 +45,8 @@ test -x $CP_DAEMON || exit 0
 
 set -e
 
+. /lib/lsb/init-functions
+
 case "$1" in
   start)
         echo "Starting $DESC"
@@ -63,9 +65,13 @@ case "$1" in
         start-stop-daemon --stop --pidfile $CP_PID_FILE --retry 15
         start-stop-daemon -d $CP_APP_PATH -c $CP_RUN_AS --start --background --pidfile $CP_PID_FILE --exec $CP_DAEMON -- $CP_DAEMON_OPTS
         ;;
+
+  status)
+       status_of_proc -p $CP_PID_FILE "$CP_DAEMON" "$NAME"
+        ;;
   *)
         N=/etc/init.d/$NAME
-        echo "Usage: $N {start|stop|restart|force-reload}" >&2
+        echo "Usage: $N {start|stop|restart|force-reload|status}" >&2
         exit 1
         ;;
 esac

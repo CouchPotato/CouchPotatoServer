@@ -1,14 +1,15 @@
 # maxdb/base.py
-# Copyright (C) 2005-2012 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 
 """Support for the MaxDB database.
 
-This dialect is *not* ported to SQLAlchemy 0.6 or 0.7.
+.. note::
 
-This dialect is *not* tested on SQLAlchemy 0.6 or 0.7.
+    The MaxDB dialect is **non-functional as of SQLAlchemy 0.6**,
+    pending development efforts to bring it up-to-date.
 
 Overview
 --------
@@ -254,7 +255,7 @@ class MaxTimestamp(sqltypes.DateTime):
                                     value[20:])])
         else:
             raise exc.InvalidRequestError(
-                "datetimeformat '%s' is not supported." % 
+                "datetimeformat '%s' is not supported." %
                 dialect.datetimeformat)
         return process
 
@@ -282,18 +283,18 @@ class MaxDate(sqltypes.Date):
                 if value is None:
                     return None
                 else:
-                    return datetime.date(int(value[0:4]), int(value[4:6]), 
+                    return datetime.date(int(value[0:4]), int(value[4:6]),
                                          int(value[6:8]))
         elif dialect.datetimeformat == 'iso':
             def process(value):
                 if value is None:
                     return None
                 else:
-                    return datetime.date(int(value[0:4]), int(value[5:7]), 
+                    return datetime.date(int(value[0:4]), int(value[5:7]),
                                          int(value[8:10]))
         else:
             raise exc.InvalidRequestError(
-                "datetimeformat '%s' is not supported." % 
+                "datetimeformat '%s' is not supported." %
                 dialect.datetimeformat)
         return process
 
@@ -321,7 +322,7 @@ class MaxTime(sqltypes.Time):
                 if value is None:
                     return None
                 else:
-                    return datetime.time(int(value[0:4]), int(value[4:6]), 
+                    return datetime.time(int(value[0:4]), int(value[4:6]),
                                          int(value[6:8]))
         elif dialect.datetimeformat == 'iso':
             def process(value):
@@ -332,7 +333,7 @@ class MaxTime(sqltypes.Time):
                                          int(value[8:10]))
         else:
             raise exc.InvalidRequestError(
-                "datetimeformat '%s' is not supported." % 
+                "datetimeformat '%s' is not supported." %
                 dialect.datetimeformat)
         return process
 

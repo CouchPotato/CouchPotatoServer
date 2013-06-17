@@ -1,5 +1,5 @@
 # informix/base.py
-# Copyright (C) 2005-2012 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
 # coding: gbk
 #
 # This module is part of SQLAlchemy and is released under
@@ -7,8 +7,11 @@
 
 """Support for the Informix database.
 
-This dialect is mostly functional as of SQLAlchemy 0.6.5.
+.. note::
 
+    The Informix dialect functions on current SQLAlchemy versions
+    but is not regularly tested, and may have many issues and
+    caveats not currently handled.
 
 """
 
@@ -23,7 +26,7 @@ from sqlalchemy import types as sqltypes
 RESERVED_WORDS = set(
     ["abs", "absolute", "access", "access_method", "acos", "active", "add",
     "address", "add_months", "admin", "after", "aggregate", "alignment",
-    "all", "allocate", "all_rows", "altere", "and", "ansi", "any", "append",
+    "all", "allocate", "all_rows", "alter", "and", "ansi", "any", "append",
     "array", "as", "asc", "ascii", "asin", "at", "atan", "atan2", "attach",
     "attributes", "audit", "authentication", "authid", "authorization",
     "authorized", "auto", "autofree", "auto_reprepare", "auto_stat_mode",
@@ -463,7 +466,7 @@ class InformixDialect(default.DefaultDialect):
         c = connection.execute(
         """select t1.constrname as cons_name,
                  t4.colname as local_column, t7.tabname as remote_table,
-                 t6.colname as remote_column, t7.owner as remote_owner 
+                 t6.colname as remote_column, t7.owner as remote_owner
             from sysconstraints as t1 , systables as t2 ,
                  sysindexes as t3 , syscolumns as t4 ,
                  sysreferences as t5 , syscolumns as t6 , systables as t7 ,
@@ -472,7 +475,7 @@ class InformixDialect(default.DefaultDialect):
              and t3.tabid = t2.tabid and t3.idxname = t1.idxname
              and t4.tabid = t2.tabid and t4.colno in (t3.part1, t3.part2, t3.part3,
              t3.part4, t3.part5, t3.part6, t3.part7, t3.part8, t3.part9, t3.part10,
-             t3.part11, t3.part11, t3.part12, t3.part13, t3.part4, t3.part15, t3.part16) 
+             t3.part11, t3.part11, t3.part12, t3.part13, t3.part4, t3.part15, t3.part16)
              and t5.constrid = t1.constrid and t8.constrid = t5.primary
              and t6.tabid = t5.ptabid and t6.colno in (t9.part1, t9.part2, t9.part3,
              t9.part4, t9.part5, t9.part6, t9.part7, t9.part8, t9.part9, t9.part10,
@@ -519,7 +522,7 @@ class InformixDialect(default.DefaultDialect):
 
         # Select the column positions from sysindexes for sysconstraints
         data = connection.execute(
-            """select t2.* 
+            """select t2.*
             from systables as t1, sysindexes as t2, sysconstraints as t3
             where t1.tabid=t2.tabid and t1.tabname=? and t1.owner=?
             and t2.idxname=t3.idxname and t3.constrtype='P'""",
@@ -541,7 +544,7 @@ class InformixDialect(default.DefaultDialect):
         c = connection.execute(
             """select t1.colname
             from syscolumns as t1, systables as t2
-            where t2.tabname=? and t1.tabid = t2.tabid and 
+            where t2.tabname=? and t1.tabid = t2.tabid and
             t1.colno in (%s)""" % place_holder,
             table_name, *colpositions
         ).fetchall()
@@ -565,7 +568,7 @@ class InformixDialect(default.DefaultDialect):
             c = connection.execute(
                 """select t1.colname
                 from syscolumns as t1, systables as t2
-                where t2.tabname=? and t1.tabid = t2.tabid and 
+                where t2.tabname=? and t1.tabid = t2.tabid and
                 t1.colno in (%s)""" % place_holder,
                 table_name, *colnames
             ).fetchall()

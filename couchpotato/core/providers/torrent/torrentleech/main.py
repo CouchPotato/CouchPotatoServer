@@ -14,6 +14,7 @@ class TorrentLeech(TorrentProvider):
     urls = {
         'test' : 'http://www.torrentleech.org/',
         'login' : 'http://www.torrentleech.org/user/account/login/',
+        'login_check': 'http://torrentleech.org/user/messages',
         'detail' : 'http://www.torrentleech.org/torrent/%s',
         'search' : 'http://www.torrentleech.org/torrents/browse/index/query/%s/categories/%d',
         'download' : 'http://www.torrentleech.org%s',
@@ -58,7 +59,6 @@ class TorrentLeech(TorrentProvider):
                         'name': link.string,
                         'url': self.urls['download'] % url['href'],
                         'detail_url': self.urls['download'] % details['href'],
-                        'download': self.loginDownload,
                         'size': self.parseSize(result.find_all('td')[4].string),
                         'seeders': tryInt(result.find('td', attrs = {'class' : 'seeders'}).string),
                         'leechers': tryInt(result.find('td', attrs = {'class' : 'leechers'}).string),
@@ -77,3 +77,5 @@ class TorrentLeech(TorrentProvider):
 
     def loginSuccess(self, output):
         return '/user/account/logout' in output.lower() or 'welcome back' in output.lower()
+
+    loginCheckSuccess = loginSuccess

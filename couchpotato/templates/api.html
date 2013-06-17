@@ -1,27 +1,28 @@
+{% autoescape None %}
 <!doctype html>
 <html>
 	<head>
-		<link rel="stylesheet" href="{{ url_for('web.static', filename='style/api.css') }}" type="text/css">
+		<link rel="stylesheet" href="{{ Env.get('static_path') }}style/api.css" type="text/css">
 		<title>API documentation</title>
 	</head>
 	<body>
 
 		<h1>CouchPotato API Documentation</h1>
 		<div class="api">
-			You can access the API via <pre>{{ fireEvent('app.api_url', single = True)|safe }}/</pre>
+			You can access the API via <pre>{{ Env.get('api_base') }}</pre>
 			To see it in action, have a look at the webinterface with Firebug (on firefox) or the development tools included in Chrome. 
 			All the data that you see there are from the API.
 			<br />
 			<br />
 			A normal API call:
-			<pre><a href="{{ fireEvent('app.api_url', single = True)|safe }}/updater.info/">{{ fireEvent('app.api_url', single = True)|safe }}/updater.info/</a></pre>
+			<pre><a href="{{ Env.get('api_base') }}updater.info/">{{ Env.get('api_base') }}updater.info/</a></pre>
 			<br />
 			You can also use the API over another domain using JSONP, the callback function should be in 'callback_func'
-			<pre><a href="{{ fireEvent('app.api_url', single = True)|safe }}/updater.info/?callback_func=myfunction">{{ fireEvent('app.api_url', single = True)|safe }}/updater.info/?callback_func=myfunction</a></pre>
+			<pre><a href="{{ Env.get('api_base') }}updater.info/?callback_func=myfunction">{{ Env.get('api_base') }}updater.info/?callback_func=myfunction</a></pre>
 			<br />
 			<br />
 			Get the API key:
-			<pre><a href="{{ url_for('web.index') }}getkey/?p=md5(password)&amp;u=md5(username)">{{ url_for('web.index') }}getkey/?p=md5(password)&amp;u=md5(username)</a></pre>
+			<pre><a href="{{ Env.get('web_base') }}getkey/?p=md5(password)&amp;u=md5(username)">{{ Env.get('web_base') }}getkey/?p=md5(password)&amp;u=md5(username)</a></pre>
 			Will return {"api_key": "XXXXXXXXXX", "success": true}. When username or password is empty you don't need to md5 it.
 			<br />
 		</div>
@@ -41,9 +42,9 @@
 						<td class="type">{{ api_docs[route]['params'][param].get('type', 'string') }}</td>
 						<td class="description">{{ api_docs[route]['params'][param]['desc'] }}</td>
 					</tr>
-				{% endfor %}
+				{% end %}
 				</table>
-				{% endif %}
+				{% end %}
 
 				{% if api_docs[route].get('return') %}
 				<h3>Return</h3>
@@ -52,14 +53,14 @@
 					{% if api_docs[route]['return'].get('example') %}
 					<div class="example">
 						<h4>Example</h4>
-						<pre>{{ api_docs[route]['return'].get('example', '')|safe }}</pre>
+						<pre>{{ api_docs[route]['return'].get('example', '') }}</pre>
 					</div>
-					{% endif %}
+					{% end %}
 				</div>
-				{% endif %}
+				{% end %}
 			</div>
-			{% endif %}
-		{% endfor %}
+			{% end %}
+		{% end %}
 
 		<div class="missing">
 			<h1>Missing documentation</h1>

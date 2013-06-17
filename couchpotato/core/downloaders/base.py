@@ -16,7 +16,7 @@ class Downloader(Provider):
 
     torrent_sources = [
         'http://torrage.com/torrent/%s.torrent',
-        'http://torcache.net/torrent/%s.torrent',
+        'https://torcache.net/torrent/%s.torrent',
     ]
 
     torrent_trackers = [

@@ -2,7 +2,6 @@ from couchpotato import get_session
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
 from couchpotato.core.helpers.encoding import simplifyString, toUnicode
-from couchpotato.core.helpers.request import jsonified, getParam
 from couchpotato.core.helpers.variable import md5, getTitle, splitString, \
     possibleTitles
 from couchpotato.core.logger import CPLog
@@ -67,15 +66,15 @@ class Searcher(Plugin):
         else:
             fireEvent('notify.frontend', type = 'searcher.already_started', data = True, message = 'Full search already in progress')
 
-        return jsonified({
+        return {
             'success': not in_progress
-        })
+        }
 
     def getProgress(self):
 
-        return jsonified({
+        return {
             'progress': self.in_progress
-        })
+        }
 
     def allMovies(self):
 
@@ -146,9 +145,10 @@ class Searcher(Plugin):
 
         pre_releases = fireEvent('quality.pre_releases', single = True)
         release_dates = fireEvent('library.update_release_date', identifier = movie['library']['identifier'], merge = True)
-        available_status, ignored_status = fireEvent('status.get', ['available', 'ignored'], single = True)
+        available_status, ignored_status, failed_status = fireEvent('status.get', ['available', 'ignored', 'failed'], single = True)
 
         found_releases = []
+        too_early_to_search = []
 
         default_title = getTitle(movie['library'])
         if not default_title:
@@ -162,14 +162,14 @@ class Searcher(Plugin):
         ret = False
         for quality_type in movie['profile']['types']:
             if not self.conf('always_search') and not self.couldBeReleased(quality_type['quality']['identifier'] in pre_releases, release_dates):
-                log.info('Too early to search for %s, %s', (quality_type['quality']['identifier'], default_title))
+                too_early_to_search.append(quality_type['quality']['identifier'])
                 continue
 
             has_better_quality = 0
 
             # See if better quality is available
             for release in movie['releases']:
-                if release['quality']['order'] <= quality_type['quality']['order'] and release['status_id'] not in [available_status.get('id'), ignored_status.get('id')]:
+                if release['quality']['order'] <= quality_type['quality']['order'] and release['status_id'] not in [available_status.get('id'), ignored_status.get('id'), failed_status.get('id')]:
                     has_better_quality += 1
 
             # Don't search for quality lower then already available.
@@ -240,7 +240,7 @@ class Searcher(Plugin):
                         log.info('Ignored, waiting %s days: %s', (quality_type.get('wait_for'), nzb['name']))
                         continue
 
-                    if nzb['status_id'] == ignored_status.get('id'):
+                    if nzb['status_id'] in [ignored_status.get('id'), failed_status.get('id')]:
                         log.info('Ignored: %s', nzb['name'])
                         continue
 
@@ -268,6 +268,9 @@ class Searcher(Plugin):
             # Break if CP wants to shut down
             if self.shuttingDown() or ret:
                 break
+
+        if len(too_early_to_search) > 0:
+            log.info2('Too early to search for %s, %s', (too_early_to_search, default_title))
 
         fireEvent('notify.frontend', type = 'searcher.ended.%s' % movie['id'], data = True)
 
@@ -586,18 +589,17 @@ class Searcher(Plugin):
 
         return False
 
-    def tryNextReleaseView(self):
+    def tryNextReleaseView(self, id = None, **kwargs):
 
-        trynext = self.tryNextRelease(getParam('id'))
+        trynext = self.tryNextRelease(id)
 
-        return jsonified({
+        return {
             'success': trynext
-        })
+        }
 
     def tryNextRelease(self, movie_id, manual = False):
 
-        snatched_status = fireEvent('status.get', 'snatched', single = True)
-        ignored_status = fireEvent('status.get', 'ignored', single = True)
+        snatched_status, ignored_status = fireEvent('status.get', ['snatched', 'ignored'], single = True)
 
         try:
             db = get_session()

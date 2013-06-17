@@ -1,5 +1,5 @@
 # engine/strategies.py
-# Copyright (C) 2005-2012 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -24,7 +24,7 @@ strategies = {}
 
 
 class EngineStrategy(object):
-    """An adaptor that processes input arguements and produces an Engine.
+    """An adaptor that processes input arguments and produces an Engine.
 
     Provides a ``create`` method that receives input arguments and
     produces an instance of base.Engine or a subclass.
@@ -41,7 +41,7 @@ class EngineStrategy(object):
 
 
 class DefaultEngineStrategy(EngineStrategy):
-    """Base class for built-in stratgies."""
+    """Base class for built-in strategies."""
 
     def create(self, name_or_url, **kwargs):
         # create url.URL object
@@ -80,7 +80,7 @@ class DefaultEngineStrategy(EngineStrategy):
                     return dialect.connect(*cargs, **cparams)
                 except Exception, e:
                     # Py3K
-                    #raise exc.DBAPIError.instance(None, None, 
+                    #raise exc.DBAPIError.instance(None, None,
                     #                   e, dialect.dbapi.Error,
                     #                   connection_invalidated=
                     #                       dialect.is_disconnect(e, None, None)
@@ -180,7 +180,7 @@ PlainEngineStrategy()
 
 
 class ThreadLocalEngineStrategy(DefaultEngineStrategy):
-    """Strategy for configuring an Engine with thredlocal behavior."""
+    """Strategy for configuring an Engine with threadlocal behavior."""
 
     name = 'threadlocal'
     engine_cls = threadlocal.TLEngine
@@ -245,8 +245,8 @@ class MockEngineStrategy(EngineStrategy):
             from sqlalchemy.engine import ddl
             ddl.SchemaDropper(self.dialect, self, **kwargs).traverse_single(entity)
 
-        def _run_visitor(self, visitorcallable, element, 
-                                        connection=None, 
+        def _run_visitor(self, visitorcallable, element,
+                                        connection=None,
                                         **kwargs):
             kwargs['checkfirst'] = False
             visitorcallable(self.dialect, self,

@@ -77,7 +77,7 @@ def bind_unused_port():
 
     Returns a tuple (socket, port).
     """
-    [sock] = netutil.bind_sockets(0, 'localhost', family=socket.AF_INET)
+    [sock] = netutil.bind_sockets(None, 'localhost', family=socket.AF_INET)
     port = sock.getsockname()[1]
     return sock, port
 
@@ -86,6 +86,8 @@ def get_async_test_timeout():
     """Get the global timeout setting for async tests.
 
     Returns a float, the timeout in seconds.
+
+    .. versionadded:: 3.1
     """
     try:
         return float(os.environ.get('ASYNC_TEST_TIMEOUT'))
@@ -98,12 +100,15 @@ class AsyncTestCase(unittest.TestCase):
     asynchronous code.
 
     The unittest framework is synchronous, so the test must be
-    complete by the time the test method returns.  This class provides
-    the `stop()` and `wait()` methods for this purpose.  The test
+    complete by the time the test method returns.  This means that
+    asynchronous code cannot be used in quite the same way as usual.
+    To write test functions that use the same ``yield``-based patterns
+    used with the `tornado.gen` module, decorate your test methods
+    with `tornado.testing.gen_test` instead of
+    `tornado.gen.coroutine`.  This class also provides the `stop()`
+    and `wait()` methods for a more manual style of testing.  The test
     method itself must call ``self.wait()``, and asynchronous
     callbacks should call ``self.stop()`` to signal completion.
-    Alternately, the `gen_test` decorator can be used to use yield points
-    from the `tornado.gen` module.
 
     By default, a new `.IOLoop` is constructed for each test and is available
     as ``self.io_loop``.  This `.IOLoop` should be used in the construction of
@@ -118,8 +123,17 @@ class AsyncTestCase(unittest.TestCase):
 
     Example::
 
-        # This test uses argument passing between self.stop and self.wait.
+        # This test uses coroutine style.
         class MyTestCase(AsyncTestCase):
+            @tornado.testing.gen_test
+            def test_http_fetch(self):
+                client = AsyncHTTPClient(self.io_loop)
+                response = yield client.fetch("http://www.tornadoweb.org")
+                # Test contents of response
+                self.assertIn("FriendFeed", response.body)
+
+        # This test uses argument passing between self.stop and self.wait.
+        class MyTestCase2(AsyncTestCase):
             def test_http_fetch(self):
                 client = AsyncHTTPClient(self.io_loop)
                 client.fetch("http://www.tornadoweb.org/", self.stop)
@@ -128,7 +142,7 @@ class AsyncTestCase(unittest.TestCase):
                 self.assertIn("FriendFeed", response.body)
 
         # This test uses an explicit callback-based style.
-        class MyTestCase2(AsyncTestCase):
+        class MyTestCase3(AsyncTestCase):
             def test_http_fetch(self):
                 client = AsyncHTTPClient(self.io_loop)
                 client.fetch("http://www.tornadoweb.org/", self.handle_fetch)
@@ -216,12 +230,16 @@ class AsyncTestCase(unittest.TestCase):
     def wait(self, condition=None, timeout=None):
         """Runs the `.IOLoop` until stop is called or timeout has passed.
 
-        In the event of a timeout, an exception will be thrown. The default
-        timeout is 5 seconds; it may be overridden with a ``timeout`` keyword
-        argument or globally with the ASYNC_TEST_TIMEOUT environment variable.
+        In the event of a timeout, an exception will be thrown. The
+        default timeout is 5 seconds; it may be overridden with a
+        ``timeout`` keyword argument or globally with the
+        ``ASYNC_TEST_TIMEOUT`` environment variable.
 
         If ``condition`` is not None, the `.IOLoop` will be restarted
         after `stop()` until ``condition()`` returns true.
+
+        .. versionchanged:: 3.1
+           Added the ``ASYNC_TEST_TIMEOUT`` environment variable.
         """
         if timeout is None:
             timeout = get_async_test_timeout()
@@ -385,7 +403,7 @@ def gen_test(func=None, timeout=None):
                 response = yield gen.Task(self.fetch('/'))
 
     By default, ``@gen_test`` times out after 5 seconds. The timeout may be
-    overridden globally with the ASYNC_TEST_TIMEOUT environment variable,
+    overridden globally with the ``ASYNC_TEST_TIMEOUT`` environment variable,
     or for each test with the ``timeout`` keyword argument::
 
         class MyTest(AsyncHTTPTestCase):
@@ -393,8 +411,9 @@ def gen_test(func=None, timeout=None):
             def test_something_slow(self):
                 response = yield gen.Task(self.fetch('/'))
 
-    If both the environment variable and the parameter are set, ``gen_test``
-    uses the maximum of the two.
+    .. versionadded:: 3.1
+       The ``timeout`` argument and ``ASYNC_TEST_TIMEOUT`` environment
+       variable.
     """
     if timeout is None:
         timeout = get_async_test_timeout()

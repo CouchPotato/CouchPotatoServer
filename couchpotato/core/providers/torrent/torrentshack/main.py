@@ -13,6 +13,7 @@ class TorrentShack(TorrentProvider):
     urls = {
         'test' : 'http://www.torrentshack.net/',
         'login' : 'http://www.torrentshack.net/login.php',
+        'login_check': 'http://www.torrentshack.net/inbox.php',
         'detail' : 'http://www.torrentshack.net/torrent/%s',
         'search' : 'http://www.torrentshack.net/torrents.php?searchstr=%s&filter_cat[%d]=1',
         'download' : 'http://www.torrentshack.net/%s',
@@ -58,7 +59,6 @@ class TorrentShack(TorrentProvider):
                             'name': unicode(link.span.string).translate({ord(u'\xad'): None}),
                             'url': self.urls['download'] % url['href'],
                             'detail_url': self.urls['download'] % link['href'],
-                            'download': self.loginDownload,
                             'size': self.parseSize(result.find_all('td')[4].string),
                             'seeders': tryInt(result.find_all('td')[6].string),
                             'leechers': tryInt(result.find_all('td')[7].string),
@@ -79,3 +79,5 @@ class TorrentShack(TorrentProvider):
 
     def loginSuccess(self, output):
         return 'logout.php' in output.lower()
+
+    loginCheckSuccess = loginSuccess

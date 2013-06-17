@@ -1,5 +1,5 @@
 # postgresql/pypostgresql.py
-# Copyright (C) 2005-2012 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -40,7 +40,7 @@ class PGDialect_pypostgresql(PGDialect):
     default_paramstyle = 'pyformat'
 
     # requires trunk version to support sane rowcounts
-    # TODO: use dbapi version information to set this flag appropariately
+    # TODO: use dbapi version information to set this flag appropriately
     supports_sane_rowcount = True
     supports_sane_multi_rowcount = False
 

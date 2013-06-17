@@ -1,5 +1,5 @@
 # util/compat.py
-# Copyright (C) 2005-2012 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -19,6 +19,7 @@ py3k_warning = getattr(sys, 'py3kwarning', False) or sys.version_info >= (3, 0)
 jython = sys.platform.startswith('java')
 pypy = hasattr(sys, 'pypy_version_info')
 win32 = sys.platform.startswith('win')
+cpython = not pypy and not jython  # TODO: something better for this ?
 
 if py3k_warning:
     set_types = set
@@ -40,6 +41,11 @@ else:
 
     set_types = set, sets.Set
 
+if sys.version_info < (2, 6):
+    def next(iter):
+        return iter.next()
+else:
+    next = next
 if py3k_warning:
     import pickle
 else:
@@ -50,7 +56,7 @@ else:
 
 # a controversial feature, required by MySQLdb currently
 def buffer(x):
-    return x 
+    return x
 
 # Py2K
 buffer = buffer
@@ -193,7 +199,7 @@ import time
 if win32 or jython:
     time_func = time.clock
 else:
-    time_func = time.time 
+    time_func = time.time
 
 if sys.version_info >= (2, 5):
     any = any

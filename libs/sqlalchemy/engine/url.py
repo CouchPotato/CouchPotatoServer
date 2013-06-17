@@ -1,5 +1,5 @@
 # engine/url.py
-# Copyright (C) 2005-2012 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -110,7 +110,7 @@ class URL(object):
                 module = self._load_entry_point()
                 if module is None:
                     raise exc.ArgumentError(
-                        "Could not determine dialect for '%s'." % 
+                        "Could not determine dialect for '%s'." %
                         self.drivername)
 
             return module.dialect

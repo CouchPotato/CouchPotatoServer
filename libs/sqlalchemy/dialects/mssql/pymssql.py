@@ -1,5 +1,5 @@
 # mssql/pymssql.py
-# Copyright (C) 2005-2012 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -21,8 +21,8 @@ Sample connect string::
     mssql+pymssql://<username>:<password>@<freetds_name>
 
 Adding "?charset=utf8" or similar will cause pymssql to return
-strings as Python unicode objects.   This can potentially improve 
-performance in some scenarios as decoding of strings is 
+strings as Python unicode objects.   This can potentially improve
+performance in some scenarios as decoding of strings is
 handled natively.
 
 Limitations
