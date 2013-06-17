@@ -11,6 +11,7 @@ class Env(object):
     _appname = 'CouchPotato'
 
     ''' Environment variables '''
+    _app = None
     _encoding = 'UTF-8'
     _debug = False
     _dev = False

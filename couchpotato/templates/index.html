@@ -1,3 +1,4 @@
+{% autoescape None %}
 <!doctype html>
 <html>
 	<head>
@@ -5,38 +6,38 @@
 		<meta name="apple-mobile-web-app-capable" content="yes">
 
 		{% for url in fireEvent('clientscript.get_styles', as_html = True, location = 'front', single = True) %}
-		<link rel="stylesheet" href="{{ url_for('web.index') }}{{ url }}" type="text/css">{% endfor %}
+		<link rel="stylesheet" href="{{ Env.get('web_base') }}{{ url }}" type="text/css">{% end %}
 		{% for url in fireEvent('clientscript.get_scripts', as_html = True, location = 'front', single = True) %}
-		<script type="text/javascript" src="{{ url_for('web.index') }}{{ url }}"></script>{% endfor %}
+		<script type="text/javascript" src="{{ Env.get('web_base') }}{{ url }}"></script>{% end %}
 
 		{% for url in fireEvent('clientscript.get_scripts', as_html = True, location = 'head', single = True) %}
-		<script type="text/javascript" src="{{ url_for('web.index') }}{{ url }}"></script>{% endfor %}
+		<script type="text/javascript" src="{{ Env.get('web_base') }}{{ url }}"></script>{% end %}
 		{% for url in fireEvent('clientscript.get_styles', as_html = True, location = 'head', single = True) %}
-		<link rel="stylesheet" href="{{ url_for('web.index') }}{{ url }}" type="text/css">{% endfor %}
+		<link rel="stylesheet" href="{{ Env.get('web_base') }}{{ url }}" type="text/css">{% end %}
 
-		<link href="{{ url_for('web.static', filename='images/favicon.ico') }}" rel="icon" type="image/x-icon" />
-		<link rel="apple-touch-icon" href="{{ url_for('web.static', filename='images/homescreen.png') }}" />
+		<link href="{{ Env.get('static_path') }}images/favicon.ico" rel="icon" type="image/x-icon" />
+		<link rel="apple-touch-icon" href="{{ Env.get('static_path') }}images/homescreen.png" />
 
 		<script type="text/javascript" src="https://www.youtube.com/player_api" defer="defer"></script>
 
 		<script type="text/javascript">
-		
+
 			if($(window).getSize().x <= 480)
 				window.addEvent('load', function() {
-	
+
 					setTimeout(function(){
 						window.scrollTo(0, 1);
 						window.scrollTo(0, 0);
 					}, 100);
-	
+
 				});
 
 			window.addEvent('domready', function() {
 				new Uniform();
 
 				Api.setup({
-					'url': {{ url_for('api.index')|tojson|safe }},
-					'path_sep': {{ sep|tojson|safe }},
+					'url': {{ json_encode(Env.get('api_base')) }},
+					'path_sep': {{ json_encode(sep) }},
 					'is_remote': false
 				});
 
@@ -61,29 +62,29 @@
 				}
 
 				Quality.setup({
-					'profiles': {{ fireEvent('profile.all', single = True)|tojson|safe }},
-					'qualities': {{ fireEvent('quality.all', single = True)|tojson|safe }}
+					'profiles': {{ json_encode(fireEvent('profile.all', single = True)) }},
+					'qualities': {{ json_encode(fireEvent('quality.all', single = True)) }}
 				});
 
-				Status.setup({{ fireEvent('status.all', single = True)|tojson|safe }});
+				Status.setup({{ json_encode(fireEvent('status.all', single = True)) }});
 
-				File.Type.setup({{ fireEvent('file.types', single = True)|tojson|safe }});
+				File.Type.setup({{ json_encode(fireEvent('file.types', single = True)) }});
 
 				App.setup({
-					'base_url': {{ url_for('web.index')|tojson|safe }},
-					'args': {{ env.get('args')|tojson|safe }},
-					'options': {{ ('%s' % env.get('options'))|tojson|safe }},
-					'app_dir': {{ env.get('app_dir')|tojson|safe }},
-					'data_dir': {{ env.get('data_dir')|tojson|safe }},
-					'pid': {{ env.getPid()|tojson|safe }},
-					'userscript_version': {{ fireEvent('userscript.get_version', single = True)|tojson|safe }}
+					'base_url': {{ json_encode(Env.get('web_base')) }},
+					'args': {{ json_encode(Env.get('args')) }},
+					'options': {{ json_encode(('%s' % Env.get('options'))) }},
+					'app_dir': {{ json_encode(Env.get('app_dir')) }},
+					'data_dir': {{ json_encode(Env.get('data_dir')) }},
+					'pid': {{ json_encode(Env.getPid()) }},
+					'userscript_version': {{ json_encode(fireEvent('userscript.get_version', single = True)) }}
 				});
 			})
 
-			{% if env.setting('show_wizard') %}
+			{% if Env.setting('show_wizard') %}
 				if(!window.location.href.contains('wizard'))
-					window.location = '{{ url_for('web.index') }}wizard/'
-			{% endif %}
+					window.location = '{{ Env.get('web_base') }}wizard/'
+			{% end %}
 
 		</script>
 		<title>CouchPotato</title>

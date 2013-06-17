@@ -10,7 +10,8 @@ class TorrentDay(TorrentProvider):
 
     urls = {
         'test': 'http://www.td.af/',
-        'login' : 'http://www.td.af/torrents/',
+        'login': 'http://www.td.af/torrents/',
+        'login_check': 'http://www.torrentday.com/userdetails.php',
         'detail': 'http://www.td.af/details.php?id=%s',
         'search': 'http://www.td.af/V3/API/API.php',
         'download': 'http://www.td.af/download.php/%s/%s',
@@ -50,7 +51,6 @@ class TorrentDay(TorrentProvider):
                 'size': self.parseSize(torrent.get('size')),
                 'seeders': tryInt(torrent.get('seed')),
                 'leechers': tryInt(torrent.get('leech')),
-                'download': self.loginDownload,
             })
 
     def getLoginParams(self):
@@ -62,3 +62,6 @@ class TorrentDay(TorrentProvider):
 
     def loginSuccess(self, output):
         return 'Password not correct' not in output
+
+    def loginCheckSuccess(self, output):
+        return 'logout.php' in output.lower()

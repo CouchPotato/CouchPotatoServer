@@ -2,7 +2,6 @@ from couchpotato import get_session
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import toUnicode
-from couchpotato.core.helpers.request import jsonified, getParams
 from couchpotato.core.helpers.variable import mergeDicts, md5, getExt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
@@ -53,10 +52,10 @@ class QualityPlugin(Plugin):
 
     def allView(self):
 
-        return jsonified({
+        return {
             'success': True,
             'list': self.all()
-        })
+        }
 
     def all(self):
 
@@ -88,20 +87,18 @@ class QualityPlugin(Plugin):
             if identifier == q.get('identifier'):
                 return q
 
-    def saveSize(self):
-
-        params = getParams()
+    def saveSize(self, **kwargs):
 
         db = get_session()
-        quality = db.query(Quality).filter_by(identifier = params.get('identifier')).first()
+        quality = db.query(Quality).filter_by(identifier = kwargs.get('identifier')).first()
 
         if quality:
-            setattr(quality, params.get('value_type'), params.get('value'))
+            setattr(quality, kwargs.get('value_type'), kwargs.get('value'))
             db.commit()
 
-        return jsonified({
+        return {
             'success': True
-        })
+        }
 
     def fill(self):
 

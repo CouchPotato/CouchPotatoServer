@@ -1,12 +1,10 @@
 from couchpotato.api import addApiView
 from couchpotato.core.helpers.encoding import tryUrlencode
-from couchpotato.core.helpers.request import jsonified, getParam
 from couchpotato.core.helpers.variable import cleanHost
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
-from flask.helpers import url_for
+from couchpotato.environment import Env
 from pytwitter import Api, parse_qsl
-from werkzeug.utils import redirect
 import oauth2
 
 log = CPLog(__name__)
@@ -70,10 +68,9 @@ class Twitter(Notification):
 
         return True
 
-    def getAuthorizationUrl(self):
+    def getAuthorizationUrl(self, host = None, **kwargs):
 
-        referer = getParam('host')
-        callback_url = cleanHost(referer) + '%snotify.%s.credentials/' % (url_for('api.index').lstrip('/'), self.getName().lower())
+        callback_url = cleanHost(host) + '%snotify.%s.credentials/' % (Env.get('api_base').lstrip('/'), self.getName().lower())
 
         oauth_consumer = oauth2.Consumer(self.consumer_key, self.consumer_secret)
         oauth_client = oauth2.Client(oauth_consumer)
@@ -82,31 +79,29 @@ class Twitter(Notification):
 
         if resp['status'] != '200':
             log.error('Invalid response from Twitter requesting temp token: %s', resp['status'])
-            return jsonified({
+            return {
                 'success': False,
-            })
+            }
         else:
             self.request_token = dict(parse_qsl(content))
 
             auth_url = self.urls['authorize'] + ("?oauth_token=%s" % self.request_token['oauth_token'])
 
             log.info('Redirecting to "%s"', auth_url)
-            return jsonified({
+            return {
                 'success': True,
                 'url': auth_url,
-            })
+            }
 
-    def getCredentials(self):
-
-        key = getParam('oauth_verifier')
+    def getCredentials(self, oauth_verifier, **kwargs):
 
         token = oauth2.Token(self.request_token['oauth_token'], self.request_token['oauth_token_secret'])
-        token.set_verifier(key)
+        token.set_verifier(oauth_verifier)
 
         oauth_consumer = oauth2.Consumer(key = self.consumer_key, secret = self.consumer_secret)
         oauth_client = oauth2.Client(oauth_consumer, token)
 
-        resp, content = oauth_client.request(self.urls['access'], method = 'POST', body = 'oauth_verifier=%s' % key)
+        resp, content = oauth_client.request(self.urls['access'], method = 'POST', body = 'oauth_verifier=%s' % oauth_verifier)
         access_token = dict(parse_qsl(content))
 
         if resp['status'] != '200':
@@ -121,4 +116,4 @@ class Twitter(Notification):
 
             self.request_token = None
 
-            return redirect(url_for('web.index') + 'settings/notifications/')
+            return 'redirect', Env.get('web_base') + 'settings/notifications/'

@@ -2,7 +2,6 @@ from couchpotato import get_session
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
 from couchpotato.core.helpers.encoding import toUnicode, ss
-from couchpotato.core.helpers.request import getParams, jsonified
 from couchpotato.core.helpers.variable import getExt, mergeDicts, getTitle, \
     getImdb, link, symlink, tryInt
 from couchpotato.core.logger import CPLog
@@ -59,13 +58,12 @@ class Renamer(Plugin):
 
         return True
 
-    def scanView(self):
+    def scanView(self, **kwargs):
 
-        params = getParams()
-        async = tryInt(params.get('async', None))
-        movie_folder = params.get('movie_folder', None)
-        downloader = params.get('downloader', None)
-        download_id = params.get('download_id', None)
+        async = tryInt(kwargs.get('async', None))
+        movie_folder = kwargs.get('movie_folder', None)
+        downloader = kwargs.get('downloader', None)
+        download_id = kwargs.get('download_id', None)
 
         fire_handle = fireEvent if not async else fireEventAsync
 
@@ -74,9 +72,9 @@ class Renamer(Plugin):
             download_info = {'id': download_id, 'downloader': downloader} if download_id else None
         )
 
-        return jsonified({
+        return {
             'success': True
-        })
+        }
 
     def scan(self, movie_folder = None, download_info = None):
 
@@ -183,6 +181,7 @@ class Renamer(Plugin):
                      'source': group['meta_data']['source'],
                      'resolution_width': group['meta_data'].get('resolution_width'),
                      'resolution_height': group['meta_data'].get('resolution_height'),
+                     'audio_channels': group['meta_data'].get('audio_channels'),
                      'imdb_id': library['identifier'],
                      'cd': '',
                      'cd_nr': '',

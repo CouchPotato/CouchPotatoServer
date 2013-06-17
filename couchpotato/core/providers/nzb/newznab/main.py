@@ -53,10 +53,19 @@ class Newznab(NZBProvider, RSS):
         for nzb in nzbs:
 
             date = None
+            spotter = None
             for item in nzb:
+                if date and spotter:
+                    break
                 if item.attrib.get('name') == 'usenetdate':
                     date = item.attrib.get('value')
                     break
+
+                # Get the name of the person who posts the spot
+                if item.attrib.get('name') == 'poster':
+                    if "@spot.net" in item.attrib.get('value'):
+                        spotter = item.attrib.get('value').split("@")[0]
+                        continue
 
             if not date:
                 date = self.getTextElement(nzb, 'pubDate')
@@ -67,10 +76,15 @@ class Newznab(NZBProvider, RSS):
             if not name:
                 continue
 
+            name_extra = ''
+            if spotter:
+                name_extra = spotter
+
             results.append({
                 'id': nzb_id,
                 'provider_extra': urlparse(host['host']).hostname or host['host'],
-                'name': self.getTextElement(nzb, 'title'),
+                'name': name,
+                'name_extra': name_extra,
                 'age': self.calculateAge(int(time.mktime(parse(date).timetuple()))),
                 'size': int(self.getElement(nzb, 'enclosure').attrib['length']) / 1024 / 1024,
                 'url': (self.getUrl(host['host'], self.urls['download']) % tryUrlencode(nzb_id)) + self.getApiExt(host),

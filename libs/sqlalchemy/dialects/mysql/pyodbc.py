@@ -1,5 +1,5 @@
 # mysql/pyodbc.py
-# Copyright (C) 2005-2012 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -20,7 +20,7 @@ Connect string::
 Limitations
 -----------
 
-The mysql-pyodbc dialect is subject to unresolved character encoding issues 
+The mysql-pyodbc dialect is subject to unresolved character encoding issues
 which exist within the current ODBC drivers available.
 (see http://code.google.com/p/pyodbc/issues/detail?id=25).   Consider usage
 of OurSQL, MySQLdb, or MySQL-connector/Python.

@@ -1,5 +1,5 @@
 # ext/mutable.py
-# Copyright (C) 2005-2012 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -21,8 +21,8 @@ Establishing Mutability on Scalar Column Values
 ===============================================
 
 A typical example of a "mutable" structure is a Python dictionary.
-Following the example introduced in :ref:`types_toplevel`, we 
-begin with a custom type that marshals Python dictionaries into 
+Following the example introduced in :ref:`types_toplevel`, we
+begin with a custom type that marshals Python dictionaries into
 JSON strings before being persisted::
 
     from sqlalchemy.types import TypeDecorator, VARCHAR
@@ -43,7 +43,7 @@ JSON strings before being persisted::
                 value = json.loads(value)
             return value
 
-The usage of ``json`` is only for the purposes of example. The :mod:`sqlalchemy.ext.mutable` 
+The usage of ``json`` is only for the purposes of example. The :mod:`sqlalchemy.ext.mutable`
 extension can be used
 with any type whose target Python type may be mutable, including
 :class:`.PickleType`, :class:`.postgresql.ARRAY`, etc.
@@ -86,7 +86,7 @@ The above dictionary class takes the approach of subclassing the Python
 built-in ``dict`` to produce a dict
 subclass which routes all mutation events through ``__setitem__``. There are
 many variants on this approach, such as subclassing ``UserDict.UserDict``,
-the newer ``collections.MutableMapping``,  etc. The part that's important to this 
+the newer ``collections.MutableMapping``,  etc. The part that's important to this
 example is that the :meth:`.Mutable.changed` method is called whenever an in-place change to the
 datastructure takes place.
 
@@ -95,7 +95,7 @@ convert any values that are not instances of ``MutationDict``, such
 as the plain dictionaries returned by the ``json`` module, into the
 appropriate type.  Defining this method is optional; we could just as well created our
 ``JSONEncodedDict`` such that it always returns an instance of ``MutationDict``,
-and additionally ensured that all calling code uses ``MutationDict`` 
+and additionally ensured that all calling code uses ``MutationDict``
 explicitly.  When :meth:`.Mutable.coerce` is not overridden, any values
 applied to a parent object which are not instances of the mutable type
 will raise a ``ValueError``.
@@ -108,14 +108,14 @@ of this type, applying event listening instrumentation to the mapped
 attribute. Such as, with classical table metadata::
 
     from sqlalchemy import Table, Column, Integer
-    
+
     my_data = Table('my_data', metadata,
         Column('id', Integer, primary_key=True),
         Column('data', MutationDict.as_mutable(JSONEncodedDict))
     )
 
 Above, :meth:`~.Mutable.as_mutable` returns an instance of ``JSONEncodedDict``
-(if the type object was not an instance already), which will intercept any 
+(if the type object was not an instance already), which will intercept any
 attributes which are mapped against this type.  Below we establish a simple
 mapping against the ``my_data`` table::
 
@@ -157,7 +157,7 @@ will flag the attribute as "dirty" on the parent object::
 
 The ``MutationDict`` can be associated with all future instances
 of ``JSONEncodedDict`` in one step, using :meth:`~.Mutable.associate_with`.  This
-is similar to :meth:`~.Mutable.as_mutable` except it will intercept 
+is similar to :meth:`~.Mutable.as_mutable` except it will intercept
 all occurrences of ``MutationDict`` in all mappings unconditionally, without
 the need to declare it individually::
 
@@ -167,8 +167,8 @@ the need to declare it individually::
         __tablename__ = 'my_data'
         id = Column(Integer, primary_key=True)
         data = Column(JSONEncodedDict)
-    
-    
+
+
 Supporting Pickling
 --------------------
 
@@ -180,7 +180,7 @@ not picklable, due to the fact that they contain weakrefs and function
 callbacks. In our case, this is a good thing, since if this dictionary were
 picklable, it could lead to an excessively large pickle size for our value
 objects that are pickled by themselves outside of the context of the parent.
-The developer responsiblity here is only to provide a ``__getstate__`` method
+The developer responsibility here is only to provide a ``__getstate__`` method
 that excludes the :meth:`~.MutableBase._parents` collection from the pickle
 stream::
 
@@ -217,12 +217,13 @@ be assigned an object value which represents information "composed" from one
 or more columns from the underlying mapped table. The usual example is that of
 a geometric "point", and is introduced in :ref:`mapper_composite`.
 
-As of SQLAlchemy 0.7, the internals of :func:`.orm.composite` have been
-greatly simplified and in-place mutation detection is no longer enabled by
-default; instead, the user-defined value must detect changes on its own and
-propagate them to all owning parents. The :mod:`sqlalchemy.ext.mutable`
-extension provides the helper class :class:`.MutableComposite`, which is a
-slight variant on the :class:`.Mutable` class.
+.. versionchanged:: 0.7
+    The internals of :func:`.orm.composite` have been
+    greatly simplified and in-place mutation detection is no longer enabled by
+    default; instead, the user-defined value must detect changes on its own and
+    propagate them to all owning parents. The :mod:`sqlalchemy.ext.mutable`
+    extension provides the helper class :class:`.MutableComposite`, which is a
+    slight variant on the :class:`.Mutable` class.
 
 As is the case with :class:`.Mutable`, the user-defined composite class
 subclasses :class:`.MutableComposite` as a mixin, and detects and delivers
@@ -300,6 +301,31 @@ will flag the attribute as "dirty" on the parent object::
     >>> assert v1 in sess.dirty
     True
 
+Coercing Mutable Composites
+---------------------------
+
+The :meth:`.MutableBase.coerce` method is also supported on composite types.
+In the case of :class:`.MutableComposite`, the :meth:`.MutableBase.coerce`
+method is only called for attribute set operations, not load operations.
+Overriding the :meth:`.MutableBase.coerce` method is essentially equivalent
+to using a :func:`.validates` validation routine for all attributes which
+make use of the custom composite type::
+
+    class Point(MutableComposite):
+        # other Point methods
+        # ...
+
+        def coerce(cls, key, value):
+            if isinstance(value, tuple):
+                value = Point(*value)
+            elif not isinstance(value, Point):
+                raise ValueError("tuple or Point expected")
+            return value
+
+.. versionadded:: 0.7.10,0.8.0b2
+    Support for the :meth:`.MutableBase.coerce` method in conjunction with
+    objects of type :class:`.MutableComposite`.
+
 Supporting Pickling
 --------------------
 
@@ -313,10 +339,10 @@ the minimal form of our ``Point`` class::
 
     class Point(MutableComposite):
         # ...
-        
+
         def __getstate__(self):
             return self.x, self.y
-        
+
         def __setstate__(self, state):
             self.x, self.y = state
 
@@ -327,7 +353,7 @@ pickling process of the parent's object-relational state so that the
 """
 from sqlalchemy.orm.attributes import flag_modified
 from sqlalchemy import event, types
-from sqlalchemy.orm import mapper, object_mapper
+from sqlalchemy.orm import mapper, object_mapper, Mapper
 from sqlalchemy.util import memoized_property
 import weakref
 
@@ -337,20 +363,38 @@ class MutableBase(object):
     @memoized_property
     def _parents(self):
         """Dictionary of parent object->attribute name on the parent.
-        
+
         This attribute is a so-called "memoized" property.  It initializes
         itself with a new ``weakref.WeakKeyDictionary`` the first time
         it is accessed, returning the same object upon subsequent access.
-        
+
         """
 
         return weakref.WeakKeyDictionary()
 
     @classmethod
     def coerce(cls, key, value):
-        """Given a value, coerce it into this type.
+        """Given a value, coerce it into the target type.
 
-        By default raises ValueError.
+        Can be overridden by custom subclasses to coerce incoming
+        data into a particular type.
+
+        By default, raises ``ValueError``.
+
+        This method is called in different scenarios depending on if
+        the parent class is of type :class:`.Mutable` or of type
+        :class:`.MutableComposite`.  In the case of the former, it is called
+        for both attribute-set operations as well as during ORM loading
+        operations.  For the latter, it is only called during attribute-set
+        operations; the mechanics of the :func:`.composite` construct
+        handle coercion during load operations.
+
+
+        :param key: string name of the ORM-mapped attribute being set.
+        :param value: the incoming value.
+        :return: the method should return the coerced value, or raise
+         ``ValueError`` if the coercion cannot be completed.
+
         """
         if value is None:
             return None
@@ -358,7 +402,7 @@ class MutableBase(object):
 
     @classmethod
     def _listen_on_attribute(cls, attribute, coerce, parent_cls):
-        """Establish this type as a mutation listener for the given 
+        """Establish this type as a mutation listener for the given
         mapped descriptor.
 
         """
@@ -372,7 +416,7 @@ class MutableBase(object):
         def load(state, *args):
             """Listen for objects loaded or refreshed.
 
-            Wrap the target data member's value with 
+            Wrap the target data member's value with
             ``Mutable``.
 
             """
@@ -388,7 +432,7 @@ class MutableBase(object):
             data member.
 
             Establish a weak reference to the parent object
-            on the incoming value, remove it for the one 
+            on the incoming value, remove it for the one
             outgoing.
 
             """
@@ -435,7 +479,7 @@ class Mutable(MutableBase):
 
     @classmethod
     def associate_with_attribute(cls, attribute):
-        """Establish this type as a mutation listener for the given 
+        """Establish this type as a mutation listener for the given
         mapped descriptor.
 
         """
@@ -443,15 +487,15 @@ class Mutable(MutableBase):
 
     @classmethod
     def associate_with(cls, sqltype):
-        """Associate this wrapper with all future mapped columns 
+        """Associate this wrapper with all future mapped columns
         of the given type.
 
         This is a convenience method that calls ``associate_with_attribute`` automatically.
 
-        .. warning:: 
-        
+        .. warning::
+
            The listeners established by this method are *global*
-           to all mappers, and are *not* garbage collected.   Only use 
+           to all mappers, and are *not* garbage collected.   Only use
            :meth:`.associate_with` for types that are permanent to an application,
            not with ad-hoc types else this will cause unbounded growth
            in memory usage.
@@ -473,7 +517,7 @@ class Mutable(MutableBase):
         This establishes listeners that will detect ORM mappings against
         the given type, adding mutation event trackers to those mappings.
 
-        The type is returned, unconditionally as an instance, so that 
+        The type is returned, unconditionally as an instance, so that
         :meth:`.as_mutable` can be used inline::
 
             Table('mytable', metadata,
@@ -485,15 +529,15 @@ class Mutable(MutableBase):
         is given, and that only columns which are declared specifically with that
         type instance receive additional instrumentation.
 
-        To associate a particular mutable type with all occurrences of a 
+        To associate a particular mutable type with all occurrences of a
         particular type, use the :meth:`.Mutable.associate_with` classmethod
         of the particular :meth:`.Mutable` subclass to establish a global
         association.
 
-        .. warning:: 
-        
+        .. warning::
+
            The listeners established by this method are *global*
-           to all mappers, and are *not* garbage collected.   Only use 
+           to all mappers, and are *not* garbage collected.   Only use
            :meth:`.as_mutable` for types that are permanent to an application,
            not with ad-hoc types else this will cause unbounded growth
            in memory usage.
@@ -511,28 +555,22 @@ class Mutable(MutableBase):
 
         return sqltype
 
-class _MutableCompositeMeta(type):
-    def __init__(cls, classname, bases, dict_):
-        cls._setup_listeners()
-        return type.__init__(cls, classname, bases, dict_)
-
 class MutableComposite(MutableBase):
     """Mixin that defines transparent propagation of change
     events on a SQLAlchemy "composite" object to its
     owning parent or parents.
-    
+
     See the example in :ref:`mutable_composites` for usage information.
-    
-    .. warning:: 
-    
+
+    .. warning::
+
        The listeners established by the :class:`.MutableComposite`
-       class are *global* to all mappers, and are *not* garbage collected.   Only use 
+       class are *global* to all mappers, and are *not* garbage collected.   Only use
        :class:`.MutableComposite` for types that are permanent to an application,
        not with ad-hoc types else this will cause unbounded growth
        in memory usage.
 
     """
-    __metaclass__ = _MutableCompositeMeta
 
     def changed(self):
         """Subclasses should call this method whenever change events occur."""
@@ -541,23 +579,18 @@ class MutableComposite(MutableBase):
 
             prop = object_mapper(parent).get_property(key)
             for value, attr_name in zip(
-                                    self.__composite_values__(), 
+                                    self.__composite_values__(),
                                     prop._attribute_keys):
                 setattr(parent, attr_name, value)
 
-    @classmethod
-    def _setup_listeners(cls):
-        """Associate this wrapper with all future mapped composites
-        of the given type.
 
-        This is a convenience method that calls ``associate_with_attribute`` automatically.
-
-        """
-
-        def listen_for_type(mapper, class_):
-            for prop in mapper.iterate_properties:
-                if hasattr(prop, 'composite_class') and issubclass(prop.composite_class, cls):
-                    cls._listen_on_attribute(getattr(class_, prop.key), False, class_)
-
-        event.listen(mapper, 'mapper_configured', listen_for_type)
-
+def _setup_composite_listener():
+    def _listen_for_type(mapper, class_):
+        for prop in mapper.iterate_properties:
+            if (hasattr(prop, 'composite_class') and
+                issubclass(prop.composite_class, MutableComposite)):
+                prop.composite_class._listen_on_attribute(
+                    getattr(class_, prop.key), False, class_)
+    if not Mapper.dispatch.mapper_configured._contains(Mapper, _listen_for_type):
+        event.listen(Mapper, 'mapper_configured', _listen_for_type)
+_setup_composite_listener()

@@ -1,5 +1,5 @@
 # mssql/adodbapi.py
-# Copyright (C) 2005-2012 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -16,7 +16,7 @@ import sys
 class MSDateTime_adodbapi(MSDateTime):
     def result_processor(self, dialect, coltype):
         def process(value):
-            # adodbapi will return datetimes with empty time 
+            # adodbapi will return datetimes with empty time
             # values as datetime.date() objects.
             # Promote them back to full datetime.datetime()
             if type(value) is datetime.date:
@@ -49,7 +49,7 @@ class MSDialect_adodbapi(MSDialect):
 
         connectors = ["Provider=SQLOLEDB"]
         if 'port' in keys:
-            connectors.append ("Data Source=%s, %s" % 
+            connectors.append ("Data Source=%s, %s" %
                                 (keys.get("host"), keys.get("port")))
         else:
             connectors.append ("Data Source=%s" % keys.get("host"))

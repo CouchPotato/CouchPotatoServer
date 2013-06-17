@@ -22,14 +22,22 @@ def addEvent(name, handler, priority = 100):
     def createHandle(*args, **kwargs):
 
         try:
-            parent = handler.im_self
-            bc = hasattr(parent, 'beforeCall')
-            if bc: parent.beforeCall(handler)
+            # Open handler
+            has_parent = hasattr(handler, 'im_self')
+            if has_parent:
+                parent = handler.im_self
+                bc = hasattr(parent, 'beforeCall')
+                if bc: parent.beforeCall(handler)
+
+            # Main event
             h = runHandler(name, handler, *args, **kwargs)
-            ac = hasattr(parent, 'afterCall')
-            if ac: parent.afterCall(handler)
+
+            # Close handler
+            if has_parent:
+                ac = hasattr(parent, 'afterCall')
+                if ac: parent.afterCall(handler)
         except:
-            h = runHandler(name, handler, *args, **kwargs)
+            log.error('Failed creating handler %s %s: %s', (name, handler, traceback.format_exc()))
 
         return h
 
@@ -43,7 +51,7 @@ def removeEvent(name, handler):
     e -= handler
 
 def fireEvent(name, *args, **kwargs):
-    if not events.get(name): return
+    if not events.has_key(name): return
 
     e = Event(name = name, threads = 10, asynch = kwargs.get('async', False), exc_info = True, traceback = True, lock = threading.RLock())
 
@@ -133,8 +141,6 @@ def fireEvent(name, *args, **kwargs):
             options['on_complete']()
 
         return results
-    except KeyError, e:
-        pass
     except Exception:
         log.error('%s: %s', (name, traceback.format_exc()))
 

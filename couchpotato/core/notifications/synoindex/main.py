@@ -1,5 +1,4 @@
 from couchpotato.core.event import addEvent
-from couchpotato.core.helpers.request import jsonified
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
 import os
@@ -33,4 +32,6 @@ class Synoindex(Notification):
         return True
 
     def test(self):
-        return jsonified({'success': os.path.isfile(self.index_path)})
+        return {
+            'success': os.path.isfile(self.index_path)
+        }

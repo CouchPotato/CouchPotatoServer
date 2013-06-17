@@ -1,22 +1,21 @@
 from couchpotato.core.downloaders.base import Downloader
 from couchpotato.core.helpers.encoding import isInt
 from couchpotato.core.logger import CPLog
-import httplib
 import json
-import urllib
-import urllib2
-
+import requests
 
 log = CPLog(__name__)
 
+
 class Synology(Downloader):
 
-    type = ['torrent_magnet']
+    type = ['torrent', 'torrent_magnet']
     log = CPLog(__name__)
 
     def download(self, data, movie, filedata = None):
 
-        log.error('Sending "%s" (%s) to Synology.', (data.get('name'), data.get('type')))
+        response = False
+        log.error('Sending "%s" (%s) to Synology.', (data['name'], data['type']))
 
         # Load host from config and split out port.
         host = self.conf('host').split(':')
@@ -24,19 +23,23 @@ class Synology(Downloader):
             log.error('Config properties are not filled in correctly, port is missing.')
             return False
 
-        if data.get('type') == 'torrent':
-            log.error('Can\'t add binary torrent file')
-            return False
-
         try:
-            # Send request to Transmission
+            # Send request to Synology
             srpc = SynologyRPC(host[0], host[1], self.conf('username'), self.conf('password'))
-            remote_torrent = srpc.add_torrent_uri(data.get('url'))
-            log.info('Response: %s', remote_torrent)
-            return remote_torrent['success']
+            if data['type'] == 'torrent_magnet':
+                log.info('Adding torrent URL %s', data['url'])
+                response = srpc.create_task(url = data['url'])
+            elif data['type'] == 'torrent':
+                log.info('Adding torrent')
+                if not filedata:
+                    log.error('No torrent data found')
+                else:
+                    filename = data['name'] + '.' + data['type']
+                    response = srpc.create_task(filename = filename, filedata = filedata)
         except Exception, err:
             log.error('Exception while adding torrent: %s', err)
-            return False
+        finally:
+            return response
 
 
 class SynologyRPC(object):
@@ -58,11 +61,13 @@ class SynologyRPC(object):
             args = {'api': 'SYNO.API.Auth', 'account': self.username, 'passwd': self.password, 'version': 2,
             'method': 'login', 'session': self.session_name, 'format': 'sid'}
             response = self._req(self.auth_url, args)
-            if response['success'] == True:
+            if response['success']:
                 self.sid = response['data']['sid']
-                log.debug('Sid=%s', self.sid)
-            return response
-        elif self.username or self.password:
+                log.debug('sid=%s', self.sid)
+            else:
+                log.error('Couldn\'t login to Synology, %s', response)
+            return response['success']
+        else:
             log.error('User or password missing, not using authentication.')
             return False
 
@@ -70,36 +75,51 @@ class SynologyRPC(object):
         args = {'api':'SYNO.API.Auth', 'version':1, 'method':'logout', 'session':self.session_name, '_sid':self.sid}
         return self._req(self.auth_url, args)
 
-    def _req(self, url, args):
-        req_url = url + '?' + urllib.urlencode(args)
+    def _req(self, url, args, files = None):
+        response = {'success': False}
         try:
-            req_open = urllib2.urlopen(req_url)
-            response = json.loads(req_open.read())
+            req = requests.post(url, data = args, files = files)
+            req.raise_for_status()
+            response = json.loads(req.text)
             if response['success'] == True:
                 log.info('Synology action successfull')
             return response
-        except httplib.InvalidURL, err:
-            log.error('Invalid Transmission host, check your config %s', err)
-            return False
-        except urllib2.HTTPError, err:
+        except requests.ConnectionError, err:
+            log.error('Synology connection error, check your config %s', err)
+        except requests.HTTPError, err:
             log.error('SynologyRPC HTTPError: %s', err)
-            return False
-        except urllib2.URLError, err:
-            log.error('Unable to connect to Synology %s', err)
-            return False
+        except Exception, err:
+            log.error('Exception: %s', err)
+        finally:
+            return response
 
-    def add_torrent_uri(self, torrent):
-        log.info('Adding torrent URL %s', torrent)
-        response = {}
+    def create_task(self, url = None, filename = None, filedata = None):
+        ''' Creates new download task in Synology DownloadStation. Either specify
+        url or pair (filename, filedata).
+
+        Returns True if task was created, False otherwise
+        '''
+        result = False
         # login
-        login = self._login()
-        if len(login) > 0 and login['success'] == True:
-            log.info('Login success, adding torrent')
-            args = {'api':'SYNO.DownloadStation.Task', 'version':1, 'method':'create', 'uri':torrent, '_sid':self.sid}
-            response = self._req(self.download_url, args)
+        if self._login():
+            args = {'api': 'SYNO.DownloadStation.Task',
+                    'version': '1',
+                    'method': 'create',
+                    '_sid': self.sid}
+            if url:
+                log.info('Login success, adding torrent URI')
+                args['uri'] = url
+                response = self._req(self.download_url, args = args)
+                log.info('Response: %s', response)
+                result = response['success']
+            elif filename and filedata:
+                log.info('Login success, adding torrent')
+                files = {'file': (filename, filedata)}
+                response = self._req(self.download_url, args = args, files = files)
+                log.info('Response: %s', response)
+                result = response['success']
+            else:
+                log.error('Invalid use of SynologyRPC.create_task: either url or filename+filedata must be specified')
             self._logout()
-        else:
-            log.error('Couldn\'t login to Synology, %s', login)
-        return response
 
-
+        return result

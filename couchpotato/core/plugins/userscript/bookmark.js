@@ -1,5 +1,7 @@
-var includes = {{includes|tojson}};
-var excludes = {{excludes|tojson}};
+{% autoescape None %}
+
+var includes = {{ json_encode(includes) }};
+var excludes = {{ json_encode(excludes) }};
 
 var specialChars = '\\{}+.():-|^$';
 var makeRegex = function(pattern) {
@@ -20,6 +22,8 @@ var makeRegex = function(pattern) {
 
 var isCorrectUrl = function() {
 	for(i in includes) {
+		if(!includes.hasOwnProperty(i)) continue;
+
 		var reg = includes[i]
 		if (makeRegex(reg).test(document.location.href))
 			return true;

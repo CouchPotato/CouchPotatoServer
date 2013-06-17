@@ -1,5 +1,5 @@
 # sqlalchemy/__init__.py
-# Copyright (C) 2005-2012 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -50,6 +50,8 @@ from sqlalchemy.sql import (
     )
 
 from sqlalchemy.types import (
+    BIGINT,
+    BINARY,
     BLOB,
     BOOLEAN,
     BigInteger,
@@ -87,6 +89,7 @@ from sqlalchemy.types import (
     TypeDecorator,
     Unicode,
     UnicodeText,
+    VARBINARY,
     VARCHAR,
     )
 
@@ -117,7 +120,7 @@ from sqlalchemy.engine import create_engine, engine_from_config
 __all__ = sorted(name for name, obj in locals().items()
                  if not (name.startswith('_') or inspect.ismodule(obj)))
 
-__version__ = '0.7.6'
+__version__ = '0.7.10'
 
 del inspect, sys
 

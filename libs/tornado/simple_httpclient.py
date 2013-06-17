@@ -73,10 +73,20 @@ class SimpleAsyncHTTPClient(AsyncHTTPClient):
         self.queue = collections.deque()
         self.active = {}
         self.max_buffer_size = max_buffer_size
-        self.resolver = resolver or Resolver(io_loop=io_loop)
+        if resolver:
+            self.resolver = resolver
+            self.own_resolver = False
+        else:
+            self.resolver = Resolver(io_loop=io_loop)
+            self.own_resolver = True
         if hostname_mapping is not None:
             self.resolver = OverrideResolver(resolver=self.resolver,
                                              mapping=hostname_mapping)
+
+    def close(self):
+        super(SimpleAsyncHTTPClient, self).close()
+        if self.own_resolver:
+            self.resolver.close()
 
     def fetch_impl(self, request, callback):
         self.queue.append((request, callback))
@@ -279,9 +289,11 @@ class _HTTPConnection(object):
             if b'\n' in line:
                 raise ValueError('Newline in header: ' + repr(line))
             request_lines.append(line)
-        self.stream.write(b"\r\n".join(request_lines) + b"\r\n\r\n")
+        request_str = b"\r\n".join(request_lines) + b"\r\n\r\n"
         if self.request.body is not None:
-            self.stream.write(self.request.body)
+            request_str += self.request.body
+        self.stream.set_nodelay(True)
+        self.stream.write(request_str)
         self.stream.read_until_regex(b"\r?\n\r?\n", self._on_headers)
 
     def _release(self):
@@ -300,7 +312,6 @@ class _HTTPConnection(object):
     def _handle_exception(self, typ, value, tb):
         if self.final_callback:
             self._remove_timeout()
-            gen_log.warning("uncaught exception", exc_info=(typ, value, tb))
             self._run_callback(HTTPResponse(self.request, 599, error=value,
                                             request_time=self.io_loop.time() - self.start_time,
                                             ))

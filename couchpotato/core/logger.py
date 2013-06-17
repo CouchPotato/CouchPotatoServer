@@ -4,7 +4,7 @@ import re
 class CPLog(object):
 
     context = ''
-    replace_private = ['api', 'apikey', 'api_key', 'password', 'username', 'h', 'uid', 'key']
+    replace_private = ['api', 'apikey', 'api_key', 'password', 'username', 'h', 'uid', 'key', 'passkey']
 
     def __init__(self, context = ''):
         if context.endswith('.main'):

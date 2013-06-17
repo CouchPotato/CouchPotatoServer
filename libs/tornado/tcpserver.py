@@ -77,13 +77,17 @@ class TCPServer(object):
        also be used in single-process servers if you want to create
        your listening sockets in some way other than
        `~tornado.netutil.bind_sockets`.
+
+    .. versionadded:: 3.1
+       The ``max_buffer_size`` argument.
     """
-    def __init__(self, io_loop=None, ssl_options=None):
+    def __init__(self, io_loop=None, ssl_options=None, max_buffer_size=None):
         self.io_loop = io_loop
         self.ssl_options = ssl_options
         self._sockets = {}  # fd -> socket object
         self._pending_sockets = []
         self._started = False
+        self.max_buffer_size = max_buffer_size
 
         # Verify the SSL options. Otherwise we don't get errors until clients
         # connect. This doesn't verify that the keys are legitimate, but
@@ -216,15 +220,25 @@ class TCPServer(object):
                 else:
                     raise
             except socket.error as err:
-                if err.args[0] == errno.ECONNABORTED:
+                # If the connection is closed immediately after it is created
+                # (as in a port scan), we can get one of several errors.
+                # wrap_socket makes an internal call to getpeername,
+                # which may return either EINVAL (Mac OS X) or ENOTCONN
+                # (Linux).  If it returns ENOTCONN, this error is
+                # silently swallowed by the ssl module, so we need to
+                # catch another error later on (AttributeError in
+                # SSLIOStream._do_ssl_handshake).
+                # To test this behavior, try nmap with the -sT flag.
+                # https://github.com/facebook/tornado/pull/750
+                if err.args[0] in (errno.ECONNABORTED, errno.EINVAL):
                     return connection.close()
                 else:
                     raise
         try:
             if self.ssl_options is not None:
-                stream = SSLIOStream(connection, io_loop=self.io_loop)
+                stream = SSLIOStream(connection, io_loop=self.io_loop, max_buffer_size=self.max_buffer_size)
             else:
-                stream = IOStream(connection, io_loop=self.io_loop)
+                stream = IOStream(connection, io_loop=self.io_loop, max_buffer_size=self.max_buffer_size)
             self.handle_stream(stream, address)
         except Exception:
             app_log.error("Error in connection callback", exc_info=True)
