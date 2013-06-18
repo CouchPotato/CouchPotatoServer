@@ -9,7 +9,7 @@ log = CPLog(__name__)
 
 class Synology(Downloader):
 
-    type = ['torrent', 'torrent_magnet']
+    type = ['nzb', 'torrent', 'torrent_magnet']
     log = CPLog(__name__)
 
     def download(self, data, movie, filedata = None):
@@ -29,10 +29,10 @@ class Synology(Downloader):
             if data['type'] == 'torrent_magnet':
                 log.info('Adding torrent URL %s', data['url'])
                 response = srpc.create_task(url = data['url'])
-            elif data['type'] == 'torrent':
-                log.info('Adding torrent')
+            elif data['type'] in ['nzb', 'torrent']:
+                log.info('Adding %s' % data['type'])
                 if not filedata:
-                    log.error('No torrent data found')
+                    log.error('No %s data found' % data['type'])
                 else:
                     filename = data['name'] + '.' + data['type']
                     response = srpc.create_task(filename = filename, filedata = filedata)
@@ -41,6 +41,23 @@ class Synology(Downloader):
         finally:
             return response
 
+    def getEnabledDownloadType(self):
+        if self.conf('use_for') == 'both':
+            return super(Synology, self).getEnabledDownloadType()
+        elif self.conf('use_for') == 'torrent':
+            return ['torrent', 'torrent_magnet']
+        else:
+            return ['nzb']
+
+    def isEnabled(self, manual, data = {}):
+        for_type = ['both']
+        if data and 'torrent' in data.get('type'):
+            for_type.append('torrent')
+        elif data:
+            for_type.append(data.get('type'))
+
+        return super(Synology, self).isEnabled(manual, data) and\
+               ((self.conf('use_for') in for_type))
 
 class SynologyRPC(object):
 
