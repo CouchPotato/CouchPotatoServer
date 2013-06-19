@@ -29,8 +29,8 @@ class ThePirateBay(TorrentMagnetProvider):
     http_time_between_calls = 0
 
     proxy_list = [
-        'https://thepiratebay.se',
-        'https://tpb.ipredator.se',
+        'https://thepiratebay.sx',
+        'https://tpb.ipredator.sx',
         'https://depiraatbaai.be',
         'https://piratereverse.info',
         'https://tpb.pirateparty.org.uk',
