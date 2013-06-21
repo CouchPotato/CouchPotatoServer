@@ -19,18 +19,16 @@
 #
 
 from __future__ import unicode_literals
-from guessit import PY3, u
+from guessit import PY3, u, base_text_type
 from guessit.matchtree import MatchTree
-from guessit.guess import (merge_similar_guesses, merge_all,
-                           choose_int, choose_string)
-import copy
+from guessit.textutils import normalize_unicode
 import logging
 
 log = logging.getLogger(__name__)
 
 
 class IterativeMatcher(object):
-    def __init__(self, filename, filetype='autodetect'):
+    def __init__(self, filename, filetype='autodetect', opts=None):
         """An iterative matcher tries to match different patterns that appear
         in the filename.
 
@@ -76,6 +74,14 @@ class IterativeMatcher(object):
             raise ValueError("filetype needs to be one of %s" % valid_filetypes)
         if not PY3 and not isinstance(filename, unicode):
             log.warning('Given filename to matcher is not unicode...')
+            filename = filename.decode('utf-8')
+
+        filename = normalize_unicode(filename)
+
+        if opts is None:
+            opts = []
+        elif isinstance(opts, base_text_type):
+            opts = opts.split()
 
         self.match_tree = MatchTree(filename)
         mtree = self.match_tree
@@ -84,7 +90,7 @@ class IterativeMatcher(object):
         def apply_transfo(transfo_name, *args, **kwargs):
             transfo = __import__('guessit.transfo.' + transfo_name,
                                  globals=globals(), locals=locals(),
-                                 fromlist=['process'], level=-1)
+                                 fromlist=['process'], level=0)
             transfo.process(mtree, *args, **kwargs)
 
         # 1- first split our path into dirs + basename + ext
@@ -115,12 +121,19 @@ class IterativeMatcher(object):
                          'guess_properties', 'guess_language',
                          'guess_video_rexps' ]
 
+        if 'nolanguage' in opts:
+            strategy.remove('guess_language')
+
         for name in strategy:
             apply_transfo(name)
 
         # more guessers for both movies and episodes
-        for name in ['guess_bonus_features', 'guess_year', 'guess_country']:
+        for name in ['guess_bonus_features', 'guess_year']:
             apply_transfo(name)
+
+        if 'nocountry' not in opts:
+            apply_transfo('guess_country')
+
 
         # split into '-' separated subgroups (with required separator chars
         # around the dash)
@@ -139,27 +152,4 @@ class IterativeMatcher(object):
         log.debug('Found match tree:\n%s' % u(mtree))
 
     def matched(self):
-        # we need to make a copy here, as the merge functions work in place and
-        # calling them on the match tree would modify it
-
-        parts = [node.guess for node in self.match_tree.nodes() if node.guess]
-        parts = copy.deepcopy(parts)
-
-        # 1- try to merge similar information together and give it a higher
-        #    confidence
-        for int_part in ('year', 'season', 'episodeNumber'):
-            merge_similar_guesses(parts, int_part, choose_int)
-
-        for string_part in ('title', 'series', 'container', 'format',
-                            'releaseGroup', 'website', 'audioCodec',
-                            'videoCodec', 'screenSize', 'episodeFormat',
-                            'audioChannels'):
-            merge_similar_guesses(parts, string_part, choose_string)
-
-        # 2- merge the rest, potentially discarding information not properly
-        #    merged before
-        result = merge_all(parts,
-                           append=['language', 'subtitleLanguage', 'other'])
-
-        log.debug('Final result: ' + result.nice_string())
-        return result
+        return self.match_tree.matched()

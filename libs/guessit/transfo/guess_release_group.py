@@ -20,49 +20,51 @@
 
 from __future__ import unicode_literals
 from guessit.transfo import SingleNodeGuesser
-from guessit.patterns import properties, canonical_form
+from guessit.patterns import prop_multi, compute_canonical_form, _dash, _psep
 import re
 import logging
 
 log = logging.getLogger(__name__)
 
+def get_patterns(property_name):
+    return [ p.replace(_dash, _psep) for patterns in prop_multi[property_name].values() for p in patterns  ]
 
-CODECS = properties['videoCodec']
-FORMATS = properties['format']
+CODECS = get_patterns('videoCodec')
+FORMATS = get_patterns('format')
+
+GROUP_NAMES = [ r'(?P<videoCodec>' + codec + r')-?(?P<releaseGroup>.*?)[ \.]'
+                for codec in CODECS ]
+GROUP_NAMES += [ r'(?P<format>' + fmt + r')-?(?P<releaseGroup>.*?)[ \.]'
+                 for fmt in FORMATS ]
+
+GROUP_NAMES2 = [ r'\.(?P<videoCodec>' + codec + r')-(?P<releaseGroup>.*?)(-(.*?))?[ \.]'
+                 for codec in CODECS ]
+GROUP_NAMES2 += [ r'\.(?P<format>' + fmt + r')-(?P<releaseGroup>.*?)(-(.*?))?[ \.]'
+                  for fmt in FORMATS ]
+
+GROUP_NAMES = [ re.compile(r, re.IGNORECASE) for r in GROUP_NAMES ]
+GROUP_NAMES2 = [ re.compile(r, re.IGNORECASE) for r in GROUP_NAMES2 ]
 
 def adjust_metadata(md):
-    codec = canonical_form(md['videoCodec'])
-    if codec in FORMATS:
-        md['format'] = codec
-        del md['videoCodec']
-    return md
+    return dict((property_name, compute_canonical_form(property_name, value) or value)
+                for property_name, value in md.items())
 
 
 def guess_release_group(string):
-    group_names = [ r'\.(Xvid)-(?P<releaseGroup>.*?)[ \.]',
-                    r'\.(DivX)-(?P<releaseGroup>.*?)[\. ]',
-                    r'\.(DVDivX)-(?P<releaseGroup>.*?)[\. ]',
-                    ]
-
     # first try to see whether we have both a known codec and a known release group
-    group_names = [ r'\.(?P<videoCodec>' + codec + r')-(?P<releaseGroup>.*?)[ \.]'
-                    for codec in (CODECS + FORMATS) ]
-
-    for rexp in group_names:
-        match = re.search(rexp, string, re.IGNORECASE)
+    for rexp in GROUP_NAMES:
+        match = rexp.search(string)
         if match:
             metadata = match.groupdict()
-            if canonical_form(metadata['releaseGroup']) in properties['releaseGroup']:
+            release_group = compute_canonical_form('releaseGroup', metadata['releaseGroup'])
+            if release_group:
                 return adjust_metadata(metadata), (match.start(1), match.end(2))
 
     # pick anything as releaseGroup as long as we have a codec in front
     # this doesn't include a potential dash ('-') ending the release group
     # eg: [...].X264-HiS@SiLUHD-English.[...]
-    group_names = [ r'\.(?P<videoCodec>' + codec + r')-(?P<releaseGroup>.*?)(-(.*?))?[ \.]'
-                    for codec in (CODECS + FORMATS) ]
-
-    for rexp in group_names:
-        match = re.search(rexp, string, re.IGNORECASE)
+    for rexp in GROUP_NAMES2:
+        match = rexp.search(string)
         if match:
             return adjust_metadata(match.groupdict()), (match.start(1), match.end(2))
 

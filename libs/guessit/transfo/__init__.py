@@ -45,7 +45,7 @@ def format_guess(guess):
         elif isinstance(value, base_text_type):
             if prop in ('edition',):
                 value = clean_string(value)
-            guess[prop] = canonical_form(value)
+            guess[prop] = canonical_form(value).replace('\\', '')
 
     return guess
 

@@ -22,6 +22,7 @@ from __future__ import unicode_literals
 from guessit import s, u
 import os.path
 import zipfile
+import io
 
 
 def split_path(path):
@@ -76,12 +77,12 @@ def file_in_same_dir(ref_file, desired_file):
 
 def load_file_in_same_dir(ref_file, filename):
     """Load a given file. Works even when the file is contained inside a zip."""
-    path = split_path(ref_file)[:-1] + [filename]
+    path = split_path(ref_file)[:-1] + [str(filename)]
 
     for i, p in enumerate(path):
-        if p.endswith('.zip'):
+        if p[-4:] == '.zip':
             zfilename = os.path.join(*path[:i + 1])
             zfile = zipfile.ZipFile(zfilename)
             return zfile.read('/'.join(path[i + 1:]))
 
-    return u(open(os.path.join(*path)).read())
+    return u(io.open(os.path.join(*path), encoding = 'utf-8').read())

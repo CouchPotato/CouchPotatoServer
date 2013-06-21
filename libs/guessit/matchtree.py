@@ -22,6 +22,9 @@ from __future__ import unicode_literals
 from guessit import UnicodeMixin, base_text_type, Guess
 from guessit.textutils import clean_string, str_fill
 from guessit.patterns import group_delimiters
+from guessit.guess import (merge_similar_guesses, merge_all,
+                           choose_int, choose_string)
+import copy
 import logging
 
 log = logging.getLogger(__name__)
@@ -257,3 +260,28 @@ class MatchTree(BaseMatchTree):
         """Return whether the group was explicitly enclosed by
         parentheses/square brackets/etc."""
         return (self.value[0] + self.value[-1]) in group_delimiters
+
+    def matched(self):
+        # we need to make a copy here, as the merge functions work in place and
+        # calling them on the match tree would modify it
+        parts = [node.guess for node in self.nodes() if node.guess]
+        parts = copy.deepcopy(parts)
+
+        # 1- try to merge similar information together and give it a higher
+        #    confidence
+        for int_part in ('year', 'season', 'episodeNumber'):
+            merge_similar_guesses(parts, int_part, choose_int)
+
+        for string_part in ('title', 'series', 'container', 'format',
+                            'releaseGroup', 'website', 'audioCodec',
+                            'videoCodec', 'screenSize', 'episodeFormat',
+                            'audioChannels'):
+            merge_similar_guesses(parts, string_part, choose_string)
+
+        # 2- merge the rest, potentially discarding information not properly
+        #    merged before
+        result = merge_all(parts,
+                           append=['language', 'subtitleLanguage', 'other'])
+
+        log.debug('Final result: ' + result.nice_string())
+        return result
