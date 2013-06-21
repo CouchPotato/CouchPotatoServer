@@ -95,17 +95,24 @@ class Newznab(NZBProvider, RSS):
 
     def getHosts(self):
 
-        uses = splitString(str(self.conf('use')))
-        hosts = splitString(self.conf('host'))
-        api_keys = splitString(self.conf('api_key'))
-        extra_score = splitString(self.conf('extra_score'))
+        uses = splitString(str(self.conf('use')), clean = False)
+        hosts = splitString(self.conf('host'), clean = False)
+        api_keys = splitString(self.conf('api_key'), clean = False)
+        extra_score = splitString(self.conf('extra_score'), clean = False)
 
         list = []
         for nr in range(len(hosts)):
+
+            try: key = api_keys[nr]
+            except: key = ''
+
+            try: host = hosts[nr]
+            except: host = ''
+
             list.append({
                 'use': uses[nr],
-                'host': hosts[nr],
-                'api_key': api_keys[nr],
+                'host': host,
+                'api_key': key,
                 'extra_score': tryInt(extra_score[nr]) if len(extra_score) > nr else 0
             })
 
