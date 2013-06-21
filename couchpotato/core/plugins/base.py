@@ -1,6 +1,7 @@
 from StringIO import StringIO
 from couchpotato.core.event import fireEvent, addEvent
-from couchpotato.core.helpers.encoding import tryUrlencode, ss, toSafeString
+from couchpotato.core.helpers.encoding import tryUrlencode, ss, toSafeString, \
+    toUnicode
 from couchpotato.core.helpers.variable import getExt, md5
 from couchpotato.core.logger import CPLog
 from couchpotato.environment import Env
@@ -54,7 +55,7 @@ class Plugin(object):
 
         # Register plugin path
         self.plugin_path = os.path.dirname(plugin_file)
-        static_folder = os.path.join(self.plugin_path, 'static')
+        static_folder = toUnicode(os.path.join(self.plugin_path, 'static'))
 
         if not os.path.isdir(static_folder):
             return
