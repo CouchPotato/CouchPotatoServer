@@ -178,7 +178,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     if db_exists:
 
         from migrate.versioning.api import version_control, db_version, version, upgrade
-        repo = toUnicode(os.path.join(base_path, 'couchpotato', 'core', 'migration'))
+        repo = os.path.join(base_path, 'couchpotato', 'core', 'migration')
 
         latest_db_version = version(repo)
         try:
