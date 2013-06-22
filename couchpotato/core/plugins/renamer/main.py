@@ -685,6 +685,11 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                                         item.update({'pause': True, 'scan': True, 'process_complete': False})
                                         scan_items.append(item)
                                     else:
+                                        if rel.status_id != seeding_status.get('id'):
+                                            rel.status_id = seeding_status.get('id')
+                                            rel.last_edit = int(time.time())
+                                            db.commit()
+
                                         #let it seed
                                         log.debug('%s is seeding with ratio: %s', (item['name'], item['seed_ratio']))
                                         pass
