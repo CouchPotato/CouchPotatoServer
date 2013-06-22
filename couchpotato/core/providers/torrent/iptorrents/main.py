@@ -59,7 +59,11 @@ class IPTorrents(TorrentProvider):
 
                     for result in entries[1:]:
 
-                        torrent = result.find_all('td')[1].find('a')
+                        torrent = result.find_all('td')
+                        if len(torrent) <= 1:
+                            break
+
+                        torrent = torrent[1].find('a')
 
                         torrent_id = torrent['href'].replace('/details.php?id=', '')
                         torrent_name = torrent.string
