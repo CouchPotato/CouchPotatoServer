@@ -84,7 +84,7 @@ class CouchPotatoApi(MovieProvider):
         suggestions = self.getJsonData(self.urls['suggest'], params = {
             'movies': ','.join(movies),
             'ignore': ','.join(ignore),
-        })
+        }, headers = self.getRequestHeaders())
         log.info('Found suggestions for %s movies, %s ignored', (len(movies), len(ignore)))
 
         return suggestions
