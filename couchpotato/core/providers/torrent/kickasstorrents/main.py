@@ -11,9 +11,9 @@ log = CPLog(__name__)
 class KickAssTorrents(TorrentMagnetProvider):
 
     urls = {
-        'test': 'https://kat.ph/',
-        'detail': 'https://kat.ph/%s',
-        'search': 'https://kat.ph/%s-i%s/',
+        'test': 'https://kickass.to/',
+        'detail': 'https://kickass.to/%s',
+        'search': 'https://kickass.to/%s-i%s/',
     }
 
     cat_ids = [

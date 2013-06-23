@@ -9,15 +9,16 @@
 // @grant       none
 // @version     {{version}}
 
-// @match       {{host}}*
+// @match       {{host}}/*
 {% for include in includes %}
-// @match       {{include}}{% endfor %}
+// @match       {{include}}{% end %}
 {% for exclude in excludes %}
-// @exclude     {{exclude}}{% endfor %}
+// @exclude     {{exclude}}{% end %}
 // @exclude     {{host}}{{api.rstrip('/')}}*
 
 // ==/UserScript==
 
+{% autoescape None %}
 if (window.top == window.self){  // Only run on top window
 
 var version = {{version}},

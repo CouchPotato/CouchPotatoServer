@@ -1,5 +1,5 @@
 # sql/functions.py
-# Copyright (C) 2005-2012 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -33,11 +33,11 @@ class GenericFunction(Function):
 class next_value(Function):
     """Represent the 'next value', given a :class:`.Sequence`
     as it's single argument.
-    
+
     Compiles into the appropriate function on each backend,
     or will raise NotImplementedError if used on a backend
     that does not provide support for sequences.
-    
+
     """
     type = sqltypes.Integer()
     name = "next_value"

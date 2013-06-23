@@ -1,13 +1,13 @@
 # util/__init__.py
-# Copyright (C) 2005-2012 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 
 from compat import callable, cmp, reduce, defaultdict, py25_dict, \
-    threading, py3k_warning, jython, pypy, win32, set_types, buffer, pickle, \
-    update_wrapper, partial, md5_hex, decode_slice, dottedgetter,\
-    parse_qsl, any, contextmanager
+    threading, py3k_warning, jython, pypy, cpython, win32, set_types, buffer, \
+    pickle, update_wrapper, partial, md5_hex, decode_slice, dottedgetter,\
+    parse_qsl, any, contextmanager, next
 
 from _collections import NamedTuple, ImmutableContainer, immutabledict, \
     Properties, OrderedProperties, ImmutableProperties, OrderedDict, \

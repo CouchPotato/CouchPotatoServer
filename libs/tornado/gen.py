@@ -19,7 +19,6 @@ For example, the following asynchronous handler::
 could be written with ``gen`` as::
 
     class GenAsyncHandler(RequestHandler):
-        @asynchronous
         @gen.coroutine
         def get(self):
             http_client = AsyncHTTPClient()
@@ -136,7 +135,7 @@ def engine(func):
             if runner is not None:
                 return runner.handle_exception(typ, value, tb)
             return False
-        with ExceptionStackContext(handle_exception):
+        with ExceptionStackContext(handle_exception) as deactivate:
             try:
                 result = func(*args, **kwargs)
             except (Return, StopIteration) as e:
@@ -149,6 +148,7 @@ def engine(func):
                                 "@gen.engine functions cannot return values: "
                                 "%r" % (value,))
                         assert value is None
+                        deactivate()
                     runner = Runner(result, final_callback)
                     runner.run()
                     return
@@ -156,6 +156,7 @@ def engine(func):
                 raise ReturnValueIgnoredError(
                     "@gen.engine functions cannot return values: %r" %
                     (result,))
+            deactivate()
             # no yield, so we're done
     return wrapper
 
@@ -164,13 +165,7 @@ def coroutine(func):
     """Decorator for asynchronous generators.
 
     Any generator that yields objects from this module must be wrapped
-    in either this decorator or `engine`.  These decorators only work
-    on functions that are already asynchronous.  For
-    `~tornado.web.RequestHandler` :ref:`HTTP verb methods <verbs>` methods, this
-    means that both the `tornado.web.asynchronous` and
-    `tornado.gen.coroutine` decorators must be used (for proper
-    exception handling, ``asynchronous`` should come before
-    ``gen.coroutine``).
+    in either this decorator or `engine`.
 
     Coroutines may "return" by raising the special exception
     `Return(value) <Return>`.  In Python 3.3+, it is also possible for
@@ -208,21 +203,24 @@ def coroutine(func):
                 typ, value, tb = sys.exc_info()
             future.set_exc_info((typ, value, tb))
             return True
-        with ExceptionStackContext(handle_exception):
+        with ExceptionStackContext(handle_exception) as deactivate:
             try:
                 result = func(*args, **kwargs)
             except (Return, StopIteration) as e:
                 result = getattr(e, 'value', None)
             except Exception:
+                deactivate()
                 future.set_exc_info(sys.exc_info())
                 return future
             else:
                 if isinstance(result, types.GeneratorType):
                     def final_callback(value):
+                        deactivate()
                         future.set_result(value)
                     runner = Runner(result, final_callback)
                     runner.run()
                     return future
+            deactivate()
             future.set_result(result)
         return future
     return wrapper
@@ -439,6 +437,9 @@ class _NullYieldPoint(YieldPoint):
         return None
 
 
+_null_yield_point = _NullYieldPoint()
+
+
 class Runner(object):
     """Internal implementation of `tornado.gen.engine`.
 
@@ -449,7 +450,7 @@ class Runner(object):
     def __init__(self, gen, final_callback):
         self.gen = gen
         self.final_callback = final_callback
-        self.yield_point = _NullYieldPoint()
+        self.yield_point = _null_yield_point
         self.pending_callbacks = set()
         self.results = {}
         self.running = False
@@ -493,6 +494,7 @@ class Runner(object):
                         if not self.yield_point.is_ready():
                             return
                         next = self.yield_point.get_result()
+                        self.yield_point = None
                     except Exception:
                         self.exc_info = sys.exc_info()
                 try:
@@ -505,6 +507,7 @@ class Runner(object):
                         yielded = self.gen.send(next)
                 except (StopIteration, Return) as e:
                     self.finished = True
+                    self.yield_point = _null_yield_point
                     if self.pending_callbacks and not self.had_exception:
                         # If we ran cleanly without waiting on all callbacks
                         # raise an error (really more of a warning).  If we
@@ -518,6 +521,7 @@ class Runner(object):
                     return
                 except Exception:
                     self.finished = True
+                    self.yield_point = _null_yield_point
                     raise
                 if isinstance(yielded, list):
                     yielded = Multi(yielded)
@@ -531,7 +535,7 @@ class Runner(object):
                         self.exc_info = sys.exc_info()
                 else:
                     self.exc_info = (BadYieldError(
-                            "yielded unknown object %r" % (yielded,)),)
+                        "yielded unknown object %r" % (yielded,)),)
         finally:
             self.running = False
 

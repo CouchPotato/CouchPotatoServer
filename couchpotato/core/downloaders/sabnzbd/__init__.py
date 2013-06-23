@@ -11,7 +11,7 @@ config = [{
             'list': 'download_providers',
             'name': 'sabnzbd',
             'label': 'Sabnzbd',
-            'description': 'Use <a href="http://sabnzbd.org/" target="_blank">SABnzbd</a> to download NZBs.',
+            'description': 'Use <a href="http://sabnzbd.org/" target="_blank">SABnzbd</a> (0.7+) to download NZBs.',
             'wizard': True,
             'options': [
                 {

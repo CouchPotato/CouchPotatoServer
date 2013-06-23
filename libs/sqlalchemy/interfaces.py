@@ -1,5 +1,5 @@
 # sqlalchemy/interfaces.py
-# Copyright (C) 2007-2012 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2007-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
 # Copyright (C) 2007 Jason Kirtland jek@discorporate.us
 #
 # This module is part of SQLAlchemy and is released under
@@ -17,8 +17,8 @@ from sqlalchemy import event, util
 class PoolListener(object):
     """Hooks into the lifecycle of connections in a :class:`.Pool`.
 
-    .. note:: 
-    
+    .. note::
+
        :class:`.PoolListener` is deprecated.   Please
        refer to :class:`.PoolEvents`.
 
@@ -27,7 +27,7 @@ class PoolListener(object):
         class MyListener(PoolListener):
             def connect(self, dbapi_con, con_record):
                 '''perform connect operations'''
-            # etc. 
+            # etc.
 
         # create a new pool with a listener
         p = QueuePool(..., listeners=[MyListener()])
@@ -151,8 +151,8 @@ class PoolListener(object):
 class ConnectionProxy(object):
     """Allows interception of statement execution by Connections.
 
-    .. note:: 
-    
+    .. note::
+
        :class:`.ConnectionProxy` is deprecated.   Please
        refer to :class:`.ConnectionEvents`.
 
@@ -194,7 +194,7 @@ class ConnectionProxy(object):
 
         event.listen(self, 'before_execute', adapt_execute)
 
-        def adapt_cursor_execute(conn, cursor, statement, 
+        def adapt_cursor_execute(conn, cursor, statement,
                                 parameters,context, executemany, ):
 
             def execute_wrapper(

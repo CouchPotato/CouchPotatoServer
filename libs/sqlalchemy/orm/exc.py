@@ -1,5 +1,5 @@
 # orm/exc.py
-# Copyright (C) 2005-2012 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -18,21 +18,23 @@ class StaleDataError(sa.exc.SQLAlchemyError):
     Conditions which cause this to happen include:
 
     * A flush may have attempted to update or delete rows
-      and an unexpected number of rows were matched during 
-      the UPDATE or DELETE statement.   Note that when 
+      and an unexpected number of rows were matched during
+      the UPDATE or DELETE statement.   Note that when
       version_id_col is used, rows in UPDATE or DELETE statements
       are also matched against the current known version
       identifier.
 
-    * A mapped object with version_id_col was refreshed, 
+    * A mapped object with version_id_col was refreshed,
       and the version number coming back from the database does
       not match that of the object itself.
-      
+
     * A object is detached from its parent object, however
       the object was previously attached to a different parent
       identity which was garbage collected, and a decision
       cannot be made if the new parent was really the most
-      recent "parent" (new in 0.7.4).
+      recent "parent".
+
+      .. versionadded:: 0.7.4
 
     """
 
@@ -50,7 +52,7 @@ class ObjectDereferencedError(sa.exc.SQLAlchemyError):
     """An operation cannot complete due to an object being garbage collected."""
 
 class DetachedInstanceError(sa.exc.SQLAlchemyError):
-    """An attempt to access unloaded attributes on a 
+    """An attempt to access unloaded attributes on a
     mapped instance that is detached."""
 
 class UnmappedInstanceError(UnmappedError):
@@ -89,21 +91,21 @@ class UnmappedClassError(UnmappedError):
 class ObjectDeletedError(sa.exc.InvalidRequestError):
     """A refresh operation failed to retrieve the database
     row corresponding to an object's known primary key identity.
-    
-    A refresh operation proceeds when an expired attribute is 
+
+    A refresh operation proceeds when an expired attribute is
     accessed on an object, or when :meth:`.Query.get` is
     used to retrieve an object which is, upon retrieval, detected
     as expired.   A SELECT is emitted for the target row
     based on primary key; if no row is returned, this
     exception is raised.
-    
-    The true meaning of this exception is simply that 
+
+    The true meaning of this exception is simply that
     no row exists for the primary key identifier associated
-    with a persistent object.   The row may have been 
+    with a persistent object.   The row may have been
     deleted, or in some cases the primary key updated
     to a new value, outside of the ORM's management of the target
-    object.   
-    
+    object.
+
     """
     def __init__(self, state, msg=None):
         if not msg:

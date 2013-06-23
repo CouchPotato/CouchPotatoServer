@@ -1,5 +1,5 @@
 # util/langhelpers.py
-# Copyright (C) 2005-2012 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -239,14 +239,16 @@ def unbound_method_to_callable(func_or_cls):
     else:
         return func_or_cls
 
-def generic_repr(obj):
+def generic_repr(obj, additional_kw=(), to_inspect=None):
     """Produce a __repr__() based on direct association of the __init__()
     specification vs. same-named attributes present.
-    
+
     """
+    if to_inspect is None:
+        to_inspect = obj
     def genargs():
         try:
-            (args, vargs, vkw, defaults) = inspect.getargspec(obj.__init__)
+            (args, vargs, vkw, defaults) = inspect.getargspec(to_inspect.__init__)
         except TypeError:
             return
 
@@ -267,6 +269,15 @@ def generic_repr(obj):
                         yield '%s=%r' % (arg, val)
                 except:
                     pass
+        if additional_kw:
+            for arg, defval in additional_kw:
+                try:
+                    val = getattr(obj, arg, None)
+                    if val != defval:
+                        yield '%s=%r' % (arg, val)
+                except:
+                    pass
+
     return "%s(%s)" % (obj.__class__.__name__, ", ".join(genargs()))
 
 class portable_instancemethod(object):
@@ -485,6 +496,8 @@ class memoized_property(object):
         obj.__dict__[self.__name__] = result = self.fget(obj)
         return result
 
+    def _reset(self, obj):
+        obj.__dict__.pop(self.__name__, None)
 
 class memoized_instancemethod(object):
     """Decorate a method memoize its return value.
@@ -551,10 +564,10 @@ class importlater(object):
         from mypackage.somemodule import somesubmod
 
     except evaluted upon attribute access to "somesubmod".
-    
+
     importlater() currently requires that resolve_all() be
     called, typically at the bottom of a package's __init__.py.
-    This is so that __import__ still called only at 
+    This is so that __import__ still called only at
     module import time, and not potentially within
     a non-main thread later on.
 
@@ -597,14 +610,14 @@ class importlater(object):
         importlater._unresolved.discard(self)
         if self._il_addtl:
             self._initial_import = __import__(
-                                self._il_path, globals(), locals(), 
+                                self._il_path, globals(), locals(),
                                 [self._il_addtl])
         else:
             self._initial_import = __import__(self._il_path)
 
     def __getattr__(self, key):
         if key == 'module':
-            raise ImportError("Could not resolve module %s" 
+            raise ImportError("Could not resolve module %s"
                                 % self._full_path)
         try:
             attr = getattr(self.module, key)
@@ -860,8 +873,8 @@ def warn(msg, stacklevel=3):
     If msg is a string, :class:`.exc.SAWarning` is used as
     the category.
 
-    .. note:: 
-     
+    .. note::
+
        This function is swapped out when the test suite
        runs, with a compatible version that uses
        warnings.warn_explicit, so that the warnings registry can

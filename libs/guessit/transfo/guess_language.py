@@ -22,7 +22,7 @@ from __future__ import unicode_literals
 from guessit import Guess
 from guessit.transfo import SingleNodeGuesser
 from guessit.language import search_language
-from guessit.textutils import clean_string
+from guessit.textutils import clean_string, find_words
 import logging
 
 log = logging.getLogger(__name__)
@@ -31,18 +31,13 @@ log = logging.getLogger(__name__)
 def guess_language(string):
     language, span, confidence = search_language(string)
     if language:
-        # is it a subtitle language?
-        if 'sub' in clean_string(string[:span[0]]).lower().split(' '):
-            return (Guess({'subtitleLanguage': language},
-                          confidence=confidence),
-                    span)
-        else:
-            return (Guess({'language': language},
-                          confidence=confidence),
-                    span)
+        return (Guess({'language': language},
+                      confidence=confidence),
+                span)
 
     return None, None
 
 
 def process(mtree):
     SingleNodeGuesser(guess_language, None, log).process(mtree)
+    # Note: 'language' is promoted to 'subtitleLanguage' in the post_process transfo

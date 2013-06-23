@@ -3,13 +3,11 @@ from couchpotato.core.helpers.variable import getTitle, tryInt, mergeDicts
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.torrent.base import TorrentProvider
 from dateutil.parser import parse
-import cookielib
 import htmlentitydefs
 import json
 import re
 import time
 import traceback
-import urllib2
 
 log = CPLog(__name__)
 
@@ -21,8 +19,11 @@ class PassThePopcorn(TorrentProvider):
          'detail': 'https://tls.passthepopcorn.me/torrents.php?torrentid=%s',
          'torrent': 'https://tls.passthepopcorn.me/torrents.php',
          'login': 'https://tls.passthepopcorn.me/ajax.php?action=login',
+         'login_check': 'https://tls.passthepopcorn.me/ajax.php?action=login',
          'search': 'https://tls.passthepopcorn.me/search/%s/0/7/%d'
     }
+
+    http_time_between_calls = 2
 
     quality_search_params = {
         'bd50':     {'media': 'Blu-ray', 'format': 'BD50'},
@@ -52,18 +53,6 @@ class PassThePopcorn(TorrentProvider):
         'cam':      {'Source': ['CAM']}
     }
 
-    class NotLoggedInHTTPError(urllib2.HTTPError):
-        def __init__(self, url, code, msg, headers, fp):
-            urllib2.HTTPError.__init__(self, url, code, msg, headers, fp)
-
-    class PTPHTTPRedirectHandler(urllib2.HTTPRedirectHandler):
-        def http_error_302(self, req, fp, code, msg, headers):
-            log.debug("302 detected; redirected to %s", headers['Location'])
-            if (headers['Location'] != 'login.php'):
-                return urllib2.HTTPRedirectHandler.http_error_302(self, req, fp, code, msg, headers)
-            else:
-                raise PassThePopcorn.NotLoggedInHTTPError(req.get_full_url(), code, msg, headers, fp)
-
     def _search(self, movie, quality, results):
 
         movie_title = getTitle(movie['library'])
@@ -75,17 +64,8 @@ class PassThePopcorn(TorrentProvider):
             'searchstr': movie['library']['identifier']
         })
 
-        # Do login for the cookies
-        if not self.login_opener and not self.login():
-            return
-
-        try:
-            url = '%s?json=noredirect&%s' % (self.urls['torrent'], tryUrlencode(params))
-            txt = self.urlopen(url, opener = self.login_opener)
-            res = json.loads(txt)
-        except:
-            log.error('Search on PassThePopcorn.me (%s) failed (could not decode JSON)', params)
-            return
+        url = '%s?json=noredirect&%s' % (self.urls['torrent'], tryUrlencode(params))
+        res = self.getJsonData(url, opener = self.login_opener)
 
         try:
             if not 'Movies' in res:
@@ -136,39 +116,10 @@ class PassThePopcorn(TorrentProvider):
                         'leechers': tryInt(torrent['Leechers']),
                         'score': torrentscore,
                         'extra_check': extra_check,
-                        'download': self.loginDownload,
                     })
 
         except:
             log.error('Failed getting results from %s: %s', (self.getName(), traceback.format_exc()))
-
-    def login(self):
-
-        cookieprocessor = urllib2.HTTPCookieProcessor(cookielib.CookieJar())
-        opener = urllib2.build_opener(cookieprocessor, PassThePopcorn.PTPHTTPRedirectHandler())
-        opener.addheaders = [
-            ('User-Agent', 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.1 (KHTML, like Gecko) Chrome/21.0.1180.75 Safari/537.1'),
-            ('Accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'),
-            ('Accept-Language', 'en-gb,en;q=0.5'),
-            ('Accept-Charset', 'ISO-8859-1,utf-8;q=0.7,*;q=0.7'),
-            ('Keep-Alive', '115'),
-            ('Connection', 'keep-alive'),
-            ('Cache-Control', 'max-age=0'),
-        ]
-
-        try:
-            response = opener.open(self.urls['login'], self.getLoginParams())
-        except urllib2.URLError as e:
-            log.error('Login to PassThePopcorn failed: %s', e)
-            return False
-
-        if response.getcode() == 200:
-            log.debug('Login HTTP status 200; seems successful')
-            self.login_opener = opener
-            return True
-        else:
-            log.error('Login to PassThePopcorn failed: returned code %d', response.getcode())
-            return False
 
     def torrentMeetsQualitySpec(self, torrent, quality):
 
@@ -186,7 +137,7 @@ class PassThePopcorn(TorrentProvider):
             seen_one = False
 
             if not field in torrent:
-                log.debug('Torrent with ID %s has no field "%s"; cannot apply post-search-filter for quality "%s"', (torrent['Id'], field, quality))
+                log.debug('Torrent with ID %s has no field "%s"; cannot apply post-search-filter for quality "%s"', (torrent['id'], field, quality))
                 continue
 
             for spec in specs:
@@ -244,3 +195,11 @@ class PassThePopcorn(TorrentProvider):
              'keeplogged': '1',
              'login': 'Login'
         })
+
+    def loginSuccess(self, output):
+        try:
+            return json.loads(output).get('Result', '').lower() == 'ok'
+        except:
+            return False
+
+    loginCheckSuccess = loginSuccess

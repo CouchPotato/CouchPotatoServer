@@ -20,6 +20,7 @@
 
 from __future__ import unicode_literals
 from guessit import Guess
+import unicodedata
 import logging
 
 log = logging.getLogger(__name__)

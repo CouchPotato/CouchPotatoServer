@@ -432,6 +432,7 @@ class Scanner(Plugin):
                 data['audio'] = meta.get('audio', self.getCodec(cur_file, self.codecs['audio']))
                 data['resolution_width'] = meta.get('resolution_width', 720)
                 data['resolution_height'] = meta.get('resolution_height', 480)
+                data['audio_channels'] = meta.get('audio_channels', 2.0)
                 data['aspect'] = meta.get('resolution_width', 720) / meta.get('resolution_height', 480)
             except:
                 log.debug('Error parsing metadata: %s %s', (cur_file, traceback.format_exc()))
@@ -476,6 +477,7 @@ class Scanner(Plugin):
                 'audio': ac,
                 'resolution_width': tryInt(p.video[0].width),
                 'resolution_height': tryInt(p.video[0].height),
+                'audio_channels': p.audio[0].channels,
             }
         except ParseError:
             log.debug('Failed to parse meta for %s', filename)
@@ -582,7 +584,7 @@ class Scanner(Plugin):
                 movie = fireEvent('movie.by_hash', file = cur_file, merge = True)
 
                 if len(movie) > 0:
-                    imdb_id = movie[0]['imdb']
+                    imdb_id = movie[0].get('imdb')
                     if imdb_id:
                         log.debug('Found movie via OpenSubtitleHash: %s', cur_file)
                         break
@@ -600,7 +602,7 @@ class Scanner(Plugin):
                         movie = fireEvent('movie.search', q = '%(name)s %(year)s' % name_year, merge = True, limit = 1)
 
                         if len(movie) > 0:
-                            imdb_id = movie[0]['imdb']
+                            imdb_id = movie[0].get('imdb')
                             log.debug('Found movie via search: %s', cur_file)
                             if imdb_id: break
                 else:

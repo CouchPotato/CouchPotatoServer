@@ -10,7 +10,7 @@ _codes = {
     102: ('processing',),
     103: ('checkpoint',),
     122: ('uri_too_long', 'request_uri_too_long'),
-    200: ('ok', 'okay', 'all_ok', 'all_okay', 'all_good', '\\o/'),
+    200: ('ok', 'okay', 'all_ok', 'all_okay', 'all_good', '\\o/', '✓'),
     201: ('created',),
     202: ('accepted',),
     203: ('non_authoritative_info', 'non_authoritative_information'),
@@ -62,10 +62,11 @@ _codes = {
     444: ('no_response', 'none'),
     449: ('retry_with', 'retry'),
     450: ('blocked_by_windows_parental_controls', 'parental_controls'),
+    451: ('unavailable_for_legal_reasons', 'legal_reasons'),
     499: ('client_closed_request',),
 
     # Server Error.
-    500: ('internal_server_error', 'server_error', '/o\\'),
+    500: ('internal_server_error', 'server_error', '/o\\', '✗'),
     501: ('not_implemented',),
     502: ('bad_gateway',),
     503: ('service_unavailable', 'unavailable'),

@@ -53,7 +53,7 @@ class HTTPClient(object):
             print response.body
         except httpclient.HTTPError as e:
             print "Error:", e
-        httpclient.close()
+        http_client.close()
     """
     def __init__(self, async_client_class=None, **kwargs):
         self._io_loop = IOLoop()
@@ -258,6 +258,7 @@ class HTTPRequest(object):
         :arg string url: URL to fetch
         :arg string method: HTTP method, e.g. "GET" or "POST"
         :arg headers: Additional HTTP headers to pass on the request
+        :arg body: HTTP body to pass on the request
         :type headers: `~tornado.httputil.HTTPHeaders` or `dict`
         :arg string auth_username: Username for HTTP authentication
         :arg string auth_password: Password for HTTP authentication
@@ -310,6 +311,9 @@ class HTTPRequest(object):
            ``simple_httpclient`` and true in ``curl_httpclient``
         :arg string client_key: Filename for client SSL key, if any
         :arg string client_cert: Filename for client SSL certificate, if any
+
+        .. versionadded:: 3.1
+           The ``auth_mode`` argument.
         """
         if headers is None:
             headers = httputil.HTTPHeaders()
@@ -326,7 +330,7 @@ class HTTPRequest(object):
         self.body = utf8(body)
         self.auth_username = auth_username
         self.auth_password = auth_password
-        self.auth_mode = auth_mode        
+        self.auth_mode = auth_mode
         self.connect_timeout = connect_timeout
         self.request_timeout = request_timeout
         self.follow_redirects = follow_redirects

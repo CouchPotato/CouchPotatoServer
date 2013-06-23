@@ -104,12 +104,21 @@ class NZBGet(Downloader):
                 nzb_id = [param['Value'] for param in item['Parameters'] if param['Name'] == 'couchpotato'][0]
             except:
                 nzb_id = item['NZBID']
+
+
+            timeleft = -1
+            try:
+                if item['ActiveDownloads'] > 0 and item['DownloadRate'] > 0 and not (status['DownloadPaused'] or status['Download2Paused']):
+                    timeleft = str(timedelta(seconds = item['RemainingSizeMB'] / status['DownloadRate'] * 2 ^ 20))
+            except:
+                pass
+
             statuses.append({
                 'id': nzb_id,
                 'name': item['NZBFilename'],
                 'original_status': 'DOWNLOADING' if item['ActiveDownloads'] > 0 else 'QUEUED',
                 # Seems to have no native API function for time left. This will return the time left after NZBGet started downloading this item
-                'timeleft': str(timedelta(seconds = item['RemainingSizeMB'] / status['DownloadRate'] * 2 ^ 20)) if item['ActiveDownloads'] > 0 and not (status['DownloadPaused'] or status['Download2Paused']) else -1,
+                'timeleft': timeleft,
             })
 
         for item in queue: # 'Parameters' is not passed in rpc.postqueue
