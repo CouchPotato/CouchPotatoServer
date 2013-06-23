@@ -193,7 +193,7 @@
 			transition: all .4s cubic-bezier(0.9,0,0.1,1);
 		}
 			.movie_result .data.open {
-				left: 100%;
+				left: 100% !important;
 			}
 
 			.movie_result:last-child .data { border-bottom: 0; }

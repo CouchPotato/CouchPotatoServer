@@ -15,37 +15,7 @@ log = CPLog(__name__)
 class Dashboard(Plugin):
 
     def __init__(self):
-
-        addApiView('dashboard.suggestions', self.suggestView)
         addApiView('dashboard.soon', self.getSoonView)
-
-    def newSuggestions(self):
-
-        movies = fireEvent('movie.list', status = ['active', 'done'], limit_offset = (20, 0), single = True)
-        movie_identifiers = [m['library']['identifier'] for m in movies[1]]
-
-        ignored_movies = fireEvent('movie.list', status = ['ignored', 'deleted'], limit_offset = (100, 0), single = True)
-        ignored_identifiers = [m['library']['identifier'] for m in ignored_movies[1]]
-
-        suggestions = fireEvent('movie.suggest', movies = movie_identifiers, ignore = ignored_identifiers, single = True)
-        suggest_status = fireEvent('status.get', 'suggest', single = True)
-
-        for suggestion in suggestions:
-            fireEvent('movie.add', params = {'identifier': suggestion}, force_readd = False, search_after = False, status_id = suggest_status.get('id'))
-
-    def suggestView(self):
-
-        db = get_session()
-
-        movies = db.query(Movie).limit(20).all()
-        identifiers = [m.library.identifier for m in movies]
-
-        suggestions = fireEvent('movie.suggest', movies = identifiers, single = True)
-
-        return {
-            'result': True,
-            'suggestions': suggestions
-        }
 
     def getSoonView(self, limit_offset = None, random = False, late = False, **kwargs):
 
