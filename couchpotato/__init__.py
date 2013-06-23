@@ -20,7 +20,8 @@ template_loader = template.Loader(os.path.join(os.path.dirname(__file__), 'templ
 # Main web handler
 @requires_auth
 class WebHandler(RequestHandler):
-    def get(self, route):
+    def get(self, route, *args, **kwargs):
+        route = route.strip('/')
         if not views.get(route):
             page_not_found(self)
             return
@@ -55,7 +56,7 @@ addView('docs', apiDocs)
 
 # Make non basic auth option to get api key
 class KeyHandler(RequestHandler):
-    def get(self):
+    def get(self, *args, **kwargs):
         api = None
         username = Env.setting('username')
         password = Env.setting('password')

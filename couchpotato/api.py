@@ -14,7 +14,8 @@ class NonBlockHandler(RequestHandler):
     stoppers = []
 
     @asynchronous
-    def get(self, route):
+    def get(self, route, *args, **kwargs):
+        route = route.strip('/')
         start, stop = api_nonblock[route]
         self.stoppers.append(stop)
 
@@ -43,7 +44,8 @@ def addNonBlockApiView(route, func_tuple, docs = None, **kwargs):
 # Blocking API handler
 class ApiHandler(RequestHandler):
 
-    def get(self, route):
+    def get(self, route, *args, **kwargs):
+        route = route.strip('/')
         if not api.get(route):
             self.write('API call doesn\'t seem to exist')
             return
