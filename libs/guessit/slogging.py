@@ -21,6 +21,8 @@
 from __future__ import unicode_literals
 import logging
 import sys
+import os, os.path
+
 
 GREEN_FONT = "\x1B[0;32m"
 YELLOW_FONT = "\x1B[0;33m"
@@ -29,33 +31,57 @@ RED_FONT = "\x1B[0;31m"
 RESET_FONT = "\x1B[0m"
 
 
-def setupLogging(colored=True):
+def setupLogging(colored=True, with_time=False, with_thread=False, filename=None):
     """Set up a nice colored logger as the main application logger."""
 
     class SimpleFormatter(logging.Formatter):
-        def __init__(self):
-            self.fmt = '%(levelname)-8s %(module)s:%(funcName)s -- %(message)s'
+        def __init__(self, with_time, with_thread):
+            self.fmt = (('%(asctime)s ' if with_time else '') +
+                        '%(levelname)-8s ' +
+                        '[%(name)s:%(funcName)s]' +
+                        ('[%(threadName)s]' if with_thread else '') +
+                        ' -- %(message)s')
             logging.Formatter.__init__(self, self.fmt)
 
     class ColoredFormatter(logging.Formatter):
-        def __init__(self):
-            self.fmt = ('%(levelname)-8s ' +
-                        BLUE_FONT + '%(name)s:%(funcName)s' +
-                        RESET_FONT + ' -- %(message)s')
+        def __init__(self, with_time, with_thread):
+            self.fmt = (('%(asctime)s ' if with_time else '') +
+                        '-CC-%(levelname)-8s ' +
+                        BLUE_FONT + '[%(name)s:%(funcName)s]' +
+                        RESET_FONT + ('[%(threadName)s]' if with_thread else '') +
+                        ' -- %(message)s')
+
             logging.Formatter.__init__(self, self.fmt)
 
         def format(self, record):
+            modpath = record.name.split('.')
+            record.mname = modpath[0]
+            record.mmodule = '.'.join(modpath[1:])
             result = logging.Formatter.format(self, record)
-            if record.levelno in (logging.DEBUG, logging.INFO):
-                return GREEN_FONT + result
+            if record.levelno == logging.DEBUG:
+                color = BLUE_FONT
+            elif record.levelno == logging.INFO:
+                color = GREEN_FONT
             elif record.levelno == logging.WARNING:
-                return YELLOW_FONT + result
+                color = YELLOW_FONT
             else:
-                return RED_FONT + result
+                color = RED_FONT
 
-    ch = logging.StreamHandler()
-    if colored and sys.platform != 'win32':
-        ch.setFormatter(ColoredFormatter())
+            result = result.replace('-CC-', color)
+            return result
+
+    if filename is not None:
+        # make sure we can write to our log file
+        logdir = os.path.dirname(filename)
+        if not os.path.exists(logdir):
+            os.makedirs(logdir)
+        ch = logging.FileHandler(filename, mode='w')
+        ch.setFormatter(SimpleFormatter(with_time, with_thread))
     else:
-        ch.setFormatter(SimpleFormatter())
+        ch = logging.StreamHandler()
+        if colored and sys.platform != 'win32':
+            ch.setFormatter(ColoredFormatter(with_time, with_thread))
+        else:
+            ch.setFormatter(SimpleFormatter(with_time, with_thread))
+
     logging.getLogger().addHandler(ch)

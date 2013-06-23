@@ -168,7 +168,6 @@ class CoreNotifier(Notification):
                 })
             except:
                 log.debug('Failed sending to listener: %s', traceback.format_exc())
-                break
 
         self.m_lock.release()
         self.cleanMessages()
