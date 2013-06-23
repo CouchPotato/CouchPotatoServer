@@ -20,6 +20,7 @@
 
 from __future__ import unicode_literals
 from guessit.patterns import subtitle_exts
+from guessit.textutils import reorder_title, find_words
 import logging
 
 log = logging.getLogger(__name__)
@@ -45,6 +46,15 @@ def process(mtree):
             node == mtree.leaves()[-2]):
             promote_subtitle()
 
+        # - if we find the word 'sub' before the language, and in the same explicit
+        #   group, then upgrade the language
+        explicit_group = mtree.node_at(node.node_idx[:2])
+        group_str = explicit_group.value.lower()
+
+        if ('sub' in find_words(group_str) and
+            0 <= group_str.find('sub') < (node.span[0] - explicit_group.span[0])):
+            promote_subtitle()
+
         # - if a language is in an explicit group just preceded by "st",
         #   it is a subtitle language (eg: '...st[fr-eng]...')
         try:
@@ -60,11 +70,4 @@ def process(mtree):
         if 'series' not in node.guess:
             continue
 
-        series = node.guess['series']
-        lseries = series.lower()
-
-        if lseries[-4:] == ',the':
-            node.guess['series'] = 'The ' + series[:-4]
-
-        if lseries[-5:] == ', the':
-            node.guess['series'] = 'The ' + series[:-5]
+        node.guess['series'] = reorder_title(node.guess['series'])

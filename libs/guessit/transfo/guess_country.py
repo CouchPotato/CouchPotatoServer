@@ -19,24 +19,30 @@
 #
 
 from __future__ import unicode_literals
-#from guessit.transfo import SingleNodeGuesser
-#from guessit.date import search_year
 from guessit.country import Country
 from guessit import Guess
 import logging
 
 log = logging.getLogger(__name__)
 
+# list of common words which could be interpreted as countries, but which
+# are far too common to be able to say they represent a country
+country_common_words = frozenset([ 'bt', 'bb' ])
 
 def process(mtree):
     for node in mtree.unidentified_leaves():
-        # only keep explicit groups (enclosed in parentheses/brackets)
         if len(node.node_idx) == 2:
-            try:
-                country = Country(node.value[1:-1], strict=True)
-                if node.value[0] + node.value[-1] not in ['()', '[]', '{}']:
-                    continue
-                node.guess = Guess(country=country, confidence=1.0)
+            c = node.value[1:-1].lower()
+            if c in country_common_words:
+                continue
 
+            # only keep explicit groups (enclosed in parentheses/brackets)
+            if node.value[0] + node.value[-1] not in ['()', '[]', '{}']:
+                continue
+
+            try:
+                country = Country(c, strict=True)
             except ValueError:
-                pass
+                continue
+
+            node.guess = Guess(country=country, confidence=1.0)

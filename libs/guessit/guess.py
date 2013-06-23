@@ -253,47 +253,25 @@ def merge_similar_guesses(guesses, prop, choose):
             merge_similar_guesses(guesses, prop, choose)
 
 
-def merge_append_guesses(guesses, prop):
-    """Take a list of guesses and merge those which have the same properties by
-    appending them in a list.
-
-    DEPRECATED, remove with old guessers
-
-    """
-    similar = [guess for guess in guesses if prop in guess]
-    if not similar:
-        return
-
-    merged = similar[0]
-    merged[prop] = [merged[prop]]
-    # TODO: what to do with global confidence? mean of them all?
-
-    for m in similar[1:]:
-        for prop2 in m:
-            if prop == prop2:
-                merged[prop].append(m[prop])
-            else:
-                if prop2 in m:
-                    log.warning('overwriting property "%s" with value %s' % (prop2, m[prop2]))
-                merged[prop2] = m[prop2]
-                # TODO: confidence also
-
-        guesses.remove(m)
-
-
 def merge_all(guesses, append=None):
     """Merge all the guesses in a single result, remove very unlikely values,
     and return it.
     You can specify a list of properties that should be appended into a list
     instead of being merged.
 
-    >>> s(merge_all([ Guess({ 'season': 2 }, confidence = 0.6),
-    ...               Guess({ 'episodeNumber': 13 }, confidence = 0.8) ]))
+    >>> s(merge_all([ Guess({'season': 2}, confidence=0.6),
+    ...               Guess({'episodeNumber': 13}, confidence=0.8) ]))
     {'season': 2, 'episodeNumber': 13}
 
-    >>> s(merge_all([ Guess({ 'episodeNumber': 27 }, confidence = 0.02),
-    ...               Guess({ 'season': 1 }, confidence = 0.2) ]))
+    >>> s(merge_all([ Guess({'episodeNumber': 27}, confidence=0.02),
+    ...               Guess({'season': 1}, confidence=0.2) ]))
     {'season': 1}
+
+    >>> s(merge_all([ Guess({'other': 'PROPER'}, confidence=0.8),
+    ...               Guess({'releaseGroup': '2HD'}, confidence=0.8) ],
+    ...             append=['other']))
+    {'releaseGroup': '2HD', 'other': ['PROPER']}
+
 
     """
     if not guesses:
@@ -328,7 +306,13 @@ def merge_all(guesses, append=None):
 
     # make sure our appendable properties contain unique values
     for prop in append:
-        if prop in result:
-            result[prop] = list(set(result[prop]))
+        try:
+            value = result[prop]
+            if isinstance(value, list):
+                result[prop] = list(set(value))
+            else:
+                result[prop] = [ value ]
+        except KeyError:
+            pass
 
     return result
