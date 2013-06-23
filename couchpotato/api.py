@@ -1,3 +1,4 @@
+from couchpotato.core.helpers.request import getParams
 from tornado.web import RequestHandler, asynchronous
 import json
 import urllib
@@ -53,6 +54,9 @@ class ApiHandler(RequestHandler):
         kwargs = {}
         for x in self.request.arguments:
             kwargs[x] = urllib.unquote(self.get_argument(x))
+
+        # Split array arguments
+        kwargs = getParams(kwargs)
 
         # Remove t random string
         try: del kwargs['t']
