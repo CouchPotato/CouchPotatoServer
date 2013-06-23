@@ -15,7 +15,7 @@ class CouchPotatoApi(MovieProvider):
         'info': 'https://api.couchpota.to/info/%s/',
         'is_movie': 'https://api.couchpota.to/ismovie/%s/',
         'eta': 'https://api.couchpota.to/eta/%s/',
-        'suggest': 'http://api.couchpota.to:3010/suggest/',
+        'suggest': 'https://api.couchpota.to/suggest/',
         'updater': 'https://api.couchpota.to/updater/?%s',
         'messages': 'https://api.couchpota.to/messages/?%s',
     }
