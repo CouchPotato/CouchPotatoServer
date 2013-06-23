@@ -75,11 +75,12 @@ class Suggestion(Plugin):
         if len(new_suggestions) - 1 < limit:
 
             db = get_session()
-            active_movies = db.query(Movie).filter(Movie.status.has(identifier = 'active')).all()
+            active_movies = db.query(Movie) \
+                .filter(or_(*[Movie.status.has(identifier = s) for s in ['active', 'done']])).all()
             movies = [x.library.identifier for x in active_movies]
 
-            #if ignored:
-            #    ignored.extend([x.get('imdb') for x in new_suggestions])
+            if ignored:
+                ignored.extend([x.get('imdb') for x in new_suggestions])
 
             suggestions = fireEvent('movie.suggest', movies = movies, ignore = list(set(ignored)), single = True)
 
