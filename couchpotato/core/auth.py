@@ -38,14 +38,3 @@ def requires_auth(handler_class):
     handler_class._execute = wrap_execute(handler_class._execute)
 
     return handler_class
-
-#     @wraps(f)
-#     def decorated(*args, **kwargs):
-#         auth = getattr(request, 'authorization')
-#         if Env.setting('username') and Env.setting('password'):
-#             if (not auth or not check_auth(auth.username.decode('latin1'), md5(auth.password.decode('latin1').encode(Env.get('encoding'))))):
-#                 return authenticate()
-#
-#         return f(*args, **kwargs)
-#
-#     return decorated

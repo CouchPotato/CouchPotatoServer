@@ -230,16 +230,15 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
 
     # Request handlers
     application.add_handlers(".*$", [
-        (r'%snonblock/(.*)/' % api_base, NonBlockHandler),
+        (r'%snonblock/(.*)(/?)' % api_base, NonBlockHandler),
 
         # API handlers
-        (r'%s(.*)/' % api_base, ApiHandler), # Main API handler
-        (r'%sgetkey/' % web_base, KeyHandler), # Get API key
+        (r'%s(.*)(/?)' % api_base, ApiHandler), # Main API handler
+        (r'%sgetkey(/?)' % web_base, KeyHandler), # Get API key
         (r'%s' % api_base, RedirectHandler, {"url": web_base + 'docs/'}), # API docs
 
         # Catch all webhandlers
-        (r'%s(.*)/' % web_base, WebHandler),
-        (r'%s(.*)' % web_base, WebHandler),
+        (r'%s(.*)(/?)' % web_base, WebHandler),
         (r'(.*)', WebHandler),
     ])
 
