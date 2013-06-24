@@ -45,7 +45,7 @@ class ProfilePlugin(Plugin):
                 movie.profile_id = default_profile.get('id')
                 db.commit()
 
-    def allView(self):
+    def allView(self, **kwargs):
 
         return {
             'success': True,
@@ -128,7 +128,7 @@ class ProfilePlugin(Plugin):
             'success': True
         }
 
-    def delete(self, id = None):
+    def delete(self, id = None, **kwargs):
 
         db = get_session()
 

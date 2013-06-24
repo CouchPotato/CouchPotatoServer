@@ -41,7 +41,7 @@ class StatusPlugin(Plugin):
 }"""}
         })
 
-    def list(self):
+    def list(self, **kwargs):
 
         return {
             'success': True,

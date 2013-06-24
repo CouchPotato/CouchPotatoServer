@@ -94,13 +94,13 @@ class Updater(Plugin):
     def info(self, **kwargs):
         return self.updater.info()
 
-    def checkView(self):
+    def checkView(self, **kwargs):
         return {
             'update_available': self.check(force = True),
             'info': self.updater.info()
         }
 
-    def doUpdateView(self):
+    def doUpdateView(self, **kwargs):
 
         self.check()
         if not self.updater.update_version:

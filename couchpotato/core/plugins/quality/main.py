@@ -50,7 +50,7 @@ class QualityPlugin(Plugin):
     def preReleases(self):
         return self.pre_releases
 
-    def allView(self):
+    def allView(self, **kwargs):
 
         return {
             'success': True,

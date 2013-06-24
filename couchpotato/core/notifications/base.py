@@ -49,7 +49,7 @@ class Notification(Provider):
     def notify(self, message = '', data = {}, listener = None):
         pass
 
-    def test(self):
+    def test(self, **kwargs):
 
         test_type = self.testNotifyName()
 

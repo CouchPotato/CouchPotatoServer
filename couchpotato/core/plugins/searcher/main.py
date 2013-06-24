@@ -57,7 +57,7 @@ class Searcher(Plugin):
     def setCrons(self):
         fireEvent('schedule.cron', 'searcher.all', self.allMovies, day = self.conf('cron_day'), hour = self.conf('cron_hour'), minute = self.conf('cron_minute'))
 
-    def allMoviesView(self):
+    def allMoviesView(self, **kwargs):
 
         in_progress = self.in_progress
         if not in_progress:
@@ -70,7 +70,7 @@ class Searcher(Plugin):
             'success': not in_progress
         }
 
-    def getProgress(self):
+    def getProgress(self, **kwargs):
 
         return {
             'progress': self.in_progress

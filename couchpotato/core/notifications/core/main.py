@@ -62,7 +62,7 @@ class CoreNotifier(Notification):
         db.commit()
 
 
-    def markAsRead(self, ids = None):
+    def markAsRead(self, ids = None, **kwargs):
 
         ids = splitString(ids) if ids else None
 
