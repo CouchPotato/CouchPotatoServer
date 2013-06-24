@@ -1,18 +1,14 @@
 from couchpotato.core.helpers.encoding import toUnicode, tryUrlencode
-from couchpotato.core.helpers.variable import tryInt, cleanHost
+from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.torrent.base import TorrentProvider
-from couchpotato.environment import Env
-import re
-import time
 import traceback
-from pprint import pprint
 
 log = CPLog(__name__)
 
 
 class Yify(TorrentProvider):
-   
+
     urls = {
         'test' : 'https://yify-torrents.com/api',
         'search' : 'https://yify-torrents.com/api/list.json?keywords=%s&quality=%s',
@@ -21,19 +17,31 @@ class Yify(TorrentProvider):
 
     http_time_between_calls = 1 #seconds
 
-    def _search(self, movie, quality, results):
-        try:
-            data = self.getJsonData(self.urls['search'] % (movie['library']['title'], quality['identifier']))
-        except:
-            log.error('Search on Yify (%s) failed (could not decode JSON)', params)
-            return
+    def search(self, movie, quality):
+
+        if not quality.get('hd', False):
+            return []
+
+        return super(Yify, self).search(movie, quality)
+
+    def _searchOnTitle(self, title, movie, quality, results):
+
+        data = self.getJsonData(self.urls['search'] % (title, quality['identifier']))
 
         if data:
             try:
-                for result in data:
+                for result in data.get('MovieList'):
+
+                    try:
+                        title = result['TorrentUrl'].split('/')[-1][:-8].replace('_', '.').strip('._')
+                        title = title.replace('.-.', '-')
+                        title = title.replace('..', '.')
+                    except:
+                        continue
+
                     results.append({
                         'id': result['MovieID'],
-                        'name': result['MovieTitle'],
+                        'name': title,
                         'url': result['TorrentUrl'],
                         'detail_url': self.urls['detail'] % result['MovieID'],
                         'size': self.parseSize(result['Size']),
@@ -43,4 +51,4 @@ class Yify(TorrentProvider):
 
             except:
                 log.error('Failed getting results from %s: %s', (self.getName(), traceback.format_exc()))
-  
+
