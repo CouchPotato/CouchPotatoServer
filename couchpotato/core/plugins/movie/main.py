@@ -124,7 +124,7 @@ class MoviePlugin(Plugin):
 
         db.expire_all()
 
-    def getView(self, id = None):
+    def getView(self, id = None, **kwargs):
 
         movie = self.get(id) if id else None
 
@@ -298,7 +298,7 @@ class MoviePlugin(Plugin):
             'chars': chars,
         }
 
-    def refresh(self, id = ''):
+    def refresh(self, id = '', **kwargs):
 
         db = get_session()
 
@@ -320,7 +320,7 @@ class MoviePlugin(Plugin):
             'success': True,
         }
 
-    def search(self, q = ''):
+    def search(self, q = '', **kwargs):
 
         cache_key = u'%s/%s' % (__name__, simplifyString(q))
         movies = Env.get('cache').get(cache_key)

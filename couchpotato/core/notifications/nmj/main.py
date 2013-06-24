@@ -113,7 +113,7 @@ class NMJ(Notification):
             'success': False
         }
 
-    def test(self):
+    def test(self, **kwargs):
         return {
             'success': self.addToLibrary()
         }

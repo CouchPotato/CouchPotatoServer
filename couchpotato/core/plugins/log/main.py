@@ -114,7 +114,7 @@ class Logging(Plugin):
             'log': '[0m\n'.join(log_lines),
         }
 
-    def clear(self):
+    def clear(self, **kwargs):
 
         for x in range(0, 50):
             path = '%s%s' % (Env.get('log_path'), '.%s' % x if x > 0 else '')

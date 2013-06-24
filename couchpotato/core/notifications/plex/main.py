@@ -72,7 +72,7 @@ class Plex(Notification):
         log.info('Plex notification to %s successful.', host)
         return True
 
-    def test(self):
+    def test(self, **kwargs):
 
         test_type = self.testNotifyName()
 

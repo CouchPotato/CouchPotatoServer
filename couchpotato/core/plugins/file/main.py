@@ -79,7 +79,7 @@ class FileManager(Plugin):
         except:
             log.error('Failed removing unused file: %s', traceback.format_exc())
 
-    def showCacheFile(self, route):
+    def showCacheFile(self, route, **kwargs):
         Env.get('app').add_handlers(".*$", [('%s%s' % (Env.get('api_base'), route), StaticFileHandler, {'path': Env.get('cache_dir')})])
 
 
@@ -150,7 +150,7 @@ class FileManager(Plugin):
 
         return types
 
-    def getTypesView(self):
+    def getTypesView(self, **kwargs):
 
         return {
             'types': self.getTypes()

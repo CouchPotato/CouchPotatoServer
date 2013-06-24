@@ -31,7 +31,7 @@ class Synoindex(Notification):
 
         return True
 
-    def test(self):
+    def test(self, **kwargs):
         return {
             'success': os.path.isfile(self.index_path)
         }

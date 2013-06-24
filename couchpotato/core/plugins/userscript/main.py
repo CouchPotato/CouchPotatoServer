@@ -35,14 +35,14 @@ class Userscript(Plugin):
 
         return self.renderTemplate(__file__, 'bookmark.js', **params)
 
-    def getIncludes(self):
+    def getIncludes(self, **kwargs):
 
         return {
             'includes': fireEvent('userscript.get_includes', merge = True),
             'excludes': fireEvent('userscript.get_excludes', merge = True),
         }
 
-    def getUserScript(self, route):
+    def getUserScript(self, route, **kwargs):
 
         klass = self
 

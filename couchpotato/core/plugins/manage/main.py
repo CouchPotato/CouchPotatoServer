@@ -47,7 +47,7 @@ class Manage(Plugin):
         if not Env.get('dev'):
             addEvent('app.load', self.updateLibraryQuick)
 
-    def getProgress(self):
+    def getProgress(self, **kwargs):
         return {
             'progress': self.in_progress
         }

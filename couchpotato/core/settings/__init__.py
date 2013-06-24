@@ -168,7 +168,7 @@ class Settings(object):
         return self.options
 
 
-    def view(self):
+    def view(self, **kwargs):
         return {
             'options': self.getOptions(),
             'values': self.getValues()
