@@ -54,6 +54,11 @@ class Loader(object):
         # Logging
         from couchpotato.core.logger import CPLog
         self.log = CPLog(__name__)
+        
+        # DB URI Command line Option to overide database
+        self.db_uri = None
+        if self.options.db_uri:
+            self.db_uri = self.options.db_uri
 
         formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s', '%H:%M:%S')
         hdlr = handlers.RotatingFileHandler(os.path.join(self.log_dir, 'error.log'), 'a', 500000, 10)
@@ -80,7 +85,7 @@ class Loader(object):
         self.addSignals()
 
         from couchpotato.runner import runCouchPotato
-        runCouchPotato(self.options, base_path, sys.argv[1:], data_dir = self.data_dir, log_dir = self.log_dir, Env = Env)
+        runCouchPotato(self.options, base_path, sys.argv[1:], data_dir = self.data_dir, log_dir = self.log_dir, db_uri = self.db_uri, Env = Env)
 
         if self.do_restart:
             self.restart()

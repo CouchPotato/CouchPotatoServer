@@ -35,6 +35,8 @@ def getOptions(base_path, args):
                         dest = 'daemon', help = 'Daemonize the app')
     parser.add_argument('--pid_file',
                         dest = 'pid_file', help = 'Path to pidfile needed for daemon')
+    parser.add_argument('--db_uri',
+                        dest = 'db_uri', help = 'URI to database (if not using sqlite). eg mysql://user:pass@localhost/cp')
 
     options = parser.parse_args(args)
 
@@ -64,7 +66,7 @@ def _log(status_code, request):
     log_method("%d %s %.2fms", status_code, summary, request_time)
 
 
-def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, Env = None, desktop = None):
+def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, db_uri = None, Env = None, desktop = None):
 
     try:
         locale.setlocale(locale.LC_ALL, "")
@@ -115,6 +117,8 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     Env.set('data_dir', toUnicode(data_dir))
     Env.set('log_path', toUnicode(os.path.join(log_dir, 'CouchPotato.log')))
     Env.set('db_path', toUnicode('sqlite:///' + db_path))
+    if db_uri is not None:
+        Env.set('db_path', toUnicode(db_uri))
     Env.set('cache_dir', toUnicode(os.path.join(data_dir, 'cache')))
     Env.set('cache', FileSystemCache(toUnicode(os.path.join(Env.get('cache_dir'), 'python'))))
     Env.set('console_log', options.console_log)
