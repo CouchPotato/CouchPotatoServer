@@ -48,7 +48,7 @@ config = [{
                     'label': 'Seeding support',
                     'default': True,
                     'type': 'bool',
-                    'description': '(Hard)links/copies after download is complete (if enabled in renamer), wait for seeding to finish before (re)moving. Set the seeding goal in the torrent providers.',
+                    'description': '(Hard)link/copy after download is complete (if enabled in renamer), wait for seeding to finish before (re)moving and set the seeding goal from the torrent providers.',
                 },                
                 {
                     'name': 'remove_complete',
