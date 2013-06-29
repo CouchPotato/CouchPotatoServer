@@ -42,6 +42,13 @@ config = [{
                     'description': 'Disable this downloader for automated searches, but use it when I manually send a release.',
                 },
                 {
+                    'name': 'remove_complete',
+                    'label': 'Remove torrent',
+                    'default': True,
+                    'type': 'bool',
+                    'description': 'Remove the NZB from SabNZBd history after it completed.',
+                },  
+                {
                     'name': 'delete_failed',
                     'default': True,
                     'type': 'bool',

@@ -129,6 +129,22 @@ class Sabnzbd(Downloader):
 
         return True
 
+    def processComplete(self, item, delete_files = False):
+        log.debug('Requesting SabNZBd to remove the NZB %s%s.', (item['name']))
+
+        try:
+            self.call({
+                'mode': 'history',
+                'name': 'delete',
+                'del_files': '0',
+                'value': item['id']
+            }, use_json = False)
+        except:
+            log.error('Failed removing: %s', traceback.format_exc(0))
+            return False
+
+        return True
+
     def call(self, request_params, use_json = True, **kwargs):
 
         url = cleanHost(self.conf('host')) + 'api?' + tryUrlencode(mergeDicts(request_params, {

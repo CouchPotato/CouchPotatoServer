@@ -83,7 +83,7 @@ class Downloader(Provider):
 
         if item and item.get('downloader') == self.getName():
             if self.conf('remove_complete'):
-                return self.processComplete(item = item, delete_files = self.conf('delete_files'))
+                return self.processComplete(item = item, delete_files = self.conf('delete_files', default = False))
 
             return False
         return
