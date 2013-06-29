@@ -89,7 +89,7 @@ class Transmission(Downloader):
         statuses = StatusList(self)
 
         return_params = {
-                'fields': ['id', 'name', 'hashString', 'percentDone', 'status', 'eta', 'isFinished', 'downloadDir', 'uploadRatio', 'secondsSeeding', 'seedIdleLimit']
+                'fields': ['id', 'name', 'hashString', 'percentDone', 'status', 'eta', 'isStalled', 'isFinished', 'downloadDir', 'uploadRatio', 'secondsSeeding', 'seedIdleLimit']
             }
 
         queue = self.trpc.get_alltorrents(return_params)
@@ -105,7 +105,9 @@ class Transmission(Downloader):
                 return
 
             status = 'busy'
-            if item['status'] == 0 and item['percentDone'] == 1:
+            if item['isStalled'] and self.conf('stalled_as_failed'):
+                status = 'failed'
+            elif item['status'] == 0 and item['percentDone'] == 1:
                 status = 'completed'
             elif item['status'] in [5, 6]:
                 status = 'seeding'
@@ -127,6 +129,10 @@ class Transmission(Downloader):
             return self.trpc.stop_torrent(item['hashString'])
         else:
             return self.trpc.start_torrent(item['hashString'])
+
+    def removeFailed(self, item):
+        log.info('%s failed downloading, deleting...', item['name'])
+        return self.trpc.remove_torrent(self, item['hashString'], True)
 
     def processComplete(self, item, delete_files = False):
         log.debug('Requesting Transmission to remove the torrent %s%s.', (item['name'], ' and cleanup the downloaded files' if delete_files else ''))

@@ -78,6 +78,18 @@ config = [{
                     'advanced': True,
                     'description': 'Disable this downloader for automated searches, but use it when I manually send a release.',
                 },
+                {
+                    'name': 'stalled_as_failed',
+                    'default': True,
+                    'type': 'bool',
+                    'description': 'Consider a stalled torrent as failed',
+                },
+                {
+                    'name': 'delete_failed',
+                    'default': True,
+                    'type': 'bool',
+                    'description': 'Delete a release after the download has failed.',
+                },
             ],
         }
     ],
