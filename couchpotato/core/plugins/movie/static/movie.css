@@ -845,7 +845,7 @@
 			font-family: 'Elusive-Icons';
 			content: "\e03e";
 			position: absolute;
-			height: 100%;
+			height: 20px;
 			line-height: 45px;
 			font-size: 12px;
 			margin: 0 0 0 10px;
