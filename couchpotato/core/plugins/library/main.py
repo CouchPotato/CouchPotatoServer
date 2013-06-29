@@ -87,7 +87,7 @@ class LibraryPlugin(Plugin):
             library.tagline = toUnicode(info.get('tagline', ''))
             library.year = info.get('year', 0)
             library.status_id = done_status.get('id')
-            library.info = info
+            library.info.update(info)
             db.commit()
 
             # Titles
@@ -148,7 +148,7 @@ class LibraryPlugin(Plugin):
 
         if dates and dates.get('expires', 0) < time.time() or not dates:
             dates = fireEvent('movie.release_date', identifier = identifier, merge = True)
-            library.info = mergeDicts(library.info, {'release_date': dates })
+            library.info.update({'release_date': dates })
             db.commit()
 
         db.expire_all()

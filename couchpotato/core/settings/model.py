@@ -3,6 +3,7 @@ from elixir.entity import Entity
 from elixir.fields import Field
 from elixir.options import options_defaults, using_options
 from elixir.relationships import ManyToMany, OneToMany, ManyToOne
+from sqlalchemy.ext.mutable import Mutable
 from sqlalchemy.types import Integer, Unicode, UnicodeText, Boolean, String, \
     TypeDecorator
 import json
@@ -38,6 +39,37 @@ class JsonType(TypeDecorator):
 
     def process_result_value(self, value, dialect):
         return json.loads(value if value else '{}')
+
+class MutableDict(Mutable, dict):
+
+    @classmethod
+    def coerce(cls, key, value):
+        if not isinstance(value, MutableDict):
+            if isinstance(value, dict):
+                return MutableDict(value)
+            return Mutable.coerce(key, value)
+        else:
+            return value
+
+    def __delitem(self, key):
+        dict.__delitem__(self, key)
+        self.changed()
+
+    def __setitem__(self, key, value):
+        dict.__setitem__(self, key, value)
+        self.changed()
+
+    def __getstate__(self):
+        return dict(self)
+
+    def __setstate__(self, state):
+        self.update(self)
+
+    def update(self, *args, **kwargs):
+        super(MutableDict, self).update(*args, **kwargs)
+        self.changed()
+
+MutableDict.associate_with(JsonType)
 
 
 class Movie(Entity):
