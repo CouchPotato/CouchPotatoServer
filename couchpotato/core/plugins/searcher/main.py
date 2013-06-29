@@ -49,6 +49,9 @@ class Searcher(Plugin):
 }"""},
         })
 
+        if self.conf('run_on_launch'):
+            addEvent('app.load', self.allMovies)
+
         addEvent('app.load', self.setCrons)
         addEvent('setting.save.searcher.cron_day.after', self.setCrons)
         addEvent('setting.save.searcher.cron_hour.after', self.setCrons)
