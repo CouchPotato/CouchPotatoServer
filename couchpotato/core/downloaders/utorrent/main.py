@@ -46,6 +46,18 @@ class uTorrent(Downloader):
         if not settings:
             return False
 
+        #Fix settings in case they are not set for CPS compatibility
+        new_settings = {}
+        if self.conf('seeding') and not (settings.get('seed_prio_limitul') == 0 and settings['seed_prio_limitul_flag']):
+            new_settings['seed_prio_limitul'] = 0
+            new_settings['seed_prio_limitul_flag'] = True
+            log.info('Updated uTorrent settings to set a torrent to complete after it the seeding requirements are met.')
+        if settings.get('bt.read_only_on_complete'): #This doesnt work as this option seems to be not available through the api
+            new_settings['bt.read_only_on_complete'] = False
+            log.info('Updated uTorrent settings to not set the files to read only after completing.')
+        if new_settings:
+            self.utorrent_api.set_settings(new_settings)
+
         torrent_params = {}
         if self.conf('label'):
             torrent_params['label'] = self.conf('label')
@@ -65,20 +77,10 @@ class uTorrent(Downloader):
         if data.get('seed_ratio') and self.conf('seeding'):
             torrent_params['seed_override'] = 1
             torrent_params['seed_ratio'] = tryInt(tryFloat(data['seed_ratio'])*1000)
-            
-            # Check if uTorrent completes the torrent if seeding goal is met.
-            # Note that CPS can also check if the goal has been met but for now it should be done by uTorrent
-            if not (settings.get('seed_prio_limitul') == 0 and settings['seed_prio_limitul_flag']):
-                log.info('With the current settings uTorrent does not set torrents that completed the seed ratio and time to complete. Please stop them manually in uTorrent or check the option Queueing->When uTorrent reaches the seeding goal->Limit the upload rate and set it to 0')
 
         if data.get('seed_time') and self.conf('seeding'):
             torrent_params['seed_override'] = 1
             torrent_params['seed_time'] = tryInt(data['seed_time'])*3600
-
-            # Check if uTorrent completes the torrent if seeding goal is met.
-            # Note that CPS can also check if the goal has been met but for now it should be done by uTorrent
-            if not (settings.get('seed_prio_limitul') == 0 and settings['seed_prio_limitul_flag']):
-                log.info('With the current settings uTorrent does not set torrents that completed the seed ratio and time to complete. Please stop them manually in uTorrent or check the option Queueing->When uTorrent reaches the seeding goal->Limit the upload rate and set it to 0')
 
         # Convert base 32 to hex
         if len(torrent_hash) == 32:
@@ -262,3 +264,11 @@ class uTorrentAPI(object):
             log.error('Failed to get settings from uTorrent: %s', err)
 
         return settings_dict
+
+    def set_settings(self, settings_dict = {}):
+        for key in settings_dict:
+            if isinstance(settings_dict[key], bool):
+                settings_dict[key] = 1 if settings_dict[key] else 0
+
+        action = 'action=setsetting'  + ''.join(['&s=%s&v=%s' % (key, value) for (key, value) in settings_dict.items()])
+        return self._request(action)

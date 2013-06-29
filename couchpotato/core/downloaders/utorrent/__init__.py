@@ -41,7 +41,7 @@ config = [{
                     'label': 'Seeding support',
                     'default': True,
                     'type': 'bool',
-                    'description': '(Hard)links/copies after download is complete (if enabled in renamer), wait for seeding to finish before (re)moving. Stop seeding manually in uTorrent, or check the option Queueing->When uTorrent reaches the seeding goal->Limit the upload rate and set it to 0 to stop seeding after the seeding goal set in the torrent providers is met.',
+                    'description': '(Hard)links/copies after download is complete (if enabled in renamer), wait for seeding to finish before (re)moving.',
                 },                
                 {
                     'name': 'remove_complete',
