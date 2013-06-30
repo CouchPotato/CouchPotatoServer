@@ -43,10 +43,10 @@ config = [{
                 },
                 {
                     'name': 'remove_complete',
-                    'label': 'Remove torrent',
+                    'label': 'Remove NZB',
                     'default': True,
                     'type': 'bool',
-                    'description': 'Remove the NZB from SabNZBd history after it completed.',
+                    'description': 'Remove the NZB from history after it completed.',
                 },  
                 {
                     'name': 'delete_failed',
