@@ -32,6 +32,8 @@ def getParams(params):
                     current = current[item]
         else:
             temp[param] = toUnicode(unquote(value))
+            if temp[param].lower() in ['true', 'false']:
+                temp[param] = temp[param].lower() != 'false'
 
     return dictToList(temp)
 
