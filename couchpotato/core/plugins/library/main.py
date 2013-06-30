@@ -1,7 +1,6 @@
 from couchpotato import get_session
 from couchpotato.core.event import addEvent, fireEventAsync, fireEvent
 from couchpotato.core.helpers.encoding import toUnicode, simplifyString
-from couchpotato.core.helpers.variable import mergeDicts
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Library, LibraryTitle, File
@@ -32,7 +31,8 @@ class LibraryPlugin(Plugin):
                 identifier = attrs.get('identifier'),
                 plot = toUnicode(attrs.get('plot')),
                 tagline = toUnicode(attrs.get('tagline')),
-                status_id = status.get('id')
+                status_id = status.get('id'),
+                info = {},
             )
 
             title = LibraryTitle(
