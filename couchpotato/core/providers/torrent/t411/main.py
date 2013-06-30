@@ -111,8 +111,8 @@ class t411(TorrentProvider):
                                 testname=namer_check.correctName(name,movie)
                                 if testname==0:
                                     continue
-                                url = ('http://www.t411.me/torrents/download/?id=%s' % id)
-                                detail_url = ('http://www.t411.me/torrents/?id=%s' % id)
+                                url = ('http://www.t411.me/torrents/download/?id=%s' % idt)
+                                detail_url = ('http://www.t411.me/torrents/?id=%s' % idt)
     
                                 size = result.find_all('td')[5].text
                                 age = result.find_all('td')[4].text
