@@ -456,6 +456,9 @@ class Renamer(Plugin):
             except:
                 log.error('Failed firing (some) of the renamer.after events: %s', traceback.format_exc())
 
+            # Removing all leftover empty folders in "from" folder
+            self.deleteEmptyFolder(self.conf('from'), show_error = False, remove_self = False)
+
             # Break if CP wants to shut down
             if self.shuttingDown():
                 break
@@ -561,7 +564,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
     def replaceDoubles(self, string):
         return string.replace('  ', ' ').replace(' .', '.')
 
-    def deleteEmptyFolder(self, folder, show_error = True):
+    def deleteEmptyFolder(self, folder, show_error = True, remove_self = True):
         folder = ss(folder)
 
         loge = log.error if show_error else log.debug
@@ -575,10 +578,11 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                     except:
                         loge('Couldn\'t remove empty directory %s: %s', (full_path, traceback.format_exc()))
 
-        try:
-            os.rmdir(folder)
-        except:
-            loge('Couldn\'t remove empty directory %s: %s', (folder, traceback.format_exc()))
+        if (remove_self):
+            try:
+                os.rmdir(folder)
+            except:
+                loge('Couldn\'t remove empty directory %s: %s', (folder, traceback.format_exc()))
 
     def checkSnatched(self):
 
