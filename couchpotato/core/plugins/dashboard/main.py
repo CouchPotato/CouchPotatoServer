@@ -15,37 +15,7 @@ log = CPLog(__name__)
 class Dashboard(Plugin):
 
     def __init__(self):
-
-        addApiView('dashboard.suggestions', self.suggestView)
         addApiView('dashboard.soon', self.getSoonView)
-
-    def newSuggestions(self):
-
-        movies = fireEvent('movie.list', status = ['active', 'done'], limit_offset = (20, 0), single = True)
-        movie_identifiers = [m['library']['identifier'] for m in movies[1]]
-
-        ignored_movies = fireEvent('movie.list', status = ['ignored', 'deleted'], limit_offset = (100, 0), single = True)
-        ignored_identifiers = [m['library']['identifier'] for m in ignored_movies[1]]
-
-        suggestions = fireEvent('movie.suggest', movies = movie_identifiers, ignore = ignored_identifiers, single = True)
-        suggest_status = fireEvent('status.get', 'suggest', single = True)
-
-        for suggestion in suggestions:
-            fireEvent('movie.add', params = {'identifier': suggestion}, force_readd = False, search_after = False, status_id = suggest_status.get('id'))
-
-    def suggestView(self):
-
-        db = get_session()
-
-        movies = db.query(Movie).limit(20).all()
-        identifiers = [m.library.identifier for m in movies]
-
-        suggestions = fireEvent('movie.suggest', movies = identifiers, single = True)
-
-        return {
-            'result': True,
-            'suggestions': suggestions
-        }
 
     def getSoonView(self, limit_offset = None, random = False, late = False, **kwargs):
 
@@ -100,9 +70,9 @@ class Dashboard(Plugin):
             coming_soon = False
 
             # Theater quality
-            if pp.get('theater') and fireEvent('searcher.could_be_released', True, eta, single = True):
+            if pp.get('theater') and fireEvent('searcher.could_be_released', True, eta, movie.library.year, single = True):
                 coming_soon = True
-            if pp.get('dvd') and fireEvent('searcher.could_be_released', False, eta, single = True):
+            if pp.get('dvd') and fireEvent('searcher.could_be_released', False, eta, movie.library.year, single = True):
                 coming_soon = True
 
             # Skip if movie is snatched/downloaded/available
@@ -123,8 +93,8 @@ class Dashboard(Plugin):
                 })
 
                 # Don't list older movies
-                if ((not late and (not eta.get('dvd') or (eta.get('dvd') and eta.get('dvd') > (now - 2419200)))) or \
-                        (late and eta.get('dvd') and eta.get('dvd') < (now - 2419200))):
+                if ((not late and ((not eta.get('dvd') and not eta.get('theater')) or (eta.get('dvd') and eta.get('dvd') > (now - 2419200)))) or \
+                        (late and (eta.get('dvd', 0) > 0 or eta.get('theater')) and eta.get('dvd') < (now - 2419200))):
                     movies.append(temp)
 
                 if len(movies) >= limit:

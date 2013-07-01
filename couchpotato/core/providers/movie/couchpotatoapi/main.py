@@ -1,9 +1,7 @@
-from couchpotato import get_session
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.movie.base import MovieProvider
-from couchpotato.core.settings.model import Movie
 from couchpotato.environment import Env
 import time
 
@@ -28,7 +26,7 @@ class CouchPotatoApi(MovieProvider):
         addEvent('movie.info', self.getInfo, priority = 1)
         addEvent('movie.search', self.search, priority = 1)
         addEvent('movie.release_date', self.getReleaseDate)
-        addEvent('movie.suggest', self.suggest)
+        addEvent('movie.suggest', self.getSuggestions)
         addEvent('movie.is_movie', self.isMovie)
 
         addEvent('cp.source_url', self.getSourceUrl)
@@ -82,32 +80,14 @@ class CouchPotatoApi(MovieProvider):
 
         return dates
 
-    def suggest(self, movies = [], ignore = []):
+    def getSuggestions(self, movies = [], ignore = []):
         suggestions = self.getJsonData(self.urls['suggest'], params = {
             'movies': ','.join(movies),
             'ignore': ','.join(ignore),
-        })
-        log.info('Found Suggestions for %s', (suggestions))
+        }, headers = self.getRequestHeaders())
+        log.info('Found suggestions for %s movies, %s ignored', (len(movies), len(ignore)))
 
         return suggestions
-
-    def suggestView(self, **kwargs):
-
-        movies = kwargs.get('movies')
-        ignore = kwargs.get('ignore', [])
-
-        if not movies:
-            db = get_session()
-            active_movies = db.query(Movie).filter(Movie.status.has(identifier = 'active')).all()
-            movies = [x.library.identifier for x in active_movies]
-
-        suggestions = self.suggest(movies, ignore)
-
-        return {
-            'success': True,
-            'count': len(suggestions),
-            'suggestions': suggestions
-        }
 
     def getRequestHeaders(self):
         return {

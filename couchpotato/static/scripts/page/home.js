@@ -101,6 +101,9 @@ Page.Home = new Class({
 			});
 		});
 
+		// Suggest
+		self.suggestion_list = new SuggestList();
+
 		// Still not available
 		self.late_list = new MovieList({
 			'navigation': false,
@@ -121,24 +124,9 @@ Page.Home = new Class({
 		self.el.adopt(
 			$(self.available_list),
 			$(self.soon_list),
+			$(self.suggestion_list),
 			$(self.late_list)
 		);
-
-		// Suggest
-		// self.suggestion_list = new MovieList({
-			// 'navigation': false,
-			// 'identifier': 'suggestions',
-			// 'limit': 6,
-			// 'load_more': false,
-			// 'view': 'thumbs',
-			// 'api_call': 'suggestion.suggest'
-		// });
-		// self.el.adopt(
-			// new Element('h2', {
-				// 'text': 'You might like'
-			// }),
-			// $(self.suggestion_list)
-		// );
 
 		// Recent
 			// Snatched

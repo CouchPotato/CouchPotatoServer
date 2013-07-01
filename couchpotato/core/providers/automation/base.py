@@ -13,7 +13,7 @@ class Automation(Provider):
     enabled_option = 'automation_enabled'
     http_time_between_calls = 2
 
-    interval = 86400
+    interval = 1800
     last_checked = 0
 
     def __init__(self):

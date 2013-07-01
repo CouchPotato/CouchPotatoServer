@@ -85,7 +85,9 @@ class Updater(Plugin):
 
         if self.updater.check():
             if not self.available_notified and self.conf('notification') and not self.conf('automatic'):
-                fireEvent('updater.available', message = 'A new update is available', data = self.updater.info())
+                info = self.updater.info()
+                version_date = datetime.fromtimestamp(info['update_version']['date'])
+                fireEvent('updater.available', message = 'A new update with hash "%s" is available, this version is from %s' % (info['update_version']['hash'], version_date), data = info)
                 self.available_notified = True
             return True
 

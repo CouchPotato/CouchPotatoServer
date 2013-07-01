@@ -629,7 +629,7 @@
 					height: auto;
 				}
 
-				.movies .movie .trailer_container {
+				.trailer_container {
 					width: 100%;
 					background: #000;
 					text-align: center;
@@ -639,11 +639,11 @@
 					position: absolute;
 					z-index: 10;
 				}
-					.movies .movie .trailer_container.hide {
+					.trailer_container.hide {
 						height: 0 !important;
 					}
 
-					.movies .movie .hide_trailer {
+					.hide_trailer {
 						position: absolute;
 						top: 0;
 						left: 50%;
@@ -655,7 +655,7 @@
 						transition: all .2s cubic-bezier(0.9,0,0.1,1) .2s;
 						z-index: 11;
 					}
-						.movies .movie .hide_trailer.hide {
+						.hide_trailer.hide {
 							top: -30px;
 						}
 
@@ -845,7 +845,7 @@
 			font-family: 'Elusive-Icons';
 			content: "\e03e";
 			position: absolute;
-			height: 100%;
+			height: 20px;
 			line-height: 45px;
 			font-size: 12px;
 			margin: 0 0 0 10px;

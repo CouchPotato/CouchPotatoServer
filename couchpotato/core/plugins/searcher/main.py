@@ -8,6 +8,7 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Movie, Release, ReleaseInfo
 from couchpotato.environment import Env
+from datetime import date
 from inspect import ismethod, isfunction
 from sqlalchemy.exc import InterfaceError
 import datetime
@@ -48,6 +49,9 @@ class Searcher(Plugin):
     'progress': False || object, total & to_go,
 }"""},
         })
+
+        if self.conf('run_on_launch'):
+            addEvent('app.load', self.allMovies)
 
         addEvent('app.load', self.setCrons)
         addEvent('setting.save.searcher.cron_day.after', self.setCrons)
@@ -161,7 +165,7 @@ class Searcher(Plugin):
 
         ret = False
         for quality_type in movie['profile']['types']:
-            if not self.conf('always_search') and not self.couldBeReleased(quality_type['quality']['identifier'] in pre_releases, release_dates):
+            if not self.conf('always_search') and not self.couldBeReleased(quality_type['quality']['identifier'] in pre_releases, release_dates, movie['library']['year']):
                 too_early_to_search.append(quality_type['quality']['identifier'])
                 continue
 
@@ -555,11 +559,12 @@ class Searcher(Plugin):
 
         return False
 
-    def couldBeReleased(self, is_pre_release, dates):
+    def couldBeReleased(self, is_pre_release, dates, year = None):
 
         now = int(time.time())
+        now_year = date.today().year
 
-        if not dates or (dates.get('theater', 0) == 0 and dates.get('dvd', 0) == 0):
+        if (year is None or year < now_year - 1) and (not dates or (dates.get('theater', 0) == 0 and dates.get('dvd', 0) == 0)):
             return True
         else:
 

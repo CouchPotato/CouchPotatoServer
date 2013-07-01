@@ -185,8 +185,11 @@ Block.Search = new Class({
 
 Block.Search.Item = new Class({
 
+	Implements: [Options, Events],
+
 	initialize: function(info, options){
 		var self = this;
+		self.setOptions(options);
 
 		self.info = info;
 		self.alternative_titles = [];
@@ -208,17 +211,13 @@ Block.Search.Item = new Class({
 			}) : null,
 			self.options_el = new Element('div.options.inlay'),
 			self.data_container = new Element('div.data', {
-				'tween': {
-					duration: 400,
-					transition: 'quint:in:out'
-				},
 				'events': {
 					'click': self.showOptions.bind(self)
 				}
 			}).adopt(
 				new Element('div.info').adopt(
 					self.title = new Element('h2', {
-						'text': info.titles[0]
+						'text': info.titles && info.titles.length > 0 ? info.titles[0] : 'Unknown'
 					}).adopt(
 						self.year = info.year ? new Element('span.year', {
 							'text': info.year
@@ -228,18 +227,32 @@ Block.Search.Item = new Class({
 			)
 		)
 
-
-		info.titles.each(function(title){
-			self.alternativeTitle({
-				'title': title
-			});
-		})
+		if(info.titles)
+			info.titles.each(function(title){
+				self.alternativeTitle({
+					'title': title
+				});
+			})
 	},
 
 	alternativeTitle: function(alternative){
 		var self = this;
 
 		self.alternative_titles.include(alternative);
+	},
+
+	getTitle: function(){
+		var self = this;
+		try {
+			return self.info.original_title ? self.info.original_title : self.info.titles[0];
+		}
+		catch(e){
+			return 'Unknown';
+		}
+	},
+
+	get: function(key){
+		return this.info[key]
 	},
 
 	showOptions: function(){
@@ -279,6 +292,8 @@ Block.Search.Item = new Class({
 					})
 				);
 				self.mask.fade('out');
+
+				self.fireEvent('added');
 			},
 			'onFailure': function(){
 				self.options_el.empty();

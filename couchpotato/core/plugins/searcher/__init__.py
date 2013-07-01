@@ -58,6 +58,14 @@ config = [{
             'description': 'Cron settings for the searcher see: <a href="http://packages.python.org/APScheduler/cronschedule.html">APScheduler</a> for details.',
             'options': [
                 {
+                    'name': 'run_on_launch',
+                    'label': 'Run on launch',
+                    'advanced': True,
+                    'default': 0,
+                    'type': 'bool',
+                    'description': 'Force run the searcher after (re)start.',
+                },
+                {
                     'name': 'cron_day',
                     'label': 'Day',
                     'advanced': True,
