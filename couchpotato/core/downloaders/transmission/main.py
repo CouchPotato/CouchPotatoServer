@@ -132,6 +132,8 @@ class Transmission(Downloader):
                         'timeleft': str(timedelta(seconds = 0)),
                         'folder': os.path.join(item['downloadDir'], item['name']),
                     })
+                    if ((not os.path.isdir(item['downloadDir']))) and (self.conf('from') in item['downloadDir'])):
+                        trpc.remove_torrent(item['id'], "true", {})
                 except Exception, err:
                     log.error('Failed to stop and remove torrent "%s" with error: %s', (item['name'], err))
                     statuses.append({
