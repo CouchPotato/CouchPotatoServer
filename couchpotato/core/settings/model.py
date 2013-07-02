@@ -106,8 +106,8 @@ class LibraryTitle(Entity):
     """"""
     using_options(order_by = '-default')
 
-    title = Field(Unicode)
-    simple_title = Field(Unicode, index = True)
+    title = Field(Unicode(250))
+    simple_title = Field(Unicode(250), index = True)
     default = Field(Boolean, default = False, index = True)
 
     language = OneToMany('Language')
@@ -118,7 +118,7 @@ class Language(Entity):
     """"""
 
     identifier = Field(String(20), index = True)
-    label = Field(Unicode)
+    label = Field(Unicode(200))
 
     titles = ManyToOne('LibraryTitle')
 
