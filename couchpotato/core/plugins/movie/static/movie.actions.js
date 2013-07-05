@@ -1,9 +1,13 @@
 var MovieAction = new Class({
+	
+	Implements: [Options],
 
 	class_name: 'action icon2',
 
-	initialize: function(movie){
+	initialize: function(movie, options){
 		var self = this;
+		self.setOptions(options);
+
 		self.movie = movie;
 
 		self.create();
@@ -19,6 +23,32 @@ var MovieAction = new Class({
 
 	enable: function(){
 		this.el.removeClass('disable')
+	},
+
+	getTitle: function(){
+		var self = this;
+
+		try {
+			return self.movie.getTitle();
+		}
+		catch(e){
+			try {
+				return self.movie.original_title ? self.movie.original_title : self.movie.titles[0];
+			}
+			catch(e){
+				return 'Unknown';
+			}
+		}
+	},
+
+	get: function(key){
+		var self = this;
+		try {
+			return self.movie.get(key)
+		}
+		catch(e){
+			return self.movie[key]
+		}
 	},
 
 	createMask: function(){
@@ -62,10 +92,10 @@ MA.IMDB = new Class({
 	create: function(){
 		var self = this;
 
-		self.id = self.movie.get('identifier');
+		self.id = self.movie.get('imdb') || self.movie.get('identifier');
 
 		self.el = new Element('a.imdb', {
-			'title': 'Go to the IMDB page of ' + self.movie.getTitle(),
+			'title': 'Go to the IMDB page of ' + self.getTitle(),
 			'href': 'http://www.imdb.com/title/'+self.id+'/',
 			'target': '_blank'
 		});
@@ -83,7 +113,7 @@ MA.Release = new Class({
 		var self = this;
 
 		self.el = new Element('a.releases.download', {
-			'title': 'Show the releases that are available for ' + self.movie.getTitle(),
+			'title': 'Show the releases that are available for ' + self.getTitle(),
 			'events': {
 				'click': self.show.bind(self)
 			}
@@ -136,7 +166,7 @@ MA.Release = new Class({
 				}
 
 				// Create release
-				new Element('div', {
+				var item = new Element('div', {
 					'class': 'item '+status.identifier,
 					'id': 'release_'+release.id
 				}).adopt(
@@ -165,11 +195,12 @@ MA.Release = new Class({
 							'click': function(e){
 								(e).preventDefault();
 								self.ignore(release);
-								this.getParent('.item').toggleClass('ignored')
 							}
 						}
 					})
-				).inject(self.release_container)
+				).inject(self.release_container);
+
+				release['el'] = item;
 
 				if(status.identifier == 'ignored' || status.identifier == 'failed' || status.identifier == 'snatched'){
 					if(!self.last_release || (self.last_release && self.last_release.status.identifier != 'snatched' && status.identifier == 'snatched'))
@@ -189,7 +220,7 @@ MA.Release = new Class({
 			}
 
 			if(self.next_release || (self.last_release && ['ignored', 'failed'].indexOf(self.last_release.status.identifier) === false)){
-				
+
 				self.trynext_container = new Element('div.buttons.try_container').inject(self.release_container, 'top');
 
 				self.trynext_container.adopt(
@@ -318,6 +349,17 @@ MA.Release = new Class({
 		Api.request('release.ignore', {
 			'data': {
 				'id': release.id
+			},
+			'onComplete': function(){
+				var el = release.el;
+				if(el.hasClass('failed') || el.hasClass('ignored')){
+					el.removeClass('failed').removeClass('ignored');
+					el.getElement('.release_status').set('text', 'available');
+				}
+				else {
+					el.addClass('ignored');
+					el.getElement('.release_status').set('text', 'ignored');
+				}
 			}
 		})
 
@@ -355,7 +397,7 @@ MA.Trailer = new Class({
 		var self = this;
 
 		self.el = new Element('a.trailer', {
-			'title': 'Watch the trailer of ' + self.movie.getTitle(),
+			'title': 'Watch the trailer of ' + self.getTitle(),
 			'events': {
 				'click': self.watch.bind(self)
 			}
@@ -368,12 +410,12 @@ MA.Trailer = new Class({
 
 		var data_url = 'http://gdata.youtube.com/feeds/videos?vq="{title}" {year} trailer&max-results=1&alt=json-in-script&orderby=relevance&sortorder=descending&format=5&fmt=18'
 		var url = data_url.substitute({
-				'title': encodeURI(self.movie.getTitle()),
-				'year': self.movie.get('year'),
+				'title': encodeURI(self.getTitle()),
+				'year': self.get('year'),
 				'offset': offset || 1
 			}),
 			size = $(self.movie).getSize(),
-			height = (size.x/16)*9,
+			height = self.options.height || (size.x/16)*9,
 			id = 'trailer-'+randomString();
 
 		self.player_container = new Element('div[id='+id+']');

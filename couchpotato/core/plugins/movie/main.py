@@ -2,7 +2,6 @@ from couchpotato import get_session
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, fireEventAsync, addEvent
 from couchpotato.core.helpers.encoding import toUnicode, simplifyString
-from couchpotato.core.helpers.request import getParams, jsonified, getParam
 from couchpotato.core.helpers.variable import getImdb, splitString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
@@ -125,15 +124,14 @@ class MoviePlugin(Plugin):
 
         db.expire_all()
 
-    def getView(self):
+    def getView(self, id = None, **kwargs):
 
-        movie_id = getParam('id')
-        movie = self.get(movie_id) if movie_id else None
+        movie = self.get(id) if id else None
 
-        return jsonified({
+        return {
             'success': movie is not None,
             'movie': movie,
-        })
+        }
 
     def get(self, movie_id):
 
@@ -263,15 +261,14 @@ class MoviePlugin(Plugin):
         db.expire_all()
         return ''.join(sorted(chars, key = str.lower))
 
-    def listView(self):
+    def listView(self, **kwargs):
 
-        params = getParams()
-        status = splitString(params.get('status', None))
-        release_status = splitString(params.get('release_status', None))
-        limit_offset = params.get('limit_offset', None)
-        starts_with = params.get('starts_with', None)
-        search = params.get('search', None)
-        order = params.get('order', None)
+        status = splitString(kwargs.get('status', None))
+        release_status = splitString(kwargs.get('release_status', None))
+        limit_offset = kwargs.get('limit_offset', None)
+        starts_with = kwargs.get('starts_with', None)
+        search = kwargs.get('search', None)
+        order = kwargs.get('order', None)
 
         total_movies, movies = self.list(
             status = status,
@@ -282,32 +279,31 @@ class MoviePlugin(Plugin):
             order = order
         )
 
-        return jsonified({
+        return {
             'success': True,
             'empty': len(movies) == 0,
             'total': total_movies,
             'movies': movies,
-        })
+        }
 
-    def charView(self):
+    def charView(self, **kwargs):
 
-        params = getParams()
-        status = splitString(params.get('status', None))
-        release_status = splitString(params.get('release_status', None))
+        status = splitString(kwargs.get('status', None))
+        release_status = splitString(kwargs.get('release_status', None))
         chars = self.availableChars(status, release_status)
 
-        return jsonified({
+        return {
             'success': True,
             'empty': len(chars) == 0,
             'chars': chars,
-        })
+        }
 
-    def refresh(self):
+    def refresh(self, id = '', **kwargs):
 
         db = get_session()
 
-        for id in splitString(getParam('id')):
-            movie = db.query(Movie).filter_by(id = id).first()
+        for x in splitString(id):
+            movie = db.query(Movie).filter_by(id = x).first()
 
             if movie:
 
@@ -316,17 +312,16 @@ class MoviePlugin(Plugin):
                 for title in movie.library.titles:
                     if title.default: default_title = title.title
 
-                fireEvent('notify.frontend', type = 'movie.busy.%s' % id, data = True)
-                fireEventAsync('library.update', identifier = movie.library.identifier, default_title = default_title, force = True, on_complete = self.createOnComplete(id))
+                fireEvent('notify.frontend', type = 'movie.busy.%s' % x, data = True)
+                fireEventAsync('library.update', identifier = movie.library.identifier, default_title = default_title, force = True, on_complete = self.createOnComplete(x))
 
         db.expire_all()
-        return jsonified({
+        return {
             'success': True,
-        })
+        }
 
-    def search(self):
+    def search(self, q = '', **kwargs):
 
-        q = getParam('q')
         cache_key = u'%s/%s' % (__name__, simplifyString(q))
         movies = Env.get('cache').get(cache_key)
 
@@ -338,11 +333,11 @@ class MoviePlugin(Plugin):
                 movies = fireEvent('movie.search', q = q, merge = True)
             Env.get('cache').set(cache_key, movies)
 
-        return jsonified({
+        return {
             'success': True,
             'empty': len(movies) == 0 if movies else 0,
             'movies': movies,
-        })
+        }
 
     def add(self, params = {}, force_readd = True, search_after = True, update_library = False, status_id = None):
 
@@ -432,33 +427,30 @@ class MoviePlugin(Plugin):
         return movie_dict
 
 
-    def addView(self):
+    def addView(self, **kwargs):
 
-        params = getParams()
+        movie_dict = self.add(params = kwargs)
 
-        movie_dict = self.add(params)
-
-        return jsonified({
+        return {
             'success': True,
             'added': True if movie_dict else False,
             'movie': movie_dict,
-        })
+        }
 
-    def edit(self):
+    def edit(self, id = '', **kwargs):
 
-        params = getParams()
         db = get_session()
 
         available_status = fireEvent('status.get', 'available', single = True)
 
-        ids = splitString(params.get('id'))
+        ids = splitString(id)
         for movie_id in ids:
 
             m = db.query(Movie).filter_by(id = movie_id).first()
             if not m:
                 continue
 
-            m.profile_id = params.get('profile_id')
+            m.profile_id = kwargs.get('profile_id')
 
             # Remove releases
             for rel in m.releases:
@@ -467,9 +459,9 @@ class MoviePlugin(Plugin):
                     db.commit()
 
             # Default title
-            if params.get('default_title'):
+            if kwargs.get('default_title'):
                 for title in m.library.titles:
-                    title.default = toUnicode(params.get('default_title', '')).lower() == toUnicode(title.title).lower()
+                    title.default = toUnicode(kwargs.get('default_title', '')).lower() == toUnicode(title.title).lower()
 
             db.commit()
 
@@ -479,21 +471,19 @@ class MoviePlugin(Plugin):
             fireEventAsync('searcher.single', movie_dict, on_complete = self.createNotifyFront(movie_id))
 
         db.expire_all()
-        return jsonified({
+        return {
             'success': True,
-        })
+        }
 
-    def deleteView(self):
+    def deleteView(self, id = '', **kwargs):
 
-        params = getParams()
-
-        ids = splitString(params.get('id'))
+        ids = splitString(id)
         for movie_id in ids:
-            self.delete(movie_id, delete_from = params.get('delete_from', 'all'))
+            self.delete(movie_id, delete_from = kwargs.get('delete_from', 'all'))
 
-        return jsonified({
+        return {
             'success': True,
-        })
+        }
 
     def delete(self, movie_id, delete_from = None):
 

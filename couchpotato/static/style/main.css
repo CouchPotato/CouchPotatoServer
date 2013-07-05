@@ -168,6 +168,7 @@ body > .spinner, .mask{
 	color: #FFF;
 }
 
+.icon2.add:before { content: "\e05a"; color: #c2fac5; }
 .icon2.cog:before { content: "\e109"; }
 .icon2.eye-open:before { content: "\e09d"; }
 .icon2.search:before { content: "\e03e"; }

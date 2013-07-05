@@ -2,7 +2,6 @@ from couchpotato import get_session
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import toUnicode
-from couchpotato.core.helpers.request import jsonified, getParams, getParam
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Profile, ProfileType, Movie
@@ -46,12 +45,12 @@ class ProfilePlugin(Plugin):
                 movie.profile_id = default_profile.get('id')
                 db.commit()
 
-    def allView(self):
+    def allView(self, **kwargs):
 
-        return jsonified({
+        return {
             'success': True,
             'list': self.all()
-        })
+        }
 
     def all(self):
 
@@ -65,30 +64,28 @@ class ProfilePlugin(Plugin):
         db.expire_all()
         return temp
 
-    def save(self):
-
-        params = getParams()
+    def save(self, **kwargs):
 
         db = get_session()
 
-        p = db.query(Profile).filter_by(id = params.get('id')).first()
+        p = db.query(Profile).filter_by(id = kwargs.get('id')).first()
         if not p:
             p = Profile()
             db.add(p)
 
-        p.label = toUnicode(params.get('label'))
-        p.order = params.get('order', p.order if p.order else 0)
-        p.core = params.get('core', False)
+        p.label = toUnicode(kwargs.get('label'))
+        p.order = kwargs.get('order', p.order if p.order else 0)
+        p.core = kwargs.get('core', False)
 
         #delete old types
         [db.delete(t) for t in p.types]
 
         order = 0
-        for type in params.get('types', []):
+        for type in kwargs.get('types', []):
             t = ProfileType(
                 order = order,
                 finish = type.get('finish') if order > 0 else 1,
-                wait_for = params.get('wait_for'),
+                wait_for = kwargs.get('wait_for'),
                 quality_id = type.get('quality_id')
             )
             p.types.append(t)
@@ -99,10 +96,10 @@ class ProfilePlugin(Plugin):
 
         profile_dict = p.to_dict(self.to_dict)
 
-        return jsonified({
+        return {
             'success': True,
             'profile': profile_dict
-        })
+        }
 
     def default(self):
 
@@ -113,28 +110,25 @@ class ProfilePlugin(Plugin):
         db.expire_all()
         return default_dict
 
-    def saveOrder(self):
+    def saveOrder(self, **kwargs):
 
-        params = getParams()
         db = get_session()
 
         order = 0
-        for profile in params.get('ids', []):
+        for profile in kwargs.get('ids', []):
             p = db.query(Profile).filter_by(id = profile).first()
-            p.hide = params.get('hidden')[order]
+            p.hide = kwargs.get('hidden')[order]
             p.order = order
 
             order += 1
 
         db.commit()
 
-        return jsonified({
+        return {
             'success': True
-        })
+        }
 
-    def delete(self):
-
-        id = getParam('id')
+    def delete(self, id = None, **kwargs):
 
         db = get_session()
 
@@ -154,10 +148,10 @@ class ProfilePlugin(Plugin):
             message = log.error('Failed deleting Profile: %s', e)
 
         db.expire_all()
-        return jsonified({
+        return {
             'success': success,
             'message': message
-        })
+        }
 
     def fill(self):
 

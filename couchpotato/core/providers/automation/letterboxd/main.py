@@ -12,6 +12,8 @@ class Letterboxd(Automation):
     url = 'http://letterboxd.com/%s/watchlist/'
     pattern = re.compile(r'(.*)\((\d*)\)')
 
+    interval = 1800
+
     def getIMDBids(self):
 
         urls = splitString(self.conf('automation_urls'))

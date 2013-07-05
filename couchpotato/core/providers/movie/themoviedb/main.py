@@ -2,7 +2,7 @@ from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import simplifyString, toUnicode
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.movie.base import MovieProvider
-from libs.themoviedb import tmdb
+from themoviedb import tmdb
 import traceback
 
 log = CPLog(__name__)

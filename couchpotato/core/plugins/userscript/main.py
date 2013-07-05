@@ -1,13 +1,11 @@
+from couchpotato import index
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, addEvent
-from couchpotato.core.helpers.request import getParam, jsonified
 from couchpotato.core.helpers.variable import isDict
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
-from flask.globals import request
-from flask.helpers import url_for
-from flask.templating import render_template
+from tornado.web import RequestHandler
 import os
 
 log = CPLog(__name__)
@@ -18,7 +16,8 @@ class Userscript(Plugin):
     version = 3
 
     def __init__(self):
-        addApiView('userscript.get/<random>/<path:filename>', self.getUserScript, static = True)
+        addApiView('userscript.get/(.*)/(.*)', self.getUserScript, static = True)
+
         addApiView('userscript', self.iFrame)
         addApiView('userscript.add_via_url', self.getViaUrl)
         addApiView('userscript.includes', self.getIncludes)
@@ -26,38 +25,46 @@ class Userscript(Plugin):
 
         addEvent('userscript.get_version', self.getVersion)
 
-    def bookmark(self):
+    def bookmark(self, host = None, **kwargs):
 
         params = {
             'includes': fireEvent('userscript.get_includes', merge = True),
             'excludes': fireEvent('userscript.get_excludes', merge = True),
-            'host': getParam('host', None),
+            'host': host,
         }
 
         return self.renderTemplate(__file__, 'bookmark.js', **params)
 
-    def getIncludes(self):
+    def getIncludes(self, **kwargs):
 
-        return jsonified({
+        return {
             'includes': fireEvent('userscript.get_includes', merge = True),
             'excludes': fireEvent('userscript.get_excludes', merge = True),
-        })
-
-    def getUserScript(self, random = '', filename = ''):
-
-        params = {
-            'includes': fireEvent('userscript.get_includes', merge = True),
-            'excludes': fireEvent('userscript.get_excludes', merge = True),
-            'version': self.getVersion(),
-            'api': '%suserscript/' % url_for('api.index').lstrip('/'),
-            'host': request.host_url,
         }
 
-        script = self.renderTemplate(__file__, 'template.js', **params)
-        self.createFile(os.path.join(Env.get('cache_dir'), 'couchpotato.user.js'), script)
+    def getUserScript(self, route, **kwargs):
 
-        from flask.helpers import send_from_directory
-        return send_from_directory(Env.get('cache_dir'), 'couchpotato.user.js')
+        klass = self
+
+        class UserscriptHandler(RequestHandler):
+
+            def get(self, random, route):
+
+                params = {
+                    'includes': fireEvent('userscript.get_includes', merge = True),
+                    'excludes': fireEvent('userscript.get_excludes', merge = True),
+                    'version': klass.getVersion(),
+                    'api': '%suserscript/' % Env.get('api_base'),
+                    'host': '%s://%s' % (self.request.protocol, self.request.host),
+                }
+
+                script = klass.renderTemplate(__file__, 'template.js', **params)
+                klass.createFile(os.path.join(Env.get('cache_dir'), 'couchpotato.user.js'), script)
+
+                self.redirect(Env.get('api_base') + 'file.cache/couchpotato.user.js')
+
+        Env.get('app').add_handlers(".*$", [('%s%s' % (Env.get('api_base'), route), UserscriptHandler)])
+
 
     def getVersion(self):
 
@@ -69,12 +76,12 @@ class Userscript(Plugin):
 
         return version
 
-    def iFrame(self):
-        return render_template('index.html', sep = os.sep, fireEvent = fireEvent, env = Env)
+    def iFrame(self, **kwargs):
+        return index()
 
-    def getViaUrl(self):
+    def getViaUrl(self, url = None, **kwargs):
 
-        url = getParam('url')
+        print url
 
         params = {
             'url': url,
@@ -84,4 +91,4 @@ class Userscript(Plugin):
             log.error('Failed adding movie via url: %s', url)
             params['error'] = params['movie'] if params['movie'] else 'Failed getting movie info'
 
-        return jsonified(params)
+        return params

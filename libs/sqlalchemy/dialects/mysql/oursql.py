@@ -1,5 +1,5 @@
 # mysql/oursql.py
-# Copyright (C) 2005-2012 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -108,9 +108,9 @@ class MySQLDialect_oursql(MySQLDialect):
         arg = "'%s'" % arg
         connection.execution_options(_oursql_plain_query=True).execute(query % arg)
 
-    # Because mysql is bad, these methods have to be 
+    # Because mysql is bad, these methods have to be
     # reimplemented to use _PlainQuery. Basically, some queries
-    # refuse to return any data if they're run through 
+    # refuse to return any data if they're run through
     # the parameterized query API, or refuse to be parameterized
     # in the first place.
     def do_begin_twophase(self, connection, xid):
@@ -135,7 +135,7 @@ class MySQLDialect_oursql(MySQLDialect):
     # Q: why didn't we need all these "plain_query" overrides earlier ?
     # am i on a newer/older version of OurSQL ?
     def has_table(self, connection, table_name, schema=None):
-        return MySQLDialect.has_table(self, 
+        return MySQLDialect.has_table(self,
                                         connection.connect().\
                                             execution_options(_oursql_plain_query=True),
                                         table_name, schema)
@@ -183,7 +183,7 @@ class MySQLDialect_oursql(MySQLDialect):
 
     def initialize(self, connection):
         return MySQLDialect.initialize(
-                            self, 
+                            self,
                             connection.execution_options(_oursql_plain_query=True)
                             )
 
@@ -208,6 +208,7 @@ class MySQLDialect_oursql(MySQLDialect):
         util.coerce_kw_type(opts, 'port', int)
         util.coerce_kw_type(opts, 'compress', bool)
         util.coerce_kw_type(opts, 'autoping', bool)
+        util.coerce_kw_type(opts, 'raise_on_warnings', bool)
 
         util.coerce_kw_type(opts, 'default_charset', bool)
         if opts.pop('default_charset', False):
@@ -222,7 +223,7 @@ class MySQLDialect_oursql(MySQLDialect):
         opts.setdefault('found_rows', True)
 
         ssl = {}
-        for key in ['ssl_ca', 'ssl_key', 'ssl_cert', 
+        for key in ['ssl_ca', 'ssl_key', 'ssl_cert',
                         'ssl_capath', 'ssl_cipher']:
             if key in opts:
                 ssl[key[4:]] = opts[key]

@@ -1,6 +1,6 @@
 from couchpotato.core.event import fireEvent
 from couchpotato.core.helpers.encoding import simplifyString
-from couchpotato.core.helpers.variable import tryInt
+from couchpotato.core.helpers.variable import tryInt, splitString
 from couchpotato.environment import Env
 import re
 
@@ -42,10 +42,8 @@ def nameScore(name, year):
 
     # Contains preferred word
     nzb_words = re.split('\W+', simplifyString(name))
-    preferred_words = [x.strip() for x in Env.setting('preferred_words', section = 'searcher').split(',')]
-    for word in preferred_words:
-        if word.strip() and word.strip().lower() in nzb_words:
-            score = score + 100
+    preferred_words = splitString(Env.setting('preferred_words', section = 'searcher'))
+    score += 100 * len(list(set(nzb_words) & set(preferred_words)))
 
     return score
 

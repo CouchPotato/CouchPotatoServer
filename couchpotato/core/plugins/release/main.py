@@ -2,7 +2,6 @@ from couchpotato import get_session
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, addEvent
 from couchpotato.core.helpers.encoding import ss
-from couchpotato.core.helpers.request import getParam, jsonified
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.plugins.scanner.main import Scanner
@@ -108,13 +107,11 @@ class Release(Plugin):
         # Check database and update/insert if necessary
         return fireEvent('file.add', path = filepath, part = fireEvent('scanner.partnumber', file, single = True), type_tuple = Scanner.file_types.get(type), properties = properties, single = True)
 
-    def deleteView(self):
+    def deleteView(self, id = None, **kwargs):
 
-        release_id = getParam('id')
-
-        return jsonified({
-            'success': self.delete(release_id)
-        })
+        return {
+            'success': self.delete(id)
+        }
 
     def delete(self, id):
 
@@ -146,25 +143,23 @@ class Release(Plugin):
 
         return False
 
-    def ignore(self):
+    def ignore(self, id = None, **kwargs):
 
         db = get_session()
-        id = getParam('id')
 
         rel = db.query(Relea).filter_by(id = id).first()
         if rel:
-            ignored_status, available_status = fireEvent('status.get', ['ignored', 'available'], single = True)
-            rel.status_id = available_status.get('id') if rel.status_id is ignored_status.get('id') else ignored_status.get('id')
+            ignored_status, failed_status, available_status = fireEvent('status.get', ['ignored', 'failed', 'available'], single = True)
+            rel.status_id = available_status.get('id') if rel.status_id in [ignored_status.get('id'), failed_status.get('id')] else ignored_status.get('id')
             db.commit()
 
-        return jsonified({
+        return {
             'success': True
-        })
+        }
 
-    def download(self):
+    def download(self, id = None, **kwargs):
 
         db = get_session()
-        id = getParam('id')
 
         snatched_status, done_status = fireEvent('status.get', ['snatched', 'done'], single = True)
 
@@ -199,12 +194,12 @@ class Release(Plugin):
 
                 fireEvent('notify.frontend', type = 'release.download', data = True, message = 'Successfully snatched "%s"' % item['name'])
 
-            return jsonified({
+            return {
                 'success': success
-            })
+            }
         else:
             log.error('Couldn\'t find release with id: %s', id)
 
-        return jsonified({
+        return {
             'success': False
-        })
+        }

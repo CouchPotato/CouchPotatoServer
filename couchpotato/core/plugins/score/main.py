@@ -18,7 +18,7 @@ class Score(Plugin):
     def calculate(self, nzb, movie):
         ''' Calculate the score of a NZB, used for sorting later '''
 
-        score = nameScore(toUnicode(nzb['name']), movie['library']['year'])
+        score = nameScore(toUnicode(nzb['name'] + ' ' + nzb.get('name_extra', '')), movie['library']['year'])
 
         for movie_title in movie['library']['titles']:
             score += nameRatioScore(toUnicode(nzb['name']), toUnicode(movie_title['title']))

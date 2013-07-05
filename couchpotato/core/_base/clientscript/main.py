@@ -8,7 +8,6 @@ from minify.cssmin import cssmin
 from minify.jsmin import jsmin
 import os
 import re
-import time
 import traceback
 
 log = CPLog(__name__)
@@ -122,7 +121,7 @@ class ClientScript(Plugin):
         # Combine all files together with some comments
         data = ''
         for r in raw:
-            data += self.comment.get(file_type) % (r.get('file'), r.get('date'))
+            data += self.comment.get(file_type) % (ss(r.get('file')), r.get('date'))
             data += r.get('data') + '\n\n'
 
         self.createFile(out, data.strip())

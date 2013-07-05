@@ -1,0 +1,84 @@
+.suggestions {
+}
+
+	.suggestions > h2 {
+		height: 40px;
+	}
+
+.suggestions .movie_result {
+	display: inline-block;
+	width: 33.333%;
+	height: 150px;
+}
+
+	@media all and (max-width: 960px) {
+		.suggestions .movie_result {
+			width: 50%;
+		}
+	}
+	
+	@media all and (max-width: 600px) {
+		.suggestions .movie_result {
+			width: 100%;
+		}
+	}
+	
+	.suggestions .movie_result .data {
+		left: 100px;
+		background: #4e5969;
+		border: none;
+	}
+		
+		.suggestions .movie_result .data .info {
+			top: 15px;
+			left: 15px;
+			right: 15px;
+		}
+		
+		.suggestions .movie_result .data .info h2 {
+			white-space: normal;
+			max-height: 120px;
+			font-size: 18px;
+			line-height: 18px;
+		}
+			
+		.suggestions .movie_result .data .info .year {
+			position: static;
+			display: block;
+			margin: 5px 0 0;
+			padding: 0;
+			opacity: .6;
+		}
+		
+	.suggestions .movie_result .data {
+		cursor: default; 
+	}
+	
+	.suggestions .movie_result .options {
+		left: 100px;
+	}
+	
+	.suggestions .movie_result .thumbnail {
+		width: 100px;
+	}
+	
+	.suggestions .movie_result .actions {
+		position: absolute;
+		bottom: 10px;
+		right: 10px;
+		display: none;
+		width: 120px;
+	}
+		.suggestions .movie_result:hover .actions {
+			display: block;
+		}
+		.suggestions .movie_result .data.open .actions {
+			display: none;
+		}
+	
+		.suggestions .movie_result .actions a {
+			margin-left: 10px;
+			vertical-align: middle;
+		}
+		
+	

@@ -1,5 +1,5 @@
 # mysql/mysqlconnector.py
-# Copyright (C) 2005-2012 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -105,15 +105,11 @@ class MySQLDialect_mysqlconnector(MySQLDialect):
 
     def _get_server_version_info(self, connection):
         dbapi_con = connection.connection
-
-        from mysql.connector.constants import ClientFlag
-        dbapi_con.set_client_flag(ClientFlag.FOUND_ROWS)
-
         version = dbapi_con.get_server_version()
         return tuple(version)
 
     def _detect_charset(self, connection):
-        return connection.connection.get_characterset_info()
+        return connection.connection.charset
 
     def _extract_error_code(self, exception):
         return exception.errno

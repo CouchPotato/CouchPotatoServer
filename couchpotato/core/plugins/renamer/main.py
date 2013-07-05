@@ -2,7 +2,6 @@ from couchpotato import get_session
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
 from couchpotato.core.helpers.encoding import toUnicode, ss
-from couchpotato.core.helpers.request import getParams, jsonified
 from couchpotato.core.helpers.variable import getExt, mergeDicts, getTitle, \
     getImdb, link, symlink, tryInt
 from couchpotato.core.logger import CPLog
@@ -59,13 +58,12 @@ class Renamer(Plugin):
 
         return True
 
-    def scanView(self):
+    def scanView(self, **kwargs):
 
-        params = getParams()
-        async = tryInt(params.get('async', None))
-        movie_folder = params.get('movie_folder', None)
-        downloader = params.get('downloader', None)
-        download_id = params.get('download_id', None)
+        async = tryInt(kwargs.get('async', None))
+        movie_folder = kwargs.get('movie_folder', None)
+        downloader = kwargs.get('downloader', None)
+        download_id = kwargs.get('download_id', None)
 
         fire_handle = fireEvent if not async else fireEventAsync
 
@@ -74,9 +72,9 @@ class Renamer(Plugin):
             download_info = {'id': download_id, 'downloader': downloader} if download_id else None
         )
 
-        return jsonified({
+        return {
             'success': True
-        })
+        }
 
     def scan(self, movie_folder = None, download_info = None):
 
@@ -183,6 +181,7 @@ class Renamer(Plugin):
                      'source': group['meta_data']['source'],
                      'resolution_width': group['meta_data'].get('resolution_width'),
                      'resolution_height': group['meta_data'].get('resolution_height'),
+                     'audio_channels': group['meta_data'].get('audio_channels'),
                      'imdb_id': library['identifier'],
                      'cd': '',
                      'cd_nr': '',
@@ -221,15 +220,15 @@ class Renamer(Plugin):
                         replacements['cd_nr'] = cd if multiple else ''
 
                         # Naming
-                        final_folder_name = self.doReplace(folder_name, replacements).lstrip('. ')
-                        final_file_name = self.doReplace(file_name, replacements).lstrip('. ')
+                        final_folder_name = self.doReplace(folder_name, replacements)
+                        final_file_name = self.doReplace(file_name, replacements)
                         replacements['filename'] = final_file_name[:-(len(getExt(final_file_name)) + 1)]
 
                         # Meta naming
                         if file_type is 'trailer':
-                            final_file_name = self.doReplace(trailer_name, replacements, remove_multiple = True).lstrip('. ')
+                            final_file_name = self.doReplace(trailer_name, replacements, remove_multiple = True)
                         elif file_type is 'nfo':
-                            final_file_name = self.doReplace(nfo_name, replacements, remove_multiple = True).lstrip('. ')
+                            final_file_name = self.doReplace(nfo_name, replacements, remove_multiple = True)
 
                         # Seperator replace
                         if separator:
@@ -283,7 +282,7 @@ class Renamer(Plugin):
 
                             # Don't add language if multiple languages in 1 subtitle file
                             if len(sub_langs) == 1:
-                                sub_name = final_file_name.replace(replacements['ext'], '%s.%s' % (sub_langs[0], replacements['ext']))
+                                sub_name = sub_name.replace(replacements['ext'], '%s.%s' % (sub_langs[0], replacements['ext']))
                                 rename_files[current_file] = os.path.join(destination, final_folder_name, sub_name)
 
                             rename_files = mergeDicts(rename_files, rename_extras)
@@ -557,7 +556,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         replaced = re.sub(r"[\x00:\*\?\"<>\|]", '', replaced)
 
         sep = self.conf('separator')
-        return self.replaceDoubles(replaced).replace(' ', ' ' if not sep else sep)
+        return self.replaceDoubles(replaced.lstrip('. ')).replace(' ', ' ' if not sep else sep)
 
     def replaceDoubles(self, string):
         return string.replace('  ', ' ').replace(' .', '.')

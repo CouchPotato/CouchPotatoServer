@@ -2,7 +2,6 @@ from couchpotato import get_session
 from couchpotato.api import addApiView, addNonBlockApiView
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import toUnicode
-from couchpotato.core.helpers.request import jsonified, getParam
 from couchpotato.core.helpers.variable import tryInt, splitString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
@@ -11,6 +10,7 @@ from couchpotato.environment import Env
 from sqlalchemy.sql.expression import or_
 import threading
 import time
+import traceback
 import uuid
 
 log = CPLog(__name__)
@@ -62,11 +62,9 @@ class CoreNotifier(Notification):
         db.commit()
 
 
-    def markAsRead(self):
+    def markAsRead(self, ids = None, **kwargs):
 
-        ids = None
-        if getParam('ids'):
-            ids = splitString(getParam('ids'))
+        ids = splitString(ids) if ids else None
 
         db = get_session()
 
@@ -79,14 +77,13 @@ class CoreNotifier(Notification):
 
         db.commit()
 
-        return jsonified({
+        return {
             'success': True
-        })
+        }
 
-    def listView(self):
+    def listView(self, limit_offset = None, **kwargs):
 
         db = get_session()
-        limit_offset = getParam('limit_offset', None)
 
         q = db.query(Notif)
 
@@ -105,11 +102,11 @@ class CoreNotifier(Notification):
             ndict['type'] = 'notification'
             notifications.append(ndict)
 
-        return jsonified({
+        return {
             'success': True,
             'empty': len(notifications) == 0,
             'notifications': notifications
-        })
+        }
 
     def checkMessages(self):
 
@@ -150,6 +147,8 @@ class CoreNotifier(Notification):
 
     def frontend(self, type = 'notification', data = {}, message = None):
 
+        log.debug('Notifying frontend')
+
         self.m_lock.acquire()
         notification = {
             'message_id': str(uuid.uuid4()),
@@ -168,10 +167,12 @@ class CoreNotifier(Notification):
                     'result': [notification],
                 })
             except:
-                break
+                log.debug('Failed sending to listener: %s', traceback.format_exc())
 
         self.m_lock.release()
         self.cleanMessages()
+
+        log.debug('Done notifying frontend')
 
     def addListener(self, callback, last_id = None):
 
@@ -194,9 +195,11 @@ class CoreNotifier(Notification):
                 if listener == callback:
                     self.listeners.remove(list_tuple)
             except:
-                pass
+                log.debug('Failed removing listener: %s', traceback.format_exc())
 
     def cleanMessages(self):
+
+        log.debug('Cleaning messages')
         self.m_lock.acquire()
 
         for message in self.messages:
@@ -204,8 +207,11 @@ class CoreNotifier(Notification):
                 self.messages.remove(message)
 
         self.m_lock.release()
+        log.debug('Done cleaning messages')
 
     def getMessages(self, last_id):
+
+        log.debug('Getting messages with id: %s', last_id)
         self.m_lock.acquire()
 
         recent = []
@@ -216,15 +222,16 @@ class CoreNotifier(Notification):
             recent = self.messages[index:]
 
         self.m_lock.release()
+        log.debug('Returning for %s %s messages', (last_id, len(recent or [])))
 
         return recent or []
 
-    def listener(self):
+    def listener(self, init = False, **kwargs):
 
         messages = []
 
         # Get unread
-        if getParam('init'):
+        if init:
             db = get_session()
 
             notifications = db.query(Notif) \
@@ -235,7 +242,7 @@ class CoreNotifier(Notification):
                 ndict['type'] = 'notification'
                 messages.append(ndict)
 
-        return jsonified({
+        return {
             'success': True,
             'result': messages,
-        })
+        }

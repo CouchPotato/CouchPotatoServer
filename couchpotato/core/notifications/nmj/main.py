@@ -1,7 +1,6 @@
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import tryUrlencode
-from couchpotato.core.helpers.request import getParams, jsonified
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
 import re
@@ -22,10 +21,7 @@ class NMJ(Notification):
         addApiView(self.testNotifyName(), self.test)
         addApiView('notify.nmj.auto_config', self.autoConfig)
 
-    def autoConfig(self):
-
-        params = getParams()
-        host = params.get('host', 'localhost')
+    def autoConfig(self, host = 'localhost', **kwargs):
 
         database = ''
         mount = ''
@@ -63,11 +59,11 @@ class NMJ(Notification):
                 log.error('Detected a network share on the Popcorn Hour, but could not get the mounting url')
                 return self.failed()
 
-        return jsonified({
+        return {
             'success': True,
             'database': database,
             'mount': mount,
-        })
+        }
 
     def addToLibrary(self, message = None, group = {}):
         if self.isDisabled(): return
@@ -113,9 +109,13 @@ class NMJ(Notification):
             return True
 
     def failed(self):
-        return jsonified({'success': False})
+        return {
+            'success': False
+        }
 
-    def test(self):
-        return jsonified({'success': self.addToLibrary()})
+    def test(self, **kwargs):
+        return {
+            'success': self.addToLibrary()
+        }
 
 

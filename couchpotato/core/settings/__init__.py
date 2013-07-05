@@ -2,7 +2,6 @@ from __future__ import with_statement
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import isInt, toUnicode
-from couchpotato.core.helpers.request import getParams, jsonified
 from couchpotato.core.helpers.variable import mergeDicts, tryInt
 from couchpotato.core.settings.model import Properties
 import ConfigParser
@@ -169,19 +168,17 @@ class Settings(object):
         return self.options
 
 
-    def view(self):
-        return jsonified({
+    def view(self, **kwargs):
+        return {
             'options': self.getOptions(),
             'values': self.getValues()
-        })
+        }
 
-    def saveView(self):
+    def saveView(self, **kwargs):
 
-        params = getParams()
-
-        section = params.get('section')
-        option = params.get('name')
-        value = params.get('value')
+        section = kwargs.get('section')
+        option = kwargs.get('name')
+        value = kwargs.get('value')
 
         # See if a value handler is attached, use that as value
         new_value = fireEvent('setting.save.%s.%s' % (section, option), value, single = True)
@@ -192,9 +189,9 @@ class Settings(object):
         # After save (for re-interval etc)
         fireEvent('setting.save.%s.%s.after' % (section, option), single = True)
 
-        return jsonified({
+        return {
             'success': True,
-        })
+        }
 
     def getProperty(self, identifier):
         from couchpotato import get_session

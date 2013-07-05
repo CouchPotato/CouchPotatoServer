@@ -2,7 +2,6 @@ from couchpotato import get_session
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import toUnicode
-from couchpotato.core.helpers.request import jsonified
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Status
@@ -42,12 +41,12 @@ class StatusPlugin(Plugin):
 }"""}
         })
 
-    def list(self):
+    def list(self, **kwargs):
 
-        return jsonified({
+        return {
             'success': True,
             'list': self.all()
-        })
+        }
 
     def getById(self, id):
         db = get_session()

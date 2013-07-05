@@ -2,15 +2,13 @@ from couchpotato import get_session
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import toUnicode
-from couchpotato.core.helpers.request import jsonified
 from couchpotato.core.helpers.variable import md5, getExt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.plugins.scanner.main import Scanner
 from couchpotato.core.settings.model import FileType, File
 from couchpotato.environment import Env
-from flask.helpers import send_file
-from werkzeug.exceptions import NotFound
+from tornado.web import StaticFileHandler
 import os.path
 import time
 import traceback
@@ -25,7 +23,7 @@ class FileManager(Plugin):
         addEvent('file.download', self.download)
         addEvent('file.types', self.getTypes)
 
-        addApiView('file.cache/<path:filename>', self.showCacheFile, static = True, docs = {
+        addApiView('file.cache/(.*)', self.showCacheFile, static = True, docs = {
             'desc': 'Return a file from the cp_data/cache directory',
             'params': {
                 'filename': {'desc': 'path/filename of the wanted file'}
@@ -81,15 +79,9 @@ class FileManager(Plugin):
         except:
             log.error('Failed removing unused file: %s', traceback.format_exc())
 
-    def showCacheFile(self, filename = ''):
+    def showCacheFile(self, route, **kwargs):
+        Env.get('app').add_handlers(".*$", [('%s%s' % (Env.get('api_base'), route), StaticFileHandler, {'path': Env.get('cache_dir')})])
 
-        file_path = os.path.join(Env.get('cache_dir'), os.path.basename(filename))
-
-        if not os.path.isfile(file_path):
-            log.error('File "%s" not found', file_path)
-            raise NotFound()
-
-        return send_file(file_path, conditional = True)
 
     def download(self, url = '', dest = None, overwrite = False, urlopen_kwargs = {}):
 
@@ -158,8 +150,8 @@ class FileManager(Plugin):
 
         return types
 
-    def getTypesView(self):
+    def getTypesView(self, **kwargs):
 
-        return jsonified({
+        return {
             'types': self.getTypes()
-        })
+        }

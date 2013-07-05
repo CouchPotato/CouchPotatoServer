@@ -181,5 +181,6 @@ def possibleTitles(raw_title):
 def randomString(size = 8, chars = string.ascii_uppercase + string.digits):
     return ''.join(random.choice(chars) for x in range(size))
 
-def splitString(str, split_on = ','):
-    return [x.strip() for x in str.split(split_on)] if str else []
+def splitString(str, split_on = ',', clean = True):
+    list = [x.strip() for x in str.split(split_on)] if str else []
+    return filter(None, list) if clean else list

@@ -1,84 +1,85 @@
-from couchpotato.api import api_docs, api_docs_missing
+from couchpotato.api import api_docs, api_docs_missing, api
 from couchpotato.core.auth import requires_auth
 from couchpotato.core.event import fireEvent
-from couchpotato.core.helpers.request import getParams, jsonified
 from couchpotato.core.helpers.variable import md5
 from couchpotato.core.logger import CPLog
 from couchpotato.environment import Env
-from flask.app import Flask
-from flask.blueprints import Blueprint
-from flask.globals import request
-from flask.helpers import url_for
-from flask.templating import render_template
 from sqlalchemy.engine import create_engine
 from sqlalchemy.orm import scoped_session
 from sqlalchemy.orm.session import sessionmaker
-from werkzeug.utils import redirect
+from tornado import template
+from tornado.web import RequestHandler
 import os
 import time
 
 log = CPLog(__name__)
 
-app = Flask(__name__, static_folder = 'nope')
-web = Blueprint('web', __name__)
+views = {}
+template_loader = template.Loader(os.path.join(os.path.dirname(__file__), 'templates'))
 
+# Main web handler
+@requires_auth
+class WebHandler(RequestHandler):
+    def get(self, route, *args, **kwargs):
+        route = route.strip('/')
+        if not views.get(route):
+            page_not_found(self)
+            return
+        self.write(views[route]())
+
+def addView(route, func, static = False):
+    views[route] = func
 
 def get_session(engine = None):
     return Env.getSession(engine)
 
-def addView(route, func, static = False):
-    web.add_url_rule(route + ('' if static else '/'), endpoint = route if route else 'index', view_func = func)
 
-""" Web view """
-@web.route('/')
-@requires_auth
+# Web view
 def index():
-    return render_template('index.html', sep = os.sep, fireEvent = fireEvent, env = Env)
+    return template_loader.load('index.html').generate(sep = os.sep, fireEvent = fireEvent, Env = Env)
+addView('', index)
 
-""" Api view """
-@web.route('docs/')
-@requires_auth
+# API docs
 def apiDocs():
-    from couchpotato import app
     routes = []
-    for route, x in sorted(app.view_functions.iteritems()):
-        if route[0:4] == 'api.':
-            routes += [route[4:].replace('::', '.')]
+
+    for route in api.iterkeys():
+        routes.append(route)
 
     if api_docs.get(''):
         del api_docs['']
         del api_docs_missing['']
-    return render_template('api.html', fireEvent = fireEvent, routes = sorted(routes), api_docs = api_docs, api_docs_missing = sorted(api_docs_missing))
 
-@web.route('getkey/')
-def getApiKey():
+    return template_loader.load('api.html').generate(fireEvent = fireEvent, routes = sorted(routes), api_docs = api_docs, api_docs_missing = sorted(api_docs_missing), Env = Env)
 
-    api = None
-    params = getParams()
-    username = Env.setting('username')
-    password = Env.setting('password')
+addView('docs', apiDocs)
 
-    if (params.get('u') == md5(username) or not username) and (params.get('p') == password or not password):
-        api = Env.setting('api_key')
+# Make non basic auth option to get api key
+class KeyHandler(RequestHandler):
+    def get(self, *args, **kwargs):
+        api = None
+        username = Env.setting('username')
+        password = Env.setting('password')
 
-    return jsonified({
-        'success': api is not None,
-        'api_key': api
-    })
+        if (self.get_argument('u') == md5(username) or not username) and (self.get_argument('p') == password or not password):
+            api = Env.setting('api_key')
 
-@app.errorhandler(404)
-def page_not_found(error):
-    index_url = url_for('web.index')
-    url = request.path[len(index_url):]
+        self.write({
+            'success': api is not None,
+            'api_key': api
+        })
+
+def page_not_found(rh):
+    index_url = Env.get('web_base')
+    url = rh.request.uri[len(index_url):]
 
     if url[:3] != 'api':
-        if request.path != '/':
-            r = request.url.replace(request.path, index_url + '#' + url)
-        else:
-            r = '%s%s' % (request.url.rstrip('/'), index_url + '#' + url)
-        return redirect(r)
+        r = index_url + '#' + url.lstrip('/')
+        rh.redirect(r)
     else:
         if not Env.get('dev'):
             time.sleep(0.1)
-        return 'Wrong API key used', 404
+
+        rh.set_status(404)
+        rh.write('Wrong API key used')
 

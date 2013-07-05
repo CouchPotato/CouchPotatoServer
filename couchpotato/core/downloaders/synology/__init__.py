@@ -18,7 +18,7 @@ config = [{
                     'name': 'enabled',
                     'default': 0,
                     'type': 'enabler',
-                    'radio_group': 'torrent',
+                    'radio_group': 'nzb,torrent',
                 },
                 {
                     'name': 'host',
@@ -31,6 +31,13 @@ config = [{
                 {
                     'name': 'password',
                     'type': 'password',
+                },
+                {
+                    'name': 'use_for',
+                    'label': 'Use for',
+                    'default': 'both',
+                    'type': 'dropdown',
+                    'values': [('usenet & torrents', 'both'), ('usenet', 'nzb'), ('torrent', 'torrent')],
                 },
                 {
                     'name': 'manual',

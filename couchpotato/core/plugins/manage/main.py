@@ -1,7 +1,6 @@
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, addEvent, fireEventAsync
 from couchpotato.core.helpers.encoding import ss
-from couchpotato.core.helpers.request import jsonified, getParam
 from couchpotato.core.helpers.variable import splitString, getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
@@ -46,24 +45,23 @@ class Manage(Plugin):
         })
 
         if not Env.get('dev'):
-            def updateLibrary():
-                self.updateLibrary(full = False)
-            addEvent('app.load', updateLibrary)
+            addEvent('app.load', self.updateLibraryQuick)
 
-    def getProgress(self):
-        return jsonified({
+    def getProgress(self, **kwargs):
+        return {
             'progress': self.in_progress
-        })
+        }
 
-    def updateLibraryView(self):
+    def updateLibraryView(self, full = 1, **kwargs):
 
-        full = getParam('full', default = 1)
         fireEventAsync('manage.update', full = True if full == '1' else False)
 
-        return jsonified({
+        return {
             'success': True
-        })
+        }
 
+    def updateLibraryQuick(self):
+        return self.updateLibrary(full = False)
 
     def updateLibrary(self, full = True):
         last_update = float(Env.prop('manage.last_update', default = 0))

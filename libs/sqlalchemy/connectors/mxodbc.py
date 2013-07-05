@@ -1,5 +1,5 @@
 # connectors/mxodbc.py
-# Copyright (C) 2005-2012 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -117,7 +117,7 @@ class MxODBCConnector(Connector):
             return False
 
     def _get_server_version_info(self, connection):
-        # eGenix suggests using conn.dbms_version instead 
+        # eGenix suggests using conn.dbms_version instead
         # of what we're doing here
         dbapi_con = connection.connection
         version = []

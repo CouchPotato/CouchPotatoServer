@@ -1,6 +1,5 @@
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent
-from couchpotato.core.helpers.request import jsonified
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.base import Provider
 from couchpotato.environment import Env
@@ -50,7 +49,7 @@ class Notification(Provider):
     def notify(self, message = '', data = {}, listener = None):
         pass
 
-    def test(self):
+    def test(self, **kwargs):
 
         test_type = self.testNotifyName()
 
@@ -62,7 +61,9 @@ class Notification(Provider):
             listener = 'test'
         )
 
-        return jsonified({'success': success})
+        return {
+            'success': success
+        }
 
     def testNotifyName(self):
         return 'notify.%s.test' % self.getName().lower()

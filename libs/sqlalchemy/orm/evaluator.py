@@ -1,5 +1,5 @@
 # orm/evaluator.py
-# Copyright (C) 2005-2012 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -13,10 +13,10 @@ class UnevaluatableError(Exception):
     pass
 
 _straight_ops = set(getattr(operators, op)
-                    for op in ('add', 'mul', 'sub', 
+                    for op in ('add', 'mul', 'sub',
                                 # Py2K
                                 'div',
-                                # end Py2K 
+                                # end Py2K
                                 'mod', 'truediv',
                                'lt', 'le', 'ne', 'gt', 'ge', 'eq'))
 

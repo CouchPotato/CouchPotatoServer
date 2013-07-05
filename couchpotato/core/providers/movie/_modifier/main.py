@@ -28,7 +28,6 @@ class MovieResultModifier(Plugin):
         'tagline': '',
         'imdb': '',
         'genres': [],
-        'release_date': {}
     }
 
     def __init__(self):

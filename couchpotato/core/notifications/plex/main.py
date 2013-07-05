@@ -1,6 +1,5 @@
 from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import tryUrlencode
-from couchpotato.core.helpers.request import jsonified
 from couchpotato.core.helpers.variable import cleanHost
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
@@ -73,7 +72,7 @@ class Plex(Notification):
         log.info('Plex notification to %s successful.', host)
         return True
 
-    def test(self):
+    def test(self, **kwargs):
 
         test_type = self.testNotifyName()
 
@@ -86,4 +85,6 @@ class Plex(Notification):
         )
         success2 = self.addToLibrary()
 
-        return jsonified({'success': success or success2})
+        return {
+            'success': success or success2
+        }

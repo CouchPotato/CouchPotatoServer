@@ -11,7 +11,7 @@ config = [{
             'list': 'watchlist_providers',
             'name': 'imdb_automation',
             'label': 'IMDB',
-            'description': 'From any <strong>public</strong> IMDB watchlists. Url should be the RSS link.',
+            'description': 'From any <strong>public</strong> IMDB watchlists. Url should be the CSV link.',
             'options': [
                 {
                     'name': 'automation_enabled',

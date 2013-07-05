@@ -13,6 +13,7 @@ class SceneHD(TorrentProvider):
     urls = {
         'test': 'https://scenehd.org/',
         'login' : 'https://scenehd.org/takelogin.php',
+        'login_check': 'https://scenehd.org/my.php',
         'detail': 'https://scenehd.org/details.php?id=%s',
         'search': 'https://scenehd.org/browse.php?ajax',
         'download': 'https://scenehd.org/download.php?id=%s',
@@ -27,10 +28,6 @@ class SceneHD(TorrentProvider):
             'search': q,
         })
         url = "%s&%s" % (self.urls['search'], arguments)
-
-        # Cookie login
-        if not self.login_opener and not self.login():
-            return
 
         data = self.getHTMLData(url, opener = self.login_opener)
 
@@ -61,7 +58,6 @@ class SceneHD(TorrentProvider):
                         'seeders': tryInt(all_cells[10].find('a').string),
                         'leechers': tryInt(leechers),
                         'url': self.urls['download'] % torrent_id,
-                        'download': self.loginDownload,
                         'description': all_cells[1].find('a')['href'],
                     })
 
@@ -75,3 +71,9 @@ class SceneHD(TorrentProvider):
             'password': self.conf('password'),
             'ssl': 'yes',
         })
+
+    def loginSuccess(self, output):
+        return 'logout.php' in output.lower()
+
+    loginCheckSuccess = loginSuccess
+

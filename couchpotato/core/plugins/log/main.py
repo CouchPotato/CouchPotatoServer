@@ -1,6 +1,5 @@
 from couchpotato.api import addApiView
 from couchpotato.core.helpers.encoding import toUnicode
-from couchpotato.core.helpers.request import jsonified, getParam, getParams
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
@@ -47,9 +46,9 @@ class Logging(Plugin):
             }
         })
 
-    def get(self):
+    def get(self, nr = 0, **kwargs):
 
-        nr = int(getParam('nr', 0))
+        nr = tryInt(nr)
         current_path = None
 
         total = 1
@@ -71,16 +70,15 @@ class Logging(Plugin):
             f = open(current_path, 'r')
             log = f.read()
 
-        return jsonified({
+        return {
             'success': True,
             'log': toUnicode(log),
             'total': total,
-        })
+        }
 
-    def partial(self):
+    def partial(self, type = 'all', lines = 30, **kwargs):
 
-        log_type = getParam('type', 'all')
-        total_lines = tryInt(getParam('lines', 30))
+        total_lines = tryInt(lines)
 
         log_lines = []
 
@@ -100,7 +98,7 @@ class Logging(Plugin):
             brk = False
             for line in reversed_lines:
 
-                if log_type == 'all' or '%s ' % log_type.upper() in line:
+                if type == 'all' or '%s ' % type.upper() in line:
                     log_lines.append(line)
 
                 if len(log_lines) >= total_lines:
@@ -111,12 +109,12 @@ class Logging(Plugin):
                 break
 
         log_lines.reverse()
-        return jsonified({
+        return {
             'success': True,
             'log': '[0m\n'.join(log_lines),
-        })
+        }
 
-    def clear(self):
+    def clear(self, **kwargs):
 
         for x in range(0, 50):
             path = '%s%s' % (Env.get('log_path'), '.%s' % x if x > 0 else '')
@@ -135,24 +133,21 @@ class Logging(Plugin):
             except:
                 log.error('Couldn\'t delete file "%s": %s', (path, traceback.format_exc()))
 
-        return jsonified({
+        return {
             'success': True
-        })
+        }
 
-    def log(self):
-
-        params = getParams()
+    def log(self, type = 'error', **kwargs):
 
         try:
-            log_message = 'API log: %s' % params
+            log_message = 'API log: %s' % kwargs
             try:
-                getattr(log, params.get('type', 'error'))(log_message)
+                getattr(log, type)(log_message)
             except:
                 log.error(log_message)
         except:
-            log.error('Couldn\'t log via API: %s', params)
+            log.error('Couldn\'t log via API: %s', kwargs)
 
-
-        return jsonified({
+        return {
             'success': True
-        })
+        }

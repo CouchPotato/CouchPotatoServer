@@ -9,9 +9,10 @@
 """
 Support for the Microsoft Access database.
 
-This dialect is *not* ported to SQLAlchemy 0.6 or 0.7.
+.. note::
 
-This dialect is *not* tested on SQLAlchemy 0.6 or 0.7.
+    The Access dialect is **non-functional as of SQLAlchemy 0.6**,
+    pending development efforts to bring it up-to-date.
 
 
 """
@@ -124,7 +125,7 @@ class AccessExecutionContext(default.DefaultExecutionContext):
                 # self._last_inserted_ids[0] is None:
                 self.cursor.execute("SELECT @@identity AS lastrowid")
                 row = self.cursor.fetchone()
-                self._last_inserted_ids = [int(row[0])] 
+                self._last_inserted_ids = [int(row[0])]
                 #+ self._last_inserted_ids[1:]
                 # print "LAST ROW ID", self._last_inserted_ids
 
@@ -259,7 +260,7 @@ class AccessDialect(default.DefaultDialect):
 
                 colargs = \
                 {
-                    'nullable': not(col.Required or 
+                    'nullable': not(col.Required or
                                     col.Attributes & const.dbAutoIncrField),
                 }
                 default = col.DefaultValue
@@ -286,7 +287,7 @@ class AccessDialect(default.DefaultDialect):
                         if isinstance(thecol.type, AcInteger) and \
                                 not (thecol.default and
                                 isinstance(
-                                        thecol.default.arg, 
+                                        thecol.default.arg,
                                         schema.Sequence
                                 )):
                             thecol.autoincrement = False
@@ -321,7 +322,7 @@ class AccessDialect(default.DefaultDialect):
         # This is necessary, so we get the latest updates
         dtbs = daoEngine.OpenDatabase(connection.engine.url.database)
 
-        names = [t.Name for t in dtbs.TableDefs 
+        names = [t.Name for t in dtbs.TableDefs
                 if t.Name[:4] != "MSys" and t.Name[:4] != "~TMP"]
         dtbs.Close()
         return names
@@ -372,7 +373,7 @@ class AccessCompiler(compiler.SQLCompiler):
                           'length':             'len',
                           }
     def visit_function(self, func):
-        """Access function names differ from the ANSI SQL names; 
+        """Access function names differ from the ANSI SQL names;
         rewrite common ones"""
         func.name = self.function_rewrites.get(func.name, func.name)
         return super(AccessCompiler, self).visit_function(func)

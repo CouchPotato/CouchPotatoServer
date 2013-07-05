@@ -66,7 +66,12 @@ def bind_sockets(port, address=None, family=socket.AF_UNSPEC, backlog=128, flags
     for res in set(socket.getaddrinfo(address, port, family, socket.SOCK_STREAM,
                                       0, flags)):
         af, socktype, proto, canonname, sockaddr = res
-        sock = socket.socket(af, socktype, proto)
+        try:
+            sock = socket.socket(af, socktype, proto)
+        except socket.error as e:
+            if e.args[0] == errno.EAFNOSUPPORT:
+                continue
+            raise
         set_close_exec(sock.fileno())
         if os.name != 'nt':
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -135,8 +140,15 @@ def add_accept_handler(sock, callback, io_loop=None):
             try:
                 connection, address = sock.accept()
             except socket.error as e:
+                # EWOULDBLOCK and EAGAIN indicate we have accepted every
+                # connection that is available.
                 if e.args[0] in (errno.EWOULDBLOCK, errno.EAGAIN):
                     return
+                # ECONNABORTED indicates that there was a connection
+                # but it was closed while still in the accept queue.
+                # (observed on FreeBSD).
+                if e.args[0] == errno.ECONNABORTED:
+                    continue
                 raise
             callback(connection, address)
     io_loop.add_handler(sock.fileno(), accept_handler, IOLoop.READ)
@@ -200,15 +212,47 @@ class Resolver(Configurable):
         """
         raise NotImplementedError()
 
+    def close(self):
+        """Closes the `Resolver`, freeing any resources used.
+
+        .. versionadded:: 3.1
+
+        """
+        pass
+
 
 class ExecutorResolver(Resolver):
-    def initialize(self, io_loop=None, executor=None):
+    """Resolver implementation using a `concurrent.futures.Executor`.
+
+    Use this instead of `ThreadedResolver` when you require additional
+    control over the executor being used.
+
+    The executor will be shut down when the resolver is closed unless
+    ``close_resolver=False``; use this if you want to reuse the same
+    executor elsewhere.
+    """
+    def initialize(self, io_loop=None, executor=None, close_executor=True):
         self.io_loop = io_loop or IOLoop.current()
-        self.executor = executor or dummy_executor
+        if executor is not None:
+            self.executor = executor
+            self.close_executor = close_executor
+        else:
+            self.executor = dummy_executor
+            self.close_executor = False
+
+    def close(self):
+        if self.close_executor:
+            self.executor.shutdown()
+        self.executor = None
 
     @run_on_executor
     def resolve(self, host, port, family=socket.AF_UNSPEC):
-        addrinfo = socket.getaddrinfo(host, port, family)
+        # On Solaris, getaddrinfo fails if the given port is not found
+        # in /etc/services and no socket type is given, so we must pass
+        # one here.  The socket type used here doesn't seem to actually
+        # matter (we discard the one we get back in the results),
+        # so the addresses we return should still be usable with SOCK_DGRAM.
+        addrinfo = socket.getaddrinfo(host, port, family, socket.SOCK_STREAM)
         results = []
         for family, socktype, proto, canonname, address in addrinfo:
             results.append((family, address))
@@ -236,11 +280,31 @@ class ThreadedResolver(ExecutorResolver):
 
         Resolver.configure('tornado.netutil.ThreadedResolver',
                            num_threads=10)
+
+    .. versionchanged:: 3.1
+       All ``ThreadedResolvers`` share a single thread pool, whose
+       size is set by the first one to be created.
     """
+    _threadpool = None
+    _threadpool_pid = None
+
     def initialize(self, io_loop=None, num_threads=10):
-        from concurrent.futures import ThreadPoolExecutor
+        threadpool = ThreadedResolver._create_threadpool(num_threads)
         super(ThreadedResolver, self).initialize(
-            io_loop=io_loop, executor=ThreadPoolExecutor(num_threads))
+            io_loop=io_loop, executor=threadpool, close_executor=False)
+
+    @classmethod
+    def _create_threadpool(cls, num_threads):
+        pid = os.getpid()
+        if cls._threadpool_pid != pid:
+            # Threads cannot survive after a fork, so if our pid isn't what it
+            # was when we created the pool then delete it.
+            cls._threadpool = None
+        if cls._threadpool is None:
+            from concurrent.futures import ThreadPoolExecutor
+            cls._threadpool = ThreadPoolExecutor(num_threads)
+            cls._threadpool_pid = pid
+        return cls._threadpool
 
 
 class OverrideResolver(Resolver):
@@ -254,6 +318,9 @@ class OverrideResolver(Resolver):
     def initialize(self, resolver, mapping):
         self.resolver = resolver
         self.mapping = mapping
+
+    def close(self):
+        self.resolver.close()
 
     def resolve(self, host, port, *args, **kwargs):
         if (host, port) in self.mapping:
@@ -331,9 +398,16 @@ else:
     class SSLCertificateError(ValueError):
         pass
 
-    def _dnsname_to_pat(dn):
+    def _dnsname_to_pat(dn, max_wildcards=1):
         pats = []
         for frag in dn.split(r'.'):
+            if frag.count('*') > max_wildcards:
+                # Issue #17980: avoid denials of service by refusing more
+                # than one wildcard per fragment.  A survery of established
+                # policy among SSL implementations showed it to be a
+                # reasonable choice.
+                raise SSLCertificateError(
+                    "too many wildcards in certificate DNS name: " + repr(dn))
             if frag == '*':
                 # When '*' is a fragment by itself, it matches a non-empty dotless
                 # fragment.
@@ -361,8 +435,9 @@ else:
                 if _dnsname_to_pat(value).match(hostname):
                     return
                 dnsnames.append(value)
-        if not san:
-            # The subject is only checked when subjectAltName is empty
+        if not dnsnames:
+            # The subject is only checked when there is no dNSName entry
+            # in subjectAltName
             for sub in cert.get('subject', ()):
                 for key, value in sub:
                     # XXX according to RFC 2818, the most specific Common Name

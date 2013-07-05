@@ -12,7 +12,8 @@ class SceneAccess(TorrentProvider):
 
     urls = {
         'test': 'https://www.sceneaccess.eu/',
-        'login' : 'https://www.sceneaccess.eu/login',
+        'login': 'https://www.sceneaccess.eu/login',
+        'login_check': 'https://www.sceneaccess.eu/inbox',
         'detail': 'https://www.sceneaccess.eu/details?id=%s',
         'search': 'https://www.sceneaccess.eu/browse?method=2&c%d=%d',
         'download': 'https://www.sceneaccess.eu/%s',
@@ -39,9 +40,6 @@ class SceneAccess(TorrentProvider):
         })
         url = "%s&%s" % (url, arguments)
 
-        # Do login for the cookies
-        if not self.login_opener and not self.login():
-            return
 
         data = self.getHTMLData(url, opener = self.login_opener)
 
@@ -69,7 +67,6 @@ class SceneAccess(TorrentProvider):
                         'size': self.parseSize(result.find('td', attrs = {'class' : 'ttr_size'}).contents[0]),
                         'seeders': tryInt(result.find('td', attrs = {'class' : 'ttr_seeders'}).find('a').string),
                         'leechers': tryInt(leechers.string) if leechers else 0,
-                        'download': self.loginDownload,
                         'get_more_info': self.getMoreInfo,
                     })
 
@@ -91,3 +88,8 @@ class SceneAccess(TorrentProvider):
 
         item['description'] = description
         return item
+
+    def loginSuccess(self, output):
+        return '/inbox' in output.lower()
+
+    loginCheckSuccess = loginSuccess

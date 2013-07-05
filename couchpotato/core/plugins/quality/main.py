@@ -2,7 +2,6 @@ from couchpotato import get_session
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import toUnicode
-from couchpotato.core.helpers.request import jsonified, getParams
 from couchpotato.core.helpers.variable import mergeDicts, md5, getExt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
@@ -18,8 +17,8 @@ class QualityPlugin(Plugin):
 
     qualities = [
         {'identifier': 'bd50', 'hd': True, 'size': (15000, 60000), 'label': 'BR-Disk', 'alternative': ['bd25'], 'allow': ['1080p'], 'ext':[], 'tags': ['bdmv', 'certificate', ('complete', 'bluray')]},
-        {'identifier': '1080p', 'hd': True, 'size': (5000, 20000), 'label': '1080p', 'width': 1920, 'height': 1080, 'alternative': [], 'allow': [], 'ext':['mkv', 'm2ts'], 'tags': ['m2ts']},
-        {'identifier': '720p', 'hd': True, 'size': (3500, 10000), 'label': '720p', 'width': 1280, 'height': 720, 'alternative': [], 'allow': [], 'ext':['mkv', 'ts']},
+        {'identifier': '1080p', 'hd': True, 'size': (4000, 20000), 'label': '1080p', 'width': 1920, 'height': 1080, 'alternative': [], 'allow': [], 'ext':['mkv', 'm2ts'], 'tags': ['m2ts']},
+        {'identifier': '720p', 'hd': True, 'size': (3000, 10000), 'label': '720p', 'width': 1280, 'height': 720, 'alternative': [], 'allow': [], 'ext':['mkv', 'ts']},
         {'identifier': 'brrip', 'hd': True, 'size': (700, 7000), 'label': 'BR-Rip', 'alternative': ['bdrip'], 'allow': ['720p', '1080p'], 'ext':['avi']},
         {'identifier': 'dvdr', 'size': (3000, 10000), 'label': 'DVD-R', 'alternative': [], 'allow': [], 'ext':['iso', 'img'], 'tags': ['pal', 'ntsc', 'video_ts', 'audio_ts']},
         {'identifier': 'dvdrip', 'size': (600, 2400), 'label': 'DVD-Rip', 'width': 720, 'alternative': ['dvdrip'], 'allow': [], 'ext':['avi', 'mpg', 'mpeg'], 'tags': [('dvd', 'rip'), ('dvd', 'xvid'), ('dvd', 'divx')]},
@@ -51,12 +50,12 @@ class QualityPlugin(Plugin):
     def preReleases(self):
         return self.pre_releases
 
-    def allView(self):
+    def allView(self, **kwargs):
 
-        return jsonified({
+        return {
             'success': True,
             'list': self.all()
-        })
+        }
 
     def all(self):
 
@@ -88,20 +87,18 @@ class QualityPlugin(Plugin):
             if identifier == q.get('identifier'):
                 return q
 
-    def saveSize(self):
-
-        params = getParams()
+    def saveSize(self, **kwargs):
 
         db = get_session()
-        quality = db.query(Quality).filter_by(identifier = params.get('identifier')).first()
+        quality = db.query(Quality).filter_by(identifier = kwargs.get('identifier')).first()
 
         if quality:
-            setattr(quality, params.get('value_type'), params.get('value'))
+            setattr(quality, kwargs.get('value_type'), kwargs.get('value'))
             db.commit()
 
-        return jsonified({
+        return {
             'success': True
-        })
+        }
 
     def fill(self):
 
