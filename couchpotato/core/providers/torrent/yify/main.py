@@ -27,7 +27,7 @@ class Yify(TorrentProvider):
 
         data = self.getJsonData(self.urls['search'] % (title, quality['identifier']))
 
-        if data:
+        if data and data.get('MovieList'):
             try:
                 for result in data.get('MovieList'):
 
