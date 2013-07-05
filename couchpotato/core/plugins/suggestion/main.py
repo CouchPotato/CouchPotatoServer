@@ -65,6 +65,7 @@ class Suggestion(Plugin):
         # Combine with previous suggestion_cache
         cached_suggestion = self.getCache('suggestion_cached')
         new_suggestions = []
+        ignored = [] if not ignored else ignored
 
         if ignore_imdb:
             for cs in cached_suggestion:
@@ -79,9 +80,7 @@ class Suggestion(Plugin):
                 .filter(or_(*[Movie.status.has(identifier = s) for s in ['active', 'done']])).all()
             movies = [x.library.identifier for x in active_movies]
 
-            if ignored:
-                ignored.extend([x.get('imdb') for x in new_suggestions])
-
+            ignored.extend([x.get('imdb') for x in cached_suggestion])
             suggestions = fireEvent('movie.suggest', movies = movies, ignore = list(set(ignored)), single = True)
 
             if suggestions:
