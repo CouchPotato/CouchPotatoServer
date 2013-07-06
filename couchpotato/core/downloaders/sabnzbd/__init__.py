@@ -35,6 +35,15 @@ config = [{
                     'description': 'The category CP places the nzb in. Like <strong>movies</strong> or <strong>couchpotato</strong>',
                 },
                 {
+                    'name': 'priority',
+                    'label': 'Priority',
+                    'type': 'dropdown',
+                    'default': '0',
+                    'advanced': True,
+                    'values': [('Paused', -2), ('Low', -1), ('Normal', 0), ('High', 1), ('Forced', 2)],
+                    'description': 'Priority in the SABnzbd queue. Option to add paused.',
+                },
+                {
                     'name': 'manual',
                     'default': False,
                     'type': 'bool',
