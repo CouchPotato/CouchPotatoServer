@@ -284,6 +284,10 @@ class MPEG4(core.AVContainer):
 
                     while datasize:
                         mdia = struct.unpack('>I4s', atomdata[pos:pos + 8])
+
+                        if mdia[0] == 0:
+                            break
+
                         if mdia[1] == 'mdhd':
                             # Parse based on version of mdhd header.  See
                             # http://wiki.multimedia.cx/index.php?title=QuickTime_container#mdhd
