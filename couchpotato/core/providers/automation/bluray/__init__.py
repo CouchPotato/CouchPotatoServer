@@ -11,7 +11,7 @@ config = [{
             'list': 'automation_providers',
             'name': 'bluray_automation',
             'label': 'Blu-ray.com',
-            'description': 'Imports movies from blu-ray.com. (uses minimal requirements)',
+            'description': 'Imports movies from blu-ray.com.',
             'options': [
                 {
                     'name': 'automation_enabled',

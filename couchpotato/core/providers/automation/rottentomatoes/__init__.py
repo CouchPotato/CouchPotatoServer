@@ -21,7 +21,8 @@ config = [{
                 {
                     'name': 'tomatometer_percent',
                     'default': '80',
-                    'label': 'Tomatometer'
+                    'label': 'Tomatometer',
+                    'description': 'Use as extra scoring requirement',
                 }
             ],
         },

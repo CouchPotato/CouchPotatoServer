@@ -11,7 +11,7 @@ config = [{
             'list': 'automation_providers',
             'name': 'kinepolis_automation',
             'label': 'Kinepolis',
-            'description': 'Imports movies from the current top 10 of kinepolis. (uses minimal requirements)',
+            'description': 'Imports movies from the current top 10 of kinepolis.',
             'options': [
                 {
                     'name': 'automation_enabled',

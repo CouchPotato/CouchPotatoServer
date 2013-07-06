@@ -42,7 +42,7 @@ class Rottentomatoes(Automation, RSS):
                     year = datetime.datetime.now().strftime("%Y")
                     imdb = self.search(name, year)
 
-                    if imdb:
+                    if imdb and self.isMinimalMovie(imdb):
                         movies.append(imdb['imdb'])
 
         return movies
