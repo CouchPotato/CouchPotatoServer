@@ -33,14 +33,14 @@ config = [{
                     'label': 'Seed ratio',
                     'type': 'float',
                     'default': 1,
-                    'description': 'Torrent will not be (re)moved until this seed ratio is met.',
+                    'description': 'Will not be (re)moved until this seed ratio is met.',
                 },
                 {
                     'name': 'seed_time',
                     'label': 'Seed time',
                     'type': 'int',
                     'default': 40,
-                    'description': 'Torrent will not be (re)moved until this seed time (in hours) is met.',
+                    'description': 'Will not be (re)moved until this seed time (in hours) is met.',
                 },
                 {
                     'name': 'extra_score',
