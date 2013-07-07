@@ -49,14 +49,14 @@ config = [{
                     'default': True,
                     'type': 'bool',
                     'description': '(Hard)link/copy after download is complete (if enabled in renamer), wait for seeding to finish before (re)moving and set the seeding goal from the torrent providers.',
-                },                
+                },
                 {
                     'name': 'remove_complete',
                     'label': 'Remove torrent',
                     'default': True,
                     'type': 'bool',
                     'description': 'Remove the torrent from Transmission after it finished seeding.',
-                },                
+                },
                 {
                     'name': 'delete_files',
                     'label': 'Remove files',

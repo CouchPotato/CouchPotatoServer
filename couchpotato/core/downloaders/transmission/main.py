@@ -19,15 +19,17 @@ class Transmission(Downloader):
     type = ['torrent', 'torrent_magnet']
     log = CPLog(__name__)
     trpc = None
-    
+
     def connect(self):
         # Load host from config and split out port.
         host = self.conf('host').split(':')
         if not isInt(host[1]):
             log.error('Config properties are not filled in correctly, port is missing.')
             return False
+
         if not self.trpc:
             self.trpc = TransmissionRPC(host[0], port = host[1], username = self.conf('username'), password = self.conf('password'))
+
         return self.trpc
 
     def download(self, data, movie, filedata = None):
@@ -58,7 +60,7 @@ class Transmission(Downloader):
             torrent_params['seedRatioMode'] = 1
 
         if data.get('seed_time') and self.conf('seeding'):
-            torrent_params['seedIdleLimit'] = tryInt(data.get('seed_time'))*60
+            torrent_params['seedIdleLimit'] = tryInt(data.get('seed_time')) * 60
             torrent_params['seedIdleMode'] = 1
 
         # Send request to Transmission
@@ -89,8 +91,8 @@ class Transmission(Downloader):
         statuses = StatusList(self)
 
         return_params = {
-                'fields': ['id', 'name', 'hashString', 'percentDone', 'status', 'eta', 'isStalled', 'isFinished', 'downloadDir', 'uploadRatio', 'secondsSeeding', 'seedIdleLimit']
-            }
+            'fields': ['id', 'name', 'hashString', 'percentDone', 'status', 'eta', 'isStalled', 'isFinished', 'downloadDir', 'uploadRatio', 'secondsSeeding', 'seedIdleLimit']
+        }
 
         queue = self.trpc.get_alltorrents(return_params)
         if not (queue and queue.get('torrents')):
@@ -98,7 +100,8 @@ class Transmission(Downloader):
             return False
 
         for item in queue['torrents']:
-            log.debug('name=%s / id=%s / downloadDir=%s / hashString=%s / percentDone=%s / status=%s / eta=%s / uploadRatio=%s / isFinished=%s', (item['name'], item['id'], item['downloadDir'], item['hashString'], item['percentDone'], item['status'], item['eta'], item['uploadRatio'], item['isFinished']))
+            log.debug('name=%s / id=%s / downloadDir=%s / hashString=%s / percentDone=%s / status=%s / eta=%s / uploadRatio=%s / isFinished=%s',
+                (item['name'], item['id'], item['downloadDir'], item['hashString'], item['percentDone'], item['status'], item['eta'], item['uploadRatio'], item['isFinished']))
 
             if not os.path.isdir(Env.setting('from', 'renamer')):
                 log.error('Renamer "from" folder doesn\'t to exist.')

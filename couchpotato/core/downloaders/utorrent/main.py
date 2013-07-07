@@ -76,11 +76,11 @@ class uTorrent(Downloader):
 
         if data.get('seed_ratio') and self.conf('seeding'):
             torrent_params['seed_override'] = 1
-            torrent_params['seed_ratio'] = tryInt(tryFloat(data['seed_ratio'])*1000)
+            torrent_params['seed_ratio'] = tryInt(tryFloat(data['seed_ratio']) * 1000)
 
         if data.get('seed_time') and self.conf('seeding'):
             torrent_params['seed_override'] = 1
-            torrent_params['seed_time'] = tryInt(data['seed_time'])*3600
+            torrent_params['seed_time'] = tryInt(data['seed_time']) * 3600
 
         # Convert base 32 to hex
         if len(torrent_hash) == 32:
@@ -139,7 +139,7 @@ class uTorrent(Downloader):
                 'id': item[0],
                 'name': item[2],
                 'status':  status,
-                'seed_ratio': float(item[7])/1000,
+                'seed_ratio': float(item[7]) / 1000,
                 'original_status': item[1],
                 'timeleft': str(timedelta(seconds = item[10])),
                 'folder': item[26],
@@ -228,16 +228,16 @@ class uTorrentAPI(object):
             action = "action=unpause&hash=%s" % hash
         return self._request(action)
 
-    def stop_torrent(self, hash):  
-        action = "action=stop&hash=%s" % hash  
-        return self._request(action)  
+    def stop_torrent(self, hash):
+        action = "action=stop&hash=%s" % hash
+        return self._request(action)
 
-    def remove_torrent(self, hash, remove_data = False):  
+    def remove_torrent(self, hash, remove_data = False):
         if remove_data:
             action = "action=removedata&hash=%s" % hash
         else:
-            action = "action=remove&hash=%s" % hash  
-        return self._request(action)  
+            action = "action=remove&hash=%s" % hash
+        return self._request(action)
 
     def get_status(self):
         action = "list=1"
@@ -270,5 +270,5 @@ class uTorrentAPI(object):
             if isinstance(settings_dict[key], bool):
                 settings_dict[key] = 1 if settings_dict[key] else 0
 
-        action = 'action=setsetting'  + ''.join(['&s=%s&v=%s' % (key, value) for (key, value) in settings_dict.items()])
+        action = 'action=setsetting' + ''.join(['&s=%s&v=%s' % (key, value) for (key, value) in settings_dict.items()])
         return self._request(action)

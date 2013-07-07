@@ -151,7 +151,7 @@ class Renamer(Plugin):
 
             # Add _UNKNOWN_ if no library item is connected
             if not group['library'] or not movie_title:
-                self.tagDir(group['parentdir'], 'unknown')
+                self.tagDir(group, 'unknown')
                 continue
             # Rename the files using the library data
             else:
@@ -361,7 +361,7 @@ class Renamer(Plugin):
                                 log.info('Better quality release already exists for %s, with quality %s', (movie.library.titles[0].title, release.quality.label))
 
                                 # Add exists tag to the .ignore file
-                                self.tagDir(group['parentdir'], 'exists')
+                                self.tagDir(group, 'exists')
 
                                 # Notify on rename fail
                                 download_message = 'Renaming of %s (%s) canceled, exists in %s already.' % (movie.library.titles[0].title, group['meta_data']['quality']['label'], release.quality.label)
@@ -412,7 +412,7 @@ class Renamer(Plugin):
 
                 except:
                     log.error('Failed removing %s: %s', (src, traceback.format_exc()))
-                    self.tagDir(group['parentdir'], 'failed_remove')
+                    self.tagDir(group, 'failed_remove')
 
             # Delete leftover folder from older releases
             for delete_folder in delete_folders:
@@ -436,12 +436,12 @@ class Renamer(Plugin):
                         group['renamed_files'].append(dst)
                     except:
                         log.error('Failed moving the file "%s" : %s', (os.path.basename(src), traceback.format_exc()))
-                        self.tagDir(group['parentdir'], 'failed_rename')
+                        self.tagDir(group, 'failed_rename')
 
             # Tag folder if it is in the 'from' folder and it will not be removed because it is a torrent
             if (movie_folder and self.conf('from') in movie_folder or not movie_folder) and \
                 self.conf('file_action') != 'move' and self.downloadIsTorrent(download_info):
-                self.tagDir(group['parentdir'], 'renamed_already')
+                self.tagDir(group, 'renamed_already')
 
             # Remove matching releases
             for release in remove_releases:
@@ -489,9 +489,18 @@ class Renamer(Plugin):
         return rename_files
 
     # This adds a file to ignore / tag a release so it is ignored later
-    def tagDir(self, folder, tag):
-        if not os.path.isdir(folder) or not tag:
-            return
+    def tagDir(self, group, tag):
+
+        ignore_file = None
+        if isinstance(group, (dict)):
+            for movie_file in sorted(list(group['files']['movie'])):
+                ignore_file = '%s.%s.ignore' % (os.path.splitext(movie_file)[0], tag)
+                break
+        else:
+            if not os.path.isdir(group) or not tag:
+                return
+            ignore_file = os.path.join(group, '%s.ignore' % tag)
+
 
         text = """This file is from CouchPotato
 It has marked this release as "%s"
@@ -499,7 +508,8 @@ This file hides the release from the renamer
 Remove it if you want it to be renamed (again, or at least let it try again)
 """ % tag
 
-        self.createFile(os.path.join(folder, '%s.ignore' % tag), text)
+        if ignore_file:
+            self.createFile(ignore_file, text)
 
     def untagDir(self, folder, tag = None):
         if not os.path.isdir(folder):
@@ -808,4 +818,4 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         if not group['files'].get('added'):
             return False
         return src in group['files']['added']
-    
+

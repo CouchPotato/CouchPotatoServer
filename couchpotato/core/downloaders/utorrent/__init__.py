@@ -42,14 +42,14 @@ config = [{
                     'default': True,
                     'type': 'bool',
                     'description': '(Hard)links/copies after download is complete (if enabled in renamer), wait for seeding to finish before (re)moving.',
-                },                
+                },
                 {
                     'name': 'remove_complete',
                     'label': 'Remove torrent',
                     'default': True,
                     'type': 'bool',
                     'description': 'Remove the torrent from uTorrent after it finished seeding.',
-                },                
+                },
                 {
                     'name': 'delete_files',
                     'label': 'Remove files',
