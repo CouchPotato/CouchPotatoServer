@@ -124,7 +124,7 @@ class Core(Plugin):
 
             time.sleep(1)
 
-        log.debug('Save to shutdown/restart')
+        log.debug('Safe to shutdown/restart')
 
         try:
             IOLoop.current().stop()
