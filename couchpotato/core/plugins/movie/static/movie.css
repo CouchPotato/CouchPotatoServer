@@ -425,7 +425,9 @@
 			}
 
 			.movies .data .quality .available { background-color: #578bc3; }
-			.movies .data .quality .snatched { background-color: #369545; }
+			.movies .data .quality .failed { background-color: #a43d34; }
+			.movies .data .quality .snatched { background-color: #a2a232; }
+			.movies .data .quality .seeding { background-color: #0a6819; }
 			.movies .data .quality .done {
 				background-color: #369545;
 				opacity: 1;
