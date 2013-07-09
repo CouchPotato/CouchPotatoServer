@@ -15,7 +15,6 @@ import time
 import urllib
 import urllib2
 
-
 log = CPLog(__name__)
 
 
@@ -31,8 +30,8 @@ class uTorrent(Downloader):
             log.error('Config properties are not filled in correctly, port is missing.')
             return False
 
-        if not self.utorrent_api:
-            self.utorrent_api = uTorrentAPI(host[0], port = host[1], username = self.conf('username'), password = self.conf('password'))
+        self.utorrent_api = uTorrentAPI(host[0], port = host[1], username = self.conf('username'), password = self.conf('password'))
+
         return self.utorrent_api
 
     def download(self, data, movie, filedata = None):
@@ -42,19 +41,23 @@ class uTorrent(Downloader):
         if not self.connect():
             return False
 
+        print 'test'
+
         settings = self.utorrent_api.get_settings()
         if not settings:
             return False
 
         #Fix settings in case they are not set for CPS compatibility
         new_settings = {}
-        if self.conf('seeding') and not (settings.get('seed_prio_limitul') == 0 and settings['seed_prio_limitul_flag']):
+        if not (settings.get('seed_prio_limitul') == 0 and settings['seed_prio_limitul_flag']):
             new_settings['seed_prio_limitul'] = 0
             new_settings['seed_prio_limitul_flag'] = True
             log.info('Updated uTorrent settings to set a torrent to complete after it the seeding requirements are met.')
+
         if settings.get('bt.read_only_on_complete'): #This doesnt work as this option seems to be not available through the api
             new_settings['bt.read_only_on_complete'] = False
             log.info('Updated uTorrent settings to not set the files to read only after completing.')
+
         if new_settings:
             self.utorrent_api.set_settings(new_settings)
 
@@ -74,11 +77,11 @@ class uTorrent(Downloader):
             torrent_hash = sha1(bencode(info)).hexdigest().upper()
             torrent_filename = self.createFileName(data, filedata, movie)
 
-        if data.get('seed_ratio') and self.conf('seeding'):
+        if data.get('seed_ratio'):
             torrent_params['seed_override'] = 1
             torrent_params['seed_ratio'] = tryInt(tryFloat(data['seed_ratio']) * 1000)
 
-        if data.get('seed_time') and self.conf('seeding'):
+        if data.get('seed_time'):
             torrent_params['seed_override'] = 1
             torrent_params['seed_time'] = tryInt(data['seed_time']) * 3600
 
@@ -130,10 +133,7 @@ class uTorrent(Downloader):
             if 'Finished' in item[21]:
                 status = 'completed'
             elif 'Seeding' in item[21]:
-                if self.conf('seeding'):
-                    status = 'seeding'
-                else:
-                    status = 'completed'
+                status = 'seeding'
 
             statuses.append({
                 'id': item[0],
@@ -151,6 +151,12 @@ class uTorrent(Downloader):
         if not self.connect():
             return False
         return self.utorrent_api.pause_torrent(download_info['id'], pause)
+
+    def removeFailed(self, item):
+        log.info('%s failed downloading, deleting...', item['name'])
+        if not self.connect():
+            return False
+        return self.utorrent_api.remove_torrent(item['id'], remove_data = True)
 
     def processComplete(self, item, delete_files = False):
         log.debug('Requesting uTorrent to remove the torrent %s%s.', (item['name'], ' and cleanup the downloaded files' if delete_files else ''))

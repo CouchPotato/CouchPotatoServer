@@ -12,6 +12,7 @@ import xmlrpclib
 
 log = CPLog(__name__)
 
+
 class NZBGet(Downloader):
 
     type = ['nzb']

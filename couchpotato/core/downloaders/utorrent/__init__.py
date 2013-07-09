@@ -37,16 +37,10 @@ config = [{
                     'description': 'Label to add torrent as.',
                 },
                 {
-                    'name': 'seeding',
-                    'label': 'Seeding support',
-                    'default': True,
-                    'type': 'bool',
-                    'description': '(Hard)links/copies after download is complete (if enabled in renamer), wait for seeding to finish before (re)moving.',
-                },
-                {
                     'name': 'remove_complete',
                     'label': 'Remove torrent',
-                    'default': True,
+                    'default': False,
+                    'advanced': True,
                     'type': 'bool',
                     'description': 'Remove the torrent from uTorrent after it finished seeding.',
                 },
@@ -61,6 +55,7 @@ config = [{
                 {
                     'name': 'paused',
                     'type': 'bool',
+                    'advanced': True,
                     'default': False,
                     'description': 'Add the torrent paused.',
                 },
@@ -70,6 +65,13 @@ config = [{
                     'type': 'bool',
                     'advanced': True,
                     'description': 'Disable this downloader for automated searches, but use it when I manually send a release.',
+                },
+                {
+                    'name': 'delete_failed',
+                    'default': True,
+                    'advanced': True,
+                    'type': 'bool',
+                    'description': 'Delete a release after the download has failed.',
                 },
             ],
         }

@@ -38,6 +38,7 @@ config = [{
                 {
                     'name': 'delete_failed',
                     'default': True,
+                    'advanced': True,
                     'type': 'bool',
                     'description': 'Delete a release after the download has failed.',
                 },

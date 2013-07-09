@@ -55,11 +55,11 @@ class Transmission(Downloader):
 
         # Change parameters of torrent
         torrent_params = {}
-        if data.get('seed_ratio') and self.conf('seeding'):
+        if data.get('seed_ratio'):
             torrent_params['seedRatioLimit'] = tryFloat(data.get('seed_ratio'))
             torrent_params['seedRatioMode'] = 1
 
-        if data.get('seed_time') and self.conf('seeding'):
+        if data.get('seed_time'):
             torrent_params['seedIdleLimit'] = tryInt(data.get('seed_time')) * 60
             torrent_params['seedIdleMode'] = 1
 

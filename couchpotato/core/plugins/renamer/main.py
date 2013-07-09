@@ -164,6 +164,7 @@ class Renamer(Plugin):
                 movie_title = getTitle(library)
 
                 # Find subtitle for renaming
+                group['before_rename'] = []
                 fireEvent('renamer.before', group)
 
                 # Remove weird chars from moviename
@@ -451,7 +452,7 @@ class Renamer(Plugin):
                 except:
                     log.error('Failed removing %s: %s', (release.identifier, traceback.format_exc()))
 
-            if group['dirname'] and group['parentdir']:
+            if group['dirname'] and group['parentdir'] and self.conf('file_action') == 'move':
                 try:
                     log.info('Deleting folder: %s', group['parentdir'])
                     self.deleteEmptyFolder(group['parentdir'])
@@ -642,17 +643,6 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                     for rel in rels:
                         rel_dict = rel.to_dict({'info': {}})
 
-                        # Get current selected title
-                        default_title = getTitle(rel.movie.library)
-
-                        # Check if movie has already completed and is manage tab (legacy db correction)
-                        if rel.movie.status_id == done_status.get('id') and rel.status_id == snatched_status.get('id'):
-                            log.debug('Found a completed movie with a snatched release : %s. Setting release status to ignored...' , default_title)
-                            rel.status_id = ignored_status.get('id')
-                            rel.last_edit = int(time.time())
-                            db.commit()
-                            continue
-
                         movie_dict = fireEvent('movie.get', rel.movie_id, single = True)
 
                         # check status
@@ -678,8 +668,8 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                                     if item['folder'] and self.conf('from') in item['folder']:
                                         self.tagDir(item['folder'], 'downloading')
 
-                                    pass
                                 elif item['status'] == 'seeding':
+
                                     #If linking setting is enabled, process release
                                     if self.conf('file_action') != 'move' and not rel.movie.status_id == done_status.get('id') and item['id'] and item['downloader'] and item['folder']:
                                         log.info('Download of %s completed! It is now being processed while leaving the original files alone for seeding. Current ratio: %s.', (item['name'], item['seed_ratio']))
@@ -702,7 +692,6 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
                                         #let it seed
                                         log.debug('%s is seeding with ratio: %s', (item['name'], item['seed_ratio']))
-                                        pass
                                 elif item['status'] == 'failed':
                                     fireEvent('download.remove_failed', item, single = True)
                                     rel.status_id = failed_status.get('id')
@@ -815,7 +804,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         return download_info and download_info.get('type') in ['torrent', 'torrent_magnet']
 
     def fileIsAdded(self, src, group):
-        if not group['files'].get('added'):
+        if not group or not group.get('before_rename'):
             return False
-        return src in group['files']['added']
+        return src in group['before_rename']
 

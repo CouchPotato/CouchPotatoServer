@@ -7,6 +7,7 @@ import traceback
 
 log = CPLog(__name__)
 
+
 class Blackhole(Downloader):
 
     type = ['nzb', 'torrent', 'torrent_magnet']
