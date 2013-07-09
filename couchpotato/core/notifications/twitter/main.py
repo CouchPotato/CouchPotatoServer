@@ -50,7 +50,7 @@ class Twitter(Notification):
         try:
             if direct_message:
                 for user in direct_message_users.split():
-                    api.PostDirectMessage(user, '[%s] %s' % (self.default_title, message))
+                    api.PostDirectMessage('[%s] %s' % (self.default_title, message), screen_name = user)
             else:
                 update_message = '[%s] %s' % (self.default_title, message)
                 if len(update_message) > 140:
