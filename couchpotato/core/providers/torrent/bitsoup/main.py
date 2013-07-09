@@ -14,9 +14,8 @@ class Bitsoup(TorrentProvider):
         'test': 'https://www.bitsoup.me/',
         'login' : 'https://www.bitsoup.me/takelogin.php',
         'login_check': 'https://www.bitsoup.me/my.php',
-        'detail': 'https://www.bitsoup.me/details.php?id=%s',
         'search': 'https://www.bitsoup.me/browse.php?',
-        'download': 'https://www.bitsoup.me/%s',
+        'baseurl': 'https://www.bitsoup.me/%s',
     }
 
     http_time_between_calls = 1 #seconds
@@ -53,8 +52,8 @@ class Bitsoup(TorrentProvider):
                     torrent_size = self.parseSize(all_cells[7].getText())
                     torrent_seeders = tryInt(all_cells[9].getText())
                     torrent_leechers = tryInt(all_cells[10].getText())
-                    torrent_url = self.urls['download'] % download['href']
-                    torrent_description = torrent['href']
+                    torrent_url = self.urls['baseurl'] % download['href']
+                    torrent_detail_url = self.urls['baseurl'] % torrent['href']
                     
                     results.append({
                         'id': torrent_id,
@@ -63,7 +62,7 @@ class Bitsoup(TorrentProvider):
                         'seeders': torrent_seeders,
                         'leechers': torrent_leechers,
                         'url': torrent_url,
-                        'description': torrent_description,
+                        'detail_url': torrent_detail_url,
                     })
 
             except:
