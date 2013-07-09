@@ -10,6 +10,7 @@ import traceback
 
 log = CPLog(__name__)
 
+
 class Sabnzbd(Downloader):
 
     type = ['nzb']

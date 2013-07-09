@@ -82,11 +82,12 @@ class Downloader(Provider):
             return
 
         if item and item.get('downloader') == self.getName():
-            if self.conf('remove_complete'):
+            if self.conf('remove_complete', default = False):
                 return self.processComplete(item = item, delete_files = self.conf('delete_files', default = False))
 
             return False
-        return
+
+        return False
 
     def processComplete(self, item, delete_files):
         return
@@ -149,7 +150,8 @@ class Downloader(Provider):
         if item and item.get('downloader') == self.getName():
             self.pause(item, pause)
             return True
-        return
+
+        return False
 
     def pause(self, item, pause):
         return

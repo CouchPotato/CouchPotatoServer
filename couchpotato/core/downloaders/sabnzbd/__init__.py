@@ -43,14 +43,16 @@ config = [{
                 },
                 {
                     'name': 'remove_complete',
+                    'advanced': True,
                     'label': 'Remove NZB',
-                    'default': True,
+                    'default': False,
                     'type': 'bool',
                     'description': 'Remove the NZB from history after it completed.',
-                },  
+                },
                 {
                     'name': 'delete_failed',
                     'default': True,
+                    'advanced': True,
                     'type': 'bool',
                     'description': 'Delete a release after the download has failed.',
                 },

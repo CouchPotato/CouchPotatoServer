@@ -33,30 +33,18 @@ config = [{
                     'type': 'password',
                 },
                 {
-                    'name': 'paused',
-                    'type': 'bool',
-                    'default': False,
-                    'description': 'Add the torrent paused.',
-                },
-                {
                     'name': 'directory',
                     'type': 'directory',
                     'description': 'Download to this directory. Keep empty for default Transmission download directory.',
                 },
                 {
-                    'name': 'seeding',
-                    'label': 'Seeding support',
-                    'default': True,
-                    'type': 'bool',
-                    'description': '(Hard)link/copy after download is complete (if enabled in renamer), wait for seeding to finish before (re)moving and set the seeding goal from the torrent providers.',
-                },                
-                {
                     'name': 'remove_complete',
                     'label': 'Remove torrent',
-                    'default': True,
+                    'default': False,
+                    'advanced': True,
                     'type': 'bool',
                     'description': 'Remove the torrent from Transmission after it finished seeding.',
-                },                
+                },
                 {
                     'name': 'delete_files',
                     'label': 'Remove files',
@@ -68,6 +56,7 @@ config = [{
                 {
                     'name': 'paused',
                     'type': 'bool',
+                    'advanced': True,
                     'default': False,
                     'description': 'Add the torrent paused.',
                 },
@@ -81,12 +70,14 @@ config = [{
                 {
                     'name': 'stalled_as_failed',
                     'default': True,
+                    'advanced': True,
                     'type': 'bool',
                     'description': 'Consider a stalled torrent as failed',
                 },
                 {
                     'name': 'delete_failed',
                     'default': True,
+                    'advanced': True,
                     'type': 'bool',
                     'description': 'Delete a release after the download has failed.',
                 },
