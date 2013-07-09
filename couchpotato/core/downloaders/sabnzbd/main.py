@@ -23,6 +23,7 @@ class Sabnzbd(Downloader):
             'cat': self.conf('category'),
             'mode': 'addurl',
             'nzbname': self.createNzbName(data, movie),
+            'priority': self.conf('priority'),
         }
 
         if filedata:
