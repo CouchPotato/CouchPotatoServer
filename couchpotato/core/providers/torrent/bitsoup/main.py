@@ -22,7 +22,7 @@ class Bitsoup(TorrentProvider):
 
     def _searchOnTitle(self, title, movie, quality, results):
 
-        q = '"%s %s"' % (simplifyString(title), movie['library']['year'])
+        q = '"%s" %s' % (simplifyString(title), movie['library']['year'])
         arguments = tryUrlencode({
             'search': q,
         })
@@ -34,19 +34,19 @@ class Bitsoup(TorrentProvider):
             html = BeautifulSoup(data)
 
             try:
-                resultsTable = html.find_all('table')[8]
-                entries = resultsTable.find_all('tr')
+                result_table = html.find('table', attrs = {'class': 'koptekst'})
+                entries = result_table.find_all('tr')
                 for result in entries[1:]:
-                
+
                     all_cells = result.find_all('td')
 
                     torrent = all_cells[1].find('a')
                     download = all_cells[3].find('a')
-                    
+
                     torrent_id = torrent['href']
                     torrent_id = torrent_id.replace('details.php?id=', '')
                     torrent_id = torrent_id.replace('&hit=1', '')
-                    
+
                     torrent_name = torrent.getText()
 
                     torrent_size = self.parseSize(all_cells[7].getText())
@@ -54,7 +54,7 @@ class Bitsoup(TorrentProvider):
                     torrent_leechers = tryInt(all_cells[10].getText())
                     torrent_url = self.urls['baseurl'] % download['href']
                     torrent_detail_url = self.urls['baseurl'] % torrent['href']
-                    
+
                     results.append({
                         'id': torrent_id,
                         'name': torrent_name,
@@ -79,6 +79,6 @@ class Bitsoup(TorrentProvider):
 
     def loginSuccess(self, output):
         return 'logout.php' in output.lower()
-            
+
     loginCheckSuccess = loginSuccess
 
