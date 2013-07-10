@@ -86,8 +86,7 @@ class Downloader(Provider):
                 return self.processComplete(item = item, delete_files = self.conf('delete_files', default = False))
 
             return False
-
-        return False
+        return
 
     def processComplete(self, item, delete_files):
         return

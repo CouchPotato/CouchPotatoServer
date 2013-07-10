@@ -41,8 +41,6 @@ class uTorrent(Downloader):
         if not self.connect():
             return False
 
-        print 'test'
-
         settings = self.utorrent_api.get_settings()
         if not settings:
             return False
