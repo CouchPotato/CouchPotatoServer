@@ -12,9 +12,6 @@ log = CPLog(__name__)
 
 class XBMC(MetaDataBase):
 
-    def getRootName(self, data = {}):
-        return os.path.join(data['destination_dir'], data['filename'])
-
     def getFanartName(self, name, root):
         return self.createMetaName(self.conf('meta_fanart_name'), name, root)
 
