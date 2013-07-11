@@ -168,9 +168,6 @@ class QualityPlugin(Plugin):
                 if contains:
                     found[quality['identifier']] = True
 
-            if 'web' in words and 'dl' in words:
-                print found
-
             for quality in self.all():
 
                 # Check identifier
