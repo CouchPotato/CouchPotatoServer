@@ -408,7 +408,7 @@ MA.Trailer = new Class({
 	watch: function(offset){
 		var self = this;
 
-		var data_url = 'http://gdata.youtube.com/feeds/videos?vq="{title}" {year} trailer&max-results=1&alt=json-in-script&orderby=relevance&sortorder=descending&format=5&fmt=18'
+		var data_url = 'https://gdata.youtube.com/feeds/videos?vq="{title}" {year} trailer&max-results=1&alt=json-in-script&orderby=relevance&sortorder=descending&format=5&fmt=18'
 		var url = data_url.substitute({
 				'title': encodeURI(self.getTitle()),
 				'year': self.get('year'),
