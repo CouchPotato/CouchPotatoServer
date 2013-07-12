@@ -1,9 +1,10 @@
 from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import tryUrlencode
-from couchpotato.core.helpers.variable import cleanHost
+from couchpotato.core.helpers.variable import cleanHost, splitString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
 from urllib2 import URLError
+from urlparse import urlparse
 from xml.dom import minidom
 import traceback
 
@@ -20,12 +21,12 @@ class Plex(Notification):
         if self.isDisabled(): return
 
         log.info('Sending notification to Plex')
-        hosts = [cleanHost(x.strip() + ':32400') for x in self.conf('host').split(",")]
+        hosts = self.getHosts(port = 32400)
 
         for host in hosts:
 
             source_type = ['movie']
-            base_url = '%slibrary/sections' % host
+            base_url = '%s/library/sections' % host
             refresh_url = '%s/%%s/refresh' % base_url
 
             try:
@@ -46,7 +47,7 @@ class Plex(Notification):
 
     def notify(self, message = '', data = {}, listener = None):
 
-        hosts = [x.strip() + ':3000' for x in self.conf('host').split(",")]
+        hosts = self.getHosts(port = 3000)
         successful = 0
         for host in hosts:
             if self.send({'command': 'ExecBuiltIn', 'parameter': 'Notification(CouchPotato, %s)' % message}, host):
@@ -56,8 +57,7 @@ class Plex(Notification):
 
     def send(self, command, host):
 
-        url = 'http://%s/xbmcCmds/xbmcHttp/?%s' % (host, tryUrlencode(command))
-
+        url = '%s/xbmcCmds/xbmcHttp/?%s' % (host, tryUrlencode(command))
         headers = {}
 
         try:
@@ -88,3 +88,18 @@ class Plex(Notification):
         return {
             'success': success or success2
         }
+
+    def getHosts(self, port = None):
+
+        raw_hosts = splitString(self.conf('host'))
+        hosts = []
+
+        for h in raw_hosts:
+            h = cleanHost(h)
+            p = urlparse(h)
+            h = h.rstrip('/')
+            if port and not p.port:
+                h += ':%s' % port
+            hosts.append(h)
+
+        return hosts
