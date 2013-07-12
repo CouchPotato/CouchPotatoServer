@@ -42,12 +42,19 @@
 			line-height: 18px;
 		}
 			
+		.suggestions .movie_result .data .info .rating,
+		.suggestions .movie_result .data .info .genres,
 		.suggestions .movie_result .data .info .year {
 			position: static;
 			display: block;
 			margin: 5px 0 0;
 			padding: 0;
 			opacity: .6;
+		}
+		
+		.suggestions .movie_result .data .info .rating,
+		.suggestions .movie_result .data .info .genres {
+			font-size: 10px;
 		}
 		
 	.suggestions .movie_result .data {
