@@ -223,12 +223,11 @@ Block.Search.Item = new Class({
 							'text': info.year
 						}) : null
 					)
-				).grab(
+				).adopt(
 					self.rating = info.rating && info.rating.imdb.length == 2 && parseFloat(info.rating.imdb[0]) > 0  ? new Element('span.rating', {
 						'text': parseFloat(info.rating.imdb[0]),
 						'title': parseInt(info.rating.imdb[1]) + ' votes'
-					}) : null
-				).grab(
+					}) : null,
 					self.genre = info.genres && info.genres.length > 0 ? new Element('span.genres', {
 						'text': info.genres.slice(0, 3).join(', ')
 					}) : null
