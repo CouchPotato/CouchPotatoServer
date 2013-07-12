@@ -223,14 +223,15 @@ Block.Search.Item = new Class({
 							'text': info.year
 						}) : null
 					)
-				).adopt(
-						self.rating = info.rating && info.rating.imdb.length > 0 && info.rating.imdb[0] != '0'  ? new Element('span.rating', {
-							'text': info.rating.imdb[0] + '/10'
-						}) : null
-				).adopt(
-						self.genre = info.genres && info.genres.length > 0 ? new Element('span.genres', {
-							'text': self.getGenres(info.genres)
-						}) : null
+				).grab(
+					self.rating = info.rating && info.rating.imdb.length == 2 && parseFloat(info.rating.imdb[0]) > 0  ? new Element('span.rating', {
+						'text': parseFloat(info.rating.imdb[0]),
+						'title': parseInt(info.rating.imdb[1]) + ' votes'
+					}) : null
+				).grab(
+					self.genre = info.genres && info.genres.length > 0 ? new Element('span.genres', {
+						'text': info.genres.slice(0, 3).join(', ')
+					}) : null
 				)
 			)
 		)
@@ -247,17 +248,6 @@ Block.Search.Item = new Class({
 		var self = this;
 
 		self.alternative_titles.include(alternative);
-	},
-
-	getGenres: function(data){
-		var self = this;
-		var genres = [];
-		
-		for (var i=0;i<data.length && i<3;i++) {
-			genres[i] = data[i];
-		}
-		
-		return genres.join(' | ');
 	},
 
 	getTitle: function(){
