@@ -73,6 +73,12 @@ config = [{
                     'options': rename_options
                 },
                 {
+                    'name': 'unrar',
+                    'type': 'bool',
+                    'description': 'Extract rar files if found.',
+                    'default': False,
+                },
+                {
                     'name': 'cleanup',
                     'type': 'bool',
                     'description': 'Cleanup leftover files after successful rename.',

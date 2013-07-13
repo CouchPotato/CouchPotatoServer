@@ -9,6 +9,8 @@ from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Library, File, Profile, Release, \
     ReleaseInfo
 from couchpotato.environment import Env
+from unrar2 import RarFile, RarInfo
+from unrar2.rar_exceptions import *
 import errno
 import fnmatch
 import os
@@ -107,26 +109,33 @@ class Renamer(Plugin):
         self.renaming_started = True
 
         # make sure the movie folder name is included in the search
-        folder = None
-        files = []
         if movie_folder:
-            log.info('Scanning movie folder %s...', movie_folder)
             movie_folder = movie_folder.rstrip(os.path.sep)
             folder = os.path.dirname(movie_folder)
+            log.info('Scanning movie folder %s...', movie_folder)
+        else:
+            folder = self.conf('from')
+            log.info('Scanning from folder %s...', folder)
 
-            # Get all files from the specified folder
-            try:
-                for root, folders, names in os.walk(movie_folder):
-                    files.extend([os.path.join(root, name) for name in names])
-            except:
-                log.error('Failed getting files from %s: %s', (movie_folder, traceback.format_exc()))
+        # Get all files from the specified folder
+        files = []
+        try:
+            for root, folders, names in os.walk(movie_folder if movie_folder else self.conf('from')):
+                files.extend([os.path.join(root, name) for name in names])
+        except:
+            log.error('Failed getting files from %s: %s', (movie_folder if movie_folder else self.conf('from'), traceback.format_exc()))
+
+        # Unpack any archives
+        if self.conf('unrar'):
+            folder, movie_folder, files, extr_files = self.extractFiles(root = folder, movie_folder = movie_folder, files = files, \
+                cleanup = self.conf('cleanup') and not (self.conf('file_action') != 'move' and self.downloadIsTorrent(download_info)))
 
         db = get_session()
 
         # Extend the download info with info stored in the downloaded release
         download_info = self.extendDownloadInfo(download_info)
 
-        groups = fireEvent('scanner.scan', folder = folder if folder else self.conf('from'),
+        groups = fireEvent('scanner.scan', folder = folder,
                            files = files, download_info = download_info, return_ignored = False, single = True)
 
         destination = self.conf('to')
@@ -171,6 +180,9 @@ class Renamer(Plugin):
                 group['before_rename'] = []
                 fireEvent('renamer.before', group)
 
+                # Add extracted files to the before_rename list
+                group['before_rename'].extend(extr_files)
+
                 # Remove weird chars from moviename
                 movie_name = re.sub(r"[\x00\/\\:\*\?\"<>\|]", '', movie_title)
 
@@ -204,8 +216,8 @@ class Renamer(Plugin):
                     # Move nfo depending on settings
                     if file_type is 'nfo' and not self.conf('rename_nfo'):
                         log.debug('Skipping, renaming of %s disabled', file_type)
-                        if self.conf('cleanup') and not (self.conf('file_action') != 'move' and self.downloadIsTorrent(download_info)):
-                            for current_file in group['files'][file_type]:
+                        for current_file in group['files'][file_type]:
+                            if self.conf('cleanup') and (not (self.conf('file_action') != 'move' and self.downloadIsTorrent(download_info)) or self.fileIsAdded(current_file, group)):
                                 remove_files.append(current_file)
                         continue
 
@@ -386,13 +398,14 @@ class Renamer(Plugin):
                                 db.commit()
 
                 # Remove leftover files
-                if self.conf('cleanup') and not self.conf('move_leftover') and remove_leftovers and \
-                        not (self.conf('file_action') != 'move' and self.downloadIsTorrent(download_info)):
-                    log.debug('Removing leftover files')
-                    for current_file in group['files']['leftover']:
-                        remove_files.append(current_file)
-                elif not remove_leftovers: # Don't remove anything
+                if not remove_leftovers: # Don't remove anything
                     break
+
+                log.debug('Removing leftover files')
+                for current_file in group['files']['leftover']:
+                    if self.conf('cleanup') and not self.conf('move_leftover') and \
+                            (not (self.conf('file_action') != 'move' and self.downloadIsTorrent(download_info)) or self.fileIsAdded(current_file, group)):
+                        remove_files.append(current_file)
 
             # Remove files
             delete_folders = []
@@ -822,3 +835,78 @@ Remove it if you want it to be renamed (again, or at least let it try again)
     
     def movieInFromFolder(self, movie_folder):
         return movie_folder and self.conf('from') in movie_folder or not movie_folder
+
+    def extractFiles(self, root, movie_folder, files, cleanup = False):
+
+        # RegEx for finding rar files
+        archive_regex = '(?P<file>^(?P<base>(?:(?!\.part\d+\.rar$).)*)\.(?:(?:part0*1\.)?rar)$)'
+        restfile_regex = '(^%s\.(?:part(?!0*1\.rar$)\d+\.rar$|[rstuvw]\d+$))'
+        extr_files = []
+
+        # Find all archive files
+        archives = [re.search(archive_regex, name).groupdict() for name in files if re.search(archive_regex, name)]
+
+        #Extract all archives
+        for archive in archives:
+            # Find all related archive files
+            archive['files'] = [name for name in files if re.search(restfile_regex % re.escape(archive['base']), name)]
+            archive['files'].append(archive['file'])
+
+            log.info('Archive %s found. Extracting...', os.path.basename(archive['file']))
+            try:
+                rar_handle = RarFile(archive['file'])
+                extr_path = os.path.join(self.conf('from'), os.path.relpath(os.path.dirname(archive['file']), root))
+                self.makeDir(extr_path)
+                for packedinfo in rar_handle.infolist():
+                    if not packedinfo.isdir and not os.path.isfile(os.path.join(extr_path, os.path.basename(packedinfo.filename))):
+                        log.debug('Extracting %s...', packedinfo.filename)
+                        rar_handle.extract(condition = [packedinfo.index], path = extr_path, withSubpath = False, overwrite = False)
+                        extr_files.append(os.path.join(extr_path, os.path.basename(packedinfo.filename)))
+                del rar_handle
+            except Exception, e:
+                log.error('Failed to extract %s: %s %s', (archive['file'], e, traceback.format_exc()))
+                continue
+
+            # Delete the archive files
+            for filename in archive['files']:
+                if cleanup:
+                    try:
+                        os.remove(filename)
+                    except Exception, e:
+                        log.error('Failed to remove %s: %s %s', (filename, e, traceback.format_exc()))
+                        continue
+                files.remove(filename)
+
+        # Move the rest of the files and folders if any files are extracted to the from folder
+        if extr_files and os.path.normpath(os.path.normcase(root)) != os.path.normpath(os.path.normcase(self.conf('from'))):   
+            for leftoverfile in list(files):
+                move_to = os.path.join(self.conf('from'), os.path.relpath(leftoverfile, root))
+
+                try:
+                    self.makeDir(os.path.dirname(move_to))
+                    self.moveFile(leftoverfile, move_to, cleanup)
+                except Exception, e:
+                    log.error('Failed moving left over file %s to %s: %s %s',(leftoverfile, move_to, e, traceback.format_exc()))
+                    # As we probably tried to overwrite the nfo file, check if it exists and then remove the original
+                    if os.path.isfile(move_to):
+                        if cleanup:
+                            log.info('Deleting left over file %s instead...', leftoverfile)
+                            os.unlink(leftoverfile)
+                    else:
+                        continue
+
+                files.remove(leftoverfile)
+                extr_files.append(move_to)
+
+            if cleanup:
+                # Remove all left over folders
+                log.debug('Removing old movie folder %s...', movie_folder)
+                self.deleteEmptyFolder(movie_folder)
+
+            movie_folder = os.path.join(self.conf('from'), os.path.relpath(movie_folder, root))
+            root = self.conf('from')
+
+        if extr_files:
+            files.extend(extr_files)
+
+        return (root, movie_folder, files, extr_files)
