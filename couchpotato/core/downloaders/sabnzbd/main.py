@@ -132,7 +132,7 @@ class Sabnzbd(Downloader):
         return True
 
     def processComplete(self, item, delete_files = False):
-        log.debug('Requesting SabNZBd to remove the NZB %s%s.', (item['name']))
+        log.debug('Requesting SabNZBd to remove the NZB %s.', item['name'])
 
         try:
             self.call({
