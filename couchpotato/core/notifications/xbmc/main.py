@@ -34,7 +34,7 @@ class XBMC(Notification):
                 ]
 
                 if not self.conf('only_first') or hosts.index(host) == 0:
-                    calls.append(('VideoLibrary.Scan', {'directory': data.get('destination_dir', None)}))
+                    calls.append(('VideoLibrary.Scan', {'directory': data.get('destination_dir', None)} if 'localhost' in host else {}))
 
                 max_successful += len(calls)
                 response = self.request(host, calls)
