@@ -26,6 +26,13 @@ config = [{
                     'description': 'Hostname with port. Usually <strong>localhost:9091</strong>',
                 },
                 {
+                    'name': 'rpc_url',
+                    'type': 'string',
+                    'default': 'transmission',
+                    'advanced': True,
+                    'description': 'Change if you don\'t run Transmission RPC at the default url.',
+                },
+                {
                     'name': 'username',
                 },
                 {
