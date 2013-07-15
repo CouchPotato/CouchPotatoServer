@@ -28,7 +28,7 @@ class Transmission(Downloader):
             return False
 
         if not self.trpc:
-            self.trpc = TransmissionRPC(host[0], port = host[1], username = self.conf('username'), password = self.conf('password'))
+            self.trpc = TransmissionRPC(host[0], port = host[1], rpc_url = self.conf('rpc_url'), username = self.conf('username'), password = self.conf('password'))
 
         return self.trpc
 
@@ -144,11 +144,11 @@ class Transmission(Downloader):
 class TransmissionRPC(object):
 
     """TransmissionRPC lite library"""
-    def __init__(self, host = 'localhost', port = 9091, username = None, password = None):
+    def __init__(self, host = 'localhost', port = 9091, rpc_url = 'transmission', username = None, password = None):
 
         super(TransmissionRPC, self).__init__()
 
-        self.url = 'http://' + host + ':' + str(port) + '/transmission/rpc'
+        self.url = 'http://' + host + ':' + str(port) + '/' + rpc_url + '/rpc'
         self.tag = 0
         self.session_id = 0
         self.session = {}
