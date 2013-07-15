@@ -47,6 +47,32 @@ def nameScore(name, year):
 
     return score
 
+def CatnameScore(name, year, preferred):
+    ''' Calculate score for words in the NZB name '''
+
+    score = 0
+    name = name.lower()
+
+    # give points for the cool stuff
+    for value in name_scores:
+        v = value.split(':')
+        add = int(v.pop())
+        if v.pop() in name:
+            score = score + add
+
+    # points if the year is correct
+    if str(year) in name:
+        score = score + 5
+
+    # Contains preferred word
+    nzb_words = re.split('\W+', simplifyString(name))
+    preferred_words = [x.strip() for x in preferred.split(',')]
+    for word in preferred_words:
+        if word.strip() and word.strip().lower() in nzb_words:
+            score = score + 100
+
+    return score
+
 
 def nameRatioScore(nzb_name, movie_name):
     nzb_words = re.split('\W+', fireEvent('scanner.create_file_identifier', nzb_name, single = True))
@@ -140,6 +166,20 @@ def partialIgnoredScore(nzb_name, movie_name):
     movie_name = movie_name.lower()
 
     ignored_words = [x.strip().lower() for x in Env.setting('ignored_words', section = 'searcher').split(',')]
+
+    score = 0
+    for ignored_word in ignored_words:
+        if ignored_word in nzb_name and ignored_word not in movie_name:
+            score -= 5
+
+    return score
+
+def CatpartialIgnoredScore(nzb_name, movie_name, ignored):
+
+    nzb_name = nzb_name.lower()
+    movie_name = movie_name.lower()
+
+    ignored_words = [x.strip().lower() for x in ignored.split(',')]
 
     score = 0
     for ignored_word in ignored_words:

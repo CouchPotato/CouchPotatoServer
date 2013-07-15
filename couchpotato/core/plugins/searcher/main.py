@@ -392,24 +392,30 @@ class Searcher(Plugin):
         nzb_words = re.split('\W+', nzb_name)
 
         # Make sure it has required words
-        required_words = splitString(self.conf('required_words').lower())
+        try:
+            required_words = splitString(movie['category']['required'].lower())
+        except:
+            required_words = splitString(self.conf('required_words').lower())
         req_match = 0
         for req_set in required_words:
             req = splitString(req_set, '&')
             req_match += len(list(set(nzb_words) & set(req))) == len(req)
 
-        if self.conf('required_words') and req_match == 0:
+        if len(required_words) > 0  and req_match == 0:
             log.info2('Wrong: Required word missing: %s', nzb['name'])
             return False
 
         # Ignore releases
-        ignored_words = splitString(self.conf('ignored_words').lower())
+        try:
+            ignored_words = splitString(movie['category']['ignored'].lower())
+        except:
+            ignored_words = splitString(self.conf('ignored_words').lower())
         ignored_match = 0
         for ignored_set in ignored_words:
             ignored = splitString(ignored_set, '&')
             ignored_match += len(list(set(nzb_words) & set(ignored))) == len(ignored)
 
-        if self.conf('ignored_words') and ignored_match:
+        if len(ignored_words) > 0 and ignored_match:
             log.info2("Wrong: '%s' contains 'ignored words'", (nzb['name']))
             return False
 

@@ -82,6 +82,7 @@ class Movie(Entity):
     library = ManyToOne('Library', cascade = 'delete, delete-orphan', single_parent = True)
     status = ManyToOne('Status')
     profile = ManyToOne('Profile')
+    category = ManyToOne('Category')
     releases = OneToMany('Release', cascade = 'all, delete-orphan')
     files = ManyToMany('File', cascade = 'all, delete-orphan', single_parent = True)
 
@@ -205,6 +206,22 @@ class Profile(Entity):
         orig_dict['hide'] = orig_dict.get('hide') or False
 
         return orig_dict
+
+class Category(Entity):
+    """"""
+    using_options(order_by = 'order')
+
+    label = Field(Unicode(50))
+    order = Field(Integer, default = 0, index = True)
+    core = Field(Boolean, default = False)
+    hide = Field(Boolean, default = False)
+
+    movie = OneToMany('Movie')
+    path = Field(Unicode(255))
+    required = Field(Unicode(255))
+    preferred = Field(Unicode(255))
+    ignored = Field(Unicode(255))
+    
 
 class ProfileType(Entity):
     """"""
