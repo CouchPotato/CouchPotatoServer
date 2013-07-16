@@ -13,7 +13,7 @@ log = CPLog(__name__)
 
 class XBMC(Notification):
 
-    listen_to = ['renamer.after']
+    listen_to = ['renamer.after', 'movie.snatched']
     use_json_notifications = {}
     http_time_between_calls = 0
 
@@ -33,15 +33,19 @@ class XBMC(Notification):
                     ('GUI.ShowNotification', {'title': self.default_title, 'message': message, 'image': self.getNotificationImage('small')}),
                 ]
 
-                if not self.conf('only_first') or hosts.index(host) == 0:
-                    calls.append(('VideoLibrary.Scan', {'directory': data.get('destination_dir', None)} if 'localhost' in host else {}))
+                if data and data.get('destination_dir') and (not self.conf('only_first') or hosts.index(host) == 0):
+                    param = {}
+                    if self.conf('remote_dir_scan') or socket.getfqdn('localhost') == socket.getfqdn(host.split(':')[0]):
+                        param = {'directory': data['destination_dir']}
+
+                    calls.append(('VideoLibrary.Scan', param))
 
                 max_successful += len(calls)
                 response = self.request(host, calls)
             else:
                 response = self.notifyXBMCnoJSON(host, {'title':self.default_title, 'message':message})
 
-                if not self.conf('only_first') or hosts.index(host) == 0:
+                if data and data.get('destination_dir') and (not self.conf('only_first') or hosts.index(host) == 0):
                     response += self.request(host, [('VideoLibrary.Scan', {})])
                     max_successful += 1
 
