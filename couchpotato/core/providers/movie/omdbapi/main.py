@@ -95,6 +95,7 @@ class OMDBAPI(MovieProvider):
                     #'rotten': (tryFloat(movie.get('tomatoRating', 0)), tryInt(movie.get('tomatoReviews', '').replace(',', ''))),
                 },
                 'imdb': str(movie.get('imdbID', '')),
+                'mpaa': str(movie.get('Rated', '')),
                 'runtime': self.runtimeToMinutes(movie.get('Runtime', '')),
                 'released': movie.get('Released'),
                 'year': year if isinstance(year, (int)) else None,

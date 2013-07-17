@@ -94,6 +94,7 @@ class Library(Entity):
 
     plot = Field(UnicodeText)
     tagline = Field(UnicodeText(255))
+    mpaa = Field(UnicodeText(255))
     info = Field(JsonType)
 
     status = ManyToOne('Status')

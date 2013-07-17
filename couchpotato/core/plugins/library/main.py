@@ -31,6 +31,7 @@ class LibraryPlugin(Plugin):
                 identifier = attrs.get('identifier'),
                 plot = toUnicode(attrs.get('plot')),
                 tagline = toUnicode(attrs.get('tagline')),
+                mpaa = toUnicode(attrs.get('mpaa')),
                 status_id = status.get('id'),
                 info = {},
             )
@@ -85,6 +86,7 @@ class LibraryPlugin(Plugin):
         if do_update:
             library.plot = toUnicode(info.get('plot', ''))
             library.tagline = toUnicode(info.get('tagline', ''))
+            library.mpaa = toUnicode(info.get('mpaa', ''))
             library.year = info.get('year', 0)
             library.status_id = done_status.get('id')
             library.info.update(info)

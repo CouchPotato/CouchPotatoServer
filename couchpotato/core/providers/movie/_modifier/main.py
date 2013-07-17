@@ -26,6 +26,7 @@ class MovieResultModifier(Plugin):
         'runtime': 0,
         'plot': '',
         'tagline': '',
+        'mpaa': '',
         'imdb': '',
         'genres': [],
     }
