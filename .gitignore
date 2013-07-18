@@ -3,6 +3,3 @@
 /_source/
 .project
 .pydevproject
-.DS_Store
-.idea
-*.iml

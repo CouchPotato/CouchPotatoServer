@@ -57,7 +57,7 @@ class XBMC(MetaDataBase):
             pass
 
         # Other values
-        types = ['year', 'originaltitle:original_title', 'outline', 'plot', 'tagline', 'mpaa', 'premiered:released']
+        types = ['year', 'mpaa', 'originaltitle:original_title', 'outline', 'plot', 'tagline', 'premiered:released']
         for type in types:
 
             if ':' in type:

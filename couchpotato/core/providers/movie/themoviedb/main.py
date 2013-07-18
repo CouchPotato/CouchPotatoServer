@@ -167,6 +167,7 @@ class TheMovieDb(MovieProvider):
                 'backdrop_original': [backdrop_original] if backdrop_original else [],
             },
             'imdb': movie.get('imdb_id'),
+            'mpaa': movie.get('certification', ''),
             'runtime': movie.get('runtime'),
             'released': movie.get('released'),
             'year': year,
