@@ -27,6 +27,7 @@ rename_options = {
         'imdb_id': 'IMDB id (tt0123456)',
         'cd': 'CD number (cd1)',
         'cd_nr': 'Just the cd nr. (1)',
+        'mpaa': 'MPAA Rating',
     },
 }
 
