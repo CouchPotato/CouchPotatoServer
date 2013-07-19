@@ -105,6 +105,7 @@ class Searcher(Plugin):
 
             for movie in movies:
                 movie_dict = movie.to_dict({
+                    'category': {},
                     'profile': {'types': {'quality': {}}},
                     'releases': {'status': {}, 'quality': {}},
                     'library': {'titles': {}, 'files':{}},
@@ -392,10 +393,10 @@ class Searcher(Plugin):
         nzb_words = re.split('\W+', nzb_name)
 
         # Make sure it has required words
-        try:
-            required_words = splitString(movie['category']['required'].lower())
-        except:
-            required_words = splitString(self.conf('required_words').lower())
+        required_words = splitString(self.conf('required_words').lower())
+        try: required_words = list(set(required_words + splitString(movie['category']['required'].lower())))
+        except: pass
+
         req_match = 0
         for req_set in required_words:
             req = splitString(req_set, '&')
@@ -406,10 +407,10 @@ class Searcher(Plugin):
             return False
 
         # Ignore releases
-        try:
-            ignored_words = splitString(movie['category']['ignored'].lower())
-        except:
-            ignored_words = splitString(self.conf('ignored_words').lower())
+        ignored_words = splitString(self.conf('ignored_words').lower())
+        try: ignored_words = list(set(ignored_words + splitString(movie['category']['ignored'].lower())))
+        except: pass
+
         ignored_match = 0
         for ignored_set in ignored_words:
             ignored = splitString(ignored_set, '&')

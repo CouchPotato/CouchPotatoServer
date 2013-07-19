@@ -1,11 +1,12 @@
 from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import toUnicode
-from couchpotato.core.helpers.variable import getTitle
+from couchpotato.core.helpers.variable import getTitle, splitString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.core.plugins.score.scores import nameScore, CatnameScore, nameRatioScore, \
-    sizeScore, providerScore, duplicateScore, partialIgnoredScore, CatpartialIgnoredScore, namePositionScore, \
+from couchpotato.core.plugins.score.scores import nameScore, nameRatioScore, \
+    sizeScore, providerScore, duplicateScore, partialIgnoredScore, namePositionScore, \
     halfMultipartScore
+from couchpotato.environment import Env
 
 log = CPLog(__name__)
 
@@ -18,10 +19,12 @@ class Score(Plugin):
     def calculate(self, nzb, movie):
         ''' Calculate the score of a NZB, used for sorting later '''
 
-        if movie and movie['category'] and movie['category']['preferred']:
-            score = CatnameScore(toUnicode(nzb['name']), movie['library']['year'], movie['category']['preferred'])
-        else:
-            score = nameScore(toUnicode(nzb['name']), movie['library']['year'])
+        # Merge global and category
+        preferred_words = splitString(Env.setting('preferred_words', section = 'searcher').lower())
+        try: preferred_words = list(set(preferred_words + splitString(movie['category']['preferred'].lower())))
+        except: pass
+
+        score = nameScore(toUnicode(nzb['name']), movie['library']['year'], preferred_words)
 
         for movie_title in movie['library']['titles']:
             score += nameRatioScore(toUnicode(nzb['name']), toUnicode(movie_title['title']))
@@ -43,11 +46,13 @@ class Score(Plugin):
         # Duplicates in name
         score += duplicateScore(nzb['name'], getTitle(movie['library']))
 
+        # Merge global and category
+        ignored_words = splitString(Env.setting('ignored_words', section = 'searcher').lower())
+        try: ignored_words = list(set(ignored_words + splitString(movie['category']['ignored'].lower())))
+        except: pass
+
         # Partial ignored words
-        if movie and movie['category'] and movie['category']['ignored']:
-            score = CatpartialIgnoredScore(nzb['name'], getTitle(movie['library']), movie['category']['ignored'])
-        else:        
-            score += partialIgnoredScore(nzb['name'], getTitle(movie['library']))
+        score += partialIgnoredScore(nzb['name'], getTitle(movie['library']), ignored_words)
 
         # Ignore single downloads from multipart
         score += halfMultipartScore(nzb['name'])
