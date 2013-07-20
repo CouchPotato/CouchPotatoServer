@@ -95,7 +95,7 @@ class uTorrent(Downloader):
         else:
             self.utorrent_api.add_torrent_file(torrent_filename, filedata)
 
-        # Change settings of added torrents
+        # Change settings of added torrent
         self.utorrent_api.set_torrent(torrent_hash, torrent_params)
         if self.conf('paused', default = 0):
             self.utorrent_api.pause_torrent(torrent_hash)
