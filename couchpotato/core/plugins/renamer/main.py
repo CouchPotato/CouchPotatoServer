@@ -552,7 +552,11 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                 shutil.copy(old, dest)
             elif self.conf('file_action') == 'move_symlink':
                 shutil.move(old, dest)
-                symlink(dest, old)
+                try:
+                    symlink(dest, old)
+                except:
+                    log.error('Couldn\'t symlink file "%s" to "%s". Copying the file back. Error: %s. ', (old, dest, traceback.format_exc()))
+                    shutil.copy(dest, old)
             else:
                 shutil.move(old, dest)
 
