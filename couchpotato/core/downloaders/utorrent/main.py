@@ -10,7 +10,9 @@ from multipartpost import MultipartPostHandler
 import cookielib
 import httplib
 import json
+import os
 import re
+import stat
 import time
 import urllib
 import urllib2
@@ -52,7 +54,7 @@ class uTorrent(Downloader):
             new_settings['seed_prio_limitul_flag'] = True
             log.info('Updated uTorrent settings to set a torrent to complete after it the seeding requirements are met.')
 
-        if settings.get('bt.read_only_on_complete'): #This doesnt work as this option seems to be not available through the api
+        if settings.get('bt.read_only_on_complete'): #This doesn't work as this option seems to be not available through the api. Mitigated with removeReadOnly function
             new_settings['bt.read_only_on_complete'] = False
             log.info('Updated uTorrent settings to not set the files to read only after completing.')
 
@@ -130,8 +132,10 @@ class uTorrent(Downloader):
             status = 'busy'
             if 'Finished' in item[21]:
                 status = 'completed'
+                self.removeReadOnly(item[26])
             elif 'Seeding' in item[21]:
                 status = 'seeding'
+                self.removeReadOnly(item[26])
 
             statuses.append({
                 'id': item[0],
@@ -161,6 +165,13 @@ class uTorrent(Downloader):
         if not self.connect():
             return False
         return self.utorrent_api.remove_torrent(item['id'], remove_data = delete_files)
+    
+    def removeReadOnly(self, folder):
+        #Removes all read-only flags in a folder
+        if folder and os.path.isdir(folder):
+            for root, folders, filenames in os.walk(folder):
+                for filename in filenames:
+                    os.chmod(os.path.join(root, filename), stat.S_IWRITE)
 
 class uTorrentAPI(object):
 
