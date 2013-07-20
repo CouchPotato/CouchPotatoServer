@@ -517,22 +517,22 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         if ignore_file:
             self.createFile(ignore_file, text)
 
-    def untagDir(self, folder, tag = None):
+    def untagDir(self, folder, tag = ''):
         if not os.path.isdir(folder):
             return
 
         # Remove any .ignore files
         for root, dirnames, filenames in os.walk(folder):
-            for filename in fnmatch.filter(filenames, '%s.ignore' % tag if tag else '*'):
+            for filename in fnmatch.filter(filenames, '*%s.ignore' % tag):
                 os.remove((os.path.join(root, filename)))
 
-    def hastagDir(self, folder, tag = None):
+    def hastagDir(self, folder, tag = ''):
         if not os.path.isdir(folder):
             return False
 
         # Find any .ignore files
         for root, dirnames, filenames in os.walk(folder):
-            if fnmatch.filter(filenames, '%s.ignore' % tag if tag else '*'):
+            if fnmatch.filter(filenames, '*%s.ignore' % tag):
                 return True
 
         return False
