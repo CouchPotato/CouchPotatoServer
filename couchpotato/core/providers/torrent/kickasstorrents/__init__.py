@@ -8,7 +8,6 @@ config = [{
     'groups': [
         {
             'tab': 'searcher',
-            'subtab': 'providers',
             'list': 'torrent_providers',
             'name': 'KickAssTorrents',
             'description': 'See <a href="https://kat.ph/">KickAssTorrents</a>',

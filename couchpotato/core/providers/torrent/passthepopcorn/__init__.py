@@ -8,7 +8,6 @@ config = [{
     'groups': [
         {
             'tab': 'searcher',
-            'subtab': 'providers',
             'list': 'torrent_providers',
             'name': 'PassThePopcorn',
             'description': 'See <a href="https://passthepopcorn.me">PassThePopcorn.me</a>',

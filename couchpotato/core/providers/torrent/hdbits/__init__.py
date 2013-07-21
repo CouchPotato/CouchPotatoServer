@@ -8,7 +8,6 @@ config = [{
     'groups': [
         {
             'tab': 'searcher',
-            'subtab': 'providers',
             'list': 'torrent_providers',
             'name': 'HDBits',
             'description': 'See <a href="http://hdbits.org">HDBits</a>',

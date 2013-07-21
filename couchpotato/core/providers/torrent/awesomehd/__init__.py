@@ -8,7 +8,6 @@ config = [{
     'groups': [
         {
             'tab': 'searcher',
-            'subtab': 'providers',
             'list': 'torrent_providers',
             'name': 'Awesome-HD',
             'description': 'See <a href="https://awesome-hd.net">AHD</a>',

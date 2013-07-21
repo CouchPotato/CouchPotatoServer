@@ -8,7 +8,6 @@ config = [{
     'groups': [
         {
             'tab': 'searcher',
-            'subtab': 'providers',
             'list': 'torrent_providers',
             'name': 'TorrentShack',
             'description': 'See <a href="http://www.torrentshack.net/">TorrentShack</a>',

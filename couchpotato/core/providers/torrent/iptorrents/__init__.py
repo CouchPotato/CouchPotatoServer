@@ -8,7 +8,6 @@ config = [{
     'groups': [
         {
             'tab': 'searcher',
-            'subtab': 'providers',
             'list': 'torrent_providers',
             'name': 'IPTorrents',
             'description': 'See <a href="http://www.iptorrents.com">IPTorrents</a>',
