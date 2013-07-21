@@ -41,7 +41,8 @@ var QualityBase = new Class({
 		self.settings.addEvent('create', function(){
 			var tab = self.settings.createSubTab('profile', {
 				'label': 'Quality',
-				'name': 'profile'
+				'name': 'profile',
+				'subtab_label': 'Qualities'
 			}, self.settings.tabs.searcher ,'searcher');
 
 			self.tab = tab.tab;

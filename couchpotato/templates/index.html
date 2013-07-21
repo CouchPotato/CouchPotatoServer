@@ -70,6 +70,8 @@
 
 				File.Type.setup({{ json_encode(fireEvent('file.types', single = True)) }});
 
+				CategoryList.setup({{ json_encode(fireEvent('category.all', single = True)) }});
+
 				App.setup({
 					'base_url': {{ json_encode(Env.get('web_base')) }},
 					'args': {{ json_encode(Env.get('args')) }},

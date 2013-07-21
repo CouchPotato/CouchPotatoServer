@@ -15,25 +15,6 @@ config = [{
             'description': 'Options for the searchers',
             'options': [
                 {
-                    'name': 'preferred_words',
-                    'label': 'Preferred words',
-                    'default': '',
-                    'description': 'These words will give the releases a higher score.'
-                },
-                {
-                    'name': 'required_words',
-                    'label': 'Required words',
-                    'default': '',
-                    'placeholder': 'Example: DTS, AC3 & English',
-                    'description': 'A release should contain at least one set of words. Sets are separated by "," and each word within a set must be separated with "&"'
-                },
-                {
-                    'name': 'ignored_words',
-                    'label': 'Ignored words',
-                    'default': 'german, dutch, french, truefrench, danish, swedish, spanish, italian, korean, dubbed, swesub, korsub, dksubs',
-                    'description': 'Ignores releases that match any of these sets. (Works like explained above)'
-                },
-                {
                     'name': 'preferred_method',
                     'label': 'First search',
                     'description': 'Which of the methods do you prefer',
@@ -48,6 +29,34 @@ config = [{
                     'type': 'bool',
                     'label': 'Always search',
                     'description': 'Search for movies even before there is a ETA. Enabling this will probably get you a lot of fakes.',
+                },
+            ],
+        }, {
+            'tab': 'searcher',
+            'subtab': 'category',
+            'subtab_label': 'Categories',
+            'name': 'filter',
+            'label': 'Global filters',
+            'description': 'Prefer, ignore & required words in release names',
+            'options': [
+                {
+                    'name': 'preferred_words',
+                    'label': 'Preferred',
+                    'default': '',
+                    'description': 'Words that give the releases a higher score.'
+                },
+                {
+                    'name': 'required_words',
+                    'label': 'Required',
+                    'default': '',
+                    'placeholder': 'Example: DTS, AC3 & English',
+                    'description': 'Release should contain at least one set of words. Sets are separated by "," and each word within a set must be separated with "&"'
+                },
+                {
+                    'name': 'ignored_words',
+                    'label': 'Ignored',
+                    'default': 'german, dutch, french, truefrench, danish, swedish, spanish, italian, korean, dubbed, swesub, korsub, dksubs',
+                    'description': 'Ignores releases that match any of these sets. (Works like explained above)'
                 },
             ],
         }, {
@@ -97,13 +106,14 @@ config = [{
     'groups': [
         {
             'tab': 'searcher',
-            'name': 'nzb',
+            'name': 'searcher',
             'label': 'NZB',
             'wizard': True,
             'options': [
                 {
                     'name': 'retention',
-                    'default': 1000,
+                    'label': 'Usenet Retention',
+                    'default': 1500,
                     'type': 'int',
                     'unit': 'days'
                 },
