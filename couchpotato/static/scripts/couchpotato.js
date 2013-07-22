@@ -56,6 +56,10 @@
 				History.push(url);
 		}
 	},
+	
+	isMac: function(){
+		return Browser.Platform.mac
+	},
 
 	createLayout: function(){
 		var self = this;
