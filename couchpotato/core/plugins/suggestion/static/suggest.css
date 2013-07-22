@@ -34,6 +34,7 @@
 			left: 15px;
 			right: 15px;
 			bottom: 15px;
+			overflow: hidden;
 		}
 
 		.suggestions .movie_result .data .info h2 {
@@ -83,6 +84,17 @@
 	.suggestions .movie_result .options {
 		left: 100px;
 	}
+		.suggestions .movie_result .options select[name=title] { width: 100%; }
+		.suggestions .movie_result .options select[name=profile] { width: 100%; }
+		.suggestions .movie_result .options select[name=category] { width: 100%; }
+		
+		.suggestions .movie_result .button { 
+			position: absolute;
+			margin: 2px 0 0 0;
+			right: 15px;
+			bottom: 15px;
+		}
+		
 
 	.suggestions .movie_result .thumbnail {
 		width: 100px;

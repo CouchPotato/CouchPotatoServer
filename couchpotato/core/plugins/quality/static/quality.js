@@ -103,7 +103,8 @@ var QualityBase = new Class({
 
 		var profile_list;
 		var group = self.settings.createGroup({
-			'label': 'Profile Defaults'
+			'label': 'Profile Defaults',
+			'description':  '(Needs refresh \'' +(App.isMac() ? 'CMD+R' : 'F5')+ '\' after editing)'
 		}).adopt(
 			new Element('.ctrlHolder#profile_ordering').adopt(
 				new Element('label[text=Order]'),

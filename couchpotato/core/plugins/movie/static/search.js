@@ -216,9 +216,10 @@ Block.Search.Item = new Class({
 				}
 			}).adopt(
 				self.info_container = new Element('div.info').adopt(
-					self.title = new Element('h2', {
-						'text': info.titles && info.titles.length > 0 ? info.titles[0] : 'Unknown'
-					}).adopt(
+					new Element('h2').adopt(
+						self.title = new Element('span.title', {
+							'text': info.titles && info.titles.length > 0 ? info.titles[0] : 'Unknown'
+						}),
 						self.year = info.year ? new Element('span.year', {
 							'text': info.year
 						}) : null
@@ -274,7 +275,9 @@ Block.Search.Item = new Class({
 
 	add: function(e){
 		var self = this;
-		(e).preventDefault();
+
+		if(e)
+			(e).preventDefault();
 
 		self.loadingMask();
 
@@ -282,7 +285,8 @@ Block.Search.Item = new Class({
 			'data': {
 				'identifier': self.info.imdb,
 				'title': self.title_select.get('value'),
-				'profile_id': self.profile_select.get('value')
+				'profile_id': self.profile_select.get('value'),
+				'category_id': self.category_select.get('value')
 			},
 			'onComplete': function(json){
 				self.options_el.empty();
@@ -335,7 +339,12 @@ Block.Search.Item = new Class({
 					self.profile_select = new Element('select', {
 						'name': 'profile'
 					}),
-					new Element('a.button', {
+					self.category_select = new Element('select', {
+						'name': 'category'
+					}).grab(
+						new Element('option', {'value': -1, 'text': 'None'})
+					),
+					self.add_button = new Element('a.button', {
 						'text': 'Add',
 						'events': {
 							'click': self.add.bind(self)
@@ -350,7 +359,28 @@ Block.Search.Item = new Class({
 				}).inject(self.title_select)
 			})
 
-			Quality.getActiveProfiles().each(function(profile){
+
+			// Fill categories
+			var categories = CategoryList.getAll();
+
+			if(categories.length == 0)
+				self.category_select.hide();
+			else {
+				self.category_select.show();
+				categories.each(function(category){
+					new Element('option', {
+						'value': category.data.id,
+						'text': category.data.label
+					}).inject(self.category_select);
+				});
+			}
+
+			// Fill profiles
+			var profiles = Quality.getActiveProfiles();
+			if(profiles.length == 1)
+				self.profile_select.hide();
+
+			profiles.each(function(profile){
 				new Element('option', {
 					'value': profile.id ? profile.id : profile.data.id,
 					'text': profile.label ? profile.label : profile.data.label
@@ -358,6 +388,10 @@ Block.Search.Item = new Class({
 			});
 
 			self.options_el.addClass('set');
+
+			if(categories.length == 0 && self.title_select.getElements('option').length == 1 && profiles.length == 1)
+				self.add();
+
 		}
 
 	},

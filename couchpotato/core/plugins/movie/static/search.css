@@ -165,7 +165,8 @@
 				@media all and (max-width: 480px) {
 				
 					.movie_result .options select[name=title] { width: 90px; }
-					.movie_result .options select[name=profile] { width: 60px; }
+					.movie_result .options select[name=profile] { width: 50px; }
+					.movie_result .options select[name=category] { width: 50px; }
 					
 				}
 
@@ -217,26 +218,51 @@
 				position: absolute;
 				top: 20%;
 				left: 15px;
-				right: 60px;
+				right: 7px;
 				vertical-align: middle;
 			}
-
+			
 				.movie_result .info h2 {
+					margin: 0;
 					font-weight: normal;
 					font-size: 20px;
+					padding: 0;
+				}
+				
+					.search_form .info h2 {
+						position: absolute;
+						width: 100%;
+					}
+
+				.movie_result .info h2 .title {
 					display: block;
 					margin: 0;
 					text-overflow: ellipsis;
 					overflow: hidden;
 					white-space: nowrap;
-					width: 100%;
 				}
-
-				.movie_result .info h2 span {
-					padding: 0 5px;
-					position: absolute;
-					right: -60px;
-				}
+				
+					.search_form .info h2 .title {
+						position: absolute;
+						width: 88%;
+					}
+	
+					.movie_result .info h2 .year {
+						padding: 0 5px;
+						text-align: center;
+						position: absolute;
+						width: 12%;
+						right: 0;
+					}
+					
+					@media all and (max-width: 480px) {
+					
+						.search_form .info h2 .year {
+							font-size: 12px;
+							margin-top: 7px;
+						}
+						
+					}
 
 .search_form .mask,
 .movie_result .mask {

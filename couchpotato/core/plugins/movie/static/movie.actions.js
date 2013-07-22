@@ -1,5 +1,5 @@
 var MovieAction = new Class({
-	
+
 	Implements: [Options],
 
 	class_name: 'action icon2',
@@ -521,6 +521,11 @@ MA.Edit = new Class({
 					self.profile_select = new Element('select', {
 						'name': 'profile'
 					}),
+					self.category_select = new Element('select', {
+						'name': 'category'
+					}).grab(
+						new Element('option', {'value': -1, 'text': 'None'})
+					),
 					new Element('a.button.edit', {
 						'text': 'Save & Search',
 						'events': {
@@ -540,7 +545,34 @@ MA.Edit = new Class({
 			});
 
 
-			Quality.getActiveProfiles().each(function(profile){
+			// Fill categories
+			var categories = CategoryList.getAll();
+
+			if(categories.length == 0)
+				self.category_select.hide();
+			else {
+				self.category_select.show();
+				categories.each(function(category){
+
+					var category_id = category.data.id;
+
+					new Element('option', {
+						'value': category_id,
+						'text': category.data.label
+					}).inject(self.category_select);
+
+					if(self.movie.category && self.movie.category.data && self.movie.category.data.id == category_id)
+						self.category_select.set('value', category_id);
+
+				});
+			}
+
+			// Fill profiles
+			var profiles = Quality.getActiveProfiles();
+			if(profiles.length == 1)
+				self.profile_select.hide();
+
+			profiles.each(function(profile){
 
 				var profile_id = profile.id ? profile.id : profile.data.id;
 
@@ -551,6 +583,7 @@ MA.Edit = new Class({
 
 				if(self.movie.profile && self.movie.profile.data && self.movie.profile.data.id == profile_id)
 					self.profile_select.set('value', profile_id);
+
 			});
 
 		}
@@ -566,7 +599,8 @@ MA.Edit = new Class({
 			'data': {
 				'id': self.movie.get('id'),
 				'default_title': self.title_select.get('value'),
-				'profile_id': self.profile_select.get('value')
+				'profile_id': self.profile_select.get('value'),
+				'category_id': self.category_select.get('value')
 			},
 			'useSpinner': true,
 			'spinnerTarget': $(self.movie),

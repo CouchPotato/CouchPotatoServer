@@ -42,7 +42,7 @@ var CategoryListBase = new Class({
 
 		self.settings.createGroup({
 			'label': 'Categories',
-			'description': 'Create your own categories.'
+			'description': 'Create categories, each one extending global filters. (Needs refresh \'' +(App.isMac() ? 'CMD+R' : 'F5')+ '\' after editing)'
 		}).inject(self.content).adopt(
 			self.category_container = new Element('div.container'),
 			new Element('a.add_new_category', {
@@ -63,6 +63,16 @@ var CategoryListBase = new Class({
 
 	},
 
+	getCategory: function(id){
+		return this.categories.filter(function(category){
+			return category.data.id == id
+		}).pick()
+	},
+	
+	getAll: function(){
+		return this.categories;
+	},
+
 	createCategory: function(data){
 		var self = this;
 
@@ -78,7 +88,7 @@ var CategoryListBase = new Class({
 
 		var category_list;
 		var group = self.settings.createGroup({
-			'label': 'Category order'
+			'label': 'Category ordering'
 		}).adopt(
 			new Element('.ctrlHolder#category_ordering').adopt(
 				new Element('label[text=Order]'),
@@ -138,7 +148,6 @@ var Category = new Class({
 		var self = this;
 
 		self.data = data;
-		self.types = [];
 
 		self.create();
 
@@ -165,15 +174,16 @@ var Category = new Class({
 				new Element('input.inlay', {
 					'type':'text',
 					'value': data.label,
-					'placeholder': 'Label'
-				})
+					'placeholder': 'Example: Kids, Horror or His'
+				}),
+				new Element('p.formHint', {'text': 'See global filters for explanation.'})
 			),
 			new Element('.category_preferred.ctrlHolder').adopt(
 				new Element('label', {'text':'Preferred'}),
 				new Element('input.inlay', {
 					'type':'text',
 					'value': data.preferred,
-					'placeholder': 'Ignored'
+					'placeholder': 'Blu-ray, DTS'
 				})
 			),
 			new Element('.category_required.ctrlHolder').adopt(
@@ -181,7 +191,7 @@ var Category = new Class({
 				new Element('input.inlay', {
 					'type':'text',
 					'value': data.required,
-					'placeholder': 'Required'
+					'placeholder': 'Example: DTS, AC3 & English'
 				})
 			),
 			new Element('.category_ignored.ctrlHolder').adopt(
@@ -189,7 +199,7 @@ var Category = new Class({
 				new Element('input.inlay', {
 					'type':'text',
 					'value': data.ignored,
-					'placeholder': 'Ignored'
+					'placeholder': 'Example: dubbed, swesub, french'
 				})
 			)
 		);

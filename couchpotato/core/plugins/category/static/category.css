@@ -29,9 +29,7 @@
 
 	.category .formHint {
 		width: 250px !important;
-		vertical-align: top !important;
 		margin: 0 !important;
-		padding-left: 3px !important;
 		opacity: 0.1;
 	}
 	.category:hover .formHint {
