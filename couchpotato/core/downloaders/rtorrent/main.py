@@ -25,11 +25,14 @@ class rTorrent(Downloader):
     rtorrent_api = None
 
     def get_conn(self):
-        return RTorrent(
-            self.conf('url'),
-            self.conf('username'),
-            self.conf('password')
-        )
+        if self.conf('username') and self.conf('password'):
+            return RTorrent(
+                self.conf('url'),
+                self.conf('username'),
+                self.conf('password')
+            )
+
+        return RTorrent(self.conf('url'))
 
     def download(self, data, movie, filedata=None):
         log.debug('Sending "%s" (%s) to rTorrent.', (data.get('name'), data.get('type')))
@@ -59,7 +62,16 @@ class rTorrent(Downloader):
             if not self.rtorrent_api:
                 self.rtorrent_api = self.get_conn()
 
-            torrent = self.rtorrent_api.load_torrent(filedata, not self.conf('paused', default=0))
+            # Send torrent to rTorrent
+            torrent = self.rtorrent_api.load_torrent(filedata)
+
+            # Set label
+            if self.conf('label'):
+                torrent.set_custom(1, self.conf('label'))
+
+            # Start torrent
+            if not self.conf('paused', default=0):
+                torrent.start()
 
             return self.downloadReturnId(torrent_hash)
         except Exception, err:
