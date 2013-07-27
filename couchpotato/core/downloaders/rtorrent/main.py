@@ -87,11 +87,11 @@ class rTorrent(Downloader):
                     'original_status': item.state,
                     'timeleft': str(timedelta(seconds=float(item.left_bytes) / item.down_rate))
                                     if item.down_rate > 0 else -1,
-                    'folder': ''
+                    'folder': item.directory
                 })
 
             return statuses
 
         except Exception, err:
-            log.error('Failed to send torrent to rTorrent: %s', err)
+            log.error('Failed to get status from rTorrent: %s', err)
             return False
