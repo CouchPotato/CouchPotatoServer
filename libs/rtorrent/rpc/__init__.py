@@ -67,8 +67,8 @@ class BasicAuthTransport(xmlrpclib.Transport):
             raise
 
         #discard any response data and raise exception
-        #if (response.getheader("content-length", 0)):
-        #    response.read()
+        if (response.getheader("content-length", 0)):
+            response.read()
         raise xmlrpclib.ProtocolError(
             host + handler,
             response.status, response.reason,
