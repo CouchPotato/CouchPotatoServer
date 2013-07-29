@@ -33,7 +33,7 @@ config = [{
                 },
                 {
                     'name': 'label',
-                    'description': 'Label to add torrent as.',
+                    'description': 'Label to apply on added torrents.',
                 },
                 {
                     'name': 'paused',
