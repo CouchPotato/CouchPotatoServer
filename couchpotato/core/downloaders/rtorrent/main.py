@@ -1,18 +1,11 @@
 from base64 import b16encode, b32decode
-from bencode import bencode, bdecode
-from couchpotato.core.downloaders.base import Downloader, StatusList
-from couchpotato.core.helpers.encoding import isInt, ss
-from couchpotato.core.logger import CPLog
 from datetime import timedelta
 from hashlib import sha1
-from multipartpost import MultipartPostHandler
-import cookielib
-import httplib
-import json
-import re
-import time
-import urllib
-import urllib2
+import traceback
+
+from bencode import bencode, bdecode
+from couchpotato.core.downloaders.base import Downloader, StatusList
+from couchpotato.core.logger import CPLog
 from rtorrent import RTorrent
 
 
@@ -45,13 +38,17 @@ class rTorrent(Downloader):
             log.error('Failed sending torrent, no data')
             return False
 
+        # Try download magnet torrents
         if data.get('type') == 'torrent_magnet':
-            log.info('magnet torrents are not supported')
-            return False
+            filedata = self.magnetToTorrent(data.get('url'))
+
+            if filedata is False:
+                return False
+
+            data['type'] = 'torrent'
 
         info = bdecode(filedata)["info"]
         torrent_hash = sha1(bencode(info)).hexdigest().upper()
-        torrent_filename = self.createFileName(data, filedata, movie)
 
         # Convert base 32 to hex
         if len(torrent_hash) == 32:
