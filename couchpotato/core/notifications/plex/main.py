@@ -166,8 +166,8 @@ class Plex(Notification):
 
         return successful == total
 
-    def notify(self, message='', data={}, listener=None, forceUpdate=True):
-        self.updateClients(forceUpdate)
+    def notify(self, message='', data={}, listener=None, force=False):
+        self.updateClients(force)
 
         http_result = self.notify_http(message, data, listener)
         json_result = self.notify_json(message, data, listener)
