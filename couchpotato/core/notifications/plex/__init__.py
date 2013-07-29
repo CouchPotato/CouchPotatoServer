@@ -17,10 +17,14 @@ config = [{
                     'type': 'enabler',
                 },
                 {
-                    'name': 'host',
+                    'name': 'media_server',
                     'default': 'localhost',
-                    'description': 'Default should be on localhost',
-                    'advanced': True,
+                    'description': 'Media server hostname'
+                },
+                {
+                    'name': 'clients',
+                    'default': '',
+                    'description': 'Comma separated list of client names\'s (computer names).'
                 },
                 {
                     'name': 'on_snatch',
