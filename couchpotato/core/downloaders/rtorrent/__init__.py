@@ -54,7 +54,8 @@ config = [{
                 {
                     'name': 'delete_files',
                     'label': 'Remove files',
-                    'default': True,
+                    'default': False,
+                    'hidden': True,
                     'type': 'bool',
                     'advanced': True,
                     'description': 'Also remove the leftover files.',
