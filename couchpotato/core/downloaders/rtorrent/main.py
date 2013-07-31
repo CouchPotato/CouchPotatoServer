@@ -15,20 +15,63 @@ log = CPLog(__name__)
 class rTorrent(Downloader):
 
     type = ['torrent', 'torrent_magnet']
-    rtorrent_api = None
+    rt = None
 
-    def get_conn(self):
+    def connect(self):
+        # Already connected?
+        if self.rt is not None:
+            return self.rt
+
+        # Ensure url is set
+        if not self.conf('url'):
+            log.error('Config properties are not filled in correctly, url is missing.')
+            return False
+
         if self.conf('username') and self.conf('password'):
-            return RTorrent(
+            self.rt = RTorrent(
                 self.conf('url'),
                 self.conf('username'),
                 self.conf('password')
             )
+        else:
+            self.rt = RTorrent(self.conf('url'))
 
-        return RTorrent(self.conf('url'))
+        return self.rt
+
+    def _update_provider_group(self, name, data):
+        if data.get('seed_time') is not None:
+            log.info('seeding time ignored, not supported')
+
+        if name is None or data.get('seed_ratio') is None:
+            return False
+
+        if not self.connect():
+            return False
+
+        views = self.rt.get_views()
+
+        if name not in views:
+            self.rt.create_group(name)
+
+        log.debug('Updating provider ratio to %s, group name: %s', (data.get('seed_ratio'), name))
+
+        group = self.rt.get_group(name)
+        group.get_min(data.get('seed_ratio') * 100)
+
+        if self.conf('stop_complete'):
+            group.set_command('d.stop')
+        else:
+            group.set_command()
+
 
     def download(self, data, movie, filedata=None):
         log.debug('Sending "%s" (%s) to rTorrent.', (data.get('name'), data.get('type')))
+
+        if not self.connect():
+            return False
+
+        group_name = 'cp_' + data.get('provider').lower()
+        self._update_provider_group(group_name, data)
 
         torrent_params = {}
         if self.conf('label'):
@@ -56,15 +99,15 @@ class rTorrent(Downloader):
 
         # Send request to rTorrent
         try:
-            if not self.rtorrent_api:
-                self.rtorrent_api = self.get_conn()
-
             # Send torrent to rTorrent
-            torrent = self.rtorrent_api.load_torrent(filedata)
+            torrent = self.rt.load_torrent(filedata)
 
             # Set label
             if self.conf('label'):
                 torrent.set_custom(1, self.conf('label'))
+
+            # Set Ratio Group
+            torrent.set_visible(group_name)
 
             # Start torrent
             if not self.conf('paused', default=0):
@@ -75,24 +118,30 @@ class rTorrent(Downloader):
             log.error('Failed to send torrent to rTorrent: %s', err)
             return False
 
-
     def getAllDownloadStatus(self):
-
         log.debug('Checking rTorrent download status.')
 
-        try:
-            if not self.rtorrent_api:
-                self.rtorrent_api = self.get_conn()
+        if not self.connect():
+            return False
 
-            torrents = self.rtorrent_api.get_torrents()
+        try:
+            torrents = self.rt.get_torrents()
 
             statuses = StatusList(self)
 
             for item in torrents:
+                status = 'busy'
+                if item.complete:
+                    if item.active:
+                        status = 'seeding'
+                    else:
+                        status = 'completed'
+
                 statuses.append({
                     'id': item.info_hash,
                     'name': item.name,
-                    'status': 'completed' if item.complete else 'busy',
+                    'status': status,
+                    'seed_ratio': item.ratio,
                     'original_status': item.state,
                     'timeleft': str(timedelta(seconds=float(item.left_bytes) / item.down_rate))
                                     if item.down_rate > 0 else -1,
@@ -104,3 +153,33 @@ class rTorrent(Downloader):
         except Exception, err:
             log.error('Failed to get status from rTorrent: %s', err)
             return False
+
+    def pause(self, download_info, pause = True):
+        if not self.connect():
+            return False
+
+        torrent = self.rt.find_torrent(download_info['id'])
+        if torrent is None:
+            return False
+
+        if pause:
+            return torrent.pause()
+        return torrent.resume()
+
+    def removeFailed(self, item):
+        log.info('%s failed downloading, deleting...', item['name'])
+        return self.processComplete(item, delete_files=True)
+
+    def processComplete(self, item, delete_files):
+        log.debug('Requesting rTorrent to remove the torrent %s%s.', (item['name'], ' and cleanup the downloaded files' if delete_files else ''))
+        if not self.connect():
+            return False
+
+        torrent = self.rt.find_torrent(item['id'])
+        if torrent is None:
+            return False
+
+        if delete_files:
+            log.info('not deleting files, not supported')
+
+        return torrent.erase()  # just removes the torrent, doesn't delete data

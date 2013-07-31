@@ -190,6 +190,20 @@ class Torrent:
         self.active = m.call()[-1]
         return(self.active)
 
+    def pause(self):
+        """Pause the torrent"""
+        m = rtorrent.rpc.Multicall(self)
+        self.multicall_add(m, "d.pause")
+
+        return(m.call()[-1])
+
+    def resume(self):
+        """Resume the torrent"""
+        m = rtorrent.rpc.Multicall(self)
+        self.multicall_add(m, "d.resume")
+
+        return(m.call()[-1])
+
     def close(self):
         """Close the torrent and it's files"""
         m = rtorrent.rpc.Multicall(self)
@@ -304,6 +318,14 @@ class Torrent:
         self.multicall_add(m, "d.set_custom{0}".format(key), value)
 
         return(m.call()[-1])
+
+    def set_visible(self, view, visible=True):
+        p = self._rt_obj._get_conn()
+
+        if visible:
+            return p.view.set_visible(self.info_hash, view)
+        else:
+            return p.view.set_not_visible(self.info_hash, view)
 
     ############################################################################
     # CUSTOM METHODS (Not part of the official rTorrent API)

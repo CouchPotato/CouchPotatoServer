@@ -24,6 +24,7 @@ from rtorrent.lib.torrentparser import TorrentParser
 from rtorrent.lib.xmlrpc.http import HTTPServerProxy
 from rtorrent.rpc import Method, BasicAuthTransport
 from rtorrent.torrent import Torrent
+from rtorrent.group import Group
 import os.path
 import rtorrent.rpc  # @UnresolvedImport
 import time
@@ -285,6 +286,26 @@ class RTorrent:
             finput = torrent
 
         getattr(p, func_name)(finput)
+
+    def get_views(self):
+        p = self._get_conn()
+        return p.view_list()
+
+    def create_group(self, name, persistent=True, view=None):
+        p = self._get_conn()
+
+        if persistent is True:
+            p.group.insert_persistent_view('', name)
+        else:
+            assert view is not None, "view parameter required on non-persistent groups"
+            p.group.insert('', name, view)
+
+    def get_group(self, name):
+        assert name is not None, "group name required"
+
+        group = Group(self, name)
+        group.update()
+        return group
 
     def set_dht_port(self, port):
         """Set DHT port
