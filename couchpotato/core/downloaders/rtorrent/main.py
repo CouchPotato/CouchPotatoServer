@@ -59,11 +59,16 @@ class rTorrent(Downloader):
         group = self.rt.get_group(name)
 
         if data.get('seed_ratio'):
+            # Explicitly set all group options to ensure it is setup correctly
+            group.set_upload('1M')
             group.set_min(int(data.get('seed_ratio') * 100))
+            group.set_max(int(data.get('seed_ratio') * 100))
             group.set_command('d.stop')
+            group.enable()
         else:
-            # Reset group action
+            # Reset group action and disable it
             group.set_command()
+            group.disable()
 
         return True
 
