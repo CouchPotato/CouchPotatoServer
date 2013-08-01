@@ -542,17 +542,23 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         try:
             if forcemove:
                 shutil.move(old, dest)
-            elif self.conf('file_action') == 'hardlink':
-                try:
-                    link(old, dest)
-                except:
-                    log.error('Couldn\'t hardlink file "%s" to "%s". Copying instead. Error: %s. ', (old, dest, traceback.format_exc()))
-                    shutil.copy(old, dest)
             elif self.conf('file_action') == 'copy':
                 shutil.copy(old, dest)
-            elif self.conf('file_action') == 'move_symlink':
-                shutil.move(old, dest)
-                symlink(dest, old)
+            elif self.conf('file_action') == 'link':
+                # First try to hardlink
+                try:
+                    log.debug('Hardlinking file "%s" to "%s"...', (old, dest))
+                    link(old, dest)
+                except:
+                    # Try to simlink next
+                    log.debug('Couldn\'t hardlink file "%s" to "%s". Simlinking instead. Error: %s. ', (old, dest, traceback.format_exc()))
+                    shutil.copy(old, dest)
+                    try:
+                        symlink(dest, old + '.link')
+                        os.unlink(old)
+                        os.rename(old + '.link', old)
+                    except:
+                        log.error('Couldn\'t symlink file "%s" to "%s". Copied instead. Error: %s. ', (old, dest, traceback.format_exc()))
             else:
                 shutil.move(old, dest)
 
@@ -757,10 +763,10 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         for item in scan_items:
             # Ask the renamer to scan the item
             if item['scan']:
-                if item['pause'] and self.conf('file_action') == 'move_symlink':
+                if item['pause'] and self.conf('file_action') == 'link':
                     fireEvent('download.pause', item = item, pause = True, single = True)
                 fireEvent('renamer.scan', download_info = item)
-                if item['pause'] and self.conf('file_action') == 'move_symlink':
+                if item['pause'] and self.conf('file_action') == 'link':
                     fireEvent('download.pause', item = item, pause = False, single = True)
             if item['process_complete']:
                 #First make sure the files were succesfully processed
