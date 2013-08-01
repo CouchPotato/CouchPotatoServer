@@ -23,6 +23,7 @@ class StatusPlugin(Plugin):
         'ignored': 'Ignored',
         'available': 'Available',
         'suggest': 'Suggest',
+        'seeding': 'Seeding',
     }
     status_cached = {}
 

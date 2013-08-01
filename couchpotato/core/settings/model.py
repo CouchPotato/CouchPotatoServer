@@ -82,6 +82,7 @@ class Movie(Entity):
     library = ManyToOne('Library', cascade = 'delete, delete-orphan', single_parent = True)
     status = ManyToOne('Status')
     profile = ManyToOne('Profile')
+    category = ManyToOne('Category')
     releases = OneToMany('Release', cascade = 'all, delete-orphan')
     files = ManyToMany('File', cascade = 'all, delete-orphan', single_parent = True)
 
@@ -206,6 +207,28 @@ class Profile(Entity):
 
         return orig_dict
 
+class Category(Entity):
+    """"""
+    using_options(order_by = 'order')
+
+    label = Field(Unicode(50))
+    order = Field(Integer, default = 0, index = True)
+    required = Field(Unicode(255))
+    preferred = Field(Unicode(255))
+    ignored = Field(Unicode(255))
+
+    movie = OneToMany('Movie')
+    destination = ManyToOne('Destination')
+
+
+class Destination(Entity):
+    """"""
+
+    path = Field(Unicode(255))
+
+    category = OneToMany('Category')
+
+
 class ProfileType(Entity):
     """"""
     using_options(order_by = 'order')
@@ -269,13 +292,6 @@ class Notification(Entity):
     read = Field(Boolean, default = False)
     message = Field(Unicode(255))
     data = Field(JsonType)
-
-
-class Folder(Entity):
-    """Renamer destination folders."""
-
-    path = Field(Unicode(255))
-    label = Field(Unicode(255))
 
 
 class Properties(Entity):

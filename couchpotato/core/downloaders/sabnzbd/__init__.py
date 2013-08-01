@@ -35,6 +35,15 @@ config = [{
                     'description': 'The category CP places the nzb in. Like <strong>movies</strong> or <strong>couchpotato</strong>',
                 },
                 {
+                    'name': 'priority',
+                    'label': 'Priority',
+                    'type': 'dropdown',
+                    'default': '0',
+                    'advanced': True,
+                    'values': [('Paused', -2), ('Low', -1), ('Normal', 0), ('High', 1), ('Forced', 2)],
+                    'description': 'Add to the queue with this priority.',
+                },
+                {
                     'name': 'manual',
                     'default': False,
                     'type': 'bool',
@@ -42,8 +51,17 @@ config = [{
                     'description': 'Disable this downloader for automated searches, but use it when I manually send a release.',
                 },
                 {
+                    'name': 'remove_complete',
+                    'advanced': True,
+                    'label': 'Remove NZB',
+                    'default': False,
+                    'type': 'bool',
+                    'description': 'Remove the NZB from history after it completed.',
+                },
+                {
                     'name': 'delete_failed',
                     'default': True,
+                    'advanced': True,
                     'type': 'bool',
                     'description': 'Delete a release after the download has failed.',
                 },

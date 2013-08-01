@@ -14,6 +14,7 @@ var Movie = new Class({
 		self.el = new Element('div.movie');
 
 		self.profile = Quality.getProfile(data.profile_id) || {};
+		self.category = CategoryList.getCategory(data.category_id) || {};
 		self.parent(self, options);
 
 		self.addEvents();
@@ -111,6 +112,7 @@ var Movie = new Class({
 		self.removeView();
 
 		self.profile = Quality.getProfile(self.data.profile_id) || {};
+		self.category = CategoryList.getCategory(self.data.category_id) || {};
 		self.create();
 
 		self.busy(false);

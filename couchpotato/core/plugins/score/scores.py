@@ -23,7 +23,7 @@ name_scores = [
 ]
 
 
-def nameScore(name, year):
+def nameScore(name, year, preferred_words):
     ''' Calculate score for words in the NZB name '''
 
     score = 0
@@ -42,11 +42,9 @@ def nameScore(name, year):
 
     # Contains preferred word
     nzb_words = re.split('\W+', simplifyString(name))
-    preferred_words = splitString(Env.setting('preferred_words', section = 'searcher'))
     score += 100 * len(list(set(nzb_words) & set(preferred_words)))
 
     return score
-
 
 def nameRatioScore(nzb_name, movie_name):
     nzb_words = re.split('\W+', fireEvent('scanner.create_file_identifier', nzb_name, single = True))
@@ -134,12 +132,10 @@ def duplicateScore(nzb_name, movie_name):
     return len(list(set(duplicates) - set(movie_words))) * -4
 
 
-def partialIgnoredScore(nzb_name, movie_name):
+def partialIgnoredScore(nzb_name, movie_name, ignored_words):
 
     nzb_name = nzb_name.lower()
     movie_name = movie_name.lower()
-
-    ignored_words = [x.strip().lower() for x in Env.setting('ignored_words', section = 'searcher').split(',')]
 
     score = 0
     for ignored_word in ignored_words:
@@ -147,6 +143,7 @@ def partialIgnoredScore(nzb_name, movie_name):
             score -= 5
 
     return score
+
 
 def halfMultipartScore(nzb_name):
 

@@ -2,7 +2,7 @@ from couchpotato import get_session
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, fireEventAsync, addEvent
 from couchpotato.core.helpers.encoding import toUnicode, simplifyString
-from couchpotato.core.helpers.variable import getImdb, splitString
+from couchpotato.core.helpers.variable import getImdb, splitString, tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Library, LibraryTitle, Movie, \
@@ -451,6 +451,10 @@ class MoviePlugin(Plugin):
                 continue
 
             m.profile_id = kwargs.get('profile_id')
+
+            cat_id = kwargs.get('category_id', None)
+            if cat_id is not None:
+                m.category_id = tryInt(cat_id) if tryInt(cat_id) > 0 else None
 
             # Remove releases
             for rel in m.releases:

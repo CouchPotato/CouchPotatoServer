@@ -276,6 +276,8 @@ class ResultList(list):
             'type': self.provider.type,
             'provider': self.provider.getName(),
             'download': self.provider.loginDownload if self.provider.urls.get('login') else self.provider.download,
+            'seed_ratio': Env.setting('seed_ratio', section = self.provider.getName().lower(), default = ''),
+            'seed_time': Env.setting('seed_time', section = self.provider.getName().lower(), default = ''),
             'url': '',
             'name': '',
             'age': 0,

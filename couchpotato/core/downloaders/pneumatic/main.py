@@ -6,6 +6,7 @@ import traceback
 
 log = CPLog(__name__)
 
+
 class Pneumatic(Downloader):
 
     type = ['nzb']

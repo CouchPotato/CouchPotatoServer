@@ -225,6 +225,10 @@ class Scanner(Plugin):
                 # Remove the found files from the leftover stack
                 leftovers = leftovers - set(found_files)
 
+                exts = [getExt(ff) for ff in found_files]
+                if 'ignore' in exts:
+                    ignored_identifiers.append(identifier)
+
             # Break if CP wants to shut down
             if self.shuttingDown():
                 break
@@ -250,6 +254,10 @@ class Scanner(Plugin):
 
                     # Remove the found files from the leftover stack
                     leftovers = leftovers - set([ff])
+
+                    ext = getExt(ff)
+                    if ext == 'ignore':
+                        ignored_identifiers.append(new_identifier)
 
             # Break if CP wants to shut down
             if self.shuttingDown():

@@ -161,7 +161,7 @@ Page.Settings = new Class({
 				// Create subtab
 				if(group.subtab){
 					if (!self.tabs[group.tab].subtabs[group.subtab])
-						self.createSubTab(group.subtab, {}, self.tabs[group.tab], group.tab);
+						self.createSubTab(group.subtab, group, self.tabs[group.tab], group.tab);
 					var content_container = self.tabs[group.tab].subtabs[group.subtab].content
 				}
 
@@ -243,7 +243,7 @@ Page.Settings = new Class({
 		if(!parent_tab.subtabs_el)
 			parent_tab.subtabs_el = new Element('ul.subtabs').inject(parent_tab.tab);
 
-		var label = tab.label || (tab.name || tab_name.replace('_', ' ')).capitalize()
+		var label = tab.subtab_label || tab_name.replace('_', ' ').capitalize()
 		var tab_el = new Element('li.t_'+tab_name).adopt(
 			new Element('a', {
 				'href': App.createUrl(self.name+'/'+parent_tab_name+'/'+tab_name),
