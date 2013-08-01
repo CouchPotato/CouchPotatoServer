@@ -36,14 +36,6 @@ config = [{
                     'description': 'Label to apply on added torrents.',
                 },
                 {
-                    'name': 'stop_complete',
-                    'label': 'Stop torrent',
-                    'default': False,
-                    'advanced': True,
-                    'type': 'bool',
-                    'description': 'Stop the torrent after it finishes seeding'
-                },
-                {
                     'name': 'remove_complete',
                     'label': 'Remove torrent',
                     'default': False,

@@ -43,7 +43,7 @@ class rTorrent(Downloader):
         if data.get('seed_time'):
             log.info('seeding time ignored, not supported')
 
-        if not name or not data.get('seed_ratio'):
+        if not name:
             return False
 
         if not self.connect():
@@ -57,12 +57,15 @@ class rTorrent(Downloader):
         log.debug('Updating provider ratio to %s, group name: %s', (data.get('seed_ratio'), name))
 
         group = self.rt.get_group(name)
-        group.get_min(data.get('seed_ratio') * 100)
 
-        if self.conf('stop_complete'):
+        if data.get('seed_ratio'):
+            group.set_min(int(data.get('seed_ratio') * 100))
             group.set_command('d.stop')
         else:
+            # Reset group action
             group.set_command()
+
+        return True
 
 
     def download(self, data, movie, filedata=None):
