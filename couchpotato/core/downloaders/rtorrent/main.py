@@ -1,6 +1,7 @@
 from base64 import b16encode, b32decode
 from datetime import timedelta
 from hashlib import sha1
+import shutil
 import traceback
 
 from bencode import bencode, bdecode
@@ -39,10 +40,10 @@ class rTorrent(Downloader):
         return self.rt
 
     def _update_provider_group(self, name, data):
-        if data.get('seed_time') is not None:
+        if data.get('seed_time'):
             log.info('seeding time ignored, not supported')
 
-        if name is None or data.get('seed_ratio') is None:
+        if not name or not data.get('seed_ratio'):
             return False
 
         if not self.connect():
@@ -179,7 +180,9 @@ class rTorrent(Downloader):
         if torrent is None:
             return False
 
-        if delete_files:
-            log.info('not deleting files, not supported')
+        torrent.erase()  # just removes the torrent, doesn't delete data
 
-        return torrent.erase()  # just removes the torrent, doesn't delete data
+        if delete_files:
+            shutil.rmtree(item['folder'], True)
+
+        return True
