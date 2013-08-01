@@ -11,7 +11,7 @@ config = [{
             'list': 'automation_providers',
             'name': 'rottentomatoes_automation',
             'label': 'Rottentomatoes',
-            'description': 'Imports movies from the rottentomatoes "in theaters"-feed.',
+            'description': 'Imports movies from rottentomatoes rss feeds specified below.',
             'options': [
                 {
                     'name': 'automation_enabled',
