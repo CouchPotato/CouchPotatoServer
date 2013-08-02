@@ -19,15 +19,11 @@ class Rottentomatoes(Automation, RSS):
         movies = []
 
         rotten_tomatoes_namespace = 'http://www.rottentomatoes.com/xmlns/rtmovie/'
-        enablers = [tryInt(x) for x in splitString(self.conf('automation_urls_use'))]
-        urls = splitString(self.conf('automation_urls'))
-
-        index = -1
+        urls = dict(zip(splitString(self.conf('automation_urls')), [tryInt(x) for x in splitString(self.conf('automation_urls_use'))]))
 
         for url in urls:
 
-            index += 1
-            if not enablers[index]:
+            if not urls[url]:
                 continue
 
             rss_movies = self.getRSSData(url)
