@@ -2,7 +2,7 @@ from base64 import b16encode, b32decode
 from datetime import timedelta
 from hashlib import sha1
 import shutil
-import traceback
+from rtorrent.err import MethodError
 
 from bencode import bencode, bdecode
 from couchpotato.core.downloaders.base import Downloader, StatusList
@@ -54,21 +54,26 @@ class rTorrent(Downloader):
         if name not in views:
             self.rt.create_group(name)
 
-        log.debug('Updating provider ratio to %s, group name: %s', (data.get('seed_ratio'), name))
-
         group = self.rt.get_group(name)
 
-        if data.get('seed_ratio'):
-            # Explicitly set all group options to ensure it is setup correctly
-            group.set_upload('1M')
-            group.set_min(int(data.get('seed_ratio') * 100))
-            group.set_max(int(data.get('seed_ratio') * 100))
-            group.set_command('d.stop')
-            group.enable()
-        else:
-            # Reset group action and disable it
-            group.set_command()
-            group.disable()
+        try:
+            if data.get('seed_ratio'):
+                ratio = int(float(data.get('seed_ratio')) * 100)
+                log.debug('Updating provider ratio to %s, group name: %s', (ratio, name))
+
+                # Explicitly set all group options to ensure it is setup correctly
+                group.set_upload('1M')
+                group.set_min(ratio)
+                group.set_max(ratio)
+                group.set_command('d.stop')
+                group.enable()
+            else:
+                # Reset group action and disable it
+                group.set_command()
+                group.disable()
+        except MethodError, err:
+            log.error('Unable to set group options: %s', err.message)
+            return False
 
         return True
 
@@ -80,7 +85,8 @@ class rTorrent(Downloader):
             return False
 
         group_name = 'cp_' + data.get('provider').lower()
-        self._update_provider_group(group_name, data)
+        if not self._update_provider_group(group_name, data):
+            return False
 
         torrent_params = {}
         if self.conf('label'):

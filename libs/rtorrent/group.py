@@ -64,16 +64,12 @@ class Group:
         multicall.call()
 
     def enable(self):
-        m = rtorrent.rpc.Multicall(self)
-        self.multicall_add(m, self._get_prefix() + 'enable')
-
-        return(m.call()[-1])
+        p = self._rt_obj._get_conn()
+        return getattr(p, self._get_prefix() + 'enable')()
 
     def disable(self):
-        m = rtorrent.rpc.Multicall(self)
-        self.multicall_add(m, self._get_prefix() + 'disable')
-
-        return(m.call()[-1])
+        p = self._rt_obj._get_conn()
+        return getattr(p, self._get_prefix() + 'disable')()
 
     def set_command(self, *methods):
         methods = [m + '=' for m in methods]
