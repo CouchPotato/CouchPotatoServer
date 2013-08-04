@@ -184,7 +184,7 @@ class Plex(Notification):
             message=self.test_message,
             data={},
             listener='test',
-            forceUpdate=True
+            force=True
         )
         success2 = self.addToLibrary()
 
