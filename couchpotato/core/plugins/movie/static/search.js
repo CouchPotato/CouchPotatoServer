@@ -389,7 +389,9 @@ Block.Search.Item = new Class({
 
 			self.options_el.addClass('set');
 
-			if(categories.length == 0 && self.title_select.getElements('option').length == 1 && profiles.length == 1)
+			p(self.info.in_wanted, self.info.in_wanted.profile, in_library);
+			if(categories.length == 0 && self.title_select.getElements('option').length == 1 && profiles.length == 1 &&
+				!(self.info.in_wanted && self.info.in_wanted.profile || in_library))
 				self.add();
 
 		}
