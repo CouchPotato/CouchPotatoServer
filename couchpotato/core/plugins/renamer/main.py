@@ -88,6 +88,12 @@ class Renamer(Plugin):
             log.info('Renamer is already running, if you see this often, check the logs above for errors.')
             return
 
+        # Make sure a checkSnatched marked all downloads/seeds as such
+        if not download_info and self.conf('run_every') > 0:
+            fireEvent('renamer.check_snatched')
+
+        self.renaming_started = True
+
         movie_folder = download_info and download_info.get('folder')
 
         # Check to see if the "to" folder is inside the "from" folder.
@@ -101,12 +107,6 @@ class Renamer(Plugin):
         elif (movie_folder and movie_folder in [self.conf('to'), self.conf('from')]):
             log.error('The "to" and "from" folders can\'t be inside of or the same as the provided movie folder.')
             return
-
-        # Make sure a checkSnatched marked all downloads/seeds as such
-        if not download_info and self.conf('run_every') > 0:
-            fireEvent('renamer.check_snatched')
-
-        self.renaming_started = True
 
         # make sure the movie folder name is included in the search
         if movie_folder:
@@ -125,15 +125,15 @@ class Renamer(Plugin):
         except:
             log.error('Failed getting files from %s: %s', (movie_folder if movie_folder else self.conf('from'), traceback.format_exc()))
 
-        # Unpack any archives
-        if self.conf('unrar'):
-            folder, movie_folder, files, extr_files = self.extractFiles(root = folder, movie_folder = movie_folder, files = files, \
-                cleanup = self.conf('cleanup') and not (self.conf('file_action') != 'move' and self.downloadIsTorrent(download_info)))
-
         db = get_session()
 
         # Extend the download info with info stored in the downloaded release
         download_info = self.extendDownloadInfo(download_info)
+
+        # Unpack any archives
+        if self.conf('unrar'):
+            folder, movie_folder, files, extr_files = self.extractFiles(root = folder, movie_folder = movie_folder, files = files, \
+                cleanup = self.conf('cleanup') and not self.downloadIsTorrent(download_info))
 
         groups = fireEvent('scanner.scan', folder = folder,
                            files = files, download_info = download_info, return_ignored = False, single = True)
@@ -848,6 +848,10 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
         #Extract all archives
         for archive in archives:
+            # Check if it has already been processed by CPS
+            if (self.hastagDir(os.path.dirname(archive['file']))):
+                continue
+
             # Find all related archive files
             archive['files'] = [name for name in files if re.search(restfile_regex % re.escape(archive['base']), name)]
             archive['files'].append(archive['file'])
