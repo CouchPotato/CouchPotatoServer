@@ -104,38 +104,22 @@ class Deluge(Downloader):
                 log.error('Renamer "from" folder doesn\'t to exist.')
                 return
 
-            if item['progress'] >= 100 and (item['state'] == "Seeding" or item['state'] == "Paused") and item['ratio'] > self.conf('ratio'):
-                try:
-                    drpc.stop_torrent(item['hash'])
-                    download_dir = item['save_path']
-                    if item['move_on_completed']:
-                      download_dir = item['move_completed_path']
+            status = 'busy'
+            if item['is_seed'] or item['is_finished']:
+		status = 'completed'
 
-                    statuses.append({
-                        'id': item['hash'],
-                        'name': item['name'],
-                        'status': 'completed',
-                        'original_status': item['state'],
-                        'timeleft': str(timedelta(seconds = 0)),
-                        'folder': os.path.join(download_dir, item['name']),
-                    })
-                except Exception, err:
-                    log.error('Failed to stop and remove torrent "%s" with error: %s', (item['name'], err))
-                    statuses.append({
-                        'id': item['hash'],
-                        'name': item['name'],
-                        'status': 'failed',
-                        'original_status': item['state'],
-                        'timeleft': str(timedelta(seconds = 0)),
-                    })
-            else:
-                statuses.append({
-                    'id': item['hash'],
-                    'name': item['name'],
-                    'status': 'busy',
-                    'original_status': item['state'],
-                    'timeleft': str(timedelta(seconds = item['eta'])), # Is ETA in seconds??
-                })
+            download_dir = item['save_path']
+            if item['move_on_completed']:
+                download_dir = item['move_completed_path']
+
+            statuses.append({
+                'id': item['hash'],
+                'name': item['name'],
+                'status': status,
+                'original_status': item['state'],
+                'timeleft': str(timedelta(seconds = item['eta'])),
+                'folder': os.path.join(download_dir, item['name']),
+            })
 
         return statuses
 
