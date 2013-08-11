@@ -54,18 +54,12 @@ config = [{
                     'description': 'Label to add to torrents in the Deluge UI.',
                 },
                 {
-                    'name': 'ratio',
-                    'default': 10,
-                    'type': 'float',
-                    'advanced': True,
-                    'description': 'Stop transfer when reaching ratio',
-                },
-                {
-                    'name': 'ratioremove',
+                    'name': 'remove_complete',
+                    'label': 'Remove torrent',
                     'type': 'bool',
-                    'default': False,
+                    'default': True,
                     'advanced': True,
-                    'description': 'Remove torrent when ratio reached.',
+                    'description': 'Remove the torrent from Deluge after it has finished seeding.',
                 },
                 {
                     'name': 'manual',

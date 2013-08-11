@@ -39,11 +39,13 @@ class Deluge(Downloader):
             options['move_completed'] = 1
             options['move_completed_path'] = self.conf('completed_directory', default = '')
 
-        if self.conf('ratio'):
+        if data.get('seed_ratio'):
             options['stop_at_ratio'] = 1
-            options['stop_ratio'] = self.conf('ratio')
-            if self.conf('ratioremove', default = 0):
-              options['remove_at_ratio'] = 1
+            options['stop_ratio'] = tryFloat(data.get('seed_ratio'))
+
+#        Deluge only has seed time as a global option. Might be added in
+#        in a future API release.
+#        if data.get('seed_time'):
 
         if not filedata and data.get('type') == 'torrent':
             log.error('Failed sending torrent, no data')
@@ -69,6 +71,44 @@ class Deluge(Downloader):
             if drpc:
                 drpc.disconnect()
 
+    def pause(self, download_info, pause = True):
+        try:
+            drpc = DelugeRPC(host[0], port = host[1], username = self.conf('username'), password = self.conf('password'))
+            if pause:
+                return drpc.pause_torrent([download_info['id']])
+            else:
+                return drpc.resume_torrent([download_info['id']])
+        except Exception, err:
+            log.error('Failed to pause torrent %s: %s', download_info['name'], err)
+            return False
+        finally:
+            if drpc:
+                drpc.disconnect()
+
+    def removeFailed(self, item, pause = True):
+        try:
+            drpc = DelugeRPC(host[0], port = host[1], username = self.conf('username'), password = self.conf('password'))
+            return drpc.remove_torrent(item['id'])
+        except Exception, err:
+            log.error('Failed to remove torrent %s: %s', item['name'], err)
+            return False
+        finally:
+            if drpc:
+                drpc.disconnect()
+        
+
+    def processComplete(self, item, delete_files = False):
+        log.debug('Requesting Deluge to remove the torrent %s%s.', (item['name'], ' and cleanup the downloaded files' if delete_files else ''))
+        try:
+            drpc = DelugeRPC(host[0], port = host[1], username = self.conf('username'), password = self.conf('password'))
+            return drpc.remove_torrent(item['id'], remove_local_data = delete_files)
+        except Exception, err:
+            log.error('Failed to stop and remove torrent %s: %s', item['name'], err)
+            return False
+        finally:
+            if drpc:
+                drpc.disconnect()
+
     def getAllDownloadStatus(self):
 
         log.debug('Checking Deluge download status.')
@@ -85,7 +125,6 @@ class Deluge(Downloader):
             queue = drpc.get_alltorrents()
         except Exception, err:
             log.error('Failed getting queue: %s', err)
-            log.error('Failed getting queue: %s', traceback.format_exc())
             return False
         finally:
             if drpc:
@@ -105,8 +144,11 @@ class Deluge(Downloader):
                 return
 
             status = 'busy'
+            # Deluge seems to set both is_seed and is_finished once everything has been downloaded.
             if item['is_seed'] or item['is_finished']:
-		status = 'completed'
+            		status = 'seeding'
+            elif item['is_seed'] and item['is_finished'] and item['paused']:
+                status = 'completed'
 
             download_dir = item['save_path']
             if item['move_on_completed']:
@@ -149,8 +191,11 @@ class DelugeRPC(object):
     def get_alltorrents(self):
         return self.client.core.get_torrents_status({}, {}).get()
 
-    def stop_torrent(self, torrent_id):
-        self.client.core.stop_torrent(torrent_id).get()
+    def pause_torrent(self, torrent_ids):
+        self.client.core.pause_torrent(torrent_ids).get()
+
+    def resume_torrent(self, torrent_ids):
+        self.client.core.resume_torrent(torrent_ids).get()
 
     def remove_torrent(self, torrent_id, remove_local_data):
         return self.client.core.remove_torrent(torrent_id, remove_local_data).get()
