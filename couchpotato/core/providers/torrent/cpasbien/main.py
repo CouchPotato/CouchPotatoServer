@@ -61,7 +61,7 @@ class cpasbien(TorrentProvider):
         }
 
         data_tmp = urllib.urlencode(values)
-        req = urllib2.Request(URL, data_tmp )
+        req = urllib2.Request(URL, data_tmp, headers={'User-Agent' : "Mozilla/5.0"} )
         
         data = urllib2.urlopen(req )
 
@@ -98,7 +98,7 @@ class cpasbien(TorrentProvider):
                         urldetail=urldetail.encode('ascii','ignore')
                         urldetail = urllib2.quote(urldetail.encode('utf8'), ":/?=")
 
-                        req = urllib2.Request(urldetail )  # POST request doesn't not work
+                        req = urllib2.Request(urldetail, headers={'User-Agent' : "Mozilla/5.0"} )  # POST request doesn't not work
                         data_detail = urllib2.urlopen(req)
 
                         url_download = ""
@@ -215,7 +215,7 @@ class cpasbien(TorrentProvider):
           'url' : '/'
         }
         data_tmp = urllib.urlencode(values)
-        req = urllib2.Request(url, data_tmp )
+        req = urllib2.Request(url, data_tmp, headers={'User-Agent' : "Mozilla/5.0"} )
         
         try:
             if not self.login_opener and not self.login():
@@ -233,7 +233,7 @@ class cpasbien(TorrentProvider):
           'url' : '/'
         }
         data_tmp = urllib.urlencode(values)
-        req = urllib2.Request(url, data_tmp )
+        req = urllib2.Request(url, data_tmp, headers={'User-Agent' : "Mozilla/5.0"} )
         
         try:
             return urllib2.urlopen(req).read()
