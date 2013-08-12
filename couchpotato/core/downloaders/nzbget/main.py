@@ -33,7 +33,7 @@ class NZBGet(Downloader):
         rpc = xmlrpclib.ServerProxy(url)
         try:
             if rpc.writelog('INFO', 'CouchPotato connected to drop off %s.' % nzb_name):
-                log.info('Successfully connected to NZBGet')
+                log.debug('Successfully connected to NZBGet')
             else:
                 log.info('Successfully connected to NZBGet, but unable to send a message')
         except socket.error:
@@ -74,7 +74,7 @@ class NZBGet(Downloader):
         rpc = xmlrpclib.ServerProxy(url)
         try:
             if rpc.writelog('INFO', 'CouchPotato connected to check status'):
-                log.info('Successfully connected to NZBGet')
+                log.debug('Successfully connected to NZBGet')
             else:
                 log.info('Successfully connected to NZBGet, but unable to send a message')
         except socket.error:
@@ -152,12 +152,12 @@ class NZBGet(Downloader):
 
         log.info('%s failed downloading, deleting...', item['name'])
 
-        url = self.url % {'host': self.conf('host'), 'password': self.conf('password')}
+        url = self.url % {'host': self.conf('host'), 'username': self.conf('username'), 'password': self.conf('password')}
 
         rpc = xmlrpclib.ServerProxy(url)
         try:
             if rpc.writelog('INFO', 'CouchPotato connected to delete some history'):
-                log.info('Successfully connected to NZBGet')
+                log.debug('Successfully connected to NZBGet')
             else:
                 log.info('Successfully connected to NZBGet, but unable to send a message')
         except socket.error:
