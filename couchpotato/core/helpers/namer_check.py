@@ -67,6 +67,7 @@ def getReleaseNameYear(release_name, file_name = None):
         # Use guessit first
         guess = {}
         if release_name:
+            release_name = re.sub(clean, ' ', release_name.lower())
             try:
                 guess = guess_movie_info(toUnicode(release_name))
                 if guess.get('title') and guess.get('year'):
@@ -84,7 +85,9 @@ def getReleaseNameYear(release_name, file_name = None):
 
         # Backup to simple
         cleaned = ' '.join(re.split('\W+', simplifyString(release_name)))
-        cleaned = re.sub(clean, ' ', cleaned)
+        for i in range(1,4):
+            cleaned = re.sub(clean, ' ', cleaned)
+            cleaned = re.sub(clean, ' ', cleaned)
         year = findYear(cleaned)
         cp_guess = {}
 
@@ -111,7 +114,8 @@ def getReleaseNameYear(release_name, file_name = None):
             return guess
         elif guess == {}:
             return cp_guess
-
+        if cp_guess.get('year') == guess.get('year') and len(cp_guess.get('name', '')) < len(guess.get('name', '')):
+            return cp_guess
         return guess
     
 def findYear(text):
