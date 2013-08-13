@@ -28,7 +28,7 @@ class Loader(object):
         provider_dir = os.path.join(root, 'couchpotato', 'core', 'providers')
         for provider in os.listdir(provider_dir):
             path = os.path.join(provider_dir, provider)
-            if os.path.isdir(path):
+            if os.path.isdir(path) and provider[:2] != '__':
                 self.paths[provider + '_provider'] = (25, 'couchpotato.core.providers.' + provider, path)
 
 
