@@ -12,27 +12,28 @@ api_docs_missing = []
 # NonBlock API handler
 class NonBlockHandler(RequestHandler):
 
-    stoppers = []
+    stopper = None
 
     @asynchronous
     def get(self, route, *args, **kwargs):
         route = route.strip('/')
         start, stop = api_nonblock[route]
-        self.stoppers.append(stop)
+        self.stopper = stop
 
-        start(self.onNewMessage, last_id = self.get_argument("last_id", None))
+        start(self.onNewMessage, last_id = self.get_argument('last_id', None))
 
     def onNewMessage(self, response):
         if self.request.connection.stream.closed():
             return
+
         self.finish(response)
 
     def on_connection_close(self):
 
-        for stop in self.stoppers:
-            stop(self.onNewMessage)
+        if self.stopper:
+            self.stopper(self.onNewMessage)
 
-        self.stoppers = []
+        self.stopper = None
 
 def addNonBlockApiView(route, func_tuple, docs = None, **kwargs):
     api_nonblock[route] = func_tuple
