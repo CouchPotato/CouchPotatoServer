@@ -176,6 +176,10 @@ def possibleTitles(raw_title):
     titles.append(raw_title.lower())
     titles.append(simplifyString(raw_title))
 
+    # replace some chars
+    new_title = raw_title.replace('&', 'and')
+    titles.append(simplifyString(new_title))
+
     return list(set(titles))
 
 def randomString(size = 8, chars = string.ascii_uppercase + string.digits):
