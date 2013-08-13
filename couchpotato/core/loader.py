@@ -43,6 +43,9 @@ class Loader(object):
             for module_name, plugin in sorted(self.modules[priority].iteritems()):
                 # Load module
                 try:
+                    if plugin.get('name')[:2] == '__':
+                        continue
+
                     m = getattr(self.loadModule(module_name), plugin.get('name'))
 
                     log.info('Loading %s: %s', (plugin['type'], plugin['name']))
