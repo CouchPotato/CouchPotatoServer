@@ -28,7 +28,7 @@ class Loader(object):
         provider_dir = os.path.join(root, 'couchpotato', 'core', 'providers')
         for provider in os.listdir(provider_dir):
             path = os.path.join(provider_dir, provider)
-            if os.path.isdir(path):
+            if os.path.isdir(path) and provider[:2] != '__':
                 self.paths[provider + '_provider'] = (25, 'couchpotato.core.providers.' + provider, path)
 
 
@@ -43,6 +43,9 @@ class Loader(object):
             for module_name, plugin in sorted(self.modules[priority].iteritems()):
                 # Load module
                 try:
+                    if plugin.get('name')[:2] == '__':
+                        continue
+
                     m = getattr(self.loadModule(module_name), plugin.get('name'))
 
                     log.info('Loading %s: %s', (plugin['type'], plugin['name']))
