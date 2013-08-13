@@ -68,9 +68,12 @@ def namePositionScore(nzb_name, movie_name):
     name_year = fireEvent('scanner.name_year', nzb_name, single = True)
 
     # Give points for movies beginning with the correct name
-    name_split = simplifyString(nzb_name).split(simplifyString(movie_name))
-    if name_split[0].strip() == '':
-        score += 10
+    split_by = simplifyString(movie_name)
+    name_split = []
+    if len(split_by) > 0:
+        name_split = simplifyString(nzb_name).split(split_by)
+        if name_split[0].strip() == '':
+            score += 10
 
     # If year is second in line, give more points
     if len(name_split) > 1 and name_year:
