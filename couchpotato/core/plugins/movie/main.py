@@ -200,7 +200,8 @@ class MoviePlugin(Plugin):
 
         q = q.subquery()
         q2 = db.query(Movie).join((q, q.c.id == Movie.id)) \
-            .options(joinedload_all('releases')) \
+            .options(joinedload_all('releases.files')) \
+            .options(joinedload_all('releases.info')) \
             .options(joinedload_all('profile.types')) \
             .options(joinedload_all('library.titles')) \
             .options(joinedload_all('library.files')) \
