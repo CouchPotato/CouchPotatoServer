@@ -192,7 +192,7 @@ class Manage(Plugin):
 
         # Notify frontend
         def afterUpdate():
-            if not self.in_progress:
+            if not self.in_progress or self.shuttingDown():
                 return
 
             self.in_progress[folder]['to_go'] = self.in_progress[folder]['to_go'] - 1

@@ -10,6 +10,7 @@ import traceback
 
 log = CPLog(__name__)
 
+
 class LibraryPlugin(Plugin):
 
     default_dict = {'titles': {}, 'files':{}}
@@ -56,6 +57,9 @@ class LibraryPlugin(Plugin):
         return library_dict
 
     def update(self, identifier, default_title = '', force = False):
+
+        if self.shuttingDown():
+            return
 
         db = get_session()
         library = db.query(Library).filter_by(identifier = identifier).first()
