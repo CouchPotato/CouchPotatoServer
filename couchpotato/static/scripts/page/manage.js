@@ -86,9 +86,12 @@ Page.Manage = new Class({
 
 		self.progress_interval = setInterval(function(){
 
-			Api.request('manage.progress', {
+			if(self.progress_request && self.progress_request.running)
+				return;
+
+			self.update_in_progress = true;
+			self.progress_request = Api.request('manage.progress', {
 				'onComplete': function(json){
-					self.update_in_progress = true;
 
 					if(!json || !json.progress){
 						clearInterval(self.progress_interval);
