@@ -44,7 +44,7 @@ class Manage(Plugin):
 }"""},
         })
 
-        if not Env.get('dev'):
+        if not Env.get('dev') and self.conf('startup_scan'):
             addEvent('app.load', self.updateLibraryQuick)
 
     def getProgress(self, **kwargs):
