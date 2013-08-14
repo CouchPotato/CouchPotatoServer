@@ -102,6 +102,11 @@ Page.Manage = new Class({
 						}
 					}
 					else {
+
+						// Don't add loader when page is loading still
+						if(!self.list.navigation)
+							return;
+
 						if(!self.progress_container)
 							self.progress_container = new Element('div.progress').inject(self.list.navigation, 'after')
 
