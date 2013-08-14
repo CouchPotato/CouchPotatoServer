@@ -46,7 +46,7 @@ class Dashboard(Plugin):
 
         q = db.query(Movie).join((subq, subq.c.id == Movie.id)) \
             .options(joinedload_all('releases')) \
-            .options(joinedload_all('profile.types')) \
+            .options(joinedload_all('profile')) \
             .options(joinedload_all('library.titles')) \
             .options(joinedload_all('library.files')) \
             .options(joinedload_all('status')) \
