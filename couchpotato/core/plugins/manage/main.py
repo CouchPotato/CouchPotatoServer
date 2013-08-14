@@ -192,6 +192,9 @@ class Manage(Plugin):
 
         # Notify frontend
         def afterUpdate():
+            if not self.in_progress:
+                return
+
             self.in_progress[folder]['to_go'] = self.in_progress[folder]['to_go'] - 1
             total = self.in_progress[folder]['total']
             movie_dict = fireEvent('movie.get', identifier, single = True)
