@@ -37,7 +37,6 @@ var CategoryListBase = new Class({
 		self.settings.addEvent('create', function(){
 			var renamer_group = self.settings.tabs.renamer.groups.renamer;
 
-			p(renamer_group.getElement('.renamer_to'))
 			self.categories.each(function(category){
 
 				var input = new Option.Directory('section_name', 'option.name', category.get('destination'), {
