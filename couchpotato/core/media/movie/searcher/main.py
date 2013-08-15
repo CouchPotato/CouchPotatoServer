@@ -19,7 +19,7 @@ import traceback
 log = CPLog(__name__)
 
 
-class Searcher(Plugin):
+class MovieSearcher(Plugin):
 
     in_progress = False
 

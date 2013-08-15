@@ -1,8 +1,8 @@
-from .main import Searcher
+from .main import MovieSearcher
 import random
 
 def start():
-    return Searcher()
+    return MovieSearcher()
 
 config = [{
     'name': 'searcher',
