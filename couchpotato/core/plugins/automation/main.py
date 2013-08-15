@@ -36,4 +36,4 @@ class Automation(Plugin):
 
         for movie_id in movie_ids:
             movie_dict = fireEvent('movie.get', movie_id, single = True)
-            fireEvent('searcher.single', movie_dict)
+            fireEvent('movie.searcher.single', movie_dict)

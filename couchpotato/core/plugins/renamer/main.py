@@ -715,7 +715,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                                     db.commit()
 
                                     if self.conf('next_on_failed'):
-                                        fireEvent('searcher.try_next_release', movie_id = rel.movie_id)
+                                        fireEvent('movie.searcher.try_next_release', movie_id = rel.movie_id)
                                 elif item['status'] == 'completed':
                                     log.info('Download of %s completed!', item['name'])
                                     if self.statusInfoComplete(item):

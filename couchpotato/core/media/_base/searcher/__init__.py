@@ -11,8 +11,8 @@ config = [{
         {
             'tab': 'searcher',
             'name': 'searcher',
-            'label': 'Search',
-            'description': 'Options for the searchers',
+            'label': 'Basics',
+            'description': 'General search options',
             'options': [
                 {
                     'name': 'preferred_method',
@@ -21,14 +21,6 @@ config = [{
                     'default': 'both',
                     'type': 'dropdown',
                     'values': [('usenet & torrents', 'both'), ('usenet', 'nzb'), ('torrents', 'torrent')],
-                },
-                {
-                    'name': 'always_search',
-                    'default': False,
-                    'advanced': True,
-                    'type': 'bool',
-                    'label': 'Always search',
-                    'description': 'Search for movies even before there is a ETA. Enabling this will probably get you a lot of fakes.',
                 },
             ],
         }, {
@@ -58,46 +50,6 @@ config = [{
                     'label': 'Ignored',
                     'default': 'german, dutch, french, truefrench, danish, swedish, spanish, italian, korean, dubbed, swesub, korsub, dksubs',
                     'description': 'Ignores releases that match any of these sets. (Works like explained above)'
-                },
-            ],
-        }, {
-            'tab': 'searcher',
-            'name': 'cronjob',
-            'label': 'Cronjob',
-            'advanced': True,
-            'description': 'Cron settings for the searcher see: <a href="http://packages.python.org/APScheduler/cronschedule.html">APScheduler</a> for details.',
-            'options': [
-                {
-                    'name': 'run_on_launch',
-                    'label': 'Run on launch',
-                    'advanced': True,
-                    'default': 0,
-                    'type': 'bool',
-                    'description': 'Force run the searcher after (re)start.',
-                },
-                {
-                    'name': 'cron_day',
-                    'label': 'Day',
-                    'advanced': True,
-                    'default': '*',
-                    'type': 'string',
-                    'description': '<strong>*</strong>: Every day, <strong>*/2</strong>: Every 2 days, <strong>1</strong>: Every first of the month.',
-                },
-                {
-                    'name': 'cron_hour',
-                    'label': 'Hour',
-                    'advanced': True,
-                    'default': random.randint(0, 23),
-                    'type': 'string',
-                    'description': '<strong>*</strong>: Every hour, <strong>*/8</strong>: Every 8 hours, <strong>3</strong>: At 3, midnight.',
-                },
-                {
-                    'name': 'cron_minute',
-                    'label': 'Minute',
-                    'advanced': True,
-                    'default': random.randint(0, 59),
-                    'type': 'string',
-                    'description': "Just keep it random, so the providers don't get DDOSed by every CP user on a 'full' hour."
                 },
             ],
         },
