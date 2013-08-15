@@ -159,8 +159,9 @@
 				display: inline-block;
 				margin-right: 10px;
 			}
-				.movie_result .options select[name=title] { width: 180px; }
+				.movie_result .options select[name=title] { width: 170px; }
 				.movie_result .options select[name=profile] { width: 90px; }
+				.movie_result .options select[name=category] { width: 80px; }
 				
 				@media all and (max-width: 480px) {
 				

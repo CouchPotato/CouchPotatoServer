@@ -329,8 +329,8 @@ var OptionBase = new Class({
 	 * Create the element
 	 */
 	createBase: function(){
-		var self = this
-		self.el = new Element('div.ctrlHolder')
+		var self = this;
+		self.el = new Element('div.ctrlHolder.'+self.section + '_' + self.name)
 	},
 
 	create: function(){},
