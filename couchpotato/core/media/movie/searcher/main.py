@@ -3,13 +3,12 @@ from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
 from couchpotato.core.helpers.encoding import simplifyString, toUnicode
 from couchpotato.core.helpers.variable import md5, getTitle, splitString, \
-    possibleTitles
+    possibleTitles, getImdb
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Movie, Release, ReleaseInfo
 from couchpotato.environment import Env
 from datetime import date
-from inspect import ismethod, isfunction
 from sqlalchemy.exc import InterfaceError
 import datetime
 import random
@@ -25,25 +24,24 @@ class Searcher(Plugin):
     in_progress = False
 
     def __init__(self):
-        addEvent('searcher.all', self.allMovies)
-        addEvent('searcher.single', self.single)
-        addEvent('searcher.correct_movie', self.correctMovie)
-        addEvent('searcher.download', self.download)
-        addEvent('searcher.try_next_release', self.tryNextRelease)
-        addEvent('searcher.could_be_released', self.couldBeReleased)
+        addEvent('movie.searcher.all', self.searchAll)
+        addEvent('movie.searcher.single', self.single)
+        addEvent('movie.searcher.correct_movie', self.correctMovie)
+        addEvent('movie.searcher.try_next_release', self.tryNextRelease)
+        addEvent('movie.searcher.could_be_released', self.couldBeReleased)
 
-        addApiView('searcher.try_next', self.tryNextReleaseView, docs = {
+        addApiView('movie.searcher.try_next', self.tryNextReleaseView, docs = {
             'desc': 'Marks the snatched results as ignored and try the next best release',
             'params': {
                 'id': {'desc': 'The id of the movie'},
             },
         })
 
-        addApiView('searcher.full_search', self.allMoviesView, docs = {
+        addApiView('movie.searcher.full_search', self.searchAllView, docs = {
             'desc': 'Starts a full search for all wanted movies',
         })
 
-        addApiView('searcher.progress', self.getProgress, docs = {
+        addApiView('movie.searcher.progress', self.getProgress, docs = {
             'desc': 'Get the progress of current full search',
             'return': {'type': 'object', 'example': """{
     'progress': False || object, total & to_go,
@@ -51,7 +49,7 @@ class Searcher(Plugin):
         })
 
         if self.conf('run_on_launch'):
-            addEvent('app.load', self.allMovies)
+            addEvent('app.load', self.searchAll)
 
         addEvent('app.load', self.setCrons)
         addEvent('setting.save.searcher.cron_day.after', self.setCrons)
@@ -59,16 +57,16 @@ class Searcher(Plugin):
         addEvent('setting.save.searcher.cron_minute.after', self.setCrons)
 
     def setCrons(self):
-        fireEvent('schedule.cron', 'searcher.all', self.allMovies, day = self.conf('cron_day'), hour = self.conf('cron_hour'), minute = self.conf('cron_minute'))
+        fireEvent('schedule.cron', 'movie.searcher.all', self.searchAll, day = self.conf('cron_day'), hour = self.conf('cron_hour'), minute = self.conf('cron_minute'))
 
-    def allMoviesView(self, **kwargs):
+    def searchAllView(self, **kwargs):
 
         in_progress = self.in_progress
         if not in_progress:
-            fireEventAsync('searcher.all')
-            fireEvent('notify.frontend', type = 'searcher.started', data = True, message = 'Full search started')
+            fireEventAsync('movie.searcher.all')
+            fireEvent('notify.frontend', type = 'movie.searcher.started', data = True, message = 'Full search started')
         else:
-            fireEvent('notify.frontend', type = 'searcher.already_started', data = True, message = 'Full search already in progress')
+            fireEvent('notify.frontend', type = 'movie.searcher.already_started', data = True, message = 'Full search already in progress')
 
         return {
             'success': not in_progress
@@ -80,7 +78,7 @@ class Searcher(Plugin):
             'progress': self.in_progress
         }
 
-    def allMovies(self):
+    def searchAll(self):
 
         if self.in_progress:
             log.info('Search already in progress')
@@ -101,7 +99,7 @@ class Searcher(Plugin):
         }
 
         try:
-            search_types = self.getSearchTypes()
+            search_types = fireEvent('searcher.get_types', single = True)
 
             for movie in movies:
                 movie_dict = movie.to_dict({
@@ -136,7 +134,7 @@ class Searcher(Plugin):
         # Find out search type
         try:
             if not search_types:
-                search_types = self.getSearchTypes()
+                search_types = fireEvent('searcher.get_types', single = True)
         except SearchSetupError:
             return
 
@@ -161,7 +159,7 @@ class Searcher(Plugin):
             fireEvent('movie.delete', movie['id'], single = True)
             return
 
-        fireEvent('notify.frontend', type = 'searcher.started.%s' % movie['id'], data = True, message = 'Searching for "%s"' % default_title)
+        fireEvent('notify.frontend', type = 'movie.searcher.started.%s' % movie['id'], data = True, message = 'Searching for "%s"' % default_title)
 
 
         ret = False
@@ -253,7 +251,7 @@ class Searcher(Plugin):
                         log.info('Ignored, score to low: %s', nzb['name'])
                         continue
 
-                    downloaded = self.download(data = nzb, movie = movie)
+                    downloaded = fireEvent('searcher.download', data = nzb, movie = movie, single = True)
                     if downloaded is True:
                         ret = True
                         break
@@ -277,106 +275,9 @@ class Searcher(Plugin):
         if len(too_early_to_search) > 0:
             log.info2('Too early to search for %s, %s', (too_early_to_search, default_title))
 
-        fireEvent('notify.frontend', type = 'searcher.ended.%s' % movie['id'], data = True)
+        fireEvent('notify.frontend', type = 'movie.searcher.ended.%s' % movie['id'], data = True)
 
         return ret
-
-    def download(self, data, movie, manual = False):
-
-        # Test to see if any downloaders are enabled for this type
-        downloader_enabled = fireEvent('download.enabled', manual, data, single = True)
-
-        if downloader_enabled:
-
-            snatched_status = fireEvent('status.get', 'snatched', single = True)
-
-            # Download movie to temp
-            filedata = None
-            if data.get('download') and (ismethod(data.get('download')) or isfunction(data.get('download'))):
-                filedata = data.get('download')(url = data.get('url'), nzb_id = data.get('id'))
-                if filedata == 'try_next':
-                    return filedata
-
-            download_result = fireEvent('download', data = data, movie = movie, manual = manual, filedata = filedata, single = True)
-            log.debug('Downloader result: %s', download_result)
-
-            if download_result:
-                try:
-                    # Mark release as snatched
-                    db = get_session()
-                    rls = db.query(Release).filter_by(identifier = md5(data['url'])).first()
-                    if rls:
-                        renamer_enabled = Env.setting('enabled', 'renamer')
-
-                        done_status = fireEvent('status.get', 'done', single = True)
-                        rls.status_id = done_status.get('id') if not renamer_enabled else snatched_status.get('id')
-
-                        # Save download-id info if returned
-                        if isinstance(download_result, dict):
-                            for key in download_result:
-                                rls_info = ReleaseInfo(
-                                    identifier = 'download_%s' % key,
-                                    value = toUnicode(download_result.get(key))
-                                )
-                                rls.info.append(rls_info)
-                        db.commit()
-
-                        log_movie = '%s (%s) in %s' % (getTitle(movie['library']), movie['library']['year'], rls.quality.label)
-                        snatch_message = 'Snatched "%s": %s' % (data.get('name'), log_movie)
-                        log.info(snatch_message)
-                        fireEvent('movie.snatched', message = snatch_message, data = rls.to_dict())
-
-                        # If renamer isn't used, mark movie done
-                        if not renamer_enabled:
-                            active_status = fireEvent('status.get', 'active', single = True)
-                            done_status = fireEvent('status.get', 'done', single = True)
-                            try:
-                                if movie['status_id'] == active_status.get('id'):
-                                    for profile_type in movie['profile']['types']:
-                                        if profile_type['quality_id'] == rls.quality.id and profile_type['finish']:
-                                            log.info('Renamer disabled, marking movie as finished: %s', log_movie)
-
-                                            # Mark release done
-                                            rls.status_id = done_status.get('id')
-                                            rls.last_edit = int(time.time())
-                                            db.commit()
-
-                                            # Mark movie done
-                                            mvie = db.query(Movie).filter_by(id = movie['id']).first()
-                                            mvie.status_id = done_status.get('id')
-                                            mvie.last_edit = int(time.time())
-                                            db.commit()
-                            except:
-                                log.error('Failed marking movie finished, renamer disabled: %s', traceback.format_exc())
-
-                except:
-                    log.error('Failed marking movie finished: %s', traceback.format_exc())
-
-                return True
-
-        log.info('Tried to download, but none of the "%s" downloaders are enabled or gave an error', (data.get('type', '')))
-
-        return False
-
-    def getSearchTypes(self):
-
-        download_types = fireEvent('download.enabled_types', merge = True)
-        provider_types = fireEvent('provider.enabled_types', merge = True)
-
-        if download_types and len(list(set(provider_types) & set(download_types))) == 0:
-            log.error('There aren\'t any providers enabled for your downloader (%s). Check your settings.', ','.join(download_types))
-            raise NoProviders
-
-        for useless_provider in list(set(provider_types) - set(download_types)):
-            log.debug('Provider for "%s" enabled, but no downloader.', useless_provider)
-
-        search_types = download_types
-
-        if len(search_types) == 0:
-            log.error('There aren\'t any downloaders enabled. Please pick one in settings.')
-            raise NoDownloaders
-
-        return search_types
 
     def correctMovie(self, nzb = None, movie = None, quality = None, **kwargs):
 
@@ -430,7 +331,7 @@ class Searcher(Plugin):
         preferred_quality = fireEvent('quality.single', identifier = quality['identifier'], single = True)
 
         # Contains lower quality string
-        if self.containsOtherQuality(nzb, movie_year = movie['library']['year'], preferred_quality = preferred_quality):
+        if fireEvent('searcher.contains_other_quality', nzb, movie_year = movie['library']['year'], preferred_quality = preferred_quality, single = True):
             log.info2('Wrong: %s, looking for %s', (nzb['name'], quality['label']))
             return False
 
@@ -460,20 +361,20 @@ class Searcher(Plugin):
             return True
 
         # Check if nzb contains imdb link
-        if self.checkIMDB([nzb.get('description', '')], movie['library']['identifier']):
+        if getImdb(nzb.get('description', '')) == movie['library']['identifier']:
             return True
 
         for raw_title in movie['library']['titles']:
             for movie_title in possibleTitles(raw_title['title']):
                 movie_words = re.split('\W+', simplifyString(movie_title))
 
-                if self.correctName(nzb['name'], movie_title):
+                if fireEvent('searcher.correct_name', nzb['name'], movie_title, single = True):
                     # if no IMDB link, at least check year range 1
-                    if len(movie_words) > 2 and self.correctYear([nzb['name']], movie['library']['year'], 1):
+                    if len(movie_words) > 2 and fireEvent('searcher.correct_year', nzb['name'], movie['library']['year'], 1, single = True):
                         return True
 
                     # if no IMDB link, at least check year
-                    if len(movie_words) <= 2 and self.correctYear([nzb['name']], movie['library']['year'], 0):
+                    if len(movie_words) <= 2 and fireEvent('searcher.correct_year', nzb['name'], movie['library']['year'], 0, single = True):
                         return True
 
         log.info("Wrong: %s, undetermined naming. Looking for '%s (%s)'", (nzb['name'], movie_name, movie['library']['year']))
@@ -524,45 +425,6 @@ class Searcher(Plugin):
         for string in haystack:
             if 'imdb.com/title/' + imdbId in string:
                 return True
-
-        return False
-
-    def correctYear(self, haystack, year, year_range):
-
-        for string in haystack:
-
-            year_name = fireEvent('scanner.name_year', string, single = True)
-
-            if year_name and ((year - year_range) <= year_name.get('year') <= (year + year_range)):
-                log.debug('Movie year matches range: %s looking for %s', (year_name.get('year'), year))
-                return True
-
-        log.debug('Movie year doesn\'t matche range: %s looking for %s', (year_name.get('year'), year))
-        return False
-
-    def correctName(self, check_name, movie_name):
-
-        check_names = [check_name]
-
-        # Match names between "
-        try: check_names.append(re.search(r'([\'"])[^\1]*\1', check_name).group(0))
-        except: pass
-
-        # Match longest name between []
-        try: check_names.append(max(check_name.split('['), key = len))
-        except: pass
-
-        for check_name in list(set(check_names)):
-            check_movie = fireEvent('scanner.name_year', check_name, single = True)
-
-            try:
-                check_words = filter(None, re.split('\W+', check_movie.get('name', '')))
-                movie_words = filter(None, re.split('\W+', simplifyString(movie_name)))
-
-                if len(check_words) > 0 and len(movie_words) > 0 and len(list(set(check_words) - set(movie_words))) == 0:
-                    return True
-            except:
-                pass
 
         return False
 
@@ -626,7 +488,7 @@ class Searcher(Plugin):
 
             movie_dict = fireEvent('movie.get', movie_id, single = True)
             log.info('Trying next release for: %s', getTitle(movie_dict['library']))
-            fireEvent('searcher.single', movie_dict)
+            fireEvent('movie.searcher.single', movie_dict)
 
             return True
 
@@ -635,10 +497,4 @@ class Searcher(Plugin):
             return False
 
 class SearchSetupError(Exception):
-    pass
-
-class NoDownloaders(SearchSetupError):
-    pass
-
-class NoProviders(SearchSetupError):
     pass
