@@ -129,7 +129,6 @@ class Renamer(Plugin):
         groups = fireEvent('scanner.scan', folder = folder if folder else self.conf('from'),
                            files = files, download_info = download_info, return_ignored = False, single = True)
 
-        destination = self.conf('to')
         folder_name = self.conf('folder_name')
         file_name = self.conf('file_name')
         trailer_name = self.conf('trailer_name')
@@ -148,10 +147,6 @@ class Renamer(Plugin):
             remove_releases = []
 
             movie_title = getTitle(group['library'])
-            try:
-                destination = group['category']['path']
-            except:
-                destination = self.conf('to')
 
             # Add _UNKNOWN_ if no library item is connected
             if not group['library'] or not movie_title:
@@ -165,7 +160,20 @@ class Renamer(Plugin):
                     continue
 
                 library = group['library']
+                library_ent = db.query(Library).filter_by(identifier = group['library']['identifier']).first()
+
                 movie_title = getTitle(library)
+
+                # Overwrite destination when set in category
+                destination = self.conf('to')
+                for movie in library_ent.movies:
+                    if movie.category and movie.category.destination and len(movie.category.destination) > 0:
+                        destination = movie.category.destination
+                        log.debug('Setting category destination for "%s": %s' % (movie_title, destination))
+                    else:
+                        log.debug('No category destination found for "%s"' % movie_title)
+
+                    break
 
                 # Find subtitle for renaming
                 group['before_rename'] = []
@@ -319,17 +327,16 @@ class Renamer(Plugin):
                             cd += 1
 
                 # Before renaming, remove the lower quality files
-                library = db.query(Library).filter_by(identifier = group['library']['identifier']).first()
                 remove_leftovers = True
 
                 # Add it to the wanted list before we continue
-                if len(library.movies) == 0:
+                if len(library_ent.movies) == 0:
                     profile = db.query(Profile).filter_by(core = True, label = group['meta_data']['quality']['label']).first()
                     fireEvent('movie.add', params = {'identifier': group['library']['identifier'], 'profile_id': profile.id}, search_after = False)
                     db.expire_all()
                     library = db.query(Library).filter_by(identifier = group['library']['identifier']).first()
 
-                for movie in library.movies:
+                for movie in library_ent.movies:
 
                     # Mark movie "done" once it's found the quality with the finish check
                     try:
@@ -819,6 +826,6 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
     def statusInfoComplete(self, item):
         return item['id'] and item['downloader'] and item['folder']
-    
+
     def movieInFromFolder(self, movie_folder):
         return movie_folder and self.conf('from') in movie_folder or not movie_folder

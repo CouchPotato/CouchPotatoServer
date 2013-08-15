@@ -1,6 +1,6 @@
 from couchpotato import get_session
 from couchpotato.api import addApiView
-from couchpotato.core.event import addEvent, fireEvent
+from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
@@ -10,8 +10,6 @@ log = CPLog(__name__)
 
 
 class CategoryPlugin(Plugin):
-
-    to_dict = {'destination': {}}
 
     def __init__(self):
         addEvent('category.all', self.all)
@@ -41,7 +39,7 @@ class CategoryPlugin(Plugin):
 
         temp = []
         for category in categories:
-            temp.append(category.to_dict(self.to_dict))
+            temp.append(category.to_dict())
 
         db.expire_all()
         return temp
@@ -61,10 +59,11 @@ class CategoryPlugin(Plugin):
         c.ignored = toUnicode(kwargs.get('ignored'))
         c.preferred = toUnicode(kwargs.get('preferred'))
         c.required = toUnicode(kwargs.get('required'))
+        c.destination = toUnicode(kwargs.get('destination'))
 
         db.commit()
 
-        category_dict = c.to_dict(self.to_dict)
+        category_dict = c.to_dict()
 
         return {
             'success': True,

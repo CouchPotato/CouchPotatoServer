@@ -54,7 +54,7 @@ config = [{
                 {
                     'name': 'to',
                     'type': 'directory',
-                    'description': 'Folder where the movies should be moved to.',
+                    'description': 'Default folder where the movies are moved to.',
                 },
                 {
                     'name': 'folder_name',
