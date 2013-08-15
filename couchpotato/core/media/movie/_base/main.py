@@ -4,7 +4,7 @@ from couchpotato.core.event import fireEvent, fireEventAsync, addEvent
 from couchpotato.core.helpers.encoding import toUnicode, simplifyString
 from couchpotato.core.helpers.variable import getImdb, splitString, tryInt
 from couchpotato.core.logger import CPLog
-from couchpotato.core.plugins.base import Plugin
+from couchpotato.core.media import MediaBase
 from couchpotato.core.settings.model import Library, LibraryTitle, Movie, \
     Release
 from couchpotato.environment import Env
@@ -16,7 +16,9 @@ import time
 log = CPLog(__name__)
 
 
-class MoviePlugin(Plugin):
+class MovieBase(MediaBase):
+
+    identifier = 'movie'
 
     default_dict = {
         'profile': {'types': {'quality': {}}},
@@ -27,6 +29,8 @@ class MoviePlugin(Plugin):
     }
 
     def __init__(self):
+        super(MovieBase, self).__init__()
+
         addApiView('movie.search', self.search, docs = {
             'desc': 'Search the movie providers for a movie',
             'params': {
@@ -476,7 +480,7 @@ class MoviePlugin(Plugin):
             fireEvent('movie.restatus', m.id)
 
             movie_dict = m.to_dict(self.default_dict)
-            fireEventAsync('searcher.single', movie_dict, on_complete = self.createNotifyFront(movie_id))
+            fireEventAsync('movie.searcher.single', movie_dict, on_complete = self.createNotifyFront(movie_id))
 
         db.expire_all()
         return {
@@ -574,7 +578,7 @@ class MoviePlugin(Plugin):
         def onComplete():
             db = get_session()
             movie = db.query(Movie).filter_by(id = movie_id).first()
-            fireEventAsync('searcher.single', movie.to_dict(self.default_dict), on_complete = self.createNotifyFront(movie_id))
+            fireEventAsync('movie.searcher.single', movie.to_dict(self.default_dict), on_complete = self.createNotifyFront(movie_id))
             db.expire_all()
 
         return onComplete
