@@ -359,19 +359,12 @@ class Category(Entity):
     required = Field(Unicode(255))
     preferred = Field(Unicode(255))
     ignored = Field(Unicode(255))
+    destination = Field(Unicode(255))
 
     movie = OneToMany('Movie')
     show = OneToMany('Show')
     episode = OneToMany('Episode')
-    destination = ManyToOne('Destination')
-
-
-class Destination(Entity):
-    """"""
-
-    path = Field(Unicode(255))
-
-    category = OneToMany('Category')
+    destination = Field(Unicode(255))
 
 
 class ProfileType(Entity):

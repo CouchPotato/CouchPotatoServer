@@ -366,6 +366,7 @@ class MoviePlugin(Plugin):
             fireEvent('status.get', ['active', 'snatched', 'ignored', 'done', 'downloaded'], single = True)
 
         default_profile = fireEvent('profile.default', single = True)
+        cat_id = params.get('category_id', None)
 
         db = get_session()
         m = db.query(Movie).filter_by(library_id = library.get('id')).first()
@@ -376,6 +377,7 @@ class MoviePlugin(Plugin):
                 library_id = library.get('id'),
                 profile_id = params.get('profile_id', default_profile.get('id')),
                 status_id = status_id if status_id else status_active.get('id'),
+                category_id = tryInt(cat_id) if cat_id is not None and tryInt(cat_id) > 0 else None,
             )
             db.add(m)
             db.commit()
@@ -397,6 +399,7 @@ class MoviePlugin(Plugin):
                         fireEvent('release.delete', release.id, single = True)
 
             m.profile_id = params.get('profile_id', default_profile.get('id'))
+            m.category_id = tryInt(cat_id) if cat_id is not None and tryInt(cat_id) > 0 else None
         else:
             log.debug('Movie already exists, not updating: %s', params)
             added = False

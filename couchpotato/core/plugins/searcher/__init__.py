@@ -43,6 +43,7 @@ config = [{
                     'name': 'preferred_words',
                     'label': 'Preferred',
                     'default': '',
+                    'placeholder': 'Example: CtrlHD, Amiable, Wiki',
                     'description': 'Words that give the releases a higher score.'
                 },
                 {
