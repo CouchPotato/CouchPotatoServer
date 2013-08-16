@@ -1,9 +1,10 @@
 from couchpotato import get_session
+from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import simplifyString, toUnicode
 from couchpotato.core.helpers.variable import md5, getTitle
 from couchpotato.core.logger import CPLog
-from couchpotato.core.plugins.base import Plugin
+from couchpotato.core.media._base.searcher.base import SearcherBase
 from couchpotato.core.settings.model import Movie, Release, ReleaseInfo
 from couchpotato.environment import Env
 from inspect import ismethod, isfunction
@@ -15,7 +16,7 @@ import traceback
 log = CPLog(__name__)
 
 
-class Searcher(Plugin):
+class Searcher(SearcherBase):
 
     def __init__(self):
         addEvent('searcher.get_types', self.getSearchTypes)
@@ -23,6 +24,30 @@ class Searcher(Plugin):
         addEvent('searcher.correct_year', self.correctYear)
         addEvent('searcher.correct_name', self.correctName)
         addEvent('searcher.download', self.download)
+
+        addApiView('searcher.full_search', self.searchAllView, docs = {
+            'desc': 'Starts a full search for all media',
+        })
+
+        addApiView('searcher.progress', self.getProgressForAll, docs = {
+            'desc': 'Get the progress of all media searches',
+            'return': {'type': 'object', 'example': """{
+    'movie': False || object, total & to_go,
+    'show': False || object, total & to_go,
+}"""},
+        })
+
+    def searchAllView(self):
+
+        results = {}
+        for _type in fireEvent('media.types'):
+            results[_type] = fireEvent('%s.searcher.all_view' % _type)
+
+        return results
+
+    def getProgressForAll(self):
+        progress = fireEvent('searcher.progress', merge = True)
+        return progress
 
     def download(self, data, movie, manual = False):
 
