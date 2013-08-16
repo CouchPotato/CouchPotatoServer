@@ -29,14 +29,14 @@ var Movie = new Class({
 			self.update.delay(2000, self, notification);
 		});
 
-		['movie.busy', 'searcher.started'].each(function(listener){
+		['movie.busy', 'movie.searcher.started'].each(function(listener){
 			App.addEvent(listener+'.'+self.data.id, function(notification){
 				if(notification.data)
 					self.busy(true)
 			});
 		})
 
-		App.addEvent('searcher.ended.'+self.data.id, function(notification){
+		App.addEvent('movie.searcher.ended.'+self.data.id, function(notification){
 			if(notification.data)
 				self.busy(false)
 		});
@@ -53,7 +53,7 @@ var Movie = new Class({
 
 		// Remove events
 		App.removeEvents('movie.update.'+self.data.id);
-		['movie.busy', 'searcher.started'].each(function(listener){
+		['movie.busy', 'movie.searcher.started'].each(function(listener){
 			App.removeEvents(listener+'.'+self.data.id);
 		})
 	},

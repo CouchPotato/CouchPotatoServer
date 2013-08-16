@@ -257,7 +257,7 @@ class ResultList(list):
 
         new_result = self.fillResult(result)
 
-        is_correct_movie = fireEvent('searcher.correct_movie',
+        is_correct_movie = fireEvent('movie.searcher.correct_movie',
                                      nzb = new_result, movie = self.movie, quality = self.quality,
                                      imdb_results = self.kwargs.get('imdb_results', False), single = True)
 

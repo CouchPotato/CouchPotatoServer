@@ -40,7 +40,7 @@ Page.Wanted = new Class({
 
 		if(!self.search_in_progress){
 
-			Api.request('searcher.full_search');
+			Api.request('movie.searcher.full_search');
 			self.startProgressInterval();
 
 		}
@@ -53,7 +53,7 @@ Page.Wanted = new Class({
 		var start_text = self.manual_search.get('text');
 		self.progress_interval = setInterval(function(){
 			if(self.search_progress && self.search_progress.running) return;
-			self.search_progress = Api.request('searcher.progress', {
+			self.search_progress = Api.request('movie.searcher.progress', {
 				'onComplete': function(json){
 					self.search_in_progress = true;
 					if(!json.progress){

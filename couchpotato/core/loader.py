@@ -31,6 +31,13 @@ class Loader(object):
             if os.path.isdir(path) and provider[:2] != '__':
                 self.paths[provider + '_provider'] = (25, 'couchpotato.core.providers.' + provider, path)
 
+        # Add media to loader
+        media_dir = os.path.join(root, 'couchpotato', 'core', 'media')
+        for media in os.listdir(media_dir):
+            path = os.path.join(media_dir, media)
+            if os.path.isdir(path) and media[:2] != '__':
+                self.paths[media + '_media'] = (25, 'couchpotato.core.media.' + media, path)
+
 
         for plugin_type, plugin_tuple in self.paths.iteritems():
             priority, module, dir_name = plugin_tuple
