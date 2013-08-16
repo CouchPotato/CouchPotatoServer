@@ -5,7 +5,7 @@ def start():
     return MovieSearcher()
 
 config = [{
-    'name': 'searcher',
+    'name': 'moviesearcher',
     'order': 20,
     'groups': [
         {
@@ -18,12 +18,14 @@ config = [{
                 {
                     'name': 'always_search',
                     'default': False,
+                    'migrate_from': 'searcher',
                     'type': 'bool',
                     'label': 'Always search',
                     'description': 'Search for movies even before there is a ETA. Enabling this will probably get you a lot of fakes.',
                 },
                 {
                     'name': 'run_on_launch',
+                    'migrate_from': 'searcher',
                     'label': 'Run on launch',
                     'advanced': True,
                     'default': 0,
@@ -32,6 +34,7 @@ config = [{
                 },
                 {
                     'name': 'cron_day',
+                    'migrate_from': 'searcher',
                     'label': 'Day',
                     'advanced': True,
                     'default': '*',
@@ -40,6 +43,7 @@ config = [{
                 },
                 {
                     'name': 'cron_hour',
+                    'migrate_from': 'searcher',
                     'label': 'Hour',
                     'advanced': True,
                     'default': random.randint(0, 23),
@@ -48,6 +52,7 @@ config = [{
                 },
                 {
                     'name': 'cron_minute',
+                    'migrate_from': 'searcher',
                     'label': 'Minute',
                     'advanced': True,
                     'default': random.randint(0, 59),

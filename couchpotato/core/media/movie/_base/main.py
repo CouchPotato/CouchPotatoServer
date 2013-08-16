@@ -4,7 +4,7 @@ from couchpotato.core.event import fireEvent, fireEventAsync, addEvent
 from couchpotato.core.helpers.encoding import toUnicode, simplifyString
 from couchpotato.core.helpers.variable import getImdb, splitString, tryInt
 from couchpotato.core.logger import CPLog
-from couchpotato.core.media import MediaBase
+from couchpotato.core.media.movie import MovieTypeBase
 from couchpotato.core.settings.model import Library, LibraryTitle, Movie, \
     Release
 from couchpotato.environment import Env
@@ -16,9 +16,7 @@ import time
 log = CPLog(__name__)
 
 
-class MovieBase(MediaBase):
-
-    identifier = 'movie'
+class MovieBase(MovieTypeBase):
 
     default_dict = {
         'profile': {'types': {'quality': {}}},
@@ -29,7 +27,10 @@ class MovieBase(MediaBase):
     }
 
     def __init__(self):
+
+        # Initialize this type
         super(MovieBase, self).__init__()
+        self.initType()
 
         addApiView('movie.search', self.search, docs = {
             'desc': 'Search the movie providers for a movie',
