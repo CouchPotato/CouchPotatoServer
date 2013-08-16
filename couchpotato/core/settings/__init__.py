@@ -2,7 +2,7 @@ from __future__ import with_statement
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import isInt, toUnicode
-from couchpotato.core.helpers.variable import mergeDicts, tryInt
+from couchpotato.core.helpers.variable import mergeDicts, tryInt, tryFloat
 from couchpotato.core.settings.model import Properties
 import ConfigParser
 import os.path
@@ -77,8 +77,16 @@ class Settings(object):
 
     def registerDefaults(self, section_name, options = {}, save = True):
         self.addSection(section_name)
+
         for option_name, option in options.iteritems():
             self.setDefault(section_name, option_name, option.get('default', ''))
+
+            # Migrate old settings from old location to the new location
+            if option.get('migrate_from'):
+                if self.p.has_option(option.get('migrate_from'), option_name):
+                    previous_value = self.p.get(option.get('migrate_from'), option_name)
+                    self.p.set(section_name, option_name, previous_value)
+                    self.p.remove_option(option.get('migrate_from'), option_name)
 
             if option.get('type'):
                 self.setType(section_name, option_name, option.get('type'))
@@ -122,7 +130,7 @@ class Settings(object):
         try:
             return self.p.getfloat(section, option)
         except:
-            return tryInt(self.p.get(section, option))
+            return tryFloat(self.p.get(section, option))
 
     def getUnicode(self, section, option):
         value = self.p.get(section, option).decode('unicode_escape')
