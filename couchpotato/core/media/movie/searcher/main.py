@@ -48,7 +48,7 @@ class MovieSearcher(Plugin):
 }"""},
         })
 
-        if self.conf('run_on_launch'):
+        if self.conf('run_on_launch', section = 'searcher'):
             addEvent('app.load', self.searchAll)
 
         addEvent('app.load', self.setCrons)
@@ -57,7 +57,9 @@ class MovieSearcher(Plugin):
         addEvent('setting.save.searcher.cron_minute.after', self.setCrons)
 
     def setCrons(self):
-        fireEvent('schedule.cron', 'movie.searcher.all', self.searchAll, day = self.conf('cron_day'), hour = self.conf('cron_hour'), minute = self.conf('cron_minute'))
+
+        fireEvent('schedule.cron', 'movie.searcher.all', self.searchAll,
+            day = self.conf('cron_day', section = 'searcher'), hour = self.conf('cron_hour', section = 'searcher'), minute = self.conf('cron_minute', section = 'searcher'))
 
     def searchAllView(self, **kwargs):
 
@@ -164,7 +166,7 @@ class MovieSearcher(Plugin):
 
         ret = False
         for quality_type in movie['profile']['types']:
-            if not self.conf('always_search') and not self.couldBeReleased(quality_type['quality']['identifier'] in pre_releases, release_dates, movie['library']['year']):
+            if not self.conf('always_search', section = 'searcher') and not self.couldBeReleased(quality_type['quality']['identifier'] in pre_releases, release_dates, movie['library']['year']):
                 too_early_to_search.append(quality_type['quality']['identifier'])
                 continue
 
@@ -191,7 +193,7 @@ class MovieSearcher(Plugin):
                 if len(sorted_results) == 0:
                     log.debug('Nothing found for %s in %s', (default_title, quality_type['quality']['label']))
 
-                download_preference = self.conf('preferred_method')
+                download_preference = self.conf('preferred_method', section = 'searcher')
                 if download_preference != 'both':
                     sorted_results = sorted(sorted_results, key = lambda k: k['type'][:3], reverse = (download_preference == 'torrent'))
 
@@ -294,7 +296,7 @@ class MovieSearcher(Plugin):
         nzb_words = re.split('\W+', nzb_name)
 
         # Make sure it has required words
-        required_words = splitString(self.conf('required_words').lower())
+        required_words = splitString(self.conf('required_words', section = 'searcher').lower())
         try: required_words = list(set(required_words + splitString(movie['category']['required'].lower())))
         except: pass
 
@@ -308,7 +310,7 @@ class MovieSearcher(Plugin):
             return False
 
         # Ignore releases
-        ignored_words = splitString(self.conf('ignored_words').lower())
+        ignored_words = splitString(self.conf('ignored_words', section = 'searcher').lower())
         try: ignored_words = list(set(ignored_words + splitString(movie['category']['ignored'].lower())))
         except: pass
 
