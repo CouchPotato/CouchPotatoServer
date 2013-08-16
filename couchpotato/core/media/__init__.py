@@ -2,16 +2,13 @@ from couchpotato.core.event import addEvent
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 
-log = CPLog(__name__)
-
 
 class MediaBase(Plugin):
 
-    identifier = None
+    _type = None
 
-    def __init__(self):
-
+    def initType(self):
         addEvent('media.types', self.getType)
 
     def getType(self):
-        return self.identifier
+        return self._type

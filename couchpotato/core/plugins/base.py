@@ -40,8 +40,8 @@ class Plugin(object):
         addEvent('plugin.running', self.isRunning)
         self._running = []
 
-    def conf(self, attr, value = None, default = None):
-        return Env.setting(attr, self.getName().lower(), value = value, default = default)
+    def conf(self, attr, value = None, default = None, section = None):
+        return Env.setting(attr, section = section if section else self.getName().lower(), value = value, default = default)
 
     def getName(self):
         return self.__class__.__name__

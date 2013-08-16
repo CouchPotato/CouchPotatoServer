@@ -56,13 +56,13 @@ Page.Wanted = new Class({
 			self.search_progress = Api.request('movie.searcher.progress', {
 				'onComplete': function(json){
 					self.search_in_progress = true;
-					if(!json.progress){
+					if(!json.movie){
 						clearInterval(self.progress_interval);
 						self.search_in_progress = false;
 						self.manual_search.set('text', start_text);
 					}
 					else {
-						var progress = json.progress;
+						var progress = json.movie;
 						self.manual_search.set('text', 'Searching.. (' + (((progress.total-progress.to_go)/progress.total)*100).round() + '%)');
 					}
 				}

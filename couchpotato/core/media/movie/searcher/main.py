@@ -5,12 +5,12 @@ from couchpotato.core.helpers.encoding import simplifyString, toUnicode
 from couchpotato.core.helpers.variable import md5, getTitle, splitString, \
     possibleTitles, getImdb
 from couchpotato.core.logger import CPLog
-from couchpotato.core.plugins.base import Plugin
+from couchpotato.core.media._base.searcher.base import SearcherBase
+from couchpotato.core.media.movie import MovieTypeBase
 from couchpotato.core.settings.model import Movie, Release, ReleaseInfo
 from couchpotato.environment import Env
 from datetime import date
 from sqlalchemy.exc import InterfaceError
-import datetime
 import random
 import re
 import time
@@ -19,12 +19,15 @@ import traceback
 log = CPLog(__name__)
 
 
-class MovieSearcher(Plugin):
+class MovieSearcher(SearcherBase, MovieTypeBase):
 
     in_progress = False
 
     def __init__(self):
+        super(MovieSearcher, self).__init__()
+
         addEvent('movie.searcher.all', self.searchAll)
+        addEvent('movie.searcher.all_view', self.searchAllView)
         addEvent('movie.searcher.single', self.single)
         addEvent('movie.searcher.correct_movie', self.correctMovie)
         addEvent('movie.searcher.try_next_release', self.tryNextRelease)
@@ -51,40 +54,23 @@ class MovieSearcher(Plugin):
         if self.conf('run_on_launch'):
             addEvent('app.load', self.searchAll)
 
-        addEvent('app.load', self.setCrons)
-        addEvent('setting.save.searcher.cron_day.after', self.setCrons)
-        addEvent('setting.save.searcher.cron_hour.after', self.setCrons)
-        addEvent('setting.save.searcher.cron_minute.after', self.setCrons)
-
-    def setCrons(self):
-        fireEvent('schedule.cron', 'movie.searcher.all', self.searchAll, day = self.conf('cron_day'), hour = self.conf('cron_hour'), minute = self.conf('cron_minute'))
-
     def searchAllView(self, **kwargs):
 
-        in_progress = self.in_progress
-        if not in_progress:
-            fireEventAsync('movie.searcher.all')
-            fireEvent('notify.frontend', type = 'movie.searcher.started', data = True, message = 'Full search started')
-        else:
-            fireEvent('notify.frontend', type = 'movie.searcher.already_started', data = True, message = 'Full search already in progress')
+        fireEventAsync('movie.searcher.all')
 
         return {
-            'success': not in_progress
-        }
-
-    def getProgress(self, **kwargs):
-
-        return {
-            'progress': self.in_progress
+            'success': not self.in_progress
         }
 
     def searchAll(self):
 
         if self.in_progress:
             log.info('Search already in progress')
+            fireEvent('notify.frontend', type = 'movie.searcher.already_started', data = True, message = 'Full search already in progress')
             return
 
         self.in_progress = True
+        fireEvent('notify.frontend', type = 'movie.searcher.started', data = True, message = 'Full search started')
 
         db = get_session()
 
@@ -191,7 +177,7 @@ class MovieSearcher(Plugin):
                 if len(sorted_results) == 0:
                     log.debug('Nothing found for %s in %s', (default_title, quality_type['quality']['label']))
 
-                download_preference = self.conf('preferred_method')
+                download_preference = self.conf('preferred_method', section = 'searcher')
                 if download_preference != 'both':
                     sorted_results = sorted(sorted_results, key = lambda k: k['type'][:3], reverse = (download_preference == 'torrent'))
 
@@ -294,7 +280,7 @@ class MovieSearcher(Plugin):
         nzb_words = re.split('\W+', nzb_name)
 
         # Make sure it has required words
-        required_words = splitString(self.conf('required_words').lower())
+        required_words = splitString(self.conf('required_words', section = 'searcher').lower())
         try: required_words = list(set(required_words + splitString(movie['category']['required'].lower())))
         except: pass
 
@@ -308,7 +294,7 @@ class MovieSearcher(Plugin):
             return False
 
         # Ignore releases
-        ignored_words = splitString(self.conf('ignored_words').lower())
+        ignored_words = splitString(self.conf('ignored_words', section = 'searcher').lower())
         try: ignored_words = list(set(ignored_words + splitString(movie['category']['ignored'].lower())))
         except: pass
 
@@ -378,54 +364,6 @@ class MovieSearcher(Plugin):
                         return True
 
         log.info("Wrong: %s, undetermined naming. Looking for '%s (%s)'", (nzb['name'], movie_name, movie['library']['year']))
-        return False
-
-    def containsOtherQuality(self, nzb, movie_year = None, preferred_quality = {}):
-
-        name = nzb['name']
-        size = nzb.get('size', 0)
-        nzb_words = re.split('\W+', simplifyString(name))
-
-        qualities = fireEvent('quality.all', single = True)
-
-        found = {}
-        for quality in qualities:
-            # Main in words
-            if quality['identifier'] in nzb_words:
-                found[quality['identifier']] = True
-
-            # Alt in words
-            if list(set(nzb_words) & set(quality['alternative'])):
-                found[quality['identifier']] = True
-
-        # Try guessing via quality tags
-        guess = fireEvent('quality.guess', [nzb.get('name')], single = True)
-        if guess:
-            found[guess['identifier']] = True
-
-        # Hack for older movies that don't contain quality tag
-        year_name = fireEvent('scanner.name_year', name, single = True)
-        if len(found) == 0 and movie_year < datetime.datetime.now().year - 3 and not year_name.get('year', None):
-            if size > 3000: # Assume dvdr
-                log.info('Quality was missing in name, assuming it\'s a DVD-R based on the size: %s', (size))
-                found['dvdr'] = True
-            else: # Assume dvdrip
-                log.info('Quality was missing in name, assuming it\'s a DVD-Rip based on the size: %s', (size))
-                found['dvdrip'] = True
-
-        # Allow other qualities
-        for allowed in preferred_quality.get('allow'):
-            if found.get(allowed):
-                del found[allowed]
-
-        return not (found.get(preferred_quality['identifier']) and len(found) == 1)
-
-    def checkIMDB(self, haystack, imdbId):
-
-        for string in haystack:
-            if 'imdb.com/title/' + imdbId in string:
-                return True
-
         return False
 
     def couldBeReleased(self, is_pre_release, dates, year = None):
