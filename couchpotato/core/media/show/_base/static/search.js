@@ -8,10 +8,10 @@ Block.Search = new Class({
 		var self = this;
 
 		var focus_timer = 0;
-		self.el = new Element('div.search_form').adopt(
+		self.el = new Element('div.show_search_form').adopt(
 			new Element('div.input').adopt(
 				self.input = new Element('input', {
-					'placeholder': 'Search & add a new show',
+					'placeholder': 'Search & add a new show,
 					'events': {
 						'keyup': self.keyup.bind(self),
 						'focus': function(){
@@ -292,7 +292,7 @@ Block.Search.Item = new Class({
 				self.options_el.empty();
 				self.options_el.adopt(
 					new Element('div.message', {
-						'text': json.added ? 'Movie successfully added.' : 'Movie didn\'t add properly. Check logs'
+						'text': json.added ? 'Show successfully added.' : 'Show didn\'t add properly. Check logs'
 					})
 				);
 				self.mask.fade('out');

@@ -4,7 +4,7 @@ from couchpotato.core.plugins.base import Plugin
 log = CPLog(__name__)
 
 
-class TVSearcher(Plugin):
+class ShowSearcher(Plugin):
 
     in_progress = False
 
