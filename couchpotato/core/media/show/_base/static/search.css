@@ -2,9 +2,9 @@
 	display: inline-block;
 	vertical-align: middle;
 	position: absolute;
-	right: 205px;
+	right: 135px;
 	top: 0;
-	text-align: right;
+	text-align: left;
 	height: 100%;
 	border-bottom: 4px solid transparent;
 	transition: all .4s cubic-bezier(0.9,0,0.1,1);

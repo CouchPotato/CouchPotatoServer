@@ -91,6 +91,7 @@ class Library(Entity):
     """"""
 
     # For Movies, CPS uses three: omdbapi (no prio !?), tmdb (prio 2) and couchpotatoapi (prio 1)
+    type = Field(String(10), default="movie", index=True)
     provider = Field(String(10), default="imdb", index=True)
     year = Field(Integer)
     identifier = Field(String(20), index = True)

@@ -346,7 +346,6 @@ class MovieBase(MovieTypeBase):
         }
 
     def add(self, params = {}, force_readd = True, search_after = True, update_library = False, status_id = None):
-
         if not params.get('identifier'):
             msg = 'Can\'t add movie without imdb identifier.'
             log.error(msg)

@@ -14,6 +14,7 @@ class TheTVDb(ShowProvider):
         #addEvent('show.by_hash', self.byHash)
         addEvent('show.search', self.search, priority = 1)
         addEvent('show.info', self.getInfo, priority = 1)
+        addEvent('show.episodes', self.getEpisodes, priority = 1)
         #addEvent('show.info_by_thetvdb', self.getInfoByTheTVDBId)
 
         # Use base wrapper
@@ -100,11 +101,24 @@ class TheTVDb(ShowProvider):
 
         return results
 
-    def getInfo(self, identifier = None):
-
+    def getEpisodes(self, identifier=None):
         if not identifier:
-            return {}
-
+            return []
+        
+        try:
+            show = self.tvdb[int(identifier)]
+        except:
+            return []
+        
+        result = []
+        for season in show.values():
+            for episode in season.values():
+                # Consider cache
+                result.append(self.parseEpisode(episode))
+                
+        return result
+                
+    def getInfo(self, identifier = None):
         cache_key = 'thetvdb.cache.%s' % identifier
         result = self.getCache(cache_key)
 
@@ -217,6 +231,85 @@ class TheTVDb(ShowProvider):
                 #show_data['titles'].append(alt_name)
 
         return show_data
+    
+    def parseEpisode(self, episode):
+        """    
+        ('episodenumber', u'1'),
+        ('thumb_added', None),
+        ('rating', u'7.7'),
+        ('overview',
+         u'Experienced waitress Max Black meets her new co-worker, former rich-girl Caroline Channing, and puts her skills to the test at an old but re-emerging Brooklyn diner. Despite her initial distaste for Caroline, Max eventually softens and the two team up for a new business venture.'),
+        ('dvd_episodenumber', None),
+        ('dvd_discid', None),
+        ('combined_episodenumber', u'1'),
+        ('epimgflag', u'7'),
+        ('id', u'4099506'),
+        ('seasonid', u'465948'),
+        ('thumb_height', u'225'),
+        ('tms_export', u'1374789754'),
+        ('seasonnumber', u'1'),
+        ('writer', u'|Michael Patrick King|Whitney Cummings|'),
+        ('lastupdated', u'1371420338'),
+        ('filename', u'http://thetvdb.com/banners/episodes/248741/4099506.jpg'),
+        ('absolute_number', u'1'),
+        ('ratingcount', u'102'),
+        ('combined_season', u'1'),
+        ('thumb_width', u'400'),
+        ('imdb_id', u'tt1980319'),
+        ('director', u'James Burrows'),
+        ('dvd_chapter', None),
+        ('dvd_season', None),
+        ('gueststars',
+         u'|Brooke Lyons|Noah Mills|Shoshana Bush|Cale Hartmann|Adam Korson|Alex Enriquez|Matt Cook|Bill Parks|Eugene Shaw|Sergey Brusilovsky|Greg Lewis|Cocoa Brown|Nick Jameson|'),
+        ('seriesid', u'248741'),
+        ('language', u'en'),
+        ('productioncode', u'296793'),
+        ('firstaired', u'2011-09-19'),
+        ('episodename', u'Pilot')]
+        """
+        
+        ## Images
+        #poster = self.getImage(episode, type = 'poster', size = 'cover')
+        #backdrop = self.getImage(episode, type = 'fanart', size = 'w1280')
+        ##poster_original = self.getImage(episode, type = 'poster', size = 'original')
+        ##backdrop_original = self.getImage(episode, type = 'backdrop', size = 'original')
+        poster = []
+        backdrop = []
+        
+        ## Genres
+        genres = []
+
+        ##  Year (not really needed for episode)
+        year = None
+
+        episode_data = {
+            'via_thetvdb': True,
+            'thetvdb_id': int(episode['id']),
+            'titles': [episode['episodename'], ],
+            'original_title': episode['episodename'],
+            'images': {
+                'poster': [poster] if poster else [],
+                'backdrop': [backdrop] if backdrop else [],
+                'poster_original': [],
+                'backdrop_original': [],
+            },
+            'imdb': episode['imdb_id'],
+            'runtime': None,
+            'released': episode['firstaired'],
+            'year': year,
+            'plot': episode['overview'],
+            'genres': genres,
+        }
+
+        episode_data = dict((k, v) for k, v in episode_data.iteritems() if v)
+
+        ## Add alternative names
+        #for alt in ['original_name', 'alternative_name']:
+            #alt_name = toUnicode(episode.get(alt))
+            #if alt_name and not alt_name in episode_data['titles'] and alt_name.lower() != 'none' and alt_name != None:
+                #episode_data['titles'].append(alt_name)
+
+        return episode_data
 
     def getImage(self, show, type = 'poster', size = 'cover'):
         """"""

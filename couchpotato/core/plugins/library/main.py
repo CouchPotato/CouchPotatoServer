@@ -20,7 +20,7 @@ class LibraryPlugin(Plugin):
         addEvent('library.update', self.update)
         addEvent('library.update_release_date', self.updateReleaseDate)
 
-    def add(self, attrs = {}, update_after = True):
+    def add(self, attrs = {}, update_after = True, type='movie'):
 
         db = get_session()
 
@@ -28,6 +28,7 @@ class LibraryPlugin(Plugin):
         if not l:
             status = fireEvent('status.get', 'needs_update', single = True)
             l = Library(
+                type = type, 
                 year = attrs.get('year'),
                 identifier = attrs.get('identifier'),
                 plot = toUnicode(attrs.get('plot')),

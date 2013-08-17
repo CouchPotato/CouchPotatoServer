@@ -1,4 +1,4 @@
-Block.Search = new Class({
+Block.ShowSearch = new Class({
 
 	Extends: BlockBase,
 
@@ -11,7 +11,7 @@ Block.Search = new Class({
 		self.el = new Element('div.show_search_form').adopt(
 			new Element('div.input').adopt(
 				self.input = new Element('input', {
-					'placeholder': 'Search & add a new show,
+					'placeholder': 'Search & add a new *show*',
 					'events': {
 						'keyup': self.keyup.bind(self),
 						'focus': function(){
@@ -155,7 +155,7 @@ Block.Search = new Class({
 
 		Object.each(json.shows, function(show){
 
-			var m = new Block.Search.Item(show);
+			var m = new Block.ShowSearch.Item(show);
 			$(m).inject(self.results)
 			self.shows[show.imdb || 'r-'+Math.floor(Math.random()*10000)] = m
 
@@ -183,7 +183,7 @@ Block.Search = new Class({
 
 });
 
-Block.Search.Item = new Class({
+Block.ShowSearch.Item = new Class({
 
 	Implements: [Options, Events],
 
@@ -284,6 +284,7 @@ Block.Search.Item = new Class({
 		Api.request('show.add', {
 			'data': {
 				'identifier': self.info.imdb,
+				'thetvdb_id': self.info.thetvdb_id,
 				'title': self.title_select.get('value'),
 				'profile_id': self.profile_select.get('value'),
 				'category_id': self.category_select.get('value')

@@ -71,6 +71,7 @@
 				new Element('div').adopt(
 					self.block.navigation = new Block.Navigation(self, {}),
 					self.block.search = new Block.Search(self, {}),
+					self.block.search = new Block.ShowSearch(self, {}),
 					self.block.more = new Block.Menu(self, {'button_class': 'icon2.cog'})
 				)
 			),

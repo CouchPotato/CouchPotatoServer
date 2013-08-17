@@ -11,7 +11,7 @@ Block.Search = new Class({
 		self.el = new Element('div.search_form').adopt(
 			new Element('div.input').adopt(
 				self.input = new Element('input', {
-					'placeholder': 'Search & add a new show',
+					'placeholder': 'Search & add a new movie',
 					'events': {
 						'keyup': self.keyup.bind(self),
 						'focus': function(){
@@ -66,7 +66,7 @@ Block.Search = new Class({
 			self.input.set('value', '');
 			self.input.focus()
 
-			self.shows = []
+			self.movies = []
 			self.results.empty()
 			self.el.removeClass('filled')
 
@@ -131,7 +131,7 @@ Block.Search = new Class({
 			if(!self.spinner)
 				self.spinner = createSpinner(self.mask);
 
-			self.api_request = Api.request('show.search', {
+			self.api_request = Api.request('movie.search', {
 				'data': {
 					'q': q
 				},
@@ -150,17 +150,17 @@ Block.Search = new Class({
 
 		self.cache[q] = json
 
-		self.shows = {}
+		self.movies = {}
 		self.results.empty()
 
-		Object.each(json.shows, function(show){
+		Object.each(json.movies, function(movie){
 
-			var m = new Block.Search.Item(show);
+			var m = new Block.Search.Item(movie);
 			$(m).inject(self.results)
-			self.shows[show.imdb || 'r-'+Math.floor(Math.random()*10000)] = m
+			self.movies[movie.imdb || 'r-'+Math.floor(Math.random()*10000)] = m
 
-			if(q == show.imdb)
-				m.showOptions()
+			if(q == movie.imdb)
+				m.movieOptions()
 
 		});
 
@@ -201,7 +201,7 @@ Block.Search.Item = new Class({
 		var self = this,
 			info = self.info;
 
-		self.el = new Element('div.show_result', {
+		self.el = new Element('div.movie_result', {
 			'id': info.imdb
 		}).adopt(
 			self.thumbnail = info.images && info.images.poster.length > 0 ? new Element('img.thumbnail', {
@@ -212,7 +212,7 @@ Block.Search.Item = new Class({
 			self.options_el = new Element('div.options.inlay'),
 			self.data_container = new Element('div.data', {
 				'events': {
-					'click': self.showOptions.bind(self)
+					'click': self.movieOptions.bind(self)
 				}
 			}).adopt(
 				self.info_container = new Element('div.info').adopt(
@@ -256,7 +256,7 @@ Block.Search.Item = new Class({
 		return this.info[key]
 	},
 
-	showOptions: function(){
+	movieOptions: function(){
 		var self = this;
 
 		self.createOptions();
@@ -281,7 +281,7 @@ Block.Search.Item = new Class({
 
 		self.loadingMask();
 
-		Api.request('show.add', {
+		Api.request('movie.add', {
 			'data': {
 				'identifier': self.info.imdb,
 				'title': self.title_select.get('value'),
@@ -366,7 +366,7 @@ Block.Search.Item = new Class({
 			if(categories.length == 0)
 				self.category_select.hide();
 			else {
-				self.category_select.show();
+				self.category_select.movie();
 				categories.each(function(category){
 					new Element('option', {
 						'value': category.data.id,
