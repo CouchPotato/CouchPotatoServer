@@ -111,12 +111,7 @@ class Loader(object):
 
     def loadPlugins(self, module, name):
         try:
-            klass = module.start()
-            klass.registerPlugin()
-
-            if klass and getattr(klass, 'auto_register_static'):
-                klass.registerStatic(module.__file__)
-
+            module.start()
             return True
         except Exception, e:
             log.error('Failed loading plugin "%s": %s', (module.__file__, traceback.format_exc()))
