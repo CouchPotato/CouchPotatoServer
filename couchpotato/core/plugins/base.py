@@ -12,6 +12,7 @@ from urlparse import urlparse
 import cookielib
 import glob
 import gzip
+import inspect
 import math
 import os.path
 import re
@@ -35,10 +36,19 @@ class Plugin(object):
     http_failed_request = {}
     http_failed_disabled = {}
 
+    def __new__(typ, *args, **kwargs):
+        new_plugin = super(Plugin, typ).__new__(typ, *args, **kwargs)
+        new_plugin.registerPlugin()
+
+        return new_plugin
+
     def registerPlugin(self):
         addEvent('app.do_shutdown', self.doShutdown)
         addEvent('plugin.running', self.isRunning)
         self._running = []
+
+        if self.auto_register_static:
+            self.registerStatic(inspect.getfile(self.__class__))
 
     def conf(self, attr, value = None, default = None, section = None):
         return Env.setting(attr, section = section if section else self.getName().lower(), value = value, default = default)
