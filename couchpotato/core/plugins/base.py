@@ -25,6 +25,8 @@ log = CPLog(__name__)
 
 class Plugin(object):
 
+    _class_name = None
+
     enabled_option = 'enabled'
     auto_register_static = True
 
@@ -51,10 +53,14 @@ class Plugin(object):
             self.registerStatic(inspect.getfile(self.__class__))
 
     def conf(self, attr, value = None, default = None, section = None):
-        return Env.setting(attr, section = section if section else self.getName().lower(), value = value, default = default)
+        class_name = self.getName().lower().split(':')
+        return Env.setting(attr, section = section if section else class_name[0].lower(), value = value, default = default)
 
     def getName(self):
-        return self.__class__.__name__
+        return self._class_name or self.__class__.__name__
+
+    def setName(self, name):
+        self._class_name = name
 
     def renderTemplate(self, parent_file, templ, **params):
 
