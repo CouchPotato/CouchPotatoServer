@@ -2,13 +2,21 @@ from bs4 import BeautifulSoup
 from couchpotato.core.helpers.encoding import tryUrlencode, toUnicode
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
+from couchpotato.core.providers.base import MultiProvider
+from couchpotato.core.providers.movie.base import MovieProvider
 from couchpotato.core.providers.torrent.base import TorrentProvider
 import traceback
 
 log = CPLog(__name__)
 
 
-class SceneAccess(TorrentProvider):
+class SceneAccess(MultiProvider):
+
+    def getTypes(self):
+        return [Movie]
+
+
+class Base(TorrentProvider):
 
     urls = {
         'test': 'https://www.sceneaccess.eu/',
@@ -19,28 +27,26 @@ class SceneAccess(TorrentProvider):
         'download': 'https://www.sceneaccess.eu/%s',
     }
 
-    cat_ids = [
-        ([22], ['720p', '1080p']),
-        ([7], ['cam', 'ts', 'dvdrip', 'tc', 'r5', 'scr', 'brrip']),
-        ([8], ['dvdr']),
-    ]
-
     http_time_between_calls = 1 #seconds
 
-    def _search(self, movie, quality, results):
+    def _buildUrl(self, search, quality_identifier):
 
         url = self.urls['search'] % (
-           self.getCatId(quality['identifier'])[0],
-           self.getCatId(quality['identifier'])[0]
+           self.getCatId(quality_identifier)[0],
+           self.getCatId(quality_identifier)[0]
         )
 
         arguments = tryUrlencode({
-            'search': movie['library']['identifier'],
+            'search': search,
             'method': 1,
         })
         url = "%s&%s" % (url, arguments)
 
+        return url
 
+    def _search(self, media, quality, results):
+
+        url = self.buildUrl(media, quality)
         data = self.getHTMLData(url, opener = self.login_opener)
 
         if data:
@@ -73,13 +79,6 @@ class SceneAccess(TorrentProvider):
             except:
                 log.error('Failed getting results from %s: %s', (self.getName(), traceback.format_exc()))
 
-    def getLoginParams(self):
-        return tryUrlencode({
-            'username': self.conf('username'),
-            'password': self.conf('password'),
-            'submit': 'come on in',
-        })
-
     def getMoreInfo(self, item):
         full_description = self.getCache('sceneaccess.%s' % item['id'], item['detail_url'], cache_timeout = 25920000)
         html = BeautifulSoup(full_description)
@@ -89,7 +88,28 @@ class SceneAccess(TorrentProvider):
         item['description'] = description
         return item
 
+    # Login
+    def getLoginParams(self):
+        return tryUrlencode({
+            'username': self.conf('username'),
+            'password': self.conf('password'),
+            'submit': 'come on in',
+        })
+
     def loginSuccess(self, output):
         return '/inbox' in output.lower()
 
     loginCheckSuccess = loginSuccess
+
+
+class Movie(Base, MovieProvider):
+
+    cat_ids = [
+        ([22], ['720p', '1080p']),
+        ([7], ['cam', 'ts', 'dvdrip', 'tc', 'r5', 'scr', 'brrip']),
+        ([8], ['dvdr']),
+    ]
+
+    def buildUrl(self, media, quality):
+        return self._buildUrl(media['library']['identifier'], quality['identifier'])
+
