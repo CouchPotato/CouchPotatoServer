@@ -99,6 +99,7 @@ class Provider(Plugin):
 class YarrProvider(Provider):
 
     protocol = None # nzb, torrent, torrent_magnet
+    type = 'movie'
 
     cat_ids = {}
     cat_backup_id = None
