@@ -13,7 +13,7 @@ log = CPLog(__name__)
 
 class Sabnzbd(Downloader):
 
-    type = ['nzb']
+    protocol = ['nzb']
 
     def download(self, data = {}, movie = {}, filedata = None):
 

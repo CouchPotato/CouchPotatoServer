@@ -19,7 +19,7 @@ log = CPLog(__name__)
 
 class NZBVortex(Downloader):
 
-    type = ['nzb']
+    protocol = ['nzb']
     api_level = None
     session_id = None
 

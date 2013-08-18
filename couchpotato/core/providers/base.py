@@ -19,7 +19,7 @@ log = CPLog(__name__)
 
 class Provider(Plugin):
 
-    type = None # movie, nzb, torrent, subtitle, trailer
+    type = None # movie, show, subtitle, trailer, ...
     http_time_between_calls = 10 # Default timeout for url requests
 
     last_available_check = {}
@@ -79,7 +79,10 @@ class Provider(Plugin):
 
 class YarrProvider(Provider):
 
-    cat_ids = []
+    protocol = None # nzb, torrent, torrent_magnet
+
+    cat_ids = {}
+    cat_backup_id = None
 
     sizeGb = ['gb', 'gib']
     sizeMb = ['mb', 'mib']
@@ -89,14 +92,13 @@ class YarrProvider(Provider):
     last_login_check = 0
 
     def __init__(self):
-        addEvent('provider.enabled_types', self.getEnabledProviderType)
+        addEvent('provider.enabled_protocols', self.getEnabledProtocol)
         addEvent('provider.belongs_to', self.belongsTo)
-        addEvent('yarr.search', self.search)
-        addEvent('%s.search' % self.type, self.search)
+        addEvent('provider.search.%s.%s' % (self.protocol, self.type), self.search)
 
-    def getEnabledProviderType(self):
+    def getEnabledProtocol(self):
         if self.isEnabled():
-            return self.type
+            return self.protocol
         else:
             return []
 
@@ -273,6 +275,7 @@ class ResultList(list):
 
         defaults = {
             'id': 0,
+            'protocol': self.provider.protocol,
             'type': self.provider.type,
             'provider': self.provider.getName(),
             'download': self.provider.loginDownload if self.provider.urls.get('login') else self.provider.download,

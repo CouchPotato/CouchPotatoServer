@@ -9,7 +9,7 @@ log = CPLog(__name__)
 
 class Pneumatic(Downloader):
 
-    type = ['nzb']
+    protocol = ['nzb']
     strm_syntax = 'plugin://plugin.program.pneumatic/?mode=strm&type=add_file&nzb=%s&nzbname=%s'
 
     def download(self, data = {}, movie = {}, filedata = None):
@@ -27,7 +27,7 @@ class Pneumatic(Downloader):
 
                 try:
                     if not os.path.isfile(fullPath):
-                        log.info('Downloading %s to %s.', (data.get('type'), fullPath))
+                        log.info('Downloading %s to %s.', (data.get('protocol'), fullPath))
                         with open(fullPath, 'wb') as f:
                             f.write(filedata)
 
