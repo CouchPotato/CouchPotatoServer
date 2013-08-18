@@ -92,7 +92,7 @@ class Library(Entity):
 
     # For Movies, CPS uses three: omdbapi (no prio !?), tmdb (prio 2) and couchpotatoapi (prio 1)
     type = Field(String(10), default="movie", index=True)
-    provider = Field(String(10), default="imdb", index=True)
+    primary_provider = Field(String(10), default="imdb", index=True)
     year = Field(Integer)
     identifier = Field(String(20), index = True)
 
@@ -104,6 +104,9 @@ class Library(Entity):
     movies = OneToMany('Movie', cascade = 'all, delete-orphan')
     titles = OneToMany('LibraryTitle', cascade = 'all, delete-orphan')
     files = ManyToMany('File', cascade = 'all, delete-orphan', single_parent = True)
+    
+    parent = ManyToOne('Library')
+    children = OneToMany('Library')
 
 
 class LibraryTitle(Entity):
@@ -118,142 +121,6 @@ class LibraryTitle(Entity):
     libraries = ManyToOne('Library')
 
     
-#class Show(Entity):
-    #"""Combined Show and Library"""
-    
-    #using_options(order_by = '-default')        # ???
-    
-    #last_edit = Field(Integer, default = lambda: int(time.time()), index = True)
-    ##identifier = Field(String(20), index = True)
-    
-    #title = Field(Unicode)                      # Show title
-    #simple_title = Field(Unicode, index = True) # Simple show title
-    #default = Field(Boolean, default = False, index = True)  # ???
-
-    ### Wont need the following commented out vars since a show can not be downloaded,
-    ### only episodes can be
-    ###status = ManyToOne('Status')                # Download, watched, etc
-    ###releases = OneToMany('Release', cascade = 'all, delete-orphan')  # List all available releases that can be downloaded?
-    ###files = ManyToMany('File', cascade = 'all, delete-orphan', single_parent = True)  # File on hard drive
-    #profile = ManyToOne('Profile')              # ??? Quality ???
-    #category = ManyToOne('Category')            # ???
-    #language = OneToMany('Language')            # Language ??? (en) ???
-    
-    ## New fields
-    #air_by_date = Field(Boolean, default=False) # True if no season or episode number
-    #original_air_date = Field(Integer)          # First date ever released
-    #year = Field(Integer)                       # 1983
-    #air_day = Field(Integer)                    # Monday, Tuesday...
-    #air_time = Field(Integer)                   # 8PM EST
-    #series_id = Field(Integer)                  # Series id
-    #show_stauts = Field(Integer)                # Continuing, Ended
-    
-    #duration = Field(Integer)                   # Length of show in seconds
-    #summary = Field(Unicode)                    # Description of show
-    #network = Field(Unicode)                    # ABC, Fox
-    #rating = Field(Float)                       # 0.000-10.000 (star rating) 
-    #content_rating = Field(Unicode)             # "TV-PG"
-    
-    #default_provider = Field(Integer, default=0)# thetvdb for example; allows per show providers
-    
-    #genre = ManyToMany('Genre')                 # Genre (comedy, etc)
-    #episodes = OneToMany('Episode')             # All the episodes that belong to this show
-    #seasons = ManyToOne('Season')               # Seasons artwork
-    #banners = ManyToOne('Banner')               # Banner artwork
-    #posters = ManyToOne('Poster')               # Poster artwork
-    #fanart = ManyToOne('Fanart')                # Fanart artwork
-    #actors = ManyToMany('Actor')                # Actor info and artwork
-    #provider_ids = ManyToMany('ProviderIds')    # 'imdb_id',  'zap2it_id', 'tvrage'
-    #titles = OneToMany('ShowTitle', cascade = 'all, delete-orphan')
-    
-    
-#class ShowTitle(Entity):
-    #""""""
-    #using_options(order_by = '-default')
-
-    #title = Field(Unicode)
-    #simple_title = Field(Unicode, index = True)
-    #default = Field(Boolean, default = False, index = True)
-
-    #language = OneToMany('Language')
-    #shows = ManyToOne('Show')
-    
-    
-#class Episode(Entity):
-    #"""Combined Show and Library"""
-    
-    ##using_options(order_by = '-default')        # ???
-    ##identifier = Field(String(20), index = True)
-    
-    #last_edit = Field(Integer, default = lambda: int(time.time()), index = True)
-    #title = Field(Unicode)                      # Show title
-    #simple_title = Field(Unicode, index = True) # Simple show title
-    #default = Field(Boolean, default = False, index = True)  # ???
-
-    #status = ManyToOne('Status')                # Download, watched, etc
-    #profile = ManyToOne('Profile')              # ??? Quality ???
-    #category = ManyToOne('Category')            # ???
-    #releases = OneToMany('Release', cascade = 'all, delete-orphan')  # List all available releases that can be downloaded?
-    #files = ManyToMany('File', cascade = 'all, delete-orphan', single_parent = True)  # File on hard drive
-    #language = OneToMany('Language')            # Language ??? (en) ???
-    
-    ## New fields
-    #season = Field(Integer)                     # Season number
-    #number = Field(Integer)                     # Episode number
-    #image = Field(BLOB)                         # Episode Image (XXX: What to do with images?)
-    #air_date = Field(Integer)                   # Origianl air date
-    #duration = Field(Integer)                   # Length of show (24:34) in seconds
-    #summary = Field(Unicode)                    # Description of show
-    #rating = Field(Float)                       # 0.000-10.000 (star rating) 
-    #content_rating = Field(Unicode)             # "TV-PG"
-    #production_code = Field(Unicode)          # Production code (should this be an Integer)
-    
-    #show = ManyToOne('Show')                    # Parent show
-    #actors = ManyToMany('Actor')                # Guest Actor info and artwork
-    #directors = ManyToMany('Director')          # Directors of episode
-    #writers = ManyToMany('Writer')              # Writers of episode
-    #provider_ids = ManyToMany('ProviderIds')    # 'imdb_id',  'zap2it_id', 'tvrage'
-    
-    
-#class Fanart(Entity):
-    #"""Stub for Now"""
-    #show = OneToMany('Show')
-    
-#class Actor(Entity):
-    #"""Stub for Now"""
-    #shows = ManyToMany('Show')
-    #episodes = ManyToMany('Episode')
-    
-#class Director(Entity):
-    #"""Stub for Now"""
-    #episodes = ManyToMany('Episode')
-    
-#class Writer(Entity):
-    #"""Stub for Now"""
-    #episodes = ManyToMany('Episode')
-    
-#class Genre(Entity):
-    #"""Stub for Now"""
-    #shows = ManyToMany('Show')
-    
-#class Season(Entity):
-    #"""Stub for Now"""
-    #show = OneToMany('Show')
-    
-#class Banner(Entity):
-    #"""Stub for Now"""
-    #show = OneToMany('Show')
-    
-#class Poster(Entity):
-    #"""Stub for Now"""
-    #show = OneToMany('Show')
-    
-#class ProviderIds(Entity):
-    #"""Stub for Now"""
-    #shows = ManyToMany('Show')
-    #episodes = ManyToMany('Episode')
-    
-    
 class Language(Entity):
     """"""
 
@@ -261,9 +128,6 @@ class Language(Entity):
     label = Field(Unicode)
 
     titles = ManyToOne('LibraryTitle')
-    #show_titles = ManyToOne('ShowTitle')
-    #show = ManyToOne('Show')
-    #episode = ManyToOne('Episode')
 
 
 class Release(Entity):
@@ -274,7 +138,6 @@ class Release(Entity):
     identifier = Field(String(100), index = True)
 
     movie = ManyToOne('Movie')
-    #episode = ManyToOne('Episode')
     status = ManyToOne('Status')
     quality = ManyToOne('Quality')
     files = ManyToMany('File')
@@ -313,8 +176,6 @@ class Status(Entity):
     label = Field(Unicode(20))
 
     releases = OneToMany('Release')
-    #movies = OneToMany('Movie')
-    #episodes = OneToMany('Episode')
 
 
 class Quality(Entity):
@@ -342,8 +203,6 @@ class Profile(Entity):
     hide = Field(Boolean, default = False)
 
     movie = OneToMany('Movie')
-    #show = OneToMany('Show')
-    #episode = OneToMany('Episode')
     types = OneToMany('ProfileType', cascade = 'all, delete-orphan')
 
     def to_dict(self, deep = {}, exclude = []):
@@ -365,8 +224,6 @@ class Category(Entity):
     destination = Field(Unicode(255))
 
     movie = OneToMany('Movie')
-    #show = OneToMany('Show')
-    #episode = OneToMany('Episode')
     destination = Field(Unicode(255))
 
 
@@ -394,7 +251,6 @@ class File(Entity):
 
     history = OneToMany('RenameHistory')
     movie = ManyToMany('Movie')
-    #episodes = ManyToMany('Episode')
     release = ManyToMany('Release')
     library = ManyToMany('Library')
 

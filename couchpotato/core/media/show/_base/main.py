@@ -1,16 +1,3 @@
-#from couchpotato.core.logger import CPLog
-#from couchpotato.core.media import MediaBase
-
-#log = CPLog(__name__)
-
-
-#class ShowBase(MediaBase):
-
-    #identifier = 'show'
-
-    #def __init__(self):
-        #super(ShowBase, self).__init__()
-
 from couchpotato import get_session
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, fireEventAsync, addEvent
@@ -96,32 +83,65 @@ class ShowBase(MediaBase):
             'movie': movie_dict,
         }
     
+    def debug(self):
+        """
+        XXX: This is only a hook for a breakpoint so we can test database stuff easily
+        REMOVE when finished
+        """
+        from couchpotato import get_session
+        from couchpotato.core.event import addEvent, fireEventAsync, fireEvent
+        from couchpotato.core.helpers.encoding import toUnicode, simplifyString
+        from couchpotato.core.logger import CPLog
+        from couchpotato.core.plugins.base import Plugin
+        from couchpotato.core.settings.model import Library, LibraryTitle, File
+        from string import ascii_letters
+        import time
+        import traceback
+
+        db = get_session()
+        #parent = db.query(Library).filter_by(identifier = attrs.get('')).first()
+        return
+    
     def add(self, params = {}, force_readd = True, search_after = True, update_library = False, status_id = None):
         """
         1. Add Show
-        1. Add All Episodes
-        2. Add All Seasons
+        2. Add All Episodes
+        3. Add All Seasons
         
         Notes, not to forget:
         - relate parent and children, possible grandparent to grandchild so episodes know it belong to show, etc
         - looks like we dont send info to library; it comes later
         - change references to plot to description
         - change Model to Media
+        
+        params
+        {'category_id': u'-1',
+         'identifier': u'tt1519931',
+         'profile_id': u'12',
+         'thetvdb_id': u'158661',
+         'title': u'Haven'}
         """
         log.debug("show.add")
         
-        
-        identifier = params.get('thetvdb_id')
+        # Add show parent to db first
+        parent =  self.addToDatabase(params = params)
+    
+        skip = False # XXX: For debugging
+        identifier = params.get('id')
         episodes = fireEvent('show.episodes', identifier = identifier)
         
         # XXX: Fix so we dont have a nested list
-        for episode in episodes[0]:
-            self.add2(params=episode)
+        if episodes is not None and skip is False:
+            for episode in episodes[0]:
+                episode['title'] = episode.get('titles', None)[0]
+                episode['identifier'] = episode.get('id', None)
+                episode['parent_identifier'] = identifier
+                self.addToDatabase(params=episode, type="episode")
+            
+        return parent
 
-        return self.add2(params = params)
-
-    def add2(self, params = {}, force_readd = True, search_after = True, update_library = False, status_id = None):
-        log.debug("show.add2")
+    def addToDatabase(self, params = {}, type="show", force_readd = True, search_after = True, update_library = False, status_id = None):
+        log.debug("show.addToDatabase")
         
         if not params.get('identifier'):
             msg = 'Can\'t add show without imdb identifier.'
@@ -139,7 +159,6 @@ class ShowBase(MediaBase):
             #except:
                 #pass
 
-
         library = fireEvent('library.add', single = True, attrs = params, update_after = update_library)
 
         # Status
@@ -155,6 +174,7 @@ class ShowBase(MediaBase):
         do_search = False
         if not m:
             m = Movie(
+                type = type, 
                 library_id = library.get('id'),
                 profile_id = params.get('profile_id', default_profile.get('id')),
                 status_id = status_id if status_id else status_active.get('id'),
@@ -182,7 +202,7 @@ class ShowBase(MediaBase):
             m.profile_id = params.get('profile_id', default_profile.get('id'))
             m.category_id = tryInt(cat_id) if cat_id is not None and tryInt(cat_id) > 0 else None
         else:
-            log.debug('Movie already exists, not updating: %s', params)
+            log.debug('Show already exists, not updating: %s', params)
             added = False
 
         if force_readd:
@@ -211,22 +231,22 @@ class ShowBase(MediaBase):
         db.expire_all()
         return show_dict
 
-    def createOnComplete(self, movie_id):
+    def createOnComplete(self, show_id):
 
         def onComplete():
             db = get_session()
-            movie = db.query(Movie).filter_by(id = movie_id).first()
-            fireEventAsync('movie.searcher.single', movie.to_dict(self.default_dict), on_complete = self.createNotifyFront(movie_id))
+            show = db.query(Movie).filter_by(id = show_id).first()
+            fireEventAsync('show.searcher.single', show.to_dict(self.default_dict), on_complete = self.createNotifyFront(show_id))
             db.expire_all()
 
         return onComplete
     
-    def createNotifyFront(self, movie_id):
+    def createNotifyFront(self, show_id):
 
         def notifyFront():
             db = get_session()
-            movie = db.query(Movie).filter_by(id = movie_id).first()
-            fireEvent('notify.frontend', type = 'show.update.%s' % movie.id, data = movie.to_dict(self.default_dict))
+            show = db.query(Movie).filter_by(id = show_id).first()
+            fireEvent('notify.frontend', type = 'show.update.%s' % show.id, data = show.to_dict(self.default_dict))
             db.expire_all()
 
         return notifyFront

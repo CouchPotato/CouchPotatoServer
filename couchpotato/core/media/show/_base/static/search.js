@@ -202,7 +202,7 @@ Block.ShowSearch.Item = new Class({
 			info = self.info;
 
 		self.el = new Element('div.show_result', {
-			'id': info.imdb
+			'id': info.id
 		}).adopt(
 			self.thumbnail = info.images && info.images.poster.length > 0 ? new Element('img.thumbnail', {
 				'src': info.images.poster[0],
@@ -283,8 +283,10 @@ Block.ShowSearch.Item = new Class({
 
 		Api.request('show.add', {
 			'data': {
-				'identifier': self.info.imdb,
-				'thetvdb_id': self.info.thetvdb_id,
+				'identifier': self.info.id,
+				'id': self.info.id,
+				'type': self.info.type,
+				'primary_provider': self.info.primary_provider,
 				'title': self.title_select.get('value'),
 				'profile_id': self.profile_select.get('value'),
 				'category_id': self.category_select.get('value')

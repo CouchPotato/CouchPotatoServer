@@ -2,24 +2,33 @@ from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import simplifyString, toUnicode
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.show.base import ShowProvider
-from thetvdb.tvdb_api import Tvdb 
+from tvdb_api import tvdb_api, tvdb_exceptions
+from datetime import datetime 
 import traceback
 
 log = CPLog(__name__)
 
-
+# XXX: I return None in alot of functions when there is error or no value; check if I
+# should be returning an empty list or dictionary
+# XXX: Consider grabbing zips to put less strain on tvdb
+# XXX: Consider a cache; not implenented everywhere yet or at all
 class TheTVDb(ShowProvider):
     
     def __init__(self):
         #addEvent('show.by_hash', self.byHash)
         addEvent('show.search', self.search, priority = 1)
-        addEvent('show.info', self.getInfo, priority = 1)
+        addEvent('show.info', self.getShowInfo, priority = 1)
         addEvent('show.episodes', self.getEpisodes, priority = 1)
+        addEvent('episode.info', self.getEpisodeInfo, priority = 1)
         #addEvent('show.info_by_thetvdb', self.getInfoByTheTVDBId)
 
-        # Use base wrapper
-        #thetvdbtmdb.configure(self.conf('api_key'))
-        self.tvdb = Tvdb(apikey="7966C02F860586D2", banners=True)
+        # XXX: Load from somewhere else
+        tvdb_api_parms = {
+            'apikey':"7966C02F860586D2",
+            'banners':True
+            }
+        
+        self.tvdb = tvdb_api.Tvdb(**tvdb_api_parms)
 
     #def byHash(self, file):
         #''' Find show by hash '''
@@ -75,8 +84,9 @@ class TheTVDb(ShowProvider):
             try:
                 raw = self.tvdb.search(search_string)
                 
-            except:  # XXX: Make more specific
+            except (tvdb_exceptions.tvdb_error, IOError), e:
                 log.error('Failed searching TheTVDB for "%s": %s', (search_string, traceback.format_exc()))
+                return None
 
             results = []
             if raw:
@@ -95,51 +105,87 @@ class TheTVDb(ShowProvider):
 
                     self.setCache(cache_key, results)
                     return results
-                except SyntaxError, e:
-                    log.error('Failed to parse XML response: %s', e)
+                #except SyntaxError, e:
+                #    log.error('Failed to parse XML response: %s', e)
+                #    return False
+                except (tvdb_exceptions.tvdb_error, IOError), e:
+                    log.error('Failed parsing TheTVDB for "%s": %s', (show, traceback.format_exc()))
                     return False
 
         return results
 
-    def getEpisodes(self, identifier=None):
+    def getEpisodes(self, identifier=None,  episode_identifier=None):
+        """Either return a list of all episodes or a single episode.
+        If episode_identifer contains an episode to search for it will be returned if found
+        """
         if not identifier:
-            return []
+            return None
         
         try:
             show = self.tvdb[int(identifier)]
-        except:
-            return []
+        except (tvdb_exceptions.tvdb_error, IOError), e:
+            log.error('Failed parsing TheTVDB for "%s" id "%s": %s', (show, identifier, traceback.format_exc()))
+            return None
         
         result = []
         for season in show.values():
             for episode in season.values():
-                # Consider cache
-                result.append(self.parseEpisode(episode))
+                if episode_identifier:
+                    if episode['id'] == toUnicode(episode_identifier):
+                        return episode
+                else:
+                    result.append(self.parseEpisode(show, episode))
                 
         return result
                 
-    def getInfo(self, identifier = None):
+    def getShow(self, identifier = None):
+        show = None
+        try:
+            log.debug('Getting show: %s', identifier)
+            show = self.tvdb[int(identifier)]
+        except (tvdb_exceptions.tvdb_error, IOError), e:
+            log.error('Failed to getShowInfo for show id "%s": %s', (identifier, traceback.format_exc()))
+            return None
+            
+        return show
+        
+    def getShowInfo(self, identifier = None):
+        if not identifier:
+            return None
+        
         cache_key = 'thetvdb.cache.%s' % identifier
-        result = self.getCache(cache_key)
-
-        if not result:
-            result = {}
-            show = None
-
-            try:
-                log.debug('Getting info: %s', cache_key)
-                #show = thetvdb.imdbLookup(id = identifier)
-                show = self.tvdb[int(identifier)]
-            except:
-                pass
-
-            if show:
-                #result = self.parseShow(show[0])
-                result = self.parseShow(show)
-                self.setCache(cache_key, result)
+        log.debug('Getting showInfo: %s', cache_key)
+        result = self.getCache(cache_key) or {}
+        if result:
+            return result
+            
+        show =  self.getShow(identifier=identifier)
+        if show:
+            result = self.parseShow(show)
+            self.setCache(cache_key, result)
 
         return result
 
+    def getEpisodeInfo(self, identifier = None,  parent_identifier = None):
+        if not identifier or not parent_identifier:
+            return None
+        
+        cache_key = 'thetvdb.cache.%s.%s' % (parent_identifier, identifier)
+        log.debug('Getting EpisodeInfo: %s', cache_key)
+        result = self.getCache(cache_key) or {}
+        if result:
+            return result
+        
+        show =  self.getShow(identifier = parent_identifier)
+        if show:
+            episode =  self.getEpisodes(identifier=parent_identifier, episode_identifier=identifier) 
+            
+        if episode:
+            result = self.parseEpisode(show, episode)
+            self.setCache(cache_key, result)
+            
+        return result
+    
     #def getInfoByTheTVDBId(self, id = None):
 
         #cache_key = 'thetvdb.cache.%s' % id
@@ -191,6 +237,10 @@ class TheTVDb(ShowProvider):
                     'zap2it_id': u'SH01009396'}  
         """
         
+        # Make sure we have a valid show id, not '' or None
+        #if len (show['id']) is 0:
+        #    return None
+        
         ## Images
         poster = self.getImage(show, type = 'poster', size = 'cover')
         backdrop = self.getImage(show, type = 'fanart', size = 'w1280')
@@ -200,12 +250,16 @@ class TheTVDb(ShowProvider):
         ## Genres
         genres = [] if show['genre'] is None else show['genre'].strip('|').split('|')
 
-        ##  Year (not really needed for show)
-        year = None
+        ##  Year 
+        if show['firstaired']:
+            year = datetime.strptime(show['firstaired'],  '%Y-%m-%d').year
+        else:
+            year = None
 
         show_data = {
-            'via_thetvdb': True,
-            'thetvdb_id': int(show['id']),
+            'id': int(show['id']),
+            'type': 'show',
+            'primary_provider': 'thetvdb',
             'titles': [show['seriesname'], ],
             'original_title': show['seriesname'],
             'images': {
@@ -232,7 +286,7 @@ class TheTVDb(ShowProvider):
 
         return show_data
     
-    def parseEpisode(self, episode):
+    def parseEpisode(self, show,  episode):
         """    
         ('episodenumber', u'1'),
         ('thumb_added', None),
@@ -273,16 +327,24 @@ class TheTVDb(ShowProvider):
         #backdrop = self.getImage(episode, type = 'fanart', size = 'w1280')
         ##poster_original = self.getImage(episode, type = 'poster', size = 'original')
         ##backdrop_original = self.getImage(episode, type = 'backdrop', size = 'original')
-        poster = []
+        poster = episode['filename'] or []
         backdrop = []
         
         ## Genres
         genres = []
+        
+        plot = "%s - %sx%s - %s" %  (show['seriesname'],  episode['seasonnumber'], episode['episodenumber'], episode['overview'])
 
-        ##  Year (not really needed for episode)
-        year = None
+        ##  Year 
+        if episode['firstaired']:
+            year = datetime.strptime(episode['firstaired'],  '%Y-%m-%d').year
+        else:
+            year = None
 
         episode_data = {
+            'id': int(episode['id']),
+            'type': 'episode',
+            'primary_provider': 'thetvdb',
             'via_thetvdb': True,
             'thetvdb_id': int(episode['id']),
             'titles': [episode['episodename'], ],
@@ -297,8 +359,9 @@ class TheTVDb(ShowProvider):
             'runtime': None,
             'released': episode['firstaired'],
             'year': year,
-            'plot': episode['overview'],
+            'plot': plot,
             'genres': genres,
+            'parent_identifier': show['id'],
         }
 
         episode_data = dict((k, v) for k, v in episode_data.iteritems() if v)
