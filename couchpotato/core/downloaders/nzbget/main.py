@@ -15,7 +15,7 @@ log = CPLog(__name__)
 
 class NZBGet(Downloader):
 
-    type = ['nzb']
+    protocol = ['nzb']
 
     url = 'http://%(username)s:%(password)s@%(host)s/xmlrpc'
 

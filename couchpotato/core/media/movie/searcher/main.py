@@ -85,7 +85,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
         }
 
         try:
-            search_types = fireEvent('searcher.get_types', single = True)
+            search_protocols = fireEvent('searcher.protocols', single = True)
 
             for movie in movies:
                 movie_dict = movie.to_dict({
@@ -97,7 +97,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                 })
 
                 try:
-                    self.single(movie_dict, search_types)
+                    self.single(movie_dict, search_protocols)
                 except IndexError:
                     log.error('Forcing library update for %s, if you see this often, please report: %s', (movie_dict['library']['identifier'], traceback.format_exc()))
                     fireEvent('library.update', movie_dict['library']['identifier'], force = True)
@@ -115,12 +115,12 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
         self.in_progress = False
 
-    def single(self, movie, search_types = None):
+    def single(self, movie, search_protocols = None):
 
         # Find out search type
         try:
-            if not search_types:
-                search_types = fireEvent('searcher.get_types', single = True)
+            if not search_protocols:
+                search_protocols = fireEvent('searcher.protocols', single = True)
         except SearchSetupError:
             return
 
@@ -168,10 +168,10 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                 quality = fireEvent('quality.single', identifier = quality_type['quality']['identifier'], single = True)
 
                 results = []
-                for search_type in search_types:
-                    type_results = fireEvent('%s.search' % search_type, movie, quality, merge = True)
-                    if type_results:
-                        results += type_results
+                for search_protocol in search_protocols:
+                    protocol_results = fireEvent('provider.search.%s.movie' % search_protocol, movie, quality, merge = True)
+                    if protocol_results:
+                        results += protocol_results
 
                 sorted_results = sorted(results, key = lambda k: k['score'], reverse = True)
                 if len(sorted_results) == 0:

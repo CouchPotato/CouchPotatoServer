@@ -19,7 +19,7 @@ log = CPLog(__name__)
 class Searcher(SearcherBase):
 
     def __init__(self):
-        addEvent('searcher.get_types', self.getSearchTypes)
+        addEvent('searcher.protocols', self.getSearchProtocols)
         addEvent('searcher.contains_other_quality', self.containsOtherQuality)
         addEvent('searcher.correct_year', self.correctYear)
         addEvent('searcher.correct_name', self.correctName)
@@ -122,29 +122,29 @@ class Searcher(SearcherBase):
 
                 return True
 
-        log.info('Tried to download, but none of the "%s" downloaders are enabled or gave an error', (data.get('type', '')))
+        log.info('Tried to download, but none of the "%s" downloaders are enabled or gave an error', (data.get('protocol', '')))
 
         return False
 
-    def getSearchTypes(self):
+    def getSearchProtocols(self):
 
-        download_types = fireEvent('download.enabled_types', merge = True)
-        provider_types = fireEvent('provider.enabled_types', merge = True)
+        download_protocols = fireEvent('download.enabled_protocols', merge = True)
+        provider_protocols = fireEvent('provider.enabled_protocols', merge = True)
 
-        if download_types and len(list(set(provider_types) & set(download_types))) == 0:
-            log.error('There aren\'t any providers enabled for your downloader (%s). Check your settings.', ','.join(download_types))
+        if download_protocols and len(list(set(provider_protocols) & set(download_protocols))) == 0:
+            log.error('There aren\'t any providers enabled for your downloader (%s). Check your settings.', ','.join(download_protocols))
             return []
 
-        for useless_provider in list(set(provider_types) - set(download_types)):
+        for useless_provider in list(set(provider_protocols) - set(download_protocols)):
             log.debug('Provider for "%s" enabled, but no downloader.', useless_provider)
 
-        search_types = download_types
+        search_protocols = download_protocols
 
-        if len(search_types) == 0:
+        if len(search_protocols) == 0:
             log.error('There aren\'t any downloaders enabled. Please pick one in settings.')
             return []
 
-        return search_types
+        return search_protocols
 
     def containsOtherQuality(self, nzb, movie_year = None, preferred_quality = {}):
 

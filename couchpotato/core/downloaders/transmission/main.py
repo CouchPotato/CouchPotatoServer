@@ -16,7 +16,7 @@ log = CPLog(__name__)
 
 class Transmission(Downloader):
 
-    type = ['torrent', 'torrent_magnet']
+    protocol = ['torrent', 'torrent_magnet']
     log = CPLog(__name__)
     trpc = None
 
@@ -34,12 +34,12 @@ class Transmission(Downloader):
 
     def download(self, data, movie, filedata = None):
 
-        log.info('Sending "%s" (%s) to Transmission.', (data.get('name'), data.get('type')))
+        log.info('Sending "%s" (%s) to Transmission.', (data.get('name'), data.get('protocol')))
 
         if not self.connect():
             return False
 
-        if not filedata and data.get('type') == 'torrent':
+        if not filedata and data.get('protocol') == 'torrent':
             log.error('Failed sending torrent, no data')
             return False
 
@@ -64,7 +64,7 @@ class Transmission(Downloader):
             torrent_params['seedIdleMode'] = 1
 
         # Send request to Transmission
-        if data.get('type') == 'torrent_magnet':
+        if data.get('protocol') == 'torrent_magnet':
             remote_torrent = self.trpc.add_torrent_uri(data.get('url'), arguments = params)
             torrent_params['trackerAdd'] = self.torrent_trackers
         else:
