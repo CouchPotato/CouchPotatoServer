@@ -13,8 +13,27 @@ import traceback
 import urllib2
 import xml.etree.ElementTree as XMLTree
 
-
 log = CPLog(__name__)
+
+
+class MultiProvider(Plugin):
+
+    def __init__(self):
+        self._classes = []
+
+        for Type in self.getTypes():
+            klass = Type()
+
+            # Overwrite name so logger knows what we're talking about
+            klass.setName('%s:%s' % (self.getName(), klass.getName()))
+
+            self._classes.append(klass)
+
+    def getTypes(self):
+        return []
+
+    def getClasses(self):
+        return self._classes
 
 
 class Provider(Plugin):
