@@ -3,7 +3,8 @@ import time
 
 
 class NZBProvider(YarrProvider):
-    type = 'nzb'
+
+    protocol = 'nzb'
 
     def calculateAge(self, unix):
         return int(time.time() - unix) / 24 / 60 / 60

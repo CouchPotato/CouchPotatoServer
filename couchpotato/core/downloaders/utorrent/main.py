@@ -20,7 +20,7 @@ log = CPLog(__name__)
 
 class uTorrent(Downloader):
 
-    type = ['torrent', 'torrent_magnet']
+    protocol = ['torrent', 'torrent_magnet']
     utorrent_api = None
 
     def connect(self):
@@ -36,7 +36,7 @@ class uTorrent(Downloader):
 
     def download(self, data, movie, filedata = None):
 
-        log.debug('Sending "%s" (%s) to uTorrent.', (data.get('name'), data.get('type')))
+        log.debug('Sending "%s" (%s) to uTorrent.', (data.get('name'), data.get('protocol')))
 
         if not self.connect():
             return False
@@ -63,11 +63,11 @@ class uTorrent(Downloader):
         if self.conf('label'):
             torrent_params['label'] = self.conf('label')
 
-        if not filedata and data.get('type') == 'torrent':
+        if not filedata and data.get('protocol') == 'torrent':
             log.error('Failed sending torrent, no data')
             return False
 
-        if data.get('type') == 'torrent_magnet':
+        if data.get('protocol') == 'torrent_magnet':
             torrent_hash = re.findall('urn:btih:([\w]{32,40})', data.get('url'))[0].upper()
             torrent_params['trackers'] = '%0D%0A%0D%0A'.join(self.torrent_trackers)
         else:
@@ -88,7 +88,7 @@ class uTorrent(Downloader):
             torrent_hash = b16encode(b32decode(torrent_hash))
 
         # Send request to uTorrent
-        if data.get('type') == 'torrent_magnet':
+        if data.get('protocol') == 'torrent_magnet':
             self.utorrent_api.add_torrent_uri(data.get('url'))
         else:
             self.utorrent_api.add_torrent_file(torrent_filename, filedata)
