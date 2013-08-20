@@ -5,7 +5,7 @@ from elixir.options import options_defaults, using_options
 from elixir.relationships import ManyToMany, OneToMany, ManyToOne
 from sqlalchemy.ext.mutable import Mutable
 from sqlalchemy.types import Integer, Unicode, UnicodeText, Boolean, String, \
-    TypeDecorator
+    TypeDecorator, Float, BLOB
 import json
 import time
 
@@ -71,12 +71,12 @@ class MutableDict(Mutable, dict):
 
 MutableDict.associate_with(JsonType)
 
-
 class Movie(Entity):
     """Movie Resource a movie could have multiple releases
     The files belonging to the movie object are global for the whole movie
     such as trailers, nfo, thumbnails"""
 
+    type = Field(String(10), default="movie", index=True)
     last_edit = Field(Integer, default = lambda: int(time.time()), index = True)
 
     library = ManyToOne('Library', cascade = 'delete, delete-orphan', single_parent = True)
@@ -90,6 +90,9 @@ class Movie(Entity):
 class Library(Entity):
     """"""
 
+    # For Movies, CPS uses three: omdbapi (no prio !?), tmdb (prio 2) and couchpotatoapi (prio 1)
+    type = Field(String(10), default="movie", index=True)
+    primary_provider = Field(String(10), default="imdb", index=True)
     year = Field(Integer)
     identifier = Field(String(20), index = True)
 
@@ -101,6 +104,9 @@ class Library(Entity):
     movies = OneToMany('Movie', cascade = 'all, delete-orphan')
     titles = OneToMany('LibraryTitle', cascade = 'all, delete-orphan')
     files = ManyToMany('File', cascade = 'all, delete-orphan', single_parent = True)
+    
+    parent = ManyToOne('Library')
+    children = OneToMany('Library')
 
 
 class LibraryTitle(Entity):
@@ -114,7 +120,7 @@ class LibraryTitle(Entity):
     language = OneToMany('Language')
     libraries = ManyToOne('Library')
 
-
+    
 class Language(Entity):
     """"""
 
@@ -170,7 +176,6 @@ class Status(Entity):
     label = Field(Unicode(20))
 
     releases = OneToMany('Release')
-    movies = OneToMany('Movie')
 
 
 class Quality(Entity):
@@ -219,6 +224,7 @@ class Category(Entity):
     destination = Field(Unicode(255))
 
     movie = OneToMany('Movie')
+    destination = Field(Unicode(255))
 
 
 class ProfileType(Entity):
