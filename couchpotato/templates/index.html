@@ -21,7 +21,7 @@
 		<script type="text/javascript" src="https://www.youtube.com/player_api" defer="defer"></script>
 
 		<script type="text/javascript">
-			$(function() {
+			window.addEvent('domready', function() {
 				if($(window).getSize().x <= 480)
 					window.addEvent('load', function() {
 
@@ -30,9 +30,7 @@
 							window.scrollTo(0, 0);
 						}, 100);
 					});
-			});
 
-			window.addEvent('domready', function() {
 				new Uniform();
 
 				Api.setup({
