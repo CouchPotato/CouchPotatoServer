@@ -1,4 +1,5 @@
 from base64 import b64encode
+from couchpotato.core.helpers.variable import tryInt, tryFloat
 from couchpotato.core.downloaders.base import Downloader, StatusList
 from couchpotato.core.helpers.encoding import isInt
 from couchpotato.core.logger import CPLog
