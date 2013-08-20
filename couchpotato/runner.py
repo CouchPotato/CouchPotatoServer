@@ -81,7 +81,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     Env.set('encoding', encoding)
 
     # Do db stuff
-    db_path = toUnicode(os.path.join(data_dir, 'couchpotato.db'))
+    db_path = toUnicode(os.path.join(data_dir, 'couchpotato_v2.db'))
 
     # Backup before start and cleanup old databases
     new_backup = toUnicode(os.path.join(data_dir, 'db_backup', str(int(time.time()))))
@@ -133,7 +133,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     # Development
     development = Env.setting('development', default = False, type = 'bool')
     Env.set('dev', development)
-    
+
     # Disable logging for some modules
     for logger_name in ['enzyme', 'guessit', 'subliminal', 'apscheduler']:
         logging.getLogger(logger_name).setLevel(logging.ERROR)
