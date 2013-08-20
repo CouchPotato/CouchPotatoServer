@@ -1,0 +1,4 @@
+include UNLICENSE
+include readme.md
+include tests/*.py
+include Rakefile

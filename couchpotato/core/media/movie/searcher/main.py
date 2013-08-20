@@ -100,7 +100,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                     self.single(movie_dict, search_protocols)
                 except IndexError:
                     log.error('Forcing library update for %s, if you see this often, please report: %s', (movie_dict['library']['identifier'], traceback.format_exc()))
-                    fireEvent('library.update', movie_dict['library']['identifier'], force = True)
+                    fireEvent('library.update.movie', movie_dict['library']['identifier'], force = True)
                 except:
                     log.error('Search failed for %s: %s', (movie_dict['library']['identifier'], traceback.format_exc()))
 
@@ -133,7 +133,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
         db = get_session()
 
         pre_releases = fireEvent('quality.pre_releases', single = True)
-        release_dates = fireEvent('library.update_release_date', identifier = movie['library']['identifier'], merge = True)
+        release_dates = fireEvent('library.update.movie_release_date', identifier = movie['library']['identifier'], merge = True)
         available_status, ignored_status, failed_status = fireEvent('status.get', ['available', 'ignored', 'failed'], single = True)
 
         found_releases = []

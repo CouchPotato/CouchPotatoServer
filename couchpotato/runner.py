@@ -27,6 +27,8 @@ def getOptions(base_path, args):
                         dest = 'config_file', help = 'Absolute or ~/ path of the settings file (default DATA_DIR/settings.conf)')
     parser.add_argument('--debug', action = 'store_true',
                         dest = 'debug', help = 'Debug mode')
+    parser.add_argument('--noreloader', action = 'store_false',
+                        dest = 'noreloader', help = 'Reloader mode')
     parser.add_argument('--console_log', action = 'store_true',
                         dest = 'console_log', help = "Log to console")
     parser.add_argument('--quiet', action = 'store_true',
@@ -131,7 +133,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     # Development
     development = Env.setting('development', default = False, type = 'bool')
     Env.set('dev', development)
-
+    
     # Disable logging for some modules
     for logger_name in ['enzyme', 'guessit', 'subliminal', 'apscheduler']:
         logging.getLogger(logger_name).setLevel(logging.ERROR)
@@ -140,7 +142,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
         logging.getLogger(logger_name).setLevel(logging.WARNING)
 
     # Use reloader
-    reloader = debug is True and development and not Env.get('desktop') and not options.daemon
+    reloader = debug is True and development and not Env.get('desktop') and not options.daemon and options.noreloader is True
 
     # Logger
     logger = logging.getLogger()
