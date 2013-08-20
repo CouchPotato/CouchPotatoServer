@@ -2,8 +2,8 @@ from couchpotato import get_session
 from couchpotato.core.event import addEvent, fireEventAsync, fireEvent
 from couchpotato.core.helpers.encoding import toUnicode, simplifyString
 from couchpotato.core.logger import CPLog
-from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Library, LibraryTitle, File
+from couchpotato.core.media._base.library import LibraryBase
 from string import ascii_letters
 import time
 import traceback
@@ -11,30 +11,22 @@ import traceback
 log = CPLog(__name__)
 
 
-class LibraryPlugin(Plugin):
+class MovieLibraryPlugin(LibraryBase):
 
     default_dict = {'titles': {}, 'files':{}}
 
     def __init__(self):
-        addEvent('library.add', self.add)
-        addEvent('library.update', self.update)
-        addEvent('library.update_release_date', self.updateReleaseDate)
+        addEvent('library.add.movie', self.add)
+        addEvent('library.update.movie', self.update)
+        addEvent('library.update.movie_release_date', self.updateReleaseDate)
 
     def add(self, attrs = {}, update_after = True):
-
         # movies don't yet contain these, so lets make sure to set defaults
         type = attrs.get('type', 'movie')
         primary_provider = attrs.get('primary_provider', 'imdb')
         
         db = get_session()
-        parent_identifier = attrs.get('parent_identifier',  None)
         
-        # XXX: add type (somehow? it will be show when episode id the type) so we dont get conflicts
-        parent = None
-        if parent_identifier:
-            #parent = db.query(Library).filter_by(identifier = attrs.get('parent_identifier')).first()
-            parent = db.query(Library).filter_by(primary_provider = primary_provider,  identifier = attrs.get('parent_identifier')).first()
-
         l = db.query(Library).filter_by(type = type, identifier = attrs.get('identifier')).first()
         if not l:
             status = fireEvent('status.get', 'needs_update', single = True)
@@ -47,9 +39,8 @@ class LibraryPlugin(Plugin):
                 tagline = toUnicode(attrs.get('tagline')),
                 status_id = status.get('id'),
                 info = {},
-                parent = parent, 
+                parent = None, 
             )
-            #    children = [], 
 
             title = LibraryTitle(
                 title = toUnicode(attrs.get('title')),
@@ -64,7 +55,7 @@ class LibraryPlugin(Plugin):
         # Update library info
         if update_after is not False:
             handle = fireEventAsync if update_after is 'async' else fireEvent
-            handle('library.update', identifier = l.identifier, default_title = toUnicode(attrs.get('title', '')))
+            handle('library.update.movie', identifier = l.identifier, default_title = toUnicode(attrs.get('title', '')))
 
         library_dict = l.to_dict(self.default_dict)
 
@@ -85,30 +76,17 @@ class LibraryPlugin(Plugin):
 
         do_update = True
 
-        # XXX: Fix to be pretty
-        parent_identifier =  None
-        if library.parent:
-            parent_identifier =  library.parent.identifier
-            
-        if library.status_id == done_status.get('id') and not force:
-            do_update = False
-        # XXX:  do this a better way.  we need to pass parent_identifier to things like episode.info
-        #       maybe just make all .info (movie, show, season and esisode requre parent var and not use it)
-        elif parent_identifier:
-            info = fireEvent('%s.info' % library.type, merge = True, identifier = identifier,  \
-                             parent_identifier = parent_identifier)
-        else:
-            info = fireEvent('%s.info' % library.type, merge = True, identifier = identifier)
+        info = fireEvent('movie.info', merge = True, identifier = identifier)
 
-            # Don't need those here
-            try: del info['in_wanted']
-            except: pass
-            try: del info['in_library']
-            except: pass
+        # Don't need those here
+        try: del info['in_wanted']
+        except: pass
+        try: del info['in_library']
+        except: pass
 
-            if not info or len(info) == 0:
-                log.error('Could not update, no movie info to work with: %s', identifier)
-                return False
+        if not info or len(info) == 0:
+            log.error('Could not update, no movie info to work with: %s', identifier)
+            return False
 
         # Main info
         if do_update:

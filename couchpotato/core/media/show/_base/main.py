@@ -124,7 +124,7 @@ class ShowBase(MediaBase):
         log.debug("show.add")
         
         # Add show parent to db first
-        parent =  self.addToDatabase(params = params)
+        parent =  self.addToDatabase(params = params,  type = 'show')
     
         skip = False # XXX: For debugging
         identifier = params.get('id')
@@ -136,7 +136,7 @@ class ShowBase(MediaBase):
                 episode['title'] = episode.get('titles', None)[0]
                 episode['identifier'] = episode.get('id', None)
                 episode['parent_identifier'] = identifier
-                self.addToDatabase(params=episode, type="episode")
+                self.addToDatabase(params=episode, type = "episode")
             
         return parent
 
@@ -159,7 +159,9 @@ class ShowBase(MediaBase):
             #except:
                 #pass
 
-        library = fireEvent('library.add', single = True, attrs = params, update_after = update_library)
+        library = fireEvent('library.add.%s' % type, single = True, attrs = params, update_after = update_library)
+        if not library:
+            return False
 
         # Status
         status_active, snatched_status, ignored_status, done_status, downloaded_status = \
@@ -187,7 +189,7 @@ class ShowBase(MediaBase):
             if search_after:
                 onComplete = self.createOnComplete(m.id)
 
-            fireEventAsync('library.update', params.get('identifier'), default_title = params.get('title', ''), on_complete = onComplete)
+            fireEventAsync('library.update.%s' % type, params.get('identifier'), default_title = params.get('title', ''), on_complete = onComplete)
             search_after = False
         elif force_readd:
 
