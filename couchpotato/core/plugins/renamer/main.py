@@ -161,7 +161,7 @@ class Renamer(Plugin):
                 continue
             # Rename the files using the library data
             else:
-                group['library'] = fireEvent('library.update', identifier = group['library']['identifier'], single = True)
+                group['library'] = fireEvent('library.update.movie', identifier = group['library']['identifier'], single = True)
                 if not group['library']:
                     log.error('Could not rename, no library item to work with: %s', group_identifier)
                     continue

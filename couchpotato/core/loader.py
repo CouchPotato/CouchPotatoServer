@@ -10,9 +10,19 @@ class Loader(object):
 
     plugins = {}
     providers = {}
-
     modules = {}
 
+    def addPath(self, root, base_path, priority, recursive=False):
+        for filename in os.listdir(os.path.join(root, *base_path)):
+            path = os.path.join(os.path.join(root, *base_path), filename)
+            if os.path.isdir(path) and filename[:2] != '__':
+                if not u'__init__.py' in os.listdir(path):
+                    return
+                new_base_path = ''.join(s + '.' for s in base_path)  + filename
+                self.paths[new_base_path.replace('.', '_')] = (priority, new_base_path,  path)
+                if recursive:
+                    self.addPath(root, base_path + [filename], priority, recursive=True)
+                    
     def preload(self, root = ''):
 
         core = os.path.join(root, 'couchpotato', 'core')
@@ -25,19 +35,14 @@ class Loader(object):
         }
 
         # Add providers to loader
-        provider_dir = os.path.join(root, 'couchpotato', 'core', 'providers')
-        for provider in os.listdir(provider_dir):
-            path = os.path.join(provider_dir, provider)
-            if os.path.isdir(path) and provider[:2] != '__' and '__init__.py' in os.listdir(path):
-                self.paths[provider + '_provider'] = (25, 'couchpotato.core.providers.' + provider, path)
-
+        self.addPath(root, ['couchpotato', 'core', 'providers'], 25,  recursive=False)
+        
         # Add media to loader
-        media_dir = os.path.join(root, 'couchpotato', 'core', 'media')
-        for media in os.listdir(media_dir):
-            path = os.path.join(media_dir, media)
-            if os.path.isdir(path) and media[:2] != '__' and '__init__.py' in os.listdir(path):
-                self.paths[media + '_media'] = (25, 'couchpotato.core.media.' + media, path)
-
+        self.addPath(root, ['couchpotato', 'core', 'media'], 25,  recursive=False)
+        
+        # Add Libraries to loader
+        self.addPath(root, ['couchpotato', 'core', 'media', 'movie'], 1,  recursive=False)
+        self.addPath(root, ['couchpotato', 'core', 'media', 'show'], 1,  recursive=False)
 
         for plugin_type, plugin_tuple in self.paths.iteritems():
             priority, module, dir_name = plugin_tuple
@@ -111,7 +116,12 @@ class Loader(object):
 
     def loadPlugins(self, module, name):
         try:
-            module.start()
+            klass = module.start()
+            klass.registerPlugin()
+
+            if klass and getattr(klass, 'auto_register_static'):
+                klass.registerStatic(module.__file__)
+
             return True
         except Exception, e:
             log.error('Failed loading plugin "%s": %s', (module.__file__, traceback.format_exc()))

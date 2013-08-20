@@ -620,7 +620,7 @@ class Scanner(Plugin):
                     log.debug('Identifier to short to use for search: %s', identifier)
 
         if imdb_id:
-            return fireEvent('library.add', attrs = {
+            return fireEvent('library.add.movie', attrs = {
                 'identifier': imdb_id
             }, update_after = False, single = True)
 

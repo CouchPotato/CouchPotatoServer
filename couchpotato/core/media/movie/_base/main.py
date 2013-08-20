@@ -319,7 +319,7 @@ class MovieBase(MovieTypeBase):
                     if title.default: default_title = title.title
 
                 fireEvent('notify.frontend', type = 'movie.busy.%s' % x, data = True)
-                fireEventAsync('library.update', identifier = movie.library.identifier, default_title = default_title, force = True, on_complete = self.createOnComplete(x))
+                fireEventAsync('library.update.movie', identifier = movie.library.identifier, default_title = default_title, force = True, on_complete = self.createOnComplete(x))
 
         db.expire_all()
         return {
@@ -364,7 +364,7 @@ class MovieBase(MovieTypeBase):
                 pass
 
 
-        library = fireEvent('library.add', single = True, attrs = params, update_after = update_library)
+        library = fireEvent('library.add.movie', single = True, attrs = params, update_after = update_library)
 
         # Status
         status_active, snatched_status, ignored_status, done_status, downloaded_status = \
@@ -391,7 +391,7 @@ class MovieBase(MovieTypeBase):
             if search_after:
                 onComplete = self.createOnComplete(m.id)
 
-            fireEventAsync('library.update', params.get('identifier'), default_title = params.get('title', ''), on_complete = onComplete)
+            fireEventAsync('library.update.movie', params.get('identifier'), default_title = params.get('title', ''), on_complete = onComplete)
             search_after = False
         elif force_readd:
 
