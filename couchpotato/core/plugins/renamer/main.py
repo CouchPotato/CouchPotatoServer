@@ -88,12 +88,6 @@ class Renamer(Plugin):
             log.info('Renamer is already running, if you see this often, check the logs above for errors.')
             return
 
-        # Make sure a checkSnatched marked all downloads/seeds as such
-        if not download_info and self.conf('run_every') > 0:
-            fireEvent('renamer.check_snatched')
-
-        self.renaming_started = True
-
         movie_folder = download_info and download_info.get('folder')
 
         # Check to see if the "to" folder is inside the "from" folder.
@@ -108,22 +102,26 @@ class Renamer(Plugin):
             log.error('The "to" and "from" folders can\'t be inside of or the same as the provided movie folder.')
             return
 
+        # Make sure a checkSnatched marked all downloads/seeds as such
+        if not download_info and self.conf('run_every') > 0:
+            fireEvent('renamer.check_snatched')
+
+        self.renaming_started = True
+
         # make sure the movie folder name is included in the search
+        folder = None
+        files = []
         if movie_folder:
+            log.info('Scanning movie folder %s...', movie_folder)
             movie_folder = movie_folder.rstrip(os.path.sep)
             folder = os.path.dirname(movie_folder)
-            log.info('Scanning movie folder %s...', movie_folder)
-        else:
-            folder = self.conf('from')
-            log.info('Scanning from folder %s...', folder)
 
-        # Get all files from the specified folder
-        files = []
-        try:
-            for root, folders, names in os.walk(movie_folder if movie_folder else self.conf('from')):
-                files.extend([os.path.join(root, name) for name in names])
-        except:
-            log.error('Failed getting files from %s: %s', (movie_folder if movie_folder else self.conf('from'), traceback.format_exc()))
+            # Get all files from the specified folder
+            try:
+                for root, folders, names in os.walk(movie_folder):
+                    files.extend([os.path.join(root, name) for name in names])
+            except:
+                log.error('Failed getting files from %s: %s', (movie_folder, traceback.format_exc()))
 
         db = get_session()
 
@@ -132,10 +130,10 @@ class Renamer(Plugin):
 
         # Unpack any archives
         if self.conf('unrar'):
-            folder, movie_folder, files, extr_files = self.extractFiles(root = folder, movie_folder = movie_folder, files = files, \
+            folder, movie_folder, files, extr_files = self.extractFiles(folder = folder, movie_folder = movie_folder, files = files, \
                 cleanup = self.conf('cleanup') and not self.downloadIsTorrent(download_info))
 
-        groups = fireEvent('scanner.scan', folder = folder,
+        groups = fireEvent('scanner.scan', folder = folder if folder else self.conf('from'),
                            files = files, download_info = download_info, return_ignored = False, single = True)
 
         destination = self.conf('to')
@@ -836,17 +834,29 @@ Remove it if you want it to be renamed (again, or at least let it try again)
     def movieInFromFolder(self, movie_folder):
         return movie_folder and self.conf('from') in movie_folder or not movie_folder
 
-    def extractFiles(self, root, movie_folder, files, cleanup = False):
+    def extractFiles(self, folder = None, movie_folder = None, files = [], cleanup = False):
 
         # RegEx for finding rar files
         archive_regex = '(?P<file>^(?P<base>(?:(?!\.part\d+\.rar$).)*)\.(?:(?:part0*1\.)?rar)$)'
         restfile_regex = '(^%s\.(?:part(?!0*1\.rar$)\d+\.rar$|[rstuvw]\d+$))'
         extr_files = []
 
+        # Check input variables
+        if not folder:
+            folder = self.conf('from')
+
+        check_file_date = True
+        if movie_folder:
+            check_file_date = False
+
+        if not files:
+            for root, folders, names in os.walk(folder):
+                files.extend([os.path.join(root, name) for name in names])
+
         # Find all archive files
         archives = [re.search(archive_regex, name).groupdict() for name in files if re.search(archive_regex, name)]
 
-        #Extract all archives
+        #Extract all found archives
         for archive in archives:
             # Check if it has already been processed by CPS
             if (self.hastagDir(os.path.dirname(archive['file']))):
@@ -856,10 +866,38 @@ Remove it if you want it to be renamed (again, or at least let it try again)
             archive['files'] = [name for name in files if re.search(restfile_regex % re.escape(archive['base']), name)]
             archive['files'].append(archive['file'])
 
+            # Check if archive is fresh and maybe still copying/moving/downloading, ignore files newer than 1 minute
+            if check_file_date:
+                file_too_new = False
+                for cur_file in archive['files']:
+                    if not os.path.isfile(cur_file):
+                        file_too_new = time.time()
+                        break
+                    file_time = [os.path.getmtime(cur_file), os.path.getctime(cur_file)]
+                    for t in file_time:
+                        if t > time.time() - 60:
+                            file_too_new = tryInt(time.time() - t)
+                            break
+
+                    if file_too_new:
+                        break
+
+                if file_too_new:
+                    try:
+                        time_string = time.ctime(file_time[0])
+                    except:
+                        try:
+                            time_string = time.ctime(file_time[1])
+                        except:
+                            time_string = 'unknown'
+
+                    log.info('Archive seems to be still copying/moving/downloading or just copied/moved/downloaded (created on %s), ignoring for now: %s', (time_string, os.path.basename(archive['file'])))
+                    continue
+
             log.info('Archive %s found. Extracting...', os.path.basename(archive['file']))
             try:
                 rar_handle = RarFile(archive['file'])
-                extr_path = os.path.join(self.conf('from'), os.path.relpath(os.path.dirname(archive['file']), root))
+                extr_path = os.path.join(self.conf('from'), os.path.relpath(os.path.dirname(archive['file']), folder))
                 self.makeDir(extr_path)
                 for packedinfo in rar_handle.infolist():
                     if not packedinfo.isdir and not os.path.isfile(os.path.join(extr_path, os.path.basename(packedinfo.filename))):
@@ -881,10 +919,10 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                         continue
                 files.remove(filename)
 
-        # Move the rest of the files and folders if any files are extracted to the from folder
-        if extr_files and os.path.normpath(os.path.normcase(root)) != os.path.normpath(os.path.normcase(self.conf('from'))):   
+        # Move the rest of the files and folders if any files are extracted to the from folder (only if folder was provided)
+        if extr_files and os.path.normpath(os.path.normcase(folder)) != os.path.normpath(os.path.normcase(self.conf('from'))):
             for leftoverfile in list(files):
-                move_to = os.path.join(self.conf('from'), os.path.relpath(leftoverfile, root))
+                move_to = os.path.join(self.conf('from'), os.path.relpath(leftoverfile, folder))
 
                 try:
                     self.makeDir(os.path.dirname(move_to))
@@ -907,10 +945,15 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                 log.debug('Removing old movie folder %s...', movie_folder)
                 self.deleteEmptyFolder(movie_folder)
 
-            movie_folder = os.path.join(self.conf('from'), os.path.relpath(movie_folder, root))
-            root = self.conf('from')
+            movie_folder = os.path.join(self.conf('from'), os.path.relpath(movie_folder, folder))
+            folder = self.conf('from')
 
         if extr_files:
             files.extend(extr_files)
 
-        return (root, movie_folder, files, extr_files)
+        # Cleanup files and folder if movie_folder was not provided 
+        if not movie_folder:
+            files = []
+            folder = None
+
+        return (folder, movie_folder, files, extr_files)
