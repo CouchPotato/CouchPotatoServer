@@ -149,10 +149,10 @@ class uTorrent(Downloader):
 
         return statuses
 
-    def pause(self, download_info, pause = True):
+    def pause(self, item, pause = True):
         if not self.connect():
             return False
-        return self.utorrent_api.pause_torrent(download_info['id'], pause)
+        return self.utorrent_api.pause_torrent(item['id'], pause)
 
     def removeFailed(self, item):
         log.info('%s failed downloading, deleting...', item['name'])
