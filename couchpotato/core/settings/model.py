@@ -94,7 +94,7 @@ class Library(Entity):
     type = Field(String(10), default="movie", index=True)
     primary_provider = Field(String(10), default="imdb", index=True)
     year = Field(Integer)
-    identifier = Field(String(20), index = True)
+    identifier = Field(String(40), index = True)
 
     plot = Field(UnicodeText)
     tagline = Field(UnicodeText(255))
@@ -104,7 +104,7 @@ class Library(Entity):
     movies = OneToMany('Movie', cascade = 'all, delete-orphan')
     titles = OneToMany('LibraryTitle', cascade = 'all, delete-orphan')
     files = ManyToMany('File', cascade = 'all, delete-orphan', single_parent = True)
-    
+
     parent = ManyToOne('Library')
     children = OneToMany('Library')
 
@@ -120,7 +120,7 @@ class LibraryTitle(Entity):
     language = OneToMany('Language')
     libraries = ManyToOne('Library')
 
-    
+
 class Language(Entity):
     """"""
 
