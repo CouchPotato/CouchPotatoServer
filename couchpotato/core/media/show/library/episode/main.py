@@ -23,10 +23,10 @@ class EpisodeLibraryPlugin(LibraryBase):
     def add(self, attrs = {}, update_after = True):
         type = attrs.get('type', 'episode')
         primary_provider = attrs.get('primary_provider', 'thetvdb')
-        
+
         db = get_session()
         parent_identifier = attrs.get('parent_identifier',  None)
-        
+
         parent = None
         if parent_identifier:
             parent = db.query(Library).filter_by(primary_provider = primary_provider,  identifier = attrs.get('parent_identifier')).first()
@@ -35,15 +35,15 @@ class EpisodeLibraryPlugin(LibraryBase):
         if not l:
             status = fireEvent('status.get', 'needs_update', single = True)
             l = Library(
-                type = type, 
-                primary_provider = primary_provider, 
+                type = type,
+                primary_provider = primary_provider,
                 year = attrs.get('year'),
                 identifier = attrs.get('identifier'),
                 plot = toUnicode(attrs.get('plot')),
                 tagline = toUnicode(attrs.get('tagline')),
                 status_id = status.get('id'),
                 info = {},
-                parent = parent, 
+                parent = parent,
             )
 
             title = LibraryTitle(
@@ -84,12 +84,16 @@ class EpisodeLibraryPlugin(LibraryBase):
         parent_identifier =  None
         if library.parent:
             parent_identifier =  library.parent.identifier
-            
+
         if library.status_id == done_status.get('id') and not force:
             do_update = False
-            
-        info = fireEvent('episode.info', merge = True, identifier = identifier,  \
-                         parent_identifier = parent_identifier)
+
+        #info = fireEvent('episode.info', merge = True, identifier = identifier,  \
+        #                 parent_identifier = parent_identifier)
+        #info = fireEvent('episode.info', merge = True, identifier = parent_identifier,  \
+        #                 episode_identifier = identifier)
+        info = fireEvent('episode.info', merge = True, season_identifier = parent_identifier,  \
+                         episode_identifier = identifier)
 
         # Don't need those here
         try: del info['in_wanted']

@@ -23,22 +23,22 @@ class ShowLibraryPlugin(LibraryBase):
     def add(self, attrs = {}, update_after = True):
         type = attrs.get('type', 'show')
         primary_provider = attrs.get('primary_provider', 'thetvdb')
-        
+
         db = get_session()
-        
+
         l = db.query(Library).filter_by(type = type, identifier = attrs.get('identifier')).first()
         if not l:
             status = fireEvent('status.get', 'needs_update', single = True)
             l = Library(
-                type = type, 
-                primary_provider = primary_provider, 
+                type = type,
+                primary_provider = primary_provider,
                 year = attrs.get('year'),
                 identifier = attrs.get('identifier'),
                 plot = toUnicode(attrs.get('plot')),
                 tagline = toUnicode(attrs.get('tagline')),
                 status_id = status.get('id'),
                 info = {},
-                parent = None, 
+                parent = None,
             )
 
             title = LibraryTitle(
@@ -75,7 +75,7 @@ class ShowLibraryPlugin(LibraryBase):
 
         do_update = True
 
-        info = fireEvent('show.info' % library.type, merge = True, identifier = identifier)
+        info = fireEvent('show.info', merge = True, identifier = identifier)
 
         # Don't need those here
         try: del info['in_wanted']
