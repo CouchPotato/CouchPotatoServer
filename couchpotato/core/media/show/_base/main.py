@@ -50,7 +50,7 @@ class ShowBase(MediaBase):
                 'title': {'desc': 'Movie title to use for searches. Has to be one of the titles returned by movie.search.'},
             }
         })
-        
+
         addEvent('show.add', self.add)
 
     def search(self, q = '', **kwargs):
@@ -82,8 +82,8 @@ class ShowBase(MediaBase):
             'added': True if movie_dict else False,
             'movie': movie_dict,
         }
-    
-    def debug(self):
+
+    def debug(self,  identifier):
         """
         XXX: This is only a hook for a breakpoint so we can test database stuff easily
         REMOVE when finished
@@ -99,21 +99,21 @@ class ShowBase(MediaBase):
         import traceback
 
         db = get_session()
-        #parent = db.query(Library).filter_by(identifier = attrs.get('')).first()
+        parent = db.query(Library).filter_by(identifier = identifier).first()
         return
-    
+
     def add(self, params = {}, force_readd = True, search_after = True, update_library = False, status_id = None):
         """
         1. Add Show
         2. Add All Episodes
         3. Add All Seasons
-        
+
         Notes, not to forget:
         - relate parent and children, possible grandparent to grandchild so episodes know it belong to show, etc
         - looks like we dont send info to library; it comes later
         - change references to plot to description
         - change Model to Media
-        
+
         params
         {'category_id': u'-1',
          'identifier': u'tt1519931',
@@ -122,27 +122,45 @@ class ShowBase(MediaBase):
          'title': u'Haven'}
         """
         log.debug("show.add")
-        
+
         # Add show parent to db first
         parent =  self.addToDatabase(params = params,  type = 'show')
-    
-        skip = False # XXX: For debugging
+
         identifier = params.get('id')
-        episodes = fireEvent('show.episodes', identifier = identifier)
-        
-        # XXX: Fix so we dont have a nested list
-        if episodes is not None and skip is False:
-            for episode in episodes[0]:
-                episode['title'] = episode.get('titles', None)[0]
-                episode['identifier'] = episode.get('id', None)
-                episode['parent_identifier'] = identifier
-                self.addToDatabase(params=episode, type = "episode")
-            
+
+        # XXX: add seasons
+        # XXX: Fix so we dont have a nested list [0] (fireEvent)
+        try:
+            seasons = fireEvent('season.info', identifier = identifier)[0]
+        except: return None
+        if seasons is not None:
+            for season in seasons:
+                season['title'] = season.get('title',  None)
+                season_id =  season.get('id', None)
+                if season_id is None: continue
+                season['identifier'] = season_id
+                season['parent_identifier'] = identifier
+                self.addToDatabase(params=season, type = "season")
+
+                # XXX: Fix so we dont have a nested list [0] (fireEvent)
+                try:
+                    episodes = fireEvent('episode.info', identifier = identifier, season_identifier = season_id)[0]
+                except: continue
+                if episodes is not None:
+                    for episode in episodes:
+                        episode['title'] = episode.get('titles', None)[0] # XXX. [0] will create exception. FIX!
+                        episode_id =  episode.get('id', None)
+                        if episode_id is None: continue
+                        episode['identifier'] = episode_id
+                        episode['parent_identifier'] = season['identifier']
+                        self.addToDatabase(params=episode, type = "episode")
+
+        self.debug(str(identifier)) # XXX: Remove TODO:  Add Show(extend Library) convience options for db seasching
         return parent
 
     def addToDatabase(self, params = {}, type="show", force_readd = True, search_after = True, update_library = False, status_id = None):
         log.debug("show.addToDatabase")
-        
+
         if not params.get('identifier'):
             msg = 'Can\'t add show without imdb identifier.'
             log.error(msg)
@@ -176,7 +194,7 @@ class ShowBase(MediaBase):
         do_search = False
         if not m:
             m = Movie(
-                type = type, 
+                type = type,
                 library_id = library.get('id'),
                 profile_id = params.get('profile_id', default_profile.get('id')),
                 status_id = status_id if status_id else status_active.get('id'),
@@ -242,7 +260,7 @@ class ShowBase(MediaBase):
             db.expire_all()
 
         return onComplete
-    
+
     def createNotifyFront(self, show_id):
 
         def notifyFront():
