@@ -23,10 +23,10 @@ class SeasonLibraryPlugin(LibraryBase):
     def add(self, attrs = {}, update_after = True):
         type = attrs.get('type', 'season')
         primary_provider = attrs.get('primary_provider', 'thetvdb')
-        
+
         db = get_session()
         parent_identifier = attrs.get('parent_identifier',  None)
-        
+
         parent = None
         if parent_identifier:
             parent = db.query(Library).filter_by(primary_provider = primary_provider,  identifier = attrs.get('parent_identifier')).first()
@@ -35,15 +35,15 @@ class SeasonLibraryPlugin(LibraryBase):
         if not l:
             status = fireEvent('status.get', 'needs_update', single = True)
             l = Library(
-                type = type, 
-                primary_provider = primary_provider, 
+                type = type,
+                primary_provider = primary_provider,
                 year = attrs.get('year'),
                 identifier = attrs.get('identifier'),
                 plot = toUnicode(attrs.get('plot')),
                 tagline = toUnicode(attrs.get('tagline')),
                 status_id = status.get('id'),
                 info = {},
-                parent = parent, 
+                parent = parent,
             )
 
             title = LibraryTitle(
@@ -84,12 +84,12 @@ class SeasonLibraryPlugin(LibraryBase):
         parent_identifier =  None
         if library.parent:
             parent_identifier =  library.parent.identifier
-            
+
         if library.status_id == done_status.get('id') and not force:
             do_update = False
-            
-        info = fireEvent('season.info', merge = True, identifier = identifier,  \
-                         parent_identifier = parent_identifier)
+
+        info = fireEvent('season.info', merge = True, identifier = parent_identifier,  \
+                        season_identifier = identifier)
 
         # Don't need those here
         try: del info['in_wanted']
@@ -124,7 +124,9 @@ class SeasonLibraryPlugin(LibraryBase):
                 t = LibraryTitle(
                     title = title,
                     simple_title = self.simplifyTitle(title),
-                    default = (len(default_title) == 0 and counter == 0) or len(titles) == 1 or title.lower() == toUnicode(default_title.lower()) or (toUnicode(default_title) == u'' and toUnicode(titles[0]) == title)
+                    # XXX: default was None; so added a quick hack since we don't really need titiles for seasons anyway
+                    #default = (len(default_title) == 0 and counter == 0) or len(titles) == 1 or title.lower() == toUnicode(default_title.lower()) or (toUnicode(default_title) == u'' and toUnicode(titles[0]) == title)
+                    default = True,
                 )
                 library.titles.append(t)
                 counter += 1
@@ -132,23 +134,23 @@ class SeasonLibraryPlugin(LibraryBase):
             db.commit()
 
             # Files
-            images = info.get('images', [])
-            for image_type in ['poster']:
-                for image in images.get(image_type, []):
-                    if not isinstance(image, (str, unicode)):
-                        continue
+            #images = info.get('images', [])
+            #for image_type in ['poster']:
+                #for image in images.get(image_type, []):
+                    #if not isinstance(image, (str, unicode)):
+                        #continue
 
-                    file_path = fireEvent('file.download', url = image, single = True)
-                    if file_path:
-                        file_obj = fireEvent('file.add', path = file_path, type_tuple = ('image', image_type), single = True)
-                        try:
-                            file_obj = db.query(File).filter_by(id = file_obj.get('id')).one()
-                            library.files.append(file_obj)
-                            db.commit()
+                    #file_path = fireEvent('file.download', url = image, single = True)
+                    #if file_path:
+                        #file_obj = fireEvent('file.add', path = file_path, type_tuple = ('image', image_type), single = True)
+                        #try:
+                            #file_obj = db.query(File).filter_by(id = file_obj.get('id')).one()
+                            #library.files.append(file_obj)
+                            #db.commit()
 
-                            break
-                        except:
-                            log.debug('Failed to attach to library: %s', traceback.format_exc())
+                            #break
+                        #except:
+                            #log.debug('Failed to attach to library: %s', traceback.format_exc())
 
             library_dict = library.to_dict(self.default_dict)
 
