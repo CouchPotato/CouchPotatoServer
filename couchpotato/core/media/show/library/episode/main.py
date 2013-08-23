@@ -2,8 +2,9 @@ from couchpotato import get_session
 from couchpotato.core.event import addEvent, fireEventAsync, fireEvent
 from couchpotato.core.helpers.encoding import toUnicode, simplifyString
 from couchpotato.core.logger import CPLog
-from couchpotato.core.settings.model import Library, LibraryTitle, File
+from couchpotato.core.settings.model import EpisodeLibrary, SeasonLibrary, LibraryTitle, File
 from couchpotato.core.media._base.library import LibraryBase
+from couchpotato.core.helpers.variable import tryInt
 from string import ascii_letters
 import time
 import traceback
@@ -29,12 +30,12 @@ class EpisodeLibraryPlugin(LibraryBase):
 
         parent = None
         if parent_identifier:
-            parent = db.query(Library).filter_by(primary_provider = primary_provider,  identifier = attrs.get('parent_identifier')).first()
+            parent = db.query(SeasonLibrary).filter_by(primary_provider = primary_provider,  identifier = attrs.get('parent_identifier')).first()
 
-        l = db.query(Library).filter_by(type = type, identifier = attrs.get('identifier')).first()
+        l = db.query(EpisodeLibrary).filter_by(type = type, identifier = attrs.get('identifier')).first()
         if not l:
             status = fireEvent('status.get', 'needs_update', single = True)
-            l = Library(
+            l = EpisodeLibrary(
                 type = type,
                 primary_provider = primary_provider,
                 year = attrs.get('year'),
@@ -72,7 +73,7 @@ class EpisodeLibraryPlugin(LibraryBase):
             return
 
         db = get_session()
-        library = db.query(Library).filter_by(identifier = identifier).first()
+        library = db.query(EpisodeLibrary).filter_by(identifier = identifier).first()
         done_status = fireEvent('status.get', 'done', single = True)
 
         if library:
@@ -82,7 +83,7 @@ class EpisodeLibraryPlugin(LibraryBase):
 
         # XXX: Fix to be pretty
         parent_identifier =  None
-        if library.parent:
+        if library.parent is not None:
             parent_identifier =  library.parent.identifier
 
         if library.status_id == done_status.get('id') and not force:
@@ -111,6 +112,8 @@ class EpisodeLibraryPlugin(LibraryBase):
             library.tagline = toUnicode(info.get('tagline', ''))
             library.year = info.get('year', 0)
             library.status_id = done_status.get('id')
+            library.season_number = tryInt(info.get('seasonnumber', None))
+            library.episode_number = tryInt(info.get('episodenumber', None))
             library.info.update(info)
             db.commit()
 
@@ -162,7 +165,7 @@ class EpisodeLibraryPlugin(LibraryBase):
     def updateReleaseDate(self, identifier):
 
         db = get_session()
-        library = db.query(Library).filter_by(identifier = identifier).first()
+        library = db.query(EpisodeLibrary).filter_by(identifier = identifier).first()
 
         if not library.info:
             library_dict = self.update(identifier, force = True)

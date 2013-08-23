@@ -2,7 +2,7 @@ from couchpotato import get_session
 from couchpotato.core.event import addEvent, fireEventAsync, fireEvent
 from couchpotato.core.helpers.encoding import toUnicode, simplifyString
 from couchpotato.core.logger import CPLog
-from couchpotato.core.settings.model import Library, LibraryTitle, File
+from couchpotato.core.settings.model import ShowLibrary, LibraryTitle, File
 from couchpotato.core.media._base.library import LibraryBase
 from string import ascii_letters
 import time
@@ -26,10 +26,10 @@ class ShowLibraryPlugin(LibraryBase):
 
         db = get_session()
 
-        l = db.query(Library).filter_by(type = type, identifier = attrs.get('identifier')).first()
+        l = db.query(ShowLibrary).filter_by(type = type, identifier = attrs.get('identifier')).first()
         if not l:
             status = fireEvent('status.get', 'needs_update', single = True)
-            l = Library(
+            l = ShowLibrary(
                 type = type,
                 primary_provider = primary_provider,
                 year = attrs.get('year'),
@@ -67,7 +67,7 @@ class ShowLibraryPlugin(LibraryBase):
             return
 
         db = get_session()
-        library = db.query(Library).filter_by(identifier = identifier).first()
+        library = db.query(ShowLibrary).filter_by(identifier = identifier).first()
         done_status = fireEvent('status.get', 'done', single = True)
 
         if library:
@@ -93,7 +93,15 @@ class ShowLibraryPlugin(LibraryBase):
             library.tagline = toUnicode(info.get('tagline', ''))
             library.year = info.get('year', 0)
             library.status_id = done_status.get('id')
+            #--------------------------------------------------------------------------------------------------
+            # XXX: TODO: implement logic to get proper values
+            library.airs_dayofweek = int(0)
+            library.airs_time = int(0)
+            library.last_updated = int(0)
+            library.show_status = toUnicode(info.get('status',  '').lower())
+            #--------------------------------------------------------------------------------------------------
             library.info.update(info)
+
             db.commit()
 
             # Titles
@@ -144,7 +152,7 @@ class ShowLibraryPlugin(LibraryBase):
     def updateReleaseDate(self, identifier):
 
         db = get_session()
-        library = db.query(Library).filter_by(identifier = identifier).first()
+        library = db.query(ShowLibrary).filter_by(identifier = identifier).first()
 
         if not library.info:
             library_dict = self.update(identifier, force = True)

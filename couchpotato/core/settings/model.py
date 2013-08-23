@@ -6,6 +6,8 @@ from elixir.relationships import ManyToMany, OneToMany, ManyToOne
 from sqlalchemy.ext.mutable import Mutable
 from sqlalchemy.types import Integer, Unicode, UnicodeText, Boolean, String, \
     TypeDecorator, Float, BLOB
+from UserDict import DictMixin
+from collections import OrderedDict
 import json
 import time
 
@@ -71,12 +73,13 @@ class MutableDict(Mutable, dict):
 
 MutableDict.associate_with(JsonType)
 
+
 class Movie(Entity):
     """Movie Resource a movie could have multiple releases
     The files belonging to the movie object are global for the whole movie
     such as trailers, nfo, thumbnails"""
 
-    type = Field(String(10), default="movie", index=True)
+    type = Field(String(10), default = "movie", index = True)
     last_edit = Field(Integer, default = lambda: int(time.time()), index = True)
 
     library = ManyToOne('Library', cascade = 'delete, delete-orphan', single_parent = True)
@@ -89,10 +92,11 @@ class Movie(Entity):
 
 class Library(Entity):
     """"""
+    using_options(inheritance = 'multi')
 
     # For Movies, CPS uses three: omdbapi (no prio !?), tmdb (prio 2) and couchpotatoapi (prio 1)
-    type = Field(String(10), default="movie", index=True)
-    primary_provider = Field(String(10), default="imdb", index=True)
+    type = Field(String(10), default = "movie", index = True)
+    primary_provider = Field(String(10), default = "imdb", index = True)
     year = Field(Integer)
     identifier = Field(String(40), index = True)
 
@@ -107,6 +111,85 @@ class Library(Entity):
 
     parent = ManyToOne('Library')
     children = OneToMany('Library')
+
+
+class ShowLibrary(Library, DictMixin):
+    using_options(inheritance = 'multi')
+
+    last_updated = Field(Integer, index = True)
+    show_status = Field(String(10), index = True)
+    airs_dayofweek = Field(Integer,  index = True)
+    airs_time = Field(Integer,  index = True)
+
+    def getSeasons(self):
+        data = OrderedDict()
+        for c in self.children:
+            data[c.season_number] = c
+        return data
+
+    def getEpisodes(self, season_number):
+        data = OrderedDict()
+        for c in self.children[season_number].children:
+            data[c.episode_number] = c
+        return data
+
+    # Read access to season by number: library[1] for season 1
+    data = {}
+    def __getitem__(self, key):
+        if not self.data:
+            self.setData()
+        if key in self.data:
+            return self.data[key]
+        if hasattr(self.__class__, "__missing__"):
+            return self.__class__.__missing__(self, key)
+        raise KeyError(key)
+    def get(self, key, failobj = None):
+        if key not in self:
+            return failobj
+        return self[key]
+    def keys(self): return self.data.keys()
+    def setData(self):
+        for c in self.children:
+            self.data[c.season_number] = c
+
+
+class SeasonLibrary(Library, DictMixin):
+    using_options(inheritance = 'multi')
+
+    season_number = Field(Integer, index = True)
+    last_updated = Field(Integer, index = True)
+
+    def getEpisodes(self):
+        data = OrderedDict()
+        for c in self.children:
+            data[c.episode_number] = c
+        return data
+
+    # Read access episode by number: library[1][4] for season 1, episode 4
+    data = {}
+    def __getitem__(self, key):
+        if not self.data:
+            self.setData()
+        if key in self.data:
+            return self.data[key]
+        if hasattr(self.__class__, "__missing__"):
+            return self.__class__.__missing__(self, key)
+        raise KeyError(key)
+    def get(self, key, failobj = None):
+        if key not in self:
+            return failobj
+        return self[key]
+    def keys(self): return self.data.keys()
+    def setData(self):
+        for c in self.children:
+            self.data[c.episode_number] = c
+
+
+class EpisodeLibrary(Library):
+    using_options(inheritance = 'multi')
+
+    season_number = Field(Integer, index = True)
+    episode_number = Field(Integer, index = True)
 
 
 class LibraryTitle(Entity):
