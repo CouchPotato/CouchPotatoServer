@@ -83,6 +83,7 @@ class ShowBase(MediaBase):
             'movie': movie_dict,
         }
 
+    # XXX: Remove function and reference to it!
     def debug(self,  identifier):
         """
         XXX: This is only a hook for a breakpoint so we can test database stuff easily
@@ -155,7 +156,7 @@ class ShowBase(MediaBase):
                         episode['parent_identifier'] = season['identifier']
                         self.addToDatabase(params=episode, type = "episode")
 
-        self.debug(str(identifier)) # XXX: Remove TODO:  Add Show(extend Library) convience options for db seasching
+        #self.debug(str(identifier)) # XXX: Remove  DEBUG only
         return parent
 
     def addToDatabase(self, params = {}, type="show", force_readd = True, search_after = True, update_library = False, status_id = None):
