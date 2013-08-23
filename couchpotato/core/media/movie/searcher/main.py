@@ -7,7 +7,7 @@ from couchpotato.core.helpers.variable import md5, getTitle, splitString, \
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.searcher.base import SearcherBase
 from couchpotato.core.media.movie import MovieTypeBase
-from couchpotato.core.settings.model import Movie, Release, ReleaseInfo
+from couchpotato.core.settings.model import Media, Release, ReleaseInfo
 from couchpotato.environment import Env
 from datetime import date
 from sqlalchemy.exc import InterfaceError
@@ -74,8 +74,8 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
         db = get_session()
 
-        movies = db.query(Movie).filter(
-            Movie.status.has(identifier = 'active')
+        movies = db.query(Media).filter(
+            Media.status.has(identifier = 'active')
         ).all()
         random.shuffle(movies)
 
@@ -182,7 +182,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                     sorted_results = sorted(sorted_results, key = lambda k: k['type'][:3], reverse = (download_preference == 'torrent'))
 
                 # Check if movie isn't deleted while searching
-                if not db.query(Movie).filter_by(id = movie.get('id')).first():
+                if not db.query(Media).filter_by(id = movie.get('id')).first():
                     break
 
                 # Add them to this movie releases list

@@ -27,7 +27,7 @@ class Subtitle(Plugin):
         library = db.query(Library).all()
         done_status = fireEvent('status.get', 'done', single = True)
 
-        for movie in library.movies:
+        for movie in library.media:
 
             for release in movie.releases:
 
