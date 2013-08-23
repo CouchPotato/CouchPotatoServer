@@ -21,10 +21,9 @@ class Loader(object):
                 new_base_path = ''.join(s + '.' for s in base_path)  + filename
                 self.paths[new_base_path.replace('.', '_')] = (priority, new_base_path,  path)
                 if recursive:
-                    self.addPath(root, base_path + [filename], priority, recursive=True)
-                    
-    def preload(self, root = ''):
+                    self.addPath(root, base_path + [filename], priority, recursive = True)
 
+    def preload(self, root = ''):
         core = os.path.join(root, 'couchpotato', 'core')
 
         self.paths = {
@@ -35,14 +34,14 @@ class Loader(object):
         }
 
         # Add providers to loader
-        self.addPath(root, ['couchpotato', 'core', 'providers'], 25,  recursive=False)
-        
+        self.addPath(root, ['couchpotato', 'core', 'providers'], 25, recursive = False)
+
         # Add media to loader
-        self.addPath(root, ['couchpotato', 'core', 'media'], 25,  recursive=False)
-        
+        self.addPath(root, ['couchpotato', 'core', 'media'], 25, recursive = False)
+
         # Add Libraries to loader
-        self.addPath(root, ['couchpotato', 'core', 'media', 'movie'], 1,  recursive=False)
-        self.addPath(root, ['couchpotato', 'core', 'media', 'show'], 1,  recursive=False)
+        self.addPath(root, ['couchpotato', 'core', 'media', 'movie'], 1, recursive = False)
+        self.addPath(root, ['couchpotato', 'core', 'media', 'show'], 1, recursive = False)
 
         for plugin_type, plugin_tuple in self.paths.iteritems():
             priority, module, dir_name = plugin_tuple
@@ -58,7 +57,10 @@ class Loader(object):
                     if plugin.get('name')[:2] == '__':
                         continue
 
-                    m = getattr(self.loadModule(module_name), plugin.get('name'))
+                    m = self.loadModule(module_name)
+                    if m is None:
+                        continue
+                    m = getattr(m, plugin.get('name'))
 
                     log.info('Loading %s: %s', (plugin['type'], plugin['name']))
 
@@ -101,6 +103,9 @@ class Loader(object):
                 self.addModule(priority, plugin_type, module_name, name)
 
     def loadSettings(self, module, name, save = True):
+        if not hasattr(module, 'config'):
+            log.warning('Skip loading settings for plugin %s as it has no config section' % module.__file__)
+            return False
         try:
             for section in module.config:
                 fireEvent('settings.options', section['name'], section)
@@ -115,6 +120,9 @@ class Loader(object):
             return False
 
     def loadPlugins(self, module, name):
+        if not hasattr(module, 'start'):
+            log.warning('Skip startup for plugin %s as it has no start section' % module.__file__)
+            return False
         try:
             klass = module.start()
             klass.registerPlugin()
@@ -146,5 +154,8 @@ class Loader(object):
             for sub in splitted[1:-1]:
                 m = getattr(m, sub)
             return m
+        except ImportError:
+            log.warning("Skip loading module plugin '%s' as it seems not to be a module." % name)
+            return None
         except:
             raise
