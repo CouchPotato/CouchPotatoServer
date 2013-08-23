@@ -5,7 +5,7 @@ from couchpotato.core.helpers.encoding import simplifyString, toUnicode
 from couchpotato.core.helpers.variable import md5, getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.searcher.base import SearcherBase
-from couchpotato.core.settings.model import Movie, Release, ReleaseInfo
+from couchpotato.core.settings.model import Media, Release, ReleaseInfo
 from couchpotato.environment import Env
 from inspect import ismethod, isfunction
 import datetime
@@ -110,7 +110,7 @@ class Searcher(SearcherBase):
                                             db.commit()
 
                                             # Mark movie done
-                                            mvie = db.query(Movie).filter_by(id = movie['id']).first()
+                                            mvie = db.query(Media).filter_by(id = movie['id']).first()
                                             mvie.status_id = done_status.get('id')
                                             mvie.last_edit = int(time.time())
                                             db.commit()

@@ -74,9 +74,9 @@ class MutableDict(Mutable, dict):
 MutableDict.associate_with(JsonType)
 
 
-class Movie(Entity):
-    """Movie Resource a movie could have multiple releases
-    The files belonging to the movie object are global for the whole movie
+class Media(Entity):
+    """Media Resource could have multiple releases
+    The files belonging to the media object are global for the whole media
     such as trailers, nfo, thumbnails"""
 
     type = Field(String(10), default = "movie", index = True)
@@ -105,7 +105,7 @@ class Library(Entity):
     info = Field(JsonType)
 
     status = ManyToOne('Status')
-    movies = OneToMany('Movie', cascade = 'all, delete-orphan')
+    media = OneToMany('Media', cascade = 'all, delete-orphan')
     titles = OneToMany('LibraryTitle', cascade = 'all, delete-orphan')
     files = ManyToMany('File', cascade = 'all, delete-orphan', single_parent = True)
 
@@ -220,7 +220,7 @@ class Release(Entity):
     last_edit = Field(Integer, default = lambda: int(time.time()), index = True)
     identifier = Field(String(100), index = True)
 
-    movie = ManyToOne('Movie')
+    media = ManyToOne('Media')
     status = ManyToOne('Status')
     quality = ManyToOne('Quality')
     files = ManyToMany('File')
@@ -285,7 +285,7 @@ class Profile(Entity):
     core = Field(Boolean, default = False)
     hide = Field(Boolean, default = False)
 
-    movie = OneToMany('Movie')
+    media = OneToMany('Media')
     types = OneToMany('ProfileType', cascade = 'all, delete-orphan')
 
     def to_dict(self, deep = {}, exclude = []):
@@ -306,7 +306,7 @@ class Category(Entity):
     ignored = Field(Unicode(255))
     destination = Field(Unicode(255))
 
-    movie = OneToMany('Movie')
+    media = OneToMany('Media')
     destination = Field(Unicode(255))
 
 
@@ -333,7 +333,7 @@ class File(Entity):
     properties = OneToMany('FileProperty')
 
     history = OneToMany('RenameHistory')
-    movie = ManyToMany('Movie')
+    media = ManyToMany('Media')
     release = ManyToMany('Release')
     library = ManyToMany('Library')
 

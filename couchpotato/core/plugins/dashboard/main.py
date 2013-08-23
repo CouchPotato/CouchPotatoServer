@@ -4,7 +4,7 @@ from couchpotato.core.event import fireEvent
 from couchpotato.core.helpers.variable import splitString, tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.core.settings.model import Movie
+from couchpotato.core.settings.model import Media
 from sqlalchemy.orm import joinedload_all
 import random as rndm
 import time
@@ -42,9 +42,9 @@ class Dashboard(Plugin):
 
         # Get all active movies
         active_status, snatched_status, downloaded_status, available_status = fireEvent('status.get', ['active', 'snatched', 'downloaded', 'available'], single = True)
-        subq = db.query(Movie).filter(Movie.status_id == active_status.get('id')).subquery()
+        subq = db.query(Media).filter(Media.status_id == active_status.get('id')).subquery()
 
-        q = db.query(Movie).join((subq, subq.c.id == Movie.id)) \
+        q = db.query(Media).join((subq, subq.c.id == Media.id)) \
             .options(joinedload_all('releases')) \
             .options(joinedload_all('profile')) \
             .options(joinedload_all('library.titles')) \

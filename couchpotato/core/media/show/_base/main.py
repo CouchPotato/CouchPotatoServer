@@ -5,7 +5,7 @@ from couchpotato.core.helpers.encoding import toUnicode, simplifyString
 from couchpotato.core.helpers.variable import getImdb, splitString, tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media import MediaBase
-from couchpotato.core.settings.model import Library, LibraryTitle, Movie, \
+from couchpotato.core.settings.model import Library, LibraryTitle, Media, \
     Release
 from couchpotato.environment import Env
 from sqlalchemy.orm import joinedload_all
@@ -190,11 +190,11 @@ class ShowBase(MediaBase):
         cat_id = params.get('category_id', None)
 
         db = get_session()
-        m = db.query(Movie).filter_by(library_id = library.get('id')).first()
+        m = db.query(Media).filter_by(library_id = library.get('id')).first()
         added = True
         do_search = False
         if not m:
-            m = Movie(
+            m = Media(
                 type = type,
                 library_id = library.get('id'),
                 profile_id = params.get('profile_id', default_profile.get('id')),
@@ -256,7 +256,7 @@ class ShowBase(MediaBase):
 
         def onComplete():
             db = get_session()
-            show = db.query(Movie).filter_by(id = show_id).first()
+            show = db.query(Media).filter_by(id = show_id).first()
             fireEventAsync('show.searcher.single', show.to_dict(self.default_dict), on_complete = self.createNotifyFront(show_id))
             db.expire_all()
 
@@ -266,7 +266,7 @@ class ShowBase(MediaBase):
 
         def notifyFront():
             db = get_session()
-            show = db.query(Movie).filter_by(id = show_id).first()
+            show = db.query(Media).filter_by(id = show_id).first()
             fireEvent('notify.frontend', type = 'show.update.%s' % show.id, data = show.to_dict(self.default_dict))
             db.expire_all()
 
