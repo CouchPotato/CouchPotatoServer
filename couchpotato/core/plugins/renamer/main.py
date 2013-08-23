@@ -166,7 +166,7 @@ class Renamer(Plugin):
 
                 # Overwrite destination when set in category
                 destination = self.conf('to')
-                for movie in library_ent.movies:
+                for movie in library_ent.media:
                     if movie.category and movie.category.destination and len(movie.category.destination) > 0:
                         destination = movie.category.destination
                         log.debug('Setting category destination for "%s": %s' % (movie_title, destination))
@@ -330,13 +330,13 @@ class Renamer(Plugin):
                 remove_leftovers = True
 
                 # Add it to the wanted list before we continue
-                if len(library_ent.movies) == 0:
+                if len(library_ent.media) == 0:
                     profile = db.query(Profile).filter_by(core = True, label = group['meta_data']['quality']['label']).first()
                     fireEvent('movie.add', params = {'identifier': group['library']['identifier'], 'profile_id': profile.id}, search_after = False)
                     db.expire_all()
                     library = db.query(Library).filter_by(identifier = group['library']['identifier']).first()
 
-                for movie in library_ent.movies:
+                for movie in library_ent.media:
 
                     # Mark movie "done" once it's found the quality with the finish check
                     try:

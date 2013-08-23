@@ -4,7 +4,7 @@ from couchpotato.core.helpers.encoding import toUnicode, simplifyString, ss
 from couchpotato.core.helpers.variable import getExt, getImdb, tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.core.settings.model import File, Movie
+from couchpotato.core.settings.model import File, Media
 from enzyme.exceptions import NoParserError, ParseError
 from guessit import guess_movie_info
 from subliminal.videos import Video
@@ -404,7 +404,7 @@ class Scanner(Plugin):
             if not group['library']:
                 log.error('Unable to determine movie: %s', group['identifiers'])
             else:
-                movie = db.query(Movie).filter_by(library_id = group['library']['id']).first()
+                movie = db.query(Media).filter_by(library_id = group['library']['id']).first()
                 group['movie_id'] = None if not movie else movie.id
 
             processed_movies[identifier] = group

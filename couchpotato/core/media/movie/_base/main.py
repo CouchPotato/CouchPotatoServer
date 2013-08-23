@@ -5,7 +5,7 @@ from couchpotato.core.helpers.encoding import toUnicode, simplifyString
 from couchpotato.core.helpers.variable import getImdb, splitString, tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media.movie import MovieTypeBase
-from couchpotato.core.settings.model import Library, LibraryTitle, Movie, \
+from couchpotato.core.settings.model import Library, LibraryTitle, Media, \
     Release
 from couchpotato.environment import Env
 from sqlalchemy.orm import joinedload_all
@@ -118,8 +118,8 @@ class MovieBase(MovieTypeBase):
         db = get_session()
 
         # get movies last_edit more than a week ago
-        movies = db.query(Movie) \
-            .filter(Movie.status_id == done_status.get('id'), Movie.last_edit < (now - week)) \
+        movies = db.query(Media) \
+            .filter(Media.status_id == done_status.get('id'), Media.last_edit < (now - week)) \
             .all()
 
         for movie in movies:
@@ -145,9 +145,9 @@ class MovieBase(MovieTypeBase):
         imdb_id = getImdb(str(movie_id))
 
         if(imdb_id):
-            m = db.query(Movie).filter(Movie.library.has(identifier = imdb_id)).first()
+            m = db.query(Media).filter(Media.library.has(identifier = imdb_id)).first()
         else:
-            m = db.query(Movie).filter_by(id = movie_id).first()
+            m = db.query(Media).filter_by(id = movie_id).first()
 
         results = None
         if m:
@@ -166,14 +166,14 @@ class MovieBase(MovieTypeBase):
         if release_status and not isinstance(release_status, (list, tuple)):
             release_status = [release_status]
 
-        q = db.query(Movie) \
-            .outerjoin(Movie.releases, Movie.library, Library.titles) \
+        q = db.query(Media) \
+            .outerjoin(Media.releases, Media.library, Library.titles) \
             .filter(LibraryTitle.default == True) \
-            .group_by(Movie.id)
+            .group_by(Media.id)
 
         # Filter on movie status
         if status and len(status) > 0:
-            q = q.filter(or_(*[Movie.status.has(identifier = s) for s in status]))
+            q = q.filter(or_(*[Media.status.has(identifier = s) for s in status]))
 
         # Filter on release status
         if release_status and len(release_status) > 0:
@@ -204,7 +204,7 @@ class MovieBase(MovieTypeBase):
             q = q.order_by(asc(LibraryTitle.simple_title))
 
         q = q.subquery()
-        q2 = db.query(Movie).join((q, q.c.id == Movie.id)) \
+        q2 = db.query(Media).join((q, q.c.id == Media.id)) \
             .options(joinedload_all('releases.files')) \
             .options(joinedload_all('releases.info')) \
             .options(joinedload_all('profile.types')) \
@@ -244,13 +244,13 @@ class MovieBase(MovieTypeBase):
         if release_status and not isinstance(release_status, (list, tuple)):
             release_status = [release_status]
 
-        q = db.query(Movie) \
-            .outerjoin(Movie.releases, Movie.library, Library.titles, Movie.status) \
+        q = db.query(Media) \
+            .outerjoin(Media.releases, Media.library, Library.titles, Media.status) \
             .options(joinedload_all('library.titles'))
 
         # Filter on movie status
         if status and len(status) > 0:
-            q = q.filter(or_(*[Movie.status.has(identifier = s) for s in status]))
+            q = q.filter(or_(*[Media.status.has(identifier = s) for s in status]))
 
         # Filter on release status
         if release_status and len(release_status) > 0:
@@ -310,7 +310,7 @@ class MovieBase(MovieTypeBase):
         db = get_session()
 
         for x in splitString(id):
-            movie = db.query(Movie).filter_by(id = x).first()
+            movie = db.query(Media).filter_by(id = x).first()
 
             if movie:
 
@@ -374,11 +374,11 @@ class MovieBase(MovieTypeBase):
         cat_id = params.get('category_id', None)
 
         db = get_session()
-        m = db.query(Movie).filter_by(library_id = library.get('id')).first()
+        m = db.query(Media).filter_by(library_id = library.get('id')).first()
         added = True
         do_search = False
         if not m:
-            m = Movie(
+            m = Media(
                 library_id = library.get('id'),
                 profile_id = params.get('profile_id', default_profile.get('id')),
                 status_id = status_id if status_id else status_active.get('id'),
@@ -455,7 +455,7 @@ class MovieBase(MovieTypeBase):
         ids = splitString(id)
         for movie_id in ids:
 
-            m = db.query(Movie).filter_by(id = movie_id).first()
+            m = db.query(Media).filter_by(id = movie_id).first()
             if not m:
                 continue
 
@@ -502,7 +502,7 @@ class MovieBase(MovieTypeBase):
 
         db = get_session()
 
-        movie = db.query(Movie).filter_by(id = movie_id).first()
+        movie = db.query(Media).filter_by(id = movie_id).first()
         if movie:
             deleted = False
             if delete_from == 'all':
@@ -552,7 +552,7 @@ class MovieBase(MovieTypeBase):
 
         db = get_session()
 
-        m = db.query(Movie).filter_by(id = movie_id).first()
+        m = db.query(Media).filter_by(id = movie_id).first()
         if not m or len(m.library.titles) == 0:
             log.debug('Can\'t restatus movie, doesn\'t seem to exist.')
             return False
@@ -578,7 +578,7 @@ class MovieBase(MovieTypeBase):
 
         def onComplete():
             db = get_session()
-            movie = db.query(Movie).filter_by(id = movie_id).first()
+            movie = db.query(Media).filter_by(id = movie_id).first()
             fireEventAsync('movie.searcher.single', movie.to_dict(self.default_dict), on_complete = self.createNotifyFront(movie_id))
             db.expire_all()
 
@@ -589,7 +589,7 @@ class MovieBase(MovieTypeBase):
 
         def notifyFront():
             db = get_session()
-            movie = db.query(Movie).filter_by(id = movie_id).first()
+            movie = db.query(Media).filter_by(id = movie_id).first()
             fireEvent('notify.frontend', type = 'movie.update.%s' % movie.id, data = movie.to_dict(self.default_dict))
             db.expire_all()
 
