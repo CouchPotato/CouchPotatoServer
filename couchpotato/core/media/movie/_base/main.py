@@ -259,10 +259,11 @@ class MovieBase(MovieTypeBase):
         results = q.all()
 
         for movie in results:
-            char = movie.library.titles[0].simple_title[0]
-            char = char if char in ascii_lowercase else '#'
-            if char not in chars:
-                chars += str(char)
+            if movie.library.titles:
+                char = movie.library.titles[0].simple_title[0]
+                char = char if char in ascii_lowercase else '#'
+                if char not in chars:
+                    chars += str(char)
 
         db.expire_all()
         return ''.join(sorted(chars, key = str.lower))
