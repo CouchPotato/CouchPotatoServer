@@ -86,9 +86,6 @@ class Loader(object):
             splitted = module.split('.')
             for sub in splitted[1:]:
                 m = getattr(m, sub)
-
-            if hasattr(m, 'config'):
-                fireEvent('settings.options', splitted[-1] + '_config', getattr(m, 'config'))
         except:
             raise
 
