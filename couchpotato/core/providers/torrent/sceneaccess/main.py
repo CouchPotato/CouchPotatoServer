@@ -3,7 +3,7 @@ from couchpotato.core.helpers.encoding import tryUrlencode, toUnicode
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.base import MultiProvider
-from couchpotato.core.providers.movie.base import MovieProvider
+from couchpotato.core.providers.info.base import MovieProvider
 from couchpotato.core.providers.torrent.base import TorrentProvider
 import traceback
 

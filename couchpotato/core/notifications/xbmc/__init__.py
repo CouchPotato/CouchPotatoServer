@@ -39,6 +39,14 @@ config = [{
                     'description': 'Only update the first host when movie snatched, useful for synced XBMC',
                 },
                 {
+                    'name': 'remote_dir_scan',
+                    'label': 'Remote Folder Scan',
+                    'default': 0,
+                    'type': 'bool',
+                    'advanced': True,
+                    'description': 'Only scan new movie folder at remote XBMC servers. Works if movie location is the same.',
+                },
+                {
                     'name': 'on_snatch',
                     'default': 0,
                     'type': 'bool',
