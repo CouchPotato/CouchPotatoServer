@@ -1,7 +1,7 @@
 from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import simplifyString, toUnicode
 from couchpotato.core.logger import CPLog
-from couchpotato.core.providers.show.base import ShowProvider
+from couchpotato.core.providers.info.base import ShowProvider
 from tvdb_api import tvdb_api, tvdb_exceptions
 from datetime import datetime
 import traceback
