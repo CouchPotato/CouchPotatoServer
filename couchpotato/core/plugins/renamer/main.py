@@ -205,6 +205,7 @@ class Renamer(Plugin):
                      'imdb_id': library['identifier'],
                      'cd': '',
                      'cd_nr': '',
+                     'mpaa': library['info'].get('mpaa', ''),
                 }
 
                 for file_type in group['files']:
@@ -212,7 +213,7 @@ class Renamer(Plugin):
                     # Move nfo depending on settings
                     if file_type is 'nfo' and not self.conf('rename_nfo'):
                         log.debug('Skipping, renaming of %s disabled', file_type)
-                        if self.conf('cleanup') and not (self.conf('file_action') != 'move' and self.downloadIsTorrent(download_info)):
+                        if self.conf('cleanup') and not self.downloadIsTorrent(download_info):
                             for current_file in group['files'][file_type]:
                                 remove_files.append(current_file)
                         continue
@@ -394,7 +395,7 @@ class Renamer(Plugin):
 
                 # Remove leftover files
                 if self.conf('cleanup') and not self.conf('move_leftover') and remove_leftovers and \
-                        not (self.conf('file_action') != 'move' and self.downloadIsTorrent(download_info)):
+                        not self.downloadIsTorrent(download_info):
                     log.debug('Removing leftover files')
                     for current_file in group['files']['leftover']:
                         remove_files.append(current_file)
@@ -451,8 +452,7 @@ class Renamer(Plugin):
                         self.tagDir(group, 'failed_rename')
 
             # Tag folder if it is in the 'from' folder and it will not be removed because it is a torrent
-            if self.movieInFromFolder(movie_folder) and \
-                self.conf('file_action') != 'move' and self.downloadIsTorrent(download_info):
+            if self.movieInFromFolder(movie_folder) and self.downloadIsTorrent(download_info):
                 self.tagDir(group, 'renamed_already')
 
             # Remove matching releases
@@ -463,8 +463,7 @@ class Renamer(Plugin):
                 except:
                     log.error('Failed removing %s: %s', (release.identifier, traceback.format_exc()))
 
-            if group['dirname'] and group['parentdir'] and \
-                not (self.conf('file_action') != 'move' and self.downloadIsTorrent(download_info)):
+            if group['dirname'] and group['parentdir'] and not self.downloadIsTorrent(download_info):
                 try:
                     log.info('Deleting folder: %s', group['parentdir'])
                     self.deleteEmptyFolder(group['parentdir'])
@@ -524,22 +523,22 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         if ignore_file:
             self.createFile(ignore_file, text)
 
-    def untagDir(self, folder, tag = None):
+    def untagDir(self, folder, tag = ''):
         if not os.path.isdir(folder):
             return
 
         # Remove any .ignore files
         for root, dirnames, filenames in os.walk(folder):
-            for filename in fnmatch.filter(filenames, '%s.ignore' % tag if tag else '*'):
+            for filename in fnmatch.filter(filenames, '*%s.ignore' % tag):
                 os.remove((os.path.join(root, filename)))
 
-    def hastagDir(self, folder, tag = None):
+    def hastagDir(self, folder, tag = ''):
         if not os.path.isdir(folder):
             return False
 
         # Find any .ignore files
         for root, dirnames, filenames in os.walk(folder):
-            if fnmatch.filter(filenames, '%s.ignore' % tag if tag else '*'):
+            if fnmatch.filter(filenames, '*%s.ignore' % tag):
                 return True
 
         return False
@@ -549,17 +548,23 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         try:
             if forcemove:
                 shutil.move(old, dest)
-            elif self.conf('file_action') == 'hardlink':
-                try:
-                    link(old, dest)
-                except:
-                    log.error('Couldn\'t hardlink file "%s" to "%s". Copying instead. Error: %s. ', (old, dest, traceback.format_exc()))
-                    shutil.copy(old, dest)
             elif self.conf('file_action') == 'copy':
                 shutil.copy(old, dest)
-            elif self.conf('file_action') == 'move_symlink':
-                shutil.move(old, dest)
-                symlink(dest, old)
+            elif self.conf('file_action') == 'link':
+                # First try to hardlink
+                try:
+                    log.debug('Hardlinking file "%s" to "%s"...', (old, dest))
+                    link(old, dest)
+                except:
+                    # Try to simlink next
+                    log.debug('Couldn\'t hardlink file "%s" to "%s". Simlinking instead. Error: %s. ', (old, dest, traceback.format_exc()))
+                    shutil.copy(old, dest)
+                    try:
+                        symlink(dest, old + '.link')
+                        os.unlink(old)
+                        os.rename(old + '.link', old)
+                    except:
+                        log.error('Couldn\'t symlink file "%s" to "%s". Copied instead. Error: %s. ', (old, dest, traceback.format_exc()))
             else:
                 shutil.move(old, dest)
 
@@ -764,10 +769,10 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         for item in scan_items:
             # Ask the renamer to scan the item
             if item['scan']:
-                if item['pause'] and self.conf('file_action') == 'move_symlink':
+                if item['pause'] and self.conf('file_action') == 'link':
                     fireEvent('download.pause', item = item, pause = True, single = True)
                 fireEvent('renamer.scan', download_info = item)
-                if item['pause'] and self.conf('file_action') == 'move_symlink':
+                if item['pause'] and self.conf('file_action') == 'link':
                     fireEvent('download.pause', item = item, pause = False, single = True)
             if item['process_complete']:
                 #First make sure the files were succesfully processed
@@ -826,6 +831,6 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
     def statusInfoComplete(self, item):
         return item['id'] and item['downloader'] and item['folder']
-
+    
     def movieInFromFolder(self, movie_folder):
         return movie_folder and self.conf('from') in movie_folder or not movie_folder

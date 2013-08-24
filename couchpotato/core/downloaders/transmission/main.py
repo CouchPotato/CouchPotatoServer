@@ -129,9 +129,9 @@ class Transmission(Downloader):
 
     def pause(self, item, pause = True):
         if pause:
-            return self.trpc.stop_torrent(item['hashString'])
+            return self.trpc.stop_torrent(item['id'])
         else:
-            return self.trpc.start_torrent(item['hashString'])
+            return self.trpc.start_torrent(item['id'])
 
     def removeFailed(self, item):
         log.info('%s failed downloading, deleting...', item['name'])
