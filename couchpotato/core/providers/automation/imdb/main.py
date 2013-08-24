@@ -1,90 +1,41 @@
+import traceback
+
 from bs4 import BeautifulSoup
+from couchpotato import fireEvent
 from couchpotato.core.helpers.rss import RSS
 from couchpotato.core.helpers.variable import getImdb, splitString, tryInt
+
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.automation.base import Automation
-import re
-import traceback
+
+from couchpotato.core.providers.base import MultiProvider
+
 
 log = CPLog(__name__)
 
 
-class IMDB(Automation, RSS):
+class IMDB(MultiProvider):
+
+    def getTypes(self):
+        return [IMDBWatchlist, IMDBAutomation]
+
+
+class IMDBBase(Automation, RSS):
 
     interval = 1800
 
-    chart_urls = {
-        'theater': 'http://www.imdb.com/movies-in-theaters/',
-        'top250': 'http://www.imdb.com/chart/top',
-    }
+    def getInfo(self, imdb_id):
+        return fireEvent('movie.info', identifier = imdb_id, merge = True)
 
+
+class IMDBWatchlist(IMDBBase):
+
+    enabled_option = 'automation_enabled'
 
     def getIMDBids(self):
 
         movies = []
 
-        # Handle Chart URLs
-        if self.conf('automation_charts_theaters_use'):
-            log.debug('Started IMDB chart: %s', self.chart_urls['theater'])
-            data = self.getHTMLData(self.chart_urls['theater'])				   
-            if data:
-                html = BeautifulSoup(data)
-
-                try:		        
-                    result_div = html.find('div', attrs = {'id': 'main'})	        
-
-                    entries = result_div.find_all('div', attrs = {'itemtype': 'http://schema.org/Movie'})
-
-                    for entry in entries:
-                        title = entry.find('h4', attrs = {'itemprop': 'name'}).getText()
-
-                        log.debug('Identified title: %s', title)
-                        result = re.search('(.*) \((.*)\)', title)
-
-                        if result:
-                            name = result.group(1)
-                            year = result.group(2)
-
-                            imdb = self.search(name, year)
-
-                            if imdb and self.isMinimalMovie(imdb):
-                                movies.append(imdb['imdb'])				        				
-
-                except:
-                    log.error('Failed loading IMDB chart results from %s: %s', (self.chart_urls['theater'], traceback.format_exc()))
-
-        if self.conf('automation_charts_top250_use'):
-            log.debug('Started IMDB chart: %s', self.chart_urls['top250'])
-            data = self.getHTMLData(self.chart_urls['top250'])				   
-            if data:
-                html = BeautifulSoup(data)
-
-                try:		        
-                    result_div = html.find('div', attrs = {'id': 'main'})	        
-
-                    result_table = result_div.find_all('table')[1]
-                    entries = result_table.find_all('tr') 
-
-                    for entry in entries[1:]:
-                        title = entry.find_all('td')[2].getText() 												
-
-                        log.debug('Identified title: %s', title)
-                        result = re.search('(.*) \((.*)\)', title)
-
-                        if result:
-                            name = result.group(1)
-                            year = result.group(2)
-
-                            imdb = self.search(name, year)
-
-                            if imdb and self.isMinimalMovie(imdb):
-                                movies.append(imdb['imdb'])				        				
-
-                except:
-                    log.error('Failed loading IMDB chart results from %s: %s', (self.chart_urls['theater'], traceback.format_exc()))
-
-
-        # Handle Watchlists
         watchlist_enablers = [tryInt(x) for x in splitString(self.conf('automation_urls_use'))]
         watchlist_urls = splitString(self.conf('automation_urls'))
 
@@ -103,9 +54,47 @@ class IMDB(Automation, RSS):
                 for imdb in imdbs:
                     movies.append(imdb)
 
+                    if self.shuttingDown():
+                        break
+
             except:
                 log.error('Failed loading IMDB watchlist: %s %s', (url, traceback.format_exc()))
 
+        return movies
 
-        # Return the combined resultset
+
+class IMDBAutomation(IMDBBase):
+
+    enabled_option = 'automation_providers_enabled'
+
+    chart_urls = {
+        'theater': 'http://www.imdb.com/movies-in-theaters/',
+        'top250': 'http://www.imdb.com/chart/top',
+    }
+
+    def getIMDBids(self):
+
+        movies = []
+
+        for url in self.chart_urls:
+            if self.conf('automation_charts_%s' % url):
+                data = self.getHTMLData(self.chart_urls[url])
+                if data:
+                    html = BeautifulSoup(data)
+
+                    try:
+                        result_div = html.find('div', attrs = {'id': 'main'})
+                        imdb_ids = getImdb(str(result_div), multiple = True)
+
+                        for imdb_id in imdb_ids:
+                            info = self.getInfo(imdb_id)
+                            if info and self.isMinimalMovie(info):
+                                movies.append(imdb_id)
+
+                            if self.shuttingDown():
+                                break
+
+                    except:
+                        log.error('Failed loading IMDB chart results from %s: %s', (url, traceback.format_exc()))
+
         return movies

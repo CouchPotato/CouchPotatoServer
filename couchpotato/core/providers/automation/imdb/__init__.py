@@ -38,21 +38,23 @@ config = [{
             'description': 'Import movies from IMDB Charts',
             'options': [
                 {
-                    'name': 'automation_enabled',
+                    'name': 'automation_providers_enabled',
                     'default': False,
                     'type': 'enabler',
                 },
                 {
-                    'name': 'automation_charts_theaters_use',
-                    'type': 'checkbox',
+                    'name': 'automation_charts_theater',
+                    'type': 'bool',
                     'label': 'In Theaters',
                     'description': 'New Movies <a href="http://www.imdb.com/movies-in-theaters/">In-Theaters</a> chart',
+                    'default': True,
                 },
                 {
-                    'name': 'automation_charts_top250_use',
-                    'type': 'checkbox',
+                    'name': 'automation_charts_top250',
+                    'type': 'bool',
                     'label': 'TOP 250',
                     'description': 'IMDB <a href="http://www.imdb.com/chart/top/">TOP 250</a> chart',
+                    'default': True,
                 },                
             ],
         },
