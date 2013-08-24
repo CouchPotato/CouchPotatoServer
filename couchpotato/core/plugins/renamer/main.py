@@ -827,7 +827,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
             download_info.update({
                 'imdb_id': rls.movie.library.identifier,
                 'quality': rls.quality.identifier,
-                'protocol': rls_dict.get('info', {}).get('protocol')
+                'protocol': rls_dict.get('info', {}).get('protocol') or rls_dict.get('info', {}).get('type'),
             })
 
         return download_info
