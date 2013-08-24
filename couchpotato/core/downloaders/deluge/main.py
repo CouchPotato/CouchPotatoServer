@@ -5,13 +5,12 @@ from couchpotato.core.helpers.encoding import isInt
 from couchpotato.core.logger import CPLog
 from couchpotato.environment import Env
 from datetime import timedelta
-
 from synchronousdeluge import DelugeClient
-
 import os.path
 import traceback
 
 log = CPLog(__name__)
+
 
 class Deluge(Downloader):
 
@@ -238,4 +237,3 @@ class DelugeRPC(object):
 
     def disconnect(self):
         self.client.disconnect()
-

@@ -1,7 +1,10 @@
 import zlib
 import struct
-import socket, ssl
-from . import rencode
+import socket
+import ssl
+
+from synchronousdeluge import rencode
+
 
 __all__ = ["DelugeTransfer"]
 
