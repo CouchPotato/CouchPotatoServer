@@ -37,11 +37,7 @@ class Loader(object):
         self.addPath(root, ['couchpotato', 'core', 'providers'], 25, recursive = False)
 
         # Add media to loader
-        self.addPath(root, ['couchpotato', 'core', 'media'], 25, recursive = False)
-
-        # Add Libraries to loader
-        self.addPath(root, ['couchpotato', 'core', 'media', 'movie'], 1, recursive = False)
-        self.addPath(root, ['couchpotato', 'core', 'media', 'show'], 1, recursive = False)
+        self.addPath(root, ['couchpotato', 'core', 'media'], 25, recursive = True)
 
         for plugin_type, plugin_tuple in self.paths.iteritems():
             priority, module, dir_name = plugin_tuple
@@ -124,13 +120,7 @@ class Loader(object):
             log.warning('Skip startup for plugin %s as it has no start section' % module.__file__)
             return False
         try:
-            klass = module.start()
-            klass.registerPlugin()
-
-            if klass and getattr(klass, 'auto_register_static'):
-                klass.registerStatic(module.__file__)
-
-            return True
+            module.start()
         except Exception, e:
             log.error('Failed loading plugin "%s": %s', (module.__file__, traceback.format_exc()))
             return False
