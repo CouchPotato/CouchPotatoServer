@@ -1,7 +1,7 @@
-from .main import MovieResultModifier
+from .main import InfoResultModifier
 
 def start():
 
-    return MovieResultModifier()
+    return InfoResultModifier()
 
 config = []

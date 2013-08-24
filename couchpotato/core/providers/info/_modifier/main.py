@@ -3,6 +3,7 @@ from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.variable import mergeDicts, randomString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
+from couchpotato.core.providers.base import MultiProvider
 from couchpotato.core.settings.model import Library
 import copy
 import traceback
@@ -10,7 +11,17 @@ import traceback
 log = CPLog(__name__)
 
 
-class MovieResultModifier(Plugin):
+class InfoResultModifier(MultiProvider):
+
+    def getTypes(self):
+        return [Movie, Show]
+
+
+class ModifierBase(Plugin):
+    pass
+
+
+class Movie(ModifierBase):
 
     default_info = {
         'tmdb_id': 0,
@@ -93,3 +104,7 @@ class MovieResultModifier(Plugin):
         if result and result.get('imdb'):
             return mergeDicts(result, self.getLibraryTags(result['imdb']))
         return result
+
+
+class Show(ModifierBase):
+    pass
