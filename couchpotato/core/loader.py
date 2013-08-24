@@ -124,6 +124,7 @@ class Loader(object):
             return False
         try:
             module.start()
+            return True
         except Exception, e:
             log.error('Failed loading plugin "%s": %s', (module.__file__, traceback.format_exc()))
             return False
