@@ -224,7 +224,7 @@ class Renamer(Plugin):
                     if file_type is 'nfo' and not self.conf('rename_nfo'):
                         log.debug('Skipping, renaming of %s disabled', file_type)
                         for current_file in group['files'][file_type]:
-                            if self.conf('cleanup') and (not (self.conf('file_action') != 'move' and self.downloadIsTorrent(download_info)) or self.fileIsAdded(current_file, group)):
+                            if self.conf('cleanup') and (not self.downloadIsTorrent(download_info) or self.fileIsAdded(current_file, group)):
                                 remove_files.append(current_file)
                         continue
 
@@ -410,7 +410,7 @@ class Renamer(Plugin):
                 log.debug('Removing leftover files')
                 for current_file in group['files']['leftover']:
                     if self.conf('cleanup') and not self.conf('move_leftover') and \
-                            (not (self.conf('file_action') != 'move' and self.downloadIsTorrent(download_info)) or self.fileIsAdded(current_file, group)):
+                            (not self.downloadIsTorrent(download_info) or self.fileIsAdded(current_file, group)):
                         remove_files.append(current_file)
 
             # Remove files
