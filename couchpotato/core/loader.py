@@ -28,14 +28,14 @@ class Loader(object):
         provider_dir = os.path.join(root, 'couchpotato', 'core', 'providers')
         for provider in os.listdir(provider_dir):
             path = os.path.join(provider_dir, provider)
-            if os.path.isdir(path) and provider[:2] != '__':
+            if os.path.isdir(path) and provider[:2] != '__' and '__init__.py' in os.listdir(path):
                 self.paths[provider + '_provider'] = (25, 'couchpotato.core.providers.' + provider, path)
 
         # Add media to loader
         media_dir = os.path.join(root, 'couchpotato', 'core', 'media')
         for media in os.listdir(media_dir):
             path = os.path.join(media_dir, media)
-            if os.path.isdir(path) and media[:2] != '__':
+            if os.path.isdir(path) and media[:2] != '__' and '__init__.py' in os.listdir(path):
                 self.paths[media + '_media'] = (25, 'couchpotato.core.media.' + media, path)
 
 
