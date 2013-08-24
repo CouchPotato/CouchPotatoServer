@@ -14,8 +14,7 @@ log = CPLog(__name__)
 
 
 class rTorrent(Downloader):
-
-    type = ['torrent', 'torrent_magnet']
+    protocol = ['torrent', 'torrent_magnet']
     rt = None
 
     def connect(self):
@@ -78,8 +77,8 @@ class rTorrent(Downloader):
         return True
 
 
-    def download(self, data, movie, filedata=None):
-        log.debug('Sending "%s" (%s) to rTorrent.', (data.get('name'), data.get('type')))
+    def download(self, data, movie, filedata = None):
+        log.debug('Sending "%s" to rTorrent.', (data.get('name')))
 
         if not self.connect():
             return False
@@ -92,18 +91,18 @@ class rTorrent(Downloader):
         if self.conf('label'):
             torrent_params['label'] = self.conf('label')
 
-        if not filedata and data.get('type') == 'torrent':
+        if not filedata and data.get('protocol') == 'torrent':
             log.error('Failed sending torrent, no data')
             return False
 
         # Try download magnet torrents
-        if data.get('type') == 'torrent_magnet':
+        if data.get('protocol') == 'torrent_magnet':
             filedata = self.magnetToTorrent(data.get('url'))
 
             if filedata is False:
                 return False
 
-            data['type'] = 'torrent'
+            data['protocol'] = 'torrent'
 
         info = bdecode(filedata)["info"]
         torrent_hash = sha1(bencode(info)).hexdigest().upper()
@@ -125,7 +124,7 @@ class rTorrent(Downloader):
             torrent.set_visible(group_name)
 
             # Start torrent
-            if not self.conf('paused', default=0):
+            if not self.conf('paused', default = 0):
                 torrent.start()
 
             return self.downloadReturnId(torrent_hash)
@@ -158,8 +157,8 @@ class rTorrent(Downloader):
                     'status': status,
                     'seed_ratio': item.ratio,
                     'original_status': item.state,
-                    'timeleft': str(timedelta(seconds=float(item.left_bytes) / item.down_rate))
-                                    if item.down_rate > 0 else -1,
+                    'timeleft': str(timedelta(seconds = float(item.left_bytes) / item.down_rate))
+                    if item.down_rate > 0 else -1,
                     'folder': item.directory
                 })
 
@@ -183,10 +182,11 @@ class rTorrent(Downloader):
 
     def removeFailed(self, item):
         log.info('%s failed downloading, deleting...', item['name'])
-        return self.processComplete(item, delete_files=True)
+        return self.processComplete(item, delete_files = True)
 
     def processComplete(self, item, delete_files):
-        log.debug('Requesting rTorrent to remove the torrent %s%s.', (item['name'], ' and cleanup the downloaded files' if delete_files else ''))
+        log.debug('Requesting rTorrent to remove the torrent %s%s.',
+                  (item['name'], ' and cleanup the downloaded files' if delete_files else ''))
         if not self.connect():
             return False
 
