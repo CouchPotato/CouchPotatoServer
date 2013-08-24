@@ -6,20 +6,20 @@ import traceback
 
 log = CPLog(__name__)
 
-class Loader(object):
 
+class Loader(object):
     plugins = {}
     providers = {}
     modules = {}
 
-    def addPath(self, root, base_path, priority, recursive=False):
+    def addPath(self, root, base_path, priority, recursive = False):
         for filename in os.listdir(os.path.join(root, *base_path)):
             path = os.path.join(os.path.join(root, *base_path), filename)
             if os.path.isdir(path) and filename[:2] != '__':
                 if not u'__init__.py' in os.listdir(path):
                     return
-                new_base_path = ''.join(s + '.' for s in base_path)  + filename
-                self.paths[new_base_path.replace('.', '_')] = (priority, new_base_path,  path)
+                new_base_path = ''.join(s + '.' for s in base_path) + filename
+                self.paths[new_base_path.replace('.', '_')] = (priority, new_base_path, path)
                 if recursive:
                     self.addPath(root, base_path + [filename], priority, recursive = True)
 
@@ -94,14 +94,16 @@ class Loader(object):
 
         for cur_file in glob.glob(os.path.join(dir_name, '*')):
             name = os.path.basename(cur_file)
-            if os.path.isdir(os.path.join(dir_name, name)):
+            if os.path.isdir(os.path.join(dir_name, name)) and name != 'static':
                 module_name = '%s.%s' % (module, name)
                 self.addModule(priority, plugin_type, module_name, name)
 
     def loadSettings(self, module, name, save = True):
+
         if not hasattr(module, 'config'):
-            log.warning('Skip loading settings for plugin %s as it has no config section' % module.__file__)
+            log.debug('Skip loading settings for plugin %s as it has no config section' % module.__file__)
             return False
+
         try:
             for section in module.config:
                 fireEvent('settings.options', section['name'], section)
@@ -116,8 +118,9 @@ class Loader(object):
             return False
 
     def loadPlugins(self, module, name):
+
         if not hasattr(module, 'start'):
-            log.warning('Skip startup for plugin %s as it has no start section' % module.__file__)
+            log.debug('Skip startup for plugin %s as it has no start section' % module.__file__)
             return False
         try:
             module.start()
@@ -145,7 +148,7 @@ class Loader(object):
                 m = getattr(m, sub)
             return m
         except ImportError:
-            log.warning("Skip loading module plugin '%s' as it seems not to be a module." % name)
+            log.debug('Skip loading module plugin %s: %s', (name, traceback.format_exc()))
             return None
         except:
             raise
