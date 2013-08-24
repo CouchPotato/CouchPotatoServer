@@ -140,7 +140,11 @@ def tryInt(s):
     except: return 0
 
 def tryFloat(s):
-    try: return float(s) if '.' in s else tryInt(s)
+    try:
+        if isinstance(s, str):
+            return float(s) if '.' in s else tryInt(s)
+        else:
+            return float(s)
     except: return 0
 
 def natsortKey(s):
