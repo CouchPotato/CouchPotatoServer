@@ -37,11 +37,7 @@ class Loader(object):
         self.addPath(root, ['couchpotato', 'core', 'providers'], 25, recursive = False)
 
         # Add media to loader
-        self.addPath(root, ['couchpotato', 'core', 'media'], 25, recursive = False)
-
-        # Add Libraries to loader
-        self.addPath(root, ['couchpotato', 'core', 'media', 'movie'], 1, recursive = False)
-        self.addPath(root, ['couchpotato', 'core', 'media', 'show'], 1, recursive = False)
+        self.addPath(root, ['couchpotato', 'core', 'media'], 25, recursive = True)
 
         for plugin_type, plugin_tuple in self.paths.iteritems():
             priority, module, dir_name = plugin_tuple
