@@ -26,10 +26,9 @@ class TheTVDb(ShowProvider):
         addEvent('episode.info', self.getEpisodeInfo, priority = 1)
         #addEvent('show.info_by_thetvdb', self.getInfoByTheTVDBId)
 
-        # XXX: Load from somewhere else
         tvdb_api_parms = {
-            'apikey':"7966C02F860586D2",
-            'banners':True
+            'apikey' : self.conf('api_key'),
+            'banners' : True
             }
 
         self.tvdb = tvdb_api.Tvdb(**tvdb_api_parms)
