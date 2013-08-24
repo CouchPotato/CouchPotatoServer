@@ -47,7 +47,7 @@ config = [{
                 {
                     'name': 'remove_complete',
                     'label': 'Remove torrent',
-                    'default': False,
+                    'default': True,
                     'advanced': True,
                     'type': 'bool',
                     'description': 'Remove the torrent from Transmission after it finished seeding.',

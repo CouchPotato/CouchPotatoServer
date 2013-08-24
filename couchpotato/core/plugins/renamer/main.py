@@ -213,7 +213,7 @@ class Renamer(Plugin):
                     # Move nfo depending on settings
                     if file_type is 'nfo' and not self.conf('rename_nfo'):
                         log.debug('Skipping, renaming of %s disabled', file_type)
-                        if self.conf('cleanup') and not (self.conf('file_action') != 'move' and self.downloadIsTorrent(download_info)):
+                        if self.conf('cleanup') and not self.downloadIsTorrent(download_info):
                             for current_file in group['files'][file_type]:
                                 remove_files.append(current_file)
                         continue
@@ -395,7 +395,7 @@ class Renamer(Plugin):
 
                 # Remove leftover files
                 if self.conf('cleanup') and not self.conf('move_leftover') and remove_leftovers and \
-                        not (self.conf('file_action') != 'move' and self.downloadIsTorrent(download_info)):
+                        not self.downloadIsTorrent(download_info):
                     log.debug('Removing leftover files')
                     for current_file in group['files']['leftover']:
                         remove_files.append(current_file)
@@ -452,8 +452,7 @@ class Renamer(Plugin):
                         self.tagDir(group, 'failed_rename')
 
             # Tag folder if it is in the 'from' folder and it will not be removed because it is a torrent
-            if self.movieInFromFolder(movie_folder) and \
-                self.conf('file_action') != 'move' and self.downloadIsTorrent(download_info):
+            if self.movieInFromFolder(movie_folder) and self.downloadIsTorrent(download_info):
                 self.tagDir(group, 'renamed_already')
 
             # Remove matching releases
@@ -464,8 +463,7 @@ class Renamer(Plugin):
                 except:
                     log.error('Failed removing %s: %s', (release.identifier, traceback.format_exc()))
 
-            if group['dirname'] and group['parentdir'] and \
-                not (self.conf('file_action') != 'move' and self.downloadIsTorrent(download_info)):
+            if group['dirname'] and group['parentdir'] and not self.downloadIsTorrent(download_info):
                 try:
                     log.info('Deleting folder: %s', group['parentdir'])
                     self.deleteEmptyFolder(group['parentdir'])
@@ -525,22 +523,22 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         if ignore_file:
             self.createFile(ignore_file, text)
 
-    def untagDir(self, folder, tag = None):
+    def untagDir(self, folder, tag = ''):
         if not os.path.isdir(folder):
             return
 
         # Remove any .ignore files
         for root, dirnames, filenames in os.walk(folder):
-            for filename in fnmatch.filter(filenames, '%s.ignore' % tag if tag else '*'):
+            for filename in fnmatch.filter(filenames, '*%s.ignore' % tag):
                 os.remove((os.path.join(root, filename)))
 
-    def hastagDir(self, folder, tag = None):
+    def hastagDir(self, folder, tag = ''):
         if not os.path.isdir(folder):
             return False
 
         # Find any .ignore files
         for root, dirnames, filenames in os.walk(folder):
-            if fnmatch.filter(filenames, '%s.ignore' % tag if tag else '*'):
+            if fnmatch.filter(filenames, '*%s.ignore' % tag):
                 return True
 
         return False
@@ -560,7 +558,11 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                 shutil.copy(old, dest)
             elif self.conf('file_action') == 'move_symlink':
                 shutil.move(old, dest)
-                symlink(dest, old)
+                try:
+                    symlink(dest, old)
+                except:
+                    log.error('Couldn\'t symlink file "%s" to "%s". Copying the file back. Error: %s. ', (old, dest, traceback.format_exc()))
+                    shutil.copy(dest, old)
             else:
                 shutil.move(old, dest)
 

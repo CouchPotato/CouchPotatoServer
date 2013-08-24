@@ -39,7 +39,7 @@ config = [{
                 {
                     'name': 'remove_complete',
                     'label': 'Remove torrent',
-                    'default': False,
+                    'default': True,
                     'advanced': True,
                     'type': 'bool',
                     'description': 'Remove the torrent from uTorrent after it finished seeding.',

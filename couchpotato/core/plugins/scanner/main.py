@@ -329,14 +329,17 @@ class Scanner(Plugin):
 
         del movie_files
 
+        total_found = len(valid_files)
+
         # Make sure only one movie was found if a download ID is provided
-        if download_info and not len(valid_files) == 1:
+        if download_info and total_found == 0:
+            log.info('Download ID provided (%s), but no groups found! Make sure the download contains valid media files (fully extracted).', download_info.get('imdb_id'))
+        elif download_info and total_found > 1:
             log.info('Download ID provided (%s), but more than one group found (%s). Ignoring Download ID...', (download_info.get('imdb_id'), len(valid_files)))
             download_info = None
 
         # Determine file types
         processed_movies = {}
-        total_found = len(valid_files)
         while True and not self.shuttingDown():
             try:
                 identifier, group = valid_files.popitem()
