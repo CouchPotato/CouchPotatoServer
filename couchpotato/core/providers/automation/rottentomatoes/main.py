@@ -12,8 +12,6 @@ class Rottentomatoes(Automation, RSS):
 
     interval = 1800
 
-
-
     def getIMDBids(self):
 
         movies = []
