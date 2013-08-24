@@ -33,12 +33,6 @@ config = [{
                     'type': 'password',
                 },
                 {
-                    'name': 'paused',
-                    'type': 'bool',
-                    'default': False,
-                    'description': 'Add the torrent paused.',
-                },
-                {
                     'name': 'directory',
                     'type': 'directory',
                     'description': 'Download to this directory. Keep empty for default Deluge download directory.',
@@ -68,6 +62,13 @@ config = [{
                     'type': 'bool',
                     'advanced': True,
                     'description': 'Also remove the leftover files.',
+                },
+                {
+                    'name': 'paused',
+                    'type': 'bool',
+                    'advanced': True,
+                    'default': False,
+                    'description': 'Add the torrent paused.',
                 },
                 {
                     'name': 'manual',
