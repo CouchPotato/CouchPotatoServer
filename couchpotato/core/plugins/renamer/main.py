@@ -205,6 +205,7 @@ class Renamer(Plugin):
                      'imdb_id': library['identifier'],
                      'cd': '',
                      'cd_nr': '',
+                     'mpaa': library['info'].get('mpaa', ''),
                 }
 
                 for file_type in group['files']:

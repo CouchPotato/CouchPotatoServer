@@ -28,6 +28,7 @@ class MovieResultModifier(Plugin):
         'tagline': '',
         'imdb': '',
         'genres': [],
+        'mpaa': None
     }
 
     def __init__(self):
