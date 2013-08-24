@@ -1,7 +1,7 @@
 from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import simplifyString, toUnicode
 from couchpotato.core.logger import CPLog
-from couchpotato.core.providers.movie.base import MovieProvider
+from couchpotato.core.providers.info.base import MovieProvider
 from themoviedb import tmdb
 import traceback
 

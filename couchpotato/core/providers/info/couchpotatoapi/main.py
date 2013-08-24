@@ -1,7 +1,7 @@
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.logger import CPLog
-from couchpotato.core.providers.movie.base import MovieProvider
+from couchpotato.core.providers.info.base import MovieProvider
 from couchpotato.environment import Env
 import time
 
