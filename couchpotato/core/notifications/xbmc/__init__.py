@@ -44,7 +44,7 @@ config = [{
                     'default': 0,
                     'type': 'bool',
                     'advanced': True,
-                    'description': 'Scan new movie folder at remote XBMC servers, only works if movie location is the same.',
+                    'description': 'Only scan new movie folder at remote XBMC servers. Works if movie location is the same.',
                 },
                 {
                     'name': 'on_snatch',
