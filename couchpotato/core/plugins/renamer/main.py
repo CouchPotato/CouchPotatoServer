@@ -129,6 +129,7 @@ class Renamer(Plugin):
         download_info = self.extendDownloadInfo(download_info)
 
         # Unpack any archives
+        extr_files = None
         if self.conf('unrar'):
             folder, movie_folder, files, extr_files = self.extractFiles(folder = folder, movie_folder = movie_folder, files = files, \
                 cleanup = self.conf('cleanup') and not self.downloadIsTorrent(download_info))
@@ -187,7 +188,8 @@ class Renamer(Plugin):
                 fireEvent('renamer.before', group)
 
                 # Add extracted files to the before_rename list
-                group['before_rename'].extend(extr_files)
+                if extr_files:
+                    group['before_rename'].extend(extr_files)
 
                 # Remove weird chars from moviename
                 movie_name = re.sub(r"[\x00\/\\:\*\?\"<>\|]", '', movie_title)
