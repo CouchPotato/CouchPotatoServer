@@ -39,7 +39,7 @@ class Plugin(object):
     http_failed_disabled = {}
 
     def __new__(typ, *args, **kwargs):
-        new_plugin = super(Plugin, typ).__new__(typ, *args, **kwargs)
+        new_plugin = super(Plugin, typ).__new__(typ)
         new_plugin.registerPlugin()
 
         return new_plugin
