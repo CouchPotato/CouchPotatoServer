@@ -74,6 +74,22 @@ config = [{
                     'options': rename_options
                 },
                 {
+                    'advanced': True,
+                    'name': 'pre_scripts',
+                    'label': 'Pre scripts',
+                    'default': '',
+                    'placeholder': 'Example: ResetDates, Template',
+                    'description': 'Scripts to be run before renaming'
+                },
+                {
+                    'advanced': True,
+                    'name': 'post_scripts',
+                    'label': 'Post scripts',
+                    'default': '',
+                    'placeholder': 'Example: ResetDates, Template',
+                    'description': 'Scripts to be run after renaming'
+                },
+                {
                     'name': 'unrar',
                     'type': 'bool',
                     'description': 'Extract rar files if found.',
