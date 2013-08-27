@@ -102,10 +102,14 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     for backup in backups:
         if total_backups > 3:
             if tryInt(os.path.basename(backup)) < time.time() - 259200:
-                for src_file in src_files:
-                    b_file = toUnicode(os.path.join(backup, os.path.basename(src_file)))
-                    if os.path.isfile(b_file):
-                        os.remove(b_file)
+                for the_file in os.listdir(backup):
+                    file_path = os.path.join(backup, the_file)
+                    try:
+                        if os.path.isfile(file_path):
+                            os.remove(file_path)
+                    except Exception, e:
+                        raise
+
                 os.rmdir(backup)
                 total_backups -= 1
 
