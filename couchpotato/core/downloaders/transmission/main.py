@@ -1,6 +1,6 @@
 from base64 import b64encode
 from couchpotato.core.downloaders.base import Downloader, StatusList
-from couchpotato.core.helpers.encoding import isInt
+from couchpotato.core.helpers.encoding import isInt, ss
 from couchpotato.core.helpers.variable import tryInt, tryFloat
 from couchpotato.core.logger import CPLog
 from couchpotato.environment import Env
@@ -122,7 +122,7 @@ class Transmission(Downloader):
                 'original_status': item['status'],
                 'seed_ratio': item['uploadRatio'],
                 'timeleft': str(timedelta(seconds = item['eta'])),
-                'folder': os.path.join(item['downloadDir'], item['name']),
+                'folder': ss(os.path.join(item['downloadDir'], item['name'])),
             })
 
         return statuses

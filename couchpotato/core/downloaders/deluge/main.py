@@ -1,7 +1,7 @@
 from base64 import b64encode
 from couchpotato.core.helpers.variable import tryInt, tryFloat
 from couchpotato.core.downloaders.base import Downloader, StatusList
-from couchpotato.core.helpers.encoding import isInt
+from couchpotato.core.helpers.encoding import isInt, ss
 from couchpotato.core.logger import CPLog
 from couchpotato.environment import Env
 from datetime import timedelta
@@ -122,7 +122,7 @@ class Deluge(Downloader):
                 'original_status': item['state'],
                 'seed_ratio': item['ratio'],
                 'timeleft': str(timedelta(seconds = item['eta'])),
-                'folder': os.path.join(download_dir, item['name']),
+                'folder': ss(os.path.join(download_dir, item['name'])),
             })
 
         return statuses

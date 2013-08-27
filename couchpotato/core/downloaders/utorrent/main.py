@@ -144,7 +144,7 @@ class uTorrent(Downloader):
                 'seed_ratio': float(item[7]) / 1000,
                 'original_status': item[1],
                 'timeleft': str(timedelta(seconds = item[10])),
-                'folder': item[26],
+                'folder': ss(item[26]),
             })
 
         return statuses
