@@ -15,12 +15,13 @@ class ThePirateBay(TorrentMagnetProvider):
 
     urls = {
          'detail': '%s/torrent/%s',
-         'search': '%s/search/%s/%s/7/%d'
+         'search': '%s/search/%s/%s/7/%s'
     }
 
     cat_ids = [
        ([207], ['720p', '1080p']),
-       ([201], ['cam', 'ts', 'dvdrip', 'tc', 'r5', 'scr', 'brrip']),
+       ([201], ['cam', 'ts', 'dvdrip', 'tc', 'r5', 'scr']),
+       ([201, 207], ['brrip']),
        ([202], ['dvdr'])
     ]
 
@@ -50,10 +51,11 @@ class ThePirateBay(TorrentMagnetProvider):
 
         page = 0
         total_pages = 1
+        cats = self.getCatId(quality['identifier'])
 
         while page < total_pages:
 
-            search_url = self.urls['search'] % (self.getDomain(), tryUrlencode('"%s" %s' % (title, movie['library']['year'])), page, self.getCatId(quality['identifier'])[0])
+            search_url = self.urls['search'] % (self.getDomain(), tryUrlencode('"%s" %s' % (title, movie['library']['year'])), page, ','.join(str(x) for x in cats))
             page += 1
 
             data = self.getHTMLData(search_url)

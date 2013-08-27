@@ -46,7 +46,7 @@ class Dashboard(Plugin):
 
         q = db.query(Movie).join((subq, subq.c.id == Movie.id)) \
             .options(joinedload_all('releases')) \
-            .options(joinedload_all('profile.types')) \
+            .options(joinedload_all('profile')) \
             .options(joinedload_all('library.titles')) \
             .options(joinedload_all('library.files')) \
             .options(joinedload_all('status')) \
@@ -70,9 +70,9 @@ class Dashboard(Plugin):
             coming_soon = False
 
             # Theater quality
-            if pp.get('theater') and fireEvent('searcher.could_be_released', True, eta, movie.library.year, single = True):
+            if pp.get('theater') and fireEvent('movie.searcher.could_be_released', True, eta, movie.library.year, single = True):
                 coming_soon = True
-            if pp.get('dvd') and fireEvent('searcher.could_be_released', False, eta, movie.library.year, single = True):
+            if pp.get('dvd') and fireEvent('movie.searcher.could_be_released', False, eta, movie.library.year, single = True):
                 coming_soon = True
 
             # Skip if movie is snatched/downloaded/available

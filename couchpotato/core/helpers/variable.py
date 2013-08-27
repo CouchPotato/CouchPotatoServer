@@ -128,7 +128,7 @@ def getImdb(txt, check_inside = True, multiple = False):
     try:
         ids = re.findall('(tt\d{7})', txt)
         if multiple:
-            return ids if len(ids) > 0 else []
+            return list(set(ids)) if len(ids) > 0 else []
         return ids[0]
     except IndexError:
         pass
@@ -140,7 +140,11 @@ def tryInt(s):
     except: return 0
 
 def tryFloat(s):
-    try: return float(s) if '.' in s else tryInt(s)
+    try:
+        if isinstance(s, str):
+            return float(s) if '.' in s else tryInt(s)
+        else:
+            return float(s)
     except: return 0
 
 def natsortKey(s):
@@ -175,6 +179,10 @@ def possibleTitles(raw_title):
     titles.append(toSafeString(raw_title).lower())
     titles.append(raw_title.lower())
     titles.append(simplifyString(raw_title))
+
+    # replace some chars
+    new_title = raw_title.replace('&', 'and')
+    titles.append(simplifyString(new_title))
 
     return list(set(titles))
 

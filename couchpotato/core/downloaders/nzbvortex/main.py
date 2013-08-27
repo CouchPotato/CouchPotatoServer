@@ -16,9 +16,10 @@ import urllib2
 
 log = CPLog(__name__)
 
+
 class NZBVortex(Downloader):
 
-    type = ['nzb']
+    protocol = ['nzb']
     api_level = None
     session_id = None
 
@@ -55,7 +56,7 @@ class NZBVortex(Downloader):
                 'name': item['uiTitle'],
                 'status': status,
                 'original_status': item['state'],
-                'timeleft': -1,
+                'timeleft':-1,
                 'folder': item['destinationPath'],
             })
 

@@ -10,9 +10,10 @@ import traceback
 
 log = CPLog(__name__)
 
+
 class Sabnzbd(Downloader):
 
-    type = ['nzb']
+    protocol = ['nzb']
 
     def download(self, data = {}, movie = {}, filedata = None):
 
@@ -22,6 +23,7 @@ class Sabnzbd(Downloader):
             'cat': self.conf('category'),
             'mode': 'addurl',
             'nzbname': self.createNzbName(data, movie),
+            'priority': self.conf('priority'),
         }
 
         if filedata:
@@ -125,6 +127,22 @@ class Sabnzbd(Downloader):
             }, use_json = False)
         except:
             log.error('Failed deleting: %s', traceback.format_exc(0))
+            return False
+
+        return True
+
+    def processComplete(self, item, delete_files = False):
+        log.debug('Requesting SabNZBd to remove the NZB %s.', item['name'])
+
+        try:
+            self.call({
+                'mode': 'history',
+                'name': 'delete',
+                'del_files': '0',
+                'value': item['id']
+            }, use_json = False)
+        except:
+            log.error('Failed removing: %s', traceback.format_exc(0))
             return False
 
         return True

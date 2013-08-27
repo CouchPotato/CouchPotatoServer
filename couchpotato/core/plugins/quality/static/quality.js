@@ -41,7 +41,8 @@ var QualityBase = new Class({
 		self.settings.addEvent('create', function(){
 			var tab = self.settings.createSubTab('profile', {
 				'label': 'Quality',
-				'name': 'profile'
+				'name': 'profile',
+				'subtab_label': 'Qualities'
 			}, self.settings.tabs.searcher ,'searcher');
 
 			self.tab = tab.tab;
@@ -102,7 +103,8 @@ var QualityBase = new Class({
 
 		var profile_list;
 		var group = self.settings.createGroup({
-			'label': 'Profile Defaults'
+			'label': 'Profile Defaults',
+			'description':  '(Needs refresh \'' +(App.isMac() ? 'CMD+R' : 'F5')+ '\' after editing)'
 		}).adopt(
 			new Element('.ctrlHolder#profile_ordering').adopt(
 				new Element('label[text=Order]'),

@@ -225,6 +225,10 @@ class Scanner(Plugin):
                 # Remove the found files from the leftover stack
                 leftovers = leftovers - set(found_files)
 
+                exts = [getExt(ff) for ff in found_files]
+                if 'ignore' in exts:
+                    ignored_identifiers.append(identifier)
+
             # Break if CP wants to shut down
             if self.shuttingDown():
                 break
@@ -251,6 +255,10 @@ class Scanner(Plugin):
                     # Remove the found files from the leftover stack
                     leftovers = leftovers - set([ff])
 
+                    ext = getExt(ff)
+                    if ext == 'ignore':
+                        ignored_identifiers.append(new_identifier)
+
             # Break if CP wants to shut down
             if self.shuttingDown():
                 break
@@ -269,7 +277,7 @@ class Scanner(Plugin):
             except:
                 break
 
-            # Check if movie is fresh and maybe still unpacking, ignore files new then 1 minute
+            # Check if movie is fresh and maybe still unpacking, ignore files newer than 1 minute
             file_too_new = False
             for cur_file in group['unsorted_files']:
                 if not os.path.isfile(cur_file):
@@ -321,14 +329,17 @@ class Scanner(Plugin):
 
         del movie_files
 
+        total_found = len(valid_files)
+
         # Make sure only one movie was found if a download ID is provided
-        if download_info and not len(valid_files) == 1:
+        if download_info and total_found == 0:
+            log.info('Download ID provided (%s), but no groups found! Make sure the download contains valid media files (fully extracted).', download_info.get('imdb_id'))
+        elif download_info and total_found > 1:
             log.info('Download ID provided (%s), but more than one group found (%s). Ignoring Download ID...', (download_info.get('imdb_id'), len(valid_files)))
             download_info = None
 
         # Determine file types
         processed_movies = {}
-        total_found = len(valid_files)
         while True and not self.shuttingDown():
             try:
                 identifier, group = valid_files.popitem()
@@ -609,7 +620,7 @@ class Scanner(Plugin):
                     log.debug('Identifier to short to use for search: %s', identifier)
 
         if imdb_id:
-            return fireEvent('library.add', attrs = {
+            return fireEvent('library.add.movie', attrs = {
                 'identifier': imdb_id
             }, update_after = False, single = True)
 

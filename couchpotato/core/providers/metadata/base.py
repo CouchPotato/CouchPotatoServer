@@ -24,7 +24,7 @@ class MetaDataBase(Plugin):
 
         # Update library to get latest info
         try:
-            updated_library = fireEvent('library.update', group['library']['identifier'], force = True, single = True)
+            updated_library = fireEvent('library.update.movie', group['library']['identifier'], force = True, single = True)
             group['library'] = mergeDicts(group['library'], updated_library)
         except:
             log.error('Failed to update movie, before creating metadata: %s', traceback.format_exc())
@@ -40,7 +40,7 @@ class MetaDataBase(Plugin):
                 # Get file path
                 name = getattr(self, 'get' + file_type.capitalize() + 'Name')(meta_name, root)
 
-                if name and self.conf('meta_' + file_type):
+                if name and (self.conf('meta_' + file_type) or self.conf('meta_' + file_type) is None):
 
                     # Get file content
                     content = getattr(self, 'get' + file_type.capitalize())(movie_info = movie_info, data = group)
@@ -60,8 +60,8 @@ class MetaDataBase(Plugin):
             except:
                 log.error('Unable to create %s file: %s', (file_type, traceback.format_exc()))
 
-    def getRootName(self, data):
-        return
+    def getRootName(self, data = {}):
+        return os.path.join(data['destination_dir'], data['filename'])
 
     def getFanartName(self, name, root):
         return

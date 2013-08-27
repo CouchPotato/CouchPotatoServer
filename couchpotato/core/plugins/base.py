@@ -12,6 +12,7 @@ from urlparse import urlparse
 import cookielib
 import glob
 import gzip
+import inspect
 import math
 import os.path
 import re
@@ -24,6 +25,8 @@ log = CPLog(__name__)
 
 class Plugin(object):
 
+    _class_name = None
+
     enabled_option = 'enabled'
     auto_register_static = True
 
@@ -35,16 +38,29 @@ class Plugin(object):
     http_failed_request = {}
     http_failed_disabled = {}
 
+    def __new__(typ, *args, **kwargs):
+        new_plugin = super(Plugin, typ).__new__(typ)
+        new_plugin.registerPlugin()
+
+        return new_plugin
+
     def registerPlugin(self):
         addEvent('app.do_shutdown', self.doShutdown)
         addEvent('plugin.running', self.isRunning)
         self._running = []
 
-    def conf(self, attr, value = None, default = None):
-        return Env.setting(attr, self.getName().lower(), value = value, default = default)
+        if self.auto_register_static:
+            self.registerStatic(inspect.getfile(self.__class__))
+
+    def conf(self, attr, value = None, default = None, section = None):
+        class_name = self.getName().lower().split(':')
+        return Env.setting(attr, section = section if section else class_name[0].lower(), value = value, default = default)
 
     def getName(self):
-        return self.__class__.__name__
+        return self._class_name or self.__class__.__name__
+
+    def setName(self, name):
+        self._class_name = name
 
     def renderTemplate(self, parent_file, templ, **params):
 

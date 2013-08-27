@@ -26,6 +26,10 @@ class Automation(Plugin):
         movie_ids = []
 
         for imdb_id in movies:
+
+            if self.shuttingDown():
+                break
+
             prop_name = 'automation.added.%s' % imdb_id
             added = Env.prop(prop_name, default = False)
             if not added:
@@ -35,5 +39,11 @@ class Automation(Plugin):
                 Env.prop(prop_name, True)
 
         for movie_id in movie_ids:
+
+            if self.shuttingDown():
+                break
+
             movie_dict = fireEvent('movie.get', movie_id, single = True)
-            fireEvent('searcher.single', movie_dict)
+            fireEvent('movie.searcher.single', movie_dict)
+
+        return True

@@ -11,7 +11,8 @@ log = CPLog(__name__)
 def toSafeString(original):
     valid_chars = "-_.() %s%s" % (ascii_letters, digits)
     cleanedFilename = unicodedata.normalize('NFKD', toUnicode(original)).encode('ASCII', 'ignore')
-    return ''.join(c for c in cleanedFilename if c in valid_chars)
+    valid_string = ''.join(c for c in cleanedFilename if c in valid_chars)
+    return ' '.join(valid_string.split())
 
 def simplifyString(original):
     string = stripAccents(original.lower())

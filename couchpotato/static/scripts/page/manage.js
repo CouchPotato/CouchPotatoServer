@@ -86,9 +86,12 @@ Page.Manage = new Class({
 
 		self.progress_interval = setInterval(function(){
 
-			Api.request('manage.progress', {
+			if(self.progress_request && self.progress_request.running)
+				return;
+
+			self.update_in_progress = true;
+			self.progress_request = Api.request('manage.progress', {
 				'onComplete': function(json){
-					self.update_in_progress = true;
 
 					if(!json || !json.progress){
 						clearInterval(self.progress_interval);
@@ -99,6 +102,11 @@ Page.Manage = new Class({
 						}
 					}
 					else {
+
+						// Don't add loader when page is loading still
+						if(!self.list.navigation)
+							return;
+
 						if(!self.progress_container)
 							self.progress_container = new Element('div.progress').inject(self.list.navigation, 'after')
 

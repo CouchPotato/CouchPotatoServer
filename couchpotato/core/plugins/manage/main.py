@@ -44,7 +44,7 @@ class Manage(Plugin):
 }"""},
         })
 
-        if not Env.get('dev'):
+        if not Env.get('dev') and self.conf('startup_scan'):
             addEvent('app.load', self.updateLibraryQuick)
 
     def getProgress(self, **kwargs):
@@ -182,7 +182,7 @@ class Manage(Plugin):
 
                 # Add it to release and update the info
                 fireEvent('release.add', group = group)
-                fireEventAsync('library.update', identifier = identifier, on_complete = self.createAfterUpdate(folder, identifier))
+                fireEventAsync('library.update.movie', identifier = identifier, on_complete = self.createAfterUpdate(folder, identifier))
             else:
                 self.in_progress[folder]['to_go'] = self.in_progress[folder]['to_go'] - 1
 
@@ -192,6 +192,9 @@ class Manage(Plugin):
 
         # Notify frontend
         def afterUpdate():
+            if not self.in_progress or self.shuttingDown():
+                return
+
             self.in_progress[folder]['to_go'] = self.in_progress[folder]['to_go'] - 1
             total = self.in_progress[folder]['total']
             movie_dict = fireEvent('movie.get', identifier, single = True)
