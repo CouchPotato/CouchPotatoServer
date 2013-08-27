@@ -85,6 +85,10 @@ class Deluge(Downloader):
 
         log.debug('Checking Deluge download status.')
 
+        if not os.path.isdir(Env.setting('from', 'renamer')):
+            log.error('Renamer "from" folder doesn\'t to exist.')
+            return
+
         if not self.connect():
             return False
 
@@ -92,7 +96,7 @@ class Deluge(Downloader):
 
         queue = self.drpc.get_alltorrents()
 
-        if not (queue and queue.get('torrents')):
+        if not (queue):
             log.debug('Nothing in queue or error')
             return False
 
@@ -100,16 +104,15 @@ class Deluge(Downloader):
             item = queue[torrent_id]
             log.debug('name=%s / id=%s / save_path=%s / hash=%s / progress=%s / state=%s / eta=%s / ratio=%s / conf_ratio=%s/ is_seed=%s / is_finished=%s', (item['name'], item['hash'], item['save_path'], item['hash'], item['progress'], item['state'], item['eta'], item['ratio'], self.conf('ratio'), item['is_seed'], item['is_finished']))
 
-            if not os.path.isdir(Env.setting('from', 'renamer')):
-                log.error('Renamer "from" folder doesn\'t to exist.')
-                return
-
             status = 'busy'
-            # Deluge seems to set both is_seed and is_finished once everything has been downloaded.
-            if item['is_seed'] or item['is_finished']:
+            if item['is_seed'] and tryFloat(item['ratio']) < tryFloat(item['stop_ratio']):
+                # We have item['seeding_time'] to work out what the seeding time is, but we do not
+                # have access to the downloader seed_time, as with deluge we have no way to pass it
+                # when the torrent is added. So Deluge will only look at the ratio.
+                # See above comment in download().
                 status = 'seeding'
-            elif item['is_seed'] and item['is_finished'] and item['paused']:
-                status = 'completed'
+            elif item['is_seed'] and item['is_finished'] and item['paused'] and item['state'] == 'Paused':
+                status = 'finished'
 
             download_dir = item['save_path']
             if item['move_on_completed']:
