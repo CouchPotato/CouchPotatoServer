@@ -31,7 +31,6 @@ class Deluge(Downloader):
         return self.drpc
 
     def download(self, data, movie, filedata = None):
-
         log.info('Sending "%s" (%s) to Deluge.', (data.get('name'), data.get('protocol')))
 
         if not self.connect():
@@ -72,7 +71,8 @@ class Deluge(Downloader):
         if data.get('protocol') == 'torrent_magnet':
             remote_torrent = self.drpc.add_torrent_magnet(data.get('url'), options)
         else:
-            remote_torrent = self.drpc.add_torrent_file(movie, b64encode(filedata), options)
+            filename = self.createFileName(data, filedata, movie)
+            remote_torrent = self.drpc.add_torrent_file(filename, b64encode(filedata), options)
 
         if not remote_torrent:
             log.error('Failed sending torrent to Deluge')
@@ -172,22 +172,22 @@ class DelugeRPC(object):
             if options['label']:
                 self.client.label.set_torrent(torrent_id, options['label']).get()
         except Exception, err:
-            log.error('Failed to add torrent magnet: %s %s', (err, traceback.format_exc()))
+            log.error('Failed to add torrent magnet %s: %s %s', (torrent, err, traceback.format_exc()))
         finally:
             if self.client:
                 self.disconnect()
             
         return torrent_id
 
-    def add_torrent_file(self, movie, torrent, options):
+    def add_torrent_file(self, filename, torrent, options):
         torrent_id = False
         try:
             self.connect()
-            torrent_id = self.client.core.add_torrent_file(movie, torrent, options).get()
+            torrent_id = self.client.core.add_torrent_file(filename, torrent, options).get()
             if options['label']:
                 self.client.label.set_torrent(torrent_id, options['label']).get()
         except Exception, err:
-            log.error('Failed to add torrent file: %s %s', (err, traceback.format_exc()))
+            log.error('Failed to add torrent file %s: %s %s', (filename, err, traceback.format_exc()))
         finally:
             if self.client:
                 self.disconnect()
