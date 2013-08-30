@@ -210,9 +210,6 @@ class Release(Plugin):
                 db.expunge_all()
                 rel = db.query(Relea).filter_by(id = id).first() # Get release again @RuudBurger why do we need to get it again??
 
-                if rel.status_id != done_status.get('id'):
-                    fireEvent('release.update', id = id, status = snatched_status, single = True)
-
                 fireEvent('notify.frontend', type = 'release.download', data = True, message = 'Successfully snatched "%s"' % item['name'])
             return {
                 'success': success
