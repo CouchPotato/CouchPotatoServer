@@ -1,7 +1,7 @@
 from base64 import b64encode
-from couchpotato.core.helpers.variable import tryInt, tryFloat
 from couchpotato.core.downloaders.base import Downloader, StatusList
 from couchpotato.core.helpers.encoding import isInt, ss
+from couchpotato.core.helpers.variable import tryFloat
 from couchpotato.core.logger import CPLog
 from couchpotato.environment import Env
 from datetime import timedelta
@@ -178,7 +178,7 @@ class DelugeRPC(object):
         finally:
             if self.client:
                 self.disconnect()
-            
+
         return torrent_id
 
     def add_torrent_file(self, filename, torrent, options):
