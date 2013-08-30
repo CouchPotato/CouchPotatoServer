@@ -102,8 +102,10 @@ class Deluge(Downloader):
 
         for torrent_id in queue:
             item = queue[torrent_id]
-            log.debug('name=%s / id=%s / save_path=%s / hash=%s / progress=%s / state=%s / eta=%s / ratio=%s / conf_ratio=%s/ is_seed=%s / is_finished=%s', (item['name'], item['hash'], item['save_path'], item['hash'], item['progress'], item['state'], item['eta'], item['ratio'], self.conf('ratio'), item['is_seed'], item['is_finished']))
+            log.debug('name=%s / id=%s / save_path=%s / move_completed_path=%s / hash=%s / progress=%s / state=%s / eta=%s / ratio=%s / stop_ratio=%s / is_seed=%s / is_finished=%s / paused=%s', (item['name'], item['hash'], item['save_path'], item['move_completed_path'], item['hash'], item['progress'], item['state'], item['eta'], item['ratio'], item['stop_ratio'], item['is_seed'], item['is_finished'], item['paused']))
 
+            # Deluge has no easy way to work out if a torrent is stalled or failing.
+            #status = 'failed'
             status = 'busy'
             if item['is_seed'] and tryFloat(item['ratio']) < tryFloat(item['stop_ratio']):
                 # We have item['seeding_time'] to work out what the seeding time is, but we do not
@@ -112,7 +114,7 @@ class Deluge(Downloader):
                 # See above comment in download().
                 status = 'seeding'
             elif item['is_seed'] and item['is_finished'] and item['paused'] and item['state'] == 'Paused':
-                status = 'finished'
+                status = 'completed'
 
             download_dir = item['save_path']
             if item['move_on_completed']:
