@@ -395,14 +395,8 @@ class Renamer(Plugin):
                                 break
                         elif release.status_id is snatched_status.get('id'):
                             if release.quality.id is group['meta_data']['quality']['id']:
-                                log.debug('Marking release as downloaded')
-                                try:
-                                    release.status_id = downloaded_status.get('id')
-                                    release.last_edit = int(time.time())
-                                except Exception, e:
-                                    log.error('Failed marking release as finished: %s %s', (e, traceback.format_exc()))
-
-                                db.commit()
+                                # Set the release to downloaded
+                                fireEvent('release.update', id = release.id, status = downloaded_status, single = True)
 
                 # Remove leftover files
                 if not remove_leftovers: # Don't remove anything
@@ -677,7 +671,6 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                 try:
                     for rel in rels:
                         rel_dict = rel.to_dict({'info': {}})
-
                         movie_dict = fireEvent('movie.get', rel.movie_id, single = True)
 
                         # check status
@@ -712,26 +705,22 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                                         # Remove the downloading tag
                                         self.untagDir(item['folder'], 'downloading')
 
-                                        rel.status_id = seeding_status.get('id')
-                                        rel.last_edit = int(time.time())
-                                        db.commit()
+                                        # Set the release to seeding
+                                        fireEvent('release.update', id = rel.id, status = seeding_status, single = True)
 
                                         # Scan and set the torrent to paused if required
                                         item.update({'pause': True, 'scan': True, 'process_complete': False})
                                         scan_items.append(item)
                                     else:
-                                        if rel.status_id != seeding_status.get('id'):
-                                            rel.status_id = seeding_status.get('id')
-                                            rel.last_edit = int(time.time())
-                                            db.commit()
+                                        # Set the release to seeding
+                                        fireEvent('release.update', id = rel.id, status = seeding_status, single = True)
 
                                         #let it seed
                                         log.debug('%s is seeding with ratio: %s', (item['name'], item['seed_ratio']))
                                 elif item['status'] == 'failed':
                                     fireEvent('download.remove_failed', item, single = True)
-                                    rel.status_id = failed_status.get('id')
-                                    rel.last_edit = int(time.time())
-                                    db.commit()
+                                    # Set the release to failed
+                                    fireEvent('release.update', id = rel.id, status = failed_status, single = True)
 
                                     if self.conf('next_on_failed'):
                                         fireEvent('movie.searcher.try_next_release', movie_id = rel.movie_id)
@@ -743,18 +732,14 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                                         if rel.status_id == seeding_status.get('id'):
                                             if rel.movie.status_id == done_status.get('id'):
                                                 # Set the release to done as the movie has already been renamed
-                                                rel.status_id = downloaded_status.get('id')
-                                                rel.last_edit = int(time.time())
-                                                db.commit()
+                                                fireEvent('release.update', id = rel.id, status = downloaded_status, single = True)
 
                                                 # Allow the downloader to clean-up
                                                 item.update({'pause': False, 'scan': False, 'process_complete': True})
                                                 scan_items.append(item)
                                             else:
                                                 # Set the release to snatched so that the renamer can process the release as if it was never seeding
-                                                rel.status_id = snatched_status.get('id')
-                                                rel.last_edit = int(time.time())
-                                                db.commit()
+                                                fireEvent('release.update', id = rel.id, status = snatched_status, single = True)
 
                                                 # Scan and Allow the downloader to clean-up
                                                 item.update({'pause': False, 'scan': True, 'process_complete': True})

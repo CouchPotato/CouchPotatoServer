@@ -397,17 +397,6 @@ MA.Release = new Class({
 			'data': {
 				'id': release.id
 			},
-			'onComplete': function(){
-				var el = release.el;
-				if(el && (el.hasClass('failed') || el.hasClass('ignored'))){
-					el.removeClass('failed').removeClass('ignored');
-					el.getElement('.release_status').set('text', 'available');
-				}
-				else if(el) {
-					el.addClass('ignored');
-					el.getElement('.release_status').set('text', 'ignored');
-				}
-			}
 		})
 
 	},
