@@ -31,7 +31,6 @@ class Deluge(Downloader):
         return self.drpc
 
     def download(self, data, movie, filedata = None):
-
         log.info('Sending "%s" (%s) to Deluge.', (data.get('name'), data.get('protocol')))
 
         if not self.connect():
@@ -72,7 +71,8 @@ class Deluge(Downloader):
         if data.get('protocol') == 'torrent_magnet':
             remote_torrent = self.drpc.add_torrent_magnet(data.get('url'), options)
         else:
-            remote_torrent = self.drpc.add_torrent_file(movie, b64encode(filedata), options)
+            filename = self.createFileName(data, filedata, movie)
+            remote_torrent = self.drpc.add_torrent_file(filename, b64encode(filedata), options)
 
         if not remote_torrent:
             log.error('Failed sending torrent to Deluge')
@@ -85,6 +85,10 @@ class Deluge(Downloader):
 
         log.debug('Checking Deluge download status.')
 
+        if not os.path.isdir(Env.setting('from', 'renamer')):
+            log.error('Renamer "from" folder doesn\'t to exist.')
+            return
+
         if not self.connect():
             return False
 
@@ -92,23 +96,24 @@ class Deluge(Downloader):
 
         queue = self.drpc.get_alltorrents()
 
-        if not (queue and queue.get('torrents')):
+        if not (queue):
             log.debug('Nothing in queue or error')
             return False
 
         for torrent_id in queue:
             item = queue[torrent_id]
-            log.debug('name=%s / id=%s / save_path=%s / hash=%s / progress=%s / state=%s / eta=%s / ratio=%s / conf_ratio=%s/ is_seed=%s / is_finished=%s', (item['name'], item['hash'], item['save_path'], item['hash'], item['progress'], item['state'], item['eta'], item['ratio'], self.conf('ratio'), item['is_seed'], item['is_finished']))
+            log.debug('name=%s / id=%s / save_path=%s / move_completed_path=%s / hash=%s / progress=%s / state=%s / eta=%s / ratio=%s / stop_ratio=%s / is_seed=%s / is_finished=%s / paused=%s', (item['name'], item['hash'], item['save_path'], item['move_completed_path'], item['hash'], item['progress'], item['state'], item['eta'], item['ratio'], item['stop_ratio'], item['is_seed'], item['is_finished'], item['paused']))
 
-            if not os.path.isdir(Env.setting('from', 'renamer')):
-                log.error('Renamer "from" folder doesn\'t to exist.')
-                return
-
+            # Deluge has no easy way to work out if a torrent is stalled or failing.
+            #status = 'failed'
             status = 'busy'
-            # Deluge seems to set both is_seed and is_finished once everything has been downloaded.
-            if item['is_seed'] or item['is_finished']:
+            if item['is_seed'] and tryFloat(item['ratio']) < tryFloat(item['stop_ratio']):
+                # We have item['seeding_time'] to work out what the seeding time is, but we do not
+                # have access to the downloader seed_time, as with deluge we have no way to pass it
+                # when the torrent is added. So Deluge will only look at the ratio.
+                # See above comment in download().
                 status = 'seeding'
-            elif item['is_seed'] and item['is_finished'] and item['paused']:
+            elif item['is_seed'] and item['is_finished'] and item['paused'] and item['state'] == 'Paused':
                 status = 'completed'
 
             download_dir = item['save_path']
@@ -169,22 +174,22 @@ class DelugeRPC(object):
             if options['label']:
                 self.client.label.set_torrent(torrent_id, options['label']).get()
         except Exception, err:
-            log.error('Failed to add torrent magnet: %s %s', (err, traceback.format_exc()))
+            log.error('Failed to add torrent magnet %s: %s %s', (torrent, err, traceback.format_exc()))
         finally:
             if self.client:
                 self.disconnect()
             
         return torrent_id
 
-    def add_torrent_file(self, movie, torrent, options):
+    def add_torrent_file(self, filename, torrent, options):
         torrent_id = False
         try:
             self.connect()
-            torrent_id = self.client.core.add_torrent_file(movie, torrent, options).get()
+            torrent_id = self.client.core.add_torrent_file(filename, torrent, options).get()
             if options['label']:
                 self.client.label.set_torrent(torrent_id, options['label']).get()
         except Exception, err:
-            log.error('Failed to add torrent file: %s %s', (err, traceback.format_exc()))
+            log.error('Failed to add torrent file %s: %s %s', (filename, err, traceback.format_exc()))
         finally:
             if self.client:
                 self.disconnect()
