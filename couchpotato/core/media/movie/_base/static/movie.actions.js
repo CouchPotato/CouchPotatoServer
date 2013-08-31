@@ -252,11 +252,24 @@ MA.Release = new Class({
 				}
 
                 App.addEvent('release.update.'+release.id, function(notification){
+                    var q = self.movie.quality.getElement('.q_id'+ release.quality_id),
+                        status = Status.get(release.status_id);
+
                     var new_status=Status.get(notification.data);
+                    release.status_id = new_status.id
                     release.el.className='item '+new_status.identifier;
+
                     var status_el=release.el.getElement('.release_status');
                     status_el.className='release_status '+new_status.identifier;
                     status_el.set('text', new_status.identifier);
+
+                    if(!q && (new_status.identifier == 'snatched' || new_status.identifier == 'seeding' || new_status.identifier == 'done'))
+                        var q = self.addQuality(release.quality_id);
+
+                    if (new_status && q && !q.hasClass(new_status.identifier)){
+                        q.removeClass(status.identifier).addClass(new_status.identifier);
+                        q.set('title', q.get('title').replace(status.label, new_status.label));
+                    }
                 });
 
 			});
