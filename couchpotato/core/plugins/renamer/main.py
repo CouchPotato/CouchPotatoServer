@@ -650,12 +650,13 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
         self.checking_snatched = True
 
-        snatched_status, ignored_status, failed_status, done_status, seeding_status, downloaded_status = \
-            fireEvent('status.get', ['snatched', 'ignored', 'failed', 'done', 'seeding', 'downloaded'], single = True)
+        snatched_status, ignored_status, failed_status, done_status, seeding_status, downloaded_status, missing_status = \
+            fireEvent('status.get', ['snatched', 'ignored', 'failed', 'done', 'seeding', 'downloaded', 'missing'], single = True)
 
         db = get_session()
         rels = db.query(Release).filter_by(status_id = snatched_status.get('id')).all()
         rels.extend(db.query(Release).filter_by(status_id = seeding_status.get('id')).all())
+        rels.extend(db.query(Release).filter_by(status_id = missing_status.get('id')).all())
 
         scan_items = []
         scan_required = False
@@ -692,11 +693,16 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                                 log.debug('Found %s: %s, time to go: %s', (item['name'], item['status'].upper(), timeleft))
 
                                 if item['status'] == 'busy':
+                                    # Set the release to snatched if it was missing before
+                                    fireEvent('release.update', id = rel.id, status = snatched_status, single = True)
+
                                     # Tag folder if it is in the 'from' folder and it will not be processed because it is still downloading
                                     if item['folder'] and self.conf('from') in item['folder']:
                                         self.tagDir(item['folder'], 'downloading')
 
                                 elif item['status'] == 'seeding':
+                                    # Set the release to seeding
+                                    fireEvent('release.update', id = rel.id, status = seeding_status, single = True)
 
                                     #If linking setting is enabled, process release
                                     if self.conf('file_action') != 'move' and not rel.movie.status_id == done_status.get('id') and self.statusInfoComplete(item):
@@ -705,22 +711,18 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                                         # Remove the downloading tag
                                         self.untagDir(item['folder'], 'downloading')
 
-                                        # Set the release to seeding
-                                        fireEvent('release.update', id = rel.id, status = seeding_status, single = True)
-
                                         # Scan and set the torrent to paused if required
                                         item.update({'pause': True, 'scan': True, 'process_complete': False})
                                         scan_items.append(item)
                                     else:
-                                        # Set the release to seeding
-                                        fireEvent('release.update', id = rel.id, status = seeding_status, single = True)
-
                                         #let it seed
                                         log.debug('%s is seeding with ratio: %s', (item['name'], item['seed_ratio']))
+
                                 elif item['status'] == 'failed':
-                                    fireEvent('download.remove_failed', item, single = True)
                                     # Set the release to failed
                                     fireEvent('release.update', id = rel.id, status = failed_status, single = True)
+
+                                    fireEvent('download.remove_failed', item, single = True)
 
                                     if self.conf('next_on_failed'):
                                         fireEvent('movie.searcher.try_next_release', movie_id = rel.movie_id)
@@ -746,6 +748,9 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                                                 scan_items.append(item)
 
                                         else:
+                                            # Set the release to snatched if it was missing before
+                                            fireEvent('release.update', id = rel.id, status = snatched_status, single = True)
+
                                             # Remove the downloading tag
                                             self.untagDir(item['folder'], 'downloading')
 
@@ -760,6 +765,9 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
                         if not found:
                             log.info('%s not found in downloaders', nzbname)
+
+                            # Set the release to missing
+                            fireEvent('release.update', id = rel.id, status = missing_status, single = True)
 
                 except:
                     log.error('Failed checking for release in downloader: %s', traceback.format_exc())
