@@ -641,6 +641,12 @@
 					position: absolute;
 					z-index: 10;
 				}
+					@media only screen and (device-width: 768px) {
+						.trailer_container iframe {
+							margin-top: 25px;
+						}
+					}
+					
 					.trailer_container.hide {
 						height: 0 !important;
 					}
