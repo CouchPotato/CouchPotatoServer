@@ -1,6 +1,10 @@
 from couchpotato.core.helpers.request import getParams
+from functools import wraps
+from threading import Thread
+from tornado.gen import coroutine
 from tornado.web import RequestHandler, asynchronous
 import json
+import tornado
 import urllib
 
 api = {}
@@ -8,6 +12,15 @@ api_nonblock = {}
 
 api_docs = {}
 api_docs_missing = []
+
+def run_async(func):
+    @wraps(func)
+    def async_func(*args, **kwargs):
+        func_hl = Thread(target = func, args = args, kwargs = kwargs)
+        func_hl.start()
+        return func_hl
+
+    return async_func
 
 # NonBlock API handler
 class NonBlockHandler(RequestHandler):
@@ -46,6 +59,7 @@ def addNonBlockApiView(route, func_tuple, docs = None, **kwargs):
 # Blocking API handler
 class ApiHandler(RequestHandler):
 
+    @coroutine
     def get(self, route, *args, **kwargs):
         route = route.strip('/')
         if not api.get(route):
@@ -63,8 +77,14 @@ class ApiHandler(RequestHandler):
         try: del kwargs['t']
         except: pass
 
+        # Add async callback handler
+        @run_async
+        def run_handler(callback):
+            result = api[route](**kwargs)
+            callback(result)
+        result = yield tornado.gen.Task(run_handler)
+
         # Check JSONP callback
-        result = api[route](**kwargs)
         jsonp_callback = self.get_argument('callback_func', default = None)
 
         if jsonp_callback:
