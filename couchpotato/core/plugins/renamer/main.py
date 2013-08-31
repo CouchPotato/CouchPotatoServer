@@ -477,8 +477,15 @@ class Renamer(Plugin):
 
             if group['dirname'] and group['parentdir'] and not self.downloadIsTorrent(download_info):
                 try:
-                    log.info('Deleting folder: %s', group['parentdir'])
-                    self.deleteEmptyFolder(group['parentdir'])
+                    if movie_folder:
+                        # Delete the movie folder
+                        group_folder = movie_folder
+                    else:
+                        # Delete the first empty subfolder in the tree relative to the 'from' folder
+                        group_folder = os.path.join(self.conf('from'), os.path.relpath(group['parentdir'], self.conf('from')).split(os.path.sep)[0])
+                            
+                    log.info('Deleting folder: %s', group_folder)
+                    self.deleteEmptyFolder(group_folder)
                 except:
                     log.error('Failed removing %s: %s', (group['parentdir'], traceback.format_exc()))
 
