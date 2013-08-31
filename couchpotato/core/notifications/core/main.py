@@ -117,7 +117,7 @@ class CoreNotifier(Notification):
         prop_name = 'messages.last_check'
         last_check = tryInt(Env.prop(prop_name, default = 0))
 
-        messages = fireEvent('cp.messages', last_check = last_check, single = True)
+        messages = fireEvent('cp.messages', last_check = last_check, single = True) or []
 
         for message in messages:
             if message.get('time') > last_check:
