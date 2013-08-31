@@ -4,10 +4,12 @@ from threading import Thread
 from tornado.gen import coroutine
 from tornado.web import RequestHandler, asynchronous
 import json
+import threading
 import tornado
 import urllib
 
 api = {}
+api_locks = {}
 api_nonblock = {}
 
 api_docs = {}
@@ -39,7 +41,7 @@ class NonBlockHandler(RequestHandler):
         if self.request.connection.stream.closed():
             return
 
-        self.finish(response)
+        self.write(response)
 
     def on_connection_close(self):
 
@@ -63,8 +65,10 @@ class ApiHandler(RequestHandler):
     def get(self, route, *args, **kwargs):
         route = route.strip('/')
         if not api.get(route):
-            self.finish('API call doesn\'t seem to exist')
+            self.write('API call doesn\'t seem to exist')
             return
+
+        api_locks[route].acquire()
 
         kwargs = {}
         for x in self.request.arguments:
@@ -88,16 +92,20 @@ class ApiHandler(RequestHandler):
         jsonp_callback = self.get_argument('callback_func', default = None)
 
         if jsonp_callback:
-            self.finish(str(jsonp_callback) + '(' + json.dumps(result) + ')')
+            self.write(str(jsonp_callback) + '(' + json.dumps(result) + ')')
         elif isinstance(result, (tuple)) and result[0] == 'redirect':
             self.redirect(result[1])
         else:
-            self.finish(result)
+            self.write(result)
+
+        api_locks[route].release()
 
 def addApiView(route, func, static = False, docs = None, **kwargs):
 
     if static: func(route)
-    else: api[route] = func
+    else:
+        api[route] = func
+        api_locks[route] = threading.Lock()
 
     if docs:
         api_docs[route[4:] if route[0:4] == 'api.' else route] = docs
