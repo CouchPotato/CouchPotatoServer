@@ -120,13 +120,17 @@ class Scanner(Plugin):
                 files = []
                 for root, dirs, walk_files in os.walk(folder):
                     files.extend(os.path.join(root, filename) for filename in walk_files)
+
+                    # Break if CP wants to shut down
+                    if self.shuttingDown():
+                        break
+
             except:
                 log.error('Failed getting files from %s: %s', (folder, traceback.format_exc()))
         else:
             check_file_date = False
             files = [ss(x) for x in files]
 
-        db = get_session()
 
         for file_path in files:
 
@@ -339,6 +343,7 @@ class Scanner(Plugin):
             download_info = None
 
         # Determine file types
+        db = get_session()
         processed_movies = {}
         while True and not self.shuttingDown():
             try:
