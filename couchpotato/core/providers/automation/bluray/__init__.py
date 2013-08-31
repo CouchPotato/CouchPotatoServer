@@ -18,6 +18,13 @@ config = [{
                     'default': False,
                     'type': 'enabler',
                 },
+                {
+                    'name': 'backlog',
+                    'advanced': True,
+                    'description': 'Parses the history tables until the minimum movie year is reached. Note: only do this once!',
+                    'default': False,
+                    'type': 'bool',
+                },
             ],
         },
     ],
