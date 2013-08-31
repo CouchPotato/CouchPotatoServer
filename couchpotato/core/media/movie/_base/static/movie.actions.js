@@ -241,7 +241,6 @@ MA.Release = new Class({
 						}
 					})
 				).inject(self.release_container);
-
 				release['el'] = item;
 
 				if(status.identifier == 'ignored' || status.identifier == 'failed' || status.identifier == 'snatched'){
@@ -251,6 +250,15 @@ MA.Release = new Class({
 				else if(!self.next_release && status.identifier == 'available'){
 					self.next_release = release;
 				}
+
+                App.addEvent('release.update.'+release.id, function(notification){
+                    var new_status=Status.get(notification.data);
+                    release.el.className='item '+new_status.identifier;
+                    var status_el=release.el.getElement('.release_status');
+                    status_el.className='release_status '+new_status.identifier;
+                    status_el.set('text', new_status.identifier);
+                });
+
 			});
 
 			if(self.last_release)

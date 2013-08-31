@@ -266,4 +266,4 @@ class Release(Plugin):
             fireEvent('notify.frontend', type = 'release.download', data = True, message = '"%s" updated to %s' % (item['name'], status.get("label")))
 
             #Update all movie info as there is no release update function
-            fireEvent('notify.frontend', type = 'movie.update.%s' % rel.movie.id, data = rel.movie.to_dict(self.default_movie_dict))
+            fireEvent('notify.frontend', type = 'release.update.%s' % rel.id, data = status.get('id'))
