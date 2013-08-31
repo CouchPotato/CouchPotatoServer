@@ -52,6 +52,8 @@ class Bluray(Automation, RSS):
                     log.debug('Error loading page: %s', page)
                     break
 
+            self.conf('backlog', value = False)
+
         rss_movies = self.getRSSData(self.rss_url)
 
         for movie in rss_movies:
