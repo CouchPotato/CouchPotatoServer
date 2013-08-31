@@ -19,7 +19,7 @@ log = CPLog(__name__)
 
 class CoreNotifier(Notification):
 
-    m_lock = threading.Lock()
+    m_lock = None
 
     def __init__(self):
         super(CoreNotifier, self).__init__()
@@ -57,6 +57,7 @@ class CoreNotifier(Notification):
 
         self.messages = []
         self.listeners = []
+        self.m_lock = threading.Lock()
 
     def clean(self):
 
@@ -222,7 +223,7 @@ class CoreNotifier(Notification):
         recent = []
         try:
             index = map(itemgetter('message_id'), self.messages).index(last_id)
-            recent = self.messages[index+1:]
+            recent = self.messages[index + 1:]
         except:
             pass
 

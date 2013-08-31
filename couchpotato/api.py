@@ -49,7 +49,7 @@ class ApiHandler(RequestHandler):
     def get(self, route, *args, **kwargs):
         route = route.strip('/')
         if not api.get(route):
-            self.write('API call doesn\'t seem to exist')
+            self.finish('API call doesn\'t seem to exist')
             return
 
         kwargs = {}
@@ -68,11 +68,11 @@ class ApiHandler(RequestHandler):
         jsonp_callback = self.get_argument('callback_func', default = None)
 
         if jsonp_callback:
-            self.write(str(jsonp_callback) + '(' + json.dumps(result) + ')')
+            self.finish(str(jsonp_callback) + '(' + json.dumps(result) + ')')
         elif isinstance(result, (tuple)) and result[0] == 'redirect':
             self.redirect(result[1])
         else:
-            self.write(result)
+            self.finish(result)
 
 def addApiView(route, func, static = False, docs = None, **kwargs):
 

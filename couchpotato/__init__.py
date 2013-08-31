@@ -25,7 +25,7 @@ class WebHandler(RequestHandler):
         if not views.get(route):
             page_not_found(self)
             return
-        self.write(views[route]())
+        self.finish(views[route]())
 
 def addView(route, func, static = False):
     views[route] = func
@@ -64,7 +64,7 @@ class KeyHandler(RequestHandler):
         if (self.get_argument('u') == md5(username) or not username) and (self.get_argument('p') == password or not password):
             api = Env.setting('api_key')
 
-        self.write({
+        self.finish({
             'success': api is not None,
             'api_key': api
         })
@@ -81,5 +81,5 @@ def page_not_found(rh):
             time.sleep(0.1)
 
         rh.set_status(404)
-        rh.write('Wrong API key used')
+        rh.finish('Wrong API key used')
 
