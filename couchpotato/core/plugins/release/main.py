@@ -17,14 +17,6 @@ log = CPLog(__name__)
 
 class Release(Plugin):
 
-    default_movie_dict = {
-        'profile': {'types': {'quality': {}}},
-        'releases': {'status': {}, 'quality': {}, 'files':{}, 'info': {}},
-        'library': {'titles': {}, 'files':{}},
-        'files': {},
-        'status': {}
-    }
-
     def __init__(self):
         addEvent('release.add', self.add)
 
