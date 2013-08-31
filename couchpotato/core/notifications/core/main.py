@@ -188,11 +188,14 @@ class CoreNotifier(Notification):
                     'result': messages,
                 })
 
+        self.m_lock.acquire()
         self.listeners.append((callback, last_id))
+        self.m_lock.release()
 
 
     def removeListener(self, callback):
 
+        self.m_lock.acquire()
         for list_tuple in self.listeners:
             try:
                 listener, last_id = list_tuple
@@ -200,6 +203,7 @@ class CoreNotifier(Notification):
                     self.listeners.remove(list_tuple)
             except:
                 log.debug('Failed removing listener: %s', traceback.format_exc())
+        self.m_lock.release()
 
     def cleanMessages(self):
 
