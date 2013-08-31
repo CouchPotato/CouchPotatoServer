@@ -179,7 +179,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
                 download_preference = self.conf('preferred_method', section = 'searcher')
                 if download_preference != 'both':
-                    sorted_results = sorted(sorted_results, key = lambda k: k['type'][:3], reverse = (download_preference == 'torrent'))
+                    sorted_results = sorted(sorted_results, key = lambda k: k['protocol'][:3], reverse = (download_preference == 'torrent'))
 
                 # Check if movie isn't deleted while searching
                 if not db.query(Movie).filter_by(id = movie.get('id')).first():
