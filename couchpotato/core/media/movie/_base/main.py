@@ -378,6 +378,7 @@ class MovieBase(MovieTypeBase):
         m = db.query(Movie).filter_by(library_id = library.get('id')).first()
         added = True
         do_search = False
+        search_after = search_after and self.conf('search_on_add', section = 'moviesearcher')
         if not m:
             m = Movie(
                 library_id = library.get('id'),
