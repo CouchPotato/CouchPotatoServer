@@ -766,7 +766,7 @@ class Scanner(Plugin):
 
         # Year
         year = self.findYear(identifier)
-        if year:
+        if year and identifier[:4] != year:
             identifier = '%s %s' % (identifier.split(year)[0].strip(), year)
         else:
             identifier = identifier.split('::')[0]
