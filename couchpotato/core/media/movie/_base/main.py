@@ -23,7 +23,8 @@ class MovieBase(MovieTypeBase):
         'releases': {'status': {}, 'quality': {}, 'files':{}, 'info': {}},
         'library': {'titles': {}, 'files':{}},
         'files': {},
-        'status': {}
+        'status': {},
+        'category': {},
     }
 
     def __init__(self):

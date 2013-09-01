@@ -93,7 +93,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                     'profile': {'types': {'quality': {}}},
                     'releases': {'status': {}, 'quality': {}},
                     'library': {'titles': {}, 'files':{}},
-                    'files': {}
+                    'files': {},
                 })
 
                 try:
