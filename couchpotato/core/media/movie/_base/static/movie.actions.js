@@ -731,6 +731,7 @@ MA.Delete = new Class({
 		var self = this;
 		(e).preventDefault();
 
+		self.movie.removeView();
 		self.movie.slide('out');
 	},
 
