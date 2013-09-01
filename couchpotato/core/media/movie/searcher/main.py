@@ -133,7 +133,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
         db = get_session()
 
         pre_releases = fireEvent('quality.pre_releases', single = True)
-        release_dates = fireEvent('library.update.movie_release_date', identifier = movie['library']['identifier'], merge = True)
+        release_dates = fireEvent('library.update.movie.release_date', identifier = movie['library']['identifier'], merge = True)
         available_status, ignored_status, failed_status = fireEvent('status.get', ['available', 'ignored', 'failed'], single = True)
 
         found_releases = []
@@ -376,7 +376,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
         else:
 
             # For movies before 1972
-            if dates.get('theater', 0) < 0 or dates.get('dvd', 0) < 0:
+            if not dates or dates.get('theater', 0) < 0 or dates.get('dvd', 0) < 0:
                 return True
 
             if is_pre_release:
