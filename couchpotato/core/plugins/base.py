@@ -294,7 +294,7 @@ class Plugin(object):
         name = os.path.join(self.createNzbName(data, movie))
         if data.get('type') == 'nzb' and 'DOCTYPE nzb' not in filedata and '</nzb>' not in filedata:
             return '%s.%s' % (name, 'rar')
-        return '%s.%s' % (name, data.get('type'))
+        return '%s.%s' % (name, data.get('protocol'))
 
     def cpTag(self, movie):
         if Env.setting('enabled', 'renamer'):
