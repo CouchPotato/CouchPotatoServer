@@ -16,10 +16,10 @@ class Loader(object):
         for filename in os.listdir(os.path.join(root, *base_path)):
             path = os.path.join(os.path.join(root, *base_path), filename)
             if os.path.isdir(path) and filename[:2] != '__':
-                if not u'__init__.py' in os.listdir(path):
-                    return
-                new_base_path = ''.join(s + '.' for s in base_path) + filename
-                self.paths[new_base_path.replace('.', '_')] = (priority, new_base_path, path)
+                if u'__init__.py' in os.listdir(path):
+                    new_base_path = ''.join(s + '.' for s in base_path) + filename
+                    self.paths[new_base_path.replace('.', '_')] = (priority, new_base_path, path)
+
                 if recursive:
                     self.addPath(root, base_path + [filename], priority, recursive = True)
 
