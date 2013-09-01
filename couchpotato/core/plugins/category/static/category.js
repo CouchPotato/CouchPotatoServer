@@ -271,6 +271,11 @@ var Category = new Class({
 
 	del: function(){
 		var self = this;
+		
+		if(self.data.label == undefined){
+			self.el.destroy();
+			return;
+		}
 
 		var label = self.el.getElement('.category_label input').get('value');
 		var qObj = new Question('Are you sure you want to delete <strong>"'+label+'"</strong>?', '', [{
