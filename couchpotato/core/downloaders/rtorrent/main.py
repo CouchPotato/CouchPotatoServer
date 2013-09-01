@@ -2,6 +2,7 @@ from base64 import b16encode, b32decode
 from datetime import timedelta
 from hashlib import sha1
 import shutil
+from couchpotato.core.helpers.encoding import ss
 from rtorrent.err import MethodError
 
 from bencode import bencode, bdecode
@@ -157,9 +158,8 @@ class rTorrent(Downloader):
                     'status': status,
                     'seed_ratio': item.ratio,
                     'original_status': item.state,
-                    'timeleft': str(timedelta(seconds = float(item.left_bytes) / item.down_rate))
-                    if item.down_rate > 0 else -1,
-                    'folder': item.directory
+                    'timeleft': str(timedelta(seconds = float(item.left_bytes) / item.down_rate)) if item.down_rate > 0 else -1,
+                    'folder': ss(item.directory)
                 })
 
             return statuses

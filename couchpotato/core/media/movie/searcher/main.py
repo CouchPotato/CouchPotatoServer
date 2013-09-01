@@ -93,7 +93,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                     'profile': {'types': {'quality': {}}},
                     'releases': {'status': {}, 'quality': {}},
                     'library': {'titles': {}, 'files':{}},
-                    'files': {}
+                    'files': {},
                 })
 
                 try:
@@ -133,7 +133,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
         db = get_session()
 
         pre_releases = fireEvent('quality.pre_releases', single = True)
-        release_dates = fireEvent('library.update.movie_release_date', identifier = movie['library']['identifier'], merge = True)
+        release_dates = fireEvent('library.update.movie.release_date', identifier = movie['library']['identifier'], merge = True)
         available_status, ignored_status, failed_status = fireEvent('status.get', ['available', 'ignored', 'failed'], single = True)
 
         found_releases = []
@@ -179,7 +179,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
                 download_preference = self.conf('preferred_method', section = 'searcher')
                 if download_preference != 'both':
-                    sorted_results = sorted(sorted_results, key = lambda k: k['type'][:3], reverse = (download_preference == 'torrent'))
+                    sorted_results = sorted(sorted_results, key = lambda k: k['protocol'][:3], reverse = (download_preference == 'torrent'))
 
                 # Check if movie isn't deleted while searching
                 if not db.query(Media).filter_by(id = movie.get('id')).first():
@@ -376,7 +376,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
         else:
 
             # For movies before 1972
-            if dates.get('theater', 0) < 0 or dates.get('dvd', 0) < 0:
+            if not dates or dates.get('theater', 0) < 0 or dates.get('dvd', 0) < 0:
                 return True
 
             if is_pre_release:

@@ -81,8 +81,6 @@ class Userscript(Plugin):
 
     def getViaUrl(self, url = None, **kwargs):
 
-        print url
-
         params = {
             'url': url,
             'movie': fireEvent('userscript.get_movie_via_url', url = url, single = True)

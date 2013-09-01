@@ -43,6 +43,8 @@ var SuggestList = new Class({
 	fill: function(json){
 
 		var self = this;
+		
+		if(!json) return;
 
 		Object.each(json.suggestions, function(movie){
 

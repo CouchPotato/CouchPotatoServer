@@ -18,28 +18,23 @@ class MovieLibraryPlugin(LibraryBase):
     def __init__(self):
         addEvent('library.add.movie', self.add)
         addEvent('library.update.movie', self.update)
-        addEvent('library.update.movie_release_date', self.updateReleaseDate)
+        addEvent('library.update.movie.release_date', self.updateReleaseDate)
 
     def add(self, attrs = {}, update_after = True):
-        # movies don't yet contain these, so lets make sure to set defaults
-        type = attrs.get('type', 'movie')
         primary_provider = attrs.get('primary_provider', 'imdb')
-        
+
         db = get_session()
-        
-        l = db.query(Library).filter_by(type = type, identifier = attrs.get('identifier')).first()
+
+        l = db.query(Library).filter_by(identifier = attrs.get('identifier')).first()
         if not l:
             status = fireEvent('status.get', 'needs_update', single = True)
             l = Library(
-                type = type, 
-                primary_provider = primary_provider, 
                 year = attrs.get('year'),
                 identifier = attrs.get('identifier'),
                 plot = toUnicode(attrs.get('plot')),
                 tagline = toUnicode(attrs.get('tagline')),
                 status_id = status.get('id'),
-                info = {},
-                parent = None, 
+                info = {}
             )
 
             title = LibraryTitle(
