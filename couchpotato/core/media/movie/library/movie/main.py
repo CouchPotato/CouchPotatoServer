@@ -20,7 +20,9 @@ class MovieLibraryPlugin(LibraryBase):
         addEvent('library.update.movie', self.update)
         addEvent('library.update.movie.release_date', self.updateReleaseDate)
 
-    def add(self, attrs = {}, update_after = True):
+    def add(self, attrs = None, update_after = True):
+        if not attrs: attrs = {}
+
         primary_provider = attrs.get('primary_provider', 'imdb')
 
         db = get_session()

@@ -495,7 +495,9 @@ class Renamer(Plugin):
 
         self.renaming_started = False
 
-    def getRenameExtras(self, extra_type = '', replacements = {}, folder_name = '', file_name = '', destination = '', group = {}, current_file = '', remove_multiple = False):
+    def getRenameExtras(self, extra_type = '', replacements = None, folder_name = '', file_name = '', destination = '', group = None, current_file = '', remove_multiple = False):
+        if not group: group = {}
+        if not replacements: replacements = {}
 
         replacements = replacements.copy()
         rename_files = {}
@@ -843,11 +845,12 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
     def statusInfoComplete(self, item):
         return item['id'] and item['downloader'] and item['folder']
-    
+
     def movieInFromFolder(self, movie_folder):
         return movie_folder and self.conf('from') in movie_folder or not movie_folder
 
-    def extractFiles(self, folder = None, movie_folder = None, files = [], cleanup = False):
+    def extractFiles(self, folder = None, movie_folder = None, files = None, cleanup = False):
+        if not files: files = []
 
         # RegEx for finding rar files
         archive_regex = '(?P<file>^(?P<base>(?:(?!\.part\d+\.rar$).)*)\.(?:(?:part0*1\.)?rar)$)'
@@ -941,7 +944,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                     self.makeDir(os.path.dirname(move_to))
                     self.moveFile(leftoverfile, move_to, cleanup)
                 except Exception, e:
-                    log.error('Failed moving left over file %s to %s: %s %s',(leftoverfile, move_to, e, traceback.format_exc()))
+                    log.error('Failed moving left over file %s to %s: %s %s', (leftoverfile, move_to, e, traceback.format_exc()))
                     # As we probably tried to overwrite the nfo file, check if it exists and then remove the original
                     if os.path.isfile(move_to):
                         if cleanup:
@@ -964,7 +967,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         if extr_files:
             files.extend(extr_files)
 
-        # Cleanup files and folder if movie_folder was not provided 
+        # Cleanup files and folder if movie_folder was not provided
         if not movie_folder:
             files = []
             folder = None

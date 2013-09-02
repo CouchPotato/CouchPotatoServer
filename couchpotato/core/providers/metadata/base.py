@@ -17,8 +17,9 @@ class MetaDataBase(Plugin):
     def __init__(self):
         addEvent('renamer.after', self.create)
 
-    def create(self, message = None, group = {}):
+    def create(self, message = None, group = None):
         if self.isDisabled(): return
+        if not group: group = {}
 
         log.info('Creating %s metadata.', self.getName())
 
@@ -65,7 +66,8 @@ class MetaDataBase(Plugin):
             except:
                 log.error('Unable to create %s file: %s', (file_type, traceback.format_exc()))
 
-    def getRootName(self, data = {}):
+    def getRootName(self, data = None):
+        if not data: data = {}
         return os.path.join(data['destination_dir'], data['filename'])
 
     def getFanartName(self, name, root):
@@ -77,10 +79,13 @@ class MetaDataBase(Plugin):
     def getNfoName(self, name, root):
         return
 
-    def getNfo(self, movie_info = {}, data = {}):
-        return
+    def getNfo(self, movie_info = None, data = None):
+        if not data: data = {}
+        if not movie_info: movie_info = {}
 
-    def getThumbnail(self, movie_info = {}, data = {}, wanted_file_type = 'poster_original'):
+    def getThumbnail(self, movie_info = None, data = None, wanted_file_type = 'poster_original'):
+        if not data: data = {}
+        if not movie_info: movie_info = {}
         file_types = fireEvent('file.types', single = True)
         file_type = {}
 
@@ -102,5 +107,7 @@ class MetaDataBase(Plugin):
         except:
             pass
 
-    def getFanart(self, movie_info = {}, data = {}):
+    def getFanart(self, movie_info = None, data = None):
+        if not data: data = {}
+        if not movie_info: movie_info = {}
         return self.getThumbnail(movie_info = movie_info, data = data, wanted_file_type = 'backdrop_original')

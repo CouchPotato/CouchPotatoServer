@@ -8,7 +8,8 @@ log = CPLog(__name__)
 
 class NotifyMyAndroid(Notification):
 
-    def notify(self, message = '', data = {}, listener = None):
+    def notify(self, message = '', data = None, listener = None):
+        if not data: data = {}
 
         nma = pynma.PyNMA()
         keys = splitString(self.conf('api_key'))

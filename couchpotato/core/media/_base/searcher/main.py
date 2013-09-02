@@ -146,7 +146,8 @@ class Searcher(SearcherBase):
 
         return search_protocols
 
-    def containsOtherQuality(self, nzb, movie_year = None, preferred_quality = {}):
+    def containsOtherQuality(self, nzb, movie_year = None, preferred_quality = None):
+        if not preferred_quality: preferred_quality = {}
 
         name = nzb['name']
         size = nzb.get('size', 0)

@@ -17,8 +17,9 @@ class Plex(Notification):
         super(Plex, self).__init__()
         addEvent('renamer.after', self.addToLibrary)
 
-    def addToLibrary(self, message = None, group = {}):
+    def addToLibrary(self, message = None, group = None):
         if self.isDisabled(): return
+        if not group: group = {}
 
         log.info('Sending notification to Plex')
         hosts = self.getHosts(port = 32400)
@@ -45,7 +46,8 @@ class Plex(Notification):
 
         return True
 
-    def notify(self, message = '', data = {}, listener = None):
+    def notify(self, message = '', data = None, listener = None):
+        if not data: data = {}
 
         hosts = self.getHosts(port = 3000)
         successful = 0

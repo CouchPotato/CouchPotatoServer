@@ -80,7 +80,10 @@ class CouchPotatoApi(MovieProvider):
 
         return dates
 
-    def getSuggestions(self, movies = [], ignore = []):
+    def getSuggestions(self, movies = None, ignore = None):
+        if not ignore: ignore = []
+        if not movies: movies = []
+
         suggestions = self.getJsonData(self.urls['suggest'], params = {
             'movies': ','.join(movies),
             'ignore': ','.join(ignore),

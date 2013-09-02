@@ -15,7 +15,9 @@ class Sabnzbd(Downloader):
 
     protocol = ['nzb']
 
-    def download(self, data = {}, movie = {}, filedata = None):
+    def download(self, data = None, movie = None, filedata = None):
+        if not movie: movie = {}
+        if not data: data = {}
 
         log.info('Sending "%s" to SABnzbd.', data.get('name'))
 

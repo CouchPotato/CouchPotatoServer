@@ -17,7 +17,8 @@ class XBMC(Notification):
     use_json_notifications = {}
     http_time_between_calls = 0
 
-    def notify(self, message = '', data = {}, listener = None):
+    def notify(self, message = '', data = None, listener = None):
+        if not data: data = {}
 
         hosts = splitString(self.conf('host'))
 

@@ -12,7 +12,9 @@ class Pneumatic(Downloader):
     protocol = ['nzb']
     strm_syntax = 'plugin://plugin.program.pneumatic/?mode=strm&type=add_file&nzb=%s&nzbname=%s'
 
-    def download(self, data = {}, movie = {}, filedata = None):
+    def download(self, data = None, movie = None, filedata = None):
+        if not movie: movie = {}
+        if not data: data = {}
 
         directory = self.conf('directory')
         if not directory or not os.path.isdir(directory):

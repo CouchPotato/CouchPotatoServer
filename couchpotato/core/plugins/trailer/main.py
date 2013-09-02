@@ -12,8 +12,8 @@ class Trailer(Plugin):
     def __init__(self):
         addEvent('renamer.after', self.searchSingle)
 
-    def searchSingle(self, message = None, group = {}):
-
+    def searchSingle(self, message = None, group = None):
+        if not group: group = {}
         if self.isDisabled() or len(group['files']['trailer']) > 0: return
 
         trailers = fireEvent('trailer.search', group = group, merge = True)
@@ -40,4 +40,3 @@ class Trailer(Plugin):
             break
 
         return True
-

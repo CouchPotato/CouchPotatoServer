@@ -19,7 +19,9 @@ class NZBGet(Downloader):
 
     url = 'http://%(username)s:%(password)s@%(host)s/xmlrpc'
 
-    def download(self, data = {}, movie = {}, filedata = None):
+    def download(self, data = None, movie = None, filedata = None):
+        if not movie: movie = {}
+        if not data: data = {}
 
         if not filedata:
             log.error('Unable to get NZB file: %s', traceback.format_exc())

@@ -152,7 +152,8 @@ class QualityPlugin(Plugin):
 
         return True
 
-    def guess(self, files, extra = {}):
+    def guess(self, files, extra = None):
+        if not extra: extra = {}
 
         # Create hash for cache
         hash = md5(str([f.replace('.' + getExt(f), '') for f in files]))

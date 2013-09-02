@@ -49,7 +49,10 @@ class Downloader(Provider):
 
         return []
 
-    def _download(self, data = {}, movie = {}, manual = False, filedata = None):
+    def _download(self, data = None, movie = None, manual = False, filedata = None):
+        if not movie: movie = {}
+        if not data: data = {}
+
         if self.isDisabled(manual, data):
             return
         return self.download(data = data, movie = movie, filedata = filedata)
@@ -128,15 +131,21 @@ class Downloader(Provider):
             'id': download_id
         }
 
-    def isDisabled(self, manual = False, data = {}):
+    def isDisabled(self, manual = False, data = None):
+        if not data: data = {}
+
         return not self.isEnabled(manual, data)
 
-    def _isEnabled(self, manual, data = {}):
+    def _isEnabled(self, manual, data = None):
+        if not data: data = {}
+
         if not self.isEnabled(manual, data):
             return
         return True
 
-    def isEnabled(self, manual = False, data = {}):
+    def isEnabled(self, manual = False, data = None):
+        if not data: data = {}
+
         d_manual = self.conf('manual', default = False)
         return super(Downloader, self).isEnabled() and \
             (d_manual and manual or d_manual is False) and \

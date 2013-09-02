@@ -26,7 +26,8 @@ class Manage(Plugin):
         addEvent('manage.diskspace', self.getDiskSpace)
 
         # Add files after renaming
-        def after_rename(message = None, group = {}):
+        def after_rename(message = None, group = None):
+            if not group: group = {}
             return self.scanFilesToLibrary(folder = group['destination_dir'], files = group['renamed_files'])
         addEvent('renamer.after', after_rename, priority = 110)
 
@@ -168,7 +169,9 @@ class Manage(Plugin):
         fireEvent('notify.frontend', type = 'manage.updating', data = False)
         self.in_progress = False
 
-    def createAddToLibrary(self, folder, added_identifiers = []):
+    def createAddToLibrary(self, folder, added_identifiers = None):
+        if not added_identifiers: added_identifiers = []
+
         def addToLibrary(group, total_found, to_go):
             if self.in_progress[folder]['total'] is None:
                 self.in_progress[folder] = {

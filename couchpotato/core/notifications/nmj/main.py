@@ -64,8 +64,9 @@ class NMJ(Notification):
             'mount': mount,
         }
 
-    def addToLibrary(self, message = None, group = {}):
+    def addToLibrary(self, message = None, group = None):
         if self.isDisabled(): return
+        if not group: group = {}
 
         host = self.conf('host')
         mount = self.conf('mount')

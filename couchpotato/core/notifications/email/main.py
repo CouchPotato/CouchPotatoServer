@@ -11,7 +11,8 @@ log = CPLog(__name__)
 
 class Email(Notification):
 
-    def notify(self, message = '', data = {}, listener = None):
+    def notify(self, message = '', data = None, listener = None):
+        if not data: data = {}
 
         # Extract all the settings from settings
         from_address = self.conf('from')

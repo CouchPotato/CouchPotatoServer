@@ -83,7 +83,8 @@ class FileManager(Plugin):
         Env.get('app').add_handlers(".*$", [('%s%s' % (Env.get('api_base'), route), StaticFileHandler, {'path': Env.get('cache_dir')})])
 
 
-    def download(self, url = '', dest = None, overwrite = False, urlopen_kwargs = {}):
+    def download(self, url = '', dest = None, overwrite = False, urlopen_kwargs = None):
+        if not urlopen_kwargs: urlopen_kwargs = {}
 
         if not dest: # to Cache
             dest = os.path.join(Env.get('cache_dir'), '%s.%s' % (md5(url), getExt(url)))
@@ -100,7 +101,9 @@ class FileManager(Plugin):
         self.createFile(dest, filedata, binary = True)
         return dest
 
-    def add(self, path = '', part = 1, type_tuple = (), available = 1, properties = {}):
+    def add(self, path = '', part = 1, type_tuple = (), available = 1, properties = None):
+        if not properties: properties = {}
+
         type_id = self.getType(type_tuple).get('id')
         db = get_session()
 

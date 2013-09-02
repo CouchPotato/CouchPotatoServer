@@ -23,7 +23,9 @@ class NZBVortex(Downloader):
     api_level = None
     session_id = None
 
-    def download(self, data = {}, movie = {}, filedata = None):
+    def download(self, data = None, movie = None, filedata = None):
+        if not movie: movie = {}
+        if not data: data = {}
 
         # Send the nzb
         try:
@@ -97,9 +99,10 @@ class NZBVortex(Downloader):
         return False
 
 
-    def call(self, call, parameters = {}, repeat = False, auth = True, *args, **kwargs):
+    def call(self, call, parameters = None, repeat = False, auth = True, *args, **kwargs):
 
         # Login first
+        if not parameters: parameters = {}
         if not self.session_id and auth:
             self.login()
 
@@ -148,7 +151,8 @@ class NZBVortex(Downloader):
 
         return self.api_level
 
-    def isEnabled(self, manual = False, data = {}):
+    def isEnabled(self, manual = False, data = None):
+        if not data: data = {}
         return super(NZBVortex, self).isEnabled(manual, data) and self.getApiLevel()
 
 

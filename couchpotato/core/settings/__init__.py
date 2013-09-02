@@ -72,7 +72,9 @@ class Settings(object):
         addEvent('settings.register', self.registerDefaults)
         addEvent('settings.save', self.save)
 
-    def registerDefaults(self, section_name, options = {}, save = True):
+    def registerDefaults(self, section_name, options = None, save = True):
+        if not options: options = {}
+
         self.addSection(section_name)
 
         for option_name, option in options.iteritems():

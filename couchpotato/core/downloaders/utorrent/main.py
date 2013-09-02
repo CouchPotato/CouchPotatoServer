@@ -36,7 +36,9 @@ class uTorrent(Downloader):
 
         return self.utorrent_api
 
-    def download(self, data, movie, filedata = None):
+    def download(self, data = None, movie = None, filedata = None):
+        if not movie: movie = {}
+        if not data: data = {}
 
         log.debug('Sending "%s" (%s) to uTorrent.', (data.get('name'), data.get('protocol')))
 
@@ -280,7 +282,9 @@ class uTorrentAPI(object):
 
         return settings_dict
 
-    def set_settings(self, settings_dict = {}):
+    def set_settings(self, settings_dict = None):
+        if not settings_dict: settings_dict = {}
+
         for key in settings_dict:
             if isinstance(settings_dict[key], bool):
                 settings_dict[key] = 1 if settings_dict[key] else 0
