@@ -119,7 +119,7 @@ class Downloader(Provider):
             except:
                 log.debug('Torrent hash "%s" wasn\'t found on: %s', (torrent_hash, source))
 
-        log.error('Failed converting magnet url to torrent: %s', (torrent_hash))
+        log.error('Failed converting magnet url to torrent: %s', torrent_hash)
         return False
 
     def downloadReturnId(self, download_id):
@@ -128,7 +128,7 @@ class Downloader(Provider):
             'id': download_id
         }
 
-    def isDisabled(self, manual, data):
+    def isDisabled(self, manual = False, data = {}):
         return not self.isEnabled(manual, data)
 
     def _isEnabled(self, manual, data = {}):
@@ -136,10 +136,10 @@ class Downloader(Provider):
             return
         return True
 
-    def isEnabled(self, manual, data = {}):
+    def isEnabled(self, manual = False, data = {}):
         d_manual = self.conf('manual', default = False)
         return super(Downloader, self).isEnabled() and \
-            ((d_manual and manual) or (d_manual is False)) and \
+            (d_manual and manual or d_manual is False) and \
             (not data or self.isCorrectProtocol(data.get('protocol')))
 
     def _pause(self, item, pause = True):

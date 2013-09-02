@@ -53,9 +53,9 @@ class XBMC(Notification):
 
             try:
                 for result in response:
-                    if (result.get('result') and result['result'] == 'OK'):
+                    if result.get('result') and result['result'] == 'OK':
                         successful += 1
-                    elif (result.get('error')):
+                    elif result.get('error'):
                         log.error('XBMC error; %s: %s (%s)', (result['id'], result['error']['message'], result['error']['code']))
 
             except:
@@ -72,7 +72,7 @@ class XBMC(Notification):
             ('JSONRPC.Version', {})
         ])
         for result in response:
-            if (result.get('result') and type(result['result']['version']).__name__ == 'int'):
+            if result.get('result') and type(result['result']['version']).__name__ == 'int':
                 # only v2 and v4 return an int object
                 # v6 (as of XBMC v12(Frodo)) is required to send notifications
                 xbmc_rpc_version = str(result['result']['version'])
@@ -85,15 +85,15 @@ class XBMC(Notification):
                 # send the text message
                 resp = self.notifyXBMCnoJSON(host, {'title':self.default_title, 'message':message})
                 for result in resp:
-                    if (result.get('result') and result['result'] == 'OK'):
+                    if result.get('result') and result['result'] == 'OK':
                         log.debug('Message delivered successfully!')
                         success = True
                         break
-                    elif (result.get('error')):
+                    elif result.get('error'):
                         log.error('XBMC error; %s: %s (%s)', (result['id'], result['error']['message'], result['error']['code']))
                         break
 
-            elif (result.get('result') and type(result['result']['version']).__name__ == 'dict'):
+            elif result.get('result') and type(result['result']['version']).__name__ == 'dict':
                 # XBMC JSON-RPC v6 returns an array object containing
                 # major, minor and patch number
                 xbmc_rpc_version = str(result['result']['version']['major'])
@@ -108,16 +108,16 @@ class XBMC(Notification):
                 # send the text message
                 resp = self.request(host, [('GUI.ShowNotification', {'title':self.default_title, 'message':message, 'image': self.getNotificationImage('small')})])
                 for result in resp:
-                    if (result.get('result') and result['result'] == 'OK'):
+                    if result.get('result') and result['result'] == 'OK':
                         log.debug('Message delivered successfully!')
                         success = True
                         break
-                    elif (result.get('error')):
+                    elif result.get('error'):
                         log.error('XBMC error; %s: %s (%s)', (result['id'], result['error']['message'], result['error']['code']))
                         break
 
             # error getting version info (we do have contact with XBMC though)
-            elif (result.get('error')):
+            elif result.get('error'):
                 log.error('XBMC error; %s: %s (%s)', (result['id'], result['error']['message'], result['error']['code']))
 
         log.debug('Use JSON notifications: %s ', self.use_json_notifications)

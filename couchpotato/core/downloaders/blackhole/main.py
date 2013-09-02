@@ -62,7 +62,7 @@ class Blackhole(Downloader):
         else:
             return ['nzb']
 
-    def isEnabled(self, manual, data = {}):
+    def isEnabled(self, manual = False, data = {}):
         for_protocol = ['both']
         if data and 'torrent' in data.get('protocol'):
             for_protocol.append('torrent')

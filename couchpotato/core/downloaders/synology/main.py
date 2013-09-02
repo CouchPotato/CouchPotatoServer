@@ -49,7 +49,7 @@ class Synology(Downloader):
         else:
             return ['nzb']
 
-    def isEnabled(self, manual, data = {}):
+    def isEnabled(self, manual = False, data = {}):
         for_protocol = ['both']
         if data and 'torrent' in data.get('protocol'):
             for_protocol.append('torrent')
@@ -61,7 +61,7 @@ class Synology(Downloader):
 
 class SynologyRPC(object):
 
-    '''SynologyRPC lite library'''
+    """SynologyRPC lite library"""
 
     def __init__(self, host = 'localhost', port = 5000, username = None, password = None):
 
@@ -98,7 +98,7 @@ class SynologyRPC(object):
             req = requests.post(url, data = args, files = files)
             req.raise_for_status()
             response = json.loads(req.text)
-            if response['success'] == True:
+            if response['success']:
                 log.info('Synology action successfull')
             return response
         except requests.ConnectionError, err:
@@ -111,11 +111,11 @@ class SynologyRPC(object):
             return response
 
     def create_task(self, url = None, filename = None, filedata = None):
-        ''' Creates new download task in Synology DownloadStation. Either specify
+        """ Creates new download task in Synology DownloadStation. Either specify
         url or pair (filename, filedata).
 
         Returns True if task was created, False otherwise
-        '''
+        """
         result = False
         # login
         if self._login():

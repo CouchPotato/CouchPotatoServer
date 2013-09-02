@@ -37,7 +37,7 @@ class Plex(Notification):
                 for s in sections:
                     if s.getAttribute('type') in source_type:
                         url = refresh_url % s.getAttribute('key')
-                        x = self.urlopen(url)
+                        self.urlopen(url)
 
             except:
                 log.error('Plex library update failed for %s, Media Server not running: %s', (host, traceback.format_exc(1)))

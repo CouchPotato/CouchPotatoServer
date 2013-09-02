@@ -1,5 +1,4 @@
 from couchpotato.core.event import addEvent
-from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 
 

@@ -145,7 +145,7 @@ class MovieBase(MovieTypeBase):
 
         imdb_id = getImdb(str(movie_id))
 
-        if(imdb_id):
+        if imdb_id:
             m = db.query(Movie).filter(Movie.library.has(identifier = imdb_id)).first()
         else:
             m = db.query(Movie).filter_by(id = movie_id).first()
@@ -231,7 +231,7 @@ class MovieBase(MovieTypeBase):
             }))
 
         db.expire_all()
-        return (total_count, movies)
+        return total_count, movies
 
     def availableChars(self, status = None, release_status = None):
 
@@ -270,12 +270,12 @@ class MovieBase(MovieTypeBase):
 
     def listView(self, **kwargs):
 
-        status = splitString(kwargs.get('status', None))
-        release_status = splitString(kwargs.get('release_status', None))
-        limit_offset = kwargs.get('limit_offset', None)
-        starts_with = kwargs.get('starts_with', None)
-        search = kwargs.get('search', None)
-        order = kwargs.get('order', None)
+        status = splitString(kwargs.get('status'))
+        release_status = splitString(kwargs.get('release_status'))
+        limit_offset = kwargs.get('limit_offset')
+        starts_with = kwargs.get('starts_with')
+        search = kwargs.get('search')
+        order = kwargs.get('order')
 
         total_movies, movies = self.list(
             status = status,
@@ -372,7 +372,7 @@ class MovieBase(MovieTypeBase):
             fireEvent('status.get', ['active', 'snatched', 'ignored', 'done', 'downloaded'], single = True)
 
         default_profile = fireEvent('profile.default', single = True)
-        cat_id = params.get('category_id', None)
+        cat_id = params.get('category_id')
 
         db = get_session()
         m = db.query(Movie).filter_by(library_id = library.get('id')).first()
@@ -463,7 +463,7 @@ class MovieBase(MovieTypeBase):
 
             m.profile_id = kwargs.get('profile_id')
 
-            cat_id = kwargs.get('category_id', None)
+            cat_id = kwargs.get('category_id')
             if cat_id is not None:
                 m.category_id = tryInt(cat_id) if tryInt(cat_id) > 0 else None
 
@@ -559,7 +559,7 @@ class MovieBase(MovieTypeBase):
             log.debug('Can\'t restatus movie, doesn\'t seem to exist.')
             return False
 
-        log.debug('Changing status for %s', (m.library.titles[0].title))
+        log.debug('Changing status for %s', m.library.titles[0].title)
         if not m.profile:
             m.status_id = done_status.get('id')
         else:

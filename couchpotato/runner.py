@@ -112,7 +112,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
                     try:
                         if os.path.isfile(file_path):
                             os.remove(file_path)
-                    except Exception, e:
+                    except:
                         raise
 
                 os.rmdir(backup)
@@ -257,7 +257,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
         application.add_handlers(".*$", [
              ('%s%s/(.*)' % (static_path, dir_name), StaticFileHandler, {'path': toUnicode(os.path.join(base_path, 'couchpotato', 'static', dir_name))})
         ])
-    Env.set('static_path', static_path);
+    Env.set('static_path', static_path)
 
 
     # Load configs & plugins

@@ -1,6 +1,6 @@
 from couchpotato.core.event import fireEvent
 from couchpotato.core.helpers.encoding import simplifyString
-from couchpotato.core.helpers.variable import tryInt, splitString
+from couchpotato.core.helpers.variable import tryInt
 from couchpotato.environment import Env
 import re
 
@@ -24,7 +24,7 @@ name_scores = [
 
 
 def nameScore(name, year, preferred_words):
-    ''' Calculate score for words in the NZB name '''
+    """ Calculate score for words in the NZB name """
 
     score = 0
     name = name.lower()
@@ -34,11 +34,11 @@ def nameScore(name, year, preferred_words):
         v = value.split(':')
         add = int(v.pop())
         if v.pop() in name:
-            score = score + add
+            score += add
 
     # points if the year is correct
     if str(year) in name:
-        score = score + 5
+        score += 5
 
     # Contains preferred word
     nzb_words = re.split('\W+', simplifyString(name))

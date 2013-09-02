@@ -86,10 +86,10 @@ class ThePirateBay(TorrentMagnetProvider):
                         if link and download:
 
                             def extra_score(item):
-                                trusted = (0, 10)[result.find('img', alt = re.compile('Trusted')) != None]
-                                vip = (0, 20)[result.find('img', alt = re.compile('VIP')) != None]
-                                confirmed = (0, 30)[result.find('img', alt = re.compile('Helpers')) != None]
-                                moderated = (0, 50)[result.find('img', alt = re.compile('Moderator')) != None]
+                                trusted = (0, 10)[result.find('img', alt = re.compile('Trusted')) is not None]
+                                vip = (0, 20)[result.find('img', alt = re.compile('VIP')) is not None]
+                                confirmed = (0, 30)[result.find('img', alt = re.compile('Helpers')) is not None]
+                                moderated = (0, 50)[result.find('img', alt = re.compile('Moderator')) is not None]
 
                                 return confirmed + trusted + vip + moderated
 

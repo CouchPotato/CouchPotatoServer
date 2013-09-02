@@ -4,7 +4,8 @@ from couchpotato.core.helpers.variable import cleanHost
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
 from couchpotato.environment import Env
-from pytwitter import Api, parse_qsl
+from pytwitter import Api
+from urlparse import parse_qsl
 import oauth2
 
 log = CPLog(__name__)

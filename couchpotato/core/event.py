@@ -21,9 +21,11 @@ def addEvent(name, handler, priority = 100):
 
     def createHandle(*args, **kwargs):
 
+        h = None
         try:
             # Open handler
             has_parent = hasattr(handler, 'im_self')
+            parent = None
             if has_parent:
                 parent = handler.im_self
                 bc = hasattr(parent, 'beforeCall')
@@ -33,7 +35,7 @@ def addEvent(name, handler, priority = 100):
             h = runHandler(name, handler, *args, **kwargs)
 
             # Close handler
-            if has_parent:
+            if parent and has_parent:
                 ac = hasattr(parent, 'afterCall')
                 if ac: parent.afterCall(handler)
         except:

@@ -19,9 +19,6 @@ class AlloCine(UserscriptBase):
         except:
             return
 
-        name = None
-        year = None
-
         try:
             start = data.find('<title>')
             end = data.find('</title>', start)

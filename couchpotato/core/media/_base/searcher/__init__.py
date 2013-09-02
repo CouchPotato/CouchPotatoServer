@@ -1,5 +1,4 @@
 from .main import Searcher
-import random
 
 def start():
     return Searcher()

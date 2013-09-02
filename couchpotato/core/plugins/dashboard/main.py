@@ -93,7 +93,7 @@ class Dashboard(Plugin):
                 })
 
                 # Don't list older movies
-                if ((not late and ((not eta.get('dvd') and not eta.get('theater')) or (eta.get('dvd') and eta.get('dvd') > (now - 2419200)))) or \
+                if ((not late and (not eta.get('dvd') and not eta.get('theater') or eta.get('dvd') and eta.get('dvd') > (now - 2419200))) or
                         (late and (eta.get('dvd', 0) > 0 or eta.get('theater')) and eta.get('dvd') < (now - 2419200))):
                     movies.append(temp)
 

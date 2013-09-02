@@ -102,7 +102,7 @@ class QualityPlugin(Plugin):
 
     def fill(self):
 
-        db = get_session();
+        db = get_session()
 
         order = 0
         for q in self.qualities:

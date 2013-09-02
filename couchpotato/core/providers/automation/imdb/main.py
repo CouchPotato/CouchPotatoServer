@@ -58,7 +58,7 @@ class IMDBWatchlist(IMDBBase):
                         break
 
             except:
-                log.error('Failed loading IMDB watchlist: %s %s', (url, traceback.format_exc()))
+                log.error('Failed loading IMDB watchlist: %s %s', (watchlist_url, traceback.format_exc()))
 
         return movies
 

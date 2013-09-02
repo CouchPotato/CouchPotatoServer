@@ -23,7 +23,7 @@ class TheMovieDb(MovieProvider):
         tmdb3.set_cache(engine='file', filename=os.path.join(Env.get('cache_dir'), 'python', 'tmdb.cache'))
 
     def search(self, q, limit = 12):
-        ''' Find movie by name '''
+        """ Find movie by name """
 
         if self.isDisabled():
             return False
@@ -72,9 +72,6 @@ class TheMovieDb(MovieProvider):
         result = self.getCache(cache_key)
 
         if not result:
-            result = {}
-            movie = None
-
             try:
                 log.debug('Getting info: %s', cache_key)
                 movie = tmdb3.Movie(identifier)
@@ -129,7 +126,7 @@ class TheMovieDb(MovieProvider):
             movie_data['titles'].append(movie.originaltitle)
             for alt in movie.alternate_titles:
                 alt_name = alt.title
-                if alt_name and not alt_name in movie_data['titles'] and alt_name.lower() != 'none' and alt_name != None:
+                if alt_name and not alt_name in movie_data['titles'] and alt_name.lower() != 'none' and alt_name is not None:
                     movie_data['titles'].append(alt_name)
 
             movie_data['titles'] = list(set(movie_data['titles']))
@@ -149,6 +146,5 @@ class TheMovieDb(MovieProvider):
     def isDisabled(self):
         if self.conf('api_key') == '':
             log.error('No API key provided.')
-            True
-        else:
-            False
+            return True
+        return False

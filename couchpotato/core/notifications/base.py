@@ -45,6 +45,7 @@ class Notification(Provider):
     def _notify(self, *args, **kwargs):
         if self.isEnabled():
             return self.notify(*args, **kwargs)
+        return False
 
     def notify(self, message = '', data = {}, listener = None):
         pass

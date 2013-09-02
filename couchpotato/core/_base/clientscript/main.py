@@ -111,7 +111,7 @@ class ClientScript(Plugin):
                 data = jsmin(f)
             else:
                 data = self.prefix(f)
-                data = cssmin(f)
+                data = cssmin(data)
                 data = data.replace('../images/', '../static/images/')
                 data = data.replace('../fonts/', '../static/fonts/')
                 data = data.replace('../../static/', '../static/') # Replace inside plugins

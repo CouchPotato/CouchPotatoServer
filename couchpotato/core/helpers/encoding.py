@@ -63,7 +63,7 @@ def stripAccents(s):
 
 def tryUrlencode(s):
     new = u''
-    if isinstance(s, (dict)):
+    if isinstance(s, dict):
         for key, value in s.iteritems():
             new += u'&%s=%s' % (key, tryUrlencode(value))
 

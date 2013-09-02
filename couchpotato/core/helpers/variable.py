@@ -179,11 +179,11 @@ def getTitle(library_dict):
 
 def possibleTitles(raw_title):
 
-    titles = []
-
-    titles.append(toSafeString(raw_title).lower())
-    titles.append(raw_title.lower())
-    titles.append(simplifyString(raw_title))
+    titles = [
+        toSafeString(raw_title).lower(),
+        raw_title.lower(),
+        simplifyString(raw_title)
+    ]
 
     # replace some chars
     new_title = raw_title.replace('&', 'and')

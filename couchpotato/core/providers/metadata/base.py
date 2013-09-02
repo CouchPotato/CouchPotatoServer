@@ -82,8 +82,11 @@ class MetaDataBase(Plugin):
 
     def getThumbnail(self, movie_info = {}, data = {}, wanted_file_type = 'poster_original'):
         file_types = fireEvent('file.types', single = True)
-        for file_type in file_types:
-            if file_type.get('identifier') == wanted_file_type:
+        file_type = {}
+
+        for ft in file_types:
+            if ft.get('identifier') == wanted_file_type:
+                file_type = ft
                 break
 
         # See if it is in current files

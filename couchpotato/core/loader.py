@@ -66,7 +66,7 @@ class Loader(object):
                     self.loadPlugins(m, plugin.get('name'))
                 except ImportError as e:
                     # todo:: subclass ImportError for missing requirements.
-                    if (e.message.lower().startswith("missing")):
+                    if e.message.lower().startswith("missing"):
                         log.error(e.message)
                         pass
                     # todo:: this needs to be more descriptive.
@@ -122,7 +122,7 @@ class Loader(object):
         try:
             module.start()
             return True
-        except Exception, e:
+        except:
             log.error('Failed loading plugin "%s": %s', (module.__file__, traceback.format_exc()))
             return False
 

@@ -15,12 +15,9 @@ class NotifyMyAndroid(Notification):
         nma.addkey(keys)
         nma.developerkey(self.conf('dev_key'))
 
-        # hacky fix for the event type
-        # as it seems to be part of the message now
-        self.event = message.split(' ')[0]
         response = nma.push(
             application = self.default_title,
-            event = self.event,
+            event = message.split(' ')[0],
             description = message,
             priority = self.conf('priority'),
             batch_mode = len(keys) > 1

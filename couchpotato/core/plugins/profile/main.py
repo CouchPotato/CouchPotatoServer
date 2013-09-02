@@ -155,7 +155,7 @@ class ProfilePlugin(Plugin):
 
     def fill(self):
 
-        db = get_session();
+        db = get_session()
 
         profiles = [{
             'label': 'Best',

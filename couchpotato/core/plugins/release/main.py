@@ -8,6 +8,7 @@ from couchpotato.core.plugins.scanner.main import Scanner
 from couchpotato.core.settings.model import File, Release as Relea, Movie
 from sqlalchemy.sql.expression import and_, or_
 import os
+import traceback
 
 log = CPLog(__name__)
 
@@ -88,8 +89,8 @@ class Release(Plugin):
             added_files = db.query(File).filter(or_(*[File.id == x for x in added_files])).all()
             rel.files.extend(added_files)
             db.commit()
-        except Exception, e:
-            log.debug('Failed to attach "%s" to release: %s', (cur_file, e))
+        except:
+            log.debug('Failed to attach "%s" to release: %s', (added_files, traceback.format_exc()))
 
         fireEvent('movie.restatus', movie.id)
 

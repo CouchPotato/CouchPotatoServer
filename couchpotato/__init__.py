@@ -4,9 +4,6 @@ from couchpotato.core.event import fireEvent
 from couchpotato.core.helpers.variable import md5
 from couchpotato.core.logger import CPLog
 from couchpotato.environment import Env
-from sqlalchemy.engine import create_engine
-from sqlalchemy.orm import scoped_session
-from sqlalchemy.orm.session import sessionmaker
 from tornado import template
 from tornado.web import RequestHandler
 import os

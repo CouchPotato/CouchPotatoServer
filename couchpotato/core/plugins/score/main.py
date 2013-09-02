@@ -17,7 +17,7 @@ class Score(Plugin):
         addEvent('score.calculate', self.calculate)
 
     def calculate(self, nzb, movie):
-        ''' Calculate the score of a NZB, used for sorting later '''
+        """ Calculate the score of a NZB, used for sorting later """
 
         # Merge global and category
         preferred_words = splitString(Env.setting('preferred_words', section = 'searcher').lower())

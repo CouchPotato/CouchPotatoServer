@@ -27,9 +27,8 @@ class Synoindex(Notification):
             return True
         except OSError, e:
             log.error('Unable to run synoindex: %s', e)
-            return False
 
-        return True
+        return False
 
     def test(self, **kwargs):
         return {

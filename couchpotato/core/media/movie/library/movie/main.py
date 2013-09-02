@@ -2,8 +2,8 @@ from couchpotato import get_session
 from couchpotato.core.event import addEvent, fireEventAsync, fireEvent
 from couchpotato.core.helpers.encoding import toUnicode, simplifyString
 from couchpotato.core.logger import CPLog
-from couchpotato.core.settings.model import Library, LibraryTitle, File
 from couchpotato.core.media._base.library import LibraryBase
+from couchpotato.core.settings.model import Library, LibraryTitle, File
 from string import ascii_letters
 import time
 import traceback
@@ -66,6 +66,7 @@ class MovieLibraryPlugin(LibraryBase):
         library = db.query(Library).filter_by(identifier = identifier).first()
         done_status = fireEvent('status.get', 'done', single = True)
 
+        library_dict = None
         if library:
             library_dict = library.to_dict(self.default_dict)
 

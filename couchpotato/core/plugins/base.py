@@ -26,11 +26,13 @@ log = CPLog(__name__)
 class Plugin(object):
 
     _class_name = None
+    plugin_path = None
 
     enabled_option = 'enabled'
     auto_register_static = True
 
     _needs_shutdown = False
+    _running = None
 
     user_agent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:24.0) Gecko/20130519 Firefox/24.0'
     http_last_use = {}
@@ -306,4 +308,4 @@ class Plugin(object):
         return not self.isEnabled()
 
     def isEnabled(self):
-        return self.conf(self.enabled_option) or self.conf(self.enabled_option) == None
+        return self.conf(self.enabled_option) or self.conf(self.enabled_option) is None

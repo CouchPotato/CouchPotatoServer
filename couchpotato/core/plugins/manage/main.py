@@ -184,7 +184,7 @@ class Manage(Plugin):
                 fireEvent('release.add', group = group)
                 fireEventAsync('library.update.movie', identifier = identifier, on_complete = self.createAfterUpdate(folder, identifier))
             else:
-                self.in_progress[folder]['to_go'] = self.in_progress[folder]['to_go'] - 1
+                self.in_progress[folder]['to_go'] -= 1
 
         return addToLibrary
 
@@ -195,7 +195,7 @@ class Manage(Plugin):
             if not self.in_progress or self.shuttingDown():
                 return
 
-            self.in_progress[folder]['to_go'] = self.in_progress[folder]['to_go'] - 1
+            self.in_progress[folder]['to_go'] -= 1
             total = self.in_progress[folder]['total']
             movie_dict = fireEvent('movie.get', identifier, single = True)
 

@@ -47,6 +47,7 @@ class Suggestion(Plugin):
 
         ignored = splitString(Env.prop('suggest_ignore', default = ''))
 
+        new_suggestions = []
         if imdb:
             if not remove_only:
                 ignored.append(imdb)

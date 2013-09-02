@@ -122,7 +122,7 @@ class NZBVortex(Downloader):
                 # Try login and do again
                 if not repeat:
                     self.login()
-                    return self.call(call, parameters = parameters, repeat = True, *args, **kwargs)
+                    return self.call(call, parameters = parameters, repeat = True, **kwargs)
 
             log.error('Failed to parsing %s: %s', (self.getName(), traceback.format_exc()))
         except:
@@ -148,7 +148,7 @@ class NZBVortex(Downloader):
 
         return self.api_level
 
-    def isEnabled(self, manual, data):
+    def isEnabled(self, manual = False, data = {}):
         return super(NZBVortex, self).isEnabled(manual, data) and self.getApiLevel()
 
 
