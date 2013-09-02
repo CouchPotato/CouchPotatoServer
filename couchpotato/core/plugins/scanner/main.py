@@ -594,17 +594,6 @@ class Scanner(Plugin):
                 except:
                     pass
 
-        # Search based on OpenSubtitleHash
-        if not imdb_id and not group['is_dvd']:
-            for cur_file in files['movie']:
-                movie = fireEvent('movie.by_hash', file = cur_file, merge = True)
-
-                if len(movie) > 0:
-                    imdb_id = movie[0].get('imdb')
-                    if imdb_id:
-                        log.debug('Found movie via OpenSubtitleHash: %s', cur_file)
-                        break
-
         # Search based on identifiers
         if not imdb_id:
             for identifier in group['identifiers']:

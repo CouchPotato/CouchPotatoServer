@@ -1,8 +1,11 @@
 from couchpotato.core.event import addEvent
-from couchpotato.core.helpers.encoding import simplifyString, toUnicode
+from couchpotato.core.helpers.encoding import simplifyString, toUnicode, ss
+from couchpotato.core.helpers.variable import md5
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.info.base import MovieProvider
-from themoviedb import tmdb
+from couchpotato.environment import Env
+import os
+import tmdb3
 import traceback
 
 log = CPLog(__name__)
@@ -11,44 +14,13 @@ log = CPLog(__name__)
 class TheMovieDb(MovieProvider):
 
     def __init__(self):
-        addEvent('movie.by_hash', self.byHash)
         addEvent('movie.search', self.search, priority = 2)
         addEvent('movie.info', self.getInfo, priority = 2)
-        addEvent('movie.info_by_tmdb', self.getInfoByTMDBId)
+        addEvent('movie.info_by_tmdb', self.getInfo)
 
-        # Use base wrapper
-        tmdb.configure(self.conf('api_key'))
-
-    def byHash(self, file):
-        ''' Find movie by hash '''
-
-        if self.isDisabled():
-            return False
-
-        cache_key = 'tmdb.cache.%s' % simplifyString(file)
-        results = self.getCache(cache_key)
-
-        if not results:
-            log.debug('Searching for movie by hash: %s', file)
-            try:
-                raw = tmdb.searchByHashingFile(file)
-
-                results = []
-                if raw:
-                    try:
-                        results = self.parseMovie(raw)
-                        log.info('Found: %s', results['titles'][0] + ' (' + str(results.get('year', 0)) + ')')
-
-                        self.setCache(cache_key, results)
-                        return results
-                    except SyntaxError, e:
-                        log.error('Failed to parse XML response: %s', e)
-                        return False
-            except:
-                log.debug('No movies known by hash for: %s', file)
-                pass
-
-        return results
+        # Configure TMDB settings
+        tmdb3.set_key(self.conf('api_key'))
+        tmdb3.set_cache(engine='file', filename=os.path.join(Env.get('cache_dir'), 'python', 'tmdb.cache'))
 
     def search(self, q, limit = 12):
         ''' Find movie by name '''
@@ -65,7 +37,7 @@ class TheMovieDb(MovieProvider):
 
             raw = None
             try:
-                raw = tmdb.search(search_string)
+                raw = tmdb3.searchMovie(search_string)
             except:
                 log.error('Failed searching TMDB for "%s": %s', (search_string, traceback.format_exc()))
 
@@ -75,7 +47,7 @@ class TheMovieDb(MovieProvider):
                     nr = 0
 
                     for movie in raw:
-                        results.append(self.parseMovie(movie))
+                        results.append(self.parseMovie(movie, with_titles = False))
 
                         nr += 1
                         if nr == limit:
@@ -83,7 +55,7 @@ class TheMovieDb(MovieProvider):
 
                     log.info('Found: %s', [result['titles'][0] + ' (' + str(result.get('year', 0)) + ')' for result in results])
 
-                    self.setCache(cache_key, results)
+                    self.setCache(md5(ss(cache_key)), results)
                     return results
                 except SyntaxError, e:
                     log.error('Failed to parse XML response: %s', e)
@@ -105,108 +77,74 @@ class TheMovieDb(MovieProvider):
 
             try:
                 log.debug('Getting info: %s', cache_key)
-                movie = tmdb.imdbLookup(id = identifier)
-            except:
-                pass
-
-            if movie:
-                result = self.parseMovie(movie[0])
-                self.setCache(cache_key, result)
-
-        return result
-
-    def getInfoByTMDBId(self, id = None):
-
-        cache_key = 'tmdb.cache.%s' % id
-        result = self.getCache(cache_key)
-
-        if not result:
-            result = {}
-            movie = None
-
-            try:
-                log.debug('Getting info: %s', cache_key)
-                movie = tmdb.getMovieInfo(id = id)
-            except:
-                pass
-
-            if movie:
+                movie = tmdb3.Movie(identifier)
                 result = self.parseMovie(movie)
                 self.setCache(cache_key, result)
+            except:
+                pass
 
         return result
 
-    def parseMovie(self, movie):
+    def parseMovie(self, movie, with_titles = True):
 
         # Images
-        poster = self.getImage(movie, type = 'poster', size = 'cover')
-        #backdrop = self.getImage(movie, type = 'backdrop', size = 'w1280')
+        poster = self.getImage(movie, type = 'poster', size = 'poster')
         poster_original = self.getImage(movie, type = 'poster', size = 'original')
         backdrop_original = self.getImage(movie, type = 'backdrop', size = 'original')
 
         # Genres
         try:
-            genres = self.getCategory(movie, 'genre')
+            genres = [genre.name for genre in movie.genres]
         except:
             genres = []
 
         # 1900 is the same as None
-        year = str(movie.get('released', 'none'))[:4]
-        if year == '1900' or year.lower() == 'none':
+        year = str(movie.releasedate or '')[:4]
+        if not movie.releasedate or year == '1900' or year.lower() == 'none':
             year = None
 
         movie_data = {
             'via_tmdb': True,
-            'tmdb_id': int(movie.get('id', 0)),
-            'titles': [toUnicode(movie.get('name'))],
-            'original_title': movie.get('original_name'),
+            'tmdb_id': movie.id,
+            'titles': [toUnicode(movie.title)],
+            'original_title': movie.originaltitle,
             'images': {
                 'poster': [poster] if poster else [],
                 #'backdrop': [backdrop] if backdrop else [],
                 'poster_original': [poster_original] if poster_original else [],
                 'backdrop_original': [backdrop_original] if backdrop_original else [],
             },
-            'imdb': movie.get('imdb_id'),
-            'mpaa': movie.get('certification', ''),
-            'runtime': movie.get('runtime'),
-            'released': movie.get('released'),
+            'imdb': movie.imdb,
+            'runtime': movie.runtime,
+            'released': movie.releasedate,
             'year': year,
-            'plot': movie.get('overview'),
+            'plot': movie.overview,
             'genres': genres,
         }
 
         movie_data = dict((k, v) for k, v in movie_data.iteritems() if v)
 
         # Add alternative names
-        for alt in ['original_name', 'alternative_name']:
-            alt_name = toUnicode(movie.get(alt))
-            if alt_name and not alt_name in movie_data['titles'] and alt_name.lower() != 'none' and alt_name != None:
-                movie_data['titles'].append(alt_name)
+        if with_titles:
+            movie_data['titles'].append(movie.originaltitle)
+            for alt in movie.alternate_titles:
+                alt_name = alt.title
+                if alt_name and not alt_name in movie_data['titles'] and alt_name.lower() != 'none' and alt_name != None:
+                    movie_data['titles'].append(alt_name)
+
+            movie_data['titles'] = list(set(movie_data['titles']))
 
         return movie_data
 
-    def getImage(self, movie, type = 'poster', size = 'cover'):
+    def getImage(self, movie, type = 'poster', size = 'poster'):
 
         image_url = ''
-        for image in movie.get('images', []):
-            if(image.get('type') == type) and image.get(size):
-                image_url = image.get(size)
-                break
+        try:
+            image_url = getattr(movie, type).geturl(size='original')
+        except:
+            log.debug('Failed getting %s.%s for "%s"', (type, size, movie.title))
 
         return image_url
-
-    def getCategory(self, movie, type = 'genre'):
-
-        cats = movie.get('categories', {}).get(type)
-
-        categories = []
-        for category in cats:
-            try:
-                categories.append(category)
-            except:
-                pass
-
-        return categories
 
     def isDisabled(self):
         if self.conf('api_key') == '':
