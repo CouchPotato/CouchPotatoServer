@@ -2,7 +2,7 @@ from StringIO import StringIO
 from couchpotato.core.event import fireEvent, addEvent
 from couchpotato.core.helpers.encoding import tryUrlencode, ss, toSafeString, \
     toUnicode
-from couchpotato.core.helpers.variable import getExt, md5
+from couchpotato.core.helpers.variable import getExt, md5, isLocalIP
 from couchpotato.core.logger import CPLog
 from couchpotato.environment import Env
 from multipartpost import MultipartPostHandler
@@ -140,7 +140,7 @@ class Plugin(object):
             if self.http_failed_disabled[host] > (time.time() - 900):
                 log.info2('Disabled calls to %s for 15 minutes because so many failed requests.', host)
                 if not show_error:
-                    raise
+                    raise Exception('Disabled calls to %s for 15 minutes because so many failed requests')
                 else:
                     return ''
             else:
@@ -203,7 +203,7 @@ class Plugin(object):
                     self.http_failed_request[host] += 1
 
                     # Disable temporarily
-                    if self.http_failed_request[host] > 5:
+                    if self.http_failed_request[host] > 5 and not isLocalIP(host):
                         self.http_failed_disabled[host] = time.time()
 
             except:
