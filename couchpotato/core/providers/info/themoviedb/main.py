@@ -116,7 +116,7 @@ class TheMovieDb(MovieProvider):
             },
             'imdb': movie.imdb,
             'runtime': movie.runtime,
-            'released': movie.releasedate,
+            'released': str(movie.releasedate),
             'year': year,
             'plot': movie.overview,
             'genres': genres,
