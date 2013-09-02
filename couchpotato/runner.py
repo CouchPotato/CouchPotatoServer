@@ -89,7 +89,12 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     src_files = [options.config_file, db_path, db_path + '-shm', db_path + '-wal']
     for src_file in src_files:
         if os.path.isfile(src_file):
-            shutil.copy2(src_file, toUnicode(os.path.join(new_backup, os.path.basename(src_file))))
+            dst_file = toUnicode(os.path.join(new_backup, os.path.basename(src_file)))
+            shutil.copyfile(src_file, dst_file)
+
+            # Try and copy stats seperately
+            try: shutil.copystat(src_file, dst_file)
+            except: pass
 
     # Remove older backups, keep backups 3 days or at least 3
     backups = []
