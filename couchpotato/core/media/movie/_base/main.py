@@ -208,7 +208,6 @@ class MovieBase(MovieTypeBase):
         q2 = db.query(Movie).join((q, q.c.id == Movie.id)) \
             .options(joinedload_all('releases.files')) \
             .options(joinedload_all('releases.info')) \
-            .options(joinedload_all('profile.types')) \
             .options(joinedload_all('library.titles')) \
             .options(joinedload_all('library.files')) \
             .options(joinedload_all('status')) \
@@ -224,7 +223,6 @@ class MovieBase(MovieTypeBase):
         movies = []
         for movie in results:
             movies.append(movie.to_dict({
-                'profile': {'types': {}},
                 'releases': {'files':{}, 'info': {}},
                 'library': {'titles': {}, 'files':{}},
                 'files': {},
