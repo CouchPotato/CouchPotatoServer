@@ -3,8 +3,6 @@ from couchpotato.core.helpers.encoding import simplifyString, toUnicode, ss
 from couchpotato.core.helpers.variable import md5
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.info.base import MovieProvider
-from couchpotato.environment import Env
-import os
 import tmdb3
 import traceback
 
@@ -20,7 +18,7 @@ class TheMovieDb(MovieProvider):
 
         # Configure TMDB settings
         tmdb3.set_key(self.conf('api_key'))
-        tmdb3.set_cache(engine='file', filename=os.path.join(Env.get('cache_dir'), 'python', 'tmdb.cache'))
+        tmdb3.set_cache('null')
 
     def search(self, q, limit = 12):
         """ Find movie by name """
@@ -76,7 +74,7 @@ class TheMovieDb(MovieProvider):
                 log.debug('Getting info: %s', cache_key)
                 movie = tmdb3.Movie(identifier)
                 result = self.parseMovie(movie)
-                self.setCache(cache_key, result)
+                self.setCache(md5(ss(cache_key)), result)
             except:
                 pass
 
@@ -84,52 +82,60 @@ class TheMovieDb(MovieProvider):
 
     def parseMovie(self, movie, with_titles = True):
 
-        # Images
-        poster = self.getImage(movie, type = 'poster', size = 'poster')
-        poster_original = self.getImage(movie, type = 'poster', size = 'original')
-        backdrop_original = self.getImage(movie, type = 'backdrop', size = 'original')
+        cache_key = 'tmdb.cache.%s' % movie.id
+        movie_data = self.getCache(cache_key)
 
-        # Genres
-        try:
-            genres = [genre.name for genre in movie.genres]
-        except:
-            genres = []
+        if not movie_data:
 
-        # 1900 is the same as None
-        year = str(movie.releasedate or '')[:4]
-        if not movie.releasedate or year == '1900' or year.lower() == 'none':
-            year = None
+            # Images
+            poster = self.getImage(movie, type = 'poster', size = 'poster')
+            poster_original = self.getImage(movie, type = 'poster', size = 'original')
+            backdrop_original = self.getImage(movie, type = 'backdrop', size = 'original')
 
-        movie_data = {
-            'via_tmdb': True,
-            'tmdb_id': movie.id,
-            'titles': [toUnicode(movie.title)],
-            'original_title': movie.originaltitle,
-            'images': {
-                'poster': [poster] if poster else [],
-                #'backdrop': [backdrop] if backdrop else [],
-                'poster_original': [poster_original] if poster_original else [],
-                'backdrop_original': [backdrop_original] if backdrop_original else [],
-            },
-            'imdb': movie.imdb,
-            'runtime': movie.runtime,
-            'released': str(movie.releasedate),
-            'year': year,
-            'plot': movie.overview,
-            'genres': genres,
-        }
+            # Genres
+            try:
+                genres = [genre.name for genre in movie.genres]
+            except:
+                genres = []
 
-        movie_data = dict((k, v) for k, v in movie_data.iteritems() if v)
+            # 1900 is the same as None
+            year = str(movie.releasedate or '')[:4]
+            if not movie.releasedate or year == '1900' or year.lower() == 'none':
+                year = None
 
-        # Add alternative names
-        if with_titles:
-            movie_data['titles'].append(movie.originaltitle)
-            for alt in movie.alternate_titles:
-                alt_name = alt.title
-                if alt_name and not alt_name in movie_data['titles'] and alt_name.lower() != 'none' and alt_name is not None:
-                    movie_data['titles'].append(alt_name)
+            movie_data = {
+                'via_tmdb': True,
+                'tmdb_id': movie.id,
+                'titles': [toUnicode(movie.title)],
+                'original_title': movie.originaltitle,
+                'images': {
+                    'poster': [poster] if poster else [],
+                    #'backdrop': [backdrop] if backdrop else [],
+                    'poster_original': [poster_original] if poster_original else [],
+                    'backdrop_original': [backdrop_original] if backdrop_original else [],
+                },
+                'imdb': movie.imdb,
+                'runtime': movie.runtime,
+                'released': str(movie.releasedate),
+                'year': year,
+                'plot': movie.overview,
+                'genres': genres,
+            }
 
-            movie_data['titles'] = list(set(movie_data['titles']))
+            movie_data = dict((k, v) for k, v in movie_data.iteritems() if v)
+
+            # Add alternative names
+            if with_titles:
+                movie_data['titles'].append(movie.originaltitle)
+                for alt in movie.alternate_titles:
+                    alt_name = alt.title
+                    if alt_name and not alt_name in movie_data['titles'] and alt_name.lower() != 'none' and alt_name is not None:
+                        movie_data['titles'].append(alt_name)
+
+                movie_data['titles'] = list(set(movie_data['titles']))
+
+            # Cache movie parsed
+            self.setCache(md5(ss(cache_key)), movie_data)
 
         return movie_data
 
