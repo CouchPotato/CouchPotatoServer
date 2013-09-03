@@ -47,10 +47,10 @@ class NonBlockHandler(RequestHandler):
             return
 
         try:
-            self.write(response)
+            self.finish(response)
         except:
             log.error('Failed doing nonblock request: %s', (traceback.format_exc()))
-            self.write({'success': False, 'error': 'Failed returning results'})
+            self.finish({'success': False, 'error': 'Failed returning results'})
 
     def on_connection_close(self):
 
