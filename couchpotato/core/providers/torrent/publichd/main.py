@@ -74,7 +74,7 @@ class PublicHD(TorrentMagnetProvider):
         if not description:
 
             try:
-                full_description = self.urlopen(item['detail_url'], cache_timeout = 25920000)
+                full_description = self.urlopen(item['detail_url'])
                 html = BeautifulSoup(full_description)
                 nfo_pre = html.find('div', attrs = {'id':'torrmain'})
                 description = toUnicode(nfo_pre.text) if nfo_pre else ''
@@ -82,7 +82,7 @@ class PublicHD(TorrentMagnetProvider):
                 log.error('Failed getting more info for %s', item['name'])
                 description = ''
 
-            self.setCache(cache_key, description)
+            self.setCache(cache_key, description, timeout = 25920000)
 
         item['description'] = description
         return item
