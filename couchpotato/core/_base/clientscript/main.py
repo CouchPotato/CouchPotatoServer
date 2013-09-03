@@ -80,7 +80,7 @@ class ClientScript(Plugin):
         for static_type in self.core_static:
             for rel_path in self.core_static.get(static_type):
                 file_path = os.path.join(Env.get('app_dir'), 'couchpotato', 'static', rel_path)
-                core_url = 'api/%s/static/%s?%s' % (Env.setting('api_key'), rel_path, tryInt(os.path.getmtime(file_path)))
+                core_url = 'api/%s/static/%s' % (Env.setting('api_key'), rel_path)
 
                 if static_type == 'script':
                     self.registerScript(core_url, file_path, position = 'front')
@@ -164,6 +164,8 @@ class ClientScript(Plugin):
         self.register(api_path, file_path, 'script', position)
 
     def register(self, api_path, file_path, type, location):
+
+        api_path = '%s?%s' % (api_path, tryInt(os.path.getmtime(file_path)))
 
         if not self.urls[type].get(location):
             self.urls[type][location] = []
