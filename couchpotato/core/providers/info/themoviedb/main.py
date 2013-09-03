@@ -53,7 +53,7 @@ class TheMovieDb(MovieProvider):
 
                     log.info('Found: %s', [result['titles'][0] + ' (' + str(result.get('year', 0)) + ')' for result in results])
 
-                    self.setCache(md5(ss(cache_key)), results)
+                    self.setCache(cache_key, results)
                     return results
                 except SyntaxError, e:
                     log.error('Failed to parse XML response: %s', e)
@@ -74,7 +74,7 @@ class TheMovieDb(MovieProvider):
                 log.debug('Getting info: %s', cache_key)
                 movie = tmdb3.Movie(identifier)
                 result = self.parseMovie(movie)
-                self.setCache(md5(ss(cache_key)), result)
+                self.setCache(cache_key, result)
             except:
                 pass
 
@@ -135,7 +135,7 @@ class TheMovieDb(MovieProvider):
                 movie_data['titles'] = list(set(movie_data['titles']))
 
             # Cache movie parsed
-            self.setCache(md5(ss(cache_key)), movie_data)
+            self.setCache(cache_key, movie_data)
 
         return movie_data
 

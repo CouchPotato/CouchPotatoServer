@@ -35,7 +35,7 @@ class Suggestion(Plugin):
             suggestions = cached_suggestion
         else:
             suggestions = fireEvent('movie.suggest', movies = movies, ignore = ignored, single = True)
-            self.setCache(md5(ss('suggestion_cached')), suggestions, timeout = 6048000) # Cache for 10 weeks
+            self.setCache('suggestion_cached', suggestions, timeout = 6048000) # Cache for 10 weeks
 
         return {
             'success': True,
@@ -87,6 +87,6 @@ class Suggestion(Plugin):
             if suggestions:
                 new_suggestions.extend(suggestions)
 
-        self.setCache(md5(ss('suggestion_cached')), new_suggestions, timeout = 6048000)
+        self.setCache('suggestion_cached', new_suggestions, timeout = 6048000)
 
         return new_suggestions
