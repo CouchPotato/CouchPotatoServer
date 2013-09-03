@@ -156,36 +156,37 @@ class QualityPlugin(Plugin):
         if not extra: extra = {}
 
         # Create hash for cache
-        hash = md5(str([f.replace('.' + getExt(f), '') for f in files]))
-        cached = self.getCache(hash)
-        if cached and extra is {}: return cached
+        cache_key = md5(str([f.replace('.' + getExt(f), '') for f in files]))
+        cached = self.getCache(cache_key)
+        if cached and len(extra) == 0: return cached
 
+        qualities = self.all()
         for cur_file in files:
             words = re.split('\W+', cur_file.lower())
 
             found = {}
-            for quality in self.all():
+            for quality in qualities:
                 contains = self.containsTag(quality, words, cur_file)
                 if contains:
                     found[quality['identifier']] = True
 
-            for quality in self.all():
+            for quality in qualities:
 
                 # Check identifier
                 if quality['identifier'] in words:
                     if len(found) == 0 or len(found) == 1 and found.get(quality['identifier']):
                         log.debug('Found via identifier "%s" in %s', (quality['identifier'], cur_file))
-                        return self.setCache(hash, quality)
+                        return self.setCache(cache_key, quality)
 
                 # Check alt and tags
                 contains = self.containsTag(quality, words, cur_file)
                 if contains:
-                    return self.setCache(hash, quality)
+                    return self.setCache(cache_key, quality)
 
         # Try again with loose testing
-        quality = self.guessLoose(hash, files = files, extra = extra)
+        quality = self.guessLoose(cache_key, files = files, extra = extra)
         if quality:
-            return self.setCache(hash, quality)
+            return self.setCache(cache_key, quality)
 
         log.debug('Could not identify quality for: %s', files)
         return None
@@ -205,7 +206,7 @@ class QualityPlugin(Plugin):
 
         return
 
-    def guessLoose(self, hash, files = None, extra = None):
+    def guessLoose(self, cache_key, files = None, extra = None):
 
         if extra:
             for quality in self.all():
@@ -213,15 +214,15 @@ class QualityPlugin(Plugin):
                 # Check width resolution, range 20
                 if quality.get('width') and (quality.get('width') - 20) <= extra.get('resolution_width', 0) <= (quality.get('width') + 20):
                     log.debug('Found %s via resolution_width: %s == %s', (quality['identifier'], quality.get('width'), extra.get('resolution_width', 0)))
-                    return self.setCache(hash, quality)
+                    return self.setCache(cache_key, quality)
 
                 # Check height resolution, range 20
                 if quality.get('height') and (quality.get('height') - 20) <= extra.get('resolution_height', 0) <= (quality.get('height') + 20):
                     log.debug('Found %s via resolution_height: %s == %s', (quality['identifier'], quality.get('height'), extra.get('resolution_height', 0)))
-                    return self.setCache(hash, quality)
+                    return self.setCache(cache_key, quality)
 
             if 480 <= extra.get('resolution_width', 0) <= 720:
                 log.debug('Found as dvdrip')
-                return self.setCache(hash, self.single('dvdrip'))
+                return self.setCache(cache_key, self.single('dvdrip'))
 
         return None
