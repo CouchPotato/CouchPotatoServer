@@ -5,7 +5,7 @@ Page.Home = new Class({
 	name: 'home',
 	title: 'Manage new stuff for things and such',
 
-	indexAction: function(param){
+	indexAction: function () {
 		var self = this;
 
 		if(self.soon_list){
@@ -110,7 +110,7 @@ Page.Home = new Class({
 			'identifier': 'late',
 			'limit': 50,
 			'title': 'Still not available',
-			'description': 'Try another quality profile or maybe add more providers in <a href="'+App.createUrl('settings/searcher/providers/')+'">Settings</a>.',
+			'description': 'Try another quality profile or maybe add more providers in <a href="' + App.createUrl('settings/searcher/providers/') + '">Settings</a>.',
 			'filter': {
 				'late': true
 			},
@@ -139,4 +139,4 @@ Page.Home = new Class({
 
 	}
 
-})
+});

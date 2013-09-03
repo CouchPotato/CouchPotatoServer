@@ -92,9 +92,8 @@
                       border-radius:         4px;
                       -webkit-border-radius: 4px;
                       -moz-border-radius:    4px;
-                      -o-border-radius:      4px;
-                      -khtml-border-radius:  4px;
-                    }
+
+  }
     .uniForm #errorMsg h3{} /* Feel free to use a heading level suitable to your page structure */
     .uniForm #errorMsg ol{ margin: 0 0 1.5em 0; padding: 0; }
       .uniForm #errorMsg ol li{ margin: 0 0 3px 1.5em; padding: 7px; background: #f6bec1; position: relative; font-size: .85em;
@@ -102,9 +101,8 @@
                                 border-radius:         4px;
                                 -webkit-border-radius: 4px;
                                 -moz-border-radius:    4px;
-                                -o-border-radius:      4px;
-                                -khtml-border-radius:  4px;
-                              }
+
+      }
 
   .uniForm .ctrlHolder.error,
   .uniForm .ctrlHolder.focused.error{ background: #ffdfdf; border: 1px solid #f3afb5;
@@ -112,9 +110,8 @@
                                       border-radius:         4px;
                                       -webkit-border-radius: 4px;
                                       -moz-border-radius:    4px;
-                                      -o-border-radius:      4px;
-                                      -khtml-border-radius:  4px;
-                                    }
+
+  }
     .uniForm .ctrlHolder.error input.error,
     .uniForm .ctrlHolder.error select.error,
     .uniForm .ctrlHolder.error textarea.error{ color: #af4c4c; margin: 0 0 6px 0; padding: 4px; }
@@ -125,9 +122,8 @@
                    border-radius:         4px;
                    -webkit-border-radius: 4px;
                    -moz-border-radius:    4px;
-                   -o-border-radius:      4px;
-                   -khtml-border-radius:  4px;
-                 }
+
+  }
     .uniForm #OKMsg p{ margin: 0; }
 
 /* ----------------------------------------------------------------------------- */

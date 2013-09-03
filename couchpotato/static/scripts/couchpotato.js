@@ -15,7 +15,7 @@
 		var self = this;
 		self.setOptions(options);
 
-		self.c = $(document.body)
+		self.c = $(document.body);
 
 		self.route = new Route(self.defaults);
 
@@ -48,7 +48,6 @@
 	},
 
 	pushState: function(e){
-		var self = this;
 		if((!e.meta && Browser.Platform.mac) || (!e.control && !Browser.Platform.mac)){
 			(e).preventDefault();
 			var url = e.target.get('href');
@@ -111,11 +110,11 @@
 					'click': self.shutdownQA.bind(self)
 				}
 			})
-		]
+		];
 		
 		setting_links.each(function(a){
 			self.block.more.addLink(a)
-		})
+		});
 
 
 		new ScrollSpy({
@@ -133,7 +132,7 @@
 		var self = this;
 
 		Object.each(Page, function(page_class, class_name){
-			pg = new Page[class_name](self, {});
+			var pg = new Page[class_name](self, {});
 			self.pages[class_name] = pg;
 
 			$(pg).inject(self.content);
@@ -156,7 +155,7 @@
 			return;
 
 		if(self.current_page)
-			self.current_page.hide()
+			self.current_page.hide();
 
 		try {
 			var page = self.pages[page_name] || self.pages.Home;
@@ -190,7 +189,7 @@
 		self.checkAvailable(1000);
 	},
 
-	shutdownQA: function(e){
+	shutdownQA: function(){
 		var self = this;
 
 		var q = new Question('Are you sure you want to shutdown CouchPotato?', '', [{
@@ -239,7 +238,7 @@
 	checkForUpdate: function(onComplete){
 		var self = this;
 
-		Updater.check(onComplete)
+		Updater.check(onComplete);
 
 		self.blockPage('Please wait. If this takes too long, something must have gone wrong.', 'Checking for updates');
 		self.checkAvailable(3000);
@@ -257,7 +256,7 @@
 				},
 				'onSuccess': function(){
 					if(onAvailable)
-						onAvailable()
+						onAvailable();
 					self.unBlockPage();
 					self.fireEvent('reload');
 				}
@@ -271,7 +270,6 @@
 
 		self.unBlockPage();
 
-		var body = $(document.body);
 		self.mask = new Element('div.mask').adopt(
 			new Element('div').adopt(
 				new Element('h1', {'text': title || 'Unavailable'}),
@@ -328,7 +326,7 @@
 					'target': '',
 					'events': {
 						'click': function(e){
-							(e).stop()
+							(e).stop();
 							alert('Drag it to your bookmark ;)')
 						}
 					}
@@ -351,35 +349,35 @@ var Route = new Class({
 	params: {},
 
 	initialize: function(defaults){
-		var self = this
+		var self = this;
 		self.defaults = defaults
 	},
 
 	parse: function(){
 		var self = this;
 
-		var rep = function(pa){
+		var rep = function (pa) {
 			return pa.replace(Api.getOption('url'), '/').replace(App.getOption('base_url'), '/')
-		}
+		};
 
-		var path = rep(History.getPath())
+		var path = rep(History.getPath());
 		if(path == '/' && location.hash){
 			path = rep(location.hash.replace('#', '/'))
 		}
-		self.current = path.replace(/^\/+|\/+$/g, '')
-		var url = self.current.split('/')
+		self.current = path.replace(/^\/+|\/+$/g, '');
+		var url = self.current.split('/');
 
-		self.page = (url.length > 0) ? url.shift() : self.defaults.page
-		self.action = (url.length > 0) ? url.shift() : self.defaults.action
+		self.page = (url.length > 0) ? url.shift() : self.defaults.page;
+		self.action = (url.length > 0) ? url.shift() : self.defaults.action;
 
 		self.params = Object.merge({}, self.defaults.params);
 		if(url.length > 1){
-			var key
+			var key;
 			url.each(function(el, nr){
 				if(nr%2 == 0)
-					key = el
+					key = el;
 				else if(key) {
-					self.params[key] = el
+					self.params[key] = el;
 					key = null
 				}
 			})
@@ -487,8 +485,8 @@ function randomString(length, extra) {
 
 	var comparer = function(a, b) {
 		for (var i = 0, l = keyPaths.length; i < l; i++) {
-			aVal = valueOf(a, keyPaths[i].path);
-			bVal = valueOf(b, keyPaths[i].path);
+			var aVal = valueOf(a, keyPaths[i].path),
+				bVal = valueOf(b, keyPaths[i].path);
 			if (aVal > bVal) return keyPaths[i].sign;
 			if (aVal < bVal) return -keyPaths[i].sign;
 		}
@@ -529,4 +527,4 @@ var createSpinner = function(target, options){
 	}, options);
 
 	return new Spinner(opts).spin(target);
-}
+};
