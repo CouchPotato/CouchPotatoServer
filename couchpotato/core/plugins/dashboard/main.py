@@ -46,7 +46,6 @@ class Dashboard(Plugin):
 
         q = db.query(Movie).join((subq, subq.c.id == Movie.id)) \
             .options(joinedload_all('releases')) \
-            .options(joinedload_all('profile')) \
             .options(joinedload_all('library.titles')) \
             .options(joinedload_all('library.files')) \
             .options(joinedload_all('status')) \
@@ -65,7 +64,7 @@ class Dashboard(Plugin):
 
         movies = []
         for movie in all_movies:
-            pp = profile_pre.get(movie.profile.id)
+            pp = profile_pre.get(movie.profile_id)
             eta = movie.library.info.get('release_date', {}) or {}
             coming_soon = False
 
@@ -86,8 +85,6 @@ class Dashboard(Plugin):
 
             if coming_soon:
                 temp = movie.to_dict({
-                    'profile': {'types': {}},
-                    'releases': {'files':{}, 'info': {}},
                     'library': {'titles': {}, 'files':{}},
                     'files': {},
                 })
