@@ -88,6 +88,8 @@ var SuggestList = new Class({
 			$(m).inject(self.el);
 
 		});
+		
+		self.fireEvent('loaded');
 
 	},
 
