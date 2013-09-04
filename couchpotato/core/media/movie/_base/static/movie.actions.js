@@ -289,7 +289,7 @@ MA.Release = new Class({
 					})] : null
 				)
 			}
-			
+
 			self.last_release = null;
 			self.next_release = null;
 
@@ -828,15 +828,44 @@ MA.Files = new Class({
 		self.el = new Element('a.directory', {
 			'title': 'Available files',
 			'events': {
-				'click': self.showFiles.bind(self)
+				'click': self.show.bind(self)
 			}
 		});
 
 	},
 
-	showFiles: function(e){
+	show: function(e){
 		var self = this;
 		(e).preventDefault();
+
+		if(self.releases)
+			self.showFiles();
+		else {
+
+			self.movie.busy(true);
+
+			Api.request('release.for_movie', {
+				'data': {
+					'id': self.movie.data.id
+				},
+				'onComplete': function(json){
+					self.movie.busy(false, 1);
+
+					if(json && json.releases){
+						self.releases = json.releases;
+						self.showFiles();
+					}
+					else
+						alert('Something went wrong, check the logs.');
+				}
+			});
+
+		}
+
+	},
+
+	showFiles: function(){
+		var self = this;
 
 		if(!self.options_container){
 			self.options_container = new Element('div.options').adopt(
@@ -850,7 +879,7 @@ MA.Files = new Class({
 				new Element('span.is_available', {'text': 'Available'})
 			).inject(self.files_container)
 
-			Array.each(self.movie.data.releases, function(release){
+			Array.each(self.releases, function(release){
 
 				var rel = new Element('div.release').inject(self.files_container);
 

@@ -223,7 +223,7 @@ class Release(Plugin):
             .all()
 
         releases = [r.to_dict({'info':{}, 'files':{}}) for r in releases_raw]
-        releases = sorted(releases, key = lambda k: k['info']['score'], reverse = True)
+        releases = sorted(releases, key = lambda k: k['info'].get('score', 0), reverse = True)
 
         return {
             'releases': releases,
