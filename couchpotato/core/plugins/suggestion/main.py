@@ -5,6 +5,7 @@ from couchpotato.core.helpers.variable import splitString
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Movie
 from couchpotato.environment import Env
+from sqlalchemy.orm import joinedload_all
 from sqlalchemy.sql.expression import or_
 
 
@@ -28,6 +29,7 @@ class Suggestion(Plugin):
             if not movies or len(movies) == 0:
                 db = get_session()
                 active_movies = db.query(Movie) \
+                    .options(joinedload_all('library')) \
                     .filter(or_(*[Movie.status.has(identifier = s) for s in ['active', 'done']])).all()
                 movies = [x.library.identifier for x in active_movies]
 
