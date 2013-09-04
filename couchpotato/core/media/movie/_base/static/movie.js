@@ -179,20 +179,21 @@ var Movie = new Class({
 			});
 
 		// Add releases
-		self.data.releases.each(function(release){
-
-			var q = self.quality.getElement('.q_id'+ release.quality_id),
-				status = Status.get(release.status_id);
-
-			if(!q && (status.identifier == 'snatched' || status.identifier == 'done'))
-				var q = self.addQuality(release.quality_id)
-
-			if (status && q && !q.hasClass(status.identifier)){
-				q.addClass(status.identifier);
-				q.set('title', (q.get('title') ? q.get('title') : '') + ' status: '+ status.label)
-			}
-
-		});
+		if(self.data.releases)
+			self.data.releases.each(function(release){
+	
+				var q = self.quality.getElement('.q_id'+ release.quality_id),
+					status = Status.get(release.status_id);
+	
+				if(!q && (status.identifier == 'snatched' || status.identifier == 'done'))
+					var q = self.addQuality(release.quality_id)
+	
+				if (status && q && !q.hasClass(status.identifier)){
+					q.addClass(status.identifier);
+					q.set('title', (q.get('title') ? q.get('title') : '') + ' status: '+ status.label)
+				}
+	
+			});
 
 		Object.each(self.options.actions, function(action, key){
 			self.action[key.toLowerCase()] = action = new self.options.actions[key](self)
