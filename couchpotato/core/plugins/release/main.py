@@ -6,6 +6,7 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.plugins.scanner.main import Scanner
 from couchpotato.core.settings.model import File, Release as Relea, Movie
+from sqlalchemy.orm import joinedload_all
 from sqlalchemy.sql.expression import and_, or_
 import os
 import traceback
@@ -34,6 +35,12 @@ class Release(Plugin):
             'desc': 'Toggle ignore, for bad or wrong releases',
             'params': {
                 'id': {'type': 'id', 'desc': 'ID of the release object in release-table'}
+            }
+        })
+        addApiView('release.for_movie', self.forMovie, docs = {
+            'desc': 'Returns all releases for a movie. Ordered by score(desc)',
+            'params': {
+                'id': {'type': 'id', 'desc': 'ID of the movie'}
             }
         })
 
@@ -204,3 +211,22 @@ class Release(Plugin):
         return {
             'success': False
         }
+
+    def forMovie(self, id = None, **kwargs):
+
+        db = get_session()
+
+        releases_raw = db.query(Relea) \
+            .options(joinedload_all('info')) \
+            .options(joinedload_all('files')) \
+            .filter(Relea.movie_id == id) \
+            .all()
+
+        releases = [r.to_dict({'info':{}, 'files':{}}) for r in releases_raw]
+        releases = sorted(releases, key = lambda k: k['info']['score'], reverse = True)
+
+        return {
+            'releases': releases,
+            'success': True
+        }
+
