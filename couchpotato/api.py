@@ -95,8 +95,12 @@ class ApiHandler(RequestHandler):
             # Add async callback handler
             @run_async
             def run_handler(callback):
-                result = api[route](**kwargs)
-                callback(result)
+                try:
+                    result = api[route](**kwargs)
+                    callback(result)
+                except:
+                    log.error('Failed doing api request "%s": %s', (route, traceback.format_exc()))
+                    callback({'success': False, 'error': 'Failed returning results'})
             result = yield tornado.gen.Task(run_handler)
 
             # Check JSONP callback
