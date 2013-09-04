@@ -2,7 +2,8 @@ from couchpotato import get_session
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, fireEventAsync, addEvent
 from couchpotato.core.helpers.encoding import toUnicode, simplifyString
-from couchpotato.core.helpers.variable import getImdb, splitString, tryInt
+from couchpotato.core.helpers.variable import getImdb, splitString, tryInt, \
+    mergeDicts
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media.movie import MovieTypeBase
 from couchpotato.core.settings.model import Library, LibraryTitle, Movie, \
@@ -204,28 +205,50 @@ class MovieBase(MovieTypeBase):
         else:
             q = q.order_by(asc(LibraryTitle.simple_title))
 
-        q = q.subquery()
-        q2 = db.query(Movie).join((q, q.c.id == Movie.id)) \
-            .options(joinedload_all('releases.files')) \
-            .options(joinedload_all('releases.info')) \
+        if limit_offset:
+            splt = splitString(limit_offset) if isinstance(limit_offset, (str, unicode)) else limit_offset
+            limit = splt[0]
+            offset = 0 if len(splt) is 1 else splt[1]
+            q = q.limit(limit).offset(offset)
+
+
+        movie_ids = [m.id for m in q.all()]
+
+        # List release statuses
+        releases = db.query(Release) \
+            .filter(Release.movie_id.in_(movie_ids)) \
+            .all()
+
+        release_statuses = dict((m, set()) for m in movie_ids)
+        releases_count = dict((m, 0) for m in movie_ids)
+        for release in releases:
+            release_statuses[release.movie_id].add('%d,%d' % (release.status_id, release.quality_id))
+            releases_count[release.movie_id] += 1
+
+        # Get main movie data
+        q2 = db.query(Movie) \
             .options(joinedload_all('library.titles')) \
             .options(joinedload_all('library.files')) \
             .options(joinedload_all('status')) \
             .options(joinedload_all('files'))
 
-        if limit_offset:
-            splt = splitString(limit_offset) if isinstance(limit_offset, (str, unicode)) else limit_offset
-            limit = splt[0]
-            offset = 0 if len(splt) is 1 else splt[1]
-            q2 = q2.limit(limit).offset(offset)
+        q2 = q2.filter(Movie.id.in_(movie_ids))
 
         results = q2.all()
+
         movies = []
         for movie in results:
-            movies.append(movie.to_dict({
-                'releases': {'files':{}, 'info': {}},
+
+            releases = []
+            for r in release_statuses.get(movie.id):
+                x = splitString(r)
+                releases.append({'status_id': x[0], 'quality_id': x[1]})
+            movies.append(mergeDicts(movie.to_dict({
                 'library': {'titles': {}, 'files':{}},
                 'files': {},
+            }), {
+                'releases': releases,
+                'releases_count': releases_count.get(movie.id),
             }))
 
         db.expire_all()

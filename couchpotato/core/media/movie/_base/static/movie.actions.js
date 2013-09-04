@@ -124,6 +124,46 @@ MA.Release = new Class({
 		else
 			self.showHelper();
 
+		App.addEvent('movie.searcher.ended.'+self.movie.data.id, function(notification){
+			self.releases = null;
+			if(self.options_container){
+				self.options_container.destroy();
+				self.options_container = null;
+			}
+		});
+
+	},
+
+	show: function(e){
+		var self = this;
+		if(e)
+			(e).preventDefault();
+
+		if(self.releases)
+			self.createReleases();
+		else {
+
+			self.movie.busy(true);
+
+			Api.request('release.for_movie', {
+				'data': {
+					'id': self.movie.data.id
+				},
+				'onComplete': function(json){
+					self.movie.busy(false, 1);
+
+					if(json && json.releases){
+						self.releases = json.releases;
+						self.createReleases();
+					}
+					else
+						alert('Something went wrong, check the logs.');
+				}
+			});
+
+		}
+
+
 	},
 
 	createReleases: function(){
@@ -145,7 +185,7 @@ MA.Release = new Class({
 				new Element('span.provider', {'text': 'Provider'})
 			).inject(self.release_container)
 
-			self.movie.data.releases.sortBy('-info.score').each(function(release){
+			self.releases.each(function(release){
 
 				var status = Status.get(release.status_id),
 					quality = Quality.getProfile(release.quality_id) || {},
@@ -211,13 +251,11 @@ MA.Release = new Class({
 				}
 			});
 
-			if(self.last_release){
+			if(self.last_release)
 				self.release_container.getElement('#release_'+self.last_release.id).addClass('last_release');
-			}
 
-			if(self.next_release){
+			if(self.next_release)
 				self.release_container.getElement('#release_'+self.next_release.id).addClass('next_release');
-			}
 
 			if(self.next_release || (self.last_release && ['ignored', 'failed'].indexOf(self.last_release.status.identifier) === false)){
 
@@ -230,7 +268,9 @@ MA.Release = new Class({
 					self.last_release ? new Element('a.button.orange', {
 						'text': 'the same release again',
 						'events': {
-							'click': self.trySameRelease.bind(self)
+							'click': function(){
+								self.download(self.last_release);
+							}
 						}
 					}) : null,
 					self.next_release && self.last_release ? new Element('span.or', {
@@ -239,7 +279,9 @@ MA.Release = new Class({
 					self.next_release ? [new Element('a.button.green', {
 						'text': self.last_release ? 'another release' : 'the best release',
 						'events': {
-							'click': self.tryNextRelease.bind(self)
+							'click': function(){
+								self.download(self.next_release);
+							}
 						}
 					}),
 					new Element('span.or', {
@@ -247,19 +289,16 @@ MA.Release = new Class({
 					})] : null
 				)
 			}
+			
+			self.last_release = null;
+			self.next_release = null;
 
 		}
 
-	},
-
-	show: function(e){
-		var self = this;
-		if(e)
-			(e).preventDefault();
-
-		self.createReleases();
+		// Show it
 		self.options_container.inject(self.movie, 'top');
 		self.movie.slide('in', self.options_container);
+
 	},
 
 	showHelper: function(e){
@@ -267,15 +306,29 @@ MA.Release = new Class({
 		if(e)
 			(e).preventDefault();
 
-		self.createReleases();
+		var has_available = false,
+			has_snatched = false;
 
-		if(self.next_release || (self.last_release && ['ignored', 'failed'].indexOf(self.last_release.status.identifier) === false)){
+		self.movie.data.releases.each(function(release){
+			if(has_available && has_snatched) return;
+
+			var status = Status.get(release.status_id);
+
+			if(['snatched', 'downloaded', 'seeding'].contains(status.identifier))
+				has_snatched = true;
+
+			if(['available'].contains(status.identifier))
+				has_available = true;
+
+		});
+
+		if(has_available || has_snatched){
 
 			self.trynext_container = new Element('div.buttons.trynext').inject(self.movie.info_container);
 
 			self.trynext_container.adopt(
-				self.next_release ? [new Element('a.icon2.readd', {
-					'text': self.last_release ? 'Download another release' : 'Download the best release',
+				has_available ? [new Element('a.icon2.readd', {
+					'text': has_snatched ? 'Download another release' : 'Download the best release',
 					'events': {
 						'click': self.tryNextRelease.bind(self)
 					}
@@ -291,24 +344,7 @@ MA.Release = new Class({
 				new Element('a.icon2.completed', {
 					'text': 'mark this movie done',
 					'events': {
-						'click': function(){
-							Api.request('movie.delete', {
-								'data': {
-									'id': self.movie.get('id'),
-									'delete_from': 'wanted'
-								},
-								'onComplete': function(){
-									var movie = $(self.movie);
-									movie.set('tween', {
-										'duration': 300,
-										'onComplete': function(){
-											self.movie.destroy()
-										}
-									});
-									movie.tween('height', 0);
-								}
-							});
-						}
+						'click': self.markMovieDone.bind(self)
 					}
 				})
 			)
@@ -326,14 +362,14 @@ MA.Release = new Class({
 		var release_el = self.release_container.getElement('#release_'+release.id),
 			icon = release_el.getElement('.download.icon2');
 
-		self.movie.busy(true);
+		icon.addClass('icon spinner').removeClass('download');
 
 		Api.request('release.download', {
 			'data': {
 				'id': release.id
 			},
 			'onComplete': function(json){
-				self.movie.busy(false);
+				icon.removeClass('icon spinner');
 
 				if(json.success)
 					icon.addClass('completed');
@@ -365,24 +401,36 @@ MA.Release = new Class({
 
 	},
 
-	tryNextRelease: function(movie_id){
+	markMovieDone: function(){
 		var self = this;
 
-		self.createReleases();
-
-		if(self.last_release)
-			self.ignore(self.last_release);
-
-		if(self.next_release)
-			self.download(self.next_release);
+		Api.request('movie.delete', {
+			'data': {
+				'id': self.movie.get('id'),
+				'delete_from': 'wanted'
+			},
+			'onComplete': function(){
+				var movie = $(self.movie);
+				movie.set('tween', {
+					'duration': 300,
+					'onComplete': function(){
+						self.movie.destroy()
+					}
+				});
+				movie.tween('height', 0);
+			}
+		});
 
 	},
 
-	trySameRelease: function(movie_id){
+	tryNextRelease: function(movie_id){
 		var self = this;
 
-		if(self.last_release)
-			self.download(self.last_release);
+		Api.request('movie.searcher.try_next', {
+			'data': {
+				'id': self.movie.get('id')
+			}
+		});
 
 	}
 

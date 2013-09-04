@@ -58,7 +58,7 @@ var Movie = new Class({
 		})
 	},
 
-	busy: function(set_busy){
+	busy: function(set_busy, timeout){
 		var self = this;
 
 		if(!set_busy){
@@ -72,9 +72,9 @@ var Movie = new Class({
 							self.spinner.el.destroy();
 						self.spinner = null;
 						self.mask = null;
-					}, 400);
+					}, timeout || 400);
 				}
-			}, 1000)
+			}, timeout || 1000)
 		}
 		else if(!self.spinner) {
 			self.createMask();
