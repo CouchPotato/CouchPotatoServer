@@ -1,12 +1,12 @@
 from couchpotato import get_session
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent
-from couchpotato.core.helpers.encoding import ss
-from couchpotato.core.helpers.variable import splitString, md5
+from couchpotato.core.helpers.variable import splitString
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Movie
 from couchpotato.environment import Env
 from sqlalchemy.sql.expression import or_
+
 
 class Suggestion(Plugin):
 
@@ -15,32 +15,32 @@ class Suggestion(Plugin):
         addApiView('suggestion.view', self.suggestView)
         addApiView('suggestion.ignore', self.ignoreView)
 
-    def suggestView(self, **kwargs):
+    def suggestView(self, limit = 6, **kwargs):
 
         movies = splitString(kwargs.get('movies', ''))
         ignored = splitString(kwargs.get('ignored', ''))
-        limit = kwargs.get('limit', 6)
-
-        if not movies or len(movies) == 0:
-            db = get_session()
-            active_movies = db.query(Movie) \
-                .filter(or_(*[Movie.status.has(identifier = s) for s in ['active', 'done']])).all()
-            movies = [x.library.identifier for x in active_movies]
-
-        if not ignored or len(ignored) == 0:
-            ignored = splitString(Env.prop('suggest_ignore', default = ''))
 
         cached_suggestion = self.getCache('suggestion_cached')
         if cached_suggestion:
             suggestions = cached_suggestion
         else:
+
+            if not movies or len(movies) == 0:
+                db = get_session()
+                active_movies = db.query(Movie) \
+                    .filter(or_(*[Movie.status.has(identifier = s) for s in ['active', 'done']])).all()
+                movies = [x.library.identifier for x in active_movies]
+
+            if not ignored or len(ignored) == 0:
+                ignored = splitString(Env.prop('suggest_ignore', default = ''))
+
             suggestions = fireEvent('movie.suggest', movies = movies, ignore = ignored, single = True)
             self.setCache('suggestion_cached', suggestions, timeout = 6048000) # Cache for 10 weeks
 
         return {
             'success': True,
             'count': len(suggestions),
-            'suggestions': suggestions[:limit]
+            'suggestions': suggestions[:int(limit)]
         }
 
     def ignoreView(self, imdb = None, limit = 6, remove_only = False, **kwargs):
