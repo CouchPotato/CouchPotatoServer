@@ -304,7 +304,7 @@ class ShowBase(MediaBase):
         def onComplete():
             db = get_session()
             media = db.query(Media).filter_by(id = id).first()
-            fireEventAsync('show.searcher.%s' % media.type, media.to_dict(self.default_dict), on_complete = self.createNotifyFront(id))
+            fireEventAsync('show.searcher.single', media.to_dict(self.default_dict), on_complete = self.createNotifyFront(id))
             db.expire_all()
 
         return onComplete

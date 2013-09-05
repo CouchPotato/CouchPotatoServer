@@ -4,6 +4,7 @@ from couchpotato.core.helpers.variable import getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.searcher.main import SearchSetupError
 from couchpotato.core.plugins.base import Plugin
+from couchpotato.core.settings.model import Media
 
 log = CPLog(__name__)
 
@@ -15,9 +16,7 @@ class ShowSearcher(Plugin):
     def __init__(self):
         super(ShowSearcher, self).__init__()
 
-        addEvent('show.searcher.show', self.show)
-        addEvent('show.searcher.season', self.season)
-        addEvent('show.searcher.episode', self.episode)
+        addEvent('show.searcher.single', self.single)
 
     def _get_search_protocols(self):
         try:
@@ -25,11 +24,11 @@ class ShowSearcher(Plugin):
         except SearchSetupError:
             return None
 
-    def show(self, show, search_protocols = None):
-        # TODO - handover to searching for seasons
-        pass
+    def single(self, media, search_protocols = None):
+        if media['type'] == 'show':
+            # TODO handle show searches (scan all seasons)
+            return
 
-    def season(self, season, search_protocols = None):
         # Find out search type
         search_protocols = self._get_search_protocols() if not search_protocols else None
         if search_protocols is None:
@@ -37,36 +36,7 @@ class ShowSearcher(Plugin):
 
         done_status = fireEvent('status.get', 'done', single = True)
 
-        if not season['profile'] or season['status_id'] == done_status.get('id'):
-            log.debug('Season doesn\'t have a profile or already done, assuming in manage tab.')
-            return
-
-        db = get_session()
-
-        pre_releases = fireEvent('quality.pre_releases', single = True)
-        available_status, ignored_status, failed_status = fireEvent('status.get', ['available', 'ignored', 'failed'], single = True)
-
-        found_releases = []
-        too_early_to_search = []
-
-        default_title = getTitle(season['library'])
-        if not default_title:
-            log.error('No proper info found for season, removing it from library to cause it from having more issues.')
-            #fireEvent('season.delete', season['id'], single = True)
-            return
-
-        fireEvent('notify.frontend', type = 'show.searcher.started.%s' % season['id'], data = True, message = 'Searching for "%s"' % default_title)
-
-
-    def episode(self, episode, search_protocols = None):
-        # Find out search type
-        search_protocols = self._get_search_protocols() if not search_protocols else None
-        if search_protocols is None:
-            return
-
-        done_status = fireEvent('status.get', 'done', single = True)
-
-        if not episode['profile'] or episode['status_id'] == done_status.get('id'):
+        if not media['profile'] or media['status_id'] == done_status.get('id'):
             log.debug('Episode doesn\'t have a profile or already done, assuming in manage tab.')
             return
 
@@ -78,10 +48,51 @@ class ShowSearcher(Plugin):
         found_releases = []
         too_early_to_search = []
 
-        default_title = getTitle(episode['library'])
+        default_title = getTitle(media['library'])
         if not default_title:
             log.error('No proper info found for episode, removing it from library to cause it from having more issues.')
             #fireEvent('episode.delete', episode['id'], single = True)
             return
 
-        fireEvent('notify.frontend', type = 'show.searcher.started.%s' % episode['id'], data = True, message = 'Searching for "%s"' % default_title)
+        media_library = db.query(Media).filter_by(id = media['id']).first().library
+
+        show = None
+        season = None
+        episode = None
+        if media['type'] == 'episode':
+            show = media_library.parent.parent
+            season = media_library.parent
+            episode = media_library
+        if media['type'] == 'season':
+            show = media_library.parent
+            season = media_library
+
+        fireEvent('notify.frontend', type = 'show.searcher.started.%s' % media['id'], data = True, message = 'Searching for "%s"' % default_title)
+
+        ret = False
+        for quality_type in media['profile']['types']:
+            # TODO check air date?
+            #if not self.conf('always_search') and not self.couldBeReleased(quality_type['quality']['identifier'] in pre_releases, release_dates, movie['library']['year']):
+            #    too_early_to_search.append(quality_type['quality']['identifier'])
+            #    continue
+
+            has_better_quality = 0
+
+            # See if better quality is available
+            for release in media['releases']:
+                if release['quality']['order'] <= quality_type['quality']['order'] and release['status_id'] not in [available_status.get('id'), ignored_status.get('id'), failed_status.get('id')]:
+                    has_better_quality += 1
+
+            # Don't search for quality lower then already available.
+            if has_better_quality is 0:
+
+                log.info('Search for %s S%02d%s in %s', (getTitle(show), season.season_number, "E%02d" % episode.episode_number if episode else "", quality_type['quality']['label']))
+                quality = fireEvent('quality.single', identifier = quality_type['quality']['identifier'], single = True)
+
+                results = []
+                for search_protocol in search_protocols:
+                    protocol_results = fireEvent('provider.search.%s.%s' % (search_protocol, media['type']), media, quality, merge = True)
+                    if protocol_results:
+                        results += protocol_results
+
+                log.info('%d results found' % len(results))
