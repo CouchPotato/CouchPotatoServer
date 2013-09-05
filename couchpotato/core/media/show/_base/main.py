@@ -42,6 +42,12 @@ class ShowBase(MediaBase):
     'shows': array, shows found,
 }"""}
         })
+        addApiView('show.refresh', self.refresh, docs = {
+            'desc': 'Refresh a show, season or episode by id',
+            'params': {
+                'id': {'desc': 'Show, Season or Episode ID(s) you want to refresh.', 'type': 'int (comma separated)'},
+            }
+        })
         addApiView('show.add', self.addView, docs = {
             'desc': 'Add new movie to the wanted list',
             'params': {
@@ -52,6 +58,26 @@ class ShowBase(MediaBase):
         })
 
         addEvent('show.add', self.add)
+
+    def refresh(self, id = '', **kwargs):
+        db = get_session()
+
+        for x in splitString(id):
+            media = db.query(Media).filter_by(id = x).first()
+
+            if media:
+                # Get current selected title
+                default_title = ''
+                for title in media.library.titles:
+                    if title.default: default_title = title.title
+
+                fireEvent('notify.frontend', type = '%s.busy.%s' % (media.type, x), data = True)
+                fireEventAsync('library.update.%s' % media.type, identifier = media.library.identifier, default_title = default_title, force = True, on_complete = self.createOnComplete(x))
+
+        db.expire_all()
+        return {
+            'success': True,
+        }
 
     def search(self, q = '', **kwargs):
         cache_key = u'%s/%s' % (__name__, simplifyString(q))
@@ -273,12 +299,12 @@ class ShowBase(MediaBase):
         db.expire_all()
         return show_dict
 
-    def createOnComplete(self, show_id):
+    def createOnComplete(self, id):
 
         def onComplete():
             db = get_session()
-            show = db.query(Media).filter_by(id = show_id).first()
-            fireEventAsync('show.searcher.single', show.to_dict(self.default_dict), on_complete = self.createNotifyFront(show_id))
+            media = db.query(Media).filter_by(id = id).first()
+            fireEventAsync('show.searcher.%s' % media.type, media.to_dict(self.default_dict), on_complete = self.createNotifyFront(id))
             db.expire_all()
 
         return onComplete
