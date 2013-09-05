@@ -40,64 +40,76 @@ class Dashboard(Plugin):
 
             profile_pre[profile.get('id')] = contains
 
-        # Get all active movies
-        active_status, snatched_status, downloaded_status, available_status = fireEvent('status.get', ['active', 'snatched', 'downloaded', 'available'], single = True)
-        subq = db.query(Movie).filter(Movie.status_id == active_status.get('id')).subquery()
-
-        q = db.query(Movie).join((subq, subq.c.id == Movie.id)) \
-            .options(joinedload_all('releases')) \
-            .options(joinedload_all('library.titles')) \
-            .options(joinedload_all('library.files')) \
-            .options(joinedload_all('status')) \
-            .options(joinedload_all('files'))
-
         # Add limit
         limit = 12
         if limit_offset:
             splt = splitString(limit_offset) if isinstance(limit_offset, (str, unicode)) else limit_offset
             limit = tryInt(splt[0])
 
-        all_movies = q.all()
+        # Get all active movies
+        active_status = fireEvent('status.get', ['active'], single = True)
+        active = db.query(Movie) \
+            .filter(Movie.status_id == active_status.get('id')) \
+            .all()
+        all_movie_ids = [r.id for r in active]
 
+        # Do the shuffle
         if random:
-            rndm.shuffle(all_movies)
+            rndm.shuffle(all_movie_ids)
+
+        group_limit = limit * 5
+        group_offset = 0
+        movies = []
+
+        while group_offset < len(all_movie_ids) and len(movies) < limit:
+
+            movie_ids = all_movie_ids[group_offset:group_offset + group_limit]
+            group_offset += group_limit
+
+            # Only joined needed
+            q = db.query(Movie) \
+                .options(joinedload_all('library')) \
+                .filter(Movie.id.in_(movie_ids))
+            all_movies = q.all()
+
+            for movie in all_movies:
+                pp = profile_pre.get(movie.profile_id)
+                if not pp: continue
+
+                eta = movie.library.info.get('release_date', {}) or {}
+                coming_soon = False
+
+                # Theater quality
+                if pp.get('theater') and fireEvent('movie.searcher.could_be_released', True, eta, movie.library.year, single = True):
+                    coming_soon = True
+                elif pp.get('dvd') and fireEvent('movie.searcher.could_be_released', False, eta, movie.library.year, single = True):
+                    coming_soon = True
+
+                if coming_soon:
+
+                    # Don't list older movies
+                    if ((not late and (not eta.get('dvd') and not eta.get('theater') or eta.get('dvd') and eta.get('dvd') > (now - 2419200))) or
+                            (late and (eta.get('dvd', 0) > 0 or eta.get('theater')) and eta.get('dvd') < (now - 2419200))):
+                        movies.append(movie.id)
+
+                        if len(movies) >= limit:
+                            break
+
+        # Get all movie information
+        movies_raw = db.query(Movie) \
+            .options(joinedload_all('library.titles')) \
+            .options(joinedload_all('library.files')) \
+            .options(joinedload_all('files')) \
+            .filter(Movie.id.in_(movies)) \
+            .all()
 
         movies = []
-        for movie in all_movies:
-            pp = profile_pre.get(movie.profile_id)
-            eta = movie.library.info.get('release_date', {}) or {}
-            coming_soon = False
+        for r in movies_raw:
+            movies.append(r.to_dict({
+                'library': {'titles': {}, 'files':{}},
+                'files': {},
+            }))
 
-            # Theater quality
-            if pp.get('theater') and fireEvent('movie.searcher.could_be_released', True, eta, movie.library.year, single = True):
-                coming_soon = True
-            if pp.get('dvd') and fireEvent('movie.searcher.could_be_released', False, eta, movie.library.year, single = True):
-                coming_soon = True
-
-            # Skip if movie is snatched/downloaded/available
-            skip = False
-            for release in movie.releases:
-                if release.status_id in [snatched_status.get('id'), downloaded_status.get('id'), available_status.get('id')]:
-                    skip = True
-                    break
-            if skip:
-                continue
-
-            if coming_soon:
-                temp = movie.to_dict({
-                    'library': {'titles': {}, 'files':{}},
-                    'files': {},
-                })
-
-                # Don't list older movies
-                if ((not late and (not eta.get('dvd') and not eta.get('theater') or eta.get('dvd') and eta.get('dvd') > (now - 2419200))) or
-                        (late and (eta.get('dvd', 0) > 0 or eta.get('theater')) and eta.get('dvd') < (now - 2419200))):
-                    movies.append(temp)
-
-                if len(movies) >= limit:
-                    break
-
-        db.expire_all()
         return {
             'success': True,
             'empty': len(movies) == 0,
