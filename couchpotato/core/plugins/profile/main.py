@@ -5,6 +5,7 @@ from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Profile, ProfileType, Movie
+from sqlalchemy.orm import joinedload_all
 
 log = CPLog(__name__)
 
@@ -55,7 +56,9 @@ class ProfilePlugin(Plugin):
     def all(self):
 
         db = get_session()
-        profiles = db.query(Profile).all()
+        profiles = db.query(Profile) \
+            .options(joinedload_all('types')) \
+            .all()
 
         temp = []
         for profile in profiles:
@@ -104,7 +107,9 @@ class ProfilePlugin(Plugin):
     def default(self):
 
         db = get_session()
-        default = db.query(Profile).first()
+        default = db.query(Profile) \
+            .options(joinedload_all('types')) \
+            .first()
         default_dict = default.to_dict(self.to_dict)
 
         db.expire_all()
