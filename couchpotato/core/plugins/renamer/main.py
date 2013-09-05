@@ -766,8 +766,13 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                         if not found:
                             log.info('%s not found in downloaders', nzbname)
 
-                            # Set the release to missing
-                            fireEvent('release.update', id = rel.id, status = missing_status, single = True)
+                            #Check status if already missing and for how long, if > 1 week, set to ignored else to missing
+                            if rel.status_id == missing_status.get('id'):
+                                if rel.last_edit < int(time.time()) - 7*24*60*60:
+                                    fireEvent('release.update', id = rel.id, status = ignored_status, single = True)
+                            else:
+                                # Set the release to missing
+                                fireEvent('release.update', id = rel.id, status = missing_status, single = True)
 
                 except:
                     log.error('Failed checking for release in downloader: %s', traceback.format_exc())
