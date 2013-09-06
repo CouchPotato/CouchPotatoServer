@@ -213,6 +213,8 @@ class MovieBase(MovieTypeBase):
             q = q.filter(or_(*filter_or))
 
         total_count = q.count()
+        if total_count == 0:
+            return 0, []
 
         if order == 'release_order':
             q = q.order_by(desc(Release.last_edit))

@@ -61,56 +61,60 @@ class Dashboard(Plugin):
                 .order_by(asc(LibraryTitle.simple_title))
 
         active = q.all()
-
-        # Do the shuffle
-        if random:
-            rndm.shuffle(active)
-
-        movie_ids = []
-        for movie in active:
-            movie_id, profile_id, info, year = movie
-
-            pp = profile_pre.get(profile_id)
-            if not pp: continue
-
-            eta = info.get('release_date', {}) or {}
-            coming_soon = False
-
-            # Theater quality
-            if pp.get('theater') and fireEvent('movie.searcher.could_be_released', True, eta, year, single = True):
-                coming_soon = True
-            elif pp.get('dvd') and fireEvent('movie.searcher.could_be_released', False, eta, year, single = True):
-                coming_soon = True
-
-            if coming_soon:
-
-                # Don't list older movies
-                if ((not late and (not eta.get('dvd') and not eta.get('theater') or eta.get('dvd') and eta.get('dvd') > (now - 2419200))) or
-                        (late and (eta.get('dvd', 0) > 0 or eta.get('theater')) and eta.get('dvd') < (now - 2419200))):
-                    movie_ids.append(movie_id)
-
-                    if len(movie_ids) >= limit:
-                        break
-
-        # Get all movie information
-        movies_raw = db.query(Movie) \
-            .options(joinedload_all('library.titles')) \
-            .options(joinedload_all('library.files')) \
-            .options(joinedload_all('files')) \
-            .filter(Movie.id.in_(movie_ids)) \
-            .all()
-
-        # Create dict by movie id
-        movie_dict = {}
-        for movie in movies_raw:
-            movie_dict[movie.id] = movie
-
         movies = []
-        for movie_id in movie_ids:
-            movies.append(movie_dict[movie_id].to_dict({
-                'library': {'titles': {}, 'files':{}},
-                'files': {},
-            }))
+
+        if len(active) > 0:
+
+            # Do the shuffle
+            if random:
+                rndm.shuffle(active)
+
+            movie_ids = []
+            for movie in active:
+                movie_id, profile_id, info, year = movie
+
+                pp = profile_pre.get(profile_id)
+                if not pp: continue
+
+                eta = info.get('release_date', {}) or {}
+                coming_soon = False
+
+                # Theater quality
+                if pp.get('theater') and fireEvent('movie.searcher.could_be_released', True, eta, year, single = True):
+                    coming_soon = True
+                elif pp.get('dvd') and fireEvent('movie.searcher.could_be_released', False, eta, year, single = True):
+                    coming_soon = True
+
+                if coming_soon:
+
+                    # Don't list older movies
+                    if ((not late and (not eta.get('dvd') and not eta.get('theater') or eta.get('dvd') and eta.get('dvd') > (now - 2419200))) or
+                            (late and (eta.get('dvd', 0) > 0 or eta.get('theater')) and eta.get('dvd') < (now - 2419200))):
+                        movie_ids.append(movie_id)
+
+                        if len(movie_ids) >= limit:
+                            break
+
+            if len(movie_ids) > 0:
+
+                # Get all movie information
+                movies_raw = db.query(Movie) \
+                    .options(joinedload_all('library.titles')) \
+                    .options(joinedload_all('library.files')) \
+                    .options(joinedload_all('files')) \
+                    .filter(Movie.id.in_(movie_ids)) \
+                    .all()
+
+                # Create dict by movie id
+                movie_dict = {}
+                for movie in movies_raw:
+                    movie_dict[movie.id] = movie
+
+                for movie_id in movie_ids:
+                    movies.append(movie_dict[movie_id].to_dict({
+                        'library': {'titles': {}, 'files':{}},
+                        'files': {},
+                    }))
 
         return {
             'success': True,
