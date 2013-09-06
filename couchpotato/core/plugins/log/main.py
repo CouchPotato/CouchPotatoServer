@@ -120,7 +120,7 @@ class Logging(Plugin):
             path = '%s%s' % (Env.get('log_path'), '.%s' % x if x > 0 else '')
 
             if not os.path.isfile(path):
-                break
+                continue
 
             try:
 

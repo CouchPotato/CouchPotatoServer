@@ -23,7 +23,8 @@ class MovieBase(MovieTypeBase):
         'releases': {'status': {}, 'quality': {}, 'files':{}, 'info': {}},
         'library': {'titles': {}, 'files':{}},
         'files': {},
-        'status': {}
+        'status': {},
+        'category': {},
     }
 
     def __init__(self):
@@ -377,6 +378,7 @@ class MovieBase(MovieTypeBase):
         m = db.query(Media).filter_by(library_id = library.get('id')).first()
         added = True
         do_search = False
+        search_after = search_after and self.conf('search_on_add', section = 'moviesearcher')
         if not m:
             m = Media(
                 library_id = library.get('id'),

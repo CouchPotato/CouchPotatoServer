@@ -437,15 +437,25 @@ class RequestHandler(object):
             morsel[k] = v
 
     def clear_cookie(self, name, path="/", domain=None):
-        """Deletes the cookie with the given name."""
+        """Deletes the cookie with the given name.
+
+        Due to limitations of the cookie protocol, you must pass the same
+        path and domain to clear a cookie as were used when that cookie
+        was set (but there is no way to find out on the server side
+        which values were used for a given cookie).
+        """
         expires = datetime.datetime.utcnow() - datetime.timedelta(days=365)
         self.set_cookie(name, value="", path=path, expires=expires,
                         domain=domain)
 
-    def clear_all_cookies(self):
-        """Deletes all the cookies the user sent with this request."""
+    def clear_all_cookies(self, path="/", domain=None):
+        """Deletes all the cookies the user sent with this request.
+
+        See `clear_cookie` for more information on the path and domain
+        parameters.
+        """
         for name in self.request.cookies:
-            self.clear_cookie(name)
+            self.clear_cookie(name, path=path, domain=domain)
 
     def set_secure_cookie(self, name, value, expires_days=30, **kwargs):
         """Signs and timestamps a cookie so it cannot be forged.
@@ -751,10 +761,10 @@ class RequestHandler(object):
 
         if hasattr(self.request, "connection"):
             # Now that the request is finished, clear the callback we
-            # set on the IOStream (which would otherwise prevent the
+            # set on the HTTPConnection (which would otherwise prevent the
             # garbage collection of the RequestHandler when there
             # are keepalive connections)
-            self.request.connection.stream.set_close_callback(None)
+            self.request.connection.set_close_callback(None)
 
         if not self.application._wsgi:
             self.flush(include_footers=True)
@@ -1142,7 +1152,7 @@ class RequestHandler(object):
             elif isinstance(result, Future):
                 if result.done():
                     if result.result() is not None:
-                        raise ValueError('Expected None, got %r' % result)
+                        raise ValueError('Expected None, got %r' % result.result())
                     callback()
                 else:
                     # Delayed import of IOLoop because it's not available
@@ -1827,6 +1837,10 @@ class StaticFileHandler(RequestHandler):
                 return
             if start is not None and start < 0:
                 start += size
+            if end is not None and end > size:
+                # Clients sometimes blindly use a large range to limit their
+                # download size; cap the endpoint at the actual file size.
+                end = size
             # Note: only return HTTP 206 if less than the entire range has been
             # requested. Not only is this semantically correct, but Chrome
             # refuses to play audio if it gets an HTTP 206 in response to
@@ -2305,8 +2319,11 @@ class UIModule(object):
         self.handler = handler
         self.request = handler.request
         self.ui = handler.ui
-        self.current_user = handler.current_user
         self.locale = handler.locale
+
+    @property
+    def current_user(self):
+        return self.handler.current_user
 
     def render(self, *args, **kwargs):
         """Overridden in subclasses to return this module's output."""

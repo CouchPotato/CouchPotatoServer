@@ -33,6 +33,14 @@ config = [{
                     'description': 'Force run the searcher after (re)start.',
                 },
                 {
+                    'name': 'search_on_add',
+                    'label': 'Search after add',
+                    'advanced': True,
+                    'default': 1,
+                    'type': 'bool',
+                    'description': 'Disable this to only search for movies on cron.',
+                },
+                {
                     'name': 'cron_day',
                     'migrate_from': 'searcher',
                     'label': 'Day',
