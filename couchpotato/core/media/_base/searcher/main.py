@@ -2,7 +2,7 @@ from couchpotato import get_session
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import simplifyString, toUnicode
-from couchpotato.core.helpers.variable import md5, getTitle
+from couchpotato.core.helpers.variable import md5, getTitle, splitString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.searcher.base import SearcherBase
 from couchpotato.core.settings.model import Media, Release, ReleaseInfo
@@ -23,6 +23,7 @@ class Searcher(SearcherBase):
         addEvent('searcher.contains_other_quality', self.containsOtherQuality)
         addEvent('searcher.correct_year', self.correctYear)
         addEvent('searcher.correct_name', self.correctName)
+        addEvent('searcher.correct_words', self.correctWords)
         addEvent('searcher.download', self.download)
 
         addApiView('searcher.full_search', self.searchAllView, docs = {
@@ -233,6 +234,50 @@ class Searcher(SearcherBase):
                 pass
 
         return False
+
+    def correctWords(self, rel_name, media):
+        media_title = fireEvent('searcher.get_search_title', media)
+        media_words = re.split('\W+', simplifyString(media_title))
+
+        rel_name = simplifyString(rel_name)
+        rel_words = re.split('\W+', rel_name)
+
+        # Make sure it has required words
+        required_words = splitString(self.conf('required_words', section = 'searcher').lower())
+        try: required_words = list(set(required_words + splitString(media['category']['required'].lower())))
+        except: pass
+
+        req_match = 0
+        for req_set in required_words:
+            req = splitString(req_set, '&')
+            req_match += len(list(set(rel_words) & set(req))) == len(req)
+
+        if len(required_words) > 0  and req_match == 0:
+            log.info2('Wrong: Required word missing: %s', rel_name)
+            return False
+
+        # Ignore releases
+        ignored_words = splitString(self.conf('ignored_words', section = 'searcher').lower())
+        try: ignored_words = list(set(ignored_words + splitString(media['category']['ignored'].lower())))
+        except: pass
+
+        ignored_match = 0
+        for ignored_set in ignored_words:
+            ignored = splitString(ignored_set, '&')
+            ignored_match += len(list(set(rel_words) & set(ignored))) == len(ignored)
+
+        if len(ignored_words) > 0 and ignored_match:
+            log.info2("Wrong: '%s' contains 'ignored words'", rel_name)
+            return False
+
+        # Ignore porn stuff
+        pron_tags = ['xxx', 'sex', 'anal', 'tits', 'fuck', 'porn', 'orgy', 'milf', 'boobs', 'erotica', 'erotic', 'cock', 'dick']
+        pron_words = list(set(rel_words) & set(pron_tags) - set(media_words))
+        if pron_words:
+            log.info('Wrong: %s, probably pr0n', rel_name)
+            return False
+
+        return True
 
 class SearchSetupError(Exception):
     pass

@@ -29,9 +29,9 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
         addEvent('movie.searcher.all', self.searchAll)
         addEvent('movie.searcher.all_view', self.searchAllView)
         addEvent('movie.searcher.single', self.single)
-        addEvent('movie.searcher.correct_movie', self.correctMovie)
         addEvent('movie.searcher.try_next_release', self.tryNextRelease)
         addEvent('movie.searcher.could_be_released', self.couldBeReleased)
+        addEvent('searcher.correct_release', self.correctRelease)
         addEvent('searcher.get_search_title', self.getSearchTitle)
 
         addApiView('movie.searcher.try_next', self.tryNextReleaseView, docs = {
@@ -266,7 +266,9 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
         return ret
 
-    def correctMovie(self, nzb = None, movie = None, quality = None, **kwargs):
+    def correctRelease(self, nzb = None, media = None, quality = None, **kwargs):
+
+        if media.get('type') != 'movie': return
 
         imdb_results = kwargs.get('imdb_results', False)
         retention = Env.setting('retention', section = 'nzb')
@@ -275,50 +277,14 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
             log.info2('Wrong: Outside retention, age is %s, needs %s or lower: %s', (nzb['age'], retention, nzb['name']))
             return False
 
-        movie_name = getTitle(movie['library'])
-        movie_words = re.split('\W+', simplifyString(movie_name))
-        nzb_name = simplifyString(nzb['name'])
-        nzb_words = re.split('\W+', nzb_name)
-
-        # Make sure it has required words
-        required_words = splitString(self.conf('required_words', section = 'searcher').lower())
-        try: required_words = list(set(required_words + splitString(movie['category']['required'].lower())))
-        except: pass
-
-        req_match = 0
-        for req_set in required_words:
-            req = splitString(req_set, '&')
-            req_match += len(list(set(nzb_words) & set(req))) == len(req)
-
-        if len(required_words) > 0  and req_match == 0:
-            log.info2('Wrong: Required word missing: %s', nzb['name'])
-            return False
-
-        # Ignore releases
-        ignored_words = splitString(self.conf('ignored_words', section = 'searcher').lower())
-        try: ignored_words = list(set(ignored_words + splitString(movie['category']['ignored'].lower())))
-        except: pass
-
-        ignored_match = 0
-        for ignored_set in ignored_words:
-            ignored = splitString(ignored_set, '&')
-            ignored_match += len(list(set(nzb_words) & set(ignored))) == len(ignored)
-
-        if len(ignored_words) > 0 and ignored_match:
-            log.info2("Wrong: '%s' contains 'ignored words'", (nzb['name']))
-            return False
-
-        # Ignore porn stuff
-        pron_tags = ['xxx', 'sex', 'anal', 'tits', 'fuck', 'porn', 'orgy', 'milf', 'boobs', 'erotica', 'erotic', 'cock', 'dick']
-        pron_words = list(set(nzb_words) & set(pron_tags) - set(movie_words))
-        if pron_words:
-            log.info('Wrong: %s, probably pr0n', (nzb['name']))
+        # Check for required and ignored words
+        if not fireEvent('searcher.correct_words', nzb['name'], media, single = True):
             return False
 
         preferred_quality = fireEvent('quality.single', identifier = quality['identifier'], single = True)
 
         # Contains lower quality string
-        if fireEvent('searcher.contains_other_quality', nzb, movie_year = movie['library']['year'], preferred_quality = preferred_quality, single = True):
+        if fireEvent('searcher.contains_other_quality', nzb, movie_year = media['library']['year'], preferred_quality = preferred_quality, single = True):
             log.info2('Wrong: %s, looking for %s', (nzb['name'], quality['label']))
             return False
 
@@ -348,23 +314,23 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
             return True
 
         # Check if nzb contains imdb link
-        if getImdb(nzb.get('description', '')) == movie['library']['identifier']:
+        if getImdb(nzb.get('description', '')) == media['library']['identifier']:
             return True
 
-        for raw_title in movie['library']['titles']:
+        for raw_title in media['library']['titles']:
             for movie_title in possibleTitles(raw_title['title']):
                 movie_words = re.split('\W+', simplifyString(movie_title))
 
                 if fireEvent('searcher.correct_name', nzb['name'], movie_title, single = True):
                     # if no IMDB link, at least check year range 1
-                    if len(movie_words) > 2 and fireEvent('searcher.correct_year', nzb['name'], movie['library']['year'], 1, single = True):
+                    if len(movie_words) > 2 and fireEvent('searcher.correct_year', nzb['name'], media['library']['year'], 1, single = True):
                         return True
 
                     # if no IMDB link, at least check year
-                    if len(movie_words) <= 2 and fireEvent('searcher.correct_year', nzb['name'], movie['library']['year'], 0, single = True):
+                    if len(movie_words) <= 2 and fireEvent('searcher.correct_year', nzb['name'], media['library']['year'], 0, single = True):
                         return True
 
-        log.info("Wrong: %s, undetermined naming. Looking for '%s (%s)'", (nzb['name'], movie_name, movie['library']['year']))
+        log.info("Wrong: %s, undetermined naming. Looking for '%s (%s)'", (nzb['name'], movie_name, media['library']['year']))
         return False
 
     def couldBeReleased(self, is_pre_release, dates, year = None):
