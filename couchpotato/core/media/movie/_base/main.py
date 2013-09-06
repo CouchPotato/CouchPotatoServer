@@ -278,7 +278,8 @@ class MovieBase(MovieTypeBase):
 
     def availableChars(self, status = None, release_status = None):
 
-        chars = ''
+        status = status or []
+        release_status = release_status or []
 
         db = get_session()
 
@@ -288,28 +289,44 @@ class MovieBase(MovieTypeBase):
         if release_status and not isinstance(release_status, (list, tuple)):
             release_status = [release_status]
 
-        q = db.query(Movie) \
-            .outerjoin(Movie.releases, Movie.library, Library.titles, Movie.status) \
-            .options(joinedload_all('library.titles'))
+        q = db.query(Movie)
 
         # Filter on movie status
         if status and len(status) > 0:
-            q = q.filter(or_(*[Movie.status.has(identifier = s) for s in status]))
+            statuses = fireEvent('status.get', status, single = len(release_status) > 1)
+            statuses = [s.get('id') for s in statuses]
+
+            q = q.filter(Movie.status_id.in_(statuses))
 
         # Filter on release status
         if release_status and len(release_status) > 0:
-            q = q.filter(or_(*[Release.status.has(identifier = s) for s in release_status]))
 
-        results = q.all()
+            statuses = fireEvent('status.get', release_status, single = len(release_status) > 1)
+            statuses = [s.get('id') for s in statuses]
 
-        for movie in results:
-            char = movie.library.titles[0].simple_title[0]
-            char = char if char in ascii_lowercase else '#'
-            if char not in chars:
-                chars += str(char)
+            q = q.join(Movie.releases) \
+                .filter(Release.status_id.in_(statuses))
+
+        q = q.join(Library, LibraryTitle) \
+            .with_entities(LibraryTitle.simple_title) \
+            .filter(LibraryTitle.default == True)
+
+        titles = q.all()
+
+        chars = set()
+        for title in titles:
+            try:
+                char = title[0][0]
+                char = char if char in ascii_lowercase else '#'
+                chars.add(str(char))
+            except:
+                log.error('Failed getting title for %s', title.libraries_id)
+
+            if len(chars) == 25:
+                break
 
         db.expire_all()
-        return ''.join(sorted(chars, key = str.lower))
+        return ''.join(sorted(chars))
 
     def listView(self, **kwargs):
 

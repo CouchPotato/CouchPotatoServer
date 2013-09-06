@@ -273,8 +273,25 @@ var MovieList = new Class({
 			})
 		).addClass('search');
 
+		var available_chars;
 		self.filter_menu.addEvent('open', function(){
 			self.navigation_search_input.focus();
+
+			// Get available chars and highlight
+			if(!available_chars && (self.navigation.isDisplayed() || self.navigation.isVisible()))
+				Api.request('movie.available_chars', {
+					'data': Object.merge({
+						'status': self.options.status
+					}, self.filter),
+					'onSuccess': function(json){
+						available_chars = json.chars
+	
+						json.chars.split('').each(function(c){
+							self.letters[c.capitalize()].addClass('available')
+						})
+	
+					}
+				});
 		});
 
 		self.filter_menu.addLink(
@@ -310,21 +327,6 @@ var MovieList = new Class({
 				'data-letter': c
 			}).inject(self.navigation_alpha);
 		});
-
-		// Get available chars and highlight
-		if(self.navigation.isDisplayed() || self.navigation.isVisible())
-			Api.request('movie.available_chars', {
-				'data': Object.merge({
-					'status': self.options.status
-				}, self.filter),
-				'onSuccess': function(json){
-
-					json.chars.split('').each(function(c){
-						self.letters[c.capitalize()].addClass('available')
-					})
-
-				}
-			});
 
 		// Add menu or hide
 		if (self.options.menu.length > 0)
