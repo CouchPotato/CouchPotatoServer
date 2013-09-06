@@ -110,11 +110,7 @@ class ShowSearcher(Plugin):
                 log.info('%d results found' % len(results))
 
     def getSearchTitle(self, media):
-        if media['type'] not in ['season', 'episode']:
-            return None
-
         show, season, episode = self._lookupMedia(media)
-
         if show is None:
             return None
 
