@@ -27,10 +27,10 @@ class IPTorrents(TorrentProvider):
             ([7], ['dvdrip', 'brrip']),
             ([6], ['dvdr']),
         ]),
-        (['season'], [
+        ('season', [
             ([65], ['hdtv', '480p', '720p', '1080p']),
         ]),
-        (['episode'], [
+        ('episode', [
             ([5], ['720p', '1080p']),
             ([78], ['480p']),
             ([4, 79], ['hdtv'])

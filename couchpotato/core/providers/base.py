@@ -102,6 +102,7 @@ class YarrProvider(Provider):
     type = 'movie'
 
     cat_ids = {}
+    cat_ids_structure = None
     cat_backup_id = None
 
     sizeGb = ['gb', 'gib']
@@ -246,11 +247,24 @@ class YarrProvider(Provider):
 
         return 0
 
+    def _discoverCatIdStructure(self):
+        # Discover cat_ids structure (single or groups)
+        for group_name, group_cat_ids in self.cat_ids:
+            if len(group_cat_ids) > 0:
+                if type(group_cat_ids[0]) is tuple:
+                    self.cat_ids_structure = 'groups'
+                if type(group_cat_ids[0]) is str:
+                    self.cat_ids_structure = 'single'
+
     def getCatId(self, identifier, media_type = 'movie'):
 
         cat_ids = self.cat_ids
 
-        if type(toIterable(cat_ids[0][0])[0]) is str:
+        if not self.cat_ids_structure:
+            self._discoverCatIdStructure()
+
+        # If cat_ids is in a 'groups' structure, locate the media group
+        if self.cat_ids_structure == 'groups':
             for group_type, group_cat_ids in cat_ids:
                 if media_type in toIterable(group_type):
                     cat_ids = group_cat_ids

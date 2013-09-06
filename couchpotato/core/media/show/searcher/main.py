@@ -75,7 +75,7 @@ class ShowSearcher(Plugin):
             return
 
         show, season, episode = self._lookupMedia(media)
-        if not show or not season:
+        if show is None or season is None:
             log.error('Unable to find show or season library in database, missing required data for searching')
             return
 
