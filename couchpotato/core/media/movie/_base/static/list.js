@@ -285,11 +285,11 @@ var MovieList = new Class({
 					}, self.filter),
 					'onSuccess': function(json){
 						available_chars = json.chars
-	
+
 						json.chars.split('').each(function(c){
 							self.letters[c.capitalize()].addClass('available')
 						})
-	
+
 					}
 				});
 		});
@@ -568,7 +568,7 @@ var MovieList = new Class({
 				}
 
 				self.store(json.movies);
-				self.addMovies(json.movies, json.total);
+				self.addMovies(json.movies, json.total || json.movies.length);
 				if(self.scrollspy) {
 					self.load_more.set('text', 'load more movies');
 					self.scrollspy.start();
