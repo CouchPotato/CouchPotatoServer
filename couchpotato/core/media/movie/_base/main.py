@@ -581,7 +581,7 @@ class MovieBase(MovieTypeBase):
                 total_deleted = 0
                 new_movie_status = None
                 for release in movie.releases:
-                    if delete_from in ['wanted', 'snatched']:
+                    if delete_from in ['wanted', 'snatched', 'late']:
                         if release.status_id != done_status.get('id'):
                             db.delete(release)
                             total_deleted += 1
