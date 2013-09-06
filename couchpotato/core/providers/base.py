@@ -1,6 +1,6 @@
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.variable import tryFloat, mergeDicts, md5, \
-    possibleTitles, getTitle
+    possibleTitles, toIterable
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
@@ -114,7 +114,9 @@ class YarrProvider(Provider):
     def __init__(self):
         addEvent('provider.enabled_protocols', self.getEnabledProtocol)
         addEvent('provider.belongs_to', self.belongsTo)
-        addEvent('provider.search.%s.%s' % (self.protocol, self.type), self.search)
+
+        for type in toIterable(self.type):
+            addEvent('provider.search.%s.%s' % (self.protocol, type), self.search)
 
     def getEnabledProtocol(self):
         if self.isEnabled():
@@ -183,7 +185,7 @@ class YarrProvider(Provider):
 
         return 'try_next'
 
-    def search(self, movie, quality):
+    def search(self, media, quality):
 
         if self.isDisabled():
             return []
@@ -195,15 +197,15 @@ class YarrProvider(Provider):
 
         # Create result container
         imdb_results = hasattr(self, '_search')
-        results = ResultList(self, movie, quality, imdb_results = imdb_results)
+        results = ResultList(self, media, quality, imdb_results = imdb_results)
 
         # Do search based on imdb id
         if imdb_results:
-            self._search(movie, quality, results)
+            self._search(media, quality, results)
         # Search possible titles
         else:
-            for title in possibleTitles(getTitle(movie['library'])):
-                self._searchOnTitle(title, movie, quality, results)
+            for title in possibleTitles(fireEvent('searcher.get_search_title', media, single = True)):
+                self._searchOnTitle(title, media, quality, results)
 
         return results
 
@@ -244,9 +246,16 @@ class YarrProvider(Provider):
 
         return 0
 
-    def getCatId(self, identifier):
+    def getCatId(self, identifier, media_type = 'movie'):
 
-        for cats in self.cat_ids:
+        cat_ids = self.cat_ids
+
+        if type(toIterable(cat_ids[0][0])[0]) is str:
+            for group_type, group_cat_ids in cat_ids:
+                if media_type in toIterable(group_type):
+                    cat_ids = group_cat_ids
+
+        for cats in cat_ids:
             ids, qualities = cats
             if identifier in qualities:
                 return ids

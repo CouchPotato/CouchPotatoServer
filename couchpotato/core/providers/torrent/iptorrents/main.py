@@ -10,6 +10,8 @@ log = CPLog(__name__)
 
 class IPTorrents(TorrentProvider):
 
+    type = ['movie', 'season', 'episode']
+
     urls = {
         'test' : 'http://www.iptorrents.com/',
         'base_url' : 'http://www.iptorrents.com',
@@ -19,16 +21,26 @@ class IPTorrents(TorrentProvider):
     }
 
     cat_ids = [
-        ([48], ['720p', '1080p', 'bd50']),
-        ([72], ['cam', 'ts', 'tc', 'r5', 'scr']),
-        ([7], ['dvdrip', 'brrip']),
-        ([6], ['dvdr']),
+        ('movie', [
+            ([48], ['720p', '1080p', 'bd50']),
+            ([72], ['cam', 'ts', 'tc', 'r5', 'scr']),
+            ([7], ['dvdrip', 'brrip']),
+            ([6], ['dvdr']),
+        ]),
+        (['season'], [
+            ([65], ['hdtv', '480p', '720p', '1080p']),
+        ]),
+        (['episode'], [
+            ([5], ['720p', '1080p']),
+            ([78], ['480p']),
+            ([4, 79], ['hdtv'])
+        ])
     ]
 
     http_time_between_calls = 1 #seconds
     cat_backup_id = None
 
-    def _searchOnTitle(self, title, movie, quality, results):
+    def _searchOnTitle(self, title, media, quality, results):
 
         freeleech = '' if not self.conf('freeleech') else '&free=on'
 
@@ -36,7 +48,16 @@ class IPTorrents(TorrentProvider):
         current_page = 1
         while current_page <= pages and not self.shuttingDown():
 
-            url = self.urls['search'] % (self.getCatId(quality['identifier'])[0], freeleech, tryUrlencode('%s %s' % (title.replace(':', ''), movie['library']['year'])), current_page)
+            query = title.replace(':', '')
+            if media['type'] == 'movie':
+                query = '%s %s' % (title.replace(':', ''), media['library']['year'])
+
+            cat_id = self.getCatId(quality['identifier'], media['type'])[0]
+            if not cat_id:
+                log.warning('Unable to find category for quality %s and media type %s', (quality['identifier'], media['type']))
+                return
+
+            url = self.urls['search'] % (cat_id, freeleech, tryUrlencode(query), current_page)
             data = self.getHTMLData(url, opener = self.login_opener)
 
             if data:

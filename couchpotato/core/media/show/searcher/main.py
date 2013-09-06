@@ -17,12 +17,27 @@ class ShowSearcher(Plugin):
         super(ShowSearcher, self).__init__()
 
         addEvent('show.searcher.single', self.single)
+        addEvent('searcher.get_search_title', self.getSearchTitle)
 
-    def _get_search_protocols(self):
-        try:
-            return fireEvent('searcher.protocols', single = True)
-        except SearchSetupError:
-            return None
+    def _lookupMedia(self, media):
+        db = get_session()
+
+        media_library = db.query(Media).filter_by(id = media['id']).first().library
+
+        show = None
+        season = None
+        episode = None
+
+        if media['type'] == 'episode':
+            show = media_library.parent.parent
+            season = media_library.parent
+            episode = media_library
+
+        if media['type'] == 'season':
+            show = media_library.parent
+            season = media_library
+
+        return show, season, episode
 
     def single(self, media, search_protocols = None):
         if media['type'] == 'show':
@@ -30,8 +45,10 @@ class ShowSearcher(Plugin):
             return
 
         # Find out search type
-        search_protocols = self._get_search_protocols() if not search_protocols else None
-        if search_protocols is None:
+        try:
+            if not search_protocols:
+                search_protocols = fireEvent('searcher.protocols', single = True)
+        except SearchSetupError:
             return
 
         done_status = fireEvent('status.get', 'done', single = True)
@@ -54,18 +71,7 @@ class ShowSearcher(Plugin):
             #fireEvent('episode.delete', episode['id'], single = True)
             return
 
-        media_library = db.query(Media).filter_by(id = media['id']).first().library
-
-        show = None
-        season = None
-        episode = None
-        if media['type'] == 'episode':
-            show = media_library.parent.parent
-            season = media_library.parent
-            episode = media_library
-        if media['type'] == 'season':
-            show = media_library.parent
-            season = media_library
+        show, season, episode = self._lookupMedia(media)
 
         fireEvent('notify.frontend', type = 'show.searcher.started.%s' % media['id'], data = True, message = 'Searching for "%s"' % default_title)
 
@@ -96,3 +102,24 @@ class ShowSearcher(Plugin):
                         results += protocol_results
 
                 log.info('%d results found' % len(results))
+
+    def getSearchTitle(self, media):
+        if media['type'] not in ['season', 'episode']:
+            return None
+
+        show, season, episode = self._lookupMedia(media)
+
+        if show is None:
+            return None
+
+        name = ''
+        if season is not None:
+            name = ' S%02d' % season.season_number
+
+            if episode is not None:
+                name += 'E%02d' % episode.episode_number
+
+        return ''.join([
+            getTitle(show),
+            name
+        ])

@@ -1,3 +1,4 @@
+import collections
 from couchpotato.core.helpers.encoding import simplifyString, toSafeString, ss
 from couchpotato.core.logger import CPLog
 import hashlib
@@ -162,6 +163,11 @@ def natsortKey(s):
 
 def natcmp(a, b):
     return cmp(natsortKey(a), natsortKey(b))
+
+def toIterable(value):
+    if isinstance(value, collections.Iterable):
+        return value
+    return [value]
 
 def getTitle(library_dict):
     try:
