@@ -37,6 +37,9 @@ class ShowSearcher(Plugin):
             show = media_library.parent
             season = media_library
 
+        if media['type'] == 'show':
+            show = media_library
+
         return show, season, episode
 
     def single(self, media, search_protocols = None):
@@ -72,6 +75,9 @@ class ShowSearcher(Plugin):
             return
 
         show, season, episode = self._lookupMedia(media)
+        if not show or not season:
+            log.error('Unable to find show or season library in database, missing required data for searching')
+            return
 
         fireEvent('notify.frontend', type = 'show.searcher.started.%s' % media['id'], data = True, message = 'Searching for "%s"' % default_title)
 
@@ -119,7 +125,8 @@ class ShowSearcher(Plugin):
             if episode is not None:
                 name += 'E%02d' % episode.episode_number
 
-        return ''.join([
-            getTitle(show),
-            name
-        ])
+        show_title = getTitle(show)
+        if not show_title:
+            return None
+
+        return show_title + name
