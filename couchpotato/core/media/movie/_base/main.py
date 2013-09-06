@@ -168,19 +168,33 @@ class MovieBase(MovieTypeBase):
         if release_status and not isinstance(release_status, (list, tuple)):
             release_status = [release_status]
 
+        # query movie ids
         q = db.query(Movie) \
-            .outerjoin(Movie.releases, Movie.library, Library.titles) \
-            .filter(LibraryTitle.default == True) \
+            .with_entities(Movie.id) \
             .group_by(Movie.id)
 
         # Filter on movie status
         if status and len(status) > 0:
-            q = q.filter(or_(*[Movie.status.has(identifier = s) for s in status]))
+            statuses = fireEvent('status.get', status, single = len(status) > 1)
+            statuses = [s.get('id') for s in statuses]
+
+            q = q.filter(Movie.status_id.in_(statuses))
 
         # Filter on release status
         if release_status and len(release_status) > 0:
-            q = q.filter(or_(*[Release.status.has(identifier = s) for s in release_status]))
+            q = q.join(Movie.releases)
 
+            statuses = fireEvent('status.get', release_status, single = len(release_status) > 1)
+            statuses = [s.get('id') for s in statuses]
+
+            q = q.filter(Release.status_id.in_(statuses))
+
+        # Only join when searching / ordering
+        if starts_with or search or order != 'release_order':
+            q = q.join(Movie.library, Library.titles) \
+                .filter(LibraryTitle.default == True)
+
+        # Add search filters
         filter_or = []
         if starts_with:
             starts_with = toUnicode(starts_with.lower())
@@ -195,7 +209,7 @@ class MovieBase(MovieTypeBase):
         if search:
             filter_or.append(LibraryTitle.simple_title.like('%%' + search + '%%'))
 
-        if filter_or:
+        if len(filter_or) > 0:
             q = q.filter(or_(*filter_or))
 
         total_count = q.count()
@@ -211,7 +225,7 @@ class MovieBase(MovieTypeBase):
             offset = 0 if len(splt) is 1 else splt[1]
             q = q.limit(limit).offset(offset)
 
-
+        # Get all movie_ids in sorted order
         movie_ids = [m.id for m in q.all()]
 
         # List release statuses
@@ -236,19 +250,27 @@ class MovieBase(MovieTypeBase):
 
         results = q2.all()
 
-        movies = []
+        # Create dict by movie id
+        movie_dict = {}
         for movie in results:
+            movie_dict[movie.id] = movie
+
+        # List movies based on movie_ids order
+        movies = []
+        for movie_id in movie_ids:
 
             releases = []
-            for r in release_statuses.get(movie.id):
+            for r in release_statuses.get(movie_id):
                 x = splitString(r)
                 releases.append({'status_id': x[0], 'quality_id': x[1]})
-            movies.append(mergeDicts(movie.to_dict({
+
+            # Merge releases with movie dict
+            movies.append(mergeDicts(movie_dict[movie_id].to_dict({
                 'library': {'titles': {}, 'files':{}},
                 'files': {},
             }), {
                 'releases': releases,
-                'releases_count': releases_count.get(movie.id),
+                'releases_count': releases_count.get(movie_id),
             }))
 
         db.expire_all()
