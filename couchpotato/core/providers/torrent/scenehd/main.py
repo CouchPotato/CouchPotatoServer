@@ -65,7 +65,7 @@ class SceneHD(TorrentProvider):
                 log.error('Failed getting results from %s: %s', (self.getName(), traceback.format_exc()))
 
 
-    def getLoginParams(self, params):
+    def getLoginParams(self):
         return tryUrlencode({
             'username': self.conf('username'),
             'password': self.conf('password'),

@@ -8,7 +8,7 @@ def getParams(params):
 
     reg = re.compile('^[a-z0-9_\.]+$')
 
-    current = temp = {}
+    temp = {}
     for param, value in sorted(params.iteritems()):
 
         nest = re.split("([\[\]]+)", param)

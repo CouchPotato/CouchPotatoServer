@@ -4,8 +4,9 @@ from couchpotato.core.event import fireEvent
 from couchpotato.core.helpers.variable import splitString, tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.core.settings.model import Movie
+from couchpotato.core.settings.model import Movie, Library, LibraryTitle
 from sqlalchemy.orm import joinedload_all
+from sqlalchemy.sql.expression import asc
 import random as rndm
 import time
 
@@ -40,67 +41,81 @@ class Dashboard(Plugin):
 
             profile_pre[profile.get('id')] = contains
 
-        # Get all active movies
-        active_status, snatched_status, downloaded_status, available_status = fireEvent('status.get', ['active', 'snatched', 'downloaded', 'available'], single = True)
-        subq = db.query(Movie).filter(Movie.status_id == active_status.get('id')).subquery()
-
-        q = db.query(Movie).join((subq, subq.c.id == Movie.id)) \
-            .options(joinedload_all('releases')) \
-            .options(joinedload_all('profile.types')) \
-            .options(joinedload_all('library.titles')) \
-            .options(joinedload_all('library.files')) \
-            .options(joinedload_all('status')) \
-            .options(joinedload_all('files'))
-
         # Add limit
         limit = 12
         if limit_offset:
             splt = splitString(limit_offset) if isinstance(limit_offset, (str, unicode)) else limit_offset
             limit = tryInt(splt[0])
 
-        all_movies = q.all()
+        # Get all active movies
+        active_status = fireEvent('status.get', ['active'], single = True)
+        q = db.query(Movie) \
+            .join(Library) \
+            .filter(Movie.status_id == active_status.get('id')) \
+            .with_entities(Movie.id, Movie.profile_id, Library.info, Library.year) \
+            .group_by(Movie.id)
 
-        if random:
-            rndm.shuffle(all_movies)
+        if not random:
+            q = q.join(LibraryTitle) \
+                .filter(LibraryTitle.default == True) \
+                .order_by(asc(LibraryTitle.simple_title))
 
+        active = q.all()
         movies = []
-        for movie in all_movies:
-            pp = profile_pre.get(movie.profile.id)
-            eta = movie.library.info.get('release_date', {}) or {}
-            coming_soon = False
 
-            # Theater quality
-            if pp.get('theater') and fireEvent('searcher.could_be_released', True, eta, movie.library.year, single = True):
-                coming_soon = True
-            if pp.get('dvd') and fireEvent('searcher.could_be_released', False, eta, movie.library.year, single = True):
-                coming_soon = True
+        if len(active) > 0:
 
-            # Skip if movie is snatched/downloaded/available
-            skip = False
-            for release in movie.releases:
-                if release.status_id in [snatched_status.get('id'), downloaded_status.get('id'), available_status.get('id')]:
-                    skip = True
-                    break
-            if skip:
-                continue
+            # Do the shuffle
+            if random:
+                rndm.shuffle(active)
 
-            if coming_soon:
-                temp = movie.to_dict({
-                    'profile': {'types': {}},
-                    'releases': {'files':{}, 'info': {}},
-                    'library': {'titles': {}, 'files':{}},
-                    'files': {},
-                })
+            movie_ids = []
+            for movie in active:
+                movie_id, profile_id, info, year = movie
 
-                # Don't list older movies
-                if ((not late and ((not eta.get('dvd') and not eta.get('theater')) or (eta.get('dvd') and eta.get('dvd') > (now - 2419200)))) or \
-                        (late and (eta.get('dvd', 0) > 0 or eta.get('theater')) and eta.get('dvd') < (now - 2419200))):
-                    movies.append(temp)
+                pp = profile_pre.get(profile_id)
+                if not pp: continue
 
-                if len(movies) >= limit:
-                    break
+                eta = info.get('release_date', {}) or {}
+                coming_soon = False
 
-        db.expire_all()
+                # Theater quality
+                if pp.get('theater') and fireEvent('movie.searcher.could_be_released', True, eta, year, single = True):
+                    coming_soon = True
+                elif pp.get('dvd') and fireEvent('movie.searcher.could_be_released', False, eta, year, single = True):
+                    coming_soon = True
+
+                if coming_soon:
+
+                    # Don't list older movies
+                    if ((not late and (not eta.get('dvd') and not eta.get('theater') or eta.get('dvd') and eta.get('dvd') > (now - 2419200))) or
+                            (late and (eta.get('dvd', 0) > 0 or eta.get('theater')) and eta.get('dvd') < (now - 2419200))):
+                        movie_ids.append(movie_id)
+
+                        if len(movie_ids) >= limit:
+                            break
+
+            if len(movie_ids) > 0:
+
+                # Get all movie information
+                movies_raw = db.query(Movie) \
+                    .options(joinedload_all('library.titles')) \
+                    .options(joinedload_all('library.files')) \
+                    .options(joinedload_all('files')) \
+                    .filter(Movie.id.in_(movie_ids)) \
+                    .all()
+
+                # Create dict by movie id
+                movie_dict = {}
+                for movie in movies_raw:
+                    movie_dict[movie.id] = movie
+
+                for movie_id in movie_ids:
+                    movies.append(movie_dict[movie_id].to_dict({
+                        'library': {'titles': {}, 'files':{}},
+                        'files': {},
+                    }))
+
         return {
             'success': True,
             'empty': len(movies) == 0,

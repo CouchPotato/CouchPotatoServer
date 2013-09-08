@@ -86,8 +86,10 @@ class BinSearch(NZBProvider):
 
     def download(self, url = '', nzb_id = ''):
 
-        params = {'action': 'nzb'}
-        params[nzb_id] = 'on'
+        params = {
+            'action': 'nzb',
+            nzb_id: 'on'
+        }
 
         try:
             return self.urlopen(url, params = params, show_error = False)

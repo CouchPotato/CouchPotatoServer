@@ -43,6 +43,8 @@ var SuggestList = new Class({
 	fill: function(json){
 
 		var self = this;
+		
+		if(!json) return;
 
 		Object.each(json.suggestions, function(movie){
 
@@ -71,9 +73,23 @@ var SuggestList = new Class({
 					)
 				);
 				m.data_container.removeEvents('click');
+
+				// Add rating
+				m.info_container.adopt(
+					m.rating = m.info.rating && m.info.rating.imdb.length == 2 && parseFloat(m.info.rating.imdb[0]) > 0  ? new Element('span.rating', {
+						'text': parseFloat(m.info.rating.imdb[0]),
+						'title': parseInt(m.info.rating.imdb[1]) + ' votes'
+					}) : null,
+					m.genre = m.info.genres && m.info.genres.length > 0 ? new Element('span.genres', {
+						'text': m.info.genres.slice(0, 3).join(', ')
+					}) : null
+				)
+
 			$(m).inject(self.el);
 
 		});
+		
+		self.fireEvent('loaded');
 
 	},
 

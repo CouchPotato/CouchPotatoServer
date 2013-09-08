@@ -42,6 +42,7 @@ config = [{
                 },
                 {
                     'name': 'priority',
+                    'advanced': True,
                     'default': '0',
                     'type': 'dropdown',
                     'values': [('Very Low', -100), ('Low', -50), ('Normal', 0), ('High', 50), ('Very High', 100)],
@@ -57,6 +58,7 @@ config = [{
                 {
                     'name': 'delete_failed',
                     'default': True,
+                    'advanced': True,
                     'type': 'bool',
                     'description': 'Delete a release after the download has failed.',
                 },

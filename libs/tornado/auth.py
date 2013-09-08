@@ -56,7 +56,7 @@ import hmac
 import time
 import uuid
 
-from tornado.concurrent import Future, chain_future, return_future
+from tornado.concurrent import TracebackFuture, chain_future, return_future
 from tornado import gen
 from tornado import httpclient
 from tornado import escape
@@ -99,7 +99,7 @@ def _auth_return_future(f):
 
     @functools.wraps(f)
     def wrapper(*args, **kwargs):
-        future = Future()
+        future = TracebackFuture()
         callback, args, kwargs = replacer.replace(future, args, kwargs)
         if callback is not None:
             future.add_done_callback(
@@ -306,10 +306,10 @@ class OAuthMixin(object):
         """Redirects the user to obtain OAuth authorization for this service.
 
         The ``callback_uri`` may be omitted if you have previously
-        registered a callback URI with the third-party service.  For some
-        sevices (including Twitter and Friendfeed), you must use a
-        previously-registered callback URI and cannot specify a callback
-        via this method.
+        registered a callback URI with the third-party service.  For
+        some sevices (including Friendfeed), you must use a
+        previously-registered callback URI and cannot specify a
+        callback via this method.
 
         This method sets a cookie called ``_oauth_request_token`` which is
         subsequently used (and cleared) in `get_authenticated_user` for
@@ -1158,7 +1158,7 @@ class FacebookMixin(object):
 class FacebookGraphMixin(OAuth2Mixin):
     """Facebook authentication using the new Graph API and OAuth2."""
     _OAUTH_ACCESS_TOKEN_URL = "https://graph.facebook.com/oauth/access_token?"
-    _OAUTH_AUTHORIZE_URL = "https://graph.facebook.com/oauth/authorize?"
+    _OAUTH_AUTHORIZE_URL = "https://www.facebook.com/dialog/oauth?"
     _OAUTH_NO_CALLBACKS = False
     _FACEBOOK_BASE_URL = "https://graph.facebook.com"
 

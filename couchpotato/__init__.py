@@ -4,15 +4,14 @@ from couchpotato.core.event import fireEvent
 from couchpotato.core.helpers.variable import md5
 from couchpotato.core.logger import CPLog
 from couchpotato.environment import Env
-from sqlalchemy.engine import create_engine
-from sqlalchemy.orm import scoped_session
-from sqlalchemy.orm.session import sessionmaker
 from tornado import template
 from tornado.web import RequestHandler
 import os
 import time
+import traceback
 
 log = CPLog(__name__)
+
 
 views = {}
 template_loader = template.Loader(os.path.join(os.path.dirname(__file__), 'templates'))
@@ -25,7 +24,12 @@ class WebHandler(RequestHandler):
         if not views.get(route):
             page_not_found(self)
             return
-        self.write(views[route]())
+
+        try:
+            self.write(views[route]())
+        except:
+            log.error('Failed doing web request "%s": %s', (route, traceback.format_exc()))
+            self.write({'success': False, 'error': 'Failed returning results'})
 
 def addView(route, func, static = False):
     views[route] = func
@@ -58,16 +62,22 @@ addView('docs', apiDocs)
 class KeyHandler(RequestHandler):
     def get(self, *args, **kwargs):
         api = None
-        username = Env.setting('username')
-        password = Env.setting('password')
 
-        if (self.get_argument('u') == md5(username) or not username) and (self.get_argument('p') == password or not password):
-            api = Env.setting('api_key')
+        try:
+            username = Env.setting('username')
+            password = Env.setting('password')
 
-        self.write({
-            'success': api is not None,
-            'api_key': api
-        })
+            if (self.get_argument('u') == md5(username) or not username) and (self.get_argument('p') == password or not password):
+                api = Env.setting('api_key')
+
+            self.write({
+                'success': api is not None,
+                'api_key': api
+            })
+        except:
+            log.error('Failed doing key request: %s', (traceback.format_exc()))
+            self.write({'success': False, 'error': 'Failed returning results'})
+
 
 def page_not_found(rh):
     index_url = Env.get('web_base')

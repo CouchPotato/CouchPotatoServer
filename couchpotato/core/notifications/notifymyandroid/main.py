@@ -8,19 +8,17 @@ log = CPLog(__name__)
 
 class NotifyMyAndroid(Notification):
 
-    def notify(self, message = '', data = {}, listener = None):
+    def notify(self, message = '', data = None, listener = None):
+        if not data: data = {}
 
         nma = pynma.PyNMA()
         keys = splitString(self.conf('api_key'))
         nma.addkey(keys)
         nma.developerkey(self.conf('dev_key'))
 
-        # hacky fix for the event type
-        # as it seems to be part of the message now
-        self.event = message.split(' ')[0]
         response = nma.push(
             application = self.default_title,
-            event = self.event,
+            event = message.split(' ')[0],
             description = message,
             priority = self.conf('priority'),
             batch_mode = len(keys) > 1

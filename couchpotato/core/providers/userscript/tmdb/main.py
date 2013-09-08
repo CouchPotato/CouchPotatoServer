@@ -9,7 +9,7 @@ class TMDB(UserscriptBase):
 
     def getMovie(self, url):
         match = re.search('(?P<id>\d+)', url)
-        movie = fireEvent('movie.info_by_tmdb', id = match.group('id'), merge = True)
+        movie = fireEvent('movie.info_by_tmdb', identifier = match.group('id'), merge = True)
 
         if movie['imdb']:
             return self.getInfo(movie['imdb'])

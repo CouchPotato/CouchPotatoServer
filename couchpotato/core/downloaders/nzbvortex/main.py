@@ -16,13 +16,16 @@ import urllib2
 
 log = CPLog(__name__)
 
+
 class NZBVortex(Downloader):
 
-    type = ['nzb']
+    protocol = ['nzb']
     api_level = None
     session_id = None
 
-    def download(self, data = {}, movie = {}, filedata = None):
+    def download(self, data = None, movie = None, filedata = None):
+        if not movie: movie = {}
+        if not data: data = {}
 
         # Send the nzb
         try:
@@ -55,8 +58,8 @@ class NZBVortex(Downloader):
                 'name': item['uiTitle'],
                 'status': status,
                 'original_status': item['state'],
-                'timeleft': -1,
-                'folder': item['destinationPath'],
+                'timeleft':-1,
+                'folder': ss(item['destinationPath']),
             })
 
         return statuses
@@ -96,9 +99,10 @@ class NZBVortex(Downloader):
         return False
 
 
-    def call(self, call, parameters = {}, repeat = False, auth = True, *args, **kwargs):
+    def call(self, call, parameters = None, repeat = False, auth = True, *args, **kwargs):
 
         # Login first
+        if not parameters: parameters = {}
         if not self.session_id and auth:
             self.login()
 
@@ -121,7 +125,7 @@ class NZBVortex(Downloader):
                 # Try login and do again
                 if not repeat:
                     self.login()
-                    return self.call(call, parameters = parameters, repeat = True, *args, **kwargs)
+                    return self.call(call, parameters = parameters, repeat = True, **kwargs)
 
             log.error('Failed to parsing %s: %s', (self.getName(), traceback.format_exc()))
         except:
@@ -147,7 +151,8 @@ class NZBVortex(Downloader):
 
         return self.api_level
 
-    def isEnabled(self, manual, data):
+    def isEnabled(self, manual = False, data = None):
+        if not data: data = {}
         return super(NZBVortex, self).isEnabled(manual, data) and self.getApiLevel()
 
 

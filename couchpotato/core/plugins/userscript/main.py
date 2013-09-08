@@ -55,7 +55,7 @@ class Userscript(Plugin):
                     'excludes': fireEvent('userscript.get_excludes', merge = True),
                     'version': klass.getVersion(),
                     'api': '%suserscript/' % Env.get('api_base'),
-                    'host': '%s://%s' % (self.request.protocol, self.request.host),
+                    'host': '%s://%s' % (self.request.protocol, self.request.headers.get('X-Forwarded-Host') or self.request.headers.get('host')),
                 }
 
                 script = klass.renderTemplate(__file__, 'template.js', **params)
@@ -80,8 +80,6 @@ class Userscript(Plugin):
         return index()
 
     def getViaUrl(self, url = None, **kwargs):
-
-        print url
 
         params = {
             'url': url,

@@ -120,13 +120,17 @@ class Scanner(Plugin):
                 files = []
                 for root, dirs, walk_files in os.walk(folder):
                     files.extend(os.path.join(root, filename) for filename in walk_files)
+
+                    # Break if CP wants to shut down
+                    if self.shuttingDown():
+                        break
+
             except:
                 log.error('Failed getting files from %s: %s', (folder, traceback.format_exc()))
         else:
             check_file_date = False
             files = [ss(x) for x in files]
 
-        db = get_session()
 
         for file_path in files:
 
@@ -225,6 +229,10 @@ class Scanner(Plugin):
                 # Remove the found files from the leftover stack
                 leftovers = leftovers - set(found_files)
 
+                exts = [getExt(ff) for ff in found_files]
+                if 'ignore' in exts:
+                    ignored_identifiers.append(identifier)
+
             # Break if CP wants to shut down
             if self.shuttingDown():
                 break
@@ -251,6 +259,10 @@ class Scanner(Plugin):
                     # Remove the found files from the leftover stack
                     leftovers = leftovers - set([ff])
 
+                    ext = getExt(ff)
+                    if ext == 'ignore':
+                        ignored_identifiers.append(new_identifier)
+
             # Break if CP wants to shut down
             if self.shuttingDown():
                 break
@@ -269,7 +281,7 @@ class Scanner(Plugin):
             except:
                 break
 
-            # Check if movie is fresh and maybe still unpacking, ignore files new then 1 minute
+            # Check if movie is fresh and maybe still unpacking, ignore files newer than 1 minute
             file_too_new = False
             for cur_file in group['unsorted_files']:
                 if not os.path.isfile(cur_file):
@@ -321,14 +333,18 @@ class Scanner(Plugin):
 
         del movie_files
 
+        total_found = len(valid_files)
+
         # Make sure only one movie was found if a download ID is provided
-        if download_info and not len(valid_files) == 1:
+        if download_info and total_found == 0:
+            log.info('Download ID provided (%s), but no groups found! Make sure the download contains valid media files (fully extracted).', download_info.get('imdb_id'))
+        elif download_info and total_found > 1:
             log.info('Download ID provided (%s), but more than one group found (%s). Ignoring Download ID...', (download_info.get('imdb_id'), len(valid_files)))
             download_info = None
 
         # Determine file types
+        db = get_session()
         processed_movies = {}
-        total_found = len(valid_files)
         while True and not self.shuttingDown():
             try:
                 identifier, group = valid_files.popitem()
@@ -413,7 +429,7 @@ class Scanner(Plugin):
         if len(processed_movies) > 0:
             log.info('Found %s movies in the folder %s', (len(processed_movies), folder))
         else:
-            log.debug('Found no movies in the folder %s', (folder))
+            log.debug('Found no movies in the folder %s', folder)
 
         return processed_movies
 
@@ -492,6 +508,7 @@ class Scanner(Plugin):
         detected_languages = {}
 
         # Subliminal scanner
+        paths = None
         try:
             paths = group['files']['movie']
             scan_result = []
@@ -544,12 +561,14 @@ class Scanner(Plugin):
                     break
 
         # Check and see if nfo contains the imdb-id
+        nfo_file = None
         if not imdb_id:
             try:
-                for nfo_file in files['nfo']:
+                for nf in files['nfo']:
                     imdb_id = getImdb(nfo_file)
                     if imdb_id:
-                        log.debug('Found movie via nfo file: %s', nfo_file)
+                        log.debug('Found movie via nfo file: %s', nf)
+                        nfo_file = nf
                         break
             except:
                 pass
@@ -569,25 +588,15 @@ class Scanner(Plugin):
         # Check if path is already in db
         if not imdb_id:
             db = get_session()
-            for cur_file in files['movie']:
-                f = db.query(File).filter_by(path = toUnicode(cur_file)).first()
+            for cf in files['movie']:
+                f = db.query(File).filter_by(path = toUnicode(cf)).first()
                 try:
                     imdb_id = f.library[0].identifier
-                    log.debug('Found movie via database: %s', cur_file)
+                    log.debug('Found movie via database: %s', cf)
+                    cur_file = cf
                     break
                 except:
                     pass
-
-        # Search based on OpenSubtitleHash
-        if not imdb_id and not group['is_dvd']:
-            for cur_file in files['movie']:
-                movie = fireEvent('movie.by_hash', file = cur_file, merge = True)
-
-                if len(movie) > 0:
-                    imdb_id = movie[0].get('imdb')
-                    if imdb_id:
-                        log.debug('Found movie via OpenSubtitleHash: %s', cur_file)
-                        break
 
         # Search based on identifiers
         if not imdb_id:
@@ -609,7 +618,7 @@ class Scanner(Plugin):
                     log.debug('Identifier to short to use for search: %s', identifier)
 
         if imdb_id:
-            return fireEvent('library.add', attrs = {
+            return fireEvent('library.add.movie', attrs = {
                 'identifier': imdb_id
             }, update_after = False, single = True)
 
@@ -675,10 +684,9 @@ class Scanner(Plugin):
             return getExt(s.lower()) in ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'tbn']
         files = set(filter(test, files))
 
-        images = {}
-
-        # Fanart
-        images['backdrop'] = set(filter(lambda s: re.search('(^|[\W_])fanart|backdrop\d*[\W_]', s.lower()) and self.filesizeBetween(s, 0, 5), files))
+        images = {
+            'backdrop': set(filter(lambda s: re.search('(^|[\W_])fanart|backdrop\d*[\W_]', s.lower()) and self.filesizeBetween(s, 0, 5), files))
+        }
 
         # Rest
         images['rest'] = files - images['backdrop']
@@ -750,7 +758,7 @@ class Scanner(Plugin):
 
         # Year
         year = self.findYear(identifier)
-        if year:
+        if year and identifier[:4] != year:
             identifier = '%s %s' % (identifier.split(year)[0].strip(), year)
         else:
             identifier = identifier.split('::')[0]

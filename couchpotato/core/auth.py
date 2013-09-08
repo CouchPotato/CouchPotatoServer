@@ -10,10 +10,15 @@ def requires_auth(handler_class):
     def wrap_execute(handler_execute):
 
         def require_basic_auth(handler, kwargs):
+
             if Env.setting('username') and Env.setting('password'):
 
                 auth_header = handler.request.headers.get('Authorization')
                 auth_decoded = base64.decodestring(auth_header[6:]) if auth_header else None
+
+                username = ''
+                password = ''
+
                 if auth_decoded:
                     username, password = auth_decoded.split(':', 2)
 

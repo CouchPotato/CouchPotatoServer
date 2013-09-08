@@ -6,15 +6,24 @@ import traceback
 
 log = CPLog(__name__)
 
-class Loader(object):
 
+class Loader(object):
     plugins = {}
     providers = {}
-
     modules = {}
 
-    def preload(self, root = ''):
+    def addPath(self, root, base_path, priority, recursive = False):
+        for filename in os.listdir(os.path.join(root, *base_path)):
+            path = os.path.join(os.path.join(root, *base_path), filename)
+            if os.path.isdir(path) and filename[:2] != '__':
+                if u'__init__.py' in os.listdir(path):
+                    new_base_path = ''.join(s + '.' for s in base_path) + filename
+                    self.paths[new_base_path.replace('.', '_')] = (priority, new_base_path, path)
 
+                if recursive:
+                    self.addPath(root, base_path + [filename], priority, recursive = True)
+
+    def preload(self, root = ''):
         core = os.path.join(root, 'couchpotato', 'core')
 
         self.paths = {
@@ -25,12 +34,10 @@ class Loader(object):
         }
 
         # Add providers to loader
-        provider_dir = os.path.join(root, 'couchpotato', 'core', 'providers')
-        for provider in os.listdir(provider_dir):
-            path = os.path.join(provider_dir, provider)
-            if os.path.isdir(path):
-                self.paths[provider + '_provider'] = (25, 'couchpotato.core.providers.' + provider, path)
+        self.addPath(root, ['couchpotato', 'core', 'providers'], 25, recursive = False)
 
+        # Add media to loader
+        self.addPath(root, ['couchpotato', 'core', 'media'], 25, recursive = True)
 
         for plugin_type, plugin_tuple in self.paths.iteritems():
             priority, module, dir_name = plugin_tuple
@@ -43,7 +50,13 @@ class Loader(object):
             for module_name, plugin in sorted(self.modules[priority].iteritems()):
                 # Load module
                 try:
-                    m = getattr(self.loadModule(module_name), plugin.get('name'))
+                    if plugin.get('name')[:2] == '__':
+                        continue
+
+                    m = self.loadModule(module_name)
+                    if m is None:
+                        continue
+                    m = getattr(m, plugin.get('name'))
 
                     log.info('Loading %s: %s', (plugin['type'], plugin['name']))
 
@@ -53,7 +66,7 @@ class Loader(object):
                     self.loadPlugins(m, plugin.get('name'))
                 except ImportError as e:
                     # todo:: subclass ImportError for missing requirements.
-                    if (e.message.lower().startswith("missing")):
+                    if e.message.lower().startswith("missing"):
                         log.error(e.message)
                         pass
                     # todo:: this needs to be more descriptive.
@@ -73,19 +86,21 @@ class Loader(object):
             splitted = module.split('.')
             for sub in splitted[1:]:
                 m = getattr(m, sub)
-
-            if hasattr(m, 'config'):
-                fireEvent('settings.options', splitted[-1] + '_config', getattr(m, 'config'))
         except:
             raise
 
         for cur_file in glob.glob(os.path.join(dir_name, '*')):
             name = os.path.basename(cur_file)
-            if os.path.isdir(os.path.join(dir_name, name)):
+            if os.path.isdir(os.path.join(dir_name, name)) and name != 'static' and os.path.isfile(os.path.join(cur_file, '__init__.py')):
                 module_name = '%s.%s' % (module, name)
                 self.addModule(priority, plugin_type, module_name, name)
 
     def loadSettings(self, module, name, save = True):
+
+        if not hasattr(module, 'config'):
+            log.debug('Skip loading settings for plugin %s as it has no config section' % module.__file__)
+            return False
+
         try:
             for section in module.config:
                 fireEvent('settings.options', section['name'], section)
@@ -100,15 +115,14 @@ class Loader(object):
             return False
 
     def loadPlugins(self, module, name):
+
+        if not hasattr(module, 'start'):
+            log.debug('Skip startup for plugin %s as it has no start section' % module.__file__)
+            return False
         try:
-            klass = module.start()
-            klass.registerPlugin()
-
-            if klass and getattr(klass, 'auto_register_static'):
-                klass.registerStatic(module.__file__)
-
+            module.start()
             return True
-        except Exception, e:
+        except:
             log.error('Failed loading plugin "%s": %s', (module.__file__, traceback.format_exc()))
             return False
 
@@ -131,5 +145,8 @@ class Loader(object):
             for sub in splitted[1:-1]:
                 m = getattr(m, sub)
             return m
+        except ImportError:
+            log.debug('Skip loading module plugin %s: %s', (name, traceback.format_exc()))
+            return None
         except:
             raise
