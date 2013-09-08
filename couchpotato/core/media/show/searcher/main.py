@@ -1,4 +1,5 @@
-from couchpotato import get_session
+import pprint
+from couchpotato import get_session, Env
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.variable import getTitle
 from couchpotato.core.logger import CPLog
@@ -17,6 +18,7 @@ class ShowSearcher(Plugin):
         super(ShowSearcher, self).__init__()
 
         addEvent('show.searcher.single', self.single)
+        addEvent('searcher.correct_release', self.correctRelease)
         addEvent('searcher.get_search_title', self.getSearchTitle)
 
     def _lookupMedia(self, media):
@@ -103,11 +105,35 @@ class ShowSearcher(Plugin):
 
                 results = []
                 for search_protocol in search_protocols:
-                    protocol_results = fireEvent('provider.search.%s.%s' % (search_protocol, media['type']), media, quality, merge = True)
+                    protocol_results = fireEvent('provider.search.%s.show' % search_protocol, media, quality, merge = True)
                     if protocol_results:
                         results += protocol_results
 
                 log.info('%d results found' % len(results))
+
+    def correctRelease(self, release = None, media = None, quality = None, **kwargs):
+
+        if media.get('type') not in ['season', 'episode']: return
+
+        imdb_results = kwargs.get('imdb_results', False)
+        retention = Env.setting('retention', section = 'nzb')
+
+        if release.get('seeders') is None and 0 < retention < release.get('age', 0):
+            log.info2('Wrong: Outside retention, age is %s, needs %s or lower: %s', (release['age'], retention, release['name']))
+            return False
+
+        # Check for required and ignored words
+        if not fireEvent('searcher.correct_words', release['name'], media, single = True):
+            return False
+
+        preferred_quality = fireEvent('quality.single', identifier = quality['identifier'], single = True)
+
+        # Contains lower quality string
+        if fireEvent('searcher.contains_other_quality', release, preferred_quality = preferred_quality, single = True):
+            log.info2('Wrong: %s, looking for %s', (release['name'], quality['label']))
+            return False
+
+        pprint.pprint(release)
 
     def getSearchTitle(self, media):
         show, season, episode = self._lookupMedia(media)
