@@ -1,4 +1,3 @@
-import logging
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.variable import tryFloat, mergeDicts, md5, \
     possibleTitles, toIterable
@@ -115,9 +114,7 @@ class YarrProvider(Provider):
     def __init__(self):
         addEvent('provider.enabled_protocols', self.getEnabledProtocol)
         addEvent('provider.belongs_to', self.belongsTo)
-
-        for type in toIterable(self.type):
-            addEvent('provider.search.%s.%s' % (self.protocol, type), self.search)
+        addEvent('provider.search.%s.%s' % (self.protocol, self.type), self.search)
 
     def getEnabledProtocol(self):
         if self.isEnabled():
@@ -252,11 +249,11 @@ class YarrProvider(Provider):
         for group_name, group_cat_ids in self.cat_ids:
             if len(group_cat_ids) > 0:
                 if type(group_cat_ids[0]) is tuple:
-                    self.cat_ids_structure = 'groups'
+                    self.cat_ids_structure = 'group'
                 if type(group_cat_ids[0]) is str:
                     self.cat_ids_structure = 'single'
 
-    def getCatId(self, identifier, media_type = 'movie'):
+    def getCatId(self, identifier, group = None):
 
         cat_ids = self.cat_ids
 
@@ -264,9 +261,12 @@ class YarrProvider(Provider):
             self._discoverCatIdStructure()
 
         # If cat_ids is in a 'groups' structure, locate the media group
-        if self.cat_ids_structure == 'groups':
+        if self.cat_ids_structure == 'group':
+            if not group:
+                raise ValueError("group is required on group cat_ids structure")
+
             for group_type, group_cat_ids in cat_ids:
-                if media_type in toIterable(group_type):
+                if group in toIterable(group_type):
                     cat_ids = group_cat_ids
 
         for cats in cat_ids:

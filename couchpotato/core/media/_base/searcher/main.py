@@ -236,7 +236,7 @@ class Searcher(SearcherBase):
         return False
 
     def correctWords(self, rel_name, media):
-        media_title = fireEvent('searcher.get_search_title', media)
+        media_title = fireEvent('searcher.get_search_title', media, single = True)
         media_words = re.split('\W+', simplifyString(media_title))
 
         rel_name = simplifyString(rel_name)

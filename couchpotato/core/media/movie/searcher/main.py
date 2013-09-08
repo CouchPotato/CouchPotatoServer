@@ -270,6 +270,8 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
         if media.get('type') != 'movie': return
 
+        media_title = fireEvent('searcher.get_search_title', media, single = True)
+
         imdb_results = kwargs.get('imdb_results', False)
         retention = Env.setting('retention', section = 'nzb')
 
@@ -330,7 +332,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                     if len(movie_words) <= 2 and fireEvent('searcher.correct_year', nzb['name'], media['library']['year'], 0, single = True):
                         return True
 
-        log.info("Wrong: %s, undetermined naming. Looking for '%s (%s)'", (nzb['name'], movie_name, media['library']['year']))
+        log.info("Wrong: %s, undetermined naming. Looking for '%s (%s)'", (nzb['name'], media_title, media['library']['year']))
         return False
 
     def couldBeReleased(self, is_pre_release, dates, year = None):

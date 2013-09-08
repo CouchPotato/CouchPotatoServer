@@ -2,43 +2,41 @@ from bs4 import BeautifulSoup
 from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
+from couchpotato.core.providers.base import MultiProvider
+from couchpotato.core.providers.info.base import MovieProvider, ShowProvider
 from couchpotato.core.providers.torrent.base import TorrentProvider
 import traceback
 
 log = CPLog(__name__)
 
 
-class IPTorrents(TorrentProvider):
+class IPTorrents(MultiProvider):
 
-    type = ['movie', 'season', 'episode']
+    def getTypes(self):
+        return [Movie, Show]
+
+
+class Base(TorrentProvider):
 
     urls = {
         'test' : 'http://www.iptorrents.com/',
         'base_url' : 'http://www.iptorrents.com',
         'login' : 'http://www.iptorrents.com/torrents/',
         'login_check': 'http://www.iptorrents.com/inbox.php',
-        'search' : 'http://www.iptorrents.com/torrents/?l%d=1%s&q=%s&qf=ti&p=%d',
+        'search' : 'http://www.iptorrents.com/torrents/?l%d=1%%s&q=%s&qf=ti&p=%%d',
     }
-
-    cat_ids = [
-        ('movie', [
-            ([48], ['720p', '1080p', 'bd50']),
-            ([72], ['cam', 'ts', 'tc', 'r5', 'scr']),
-            ([7], ['dvdrip', 'brrip']),
-            ([6], ['dvdr']),
-        ]),
-        ('season', [
-            ([65], ['hdtv', '480p', '720p', '1080p']),
-        ]),
-        ('episode', [
-            ([5], ['720p', '1080p']),
-            ([78], ['480p']),
-            ([4, 79], ['hdtv'])
-        ])
-    ]
 
     http_time_between_calls = 1 #seconds
     cat_backup_id = None
+
+    def _buildUrl(self, query, quality_identifier, cat_ids_group = None):
+
+        cat_id = self.getCatId(quality_identifier, cat_ids_group)[0]
+        if not cat_id:
+            log.warning('Unable to find category for quality %s', quality_identifier)
+            return
+
+        return self.urls['search'] % (cat_id, tryUrlencode(query))
 
     def _searchOnTitle(self, title, media, quality, results):
 
@@ -47,17 +45,11 @@ class IPTorrents(TorrentProvider):
         pages = 1
         current_page = 1
         while current_page <= pages and not self.shuttingDown():
+            url = self.buildUrl(title, media, quality)
+            if not url: return
 
-            query = title.replace(':', '')
-            if media['type'] == 'movie':
-                query = '%s %s' % (title.replace(':', ''), media['library']['year'])
+            url = url  % (freeleech, current_page)
 
-            cat_id = self.getCatId(quality['identifier'], media['type'])[0]
-            if not cat_id:
-                log.warning('Unable to find category for quality %s and media type %s', (quality['identifier'], media['type']))
-                return
-
-            url = self.urls['search'] % (cat_id, freeleech, tryUrlencode(query), current_page)
             data = self.getHTMLData(url, opener = self.login_opener)
 
             if data:
@@ -122,3 +114,38 @@ class IPTorrents(TorrentProvider):
 
     def loginCheckSuccess(self, output):
         return '/logout.php' in output.lower()
+
+
+class Movie(MovieProvider, Base):
+
+    cat_ids = [
+        ([48], ['720p', '1080p', 'bd50']),
+        ([72], ['cam', 'ts', 'tc', 'r5', 'scr']),
+        ([7], ['dvdrip', 'brrip']),
+        ([6], ['dvdr']),
+    ]
+
+    def buildUrl(self, title, media, quality):
+        query = '%s %s' % (title.replace(':', ''), media['library']['year'])
+
+        return self._buildUrl(query, quality['identifier'])
+
+
+class Show(ShowProvider, Base):
+
+    cat_ids = [
+        ('season', [
+            ([65], ['hdtv', '480p', '720p', '1080p']),
+        ]),
+        ('episode', [
+            ([5], ['720p', '1080p']),
+            ([78], ['480p']),
+            ([4, 79], ['hdtv'])
+        ])
+    ]
+
+    def buildUrl(self, title, media, quality):
+        if media['type'] not in ['season', 'episode']:
+            return
+
+        return self._buildUrl(title.replace(':', ''), quality['identifier'], media['type'])
