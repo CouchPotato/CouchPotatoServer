@@ -91,7 +91,7 @@ class Loader(object):
 
         for cur_file in glob.glob(os.path.join(dir_name, '*')):
             name = os.path.basename(cur_file)
-            if os.path.isdir(os.path.join(dir_name, name)) and name != 'static':
+            if os.path.isdir(os.path.join(dir_name, name)) and name != 'static' and os.path.isfile(os.path.join(cur_file, '__init__.py')):
                 module_name = '%s.%s' % (module, name)
                 self.addModule(priority, plugin_type, module_name, name)
 
