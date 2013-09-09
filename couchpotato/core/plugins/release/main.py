@@ -182,7 +182,11 @@ class Release(Plugin):
             # Get matching provider
             provider = fireEvent('provider.belongs_to', item['url'], provider = item.get('provider'), single = True)
 
-            if item.get('protocol', item.get('type')) != 'torrent_magnet':
+            if not item.get('protocol'):
+                item['protocol'] = item['type']
+                item['type'] = 'movie'
+
+            if item.get('protocol') != 'torrent_magnet':
                 item['download'] = provider.loginDownload if provider.urls.get('login') else provider.download
 
             success = fireEvent('searcher.download', data = item, movie = rel.movie.to_dict({
