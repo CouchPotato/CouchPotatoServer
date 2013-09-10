@@ -128,6 +128,7 @@ body > .spinner, .mask{
     border-radius: 2px;
     cursor: pointer;
     border: none;
+	-webkit-appearance: none;
 }
 	.button.red { background-color: #ff0000; }
 	.button.green { background-color: #2aa300; }
