@@ -83,7 +83,7 @@ class Plugin(object):
         class_name = re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
 
         # View path
-        path = 'api/%s/static/%s/' % (Env.setting('api_key'), class_name)
+        path = 'static/plugin/%s/' % (class_name)
 
         # Add handler to Tornado
         Env.get('app').add_handlers(".*$", [(Env.get('web_base') + path + '(.*)', StaticFileHandler, {'path': static_folder})])

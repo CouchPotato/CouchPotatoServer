@@ -234,7 +234,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
         debug = config['use_reloader'],
         gzip = True,
         cookie_secret = api_key,
-        login_url = "/login",
+        login_url = '%slogin/' % web_base,
     )
     Env.set('app', application)
 
@@ -246,7 +246,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
         (r'%s(.*)(/?)' % api_base, ApiHandler), # Main API handler
         (r'%sgetkey(/?)' % web_base, KeyHandler), # Get API key
         (r'%s' % api_base, RedirectHandler, {"url": web_base + 'docs/'}), # API docs
-        
+
         # Login handlers
         (r'%slogin(/?)' % web_base, LoginHandler),
         (r'%slogout(/?)' % web_base, LogoutHandler),
@@ -257,7 +257,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     ])
 
     # Static paths
-    static_path = '%sstatic/' % api_base
+    static_path = '%sstatic/' % web_base
     for dir_name in ['fonts', 'images', 'scripts', 'style']:
         application.add_handlers(".*$", [
              ('%s%s/(.*)' % (static_path, dir_name), StaticFileHandler, {'path': toUnicode(os.path.join(base_path, 'couchpotato', 'static', dir_name))})
