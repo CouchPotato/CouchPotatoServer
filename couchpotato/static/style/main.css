@@ -127,6 +127,7 @@ body > .spinner, .mask{
     line-height: 1;
     border-radius: 2px;
     cursor: pointer;
+    border: none;
 }
 	.button.red { background-color: #ff0000; }
 	.button.green { background-color: #2aa300; }
@@ -199,7 +200,7 @@ body > .spinner, .mask{
 	top: -3px;
 }
 .icon2.menu:before { 
-	content: "\e076  \e076  \e076"; 
+	content: "\e076   \e076   \e076"; 
 	line-height: 6px;
 	transform: scaleX(2);
 	width: 20px;
@@ -257,13 +258,14 @@ body > .spinner, .mask{
 		
 		.header .logo {
 			display: inline-block;
-			font-size: 1.75em;
-			padding: 15px 30px 0 15px;
+			font-size: 3em;
+			padding: 4px 30px 0 15px;
 			height: 100%;
             border-right: 1px solid rgba(255,255,255,.07);
 			color: #FFF;
 			font-weight: normal;
 			vertical-align: top;
+			font-family: Lobster;
 		}
 		
 			@media all and (max-width: 480px) {
@@ -274,6 +276,7 @@ body > .spinner, .mask{
 				.header .logo {
 					padding-top: 7px;
 					border: 0;
+					font-size: 1.7em;
 				}
 			}
 			
@@ -788,6 +791,73 @@ body > .spinner, .mask{
 			right: 0;
 			color: #FFF;
 		}
+
+/*** Login ***/
+.page.login {
+	display: block;
+}
+
+	.login h1 {
+		padding: 0 0 10px;
+		font-size: 60px;
+		font-family: Lobster;
+		font-weight: normal;
+	}
+
+	.login form {
+		padding: 0;
+		height: 300px;
+		width: 400px;
+		position: fixed;
+		left: 50%;
+		top: 50%;
+		margin: -200px 0 0 -200px;
+	}
+		@media all and (max-width: 480px) {
+		
+			.login form {
+				padding: 0;
+				height: 300px;
+				width: 90%;
+				position: absolute;
+				left: 5%;
+				top: 10px;
+				margin: 0;
+			}
+			
+		}
+	
+	.page.login .ctrlHolder {
+		padding: 0;
+		margin: 0 0 20px;
+	}
+		.page.login .ctrlHolder:hover {
+			background: none;
+		}
+	
+	.page.login input[type=text],
+	.page.login input[type=password] {
+		width: 100% !important;
+		font-size: 25px;
+		padding: 14px !important;
+	}
+	
+	.page.login .remember_me {
+		font-size: 15px;
+		float: left;
+		width: 150px;
+		padding: 20px 0;
+	}
+	
+		.page.login .remember_me .check {
+			margin: 5px 5px 0 0;
+		}
+	
+	.page.login .button {
+		font-size: 25px;
+		padding: 20px;
+		float: right;
+	}
 		
 /* Fonts */
 @font-face {
@@ -846,5 +916,15 @@ body > .spinner, .mask{
          url('../fonts/OpenSans-BoldItalic-webfont.svg#OpenSansBoldItalic') format('svg');
     font-weight: bold;
     font-style: italic;
+}
 
+@font-face {
+    font-family: 'Lobster';
+    src: url('../fonts/Lobster-webfont.eot');
+    src: url('../fonts/Lobster-webfont.eot?#iefix') format('embedded-opentype'),
+         url('../fonts/Lobster-webfont.woff') format('woff'),
+         url('../fonts/Lobster-webfont.ttf') format('truetype'),
+         url('../fonts/Lobster-webfont.svg#lobster_1.4regular') format('svg');
+    font-weight: normal;
+    font-style: normal;
 }
