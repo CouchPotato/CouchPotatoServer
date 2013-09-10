@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 from cache import FileSystemCache
-from couchpotato import KeyHandler
+from couchpotato import KeyHandler, LoginHandler, LogoutHandler
 from couchpotato.api import NonBlockHandler, ApiHandler
 from couchpotato.core.event import fireEventAsync, fireEvent
 from couchpotato.core.helpers.encoding import toUnicode
@@ -233,9 +233,10 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
         log_function = lambda x : None,
         debug = config['use_reloader'],
         gzip = True,
+        cookie_secret = api_key,
+        login_url = "/login",
     )
     Env.set('app', application)
-
 
     # Request handlers
     application.add_handlers(".*$", [
@@ -245,6 +246,10 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
         (r'%s(.*)(/?)' % api_base, ApiHandler), # Main API handler
         (r'%sgetkey(/?)' % web_base, KeyHandler), # Get API key
         (r'%s' % api_base, RedirectHandler, {"url": web_base + 'docs/'}), # API docs
+        
+        # Login handlers
+        (r'%slogin(/?)' % web_base, LoginHandler),
+        (r'%slogout(/?)' % web_base, LogoutHandler),
 
         # Catch all webhandlers
         (r'%s(.*)(/?)' % web_base, WebHandler),
