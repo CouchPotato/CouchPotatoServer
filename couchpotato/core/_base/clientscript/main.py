@@ -6,6 +6,7 @@ from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
 from minify.cssmin import cssmin
 from minify.jsmin import jsmin
+from tornado.web import StaticFileHandler
 import os
 import re
 import traceback
@@ -90,6 +91,13 @@ class ClientScript(Plugin):
 
     def minify(self):
 
+        # Create cache dir
+        cache = Env.get('cache_dir')
+        parent_dir = os.path.join(cache, 'minified')
+        self.makeDir(parent_dir)
+
+        Env.get('app').add_handlers(".*$", [(Env.get('web_base') + 'minified/(.*)', StaticFileHandler, {'path': parent_dir})])
+
         for file_type in ['style', 'script']:
             ext = 'js' if file_type is 'script' else 'css'
             positions = self.paths.get(file_type, {})
@@ -100,8 +108,8 @@ class ClientScript(Plugin):
     def _minify(self, file_type, files, position, out):
 
         cache = Env.get('cache_dir')
-        out_name = 'minified_' + out
-        out = os.path.join(cache, out_name)
+        out_name = out
+        out = os.path.join(cache, 'minified', out_name)
 
         raw = []
         for file_path in files:
@@ -131,7 +139,7 @@ class ClientScript(Plugin):
         if not self.minified[file_type].get(position):
             self.minified[file_type][position] = []
 
-        minified_url = 'api/%s/file.cache/%s?%s' % (Env.setting('api_key'), out_name, tryInt(os.path.getmtime(out)))
+        minified_url = 'minified/%s?%s' % (out_name, tryInt(os.path.getmtime(out)))
         self.minified[file_type][position].append(minified_url)
 
     def getStyles(self, *args, **kwargs):
