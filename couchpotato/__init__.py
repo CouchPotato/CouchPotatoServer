@@ -23,7 +23,6 @@ class BaseHandler(RequestHandler):
         password = Env.setting('password')
 
         if username or password:
-            print self.get_secure_cookie('user')
             return self.get_secure_cookie('user')
         else: # Login when no username or password are set
             return True
@@ -97,9 +96,9 @@ class LoginHandler(BaseHandler):
     def get(self, *args, **kwargs):
 
         if self.get_current_user():
-            self.redirect('/')
+            self.redirect(Env.get('web_base'))
         else:
-            self.write(template_loader.load('login.html').generate())
+            self.write(template_loader.load('login.html').generate(sep = os.sep, fireEvent = fireEvent, Env = Env))
 
     def post(self, *args, **kwargs):
 
@@ -113,15 +112,15 @@ class LoginHandler(BaseHandler):
 
         if api:
             remember_me = tryInt(self.get_argument('remember_me', default = 0))
-            self.set_secure_cookie('user', api, expires_days = 30 if remember_me else 0)
+            self.set_secure_cookie('user', api, expires_days = 30 if remember_me > 0 else None)
 
-        self.redirect('/')
+        self.redirect(Env.get('web_base'))
 
 class LogoutHandler(BaseHandler):
 
     def get(self, *args, **kwargs):
         self.clear_cookie('user')
-        self.redirect('/login')
+        self.redirect('%slogin/' % Env.get('web_base'))
 
 
 def page_not_found(rh):
