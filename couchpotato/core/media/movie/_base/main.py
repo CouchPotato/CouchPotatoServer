@@ -235,10 +235,15 @@ class MovieBase(MovieTypeBase):
             .filter(Release.movie_id.in_(movie_ids)) \
             .all()
 
-        release_statuses = dict((m, set()) for m in movie_ids)
+        releases_by_movie = dict((m, list()) for m in movie_ids)
         releases_count = dict((m, 0) for m in movie_ids)
         for release in releases:
-            release_statuses[release.movie_id].add('%d,%d' % (release.status_id, release.quality_id))
+            releases_by_movie[release.movie_id].append({
+                'id': release.id,
+                'status_id': release.status_id,
+                'quality_id': release.quality_id,
+                'files': [{'path': file.path} for file in release.files]
+            })
             releases_count[release.movie_id] += 1
 
         # Get main movie data
@@ -261,17 +266,12 @@ class MovieBase(MovieTypeBase):
         movies = []
         for movie_id in movie_ids:
 
-            releases = []
-            for r in release_statuses.get(movie_id):
-                x = splitString(r)
-                releases.append({'status_id': x[0], 'quality_id': x[1]})
-
             # Merge releases with movie dict
             movies.append(mergeDicts(movie_dict[movie_id].to_dict({
                 'library': {'titles': {}, 'files':{}},
                 'files': {},
             }), {
-                'releases': releases,
+                'releases': releases_by_movie.get(movie_id),
                 'releases_count': releases_count.get(movie_id),
             }))
 
