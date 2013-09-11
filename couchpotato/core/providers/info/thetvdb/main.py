@@ -2,70 +2,40 @@ from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import simplifyString, toUnicode
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.info.base import ShowProvider
+from couchpotato.environment import Env
 from tvdb_api import tvdb_api, tvdb_exceptions
 from datetime import datetime
 import traceback
+import os
 
 log = CPLog(__name__)
 
-# XXX: I return None in alot of functions when there is error or no value; check if I
-#      should be returning an empty list or dictionary
-# XXX: Consider grabbing zips to put less strain on tvdb
-# XXX: Consider a cache; not implenented everywhere yet or at all
-# XXX: Search by language; now ists defualt of "en"
-# XXX: alternate titles do exist for show and episodes; add them
-# XXX: Unicode stuff
-# XXX: we have a getShow function but it it being used?
+# TODO: Consider grabbing zips to put less strain on tvdb
+# TODO: Unicode stuff (check)
+# TODO: Notigy frontend on error (tvdb down at monent)
+# TODO: Expose apikey in setting so it can be changed by user
+
 class TheTVDb(ShowProvider):
 
     def __init__(self):
-        #addEvent('show.by_hash', self.byHash)
         addEvent('show.search', self.search, priority = 1)
         addEvent('show.info', self.getShowInfo, priority = 1)
         addEvent('season.info', self.getSeasonInfo, priority = 1)
         addEvent('episode.info', self.getEpisodeInfo, priority = 1)
-        #addEvent('show.info_by_thetvdb', self.getInfoByTheTVDBId)
 
-        # XXX: Load from somewhere else
-        tvdb_api_parms = {
-            'apikey':"7966C02F860586D2",
-            'banners':True
+        self.tvdb_api_parms = {
+            'apikey': self.conf('api_key'),
+            'banners': True,
+            'language': 'en',
+            'cache': os.path.join(Env.get('cache_dir'), 'thetvdb_api'),
             }
+        self._setup()
 
-        self.tvdb = tvdb_api.Tvdb(**tvdb_api_parms)
+    def _setup(self):
+        self.tvdb = tvdb_api.Tvdb(**self.tvdb_api_parms)
+        self.valid_languages = self.tvdb.config['valid_languages']
 
-    #def byHash(self, file):
-        #''' Find show by hash '''
-
-        #if self.isDisabled():
-            #return False
-
-        #cache_key = 'tmdb.cache.%s' % simplifyString(file)
-        #results = self.getCache(cache_key)
-
-        #if not results:
-            #log.debug('Searching for show by hash: %s', file)
-            #try:
-                #raw = tmdb.searchByHashingFile(file)
-
-                #results = []
-                #if raw:
-                    #try:
-                        #results = self.parseShow(raw)
-                        #log.info('Found: %s', results['titles'][0] + ' (' + str(results.get('year', 0)) + ')')
-
-                        #self.setCache(cache_key, results)
-                        #return results
-                    #except SyntaxError, e:
-                        #log.error('Failed to parse XML response: %s', e)
-                        #return False
-            #except:
-                #log.debug('No shows known by hash for: %s', file)
-                #pass
-
-        #return results
-
-    def search(self, q, limit = 12):
+    def search(self, q, limit = 12, language='en'):
         ''' Find show by name
         show = {    'id': 74713,
                     'language': 'en',
@@ -77,45 +47,39 @@ class TheTVDb(ShowProvider):
         if self.isDisabled():
             return False
 
+        if language != self.tvdb_api_parms['language'] and language in self.valid_languages:
+            self.tvdb_api_parms['language'] =  language
+            self._setup()
+
         search_string = simplifyString(q)
         cache_key = 'thetvdb.cache.%s.%s' % (search_string, limit)
         results = self.getCache(cache_key)
-        # TODO: cache is not returned
 
         if not results:
             log.debug('Searching for show: %s', q)
-
             raw = None
             try:
                 raw = self.tvdb.search(search_string)
             except (tvdb_exceptions.tvdb_error, IOError), e:
                 log.error('Failed searching TheTVDB for "%s": %s', (search_string, traceback.format_exc()))
-                return None
+                return False
 
             results = []
             if raw:
                 try:
                     nr = 0
-
-                    for show in raw:
-                        show = self.tvdb[int(show['id'])]
-                        results.append(self.parseShow(show))
-
+                    for show_info in raw:
+                        show = self.tvdb[int(show_info['id'])]
+                        results.append(self._parseShow(show))
                         nr += 1
                         if nr == limit:
                             break
-
                     log.info('Found: %s', [result['titles'][0] + ' (' + str(result.get('year', 0)) + ')' for result in results])
-
                     self.setCache(cache_key, results)
                     return results
-                #except SyntaxError, e:
-                #    log.error('Failed to parse XML response: %s', e)
-                #    return False
                 except (tvdb_exceptions.tvdb_error, IOError), e:
                     log.error('Failed parsing TheTVDB for "%s": %s', (show, traceback.format_exc()))
                     return False
-
         return results
 
     def getShow(self, identifier = None):
@@ -129,18 +93,35 @@ class TheTVDb(ShowProvider):
 
         return show
 
+    def getShowInfo(self, identifier = None):
+        if not identifier:
+            return None
+
+        cache_key = 'thetvdb.cache.%s' % identifier
+        log.debug('Getting showInfo: %s', cache_key)
+        result = self.getCache(cache_key) or {}
+        if result:
+            return result
+
+        show =  self.getShow(identifier=identifier)
+        if show:
+            result = self._parseShow(show)
+            self.setCache(cache_key, result)
+
+        return result
+
     def getSeasonInfo(self, identifier=None, season_identifier=None):
         """Either return a list of all seasons or a single season by number.
         identifier is the show 'id'
         """
         if not identifier:
-            return None
+            return False
 
         # season_identifier must contain the 'show id : season number' since there is no tvdb id
         # for season and we need a reference to both the show id and season number
         if season_identifier:
             try: season_identifier = int(season_identifier.split(':')[1])
-            except: return None
+            except: return False
 
         cache_key = 'thetvdb.cache.%s.%s' % (identifier, season_identifier)
         log.debug('Getting SeasonInfo: %s', cache_key)
@@ -152,16 +133,16 @@ class TheTVDb(ShowProvider):
             show = self.tvdb[int(identifier)]
         except (tvdb_exceptions.tvdb_error, IOError), e:
             log.error('Failed parsing TheTVDB SeasonInfo for "%s" id "%s": %s', (show, identifier, traceback.format_exc()))
-            return None
+            return False
 
         result = []
         for number, season in show.items():
             if season_identifier is not None and number == season_identifier:
-                result = self.parseSeason(show, (number, season))
+                result = self._parseSeason(show, (number, season))
                 self.setCache(cache_key, result)
                 return result
             else:
-                result.append(self.parseSeason(show, (number, season)))
+                result.append(self._parseSeason(show, (number, season)))
 
         self.setCache(cache_key, result)
         return result
@@ -171,7 +152,7 @@ class TheTVDb(ShowProvider):
         If episode_identifer contains an episode number to search for
         """
         if not identifier and season_identifier is None:
-            return None
+            return False
 
         # season_identifier must contain the 'show id : season number' since there is no tvdb id
         # for season and we need a reference to both the show id and season number
@@ -191,7 +172,7 @@ class TheTVDb(ShowProvider):
             show = self.tvdb[int(identifier)]
         except (tvdb_exceptions.tvdb_error, IOError), e:
             log.error('Failed parsing TheTVDB EpisodeInfo for "%s" id "%s": %s', (show, identifier, traceback.format_exc()))
-            return None
+            return False
 
         result = []
         for number, season in show.items():
@@ -200,81 +181,42 @@ class TheTVDb(ShowProvider):
 
             for episode in season.values():
                 if episode_identifier is not None and episode['id'] == toUnicode(episode_identifier):
-                    result = self.parseEpisode(show, episode)
+                    result = self._parseEpisode(show, episode)
                     self.setCache(cache_key, result)
                     return result
                 else:
-                    result.append(self.parseEpisode(show, episode))
+                    result.append(self._parseEpisode(show, episode))
 
         self.setCache(cache_key, result)
         return result
 
-    def getShowInfo(self, identifier = None):
-        if not identifier:
-            return None
-
-        cache_key = 'thetvdb.cache.%s' % identifier
-        log.debug('Getting showInfo: %s', cache_key)
-        result = self.getCache(cache_key) or {}
-        if result:
-            return result
-
-        show =  self.getShow(identifier=identifier)
-        if show:
-            result = self.parseShow(show)
-            self.setCache(cache_key, result)
-
-        return result
-
-    #def getInfoByTheTVDBId(self, id = None):
-
-        #cache_key = 'thetvdb.cache.%s' % id
-        #result = self.getCache(cache_key)
-
-        #if not result:
-            #result = {}
-            #show = None
-
-            #try:
-                #log.debug('Getting info: %s', cache_key)
-                #show = tmdb.getShowInfo(id = id)
-            #except:
-                #pass
-
-            #if show:
-                #result = self.parseShow(show)
-                #self.setCache(cache_key, result)
-
-        #return result
-
-    def parseShow(self, show):
+    def _parseShow(self, show):
         """
-        show[74713] = {
-                    'actors': u'|Bryan Cranston|Aaron Paul|Dean Norris|RJ Mitte|Betsy Brandt|Anna Gunn|Laura Fraser|Jesse Plemons|Christopher Cousins|Steven Michael Quezada|Jonathan Banks|Giancarlo Esposito|Bob Odenkirk|',
-                    'added': None,
-                    'addedby': None,
-                    'airs_dayofweek': u'Sunday',
-                    'airs_time': u'9:00 PM',
-                    'banner': u'http://thetvdb.com/banners/graphical/81189-g13.jpg',
-                    'contentrating': u'TV-MA',
-                    'fanart': u'http://thetvdb.com/banners/fanart/original/81189-28.jpg',
-                    'firstaired': u'2008-01-20',
-                    'genre': u'|Crime|Drama|Suspense|',
-                    'id': u'81189',
-                    'imdb_id': u'tt0903747',
-                    'language': u'en',
-                    'lastupdated': u'1376620212',
-                    'network': u'AMC',
-                    'networkid': None,
-                    'overview': u"Walter White, a struggling high school chemistry teacher is diagnosed with advanced lung cancer. He turns to a life of crime, producing and selling methamphetamine accompanied by a former student, Jesse Pinkman with the aim of securing his family's financial future before he dies.",
-                    'poster': u'http://thetvdb.com/banners/posters/81189-22.jpg',
-                    'rating': u'9.3',
-                    'ratingcount': u'473',
-                    'runtime': u'60',
-                    'seriesid': u'74713',
-                    'seriesname': u'Breaking Bad',
-                    'status': u'Continuing',
-                    'zap2it_id': u'SH01009396'}
+        'actors': u'|Bryan Cranston|Aaron Paul|Dean Norris|RJ Mitte|Betsy Brandt|Anna Gunn|Laura Fraser|Jesse Plemons|Christopher Cousins|Steven Michael Quezada|Jonathan Banks|Giancarlo Esposito|Bob Odenkirk|',
+        'added': None,
+        'addedby': None,
+        'airs_dayofweek': u'Sunday',
+        'airs_time': u'9:00 PM',
+        'banner': u'http://thetvdb.com/banners/graphical/81189-g13.jpg',
+        'contentrating': u'TV-MA',
+        'fanart': u'http://thetvdb.com/banners/fanart/original/81189-28.jpg',
+        'firstaired': u'2008-01-20',
+        'genre': u'|Crime|Drama|Suspense|',
+        'id': u'81189',
+        'imdb_id': u'tt0903747',
+        'language': u'en',
+        'lastupdated': u'1376620212',
+        'network': u'AMC',
+        'networkid': None,
+        'overview': u"Walter White, a struggling high school chemistry teacher is diagnosed with advanced lung cancer. He turns to a life of crime, producing and selling methamphetamine accompanied by a former student, Jesse Pinkman with the aim of securing his family's financial future before he dies.",
+        'poster': u'http://thetvdb.com/banners/posters/81189-22.jpg',
+        'rating': u'9.3',
+        'ratingcount': u'473',
+        'runtime': u'60',
+        'seriesid': u'74713',
+        'seriesname': u'Breaking Bad',
+        'status': u'Continuing',
+        'zap2it_id': u'SH01009396'
         """
 
         # Make sure we have a valid show id, not '' or None
@@ -282,10 +224,10 @@ class TheTVDb(ShowProvider):
         #    return None
 
         ## Images
-        poster = self.getImage(show, type = 'poster', size = 'cover')
-        backdrop = self.getImage(show, type = 'fanart', size = 'w1280')
-        #poster_original = self.getImage(show, type = 'poster', size = 'original')
-        #backdrop_original = self.getImage(show, type = 'backdrop', size = 'original')
+        poster = show['poster']
+        backdrop = show['fanart']
+        #poster = self.getImage(show, type = 'poster', size = 'cover')
+        #backdrop = self.getImage(show, type = 'fanart', size = 'w1280')
 
         genres = [] if show['genre'] is None else show['genre'].strip('|').split('|')
         if show['firstaired'] is not None:
@@ -329,21 +271,34 @@ class TheTVDb(ShowProvider):
 
         show_data = dict((k, v) for k, v in show_data.iteritems() if v)
 
-        ## Add alternative names
-        #for alt in ['original_name', 'alternative_name']:
-            #alt_name = toUnicode(show['alt))
-            #if alt_name and not alt_name in show_data['titles'] and alt_name.lower() != 'none' and alt_name != None:
-                #show_data['titles'].append(alt_name)
+        # Add alternative titles
+        try:
+            raw = self.tvdb.search(show['seriesname'])
+            if raw:
+                for show_info in raw:
+                    if show_info['id'] == show_data['id'] and show_info.get('aliasnames', None):
+                        for alt_name in show_info['aliasnames'].split('|'):
+                            show_data['titles'].append(toUnicode(alt_name))
+        except (tvdb_exceptions.tvdb_error, IOError), e:
+            log.error('Failed searching TheTVDB for "%s": %s', (show['seriesname'], traceback.format_exc()))
 
         return show_data
 
-    def parseSeason(self, show,  season_tuple):
+    def _parseSeason(self, show, season_tuple):
         """
         contains no data
         """
 
         number, season = season_tuple
         title = toUnicode('%s - Season %s' % (show['seriesname'], str(number)))
+        poster = []
+        try:
+            for id, data in show.data['_banners']['season']['season'].items():
+                if data.get('season',  None) == str(number) and data['bannertype'] == 'season' and data['bannertype2'] == 'season':
+                    poster.append(data.get('_bannerpath'))
+                    break # Only really need one
+        except:
+            pass
 
         # XXX: work on title; added defualt_title to fix an error
         season_data = {
@@ -356,7 +311,7 @@ class TheTVDb(ShowProvider):
             'parent_identifier': show['id'],
             'seasonnumber': str(number),
             'images': {
-                'poster': [],
+                'poster': poster,
                 'backdrop': [],
                 'poster_original': [],
                 'backdrop_original': [],
@@ -369,7 +324,7 @@ class TheTVDb(ShowProvider):
         season_data = dict((k, v) for k, v in season_data.iteritems() if v)
         return season_data
 
-    def parseEpisode(self, show,  episode):
+    def _parseEpisode(self, show, episode):
         """
         ('episodenumber', u'1'),
         ('thumb_added', None),
@@ -473,26 +428,19 @@ class TheTVDb(ShowProvider):
         }
 
         episode_data = dict((k, v) for k, v in episode_data.iteritems() if v)
-
-        ## Add alternative names
-        #for alt in ['original_name', 'alternative_name']:
-            #alt_name = toUnicode(episode['alt))
-            #if alt_name and not alt_name in episode_data['titles'] and alt_name.lower() != 'none' and alt_name != None:
-                #episode_data['titles'].append(alt_name)
-
         return episode_data
 
-    def getImage(self, show, type = 'poster', size = 'cover'):
-        """"""
-        # XXX: Need to implement size
-        image_url = ''
+    #def getImage(self, show, type = 'poster', size = 'cover'):
+        #""""""
+        ## XXX: Need to implement size
+        #image_url = ''
 
-        for res, res_data in show['_banners'].get(type, {}).items():
-            for bid, banner_info in res_data.items():
-                image_url = banner_info.get('_bannerpath', '')
-                break
+        #for res, res_data in show['_banners'].get(type, {}).items():
+            #for bid, banner_info in res_data.items():
+                #image_url = banner_info.get('_bannerpath', '')
+                #break
 
-        return image_url
+        #return image_url
 
     def isDisabled(self):
         if self.conf('api_key') == '':
