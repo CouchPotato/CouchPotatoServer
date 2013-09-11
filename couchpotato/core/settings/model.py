@@ -1,3 +1,5 @@
+from UserDict import DictMixin
+from collections import OrderedDict
 from couchpotato.core.helpers.encoding import toUnicode
 from elixir.entity import Entity
 from elixir.fields import Field
@@ -5,9 +7,7 @@ from elixir.options import options_defaults, using_options
 from elixir.relationships import ManyToMany, OneToMany, ManyToOne
 from sqlalchemy.ext.mutable import Mutable
 from sqlalchemy.types import Integer, Unicode, UnicodeText, Boolean, String, \
-    TypeDecorator, Float, BLOB
-from UserDict import DictMixin
-from collections import OrderedDict
+    TypeDecorator
 import json
 import time
 
