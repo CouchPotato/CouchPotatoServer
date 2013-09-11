@@ -72,8 +72,8 @@ class TheTVDb(ShowProvider):
             if raw:
                 try:
                     nr = 0
-                    for show in raw:
-                        show = self.tvdb[int(show['id'])]
+                    for show_info in raw:
+                        show = self.tvdb[int(show_info['id'])]
                         results.append(self.parseShow(show))
                         nr += 1
                         if nr == limit:
@@ -96,6 +96,23 @@ class TheTVDb(ShowProvider):
             return None
 
         return show
+
+    def getShowInfo(self, identifier = None):
+        if not identifier:
+            return None
+
+        cache_key = 'thetvdb.cache.%s' % identifier
+        log.debug('Getting showInfo: %s', cache_key)
+        result = self.getCache(cache_key) or {}
+        if result:
+            return result
+
+        show =  self.getShow(identifier=identifier)
+        if show:
+            result = self.parseShow(show)
+            self.setCache(cache_key, result)
+
+        return result
 
     def getSeasonInfo(self, identifier=None, season_identifier=None):
         """Either return a list of all seasons or a single season by number.
@@ -177,23 +194,6 @@ class TheTVDb(ShowProvider):
         self.setCache(cache_key, result)
         return result
 
-    def getShowInfo(self, identifier = None):
-        if not identifier:
-            return None
-
-        cache_key = 'thetvdb.cache.%s' % identifier
-        log.debug('Getting showInfo: %s', cache_key)
-        result = self.getCache(cache_key) or {}
-        if result:
-            return result
-
-        show =  self.getShow(identifier=identifier)
-        if show:
-            result = self.parseShow(show)
-            self.setCache(cache_key, result)
-
-        return result
-
     def parseShow(self, show):
         """
         show[74713] = {
@@ -229,10 +229,10 @@ class TheTVDb(ShowProvider):
         #    return None
 
         ## Images
-        poster = self.getImage(show, type = 'poster', size = 'cover')
-        backdrop = self.getImage(show, type = 'fanart', size = 'w1280')
-        #poster_original = self.getImage(show, type = 'poster', size = 'original')
-        #backdrop_original = self.getImage(show, type = 'backdrop', size = 'original')
+        poster = show['poster']
+        backdrop = show['fanart']
+        #poster = self.getImage(show, type = 'poster', size = 'cover')
+        #backdrop = self.getImage(show, type = 'fanart', size = 'w1280')
 
         genres = [] if show['genre'] is None else show['genre'].strip('|').split('|')
         if show['firstaired'] is not None:
@@ -276,15 +276,20 @@ class TheTVDb(ShowProvider):
 
         show_data = dict((k, v) for k, v in show_data.iteritems() if v)
 
-        ## Add alternative names
-        #for alt in ['original_name', 'alternative_name']:
-            #alt_name = toUnicode(show['alt))
-            #if alt_name and not alt_name in show_data['titles'] and alt_name.lower() != 'none' and alt_name != None:
-                #show_data['titles'].append(alt_name)
+        # Add alternative titles
+        try:
+            raw = self.tvdb.search(show['seriesname'])
+            if raw:
+                for show_info in raw:
+                    if show_info['id'] == show_data['id'] and show_info.get('aliasnames', None):
+                        for alt_name in show_info['aliasnames'].split('|'):
+                            show_data['titles'].append(toUnicode(alt_name))
+        except (tvdb_exceptions.tvdb_error, IOError), e:
+            log.error('Failed searching TheTVDB for "%s": %s', (search_string, traceback.format_exc()))
 
         return show_data
 
-    def parseSeason(self, show,  season_tuple):
+    def parseSeason(self, show, season_tuple):
         """
         contains no data
         """
@@ -316,7 +321,7 @@ class TheTVDb(ShowProvider):
         season_data = dict((k, v) for k, v in season_data.iteritems() if v)
         return season_data
 
-    def parseEpisode(self, show,  episode):
+    def parseEpisode(self, show, episode):
         """
         ('episodenumber', u'1'),
         ('thumb_added', None),

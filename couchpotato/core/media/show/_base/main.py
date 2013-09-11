@@ -54,12 +54,10 @@ class ShowBase(MediaBase):
         addEvent('show.add', self.add)
 
     def search(self, q = '', **kwargs):
-
         cache_key = u'%s/%s' % (__name__, simplifyString(q))
         shows = Env.get('cache').get(cache_key)
 
         if not shows:
-
             if getImdb(q):
                 shows = [fireEvent('show.info', identifier = q, merge = True)]
             else:
@@ -73,7 +71,6 @@ class ShowBase(MediaBase):
         }
 
     def addView(self, **kwargs):
-
         movie_dict = fireEvent('show.add', params=kwargs)  # XXX: Temp added so we can catch a breakpoint
         #movie_dict = self.add(params = kwargs)
 
@@ -82,26 +79,6 @@ class ShowBase(MediaBase):
             'added': True if movie_dict else False,
             'movie': movie_dict,
         }
-
-    # XXX: Remove function and reference to it!
-    def debug(self,  identifier):
-        """
-        XXX: This is only a hook for a breakpoint so we can test database stuff easily
-        REMOVE when finished
-        """
-        from couchpotato import get_session
-        from couchpotato.core.event import addEvent, fireEventAsync, fireEvent
-        from couchpotato.core.helpers.encoding import toUnicode, simplifyString
-        from couchpotato.core.logger import CPLog
-        from couchpotato.core.plugins.base import Plugin
-        from couchpotato.core.settings.model import Library, LibraryTitle, File
-        from string import ascii_letters
-        import time
-        import traceback
-
-        db = get_session()
-        parent = db.query(Library).filter_by(identifier = identifier).first()
-        return
 
     def add(self, params = {}, force_readd = True, search_after = True, update_library = False, status_id = None):
         """
@@ -125,11 +102,10 @@ class ShowBase(MediaBase):
         log.debug("show.add")
 
         # Add show parent to db first
-        parent =  self.addToDatabase(params = params,  type = 'show')
+        parent =  self.addToDatabase(params = params, type = 'show')
 
         identifier = params.get('id')
 
-        # XXX: add seasons
         # XXX: Fix so we dont have a nested list [0] (fireEvent)
         try:
             seasons = fireEvent('season.info', identifier = identifier)[0]
@@ -156,7 +132,6 @@ class ShowBase(MediaBase):
                         episode['parent_identifier'] = season['identifier']
                         self.addToDatabase(params=episode, type = "episode")
 
-        #self.debug(str(identifier)) # XXX: Remove  DEBUG only
         return parent
 
     def addToDatabase(self, params = {}, type="show", force_readd = True, search_after = True, update_library = False, status_id = None):
