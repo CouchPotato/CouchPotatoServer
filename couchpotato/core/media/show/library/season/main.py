@@ -135,23 +135,23 @@ class SeasonLibraryPlugin(LibraryBase):
             db.commit()
 
             # Files
-            #images = info.get('images', [])
-            #for image_type in ['poster']:
-                #for image in images.get(image_type, []):
-                    #if not isinstance(image, (str, unicode)):
-                        #continue
+            images = info.get('images', [])
+            for image_type in ['poster']:
+                for image in images.get(image_type, []):
+                    if not isinstance(image, (str, unicode)):
+                        continue
 
-                    #file_path = fireEvent('file.download', url = image, single = True)
-                    #if file_path:
-                        #file_obj = fireEvent('file.add', path = file_path, type_tuple = ('image', image_type), single = True)
-                        #try:
-                            #file_obj = db.query(File).filter_by(id = file_obj.get('id')).one()
-                            #library.files.append(file_obj)
-                            #db.commit()
+                    file_path = fireEvent('file.download', url = image, single = True)
+                    if file_path:
+                        file_obj = fireEvent('file.add', path = file_path, type_tuple = ('image', image_type), single = True)
+                        try:
+                            file_obj = db.query(File).filter_by(id = file_obj.get('id')).one()
+                            library.files.append(file_obj)
+                            db.commit()
 
-                            #break
-                        #except:
-                            #log.debug('Failed to attach to library: %s', traceback.format_exc())
+                            break
+                        except:
+                            log.debug('Failed to attach to library: %s', traceback.format_exc())
 
             library_dict = library.to_dict(self.default_dict)
 
