@@ -142,7 +142,7 @@ class NZBGet(Downloader):
             statuses.append({
                 'id': nzb_id,
                 'name': item['NZBFilename'],
-                'status': 'completed' if item['ParStatus'] == 'SUCCESS' and item['ScriptStatus'] == 'SUCCESS' else 'failed',
+                'status': 'completed' if item['ParStatus'] in ['SUCCESS','NONE'] and item['ScriptStatus'] in ['SUCCESS','NONE'] else 'failed',
                 'original_status': item['ParStatus'] + ', ' + item['ScriptStatus'],
                 'timeleft': str(timedelta(seconds = 0)),
                 'folder': ss(item['DestDir'])
@@ -178,9 +178,10 @@ class NZBGet(Downloader):
             path = None
 
             for hist in history:
-                if hist['Parameters'] and hist['Parameters']['couchpotato'] and hist['Parameters']['couchpotato'] == item['id']:
-                    nzb_id = hist['ID']
-                    path = hist['DestDir']
+                for param in hist['Parameters']:
+                    if param['Name'] == 'couchpotato' and param['Value'] == item['id']:
+                        nzb_id = hist['ID']
+                        path = hist['DestDir'] 
 
             if nzb_id and path and rpc.editqueue('HistoryDelete', 0, "", [tryInt(nzb_id)]):
                 shutil.rmtree(path, True)
