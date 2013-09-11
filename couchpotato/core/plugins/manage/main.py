@@ -169,8 +169,7 @@ class Manage(Plugin):
         fireEvent('notify.frontend', type = 'manage.updating', data = False)
         self.in_progress = False
 
-    def createAddToLibrary(self, folder, added_identifiers = None):
-        if not added_identifiers: added_identifiers = []
+    def createAddToLibrary(self, folder, added_identifiers = []):
 
         def addToLibrary(group, total_found, to_go):
             if self.in_progress[folder]['total'] is None:
