@@ -84,7 +84,7 @@ class ShowLibraryPlugin(LibraryBase):
         except: pass
 
         if not info or len(info) == 0:
-            log.error('Could not update, no movie info to work with: %s', identifier)
+            log.error('Could not update, no show info to work with: %s', identifier)
             return False
 
         # Main info
@@ -93,13 +93,30 @@ class ShowLibraryPlugin(LibraryBase):
             library.tagline = toUnicode(info.get('tagline', ''))
             library.year = info.get('year', 0)
             library.status_id = done_status.get('id')
-            #--------------------------------------------------------------------------------------------------
-            # XXX: TODO: implement logic to get proper values
-            library.airs_dayofweek = int(0)
-            library.airs_time = int(0)
-            library.last_updated = int(0)
             library.show_status = toUnicode(info.get('status',  '').lower())
-            #--------------------------------------------------------------------------------------------------
+            library.airs_time = info.get('airs_time', None)
+
+            # Bits
+            days_of_week_map =  {
+                u'Monday':    1,
+                u'Tuesday':   2,
+                u'Wednesday': 4,
+                u'Thursday':  8,
+                u'Friday':    16,
+                u'Saturday':  32,
+                u'Sunday':    64,
+                u'Daily':     127,
+            }
+            try:
+                library.airs_dayofweek = days_of_week_map.get(info.get('airs_dayofweek'))
+            except:
+                library.airs_dayofweek = 0
+
+            try:
+                library.last_updated = int(info.get('lastupdated'))
+            except:
+                library.last_updated = int(time.time())
+
             library.info.update(info)
 
             db.commit()
@@ -150,25 +167,27 @@ class ShowLibraryPlugin(LibraryBase):
         return library_dict
 
     def updateReleaseDate(self, identifier):
+        '''XXX:  Not sure what this is for yet in relation to a show'''
+        pass
+        #db = get_session()
+        #library = db.query(ShowLibrary).filter_by(identifier = identifier).first()
 
-        db = get_session()
-        library = db.query(ShowLibrary).filter_by(identifier = identifier).first()
+        #if not library.info:
+            #library_dict = self.update(identifier, force = True)
+            #dates = library_dict.get('info', {}).get('release_date')
+        #else:
+            #dates = library.info.get('release_date')
 
-        if not library.info:
-            library_dict = self.update(identifier, force = True)
-            dates = library_dict.get('info', {}).get('release_date')
-        else:
-            dates = library.info.get('release_date')
+        #if dates and dates.get('expires', 0) < time.time() or not dates:
+            #dates = fireEvent('movie.release_date', identifier = identifier, merge = True)
+            #library.info.update({'release_date': dates })
+            #db.commit()
 
-        if dates and dates.get('expires', 0) < time.time() or not dates:
-            dates = fireEvent('movie.release_date', identifier = identifier, merge = True)
-            library.info.update({'release_date': dates })
-            db.commit()
-
-        db.expire_all()
-        return dates
+        #db.expire_all()
+        #return dates
 
 
+    #TODO: Add to base class
     def simplifyTitle(self, title):
 
         title = toUnicode(title)
