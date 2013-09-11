@@ -16,8 +16,8 @@ log = CPLog(__name__)
 
 # TODO: Unicode stuff
 
-# TODO: Notigy frontend on error (tvdb down at monent)
-# TODO: Expose api in setting so it can be changed by user
+# TODO: cwNotifyNotigy frontend on error (tvdb down at monent)
+# TODO: Expose apikey in setting so it can be changed by user
 
 class TheTVDb(ShowProvider):
 
@@ -27,14 +27,18 @@ class TheTVDb(ShowProvider):
         addEvent('season.info', self.getSeasonInfo, priority = 1)
         addEvent('episode.info', self.getEpisodeInfo, priority = 1)
 
-        tvdb_api_parms = {
+        self.tvdb_api_parms = {
             'apikey' : self.conf('api_key'),
-            'banners' : True
+            'banners' : True,
+            'language' : 'en',
             }
+        self._setup()
 
-        self.tvdb = tvdb_api.Tvdb(**tvdb_api_parms)
+    def _setup(self):
+        self.tvdb = tvdb_api.Tvdb(**self.tvdb_api_parms)
+        self.valid_languages = self.tvdb.config['valid_languages']
 
-    def search(self, q, limit = 12):
+    def search(self, q, limit = 12, language='en'):
         ''' Find show by name
         show = {    'id': 74713,
                     'language': 'en',
@@ -45,6 +49,11 @@ class TheTVDb(ShowProvider):
 
         if self.isDisabled():
             return False
+
+        language =  'fr'
+        if language != self.tvdb_api_parms['language'] and language in self.valid_languages:
+            self.tvdb_api_parms['language'] =  language
+            self._setup()
 
         search_string = simplifyString(q)
         cache_key = 'thetvdb.cache.%s.%s' % (search_string, limit)
