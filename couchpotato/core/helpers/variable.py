@@ -106,6 +106,11 @@ def md5(text):
 def sha1(text):
     return hashlib.sha1(text).hexdigest()
 
+def isLocalIP(ip):
+    ip = ip.lstrip('htps:/')
+    regex = '/(^127\.)|(^192\.168\.)|(^10\.)|(^172\.1[6-9]\.)|(^172\.2[0-9]\.)|(^172\.3[0-1]\.)|(^::1)$/'
+    return re.search(regex, ip) is not None or 'localhost' in ip or ip[:4] == '127.'
+
 def getExt(filename):
     return os.path.splitext(filename)[1][1:]
 
@@ -113,8 +118,8 @@ def cleanHost(host):
     if not host.startswith(('http://', 'https://')):
         host = 'http://' + host
 
-    if not host.endswith('/'):
-        host += '/'
+    host = host.rstrip('/')
+    host += '/'
 
     return host
 
@@ -174,11 +179,11 @@ def getTitle(library_dict):
 
 def possibleTitles(raw_title):
 
-    titles = []
-
-    titles.append(toSafeString(raw_title).lower())
-    titles.append(raw_title.lower())
-    titles.append(simplifyString(raw_title))
+    titles = [
+        toSafeString(raw_title).lower(),
+        raw_title.lower(),
+        simplifyString(raw_title)
+    ]
 
     # replace some chars
     new_title = raw_title.replace('&', 'and')

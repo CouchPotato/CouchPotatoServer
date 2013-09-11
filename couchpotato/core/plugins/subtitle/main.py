@@ -36,13 +36,12 @@ class Subtitle(Plugin):
 
                     files = []
                     for file in release.files.filter(FileType.status.has(identifier = 'movie')).all():
-                        files.append(file.path);
+                        files.append(file.path)
 
                     # get subtitles for those files
                     subliminal.list_subtitles(files, cache_dir = Env.get('cache_dir'), multi = True, languages = self.getLanguages(), services = self.services)
 
     def searchSingle(self, group):
-
         if self.isDisabled(): return
 
         try:

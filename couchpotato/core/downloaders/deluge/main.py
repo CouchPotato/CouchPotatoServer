@@ -54,7 +54,7 @@ class Deluge(Downloader):
 
         if self.conf('completed_directory'):
             if os.path.isdir(self.conf('completed_directory')):
-		options['move_completed'] = 1
+                options['move_completed'] = 1
                 options['move_completed_path'] = self.conf('completed_directory')
             else:
                 log.error('Download directory from Deluge settings: %s doesn\'t exist', self.conf('directory'))
@@ -96,7 +96,7 @@ class Deluge(Downloader):
 
         queue = self.drpc.get_alltorrents()
 
-        if not (queue):
+        if not queue:
             log.debug('Nothing in queue or error')
             return False
 

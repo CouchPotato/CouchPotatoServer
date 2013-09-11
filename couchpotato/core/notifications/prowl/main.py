@@ -12,7 +12,8 @@ class Prowl(Notification):
         'api': 'https://api.prowlapp.com/publicapi/add'
     }
 
-    def notify(self, message = '', data = {}, listener = None):
+    def notify(self, message = '', data = None, listener = None):
+        if not data: data = {}
 
         data = {
             'apikey': self.conf('api_key'),

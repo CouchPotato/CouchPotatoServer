@@ -429,7 +429,7 @@ class Scanner(Plugin):
         if len(processed_movies) > 0:
             log.info('Found %s movies in the folder %s', (len(processed_movies), folder))
         else:
-            log.debug('Found no movies in the folder %s', (folder))
+            log.debug('Found no movies in the folder %s', folder)
 
         return processed_movies
 
@@ -508,6 +508,7 @@ class Scanner(Plugin):
         detected_languages = {}
 
         # Subliminal scanner
+        paths = None
         try:
             paths = group['files']['movie']
             scan_result = []
@@ -560,12 +561,14 @@ class Scanner(Plugin):
                     break
 
         # Check and see if nfo contains the imdb-id
+        nfo_file = None
         if not imdb_id:
             try:
-                for nfo_file in files['nfo']:
-                    imdb_id = getImdb(nfo_file)
+                for nf in files['nfo']:
+                    imdb_id = getImdb(nf)
                     if imdb_id:
-                        log.debug('Found movie via nfo file: %s', nfo_file)
+                        log.debug('Found movie via nfo file: %s', nf)
+                        nfo_file = nf
                         break
             except:
                 pass
@@ -585,25 +588,15 @@ class Scanner(Plugin):
         # Check if path is already in db
         if not imdb_id:
             db = get_session()
-            for cur_file in files['movie']:
-                f = db.query(File).filter_by(path = toUnicode(cur_file)).first()
+            for cf in files['movie']:
+                f = db.query(File).filter_by(path = toUnicode(cf)).first()
                 try:
                     imdb_id = f.library[0].identifier
-                    log.debug('Found movie via database: %s', cur_file)
+                    log.debug('Found movie via database: %s', cf)
+                    cur_file = cf
                     break
                 except:
                     pass
-
-        # Search based on OpenSubtitleHash
-        if not imdb_id and not group['is_dvd']:
-            for cur_file in files['movie']:
-                movie = fireEvent('movie.by_hash', file = cur_file, merge = True)
-
-                if len(movie) > 0:
-                    imdb_id = movie[0].get('imdb')
-                    if imdb_id:
-                        log.debug('Found movie via OpenSubtitleHash: %s', cur_file)
-                        break
 
         # Search based on identifiers
         if not imdb_id:
@@ -691,10 +684,9 @@ class Scanner(Plugin):
             return getExt(s.lower()) in ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'tbn']
         files = set(filter(test, files))
 
-        images = {}
-
-        # Fanart
-        images['backdrop'] = set(filter(lambda s: re.search('(^|[\W_])fanart|backdrop\d*[\W_]', s.lower()) and self.filesizeBetween(s, 0, 5), files))
+        images = {
+            'backdrop': set(filter(lambda s: re.search('(^|[\W_])fanart|backdrop\d*[\W_]', s.lower()) and self.filesizeBetween(s, 0, 5), files))
+        }
 
         # Rest
         images['rest'] = files - images['backdrop']

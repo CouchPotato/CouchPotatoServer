@@ -1,4 +1,3 @@
-from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
@@ -19,12 +18,10 @@ class SearcherBase(Plugin):
 
         self.initCron()
 
-
-    """ Set the searcher cronjob
-        Make sure to reset cronjob after setting has changed
-
-    """
     def initCron(self):
+        """ Set the searcher cronjob
+            Make sure to reset cronjob after setting has changed
+        """
 
         _type = self.getType()
 
@@ -38,14 +35,11 @@ class SearcherBase(Plugin):
         addEvent('setting.save.%s_searcher.cron_hour.after' % _type, setCrons)
         addEvent('setting.save.%s_searcher.cron_minute.after' % _type, setCrons)
 
-
-    """ Return progress of current searcher
-
-    """
     def getProgress(self, **kwargs):
+        """ Return progress of current searcher"""
 
-        progress = {}
-        progress[self.getType()] = self.in_progress
+        progress = {
+            self.getType(): self.in_progress
+        }
 
         return progress
-

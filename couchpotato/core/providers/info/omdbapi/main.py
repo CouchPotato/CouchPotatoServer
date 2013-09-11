@@ -98,7 +98,7 @@ class OMDBAPI(MovieProvider):
                 'mpaa': str(movie.get('Rated', '')),
                 'runtime': self.runtimeToMinutes(movie.get('Runtime', '')),
                 'released': movie.get('Released'),
-                'year': year if isinstance(year, (int)) else None,
+                'year': year if isinstance(year, int) else None,
                 'plot': movie.get('Plot'),
                 'genres': splitString(movie.get('Genre', '')),
                 'directors': splitString(movie.get('Director', '')),

@@ -5,7 +5,7 @@ Page.Home = new Class({
 	name: 'home',
 	title: 'Manage new stuff for things and such',
 
-	indexAction: function(param){
+	indexAction: function () {
 		var self = this;
 
 		if(self.soon_list){
@@ -14,10 +14,24 @@ Page.Home = new Class({
 			self.available_list.update();
 			self.late_list.update();
 
-			return
+			return;
 		}
 
-		// Snatched
+		self.chain = new Chain();
+		self.chain.chain(
+			self.createAvailable.bind(self),
+			self.createSoon.bind(self),
+			self.createSuggestions.bind(self),
+			self.createLate.bind(self)
+		);
+
+		self.chain.callChain();
+
+	},
+
+	createAvailable: function(){
+		var self = this;
+
 		self.available_list = new MovieList({
 			'navigation': false,
 			'identifier': 'snatched',
@@ -40,8 +54,18 @@ Page.Home = new Class({
 			'filter': {
 				'release_status': 'snatched,available'
 			},
-			'limit': null
+			'limit': null,
+			'onLoaded': function(){
+				self.chain.callChain();
+			}
 		});
+
+		$(self.available_list).inject(self.el);
+
+	},
+
+	createSoon: function(){
+		var self = this;
 
 		// Coming Soon
 		self.soon_list = new MovieList({
@@ -50,10 +74,6 @@ Page.Home = new Class({
 			'limit': 12,
 			'title': 'Available soon',
 			'description': 'These are being searched for and should be available soon as they will be released on DVD in the next few weeks.',
-			'on_empty_element': new Element('div').adopt(
-				new Element('h2', {'text': 'Available soon'}),
-				new Element('span', {'text': 'There are no movies available soon. Add some movies, so you have something to watch later.'})
-			),
 			'filter': {
 				'random': true
 			},
@@ -61,7 +81,10 @@ Page.Home = new Class({
 			'load_more': false,
 			'view': 'thumbs',
 			'force_view': true,
-			'api_call': 'dashboard.soon'
+			'api_call': 'dashboard.soon',
+			'onLoaded': function(){
+				self.chain.callChain();
+			}
 		});
 
 		// Make all thumbnails the same size
@@ -99,10 +122,30 @@ Page.Home = new Class({
 					images.setStyle('height', highest);
 				}).delay(300);
 			});
+
 		});
 
+		$(self.soon_list).inject(self.el);
+
+	},
+
+	createSuggestions: function(){
+		var self = this;
+
 		// Suggest
-		self.suggestion_list = new SuggestList();
+		self.suggestion_list = new SuggestList({
+			'onLoaded': function(){
+				self.chain.callChain();
+			}
+		});
+
+		$(self.suggestion_list).inject(self.el);
+
+
+	},
+
+	createLate: function(){
+		var self = this;
 
 		// Still not available
 		self.late_list = new MovieList({
@@ -110,7 +153,7 @@ Page.Home = new Class({
 			'identifier': 'late',
 			'limit': 50,
 			'title': 'Still not available',
-			'description': 'Try another quality profile or maybe add more providers in <a href="'+App.createUrl('settings/searcher/providers/')+'">Settings</a>.',
+			'description': 'Try another quality profile or maybe add more providers in <a href="' + App.createUrl('settings/searcher/providers/') + '">Settings</a>.',
 			'filter': {
 				'late': true
 			},
@@ -118,25 +161,14 @@ Page.Home = new Class({
 			'load_more': false,
 			'view': 'list',
 			'actions': [MA.IMDB, MA.Trailer, MA.Edit, MA.Refresh, MA.Delete],
-			'api_call': 'dashboard.soon'
+			'api_call': 'dashboard.soon',
+			'onLoaded': function(){
+				self.chain.callChain();
+			}
 		});
 
-		self.el.adopt(
-			$(self.available_list),
-			$(self.soon_list),
-			$(self.suggestion_list),
-			$(self.late_list)
-		);
-
-		// Recent
-			// Snatched
-			// Renamed
-			// Added
-
-		// Free space
-
-		// Shortcuts
+		$(self.late_list).inject(self.el);
 
 	}
 
-})
+});

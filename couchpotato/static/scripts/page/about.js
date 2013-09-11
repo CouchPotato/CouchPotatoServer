@@ -13,7 +13,7 @@ var AboutSettingTab = new Class({
 	addSettings: function(){
 		var self = this;
 
-		self.settings = App.getPage('Settings')
+		self.settings = App.getPage('Settings');
 		self.settings.addEvent('create', function(){
 			var tab = self.settings.createTab('about', {
 				'label': 'About',
@@ -72,7 +72,7 @@ var AboutSettingTab = new Class({
 		);
 
 		if(!self.fillVersion(Updater.getInfo()))
-			Updater.addEvent('loaded', self.fillVersion.bind(self))
+			Updater.addEvent('loaded', self.fillVersion.bind(self));
 
 		self.settings.createGroup({
 			'name': 'Help Support CouchPotato'

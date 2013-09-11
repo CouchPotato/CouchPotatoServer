@@ -1,5 +1,5 @@
 from base64 import b16encode, b32decode
-from bencode import bencode, bdecode
+from bencode import bencode as benc, bdecode
 from couchpotato.core.downloaders.base import Downloader, StatusList
 from couchpotato.core.helpers.encoding import isInt, ss
 from couchpotato.core.helpers.variable import tryInt, tryFloat
@@ -36,7 +36,9 @@ class uTorrent(Downloader):
 
         return self.utorrent_api
 
-    def download(self, data, movie, filedata = None):
+    def download(self, data = None, movie = None, filedata = None):
+        if not movie: movie = {}
+        if not data: data = {}
 
         log.debug('Sending "%s" (%s) to uTorrent.', (data.get('name'), data.get('protocol')))
 
@@ -74,7 +76,7 @@ class uTorrent(Downloader):
             torrent_params['trackers'] = '%0D%0A%0D%0A'.join(self.torrent_trackers)
         else:
             info = bdecode(filedata)["info"]
-            torrent_hash = sha1(bencode(info)).hexdigest().upper()
+            torrent_hash = sha1(benc(info)).hexdigest().upper()
             torrent_filename = self.createFileName(data, filedata, movie)
 
         if data.get('seed_ratio'):
@@ -280,7 +282,9 @@ class uTorrentAPI(object):
 
         return settings_dict
 
-    def set_settings(self, settings_dict = {}):
+    def set_settings(self, settings_dict = None):
+        if not settings_dict: settings_dict = {}
+
         for key in settings_dict:
             if isinstance(settings_dict[key], bool):
                 settings_dict[key] = 1 if settings_dict[key] else 0

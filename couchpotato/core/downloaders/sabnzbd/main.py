@@ -15,7 +15,9 @@ class Sabnzbd(Downloader):
 
     protocol = ['nzb']
 
-    def download(self, data = {}, movie = {}, filedata = None):
+    def download(self, data = None, movie = None, filedata = None):
+        if not movie: movie = {}
+        if not data: data = {}
 
         log.info('Sending "%s" to SABnzbd.', data.get('name'))
 
@@ -26,9 +28,10 @@ class Sabnzbd(Downloader):
             'priority': self.conf('priority'),
         }
 
+        nzb_filename = None
         if filedata:
             if len(filedata) < 50:
-                log.error('No proper nzb available: %s', (filedata))
+                log.error('No proper nzb available: %s', filedata)
                 return False
 
             # If it's a .rar, it adds the .rar extension, otherwise it stays .nzb
@@ -38,7 +41,7 @@ class Sabnzbd(Downloader):
             req_params['name'] = data.get('url')
 
         try:
-            if req_params.get('mode') is 'addfile':
+            if nzb_filename and req_params.get('mode') is 'addfile':
                 sab_data = self.call(req_params, params = {'nzbfile': (ss(nzb_filename), filedata)}, multipart = True)
             else:
                 sab_data = self.call(req_params)

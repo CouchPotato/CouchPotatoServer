@@ -5,7 +5,7 @@ Page.Manage = new Class({
 	name: 'manage',
 	title: 'Do stuff to your existing movies!',
 
-	indexAction: function(param){
+	indexAction: function(){
 		var self = this;
 
 		if(!self.list){
@@ -73,7 +73,7 @@ Page.Manage = new Class({
 				'data': {
 					'full': +full
 				}
-			})
+			});
 
 			self.startProgressInterval();
 
@@ -108,7 +108,7 @@ Page.Manage = new Class({
 							return;
 
 						if(!self.progress_container)
-							self.progress_container = new Element('div.progress').inject(self.list.navigation, 'after')
+							self.progress_container = new Element('div.progress').inject(self.list.navigation, 'after');
 
 						self.progress_container.empty();
 

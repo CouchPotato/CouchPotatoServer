@@ -24,7 +24,9 @@ class XBMC(MetaDataBase):
     def createMetaName(self, basename, name, root):
         return os.path.join(root, basename.replace('%s', name))
 
-    def getNfo(self, movie_info = {}, data = {}):
+    def getNfo(self, movie_info = None, data = None):
+        if not data: data = {}
+        if not movie_info: movie_info = {}
 
         # return imdb url only
         if self.conf('meta_url_only'):

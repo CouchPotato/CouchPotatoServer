@@ -13,7 +13,8 @@ class Trakt(Notification):
 
     listen_to = ['movie.downloaded']
 
-    def notify(self, message = '', data = {}, listener = None):
+    def notify(self, message = '', data = None, listener = None):
+        if not data: data = {}
 
         post_data = {
             'username': self.conf('automation_username'),
