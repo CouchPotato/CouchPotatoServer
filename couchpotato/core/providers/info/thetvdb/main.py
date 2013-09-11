@@ -2,9 +2,11 @@ from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import simplifyString, toUnicode
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.info.base import ShowProvider
+from couchpotato.environment import Env
 from tvdb_api import tvdb_api, tvdb_exceptions
 from datetime import datetime
 import traceback
+import os
 
 log = CPLog(__name__)
 
@@ -26,9 +28,10 @@ class TheTVDb(ShowProvider):
         addEvent('episode.info', self.getEpisodeInfo, priority = 1)
 
         self.tvdb_api_parms = {
-            'apikey' : self.conf('api_key'),
-            'banners' : True,
-            'language' : 'en',
+            'apikey': self.conf('api_key'),
+            'banners': True,
+            'language': 'en',
+            'cache': os.path.join(Env.get('cache_dir'), 'thetvdb_api'),
             }
         self._setup()
 
