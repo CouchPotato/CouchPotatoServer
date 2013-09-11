@@ -10,8 +10,6 @@ log = CPLog(__name__)
 
 # TODO: Consider grabbing zips to put less strain on tvdb
 
-# TODO: Search by language; now ists defualt of "en"
-
 # TODO: alternate titles do exist for show and episodes; add them
 
 # TODO: Unicode stuff
@@ -50,7 +48,6 @@ class TheTVDb(ShowProvider):
         if self.isDisabled():
             return False
 
-        language =  'fr'
         if language != self.tvdb_api_parms['language'] and language in self.valid_languages:
             self.tvdb_api_parms['language'] =  language
             self._setup()
