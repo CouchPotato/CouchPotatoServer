@@ -26,6 +26,20 @@ var SuggestList = new Class({
 						'onComplete': self.fill.bind(self)
 					});
 
+				},
+				'click:relay(a.eye-open)': function(e, el){
+					(e).stop();
+
+					$(el).getParent('.movie_result').destroy();
+
+					Api.request('suggestion.ignore', {
+						'data': {
+							'imdb': el.get('data-seen'),
+							'mark_seen': 1
+						},
+						'onComplete': self.fill.bind(self)
+					});
+
 				}
 			}
 		}).grab(
@@ -43,7 +57,7 @@ var SuggestList = new Class({
 	fill: function(json){
 
 		var self = this;
-		
+
 		if(!json) return;
 
 		Object.each(json.suggestions, function(movie){
@@ -69,6 +83,10 @@ var SuggestList = new Class({
 						new Element('a.delete.icon2', {
 							'title': 'Don\'t suggest this movie again',
 							'data-ignore': movie.imdb
+						}),
+						new Element('a.eye-open.icon2', {
+							'title': 'Seen it, like it, don\'t add',
+							'data-seen': movie.imdb
 						})
 					)
 				);
@@ -88,7 +106,7 @@ var SuggestList = new Class({
 			$(m).inject(self.el);
 
 		});
-		
+
 		self.fireEvent('loaded');
 
 	},
