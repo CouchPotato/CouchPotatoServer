@@ -118,8 +118,21 @@ class ShowLibrary(Library, DictMixin):
 
     last_updated = Field(Integer, index = True)
     show_status = Field(String(10), index = True)
-    airs_dayofweek = Field(Integer,  index = True)
-    airs_time = Field(Integer,  index = True)
+
+    # XXX: Maybe we should convert this to seconds?
+    # airs_time u'21:00'
+    airs_time = Field(Unicode, index = True)
+
+    # airs_dayofweek = Field(Integer, index = True)
+    #    u'Monday':    1,
+    #    u'Tuesday':   2,
+    #    u'Wednesday': 4,
+    #    u'Thursday':  8,
+    #    u'Friday':    16,
+    #    u'Saturday':  32,
+    #    u'Sunday':    64,
+    #    u'Daily':     127,
+    airs_dayofweek = Field(Integer, index = True)
 
     def getSeasons(self):
         data = OrderedDict()
@@ -188,6 +201,7 @@ class SeasonLibrary(Library, DictMixin):
 class EpisodeLibrary(Library):
     using_options(inheritance = 'multi')
 
+    last_updated = Field(Integer, index = True)
     season_number = Field(Integer, index = True)
     episode_number = Field(Integer, index = True)
 

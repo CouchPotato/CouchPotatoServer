@@ -81,7 +81,6 @@ class SeasonLibraryPlugin(LibraryBase):
 
         do_update = True
 
-        # XXX: Fix to be pretty
         parent_identifier =  None
         if library.parent is not None:
             parent_identifier =  library.parent.identifier
@@ -136,23 +135,23 @@ class SeasonLibraryPlugin(LibraryBase):
             db.commit()
 
             # Files
-            #images = info.get('images', [])
-            #for image_type in ['poster']:
-                #for image in images.get(image_type, []):
-                    #if not isinstance(image, (str, unicode)):
-                        #continue
+            images = info.get('images', [])
+            for image_type in ['poster']:
+                for image in images.get(image_type, []):
+                    if not isinstance(image, (str, unicode)):
+                        continue
 
-                    #file_path = fireEvent('file.download', url = image, single = True)
-                    #if file_path:
-                        #file_obj = fireEvent('file.add', path = file_path, type_tuple = ('image', image_type), single = True)
-                        #try:
-                            #file_obj = db.query(File).filter_by(id = file_obj.get('id')).one()
-                            #library.files.append(file_obj)
-                            #db.commit()
+                    file_path = fireEvent('file.download', url = image, single = True)
+                    if file_path:
+                        file_obj = fireEvent('file.add', path = file_path, type_tuple = ('image', image_type), single = True)
+                        try:
+                            file_obj = db.query(File).filter_by(id = file_obj.get('id')).one()
+                            library.files.append(file_obj)
+                            db.commit()
 
-                            #break
-                        #except:
-                            #log.debug('Failed to attach to library: %s', traceback.format_exc())
+                            break
+                        except:
+                            log.debug('Failed to attach to library: %s', traceback.format_exc())
 
             library_dict = library.to_dict(self.default_dict)
 
@@ -160,25 +159,27 @@ class SeasonLibraryPlugin(LibraryBase):
         return library_dict
 
     def updateReleaseDate(self, identifier):
+        '''XXX:  Not sure what this is for yet in relation to a tvshow'''
+        pass
+        #db = get_session()
+        #library = db.query(SeasonLibrary).filter_by(identifier = identifier).first()
 
-        db = get_session()
-        library = db.query(SeasonLibrary).filter_by(identifier = identifier).first()
+        #if not library.info:
+            #library_dict = self.update(identifier, force = True)
+            #dates = library_dict.get('info', {}).get('release_date')
+        #else:
+            #dates = library.info.get('release_date')
 
-        if not library.info:
-            library_dict = self.update(identifier, force = True)
-            dates = library_dict.get('info', {}).get('release_date')
-        else:
-            dates = library.info.get('release_date')
+        #if dates and dates.get('expires', 0) < time.time() or not dates:
+            #dates = fireEvent('movie.release_date', identifier = identifier, merge = True)
+            #library.info.update({'release_date': dates })
+            #db.commit()
 
-        if dates and dates.get('expires', 0) < time.time() or not dates:
-            dates = fireEvent('movie.release_date', identifier = identifier, merge = True)
-            library.info.update({'release_date': dates })
-            db.commit()
-
-        db.expire_all()
-        return dates
+        #db.expire_all()
+        #return dates
 
 
+    #TODO: Add to base class
     def simplifyTitle(self, title):
 
         title = toUnicode(title)
