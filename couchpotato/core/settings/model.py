@@ -1,3 +1,5 @@
+from UserDict import DictMixin
+from collections import OrderedDict
 from couchpotato.core.helpers.encoding import toUnicode
 from elixir.entity import Entity
 from elixir.fields import Field
@@ -5,9 +7,7 @@ from elixir.options import options_defaults, using_options
 from elixir.relationships import ManyToMany, OneToMany, ManyToOne
 from sqlalchemy.ext.mutable import Mutable
 from sqlalchemy.types import Integer, Unicode, UnicodeText, Boolean, String, \
-    TypeDecorator, Float, BLOB
-from UserDict import DictMixin
-from collections import OrderedDict
+    TypeDecorator
 import json
 import time
 
@@ -240,7 +240,10 @@ class Release(Entity):
     files = ManyToMany('File')
     info = OneToMany('ReleaseInfo', cascade = 'all, delete-orphan')
 
-    def to_dict(self, deep = {}, exclude = []):
+    def to_dict(self, deep = None, exclude = None):
+        if not exclude: exclude = []
+        if not deep: deep = {}
+
         orig_dict = super(Release, self).to_dict(deep = deep, exclude = exclude)
 
         new_info = {}
@@ -302,7 +305,10 @@ class Profile(Entity):
     media = OneToMany('Media')
     types = OneToMany('ProfileType', cascade = 'all, delete-orphan')
 
-    def to_dict(self, deep = {}, exclude = []):
+    def to_dict(self, deep = None, exclude = None):
+        if not exclude: exclude = []
+        if not deep: deep = {}
+
         orig_dict = super(Profile, self).to_dict(deep = deep, exclude = exclude)
         orig_dict['core'] = orig_dict.get('core') or False
         orig_dict['hide'] = orig_dict.get('hide') or False

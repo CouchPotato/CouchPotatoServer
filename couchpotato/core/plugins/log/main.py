@@ -90,7 +90,6 @@ class Logging(Plugin):
             if not os.path.isfile(path):
                 break
 
-            reversed_lines = []
             f = open(path, 'r')
             reversed_lines = toUnicode(f.read()).split('[0m\n')
             reversed_lines.reverse()

@@ -5,7 +5,7 @@ Page.Wanted = new Class({
 	name: 'wanted',
 	title: 'Gimmy gimmy gimmy!',
 
-	indexAction: function(param){
+	indexAction: function(){
 		var self = this;
 
 		if(!self.wanted){
@@ -35,7 +35,7 @@ Page.Wanted = new Class({
 
 	},
 
-	doFullSearch: function(full){
+	doFullSearch: function(){
 		var self = this;
 
 		if(!self.search_in_progress){

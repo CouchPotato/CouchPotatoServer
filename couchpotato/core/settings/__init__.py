@@ -1,13 +1,10 @@
 from __future__ import with_statement
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent
-from couchpotato.core.helpers.encoding import isInt, toUnicode
+from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.variable import mergeDicts, tryInt, tryFloat
 from couchpotato.core.settings.model import Properties
 import ConfigParser
-import os.path
-import time
-import traceback
 
 
 class Settings(object):
@@ -75,7 +72,9 @@ class Settings(object):
         addEvent('settings.register', self.registerDefaults)
         addEvent('settings.save', self.save)
 
-    def registerDefaults(self, section_name, options = {}, save = True):
+    def registerDefaults(self, section_name, options = None, save = True):
+        if not options: options = {}
+
         self.addSection(section_name)
 
         for option_name, option in options.iteritems():
@@ -92,7 +91,7 @@ class Settings(object):
                 self.setType(section_name, option_name, option.get('type'))
 
         if save:
-            self.save(self)
+            self.save()
 
     def set(self, section, option, value):
         return self.p.set(section, option, value)

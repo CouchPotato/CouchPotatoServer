@@ -326,10 +326,10 @@ Block.Search.Item = new Class({
 
 			self.options_el.grab(
 				new Element('div', {
-					'class': self.info.in_wanted && self.info.in_wanted.profile || in_library ? 'in_library_wanted' : ''
+					'class': self.info.in_wanted && self.info.in_wanted.profile_id || in_library ? 'in_library_wanted' : ''
 				}).adopt(
-					self.info.in_wanted && self.info.in_wanted.profile ? new Element('span.in_wanted', {
-						'text': 'Already in wanted list: ' + self.info.in_wanted.profile.label
+					self.info.in_wanted && self.info.in_wanted.profile_id ? new Element('span.in_wanted', {
+						'text': 'Already in wanted list: ' + Quality.getProfile(self.info.in_wanted.profile_id).get('label')
 					}) : (in_library ? new Element('span.in_library', {
 						'text': 'Already in library: ' + in_library.join(', ')
 					}) : null),
@@ -390,7 +390,7 @@ Block.Search.Item = new Class({
 			self.options_el.addClass('set');
 
 			if(categories.length == 0 && self.title_select.getElements('option').length == 1 && profiles.length == 1 &&
-				!(self.info.in_wanted && self.info.in_wanted.profile || in_library))
+				!(self.info.in_wanted && self.info.in_wanted.profile_id || in_library))
 				self.add();
 
 		}

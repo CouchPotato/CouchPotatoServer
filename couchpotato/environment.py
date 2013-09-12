@@ -74,7 +74,7 @@ class Env(object):
         s = Env.get('settings')
 
         # Return setting
-        if value == None:
+        if value is None:
             return s.get(attr, default = default, section = section, type = type)
 
         # Set setting
@@ -86,7 +86,7 @@ class Env(object):
     @staticmethod
     def prop(identifier, value = None, default = None):
         s = Env.get('settings')
-        if value == None:
+        if value is None:
             v = s.getProperty(identifier)
             return v if v else default
 

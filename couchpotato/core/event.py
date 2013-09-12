@@ -21,9 +21,11 @@ def addEvent(name, handler, priority = 100):
 
     def createHandle(*args, **kwargs):
 
+        h = None
         try:
             # Open handler
             has_parent = hasattr(handler, 'im_self')
+            parent = None
             if has_parent:
                 parent = handler.im_self
                 bc = hasattr(parent, 'beforeCall')
@@ -33,7 +35,7 @@ def addEvent(name, handler, priority = 100):
             h = runHandler(name, handler, *args, **kwargs)
 
             # Close handler
-            if has_parent:
+            if parent and has_parent:
                 ac = hasattr(parent, 'afterCall')
                 if ac: parent.afterCall(handler)
         except:
@@ -53,11 +55,6 @@ def removeEvent(name, handler):
 def fireEvent(name, *args, **kwargs):
     if not events.has_key(name): return
 
-    e = Event(name = name, threads = 10, asynch = kwargs.get('async', False), exc_info = True, traceback = True, lock = threading.RLock())
-
-    for event in events[name]:
-        e.handle(event['handler'], priority = event['priority'])
-
     #log.debug('Firing event %s', name)
     try:
 
@@ -67,7 +64,6 @@ def fireEvent(name, *args, **kwargs):
             'single': False, # Return single handler
             'merge': False, # Merge items
             'in_order': False, # Fire them in specific order, waits for the other to finish
-            'async': False
         }
 
         # Do options
@@ -78,12 +74,32 @@ def fireEvent(name, *args, **kwargs):
                 options[x] = val
             except: pass
 
-        # Make sure only 1 event is fired at a time when order is wanted
-        kwargs['event_order_lock'] = threading.RLock() if options['in_order'] or options['single'] else None
-        kwargs['event_return_on_result'] = options['single']
+        if len(events[name]) == 1:
 
-        # Fire
-        result = e(*args, **kwargs)
+            single = None
+            try:
+                single = events[name][0]['handler'](*args, **kwargs)
+            except:
+                log.error('Failed running single event: %s', traceback.format_exc())
+
+            # Don't load thread for single event
+            result = {
+                'single': (single is not None, single),
+            }
+
+        else:
+
+            e = Event(name = name, threads = 10, exc_info = True, traceback = True, lock = threading.RLock())
+
+            for event in events[name]:
+                e.handle(event['handler'], priority = event['priority'])
+
+            # Make sure only 1 event is fired at a time when order is wanted
+            kwargs['event_order_lock'] = threading.RLock() if options['in_order'] or options['single'] else None
+            kwargs['event_return_on_result'] = options['single']
+
+            # Fire
+            result = e(*args, **kwargs)
 
         if options['single'] and not options['merge']:
             results = None

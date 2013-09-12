@@ -15,8 +15,9 @@ class Synoindex(Notification):
         super(Synoindex, self).__init__()
         addEvent('renamer.after', self.addToLibrary)
 
-    def addToLibrary(self, message = None, group = {}):
+    def addToLibrary(self, message = None, group = None):
         if self.isDisabled(): return
+        if not group: group = {}
 
         command = [self.index_path, '-A', group.get('destination_dir')]
         log.info('Executing synoindex command: %s ', command)
@@ -27,9 +28,8 @@ class Synoindex(Notification):
             return True
         except OSError, e:
             log.error('Unable to run synoindex: %s', e)
-            return False
 
-        return True
+        return False
 
     def test(self, **kwargs):
         return {

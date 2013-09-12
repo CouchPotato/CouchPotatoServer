@@ -6,6 +6,7 @@ from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
 from minify.cssmin import cssmin
 from minify.jsmin import jsmin
+from tornado.web import StaticFileHandler
 import os
 import re
 import traceback
@@ -80,7 +81,7 @@ class ClientScript(Plugin):
         for static_type in self.core_static:
             for rel_path in self.core_static.get(static_type):
                 file_path = os.path.join(Env.get('app_dir'), 'couchpotato', 'static', rel_path)
-                core_url = 'api/%s/static/%s?%s' % (Env.setting('api_key'), rel_path, tryInt(os.path.getmtime(file_path)))
+                core_url = 'static/%s' % rel_path
 
                 if static_type == 'script':
                     self.registerScript(core_url, file_path, position = 'front')
@@ -89,6 +90,13 @@ class ClientScript(Plugin):
 
 
     def minify(self):
+
+        # Create cache dir
+        cache = Env.get('cache_dir')
+        parent_dir = os.path.join(cache, 'minified')
+        self.makeDir(parent_dir)
+
+        Env.get('app').add_handlers(".*$", [(Env.get('web_base') + 'minified/(.*)', StaticFileHandler, {'path': parent_dir})])
 
         for file_type in ['style', 'script']:
             ext = 'js' if file_type is 'script' else 'css'
@@ -100,8 +108,8 @@ class ClientScript(Plugin):
     def _minify(self, file_type, files, position, out):
 
         cache = Env.get('cache_dir')
-        out_name = 'minified_' + out
-        out = os.path.join(cache, out_name)
+        out_name = out
+        out = os.path.join(cache, 'minified', out_name)
 
         raw = []
         for file_path in files:
@@ -111,7 +119,7 @@ class ClientScript(Plugin):
                 data = jsmin(f)
             else:
                 data = self.prefix(f)
-                data = cssmin(f)
+                data = cssmin(data)
                 data = data.replace('../images/', '../static/images/')
                 data = data.replace('../fonts/', '../static/fonts/')
                 data = data.replace('../../static/', '../static/') # Replace inside plugins
@@ -131,7 +139,7 @@ class ClientScript(Plugin):
         if not self.minified[file_type].get(position):
             self.minified[file_type][position] = []
 
-        minified_url = 'api/%s/file.cache/%s?%s' % (Env.setting('api_key'), out_name, tryInt(os.path.getmtime(out)))
+        minified_url = 'minified/%s?%s' % (out_name, tryInt(os.path.getmtime(out)))
         self.minified[file_type][position].append(minified_url)
 
     def getStyles(self, *args, **kwargs):
@@ -164,6 +172,8 @@ class ClientScript(Plugin):
         self.register(api_path, file_path, 'script', position)
 
     def register(self, api_path, file_path, type, location):
+
+        api_path = '%s?%s' % (api_path, tryInt(os.path.getmtime(file_path)))
 
         if not self.urls[type].get(location):
             self.urls[type][location] = []

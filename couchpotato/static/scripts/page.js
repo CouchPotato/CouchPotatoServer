@@ -12,7 +12,7 @@ var PageBase = new Class({
 	initialize: function(options) {
 		var self = this;
 
-		self.setOptions(options)
+		self.setOptions(options);
 
 		// Create main page container
 		self.el = new Element('div.page.'+self.name);
@@ -74,4 +74,4 @@ var PageBase = new Class({
 	}
 });
 
-var Page = {}
+var Page = {};

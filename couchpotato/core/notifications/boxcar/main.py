@@ -10,7 +10,8 @@ class Boxcar(Notification):
 
     url = 'https://boxcar.io/devices/providers/7MNNXY3UIzVBwvzkKwkC/notifications'
 
-    def notify(self, message = '', data = {}, listener = None):
+    def notify(self, message = '', data = None, listener = None):
+        if not data: data = {}
 
         try:
             message = message.strip()

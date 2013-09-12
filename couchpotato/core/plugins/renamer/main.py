@@ -9,8 +9,7 @@ from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Library, File, Profile, Release, \
     ReleaseInfo
 from couchpotato.environment import Env
-from unrar2 import RarFile, RarInfo
-from unrar2.rar_exceptions import *
+from unrar2 import RarFile
 import errno
 import fnmatch
 import os
@@ -62,10 +61,10 @@ class Renamer(Plugin):
 
     def scanView(self, **kwargs):
 
-        async = tryInt(kwargs.get('async', None))
-        movie_folder = kwargs.get('movie_folder', None)
-        downloader = kwargs.get('downloader', None)
-        download_id = kwargs.get('download_id', None)
+        async = tryInt(kwargs.get('async', 0))
+        movie_folder = kwargs.get('movie_folder')
+        downloader = kwargs.get('downloader')
+        download_id = kwargs.get('download_id')
 
         download_info = {'folder': movie_folder} if movie_folder else None
         if download_info:
@@ -98,7 +97,7 @@ class Renamer(Plugin):
         elif self.conf('from') in self.conf('to'):
             log.error('The "to" can\'t be inside of the "from" folder. You\'ll get an infinite loop.')
             return
-        elif (movie_folder and movie_folder in [self.conf('to'), self.conf('from')]):
+        elif movie_folder and movie_folder in [self.conf('to'), self.conf('from')]:
             log.error('The "to" and "from" folders can\'t be inside of or the same as the provided movie folder.')
             return
 
@@ -131,8 +130,8 @@ class Renamer(Plugin):
         # Unpack any archives
         extr_files = None
         if self.conf('unrar'):
-            folder, movie_folder, files, extr_files = self.extractFiles(folder = folder, movie_folder = movie_folder, files = files, \
-                cleanup = self.conf('cleanup') and not self.downloadIsTorrent(download_info))
+            folder, movie_folder, files, extr_files = self.extractFiles(folder = folder, movie_folder = movie_folder, files = files,
+                                                                        cleanup = self.conf('cleanup') and not self.downloadIsTorrent(download_info))
 
         groups = fireEvent('scanner.scan', folder = folder if folder else self.conf('from'),
                            files = files, download_info = download_info, return_ignored = False, single = True)
@@ -347,7 +346,7 @@ class Renamer(Plugin):
                     profile = db.query(Profile).filter_by(core = True, label = group['meta_data']['quality']['label']).first()
                     fireEvent('movie.add', params = {'identifier': group['library']['identifier'], 'profile_id': profile.id}, search_after = False)
                     db.expire_all()
-                    library = db.query(Library).filter_by(identifier = group['library']['identifier']).first()
+                    library_ent = db.query(Library).filter_by(identifier = group['library']['identifier']).first()
 
                 for movie in library_ent.media:
 
@@ -496,7 +495,9 @@ class Renamer(Plugin):
 
         self.renaming_started = False
 
-    def getRenameExtras(self, extra_type = '', replacements = {}, folder_name = '', file_name = '', destination = '', group = {}, current_file = '', remove_multiple = False):
+    def getRenameExtras(self, extra_type = '', replacements = None, folder_name = '', file_name = '', destination = '', group = None, current_file = '', remove_multiple = False):
+        if not group: group = {}
+        if not replacements: replacements = {}
 
         replacements = replacements.copy()
         rename_files = {}
@@ -517,7 +518,7 @@ class Renamer(Plugin):
     def tagDir(self, group, tag):
 
         ignore_file = None
-        if isinstance(group, (dict)):
+        if isinstance(group, dict):
             for movie_file in sorted(list(group['files']['movie'])):
                 ignore_file = '%s.%s.ignore' % (os.path.splitext(movie_file)[0], tag)
                 break
@@ -603,9 +604,9 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         return True
 
     def doReplace(self, string, replacements, remove_multiple = False):
-        '''
+        """
         replace confignames with the real thing
-        '''
+        """
 
         replacements = replacements.copy()
         if remove_multiple:
@@ -844,11 +845,12 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
     def statusInfoComplete(self, item):
         return item['id'] and item['downloader'] and item['folder']
-    
+
     def movieInFromFolder(self, movie_folder):
         return movie_folder and self.conf('from') in movie_folder or not movie_folder
 
-    def extractFiles(self, folder = None, movie_folder = None, files = [], cleanup = False):
+    def extractFiles(self, folder = None, movie_folder = None, files = None, cleanup = False):
+        if not files: files = []
 
         # RegEx for finding rar files
         archive_regex = '(?P<file>^(?P<base>(?:(?!\.part\d+\.rar$).)*)\.(?:(?:part0*1\.)?rar)$)'
@@ -873,7 +875,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         #Extract all found archives
         for archive in archives:
             # Check if it has already been processed by CPS
-            if (self.hastagDir(os.path.dirname(archive['file']))):
+            if self.hastagDir(os.path.dirname(archive['file'])):
                 continue
 
             # Find all related archive files
@@ -942,7 +944,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                     self.makeDir(os.path.dirname(move_to))
                     self.moveFile(leftoverfile, move_to, cleanup)
                 except Exception, e:
-                    log.error('Failed moving left over file %s to %s: %s %s',(leftoverfile, move_to, e, traceback.format_exc()))
+                    log.error('Failed moving left over file %s to %s: %s %s', (leftoverfile, move_to, e, traceback.format_exc()))
                     # As we probably tried to overwrite the nfo file, check if it exists and then remove the original
                     if os.path.isfile(move_to):
                         if cleanup:
@@ -965,9 +967,9 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         if extr_files:
             files.extend(extr_files)
 
-        # Cleanup files and folder if movie_folder was not provided 
+        # Cleanup files and folder if movie_folder was not provided
         if not movie_folder:
             files = []
             folder = None
 
-        return (folder, movie_folder, files, extr_files)
+        return folder, movie_folder, files, extr_files

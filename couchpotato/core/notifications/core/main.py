@@ -128,7 +128,8 @@ class CoreNotifier(Notification):
 
         Env.prop(prop_name, value = last_check)
 
-    def notify(self, message = '', data = {}, listener = None):
+    def notify(self, message = '', data = None, listener = None):
+        if not data: data = {}
 
         db = get_session()
 
@@ -149,7 +150,8 @@ class CoreNotifier(Notification):
 
         return True
 
-    def frontend(self, type = 'notification', data = {}, message = None):
+    def frontend(self, type = 'notification', data = None, message = None):
+        if not data: data = {}
 
         log.debug('Notifying frontend')
 

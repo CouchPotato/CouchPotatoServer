@@ -51,6 +51,10 @@ class Searcher(SearcherBase):
 
     def download(self, data, movie, manual = False):
 
+        if not data.get('protocol'):
+            data['protocol'] = data['type']
+            data['type'] = 'movie'
+
         # Test to see if any downloaders are enabled for this type
         downloader_enabled = fireEvent('download.enabled', manual, data, single = True)
 
@@ -122,7 +126,7 @@ class Searcher(SearcherBase):
 
                 return True
 
-        log.info('Tried to download, but none of the "%s" downloaders are enabled or gave an error', (data.get('protocol', '')))
+        log.info('Tried to download, but none of the "%s" downloaders are enabled or gave an error', (data.get('protocol')))
 
         return False
 
@@ -146,7 +150,8 @@ class Searcher(SearcherBase):
 
         return search_protocols
 
-    def containsOtherQuality(self, nzb, movie_year = None, preferred_quality = {}):
+    def containsOtherQuality(self, nzb, movie_year = None, preferred_quality = None):
+        if not preferred_quality: preferred_quality = {}
 
         name = nzb['name']
         size = nzb.get('size', 0)
@@ -173,10 +178,10 @@ class Searcher(SearcherBase):
         year_name = fireEvent('scanner.name_year', name, single = True)
         if len(found) == 0 and movie_year < datetime.datetime.now().year - 3 and not year_name.get('year', None):
             if size > 3000: # Assume dvdr
-                log.info('Quality was missing in name, assuming it\'s a DVD-R based on the size: %s', (size))
+                log.info('Quality was missing in name, assuming it\'s a DVD-R based on the size: %s', size)
                 found['dvdr'] = True
             else: # Assume dvdrip
-                log.info('Quality was missing in name, assuming it\'s a DVD-Rip based on the size: %s', (size))
+                log.info('Quality was missing in name, assuming it\'s a DVD-Rip based on the size: %s', size)
                 found['dvdrip'] = True
 
         # Allow other qualities
@@ -191,6 +196,7 @@ class Searcher(SearcherBase):
         if not isinstance(haystack, (list, tuple, set)):
             haystack = [haystack]
 
+        year_name = {}
         for string in haystack:
 
             year_name = fireEvent('scanner.name_year', string, single = True)
