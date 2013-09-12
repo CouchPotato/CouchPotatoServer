@@ -128,7 +128,7 @@ class TheMovieDb(MovieProvider):
                 movie_data['titles'].append(movie.originaltitle)
                 for alt in movie.alternate_titles:
                     alt_name = alt.title
-                    if alt_name and not alt_name in movie_data['titles'] and alt_name.lower() != 'none' and alt_name is not None:
+                    if alt_name and alt_name not in movie_data['titles'] and alt_name.lower() != 'none' and alt_name is not None:
                         movie_data['titles'].append(alt_name)
 
             # Cache movie parsed
