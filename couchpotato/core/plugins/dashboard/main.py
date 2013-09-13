@@ -98,11 +98,11 @@ class Dashboard(Plugin):
             if len(movie_ids) > 0:
 
                 # Get all movie information
-                movies_raw = db.query(Movie) \
+                movies_raw = db.query(Media) \
                     .options(joinedload_all('library.titles')) \
                     .options(joinedload_all('library.files')) \
                     .options(joinedload_all('files')) \
-                    .filter(Movie.id.in_(movie_ids)) \
+                    .filter(Media.id.in_(movie_ids)) \
                     .all()
 
                 # Create dict by movie id
