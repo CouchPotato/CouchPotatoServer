@@ -12,8 +12,8 @@ log = CPLog(__name__)
 class TheMovieDb(MovieProvider):
 
     def __init__(self):
-        addEvent('movie.search', self.search, priority = 2)
-        addEvent('movie.info', self.getInfo, priority = 2)
+        addEvent('movie.search', self.search, priority = 1)
+        addEvent('movie.info', self.getInfo, priority = 1)
         addEvent('movie.info_by_tmdb', self.getInfo)
 
         # Configure TMDB settings

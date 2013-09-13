@@ -23,8 +23,8 @@ class CouchPotatoApi(MovieProvider):
     api_version = 1
 
     def __init__(self):
-        addEvent('movie.info', self.getInfo, priority = 1)
-        addEvent('movie.search', self.search, priority = 1)
+        addEvent('movie.info', self.getInfo, priority = 2)
+        addEvent('movie.search', self.search, priority = 2)
         addEvent('movie.release_date', self.getReleaseDate)
         addEvent('movie.suggest', self.getSuggestions)
         addEvent('movie.is_movie', self.isMovie)
