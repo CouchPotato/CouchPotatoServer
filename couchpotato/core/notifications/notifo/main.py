@@ -12,7 +12,8 @@ class Notifo(Notification):
 
     url = 'https://api.notifo.com/v1/send_notification'
 
-    def notify(self, message = '', data = {}, listener = None):
+    def notify(self, message = '', data = None, listener = None):
+        if not data: data = {}
 
         try:
             params = {

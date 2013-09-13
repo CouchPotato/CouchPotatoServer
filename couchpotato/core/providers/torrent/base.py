@@ -7,7 +7,7 @@ log = CPLog(__name__)
 
 class TorrentProvider(YarrProvider):
 
-    type = 'torrent'
+    protocol = 'torrent'
 
     def imdbMatch(self, url, imdbId):
         if getImdb(url) == imdbId:
@@ -27,6 +27,6 @@ class TorrentProvider(YarrProvider):
 
 class TorrentMagnetProvider(TorrentProvider):
 
-    type = 'torrent_magnet'
+    protocol = 'torrent_magnet'
 
     download = None

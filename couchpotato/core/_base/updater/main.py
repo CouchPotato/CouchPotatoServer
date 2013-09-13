@@ -85,7 +85,9 @@ class Updater(Plugin):
 
         if self.updater.check():
             if not self.available_notified and self.conf('notification') and not self.conf('automatic'):
-                fireEvent('updater.available', message = 'A new update is available', data = self.updater.info())
+                info = self.updater.info()
+                version_date = datetime.fromtimestamp(info['update_version']['date'])
+                fireEvent('updater.available', message = 'A new update with hash "%s" is available, this version is from %s' % (info['update_version']['hash'], version_date), data = info)
                 self.available_notified = True
             return True
 
@@ -94,13 +96,13 @@ class Updater(Plugin):
     def info(self, **kwargs):
         return self.updater.info()
 
-    def checkView(self):
+    def checkView(self, **kwargs):
         return {
             'update_available': self.check(force = True),
             'info': self.updater.info()
         }
 
-    def doUpdateView(self):
+    def doUpdateView(self, **kwargs):
 
         self.check()
         if not self.updater.update_version:
@@ -130,6 +132,7 @@ class BaseUpdater(Plugin):
     update_failed = False
     update_version = None
     last_check = 0
+    auto_register_static = False
 
     def doUpdate(self):
         pass

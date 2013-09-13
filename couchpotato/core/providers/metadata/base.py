@@ -17,14 +17,15 @@ class MetaDataBase(Plugin):
     def __init__(self):
         addEvent('renamer.after', self.create)
 
-    def create(self, message = None, group = {}):
+    def create(self, message = None, group = None):
         if self.isDisabled(): return
+        if not group: group = {}
 
         log.info('Creating %s metadata.', self.getName())
 
         # Update library to get latest info
         try:
-            updated_library = fireEvent('library.update', group['library']['identifier'], force = True, single = True)
+            updated_library = fireEvent('library.update.movie', group['library']['identifier'], force = True, single = True)
             group['library'] = mergeDicts(group['library'], updated_library)
         except:
             log.error('Failed to update movie, before creating metadata: %s', traceback.format_exc())
@@ -40,7 +41,7 @@ class MetaDataBase(Plugin):
                 # Get file path
                 name = getattr(self, 'get' + file_type.capitalize() + 'Name')(meta_name, root)
 
-                if name and self.conf('meta_' + file_type):
+                if name and (self.conf('meta_' + file_type) or self.conf('meta_' + file_type) is None):
 
                     # Get file content
                     content = getattr(self, 'get' + file_type.capitalize())(movie_info = movie_info, data = group)
@@ -48,6 +49,11 @@ class MetaDataBase(Plugin):
                         log.debug('Creating %s file: %s', (file_type, name))
                         if os.path.isfile(content):
                             shutil.copy2(content, name)
+                            shutil.copyfile(content, name)
+
+                            # Try and copy stats seperately
+                            try: shutil.copystat(content, name)
+                            except: pass
                         else:
                             self.createFile(name, content)
                             group['renamed_files'].append(name)
@@ -60,8 +66,9 @@ class MetaDataBase(Plugin):
             except:
                 log.error('Unable to create %s file: %s', (file_type, traceback.format_exc()))
 
-    def getRootName(self, data):
-        return
+    def getRootName(self, data = None):
+        if not data: data = {}
+        return os.path.join(data['destination_dir'], data['filename'])
 
     def getFanartName(self, name, root):
         return
@@ -72,13 +79,19 @@ class MetaDataBase(Plugin):
     def getNfoName(self, name, root):
         return
 
-    def getNfo(self, movie_info = {}, data = {}):
-        return
+    def getNfo(self, movie_info = None, data = None):
+        if not data: data = {}
+        if not movie_info: movie_info = {}
 
-    def getThumbnail(self, movie_info = {}, data = {}, wanted_file_type = 'poster_original'):
+    def getThumbnail(self, movie_info = None, data = None, wanted_file_type = 'poster_original'):
+        if not data: data = {}
+        if not movie_info: movie_info = {}
         file_types = fireEvent('file.types', single = True)
-        for file_type in file_types:
-            if file_type.get('identifier') == wanted_file_type:
+        file_type = {}
+
+        for ft in file_types:
+            if ft.get('identifier') == wanted_file_type:
+                file_type = ft
                 break
 
         # See if it is in current files
@@ -94,5 +107,7 @@ class MetaDataBase(Plugin):
         except:
             pass
 
-    def getFanart(self, movie_info = {}, data = {}):
+    def getFanart(self, movie_info = None, data = None):
+        if not data: data = {}
+        if not movie_info: movie_info = {}
         return self.getThumbnail(movie_info = movie_info, data = data, wanted_file_type = 'backdrop_original')

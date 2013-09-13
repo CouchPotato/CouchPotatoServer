@@ -43,7 +43,8 @@ class Growl(Notification):
             else:
                 log.error('Failed register of growl: %s', traceback.format_exc())
 
-    def notify(self, message = '', data = {}, listener = None):
+    def notify(self, message = '', data = None, listener = None):
+        if not data: data = {}
 
         self.register()
 

@@ -11,7 +11,8 @@ class Pushover(Notification):
 
     app_token = 'YkxHMYDZp285L265L3IwH3LmzkTaCy'
 
-    def notify(self, message = '', data = {}, listener = None):
+    def notify(self, message = '', data = None, listener = None):
+        if not data: data = {}
 
         http_handler = HTTPSConnection("api.pushover.net:443")
 

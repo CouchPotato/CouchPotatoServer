@@ -8,7 +8,7 @@ def getParams(params):
 
     reg = re.compile('^[a-z0-9_\.]+$')
 
-    current = temp = {}
+    temp = {}
     for param, value in sorted(params.iteritems()):
 
         nest = re.split("([\[\]]+)", param)
@@ -32,6 +32,8 @@ def getParams(params):
                     current = current[item]
         else:
             temp[param] = toUnicode(unquote(value))
+            if temp[param].lower() in ['true', 'false']:
+                temp[param] = temp[param].lower() != 'false'
 
     return dictToList(temp)
 

@@ -11,7 +11,8 @@ class Pushalot(Notification):
         'api': 'https://pushalot.com/api/sendmessage'
     }
 
-    def notify(self, message = '', data = {}, listener = None):
+    def notify(self, message = '', data = None, listener = None):
+        if not data: data = {}
 
         data = {
             'AuthorizationToken': self.conf('auth_token'),

@@ -3,6 +3,7 @@ from elixir.entity import Entity
 from elixir.fields import Field
 from elixir.options import options_defaults, using_options
 from elixir.relationships import ManyToMany, OneToMany, ManyToOne
+from sqlalchemy.ext.mutable import Mutable
 from sqlalchemy.types import Integer, Unicode, UnicodeText, Boolean, String, \
     TypeDecorator
 import json
@@ -39,6 +40,37 @@ class JsonType(TypeDecorator):
     def process_result_value(self, value, dialect):
         return json.loads(value if value else '{}')
 
+class MutableDict(Mutable, dict):
+
+    @classmethod
+    def coerce(cls, key, value):
+        if not isinstance(value, MutableDict):
+            if isinstance(value, dict):
+                return MutableDict(value)
+            return Mutable.coerce(key, value)
+        else:
+            return value
+
+    def __delitem(self, key):
+        dict.__delitem__(self, key)
+        self.changed()
+
+    def __setitem__(self, key, value):
+        dict.__setitem__(self, key, value)
+        self.changed()
+
+    def __getstate__(self):
+        return dict(self)
+
+    def __setstate__(self, state):
+        self.update(self)
+
+    def update(self, *args, **kwargs):
+        super(MutableDict, self).update(*args, **kwargs)
+        self.changed()
+
+MutableDict.associate_with(JsonType)
+
 
 class Movie(Entity):
     """Movie Resource a movie could have multiple releases
@@ -50,6 +82,7 @@ class Movie(Entity):
     library = ManyToOne('Library', cascade = 'delete, delete-orphan', single_parent = True)
     status = ManyToOne('Status')
     profile = ManyToOne('Profile')
+    category = ManyToOne('Category')
     releases = OneToMany('Release', cascade = 'all, delete-orphan')
     files = ManyToMany('File', cascade = 'all, delete-orphan', single_parent = True)
 
@@ -104,7 +137,10 @@ class Release(Entity):
     files = ManyToMany('File')
     info = OneToMany('ReleaseInfo', cascade = 'all, delete-orphan')
 
-    def to_dict(self, deep = {}, exclude = []):
+    def to_dict(self, deep = None, exclude = None):
+        if not exclude: exclude = []
+        if not deep: deep = {}
+
         orig_dict = super(Release, self).to_dict(deep = deep, exclude = exclude)
 
         new_info = {}
@@ -167,12 +203,29 @@ class Profile(Entity):
     movie = OneToMany('Movie')
     types = OneToMany('ProfileType', cascade = 'all, delete-orphan')
 
-    def to_dict(self, deep = {}, exclude = []):
+    def to_dict(self, deep = None, exclude = None):
+        if not exclude: exclude = []
+        if not deep: deep = {}
+
         orig_dict = super(Profile, self).to_dict(deep = deep, exclude = exclude)
         orig_dict['core'] = orig_dict.get('core') or False
         orig_dict['hide'] = orig_dict.get('hide') or False
 
         return orig_dict
+
+class Category(Entity):
+    """"""
+    using_options(order_by = 'order')
+
+    label = Field(Unicode(50))
+    order = Field(Integer, default = 0, index = True)
+    required = Field(Unicode(255))
+    preferred = Field(Unicode(255))
+    ignored = Field(Unicode(255))
+    destination = Field(Unicode(255))
+
+    movie = OneToMany('Movie')
+
 
 class ProfileType(Entity):
     """"""
@@ -237,13 +290,6 @@ class Notification(Entity):
     read = Field(Boolean, default = False)
     message = Field(Unicode(255))
     data = Field(JsonType)
-
-
-class Folder(Entity):
-    """Renamer destination folders."""
-
-    path = Field(Unicode(255))
-    label = Field(Unicode(255))
 
 
 class Properties(Entity):

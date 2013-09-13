@@ -9,13 +9,15 @@ log = CPLog(__name__)
 
 class Synology(Downloader):
 
-    type = ['nzb', 'torrent', 'torrent_magnet']
+    protocol = ['nzb', 'torrent', 'torrent_magnet']
     log = CPLog(__name__)
 
-    def download(self, data, movie, filedata = None):
+    def download(self, data = None, movie = None, filedata = None):
+        if not movie: movie = {}
+        if not data: data = {}
 
         response = False
-        log.error('Sending "%s" (%s) to Synology.', (data['name'], data['type']))
+        log.error('Sending "%s" (%s) to Synology.', (data['name'], data['protocol']))
 
         # Load host from config and split out port.
         host = self.conf('host').split(':')
@@ -26,42 +28,44 @@ class Synology(Downloader):
         try:
             # Send request to Synology
             srpc = SynologyRPC(host[0], host[1], self.conf('username'), self.conf('password'))
-            if data['type'] == 'torrent_magnet':
+            if data['protocol'] == 'torrent_magnet':
                 log.info('Adding torrent URL %s', data['url'])
                 response = srpc.create_task(url = data['url'])
-            elif data['type'] in ['nzb', 'torrent']:
-                log.info('Adding %s' % data['type'])
+            elif data['protocol'] in ['nzb', 'torrent']:
+                log.info('Adding %s' % data['protocol'])
                 if not filedata:
-                    log.error('No %s data found' % data['type'])
+                    log.error('No %s data found' % data['protocol'])
                 else:
-                    filename = data['name'] + '.' + data['type']
+                    filename = data['name'] + '.' + data['protocol']
                     response = srpc.create_task(filename = filename, filedata = filedata)
         except Exception, err:
             log.error('Exception while adding torrent: %s', err)
         finally:
             return response
 
-    def getEnabledDownloadType(self):
+    def getEnabledProtocol(self):
         if self.conf('use_for') == 'both':
-            return super(Synology, self).getEnabledDownloadType()
+            return super(Synology, self).getEnabledProtocol()
         elif self.conf('use_for') == 'torrent':
             return ['torrent', 'torrent_magnet']
         else:
             return ['nzb']
 
-    def isEnabled(self, manual, data = {}):
-        for_type = ['both']
-        if data and 'torrent' in data.get('type'):
-            for_type.append('torrent')
+    def isEnabled(self, manual = False, data = None):
+        if not data: data = {}
+
+        for_protocol = ['both']
+        if data and 'torrent' in data.get('protocol'):
+            for_protocol.append('torrent')
         elif data:
-            for_type.append(data.get('type'))
+            for_protocol.append(data.get('protocol'))
 
         return super(Synology, self).isEnabled(manual, data) and\
-               ((self.conf('use_for') in for_type))
+               ((self.conf('use_for') in for_protocol))
 
 class SynologyRPC(object):
 
-    '''SynologyRPC lite library'''
+    """SynologyRPC lite library"""
 
     def __init__(self, host = 'localhost', port = 5000, username = None, password = None):
 
@@ -98,7 +102,7 @@ class SynologyRPC(object):
             req = requests.post(url, data = args, files = files)
             req.raise_for_status()
             response = json.loads(req.text)
-            if response['success'] == True:
+            if response['success']:
                 log.info('Synology action successfull')
             return response
         except requests.ConnectionError, err:
@@ -111,11 +115,11 @@ class SynologyRPC(object):
             return response
 
     def create_task(self, url = None, filename = None, filedata = None):
-        ''' Creates new download task in Synology DownloadStation. Either specify
+        """ Creates new download task in Synology DownloadStation. Either specify
         url or pair (filename, filedata).
 
         Returns True if task was created, False otherwise
-        '''
+        """
         result = False
         # login
         if self._login():

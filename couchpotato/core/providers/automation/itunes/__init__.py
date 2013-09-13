@@ -11,7 +11,7 @@ config = [{
             'list': 'automation_providers',
             'name': 'itunes_automation',
             'label': 'iTunes',
-            'description': 'From any <a href="http://itunes.apple.com/rss">iTunes</a> Store feed. Url should be the RSS link. (uses minimal requirements)',
+            'description': 'From any <a href="http://itunes.apple.com/rss">iTunes</a> Store feed. Url should be the RSS link.',
             'options': [
                 {
                     'name': 'automation_enabled',

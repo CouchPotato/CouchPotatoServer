@@ -5,7 +5,6 @@ Block.Navigation = new Class({
 	create: function(){
 		var self = this;
 
-		var settings_added = false;
 		self.el = new Element('div.navigation').adopt(
 			self.foldout = new Element('a.foldout.icon2.menu', {
 				'events': {
@@ -28,7 +27,7 @@ Block.Navigation = new Class({
 					'duration': 100
 				}
 			})
-		)
+		);
 
 		new ScrollSpy({
 			min: 400,
@@ -58,7 +57,7 @@ Block.Navigation = new Class({
 
 	},
 
-	toggleMenu: function(e){
+	toggleMenu: function(){
 		var self = this,
 			body = $(document.body),
 			html = body.getParent();

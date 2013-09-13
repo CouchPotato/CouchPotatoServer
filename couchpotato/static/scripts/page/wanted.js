@@ -5,7 +5,7 @@ Page.Wanted = new Class({
 	name: 'wanted',
 	title: 'Gimmy gimmy gimmy!',
 
-	indexAction: function(param){
+	indexAction: function(){
 		var self = this;
 
 		if(!self.wanted){
@@ -35,12 +35,12 @@ Page.Wanted = new Class({
 
 	},
 
-	doFullSearch: function(full){
+	doFullSearch: function(){
 		var self = this;
 
 		if(!self.search_in_progress){
 
-			Api.request('searcher.full_search');
+			Api.request('movie.searcher.full_search');
 			self.startProgressInterval();
 
 		}
@@ -53,16 +53,16 @@ Page.Wanted = new Class({
 		var start_text = self.manual_search.get('text');
 		self.progress_interval = setInterval(function(){
 			if(self.search_progress && self.search_progress.running) return;
-			self.search_progress = Api.request('searcher.progress', {
+			self.search_progress = Api.request('movie.searcher.progress', {
 				'onComplete': function(json){
 					self.search_in_progress = true;
-					if(!json.progress){
+					if(!json.movie){
 						clearInterval(self.progress_interval);
 						self.search_in_progress = false;
 						self.manual_search.set('text', start_text);
 					}
 					else {
-						var progress = json.progress;
+						var progress = json.movie;
 						self.manual_search.set('text', 'Searching.. (' + (((progress.total-progress.to_go)/progress.total)*100).round() + '%)');
 					}
 				}

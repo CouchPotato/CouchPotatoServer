@@ -18,11 +18,11 @@ Block.Menu = new Class({
 			self.button = new Element('a.button' + (self.options.button_class ? '.' + self.options.button_class : ''), {
 				'events': {
 					'click': function(){
-						self.el.toggleClass('show')
-						self.fireEvent(self.el.hasClass('show') ? 'open' : 'close')
+						self.el.toggleClass('show');
+						self.fireEvent(self.el.hasClass('show') ? 'open' : 'close');
 
 						if(self.el.hasClass('show')){
-							self.el.addEvent('outerClick', self.removeOuterClick.bind(self))
+							self.el.addEvent('outerClick', self.removeOuterClick.bind(self));
 							this.addEvent('outerClick', function(e){
 								if(e.target.get('tag') != 'input')
 									self.removeOuterClick()
@@ -41,7 +41,7 @@ Block.Menu = new Class({
 	removeOuterClick: function(){
 		var self = this;
 
-		self.el.removeClass('show')
+		self.el.removeClass('show');
 		self.el.removeEvents('outerClick');
 
 		self.button.removeEvents('outerClick');
@@ -49,8 +49,7 @@ Block.Menu = new Class({
 
 	addLink: function(tab, position){
 		var self = this;
-		var el = new Element('li').adopt(tab).inject(self.more_option_ul, position || 'bottom');
-		return el;
+		return new Element('li').adopt(tab).inject(self.more_option_ul, position || 'bottom');
 	}
 
 });

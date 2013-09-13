@@ -118,7 +118,7 @@ class Newznab(NZBProvider, RSS):
 
         return list
 
-    def belongsTo(self, url, provider = None):
+    def belongsTo(self, url, provider = None, host = None):
 
         hosts = self.getHosts()
 
