@@ -88,8 +88,8 @@ class SeasonLibraryPlugin(LibraryBase):
         if library.status_id == done_status.get('id') and not force:
             do_update = False
 
-        info = fireEvent('season.info', merge = True, identifier = parent_identifier,  \
-                        season_identifier = identifier)
+        season_params = {'season_identifier': identifier}
+        info = fireEvent('season.info', merge = True, identifier = parent_identifier, params = season_params)
 
         # Don't need those here
         try: del info['in_wanted']
