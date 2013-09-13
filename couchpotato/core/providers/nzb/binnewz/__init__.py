@@ -8,7 +8,6 @@ config = [{
     'groups': [
         {
             'tab': 'searcher',
-            'subtab': 'providers',
             'list': 'nzb_providers',
             'name': 'binnewz',
             'description': 'Free provider, lots of french nzbs. See <a href="http://www.binnews.in/">binnewz</a>',

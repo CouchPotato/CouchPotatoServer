@@ -8,7 +8,6 @@ config = [{
     'groups': [
         {
             'tab': 'searcher',
-            'subtab': 'providers',
             'list': 'nzb_providers',
             'name': 'newznab',
             'order': 10,

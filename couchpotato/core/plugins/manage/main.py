@@ -26,7 +26,8 @@ class Manage(Plugin):
         addEvent('manage.diskspace', self.getDiskSpace)
 
         # Add files after renaming
-        def after_rename(message = None, group = {}):
+        def after_rename(message = None, group = None):
+            if not group: group = {}
             return self.scanFilesToLibrary(folder = group['destination_dir'], files = group['renamed_files'])
         addEvent('renamer.after', after_rename, priority = 110)
 
@@ -44,10 +45,10 @@ class Manage(Plugin):
 }"""},
         })
 
-        if not Env.get('dev'):
+        if not Env.get('dev') and self.conf('startup_scan'):
             addEvent('app.load', self.updateLibraryQuick)
 
-    def getProgress(self):
+    def getProgress(self, **kwargs):
         return {
             'progress': self.in_progress
         }
@@ -169,6 +170,7 @@ class Manage(Plugin):
         self.in_progress = False
 
     def createAddToLibrary(self, folder, added_identifiers = []):
+
         def addToLibrary(group, total_found, to_go):
             if self.in_progress[folder]['total'] is None:
                 self.in_progress[folder] = {
@@ -182,9 +184,9 @@ class Manage(Plugin):
 
                 # Add it to release and update the info
                 fireEvent('release.add', group = group)
-                fireEventAsync('library.update', identifier = identifier, on_complete = self.createAfterUpdate(folder, identifier))
+                fireEventAsync('library.update.movie', identifier = identifier, on_complete = self.createAfterUpdate(folder, identifier))
             else:
-                self.in_progress[folder]['to_go'] = self.in_progress[folder]['to_go'] - 1
+                self.in_progress[folder]['to_go'] -= 1
 
         return addToLibrary
 
@@ -192,7 +194,10 @@ class Manage(Plugin):
 
         # Notify frontend
         def afterUpdate():
-            self.in_progress[folder]['to_go'] = self.in_progress[folder]['to_go'] - 1
+            if not self.in_progress or self.shuttingDown():
+                return
+
+            self.in_progress[folder]['to_go'] -= 1
             total = self.in_progress[folder]['total']
             movie_dict = fireEvent('movie.get', identifier, single = True)
 

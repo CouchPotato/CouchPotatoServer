@@ -8,7 +8,6 @@ config = [{
     'groups': [
         {
             'tab': 'searcher',
-            'subtab': 'providers',
             'list': 'torrent_providers',
             'name': 'HDBits',
             'description': 'See <a href="http://hdbits.org">HDBits</a>',
@@ -30,6 +29,20 @@ config = [{
                 {
                     'name': 'passkey',
                     'default': '',
+                },
+                {
+                    'name': 'seed_ratio',
+                    'label': 'Seed ratio',
+                    'type': 'float',
+                    'default': 1,
+                    'description': 'Will not be (re)moved until this seed ratio is met.',
+                },
+                {
+                    'name': 'seed_time',
+                    'label': 'Seed time',
+                    'type': 'int',
+                    'default': 40,
+                    'description': 'Will not be (re)moved until this seed time (in hours) is met.',
                 },
                 {
                     'name': 'extra_score',

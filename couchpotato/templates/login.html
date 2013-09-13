@@ -1,0 +1,38 @@
+{% autoescape None %}
+<!doctype html>
+<html>
+	<head>
+	    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+		<meta name="apple-mobile-web-app-capable" content="yes">
+
+		{% for url in fireEvent('clientscript.get_styles', as_html = True, location = 'front', single = True) %}
+		<link rel="stylesheet" href="{{ Env.get('web_base') }}{{ url }}" type="text/css">{% end %}
+		
+		{% for url in fireEvent('clientscript.get_scripts', as_html = True, location = 'front', single = True) %}
+		<script type="text/javascript" src="{{ Env.get('web_base') }}{{ url }}"></script>{% end %}
+
+		<link href="{{ Env.get('static_path') }}images/favicon.ico" rel="icon" type="image/x-icon" />
+		<link rel="apple-touch-icon" href="{{ Env.get('static_path') }}images/homescreen.png" />
+		
+		<script type="text/javascript">
+			
+			window.addEvent('domready', function(){
+				new Form.Check($('remember_me'));
+			});
+			
+		</script>
+
+		<title>CouchPotato</title>
+	</head>
+	<body class="page login">
+		<form action="" method="post">
+			<h1>CouchPotato</h1>
+			<div class="ctrlHolder"><input class="inlay" name="username" type="text" placeholder="Username" autocomplete="off" /></div>
+			<div class="ctrlHolder"><input class="inlay" name="password" type="password" placeholder="Password" autocomplete="off" /></div>
+			<div class="ctrlHolder">
+				<label class="remember_me" title="for 30 days"><input class="inlay" id="remember_me" name="remember_me" type="checkbox" value="1" checked="checked" /> Remember me</label>
+				<input class="button" name="submit" type="submit" value="Login" />
+			</div>
+		</form>
+	</body>
+</html>

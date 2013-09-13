@@ -12,9 +12,6 @@ log = CPLog(__name__)
 
 class XBMC(MetaDataBase):
 
-    def getRootName(self, data = {}):
-        return os.path.join(data['destination_dir'], data['filename'])
-
     def getFanartName(self, name, root):
         return self.createMetaName(self.conf('meta_fanart_name'), name, root)
 
@@ -27,7 +24,9 @@ class XBMC(MetaDataBase):
     def createMetaName(self, basename, name, root):
         return os.path.join(root, basename.replace('%s', name))
 
-    def getNfo(self, movie_info = {}, data = {}):
+    def getNfo(self, movie_info = None, data = None):
+        if not data: data = {}
+        if not movie_info: movie_info = {}
 
         # return imdb url only
         if self.conf('meta_url_only'):

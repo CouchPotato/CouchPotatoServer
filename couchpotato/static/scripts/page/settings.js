@@ -46,16 +46,16 @@ Page.Settings = new Class({
 		var t = self.tabs[tab_name] || self.tabs[self.action] || self.tabs.general;
 
 		// Subtab
-		var subtab = null
+		var subtab = null;
 		Object.each(self.params, function(param, subtab_name){
 			subtab = subtab_name;
-		})
+		});
 
 		self.el.getElements('li.'+c+' , .tab_content.'+c).each(function(active){
 			active.removeClass(c);
 		});
 
-		if (t.subtabs[subtab]){
+		if(t.subtabs[subtab]){
 			t.tab[a](c);
 			t.subtabs[subtab].tab[a](c);
 			t.subtabs[subtab].content[a](c);
@@ -87,7 +87,7 @@ Page.Settings = new Class({
 					self.data = json;
 					onComplete(json);
 				}
-			})
+			});
 
 		return self.data;
 	},
@@ -139,7 +139,7 @@ Page.Settings = new Class({
 		Object.each(json.options, function(section, section_name){
 			section['section_name'] = section_name;
 			options.include(section);
-		})
+		});
 
 		options.sort(function(a, b){
 			return (a.order || 100) - (b.order || 100)
@@ -156,13 +156,13 @@ Page.Settings = new Class({
 				// Create tab
 				if(!self.tabs[group.tab] || !self.tabs[group.tab].groups)
 					self.createTab(group.tab, {});
-				var content_container = self.tabs[group.tab].content
+				var content_container = self.tabs[group.tab].content;
 
 				// Create subtab
 				if(group.subtab){
-					if (!self.tabs[group.tab].subtabs[group.subtab])
-						self.createSubTab(group.subtab, {}, self.tabs[group.tab], group.tab);
-					var content_container = self.tabs[group.tab].subtabs[group.subtab].content
+					if(!self.tabs[group.tab].subtabs[group.subtab])
+						self.createSubTab(group.subtab, group, self.tabs[group.tab], group.tab);
+					content_container = self.tabs[group.tab].subtabs[group.subtab].content
 				}
 
 				if(group.list && !self.lists[group.list]){
@@ -170,12 +170,10 @@ Page.Settings = new Class({
 				}
 
 				// Create the group
-				if(!self.tabs[group.tab].groups[group.name]){
-					var group_el = self.createGroup(group)
+				if(!self.tabs[group.tab].groups[group.name])
+					self.tabs[group.tab].groups[group.name] = self.createGroup(group)
 						.inject(group.list ? self.lists[group.list] : content_container)
 						.addClass('section_'+section_name);
-					self.tabs[group.tab].groups[group.name] = group_el;
-				}
 
 				// Create list if needed
 				if(group.type && group.type == 'list'){
@@ -208,9 +206,9 @@ Page.Settings = new Class({
 		var self = this;
 
 		if(self.tabs[tab_name] && self.tabs[tab_name].tab)
-			return self.tabs[tab_name].tab
+			return self.tabs[tab_name].tab;
 
-		var label = tab.label || (tab.name || tab_name).capitalize()
+		var label = tab.label || (tab.name || tab_name).capitalize();
 		var tab_el = new Element('li.t_'+tab_name).adopt(
 			new Element('a', {
 				'href': App.createUrl(self.name+'/'+tab_name),
@@ -221,14 +219,14 @@ Page.Settings = new Class({
 		if(!self.tabs[tab_name])
 			self.tabs[tab_name] = {
 				'label': label
-			}
+			};
 
 		self.tabs[tab_name] = Object.merge(self.tabs[tab_name], {
 			'tab': tab_el,
 			'subtabs': {},
-			'content': new Element('div.tab_content.tab_'+tab_name).inject(self.containers),
+			'content': new Element('div.tab_content.tab_' + tab_name).inject(self.containers),
 			'groups': {}
-		})
+		});
 
 		return self.tabs[tab_name]
 
@@ -238,12 +236,12 @@ Page.Settings = new Class({
 		var self = this;
 
 		if(parent_tab.subtabs[tab_name])
-			return parent_tab.subtabs[tab_name]
+			return parent_tab.subtabs[tab_name];
 
 		if(!parent_tab.subtabs_el)
 			parent_tab.subtabs_el = new Element('ul.subtabs').inject(parent_tab.tab);
 
-		var label = tab.label || (tab.name || tab_name.replace('_', ' ')).capitalize()
+		var label = tab.subtab_label || tab_name.replace('_', ' ').capitalize();
 		var tab_el = new Element('li.t_'+tab_name).adopt(
 			new Element('a', {
 				'href': App.createUrl(self.name+'/'+parent_tab_name+'/'+tab_name),
@@ -254,7 +252,7 @@ Page.Settings = new Class({
 		if(!parent_tab.subtabs[tab_name])
 			parent_tab.subtabs[tab_name] = {
 				'label': label
-			}
+			};
 
 		parent_tab.subtabs[tab_name] = Object.merge(parent_tab.subtabs[tab_name], {
 			'tab': tab_el,
@@ -267,21 +265,17 @@ Page.Settings = new Class({
 	},
 
 	createGroup: function(group){
-		var self = this;
-
-		var group_el = new Element('fieldset', {
+		return new Element('fieldset', {
 			'class': (group.advanced ? 'inlineLabels advanced' : 'inlineLabels') + ' group_' + (group.name || '') + ' subtab_' + (group.subtab || '')
 		}).adopt(
-			new Element('h2', {
-				'text': group.label || (group.name).capitalize()
-			}).adopt(
-				new Element('span.hint', {
-					'html': group.description || ''
-				})
-			)
-		)
-
-		return group_el
+				new Element('h2', {
+					'text': group.label || (group.name).capitalize()
+				}).adopt(
+						new Element('span.hint', {
+							'html': group.description || ''
+						})
+					)
+			);
 	},
 
 	createList: function(content_container){
@@ -299,12 +293,12 @@ var OptionBase = new Class({
 	Implements: [Options, Events],
 
 	klass: 'textInput',
-	focused_class : 'focused',
+	focused_class: 'focused',
 	save_on_change: true,
 
 	initialize: function(section, name, value, options){
-		var self = this
-		self.setOptions(options)
+		var self = this;
+		self.setOptions(options);
 
 		self.section = section;
 		self.name = name;
@@ -329,11 +323,12 @@ var OptionBase = new Class({
 	 * Create the element
 	 */
 	createBase: function(){
-		var self = this
-		self.el = new Element('div.ctrlHolder')
+		var self = this;
+		self.el = new Element('div.ctrlHolder.' + self.section + '_' + self.name)
 	},
 
-	create: function(){},
+	create: function(){
+	},
 
 	createLabel: function(){
 		var self = this;
@@ -343,7 +338,7 @@ var OptionBase = new Class({
 	},
 
 	setAdvanced: function(){
-		this.el.addClass(this.options.advanced ? 'advanced': '')
+		this.el.addClass(this.options.advanced ? 'advanced' : '')
 	},
 
 	createHint: function(){
@@ -354,7 +349,8 @@ var OptionBase = new Class({
 			}).inject(self.el);
 	},
 
-	afterInject: function(){},
+	afterInject: function(){
+	},
 
 	// Element has changed, do something
 	changed: function(){
@@ -407,7 +403,7 @@ var OptionBase = new Class({
 
 	postName: function(){
 		var self = this;
-		return self.section +'['+self.name+']';
+		return self.section + '[' + self.name + ']';
 	},
 
 	getValue: function(){
@@ -427,16 +423,16 @@ var OptionBase = new Class({
 	toElement: function(){
 		return this.el;
 	}
-})
+});
 
-var Option = {}
+var Option = {};
 Option.String = new Class({
 	Extends: OptionBase,
 
 	type: 'string',
 
 	create: function(){
-		var self = this
+		var self = this;
 
 		self.el.adopt(
 			self.createLabel(),
@@ -458,21 +454,21 @@ Option.Dropdown = new Class({
 	Extends: OptionBase,
 
 	create: function(){
-		var self = this
+		var self = this;
 
 		self.el.adopt(
 			self.createLabel(),
 			self.input = new Element('select', {
 				'name': self.postName()
 			})
-		)
+		);
 
 		Object.each(self.options.values, function(value){
 			new Element('option', {
 				'text': value[0],
 				'value': value[1]
 			}).inject(self.input)
-		})
+		});
 
 		self.input.set('value', self.getSettingValue());
 
@@ -491,7 +487,7 @@ Option.Checkbox = new Class({
 	create: function(){
 		var self = this;
 
-		var randomId = 'r-'+randomString()
+		var randomId = 'r-' + randomString();
 
 		self.el.adopt(
 			self.createLabel().set('for', randomId),
@@ -520,8 +516,8 @@ Option.Password = new Class({
 	create: function(){
 		var self = this;
 
-		self.parent()
-		self.input.set('type', 'password')
+		self.parent();
+		self.input.set('type', 'password');
 
 		self.input.addEvent('focus', function(){
 			self.input.set('value', '')
@@ -570,9 +566,9 @@ Option.Enabler = new Class({
 	afterInject: function(){
 		var self = this;
 
-		self.parentFieldset = self.el.getParent('fieldset').addClass('enabler')
+		self.parentFieldset = self.el.getParent('fieldset').addClass('enabler');
 		self.parentList = self.parentFieldset.getParent('.option_list');
-		self.el.inject(self.parentFieldset, 'top')
+		self.el.inject(self.parentFieldset, 'top');
 		self.checkState()
 	}
 
@@ -622,7 +618,7 @@ Option.Directory = new Class({
 		self.getDirs()
 	},
 
-	previousDirectory: function(e){
+	previousDirectory: function(){
 		var self = this;
 
 		self.selectDirectory(self.getParentDir())
@@ -697,8 +693,8 @@ Option.Directory = new Class({
 
 		self.initial_directory = self.input.get('text');
 
-		self.getDirs()
-		self.browser.show()
+		self.getDirs();
+		self.browser.show();
 		self.el.addEvent('outerClick', self.hideBrowser.bind(self))
 	},
 
@@ -707,11 +703,11 @@ Option.Directory = new Class({
 		(e).preventDefault();
 
 		if(save)
-			self.save()
+			self.save();
 		else
 			self.input.set('text', self.initial_directory);
 
-		self.browser.hide()
+		self.browser.hide();
 		self.el.removeEvents('outerClick')
 
 	},
@@ -732,11 +728,11 @@ Option.Directory = new Class({
 			var prev_dirname = self.getCurrentDirname(previous_dir);
 			if(previous_dir == json.home)
 				prev_dirname = 'Home';
-			else if (previous_dir == '/' && json.platform == 'nt')
+			else if(previous_dir == '/' && json.platform == 'nt')
 				prev_dirname = 'Computer';
 
-			self.back_button.set('data-value', previous_dir)
-			self.back_button.set('html', '&laquo; '+prev_dirname)
+			self.back_button.set('data-value', previous_dir);
+			self.back_button.set('html', '&laquo; ' + prev_dirname);
 			self.back_button.show()
 		}
 		else {
@@ -798,8 +794,6 @@ Option.Directory = new Class({
 	},
 
 	getCurrentDirname: function(dir){
-		var self = this;
-
 		var dir_split = dir.split(Api.getOption('path_sep'));
 
 		return dir_split[dir_split.length-2] || Api.getOption('path_sep')
@@ -848,7 +842,7 @@ Option.Directories = new Class({
 		var parent = self.el.getParent('fieldset');
 		var dirs = parent.getElements('.multi_directory');
 		if(dirs.length == 0)
-			$(dir).inject(parent)
+			$(dir).inject(parent);
 		else
 			$(dir).inject(dirs.getLast(), 'after');
 
@@ -885,7 +879,7 @@ Option.Directories = new Class({
 	saveItems: function(){
 		var self = this;
 
-		var dirs = []
+		var dirs = [];
 		self.directories.each(function(dir){
 			if(dir.getValue()){
 				$(dir).removeClass('is_empty');
@@ -957,7 +951,7 @@ Option.Choice = new Class({
 		}).inject(self.input, 'after');
 		self.el.addClass('tag_input');
 
-		var mtches = []
+		var mtches = [];
 		if(matches)
 			matches.each(function(match, mnr){
 				var pos = value.indexOf(match),
@@ -1037,7 +1031,7 @@ Option.Choice = new Class({
 
 		var prev_index = self.tags.indexOf(from_tag)-1;
 		if(prev_index >= 0)
-			self.tags[prev_index].selectFrom('right')
+			self.tags[prev_index].selectFrom('right');
 		else
 			from_tag.focus();
 
@@ -1049,7 +1043,7 @@ Option.Choice = new Class({
 
 		var next_index = self.tags.indexOf(from_tag)+1;
 		if(next_index < self.tags.length)
-			self.tags[next_index].selectFrom('left')
+			self.tags[next_index].selectFrom('left');
 		else
 			from_tag.focus();
 	},
@@ -1139,7 +1133,7 @@ Option.Choice.Tag = new Class({
 						if(e.key == 'left' && current_caret_pos == self.last_caret_pos){
 							self.fireEvent('goLeft');
 						}
-						else if (e.key == 'right' && self.last_caret_pos === current_caret_pos){
+						else if(e.key == 'right' && self.last_caret_pos === current_caret_pos){
 							self.fireEvent('goRight');
 						}
 						self.last_caret_pos = self.input.getCaretPosition();
@@ -1195,11 +1189,11 @@ Option.Choice.Tag = new Class({
 							self.fireEvent('goRight');
 							this.destroy();
 						}
-						else if (e.key == 'left'){
+						else if(e.key == 'left'){
 							self.fireEvent('goLeft');
 							this.destroy();
 						}
-						else if (e.key == 'backspace'){
+						else if(e.key == 'backspace'){
 							self.del();
 							this.destroy();
 							self.fireEvent('goLeft');
@@ -1213,7 +1207,7 @@ Option.Choice.Tag = new Class({
 					'top': -200
 				}
 			});
-			self.el.adopt(temp_input)
+			self.el.adopt(temp_input);
 			temp_input.focus();
 		}
 	},
@@ -1266,10 +1260,10 @@ Option.Combined = new Class({
 
 		self.fieldset = self.input.getParent('fieldset');
 		self.combined_list = new Element('div.combined_table').inject(self.fieldset.getElement('h2'), 'after');
-		self.values = {}
-		self.inputs = {}
-		self.items = []
-		self.labels = {}
+		self.values = {};
+		self.inputs = {};
+		self.items = [];
+		self.labels = {};
 
 		self.options.combine.each(function(name){
 
@@ -1277,7 +1271,7 @@ Option.Combined = new Class({
 			var values = self.inputs[name].get('value').split(',');
 
 			values.each(function(value, nr){
-				if (!self.values[nr]) self.values[nr] = {};
+				if(!self.values[nr]) self.values[nr] = {};
 				self.values[nr][name] = value.trim();
 			});
 
@@ -1286,19 +1280,18 @@ Option.Combined = new Class({
 
 		});
 
-		var head = new Element('div.head').inject(self.combined_list)
+		var head = new Element('div.head').inject(self.combined_list);
 
 		Object.each(self.inputs, function(input, name){
-			self.labels[name] = input.getPrevious().get('text')
+			self.labels[name] = input.getPrevious().get('text');
 			new Element('abbr', {
 				'class': name,
-				'text': self.labels[name],
-				//'title': input.getNext().get('text')
+				'text': self.labels[name]
 			}).inject(head)
-		})
+		});
 
 
-		Object.each(self.values, function(item, nr){
+		Object.each(self.values, function(item){
 			self.createItem(item);
 		});
 
@@ -1316,7 +1309,7 @@ Option.Combined = new Class({
 		self.items.each(function(ctrl_holder){
 			var empty_count = 0;
 			self.options.combine.each(function(name){
-				var input = ctrl_holder.getElement('input.'+name)
+				var input = ctrl_holder.getElement('input.' + name);
 				if(input.get('value') == '' || input.get('type') == 'checkbox')
 					empty_count++
 			});
@@ -1338,7 +1331,7 @@ Option.Combined = new Class({
 			value_empty = 0;
 
 		self.options.combine.each(function(name){
-			var value = values[name] || ''
+			var value = values[name] || '';
 
 			if(name.indexOf('use') != -1){
 				var checkbox = new Element('input[type=checkbox].inlay.'+name, {
@@ -1375,7 +1368,7 @@ Option.Combined = new Class({
 			'events': {
 				'click': self.deleteCombinedItem.bind(self)
 			}
-		}).inject(item)
+		}).inject(item);
 
 		self.items.include(item);
 
@@ -1386,7 +1379,7 @@ Option.Combined = new Class({
 		var self = this;
 
 
-		var temp = {}
+		var temp = {};
 		self.items.each(function(item, nr){
 			self.options.combine.each(function(name){
 				var input = item.getElement('input.'+name);

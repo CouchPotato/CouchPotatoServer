@@ -31,7 +31,7 @@ import time
 import tornado.escape
 import tornado.web
 
-from tornado.concurrent import Future
+from tornado.concurrent import TracebackFuture
 from tornado.escape import utf8, native_str
 from tornado import httpclient
 from tornado.ioloop import IOLoop
@@ -48,6 +48,10 @@ except NameError:
 
 
 class WebSocketError(Exception):
+    pass
+
+
+class WebSocketClosedError(WebSocketError):
     pass
 
 
@@ -160,6 +164,8 @@ class WebSocketHandler(tornado.web.RequestHandler):
         message will be sent as utf8; in binary mode any byte string
         is allowed.
         """
+        if self.ws_connection is None:
+            raise WebSocketClosedError()
         if isinstance(message, dict):
             message = tornado.escape.json_encode(message)
         self.ws_connection.write_message(message, binary=binary)
@@ -195,6 +201,8 @@ class WebSocketHandler(tornado.web.RequestHandler):
 
     def ping(self, data):
         """Send ping frame to the remote end."""
+        if self.ws_connection is None:
+            raise WebSocketClosedError()
         self.ws_connection.write_ping(data)
 
     def on_pong(self, data):
@@ -210,8 +218,9 @@ class WebSocketHandler(tornado.web.RequestHandler):
 
         Once the close handshake is successful the socket will be closed.
         """
-        self.ws_connection.close()
-        self.ws_connection = None
+        if self.ws_connection:
+            self.ws_connection.close()
+            self.ws_connection = None
 
     def allow_draft76(self):
         """Override to enable support for the older "draft76" protocol.
@@ -764,7 +773,7 @@ class WebSocketProtocol13(WebSocketProtocol):
 class WebSocketClientConnection(simple_httpclient._HTTPConnection):
     """WebSocket client connection."""
     def __init__(self, io_loop, request):
-        self.connect_future = Future()
+        self.connect_future = TracebackFuture()
         self.read_future = None
         self.read_queue = collections.deque()
         self.key = base64.b64encode(os.urandom(16))
@@ -825,7 +834,7 @@ class WebSocketClientConnection(simple_httpclient._HTTPConnection):
         ready.
         """
         assert self.read_future is None
-        future = Future()
+        future = TracebackFuture()
         if self.read_queue:
             future.set_result(self.read_queue.popleft())
         else:

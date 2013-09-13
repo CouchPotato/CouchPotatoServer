@@ -2,7 +2,7 @@
 <!doctype html>
 <html>
 	<head>
-	    <meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=no;"/>
+	    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
 		<meta name="apple-mobile-web-app-capable" content="yes">
 
 		{% for url in fireEvent('clientscript.get_styles', as_html = True, location = 'front', single = True) %}
@@ -22,17 +22,18 @@
 
 		<script type="text/javascript">
 
-			if($(window).getSize().x <= 480)
-				window.addEvent('load', function() {
+            window.addEvent('load', function(){
 
-					setTimeout(function(){
-						window.scrollTo(0, 1);
-						window.scrollTo(0, 0);
-					}, 100);
+                if(window.getSize().x <= 480)
+                    setTimeout(function(){
+                        window.scrollTo(0, 1);
+                        window.scrollTo(0, 0);
+                    }, 100);
 
-				});
+            });
 
 			window.addEvent('domready', function() {
+
 				new Uniform();
 
 				Api.setup({
@@ -69,6 +70,8 @@
 				Status.setup({{ json_encode(fireEvent('status.all', single = True)) }});
 
 				File.Type.setup({{ json_encode(fireEvent('file.types', single = True)) }});
+
+				CategoryList.setup({{ json_encode(fireEvent('category.all', single = True)) }});
 
 				App.setup({
 					'base_url': {{ json_encode(Env.get('web_base')) }},

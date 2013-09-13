@@ -8,7 +8,6 @@ config = [{
     'groups': [
         {
             'tab': 'searcher',
-            'subtab': 'providers',
             'list': 'torrent_providers',
             'name': 'PassThePopcorn',
             'description': 'See <a href="https://passthepopcorn.me">PassThePopcorn.me</a>',
@@ -37,6 +36,44 @@ config = [{
                 {
                     'name': 'passkey',
                     'default': '',
+                },
+                {
+                    'name': 'prefer_golden',
+                    'advanced': True,
+                    'type': 'bool',
+                    'label': 'Prefer golden',
+                    'default': 1,
+                    'description': 'Favors Golden Popcorn-releases over all other releases.'
+                },
+                {
+                    'name': 'prefer_scene',
+                    'advanced': True,
+                    'type': 'bool',
+                    'label': 'Prefer scene',
+                    'default': 0,
+                    'description': 'Favors scene-releases over non-scene releases.'
+                },
+                {
+                    'name': 'require_approval',
+                    'advanced': True,
+                    'type': 'bool',
+                    'label': 'Require approval',
+                    'default': 0,
+                    'description': 'Require staff-approval for releases to be accepted.'
+                },
+                {
+                    'name': 'seed_ratio',
+                    'label': 'Seed ratio',
+                    'type': 'float',
+                    'default': 1,
+                    'description': 'Will not be (re)moved until this seed ratio is met.',
+                },
+                {
+                    'name': 'seed_time',
+                    'label': 'Seed time',
+                    'type': 'int',
+                    'default': 40,
+                    'description': 'Will not be (re)moved until this seed time (in hours) is met.',
                 },
                 {
                     'name': 'extra_score',

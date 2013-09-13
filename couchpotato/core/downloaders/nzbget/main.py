@@ -12,13 +12,16 @@ import xmlrpclib
 
 log = CPLog(__name__)
 
+
 class NZBGet(Downloader):
 
-    type = ['nzb']
+    protocol = ['nzb']
 
     url = 'http://%(username)s:%(password)s@%(host)s/xmlrpc'
 
-    def download(self, data = {}, movie = {}, filedata = None):
+    def download(self, data = None, movie = None, filedata = None):
+        if not movie: movie = {}
+        if not data: data = {}
 
         if not filedata:
             log.error('Unable to get NZB file: %s', traceback.format_exc())
@@ -32,7 +35,7 @@ class NZBGet(Downloader):
         rpc = xmlrpclib.ServerProxy(url)
         try:
             if rpc.writelog('INFO', 'CouchPotato connected to drop off %s.' % nzb_name):
-                log.info('Successfully connected to NZBGet')
+                log.debug('Successfully connected to NZBGet')
             else:
                 log.info('Successfully connected to NZBGet, but unable to send a message')
         except socket.error:
@@ -73,7 +76,7 @@ class NZBGet(Downloader):
         rpc = xmlrpclib.ServerProxy(url)
         try:
             if rpc.writelog('INFO', 'CouchPotato connected to check status'):
-                log.info('Successfully connected to NZBGet')
+                log.debug('Successfully connected to NZBGet')
             else:
                 log.info('Successfully connected to NZBGet, but unable to send a message')
         except socket.error:
@@ -139,10 +142,10 @@ class NZBGet(Downloader):
             statuses.append({
                 'id': nzb_id,
                 'name': item['NZBFilename'],
-                'status': 'completed' if item['ParStatus'] == 'SUCCESS' and item['ScriptStatus'] == 'SUCCESS' else 'failed',
+                'status': 'completed' if item['ParStatus'] in ['SUCCESS','NONE'] and item['ScriptStatus'] in ['SUCCESS','NONE'] else 'failed',
                 'original_status': item['ParStatus'] + ', ' + item['ScriptStatus'],
                 'timeleft': str(timedelta(seconds = 0)),
-                'folder': item['DestDir']
+                'folder': ss(item['DestDir'])
             })
 
         return statuses
@@ -151,12 +154,12 @@ class NZBGet(Downloader):
 
         log.info('%s failed downloading, deleting...', item['name'])
 
-        url = self.url % {'host': self.conf('host'), 'password': self.conf('password')}
+        url = self.url % {'host': self.conf('host'), 'username': self.conf('username'), 'password': self.conf('password')}
 
         rpc = xmlrpclib.ServerProxy(url)
         try:
             if rpc.writelog('INFO', 'CouchPotato connected to delete some history'):
-                log.info('Successfully connected to NZBGet')
+                log.debug('Successfully connected to NZBGet')
             else:
                 log.info('Successfully connected to NZBGet, but unable to send a message')
         except socket.error:
@@ -171,11 +174,16 @@ class NZBGet(Downloader):
 
         try:
             history = rpc.history()
+            nzb_id = None
+            path = None
+
             for hist in history:
-                if hist['Parameters'] and hist['Parameters']['couchpotato'] and hist['Parameters']['couchpotato'] == item['id']:
-                    nzb_id = hist['ID']
-                    path = hist['DestDir']
-            if rpc.editqueue('HistoryDelete', 0, "", [tryInt(nzb_id)]):
+                for param in hist['Parameters']:
+                    if param['Name'] == 'couchpotato' and param['Value'] == item['id']:
+                        nzb_id = hist['ID']
+                        path = hist['DestDir'] 
+
+            if nzb_id and path and rpc.editqueue('HistoryDelete', 0, "", [tryInt(nzb_id)]):
                 shutil.rmtree(path, True)
         except:
             log.error('Failed deleting: %s', traceback.format_exc(0))

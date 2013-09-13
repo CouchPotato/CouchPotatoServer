@@ -27,6 +27,7 @@ rename_options = {
         'imdb_id': 'IMDB id (tt0123456)',
         'cd': 'CD number (cd1)',
         'cd_nr': 'Just the cd nr. (1)',
+        'mpaa': 'MPAA Rating',
     },
 }
 
@@ -54,7 +55,7 @@ config = [{
                 {
                     'name': 'to',
                     'type': 'directory',
-                    'description': 'Folder where the movies should be moved to.',
+                    'description': 'Default folder where the movies are moved to.',
                 },
                 {
                     'name': 'folder_name',
@@ -71,6 +72,12 @@ config = [{
                     'default': '<thename><cd>.<ext>',
                     'type': 'choice',
                     'options': rename_options
+                },
+                {
+                    'name': 'unrar',
+                    'type': 'bool',
+                    'description': 'Extract rar files if found.',
+                    'default': False,
                 },
                 {
                     'name': 'cleanup',
@@ -119,10 +126,10 @@ config = [{
                 {
                     'name': 'file_action',
                     'label': 'Torrent File Action',
-                    'default': 'move',
+                    'default': 'link',
                     'type': 'dropdown',
-                    'values': [('Move', 'move'), ('Copy', 'copy'), ('Hard link', 'hardlink'), ('Sym link', 'symlink'), ('Move & Sym link', 'move_symlink')],
-                    'description': 'Define which kind of file operation you want to use for torrents. Before you start using <a href="http://en.wikipedia.org/wiki/Hard_link">hard links</a> or <a href="http://en.wikipedia.org/wiki/Sym_link">sym links</a>, PLEASE read about their possible drawbacks.',
+                    'values': [('Link', 'link'), ('Copy', 'copy'), ('Move', 'move')],
+                    'description': '<strong>Link</strong> or <strong>Copy</strong> after downloading completed (and allow for seeding), or <strong>Move</strong> after seeding completed. Link first tries <a href="http://en.wikipedia.org/wiki/Hard_link">hard link</a>, then <a href="http://en.wikipedia.org/wiki/Sym_link">sym link</a> and falls back to Copy.',
                     'advanced': True,
                 },
                 {

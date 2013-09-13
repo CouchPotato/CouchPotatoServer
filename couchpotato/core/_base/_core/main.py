@@ -67,12 +67,12 @@ class Core(Plugin):
 
         return True
 
-    def available(self):
+    def available(self, **kwargs):
         return {
             'success': True
         }
 
-    def shutdown(self):
+    def shutdown(self, **kwargs):
         if self.shutdown_started:
             return False
 
@@ -82,7 +82,7 @@ class Core(Plugin):
 
         return 'shutdown'
 
-    def restart(self):
+    def restart(self, **kwargs):
         if self.shutdown_started:
             return False
 
@@ -124,7 +124,7 @@ class Core(Plugin):
 
             time.sleep(1)
 
-        log.debug('Save to shutdown/restart')
+        log.debug('Safe to shutdown/restart')
 
         try:
             IOLoop.current().stop()
@@ -169,7 +169,7 @@ class Core(Plugin):
 
         return '%s - %s-%s - v2' % (platf, ver.get('version')['type'], ver.get('version')['hash'])
 
-    def versionView(self):
+    def versionView(self, **kwargs):
         return {
             'version': self.version()
         }
