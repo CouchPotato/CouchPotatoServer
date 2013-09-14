@@ -141,6 +141,7 @@ class ShowBase(MediaBase):
                 single_season['title'] = single_season.get('original_title',  None)
                 single_season['identifier'] = season_id
                 single_season['parent_identifier'] = identifier
+                log.info("Adding Season %s" % season_id)
                 s = self.addToDatabase(params = single_season, type = "season")
 
                 episode_params = {'season_identifier':  season_id}
@@ -171,6 +172,10 @@ class ShowBase(MediaBase):
                         single_episode['title'] = single_episode.get('original_title', None)
                         single_episode['identifier'] = episode_id
                         single_episode['parent_identifier'] = single_season['identifier']
+                        log.info("Adding [%sx%s] %s - %s" % (season_id,
+                                                             episode_number,
+                                                             params['title'],
+                                                             single_episode.get('original_title',  '')))
                         e = self.addToDatabase(params = single_episode, type = "episode")
 
         return parent

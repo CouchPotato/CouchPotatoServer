@@ -157,8 +157,7 @@ class EpisodeLibraryPlugin(LibraryBase):
                         except:
                             log.debug('Failed to attach to library: %s', traceback.format_exc())
 
-            library_dict = library.to_dict(self.default_dict)
-
+        library_dict = library.to_dict(self.default_dict)
         db.expire_all()
         return library_dict
 
