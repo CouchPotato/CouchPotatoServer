@@ -118,7 +118,9 @@ class Manage(Plugin):
                         fireEvent('movie.delete', movie_id = done_movie['id'], delete_from = 'all')
                     else:
 
-                        for release in done_movie.get('releases', []):
+                        releases = fireEvent('release.for_movie', id = done_movie.get('id'), single = True)
+
+                        for release in releases:
                             if len(release.get('files', [])) == 0:
                                 fireEvent('release.delete', release['id'])
                             else:
@@ -129,9 +131,9 @@ class Manage(Plugin):
                                         break
 
                         # Check if there are duplicate releases (different quality) use the last one, delete the rest
-                        if len(done_movie.get('releases', [])) > 1:
+                        if len(releases) > 1:
                             used_files = {}
-                            for release in done_movie.get('releases', []):
+                            for release in releases:
 
                                 for release_file in release.get('files', []):
                                     already_used = used_files.get(release_file['path'])
