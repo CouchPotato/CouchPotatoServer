@@ -110,12 +110,14 @@ class TheTVDb(ShowProvider):
 
         return result
 
-    def getSeasonInfo(self, identifier=None, season_identifier=None):
+    def getSeasonInfo(self, identifier = None, params = {}):
         """Either return a list of all seasons or a single season by number.
         identifier is the show 'id'
         """
         if not identifier:
             return False
+
+        season_identifier = params.get('season_identifier', None)
 
         # season_identifier must contain the 'show id : season number' since there is no tvdb id
         # for season and we need a reference to both the show id and season number
@@ -147,10 +149,13 @@ class TheTVDb(ShowProvider):
         self.setCache(cache_key, result)
         return result
 
-    def getEpisodeInfo(self, identifier=None, season_identifier=None, episode_identifier=None):
+    def getEpisodeInfo(self, identifier = None, params = {}):
         """Either return a list of all episodes or a single episode.
         If episode_identifer contains an episode number to search for
         """
+        season_identifier = params.get('season_identifier', None)
+        episode_identifier = params.get('episode_identifier', None)
+
         if not identifier and season_identifier is None:
             return False
 

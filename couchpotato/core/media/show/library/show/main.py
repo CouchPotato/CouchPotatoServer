@@ -57,7 +57,6 @@ class ShowLibraryPlugin(LibraryBase):
             handle('library.update.show', identifier = l.identifier, default_title = toUnicode(attrs.get('title', '')))
 
         library_dict = l.to_dict(self.default_dict)
-
         db.expire_all()
         return library_dict
 

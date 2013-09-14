@@ -88,8 +88,9 @@ class EpisodeLibraryPlugin(LibraryBase):
         if library.status_id == done_status.get('id') and not force:
             do_update = False
 
-        info = fireEvent('episode.info', merge = True, season_identifier = parent_identifier,  \
-                         episode_identifier = identifier)
+        episode_params = {'season_identifier':  parent_identifier,
+                          'episode_identifier': identifier}
+        info = fireEvent('episode.info', merge = True, params = episode_params)
 
         # Don't need those here
         try: del info['in_wanted']
@@ -156,8 +157,7 @@ class EpisodeLibraryPlugin(LibraryBase):
                         except:
                             log.debug('Failed to attach to library: %s', traceback.format_exc())
 
-            library_dict = library.to_dict(self.default_dict)
-
+        library_dict = library.to_dict(self.default_dict)
         db.expire_all()
         return library_dict
 
