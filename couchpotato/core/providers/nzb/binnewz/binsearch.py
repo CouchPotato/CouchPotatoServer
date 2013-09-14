@@ -44,7 +44,10 @@ class BinSearch(NZBDownloader):
                     break
                 for checkbox in elem.findAll(lambda tag: tag.name=='input' and tag.get('type') == 'checkbox'):
                     sizeStr = re.search("size:\s+([^B]*)B", elem.text).group(1).strip()
-                    age = tryInt(re.search('(?P<size>\d+d)', elem.find_all('td')[-1:][0].text).group('size')[:-1])
+                    try:
+                        age = tryInt(re.search('(?P<size>\d+d)', elem.find_all('td')[-1:][0].text).group('size')[:-1])
+                    except:
+                        age = 0
                     nzbid = elem.find('input', attrs = {'type':'checkbox'})['name']
                     if "G" in sizeStr:
                         sizeInMegs = float( re.search("([0-9\\.]+)", sizeStr).group(1) ) * 1024
