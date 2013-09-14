@@ -22,7 +22,7 @@ class BaseHandler(RequestHandler):
         username = Env.setting('username')
         password = Env.setting('password')
 
-        if username or password:
+        if username and password:
             return self.get_secure_cookie('user')
         else: # Login when no username or password are set
             return True

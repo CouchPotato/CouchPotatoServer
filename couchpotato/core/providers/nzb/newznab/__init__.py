@@ -20,7 +20,6 @@ config = [{
                 {
                     'name': 'enabled',
                     'type': 'enabler',
-                    'default': False,
                 },
                 {
                     'name': 'use',
