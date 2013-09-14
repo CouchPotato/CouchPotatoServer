@@ -16,7 +16,6 @@ config = [{
                 {
                     'name': 'enabled',
                     'type': 'enabler',
-                    'default': False,
                 },
                 {
                     'name': 'extra_score',

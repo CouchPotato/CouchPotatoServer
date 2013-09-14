@@ -27,7 +27,7 @@ class TorrentShack(TorrentProvider):
     ]
 
     http_time_between_calls = 1 #seconds
-    cat_backup_id = None
+    cat_backup_id = 400
 
     def _searchOnTitle(self, title, movie, quality, results):
 

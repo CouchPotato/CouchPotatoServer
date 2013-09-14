@@ -84,6 +84,6 @@ config = [{
                     'description': 'Starting score for each release found via this provider.',
                 }
             ],
-}
+        }
     ]
 }]

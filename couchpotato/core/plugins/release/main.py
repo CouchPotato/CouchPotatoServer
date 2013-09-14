@@ -37,13 +37,14 @@ class Release(Plugin):
                 'id': {'type': 'id', 'desc': 'ID of the release object in release-table'}
             }
         })
-        addApiView('release.for_movie', self.forMovie, docs = {
+        addApiView('release.for_movie', self.forMovieView, docs = {
             'desc': 'Returns all releases for a movie. Ordered by score(desc)',
             'params': {
                 'id': {'type': 'id', 'desc': 'ID of the movie'}
             }
         })
 
+        addEvent('release.for_movie', self.forMovie)
         addEvent('release.delete', self.delete)
         addEvent('release.clean', self.clean)
 
@@ -216,7 +217,7 @@ class Release(Plugin):
             'success': False
         }
 
-    def forMovie(self, id = None, **kwargs):
+    def forMovie(self, id = None):
 
         db = get_session()
 
@@ -228,6 +229,12 @@ class Release(Plugin):
 
         releases = [r.to_dict({'info':{}, 'files':{}}) for r in releases_raw]
         releases = sorted(releases, key = lambda k: k['info'].get('score', 0), reverse = True)
+
+        return releases
+
+    def forMovieView(self, id = None, **kwargs):
+
+        releases = self.forMovie(id)
 
         return {
             'releases': releases,

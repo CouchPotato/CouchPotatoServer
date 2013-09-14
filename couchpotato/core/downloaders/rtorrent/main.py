@@ -1,20 +1,19 @@
 from base64 import b16encode, b32decode
-from datetime import timedelta
-from hashlib import sha1
-import shutil
-from couchpotato.core.helpers.encoding import ss
-from rtorrent.err import MethodError
-
 from bencode import bencode, bdecode
 from couchpotato.core.downloaders.base import Downloader, StatusList
+from couchpotato.core.helpers.encoding import ss
 from couchpotato.core.logger import CPLog
+from datetime import timedelta
+from hashlib import sha1
 from rtorrent import RTorrent
-
+from rtorrent.err import MethodError
+import shutil
 
 log = CPLog(__name__)
 
 
 class rTorrent(Downloader):
+
     protocol = ['torrent', 'torrent_magnet']
     rt = None
 
@@ -194,7 +193,7 @@ class rTorrent(Downloader):
         if torrent is None:
             return False
 
-        torrent.erase()  # just removes the torrent, doesn't delete data
+        torrent.erase() # just removes the torrent, doesn't delete data
 
         if delete_files:
             shutil.rmtree(item['folder'], True)
