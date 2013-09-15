@@ -188,7 +188,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                 # Add them to this movie releases list
                 for nzb in sorted_results:
 
-                    nzb_identifier = md5(nzb['url'])
+                    nzb_identifier = md5(nzb['url'].encode('ascii', 'ignore'))
                     found_releases.append(nzb_identifier)
 
                     rls = db.query(Release).filter_by(identifier = nzb_identifier).first()
@@ -308,7 +308,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
             return False
 
         # Ignore porn stuff
-        pron_tags = ['xxx', 'sex', 'anal', 'tits', 'fuck', 'porn', 'orgy', 'milf', 'boobs', 'erotica', 'erotic']
+        pron_tags = ['xxx', 'sex', 'anal', 'tits', 'fuck', 'porn', 'orgy', 'milf', 'boobs', 'erotica', 'erotic', 'cock', 'dick']
         pron_words = list(set(nzb_words) & set(pron_tags) - set(movie_words))
         if pron_words:
             log.info('Wrong: %s, probably pr0n', (nzb['name']))
