@@ -188,7 +188,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                 # Add them to this movie releases list
                 for nzb in sorted_results:
 
-                    nzb_identifier = md5(nzb['url'])
+                    nzb_identifier = md5(nzb['url'].encode('ascii', 'ignore'))
                     found_releases.append(nzb_identifier)
 
                     rls = db.query(Release).filter_by(identifier = nzb_identifier).first()
