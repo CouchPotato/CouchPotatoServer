@@ -63,7 +63,6 @@ class SeasonLibraryPlugin(LibraryBase):
             handle('library.update.season', identifier = l.identifier, default_title = toUnicode(attrs.get('title', '')))
 
         library_dict = l.to_dict(self.default_dict)
-
         db.expire_all()
         return library_dict
 
@@ -88,8 +87,8 @@ class SeasonLibraryPlugin(LibraryBase):
         if library.status_id == done_status.get('id') and not force:
             do_update = False
 
-        info = fireEvent('season.info', merge = True, identifier = parent_identifier,  \
-                        season_identifier = identifier)
+        season_params = {'season_identifier': identifier}
+        info = fireEvent('season.info', merge = True, identifier = parent_identifier, params = season_params)
 
         # Don't need those here
         try: del info['in_wanted']
@@ -148,13 +147,11 @@ class SeasonLibraryPlugin(LibraryBase):
                             file_obj = db.query(File).filter_by(id = file_obj.get('id')).one()
                             library.files.append(file_obj)
                             db.commit()
-
                             break
                         except:
                             log.debug('Failed to attach to library: %s', traceback.format_exc())
 
-            library_dict = library.to_dict(self.default_dict)
-
+        library_dict = library.to_dict(self.default_dict)
         db.expire_all()
         return library_dict
 

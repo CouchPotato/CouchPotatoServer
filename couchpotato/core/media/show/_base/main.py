@@ -82,16 +82,6 @@ class ShowBase(MediaBase):
 
     def add(self, params = {}, force_readd = True, search_after = True, update_library = False, status_id = None):
         """
-        1. Add Show
-        2. Add All Episodes
-        3. Add All Seasons
-
-        Notes, not to forget:
-        - relate parent and children, possible grandparent to grandchild so episodes know it belong to show, etc
-        - looks like we dont send info to library; it comes later
-        - change references to plot to description
-        - change Model to Media
-
         params
         {'category_id': u'-1',
          'identifier': u'tt1519931',
@@ -101,36 +91,92 @@ class ShowBase(MediaBase):
         """
         log.debug("show.add")
 
-        # Add show parent to db first
-        parent =  self.addToDatabase(params = params, type = 'show')
+        # Add show parent to db first; need to update library so maps will be in place (if any)
+        parent = self.addToDatabase(params = params, update_library = True, type = 'show')
 
+        # TODO: add by airdate
+
+        # Add by Season/Episode numbers
+        self.addBySeasonEpisode(parent,
+                                params = params,
+                                force_readd = force_readd,
+                                search_after = search_after,
+                                update_library = update_library,
+                                status_id = status_id
+                                )
+
+    def addBySeasonEpisode(self, parent, params = {}, force_readd = True, search_after = True, update_library = False, status_id = None):
         identifier = params.get('id')
+        # 'tvdb' will always be the master for our purpose.  All mapped data can be mapped
+        # to another source for downloading, but it will always be remapped back to tvdb numbering
+        # when renamed so media can be used in media players that use tvdb for info provider
+        #
+        # This currently means the episode must actually exist in tvdb in order to be found but
+        # the numbering can be different
 
-        # XXX: Fix so we dont have a nested list [0] (fireEvent)
-        try:
-            seasons = fireEvent('season.info', identifier = identifier)[0]
-        except: return None
+        #master = 'tvdb'
+        #destination = 'scene'
+        #destination = 'anidb'
+        #destination = 'rage'
+        #destination = 'trakt'
+        # TODO: auto mode.  if anime exists use it. if scene exists use it else use tvdb
+
+        # XXX: We should abort adding show, etc if either tvdb or xem is down or we will have incorrent mappings
+        #      I think if tvdb gets error we wont have anydata anyway, but we must make sure XEM returns!!!!
+
+        # Only the master should return results here; all other info providers should just return False
+        # since we are just interested in the structure at this point.
+        seasons = fireEvent('season.info', merge = True, identifier = identifier)
         if seasons is not None:
             for season in seasons:
-                season['title'] = season.get('title',  None)
+                # Make sure we are only dealing with 'tvdb' responses at this point
+                if season.get('primary_provider', None) != 'thetvdb':
+                    continue
                 season_id =  season.get('id', None)
                 if season_id is None: continue
-                season['identifier'] = season_id
-                season['parent_identifier'] = identifier
-                self.addToDatabase(params=season, type = "season")
 
-                # XXX: Fix so we dont have a nested list [0] (fireEvent)
-                try:
-                    episodes = fireEvent('episode.info', identifier = identifier, season_identifier = season_id)[0]
-                except: continue
+                season_params = {'season_identifier':  season_id}
+                # Calling all info providers; merge your info now for individual season
+                single_season = fireEvent('season.info', merge = True, identifier = identifier, params = season_params)
+                single_season['title'] = single_season.get('original_title',  None)
+                single_season['identifier'] = season_id
+                single_season['parent_identifier'] = identifier
+                log.info("Adding Season %s" % season_id)
+                s = self.addToDatabase(params = single_season, type = "season")
+
+                episode_params = {'season_identifier':  season_id}
+                episodes = fireEvent('episode.info', merge = True, identifier = identifier, params = episode_params)
                 if episodes is not None:
                     for episode in episodes:
-                        episode['title'] = episode.get('titles', None)[0] # XXX. [0] will create exception. FIX!
+                        # Make sure we are only dealing with 'tvdb' responses at this point
+                        if episode.get('primary_provider', None) != 'thetvdb':
+                            continue
                         episode_id =  episode.get('id', None)
                         if episode_id is None: continue
-                        episode['identifier'] = episode_id
-                        episode['parent_identifier'] = season['identifier']
-                        self.addToDatabase(params=episode, type = "episode")
+                        try:
+                            episode_number = int(episode.get('episodenumber', None))
+                        except (ValueError, TypeError):
+                            continue
+                        try:
+                            absolute_number = int(episode.get('absolute_number', None))
+                        except (ValueError, TypeError):
+                            absolute_number = None
+
+                        episode_params = {'season_identifier':  season_id,
+                                          'episode_identifier': episode_id,
+                                          'episode':            episode_number}
+                        if absolute_number:
+                            episode_params['absolute'] = absolute_number
+                        # Calling all info providers; merge your info now for individual episode
+                        single_episode = fireEvent('episode.info', merge = True, identifier = identifier, params = episode_params)
+                        single_episode['title'] = single_episode.get('original_title', None)
+                        single_episode['identifier'] = episode_id
+                        single_episode['parent_identifier'] = single_season['identifier']
+                        log.info("Adding [%sx%s] %s - %s" % (season_id,
+                                                             episode_number,
+                                                             params['title'],
+                                                             single_episode.get('original_title',  '')))
+                        e = self.addToDatabase(params = single_episode, type = "episode")
 
         return parent
 
