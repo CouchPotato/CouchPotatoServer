@@ -84,24 +84,26 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     # Backup before start and cleanup old databases
     new_backup = toUnicode(os.path.join(data_dir, 'db_backup', str(int(time.time()))))
 
-    # Create path and copy
-    if not os.path.isdir(new_backup): os.makedirs(new_backup)
-    src_files = [options.config_file, db_path, db_path + '-shm', db_path + '-wal']
-    for src_file in src_files:
-        if os.path.isfile(src_file):
-            dst_file = toUnicode(os.path.join(new_backup, os.path.basename(src_file)))
-            shutil.copyfile(src_file, dst_file)
-
-            # Try and copy stats seperately
-            try: shutil.copystat(src_file, dst_file)
-            except: pass
-
     # Remove older backups, keep backups 3 days or at least 3
     backups = []
     for directory in os.listdir(os.path.dirname(new_backup)):
         backup = toUnicode(os.path.join(os.path.dirname(new_backup), directory))
         if os.path.isdir(backup):
             backups.append(backup)
+
+    latest_backup = tryInt(os.path.basename(sorted(backups)[-1])) if len(backups) > 0 else 0
+    if latest_backup < time.time() - 3600:
+        # Create path and copy
+        if not os.path.isdir(new_backup): os.makedirs(new_backup)
+        src_files = [options.config_file, db_path, db_path + '-shm', db_path + '-wal']
+        for src_file in src_files:
+            if os.path.isfile(src_file):
+                dst_file = toUnicode(os.path.join(new_backup, os.path.basename(src_file)))
+                shutil.copyfile(src_file, dst_file)
+
+                # Try and copy stats seperately
+                try: shutil.copystat(src_file, dst_file)
+                except: pass
 
     total_backups = len(backups)
     for backup in backups:
