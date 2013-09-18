@@ -174,7 +174,7 @@ class Renamer(Plugin):
                 # Overwrite destination when set in category
                 destination = self.conf('to')
                 for movie in library_ent.movies:
-                    if movie.category and movie.category.destination and len(movie.category.destination) > 0:
+                    if movie.category and movie.category.destination and len(movie.category.destination) > 0 and movie.category.destination != 'None':
                         destination = movie.category.destination
                         log.debug('Setting category destination for "%s": %s' % (movie_title, destination))
                     else:

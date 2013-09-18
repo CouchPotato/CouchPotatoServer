@@ -295,7 +295,7 @@ def merge_all(guesses, append=None):
         # then merge the remaining ones
         dups = set(result) & set(g)
         if dups:
-            log.warning('duplicate properties %s in merged result...' % dups)
+            log.warning('duplicate properties %s in merged result...' % [ (result[p], g[p]) for p in dups] )
 
         result.update_highest_confidence(g)
 

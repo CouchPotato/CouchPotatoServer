@@ -29,9 +29,13 @@ class SceneAccess(TorrentProvider):
 
     def _search(self, movie, quality, results):
 
+        cat = self.getCatId(quality['identifier'])
+        if not cat:
+            return
+
         url = self.urls['search'] % (
-           self.getCatId(quality['identifier'])[0],
-           self.getCatId(quality['identifier'])[0]
+           cat[0],
+           cat[0]
         )
 
         arguments = tryUrlencode({
