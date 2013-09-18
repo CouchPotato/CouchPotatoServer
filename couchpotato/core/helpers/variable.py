@@ -1,4 +1,4 @@
-from couchpotato.core.helpers.encoding import simplifyString, toSafeString
+from couchpotato.core.helpers.encoding import simplifyString, toSafeString, ss
 from couchpotato.core.logger import CPLog
 import hashlib
 import os.path
@@ -124,6 +124,8 @@ def cleanHost(host):
     return host
 
 def getImdb(txt, check_inside = True, multiple = False):
+
+    txt = ss(txt)
 
     if check_inside and os.path.isfile(txt):
         output = open(txt, 'r')

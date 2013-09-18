@@ -260,27 +260,30 @@ MA.Release = new Class({
 			if(self.next_release || (self.last_release && ['ignored', 'failed'].indexOf(self.last_release.status.identifier) === false)){
 
 				self.trynext_container = new Element('div.buttons.try_container').inject(self.release_container, 'top');
+				
+				var nr = self.next_release,
+					lr = self.last_release;
 
 				self.trynext_container.adopt(
 					new Element('span.or', {
 						'text': 'This movie is snatched, if anything went wrong, download'
 					}),
-					self.last_release ? new Element('a.button.orange', {
+					lr ? new Element('a.button.orange', {
 						'text': 'the same release again',
 						'events': {
 							'click': function(){
-								self.download(self.last_release);
+								self.download(lr);
 							}
 						}
 					}) : null,
-					self.next_release && self.last_release ? new Element('span.or', {
+					nr && lr ? new Element('span.or', {
 						'text': ','
 					}) : null,
-					self.next_release ? [new Element('a.button.green', {
-						'text': self.last_release ? 'another release' : 'the best release',
+					nr ? [new Element('a.button.green', {
+						'text': lr ? 'another release' : 'the best release',
 						'events': {
 							'click': function(){
-								self.download(self.next_release);
+								self.download(nr);
 							}
 						}
 					}),
@@ -371,8 +374,10 @@ MA.Release = new Class({
 			'onComplete': function(json){
 				icon.removeClass('icon spinner');
 
-				if(json.success)
+				if(json.success){
 					icon.addClass('completed');
+					release_el.getElement('.release_status').set('text', 'snatched');
+				}
 				else
 					icon.addClass('attention').set('title', 'Something went wrong when downloading, please check logs.');
 			}
