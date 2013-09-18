@@ -819,6 +819,13 @@ class Scanner(Plugin):
         return None
 
     def findYear(self, text):
+
+        # Search year inside () or [] first
+        matches = re.search('(\(|\[)(?P<year>19[0-9]{2}|20[0-9]{2})(\]|\))', text)
+        if matches:
+            return matches.group('year')
+
+        # Search normal
         matches = re.search('(?P<year>19[0-9]{2}|20[0-9]{2})', text)
         if matches:
             return matches.group('year')
@@ -831,11 +838,11 @@ class Scanner(Plugin):
         guess = {}
         if file_name:
             try:
-                guess = guess_movie_info(toUnicode(file_name))
-                if guess.get('title') and guess.get('year'):
+                guessit = guess_movie_info(toUnicode(file_name))
+                if guessit.get('title') and guessit.get('year'):
                     guess = {
-                        'name': guess.get('title'),
-                        'year': guess.get('year'),
+                        'name': guessit.get('title'),
+                        'year': guessit.get('year'),
                     }
             except:
                 log.debug('Could not detect via guessit "%s": %s', (file_name, traceback.format_exc()))
@@ -843,7 +850,13 @@ class Scanner(Plugin):
         # Backup to simple
         cleaned = ' '.join(re.split('\W+', simplifyString(release_name)))
         cleaned = re.sub(self.clean, ' ', cleaned)
-        year = self.findYear(cleaned)
+
+        for year_str in [file_name, cleaned]:
+            if not year_str: continue
+            year = self.findYear(year_str)
+            if year:
+                break
+
         cp_guess = {}
 
         if year: # Split name on year
