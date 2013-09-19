@@ -3,7 +3,7 @@ from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
 from couchpotato.core.helpers.encoding import toUnicode, ss
 from couchpotato.core.helpers.variable import getExt, mergeDicts, getTitle, \
-    getImdb, link, symlink, tryInt
+    getImdb, link, symlink, tryInt, splitString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Library, File, Profile, Release, \
@@ -218,6 +218,17 @@ class Renamer(Plugin):
                      'cd_nr': '',
                      'mpaa': library['info'].get('mpaa', ''),
                 }
+
+                # Run Pre Scripts.
+                pre_script_list = splitString(self.conf('pre_scripts'))
+                for script_name in pre_script_list:
+                    script_load = __import__('couchpotato.core.scripts', fromlist=[str(script_name)])
+                    script = getattr(script_load, script_name)
+                    log.info('calling external script: %s', script_name)
+                    try:
+                        group = script.process(group)
+                    except:
+                        log.error('Failed to run external script: %s', script_name)
 
                 for file_type in group['files']:
 
@@ -488,6 +499,16 @@ class Renamer(Plugin):
                 fireEvent('renamer.after', message = download_message, group = group, in_order = True)
             except:
                 log.error('Failed firing (some) of the renamer.after events: %s', traceback.format_exc())
+
+            post_script_list = splitString(self.conf('post_scripts'))
+            for script_name in post_script_list:
+                script_load = __import__('couchpotato.core.scripts', fromlist=[str(script_name)])
+                script = getattr(script_load, script_name)
+                log.info('calling external script: %s', script_name)
+                try:
+                    group = script.process(group)
+                except:
+                    log.error('Failed to run external script: %s', script_name)
 
             # Break if CP wants to shut down
             if self.shuttingDown():
