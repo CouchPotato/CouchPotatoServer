@@ -101,7 +101,7 @@ def flattenList(l):
         return l
 
 def md5(text):
-    return hashlib.md5(text).hexdigest()
+    return hashlib.md5(ss(text)).hexdigest()
 
 def sha1(text):
     return hashlib.sha1(text).hexdigest()
