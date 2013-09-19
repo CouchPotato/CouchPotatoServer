@@ -120,7 +120,13 @@ config = [{
                 {
                     'advanced': True,
                     'name': 'separator',
-                    'label': 'Separator',
+                    'label': 'File-Separator',
+                    'description': 'Replace all the spaces with a character. Example: ".", "-" (without quotes). Leave empty to use spaces.',
+                },
+                {
+                    'advanced': True,
+                    'name': 'foldersep',
+                    'label': 'Folder-Separator',
                     'description': 'Replace all the spaces with a character. Example: ".", "-" (without quotes). Leave empty to use spaces.',
                 },
                 {
