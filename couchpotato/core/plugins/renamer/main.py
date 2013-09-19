@@ -252,7 +252,7 @@ class Renamer(Plugin):
                         replacements['cd_nr'] = cd if multiple else ''
 
                         # Naming
-                        final_folder_name = self.doReplace(folder_name, replacements)
+                        final_folder_name = self.doReplace(folder_name, replacements, folder = True)
                         final_file_name = self.doReplace(file_name, replacements)
                         replacements['filename'] = final_file_name[:-(len(getExt(final_file_name)) + 1)]
 
@@ -508,7 +508,7 @@ class Renamer(Plugin):
         for extra in set(filter(test, group['files'][extra_type])):
             replacements['ext'] = getExt(extra)
 
-            final_folder_name = self.doReplace(folder_name, replacements, remove_multiple = remove_multiple)
+            final_folder_name = self.doReplace(folder_name, replacements, remove_multiple = remove_multiple, folder = True)
             final_file_name = self.doReplace(file_name, replacements, remove_multiple = remove_multiple)
             rename_files[extra] = os.path.join(destination, final_folder_name, final_file_name)
 
@@ -603,7 +603,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
         return True
 
-    def doReplace(self, string, replacements, remove_multiple = False):
+    def doReplace(self, string, replacements, remove_multiple = False, folder = False):
         """
         replace confignames with the real thing
         """
@@ -623,7 +623,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
         replaced = re.sub(r"[\x00:\*\?\"<>\|]", '', replaced)
 
-        sep = self.conf('separator')
+        sep = self.conf('foldersep') if folder else self.conf('separator')
         return self.replaceDoubles(replaced.lstrip('. ')).replace(' ', ' ' if not sep else sep)
 
     def replaceDoubles(self, string):
