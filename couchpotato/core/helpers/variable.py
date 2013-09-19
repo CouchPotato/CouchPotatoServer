@@ -170,8 +170,11 @@ def getTitle(library_dict):
                     if title.default:
                         return title.title
             except:
-                log.error('Could not get title for %s', library_dict.identifier)
-                return None
+                try:
+                    return library_dict['info']['titles'][0]
+                except:
+                    log.error('Could not get title for %s', library_dict.identifier)
+                    return None
 
         log.error('Could not get title for %s', library_dict['identifier'])
         return None
