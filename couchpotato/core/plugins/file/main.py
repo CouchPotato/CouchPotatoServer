@@ -71,11 +71,11 @@ class FileManager(Plugin):
             db = get_session()
             for root, dirs, walk_files in os.walk(Env.get('cache_dir')):
                 for filename in walk_files:
-                    if root == python_cache or 'minified' in root or 'version' in filename or 'temp_updater' in root: continue
-                    file_path = os.path.join(root, filename)
-                    f = db.query(File).filter(File.path == toUnicode(file_path)).first()
-                    if not f:
-                        os.remove(file_path)
+                    if os.path.splitext(filename)[1] in ['.png', '.jpg', '.jpeg']:
+                        file_path = os.path.join(root, filename)
+                        f = db.query(File).filter(File.path == toUnicode(file_path)).first()
+                        if not f:
+                            os.remove(file_path)
         except:
             log.error('Failed removing unused file: %s', traceback.format_exc())
 

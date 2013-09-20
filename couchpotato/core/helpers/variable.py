@@ -101,7 +101,7 @@ def flattenList(l):
         return l
 
 def md5(text):
-    return hashlib.md5(text).hexdigest()
+    return hashlib.md5(ss(text)).hexdigest()
 
 def sha1(text):
     return hashlib.sha1(text).hexdigest()
@@ -123,9 +123,12 @@ def cleanHost(host):
 
     return host
 
-def getImdb(txt, check_inside = True, multiple = False):
+def getImdb(txt, check_inside = False, multiple = False):
 
-    txt = ss(txt)
+    if not check_inside:
+        txt = simplifyString(txt)
+    else:
+        txt = ss(txt)
 
     if check_inside and os.path.isfile(txt):
         output = open(txt, 'r')
@@ -170,8 +173,11 @@ def getTitle(library_dict):
                     if title.default:
                         return title.title
             except:
-                log.error('Could not get title for %s', library_dict.identifier)
-                return None
+                try:
+                    return library_dict['info']['titles'][0]
+                except:
+                    log.error('Could not get title for %s', library_dict.identifier)
+                    return None
 
         log.error('Could not get title for %s', library_dict['identifier'])
         return None
