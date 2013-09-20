@@ -56,7 +56,7 @@ class Core(Plugin):
             self.signalHandler()
 
     def md5Password(self, value):
-        return md5(value.encode(Env.get('encoding'))) if value else ''
+        return md5(value) if value else ''
 
     def checkApikey(self, value):
         return value if value and len(value) > 3 else uuid4().hex
@@ -124,7 +124,7 @@ class Core(Plugin):
 
             time.sleep(1)
 
-        log.debug('Save to shutdown/restart')
+        log.debug('Safe to shutdown/restart')
 
         try:
             IOLoop.current().stop()

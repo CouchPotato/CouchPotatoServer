@@ -157,7 +157,7 @@ var NotificationBase = new Class({
 		}
 
 		// Restart poll
-		self.startPoll()
+		self.startPoll.delay(1500, self);
 	},
 
 	showMessage: function(message, sticky, data){

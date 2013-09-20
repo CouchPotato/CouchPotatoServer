@@ -1,4 +1,4 @@
-from couchpotato.core.helpers.encoding import simplifyString, toSafeString
+from couchpotato.core.helpers.encoding import simplifyString, toSafeString, ss
 from couchpotato.core.logger import CPLog
 import hashlib
 import os.path
@@ -101,10 +101,15 @@ def flattenList(l):
         return l
 
 def md5(text):
-    return hashlib.md5(text).hexdigest()
+    return hashlib.md5(ss(text)).hexdigest()
 
 def sha1(text):
     return hashlib.sha1(text).hexdigest()
+
+def isLocalIP(ip):
+    ip = ip.lstrip('htps:/')
+    regex = '/(^127\.)|(^192\.168\.)|(^10\.)|(^172\.1[6-9]\.)|(^172\.2[0-9]\.)|(^172\.3[0-1]\.)|(^::1)$/'
+    return re.search(regex, ip) is not None or 'localhost' in ip or ip[:4] == '127.'
 
 def getExt(filename):
     return os.path.splitext(filename)[1][1:]
@@ -113,12 +118,14 @@ def cleanHost(host):
     if not host.startswith(('http://', 'https://')):
         host = 'http://' + host
 
-    if not host.endswith('/'):
-        host += '/'
+    host = host.rstrip('/')
+    host += '/'
 
     return host
 
 def getImdb(txt, check_inside = True, multiple = False):
+
+    txt = ss(txt)
 
     if check_inside and os.path.isfile(txt):
         output = open(txt, 'r')
@@ -128,7 +135,7 @@ def getImdb(txt, check_inside = True, multiple = False):
     try:
         ids = re.findall('(tt\d{7})', txt)
         if multiple:
-            return ids if len(ids) > 0 else []
+            return list(set(ids)) if len(ids) > 0 else []
         return ids[0]
     except IndexError:
         pass
@@ -140,7 +147,11 @@ def tryInt(s):
     except: return 0
 
 def tryFloat(s):
-    try: return float(s) if '.' in s else tryInt(s)
+    try:
+        if isinstance(s, str):
+            return float(s) if '.' in s else tryInt(s)
+        else:
+            return float(s)
     except: return 0
 
 def natsortKey(s):
@@ -159,8 +170,11 @@ def getTitle(library_dict):
                     if title.default:
                         return title.title
             except:
-                log.error('Could not get title for %s', library_dict.identifier)
-                return None
+                try:
+                    return library_dict['info']['titles'][0]
+                except:
+                    log.error('Could not get title for %s', library_dict.identifier)
+                    return None
 
         log.error('Could not get title for %s', library_dict['identifier'])
         return None
@@ -170,11 +184,15 @@ def getTitle(library_dict):
 
 def possibleTitles(raw_title):
 
-    titles = []
+    titles = [
+        toSafeString(raw_title).lower(),
+        raw_title.lower(),
+        simplifyString(raw_title)
+    ]
 
-    titles.append(toSafeString(raw_title).lower())
-    titles.append(raw_title.lower())
-    titles.append(simplifyString(raw_title))
+    # replace some chars
+    new_title = raw_title.replace('&', 'and')
+    titles.append(simplifyString(new_title))
 
     return list(set(titles))
 

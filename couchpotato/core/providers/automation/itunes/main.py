@@ -31,7 +31,7 @@ class ITunes(Automation, RSS):
         for url in urls:
 
             index += 1
-            if not enablers[index]:
+            if len(enablers) == 0 or len(enablers) < index or not enablers[index]:
                 continue
 
             try:

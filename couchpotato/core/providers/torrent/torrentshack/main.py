@@ -11,12 +11,12 @@ log = CPLog(__name__)
 class TorrentShack(TorrentProvider):
 
     urls = {
-        'test' : 'http://www.torrentshack.net/',
-        'login' : 'http://www.torrentshack.net/login.php',
-        'login_check': 'http://www.torrentshack.net/inbox.php',
-        'detail' : 'http://www.torrentshack.net/torrent/%s',
-        'search' : 'http://www.torrentshack.net/torrents.php?searchstr=%s&filter_cat[%d]=1',
-        'download' : 'http://www.torrentshack.net/%s',
+        'test' : 'https://torrentshack.net/',
+        'login' : 'https://torrentshack.net/login.php',
+        'login_check': 'https://torrentshack.net/inbox.php',
+        'detail' : 'https://torrentshack.net/torrent/%s',
+        'search' : 'https://torrentshack.net/torrents.php?searchstr=%s&filter_cat[%d]=1',
+        'download' : 'https://torrentshack.net/%s',
     }
 
     cat_ids = [
@@ -27,7 +27,7 @@ class TorrentShack(TorrentProvider):
     ]
 
     http_time_between_calls = 1 #seconds
-    cat_backup_id = None
+    cat_backup_id = 400
 
     def _searchOnTitle(self, title, movie, quality, results):
 

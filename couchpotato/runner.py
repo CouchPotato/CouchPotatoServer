@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 from cache import FileSystemCache
-from couchpotato import KeyHandler
+from couchpotato import KeyHandler, LoginHandler, LogoutHandler
 from couchpotato.api import NonBlockHandler, ApiHandler
 from couchpotato.core.event import fireEventAsync, fireEvent
 from couchpotato.core.helpers.encoding import toUnicode
@@ -83,13 +83,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
 
     # Backup before start and cleanup old databases
     new_backup = toUnicode(os.path.join(data_dir, 'db_backup', str(int(time.time()))))
-
-    # Create path and copy
     if not os.path.isdir(new_backup): os.makedirs(new_backup)
-    src_files = [options.config_file, db_path, db_path + '-shm', db_path + '-wal']
-    for src_file in src_files:
-        if os.path.isfile(src_file):
-            shutil.copy2(src_file, toUnicode(os.path.join(new_backup, os.path.basename(src_file))))
 
     # Remove older backups, keep backups 3 days or at least 3
     backups = []
@@ -98,14 +92,31 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
         if os.path.isdir(backup):
             backups.append(backup)
 
+    latest_backup = tryInt(os.path.basename(sorted(backups)[-1])) if len(backups) > 0 else 0
+    if latest_backup < time.time() - 3600:
+        # Create path and copy
+        src_files = [options.config_file, db_path, db_path + '-shm', db_path + '-wal']
+        for src_file in src_files:
+            if os.path.isfile(src_file):
+                dst_file = toUnicode(os.path.join(new_backup, os.path.basename(src_file)))
+                shutil.copyfile(src_file, dst_file)
+
+                # Try and copy stats seperately
+                try: shutil.copystat(src_file, dst_file)
+                except: pass
+
     total_backups = len(backups)
     for backup in backups:
         if total_backups > 3:
             if tryInt(os.path.basename(backup)) < time.time() - 259200:
-                for src_file in src_files:
-                    b_file = toUnicode(os.path.join(backup, os.path.basename(src_file)))
-                    if os.path.isfile(b_file):
-                        os.remove(b_file)
+                for the_file in os.listdir(backup):
+                    file_path = os.path.join(backup, the_file)
+                    try:
+                        if os.path.isfile(file_path):
+                            os.remove(file_path)
+                    except:
+                        raise
+
                 os.rmdir(backup)
                 total_backups -= 1
 
@@ -212,7 +223,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     # app.debug = development
     config = {
         'use_reloader': reloader,
-        'port': tryInt(Env.setting('port', default = 5000)),
+        'port': tryInt(Env.setting('port', default = 5050)),
         'host': host if host and len(host) > 0 else '0.0.0.0',
         'ssl_cert': Env.setting('ssl_cert', default = None),
         'ssl_key': Env.setting('ssl_key', default = None),
@@ -224,9 +235,10 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
         log_function = lambda x : None,
         debug = config['use_reloader'],
         gzip = True,
+        cookie_secret = api_key,
+        login_url = '%slogin/' % web_base,
     )
     Env.set('app', application)
-
 
     # Request handlers
     application.add_handlers(".*$", [
@@ -237,18 +249,22 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
         (r'%sgetkey(/?)' % web_base, KeyHandler), # Get API key
         (r'%s' % api_base, RedirectHandler, {"url": web_base + 'docs/'}), # API docs
 
+        # Login handlers
+        (r'%slogin(/?)' % web_base, LoginHandler),
+        (r'%slogout(/?)' % web_base, LogoutHandler),
+
         # Catch all webhandlers
         (r'%s(.*)(/?)' % web_base, WebHandler),
         (r'(.*)', WebHandler),
     ])
 
     # Static paths
-    static_path = '%sstatic/' % api_base
+    static_path = '%sstatic/' % web_base
     for dir_name in ['fonts', 'images', 'scripts', 'style']:
         application.add_handlers(".*$", [
              ('%s%s/(.*)' % (static_path, dir_name), StaticFileHandler, {'path': toUnicode(os.path.join(base_path, 'couchpotato', 'static', dir_name))})
         ])
-    Env.set('static_path', static_path);
+    Env.set('static_path', static_path)
 
 
     # Load configs & plugins

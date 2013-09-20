@@ -25,6 +25,11 @@ class AwesomeHD(TorrentProvider):
         if data:
             try:
                 soup = BeautifulSoup(data)
+
+                if soup.find('error'):
+                    log.error(soup.find('error').get_text())
+                    return
+
                 authkey = soup.find('authkey').get_text()
                 entries = soup.find_all('torrent')
 

@@ -4,7 +4,8 @@ from couchpotato.core.helpers.variable import cleanHost
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
 from couchpotato.environment import Env
-from pytwitter import Api, parse_qsl
+from pytwitter import Api
+from urlparse import parse_qsl
 import oauth2
 
 log = CPLog(__name__)
@@ -29,7 +30,8 @@ class Twitter(Notification):
         addApiView('notify.%s.auth_url' % self.getName().lower(), self.getAuthorizationUrl)
         addApiView('notify.%s.credentials' % self.getName().lower(), self.getCredentials)
 
-    def notify(self, message = '', data = {}, listener = None):
+    def notify(self, message = '', data = None, listener = None):
+        if not data: data = {}
 
         api = Api(self.consumer_key, self.consumer_secret, self.conf('access_token_key'), self.conf('access_token_secret'))
 
@@ -50,7 +52,7 @@ class Twitter(Notification):
         try:
             if direct_message:
                 for user in direct_message_users.split():
-                    api.PostDirectMessage(user, '[%s] %s' % (self.default_title, message))
+                    api.PostDirectMessage('[%s] %s' % (self.default_title, message), screen_name = user)
             else:
                 update_message = '[%s] %s' % (self.default_title, message)
                 if len(update_message) > 140:

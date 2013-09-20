@@ -67,10 +67,22 @@ class PublicHD(TorrentMagnetProvider):
                 log.error('Failed getting results from %s: %s', (self.getName(), traceback.format_exc()))
 
     def getMoreInfo(self, item):
-        full_description = self.getCache('publichd.%s' % item['id'], item['detail_url'], cache_timeout = 25920000)
-        html = BeautifulSoup(full_description)
-        nfo_pre = html.find('div', attrs = {'id':'torrmain'})
-        description = toUnicode(nfo_pre.text) if nfo_pre else ''
+
+        cache_key = 'publichd.%s' % item['id']
+        description = self.getCache(cache_key)
+
+        if not description:
+
+            try:
+                full_description = self.urlopen(item['detail_url'])
+                html = BeautifulSoup(full_description)
+                nfo_pre = html.find('div', attrs = {'id':'torrmain'})
+                description = toUnicode(nfo_pre.text) if nfo_pre else ''
+            except:
+                log.error('Failed getting more info for %s', item['name'])
+                description = ''
+
+            self.setCache(cache_key, description, timeout = 25920000)
 
         item['description'] = description
         return item

@@ -12,4 +12,4 @@
  * What hardware / OS are you using and what are the limits? NAS can be slow and maybe have a different python installed then when you use CP on OSX or Windows for example.
  * I will mark issues with the "can't reproduce" tag. Don't go asking me "why closed" if it clearly says the issue in the tag ;)
 
-**If I don't get enough info, the change of the issue getting closed is a lot bigger ;)**
+**If I don't get enough info, the chance of the issue getting closed is a lot bigger ;)**

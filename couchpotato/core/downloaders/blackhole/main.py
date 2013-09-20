@@ -7,22 +7,25 @@ import traceback
 
 log = CPLog(__name__)
 
+
 class Blackhole(Downloader):
 
-    type = ['nzb', 'torrent', 'torrent_magnet']
+    protocol = ['nzb', 'torrent', 'torrent_magnet']
 
-    def download(self, data = {}, movie = {}, filedata = None):
+    def download(self, data = None, movie = None, filedata = None):
+        if not movie: movie = {}
+        if not data: data = {}
 
         directory = self.conf('directory')
         if not directory or not os.path.isdir(directory):
-            log.error('No directory set for blackhole %s download.', data.get('type'))
+            log.error('No directory set for blackhole %s download.', data.get('protocol'))
         else:
             try:
                 if not filedata or len(filedata) < 50:
                     try:
-                        if data.get('type') == 'torrent_magnet':
+                        if data.get('protocol') == 'torrent_magnet':
                             filedata = self.magnetToTorrent(data.get('url'))
-                            data['type'] = 'torrent'
+                            data['protocol'] = 'torrent'
                     except:
                         log.error('Failed download torrent via magnet url: %s', traceback.format_exc())
 
@@ -34,7 +37,7 @@ class Blackhole(Downloader):
 
                 try:
                     if not os.path.isfile(fullPath):
-                        log.info('Downloading %s to %s.', (data.get('type'), fullPath))
+                        log.info('Downloading %s to %s.', (data.get('protocol'), fullPath))
                         with open(fullPath, 'wb') as f:
                             f.write(filedata)
                         os.chmod(fullPath, Env.getPermission('file'))
@@ -53,20 +56,21 @@ class Blackhole(Downloader):
 
         return False
 
-    def getEnabledDownloadType(self):
+    def getEnabledProtocol(self):
         if self.conf('use_for') == 'both':
-            return super(Blackhole, self).getEnabledDownloadType()
+            return super(Blackhole, self).getEnabledProtocol()
         elif self.conf('use_for') == 'torrent':
             return ['torrent', 'torrent_magnet']
         else:
             return ['nzb']
 
-    def isEnabled(self, manual, data = {}):
-        for_type = ['both']
-        if data and 'torrent' in data.get('type'):
-            for_type.append('torrent')
+    def isEnabled(self, manual = False, data = None):
+        if not data: data = {}
+        for_protocol = ['both']
+        if data and 'torrent' in data.get('protocol'):
+            for_protocol.append('torrent')
         elif data:
-            for_type.append(data.get('type'))
+            for_protocol.append(data.get('protocol'))
 
         return super(Blackhole, self).isEnabled(manual, data) and \
-            ((self.conf('use_for') in for_type))
+            ((self.conf('use_for') in for_protocol))

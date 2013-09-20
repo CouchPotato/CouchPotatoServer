@@ -2,7 +2,7 @@ from StringIO import StringIO
 from couchpotato.core.event import fireEvent, addEvent
 from couchpotato.core.helpers.encoding import tryUrlencode, ss, toSafeString, \
     toUnicode
-from couchpotato.core.helpers.variable import getExt, md5
+from couchpotato.core.helpers.variable import getExt, md5, isLocalIP
 from couchpotato.core.logger import CPLog
 from couchpotato.environment import Env
 from multipartpost import MultipartPostHandler
@@ -12,6 +12,7 @@ from urlparse import urlparse
 import cookielib
 import glob
 import gzip
+import inspect
 import math
 import os.path
 import re
@@ -24,10 +25,14 @@ log = CPLog(__name__)
 
 class Plugin(object):
 
+    _class_name = None
+    plugin_path = None
+
     enabled_option = 'enabled'
     auto_register_static = True
 
     _needs_shutdown = False
+    _running = None
 
     user_agent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:24.0) Gecko/20130519 Firefox/24.0'
     http_last_use = {}
@@ -35,16 +40,29 @@ class Plugin(object):
     http_failed_request = {}
     http_failed_disabled = {}
 
+    def __new__(typ, *args, **kwargs):
+        new_plugin = super(Plugin, typ).__new__(typ)
+        new_plugin.registerPlugin()
+
+        return new_plugin
+
     def registerPlugin(self):
         addEvent('app.do_shutdown', self.doShutdown)
         addEvent('plugin.running', self.isRunning)
         self._running = []
 
-    def conf(self, attr, value = None, default = None):
-        return Env.setting(attr, self.getName().lower(), value = value, default = default)
+        if self.auto_register_static:
+            self.registerStatic(inspect.getfile(self.__class__))
+
+    def conf(self, attr, value = None, default = None, section = None):
+        class_name = self.getName().lower().split(':')
+        return Env.setting(attr, section = section if section else class_name[0].lower(), value = value, default = default)
 
     def getName(self):
-        return self.__class__.__name__
+        return self._class_name or self.__class__.__name__
+
+    def setName(self, name):
+        self._class_name = name
 
     def renderTemplate(self, parent_file, templ, **params):
 
@@ -65,7 +83,7 @@ class Plugin(object):
         class_name = re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
 
         # View path
-        path = 'api/%s/static/%s/' % (Env.setting('api_key'), class_name)
+        path = 'static/plugin/%s/' % (class_name)
 
         # Add handler to Tornado
         Env.get('app').add_handlers(".*$", [(Env.get('web_base') + path + '(.*)', StaticFileHandler, {'path': static_folder})])
@@ -124,7 +142,7 @@ class Plugin(object):
             if self.http_failed_disabled[host] > (time.time() - 900):
                 log.info2('Disabled calls to %s for 15 minutes because so many failed requests.', host)
                 if not show_error:
-                    raise
+                    raise Exception('Disabled calls to %s for 15 minutes because so many failed requests')
                 else:
                     return ''
             else:
@@ -187,7 +205,7 @@ class Plugin(object):
                     self.http_failed_request[host] += 1
 
                     # Disable temporarily
-                    if self.http_failed_request[host] > 5:
+                    if self.http_failed_request[host] > 5 and not isLocalIP(host):
                         self.http_failed_disabled[host] = time.time()
 
             except:
@@ -241,8 +259,8 @@ class Plugin(object):
 
 
     def getCache(self, cache_key, url = None, **kwargs):
-        cache_key = md5(ss(cache_key))
-        cache = Env.get('cache').get(cache_key)
+        cache_key_md5 = md5(cache_key)
+        cache = Env.get('cache').get(cache_key_md5)
         if cache:
             if not Env.get('dev'): log.debug('Getting cache %s', cache_key)
             return cache
@@ -266,8 +284,9 @@ class Plugin(object):
                 return ''
 
     def setCache(self, cache_key, value, timeout = 300):
+        cache_key_md5 = md5(cache_key)
         log.debug('Setting cache %s', cache_key)
-        Env.get('cache').set(cache_key, value, timeout)
+        Env.get('cache').set(cache_key_md5, value, timeout)
         return value
 
     def createNzbName(self, data, movie):
@@ -276,9 +295,9 @@ class Plugin(object):
 
     def createFileName(self, data, filedata, movie):
         name = os.path.join(self.createNzbName(data, movie))
-        if data.get('type') == 'nzb' and 'DOCTYPE nzb' not in filedata and '</nzb>' not in filedata:
+        if data.get('protocol') == 'nzb' and 'DOCTYPE nzb' not in filedata and '</nzb>' not in filedata:
             return '%s.%s' % (name, 'rar')
-        return '%s.%s' % (name, data.get('type'))
+        return '%s.%s' % (name, data.get('protocol'))
 
     def cpTag(self, movie):
         if Env.setting('enabled', 'renamer'):
@@ -290,4 +309,4 @@ class Plugin(object):
         return not self.isEnabled()
 
     def isEnabled(self):
-        return self.conf(self.enabled_option) or self.conf(self.enabled_option) == None
+        return self.conf(self.enabled_option) or self.conf(self.enabled_option) is None

@@ -7,6 +7,7 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
 from couchpotato.core.settings.model import Notification as Notif
 from couchpotato.environment import Env
+from operator import itemgetter
 from sqlalchemy.sql.expression import or_
 import threading
 import time
@@ -18,9 +19,7 @@ log = CPLog(__name__)
 
 class CoreNotifier(Notification):
 
-    m_lock = threading.Lock()
-    messages = []
-    listeners = []
+    m_lock = None
 
     def __init__(self):
         super(CoreNotifier, self).__init__()
@@ -51,9 +50,14 @@ class CoreNotifier(Notification):
         addApiView('notification.listener', self.listener)
 
         fireEvent('schedule.interval', 'core.check_messages', self.checkMessages, hours = 12, single = True)
+        fireEvent('schedule.interval', 'core.clean_messages', self.cleanMessages, seconds = 15, single = True)
 
         addEvent('app.load', self.clean)
         addEvent('app.load', self.checkMessages)
+
+        self.messages = []
+        self.listeners = []
+        self.m_lock = threading.Lock()
 
     def clean(self):
 
@@ -113,7 +117,7 @@ class CoreNotifier(Notification):
         prop_name = 'messages.last_check'
         last_check = tryInt(Env.prop(prop_name, default = 0))
 
-        messages = fireEvent('cp.messages', last_check = last_check, single = True)
+        messages = fireEvent('cp.messages', last_check = last_check, single = True) or []
 
         for message in messages:
             if message.get('time') > last_check:
@@ -124,7 +128,8 @@ class CoreNotifier(Notification):
 
         Env.prop(prop_name, value = last_check)
 
-    def notify(self, message = '', data = {}, listener = None):
+    def notify(self, message = '', data = None, listener = None):
+        if not data: data = {}
 
         db = get_session()
 
@@ -145,7 +150,8 @@ class CoreNotifier(Notification):
 
         return True
 
-    def frontend(self, type = 'notification', data = {}, message = None):
+    def frontend(self, type = 'notification', data = None, message = None):
+        if not data: data = {}
 
         log.debug('Notifying frontend')
 
@@ -169,8 +175,8 @@ class CoreNotifier(Notification):
             except:
                 log.debug('Failed sending to listener: %s', traceback.format_exc())
 
+        self.listeners = []
         self.m_lock.release()
-        self.cleanMessages()
 
         log.debug('Done notifying frontend')
 
@@ -184,11 +190,14 @@ class CoreNotifier(Notification):
                     'result': messages,
                 })
 
+        self.m_lock.acquire()
         self.listeners.append((callback, last_id))
+        self.m_lock.release()
 
 
     def removeListener(self, callback):
 
+        self.m_lock.acquire()
         for list_tuple in self.listeners:
             try:
                 listener, last_id = list_tuple
@@ -196,15 +205,18 @@ class CoreNotifier(Notification):
                     self.listeners.remove(list_tuple)
             except:
                 log.debug('Failed removing listener: %s', traceback.format_exc())
+        self.m_lock.release()
 
     def cleanMessages(self):
+
+        if len(self.messages) == 0:
+            return
 
         log.debug('Cleaning messages')
         self.m_lock.acquire()
 
-        for message in self.messages:
-            if message['time'] < (time.time() - 15):
-                self.messages.remove(message)
+        time_ago = (time.time() - 15)
+        self.messages[:] = [m for m in self.messages if (m['time'] > time_ago)]
 
         self.m_lock.release()
         log.debug('Done cleaning messages')
@@ -215,16 +227,16 @@ class CoreNotifier(Notification):
         self.m_lock.acquire()
 
         recent = []
-        index = 0
-        for i in xrange(len(self.messages)):
-            index = len(self.messages) - i - 1
-            if self.messages[index]["message_id"] == last_id: break
-            recent = self.messages[index:]
+        try:
+            index = map(itemgetter('message_id'), self.messages).index(last_id)
+            recent = self.messages[index + 1:]
+        except:
+            pass
 
         self.m_lock.release()
-        log.debug('Returning for %s %s messages', (last_id, len(recent or [])))
+        log.debug('Returning for %s %s messages', (last_id, len(recent)))
 
-        return recent or []
+        return recent
 
     def listener(self, init = False, **kwargs):
 
@@ -237,6 +249,7 @@ class CoreNotifier(Notification):
             notifications = db.query(Notif) \
                 .filter(or_(Notif.read == False, Notif.added > (time.time() - 259200))) \
                 .all()
+
             for n in notifications:
                 ndict = n.to_dict()
                 ndict['type'] = 'notification'

@@ -26,7 +26,8 @@ class Manage(Plugin):
         addEvent('manage.diskspace', self.getDiskSpace)
 
         # Add files after renaming
-        def after_rename(message = None, group = {}):
+        def after_rename(message = None, group = None):
+            if not group: group = {}
             return self.scanFilesToLibrary(folder = group['destination_dir'], files = group['renamed_files'])
         addEvent('renamer.after', after_rename, priority = 110)
 
@@ -44,7 +45,7 @@ class Manage(Plugin):
 }"""},
         })
 
-        if not Env.get('dev'):
+        if not Env.get('dev') and self.conf('startup_scan'):
             addEvent('app.load', self.updateLibraryQuick)
 
     def getProgress(self, **kwargs):
@@ -117,7 +118,9 @@ class Manage(Plugin):
                         fireEvent('movie.delete', movie_id = done_movie['id'], delete_from = 'all')
                     else:
 
-                        for release in done_movie.get('releases', []):
+                        releases = fireEvent('release.for_movie', id = done_movie.get('id'), single = True)
+
+                        for release in releases:
                             if len(release.get('files', [])) == 0:
                                 fireEvent('release.delete', release['id'])
                             else:
@@ -128,9 +131,9 @@ class Manage(Plugin):
                                         break
 
                         # Check if there are duplicate releases (different quality) use the last one, delete the rest
-                        if len(done_movie.get('releases', [])) > 1:
+                        if len(releases) > 1:
                             used_files = {}
-                            for release in done_movie.get('releases', []):
+                            for release in releases:
 
                                 for release_file in release.get('files', []):
                                     already_used = used_files.get(release_file['path'])
@@ -169,6 +172,7 @@ class Manage(Plugin):
         self.in_progress = False
 
     def createAddToLibrary(self, folder, added_identifiers = []):
+
         def addToLibrary(group, total_found, to_go):
             if self.in_progress[folder]['total'] is None:
                 self.in_progress[folder] = {
@@ -182,9 +186,9 @@ class Manage(Plugin):
 
                 # Add it to release and update the info
                 fireEvent('release.add', group = group)
-                fireEventAsync('library.update', identifier = identifier, on_complete = self.createAfterUpdate(folder, identifier))
+                fireEventAsync('library.update.movie', identifier = identifier, on_complete = self.createAfterUpdate(folder, identifier))
             else:
-                self.in_progress[folder]['to_go'] = self.in_progress[folder]['to_go'] - 1
+                self.in_progress[folder]['to_go'] -= 1
 
         return addToLibrary
 
@@ -192,7 +196,10 @@ class Manage(Plugin):
 
         # Notify frontend
         def afterUpdate():
-            self.in_progress[folder]['to_go'] = self.in_progress[folder]['to_go'] - 1
+            if not self.in_progress or self.shuttingDown():
+                return
+
+            self.in_progress[folder]['to_go'] -= 1
             total = self.in_progress[folder]['total']
             movie_dict = fireEvent('movie.get', identifier, single = True)
 
