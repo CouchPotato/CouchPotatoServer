@@ -81,7 +81,7 @@ class TaskBarIcon(wx.TaskBarIcon):
         webbrowser.open(url)
 
     def onSettings(self, event):
-        url = self.frame.parent.getSetting('base_url') + '/settings/'
+        url = self.frame.parent.getSetting('base_url') + 'settings/about/'
         webbrowser.open(url)
 
     def onTaskBarClose(self, evt):
