@@ -1,5 +1,5 @@
 #define MyAppName "CouchPotato"
-#define MyAppVer "2.1.0"
+#define MyAppVer "2.2.0"
 
 [Setup]
 AppName={#MyAppName}
