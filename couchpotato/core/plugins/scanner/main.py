@@ -565,7 +565,7 @@ class Scanner(Plugin):
         if not imdb_id:
             try:
                 for nf in files['nfo']:
-                    imdb_id = getImdb(nf)
+                    imdb_id = getImdb(nf, check_inside = True)
                     if imdb_id:
                         log.debug('Found movie via nfo file: %s', nf)
                         nfo_file = nf
@@ -578,7 +578,7 @@ class Scanner(Plugin):
             try:
                 for filetype in files:
                     for filetype_file in files[filetype]:
-                        imdb_id = getImdb(filetype_file, check_inside = False)
+                        imdb_id = getImdb(filetype_file)
                         if imdb_id:
                             log.debug('Found movie via imdb in filename: %s', nfo_file)
                             break
