@@ -101,7 +101,7 @@ def flattenList(l):
         return l
 
 def md5(text):
-    return hashlib.md5(text).hexdigest()
+    return hashlib.md5(ss(text)).hexdigest()
 
 def sha1(text):
     return hashlib.sha1(text).hexdigest()
@@ -170,8 +170,11 @@ def getTitle(library_dict):
                     if title.default:
                         return title.title
             except:
-                log.error('Could not get title for %s', library_dict.identifier)
-                return None
+                try:
+                    return library_dict['info']['titles'][0]
+                except:
+                    log.error('Could not get title for %s', library_dict.identifier)
+                    return None
 
         log.error('Could not get title for %s', library_dict['identifier'])
         return None
