@@ -39,7 +39,7 @@ Page.Wizard = new Class({
 				'<br />Once installed, just click the bookmarklet on a movie page and watch the magic happen ;)',
 			'content': function(){
 				return App.createUserscriptButtons().setStyles({
-					'background-image': "url('"+Api.createUrl('static/userscript/userscript.png')+"')"
+					'background-image': "url('"+App.createUrl('static/plugin/userscript/userscript.png')+"')"
 				})
 			}
 		},
