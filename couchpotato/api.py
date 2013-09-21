@@ -49,7 +49,7 @@ class NonBlockHandler(RequestHandler):
         try:
             self.finish(response)
         except:
-            log.error('Failed doing nonblock request: %s', (traceback.format_exc()))
+            log.debug('Failed doing nonblock request, probably already closed: %s', (traceback.format_exc()))
             try: self.finish({'success': False, 'error': 'Failed returning results'})
             except: pass
 
