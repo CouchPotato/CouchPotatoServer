@@ -44,6 +44,7 @@ class NonBlockHandler(RequestHandler):
 
     def onNewMessage(self, response):
         if self.request.connection.stream.closed():
+            self.on_connection_close()
             return
 
         try:
