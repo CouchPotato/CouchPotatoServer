@@ -77,7 +77,7 @@ class uTorrent(Downloader):
         else:
             info = bdecode(filedata)["info"]
             torrent_hash = sha1(benc(info)).hexdigest().upper()
-            torrent_filename = self.createFileName(data, filedata, movie)
+        torrent_filename = self.createFileName(data, filedata, movie)
 
         if data.get('seed_ratio'):
             torrent_params['seed_override'] = 1
@@ -93,7 +93,7 @@ class uTorrent(Downloader):
 
         # Send request to uTorrent
         if data.get('protocol') == 'torrent_magnet':
-            self.utorrent_api.add_torrent_uri(data.get('url'))
+            self.utorrent_api.add_torrent_uri(torrent_filename, data.get('url'))
         else:
             self.utorrent_api.add_torrent_file(torrent_filename, filedata)
 
@@ -101,6 +101,39 @@ class uTorrent(Downloader):
         self.utorrent_api.set_torrent(torrent_hash, torrent_params)
         if self.conf('paused', default = 0):
             self.utorrent_api.pause_torrent(torrent_hash)
+
+        count = 0
+        while True:
+
+            count += 1
+            # Check if torrent is saved in subfolder of torrent name
+            data = self.utorrent_api.get_files(torrent_hash)
+
+            torrent_files = json.loads(data)
+            if torrent_files.get('error'):
+                log.error('Error getting data from uTorrent: %s', torrent_files.get('error'))
+                return False
+
+            if (torrent_files.get('files') and len(torrent_files['files'][1]) > 0) or count > 60:
+                break
+
+            time.sleep(1)
+
+        # Torrent has only one file, so uTorrent wont create a folder for it
+        if len(torrent_files['files'][1]) == 1:
+            # Remove torrent and try again
+            self.utorrent_api.remove_torrent(torrent_hash, remove_data = True)
+
+            # Send request to uTorrent
+            if data.get('protocol') == 'torrent_magnet':
+                self.utorrent_api.add_torrent_uri(torrent_filename, data.get('url'), add_folder = True)
+            else:
+                self.utorrent_api.add_torrent_file(torrent_filename, filedata, add_folder = True)
+
+            # Change settings of added torrent
+            self.utorrent_api.set_torrent(torrent_hash, torrent_params)
+            if self.conf('paused', default = 0):
+                self.utorrent_api.pause_torrent(torrent_hash)
 
         return self.downloadReturnId(torrent_hash)
 
@@ -224,12 +257,16 @@ class uTorrentAPI(object):
         token = re.findall("<div.*?>(.*?)</", request.read())[0]
         return token
 
-    def add_torrent_uri(self, torrent):
+    def add_torrent_uri(self, filename, torrent, add_folder = False):
         action = "action=add-url&s=%s" % urllib.quote(torrent)
+        if add_folder:
+            action += "&path=%s" % urllib.quote(filename)
         return self._request(action)
 
-    def add_torrent_file(self, filename, filedata):
+    def add_torrent_file(self, filename, filedata, add_folder = False):
         action = "action=add-file"
+        if add_folder:
+            action += "&path=%s" % urllib.quote(filename)
         return self._request(action, {"torrent_file": (ss(filename), filedata)})
 
     def set_torrent(self, hash, params):
@@ -290,4 +327,8 @@ class uTorrentAPI(object):
                 settings_dict[key] = 1 if settings_dict[key] else 0
 
         action = 'action=setsetting' + ''.join(['&s=%s&v=%s' % (key, value) for (key, value) in settings_dict.items()])
+        return self._request(action)
+
+    def get_files(self, hash):
+        action = "action=getfiles&hash=%s" % hash
         return self._request(action)

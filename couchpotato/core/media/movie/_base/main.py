@@ -469,7 +469,7 @@ class MovieBase(MovieTypeBase):
                         fireEvent('release.delete', release.id, single = True)
 
             m.profile_id = params.get('profile_id', default_profile.get('id'))
-            m.category_id = tryInt(cat_id) if cat_id is not None and tryInt(cat_id) > 0 else None
+            m.category_id = tryInt(cat_id) if cat_id is not None and tryInt(cat_id) > 0 else (m.category_id or None)
         else:
             log.debug('Movie already exists, not updating: %s', params)
             added = False

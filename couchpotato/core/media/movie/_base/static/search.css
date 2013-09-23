@@ -59,6 +59,11 @@
 				.search_form.shown .input input {
 					opacity: 1;
 				}
+				
+				.search_form input::-ms-clear {
+				    width : 0;
+					height: 0;
+				}
 					
 			@media all and (max-width: 480px) {
 				.search_form .input input {

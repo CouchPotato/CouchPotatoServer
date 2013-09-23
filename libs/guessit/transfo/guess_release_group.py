@@ -31,16 +31,22 @@ def get_patterns(property_name):
 
 CODECS = get_patterns('videoCodec')
 FORMATS = get_patterns('format')
+VAPIS = get_patterns('videoApi')
 
-GROUP_NAMES = [ r'(?P<videoCodec>' + codec + r')-?(?P<releaseGroup>.*?)[ \.]'
+# RG names following a codec or format, with a potential space or dash inside the name
+GROUP_NAMES = [ r'(?P<videoCodec>' + codec + r')[ \.-](?P<releaseGroup>.+?([- \.].*?)??)[ \.]'
                 for codec in CODECS ]
-GROUP_NAMES += [ r'(?P<format>' + fmt + r')-?(?P<releaseGroup>.*?)[ \.]'
+GROUP_NAMES += [ r'(?P<format>'    + fmt   + r')[ \.-](?P<releaseGroup>.+?([- \.].*?)??)[ \.]'
                  for fmt in FORMATS ]
+GROUP_NAMES += [ r'(?P<videoApi>'  + api   + r')[ \.-](?P<releaseGroup>.+?([- \.].*?)??)[ \.]'
+                 for api in VAPIS ]
 
 GROUP_NAMES2 = [ r'\.(?P<videoCodec>' + codec + r')-(?P<releaseGroup>.*?)(-(.*?))?[ \.]'
                  for codec in CODECS ]
-GROUP_NAMES2 += [ r'\.(?P<format>' + fmt + r')-(?P<releaseGroup>.*?)(-(.*?))?[ \.]'
+GROUP_NAMES2 += [ r'\.(?P<format>'    + fmt   + r')-(?P<releaseGroup>.*?)(-(.*?))?[ \.]'
                   for fmt in FORMATS ]
+GROUP_NAMES2 += [ r'\.(?P<videoApi>'  + vapi  + r')-(?P<releaseGroup>.*?)(-(.*?))?[ \.]'
+                  for vapi in VAPIS ]
 
 GROUP_NAMES = [ re.compile(r, re.IGNORECASE) for r in GROUP_NAMES ]
 GROUP_NAMES2 = [ re.compile(r, re.IGNORECASE) for r in GROUP_NAMES2 ]
@@ -54,11 +60,16 @@ def guess_release_group(string):
     # first try to see whether we have both a known codec and a known release group
     for rexp in GROUP_NAMES:
         match = rexp.search(string)
-        if match:
+        while match:
             metadata = match.groupdict()
-            release_group = compute_canonical_form('releaseGroup', metadata['releaseGroup'])
+            # make sure this is an actual release group we caught
+            release_group = (compute_canonical_form('releaseGroup', metadata['releaseGroup']) or
+                             compute_canonical_form('weakReleaseGroup', metadata['releaseGroup']))
             if release_group:
                 return adjust_metadata(metadata), (match.start(1), match.end(2))
+
+            # we didn't find anything conclusive, keep searching
+            match = rexp.search(string, match.span()[0]+1)
 
     # pick anything as releaseGroup as long as we have a codec in front
     # this doesn't include a potential dash ('-') ending the release group

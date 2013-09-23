@@ -73,7 +73,7 @@ class Suggestion(Plugin):
     def updateSuggestionCache(self, ignore_imdb = None, limit = 6, ignored = None, seen = None):
 
         # Combine with previous suggestion_cache
-        cached_suggestion = self.getCache('suggestion_cached')
+        cached_suggestion = self.getCache('suggestion_cached') or []
         new_suggestions = []
         ignored = [] if not ignored else ignored
         seen = [] if not seen else seen
@@ -102,6 +102,6 @@ class Suggestion(Plugin):
             if suggestions:
                 new_suggestions.extend(suggestions)
 
-        self.setCache('suggestion_cached', new_suggestions, timeout = 6048000)
+        self.setCache('suggestion_cached', new_suggestions, timeout = 3024000)
 
         return new_suggestions

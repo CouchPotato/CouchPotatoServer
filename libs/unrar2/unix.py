@@ -38,38 +38,38 @@ def call_unrar(params):
     "Calls rar/unrar command line executable, returns stdout pipe"
     global rar_executable_cached
     if rar_executable_cached is None:
-        for command in ('unrar', 'rar'):
+        for command in ('unrar', 'rar', os.path.join(os.path.dirname(__file__), 'unrar')):
             try:
-                subprocess.Popen([command], stdout=subprocess.PIPE)
+                subprocess.Popen([command], stdout = subprocess.PIPE)
                 rar_executable_cached = command
                 break
             except OSError:
                 pass
         if rar_executable_cached is None:
             raise UnpackerNotInstalled("No suitable RAR unpacker installed")
-            
+
     assert type(params) == list, "params must be list"
     args = [rar_executable_cached] + params
     try:
         gc.disable() # See http://bugs.python.org/issue1336
-        return subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        return subprocess.Popen(args, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
     finally:
         gc.enable()
 
 class RarFileImplementation(object):
 
-    def init(self, password=None):
+    def init(self, password = None):
         self.password = password
-        
-        
+
+
 
         stdoutdata, stderrdata = self.call('v', []).communicate()
-        
+
         for line in stderrdata.splitlines():
             if line.strip().startswith("Cannot open"):
                 raise FileOpenError
-            if line.find("CRC failed")>=0:
-                raise IncorrectRARPassword   
+            if line.find("CRC failed") >= 0:
+                raise IncorrectRARPassword
         accum = []
         source = iter(stdoutdata.splitlines())
         line = ''
@@ -85,39 +85,39 @@ class RarFileImplementation(object):
             self.comment = '\n'.join(accum[:-1])
         else:
             self.comment = None
-                
+
     def escaped_password(self):
         return '-' if self.password == None else self.password
-        
-        
-    def call(self, cmd, options=[], files=[]):
-        options2 = options + ['p'+self.escaped_password()]
-        soptions = ['-'+x for x in options2]
-        return call_unrar([cmd]+soptions+['--',self.archiveName]+files)
+
+
+    def call(self, cmd, options = [], files = []):
+        options2 = options + ['p' + self.escaped_password()]
+        soptions = ['-' + x for x in options2]
+        return call_unrar([cmd] + soptions + ['--', self.archiveName] + files)
 
     def infoiter(self):
-        
+
         stdoutdata, stderrdata = self.call('v', ['c-']).communicate()
-        
+
         for line in stderrdata.splitlines():
             if line.strip().startswith("Cannot open"):
                 raise FileOpenError
-            
+
         accum = []
         source = iter(stdoutdata.splitlines())
         line = ''
         while not line.startswith('--------------'):
             if line.strip().endswith('is not RAR archive'):
                 raise InvalidRARArchive
-            if line.find("CRC failed")>=0:
-                raise IncorrectRARPassword  
+            if line.find("CRC failed") >= 0:
+                raise IncorrectRARPassword
             line = source.next()
         line = source.next()
         i = 0
         re_spaces = re.compile(r"\s+")
         while not line.startswith('--------------'):
             accum.append(line)
-            if len(accum)==2:
+            if len(accum) == 2:
                 data = {}
                 data['index'] = i
                 data['filename'] = accum[0].strip()
@@ -125,7 +125,7 @@ class RarFileImplementation(object):
                 data['size'] = int(info[0])
                 attr = info[5]
                 data['isdir'] = 'd' in attr.lower()
-                data['datetime'] = time.strptime(info[3]+" "+info[4], '%d-%m-%y %H:%M')
+                data['datetime'] = time.strptime(info[3] + " " + info[4], '%d-%m-%y %H:%M')
                 data['comment'] = None
                 yield data
                 accum = []
@@ -136,12 +136,12 @@ class RarFileImplementation(object):
         res = []
         for info in self.infoiter():
             checkres = checker(info)
-            if checkres==True and not info.isdir:
+            if checkres == True and not info.isdir:
                 pipe = self.call('p', ['inul'], [info.filename]).stdout
                 res.append((info, pipe.read()))
-        return res            
+        return res
 
-          
+
     def extract(self, checker, path, withSubpath, overwrite):
         res = []
         command = 'x'
@@ -159,17 +159,17 @@ class RarFileImplementation(object):
             checkres = checker(info)
             if type(checkres) in [str, unicode]:
                 raise NotImplementedError("Condition callbacks returning strings are deprecated and only supported in Windows")
-            if checkres==True and not info.isdir:
+            if checkres == True and not info.isdir:
                 names.append(info.filename)
                 res.append(info)
         names.append(path)
         proc = self.call(command, options, names)
         stdoutdata, stderrdata = proc.communicate()
-        if stderrdata.find("CRC failed")>=0:
-            raise IncorrectRARPassword  
-        return res            
-            
+        if stderrdata.find("CRC failed") >= 0:
+            raise IncorrectRARPassword
+        return res
+
     def destruct(self):
         pass
 
-    
+

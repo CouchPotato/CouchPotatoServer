@@ -52,7 +52,7 @@ APP_PATH=${CP_HOME-/opt/couchpotato/}
 DATA_DIR=${CP_DATA-/var/couchpotato}
 
 # Path to store PID file
-PID_FILE=${CP_PID_FILE-/var/run/couchpotato.pid}
+PID_FILE=${CP_PIDFILE-/var/run/couchpotato.pid}
 
 # path to python bin
 DAEMON=${PYTHON_BIN-/usr/bin/python}

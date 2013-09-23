@@ -173,8 +173,8 @@ class Renamer(Plugin):
 
                 # Overwrite destination when set in category
                 destination = self.conf('to')
-                for movie in library_ent.media:
-                    if movie.category and movie.category.destination and len(movie.category.destination) > 0:
+                for movie in library_ent.movies:
+                    if movie.category and movie.category.destination and len(movie.category.destination) > 0 and movie.category.destination != 'None':
                         destination = movie.category.destination
                         log.debug('Setting category destination for "%s": %s' % (movie_title, destination))
                     else:
@@ -252,7 +252,7 @@ class Renamer(Plugin):
                         replacements['cd_nr'] = cd if multiple else ''
 
                         # Naming
-                        final_folder_name = self.doReplace(folder_name, replacements)
+                        final_folder_name = self.doReplace(folder_name, replacements, folder = True)
                         final_file_name = self.doReplace(file_name, replacements)
                         replacements['filename'] = final_file_name[:-(len(getExt(final_file_name)) + 1)]
 
@@ -342,13 +342,13 @@ class Renamer(Plugin):
                 remove_leftovers = True
 
                 # Add it to the wanted list before we continue
-                if len(library_ent.media) == 0:
+                if len(library_ent.movies) == 0:
                     profile = db.query(Profile).filter_by(core = True, label = group['meta_data']['quality']['label']).first()
                     fireEvent('movie.add', params = {'identifier': group['library']['identifier'], 'profile_id': profile.id}, search_after = False)
                     db.expire_all()
                     library_ent = db.query(Library).filter_by(identifier = group['library']['identifier']).first()
 
-                for movie in library_ent.media:
+                for movie in library_ent.movies:
 
                     # Mark movie "done" once it's found the quality with the finish check
                     try:
@@ -508,7 +508,7 @@ class Renamer(Plugin):
         for extra in set(filter(test, group['files'][extra_type])):
             replacements['ext'] = getExt(extra)
 
-            final_folder_name = self.doReplace(folder_name, replacements, remove_multiple = remove_multiple)
+            final_folder_name = self.doReplace(folder_name, replacements, remove_multiple = remove_multiple, folder = True)
             final_file_name = self.doReplace(file_name, replacements, remove_multiple = remove_multiple)
             rename_files[extra] = os.path.join(destination, final_folder_name, final_file_name)
 
@@ -603,7 +603,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
         return True
 
-    def doReplace(self, string, replacements, remove_multiple = False):
+    def doReplace(self, string, replacements, remove_multiple = False, folder = False):
         """
         replace confignames with the real thing
         """
@@ -623,7 +623,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
         replaced = re.sub(r"[\x00:\*\?\"<>\|]", '', replaced)
 
-        sep = self.conf('separator')
+        sep = self.conf('foldersep') if folder else self.conf('separator')
         return self.replaceDoubles(replaced.lstrip('. ')).replace(' ', ' ' if not sep else sep)
 
     def replaceDoubles(self, string):

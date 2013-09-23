@@ -38,8 +38,14 @@ def toUnicode(original, *args):
         return toUnicode(ascii_text)
 
 def ss(original, *args):
-    from couchpotato.environment import Env
-    return toUnicode(original, *args).encode(Env.get('encoding'))
+
+    u_original = toUnicode(original, *args)
+    try:
+        from couchpotato.environment import Env
+        return u_original.encode(Env.get('encoding'))
+    except Exception, e:
+        log.debug('Failed ss encoding char, force UTF8: %s', e)
+        return u_original.encode('UTF-8')
 
 def ek(original, *args):
     if isinstance(original, (str, unicode)):

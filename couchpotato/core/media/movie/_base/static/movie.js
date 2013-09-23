@@ -181,18 +181,18 @@ var Movie = new Class({
 		// Add releases
 		if(self.data.releases)
 			self.data.releases.each(function(release){
-	
+
 				var q = self.quality.getElement('.q_id'+ release.quality_id),
 					status = Status.get(release.status_id);
-	
+
 				if(!q && (status.identifier == 'snatched' || status.identifier == 'done'))
 					var q = self.addQuality(release.quality_id)
-	
+
 				if (status && q && !q.hasClass(status.identifier)){
 					q.addClass(status.identifier);
 					q.set('title', (q.get('title') ? q.get('title') : '') + ' status: '+ status.label)
 				}
-	
+
 			});
 
 		Object.each(self.options.actions, function(action, key){
@@ -256,7 +256,8 @@ var Movie = new Class({
 			self.el.removeEvents('outerClick')
 
 			setTimeout(function(){
-				self.el.getElements('> :not(.data):not(.poster):not(.movie_container)').hide();
+				if(self.el)
+					self.el.getElements('> :not(.data):not(.poster):not(.movie_container)').hide();
 			}, 600);
 
 			self.data_container.removeClass('hide_right');
@@ -266,9 +267,10 @@ var Movie = new Class({
 	changeView: function(new_view){
 		var self = this;
 
-		self.el
-			.removeClass(self.view+'_view')
-			.addClass(new_view+'_view')
+		if(self.el)
+			self.el
+				.removeClass(self.view+'_view')
+				.addClass(new_view+'_view')
 
 		self.view = new_view;
 	},

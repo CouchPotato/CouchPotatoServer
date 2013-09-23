@@ -24,9 +24,10 @@ Page.Wizard = new Class({
 			'title': 'What download apps are you using?',
 			'description': 'CP needs an external download app to work with. Choose one below. For more downloaders check settings after you have filled in the wizard. If your download app isn\'t in the list, use the default Blackhole.'
 		},
-		'providers': {
+		'searcher': {
+			'label': 'Providers',
 			'title': 'Are you registered at any of these sites?',
-			'description': 'CP uses these sites to search for movies. A few free are enabled by default, but it\'s always better to have a few more. Check settings for the full list of available providers.'
+			'description': 'CP uses these sites to search for movies. A few free are enabled by default, but it\'s always better to have more.'
 		},
 		'renamer': {
 			'title': 'Move & rename the movies after downloading?',
@@ -38,7 +39,7 @@ Page.Wizard = new Class({
 				'<br />Once installed, just click the bookmarklet on a movie page and watch the magic happen ;)',
 			'content': function(){
 				return App.createUserscriptButtons().setStyles({
-					'background-image': "url('"+Api.createUrl('static/userscript/userscript.png')+"')"
+					'background-image': "url('"+App.createUrl('static/plugin/userscript/userscript.png')+"')"
 				})
 			}
 		},
@@ -76,7 +77,7 @@ Page.Wizard = new Class({
 			)
 		}
 	},
-	groups: ['welcome', 'general', 'downloaders', 'searcher', 'providers', 'renamer', 'automation', 'finish'],
+	groups: ['welcome', 'general', 'downloaders', 'searcher', 'renamer', 'automation', 'finish'],
 
 	open: function(action, params){
 		var self = this;
@@ -195,8 +196,7 @@ Page.Wizard = new Class({
 		self.el.getElement('.advanced_toggle').destroy();
 
 		// Hide retention
-		self.el.getElement('.tab_searcher').hide();
-		self.el.getElement('.t_searcher').hide();
+		self.el.getElement('.section_nzb').hide();
 
 		// Add pointer
 		new Element('.tab_wrapper').wraps(tabs);
