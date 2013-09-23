@@ -224,7 +224,7 @@ class Release(Plugin):
         releases_raw = db.query(Relea) \
             .options(joinedload_all('info')) \
             .options(joinedload_all('files')) \
-            .filter(Relea.movie_id == id) \
+            .filter(Relea.media_id == id) \
             .all()
 
         releases = [r.to_dict({'info':{}, 'files':{}}) for r in releases_raw]

@@ -173,7 +173,7 @@ class Renamer(Plugin):
 
                 # Overwrite destination when set in category
                 destination = self.conf('to')
-                for movie in library_ent.movies:
+                for movie in library_ent.media:
                     if movie.category and movie.category.destination and len(movie.category.destination) > 0 and movie.category.destination != 'None':
                         destination = movie.category.destination
                         log.debug('Setting category destination for "%s": %s' % (movie_title, destination))
@@ -342,13 +342,13 @@ class Renamer(Plugin):
                 remove_leftovers = True
 
                 # Add it to the wanted list before we continue
-                if len(library_ent.movies) == 0:
+                if len(library_ent.media) == 0:
                     profile = db.query(Profile).filter_by(core = True, label = group['meta_data']['quality']['label']).first()
                     fireEvent('movie.add', params = {'identifier': group['library']['identifier'], 'profile_id': profile.id}, search_after = False)
                     db.expire_all()
                     library_ent = db.query(Library).filter_by(identifier = group['library']['identifier']).first()
 
-                for movie in library_ent.movies:
+                for movie in library_ent.media:
 
                     # Mark movie "done" once it's found the quality with the finish check
                     try:
@@ -678,7 +678,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                     for rel in rels:
                         rel_dict = rel.to_dict({'info': {}})
 
-                        movie_dict = fireEvent('movie.get', rel.movie_id, single = True)
+                        movie_dict = fireEvent('movie.get', rel.media_id, single = True)
 
                         # check status
                         nzbname = self.createNzbName(rel_dict['info'], movie_dict)
@@ -734,7 +734,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                                     db.commit()
 
                                     if self.conf('next_on_failed'):
-                                        fireEvent('movie.searcher.try_next_release', movie_id = rel.movie_id)
+                                        fireEvent('movie.searcher.try_next_release', media_id = rel.media_id)
                                 elif item['status'] == 'completed':
                                     log.info('Download of %s completed!', item['name'])
                                     if self.statusInfoComplete(item):
