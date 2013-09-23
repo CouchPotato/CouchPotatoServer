@@ -102,6 +102,6 @@ class Suggestion(Plugin):
             if suggestions:
                 new_suggestions.extend(suggestions)
 
-        self.setCache('suggestion_cached', new_suggestions, timeout = 6048000)
+        self.setCache('suggestion_cached', new_suggestions, timeout = 3024000)
 
         return new_suggestions

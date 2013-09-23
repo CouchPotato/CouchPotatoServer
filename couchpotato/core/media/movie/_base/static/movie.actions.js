@@ -18,11 +18,13 @@ var MovieAction = new Class({
 	create: function(){},
 
 	disable: function(){
-		this.el.addClass('disable')
+		if(this.el)
+			this.el.addClass('disable')
 	},
 
 	enable: function(){
-		this.el.removeClass('disable')
+		if(this.el)
+			this.el.removeClass('disable')
 	},
 
 	getTitle: function(){
@@ -252,10 +254,10 @@ MA.Release = new Class({
 			});
 
 			if(self.last_release)
-				self.release_container.getElement('#release_'+self.last_release.id).addClass('last_release');
+				self.release_container.getElements('#release_'+self.last_release.id).addClass('last_release');
 
 			if(self.next_release)
-				self.release_container.getElement('#release_'+self.next_release.id).addClass('next_release');
+				self.release_container.getElements('#release_'+self.next_release.id).addClass('next_release');
 
 			if(self.next_release || (self.last_release && ['ignored', 'failed'].indexOf(self.last_release.status.identifier) === false)){
 
@@ -365,21 +367,25 @@ MA.Release = new Class({
 		var release_el = self.release_container.getElement('#release_'+release.id),
 			icon = release_el.getElement('.download.icon2');
 
-		icon.addClass('icon spinner').removeClass('download');
+		if(icon)
+			icon.addClass('icon spinner').removeClass('download');
 
 		Api.request('release.download', {
 			'data': {
 				'id': release.id
 			},
 			'onComplete': function(json){
-				icon.removeClass('icon spinner');
+				if(icon)
+					icon.removeClass('icon spinner');
 
 				if(json.success){
-					icon.addClass('completed');
+					if(icon)
+						icon.addClass('completed');
 					release_el.getElement('.release_status').set('text', 'snatched');
 				}
 				else
-					icon.addClass('attention').set('title', 'Something went wrong when downloading, please check logs.');
+					if(icon)
+						icon.addClass('attention').set('title', 'Something went wrong when downloading, please check logs.');
 			}
 		});
 	},
@@ -393,11 +399,11 @@ MA.Release = new Class({
 			},
 			'onComplete': function(){
 				var el = release.el;
-				if(el.hasClass('failed') || el.hasClass('ignored')){
+				if(el && (el.hasClass('failed') || el.hasClass('ignored'))){
 					el.removeClass('failed').removeClass('ignored');
 					el.getElement('.release_status').set('text', 'available');
 				}
-				else {
+				else if(el) {
 					el.addClass('ignored');
 					el.getElement('.release_status').set('text', 'ignored');
 				}
