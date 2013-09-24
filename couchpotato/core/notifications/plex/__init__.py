@@ -17,14 +17,15 @@ config = [{
                     'type': 'enabler',
                 },
                 {
-                    'name': 'media_server',
+                    'name': 'host',
+                    'label': 'Media Server',
                     'default': 'localhost',
-                    'description': 'Media server hostname'
+                    'description': 'Hostname/IP, default localhost'
                 },
                 {
                     'name': 'clients',
                     'default': '',
-                    'description': 'Comma separated list of client names\'s (computer names).'
+                    'description': 'Comma separated list of client names\'s (computer names). Top right when you start Plex'
                 },
                 {
                     'name': 'on_snatch',

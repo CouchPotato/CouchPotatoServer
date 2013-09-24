@@ -1,14 +1,14 @@
-from datetime import datetime
-import json
 from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.variable import cleanHost
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
-from urllib2 import URLError
+from datetime import datetime
+from urlparse import urlparse
 from xml.dom import minidom
-import traceback
+import json
 import requests
+import traceback
 
 try:
     import xml.etree.cElementTree as etree
@@ -19,15 +19,19 @@ log = CPLog(__name__)
 
 
 class Plex(Notification):
+
     client_update_time = 5 * 60
+    http_time_between_calls = 0
 
     def __init__(self):
         super(Plex, self).__init__()
+
         self.clients = {}
         self.clients_updated = None
+
         addEvent('renamer.after', self.addToLibrary)
 
-    def updateClients(self, force=False):
+    def updateClients(self, force = False):
         if not self.conf('media_server'):
             log.warning("Plex media server hostname is required")
             return
@@ -38,13 +42,14 @@ class Plex(Notification):
         if force or self.clients_updated is None or since_update > self.client_update_time:
             self.clients = {}
 
-            client_result = etree.fromstring(self.urlopen('http://%s:32400/clients' % self.conf('media_server')))
+            data = self.urlopen('%s/clients' % self.createHost(self.conf('media_server'), port = 32400))
+            client_result = etree.fromstring(data)
 
-            hosts = [x.strip().lower() for x in self.conf('clients').split(',')]
+            clients = [x.strip().lower() for x in self.conf('clients').split(',')]
 
             for server in client_result.findall('Server'):
-                if server.get('name').lower() in hosts:
-                    hosts.remove(server.get('name').lower())
+                if server.get('name').lower() in clients:
+                    clients.remove(server.get('name').lower())
                     protocol = server.get('protocol', 'xbmchttp')
 
                     if protocol in ['xbmcjson', 'xbmchttp']:
@@ -55,21 +60,21 @@ class Plex(Notification):
                             'protocol': protocol
                         }
 
-            if len(hosts) > 0:
-                log.warning('unable to find some plex hosts: %s', ', '.join(hosts))
+            if len(clients) > 0:
+                log.info2('Unable to find plex clients: %s', ', '.join(clients))
 
-            log.info('found hosts: %s', ', '.join(self.clients.keys()))
+            log.info2('Found hosts: %s', ', '.join(self.clients.keys()))
 
             self.clients_updated = datetime.now()
 
 
-    def addToLibrary(self, message=None, group={}):
+    def addToLibrary(self, message = None, group = {}):
         if self.isDisabled(): return
 
         log.info('Sending notification to Plex')
 
         source_type = ['movie']
-        base_url = 'http://%s:32400/library/sections' % self.conf('media_server')
+        base_url = '%s/library/sections' % self.createHost(self.conf('media_server'), port = 32400)
         refresh_url = '%s/%%s/refresh' % base_url
 
         try:
@@ -89,7 +94,7 @@ class Plex(Notification):
 
         return True
 
-    def send_http(self, command, client):
+    def sendHTTP(self, command, client):
         url = 'http://%s:%s/xbmcCmds/xbmcHttp/?%s' % (
             client['address'],
             client['port'],
@@ -99,14 +104,14 @@ class Plex(Notification):
         headers = {}
 
         try:
-            self.urlopen(url, headers=headers, timeout=3, show_error=False)
+            self.urlopen(url, headers = headers, timeout = 3, show_error = False)
         except Exception, err:
             log.error("Couldn't sent command to Plex: %s", err)
             return False
 
         return True
 
-    def notify_http(self, message='', data={}, listener=None):
+    def notifyHTTP(self, message = '', data = {}, listener = None):
         total = 0
         successful = 0
 
@@ -118,13 +123,13 @@ class Plex(Notification):
         for name, client in self.clients.items():
             if client['protocol'] == 'xbmchttp':
                 total += 1
-                if self.send_http(data, client):
+                if self.sendHTTP(data, client):
                     successful += 1
 
         return successful == total
 
-    def send_json(self, method, params, client):
-        log.debug('send_json("%s", %s, %s)', (method, params, client))
+    def sendJSON(self, method, params, client):
+        log.debug('sendJSON("%s", %s, %s)', (method, params, client))
         url = 'http://%s:%s/jsonrpc' % (
             client['address'],
             client['port']
@@ -142,14 +147,14 @@ class Plex(Notification):
         }
 
         try:
-            requests.post(url, headers=headers, timeout=3, data=json.dumps(request))
+            requests.post(url, headers = headers, timeout = 3, data = json.dumps(request))
         except Exception, err:
             log.error("Couldn't sent command to Plex: %s", err)
             return False
 
         return True
 
-    def notify_json(self, message='', data={}, listener=None):
+    def notifyJSON(self, message = '', data = {}, listener = None):
         total = 0
         successful = 0
 
@@ -161,16 +166,16 @@ class Plex(Notification):
         for name, client in self.clients.items():
             if client['protocol'] == 'xbmcjson':
                 total += 1
-                if self.send_json('GUI.ShowNotification', params, client):
+                if self.sendJSON('GUI.ShowNotification', params, client):
                     successful += 1
 
         return successful == total
 
-    def notify(self, message='', data={}, listener=None, force=False):
+    def notify(self, message = '', data = {}, listener = None, force = False):
         self.updateClients(force)
 
-        http_result = self.notify_http(message, data, listener)
-        json_result = self.notify_json(message, data, listener)
+        http_result = self.notifyHTTP(message, data, listener)
+        json_result = self.notifyJSON(message, data, listener)
 
         return http_result and json_result
 
@@ -181,13 +186,23 @@ class Plex(Notification):
         log.info('Sending test to %s', test_type)
 
         success = self.notify(
-            message=self.test_message,
-            data={},
-            listener='test',
-            force=True
+            message = self.test_message,
+            data = {},
+            listener = 'test',
+            force = True
         )
         success2 = self.addToLibrary()
 
         return {
             'success': success or success2
         }
+
+    def createHost(self, host, port = None):
+
+        h = cleanHost(host)
+        p = urlparse(h)
+        h = h.rstrip('/')
+        if port and not p.port:
+            h += ':%s' % port
+
+        return h
