@@ -18,9 +18,14 @@ config = [{
                 },
                 {
                     'name': 'host',
+                    'label': 'Media Server',
                     'default': 'localhost',
-                    'description': 'Default should be on localhost',
-                    'advanced': True,
+                    'description': 'Hostname/IP, default localhost'
+                },
+                {
+                    'name': 'clients',
+                    'default': '',
+                    'description': 'Comma separated list of client names\'s (computer names). Top right when you start Plex'
                 },
                 {
                     'name': 'on_snatch',
