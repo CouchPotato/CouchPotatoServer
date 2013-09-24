@@ -17,7 +17,7 @@ config = [{
                     'type': 'enabler',
                 },
                 {
-                    'name': 'host',
+                    'name': 'media_server',
                     'label': 'Media Server',
                     'default': 'localhost',
                     'description': 'Hostname/IP, default localhost'
