@@ -1,15 +1,15 @@
-from .main import NextGenDev
+from .main import NextGen
 
 def start():
-    return NextGenDev()
+    return NextGen()
 
 config = [{
-    'name': 'nextgendev',
+    'name': 'nextgen',
     'groups': [
         {
             'tab': 'searcher',
             'list': 'torrent_providers',
-            'name': 'NextGenDev',
+            'name': 'NextGen',
             'description': 'See <a href="https://www.nxtgn.org">NextGen</a>',
             'wizard': True,
             'options': [
@@ -26,7 +26,7 @@ config = [{
                     'name': 'password',
                     'default': '',
                     'type': 'password',
-                },
+                },                       
                 {
                     'name': 'seed_ratio',
                     'label': 'Seed ratio',

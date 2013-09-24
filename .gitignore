@@ -1,5 +1,6 @@
 *.pyc
 /data/
 /_source/
+/nzbToMedia/
 .project
 .pydevproject
