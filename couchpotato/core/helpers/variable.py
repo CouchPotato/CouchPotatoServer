@@ -123,9 +123,12 @@ def cleanHost(host):
 
     return host
 
-def getImdb(txt, check_inside = True, multiple = False):
+def getImdb(txt, check_inside = False, multiple = False):
 
-    txt = ss(txt)
+    if not check_inside:
+        txt = simplifyString(txt)
+    else:
+        txt = ss(txt)
 
     if check_inside and os.path.isfile(txt):
         output = open(txt, 'r')

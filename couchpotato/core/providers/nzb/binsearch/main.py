@@ -56,6 +56,10 @@ class BinSearch(NZBProvider):
                     info = row.find('span', attrs = {'class':'d'})
                     size_match = re.search('size:.(?P<size>[0-9\.]+.[GMB]+)', info.text)
 
+                    age = 0
+                    try: age = re.search('(?P<size>\d+d)', row.find_all('td')[-1:][0].text).group('size')[:-1]
+                    except: pass
+
                     def extra_check(item):
                         parts = re.search('available:.(?P<parts>\d+)./.(?P<total>\d+)', info.text)
                         total = tryInt(parts.group('total'))
@@ -74,7 +78,7 @@ class BinSearch(NZBProvider):
                     results.append({
                         'id': nzb_id,
                         'name': title.text,
-                        'age': tryInt(re.search('(?P<size>\d+d)', row.find_all('td')[-1:][0].text).group('size')[:-1]),
+                        'age': tryInt(age),
                         'size': self.parseSize(size_match.group('size')),
                         'url': self.urls['download'] % nzb_id,
                         'detail_url': self.urls['detail'] % info.find('a')['href'],
