@@ -49,6 +49,7 @@ class NextGen(TorrentProvider):
                 torrentId = ((((result.find('td', attrs = {'class' :'torrent-border'})).find('a'))['href']).replace('details.php?id=','')).replace('&hit=1','')
                 torrentName = ((result.find('td', attrs = {'class' :'torrent-border'})).find('a'))['title']
 
+                    
                 results.append({
                     'id': torrentId,
                     'name': torrentName,
@@ -56,7 +57,6 @@ class NextGen(TorrentProvider):
                     'detail_url': (self.urls['detail'] % torrentId).encode('utf8'),
                     'size':self.parseSize(result.contents[15].text),
                     'seeders': tryInt(result.contents[17].text),
-                    'extra_score': extra_score,
             })
 
         except:
