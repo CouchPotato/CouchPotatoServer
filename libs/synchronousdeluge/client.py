@@ -34,7 +34,8 @@ class DelugeClient(object):
                 appDataReg = _winreg.QueryValueEx(hkey, "AppData")
                 appDataPath = appDataReg[0]
                 _winreg.CloseKey(hkey)
-                auth_file = os.path.join(appDataPath, "deluge", "auth")
+
+            auth_file = os.path.join(appDataPath, "deluge", "auth")
         else:
             from xdg.BaseDirectory import save_config_path
             try:
