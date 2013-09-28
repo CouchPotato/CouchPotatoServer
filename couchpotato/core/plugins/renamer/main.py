@@ -115,12 +115,19 @@ class Renamer(Plugin):
             movie_folder = movie_folder.rstrip(os.path.sep)
             folder = os.path.dirname(movie_folder)
 
-            # Get all files from the specified folder
-            try:
-                for root, folders, names in os.walk(movie_folder):
-                    files.extend([os.path.join(root, name) for name in names])
-            except:
-                log.error('Failed getting files from %s: %s', (movie_folder, traceback.format_exc()))
+            if download_info['files']:
+                files = download_info['files'].split('|')
+
+                # If there is only one file in the torrent, the downloader did not create a subfolder
+                if len(files) == 1:
+                    folder = movie_folder
+            else:
+                # Get all files from the specified folder
+                try:
+                    for root, folders, names in os.walk(movie_folder):
+                        files.extend([os.path.join(root, name) for name in names])
+                except:
+                    log.error('Failed getting files from %s: %s', (movie_folder, traceback.format_exc()))
 
         db = get_session()
 

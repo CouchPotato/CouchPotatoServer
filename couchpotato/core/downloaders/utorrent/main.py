@@ -102,39 +102,6 @@ class uTorrent(Downloader):
         if self.conf('paused', default = 0):
             self.utorrent_api.pause_torrent(torrent_hash)
 
-        count = 0
-        while True:
-
-            count += 1
-            # Check if torrent is saved in subfolder of torrent name
-            getfiles_data = self.utorrent_api.get_files(torrent_hash)
-
-            torrent_files = json.loads(getfiles_data)
-            if torrent_files.get('error'):
-                log.error('Error getting data from uTorrent: %s', torrent_files.get('error'))
-                return False
-
-            if (torrent_files.get('files') and len(torrent_files['files'][1]) > 0) or count > 60:
-                break
-
-            time.sleep(1)
-
-        # Torrent has only one file, so uTorrent wont create a folder for it
-        if len(torrent_files['files'][1]) == 1:
-            # Remove torrent and try again
-            self.utorrent_api.remove_torrent(torrent_hash, remove_data = True)
-
-            # Send request to uTorrent
-            if data.get('protocol') == 'torrent_magnet':
-                self.utorrent_api.add_torrent_uri(torrent_filename, data.get('url'), add_folder = True)
-            else:
-                self.utorrent_api.add_torrent_file(torrent_filename, filedata, add_folder = True)
-
-            # Change settings of added torrent
-            self.utorrent_api.set_torrent(torrent_hash, torrent_params)
-            if self.conf('paused', default = 0):
-                self.utorrent_api.pause_torrent(torrent_hash)
-
         return self.downloadReturnId(torrent_hash)
 
     def getAllDownloadStatus(self):
@@ -172,6 +139,14 @@ class uTorrent(Downloader):
                 status = 'seeding'
                 self.removeReadOnly(item[26])
 
+            #Get files of the torrent
+            torrent_files = ''
+            try:
+                torrent_files = json.loads(self.utorrent_api.get_files(item[0]))
+                torrent_files = [os.path.join(item[26], torrent_file[0]) for torrent_file in torrent_files['files'][1]]
+            except:
+                log.debug('Failed getting files from torrent: %s', item[2])
+
             statuses.append({
                 'id': item[0],
                 'name': item[2],
@@ -180,6 +155,7 @@ class uTorrent(Downloader):
                 'original_status': item[1],
                 'timeleft': str(timedelta(seconds = item[10])),
                 'folder': ss(item[26]),
+                'files': ss('|'.join(torrent_files))
             })
 
         return statuses

@@ -190,6 +190,7 @@ class StatusList(list):
             'status': 'busy',
             'downloader': self.provider.getName(),
             'folder': '',
+            'files': '',
         }
 
         return mergeDicts(defaults, result)
