@@ -29,11 +29,11 @@ class Bluray(Automation, RSS):
 
                 try:
                     # Stop if the release year is before the minimal year
-                    page_year = soup.body.find_all('center')[3].table.tr.find_all('td', recursive=False)[3].h3.get_text().split(', ')[1]
+                    page_year = soup.body.find_all('center')[3].table.tr.find_all('td', recursive = False)[3].h3.get_text().split(', ')[1]
                     if tryInt(page_year) < self.getMinimal('year'):
                         break
 
-                    for table in soup.body.find_all('center')[3].table.tr.find_all('td', recursive=False)[3].find_all('table')[1:20]:
+                    for table in soup.body.find_all('center')[3].table.tr.find_all('td', recursive = False)[3].find_all('table')[1:20]:
                         name = table.h3.get_text().lower().split('blu-ray')[0].strip()
                         year = table.small.get_text().split('|')[1].strip()
 
