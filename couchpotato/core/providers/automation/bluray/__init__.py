@@ -21,7 +21,7 @@ config = [{
                 {
                     'name': 'backlog',
                     'advanced': True,
-                    'description': 'Parses the history tables until the minimum movie year is reached. Note: only do this once!',
+                    'description': 'Parses the history until the minimum movie year is reached. (Will be disabled once it has completed)',
                     'default': False,
                     'type': 'bool',
                 },
