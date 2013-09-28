@@ -31,14 +31,9 @@ class TorrentShack(TorrentProvider):
 
     def _searchOnTitle(self, title, movie, quality, results):
 
-        # scene only unset by default
-        scene_only = ""
-        if self.conf('scene_only'):
-            scene_only = "1"
+        scene_only = '1' if self.conf('scene_only') else ''
 
-        url = self.urls['search'] % (tryUrlencode('"%s" %s' % (title.replace(':', ''), movie['library']['year'])),
-                                     scene_only,
-                                     self.getCatId(quality['identifier'])[0])
+        url = self.urls['search'] % (tryUrlencode('%s %s' % (title.replace(':', ''), movie['library']['year'])), scene_only, self.getCatId(quality['identifier'])[0])
         data = self.getHTMLData(url, opener = self.login_opener)
 
         if data:
