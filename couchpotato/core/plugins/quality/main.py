@@ -1,7 +1,7 @@
 from couchpotato import get_session
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent
-from couchpotato.core.helpers.encoding import toUnicode
+from couchpotato.core.helpers.encoding import toUnicode, ss
 from couchpotato.core.helpers.variable import mergeDicts, md5, getExt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
@@ -192,6 +192,7 @@ class QualityPlugin(Plugin):
         return None
 
     def containsTag(self, quality, words, cur_file = ''):
+        cur_file = ss(cur_file)
 
         # Check alt and tags
         for tag_type in ['alternative', 'tags', 'label']:
@@ -199,7 +200,7 @@ class QualityPlugin(Plugin):
             qualities = [qualities] if isinstance(qualities, (str, unicode)) else qualities
 
             for alt in qualities:
-                if (isinstance(alt, tuple) and '.'.join(alt) in '.'.join(words)) or (isinstance(alt, (str, unicode)) and alt.lower() in cur_file.lower()):
+                if (isinstance(alt, tuple) and '.'.join(alt) in '.'.join(words)) or (isinstance(alt, (str, unicode)) and ss(alt.lower()) in cur_file.lower()):
                     log.debug('Found %s via %s %s in %s', (quality['identifier'], tag_type, quality.get(tag_type), cur_file))
                     return True
 
