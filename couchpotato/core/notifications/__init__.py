@@ -1,4 +1,4 @@
-config = {
+config = [{
     'name': 'notification_providers',
     'groups': [
         {
@@ -10,4 +10,4 @@ config = {
             'options': [],
         },
     ],
-}
+}]

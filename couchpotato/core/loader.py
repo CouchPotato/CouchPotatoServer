@@ -1,6 +1,5 @@
 from couchpotato.core.event import fireEvent
 from couchpotato.core.logger import CPLog
-import glob
 import os
 import traceback
 
@@ -81,17 +80,10 @@ class Loader(object):
     def addFromDir(self, plugin_type, priority, module, dir_name):
 
         # Load dir module
-        try:
-            m = __import__(module)
-            splitted = module.split('.')
-            for sub in splitted[1:]:
-                m = getattr(m, sub)
-        except:
-            raise
+        self.addModule(priority, plugin_type, module, os.path.basename(dir_name))
 
-        for cur_file in glob.glob(os.path.join(dir_name, '*')):
-            name = os.path.basename(cur_file)
-            if os.path.isdir(os.path.join(dir_name, name)) and name != 'static' and os.path.isfile(os.path.join(cur_file, '__init__.py')):
+        for name in os.listdir(dir_name):
+            if os.path.isdir(os.path.join(dir_name, name)) and name != 'static' and os.path.isfile(os.path.join(dir_name, name, '__init__.py')):
                 module_name = '%s.%s' % (module, name)
                 self.addModule(priority, plugin_type, module_name, name)
 
