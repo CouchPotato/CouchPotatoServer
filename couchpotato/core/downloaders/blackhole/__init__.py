@@ -36,6 +36,13 @@ config = [{
                     'values': [('usenet & torrents', 'both'), ('usenet', 'nzb'), ('torrent', 'torrent')],
                 },
                 {
+                    'name': 'create_subdir',
+                    'default': 0,
+                    'type': 'bool',
+                    'advanced': True,
+                    'description': 'Create a sub directory when adding torrent to blackhole.',
+                },
+                {
                     'name': 'manual',
                     'default': 0,
                     'type': 'bool',
