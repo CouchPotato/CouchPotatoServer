@@ -1,4 +1,5 @@
 import os
+import platform
 
 from collections import defaultdict
 from itertools import imap
@@ -23,22 +24,48 @@ class DelugeClient(object):
         self._request_counter = 0
 
     def _get_local_auth(self):
-        xdg_config = os.path.expanduser(os.environ.get("XDG_CONFIG_HOME", "~/.config"))
-        config_home = os.path.join(xdg_config, "deluge")
-        auth_file = os.path.join(config_home, "auth")
-
+        auth_file = ""
         username = password = ""
-        with open(auth_file) as fd:
-            for line in fd:
+        if platform.system() in ('Windows', 'Microsoft'):
+            appDataPath = os.environ.get("APPDATA")
+            if not appDataPath:
+                import _winreg
+                hkey = _winreg.OpenKey(_winreg.HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders")
+                appDataReg = _winreg.QueryValueEx(hkey, "AppData")
+                appDataPath = appDataReg[0]
+                _winreg.CloseKey(hkey)
+
+            auth_file = os.path.join(appDataPath, "deluge", "auth")
+        else:
+            from xdg.BaseDirectory import save_config_path
+            try:
+                auth_file = os.path.join(save_config_path("deluge"), "auth")
+            except OSError, e:
+                return username, password
+
+
+        if os.path.exists(auth_file):
+            for line in open(auth_file):
                 if line.startswith("#"):
+                    # This is a comment line
+                    continue
+                line = line.strip()
+                try:
+                    lsplit = line.split(":")
+                except Exception, e:
                     continue
 
-                auth = line.split(":")
-                if len(auth) >= 2 and auth[0] == "localclient":
-                    username, password = auth[0], auth[1]
-                    break
+                if len(lsplit) == 2:
+                    username, password = lsplit
+                elif len(lsplit) == 3:
+                    username, password, level = lsplit
+                else:
+                    continue
 
-        return username, password
+                if username == "localclient":
+                    return (username, password)
+
+        return ("", "")
 
     def _create_module_method(self, module, method):
         fullname = "{0}.{1}".format(module, method)

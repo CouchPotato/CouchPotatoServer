@@ -1,4 +1,4 @@
-config = {
+config = [{
     'name': 'automation_providers',
     'groups': [
         {
@@ -18,4 +18,4 @@ config = {
             'options': [],
         },
     ],
-}
+}]

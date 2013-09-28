@@ -1,7 +1,8 @@
 from couchpotato import get_session
 from couchpotato.core.event import fireEvent, addEvent
 from couchpotato.core.helpers.encoding import toUnicode, simplifyString, ss
-from couchpotato.core.helpers.variable import getExt, getImdb, tryInt
+from couchpotato.core.helpers.variable import getExt, getImdb, tryInt, \
+    splitString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import File, Movie
@@ -741,8 +742,13 @@ class Scanner(Plugin):
 
     def createStringIdentifier(self, file_path, folder = '', exclude_filename = False):
 
-        identifier = file_path.replace(folder, '') # root folder
+        year = self.findYear(file_path)
+
+        identifier = file_path.replace(folder, '').lstrip(os.path.sep) # root folder
         identifier = os.path.splitext(identifier)[0] # ext
+
+        path_split = splitString(identifier, os.path.sep)
+        identifier = path_split[-2] if len(path_split) > 1 and len(path_split[-2]) > len(path_split[-1]) else path_split[-1] # Only get filename
 
         if exclude_filename:
             identifier = identifier[:len(identifier) - len(os.path.split(identifier)[-1])]
@@ -757,7 +763,6 @@ class Scanner(Plugin):
         identifier = re.sub(self.clean, '::', simplifyString(identifier)).strip(':')
 
         # Year
-        year = self.findYear(identifier)
         if year and identifier[:4] != year:
             identifier = '%s %s' % (identifier.split(year)[0].strip(), year)
         else:
