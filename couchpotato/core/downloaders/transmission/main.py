@@ -136,11 +136,11 @@ class Transmission(Downloader):
 
     def removeFailed(self, item):
         log.info('%s failed downloading, deleting...', item['name'])
-        return self.trpc.remove_torrent(item['hashString'], True)
+        return self.trpc.remove_torrent(item['id'], True)
 
     def processComplete(self, item, delete_files = False):
         log.debug('Requesting Transmission to remove the torrent %s%s.', (item['name'], ' and cleanup the downloaded files' if delete_files else ''))
-        return self.trpc.remove_torrent(item['hashString'], delete_files)
+        return self.trpc.remove_torrent(item['id'], delete_files)
 
 class TransmissionRPC(object):
 
