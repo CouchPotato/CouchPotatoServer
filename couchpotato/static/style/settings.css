@@ -542,7 +542,7 @@
 			line-height: 140%;
 			cursor: help;
 		}
-		.page .combined_table .head abbr.use, .page .combined_table .head abbr.automation_urls_use {
+		.page .combined_table .head abbr:first-child {
 			display: none;
 		}
 		.page .combined_table .head abbr.host {
