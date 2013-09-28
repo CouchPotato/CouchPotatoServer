@@ -40,7 +40,7 @@ config = [{
                     'default': 0,
                     'type': 'bool',
                     'advanced': True,
-                    'description': 'Create a sub directory when adding torrent to blackhole.',
+                    'description': 'Create a sub directory when saving the .nzb (or .torrent).',
                 },
                 {
                     'name': 'manual',
