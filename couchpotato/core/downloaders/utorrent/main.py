@@ -107,9 +107,9 @@ class uTorrent(Downloader):
 
             count += 1
             # Check if torrent is saved in subfolder of torrent name
-            data = self.utorrent_api.get_files(torrent_hash)
+            getfiles_data = self.utorrent_api.get_files(torrent_hash)
 
-            torrent_files = json.loads(data)
+            torrent_files = json.loads(getfiles_data)
             if torrent_files.get('error'):
                 log.error('Error getting data from uTorrent: %s', torrent_files.get('error'))
                 return False
@@ -200,7 +200,7 @@ class uTorrent(Downloader):
         if not self.connect():
             return False
         return self.utorrent_api.remove_torrent(item['id'], remove_data = delete_files)
-    
+
     def removeReadOnly(self, folder):
         #Removes all read-only flags in a folder
         if folder and os.path.isdir(folder):
