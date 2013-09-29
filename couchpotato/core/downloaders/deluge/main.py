@@ -120,6 +120,10 @@ class Deluge(Downloader):
             if item['move_on_completed']:
                 download_dir = item['move_completed_path']
 
+            torrent_files = []
+            for file_item in item['files']:
+              torrent_files.append(os.path.join(download_dir, file_item['path']))
+
             statuses.append({
                 'id': item['hash'],
                 'name': item['name'],
@@ -128,6 +132,7 @@ class Deluge(Downloader):
                 'seed_ratio': item['ratio'],
                 'timeleft': str(timedelta(seconds = item['eta'])),
                 'folder': ss(os.path.join(download_dir, item['name'])),
+                'files': ss('|'.join(torrent_files)),
             })
 
         return statuses
