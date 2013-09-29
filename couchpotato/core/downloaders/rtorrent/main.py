@@ -116,6 +116,10 @@ class rTorrent(Downloader):
             # Send torrent to rTorrent
             torrent = self.rt.load_torrent(filedata)
 
+            if not torrent:
+                log.error('Unable to find the torrent, did it fail to load?')
+                return False
+
             # Set label
             if self.conf('label'):
                 torrent.set_custom(1, self.conf('label'))
