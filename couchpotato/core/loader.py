@@ -32,8 +32,9 @@ class Loader(object):
         # Add custom plugin folder
         from couchpotato.environment import Env
         custom_plugin_dir = os.path.join(Env.get('data_dir'), 'custom_plugins')
-        sys.path.insert(0, custom_plugin_dir)
-        self.paths['custom_plugins'] = (30, '', custom_plugin_dir)
+        if os.path.isdir(custom_plugin_dir):
+            sys.path.insert(0, custom_plugin_dir)
+            self.paths['custom_plugins'] = (30, '', custom_plugin_dir)
 
         # Loop over all paths and add to module list
         for plugin_type, plugin_tuple in self.paths.iteritems():
