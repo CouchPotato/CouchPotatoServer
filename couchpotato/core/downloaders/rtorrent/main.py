@@ -7,7 +7,7 @@ from datetime import timedelta
 from hashlib import sha1
 from rtorrent import RTorrent
 from rtorrent.err import MethodError
-import shutil
+import shutil, os
 
 log = CPLog(__name__)
 

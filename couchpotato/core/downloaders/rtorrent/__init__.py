@@ -54,7 +54,7 @@ config = [{
                     'default': False,
                     'advanced': True,
                     'type': 'bool',
-                    'description': 'Append label to download location.',
+                    'description': 'Append label to download location. Requires you to set the download location above.',
                 },
                 {
                     'name': 'delete_files',
