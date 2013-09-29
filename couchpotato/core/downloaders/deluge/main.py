@@ -131,7 +131,7 @@ class Deluge(Downloader):
                 'original_status': item['state'],
                 'seed_ratio': item['ratio'],
                 'timeleft': str(timedelta(seconds = item['eta'])),
-                'folder': ss(os.path.join(download_dir, item['name'])),
+                'folder': ss(download_dir) if len(torrent_files) == 1 else ss(os.path.join(download_dir, item['name'])),
                 'files': ss('|'.join(torrent_files)),
             })
 
