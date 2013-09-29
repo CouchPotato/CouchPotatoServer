@@ -222,9 +222,10 @@ class Manage(Plugin):
 
         groups = fireEvent('scanner.scan', folder = folder, files = files, single = True)
 
-        for group in groups.itervalues():
-            if group['library'] and group['library'].get('identifier'):
-                fireEvent('release.add', group = group)
+        if groups:
+            for group in groups.itervalues():
+                if group['library'] and group['library'].get('identifier'):
+                    fireEvent('release.add', group = group)
 
     def getDiskSpace(self):
 
