@@ -1,5 +1,4 @@
 from .main import rTorrent
-from couchpotato.core.helpers.variable import getDownloadDir
 
 def start():
     return rTorrent()
@@ -40,7 +39,6 @@ config = [{
                     'name': 'directory',
                     'type': 'directory',
                     'description': 'Directory where rtorrent should download the files too.',
-                    'default': getDownloadDir()
                 },
                 {
                     'name': 'remove_complete',
