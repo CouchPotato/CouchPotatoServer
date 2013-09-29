@@ -122,9 +122,9 @@ class rTorrent(Downloader):
                 torrent.set_custom(1, self.conf('label'))
 
             if self.conf('directory') and self.conf('append_label'):
-                torrent.set_directory_base(os.path.join(self.conf('directory'), self.conf('label')))
+                torrent.set_directory(os.path.join(self.conf('directory'), self.conf('label')))
             elif self.conf('directory') and not self.conf('append_label'):
-                torrent.set_directory_base(self.conf('directory'))
+                torrent.set_directory(self.conf('directory'))
 
             # Set Ratio Group
             torrent.set_visible(group_name)
