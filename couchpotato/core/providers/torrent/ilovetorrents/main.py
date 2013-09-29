@@ -124,12 +124,22 @@ class ILoveTorrents(TorrentMagnetProvider):
     def getDomain(self, url = ''):  
         return cleanHost(self.domain).rstrip('/') + url
 
-    def getMoreInfo(self, item):
-        log.info('Getting more info')
-        full_description = self.getCache('ilt.%s' % item['id'], item['detail_url'], cache_timeout = 25920000)
-        html = BeautifulSoup(full_description)
-        nfo_pre = html.find('div', attrs = {'class':'nfo'})
-        description = toUnicode(nfo_pre.text) if nfo_pre else ''
+    def getMoreInfo(self, item):    
+        cache_key = 'ilt.%s' % item['id']
+        description = self.getCache(cache_key)
+
+        if not description:
+
+            try:
+                full_description = self.getHTMLData(item['detail_url'],  opener = self.login_opener)
+                html = BeautifulSoup(full_description, "html5lib")             
+                nfo_pre = html.find('td', attrs = {'class':'main'}).findAll('table')[1].findAll('td')[5]
+                description = toUnicode(nfo_pre.text) if nfo_pre else ''
+            except:
+                log.error('Failed getting more info for %s', item['name'])
+                description = ''
+
+            self.setCache(cache_key, description, timeout = 25920000)
 
         item['description'] = description
         return item
