@@ -49,6 +49,14 @@ config = [{
                     'description': 'Remove the torrent after it finishes seeding.',
                 },
                 {
+                    'name': 'append_label',
+                    'label': 'Append Label',
+                    'default': False,
+                    'advanced': True,
+                    'type': 'bool',
+                    'description': 'Append label to download location.',
+                },
+                {
                     'name': 'delete_files',
                     'label': 'Remove files',
                     'default': True,
