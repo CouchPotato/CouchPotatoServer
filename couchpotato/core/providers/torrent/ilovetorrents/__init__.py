@@ -18,11 +18,19 @@ config = [{
                     'type': 'enabler',
                     'default': True
                 },
-                {
-                    'name': 'domain',
-                    'advanced': True,
-                    'label': 'Proxy server',
-                    'description': 'Domain for requests, keep empty to let CouchPotato pick.',
+				{
+                    'name': 'username',
+                    'label': 'Username',
+                    'type': 'string',
+                    'default': '',
+                    'description': 'The user name for your ILT account',
+                },
+				{
+                    'name': 'password',
+                    'label': 'Password',
+                    'type': 'password',
+                    'default': '',
+                    'description': 'The password for your ILT account.',
                 },
                 {
                     'name': 'seed_ratio',
