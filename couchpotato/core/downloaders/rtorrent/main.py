@@ -154,6 +154,10 @@ class rTorrent(Downloader):
             statuses = StatusList(self)
 
             for item in torrents:
+                torrent_files = []
+                for file_item in item.get_files():
+                    torrent_files.append(os.path.join(item.directory, file_item.path))
+
                 status = 'busy'
                 if item.complete:
                     if item.active:
@@ -168,7 +172,8 @@ class rTorrent(Downloader):
                     'seed_ratio': item.ratio,
                     'original_status': item.state,
                     'timeleft': str(timedelta(seconds = float(item.left_bytes) / item.down_rate)) if item.down_rate > 0 else -1,
-                    'folder': ss(item.directory)
+                    'folder': ss(item.directory),
+                    'files': ss('|'.join(torrent_files))
                 })
 
             return statuses
