@@ -35,6 +35,15 @@ class Blackhole(Downloader):
 
                 fullPath = os.path.join(directory, self.createFileName(data, filedata, movie))
 
+                if self.conf('create_subdir'):
+                    try:
+                        new_path = os.path.splitext(fullPath)[0]
+                        if not os.path.exists(new_path):
+                            os.makedirs(new_path)
+                            fullPath = os.path.join(new_path, self.createFileName(data, filedata, movie))
+                    except:
+                        log.error('Couldnt create sub dir, reverting to old one: %s', fullPath)
+
                 try:
                     if not os.path.isfile(fullPath):
                         log.info('Downloading %s to %s.', (data.get('protocol'), fullPath))
