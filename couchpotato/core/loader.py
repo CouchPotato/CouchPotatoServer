@@ -1,6 +1,8 @@
 from couchpotato.core.event import fireEvent
 from couchpotato.core.logger import CPLog
+from importlib import import_module
 import os
+import sys
 import traceback
 
 log = CPLog(__name__)
@@ -10,17 +12,6 @@ class Loader(object):
     plugins = {}
     providers = {}
     modules = {}
-
-    def addPath(self, root, base_path, priority, recursive = False):
-        for filename in os.listdir(os.path.join(root, *base_path)):
-            path = os.path.join(os.path.join(root, *base_path), filename)
-            if os.path.isdir(path) and filename[:2] != '__':
-                if u'__init__.py' in os.listdir(path):
-                    new_base_path = ''.join(s + '.' for s in base_path) + filename
-                    self.paths[new_base_path.replace('.', '_')] = (priority, new_base_path, path)
-
-                if recursive:
-                    self.addPath(root, base_path + [filename], priority, recursive = True)
 
     def preload(self, root = ''):
         core = os.path.join(root, 'couchpotato', 'core')
@@ -38,6 +29,13 @@ class Loader(object):
         # Add media to loader
         self.addPath(root, ['couchpotato', 'core', 'media'], 25, recursive = True)
 
+        # Add custom plugin folder
+        from couchpotato.environment import Env
+        custom_plugin_dir = os.path.join(Env.get('data_dir'), 'custom_plugins')
+        sys.path.insert(0, custom_plugin_dir)
+        self.paths['custom_plugins'] = (30, '', custom_plugin_dir)
+
+        # Loop over all paths and add to module list
         for plugin_type, plugin_tuple in self.paths.iteritems():
             priority, module, dir_name = plugin_tuple
             self.addFromDir(plugin_type, priority, module, dir_name)
@@ -45,8 +43,9 @@ class Loader(object):
     def run(self):
         did_save = 0
 
-        for priority in self.modules:
+        for priority in sorted(self.modules):
             for module_name, plugin in sorted(self.modules[priority].iteritems()):
+
                 # Load module
                 try:
                     if plugin.get('name')[:2] == '__':
@@ -55,7 +54,6 @@ class Loader(object):
                     m = self.loadModule(module_name)
                     if m is None:
                         continue
-                    m = getattr(m, plugin.get('name'))
 
                     log.info('Loading %s: %s', (plugin['type'], plugin['name']))
 
@@ -77,10 +75,23 @@ class Loader(object):
         if did_save:
             fireEvent('settings.save')
 
+    def addPath(self, root, base_path, priority, recursive = False):
+        root_path = os.path.join(root, *base_path)
+        for filename in os.listdir(root_path):
+            path = os.path.join(root_path, filename)
+            if os.path.isdir(path) and filename[:2] != '__':
+                if u'__init__.py' in os.listdir(path):
+                    new_base_path = ''.join(s + '.' for s in base_path) + filename
+                    self.paths[new_base_path.replace('.', '_')] = (priority, new_base_path, path)
+
+                if recursive:
+                    self.addPath(root, base_path + [filename], priority, recursive = True)
+
     def addFromDir(self, plugin_type, priority, module, dir_name):
 
         # Load dir module
-        self.addModule(priority, plugin_type, module, os.path.basename(dir_name))
+        if module and len(module) > 0:
+            self.addModule(priority, plugin_type, module, os.path.basename(dir_name))
 
         for name in os.listdir(dir_name):
             if os.path.isdir(os.path.join(dir_name, name)) and name != 'static' and os.path.isfile(os.path.join(dir_name, name, '__init__.py')):
@@ -123,6 +134,7 @@ class Loader(object):
         if not self.modules.get(priority):
             self.modules[priority] = {}
 
+        module = module.lstrip('.')
         self.modules[priority][module] = {
             'priority': priority,
             'module': module,
@@ -132,11 +144,7 @@ class Loader(object):
 
     def loadModule(self, name):
         try:
-            m = __import__(name)
-            splitted = name.split('.')
-            for sub in splitted[1:-1]:
-                m = getattr(m, sub)
-            return m
+            return import_module(name)
         except ImportError:
             log.debug('Skip loading module plugin %s: %s', (name, traceback.format_exc()))
             return None
