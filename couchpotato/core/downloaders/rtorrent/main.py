@@ -91,6 +91,7 @@ class rTorrent(Downloader):
         if self.conf('label'):
             torrent_params['label'] = self.conf('label')
 
+
         if not filedata and data.get('protocol') == 'torrent':
             log.error('Failed sending torrent, no data')
             return False
@@ -119,6 +120,9 @@ class rTorrent(Downloader):
             # Set label
             if self.conf('label'):
                 torrent.set_custom(1, self.conf('label'))
+
+            if self.conf('directory'):
+                torrent.set_directory(self.conf('directory'))
 
             # Set Ratio Group
             torrent.set_visible(group_name)
