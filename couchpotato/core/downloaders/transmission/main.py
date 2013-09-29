@@ -92,7 +92,7 @@ class Transmission(Downloader):
         statuses = StatusList(self)
 
         return_params = {
-            'fields': ['id', 'name', 'hashString', 'percentDone', 'status', 'eta', 'isStalled', 'isFinished', 'downloadDir', 'uploadRatio', 'secondsSeeding', 'seedIdleLimit']
+            'fields': ['id', 'name', 'hashString', 'percentDone', 'status', 'eta', 'isStalled', 'isFinished', 'downloadDir', 'uploadRatio', 'secondsSeeding', 'seedIdleLimit', 'files']
         }
 
         queue = self.trpc.get_alltorrents(return_params)
@@ -104,9 +104,9 @@ class Transmission(Downloader):
             log.debug('name=%s / id=%s / downloadDir=%s / hashString=%s / percentDone=%s / status=%s / eta=%s / uploadRatio=%s / isFinished=%s',
                 (item['name'], item['id'], item['downloadDir'], item['hashString'], item['percentDone'], item['status'], item['eta'], item['uploadRatio'], item['isFinished']))
 
-            if not os.path.isdir(Env.setting('from', 'renamer')):
-                log.error('Renamer "from" folder doesn\'t to exist.')
-                return
+            torrent_files = []
+            for file_item in item['files']:
+                torrent_files.append(os.path.join(item['downloadDir'], file_item['name']))
 
             status = 'busy'
             if item['isStalled'] and self.conf('stalled_as_failed'):
@@ -123,7 +123,8 @@ class Transmission(Downloader):
                 'original_status': item['status'],
                 'seed_ratio': item['uploadRatio'],
                 'timeleft': str(timedelta(seconds = item['eta'])),
-                'folder': ss(os.path.join(item['downloadDir'], item['name'])),
+                'folder': ss(item['downloadDir']) if len(torrent_files) == 1 else ss(os.path.join(item['downloadDir'], item['name'])),
+                'files': ss('|'.join(torrent_files))
             })
 
         return statuses
