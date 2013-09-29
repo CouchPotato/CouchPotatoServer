@@ -33,17 +33,27 @@ class Blackhole(Downloader):
                         log.error('No nzb/torrent available: %s', data.get('url'))
                         return False
 
-                fullPath = os.path.join(directory, self.createFileName(data, filedata, movie))
+                file_name = self.createFileName(data, filedata, movie)
+                full_path = os.path.join(directory, file_name)
+
+                if self.conf('create_subdir'):
+                    try:
+                        new_path = os.path.splitext(full_path)[0]
+                        if not os.path.exists(new_path):
+                            os.makedirs(new_path)
+                            full_path = os.path.join(new_path, file_name)
+                    except:
+                        log.error('Couldnt create sub dir, reverting to old one: %s', full_path)
 
                 try:
-                    if not os.path.isfile(fullPath):
-                        log.info('Downloading %s to %s.', (data.get('protocol'), fullPath))
-                        with open(fullPath, 'wb') as f:
+                    if not os.path.isfile(full_path):
+                        log.info('Downloading %s to %s.', (data.get('protocol'), full_path))
+                        with open(full_path, 'wb') as f:
                             f.write(filedata)
-                        os.chmod(fullPath, Env.getPermission('file'))
+                        os.chmod(full_path, Env.getPermission('file'))
                         return True
                     else:
-                        log.info('File %s already exists.', fullPath)
+                        log.info('File %s already exists.', full_path)
                         return True
 
                 except:
