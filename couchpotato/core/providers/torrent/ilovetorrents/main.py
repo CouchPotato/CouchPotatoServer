@@ -69,7 +69,10 @@ class ILoveTorrents(TorrentMagnetProvider):
                     entries = results_table.find_all('tr')
                     
                     for result in entries[1:]:
-                        link = result.find(href = re.compile('details.php'))['href']
+                        prelink = result.find(href = re.compile('details.php'))
+                        contents = prelink.find('b').contents
+                        name = str(contents[0])                       
+                        link = prelink['href']
                         download = result.find('a', href = re.compile('download.php'))['href']                        
                         
                         try:
@@ -94,7 +97,7 @@ class ILoveTorrents(TorrentMagnetProvider):
                             fileSize = self.parseSize(size)
                             results.append({
                                 'id': id,
-                                'name': link,
+                                'name': name,
                                 'url': url,
                                 'detail_url': detail_url,
                                 'size': fileSize,
