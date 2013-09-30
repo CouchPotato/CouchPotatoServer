@@ -127,6 +127,9 @@ class ShowSearcher(Plugin):
                 if not db.query(Media).filter_by(id = media.get('id')).first():
                     break
 
+                # Add them to this movie releases list
+                found_releases += fireEvent('searcher.create_releases', results, media, quality_type, single = True)
+
                 log.info('%d results found' % len(results))
 
     def correctRelease(self, release = None, media = None, quality = None, **kwargs):

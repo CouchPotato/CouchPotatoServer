@@ -177,43 +177,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                     break
 
                 # Add them to this movie releases list
-                for nzb in results:
-
-                    nzb_identifier = md5(nzb['url'])
-                    found_releases.append(nzb_identifier)
-
-                    rls = db.query(Release).filter_by(identifier = nzb_identifier).first()
-                    if not rls:
-                        rls = Release(
-                            identifier = nzb_identifier,
-                            media_id = movie.get('id'),
-                            quality_id = quality_type.get('quality_id'),
-                            status_id = available_status.get('id')
-                        )
-                        db.add(rls)
-                    else:
-                        [db.delete(old_info) for old_info in rls.info]
-                        rls.last_edit = int(time.time())
-
-                    db.commit()
-
-                    for info in nzb:
-                        try:
-                            if not isinstance(nzb[info], (str, unicode, int, long, float)):
-                                continue
-
-                            rls_info = ReleaseInfo(
-                                identifier = info,
-                                value = toUnicode(nzb[info])
-                            )
-                            rls.info.append(rls_info)
-                        except InterfaceError:
-                            log.debug('Couldn\'t add %s to ReleaseInfo: %s', (info, traceback.format_exc()))
-
-                    db.commit()
-
-                    nzb['status_id'] = rls.status_id
-
+                found_releases += fireEvent('searcher.create_releases', results, movie, quality_type, single = True)
 
                 for nzb in results:
                     if not quality_type.get('finish', False) and quality_type.get('wait_for', 0) > 0 and nzb.get('age') <= quality_type.get('wait_for', 0):
