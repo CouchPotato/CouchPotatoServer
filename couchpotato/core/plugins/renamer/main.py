@@ -706,7 +706,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                                 elif item['status'] == 'seeding':
 
                                     #If linking setting is enabled, process release
-                                    if self.conf('file_action') != 'move' and not rel.movie.status_id == done_status.get('id') and self.statusInfoComplete(item):
+                                    if self.conf('file_action') != 'move' and not rel.status_id == seeding_status.get('id') and self.statusInfoComplete(item):
                                         log.info('Download of %s completed! It is now being processed while leaving the original files alone for seeding. Current ratio: %s.', (item['name'], item['seed_ratio']))
 
                                         # Remove the downloading tag
