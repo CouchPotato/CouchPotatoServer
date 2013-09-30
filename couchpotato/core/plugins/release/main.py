@@ -48,7 +48,7 @@ class Release(Plugin):
         addEvent('release.for_movie', self.forMovie)
         addEvent('release.delete', self.delete)
         addEvent('release.clean', self.clean)
-        addEvent('release.update', self.update_status)
+        addEvent('release.update_status', self.updateStatus)
 
     def add(self, group):
 
@@ -161,7 +161,7 @@ class Release(Plugin):
         rel = db.query(Relea).filter_by(id = id).first()
         if rel:
             ignored_status, failed_status, available_status = fireEvent('status.get', ['ignored', 'failed', 'available'], single = True)
-            self.update_status(id, available_status if rel.status_id in [ignored_status.get('id'), failed_status.get('id')] else ignored_status)
+            self.updateStatus(id, available_status if rel.status_id in [ignored_status.get('id'), failed_status.get('id')] else ignored_status)
 
         return {
             'success': True
@@ -237,7 +237,8 @@ class Release(Plugin):
             'success': True
         }
 
-    def update_status(self, id = None, status = None):
+    def updateStatus(self, id, status = None):
+        if not status: return
 
         db = get_session()
 
@@ -254,8 +255,5 @@ class Release(Plugin):
             rel.last_edit = int(time.time())
             db.commit()
 
-            #Notify frontend
-            fireEvent('notify.frontend', type = 'release.download', data = True, message = '"%s" updated to %s' % (item['name'], status.get("label")))
-
             #Update all movie info as there is no release update function
-            fireEvent('notify.frontend', type = 'release.update.%s' % rel.id, data = status.get('id'))
+            fireEvent('notify.frontend', type = 'release.update_status.%s' % rel.id, data = status.get('id'))

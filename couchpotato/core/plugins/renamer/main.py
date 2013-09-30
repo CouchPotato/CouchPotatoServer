@@ -396,7 +396,7 @@ class Renamer(Plugin):
                         elif release.status_id is snatched_status.get('id'):
                             if release.quality.id is group['meta_data']['quality']['id']:
                                 # Set the release to downloaded
-                                fireEvent('release.update', id = release.id, status = downloaded_status, single = True)
+                                fireEvent('release.update_status', release.id, status = downloaded_status, single = True)
 
                 # Remove leftover files
                 if not remove_leftovers: # Don't remove anything
@@ -701,7 +701,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
                                 if item['status'] == 'busy':
                                     # Set the release to snatched if it was missing before
-                                    fireEvent('release.update', id = rel.id, status = snatched_status, single = True)
+                                    fireEvent('release.update_status', rel.id, status = snatched_status, single = True)
 
                                     # Tag folder if it is in the 'from' folder and it will not be processed because it is still downloading
                                     if item['folder'] and self.conf('from') in item['folder']:
@@ -709,7 +709,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
                                 elif item['status'] == 'seeding':
                                     # Set the release to seeding
-                                    fireEvent('release.update', id = rel.id, status = seeding_status, single = True)
+                                    fireEvent('release.update_status', rel.id, status = seeding_status, single = True)
 
                                     #If linking setting is enabled, process release
                                     if self.conf('file_action') != 'move' and not rel.status_id == seeding_status.get('id') and self.statusInfoComplete(item):
@@ -727,7 +727,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
                                 elif item['status'] == 'failed':
                                     # Set the release to failed
-                                    fireEvent('release.update', id = rel.id, status = failed_status, single = True)
+                                    fireEvent('release.update_status', rel.id, status = failed_status, single = True)
 
                                     fireEvent('download.remove_failed', item, single = True)
 
@@ -741,14 +741,14 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                                         if rel.status_id == seeding_status.get('id'):
                                             if rel.movie.status_id == done_status.get('id'):
                                                 # Set the release to done as the movie has already been renamed
-                                                fireEvent('release.update', id = rel.id, status = downloaded_status, single = True)
+                                                fireEvent('release.update_status', rel.id, status = downloaded_status, single = True)
 
                                                 # Allow the downloader to clean-up
                                                 item.update({'pause': False, 'scan': False, 'process_complete': True})
                                                 scan_items.append(item)
                                             else:
                                                 # Set the release to snatched so that the renamer can process the release as if it was never seeding
-                                                fireEvent('release.update', id = rel.id, status = snatched_status, single = True)
+                                                fireEvent('release.update_status', rel.id, status = snatched_status, single = True)
 
                                                 # Scan and Allow the downloader to clean-up
                                                 item.update({'pause': False, 'scan': True, 'process_complete': True})
@@ -756,7 +756,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
                                         else:
                                             # Set the release to snatched if it was missing before
-                                            fireEvent('release.update', id = rel.id, status = snatched_status, single = True)
+                                            fireEvent('release.update_status', rel.id, status = snatched_status, single = True)
 
                                             # Remove the downloading tag
                                             self.untagDir(item['folder'], 'downloading')
@@ -775,11 +775,11 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
                             #Check status if already missing and for how long, if > 1 week, set to ignored else to missing
                             if rel.status_id == missing_status.get('id'):
-                                if rel.last_edit < int(time.time()) - 7*24*60*60:
-                                    fireEvent('release.update', id = rel.id, status = ignored_status, single = True)
+                                if rel.last_edit < int(time.time()) - 7 * 24 * 60 * 60:
+                                    fireEvent('release.update_status', rel.id, status = ignored_status, single = True)
                             else:
                                 # Set the release to missing
-                                fireEvent('release.update', id = rel.id, status = missing_status, single = True)
+                                fireEvent('release.update_status', rel.id, status = missing_status, single = True)
 
                 except:
                     log.error('Failed checking for release in downloader: %s', traceback.format_exc())

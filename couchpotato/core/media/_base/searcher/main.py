@@ -79,7 +79,7 @@ class Searcher(SearcherBase):
                     rls = db.query(Release).filter_by(identifier = md5(data['url'])).first()
                     if rls:
                         renamer_enabled = Env.setting('enabled', 'renamer')
-                        fireEvent('release.update', id = rls.id, status = done_status if not renamer_enabled else snatched_status, single = True)
+                        fireEvent('release.update_status', rls.id, status = done_status if not renamer_enabled else snatched_status, single = True)
 
                         # Save download-id info if returned
                         if isinstance(download_result, dict):
