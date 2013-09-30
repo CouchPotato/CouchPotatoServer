@@ -71,12 +71,10 @@ class RTorrent:
 
     def _verify_conn(self):
         # check for rpc methods that should be available
-        assert {"system.client_version",
-                "system.library_version"}.issubset(set(self._get_rpc_methods())),\
-            "Required RPC methods not available."
+        assert "system.client_version" in self._get_rpc_methods(), "Required RPC method not available."
+        assert "system.library_version" in self._get_rpc_methods(), "Required RPC method not available."
 
         # minimum rTorrent version check
-
         assert self._meets_version_requirement() is True,\
             "Error: Minimum rTorrent version required is {0}".format(
             MIN_RTORRENT_VERSION_STR)
