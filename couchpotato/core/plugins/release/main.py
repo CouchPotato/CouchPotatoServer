@@ -10,6 +10,7 @@ from sqlalchemy.orm import joinedload_all
 from sqlalchemy.sql.expression import and_, or_
 import os
 import traceback
+import time
 
 log = CPLog(__name__)
 
@@ -47,6 +48,7 @@ class Release(Plugin):
         addEvent('release.for_movie', self.forMovie)
         addEvent('release.delete', self.delete)
         addEvent('release.clean', self.clean)
+        addEvent('release.update', self.update_status)
 
     def add(self, group):
 
@@ -159,8 +161,7 @@ class Release(Plugin):
         rel = db.query(Relea).filter_by(id = id).first()
         if rel:
             ignored_status, failed_status, available_status = fireEvent('status.get', ['ignored', 'failed', 'available'], single = True)
-            rel.status_id = available_status.get('id') if rel.status_id in [ignored_status.get('id'), failed_status.get('id')] else ignored_status.get('id')
-            db.commit()
+            self.update_status(id, available_status if rel.status_id in [ignored_status.get('id'), failed_status.get('id')] else ignored_status)
 
         return {
             'success': True
@@ -199,14 +200,9 @@ class Release(Plugin):
 
             if success:
                 db.expunge_all()
-                rel = db.query(Relea).filter_by(id = id).first() # Get release again
-
-                if rel.status_id != done_status.get('id'):
-                    rel.status_id = snatched_status.get('id')
-                    db.commit()
+                rel = db.query(Relea).filter_by(id = id).first() # Get release again @RuudBurger why do we need to get it again??
 
                 fireEvent('notify.frontend', type = 'release.download', data = True, message = 'Successfully snatched "%s"' % item['name'])
-
             return {
                 'success': success
             }
@@ -241,3 +237,25 @@ class Release(Plugin):
             'success': True
         }
 
+    def update_status(self, id = None, status = None):
+
+        db = get_session()
+
+        rel = db.query(Relea).filter_by(id = id).first()
+        if rel and status and rel.status_id != status.get('id'):
+
+            item = {}
+            for info in rel.info:
+                item[info.identifier] = info.value
+
+            #update status in Db
+            log.debug('Marking release %s as %s', (item['name'], status.get("label")))
+            rel.status_id = status.get('id')
+            rel.last_edit = int(time.time())
+            db.commit()
+
+            #Notify frontend
+            fireEvent('notify.frontend', type = 'release.download', data = True, message = '"%s" updated to %s' % (item['name'], status.get("label")))
+
+            #Update all movie info as there is no release update function
+            fireEvent('notify.frontend', type = 'release.update.%s' % rel.id, data = status.get('id'))
