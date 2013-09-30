@@ -182,7 +182,9 @@ class uTorrent(Downloader):
         if folder and os.path.isdir(folder):
             for root, folders, filenames in os.walk(folder):
                 for filename in filenames:
-                    os.chmod(os.path.join(root, filename), stat.S_IWRITE)
+                    filepath = os.path.join(root, filename)
+                    #Windows only needs S_IWRITE, but we bitwise-or with current perms to preserve other permission bits on Linux
+                    os.chmod(filepath, stat.S_IWRITE | os.stat(filepath).st_mode)
 
 class uTorrentAPI(object):
 
