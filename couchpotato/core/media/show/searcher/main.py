@@ -119,11 +119,13 @@ class ShowSearcher(Plugin):
                 log.info('Search for %s S%02d%s in %s', (getTitle(show), season.season_number, "E%02d" % episode.episode_number if episode else "", quality_type['quality']['label']))
                 quality = fireEvent('quality.single', identifier = quality_type['quality']['identifier'], single = True)
 
-                results = []
-                for search_protocol in search_protocols:
-                    protocol_results = fireEvent('provider.search.%s.show' % search_protocol, media, quality, merge = True)
-                    if protocol_results:
-                        results += protocol_results
+                results = fireEvent('searcher.search', search_protocols, media, quality, single = True)
+                if len(results) == 0:
+                    log.debug('Nothing found for %s in %s', (default_title, quality_type['quality']['label']))
+
+                # Check if movie isn't deleted while searching
+                if not db.query(Media).filter_by(id = media.get('id')).first():
+                    break
 
                 log.info('%d results found' % len(results))
 
@@ -131,7 +133,6 @@ class ShowSearcher(Plugin):
 
         if media.get('type') not in ['season', 'episode']: return
 
-        imdb_results = kwargs.get('imdb_results', False)
         retention = Env.setting('retention', section = 'nzb')
 
         if release.get('seeders') is None and 0 < retention < release.get('age', 0):
@@ -141,8 +142,6 @@ class ShowSearcher(Plugin):
         # Check for required and ignored words
         if not fireEvent('searcher.correct_words', release['name'], media, single = True):
             return False
-
-        #pprint.pprint(release)
 
         show, season, episode = self._lookupMedia(media)
         if show is None or season is None:
@@ -164,9 +163,6 @@ class ShowSearcher(Plugin):
         if not self.correctIdentifier(chain, media):
             log.info('Wrong: %s, identifier does not match', release['name'])
             return False
-
-        #print chain.weight
-        #pprint.pprint(chain.info)
 
         if 'show_name' not in chain.info or not len(chain.info['show_name']):
             log.info('Wrong: %s, missing show name in parsed result', release['name'])

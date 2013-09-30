@@ -168,26 +168,16 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                 log.info('Search for %s in %s', (default_title, quality_type['quality']['label']))
                 quality = fireEvent('quality.single', identifier = quality_type['quality']['identifier'], single = True)
 
-                results = []
-                for search_protocol in search_protocols:
-                    protocol_results = fireEvent('provider.search.%s.movie' % search_protocol, movie, quality, merge = True)
-                    if protocol_results:
-                        results += protocol_results
-
-                sorted_results = sorted(results, key = lambda k: k['score'], reverse = True)
-                if len(sorted_results) == 0:
+                results = fireEvent('searcher.search', search_protocols, movie, quality, single = True)
+                if len(results) == 0:
                     log.debug('Nothing found for %s in %s', (default_title, quality_type['quality']['label']))
-
-                download_preference = self.conf('preferred_method', section = 'searcher')
-                if download_preference != 'both':
-                    sorted_results = sorted(sorted_results, key = lambda k: k['protocol'][:3], reverse = (download_preference == 'torrent'))
 
                 # Check if movie isn't deleted while searching
                 if not db.query(Media).filter_by(id = movie.get('id')).first():
                     break
 
                 # Add them to this movie releases list
-                for nzb in sorted_results:
+                for nzb in results:
 
                     nzb_identifier = md5(nzb['url'])
                     found_releases.append(nzb_identifier)
@@ -196,7 +186,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                     if not rls:
                         rls = Release(
                             identifier = nzb_identifier,
-                            movie_id = movie.get('id'),
+                            media_id = movie.get('id'),
                             quality_id = quality_type.get('quality_id'),
                             status_id = available_status.get('id')
                         )
@@ -225,7 +215,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                     nzb['status_id'] = rls.status_id
 
 
-                for nzb in sorted_results:
+                for nzb in results:
                     if not quality_type.get('finish', False) and quality_type.get('wait_for', 0) > 0 and nzb.get('age') <= quality_type.get('wait_for', 0):
                         log.info('Ignored, waiting %s days: %s', (quality_type.get('wait_for'), nzb['name']))
                         continue

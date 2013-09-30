@@ -25,6 +25,7 @@ class Searcher(SearcherBase):
         addEvent('searcher.correct_name', self.correctName)
         addEvent('searcher.correct_words', self.correctWords)
         addEvent('searcher.download', self.download)
+        addEvent('searcher.search', self.search)
 
         addApiView('searcher.full_search', self.searchAllView, docs = {
             'desc': 'Starts a full search for all media',
@@ -130,6 +131,28 @@ class Searcher(SearcherBase):
         log.info('Tried to download, but none of the "%s" downloaders are enabled or gave an error', (data.get('protocol')))
 
         return False
+
+    def search(self, protocols, media, quality):
+        results = []
+
+        search_type = None
+        if media['type'] == 'movie':
+            search_type = 'movie'
+        elif media['type'] in ['show', 'season', 'episode']:
+            search_type = 'show'
+
+        for search_protocol in protocols:
+            protocol_results = fireEvent('provider.search.%s.%s' % (search_protocol, search_type), media, quality, merge = True)
+            if protocol_results:
+                results += protocol_results
+
+        sorted_results = sorted(results, key = lambda k: k['score'], reverse = True)
+
+        download_preference = self.conf('preferred_method', section = 'searcher')
+        if download_preference != 'both':
+            sorted_results = sorted(sorted_results, key = lambda k: k['protocol'][:3], reverse = (download_preference == 'torrent'))
+
+        return sorted_results
 
     def getSearchProtocols(self):
 
