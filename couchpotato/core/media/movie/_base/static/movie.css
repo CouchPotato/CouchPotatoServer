@@ -419,22 +419,25 @@
 				}
 
 			.movies .data .quality .available,
-			.movies .data .quality .snatched {
+			.movies .data .quality .snatched,
+			.movies .data .quality .seeding {
 				opacity: 1;
 				cursor: pointer;
 			}
 
 			.movies .data .quality .available { background-color: #578bc3; }
-			.movies .data .quality .failed { background-color: #a43d34; }
+			.movies .data .quality .failed,
+			.movies .data .quality .missing,
+			.movies .data .quality .ignored { background-color: #a43d34; }
 			.movies .data .quality .snatched { background-color: #a2a232; }
-			.movies .data .quality .seeding { background-color: #0a6819; }
 			.movies .data .quality .done {
 				background-color: #369545;
 				opacity: 1;
 			}
+			.movies .data .quality .seeding { background-color: #0a6819; }
 			.movies .data .quality .finish {
 				background-image: url('../images/sprite.png');
-				background-repeat:  no-repeat;
+				background-repeat: no-repeat;
 				background-position: 0 2px;
 				padding-left: 14px;
 				background-size: 14px
@@ -646,7 +649,7 @@
 							margin-top: 25px;
 						}
 					}
-					
+
 					.trailer_container.hide {
 						height: 0 !important;
 					}
@@ -1029,7 +1032,7 @@
 			.movies .progress > div .folder {
 				display: inline-block;
 				padding: 5px 20px 5px 0;
-			    white-space: nowrap;
+				white-space: nowrap;
 				text-overflow: ellipsis;
 				overflow: hidden;
 				width: 85%;
