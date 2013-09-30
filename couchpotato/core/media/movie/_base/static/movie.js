@@ -185,7 +185,7 @@ var Movie = new Class({
 				var q = self.quality.getElement('.q_id'+ release.quality_id),
 					status = Status.get(release.status_id);
 
-				if(!q && (status.identifier == 'snatched' || status.identifier == 'done'))
+				if(!q && (status.identifier == 'snatched' || status.identifier == 'seeding' || status.identifier == 'done'))
 					var q = self.addQuality(release.quality_id)
 
 				if (status && q && !q.hasClass(status.identifier)){

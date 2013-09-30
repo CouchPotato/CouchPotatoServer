@@ -60,7 +60,7 @@ class Searcher(SearcherBase):
 
         if downloader_enabled:
 
-            snatched_status = fireEvent('status.get', 'snatched', single = True)
+            snatched_status, done_status, active_status = fireEvent('status.get', ['snatched', 'done', 'active'], single = True)
 
             # Download movie to temp
             filedata = None
@@ -79,9 +79,7 @@ class Searcher(SearcherBase):
                     rls = db.query(Release).filter_by(identifier = md5(data['url'])).first()
                     if rls:
                         renamer_enabled = Env.setting('enabled', 'renamer')
-
-                        done_status = fireEvent('status.get', 'done', single = True)
-                        rls.status_id = done_status.get('id') if not renamer_enabled else snatched_status.get('id')
+                        fireEvent('release.update_status', rls.id, status = done_status if not renamer_enabled else snatched_status, single = True)
 
                         # Save download-id info if returned
                         if isinstance(download_result, dict):
@@ -100,20 +98,12 @@ class Searcher(SearcherBase):
 
                         # If renamer isn't used, mark movie done
                         if not renamer_enabled:
-                            active_status = fireEvent('status.get', 'active', single = True)
-                            done_status = fireEvent('status.get', 'done', single = True)
                             try:
                                 if movie['status_id'] == active_status.get('id'):
                                     for profile_type in movie['profile']['types']:
                                         if profile_type['quality_id'] == rls.quality.id and profile_type['finish']:
-                                            log.info('Renamer disabled, marking movie as finished: %s', log_movie)
-
-                                            # Mark release done
-                                            rls.status_id = done_status.get('id')
-                                            rls.last_edit = int(time.time())
-                                            db.commit()
-
                                             # Mark movie done
+                                            log.info('Renamer disabled, marking movie as finished: %s', log_movie)
                                             mvie = db.query(Movie).filter_by(id = movie['id']).first()
                                             mvie.status_id = done_status.get('id')
                                             mvie.last_edit = int(time.time())

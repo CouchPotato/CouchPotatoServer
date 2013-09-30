@@ -24,6 +24,7 @@ class StatusPlugin(Plugin):
         'available': 'Available',
         'suggest': 'Suggest',
         'seeding': 'Seeding',
+        'missing': 'Missing',
     }
     status_cached = {}
 
