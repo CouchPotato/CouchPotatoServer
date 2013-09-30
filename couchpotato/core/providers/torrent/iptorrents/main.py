@@ -36,21 +36,22 @@ class Base(TorrentProvider):
             log.warning('Unable to find category for quality %s', quality_identifier)
             return
 
-        return self.urls['search'] % (cat_id, tryUrlencode(query))
+        return self.urls['search'] % (cat_id, tryUrlencode(query).replace('%', '%%'))
 
     def _searchOnTitle(self, title, media, quality, results):
 
         freeleech = '' if not self.conf('freeleech') else '&free=on'
 
+        base_url = self.buildUrl(title, media, quality)
+        if not base_url: return
+
         pages = 1
         current_page = 1
         while current_page <= pages and not self.shuttingDown():
-            url = self.buildUrl(title, media, quality)
-            if not url: return
-
-            url = url  % (freeleech, current_page)
-
-            data = self.getHTMLData(url, opener = self.login_opener)
+            data = self.getHTMLData(
+                base_url  % (freeleech, current_page),
+                opener = self.login_opener
+            )
 
             if data:
                 html = BeautifulSoup(data)
@@ -135,12 +136,12 @@ class Show(ShowProvider, Base):
 
     cat_ids = [
         ('season', [
-            ([65], ['hdtv', '480p', '720p', '1080p']),
+            ([65], ['hdtv_sd', 'hdtv_720p', 'webdl_720p', 'webdl_1080p']),
         ]),
         ('episode', [
-            ([5], ['720p', '1080p']),
-            ([78], ['480p']),
-            ([4, 79], ['hdtv'])
+            ([5], ['hdtv_720p', 'webdl_720p', 'webdl_1080p']),
+            ([78], ['hdtv_sd']),
+            ([4, 79], ['hdtv_sd'])
         ])
     ]
 

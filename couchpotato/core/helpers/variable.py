@@ -146,9 +146,9 @@ def getImdb(txt, check_inside = False, multiple = False):
 
     return False
 
-def tryInt(s):
+def tryInt(s, default=0):
     try: return int(s)
-    except: return 0
+    except: return default
 
 def tryFloat(s):
     try:
