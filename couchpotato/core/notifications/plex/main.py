@@ -52,7 +52,7 @@ class Plex(Notification):
                     clients.remove(server.get('name').lower())
                     protocol = server.get('protocol', 'xbmchttp')
 
-                    if protocol in ['xbmcjson', 'xbmchttp']:
+                    if protocol in ['plex', 'xbmcjson', 'xbmchttp']:
                         self.clients[server.get('name')] = {
                             'name': server.get('name'),
                             'address': server.get('address'),
@@ -164,7 +164,7 @@ class Plex(Notification):
         }
 
         for name, client in self.clients.items():
-            if client['protocol'] == 'xbmcjson':
+            if client['protocol'] in ['xbmcjson', 'plex']:
                 total += 1
                 if self.sendJSON('GUI.ShowNotification', params, client):
                     successful += 1
