@@ -29,9 +29,10 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
         addEvent('movie.searcher.all', self.searchAll)
         addEvent('movie.searcher.all_view', self.searchAllView)
         addEvent('movie.searcher.single', self.single)
-        addEvent('movie.searcher.correct_movie', self.correctMovie)
         addEvent('movie.searcher.try_next_release', self.tryNextRelease)
         addEvent('movie.searcher.could_be_released', self.couldBeReleased)
+        addEvent('searcher.correct_release', self.correctRelease)
+        addEvent('searcher.get_search_title', self.getSearchTitle)
 
         addApiView('movie.searcher.try_next', self.tryNextReleaseView, docs = {
             'desc': 'Marks the snatched results as ignored and try the next best release',
@@ -167,64 +168,18 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                 log.info('Search for %s in %s', (default_title, quality_type['quality']['label']))
                 quality = fireEvent('quality.single', identifier = quality_type['quality']['identifier'], single = True)
 
-                results = []
-                for search_protocol in search_protocols:
-                    protocol_results = fireEvent('provider.search.%s.movie' % search_protocol, movie, quality, merge = True)
-                    if protocol_results:
-                        results += protocol_results
-
-                sorted_results = sorted(results, key = lambda k: k['score'], reverse = True)
-                if len(sorted_results) == 0:
+                results = fireEvent('searcher.search', search_protocols, movie, quality, single = True)
+                if len(results) == 0:
                     log.debug('Nothing found for %s in %s', (default_title, quality_type['quality']['label']))
-
-                download_preference = self.conf('preferred_method', section = 'searcher')
-                if download_preference != 'both':
-                    sorted_results = sorted(sorted_results, key = lambda k: k['protocol'][:3], reverse = (download_preference == 'torrent'))
 
                 # Check if movie isn't deleted while searching
                 if not db.query(Media).filter_by(id = movie.get('id')).first():
                     break
 
                 # Add them to this movie releases list
-                for nzb in sorted_results:
+                found_releases += fireEvent('searcher.create_releases', results, movie, quality_type, single = True)
 
-                    nzb_identifier = md5(nzb['url'])
-                    found_releases.append(nzb_identifier)
-
-                    rls = db.query(Release).filter_by(identifier = nzb_identifier).first()
-                    if not rls:
-                        rls = Release(
-                            identifier = nzb_identifier,
-                            movie_id = movie.get('id'),
-                            quality_id = quality_type.get('quality_id'),
-                            status_id = available_status.get('id')
-                        )
-                        db.add(rls)
-                    else:
-                        [db.delete(old_info) for old_info in rls.info]
-                        rls.last_edit = int(time.time())
-
-                    db.commit()
-
-                    for info in nzb:
-                        try:
-                            if not isinstance(nzb[info], (str, unicode, int, long, float)):
-                                continue
-
-                            rls_info = ReleaseInfo(
-                                identifier = info,
-                                value = toUnicode(nzb[info])
-                            )
-                            rls.info.append(rls_info)
-                        except InterfaceError:
-                            log.debug('Couldn\'t add %s to ReleaseInfo: %s', (info, traceback.format_exc()))
-
-                    db.commit()
-
-                    nzb['status_id'] = rls.status_id
-
-
-                for nzb in sorted_results:
+                for nzb in results:
                     if not quality_type.get('finish', False) and quality_type.get('wait_for', 0) > 0 and nzb.get('age') <= quality_type.get('wait_for', 0):
                         log.info('Ignored, waiting %s days: %s', (quality_type.get('wait_for'), nzb['name']))
                         continue
@@ -265,7 +220,11 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
         return ret
 
-    def correctMovie(self, nzb = None, movie = None, quality = None, **kwargs):
+    def correctRelease(self, nzb = None, media = None, quality = None, **kwargs):
+
+        if media.get('type') != 'movie': return
+
+        media_title = fireEvent('searcher.get_search_title', media, single = True)
 
         imdb_results = kwargs.get('imdb_results', False)
         retention = Env.setting('retention', section = 'nzb')
@@ -274,50 +233,14 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
             log.info2('Wrong: Outside retention, age is %s, needs %s or lower: %s', (nzb['age'], retention, nzb['name']))
             return False
 
-        movie_name = getTitle(movie['library'])
-        movie_words = re.split('\W+', simplifyString(movie_name))
-        nzb_name = simplifyString(nzb['name'])
-        nzb_words = re.split('\W+', nzb_name)
-
-        # Make sure it has required words
-        required_words = splitString(self.conf('required_words', section = 'searcher').lower())
-        try: required_words = list(set(required_words + splitString(movie['category']['required'].lower())))
-        except: pass
-
-        req_match = 0
-        for req_set in required_words:
-            req = splitString(req_set, '&')
-            req_match += len(list(set(nzb_words) & set(req))) == len(req)
-
-        if len(required_words) > 0  and req_match == 0:
-            log.info2('Wrong: Required word missing: %s', nzb['name'])
-            return False
-
-        # Ignore releases
-        ignored_words = splitString(self.conf('ignored_words', section = 'searcher').lower())
-        try: ignored_words = list(set(ignored_words + splitString(movie['category']['ignored'].lower())))
-        except: pass
-
-        ignored_match = 0
-        for ignored_set in ignored_words:
-            ignored = splitString(ignored_set, '&')
-            ignored_match += len(list(set(nzb_words) & set(ignored))) == len(ignored)
-
-        if len(ignored_words) > 0 and ignored_match:
-            log.info2("Wrong: '%s' contains 'ignored words'", (nzb['name']))
-            return False
-
-        # Ignore porn stuff
-        pron_tags = ['xxx', 'sex', 'anal', 'tits', 'fuck', 'porn', 'orgy', 'milf', 'boobs', 'erotica', 'erotic', 'cock', 'dick']
-        pron_words = list(set(nzb_words) & set(pron_tags) - set(movie_words))
-        if pron_words:
-            log.info('Wrong: %s, probably pr0n', (nzb['name']))
+        # Check for required and ignored words
+        if not fireEvent('searcher.correct_words', nzb['name'], media, single = True):
             return False
 
         preferred_quality = fireEvent('quality.single', identifier = quality['identifier'], single = True)
 
         # Contains lower quality string
-        if fireEvent('searcher.contains_other_quality', nzb, movie_year = movie['library']['year'], preferred_quality = preferred_quality, single = True):
+        if fireEvent('searcher.contains_other_quality', nzb, movie_year = media['library']['year'], preferred_quality = preferred_quality, single = True):
             log.info2('Wrong: %s, looking for %s', (nzb['name'], quality['label']))
             return False
 
@@ -347,23 +270,23 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
             return True
 
         # Check if nzb contains imdb link
-        if getImdb(nzb.get('description', '')) == movie['library']['identifier']:
+        if getImdb(nzb.get('description', '')) == media['library']['identifier']:
             return True
 
-        for raw_title in movie['library']['titles']:
+        for raw_title in media['library']['titles']:
             for movie_title in possibleTitles(raw_title['title']):
                 movie_words = re.split('\W+', simplifyString(movie_title))
 
                 if fireEvent('searcher.correct_name', nzb['name'], movie_title, single = True):
                     # if no IMDB link, at least check year range 1
-                    if len(movie_words) > 2 and fireEvent('searcher.correct_year', nzb['name'], movie['library']['year'], 1, single = True):
+                    if len(movie_words) > 2 and fireEvent('searcher.correct_year', nzb['name'], media['library']['year'], 1, single = True):
                         return True
 
                     # if no IMDB link, at least check year
-                    if len(movie_words) <= 2 and fireEvent('searcher.correct_year', nzb['name'], movie['library']['year'], 0, single = True):
+                    if len(movie_words) <= 2 and fireEvent('searcher.correct_year', nzb['name'], media['library']['year'], 0, single = True):
                         return True
 
-        log.info("Wrong: %s, undetermined naming. Looking for '%s (%s)'", (nzb['name'], movie_name, movie['library']['year']))
+        log.info("Wrong: %s, undetermined naming. Looking for '%s (%s)'", (nzb['name'], media_title, media['library']['year']))
         return False
 
     def couldBeReleased(self, is_pre_release, dates, year = None):
@@ -433,6 +356,10 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
         except:
             log.error('Failed searching for next release: %s', traceback.format_exc())
             return False
+
+    def getSearchTitle(self, media):
+        if media['type'] == 'movie':
+            return getTitle(media['library'])
 
 class SearchSetupError(Exception):
     pass
