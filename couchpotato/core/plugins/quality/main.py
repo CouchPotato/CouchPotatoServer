@@ -26,7 +26,15 @@ class QualityPlugin(Plugin):
         {'identifier': 'r5', 'size': (600, 1000), 'label': 'R5', 'alternative': ['r6'], 'allow': ['dvdr'], 'ext':['avi', 'mpg', 'mpeg']},
         {'identifier': 'tc', 'size': (600, 1000), 'label': 'TeleCine', 'alternative': ['telecine'], 'allow': [], 'ext':['avi', 'mpg', 'mpeg']},
         {'identifier': 'ts', 'size': (600, 1000), 'label': 'TeleSync', 'alternative': ['telesync', 'hdts'], 'allow': [], 'ext':['avi', 'mpg', 'mpeg']},
-        {'identifier': 'cam', 'size': (600, 1000), 'label': 'Cam', 'alternative': ['camrip', 'hdcam'], 'allow': [], 'ext':['avi', 'mpg', 'mpeg']}
+        {'identifier': 'cam', 'size': (600, 1000), 'label': 'Cam', 'alternative': ['camrip', 'hdcam'], 'allow': [], 'ext':['avi', 'mpg', 'mpeg']},
+
+        # TODO come back to this later, think this could be handled better
+        # WEB-DL
+        {'identifier': 'webdl_1080p', 'hd': True, 'size': (800, 5000), 'label': 'WEB-DL - 1080p', 'width': 1920, 'height': 1080, 'alternative': [], 'allow': [], 'ext':['mkv']},
+        {'identifier': 'webdl_720p', 'hd': True, 'size': (800, 5000), 'label': 'WEB-DL - 720p', 'width': 1280, 'height': 720, 'alternative': [], 'allow': [], 'ext':['mkv']},
+        # HDTV
+        {'identifier': 'hdtv_720p', 'hd': True, 'size': (800, 5000), 'label': 'HDTV - 720p', 'width': 1280, 'height': 720, 'alternative': [], 'allow': [], 'ext':['mkv']},
+        {'identifier': 'hdtv_sd', 'hd': False, 'size': (100, 1000), 'label': 'HDTV - SD', 'width': 720, 'alternative': [], 'allow': [], 'ext':['mkv', 'mp4', 'avi']},
     ]
     pre_releases = ['cam', 'ts', 'tc', 'r5', 'scr']
 

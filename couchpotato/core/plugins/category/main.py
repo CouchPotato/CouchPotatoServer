@@ -54,12 +54,11 @@ class CategoryPlugin(Plugin):
             db.add(c)
 
         c.order = kwargs.get('order', c.order if c.order else 0)
-        c.label = toUnicode(kwargs.get('label'))
-        c.path = toUnicode(kwargs.get('path'))
-        c.ignored = toUnicode(kwargs.get('ignored'))
-        c.preferred = toUnicode(kwargs.get('preferred'))
-        c.required = toUnicode(kwargs.get('required'))
-        c.destination = toUnicode(kwargs.get('destination'))
+        c.label = toUnicode(kwargs.get('label', ''))
+        c.ignored = toUnicode(kwargs.get('ignored', ''))
+        c.preferred = toUnicode(kwargs.get('preferred', ''))
+        c.required = toUnicode(kwargs.get('required', ''))
+        c.destination = toUnicode(kwargs.get('destination', ''))
 
         db.commit()
 

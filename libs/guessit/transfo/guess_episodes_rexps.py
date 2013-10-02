@@ -28,7 +28,13 @@ import logging
 log = logging.getLogger(__name__)
 
 def number_list(s):
-    return list(re.sub('[^0-9]+', ' ', s).split())
+    l = [ int(n) for n in re.sub('[^0-9]+', ' ', s).split() ]
+
+    if len(l) == 2:
+        # it is an episode interval, return all numbers in between
+        return range(l[0], l[1]+1)
+
+    return l
 
 def guess_episodes_rexps(string):
     for rexp, confidence, span_adjust in episode_rexps:
@@ -38,23 +44,23 @@ def guess_episodes_rexps(string):
             span = (match.start() + span_adjust[0],
                     match.end() + span_adjust[1])
 
-            # episodes which have a season > 25 are most likely errors
+            # episodes which have a season > 30 are most likely errors
             # (Simpsons is at 24!)
-            if int(guess.get('season', 0)) > 25:
+            if int(guess.get('season', 0)) > 30:
                 continue
 
             # decide whether we have only a single episode number or an
             # episode list
             if guess.get('episodeNumber'):
                 eplist = number_list(guess['episodeNumber'])
-                guess.set('episodeNumber', int(eplist[0]), confidence=confidence)
+                guess.set('episodeNumber', eplist[0], confidence=confidence)
 
                 if len(eplist) > 1:
-                    guess.set('episodeList', list(map(int, eplist)), confidence=confidence)
+                    guess.set('episodeList', eplist, confidence=confidence)
 
             if guess.get('bonusNumber'):
                 eplist = number_list(guess['bonusNumber'])
-                guess.set('bonusNumber', int(eplist[0]), confidence=confidence)
+                guess.set('bonusNumber', eplist[0], confidence=confidence)
 
             return guess, span
 

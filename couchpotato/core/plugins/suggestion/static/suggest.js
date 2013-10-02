@@ -58,54 +58,59 @@ var SuggestList = new Class({
 
 		var self = this;
 
-		if(!json) return;
+		if(!json || json.count == 0){
+			self.el.hide();
+		}
+		else {
 
-		Object.each(json.suggestions, function(movie){
+			Object.each(json.suggestions, function(movie){
 
-			var m = new Block.Search.Item(movie, {
-				'onAdded': function(){
-					self.afterAdded(m, movie)
-				}
-			});
-				m.data_container.grab(
-					new Element('div.actions').adopt(
-						new Element('a.add.icon2', {
-							'title': 'Add movie with your default quality',
-							'data-add': movie.imdb,
-							'events': {
-								'click': m.showOptions.bind(m)
-							}
-						}),
-						$(new MA.IMDB(m)),
-						$(new MA.Trailer(m, {
-							'height': 150
-						})),
-						new Element('a.delete.icon2', {
-							'title': 'Don\'t suggest this movie again',
-							'data-ignore': movie.imdb
-						}),
-						new Element('a.eye-open.icon2', {
-							'title': 'Seen it, like it, don\'t add',
-							'data-seen': movie.imdb
-						})
+				var m = new Block.Search.Item(movie, {
+					'onAdded': function(){
+						self.afterAdded(m, movie)
+					}
+				});
+					m.data_container.grab(
+						new Element('div.actions').adopt(
+							new Element('a.add.icon2', {
+								'title': 'Add movie with your default quality',
+								'data-add': movie.imdb,
+								'events': {
+									'click': m.showOptions.bind(m)
+								}
+							}),
+							$(new MA.IMDB(m)),
+							$(new MA.Trailer(m, {
+								'height': 150
+							})),
+							new Element('a.delete.icon2', {
+								'title': 'Don\'t suggest this movie again',
+								'data-ignore': movie.imdb
+							}),
+							new Element('a.eye-open.icon2', {
+								'title': 'Seen it, like it, don\'t add',
+								'data-seen': movie.imdb
+							})
+						)
+					);
+					m.data_container.removeEvents('click');
+
+					// Add rating
+					m.info_container.adopt(
+						m.rating = m.info.rating && m.info.rating.imdb.length == 2 && parseFloat(m.info.rating.imdb[0]) > 0  ? new Element('span.rating', {
+							'text': parseFloat(m.info.rating.imdb[0]),
+							'title': parseInt(m.info.rating.imdb[1]) + ' votes'
+						}) : null,
+						m.genre = m.info.genres && m.info.genres.length > 0 ? new Element('span.genres', {
+							'text': m.info.genres.slice(0, 3).join(', ')
+						}) : null
 					)
-				);
-				m.data_container.removeEvents('click');
 
-				// Add rating
-				m.info_container.adopt(
-					m.rating = m.info.rating && m.info.rating.imdb.length == 2 && parseFloat(m.info.rating.imdb[0]) > 0  ? new Element('span.rating', {
-						'text': parseFloat(m.info.rating.imdb[0]),
-						'title': parseInt(m.info.rating.imdb[1]) + ' votes'
-					}) : null,
-					m.genre = m.info.genres && m.info.genres.length > 0 ? new Element('span.genres', {
-						'text': m.info.genres.slice(0, 3).join(', ')
-					}) : null
-				)
+				$(m).inject(self.el);
 
-			$(m).inject(self.el);
+			});
 
-		});
+		}
 
 		self.fireEvent('loaded');
 

@@ -174,7 +174,7 @@ class Renamer(Plugin):
                 # Overwrite destination when set in category
                 destination = self.conf('to')
                 for movie in library_ent.media:
-                    if movie.category and movie.category.destination and len(movie.category.destination) > 0:
+                    if movie.category and movie.category.destination and len(movie.category.destination) > 0 and movie.category.destination != 'None':
                         destination = movie.category.destination
                         log.debug('Setting category destination for "%s": %s' % (movie_title, destination))
                     else:
@@ -252,7 +252,7 @@ class Renamer(Plugin):
                         replacements['cd_nr'] = cd if multiple else ''
 
                         # Naming
-                        final_folder_name = self.doReplace(folder_name, replacements)
+                        final_folder_name = self.doReplace(folder_name, replacements, folder = True)
                         final_file_name = self.doReplace(file_name, replacements)
                         replacements['filename'] = final_file_name[:-(len(getExt(final_file_name)) + 1)]
 
@@ -508,7 +508,7 @@ class Renamer(Plugin):
         for extra in set(filter(test, group['files'][extra_type])):
             replacements['ext'] = getExt(extra)
 
-            final_folder_name = self.doReplace(folder_name, replacements, remove_multiple = remove_multiple)
+            final_folder_name = self.doReplace(folder_name, replacements, remove_multiple = remove_multiple, folder = True)
             final_file_name = self.doReplace(file_name, replacements, remove_multiple = remove_multiple)
             rename_files[extra] = os.path.join(destination, final_folder_name, final_file_name)
 
@@ -603,7 +603,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
         return True
 
-    def doReplace(self, string, replacements, remove_multiple = False):
+    def doReplace(self, string, replacements, remove_multiple = False, folder = False):
         """
         replace confignames with the real thing
         """
@@ -623,7 +623,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
         replaced = re.sub(r"[\x00:\*\?\"<>\|]", '', replaced)
 
-        sep = self.conf('separator')
+        sep = self.conf('foldersep') if folder else self.conf('separator')
         return self.replaceDoubles(replaced.lstrip('. ')).replace(' ', ' ' if not sep else sep)
 
     def replaceDoubles(self, string):
@@ -678,7 +678,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                     for rel in rels:
                         rel_dict = rel.to_dict({'info': {}})
 
-                        movie_dict = fireEvent('movie.get', rel.movie_id, single = True)
+                        movie_dict = fireEvent('movie.get', rel.media_id, single = True)
 
                         # check status
                         nzbname = self.createNzbName(rel_dict['info'], movie_dict)
@@ -734,7 +734,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                                     db.commit()
 
                                     if self.conf('next_on_failed'):
-                                        fireEvent('movie.searcher.try_next_release', movie_id = rel.movie_id)
+                                        fireEvent('movie.searcher.try_next_release', media_id = rel.media_id)
                                 elif item['status'] == 'completed':
                                     log.info('Download of %s completed!', item['name'])
                                     if self.statusInfoComplete(item):

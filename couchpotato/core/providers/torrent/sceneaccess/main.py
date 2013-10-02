@@ -102,7 +102,7 @@ class Base(TorrentProvider):
     loginCheckSuccess = loginSuccess
 
 
-class Movie(Base, MovieProvider):
+class Movie(MovieProvider, Base):
 
     cat_ids = [
         ([22], ['720p', '1080p']),

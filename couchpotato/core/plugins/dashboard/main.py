@@ -4,9 +4,10 @@ from couchpotato.core.event import fireEvent
 from couchpotato.core.helpers.variable import splitString, tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.core.settings.model import Media, Library, LibraryTitle
+from couchpotato.core.settings.model import Media, Library, LibraryTitle, \
+    Release
 from sqlalchemy.orm import joinedload_all
-from sqlalchemy.sql.expression import asc
+from sqlalchemy.sql.expression import asc, or_
 import random as rndm
 import time
 
@@ -48,12 +49,14 @@ class Dashboard(Plugin):
             limit = tryInt(splt[0])
 
         # Get all active movies
-        active_status = fireEvent('status.get', ['active'], single = True)
+        active_status, ignored_status = fireEvent('status.get', ['active', 'ignored'], single = True)
         q = db.query(Media) \
             .join(Library) \
+            .outerjoin(Media.releases) \
             .filter(Media.status_id == active_status.get('id')) \
             .with_entities(Media.id, Media.profile_id, Library.info, Library.year) \
-            .group_by(Media.id)
+            .group_by(Media.id) \
+            .filter(or_(Release.id == None, Release.status_id == ignored_status.get('id')))
 
         if not random:
             q = q.join(LibraryTitle) \

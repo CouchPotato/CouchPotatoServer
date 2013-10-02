@@ -259,7 +259,7 @@ class Plugin(object):
 
 
     def getCache(self, cache_key, url = None, **kwargs):
-        cache_key_md5 = md5(ss(cache_key))
+        cache_key_md5 = md5(cache_key)
         cache = Env.get('cache').get(cache_key_md5)
         if cache:
             if not Env.get('dev'): log.debug('Getting cache %s', cache_key)
@@ -284,7 +284,7 @@ class Plugin(object):
                 return ''
 
     def setCache(self, cache_key, value, timeout = 300):
-        cache_key_md5 = md5(ss(cache_key))
+        cache_key_md5 = md5(cache_key)
         log.debug('Setting cache %s', cache_key)
         Env.get('cache').set(cache_key_md5, value, timeout)
         return value

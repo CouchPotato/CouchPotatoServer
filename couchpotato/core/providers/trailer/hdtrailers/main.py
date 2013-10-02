@@ -90,21 +90,18 @@ class HDTrailers(TrailerProvider):
             html = BeautifulSoup(data, parse_only = tables)
             result_table = html.find('table', attrs = {'class':'bottomTable'})
 
-
             for tr in result_table.find_all('tr'):
                 trtext = str(tr).lower()
                 if 'clips' in trtext:
                     break
-                if 'trailer' in trtext and not 'clip' in trtext and provider in trtext:
-                    nr = 0
+
+                if 'trailer' in trtext and not 'clip' in trtext and provider in trtext and not '3d' in trtext:
                     if 'trailer' not in tr.find('span', 'standardTrailerName').text.lower():
                         continue
                     resolutions = tr.find_all('td', attrs = {'class':'bottomTableResolution'})
                     for res in resolutions:
-                        results[str(res.a.contents[0])].insert(0, res.a['href'])
-                        nr += 1
-
-            return results
+                        if res.a:
+                            results[str(res.a.contents[0])].insert(0, res.a['href'])
 
         except AttributeError:
             log.debug('No trailers found in provider %s.', provider)

@@ -232,14 +232,14 @@ class MovieBase(MovieTypeBase):
 
         # List release statuses
         releases = db.query(Release) \
-            .filter(Release.movie_id.in_(movie_ids)) \
+            .filter(Release.media_id.in_(movie_ids)) \
             .all()
 
         release_statuses = dict((m, set()) for m in movie_ids)
         releases_count = dict((m, 0) for m in movie_ids)
         for release in releases:
-            release_statuses[release.movie_id].add('%d,%d' % (release.status_id, release.quality_id))
-            releases_count[release.movie_id] += 1
+            release_statuses[release.media_id].add('%d,%d' % (release.status_id, release.quality_id))
+            releases_count[release.media_id] += 1
 
         # Get main movie data
         q2 = db.query(Media) \
@@ -469,7 +469,7 @@ class MovieBase(MovieTypeBase):
                         fireEvent('release.delete', release.id, single = True)
 
             m.profile_id = params.get('profile_id', default_profile.get('id'))
-            m.category_id = tryInt(cat_id) if cat_id is not None and tryInt(cat_id) > 0 else None
+            m.category_id = tryInt(cat_id) if cat_id is not None and tryInt(cat_id) > 0 else (m.category_id or None)
         else:
             log.debug('Movie already exists, not updating: %s', params)
             added = False

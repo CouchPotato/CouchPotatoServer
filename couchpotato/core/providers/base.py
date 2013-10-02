@@ -1,6 +1,6 @@
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.variable import tryFloat, mergeDicts, md5, \
-    possibleTitles, getTitle
+    possibleTitles, toIterable
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
@@ -14,7 +14,6 @@ import urllib2
 import xml.etree.ElementTree as XMLTree
 
 log = CPLog(__name__)
-
 
 class MultiProvider(Plugin):
 
@@ -102,6 +101,7 @@ class YarrProvider(Provider):
     type = 'movie'
 
     cat_ids = {}
+    cat_ids_structure = None
     cat_backup_id = None
 
     sizeGb = ['gb', 'gib']
@@ -183,7 +183,7 @@ class YarrProvider(Provider):
 
         return 'try_next'
 
-    def search(self, movie, quality):
+    def search(self, media, quality):
 
         if self.isDisabled():
             return []
@@ -195,15 +195,15 @@ class YarrProvider(Provider):
 
         # Create result container
         imdb_results = hasattr(self, '_search')
-        results = ResultList(self, movie, quality, imdb_results = imdb_results)
+        results = ResultList(self, media, quality, imdb_results = imdb_results)
 
         # Do search based on imdb id
         if imdb_results:
-            self._search(movie, quality, results)
+            self._search(media, quality, results)
         # Search possible titles
         else:
-            for title in possibleTitles(getTitle(movie['library'])):
-                self._searchOnTitle(title, movie, quality, results)
+            for title in possibleTitles(fireEvent('searcher.get_search_title', media, single = True)):
+                self._searchOnTitle(title, media, quality, results)
 
         return results
 
@@ -244,9 +244,32 @@ class YarrProvider(Provider):
 
         return 0
 
-    def getCatId(self, identifier):
+    def _discoverCatIdStructure(self):
+        # Discover cat_ids structure (single or groups)
+        for group_name, group_cat_ids in self.cat_ids:
+            if len(group_cat_ids) > 0:
+                if type(group_cat_ids[0]) is tuple:
+                    self.cat_ids_structure = 'group'
+                if type(group_cat_ids[0]) is str:
+                    self.cat_ids_structure = 'single'
 
-        for cats in self.cat_ids:
+    def getCatId(self, identifier, group = None):
+
+        cat_ids = self.cat_ids
+
+        if not self.cat_ids_structure:
+            self._discoverCatIdStructure()
+
+        # If cat_ids is in a 'groups' structure, locate the media group
+        if self.cat_ids_structure == 'group':
+            if not group:
+                raise ValueError("group is required on group cat_ids structure")
+
+            for group_type, group_cat_ids in cat_ids:
+                if group in toIterable(group_type):
+                    cat_ids = group_cat_ids
+
+        for cats in cat_ids:
             ids, qualities = cats
             if identifier in qualities:
                 return ids
@@ -279,8 +302,7 @@ class ResultList(list):
 
         new_result = self.fillResult(result)
 
-        is_correct_movie = fireEvent('movie.searcher.correct_movie',
-                                     nzb = new_result, movie = self.movie, quality = self.quality,
+        is_correct_movie = fireEvent('searcher.correct_release', new_result, self.movie, self.quality,
                                      imdb_results = self.kwargs.get('imdb_results', False), single = True)
 
         if is_correct_movie and new_result['id'] not in self.result_ids:

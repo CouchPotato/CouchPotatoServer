@@ -275,7 +275,7 @@ class MatchTree(BaseMatchTree):
         for string_part in ('title', 'series', 'container', 'format',
                             'releaseGroup', 'website', 'audioCodec',
                             'videoCodec', 'screenSize', 'episodeFormat',
-                            'audioChannels'):
+                            'audioChannels', 'idNumber'):
             merge_similar_guesses(parts, string_part, choose_string)
 
         # 2- merge the rest, potentially discarding information not properly

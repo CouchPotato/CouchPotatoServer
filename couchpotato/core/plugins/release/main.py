@@ -190,7 +190,7 @@ class Release(Plugin):
             if item.get('protocol') != 'torrent_magnet':
                 item['download'] = provider.loginDownload if provider.urls.get('login') else provider.download
 
-            success = fireEvent('searcher.download', data = item, movie = rel.movie.to_dict({
+            success = fireEvent('searcher.download', data = item, movie = rel.media.to_dict({
                 'profile': {'types': {'quality': {}}},
                 'releases': {'status': {}, 'quality': {}},
                 'library': {'titles': {}, 'files':{}},
@@ -224,7 +224,7 @@ class Release(Plugin):
         releases_raw = db.query(Relea) \
             .options(joinedload_all('info')) \
             .options(joinedload_all('files')) \
-            .filter(Relea.movie_id == id) \
+            .filter(Relea.media_id == id) \
             .all()
 
         releases = [r.to_dict({'info':{}, 'files':{}}) for r in releases_raw]
