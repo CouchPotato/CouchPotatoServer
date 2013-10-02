@@ -31,6 +31,7 @@ class Base(TorrentProvider):
 
     def _buildUrl(self, query, quality_identifier, cat_ids_group = None):
 
+        # TODO this should support searching multiple cat_ids under a group
         cat_id = self.getCatId(quality_identifier, cat_ids_group)[0]
         if not cat_id:
             log.warning('Unable to find category for quality %s', quality_identifier)
@@ -140,8 +141,7 @@ class Show(ShowProvider, Base):
         ]),
         ('episode', [
             ([5], ['hdtv_720p', 'webdl_720p', 'webdl_1080p']),
-            ([78], ['hdtv_sd']),
-            ([4, 79], ['hdtv_sd'])
+            ([4, 78, 79], ['hdtv_sd'])
         ])
     ]
 
