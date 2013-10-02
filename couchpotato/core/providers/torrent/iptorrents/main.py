@@ -33,7 +33,7 @@ class Base(TorrentProvider):
 
         cat_ids = self.getCatId(quality_identifier, cat_ids_group)
 
-        if not len(cat_ids):
+        if not cat_ids or not len(cat_ids):
             log.warning('Unable to find category for quality %s', quality_identifier)
             return
 
