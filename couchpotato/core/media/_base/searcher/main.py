@@ -70,7 +70,7 @@ class Searcher(SearcherBase):
                 log.info('Ignored, score to low: %s', rel['name'])
                 continue
 
-            downloaded = fireEvent('searcher.download', data = rel, movie = media, manual = manual, single = True)
+            downloaded = fireEvent('searcher.download', data = rel, media = media, manual = manual, single = True)
             if downloaded is True:
                 return True
             elif downloaded != 'try_next':
@@ -78,11 +78,12 @@ class Searcher(SearcherBase):
 
         return False
 
-    def download(self, data, movie, manual = False):
+    def download(self, data, media, manual = False):
 
-        if not data.get('protocol'):
-            data['protocol'] = data['type']
-            data['type'] = 'movie'
+        # TODO what is this for?
+        #if not data.get('protocol'):
+        #    data['protocol'] = data['type']
+        #    data['type'] = 'movie'
 
         # Test to see if any downloaders are enabled for this type
         downloader_enabled = fireEvent('download.enabled', manual, data, single = True)
@@ -91,14 +92,14 @@ class Searcher(SearcherBase):
 
             snatched_status = fireEvent('status.get', 'snatched', single = True)
 
-            # Download movie to temp
+            # Download release to temp
             filedata = None
             if data.get('download') and (ismethod(data.get('download')) or isfunction(data.get('download'))):
                 filedata = data.get('download')(url = data.get('url'), nzb_id = data.get('id'))
                 if filedata == 'try_next':
                     return filedata
 
-            download_result = fireEvent('download', data = data, movie = movie, manual = manual, filedata = filedata, single = True)
+            download_result = fireEvent('download', data = data, movie = media, manual = manual, filedata = filedata, single = True)
             log.debug('Downloader result: %s', download_result)
 
             if download_result:
@@ -122,36 +123,36 @@ class Searcher(SearcherBase):
                                 rls.info.append(rls_info)
                         db.commit()
 
-                        log_movie = '%s (%s) in %s' % (getTitle(movie['library']), movie['library']['year'], rls.quality.label)
+                        log_movie = '%s (%s) in %s' % (getTitle(media['library']), media['library']['year'], rls.quality.label)
                         snatch_message = 'Snatched "%s": %s' % (data.get('name'), log_movie)
                         log.info(snatch_message)
-                        fireEvent('movie.snatched', message = snatch_message, data = rls.to_dict())
+                        fireEvent('%s.snatched' % data['type'], message = snatch_message, data = rls.to_dict())
 
-                        # If renamer isn't used, mark movie done
+                        # If renamer isn't used, mark media done
                         if not renamer_enabled:
                             active_status = fireEvent('status.get', 'active', single = True)
                             done_status = fireEvent('status.get', 'done', single = True)
                             try:
-                                if movie['status_id'] == active_status.get('id'):
-                                    for profile_type in movie['profile']['types']:
+                                if media['status_id'] == active_status.get('id'):
+                                    for profile_type in media['profile']['types']:
                                         if profile_type['quality_id'] == rls.quality.id and profile_type['finish']:
-                                            log.info('Renamer disabled, marking movie as finished: %s', log_movie)
+                                            log.info('Renamer disabled, marking media as finished: %s', log_movie)
 
                                             # Mark release done
                                             rls.status_id = done_status.get('id')
                                             rls.last_edit = int(time.time())
                                             db.commit()
 
-                                            # Mark movie done
-                                            mvie = db.query(Media).filter_by(id = movie['id']).first()
-                                            mvie.status_id = done_status.get('id')
-                                            mvie.last_edit = int(time.time())
+                                            # Mark media done
+                                            mdia = db.query(Media).filter_by(id = media['id']).first()
+                                            mdia.status_id = done_status.get('id')
+                                            mdia.last_edit = int(time.time())
                                             db.commit()
                             except:
-                                log.error('Failed marking movie finished, renamer disabled: %s', traceback.format_exc())
+                                log.error('Failed marking media finished, renamer disabled: %s', traceback.format_exc())
 
                 except:
-                    log.error('Failed marking movie finished: %s', traceback.format_exc())
+                    log.error('Failed marking media finished: %s', traceback.format_exc())
 
                 return True
 
