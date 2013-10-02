@@ -81,7 +81,7 @@ class ShowSearcher(Plugin):
         found_releases = []
         too_early_to_search = []
 
-        default_title = self.getSearchTitle(media['library'])
+        default_title = self.getSearchTitle(media)
         if not default_title:
             log.error('No proper info found for episode, removing it from library to cause it from having more issues.')
             #fireEvent('episode.delete', episode['id'], single = True)
@@ -223,7 +223,7 @@ class ShowSearcher(Plugin):
         return True
 
     def correctIdentifier(self, chain, media):
-        required_id = self.getIdentifier(media['library'], 'season_number', 'episode_number')
+        required_id = self.getMediaIdentifier(media['library'])
 
         if 'identifier' not in chain.info:
             return False
@@ -234,7 +234,7 @@ class ShowSearcher(Plugin):
         identifier = chain.info['identifier'][0]
 
         # TODO air by date episodes
-        release_id = self.getIdentifier(identifier, 'season', 'episode')
+        release_id = self.toNumericIdentifier(identifier.get('season'), identifier.get('episode'))
 
         if required_id != release_id:
             log.info2('Wrong: required identifier %s does not match release identifier %s', (str(required_id), str(release_id)))
@@ -242,11 +242,31 @@ class ShowSearcher(Plugin):
 
         return True
 
-    def getIdentifier(self, d, episode_key, season_key):
-        return (
-            tryInt(d.get(season_key), None) if season_key in d else None,
-            tryInt(d.get(episode_key), None) if episode_key in d else None
-        )
+    def getMediaIdentifier(self, media_library):
+        identifier = None, None
+
+        if media_library['type'] == 'episode':
+            map_episode = media_library['info'].get('map_episode')
+
+            if map_episode and 'scene' in map_episode:
+                identifier = (
+                    map_episode['scene'].get('season'),
+                    map_episode['scene'].get('episode')
+                )
+            else:
+                # TODO xem mapping?
+                identifier = (
+                    media_library.get('season_number'),
+                    media_library.get('episode_number')
+                )
+
+        if media_library['type'] == 'season':
+            identifier = media_library.get('season_number'), None
+
+        return self.toNumericIdentifier(*identifier)
+
+    def toNumericIdentifier(self, season, episode):
+        return tryInt(season, None), tryInt(episode, None)
 
     def chainMatches(self, chain, group, tags):
         found_tags = []
@@ -260,7 +280,7 @@ class ShowSearcher(Plugin):
         if set(tags.keys()) == set(found_tags):
             return True
 
-        return set([key for key, value in tags.items() if value]) == set(found_tags)
+        return set([key for key, value in tags.items() if None not in value]) == set(found_tags)
 
     def cleanMatchValue(self, value):
         value = value.lower()
@@ -276,15 +296,19 @@ class ShowSearcher(Plugin):
         if show is None:
             return None
 
-        name = ''
-        if season is not None:
-            name = ' S%02d' % season.season_number
-
-            if episode is not None:
-                name += 'E%02d' % episode.episode_number
-
+        # TODO this misses alternative titles from the database
         show_title = getTitle(show)
         if not show_title:
             return None
 
-        return show_title + name
+        season_num, episode_num = self.getMediaIdentifier(media['library'])
+
+        name = show_title
+
+        if season_num:
+            name += ' S%02d' % season_num
+
+            if episode_num:
+                name += 'E%02d' % episode_num
+
+        return name
