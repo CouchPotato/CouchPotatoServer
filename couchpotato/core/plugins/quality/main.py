@@ -16,9 +16,9 @@ log = CPLog(__name__)
 class QualityPlugin(Plugin):
 
     qualities = [
-        {'identifier': 'bd50', 'hd': True, 'size': (15000, 60000), 'label': 'BR-Disk', 'alternative': ['bd25'], 'allow': ['1080p'], 'ext':[], 'tags': ['bdmv', 'certificate', ('complete', 'bluray')]},
-        {'identifier': '1080p', 'hd': True, 'size': (4000, 20000), 'label': '1080p', 'width': 1920, 'height': 1080, 'alternative': [], 'allow': [], 'ext':['mkv', 'm2ts'], 'tags': ['m2ts']},
-        {'identifier': '720p', 'hd': True, 'size': (3000, 10000), 'label': '720p', 'width': 1280, 'height': 720, 'alternative': [], 'allow': [], 'ext':['mkv', 'ts']},
+        {'identifier': 'bd50', 'hd': True, 'allow_3d': True, 'size': (15000, 60000), 'label': 'BR-Disk', 'alternative': ['bd25'], 'allow': ['1080p'], 'ext':[], 'tags': ['bdmv', 'certificate', ('complete', 'bluray')]},
+        {'identifier': '1080p', 'hd': True, 'allow_3d': True, 'size': (4000, 20000), 'label': '1080p', 'width': 1920, 'height': 1080, 'alternative': [], 'allow': [], 'ext':['mkv', 'm2ts'], 'tags': ['m2ts']},
+        {'identifier': '720p', 'hd': True, 'allow_3d': True, 'size': (3000, 10000), 'label': '720p', 'width': 1280, 'height': 720, 'alternative': [], 'allow': [], 'ext':['mkv', 'ts']},
         {'identifier': 'brrip', 'hd': True, 'size': (700, 7000), 'label': 'BR-Rip', 'alternative': ['bdrip'], 'allow': ['720p', '1080p'], 'ext':['avi'], 'tags': ['hdtv', 'hdrip', 'webdl', ('web', 'dl')]},
         {'identifier': 'dvdr', 'size': (3000, 10000), 'label': 'DVD-R', 'alternative': [], 'allow': [], 'ext':['iso', 'img'], 'tags': ['pal', 'ntsc', 'video_ts', 'audio_ts']},
         {'identifier': 'dvdrip', 'size': (600, 2400), 'label': 'DVD-Rip', 'width': 720, 'alternative': [], 'allow': [], 'ext':['avi', 'mpg', 'mpeg'], 'tags': [('dvd', 'rip'), ('dvd', 'xvid'), ('dvd', 'divx')]},
@@ -29,6 +29,11 @@ class QualityPlugin(Plugin):
         {'identifier': 'cam', 'size': (600, 1000), 'label': 'Cam', 'alternative': ['camrip', 'hdcam'], 'allow': [], 'ext':['avi', 'mpg', 'mpeg']}
     ]
     pre_releases = ['cam', 'ts', 'tc', 'r5', 'scr']
+    threed_tags = {
+        'hsbs': [('half', 'sbs')],
+        'fsbs': [('full', 'sbs')],
+        '3d': [],
+    }
 
     def __init__(self):
         addEvent('quality.all', self.all)
@@ -46,6 +51,19 @@ class QualityPlugin(Plugin):
         })
 
         addEvent('app.initialize', self.fill, priority = 10)
+
+        def test():
+            cur_file = 'ReleaseName.720p.HSBS-Groupname.mkv'
+            words = re.split('\W+', cur_file.lower())
+
+            cur_file2 = 'ReleaseName.720p.Full.SBS-Groupname.mkv'
+            words2 = re.split('\W+', cur_file2.lower())
+
+            for quality in self.qualities:
+                self.isThreeD(quality, words, cur_file)
+                self.isThreeD(quality, words2, cur_file2)
+
+        addEvent('app.load', test)
 
     def preReleases(self):
         return self.pre_releases
@@ -176,20 +194,37 @@ class QualityPlugin(Plugin):
                 if quality['identifier'] in words:
                     if len(found) == 0 or len(found) == 1 and found.get(quality['identifier']):
                         log.debug('Found via identifier "%s" in %s', (quality['identifier'], cur_file))
-                        return self.setCache(cache_key, quality)
+                        return self.cacheAndReturn(cache_key, quality, words, cur_file)
 
                 # Check alt and tags
                 contains = self.containsTag(quality, words, cur_file)
                 if contains:
-                    return self.setCache(cache_key, quality)
+                    return self.cacheAndReturn(cache_key, quality, words, cur_file)
 
         # Try again with loose testing
         quality = self.guessLoose(cache_key, files = files, extra = extra)
         if quality:
-            return self.setCache(cache_key, quality)
+            return self.cacheAndReturn(cache_key, quality, words, cur_file)
 
         log.debug('Could not identify quality for: %s', files)
         return None
+
+    def isThreeD(self, quality, words, cur_file = ''):
+        cur_file = ss(cur_file)
+
+        for key in self.threed_tags:
+            tags = self.threed_tags.get(key, [])
+
+            for tag in tags:
+                if (isinstance(tag, tuple) and '.'.join(tag) in '.'.join(words)) or (isinstance(tag, (str, unicode)) and ss(tag.lower()) in cur_file.lower()):
+                    log.debug('Found %s in %s', (tag, cur_file))
+                    return (True, key)
+
+            if list(set([key]) & set(words)):
+                log.debug('Found %s in %s', (tag, cur_file))
+                return (True, key)
+
+        return (False, None)
 
     def containsTag(self, quality, words, cur_file = ''):
         cur_file = ss(cur_file)
@@ -207,8 +242,6 @@ class QualityPlugin(Plugin):
             if list(set(qualities) & set(words)):
                 log.debug('Found %s via %s %s in %s', (quality['identifier'], tag_type, quality.get(tag_type), cur_file))
                 return True
-
-        return
 
     def guessLoose(self, cache_key, files = None, extra = None):
 
@@ -230,3 +263,9 @@ class QualityPlugin(Plugin):
                 return self.setCache(cache_key, self.single('dvdrip'))
 
         return None
+
+    def cacheAndReturn(self, cache_key, quality, words, cur_file = ''):
+
+        threed = self.isThreeD(quality, words, cur_file)
+
+        return self.setCache(cache_key, quality)

@@ -2,6 +2,7 @@ from couchpotato import get_session
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import toUnicode
+from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Profile, ProfileType, Movie
@@ -87,7 +88,8 @@ class ProfilePlugin(Plugin):
         for type in kwargs.get('types', []):
             t = ProfileType(
                 order = order,
-                finish = type.get('finish') if order > 0 else 1,
+                finish = tryInt(type.get('finish')) if order > 0 else 1,
+                threed = tryInt(type.get('3d')),
                 wait_for = kwargs.get('wait_for'),
                 quality_id = type.get('quality_id')
             )
@@ -171,6 +173,9 @@ class ProfilePlugin(Plugin):
         }, {
             'label': 'SD',
             'qualities': ['dvdrip', 'dvdr']
+        }, {
+            'label': 'Prefer 3D HD',
+            'qualities': [('720p', True), ('1080p', True), '720p', '1080p']
         }]
 
         # Create default quality profile
@@ -185,11 +190,17 @@ class ProfilePlugin(Plugin):
 
             quality_order = 0
             for quality in profile.get('qualities'):
+
+                threed = False
+                if isinstance(quality, (tuple, list)):
+                    quality, threed = quality
+
                 quality = fireEvent('quality.single', identifier = quality, single = True)
                 profile_type = ProfileType(
                     quality_id = quality.get('id'),
                     profile = p,
                     finish = True,
+                    threed = threed,
                     wait_for = 0,
                     order = quality_order
                 )

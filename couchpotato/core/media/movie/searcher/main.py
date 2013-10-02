@@ -1,7 +1,7 @@
 from couchpotato import get_session
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
-from couchpotato.core.helpers.encoding import simplifyString, toUnicode, ss
+from couchpotato.core.helpers.encoding import simplifyString, toUnicode
 from couchpotato.core.helpers.variable import md5, getTitle, splitString, \
     possibleTitles, getImdb
 from couchpotato.core.logger import CPLog
@@ -166,6 +166,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
                 log.info('Search for %s in %s', (default_title, quality_type['quality']['label']))
                 quality = fireEvent('quality.single', identifier = quality_type['quality']['identifier'], single = True)
+                quality['threed'] = quality_type.get('threed', False)
 
                 results = []
                 for search_protocol in search_protocols:
@@ -314,22 +315,20 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
             log.info('Wrong: %s, probably pr0n', (nzb['name']))
             return False
 
-        preferred_quality = fireEvent('quality.single', identifier = quality['identifier'], single = True)
-
         # Contains lower quality string
-        if fireEvent('searcher.contains_other_quality', nzb, movie_year = movie['library']['year'], preferred_quality = preferred_quality, single = True):
+        if fireEvent('searcher.contains_other_quality', nzb, movie_year = movie['library']['year'], preferred_quality = quality, single = True):
             log.info2('Wrong: %s, looking for %s', (nzb['name'], quality['label']))
             return False
 
 
         # File to small
-        if nzb['size'] and preferred_quality['size_min'] > nzb['size']:
-            log.info2('Wrong: "%s" is too small to be %s. %sMB instead of the minimal of %sMB.', (nzb['name'], preferred_quality['label'], nzb['size'], preferred_quality['size_min']))
+        if nzb['size'] and quality['size_min'] > nzb['size']:
+            log.info2('Wrong: "%s" is too small to be %s. %sMB instead of the minimal of %sMB.', (nzb['name'], quality['label'], nzb['size'], quality['size_min']))
             return False
 
         # File to large
-        if nzb['size'] and preferred_quality.get('size_max') < nzb['size']:
-            log.info2('Wrong: "%s" is too large to be %s. %sMB instead of the maximum of %sMB.', (nzb['name'], preferred_quality['label'], nzb['size'], preferred_quality['size_max']))
+        if nzb['size'] and quality.get('size_max') < nzb['size']:
+            log.info2('Wrong: "%s" is too large to be %s. %sMB instead of the maximum of %sMB.', (nzb['name'], quality['label'], nzb['size'], quality['size_max']))
             return False
 
 

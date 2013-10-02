@@ -1,3 +1,6 @@
+/* @override 
+	http://localhost:5000/static/plugin/profile_plugin/profile.css?1380692626 */
+
 .add_new_profile {
 	padding: 20px;
 	display: block;
@@ -29,11 +32,10 @@
 
 	.profile .qualities {
 		min-height: 80px;
-		padding-top: 0;
 	}
 
 	.profile .formHint {
-		width: 250px !important;
+		width: 210px !important;
 		vertical-align: top !important;
 		margin: 0 !important;
 		padding-left: 3px !important;
@@ -46,6 +48,7 @@
 	.profile .wait_for {
 		position: absolute;
 		right: 60px;
+		padding-top: 0;
 		top: 0;
 	}
 
@@ -78,21 +81,55 @@
 			}
 
 			.profile .quality_type select {
-				width: 186px;
+				width: 120px;
 				margin-left: -1px;
 			}
 
-			.profile .types li.is_empty .check, .profile .types li.is_empty .delete, .profile .types li.is_empty .handle {
+			.profile .types li.is_empty .check, 
+			.profile .types li.is_empty .delete, 
+			.profile .types li.is_empty .handle, 
+			.profile .types li.is_empty .check_label {
 				visibility: hidden;
 			}
+			
+			.profile .types .type label {
+				display: inline-block;
+				width: auto;
+				float: none;
+				text-transform: uppercase;
+				font-size: 11px;
+				font-weight: normal;
+				margin-right: 20px;
+				text-shadow: none;
+				vertical-align: bottom;
+				padding: 0;
+				height: 17px;
+			}
+				.profile .types .type label .check {
+					margin-right: 5px;
+				}
+				.profile .types .type label .check_label {
+					display: inline-block;
+					vertical-align: top;
+					height: 16px;
+					line-height: 13px;
+				}
+				
+				.profile .types .type .threed {
+					display: none;
+				}
+				
+				.profile .types .type.allow_3d .threed {
+					display: inline-block;
+				}
 
 		.profile .types .type .handle {
-			background: url('../../static/profile_plugin/handle.png') center;
+			background: url('../../plugin/profile_plugin/handle.png') center;
 			display: inline-block;
 			height: 20px;
 			width: 20px;
-			cursor: -webkit-grab;
 			cursor: -moz-grab;
+			cursor: -webkit-grab;
 			cursor: grab;
 			margin: 0;
 		}
@@ -105,6 +142,9 @@
 			cursor: pointer;
 			font-size: 13px;
 			color: #fd5353;
+		}
+		.profile .types .type:not(.allow_3d) .delete {
+			margin-left: 55px;
 		}
 
 		.profile .types .type:hover:not(.is_empty) .delete {
@@ -144,7 +184,7 @@
 			}
 
 			#profile_ordering li .handle {
-				background: url('../../static/profile_plugin/handle.png') center;
+				background: url('../../plugin/profile_plugin/handle.png') center;
 				width: 20px;
 				float: right;
 			}

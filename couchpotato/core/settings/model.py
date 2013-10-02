@@ -234,6 +234,7 @@ class ProfileType(Entity):
     order = Field(Integer, default = 0, index = True)
     finish = Field(Boolean, default = True)
     wait_for = Field(Integer, default = 0)
+    threed = Field(Boolean)
 
     quality = ManyToOne('Quality')
     profile = ManyToOne('Profile')
