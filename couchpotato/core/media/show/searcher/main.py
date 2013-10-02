@@ -1,8 +1,5 @@
-import pprint
-import re
 from couchpotato import get_session, Env
 from couchpotato.core.event import addEvent, fireEvent
-from couchpotato.core.helpers.encoding import simplifyString
 from couchpotato.core.helpers.variable import getTitle, tryInt, possibleTitles
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.searcher.main import SearchSetupError
@@ -58,9 +55,7 @@ class ShowSearcher(Plugin):
 
         return show, season, episode
 
-    def single(self, media, search_protocols = None):
-        pprint.pprint(media)
-
+    def single(self, media, search_protocols = None, manual = False):
         if media['type'] == 'show':
             # TODO handle show searches (scan all seasons)
             return
@@ -130,7 +125,29 @@ class ShowSearcher(Plugin):
                 # Add them to this movie releases list
                 found_releases += fireEvent('searcher.create_releases', results, media, quality_type, single = True)
 
-                log.info('%d results found' % len(results))
+                # Try find a valid result and download it
+                if fireEvent('searcher.try_download_result', results, media, quality_type, manual, single = True):
+                    ret = True
+
+                # Remove releases that aren't found anymore
+                for release in media.get('releases', []):
+                    if release.get('status_id') == available_status.get('id') and release.get('identifier') not in found_releases:
+                        fireEvent('release.delete', release.get('id'), single = True)
+            else:
+                log.info('Better quality (%s) already available or snatched for %s', (quality_type['quality']['label'], default_title))
+                fireEvent('movie.restatus', media['id'])
+                break
+
+            # Break if CP wants to shut down
+            if self.shuttingDown() or ret:
+                break
+
+        if len(too_early_to_search) > 0:
+            log.info2('Too early to search for %s, %s', (too_early_to_search, default_title))
+
+        fireEvent('notify.frontend', type = 'show.searcher.ended.%s' % media['id'], data = True)
+
+        return ret
 
     def correctRelease(self, release = None, media = None, quality = None, **kwargs):
 
