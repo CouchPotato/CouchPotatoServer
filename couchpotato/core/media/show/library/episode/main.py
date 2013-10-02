@@ -45,6 +45,8 @@ class EpisodeLibraryPlugin(LibraryBase):
                 status_id = status.get('id'),
                 info = {},
                 parent = parent,
+                season_number = tryInt(attrs.get('seasonnumber', None)),
+                episode_number = tryInt(attrs.get('episodenumber', None)),
             )
 
             title = LibraryTitle(
@@ -89,7 +91,8 @@ class EpisodeLibraryPlugin(LibraryBase):
             do_update = False
 
         episode_params = {'season_identifier':  parent_identifier,
-                          'episode_identifier': identifier}
+                          'episode_identifier': identifier,
+                          'episode': library.episode_number}
         info = fireEvent('episode.info', merge = True, params = episode_params)
 
         # Don't need those here
