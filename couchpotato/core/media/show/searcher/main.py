@@ -29,6 +29,7 @@ class ShowSearcher(Plugin):
         addEvent('show.searcher.single', self.single)
         addEvent('searcher.correct_release', self.correctRelease)
         addEvent('searcher.get_search_title', self.getSearchTitle)
+        addEvent('searcher.get_media_searcher_id', self.getMediaSearcherId)
 
         self.caper = Caper()
 
@@ -312,3 +313,7 @@ class ShowSearcher(Plugin):
                 name += 'E%02d' % episode_num
 
         return name
+
+    def getMediaSearcherId(self, media_type):
+        if media_type in ['show', 'season', 'episode']:
+            return 'show'
