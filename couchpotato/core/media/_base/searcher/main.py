@@ -55,7 +55,7 @@ class Searcher(SearcherBase):
         return progress
 
     def tryDownloadResult(self, results, media, quality_type, manual = False):
-        available_status, ignored_status, failed_status = fireEvent('status.get', ['available', 'ignored', 'failed'], single = True)
+        ignored_status, failed_status = fireEvent('status.get', ['ignored', 'failed'], single = True)
 
         for rel in results:
             if not quality_type.get('finish', False) and quality_type.get('wait_for', 0) > 0 and rel.get('age') <= quality_type.get('wait_for', 0):
@@ -89,8 +89,7 @@ class Searcher(SearcherBase):
         downloader_enabled = fireEvent('download.enabled', manual, data, single = True)
 
         if downloader_enabled:
-
-            snatched_status = fireEvent('status.get', 'snatched', single = True)
+            snatched_status, active_status, done_status = fireEvent('status.get', ['snatched', 'active', 'done'], single = True)
 
             # Download release to temp
             filedata = None
@@ -110,7 +109,6 @@ class Searcher(SearcherBase):
                     if rls:
                         renamer_enabled = Env.setting('enabled', 'renamer')
 
-                        done_status = fireEvent('status.get', 'done', single = True)
                         rls.status_id = done_status.get('id') if not renamer_enabled else snatched_status.get('id')
 
                         # Save download-id info if returned
@@ -130,8 +128,6 @@ class Searcher(SearcherBase):
 
                         # If renamer isn't used, mark media done
                         if not renamer_enabled:
-                            active_status = fireEvent('status.get', 'active', single = True)
-                            done_status = fireEvent('status.get', 'done', single = True)
                             try:
                                 if media['status_id'] == active_status.get('id'):
                                     for profile_type in media['profile']['types']:
@@ -163,14 +159,10 @@ class Searcher(SearcherBase):
     def search(self, protocols, media, quality):
         results = []
 
-        search_type = None
-        if media['type'] == 'movie':
-            search_type = 'movie'
-        elif media['type'] in ['show', 'season', 'episode']:
-            search_type = 'show'
+        searcher_id = fireEvent('searcher.get_media_searcher_id', media['type'], single = True)
 
         for search_protocol in protocols:
-            protocol_results = fireEvent('provider.search.%s.%s' % (search_protocol, search_type), media, quality, merge = True)
+            protocol_results = fireEvent('provider.search.%s.%s' % (search_protocol, searcher_id), media, quality, merge = True)
             if protocol_results:
                 results += protocol_results
 
@@ -191,13 +183,13 @@ class Searcher(SearcherBase):
 
         for rel in search_results:
 
-            nzb_identifier = md5(rel['url'])
-            found_releases.append(nzb_identifier)
+            rel_identifier = md5(rel['url'])
+            found_releases.append(rel_identifier)
 
-            rls = db.query(Release).filter_by(identifier = nzb_identifier).first()
+            rls = db.query(Release).filter_by(identifier = rel_identifier).first()
             if not rls:
                 rls = Release(
-                    identifier = nzb_identifier,
+                    identifier = rel_identifier,
                     media_id = media.get('id'),
                     quality_id = quality_type.get('quality_id'),
                     status_id = available_status.get('id')
