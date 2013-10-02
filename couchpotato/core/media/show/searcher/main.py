@@ -200,7 +200,7 @@ class ShowSearcher(Plugin):
                     library_title = ' '.join(valid_words)
 
                 if valid_words == chain_words:
-                    return True
+                    return chain.weight
 
         log.info("Wrong: title '%s', undetermined show naming. Looking for '%s (%s)'", (chain_title, library_title, media['library']['year']))
         return False
