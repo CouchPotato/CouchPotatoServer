@@ -1,16 +1,14 @@
 from couchpotato import get_session
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
-from couchpotato.core.helpers.encoding import simplifyString, toUnicode, ss
-from couchpotato.core.helpers.variable import md5, getTitle, splitString, \
-    possibleTitles, getImdb
+from couchpotato.core.helpers.encoding import simplifyString
+from couchpotato.core.helpers.variable import getTitle, possibleTitles, getImdb
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.searcher.base import SearcherBase
 from couchpotato.core.media.movie import MovieTypeBase
-from couchpotato.core.settings.model import Media, Release, ReleaseInfo
+from couchpotato.core.settings.model import Media, Release
 from couchpotato.environment import Env
 from datetime import date
-from sqlalchemy.exc import InterfaceError
 import random
 import re
 import time
