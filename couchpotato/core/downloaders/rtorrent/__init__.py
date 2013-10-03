@@ -36,12 +36,25 @@ config = [{
                     'description': 'Label to apply on added torrents.',
                 },
                 {
+                    'name': 'directory',
+                    'type': 'directory',
+                    'description': 'Directory where rtorrent should download the files too.',
+                },
+                {
                     'name': 'remove_complete',
                     'label': 'Remove torrent',
                     'default': False,
                     'advanced': True,
                     'type': 'bool',
                     'description': 'Remove the torrent after it finishes seeding.',
+                },
+                {
+                    'name': 'append_label',
+                    'label': 'Append Label',
+                    'default': False,
+                    'advanced': True,
+                    'type': 'bool',
+                    'description': 'Append label to download location. Requires you to set the download location above.',
                 },
                 {
                     'name': 'delete_files',

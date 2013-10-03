@@ -2,6 +2,7 @@ from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.variable import splitString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
+from couchpotato.environment import Env
 from email.mime.text import MIMEText
 import smtplib
 import traceback
@@ -23,7 +24,7 @@ class Email(Notification):
         smtp_pass = self.conf('smtp_pass')
 
         # Make the basic message
-        message = MIMEText(toUnicode(message))
+        message = MIMEText(toUnicode(message), _charset = Env.get('encoding'))
         message['Subject'] = self.default_title
         message['From'] = from_address
         message['To'] = to_address

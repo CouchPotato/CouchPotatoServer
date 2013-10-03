@@ -15,7 +15,7 @@ class TorrentShack(TorrentProvider):
         'login' : 'https://torrentshack.net/login.php',
         'login_check': 'https://torrentshack.net/inbox.php',
         'detail' : 'https://torrentshack.net/torrent/%s',
-        'search' : 'https://torrentshack.net/torrents.php?searchstr=%s&filter_cat[%d]=1',
+        'search' : 'https://torrentshack.net/torrents.php?action=advanced&searchstr=%s&scene=%s&filter_cat[%d]=1',
         'download' : 'https://torrentshack.net/%s',
     }
 
@@ -31,7 +31,9 @@ class TorrentShack(TorrentProvider):
 
     def _searchOnTitle(self, title, movie, quality, results):
 
-        url = self.urls['search'] % (tryUrlencode('"%s" %s' % (title.replace(':', ''), movie['library']['year'])), self.getCatId(quality['identifier'])[0])
+        scene_only = '1' if self.conf('scene_only') else ''
+
+        url = self.urls['search'] % (tryUrlencode('%s %s' % (title.replace(':', ''), movie['library']['year'])), scene_only, self.getCatId(quality['identifier'])[0])
         data = self.getHTMLData(url, opener = self.login_opener)
 
         if data:
@@ -49,22 +51,15 @@ class TorrentShack(TorrentProvider):
                     link = result.find('span', attrs = {'class' : 'torrent_name_link'}).parent
                     url = result.find('td', attrs = {'class' : 'torrent_td'}).find('a')
 
-                    extra_info = ''
-                    if result.find('span', attrs = {'class' : 'torrent_extra_info'}):
-                        extra_info = result.find('span', attrs = {'class' : 'torrent_extra_info'}).text
-
-                    if not self.conf('scene_only') or extra_info != '[NotScene]':
-                        results.append({
-                            'id': link['href'].replace('torrents.php?torrentid=', ''),
-                            'name': unicode(link.span.string).translate({ord(u'\xad'): None}),
-                            'url': self.urls['download'] % url['href'],
-                            'detail_url': self.urls['download'] % link['href'],
-                            'size': self.parseSize(result.find_all('td')[4].string),
-                            'seeders': tryInt(result.find_all('td')[6].string),
-                            'leechers': tryInt(result.find_all('td')[7].string),
-                        })
-                    else:
-                        log.info('Not adding release %s [NotScene]' % unicode(link.span.string).translate({ord(u'\xad'): None}))
+                    results.append({
+                        'id': link['href'].replace('torrents.php?torrentid=', ''),
+                        'name': unicode(link.span.string).translate({ord(u'\xad'): None}),
+                        'url': self.urls['download'] % url['href'],
+                        'detail_url': self.urls['download'] % link['href'],
+                        'size': self.parseSize(result.find_all('td')[4].string),
+                        'seeders': tryInt(result.find_all('td')[6].string),
+                        'leechers': tryInt(result.find_all('td')[7].string),
+                    })
 
             except:
                 log.error('Failed to parsing %s: %s', (self.getName(), traceback.format_exc()))

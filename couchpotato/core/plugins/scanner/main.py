@@ -1,7 +1,8 @@
 from couchpotato import get_session
 from couchpotato.core.event import fireEvent, addEvent
 from couchpotato.core.helpers.encoding import toUnicode, simplifyString, ss
-from couchpotato.core.helpers.variable import getExt, getImdb, tryInt
+from couchpotato.core.helpers.variable import getExt, getImdb, tryInt, \
+    splitString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import File, Media
@@ -24,7 +25,9 @@ class Scanner(Plugin):
         'media': 314572800, # 300MB
         'trailer': 1048576, # 1MB
     }
-    ignored_in_path = [os.path.sep + 'extracted' + os.path.sep, 'extracting', '_unpack', '_failed_', '_unknown_', '_exists_', '_failed_remove_', '_failed_rename_', '.appledouble', '.appledb', '.appledesktop', os.path.sep + '._', '.ds_store', 'cp.cpnfo'] #unpacking, smb-crap, hidden files
+    ignored_in_path = [os.path.sep + 'extracted' + os.path.sep, 'extracting', '_unpack', '_failed_', '_unknown_', '_exists_', '_failed_remove_',
+                       '_failed_rename_', '.appledouble', '.appledb', '.appledesktop', os.path.sep + '._', '.ds_store', 'cp.cpnfo',
+                       'thumbs.db', 'ehthumbs.db', 'desktop.ini'] #unpacking, smb-crap, hidden files
     ignore_names = ['extract', 'extracting', 'extracted', 'movie', 'movies', 'film', 'films', 'download', 'downloads', 'video_ts', 'audio_ts', 'bdmv', 'certificate']
     extensions = {
         'movie': ['mkv', 'wmv', 'avi', 'mpg', 'mpeg', 'mp4', 'm2ts', 'iso', 'img', 'mdf', 'ts', 'm4v'],
@@ -741,8 +744,15 @@ class Scanner(Plugin):
 
     def createStringIdentifier(self, file_path, folder = '', exclude_filename = False):
 
-        identifier = file_path.replace(folder, '') # root folder
+        year = self.findYear(file_path)
+
+        identifier = file_path.replace(folder, '').lstrip(os.path.sep) # root folder
         identifier = os.path.splitext(identifier)[0] # ext
+
+        try:
+            path_split = splitString(identifier, os.path.sep)
+            identifier = path_split[-2] if len(path_split) > 1 and len(path_split[-2]) > len(path_split[-1]) else path_split[-1] # Only get filename
+        except: pass
 
         if exclude_filename:
             identifier = identifier[:len(identifier) - len(os.path.split(identifier)[-1])]
@@ -757,7 +767,6 @@ class Scanner(Plugin):
         identifier = re.sub(self.clean, '::', simplifyString(identifier)).strip(':')
 
         # Year
-        year = self.findYear(identifier)
         if year and identifier[:4] != year:
             identifier = '%s %s' % (identifier.split(year)[0].strip(), year)
         else:
