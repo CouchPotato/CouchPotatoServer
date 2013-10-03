@@ -204,6 +204,7 @@ class EpisodeLibrary(Library):
     last_updated = Field(Integer, index = True)
     season_number = Field(Integer, index = True)
     episode_number = Field(Integer, index = True)
+    absolute_number = Field(Integer, index = True)
 
 
 class LibraryTitle(Entity):
