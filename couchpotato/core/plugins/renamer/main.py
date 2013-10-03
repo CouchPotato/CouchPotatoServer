@@ -662,7 +662,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
         db = get_session()
         rels = db.query(Release).filter(
-            Release.status_id.in_(snatched_status.get('id'), seeding_status.get('id'), missing_status.get('id'))
+            Release.status_id.in_([snatched_status.get('id'), seeding_status.get('id'), missing_status.get('id')])
         ).all()
 
         scan_items = []
