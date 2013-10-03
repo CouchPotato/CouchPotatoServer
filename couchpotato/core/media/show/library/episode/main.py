@@ -47,6 +47,7 @@ class EpisodeLibraryPlugin(LibraryBase):
                 parent = parent,
                 season_number = tryInt(attrs.get('seasonnumber', None)),
                 episode_number = tryInt(attrs.get('episodenumber', None)),
+                absolute_number = tryInt(attrs.get('absolute_number', None))
             )
 
             title = LibraryTitle(
@@ -92,7 +93,8 @@ class EpisodeLibraryPlugin(LibraryBase):
 
         episode_params = {'season_identifier':  parent_identifier,
                           'episode_identifier': identifier,
-                          'episode': library.episode_number}
+                          'episode': library.episode_number,
+                          'absolute':  library.absolute_number,}
         info = fireEvent('episode.info', merge = True, params = episode_params)
 
         # Don't need those here
@@ -113,6 +115,7 @@ class EpisodeLibraryPlugin(LibraryBase):
             library.status_id = done_status.get('id')
             library.season_number = tryInt(info.get('seasonnumber', None))
             library.episode_number = tryInt(info.get('episodenumber', None))
+            library.absolute_number = tryInt(info.get('absolute_number', None))
             try:
                 library.last_updated = int(info.get('lastupdated'))
             except:

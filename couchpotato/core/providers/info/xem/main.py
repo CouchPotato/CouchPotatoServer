@@ -1,7 +1,7 @@
 from couchpotato.core.event import addEvent
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.info.base import ShowProvider
-from couchpotato.core.helpers.encoding import tryUrlencode
+from couchpotato.core.helpers.encoding import toUnicode, tryUrlencode
 import traceback
 
 log = CPLog(__name__)
@@ -138,7 +138,7 @@ class Xem(ShowProvider):
                 if map_absolute:
                     map.update({'map_absolute': map_absolute})
 
-            map_names = result.get('map_names', {}).get(season, {}).get(episode, {})
+            map_names = result.get('map_names', {}).get(toUnicode(season), {})
             if map_names:
                 map.update({'map_names': map_names})
 
