@@ -14,8 +14,9 @@
 
 
 from logr import Logr
+from caper import CaperClosure
 from caper.helpers import clean_dict
-from caper.result import CaperFragmentNode
+from caper.result import CaperFragmentNode, CaperClosureNode
 from caper.step import CaptureStep
 from caper.constraint import CaptureConstraint
 
@@ -70,7 +71,9 @@ class CaptureGroup(object):
     def parse_subject(self, parent_head, subject):
         parent_node = parent_head[0] if type(parent_head) is list else parent_head
 
-        # TODO - if subject is a closure?
+        # TODO just jumping into closures for now, will be fixed later
+        if type(subject) is CaperClosure:
+            return [CaperClosureNode(subject, parent_head)]
 
         nodes = []
 
