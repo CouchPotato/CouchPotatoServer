@@ -68,7 +68,7 @@ class ShowSearcher(Plugin):
         except SearchSetupError:
             return
 
-        done_status = fireEvent('status.get', 'done', single = True)
+        done_status, available_status, ignored_status, failed_status = fireEvent('status.get', ['done', 'available', 'ignored', 'failed'], single = True)
 
         if not media['profile'] or media['status_id'] == done_status.get('id'):
             log.debug('Episode doesn\'t have a profile or already done, assuming in manage tab.')
@@ -76,8 +76,7 @@ class ShowSearcher(Plugin):
 
         db = get_session()
 
-        pre_releases = fireEvent('quality.pre_releases', single = True)
-        available_status, ignored_status, failed_status = fireEvent('status.get', ['available', 'ignored', 'failed'], single = True)
+        #pre_releases = fireEvent('quality.pre_releases', single = True)
 
         found_releases = []
         too_early_to_search = []
