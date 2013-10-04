@@ -34,7 +34,8 @@ class Pneumatic(Downloader):
                             f.write(filedata)
 
                         nzb_name = self.createNzbName(data, movie)
-                        strm_path = os.path.join(directory, nzb_name)
+                        strmName =  movie['library']['titles'][0].get('title')
+                        strm_path = os.path.join(directory, strmName)
 
                         strm_file = open(strm_path + '.strm', 'wb')
                         strmContent = self.strm_syntax % (fullPath, nzb_name)
