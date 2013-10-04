@@ -110,6 +110,7 @@ class ApiHandler(RequestHandler):
 
             if jsonp_callback:
                 self.write(str(jsonp_callback) + '(' + json.dumps(result) + ')')
+                self.set_header("Content-Type", "text/javascript")
             elif isinstance(result, tuple) and result[0] == 'redirect':
                 self.redirect(result[1])
             else:
