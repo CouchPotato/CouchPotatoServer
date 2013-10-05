@@ -130,15 +130,6 @@ class uTorrent(Downloader):
         # Get torrents
         for item in queue['torrents']:
 
-            # item[21] = Paused | Downloading | Seeding | Finished
-            status = 'busy'
-            if 'Finished' in item[21]:
-                status = 'completed'
-                self.removeReadOnly(item[26])
-            elif 'Seeding' in item[21]:
-                status = 'seeding'
-                self.removeReadOnly(item[26])
-
             #Get files of the torrent
             torrent_files = ''
             try:
@@ -146,6 +137,15 @@ class uTorrent(Downloader):
                 torrent_files = [os.path.join(item[26], torrent_file[0]) for torrent_file in torrent_files['files'][1]]
             except:
                 log.debug('Failed getting files from torrent: %s', item[2])
+
+            # item[21] = Paused | Downloading | Seeding | Finished
+            status = 'busy'
+            if 'Finished' in item[21]:
+                status = 'completed'
+                self.removeReadOnly(torrent_files)
+            elif 'Seeding' in item[21]:
+                status = 'seeding'
+                self.removeReadOnly(torrent_files)
 
             statuses.append({
                 'id': item[0],
@@ -177,14 +177,12 @@ class uTorrent(Downloader):
             return False
         return self.utorrent_api.remove_torrent(item['id'], remove_data = delete_files)
 
-    def removeReadOnly(self, folder):
-        #Removes all read-only flags in a folder
-        if folder and os.path.isdir(folder):
-            for root, folders, filenames in os.walk(folder):
-                for filename in filenames:
-                    filepath = os.path.join(root, filename)
-                    #Windows only needs S_IWRITE, but we bitwise-or with current perms to preserve other permission bits on Linux
-                    os.chmod(filepath, stat.S_IWRITE | os.stat(filepath).st_mode)
+    def removeReadOnly(self, files):
+        #Removes all read-only flags in a for all files
+        for filepath in files:
+            if os.path.isfile(filepath):
+                #Windows only needs S_IWRITE, but we bitwise-or with current perms to preserve other permission bits on Linux
+                os.chmod(filepath, stat.S_IWRITE | os.stat(filepath).st_mode)
 
 class uTorrentAPI(object):
 
