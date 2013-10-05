@@ -25,7 +25,9 @@ class Pneumatic(Downloader):
                     log.error('No nzb available!')
                     return False
 
-                fullPath = os.path.join(directory, self.createFileName(data, filedata, movie))
+                movieYear =  '(%s)' % movie['library']['info'].get('year')
+                nzb_name =  re.sub(r" ", ".", movie['library']['titles'][0].get('title') + movieYear)
+                fullPath = os.path.join(directory, nzb_name + '.nzb')
 
                 try:
                     if not os.path.isfile(fullPath):
@@ -33,7 +35,6 @@ class Pneumatic(Downloader):
                         with open(fullPath, 'wb') as f:
                             f.write(filedata)
 
-                        nzb_name = self.createNzbName(data, movie)
                         strm_path = os.path.join(directory, nzb_name)
 
                         strm_file = open(strm_path + '.strm', 'wb')
