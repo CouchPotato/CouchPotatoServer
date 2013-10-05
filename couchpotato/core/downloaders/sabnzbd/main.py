@@ -1,4 +1,4 @@
-from couchpotato.core.downloaders.base import Downloader, StatusList
+from couchpotato.core.downloaders.base import Downloader, ReleaseDownloadList
 from couchpotato.core.helpers.encoding import tryUrlencode, ss
 from couchpotato.core.helpers.variable import cleanHost, mergeDicts
 from couchpotato.core.logger import CPLog
@@ -86,58 +86,58 @@ class Sabnzbd(Downloader):
             log.error('Failed getting history json: %s', traceback.format_exc(1))
             return False
 
-        statuses = StatusList(self)
+        release_downloads = ReleaseDownloadList(self)
 
         # Get busy releases
-        for item in queue.get('slots', []):
+        for nzb in queue.get('slots', []):
             status = 'busy'
-            if 'ENCRYPTED / ' in item['filename']:
+            if 'ENCRYPTED / ' in nzb['filename']:
                 status = 'failed'
 
-            statuses.append({
-                'id': item['nzo_id'],
-                'name': item['filename'],
+            release_downloads.append({
+                'id': nzb['nzo_id'],
+                'name': nzb['filename'],
                 'status': status,
-                'original_status': item['status'],
-                'timeleft': item['timeleft'] if not queue['paused'] else -1,
+                'original_status': nzb['status'],
+                'timeleft': nzb['timeleft'] if not queue['paused'] else -1,
             })
 
         # Get old releases
-        for item in history.get('slots', []):
+        for nzb in history.get('slots', []):
 
             status = 'busy'
-            if item['status'] == 'Failed' or (item['status'] == 'Completed' and item['fail_message'].strip()):
+            if nzb['status'] == 'Failed' or (nzb['status'] == 'Completed' and nzb['fail_message'].strip()):
                 status = 'failed'
-            elif item['status'] == 'Completed':
+            elif nzb['status'] == 'Completed':
                 status = 'completed'
 
-            statuses.append({
-                'id': item['nzo_id'],
-                'name': item['name'],
+            release_downloads.append({
+                'id': nzb['nzo_id'],
+                'name': nzb['name'],
                 'status': status,
-                'original_status': item['status'],
+                'original_status': nzb['status'],
                 'timeleft': str(timedelta(seconds = 0)),
-                'folder': ss(item['storage']),
+                'folder': ss(nzb['storage']),
             })
 
-        return statuses
+        return release_downloads
 
-    def removeFailed(self, item):
+    def removeFailed(self, release_download):
 
-        log.info('%s failed downloading, deleting...', item['name'])
+        log.info('%s failed downloading, deleting...', release_download['name'])
 
         try:
             self.call({
                 'mode': 'queue',
                 'name': 'delete',
                 'del_files': '1',
-                'value': item['id']
+                'value': release_download['id']
             }, use_json = False)
             self.call({
                 'mode': 'history',
                 'name': 'delete',
                 'del_files': '1',
-                'value': item['id']
+                'value': release_download['id']
             }, use_json = False)
         except:
             log.error('Failed deleting: %s', traceback.format_exc(0))
@@ -145,15 +145,15 @@ class Sabnzbd(Downloader):
 
         return True
 
-    def processComplete(self, item, delete_files = False):
-        log.debug('Requesting SabNZBd to remove the NZB %s.', item['name'])
+    def processComplete(self, release_download, delete_files = False):
+        log.debug('Requesting SabNZBd to remove the NZB %s.', release_download['name'])
 
         try:
             self.call({
                 'mode': 'history',
                 'name': 'delete',
                 'del_files': '0',
-                'value': item['id']
+                'value': release_download['id']
             }, use_json = False)
         except:
             log.error('Failed removing: %s', traceback.format_exc(0))

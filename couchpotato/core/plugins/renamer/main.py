@@ -66,19 +66,19 @@ class Renamer(Plugin):
         downloader = kwargs.get('downloader')
         download_id = kwargs.get('download_id')
 
-        download_info = {'folder': movie_folder} if movie_folder else None
-        if download_info:
-            download_info.update({'id': download_id, 'downloader': downloader} if download_id else {})
+        release_download = {'folder': movie_folder} if movie_folder else None
+        if release_download:
+            release_download.update({'id': download_id, 'downloader': downloader} if download_id else {})
 
         fire_handle = fireEvent if not async else fireEventAsync
 
-        fire_handle('renamer.scan', download_info)
+        fire_handle('renamer.scan', release_download)
 
         return {
             'success': True
         }
 
-    def scan(self, download_info = None):
+    def scan(self, release_download = None):
 
         if self.isDisabled():
             return
@@ -87,7 +87,7 @@ class Renamer(Plugin):
             log.info('Renamer is already running, if you see this often, check the logs above for errors.')
             return
 
-        movie_folder = download_info and download_info.get('folder')
+        movie_folder = release_download and release_download.get('folder')
 
         # Check to see if the "to" folder is inside the "from" folder.
         if movie_folder and not os.path.isdir(movie_folder) or not os.path.isdir(self.conf('from')) or not os.path.isdir(self.conf('to')):
@@ -102,7 +102,7 @@ class Renamer(Plugin):
             return
 
         # Make sure a checkSnatched marked all downloads/seeds as such
-        if not download_info and self.conf('run_every') > 0:
+        if not release_download and self.conf('run_every') > 0:
             fireEvent('renamer.check_snatched')
 
         self.renaming_started = True
@@ -115,8 +115,8 @@ class Renamer(Plugin):
             movie_folder = movie_folder.rstrip(os.path.sep)
             folder = os.path.dirname(movie_folder)
 
-            if download_info['files']:
-                files = download_info['files'].split('|')
+            if release_download['files']:
+                files = release_download['files'].split('|')
 
                 # If there is only one file in the torrent, the downloader did not create a subfolder
                 if len(files) == 1:
@@ -132,16 +132,16 @@ class Renamer(Plugin):
         db = get_session()
 
         # Extend the download info with info stored in the downloaded release
-        download_info = self.extendDownloadInfo(download_info)
+        release_download = self.extendReleaseDownload(release_download)
 
         # Unpack any archives
         extr_files = None
         if self.conf('unrar'):
             folder, movie_folder, files, extr_files = self.extractFiles(folder = folder, movie_folder = movie_folder, files = files,
-                                                                        cleanup = self.conf('cleanup') and not self.downloadIsTorrent(download_info))
+                                                                        cleanup = self.conf('cleanup') and not self.downloadIsTorrent(release_download))
 
         groups = fireEvent('scanner.scan', folder = folder if folder else self.conf('from'),
-                           files = files, download_info = download_info, return_ignored = False, single = True) or []
+                           files = files, release_download = release_download, return_ignored = False, single = True) or []
 
         folder_name = self.conf('folder_name')
         file_name = self.conf('file_name')
@@ -238,7 +238,7 @@ class Renamer(Plugin):
                     if file_type is 'nfo' and not self.conf('rename_nfo'):
                         log.debug('Skipping, renaming of %s disabled', file_type)
                         for current_file in group['files'][file_type]:
-                            if self.conf('cleanup') and (not self.downloadIsTorrent(download_info) or self.fileIsAdded(current_file, group)):
+                            if self.conf('cleanup') and (not self.downloadIsTorrent(release_download) or self.fileIsAdded(current_file, group)):
                                 remove_files.append(current_file)
                         continue
 
@@ -418,7 +418,7 @@ class Renamer(Plugin):
                 log.debug('Removing leftover files')
                 for current_file in group['files']['leftover']:
                     if self.conf('cleanup') and not self.conf('move_leftover') and \
-                            (not self.downloadIsTorrent(download_info) or self.fileIsAdded(current_file, group)):
+                            (not self.downloadIsTorrent(release_download) or self.fileIsAdded(current_file, group)):
                         remove_files.append(current_file)
 
             # Remove files
@@ -464,14 +464,14 @@ class Renamer(Plugin):
                     self.makeDir(os.path.dirname(dst))
 
                     try:
-                        self.moveFile(src, dst, forcemove = not self.downloadIsTorrent(download_info) or self.fileIsAdded(src, group))
+                        self.moveFile(src, dst, forcemove = not self.downloadIsTorrent(release_download) or self.fileIsAdded(src, group))
                         group['renamed_files'].append(dst)
                     except:
                         log.error('Failed moving the file "%s" : %s', (os.path.basename(src), traceback.format_exc()))
                         self.tagDir(group, 'failed_rename')
 
             # Tag folder if it is in the 'from' folder and it will not be removed because it is a torrent
-            if self.movieInFromFolder(movie_folder) and self.downloadIsTorrent(download_info):
+            if self.movieInFromFolder(movie_folder) and self.downloadIsTorrent(release_download):
                 self.tagDir(group, 'renamed_already')
 
             # Remove matching releases
@@ -482,7 +482,7 @@ class Renamer(Plugin):
                 except:
                     log.error('Failed removing %s: %s', (release.identifier, traceback.format_exc()))
 
-            if group['dirname'] and group['parentdir'] and not self.downloadIsTorrent(download_info):
+            if group['dirname'] and group['parentdir'] and not self.downloadIsTorrent(release_download):
                 if movie_folder:
                     # Delete the movie folder
                     group_folder = movie_folder
@@ -678,14 +678,14 @@ Remove it if you want it to be renamed (again, or at least let it try again)
             Release.status_id.in_([snatched_status.get('id'), seeding_status.get('id'), missing_status.get('id')])
         ).all()
 
-        scan_items = []
+        scan_releases = []
         scan_required = False
 
         if rels:
             log.debug('Checking status snatched releases...')
 
-            statuses = fireEvent('download.status', merge = True)
-            if not statuses:
+            release_downloads = fireEvent('download.status', merge = True)
+            if not release_downloads:
                 log.debug('Download status functionality is not implemented for active downloaders.')
                 scan_required = True
             else:
@@ -698,57 +698,57 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                         nzbname = self.createNzbName(rel_dict['info'], movie_dict)
 
                         found = False
-                        for item in statuses:
+                        for release_download in release_downloads:
                             found_release = False
                             if rel_dict['info'].get('download_id'):
-                                if item['id'] == rel_dict['info']['download_id'] and item['downloader'] == rel_dict['info']['download_downloader']:
-                                    log.debug('Found release by id: %s', item['id'])
+                                if release_download['id'] == rel_dict['info']['download_id'] and release_download['downloader'] == rel_dict['info']['download_downloader']:
+                                    log.debug('Found release by id: %s', release_download['id'])
                                     found_release = True
                             else:
-                                if item['name'] == nzbname or rel_dict['info']['name'] in item['name'] or getImdb(item['name']) == movie_dict['library']['identifier']:
+                                if release_download['name'] == nzbname or rel_dict['info']['name'] in release_download['name'] or getImdb(release_download['name']) == movie_dict['library']['identifier']:
                                     found_release = True
 
                             if found_release:
-                                timeleft = 'N/A' if item['timeleft'] == -1 else item['timeleft']
-                                log.debug('Found %s: %s, time to go: %s', (item['name'], item['status'].upper(), timeleft))
+                                timeleft = 'N/A' if release_download['timeleft'] == -1 else release_download['timeleft']
+                                log.debug('Found %s: %s, time to go: %s', (release_download['name'], release_download['status'].upper(), timeleft))
 
-                                if item['status'] == 'busy':
+                                if release_download['status'] == 'busy':
                                     # Set the release to snatched if it was missing before
                                     fireEvent('release.update_status', rel.id, status = snatched_status, single = True)
 
                                     # Tag folder if it is in the 'from' folder and it will not be processed because it is still downloading
-                                    if item['folder'] and self.conf('from') in item['folder']:
-                                        self.tagDir(item['folder'], 'downloading')
+                                    if release_download['folder'] and self.conf('from') in release_download['folder']:
+                                        self.tagDir(release_download['folder'], 'downloading')
 
-                                elif item['status'] == 'seeding':
+                                elif release_download['status'] == 'seeding':
                                     # Set the release to seeding
                                     fireEvent('release.update_status', rel.id, status = seeding_status, single = True)
 
                                     #If linking setting is enabled, process release
-                                    if self.conf('file_action') != 'move' and not rel.status_id == seeding_status.get('id') and self.statusInfoComplete(item):
-                                        log.info('Download of %s completed! It is now being processed while leaving the original files alone for seeding. Current ratio: %s.', (item['name'], item['seed_ratio']))
+                                    if self.conf('file_action') != 'move' and not rel.status_id == seeding_status.get('id') and self.statusInfoComplete(release_download):
+                                        log.info('Download of %s completed! It is now being processed while leaving the original files alone for seeding. Current ratio: %s.', (release_download['name'], release_download['seed_ratio']))
 
                                         # Remove the downloading tag
-                                        self.untagDir(item['folder'], 'downloading')
+                                        self.untagDir(release_download['folder'], 'downloading')
 
                                         # Scan and set the torrent to paused if required
-                                        item.update({'pause': True, 'scan': True, 'process_complete': False})
-                                        scan_items.append(item)
+                                        release_download.update({'pause': True, 'scan': True, 'process_complete': False})
+                                        scan_releases.append(release_download)
                                     else:
                                         #let it seed
-                                        log.debug('%s is seeding with ratio: %s', (item['name'], item['seed_ratio']))
+                                        log.debug('%s is seeding with ratio: %s', (release_download['name'], release_download['seed_ratio']))
 
-                                elif item['status'] == 'failed':
+                                elif release_download['status'] == 'failed':
                                     # Set the release to failed
                                     fireEvent('release.update_status', rel.id, status = failed_status, single = True)
 
-                                    fireEvent('download.remove_failed', item, single = True)
+                                    fireEvent('download.remove_failed', release_download, single = True)
 
                                     if self.conf('next_on_failed'):
                                         fireEvent('movie.searcher.try_next_release', movie_id = rel.movie_id)
-                                elif item['status'] == 'completed':
-                                    log.info('Download of %s completed!', item['name'])
-                                    if self.statusInfoComplete(item):
+                                elif release_download['status'] == 'completed':
+                                    log.info('Download of %s completed!', release_download['name'])
+                                    if self.statusInfoComplete(release_download):
 
                                         # If the release has been seeding, process now the seeding is done
                                         if rel.status_id == seeding_status.get('id'):
@@ -757,26 +757,26 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                                                 fireEvent('release.update_status', rel.id, status = downloaded_status, single = True)
 
                                                 # Allow the downloader to clean-up
-                                                item.update({'pause': False, 'scan': False, 'process_complete': True})
-                                                scan_items.append(item)
+                                                release_download.update({'pause': False, 'scan': False, 'process_complete': True})
+                                                scan_releases.append(release_download)
                                             else:
                                                 # Set the release to snatched so that the renamer can process the release as if it was never seeding
                                                 fireEvent('release.update_status', rel.id, status = snatched_status, single = True)
 
                                                 # Scan and Allow the downloader to clean-up
-                                                item.update({'pause': False, 'scan': True, 'process_complete': True})
-                                                scan_items.append(item)
+                                                release_download.update({'pause': False, 'scan': True, 'process_complete': True})
+                                                scan_releases.append(release_download)
 
                                         else:
                                             # Set the release to snatched if it was missing before
                                             fireEvent('release.update_status', rel.id, status = snatched_status, single = True)
 
                                             # Remove the downloading tag
-                                            self.untagDir(item['folder'], 'downloading')
+                                            self.untagDir(release_download['folder'], 'downloading')
 
                                             # Scan and Allow the downloader to clean-up
-                                            item.update({'pause': False, 'scan': True, 'process_complete': True})
-                                            scan_items.append(item)
+                                            release_download.update({'pause': False, 'scan': True, 'process_complete': True})
+                                            scan_releases.append(release_download)
                                     else:
                                         scan_required = True
 
@@ -798,21 +798,21 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                     log.error('Failed checking for release in downloader: %s', traceback.format_exc())
 
         # The following can either be done here, or inside the scanner if we pass it scan_items in one go
-        for item in scan_items:
+        for release_download in scan_releases:
             # Ask the renamer to scan the item
-            if item['scan']:
-                if item['pause'] and self.conf('file_action') == 'link':
-                    fireEvent('download.pause', item = item, pause = True, single = True)
-                fireEvent('renamer.scan', download_info = item)
-                if item['pause'] and self.conf('file_action') == 'link':
-                    fireEvent('download.pause', item = item, pause = False, single = True)
-            if item['process_complete']:
+            if release_download['scan']:
+                if release_download['pause'] and self.conf('file_action') == 'link':
+                    fireEvent('download.pause', release_download = release_download, pause = True, single = True)
+                fireEvent('renamer.scan', release_download = release_download)
+                if release_download['pause'] and self.conf('file_action') == 'link':
+                    fireEvent('download.pause', release_download = release_download, pause = False, single = True)
+            if release_download['process_complete']:
                 #First make sure the files were succesfully processed
-                if not self.hastagDir(item['folder'], 'failed_rename'):
+                if not self.hastagDir(release_download['folder'], 'failed_rename'):
                     # Remove the seeding tag if it exists
-                    self.untagDir(item['folder'], 'renamed_already')
+                    self.untagDir(release_download['folder'], 'renamed_already')
                     # Ask the downloader to process the item
-                    fireEvent('download.process_complete', item = item, single = True)
+                    fireEvent('download.process_complete', release_download = release_download, single = True)
 
         if scan_required:
             fireEvent('renamer.scan')
@@ -821,16 +821,16 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
         return True
 
-    def extendDownloadInfo(self, download_info):
+    def extendReleaseDownload(self, release_download):
 
         rls = None
 
-        if download_info and download_info.get('id') and download_info.get('downloader'):
+        if release_download and release_download.get('id') and release_download.get('downloader'):
 
             db = get_session()
 
-            rlsnfo_dwnlds = db.query(ReleaseInfo).filter_by(identifier = 'download_downloader', value = download_info.get('downloader')).all()
-            rlsnfo_ids = db.query(ReleaseInfo).filter_by(identifier = 'download_id', value = download_info.get('id')).all()
+            rlsnfo_dwnlds = db.query(ReleaseInfo).filter_by(identifier = 'download_downloader', value = release_download.get('downloader')).all()
+            rlsnfo_ids = db.query(ReleaseInfo).filter_by(identifier = 'download_id', value = release_download.get('id')).all()
 
             for rlsnfo_dwnld in rlsnfo_dwnlds:
                 for rlsnfo_id in rlsnfo_ids:
@@ -840,29 +840,29 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                 if rls: break
 
             if not rls:
-                log.error('Download ID %s from downloader %s not found in releases', (download_info.get('id'), download_info.get('downloader')))
+                log.error('Download ID %s from downloader %s not found in releases', (release_download.get('id'), release_download.get('downloader')))
 
         if rls:
 
             rls_dict = rls.to_dict({'info':{}})
-            download_info.update({
+            release_download.update({
                 'imdb_id': rls.movie.library.identifier,
                 'quality': rls.quality.identifier,
                 'protocol': rls_dict.get('info', {}).get('protocol') or rls_dict.get('info', {}).get('type'),
             })
 
-        return download_info
+        return release_download
 
-    def downloadIsTorrent(self, download_info):
-        return download_info and download_info.get('protocol') in ['torrent', 'torrent_magnet']
+    def downloadIsTorrent(self, release_download):
+        return release_download and release_download.get('protocol') in ['torrent', 'torrent_magnet']
 
     def fileIsAdded(self, src, group):
         if not group or not group.get('before_rename'):
             return False
         return src in group['before_rename']
 
-    def statusInfoComplete(self, item):
-        return item['id'] and item['downloader'] and item['folder']
+    def statusInfoComplete(self, release_download):
+        return release_download['id'] and release_download['downloader'] and release_download['folder']
 
     def movieInFromFolder(self, movie_folder):
         return movie_folder and self.conf('from') in movie_folder or not movie_folder

@@ -66,36 +66,36 @@ class Downloader(Provider):
     def getAllDownloadStatus(self):
         return
 
-    def _removeFailed(self, item):
+    def _removeFailed(self, release_download):
         if self.isDisabled(manual = True, data = {}):
             return
 
-        if item and item.get('downloader') == self.getName():
+        if release_download and release_download.get('downloader') == self.getName():
             if self.conf('delete_failed'):
-                return self.removeFailed(item)
+                return self.removeFailed(release_download)
 
             return False
         return
 
-    def removeFailed(self, item):
+    def removeFailed(self, release_download):
         return
 
-    def _processComplete(self, item):
+    def _processComplete(self, release_download):
         if self.isDisabled(manual = True, data = {}):
             return
 
-        if item and item.get('downloader') == self.getName():
+        if release_download and release_download.get('downloader') == self.getName():
             if self.conf('remove_complete', default = False):
-                return self.processComplete(item = item, delete_files = self.conf('delete_files', default = False))
+                return self.processComplete(release_download = release_download, delete_files = self.conf('delete_files', default = False))
 
             return False
         return
 
-    def processComplete(self, item, delete_files):
+    def processComplete(self, release_download, delete_files):
         return
 
-    def isCorrectProtocol(self, item_protocol):
-        is_correct = item_protocol in self.protocol
+    def isCorrectProtocol(self, protocol):
+        is_correct = protocol in self.protocol
 
         if not is_correct:
             log.debug("Downloader doesn't support this protocol")
@@ -151,20 +151,20 @@ class Downloader(Provider):
             (d_manual and manual or d_manual is False) and \
             (not data or self.isCorrectProtocol(data.get('protocol')))
 
-    def _pause(self, item, pause = True):
+    def _pause(self, release_download, pause = True):
         if self.isDisabled(manual = True, data = {}):
             return
 
-        if item and item.get('downloader') == self.getName():
-            self.pause(item, pause)
+        if release_download and release_download.get('downloader') == self.getName():
+            self.pause(release_download, pause)
             return True
 
         return False
 
-    def pause(self, item, pause):
+    def pause(self, release_download, pause):
         return
 
-class StatusList(list):
+class ReleaseDownloadList(list):
 
     provider = None
 
@@ -173,7 +173,7 @@ class StatusList(list):
         self.provider = provider
         self.kwargs = kwargs
 
-        super(StatusList, self).__init__()
+        super(ReleaseDownloadList, self).__init__()
 
     def extend(self, results):
         for r in results:
@@ -181,7 +181,7 @@ class StatusList(list):
 
     def append(self, result):
         new_result = self.fillResult(result)
-        super(StatusList, self).append(new_result)
+        super(ReleaseDownloadList, self).append(new_result)
 
     def fillResult(self, result):
 

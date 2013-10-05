@@ -1,6 +1,6 @@
 from base64 import b16encode, b32decode
 from bencode import bencode as benc, bdecode
-from couchpotato.core.downloaders.base import Downloader, StatusList
+from couchpotato.core.downloaders.base import Downloader, ReleaseDownloadList
 from couchpotato.core.helpers.encoding import isInt, ss
 from couchpotato.core.helpers.variable import tryInt, tryFloat
 from couchpotato.core.logger import CPLog
@@ -111,7 +111,7 @@ class uTorrent(Downloader):
         if not self.connect():
             return False
 
-        statuses = StatusList(self)
+        release_downloads = ReleaseDownloadList(self)
 
         data = self.utorrent_api.get_status()
         if not data:
@@ -128,57 +128,57 @@ class uTorrent(Downloader):
             return False
 
         # Get torrents
-        for item in queue['torrents']:
+        for torrent in queue['torrents']:
 
             #Get files of the torrent
             torrent_files = []
             try:
-                torrent_files = json.loads(self.utorrent_api.get_files(item[0]))
-                torrent_files = [os.path.join(item[26], torrent_file[0]) for torrent_file in torrent_files['files'][1]]
+                torrent_files = json.loads(self.utorrent_api.get_files(torrent[0]))
+                torrent_files = [os.path.join(torrent[26], torrent_file[0]) for torrent_file in torrent_files['files'][1]]
             except:
-                log.debug('Failed getting files from torrent: %s', item[2])
+                log.debug('Failed getting files from torrent: %s', torrent[2])
 
-            # item[21] = Paused | Downloading | Seeding | Finished
+            # torrent[21] = Paused | Downloading | Seeding | Finished
             status = 'busy'
-            if 'Finished' in item[21]:
+            if 'Finished' in torrent[21]:
                 status = 'completed'
                 self.removeReadOnly(torrent_files)
-            elif 'Seeding' in item[21]:
+            elif 'Seeding' in torrent[21]:
                 status = 'seeding'
                 self.removeReadOnly(torrent_files)
 
-            statuses.append({
-                'id': item[0],
-                'name': item[2],
+            release_downloads.append({
+                'id': torrent[0],
+                'name': torrent[2],
                 'status':  status,
-                'seed_ratio': float(item[7]) / 1000,
-                'original_status': item[1],
-                'timeleft': str(timedelta(seconds = item[10])),
-                'folder': ss(item[26]),
+                'seed_ratio': float(torrent[7]) / 1000,
+                'original_status': torrent[1],
+                'timeleft': str(timedelta(seconds = torrent[10])),
+                'folder': ss(torrent[26]),
                 'files': ss('|'.join(torrent_files))
             })
 
-        return statuses
+        return release_downloads
 
-    def pause(self, item, pause = True):
+    def pause(self, release_download, pause = True):
         if not self.connect():
             return False
-        return self.utorrent_api.pause_torrent(item['id'], pause)
+        return self.utorrent_api.pause_torrent(release_download['id'], pause)
 
-    def removeFailed(self, item):
-        log.info('%s failed downloading, deleting...', item['name'])
+    def removeFailed(self, release_download):
+        log.info('%s failed downloading, deleting...', release_download['name'])
         if not self.connect():
             return False
-        return self.utorrent_api.remove_torrent(item['id'], remove_data = True)
+        return self.utorrent_api.remove_torrent(release_download['id'], remove_data = True)
 
-    def processComplete(self, item, delete_files = False):
-        log.debug('Requesting uTorrent to remove the torrent %s%s.', (item['name'], ' and cleanup the downloaded files' if delete_files else ''))
+    def processComplete(self, release_download, delete_files = False):
+        log.debug('Requesting uTorrent to remove the torrent %s%s.', (release_download['name'], ' and cleanup the downloaded files' if delete_files else ''))
         if not self.connect():
             return False
-        return self.utorrent_api.remove_torrent(item['id'], remove_data = delete_files)
+        return self.utorrent_api.remove_torrent(release_download['id'], remove_data = delete_files)
 
     def removeReadOnly(self, files):
-        #Removes all read-only flags in a for all files
+        #Removes all read-on ly flags in a for all files
         for filepath in files:
             if os.path.isfile(filepath):
                 #Windows only needs S_IWRITE, but we bitwise-or with current perms to preserve other permission bits on Linux
@@ -280,13 +280,13 @@ class uTorrentAPI(object):
             utorrent_settings = json.loads(self._request(action))
 
             # Create settings dict
-            for item in utorrent_settings['settings']:
-                if item[1] == 0: # int
-                    settings_dict[item[0]] = int(item[2] if not item[2].strip() == '' else '0')
-                elif item[1] == 1: # bool
-                    settings_dict[item[0]] = True if item[2] == 'true' else False
-                elif item[1] == 2: # string
-                    settings_dict[item[0]] = item[2]
+            for setting in utorrent_settings['settings']:
+                if setting[1] == 0: # int
+                    settings_dict[setting[0]] = int(setting[2] if not setting[2].strip() == '' else '0')
+                elif setting[1] == 1: # bool
+                    settings_dict[setting[0]] = True if setting[2] == 'true' else False
+                elif setting[1] == 2: # string
+                    settings_dict[setting[0]] = setting[2]
 
             #log.debug('uTorrent settings: %s', settings_dict)
 
