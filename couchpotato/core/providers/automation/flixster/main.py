@@ -39,8 +39,18 @@ class Flixster(Automation):
             index += 1
             if not enablers[index]:
                 continue
-
-            data = json.loads(self.getHTMLData(self.url % user_id))
+            
+            # flixster returns the json with a couple anomalies that can break the json parsing
+            # so we'll grab the data and "fix" it before trying to parse it
+            json_string = self.getHTMLData(self.url % user_id)
+            # first we have to strip extra newlines from the string
+            json_string = json_string.strip()
+            # then decode it using the given ISO-8859-1 encoding
+            json_string = json_string.decode('iso-8859-1')
+            # and re-encode it as utf-8
+            json_string = json_string.encode('utf-8')
+            # then we can pass it to the json parser
+            data = json.loads(json_string)
 
             for movie in data:
                 movies.append({'title': movie['movie']['title'], 'year': movie['movie']['year'] })
