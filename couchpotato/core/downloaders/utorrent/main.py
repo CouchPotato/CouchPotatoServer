@@ -131,7 +131,7 @@ class uTorrent(Downloader):
         for item in queue['torrents']:
 
             #Get files of the torrent
-            torrent_files = ''
+            torrent_files = []
             try:
                 torrent_files = json.loads(self.utorrent_api.get_files(item[0]))
                 torrent_files = [os.path.join(item[26], torrent_file[0]) for torrent_file in torrent_files['files'][1]]
