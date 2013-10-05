@@ -149,7 +149,7 @@ class Renamer(Plugin):
         nfo_name = self.conf('nfo_name')
         separator = self.conf('separator')
 
-        # Statusses
+        # Statuses
         done_status, active_status, downloaded_status, snatched_status = \
             fireEvent('status.get', ['done', 'active', 'downloaded', 'snatched'], single = True)
 
@@ -202,7 +202,7 @@ class Renamer(Plugin):
                 if extr_files:
                     group['before_rename'].extend(extr_files)
 
-                # Remove weird chars from moviename
+                # Remove weird chars from movie name
                 movie_name = re.sub(r"[\x00\/\\:\*\?\"<>\|]", '', movie_title)
 
                 # Put 'The' at the end
