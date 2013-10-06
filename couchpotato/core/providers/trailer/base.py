@@ -11,3 +11,10 @@ class TrailerProvider(Provider):
 
     def __init__(self):
         addEvent('trailer.search', self.search)
+
+class VFTrailerProvider(Provider):
+
+    type = 'vftrailer'
+
+    def __init__(self):
+        addEvent('vftrailer.search', self.search)
