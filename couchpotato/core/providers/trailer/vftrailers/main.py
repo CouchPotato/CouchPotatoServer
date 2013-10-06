@@ -14,7 +14,8 @@ except AttributeError:
 class vftrailers(VFTrailerProvider):
     def search(self, group, filename, destination):
         movie_name = getTitle(group['library'])
-        searchstring=movie_name +' bande annonce vf HD'
+        movie_year = group['library']['year']
+        searchstring=movie_name +' '+ str(movie_year) +' bande annonce vf HD'
         time.sleep(3)
         g = pygoogle(searchstring)
         g.pages = 1
