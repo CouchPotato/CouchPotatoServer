@@ -19,6 +19,13 @@ config = [{
                     'type': 'enabler',
                 },
                 {
+                    'name': 'usevf',
+                    'label' : 'Search french Trailers (beta)',
+                    'default': False,
+                    'advanced': True,
+                    'type': 'bool',
+                },
+                {
                     'name': 'quality',
                     'default': '720p',
                     'type': 'dropdown',
