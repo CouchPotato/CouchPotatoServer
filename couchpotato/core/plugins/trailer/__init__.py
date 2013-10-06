@@ -19,7 +19,7 @@ config = [{
                     'type': 'enabler',
                 },
                 {
-                    'name': 'Usevf',
+                    'name': 'usevf',
                     'label' : 'Search french Trailers (beta)',
                     'default': False,
                     'advanced': True,

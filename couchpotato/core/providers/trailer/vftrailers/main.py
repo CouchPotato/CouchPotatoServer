@@ -18,9 +18,13 @@ class vftrailers(VFTrailerProvider):
         searchstring=movie_name +' '+ str(movie_year) +' bande annonce vf HD'
         time.sleep(3)
         g = pygoogle(searchstring)
-        g.pages = 1
-        if g.get_urls():
-            subprocess.check_call([sys.executable, 'youtube_dl/__main__.py', '-o',destination+'.%(ext)s', g.get_urls()[1]], cwd=rootDir, stdout=_DEV_NULL)
+        urllist = g.get_urls()
+        cleanlist=[]
+        for x in urllist:
+            if 'youtube' in x or 'dailymotion' in x:
+                cleanlist.append(x)
+        if cleanlist:
+            subprocess.check_call([sys.executable, 'youtube_dl/__main__.py', '-o',destination+'.%(ext)s', cleanlist[0]], cwd=rootDir, stdout=_DEV_NULL)
             return True
         else:
             return False
