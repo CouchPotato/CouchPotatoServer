@@ -3,6 +3,7 @@ import subprocess
 import time
 import sys
 import os.path
+import unicodedata
 from couchpotato.core.providers.trailer.base import VFTrailerProvider
 from couchpotato.core.helpers.variable import mergeDicts, getTitle
 from couchpotato.core.logger import CPLog
@@ -14,10 +15,12 @@ except AttributeError:
 class vftrailers(VFTrailerProvider):
     def search(self, group, filename, destination):
         movie_name = getTitle(group['library'])
+        movienorm = unicodedata.normalize('NFKD', movie_name).encode('ascii','ignore')
         movie_year = group['library']['year']
-        searchstring=movie_name +' '+ str(movie_year) +' bande annonce vf HD'
-        time.sleep(3)
-        g = pygoogle(searchstring)
+        searchstring=movienorm+' '+ str(movie_year) +' bande annonce vf HD'
+        time.sleep(30)
+        g = pygoogle(str(searchstring))
+        diclist = g.search()
         urllist = g.get_urls()
         cleanlist=[]
         for x in urllist:
