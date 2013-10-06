@@ -104,7 +104,7 @@ class Scanner(Plugin):
         addEvent('scanner.name_year', self.getReleaseNameYear)
         addEvent('scanner.partnumber', self.getPartNumber)
 
-    def scan(self, folder = None, files = None, download_info = None, simple = False, newer_than = 0, return_ignored = True, on_found = None):
+    def scan(self, folder = None, files = None, release_download = None, simple = False, newer_than = 0, return_ignored = True, on_found = None):
 
         folder = ss(os.path.normpath(folder))
 
@@ -339,11 +339,11 @@ class Scanner(Plugin):
         total_found = len(valid_files)
 
         # Make sure only one movie was found if a download ID is provided
-        if download_info and total_found == 0:
-            log.info('Download ID provided (%s), but no groups found! Make sure the download contains valid media files (fully extracted).', download_info.get('imdb_id'))
-        elif download_info and total_found > 1:
-            log.info('Download ID provided (%s), but more than one group found (%s). Ignoring Download ID...', (download_info.get('imdb_id'), len(valid_files)))
-            download_info = None
+        if release_download and total_found == 0:
+            log.info('Download ID provided (%s), but no groups found! Make sure the download contains valid media files (fully extracted).', release_download.get('imdb_id'))
+        elif release_download and total_found > 1:
+            log.info('Download ID provided (%s), but more than one group found (%s). Ignoring Download ID...', (release_download.get('imdb_id'), len(valid_files)))
+            release_download = None
 
         # Determine file types
         db = get_session()
@@ -379,7 +379,7 @@ class Scanner(Plugin):
                 continue
 
             log.debug('Getting metadata for %s', identifier)
-            group['meta_data'] = self.getMetaData(group, folder = folder, download_info = download_info)
+            group['meta_data'] = self.getMetaData(group, folder = folder, release_download = release_download)
 
             # Subtitle meta
             group['subtitle_language'] = self.getSubtitleLanguage(group) if not simple else {}
@@ -411,7 +411,7 @@ class Scanner(Plugin):
             del group['unsorted_files']
 
             # Determine movie
-            group['library'] = self.determineMovie(group, download_info = download_info)
+            group['library'] = self.determineMovie(group, release_download = release_download)
             if not group['library']:
                 log.error('Unable to determine movie: %s', group['identifiers'])
             else:
@@ -436,7 +436,7 @@ class Scanner(Plugin):
 
         return processed_movies
 
-    def getMetaData(self, group, folder = '', download_info = None):
+    def getMetaData(self, group, folder = '', release_download = None):
 
         data = {}
         files = list(group['files']['movie'])
@@ -461,8 +461,8 @@ class Scanner(Plugin):
 
         # Use the quality guess first, if that failes use the quality we wanted to download
         data['quality'] = None
-        if download_info and download_info.get('quality'):
-            data['quality'] = fireEvent('quality.single', download_info.get('quality'), single = True)
+        if release_download and release_download.get('quality'):
+            data['quality'] = fireEvent('quality.single', release_download.get('quality'), single = True)
 
         if not data['quality']:
             data['quality'] = fireEvent('quality.guess', files = files, extra = data, single = True)
@@ -546,12 +546,12 @@ class Scanner(Plugin):
 
         return detected_languages
 
-    def determineMovie(self, group, download_info = None):
+    def determineMovie(self, group, release_download = None):
 
         # Get imdb id from downloader
-        imdb_id = download_info and download_info.get('imdb_id')
+        imdb_id = release_download and release_download.get('imdb_id')
         if imdb_id:
-            log.debug('Found movie via imdb id from it\'s download id: %s', download_info.get('imdb_id'))
+            log.debug('Found movie via imdb id from it\'s download id: %s', release_download.get('imdb_id'))
 
         files = group['files']
 
