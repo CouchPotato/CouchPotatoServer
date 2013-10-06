@@ -87,11 +87,18 @@ class Renamer(Plugin):
             log.info('Renamer is already running, if you see this often, check the logs above for errors.')
             return
 
-        movie_folder = download_info and download_info.get('folder')
+        movie_folder = None
+        movie_file = None
+        download = download_info and download_info.get('folder')
+
+        if download and os.path.isdir(download):
+            movie_folder = download
+        elif download and os.path.isfile(download):
+            movie_file = download
 
         # Check to see if the "to" folder is inside the "from" folder.
-        if movie_folder and not os.path.isdir(movie_folder) or not os.path.isdir(self.conf('from')) or not os.path.isdir(self.conf('to')):
-            l = log.debug if movie_folder else log.error
+        if (movie_folder or movie_file) and not os.path.isdir(self.conf('from')) or not os.path.isdir(self.conf('to')):
+            l = log.debug if movie_folder or movie_file else log.error
             l('Both the "To" and "From" have to exist.')
             return
         elif self.conf('from') in self.conf('to'):
@@ -121,6 +128,9 @@ class Renamer(Plugin):
                     files.extend([os.path.join(root, name) for name in names])
             except:
                 log.error('Failed getting files from %s: %s', (movie_folder, traceback.format_exc()))
+        elif movie_file:
+            folder = os.path.dirname(movie_file)
+            files.append(movie_file)
 
         db = get_session()
 
