@@ -1,3 +1,4 @@
+# -*- coding: latin-1 -*-
 import io
 import json
 import traceback

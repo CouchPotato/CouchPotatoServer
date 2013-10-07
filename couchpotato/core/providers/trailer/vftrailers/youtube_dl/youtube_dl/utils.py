@@ -1,6 +1,5 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
+# -*- coding: latin-1 -*-
 import datetime
 import email.utils
 import errno

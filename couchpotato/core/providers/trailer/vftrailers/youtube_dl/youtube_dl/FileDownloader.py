@@ -1,3 +1,4 @@
+# -*- coding: latin-1 -*-
 import math
 import os
 import re

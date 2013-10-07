@@ -1,3 +1,4 @@
+# -*- coding: latin-1 -*-
 import os
 import subprocess
 import sys

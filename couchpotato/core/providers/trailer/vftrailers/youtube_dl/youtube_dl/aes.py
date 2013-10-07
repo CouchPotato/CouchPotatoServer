@@ -1,3 +1,4 @@
+# -*- coding: latin-1 -*-
 __all__ = ['aes_encrypt', 'key_expansion', 'aes_ctr_decrypt', 'aes_decrypt_text']
 
 import base64
