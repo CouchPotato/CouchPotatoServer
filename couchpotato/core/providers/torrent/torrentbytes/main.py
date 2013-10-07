@@ -12,7 +12,7 @@ class TorrentBytes(TorrentProvider):
 
     urls = {
         'test' : 'https://www.torrentbytes.net/',
-        'login' : 'https://www.torrentbytes.net/login.php',
+        'login' : 'https://www.torrentbytes.net/takelogin.php',
         'login_check' : 'https://www.torrentbytes.net/inbox.php',
         'detail' : 'https://www.torrentbytes.net/details.php?id=%s',
         'search' : 'https://www.torrentbytes.net/browse.php?search=%s&cat=%d',
