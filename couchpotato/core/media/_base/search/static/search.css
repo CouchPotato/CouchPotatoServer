@@ -129,13 +129,13 @@
 		overflow-x: hidden;
 	}
 
-	.movie_result {
+	.media_result {
 		overflow: hidden;
 		height: 50px;
 		position: relative;
 	}
 
-		.movie_result .options {
+		.media_result .options {
 			position: absolute;
 			height: 100%;
 			top: 0;
@@ -147,48 +147,48 @@
 			border-radius: 0;
 			box-shadow: inset 0 1px 8px rgba(0,0,0,0.25);
 		}
-			.movie_result .options > .in_library_wanted {
+			.media_result .options > .in_library_wanted {
 				margin-top: -7px;
 			}
 
-			.movie_result .options > div {
+			.media_result .options > div {
 				border: 0;
 			}
 
-			.movie_result .options .thumbnail {
+			.media_result .options .thumbnail {
 				vertical-align: middle;
 			}
 
-			.movie_result .options select {
+			.media_result .options select {
 				vertical-align: middle;
 				display: inline-block;
 				margin-right: 10px;
 			}
-				.movie_result .options select[name=title] { width: 170px; }
-				.movie_result .options select[name=profile] { width: 90px; }
-				.movie_result .options select[name=category] { width: 80px; }
+				.media_result .options select[name=title] { width: 170px; }
+				.media_result .options select[name=profile] { width: 90px; }
+				.media_result .options select[name=category] { width: 80px; }
 				
 				@media all and (max-width: 480px) {
 				
-					.movie_result .options select[name=title] { width: 90px; }
-					.movie_result .options select[name=profile] { width: 50px; }
-					.movie_result .options select[name=category] { width: 50px; }
+					.media_result .options select[name=title] { width: 90px; }
+					.media_result .options select[name=profile] { width: 50px; }
+					.media_result .options select[name=category] { width: 50px; }
 					
 				}
 
-			.movie_result .options .button {
+			.media_result .options .button {
 				vertical-align: middle;
 				display: inline-block;
 			}
 
-			.movie_result .options .message {
+			.media_result .options .message {
 				height: 100%;
 				font-size: 20px;
 				color: #fff;
 				line-height: 20px;
 			}
 
-		.movie_result .data {
+		.media_result .data {
 			position: absolute;
 			height: 100%;
 			top: 0;
@@ -199,20 +199,20 @@
 			border-top: 1px solid rgba(255,255,255, 0.08);
 			transition: all .4s cubic-bezier(0.9,0,0.1,1);
 		}
-			.movie_result .data.open {
+			.media_result .data.open {
 				left: 100% !important;
 			}
 
-			.movie_result:last-child .data { border-bottom: 0; }
+			.media_result:last-child .data { border-bottom: 0; }
 
-			.movie_result .in_wanted, .movie_result .in_library {
+			.media_result .in_wanted, .media_result .in_library {
 				position: absolute;
 				bottom: 2px;
 				left: 14px;
 				font-size: 11px;
 			}
 
-			.movie_result .thumbnail {
+			.media_result .thumbnail {
 				width: 34px;
 				min-height: 100%;
 				display: block;
@@ -220,7 +220,7 @@
 				vertical-align: top;
 			}
 
-			.movie_result .info {
+			.media_result .info {
 				position: absolute;
 				top: 20%;
 				left: 15px;
@@ -228,7 +228,7 @@
 				vertical-align: middle;
 			}
 			
-				.movie_result .info h2 {
+				.media_result .info h2 {
 					margin: 0;
 					font-weight: normal;
 					font-size: 20px;
@@ -240,7 +240,7 @@
 						width: 100%;
 					}
 
-				.movie_result .info h2 .title {
+				.media_result .info h2 .title {
 					display: block;
 					margin: 0;
 					text-overflow: ellipsis;
@@ -253,7 +253,7 @@
 						width: 88%;
 					}
 	
-					.movie_result .info h2 .year {
+					.media_result .info h2 .year {
 						padding: 0 5px;
 						text-align: center;
 						position: absolute;
@@ -271,7 +271,7 @@
 					}
 
 .search_form .mask,
-.movie_result .mask {
+.media_result .mask {
 	position: absolute;
 	height: 100%;
 	width: 100%;

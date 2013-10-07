@@ -661,9 +661,9 @@ Remove it if you want it to be renamed (again, or at least let it try again)
             fireEvent('status.get', ['snatched', 'ignored', 'failed', 'done', 'seeding', 'downloaded', 'missing'], single = True)
 
         db = get_session()
-        rels = db.query(Release).filter_by(status_id = snatched_status.get('id')).all()
-        rels.extend(db.query(Release).filter_by(status_id = seeding_status.get('id')).all())
-        rels.extend(db.query(Release).filter_by(status_id = missing_status.get('id')).all())
+        rels = db.query(Release).filter(
+            Release.status_id.in_([snatched_status.get('id'), seeding_status.get('id'), missing_status.get('id')])
+        ).all()
 
         scan_items = []
         scan_required = False

@@ -11,6 +11,7 @@ log = CPLog(__name__)
 class TheMovieDb(MovieProvider):
 
     def __init__(self):
+        addEvent('info.search', self.search, priority = 2)
         addEvent('movie.search', self.search, priority = 2)
         addEvent('movie.info', self.getInfo, priority = 2)
         addEvent('movie.info_by_tmdb', self.getInfo)
@@ -103,6 +104,7 @@ class TheMovieDb(MovieProvider):
                 year = None
 
             movie_data = {
+                'type': 'movie',
                 'via_tmdb': True,
                 'tmdb_id': movie.id,
                 'titles': [toUnicode(movie.title)],
