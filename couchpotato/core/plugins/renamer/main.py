@@ -587,7 +587,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                 if os.name == 'nt' and self.conf('ntfs_permission'):
                     os.popen('icacls "' + dest + '"* /reset /T')
             except:
-                log.error('Failed setting permissions for file: %s, %s', (dest, traceback.format_exc(1)))
+                log.info('Failed setting permissions for file: %s', (dest))
 
         except OSError, err:
             # Copying from a filesystem with octal permission to an NTFS file system causes a permission error.  In this case ignore it.
