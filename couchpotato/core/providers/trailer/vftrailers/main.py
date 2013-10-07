@@ -27,7 +27,7 @@ class vftrailers(VFTrailerProvider):
             if 'youtube' in x or 'dailymotion' in x:
                 cleanlist.append(x)
         if cleanlist:
-            subprocess.check_call([sys.executable, 'youtube_dl/__main__.py', '-o',destination+'.%(ext)s', cleanlist[0]], cwd=rootDir, shell=False, stdout=_DEV_NULL,stderr=subprocess.STDOUT)
+            subprocess.check_call([sys.executable, 'youtube_dl/__main__.py', '-o',destination+u'.%(ext)s', cleanlist[0]], cwd=rootDir, shell=False, stdout=_DEV_NULL,stderr=subprocess.STDOUT)
             return True
         else:
             return False
