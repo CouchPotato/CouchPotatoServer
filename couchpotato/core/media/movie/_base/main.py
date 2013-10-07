@@ -34,17 +34,6 @@ class MovieBase(MovieTypeBase):
         super(MovieBase, self).__init__()
         self.initType()
 
-        addApiView('movie.search', self.search, docs = {
-            'desc': 'Search the movie providers for a movie',
-            'params': {
-                'q': {'desc': 'The (partial) movie name you want to search for'},
-            },
-            'return': {'type': 'object', 'example': """{
-    'success': True,
-    'empty': bool, any movies returned or not,
-    'movies': array, movies found,
-}"""}
-        })
         addApiView('movie.list', self.listView, docs = {
             'desc': 'List movies in wanted list',
             'params': {

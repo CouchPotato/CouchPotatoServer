@@ -131,7 +131,7 @@ Block.Search = new Class({
 			if(!self.spinner)
 				self.spinner = createSpinner(self.mask);
 
-			self.api_request = Api.request('movie.search', {
+			self.api_request = Api.request('search', {
 				'data': {
 					'q': q
 				},
