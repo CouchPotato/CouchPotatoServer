@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: latin-1 -*-
 
 # Execute with
 # $ python youtube_dl/__main__.py (2.6+)

@@ -18,7 +18,7 @@ class vftrailers(VFTrailerProvider):
         movienorm = unicodedata.normalize('NFKD', movie_name).encode('ascii','ignore')
         movie_year = group['library']['year']
         searchstring=movienorm+' '+ str(movie_year) +' bande annonce vf HD'
-        time.sleep(30)
+        time.sleep(3)
         g = pygoogle(str(searchstring))
         diclist = g.search()
         urllist = g.get_urls()
@@ -27,7 +27,8 @@ class vftrailers(VFTrailerProvider):
             if 'youtube' in x or 'dailymotion' in x:
                 cleanlist.append(x)
         if cleanlist:
-            subprocess.check_call([sys.executable, 'youtube_dl/__main__.py', '-o',destination+'.%(ext)s', cleanlist[0]], cwd=rootDir, shell=False, stdout=_DEV_NULL,stderr=subprocess.STDOUT)
+            option='-o,'+str(destination)+'.%(ext)s,'+str(cleanlist[0])
+            subprocess.check_call([sys.executable, 'youtube_dl/__main__.py', '-o',destination.encode('latin-1')+'.%(ext)s', cleanlist[0]], cwd=rootDir, shell=False, stdout=_DEV_NULL,stderr=subprocess.STDOUT)
             return True
         else:
             return False
