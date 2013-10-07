@@ -25,7 +25,7 @@ class Trailer(Plugin):
             log.info('No trailers found for: %s', getTitle(group['library']))
             return False
         
-        if (self.conf('usevf)')):
+        if self.conf('usevf'):
             log.info('Trailers found in VF for: %s', getTitle(group['library']))
             return True
         else:
