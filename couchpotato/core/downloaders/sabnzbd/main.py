@@ -90,9 +90,14 @@ class Sabnzbd(Downloader):
 
         # Get busy releases
         for item in queue.get('slots', []):
+            status = 'busy'
+            if 'ENCRYPTED / ' in item['filename']:
+                status = 'failed'
+
             statuses.append({
                 'id': item['nzo_id'],
                 'name': item['filename'],
+                'status': status,
                 'original_status': item['status'],
                 'timeleft': item['timeleft'] if not queue['paused'] else -1,
             })
@@ -122,6 +127,12 @@ class Sabnzbd(Downloader):
         log.info('%s failed downloading, deleting...', item['name'])
 
         try:
+            self.call({
+                'mode': 'queue',
+                'name': 'delete',
+                'del_files': '1',
+                'value': item['id']
+            }, use_json = False)
             self.call({
                 'mode': 'history',
                 'name': 'delete',
