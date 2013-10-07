@@ -19,8 +19,9 @@ class Search(Plugin):
             },
             'return': {'type': 'object', 'example': """{
     'success': True,
-    'empty': bool, any movies returned or not,
-    'results': object {'movie': [], 'show': []}, by media type found,
+    'movies': array,
+    'show': array,
+    etc
 }"""}
         })
 

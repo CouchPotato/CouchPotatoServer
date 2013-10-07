@@ -436,7 +436,7 @@
 			}
 			.movies .data .quality .seeding { background-color: #0a6819; }
 			.movies .data .quality .finish {
-				background-image: url('../images/sprite.png');
+				background-image: url('../../images/sprite.png');
 				background-repeat: no-repeat;
 				background-position: 0 2px;
 				padding-left: 14px;
@@ -992,7 +992,7 @@
 			}
 
 .movies .empty_wanted {
-	background-image: url('../images/emptylist.png');
+	background-image: url('../../images/emptylist.png');
 	background-position: 80% 0;
 	height: 750px;
 	width: 100%;
