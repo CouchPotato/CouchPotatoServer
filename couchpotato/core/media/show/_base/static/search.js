@@ -16,7 +16,7 @@ Block.Search.ShowItem = new Class({
 		var self = this,
 			info = self.info;
 
-		self.el = new Element('div.show_result', {
+		self.el = new Element('div.media_result', {
 			'id': info.id
 		}).adopt(
 			self.thumbnail = info.images && info.images.poster.length > 0 ? new Element('img.thumbnail', {
@@ -98,10 +98,7 @@ Block.Search.ShowItem = new Class({
 
 		Api.request('show.add', {
 			'data': {
-				'identifier': self.info.id,
-				'id': self.info.id,
-				'type': self.info.type,
-				'primary_provider': self.info.primary_provider,
+				'identifier': self.info.imdb,
 				'title': self.title_select.get('value'),
 				'profile_id': self.profile_select.get('value'),
 				'category_id': self.category_select.get('value')
@@ -110,7 +107,7 @@ Block.Search.ShowItem = new Class({
 				self.options_el.empty();
 				self.options_el.adopt(
 					new Element('div.message', {
-						'text': json.added ? 'Show successfully added.' : 'Show didn\'t add properly. Check logs'
+						'text': json.added ? 'Movie successfully added.' : 'Movie didn\'t add properly. Check logs'
 					})
 				);
 				self.mask.fade('out');
@@ -144,10 +141,10 @@ Block.Search.ShowItem = new Class({
 
 			self.options_el.grab(
 				new Element('div', {
-					'class': self.info.in_wanted && self.info.in_wanted.profile || in_library ? 'in_library_wanted' : ''
+					'class': self.info.in_wanted && self.info.in_wanted.profile_id || in_library ? 'in_library_wanted' : ''
 				}).adopt(
-					self.info.in_wanted && self.info.in_wanted.profile ? new Element('span.in_wanted', {
-						'text': 'Already in wanted list: ' + self.info.in_wanted.profile.label
+					self.info.in_wanted && self.info.in_wanted.profile_id ? new Element('span.in_wanted', {
+						'text': 'Already in wanted list: ' + Quality.getProfile(self.info.in_wanted.profile_id).get('label')
 					}) : (in_library ? new Element('span.in_library', {
 						'text': 'Already in library: ' + in_library.join(', ')
 					}) : null),
@@ -208,7 +205,7 @@ Block.Search.ShowItem = new Class({
 			self.options_el.addClass('set');
 
 			if(categories.length == 0 && self.title_select.getElements('option').length == 1 && profiles.length == 1 &&
-				!(self.info.in_wanted && self.info.in_wanted.profile || in_library))
+				!(self.info.in_wanted && self.info.in_wanted.profile_id || in_library))
 				self.add();
 
 		}

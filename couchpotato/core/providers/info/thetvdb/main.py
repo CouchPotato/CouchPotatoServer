@@ -18,6 +18,7 @@ log = CPLog(__name__)
 class TheTVDb(ShowProvider):
 
     def __init__(self):
+        addEvent('info.search', self.search, priority = 1)
         addEvent('show.search', self.search, priority = 1)
         addEvent('show.info', self.getShowInfo, priority = 1)
         addEvent('season.info', self.getSeasonInfo, priority = 1)
@@ -35,7 +36,7 @@ class TheTVDb(ShowProvider):
         self.tvdb = tvdb_api.Tvdb(**self.tvdb_api_parms)
         self.valid_languages = self.tvdb.config['valid_languages']
 
-    def search(self, q, limit = 12, language='en'):
+    def search(self, q, limit = 12, language = 'en'):
         ''' Find show by name
         show = {    'id': 74713,
                     'language': 'en',
@@ -48,7 +49,7 @@ class TheTVDb(ShowProvider):
             return False
 
         if language != self.tvdb_api_parms['language'] and language in self.valid_languages:
-            self.tvdb_api_parms['language'] =  language
+            self.tvdb_api_parms['language'] = language
             self._setup()
 
         search_string = simplifyString(q)
@@ -103,7 +104,7 @@ class TheTVDb(ShowProvider):
         if result:
             return result
 
-        show =  self.getShow(identifier=identifier)
+        show = self.getShow(identifier = identifier)
         if show:
             result = self._parseShow(show)
             self.setCache(cache_key, result)
@@ -164,7 +165,7 @@ class TheTVDb(ShowProvider):
         if season_identifier:
             try:
                 identifier, season_identifier = season_identifier.split(':')
-                season_identifier =  int(season_identifier)
+                season_identifier = int(season_identifier)
             except: return None
 
         cache_key = 'thetvdb.cache.%s.%s.%s' % (identifier, episode_identifier, season_identifier)
@@ -236,8 +237,8 @@ class TheTVDb(ShowProvider):
 
         genres = [] if show['genre'] is None else show['genre'].strip('|').split('|')
         if show['firstaired'] is not None:
-            try: year = datetime.strptime(show['firstaired'],  '%Y-%m-%d').year
-            except: year =  None
+            try: year = datetime.strptime(show['firstaired'], '%Y-%m-%d').year
+            except: year = None
         else:
             year = None
 
@@ -299,7 +300,7 @@ class TheTVDb(ShowProvider):
         poster = []
         try:
             for id, data in show.data['_banners']['season']['season'].items():
-                if data.get('season',  None) == str(number) and data['bannertype'] == 'season' and data['bannertype2'] == 'season':
+                if data.get('season', None) == str(number) and data['bannertype'] == 'season' and data['bannertype2'] == 'season':
                     poster.append(data.get('_bannerpath'))
                     break # Only really need one
         except:
@@ -374,13 +375,13 @@ class TheTVDb(ShowProvider):
         poster = episode['filename'] or []
         backdrop = []
         genres = []
-        plot = "%s - %sx%s - %s" %  (show['seriesname'],
+        plot = "%s - %sx%s - %s" % (show['seriesname'],
                                      episode['seasonnumber'],
                                      episode['episodenumber'],
                                      episode['overview'])
         if episode['firstaired'] is not None:
-            try: year = datetime.strptime(episode['firstaired'],  '%Y-%m-%d').year
-            except: year =  None
+            try: year = datetime.strptime(episode['firstaired'], '%Y-%m-%d').year
+            except: year = None
         else:
             year = None
 

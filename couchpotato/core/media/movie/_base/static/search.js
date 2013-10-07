@@ -27,7 +27,7 @@ Block.Search.MovieItem = new Class({
 			self.options_el = new Element('div.options.inlay'),
 			self.data_container = new Element('div.data', {
 				'events': {
-					'click': self.movieOptions.bind(self)
+					'click': self.showOptions.bind(self)
 				}
 			}).adopt(
 				self.info_container = new Element('div.info').adopt(
@@ -71,7 +71,7 @@ Block.Search.MovieItem = new Class({
 		return this.info[key]
 	},
 
-	movieOptions: function(){
+	showOptions: function(){
 		var self = this;
 
 		self.createOptions();
