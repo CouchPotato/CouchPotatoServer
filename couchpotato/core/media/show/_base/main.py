@@ -1,16 +1,10 @@
 from couchpotato import get_session
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, fireEventAsync, addEvent
-from couchpotato.core.helpers.encoding import toUnicode, simplifyString
-from couchpotato.core.helpers.variable import getImdb, splitString, tryInt
+from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media import MediaBase
-from couchpotato.core.settings.model import Library, LibraryTitle, Media, \
-    Release
-from couchpotato.environment import Env
-from sqlalchemy.orm import joinedload_all
-from sqlalchemy.sql.expression import or_, asc, not_, desc
-from string import ascii_lowercase
+from couchpotato.core.settings.model import Media
 import time
 
 log = CPLog(__name__)
@@ -18,36 +12,11 @@ log = CPLog(__name__)
 
 class ShowBase(MediaBase):
 
-    identifier = 'show'
-
-    default_dict = {
-        'profile': {'types': {'quality': {}}},
-        'releases': {'status': {}, 'quality': {}, 'files':{}, 'info': {}},
-        'library': {'titles': {}, 'files':{}},
-        'files': {},
-        'status': {}
-    }
+    _type = 'show'
 
     def __init__(self):
         super(ShowBase, self).__init__()
 
-        addApiView('show.search', self.search, docs = {
-            'desc': 'Search the show providers for a show',
-            'params': {
-                'q': {'desc': 'The (partial) show name you want to search for'},
-            },
-            'return': {'type': 'object', 'example': """{
-    'success': True,
-    'empty': bool, any shows returned or not,
-    'shows': array, shows found,
-}"""}
-        })
-        addApiView('show.refresh', self.refresh, docs = {
-            'desc': 'Refresh a show, season or episode by id',
-            'params': {
-                'id': {'desc': 'Show, Season or Episode ID(s) you want to refresh.', 'type': 'int (comma separated)'},
-            }
-        })
         addApiView('show.add', self.addView, docs = {
             'desc': 'Add new movie to the wanted list',
             'params': {
@@ -59,51 +28,12 @@ class ShowBase(MediaBase):
 
         addEvent('show.add', self.add)
 
-    def refresh(self, id = '', **kwargs):
-        db = get_session()
-
-        for x in splitString(id):
-            media = db.query(Media).filter_by(id = x).first()
-
-            if media:
-                # Get current selected title
-                default_title = ''
-                for title in media.library.titles:
-                    if title.default: default_title = title.title
-
-                fireEvent('notify.frontend', type = '%s.busy.%s' % (media.type, x), data = True)
-                fireEventAsync('library.update.%s' % media.type, identifier = media.library.identifier, default_title = default_title, force = True, on_complete = self.createOnComplete(x))
-
-        db.expire_all()
-        return {
-            'success': True,
-        }
-
-    def search(self, q = '', **kwargs):
-        cache_key = u'%s/%s' % (__name__, simplifyString(q))
-        shows = Env.get('cache').get(cache_key)
-
-        if not shows:
-            if getImdb(q):
-                shows = [fireEvent('show.info', identifier = q, merge = True)]
-            else:
-                shows = fireEvent('show.search', q = q, merge = True)
-            Env.get('cache').set(cache_key, shows)
-
-        return {
-            'success': True,
-            'empty': len(shows) == 0 if shows else 0,
-            'shows': shows,
-        }
-
     def addView(self, **kwargs):
-        movie_dict = fireEvent('show.add', params=kwargs)  # XXX: Temp added so we can catch a breakpoint
-        #movie_dict = self.add(params = kwargs)
+        add_dict = self.add(params = kwargs)
 
         return {
-            'success': True,
-            'added': True if movie_dict else False,
-            'movie': movie_dict,
+            'success': True if add_dict else False,
+            'show': add_dict,
         }
 
     def add(self, params = {}, force_readd = True, search_after = True, update_library = False, status_id = None):
@@ -158,13 +88,13 @@ class ShowBase(MediaBase):
                 # Make sure we are only dealing with 'tvdb' responses at this point
                 if season.get('primary_provider', None) != 'thetvdb':
                     continue
-                season_id =  season.get('id', None)
+                season_id = season.get('id', None)
                 if season_id is None: continue
 
                 season_params = {'season_identifier':  season_id}
                 # Calling all info providers; merge your info now for individual season
                 single_season = fireEvent('season.info', merge = True, identifier = identifier, params = season_params)
-                single_season['title'] = single_season.get('original_title',  None)
+                single_season['title'] = single_season.get('original_title', None)
                 single_season['identifier'] = season_id
                 single_season['parent_identifier'] = identifier
                 log.info("Adding Season %s" % season_id)
@@ -177,7 +107,7 @@ class ShowBase(MediaBase):
                         # Make sure we are only dealing with 'tvdb' responses at this point
                         if episode.get('primary_provider', None) != 'thetvdb':
                             continue
-                        episode_id =  episode.get('id', None)
+                        episode_id = episode.get('id', None)
                         if episode_id is None: continue
                         try:
                             episode_number = int(episode.get('episodenumber', None))
@@ -201,12 +131,12 @@ class ShowBase(MediaBase):
                         log.info("Adding [%sx%s] %s - %s" % (season_id,
                                                              episode_number,
                                                              params['title'],
-                                                             single_episode.get('original_title',  '')))
+                                                             single_episode.get('original_title', '')))
                         e = self.addToDatabase(params = single_episode, type = "episode")
 
         return parent
 
-    def addToDatabase(self, params = {}, type="show", force_readd = True, search_after = True, update_library = False, status_id = None):
+    def addToDatabase(self, params = {}, type = "show", force_readd = True, search_after = True, update_library = False, status_id = None):
         log.debug("show.addToDatabase")
 
         if not params.get('identifier'):
@@ -298,23 +228,3 @@ class ShowBase(MediaBase):
 
         db.expire_all()
         return show_dict
-
-    def createOnComplete(self, id):
-
-        def onComplete():
-            db = get_session()
-            media = db.query(Media).filter_by(id = id).first()
-            fireEventAsync('show.searcher.single', media.to_dict(self.default_dict), on_complete = self.createNotifyFront(id))
-            db.expire_all()
-
-        return onComplete
-
-    def createNotifyFront(self, show_id):
-
-        def notifyFront():
-            db = get_session()
-            show = db.query(Media).filter_by(id = show_id).first()
-            fireEvent('notify.frontend', type = 'show.update.%s' % show.id, data = show.to_dict(self.default_dict))
-            db.expire_all()
-
-        return notifyFront
