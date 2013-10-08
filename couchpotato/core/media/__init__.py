@@ -1,7 +1,7 @@
 from couchpotato import get_session
 from couchpotato.core.event import addEvent, fireEventAsync, fireEvent
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.core.settings.model import Movie
+from couchpotato.core.settings.model import Media
 
 
 class MediaBase(Plugin):
@@ -27,7 +27,7 @@ class MediaBase(Plugin):
 
         def onComplete():
             db = get_session()
-            media = db.query(Movie).filter_by(id = id).first()
+            media = db.query(Media).filter_by(id = id).first()
             fireEventAsync('%s.searcher.single' % media.type, media.to_dict(self.default_dict), on_complete = self.createNotifyFront(id))
             db.expire_all()
 
@@ -37,7 +37,7 @@ class MediaBase(Plugin):
 
         def notifyFront():
             db = get_session()
-            media = db.query(Movie).filter_by(id = media_id).first()
+            media = db.query(Media).filter_by(id = media_id).first()
             fireEvent('notify.frontend', type = '%s.update.%s' % (media.type, media.id), data = media.to_dict(self.default_dict))
             db.expire_all()
 

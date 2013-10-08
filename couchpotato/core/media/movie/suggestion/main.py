@@ -3,7 +3,7 @@ from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent
 from couchpotato.core.helpers.variable import splitString
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.core.settings.model import Movie, Library
+from couchpotato.core.settings.model import Media, Library
 from couchpotato.environment import Env
 from sqlalchemy.orm import joinedload_all
 from sqlalchemy.sql.expression import or_
@@ -29,9 +29,9 @@ class Suggestion(Plugin):
 
             if not movies or len(movies) == 0:
                 db = get_session()
-                active_movies = db.query(Movie) \
+                active_movies = db.query(Media) \
                     .options(joinedload_all('library')) \
-                    .filter(or_(*[Movie.status.has(identifier = s) for s in ['active', 'done']])).all()
+                    .filter(or_(*[Media.status.has(identifier = s) for s in ['active', 'done']])).all()
                 movies = [x.library.identifier for x in active_movies]
 
             if not ignored or len(ignored) == 0:
@@ -89,10 +89,10 @@ class Suggestion(Plugin):
             active_status, done_status = fireEvent('status.get', ['active', 'done'], single = True)
 
             db = get_session()
-            active_movies = db.query(Movie) \
+            active_movies = db.query(Media) \
                 .join(Library) \
                 .with_entities(Library.identifier) \
-                .filter(Movie.status_id.in_([active_status.get('id'), done_status.get('id')])).all()
+                .filter(Media.status_id.in_([active_status.get('id'), done_status.get('id')])).all()
             movies = [x[0] for x in active_movies]
             movies.extend(seen)
 

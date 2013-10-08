@@ -4,7 +4,7 @@ from couchpotato.core.event import fireEvent, fireEventAsync, addEvent
 from couchpotato.core.helpers.variable import splitString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media import MediaBase
-from couchpotato.core.settings.model import Movie
+from couchpotato.core.settings.model import Media
 
 log = CPLog(__name__)
 
@@ -26,7 +26,7 @@ class MediaPlugin(MediaBase):
         db = get_session()
 
         for x in splitString(id):
-            media = db.query(Movie).filter_by(id = x).first()
+            media = db.query(Media).filter_by(id = x).first()
 
             if media:
                 # Get current selected title

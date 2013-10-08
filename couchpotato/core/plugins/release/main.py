@@ -5,12 +5,12 @@ from couchpotato.core.helpers.encoding import ss
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.plugins.scanner.main import Scanner
-from couchpotato.core.settings.model import File, Release as Relea, Movie
+from couchpotato.core.settings.model import File, Release as Relea, Media
 from sqlalchemy.orm import joinedload_all
 from sqlalchemy.sql.expression import and_, or_
 import os
-import traceback
 import time
+import traceback
 
 log = CPLog(__name__)
 
@@ -60,9 +60,9 @@ class Release(Plugin):
         done_status, snatched_status = fireEvent('status.get', ['done', 'snatched'], single = True)
 
         # Add movie
-        movie = db.query(Movie).filter_by(library_id = group['library'].get('id')).first()
+        movie = db.query(Media).filter_by(library_id = group['library'].get('id')).first()
         if not movie:
-            movie = Movie(
+            movie = Media(
                 library_id = group['library'].get('id'),
                 profile_id = 0,
                 status_id = done_status.get('id')

@@ -415,7 +415,7 @@ class Scanner(Plugin):
             if not group['library']:
                 log.error('Unable to determine movie: %s', group['identifiers'])
             else:
-                movie = db.query(Movie).filter_by(library_id = group['library']['id']).first()
+                movie = db.query(Media).filter_by(library_id = group['library']['id']).first()
                 group['movie_id'] = None if not movie else movie.id
 
             processed_movies[identifier] = group

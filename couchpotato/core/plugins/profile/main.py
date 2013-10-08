@@ -4,7 +4,7 @@ from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.core.settings.model import Profile, ProfileType, Movie
+from couchpotato.core.settings.model import Profile, ProfileType, Media
 from sqlalchemy.orm import joinedload_all
 
 log = CPLog(__name__)
@@ -38,7 +38,7 @@ class ProfilePlugin(Plugin):
         active_status = fireEvent('status.get', 'active', single = True)
 
         db = get_session()
-        movies = db.query(Movie).filter(Movie.status_id == active_status.get('id'), Movie.profile == None).all()
+        movies = db.query(Media).filter(Media.status_id == active_status.get('id'), Media.profile == None).all()
 
         if len(movies) > 0:
             default_profile = self.default()

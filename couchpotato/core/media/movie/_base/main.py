@@ -6,7 +6,7 @@ from couchpotato.core.helpers.variable import getImdb, splitString, tryInt, \
     mergeDicts
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media.movie import MovieTypeBase
-from couchpotato.core.settings.model import Library, LibraryTitle, Movie, \
+from couchpotato.core.settings.model import Library, LibraryTitle, Media, \
     Release
 from couchpotato.environment import Env
 from sqlalchemy.orm import joinedload_all
@@ -96,8 +96,8 @@ class MovieBase(MovieTypeBase):
         db = get_session()
 
         # get movies last_edit more than a week ago
-        movies = db.query(Movie) \
-            .filter(Movie.status_id == done_status.get('id'), Movie.last_edit < (now - week)) \
+        movies = db.query(Media) \
+            .filter(Media.status_id == done_status.get('id'), Media.last_edit < (now - week)) \
             .all()
 
         for movie in movies:
@@ -123,9 +123,9 @@ class MovieBase(MovieTypeBase):
         imdb_id = getImdb(str(movie_id))
 
         if imdb_id:
-            m = db.query(Movie).filter(Movie.library.has(identifier = imdb_id)).first()
+            m = db.query(Media).filter(Media.library.has(identifier = imdb_id)).first()
         else:
-            m = db.query(Movie).filter_by(id = movie_id).first()
+            m = db.query(Media).filter_by(id = movie_id).first()
 
         results = None
         if m:
@@ -145,20 +145,20 @@ class MovieBase(MovieTypeBase):
             release_status = [release_status]
 
         # query movie ids
-        q = db.query(Movie) \
-            .with_entities(Movie.id) \
-            .group_by(Movie.id)
+        q = db.query(Media) \
+            .with_entities(Media.id) \
+            .group_by(Media.id)
 
         # Filter on movie status
         if status and len(status) > 0:
             statuses = fireEvent('status.get', status, single = len(status) > 1)
             statuses = [s.get('id') for s in statuses]
 
-            q = q.filter(Movie.status_id.in_(statuses))
+            q = q.filter(Media.status_id.in_(statuses))
 
         # Filter on release status
         if release_status and len(release_status) > 0:
-            q = q.join(Movie.releases)
+            q = q.join(Media.releases)
 
             statuses = fireEvent('status.get', release_status, single = len(release_status) > 1)
             statuses = [s.get('id') for s in statuses]
@@ -167,7 +167,7 @@ class MovieBase(MovieTypeBase):
 
         # Only join when searching / ordering
         if starts_with or search or order != 'release_order':
-            q = q.join(Movie.library, Library.titles) \
+            q = q.join(Media.library, Library.titles) \
                 .filter(LibraryTitle.default == True)
 
         # Add search filters
@@ -218,13 +218,13 @@ class MovieBase(MovieTypeBase):
             releases_count[release.movie_id] += 1
 
         # Get main movie data
-        q2 = db.query(Movie) \
+        q2 = db.query(Media) \
             .options(joinedload_all('library.titles')) \
             .options(joinedload_all('library.files')) \
             .options(joinedload_all('status')) \
             .options(joinedload_all('files'))
 
-        q2 = q2.filter(Movie.id.in_(movie_ids))
+        q2 = q2.filter(Media.id.in_(movie_ids))
 
         results = q2.all()
 
@@ -267,14 +267,14 @@ class MovieBase(MovieTypeBase):
         if release_status and not isinstance(release_status, (list, tuple)):
             release_status = [release_status]
 
-        q = db.query(Movie)
+        q = db.query(Media)
 
         # Filter on movie status
         if status and len(status) > 0:
             statuses = fireEvent('status.get', status, single = len(release_status) > 1)
             statuses = [s.get('id') for s in statuses]
 
-            q = q.filter(Movie.status_id.in_(statuses))
+            q = q.filter(Media.status_id.in_(statuses))
 
         # Filter on release status
         if release_status and len(release_status) > 0:
@@ -282,7 +282,7 @@ class MovieBase(MovieTypeBase):
             statuses = fireEvent('status.get', release_status, single = len(release_status) > 1)
             statuses = [s.get('id') for s in statuses]
 
-            q = q.join(Movie.releases) \
+            q = q.join(Media.releases) \
                 .filter(Release.status_id.in_(statuses))
 
         q = q.join(Library, LibraryTitle) \
@@ -392,12 +392,12 @@ class MovieBase(MovieTypeBase):
         cat_id = params.get('category_id')
 
         db = get_session()
-        m = db.query(Movie).filter_by(library_id = library.get('id')).first()
+        m = db.query(Media).filter_by(library_id = library.get('id')).first()
         added = True
         do_search = False
         search_after = search_after and self.conf('search_on_add', section = 'moviesearcher')
         if not m:
-            m = Movie(
+            m = Media(
                 library_id = library.get('id'),
                 profile_id = params.get('profile_id', default_profile.get('id')),
                 status_id = status_id if status_id else status_active.get('id'),
@@ -471,7 +471,7 @@ class MovieBase(MovieTypeBase):
         ids = splitString(id)
         for movie_id in ids:
 
-            m = db.query(Movie).filter_by(id = movie_id).first()
+            m = db.query(Media).filter_by(id = movie_id).first()
             if not m:
                 continue
 
@@ -518,7 +518,7 @@ class MovieBase(MovieTypeBase):
 
         db = get_session()
 
-        movie = db.query(Movie).filter_by(id = movie_id).first()
+        movie = db.query(Media).filter_by(id = movie_id).first()
         if movie:
             deleted = False
             if delete_from == 'all':
@@ -568,7 +568,7 @@ class MovieBase(MovieTypeBase):
 
         db = get_session()
 
-        m = db.query(Movie).filter_by(id = movie_id).first()
+        m = db.query(Media).filter_by(id = movie_id).first()
         if not m or len(m.library.titles) == 0:
             log.debug('Can\'t restatus movie, doesn\'t seem to exist.')
             return False
