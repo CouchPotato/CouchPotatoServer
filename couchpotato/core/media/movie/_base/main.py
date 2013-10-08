@@ -19,14 +19,7 @@ log = CPLog(__name__)
 
 class MovieBase(MovieTypeBase):
 
-    default_dict = {
-        'profile': {'types': {'quality': {}}},
-        'releases': {'status': {}, 'quality': {}, 'files':{}, 'info': {}},
-        'library': {'titles': {}, 'files':{}},
-        'files': {},
-        'status': {},
-        'category': {},
-    }
+    _type = 'movie'
 
     def __init__(self):
 
@@ -53,12 +46,6 @@ class MovieBase(MovieTypeBase):
             'desc': 'Get a movie by id',
             'params': {
                 'id': {'desc': 'The id of the movie'},
-            }
-        })
-        addApiView('movie.refresh', self.refresh, docs = {
-            'desc': 'Refresh a movie by id',
-            'params': {
-                'id': {'desc': 'Movie ID(s) you want to refresh.', 'type': 'int (comma separated)'},
             }
         })
         addApiView('movie.available_chars', self.charView)
@@ -356,28 +343,6 @@ class MovieBase(MovieTypeBase):
             'chars': chars,
         }
 
-    def refresh(self, id = '', **kwargs):
-
-        db = get_session()
-
-        for x in splitString(id):
-            movie = db.query(Media).filter_by(id = x).first()
-
-            if movie:
-
-                # Get current selected title
-                default_title = ''
-                for title in movie.library.titles:
-                    if title.default: default_title = title.title
-
-                fireEvent('notify.frontend', type = 'movie.busy.%s' % x, data = True)
-                fireEventAsync('library.update.movie', identifier = movie.library.identifier, default_title = default_title, force = True, on_complete = self.createOnComplete(x))
-
-        db.expire_all()
-        return {
-            'success': True,
-        }
-
     def search(self, q = '', **kwargs):
 
         cache_key = u'%s/%s' % (__name__, simplifyString(q))
@@ -489,15 +454,12 @@ class MovieBase(MovieTypeBase):
         db.expire_all()
         return movie_dict
 
-
     def addView(self, **kwargs):
-
-        movie_dict = self.add(params = kwargs)
+        add_dict = self.add(params = kwargs)
 
         return {
-            'success': True,
-            'added': True if movie_dict else False,
-            'movie': movie_dict,
+            'success': True if add_dict else False,
+            'movie': add_dict,
         }
 
     def edit(self, id = '', **kwargs):
@@ -627,24 +589,3 @@ class MovieBase(MovieTypeBase):
         db.commit()
 
         return True
-
-    def createOnComplete(self, movie_id):
-
-        def onComplete():
-            db = get_session()
-            movie = db.query(Media).filter_by(id = movie_id).first()
-            fireEventAsync('movie.searcher.single', movie.to_dict(self.default_dict), on_complete = self.createNotifyFront(movie_id))
-            db.expire_all()
-
-        return onComplete
-
-
-    def createNotifyFront(self, movie_id):
-
-        def notifyFront():
-            db = get_session()
-            movie = db.query(Media).filter_by(id = movie_id).first()
-            fireEvent('notify.frontend', type = 'movie.update.%s' % movie.id, data = movie.to_dict(self.default_dict))
-            db.expire_all()
-
-        return notifyFront
