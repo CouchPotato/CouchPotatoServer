@@ -14,25 +14,25 @@
 		padding: 20px;
 	}
 	
-	.page.userscript .movie_result {
+	.page.userscript .media_result {
 		height: 140px;
 	}
-		.page.userscript .movie_result .thumbnail {
+		.page.userscript .media_result .thumbnail {
 			width: 90px;
 		}
-		.page.userscript .movie_result .options {
+		.page.userscript .media_result .options {
 			left: 90px;
 			padding: 54px 15px;
 		}
 		
-		.page.userscript .movie_result .year {
+		.page.userscript .media_result .year {
 			display: none;
 		}
 		
-		.page.userscript .movie_result .options select[name="title"] {
+		.page.userscript .media_result .options select[name="title"] {
 			width: 190px;
 		}
 		
-		.page.userscript .movie_result .options select[name="profile"] {
+		.page.userscript .media_result .options select[name="profile"] {
 			width: 70px;
 		}
