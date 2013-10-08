@@ -4,6 +4,7 @@ from couchpotato.core.event import fireEvent, fireEventAsync, addEvent
 from couchpotato.core.helpers.variable import splitString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media import MediaBase
+from couchpotato.core.settings.model import Media
 
 log = CPLog(__name__)
 

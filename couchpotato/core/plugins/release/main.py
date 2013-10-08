@@ -9,8 +9,8 @@ from couchpotato.core.settings.model import File, Release as Relea, Media
 from sqlalchemy.orm import joinedload_all
 from sqlalchemy.sql.expression import and_, or_
 import os
-import traceback
 import time
+import traceback
 
 log = CPLog(__name__)
 
