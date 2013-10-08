@@ -1,6 +1,6 @@
-from .main import Media
+from .main import MediaPlugin
 
 def start():
-    return Media()
+    return MediaPlugin()
 
 config = []

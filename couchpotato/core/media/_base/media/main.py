@@ -8,7 +8,7 @@ from couchpotato.core.media import MediaBase
 log = CPLog(__name__)
 
 
-class Media(MediaBase):
+class MediaPlugin(MediaBase):
 
     def __init__(self):
 
