@@ -20,6 +20,8 @@ else
     echo "/etc/default/couchpotato not found using default settings.";
 fi
 
+. /lib/lsb/init-functions
+
 # Script name
 NAME=couchpotato
 
