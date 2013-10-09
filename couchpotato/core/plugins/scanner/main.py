@@ -5,7 +5,7 @@ from couchpotato.core.helpers.variable import getExt, getImdb, tryInt, \
     splitString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.core.settings.model import File, Movie
+from couchpotato.core.settings.model import File, Media
 from enzyme.exceptions import NoParserError, ParseError
 from guessit import guess_movie_info
 from subliminal.videos import Video
