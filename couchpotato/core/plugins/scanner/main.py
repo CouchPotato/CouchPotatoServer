@@ -830,18 +830,20 @@ class Scanner(Plugin):
     def findYear(self, text):
 
         # Search year inside () or [] first
-        matches = re.search('(\(|\[)(?P<year>19[0-9]{2}|20[0-9]{2})(\]|\))', text)
+        matches = re.findall('(\(|\[)(?P<year>19[0-9]{2}|20[0-9]{2})(\]|\))', text)
         if matches:
-            return matches.group('year')
+            return matches[-1][1]
 
         # Search normal
-        matches = re.search('(?P<year>19[0-9]{2}|20[0-9]{2})', text)
+        matches = re.findall('(?P<year>19[0-9]{2}|20[0-9]{2})', text)
         if matches:
-            return matches.group('year')
+            return matches[-1]
 
         return ''
 
     def getReleaseNameYear(self, release_name, file_name = None):
+
+        release_name = release_name.strip(' .-_')
 
         # Use guessit first
         guess = {}
@@ -860,7 +862,7 @@ class Scanner(Plugin):
         cleaned = ' '.join(re.split('\W+', simplifyString(release_name)))
         cleaned = re.sub(self.clean, ' ', cleaned)
 
-        for year_str in [file_name, cleaned]:
+        for year_str in [file_name, release_name, cleaned]:
             if not year_str: continue
             year = self.findYear(year_str)
             if year:
@@ -870,19 +872,21 @@ class Scanner(Plugin):
 
         if year: # Split name on year
             try:
-                movie_name = cleaned.split(year).pop(0).strip()
-                cp_guess = {
-                    'name': movie_name,
-                    'year': int(year),
-                }
+                movie_name = cleaned.rsplit(year, 1).pop(0).strip()
+                if movie_name:
+                    cp_guess = {
+                        'name': movie_name,
+                        'year': int(year),
+                    }
             except:
                 pass
-        else: # Split name on multiple spaces
+
+        if not cp_guess: # Split name on multiple spaces
             try:
                 movie_name = cleaned.split('  ').pop(0).strip()
                 cp_guess = {
                     'name': movie_name,
-                    'year': int(year),
+                    'year': int(year) if movie_name[:4] != year else 0,
                 }
             except:
                 pass
