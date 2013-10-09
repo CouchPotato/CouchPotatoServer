@@ -17,64 +17,14 @@
 # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-from base64 import encodestring
-import httplib
-import inspect
-import string
 
+import inspect
 import rtorrent
 import re
 from rtorrent.common import bool_to_int, convert_version_tuple_to_str,\
     safe_repr
-from rtorrent.err import RTorrentVersionError, MethodError
+from rtorrent.err import MethodError
 from rtorrent.compat import xmlrpclib
-
-
-class BasicAuthTransport(xmlrpclib.Transport):
-    def __init__(self, username=None, password=None):
-        xmlrpclib.Transport.__init__(self)
-        self.username = username
-        self.password = password
-
-    def send_auth(self, h):
-        if self.username is not None and self.password is not None:
-            h.putheader('AUTHORIZATION', "Basic %s" % string.replace(
-                encodestring("%s:%s" % (self.username, self.password)),
-                "\012", ""
-            ))
-
-    def single_request(self, host, handler, request_body, verbose=0):
-        # issue XML-RPC request
-
-        h = self.make_connection(host)
-        if verbose:
-            h.set_debuglevel(1)
-
-        try:
-            self.send_request(h, handler, request_body)
-            self.send_host(h, host)
-            self.send_user_agent(h)
-            self.send_auth(h)
-            self.send_content(h, request_body)
-
-            response = h.getresponse(buffering=True)
-            if response.status == 200:
-                self.verbose = verbose
-                return self.parse_response(response)
-        except xmlrpclib.Fault:
-            raise
-        except Exception:
-            self.close()
-            raise
-
-        #discard any response data and raise exception
-        if (response.getheader("content-length", 0)):
-            response.read()
-        raise xmlrpclib.ProtocolError(
-            host + handler,
-            response.status, response.reason,
-            response.msg,
-        )
 
 
 def get_varname(rpc_call):
