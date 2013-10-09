@@ -721,9 +721,6 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                                         self.tagDir(release_download['folder'], 'downloading')
 
                                 elif release_download['status'] == 'seeding':
-                                    # Set the release to seeding
-                                    fireEvent('release.update_status', rel.id, status = seeding_status, single = True)
-
                                     #If linking setting is enabled, process release
                                     if self.conf('file_action') != 'move' and not rel.status_id == seeding_status.get('id') and self.statusInfoComplete(release_download):
                                         log.info('Download of %s completed! It is now being processed while leaving the original files alone for seeding. Current ratio: %s.', (release_download['name'], release_download['seed_ratio']))
@@ -737,6 +734,9 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                                     else:
                                         #let it seed
                                         log.debug('%s is seeding with ratio: %s', (release_download['name'], release_download['seed_ratio']))
+
+                                    # Set the release to seeding
+                                    fireEvent('release.update_status', rel.id, status = seeding_status, single = True)
 
                                 elif release_download['status'] == 'failed':
                                     # Set the release to failed

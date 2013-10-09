@@ -270,7 +270,7 @@ class Release(Plugin):
         }
 
     def updateStatus(self, id, status = None):
-        if not status: return
+        if not status: return False
 
         db = get_session()
 
@@ -289,3 +289,5 @@ class Release(Plugin):
 
             #Update all movie info as there is no release update function
             fireEvent('notify.frontend', type = 'release.update_status.%s' % rel.id, data = status.get('id'))
+
+        return True
