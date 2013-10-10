@@ -115,7 +115,7 @@ class SCGITransport(xmlrpclib.Transport):
         try:
             if host:
                 host, port = urllib.splitport(host)
-                addrinfo = socket.getaddrinfo(host, port, socket.AF_INET,
+                addrinfo = socket.getaddrinfo(host, int(port), socket.AF_INET,
                                               socket.SOCK_STREAM)
                 sock = socket.socket(*addrinfo[0][:3])
                 sock.connect(addrinfo[0][4])

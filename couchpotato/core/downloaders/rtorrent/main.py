@@ -71,7 +71,7 @@ class rTorrent(Downloader):
                 group.set_command()
                 group.disable()
         except MethodError, err:
-            log.error('Unable to set group options: %s', err.message)
+            log.error('Unable to set group options: %s', err.msg)
             return False
 
         return True
