@@ -206,7 +206,16 @@ class uTorrent(Downloader):
         if folder and os.path.isdir(folder):
             for root, folders, filenames in os.walk(folder):
                 for filename in filenames:
-                    os.chmod(os.path.join(root, filename), stat.S_IWRITE)
+                     filepath = os.path.join(root, filename)
+                     mode = oct(stat.S_IMODE(os.stat(filepath).st_mode))
+                     # Check for Owner Read-WritePermissions 
+                     gp = re.compile("^0[6-7][0-7][0-7]$")
+                     if not gp.match(mode):
+                        log.error('Adding write permissions to %s', str(filepath))
+                        os.chmod(filepath, stat.S_IWRITE | os.stat(filepath).st_mode)
+                        mode = oct(stat.S_IMODE(os.stat(filepath).st_mode))
+                        log.error('Permissions are now %s', str(mode))
+
 
 class uTorrentAPI(object):
 
