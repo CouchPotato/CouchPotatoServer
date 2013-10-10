@@ -3,6 +3,9 @@
 # rtorrent_xmlrpc
 # (c) 2011 Roger Que <alerante@bellsouth.net>
 #
+# Modified portions:
+# (c) 2013 Dean Gardiner <gardiner91@gmail.com>
+#
 # Python module for interacting with rtorrent's XML-RPC interface
 # directly over SCGI, instead of through an HTTP server intermediary.
 # Inspired by Glenn Washburn's xmlrpc2scgi.py [1], but subclasses the
@@ -78,13 +81,28 @@
 # ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE
 # OF THIS SOFTWARE.
 
+import httplib
 import re
 import socket
 import urllib
 import xmlrpclib
+import errno
 
 
 class SCGITransport(xmlrpclib.Transport):
+    # Added request() from Python 2.7 xmlrpclib here to backport to Python 2.6
+    def request(self, host, handler, request_body, verbose=0):
+        #retry request once if cached connection has gone cold
+        for i in (0, 1):
+            try:
+                return self.single_request(host, handler, request_body, verbose)
+            except socket.error, e:
+                if i or e.errno not in (errno.ECONNRESET, errno.ECONNABORTED, errno.EPIPE):
+                    raise
+            except httplib.BadStatusLine: #close after we sent request
+                if i:
+                    raise
+
     def single_request(self, host, handler, request_body, verbose=0):
         # Add SCGI headers to the request.
         headers = {'CONTENT_LENGTH': str(len(request_body)), 'SCGI': '1'}
