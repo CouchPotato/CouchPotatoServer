@@ -115,6 +115,11 @@ class RTorrent:
 
         return self._client_version_tuple
 
+    def _update_rpc_methods(self):
+        self._rpc_methods = self._get_conn().system.listMethods()
+
+        return self._rpc_methods
+
     def _get_rpc_methods(self):
         """ Get list of raw RPC commands
 
@@ -122,10 +127,7 @@ class RTorrent:
         @rtype: list
         """
 
-        if self._rpc_methods == []:
-            self._rpc_methods = self._get_conn().system.listMethods()
-
-        return(self._rpc_methods)
+        return(self._rpc_methods or self._update_rpc_methods())
 
     def get_torrents(self, view="main"):
         """Get list of all torrents in specified view
@@ -316,6 +318,8 @@ class RTorrent:
         else:
             assert view is not None, "view parameter required on non-persistent groups"
             p.group.insert('', name, view)
+
+        self._update_rpc_methods()
 
     def get_group(self, name):
         assert name is not None, "group name required"
