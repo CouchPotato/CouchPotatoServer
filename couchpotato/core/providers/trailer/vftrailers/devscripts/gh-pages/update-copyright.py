@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# coding: utf-8
+# coding: latin-1
 
 from __future__ import with_statement
 

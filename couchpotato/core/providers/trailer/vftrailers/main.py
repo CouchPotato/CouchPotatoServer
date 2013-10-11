@@ -3,6 +3,7 @@ import subprocess
 import time
 import sys
 import os.path
+import unicodedata
 from couchpotato.core.providers.trailer.base import VFTrailerProvider
 from couchpotato.core.helpers.variable import mergeDicts, getTitle
 from couchpotato.core.logger import CPLog
@@ -14,17 +15,20 @@ except AttributeError:
 class vftrailers(VFTrailerProvider):
     def search(self, group, filename, destination):
         movie_name = getTitle(group['library'])
+        movienorm = unicodedata.normalize('NFKD', movie_name).encode('ascii','ignore')
         movie_year = group['library']['year']
-        searchstring=movie_name +' '+ str(movie_year) +' bande annonce vf HD'
+        searchstring=movienorm+' '+ str(movie_year) +' bande annonce vf HD'
         time.sleep(3)
-        g = pygoogle(searchstring)
+        g = pygoogle(str(searchstring))
+        diclist = g.search()
         urllist = g.get_urls()
         cleanlist=[]
         for x in urllist:
             if 'youtube' in x or 'dailymotion' in x:
                 cleanlist.append(x)
         if cleanlist:
-            subprocess.check_call([sys.executable, 'youtube_dl/__main__.py', '-o',destination+'.%(ext)s', cleanlist[0]], cwd=rootDir, stdout=_DEV_NULL)
+            dest=destination+u'.%(ext)s'
+            subprocess.check_call([sys.executable, 'youtube_dl/__main__.py', '-o',dest, cleanlist[0]], cwd=rootDir, shell=False, stdout=_DEV_NULL,stderr=subprocess.STDOUT)
             return True
         else:
             return False

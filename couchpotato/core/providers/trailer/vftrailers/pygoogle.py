@@ -61,7 +61,7 @@ class pygoogle:
     def __init__(self,query,pages=1,hl='fr'):
         self.pages = pages          #Number of pages. default 10
         self.query = query
-        self.filter = FILTER_ON     #Controls turning on or off the duplicate content filter. On = 1.
+        self.filter = FILTER_OFF     #Controls turning on or off the duplicate content filter. On = 1.
         self.rsz = RSZ_LARGE        #Results per page. small = 4 /large = 8
         self.safe = SAFE_OFF        #SafeBrowsing -  active/moderate/off
         self.hl = hl                #Defaults to English (en)
@@ -74,7 +74,7 @@ class pygoogle:
                 rsz = 4
             args = {'q' : self.query,
                     'v' : '1.0',
-                    'start' : page*rsz,
+                    'start' : '0',
                     'rsz': self.rsz,
                     'safe' : self.safe, 
                     'filter' : self.filter,    

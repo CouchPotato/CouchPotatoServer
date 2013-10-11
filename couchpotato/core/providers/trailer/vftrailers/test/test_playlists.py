@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# encoding: utf-8
+# encoding: latin-1
 
 import sys
 import unittest

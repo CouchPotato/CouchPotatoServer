@@ -1,4 +1,4 @@
-# coding: utf-8
+# coding: latin-1
 import re
 
 from .common import InfoExtractor
