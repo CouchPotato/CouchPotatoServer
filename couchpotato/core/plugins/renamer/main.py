@@ -31,8 +31,9 @@ class Renamer(Plugin):
             'params': {
                 'async': {'desc': 'Optional: Set to 1 if you dont want to fire the renamer.scan asynchronous.'},
                 'movie_folder': {'desc': 'Optional: The folder of the movie to scan. Keep empty for default renamer folder.'},
-                'downloader' : {'desc': 'Optional: The downloader this movie has been downloaded with'},
-                'download_id': {'desc': 'Optional: The downloader\'s nzb/torrent ID'},
+                'downloader' : {'desc': 'Optional: The downloader the release has been downloaded with. \'download_id\' is required with this option.'},
+                'download_id': {'desc': 'Optional: The nzb/torrent ID of the release in movie_folder. \'downloader\' is required with this option.'},
+                'status': {'desc': 'Optional: The status of the release: \'completed\' (default) or \'seeding\''},
             },
         })
 
@@ -65,10 +66,11 @@ class Renamer(Plugin):
         movie_folder = kwargs.get('movie_folder')
         downloader = kwargs.get('downloader')
         download_id = kwargs.get('download_id')
+        status = kwargs.get('status', 'completed')
 
         release_download = {'folder': movie_folder} if movie_folder else None
         if release_download:
-            release_download.update({'id': download_id, 'downloader': downloader} if download_id else {})
+            release_download.update({'id': download_id, 'downloader': downloader, 'status': status} if download_id else {})
 
         fire_handle = fireEvent if not async else fireEventAsync
 
@@ -150,8 +152,8 @@ class Renamer(Plugin):
         separator = self.conf('separator')
 
         # Statuses
-        done_status, active_status, downloaded_status, snatched_status = \
-            fireEvent('status.get', ['done', 'active', 'downloaded', 'snatched'], single = True)
+        done_status, active_status, downloaded_status, snatched_status, seeding_status = \
+            fireEvent('status.get', ['done', 'active', 'downloaded', 'snatched', 'seeding'], single = True)
 
         for group_identifier in groups:
 
@@ -406,10 +408,20 @@ class Renamer(Plugin):
                                 remove_leftovers = False
 
                                 break
-                        elif release.status_id is snatched_status.get('id'):
-                            if release.quality.id is group['meta_data']['quality']['id']:
-                                # Set the release to downloaded
-                                fireEvent('release.update_status', release.id, status = downloaded_status, single = True)
+
+                        elif release.status_id in [snatched_status.get('id'), seeding_status.get('id')]:
+                            if release_download and release_download.get('rls_id'):
+                                if release_download['rls_id'] is release.id:
+                                    if release_download['status'] == 'completed':
+                                        # Set the release to downloaded
+                                        fireEvent('release.update_status', release.id, status = downloaded_status, single = True)
+                                    elif release_download['status'] == 'seeding':
+                                        # Set the release to seeding
+                                        fireEvent('release.update_status', release.id, status = seeding_status, single = True)
+
+                            elif release.quality.id is group['meta_data']['quality']['id']:
+                                    # Set the release to downloaded
+                                    fireEvent('release.update_status', release.id, status = downloaded_status, single = True)
 
                 # Remove leftover files
                 if not remove_leftovers: # Don't remove anything
@@ -735,8 +747,8 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                                         #let it seed
                                         log.debug('%s is seeding with ratio: %s', (release_download['name'], release_download['seed_ratio']))
 
-                                    # Set the release to seeding
-                                    fireEvent('release.update_status', rel.id, status = seeding_status, single = True)
+                                        # Set the release to seeding
+                                        fireEvent('release.update_status', rel.id, status = seeding_status, single = True)
 
                                 elif release_download['status'] == 'failed':
                                     # Set the release to failed
@@ -752,7 +764,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
                                         # If the release has been seeding, process now the seeding is done
                                         if rel.status_id == seeding_status.get('id'):
-                                            if rel.movie.status_id == done_status.get('id'):
+                                            if self.conf('file_action') != 'move':
                                                 # Set the release to done as the movie has already been renamed
                                                 fireEvent('release.update_status', rel.id, status = downloaded_status, single = True)
 
@@ -760,9 +772,6 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                                                 release_download.update({'pause': False, 'scan': False, 'process_complete': True})
                                                 scan_releases.append(release_download)
                                             else:
-                                                # Set the release to snatched so that the renamer can process the release as if it was never seeding
-                                                fireEvent('release.update_status', rel.id, status = snatched_status, single = True)
-
                                                 # Scan and Allow the downloader to clean-up
                                                 release_download.update({'pause': False, 'scan': True, 'process_complete': True})
                                                 scan_releases.append(release_download)
@@ -849,6 +858,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                 'imdb_id': rls.movie.library.identifier,
                 'quality': rls.quality.identifier,
                 'protocol': rls_dict.get('info', {}).get('protocol') or rls_dict.get('info', {}).get('type'),
+                'rls_id': rls.id,
             })
 
         return release_download
