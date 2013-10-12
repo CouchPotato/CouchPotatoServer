@@ -29,31 +29,40 @@ class Plex(Notification):
 
         return self.server.refresh()
 
-    def notifyClients(self, message, clients):
+    def getClientNames(self):
+        return [
+            x.strip().lower()
+            for x in self.conf('clients').split(',')
+        ]
+
+    def notifyClients(self, message, client_names):
         success = True
 
-        while len(clients):
-            client = clients[0]
+        while len(client_names):
+            client_name = client_names[0]
+            client_success = False
+            client = self.server.clients.get(client_name)
 
-            success = fireEvent('notify.plex.notifyClient', client, message, single=True)
+            if client:
+                client_success = fireEvent('notify.plex.notifyClient', client, message, single=True)
 
-            if success:
-                clients.pop(0)
-            else:
+                if client_success:
+                    client_names.pop(0)
+
+            if not client_success:
                 if self.server.staleClients():
                     log.info('Failed to send notification to client "%s". '
-                             'Client list is stale, updating the client list and retrying.', client['name'])
-                    self.server.updateClients()
+                             'Client list is stale, updating the client list and retrying.', client_name)
+                    self.server.updateClients(self.getClientNames())
                 else:
-                    log.warning('Failed to send notification to client %s, skipping this time', client['name'])
-                    clients.pop(0)
+                    log.warning('Failed to send notification to client %s, skipping this time', client_name)
+                    client_names.pop(0)
                     success = False
-                    break
 
         return success
 
     def notify(self, message = '', data = {}, listener = None):
-        return self.notifyClients(message, self.server.clients.values())
+        return self.notifyClients(message, self.getClientNames())
 
     def test(self, **kwargs):
 

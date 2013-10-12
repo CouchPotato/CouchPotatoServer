@@ -44,7 +44,7 @@ class PlexServer(object):
         else:
             return data
 
-    def updateClients(self):
+    def updateClients(self, client_names):
         log.info('Searching for clients on Plex Media Server')
 
         self.clients = {}
@@ -53,14 +53,9 @@ class PlexServer(object):
         if not result:
             return
 
-        notify_clients = [
-            x.strip().lower()
-            for x in self.plex.conf('clients').split(',')
-        ]
-
         found_clients = [
             c for c in result.findall('Server')
-            if c.get('name') and c.get('name').lower() in notify_clients
+            if c.get('name') and c.get('name').lower() in client_names
         ]
 
         for client in found_clients:
@@ -73,10 +68,10 @@ class PlexServer(object):
                 'protocol': client.get('protocol', 'xbmchttp')
             }
 
-            notify_clients.remove(name)
+            client_names.remove(name)
 
-        if len(notify_clients) > 0:
-            log.debug('Unable to find clients: %s', ', '.join(notify_clients))
+        if len(client_names) > 0:
+            log.debug('Unable to find clients: %s', ', '.join(client_names))
 
         self.last_clients_update = datetime.now()
 
