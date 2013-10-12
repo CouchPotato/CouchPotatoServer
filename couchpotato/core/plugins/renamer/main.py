@@ -411,7 +411,7 @@ class Renamer(Plugin):
 
                         elif release.status_id in [snatched_status.get('id'), seeding_status.get('id')]:
                             if release_download and release_download.get('rls_id'):
-                                if release_download['rls_id'] is release.id:
+                                if release_download['rls_id'] == release.id:
                                     if release_download['status'] == 'completed':
                                         # Set the release to downloaded
                                         fireEvent('release.update_status', release.id, status = downloaded_status, single = True)
