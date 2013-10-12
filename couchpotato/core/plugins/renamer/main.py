@@ -166,7 +166,7 @@ class Renamer(Plugin):
 
             # Add _UNKNOWN_ if no library item is connected
             if not group['library'] or not movie_title:
-                self.tagDir(group, 'unknown')
+                self.tagRelease(group = group, tag = 'unknown')
                 continue
             # Rename the files using the library data
             else:
@@ -400,7 +400,7 @@ class Renamer(Plugin):
                                 log.info('Better quality release already exists for %s, with quality %s', (movie.library.titles[0].title, release.quality.label))
 
                                 # Add exists tag to the .ignore file
-                                self.tagDir(group, 'exists')
+                                self.tagRelease(group = group, tag = 'exists')
 
                                 # Notify on rename fail
                                 download_message = 'Renaming of %s (%s) cancelled, exists in %s already.' % (movie.library.titles[0].title, group['meta_data']['quality']['label'], release.quality.label)
@@ -456,7 +456,7 @@ class Renamer(Plugin):
 
                 except:
                     log.error('Failed removing %s: %s', (src, traceback.format_exc()))
-                    self.tagDir(group, 'failed_remove')
+                    self.tagRelease(group = group, tag = 'failed_remove')
 
             # Delete leftover folder from older releases
             for delete_folder in delete_folders:
@@ -480,11 +480,11 @@ class Renamer(Plugin):
                         group['renamed_files'].append(dst)
                     except:
                         log.error('Failed moving the file "%s" : %s', (os.path.basename(src), traceback.format_exc()))
-                        self.tagDir(group, 'failed_rename')
+                        self.tagRelease(group = group, tag = 'failed_rename')
 
             # Tag folder if it is in the 'from' folder and it will not be removed because it is a torrent
             if self.movieInFromFolder(movie_folder) and self.downloadIsTorrent(release_download):
-                self.tagDir(group, 'renamed_already')
+                self.tagRelease(group = group, tag = 'renamed_already')
 
             # Remove matching releases
             for release in remove_releases:
@@ -541,18 +541,9 @@ class Renamer(Plugin):
         return rename_files
 
     # This adds a file to ignore / tag a release so it is ignored later
-    def tagDir(self, group, tag):
-
-        ignore_file = None
-        if isinstance(group, dict):
-            for movie_file in sorted(list(group['files']['movie'])):
-                ignore_file = '%s.%s.ignore' % (os.path.splitext(movie_file)[0], tag)
-                break
-        else:
-            if not os.path.isdir(group) or not tag:
-                return
-            ignore_file = os.path.join(group, '%s.ignore' % tag)
-
+    def tagRelease(self, tag, group = None, release_download = None):
+        if not tag:
+            return
 
         text = """This file is from CouchPotato
 It has marked this release as "%s"
@@ -560,25 +551,81 @@ This file hides the release from the renamer
 Remove it if you want it to be renamed (again, or at least let it try again)
 """ % tag
 
-        if ignore_file:
-            self.createFile(ignore_file, text)
+        tag_files = []
 
-    def untagDir(self, folder, tag = ''):
-        if not os.path.isdir(folder):
+        # Tag movie files if they are known
+        if isinstance(group, dict):
+            tag_files = sorted(list(group['files']['movie']))[0]
+
+        elif isinstance(release_download, dict):
+            # Tag download_files if they are known
+            if release_download['files']:
+                tag_files = release_download['files']
+
+            # Tag all files in release folder
+            else:
+                for root, folders, names in os.walk(release_download['folder']):
+                    tag_files.extend([os.path.join(root, name) for name in names])
+                
+        for filename in tag_files:
+            self.createFile('%s.%s.ignore' % (os.path.splitext(filename)[0], tag), text)
+
+    def untagRelease(self, release_download, tag = ''):
+        if not release_download:
             return
 
-        # Remove any .ignore files
-        for root, dirnames, filenames in os.walk(folder):
-            for filename in fnmatch.filter(filenames, '*%s.ignore' % tag):
-                os.remove((os.path.join(root, filename)))
-
-    def hastagDir(self, folder, tag = ''):
+        folder = release_download['folder']
         if not os.path.isdir(folder):
             return False
 
-        # Find any .ignore files
+        # Untag download_files if they are known
+        if release_download['files']:
+            tag_files = release_download['files']
+
+        # Untag all files in release folder
+        else:
+            tag_files = []
+            for root, folders, names in os.walk(release_download['folder']):
+                tag_files.extend([os.path.join(root, name) for name in names if not os.path.splitext(name)[1] == '.ignore'])
+
+        # Find all .ignore files in folder
+        ignore_files = []
         for root, dirnames, filenames in os.walk(folder):
-            if fnmatch.filter(filenames, '*%s.ignore' % tag):
+            ignore_files.extend([fnmatch.filter([os.path.join(root, filename) for filename in filenames], '*%s.ignore' % tag)])
+                                           
+        # Match all found ignore files with the tag_files and delete if found 
+        for tag_file in tag_files:
+            ignore_file = fnmatch.filter(ignore_files, '%s.%s.ignore' % (os.path.splitext(tag_file)[0], tag if tag else '*'))
+            if ignore_file:
+                os.remove(ignore_file)
+
+    def hastagRelease(self, release_download, tag = ''):
+        if not release_download:
+            return False
+
+        folder = release_download['folder']
+        if not os.path.isdir(folder):
+            return False
+
+        # Find tag on download_files if they are known
+        if release_download['files']:
+            tag_files = release_download['files']
+
+        # Find tag on all files in release folder
+        else:
+            tag_files = []
+            for root, folders, names in os.walk(release_download['folder']):
+                tag_files.extend([os.path.join(root, name) for name in names if not os.path.splitext(name)[1] == '.ignore'])
+
+        # Find all .ignore files in folder
+        ignore_files = []
+        for root, dirnames, filenames in os.walk(folder):
+            ignore_files.extend([fnmatch.filter([os.path.join(root, filename) for filename in filenames], '*%s.ignore' % tag)])
+                                           
+        # Match all found ignore files with the tag_files and return True found 
+        for tag_file in tag_files:
+            ignore_file = fnmatch.filter(ignore_files, '%s.%s.ignore' % (os.path.splitext(tag_file)[0], tag if tag else '*'))
+            if ignore_file:
                 return True
 
         return False
@@ -730,7 +777,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
                                     # Tag folder if it is in the 'from' folder and it will not be processed because it is still downloading
                                     if release_download['folder'] and self.conf('from') in release_download['folder']:
-                                        self.tagDir(release_download['folder'], 'downloading')
+                                        self.tagRelease(release_download = release_download, tag = 'downloading')
 
                                 elif release_download['status'] == 'seeding':
                                     #If linking setting is enabled, process release
@@ -738,7 +785,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                                         log.info('Download of %s completed! It is now being processed while leaving the original files alone for seeding. Current ratio: %s.', (release_download['name'], release_download['seed_ratio']))
 
                                         # Remove the downloading tag
-                                        self.untagDir(release_download['folder'], 'downloading')
+                                        self.untagRelease(release_download = release_download, tag = 'downloading')
 
                                         # Scan and set the torrent to paused if required
                                         release_download.update({'pause': True, 'scan': True, 'process_complete': False})
@@ -781,7 +828,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                                             fireEvent('release.update_status', rel.id, status = snatched_status, single = True)
 
                                             # Remove the downloading tag
-                                            self.untagDir(release_download['folder'], 'downloading')
+                                            self.untagRelease(release_download = release_download, tag = 'downloading')
 
                                             # Scan and Allow the downloader to clean-up
                                             release_download.update({'pause': False, 'scan': True, 'process_complete': True})
@@ -817,9 +864,9 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                     fireEvent('download.pause', release_download = release_download, pause = False, single = True)
             if release_download['process_complete']:
                 #First make sure the files were succesfully processed
-                if not self.hastagDir(release_download['folder'], 'failed_rename'):
+                if not self.hastagRelease(release_download = release_download, tag = 'failed_rename'):
                     # Remove the seeding tag if it exists
-                    self.untagDir(release_download['folder'], 'renamed_already')
+                    self.untagRelease(release_download = release_download, tag = 'renamed_already')
                     # Ask the downloader to process the item
                     fireEvent('download.process_complete', release_download = release_download, single = True)
 
@@ -903,7 +950,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         #Extract all found archives
         for archive in archives:
             # Check if it has already been processed by CPS
-            if self.hastagDir(os.path.dirname(archive['file'])):
+            if self.hastagRelease(release_download = {'folder': os.path.dirname(archive['file']), 'files': [archive['file']]}):
                 continue
 
             # Find all related archive files
