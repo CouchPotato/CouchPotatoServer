@@ -172,7 +172,8 @@ class Searcher(SearcherBase):
             if not rls:
                 rls = Release(
                     identifier = nzb_identifier,
-                    media_id = media.get('id'),
+                    movie_id = media.get('id'),
+                    #media_id = media.get('id'),
                     quality_id = quality_type.get('quality_id'),
                     status_id = available_status.get('id')
                 )
