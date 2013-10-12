@@ -58,17 +58,25 @@ class PlexServer(object):
             if c.get('name') and c.get('name').lower() in client_names
         ]
 
+        # Store client details in cache
         for client in found_clients:
             name = client.get('name').lower()
 
             self.clients[name] = {
                 'name': client.get('name'),
+                'found': True,
                 'address': client.get('address'),
                 'port': client.get('port'),
                 'protocol': client.get('protocol', 'xbmchttp')
             }
 
             client_names.remove(name)
+
+        # Store dummy info for missing clients
+        for client_name in client_names:
+            self.clients[client_name] = {
+                'found': False
+            }
 
         if len(client_names) > 0:
             log.debug('Unable to find clients: %s', ', '.join(client_names))

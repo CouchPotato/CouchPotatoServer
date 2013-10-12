@@ -43,14 +43,14 @@ class Plex(Notification):
             client_success = False
             client = self.server.clients.get(client_name)
 
-            if client:
+            if client and client['found']:
                 client_success = fireEvent('notify.plex.notifyClient', client, message, single=True)
 
                 if client_success:
                     client_names.pop(0)
 
             if not client_success:
-                if self.server.staleClients():
+                if self.server.staleClients() or not client:
                     log.info('Failed to send notification to client "%s". '
                              'Client list is stale, updating the client list and retrying.', client_name)
                     self.server.updateClients(self.getClientNames())
