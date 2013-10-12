@@ -555,24 +555,28 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
         # Tag movie files if they are known
         if isinstance(group, dict):
-            tag_files = sorted(list(group['files']['movie']))[0]
+            tag_files = [sorted(list(group['files']['movie']))[0]]
 
         elif isinstance(release_download, dict):
             # Tag download_files if they are known
             if release_download['files']:
-                tag_files = release_download['files']
+                tag_files = release_download['files'].split('|')
 
             # Tag all files in release folder
             else:
                 for root, folders, names in os.walk(release_download['folder']):
                     tag_files.extend([os.path.join(root, name) for name in names])
-                
+
         for filename in tag_files:
-            self.createFile('%s.%s.ignore' % (os.path.splitext(filename)[0], tag), text)
+            tag_filename = '%s.%s.ignore' % (os.path.splitext(filename)[0], tag)
+            if not os.path.isfile(tag_filename):
+                self.createFile(tag_filename, text)
 
     def untagRelease(self, release_download, tag = ''):
         if not release_download:
             return
+
+        tag_files = []
 
         folder = release_download['folder']
         if not os.path.isdir(folder):
@@ -580,24 +584,26 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
         # Untag download_files if they are known
         if release_download['files']:
-            tag_files = release_download['files']
+            tag_files = release_download['files'].split('|')
 
         # Untag all files in release folder
         else:
-            tag_files = []
             for root, folders, names in os.walk(release_download['folder']):
                 tag_files.extend([os.path.join(root, name) for name in names if not os.path.splitext(name)[1] == '.ignore'])
 
         # Find all .ignore files in folder
         ignore_files = []
         for root, dirnames, filenames in os.walk(folder):
-            ignore_files.extend([fnmatch.filter([os.path.join(root, filename) for filename in filenames], '*%s.ignore' % tag)])
-                                           
+            ignore_files.extend(fnmatch.filter([os.path.join(root, filename) for filename in filenames], '*%s.ignore' % tag))
+
         # Match all found ignore files with the tag_files and delete if found 
         for tag_file in tag_files:
             ignore_file = fnmatch.filter(ignore_files, '%s.%s.ignore' % (os.path.splitext(tag_file)[0], tag if tag else '*'))
-            if ignore_file:
-                os.remove(ignore_file)
+            for filename in ignore_file:
+                try:
+                    os.remove(filename)
+                except:
+                    log.debug('Unable to remove ignore file: %s' % (filename, traceback.format_exc()))
 
     def hastagRelease(self, release_download, tag = ''):
         if not release_download:
@@ -607,20 +613,21 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         if not os.path.isdir(folder):
             return False
 
+        tag_files = []
+        ignore_files = []
+
         # Find tag on download_files if they are known
         if release_download['files']:
-            tag_files = release_download['files']
+            tag_files = release_download['files'].split('|')
 
         # Find tag on all files in release folder
         else:
-            tag_files = []
             for root, folders, names in os.walk(release_download['folder']):
                 tag_files.extend([os.path.join(root, name) for name in names if not os.path.splitext(name)[1] == '.ignore'])
 
         # Find all .ignore files in folder
-        ignore_files = []
         for root, dirnames, filenames in os.walk(folder):
-            ignore_files.extend([fnmatch.filter([os.path.join(root, filename) for filename in filenames], '*%s.ignore' % tag)])
+            ignore_files.extend(fnmatch.filter([os.path.join(root, filename) for filename in filenames], '*%s.ignore' % tag))
                                            
         # Match all found ignore files with the tag_files and return True found 
         for tag_file in tag_files:
@@ -950,7 +957,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         #Extract all found archives
         for archive in archives:
             # Check if it has already been processed by CPS
-            if self.hastagRelease(release_download = {'folder': os.path.dirname(archive['file']), 'files': [archive['file']]}):
+            if self.hastagRelease(release_download = {'folder': os.path.dirname(archive['file']), 'files': archive['file']}):
                 continue
 
             # Find all related archive files
