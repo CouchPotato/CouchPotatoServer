@@ -116,6 +116,10 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
     def single(self, movie, search_protocols = None, manual = False):
 
+        # movies don't contain 'type' yet, so just set to default here
+        if 'type' not in movie:
+            movie['type'] = 'movie'
+
         # Find out search type
         try:
             if not search_protocols:
