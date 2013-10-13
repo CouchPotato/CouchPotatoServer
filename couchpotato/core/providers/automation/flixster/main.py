@@ -39,7 +39,7 @@ class Flixster(Automation):
             if not enablers[index]:
                 continue
 
-            data = self.getJsonData(self.url % user_id)
+            data = self.getJsonData(self.url % user_id, decode_from = 'iso-8859-1')
 
             for movie in data:
                 movies.append({'title': movie['movie']['title'], 'year': movie['movie']['year'] })
