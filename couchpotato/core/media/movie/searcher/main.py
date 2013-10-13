@@ -117,7 +117,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
     def single(self, movie, search_protocols = None, manual = False):
 
         # movies don't contain 'type' yet, so just set to default here
-        if 'type' not in movie:
+        if not movie.has_key('type'):
             movie['type'] = 'movie'
 
         # Find out search type
@@ -170,7 +170,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                 log.info('Search for %s in %s', (default_title, quality_type['quality']['label']))
                 quality = fireEvent('quality.single', identifier = quality_type['quality']['identifier'], single = True)
 
-                results = fireEvent('searcher.search', search_protocols, movie, quality, single = True)
+                results = fireEvent('searcher.search', search_protocols, movie, quality, single = True) or []
                 if len(results) == 0:
                     log.debug('Nothing found for %s in %s', (default_title, quality_type['quality']['label']))
 

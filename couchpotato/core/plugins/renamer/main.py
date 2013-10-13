@@ -134,7 +134,7 @@ class Renamer(Plugin):
                                                                         cleanup = self.conf('cleanup') and not self.downloadIsTorrent(download_info))
 
         groups = fireEvent('scanner.scan', folder = folder if folder else self.conf('from'),
-                           files = files, download_info = download_info, return_ignored = False, single = True)
+                           files = files, download_info = download_info, return_ignored = False, single = True) or []
 
         folder_name = self.conf('folder_name')
         file_name = self.conf('file_name')

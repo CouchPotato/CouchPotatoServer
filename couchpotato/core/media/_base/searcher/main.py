@@ -7,8 +7,8 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.searcher.base import SearcherBase
 from couchpotato.core.settings.model import Media, Release, ReleaseInfo
 from couchpotato.environment import Env
-from sqlalchemy.exc import InterfaceError
 from inspect import ismethod, isfunction
+from sqlalchemy.exc import InterfaceError
 import datetime
 import re
 import time
@@ -64,7 +64,7 @@ class Searcher(SearcherBase):
 
         if downloader_enabled:
 
-            snatched_status = fireEvent('status.get', 'snatched', single = True)
+            snatched_status, done_status, active_status = fireEvent('status.get', ['snatched', 'done', 'active'], single = True)
 
             # Download movie to temp
             filedata = None
@@ -84,9 +84,6 @@ class Searcher(SearcherBase):
                     if rls:
                         renamer_enabled = Env.setting('enabled', 'renamer')
 
-                        done_status = fireEvent('status.get', 'done', single = True)
-                        rls.status_id = done_status.get('id') if not renamer_enabled else snatched_status.get('id')
-
                         # Save download-id info if returned
                         if isinstance(download_result, dict):
                             for key in download_result:
@@ -104,8 +101,6 @@ class Searcher(SearcherBase):
 
                         # If renamer isn't used, mark movie done
                         if not renamer_enabled:
-                            active_status = fireEvent('status.get', 'active', single = True)
-                            done_status = fireEvent('status.get', 'done', single = True)
                             try:
                                 if movie['status_id'] == active_status.get('id'):
                                     for profile_type in movie['profile']['types']:
@@ -113,9 +108,7 @@ class Searcher(SearcherBase):
                                             log.info('Renamer disabled, marking movie as finished: %s', log_movie)
 
                                             # Mark release done
-                                            rls.status_id = done_status.get('id')
-                                            rls.last_edit = int(time.time())
-                                            db.commit()
+                                            fireEvent('release.update_status', rls.id, status = done_status, single = True)
 
                                             # Mark movie done
                                             mvie = db.query(Media).filter_by(id = movie['id']).first()
@@ -124,6 +117,8 @@ class Searcher(SearcherBase):
                                             db.commit()
                             except:
                                 log.error('Failed marking movie finished, renamer disabled: %s', traceback.format_exc())
+                        else:
+                            fireEvent('release.update_status', rls.id, status = snatched_status, single = True)
 
                 except:
                     log.error('Failed marking movie finished: %s', traceback.format_exc())
@@ -158,7 +153,7 @@ class Searcher(SearcherBase):
 
     def createReleases(self, search_results, media, quality_type):
 
-        available_status, ignored_status, failed_status = fireEvent('status.get', ['available', 'ignored', 'failed'], single = True)
+        available_status = fireEvent('status.get', ['available'], single = True)
         db = get_session()
 
         found_releases = []
