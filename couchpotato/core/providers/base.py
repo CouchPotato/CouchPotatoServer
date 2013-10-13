@@ -1,3 +1,4 @@
+import logging
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.variable import tryFloat, mergeDicts, md5, \
     possibleTitles, getTitle
@@ -14,7 +15,6 @@ import urllib2
 import xml.etree.ElementTree as XMLTree
 
 log = CPLog(__name__)
-
 
 class MultiProvider(Plugin):
 
@@ -279,8 +279,7 @@ class ResultList(list):
 
         new_result = self.fillResult(result)
 
-        is_correct_movie = fireEvent('movie.searcher.correct_movie',
-                                     nzb = new_result, movie = self.movie, quality = self.quality,
+        is_correct_movie = fireEvent('searcher.correct_release', new_result, self.movie, self.quality,
                                      imdb_results = self.kwargs.get('imdb_results', False), single = True)
 
         if is_correct_movie and new_result['id'] not in self.result_ids:
