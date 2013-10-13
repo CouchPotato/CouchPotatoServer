@@ -1,7 +1,6 @@
 from couchpotato.core.helpers.variable import tryInt, splitString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.automation.base import Automation
-import json
 
 log = CPLog(__name__)
 
@@ -40,7 +39,7 @@ class Flixster(Automation):
             if not enablers[index]:
                 continue
 
-            data = json.loads(self.getHTMLData(self.url % user_id))
+            data = self.getJsonData(self.url % user_id)
 
             for movie in data:
                 movies.append({'title': movie['movie']['title'], 'year': movie['movie']['year'] })
