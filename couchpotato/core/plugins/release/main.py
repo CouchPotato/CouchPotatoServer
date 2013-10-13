@@ -50,6 +50,38 @@ class Release(Plugin):
         addEvent('release.clean', self.clean)
         addEvent('release.update_status', self.updateStatus)
 
+        # Clean releases that didn't have activity in the last week
+        addEvent('app.load', self.cleanReleases)
+        fireEvent('schedule.interval', 'movie.clean_releases', self.cleanReleases, hours = 4)
+
+    def cleanReleases(self):
+
+        log.debug('Removing releases from dashboard')
+
+        now = time.time()
+        week = 262080
+
+        done_status, available_status, snatched_status, downloaded_status, ignored_status = \
+            fireEvent('status.get', ['done', 'available', 'snatched', 'downloaded', 'ignored'], single = True)
+
+        db = get_session()
+
+        # get movies last_edit more than a week ago
+        media = db.query(Media) \
+            .filter(Media.status_id == done_status.get('id'), Media.last_edit < (now - week)) \
+            .all()
+
+        for item in media:
+            for rel in item.releases:
+                # Remove all available releases
+                if rel.status_id in [available_status.get('id')]:
+                    fireEvent('release.delete', id = rel.id, single = True)
+                # Set all snatched and downloaded releases to ignored to make sure they are ignored when re-adding the move
+                elif rel.status_id in [snatched_status.get('id'), downloaded_status.get('id')]:
+                    fireEvent('release.update', id = rel.id, status = ignored_status)
+
+        db.expire_all()
+
     def add(self, group):
 
         db = get_session()
