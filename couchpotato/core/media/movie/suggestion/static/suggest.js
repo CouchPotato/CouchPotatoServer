@@ -17,7 +17,7 @@ var SuggestList = new Class({
 				'click:relay(a.delete)': function(e, el){
 					(e).stop();
 
-					$(el).getParent('.movie_result').destroy();
+					$(el).getParent('.media_result').destroy();
 
 					Api.request('suggestion.ignore', {
 						'data': {
@@ -30,7 +30,7 @@ var SuggestList = new Class({
 				'click:relay(a.eye-open)': function(e, el){
 					(e).stop();
 
-					$(el).getParent('.movie_result').destroy();
+					$(el).getParent('.media_result').destroy();
 
 					Api.request('suggestion.ignore', {
 						'data': {
@@ -65,7 +65,7 @@ var SuggestList = new Class({
 
 			Object.each(json.suggestions, function(movie){
 
-				var m = new Block.Search.Item(movie, {
+				var m = new Block.Search.MovieItem(movie, {
 					'onAdded': function(){
 						self.afterAdded(m, movie)
 					}

@@ -5,7 +5,7 @@ from couchpotato.core.helpers.variable import getExt, getImdb, tryInt, \
     splitString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.core.settings.model import File, Movie
+from couchpotato.core.settings.model import File, Media
 from enzyme.exceptions import NoParserError, ParseError
 from guessit import guess_movie_info
 from subliminal.videos import Video
@@ -415,7 +415,7 @@ class Scanner(Plugin):
             if not group['library']:
                 log.error('Unable to determine movie: %s', group['identifiers'])
             else:
-                movie = db.query(Movie).filter_by(library_id = group['library']['id']).first()
+                movie = db.query(Media).filter_by(library_id = group['library']['id']).first()
                 group['movie_id'] = None if not movie else movie.id
 
             processed_movies[identifier] = group
@@ -830,18 +830,20 @@ class Scanner(Plugin):
     def findYear(self, text):
 
         # Search year inside () or [] first
-        matches = re.search('(\(|\[)(?P<year>19[0-9]{2}|20[0-9]{2})(\]|\))', text)
+        matches = re.findall('(\(|\[)(?P<year>19[0-9]{2}|20[0-9]{2})(\]|\))', text)
         if matches:
-            return matches.group('year')
+            return matches[-1][1]
 
         # Search normal
-        matches = re.search('(?P<year>19[0-9]{2}|20[0-9]{2})', text)
+        matches = re.findall('(?P<year>19[0-9]{2}|20[0-9]{2})', text)
         if matches:
-            return matches.group('year')
+            return matches[-1]
 
         return ''
 
     def getReleaseNameYear(self, release_name, file_name = None):
+
+        release_name = release_name.strip(' .-_')
 
         # Use guessit first
         guess = {}
@@ -860,7 +862,7 @@ class Scanner(Plugin):
         cleaned = ' '.join(re.split('\W+', simplifyString(release_name)))
         cleaned = re.sub(self.clean, ' ', cleaned)
 
-        for year_str in [file_name, cleaned]:
+        for year_str in [file_name, release_name, cleaned]:
             if not year_str: continue
             year = self.findYear(year_str)
             if year:
@@ -870,19 +872,21 @@ class Scanner(Plugin):
 
         if year: # Split name on year
             try:
-                movie_name = cleaned.split(year).pop(0).strip()
-                cp_guess = {
-                    'name': movie_name,
-                    'year': int(year),
-                }
+                movie_name = cleaned.rsplit(year, 1).pop(0).strip()
+                if movie_name:
+                    cp_guess = {
+                        'name': movie_name,
+                        'year': int(year),
+                    }
             except:
                 pass
-        else: # Split name on multiple spaces
+
+        if not cp_guess: # Split name on multiple spaces
             try:
                 movie_name = cleaned.split('  ').pop(0).strip()
                 cp_guess = {
                     'name': movie_name,
-                    'year': int(year),
+                    'year': int(year) if movie_name[:4] != year else 0,
                 }
             except:
                 pass

@@ -706,7 +706,7 @@ MA.Refresh = new Class({
 		var self = this;
 		(e).preventDefault();
 
-		Api.request('movie.refresh', {
+		Api.request('media.refresh', {
 			'data': {
 				'id': self.movie.get('id')
 			}

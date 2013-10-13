@@ -134,7 +134,7 @@ class Renamer(Plugin):
                                                                         cleanup = self.conf('cleanup') and not self.downloadIsTorrent(download_info))
 
         groups = fireEvent('scanner.scan', folder = folder if folder else self.conf('from'),
-                           files = files, download_info = download_info, return_ignored = False, single = True)
+                           files = files, download_info = download_info, return_ignored = False, single = True) or []
 
         folder_name = self.conf('folder_name')
         file_name = self.conf('file_name')
@@ -173,7 +173,12 @@ class Renamer(Plugin):
 
                 # Overwrite destination when set in category
                 destination = self.conf('to')
+                category_label = ''
                 for movie in library_ent.movies:
+
+                    if movie.category and movie.category.label:
+                        category_label = movie.category.label
+
                     if movie.category and movie.category.destination and len(movie.category.destination) > 0 and movie.category.destination != 'None':
                         destination = movie.category.destination
                         log.debug('Setting category destination for "%s": %s' % (movie_title, destination))
@@ -217,6 +222,7 @@ class Renamer(Plugin):
                      'cd': '',
                      'cd_nr': '',
                      'mpaa': library['info'].get('mpaa', ''),
+                     'category': category_label,
                 }
 
                 for file_type in group['files']:
