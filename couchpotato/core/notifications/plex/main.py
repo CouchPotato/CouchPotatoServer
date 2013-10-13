@@ -38,16 +38,13 @@ class Plex(Notification):
     def notifyClients(self, message, client_names):
         success = True
 
-        while len(client_names):
-            client_name = client_names[0]
+        for client_name in client_names:
+
             client_success = False
             client = self.server.clients.get(client_name)
 
             if client and client['found']:
-                client_success = fireEvent('notify.plex.notifyClient', client, message, single=True)
-
-                if client_success:
-                    client_names.pop(0)
+                client_success = fireEvent('notify.plex.notifyClient', client, message, single = True)
 
             if not client_success:
                 if self.server.staleClients() or not client:
@@ -56,7 +53,6 @@ class Plex(Notification):
                     self.server.updateClients(self.getClientNames())
                 else:
                     log.warning('Failed to send notification to client %s, skipping this time', client_name)
-                    client_names.pop(0)
                     success = False
 
         return success
