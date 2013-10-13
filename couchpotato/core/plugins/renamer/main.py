@@ -735,10 +735,6 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                                         fireEvent('movie.searcher.try_next_release', movie_id = rel.movie_id)
                                 elif item['status'] == 'completed':
                                     log.info('Download of %s completed!', item['name'])
-
-                                    # Remove the downloading tag
-                                    self.untagDir(item['folder'], 'downloading')
-
                                     if self.statusInfoComplete(item):
 
                                         # If the release has been seeding, process now the seeding is done
@@ -761,6 +757,9 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                                         else:
                                             # Set the release to snatched if it was missing before
                                             fireEvent('release.update_status', rel.id, status = snatched_status, single = True)
+
+                                            # Remove the downloading tag
+                                            self.untagDir(item['folder'], 'downloading')
 
                                             # Scan and Allow the downloader to clean-up
                                             item.update({'pause': False, 'scan': True, 'process_complete': True})
