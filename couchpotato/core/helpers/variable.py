@@ -1,3 +1,4 @@
+import collections
 from couchpotato.core.helpers.encoding import simplifyString, toSafeString, ss
 from couchpotato.core.logger import CPLog
 import hashlib
@@ -145,9 +146,9 @@ def getImdb(txt, check_inside = False, multiple = False):
 
     return False
 
-def tryInt(s):
+def tryInt(s, default=0):
     try: return int(s)
-    except: return 0
+    except: return default
 
 def tryFloat(s):
     try:
@@ -162,6 +163,11 @@ def natsortKey(s):
 
 def natcmp(a, b):
     return cmp(natsortKey(a), natsortKey(b))
+
+def toIterable(value):
+    if isinstance(value, collections.Iterable):
+        return value
+    return [value]
 
 def getTitle(library_dict):
     try:
