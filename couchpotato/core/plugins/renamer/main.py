@@ -173,7 +173,12 @@ class Renamer(Plugin):
 
                 # Overwrite destination when set in category
                 destination = self.conf('to')
+                category_label = ''
                 for movie in library_ent.movies:
+
+                    if movie.category and movie.category.label:
+                        category_label = movie.category.label
+
                     if movie.category and movie.category.destination and len(movie.category.destination) > 0 and movie.category.destination != 'None':
                         destination = movie.category.destination
                         log.debug('Setting category destination for "%s": %s' % (movie_title, destination))
@@ -217,6 +222,7 @@ class Renamer(Plugin):
                      'cd': '',
                      'cd_nr': '',
                      'mpaa': library['info'].get('mpaa', ''),
+                     'category': category_label,
                 }
 
                 for file_type in group['files']:
