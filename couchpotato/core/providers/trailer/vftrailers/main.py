@@ -37,7 +37,7 @@ class vftrailers(VFTrailerProvider):
                     tempdest=unicodedata.normalize('NFKD', os.path.join(rootDir,filename)).encode('ascii','ignore')+u'.%(ext)s'
                     dest=destination+u'.%(ext)s'
                     log.info('Trying to download : %s to %s ', (bo, tempdest))
-                    subprocess.check_call([sys.executable, 'youtube_dl/__main__.py', '-o',tempdest,'--newline', bo],cwd=rootDir, shell=True, stdout=_DEV_NULL,stderr=subprocess.STDOUT)
+                    subprocess.check_call([sys.executable, 'youtube_dl/__main__.py', '-o',tempdest,'--newline', bo],cwd=rootDir, shell=False, stdout=_DEV_NULL,stderr=subprocess.STDOUT)
                     listetemp=glob.glob(os.path.join(rootDir,'*'))
                     filecount=0
                     for listfile in listetemp:
