@@ -107,7 +107,7 @@ Block.Search.MovieItem = new Class({
 				self.options_el.empty();
 				self.options_el.adopt(
 					new Element('div.message', {
-						'text': json.added ? 'Movie successfully added.' : 'Movie didn\'t add properly. Check logs'
+						'text': json.success ? 'Movie successfully added.' : 'Movie didn\'t add properly. Check logs'
 					})
 				);
 				self.mask.fade('out');
