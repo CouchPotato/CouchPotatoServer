@@ -137,7 +137,7 @@ def getImdb(txt, check_inside = False, multiple = False):
         output.close()
 
     try:
-        ids = re.findall('(tt\d{7})', txt)
+        ids = re.findall('(tt\d{4,7})', txt)
         if multiple:
             return list(set(ids)) if len(ids) > 0 else []
         return ids[0]
@@ -146,7 +146,7 @@ def getImdb(txt, check_inside = False, multiple = False):
 
     return False
 
-def tryInt(s, default=0):
+def tryInt(s, default = 0):
     try: return int(s)
     except: return default
 
