@@ -37,26 +37,15 @@ class vftrailers(VFTrailerProvider):
                     tempdest=unicodedata.normalize('NFKD', os.path.join(rootDir,filename)).encode('ascii','ignore')+u'.%(ext)s'
                     dest=destination+u'.%(ext)s'
                     log.info('Trying to download : %s to %s ', (bo, tempdest))
-                    try:
-                        p=subprocess.Popen([sys.executable, 'youtube_dl/__main__.py', '-o',tempdest,'--newline', bo],cwd=rootDir, shell=True, stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-                    except:
-                        log.info('toto')
-                    while p.poll() is None:
-                        l = p.stdout.readline() # This blocks until it receives a newline.
-                        lmsg= l.replace('%',' percent')+' '+filename
-                        log.info(lmsg)
-                    # When the subprocess terminates there might be unconsumed output 
-                    # that still needs to be processed.
+                    p=subprocess.call([sys.executable, 'youtube_dl/__main__.py', '-o',tempdest,'--newline', bo],cwd=rootDir, shell=True, stdout=_DEV_NULL,stderr=subprocess.STDOUT)
                     (out, err) = p.communicate()
                     outmsg='Out for '+filename +' : '+out
                     errmsg='Err for '+filename +' : '+err
-                    if out:
-                        log.info(outmsg)
+                    log.info(outmsg)
+                    log.info(errmsg)
                     if err:
-                        log.info(errmsg)
                         continue
                     else:
-                        log.info('toto2')
                         listetemp=glob.glob(os.path.join(rootDir,'*'))
                         for listfile in listetemp:
                             if unicodedata.normalize('NFKD', filename).encode('ascii','ignore') in listfile:
