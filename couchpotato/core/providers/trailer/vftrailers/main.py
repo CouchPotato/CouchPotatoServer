@@ -36,7 +36,7 @@ class vftrailers(VFTrailerProvider):
                 if bocount==0:
                     tempdest=unicodedata.normalize('NFKD', os.path.join(rootDir,filename)).encode('ascii','ignore')+u'.%(ext)s'
                     dest=destination+u'.%(ext)s'
-                    log.info('Trying to download : %s', bo)
+                    log.info('Trying to download : %s to %s ', (bo, tempdest))
                     p=subprocess.Popen([sys.executable, 'youtube_dl/__main__.py', '-o',tempdest,'--newline', bo],cwd=rootDir, shell=True, stdout=subprocess.PIPE,stderr=subprocess.PIPE)
                     while p.poll() is None:
                         l = p.stdout.readline() # This blocks until it receives a newline.
@@ -47,9 +47,10 @@ class vftrailers(VFTrailerProvider):
                     (out, err) = p.communicate()
                     outmsg='Out for '+filename +' : '+out
                     errmsg='Err for '+filename +' : '+err
-                    log.info(outmsg)
-                    log.info(errmsg)
+                    if out:
+                        log.info(outmsg)
                     if err:
+                        log.info(errmsg)
                         continue
                     else:
                         listetemp=glob.glob(os.path.join(rootDir,'*'))
