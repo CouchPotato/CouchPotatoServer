@@ -1,6 +1,6 @@
-import collections
 from couchpotato.core.helpers.encoding import simplifyString, toSafeString, ss
 from couchpotato.core.logger import CPLog
+import collections
 import hashlib
 import os.path
 import platform
@@ -138,9 +138,11 @@ def getImdb(txt, check_inside = False, multiple = False):
 
     try:
         ids = re.findall('(tt\d{4,7})', txt)
+
         if multiple:
-            return list(set(ids)) if len(ids) > 0 else []
-        return ids[0]
+            return list(set(['tt%07d' % tryInt(x[2:]) for x in ids])) if len(ids) > 0 else []
+
+        return 'tt%07d' % tryInt(ids[0][2:])
     except IndexError:
         pass
 
