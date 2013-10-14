@@ -38,6 +38,7 @@ class vftrailers(VFTrailerProvider):
                     dest=destination+u'.%(ext)s'
                     log.info('Trying to download : %s to %s ', (bo, tempdest))
                     p=subprocess.Popen([sys.executable, 'youtube_dl/__main__.py', '-o',tempdest,'--newline', bo],cwd=rootDir, shell=True, stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+                    p.communicate()
                     while p.poll() is None:
                         l = p.stdout.readline() # This blocks until it receives a newline.
                         lmsg= l.replace('%',' percent')+' '+filename
@@ -45,8 +46,6 @@ class vftrailers(VFTrailerProvider):
                     # When the subprocess terminates there might be unconsumed output 
                     # that still needs to be processed.
                     (out, err) = p.communicate()
-                    log.info('Waiting for download')
-                    p.wait()
                     outmsg='Out for '+filename +' : '+out
                     errmsg='Err for '+filename +' : '+err
                     if out:
