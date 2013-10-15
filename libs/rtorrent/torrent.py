@@ -172,6 +172,17 @@ class Torrent:
 
         self.directory = m.call()[-1]
 
+    def set_directory_base(self, d):
+        """Modify base download directory
+
+        @note: Needs to stop torrent in order to change the directory.
+        Also doesn't restart after directory is set, that must be called
+        separately.
+        """
+        m = rtorrent.rpc.Multicall(self)
+        self.multicall_add(m, "d.try_stop")
+        self.multicall_add(m, "d.set_directory_base", d)
+
     def start(self):
         """Start the torrent"""
         m = rtorrent.rpc.Multicall(self)

@@ -84,6 +84,7 @@ class OMDBAPI(MovieProvider):
             year = tryInt(movie.get('Year', ''))
 
             movie_data = {
+                'type': 'movie',
                 'via_imdb': True,
                 'titles': [movie.get('Title')] if movie.get('Title') else [],
                 'original_title': movie.get('Title'),

@@ -1,4 +1,4 @@
-config = {
+config = [{
     'name': 'torrent_providers',
     'groups': [
         {
@@ -11,4 +11,4 @@ config = {
             'options': [],
         },
     ],
-}
+}]

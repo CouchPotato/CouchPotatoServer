@@ -422,7 +422,7 @@ var MovieList = new Class({
 		var self = this;
 		var ids = self.getSelectedMovies()
 
-		Api.request('movie.refresh', {
+		Api.request('media.refresh', {
 			'data': {
 				'id': ids.join(','),
 			}

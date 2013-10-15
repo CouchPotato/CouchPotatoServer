@@ -326,7 +326,7 @@ def search_language(string, lang_filter=None):
         'la', 'el', 'del', 'por', 'mar',
         # other
         'ind', 'arw', 'ts', 'ii', 'bin', 'chan', 'ss', 'san', 'oss', 'iii',
-        'vi', 'ben', 'da'
+        'vi', 'ben', 'da', 'lt'
         ])
     sep = r'[](){} \._-+'
 

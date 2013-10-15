@@ -23,9 +23,9 @@ class Yify(TorrentProvider):
 
         return super(Yify, self).search(movie, quality)
 
-    def _searchOnTitle(self, title, movie, quality, results):
+    def _search(self, movie, quality, results):
 
-        data = self.getJsonData(self.urls['search'] % (title, quality['identifier']))
+        data = self.getJsonData(self.urls['search'] % (movie['library']['identifier'], quality['identifier']))
 
         if data and data.get('MovieList'):
             try:

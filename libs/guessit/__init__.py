@@ -20,7 +20,7 @@
 
 from __future__ import unicode_literals
 
-__version__ = '0.6-dev'
+__version__ = '0.7-dev'
 __all__ = ['Guess', 'Language',
            'guess_file_info', 'guess_video_info',
            'guess_movie_info', 'guess_episode_info']
@@ -91,7 +91,28 @@ log.addHandler(h)
 
 
 def _guess_filename(filename, filetype):
+    def find_nodes(tree, props):
+        """Yields all nodes containing any of the given props."""
+        if isinstance(props, base_text_type):
+            props = [props]
+        for node in tree.nodes():
+            if any(prop in node.guess for prop in props):
+                yield node
+
+    def warning(title):
+        log.warning('%s, guesses: %s - %s' % (title, m.nice_string(), m2.nice_string()))
+        return m
+
     mtree = IterativeMatcher(filename, filetype=filetype)
+
+    # if there are multiple possible years found, we assume the first one is
+    # part of the title, reparse the tree taking this into account
+    years = set(n.value for n in find_nodes(mtree.match_tree, 'year'))
+    if len(years) >= 2:
+        mtree = IterativeMatcher(filename, filetype=filetype,
+                                 opts=['skip_first_year'])
+
+
     m = mtree.matched()
 
     if 'language' not in m and 'subtitleLanguage' not in m:
@@ -102,19 +123,9 @@ def _guess_filename(filename, filetype):
                               opts=['nolanguage', 'nocountry'])
     m2 = mtree2.matched()
 
-    def find_nodes(tree, props):
-        """Yields all nodes containing any of the given props."""
-        if isinstance(props, base_text_type):
-            props = [props]
-        for node in tree.nodes():
-            if any(prop in node.guess for prop in props):
-                yield node
 
-
-    def warning(title):
-        log.warning('%s, guesses: %s - %s' % (title, m.nice_string(), m2.nice_string()))
+    if m.get('title') is None:
         return m
-
 
     if m.get('title') != m2.get('title'):
         title = next(find_nodes(mtree.match_tree, 'title'))

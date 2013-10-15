@@ -16,7 +16,7 @@ config = [{
                 {
                     'name': 'enabled',
                     'type': 'enabler',
-                    'default': True
+                    'default': False
                 },
                 {
                     'name': 'domain',

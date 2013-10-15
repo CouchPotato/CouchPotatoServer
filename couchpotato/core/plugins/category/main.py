@@ -4,7 +4,7 @@ from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.core.settings.model import Movie, Category
+from couchpotato.core.settings.model import Media, Category
 
 log = CPLog(__name__)
 
@@ -54,12 +54,11 @@ class CategoryPlugin(Plugin):
             db.add(c)
 
         c.order = kwargs.get('order', c.order if c.order else 0)
-        c.label = toUnicode(kwargs.get('label'))
-        c.path = toUnicode(kwargs.get('path'))
-        c.ignored = toUnicode(kwargs.get('ignored'))
-        c.preferred = toUnicode(kwargs.get('preferred'))
-        c.required = toUnicode(kwargs.get('required'))
-        c.destination = toUnicode(kwargs.get('destination'))
+        c.label = toUnicode(kwargs.get('label', ''))
+        c.ignored = toUnicode(kwargs.get('ignored', ''))
+        c.preferred = toUnicode(kwargs.get('preferred', ''))
+        c.required = toUnicode(kwargs.get('required', ''))
+        c.destination = toUnicode(kwargs.get('destination', ''))
 
         db.commit()
 
@@ -114,7 +113,7 @@ class CategoryPlugin(Plugin):
     def removeFromMovie(self, category_id):
 
         db = get_session()
-        movies = db.query(Movie).filter(Movie.category_id == category_id).all()
+        movies = db.query(Media).filter(Media.category_id == category_id).all()
 
         if len(movies) > 0:
             for movie in movies:
