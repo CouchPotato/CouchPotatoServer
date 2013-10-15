@@ -225,15 +225,18 @@ class TheTVDb(ShowProvider):
         'zap2it_id': u'SH01009396'
         """
 
-        # Make sure we have a valid show id, not '' or None
+        #
+        # NOTE: show object only allows direct access via
+        # show['id'], not show.get('id')
+        #
+
+        # TODO: Make sure we have a valid show id, not '' or None
         #if len (show['id']) is 0:
         #    return None
 
         ## Images
         poster = show['poster'] or None
         backdrop = show['fanart'] or None
-        #poster = self.getImage(show, type = 'poster', size = 'cover')
-        #backdrop = self.getImage(show, type = 'fanart', size = 'w1280')
 
         genres = [] if show['genre'] is None else show['genre'].strip('|').split('|')
         if show['firstaired'] is not None:
@@ -242,12 +245,17 @@ class TheTVDb(ShowProvider):
         else:
             year = None
 
+        try:
+            id = int(show['id'])
+        except:
+            id =  None
+
         show_data = {
-            'id': int(show['id']),
+            'id': id,
             'type': 'show',
             'primary_provider': 'thetvdb',
-            'titles': [show['seriesname'], ] or None,
-            'original_title': show['seriesname'] or None,
+            'titles': [show['seriesname'] or u'', ],
+            'original_title': show['seriesname'] or u'',
             'images': {
                 'poster': [poster] if poster else [],
                 'backdrop': [backdrop] if backdrop else [],
@@ -296,7 +304,7 @@ class TheTVDb(ShowProvider):
         """
 
         number, season = season_tuple
-        title = toUnicode('%s - Season %s' % (show['seriesname'], str(number)))
+        title = toUnicode('%s - Season %s' % (show['seriesname'] or u'', str(number)))
         poster = []
         try:
             for id, data in show.data['_banners']['season']['season'].items():
@@ -306,15 +314,20 @@ class TheTVDb(ShowProvider):
         except:
             pass
 
+        try:
+            id = (show['id'] + ':' + str(number))
+        except:
+            id =  None
+
         # XXX: work on title; added defualt_title to fix an error
         season_data = {
-            'id': (show['id'] + ':' + str(number)),
+            'id': id,
             'type': 'season',
             'primary_provider': 'thetvdb',
             'titles': [title, ],
             'original_title': title,
             'via_thetvdb': True,
-            'parent_identifier': show['id'],
+            'parent_identifier': show['id'] or None,
             'seasonnumber': str(number),
             'images': {
                 'poster': poster,
@@ -366,71 +379,70 @@ class TheTVDb(ShowProvider):
         ('episodename', u'Pilot')]
         """
 
-        ## Images
-        #poster = self.getImage(episode, type = 'poster', size = 'cover')
-        #backdrop = self.getImage(episode, type = 'fanart', size = 'w1280')
-        ##poster_original = self.getImage(episode, type = 'poster', size = 'original')
-        ##backdrop_original = self.getImage(episode, type = 'backdrop', size = 'original')
-
-        poster = episode['filename'] or []
+        poster = episode.get('filename', [])
         backdrop = []
         genres = []
-        plot = "%s - %sx%s - %s" % (show['seriesname'],
-                                     episode['seasonnumber'],
-                                     episode['episodenumber'],
-                                     episode['overview'])
-        if episode['firstaired'] is not None:
+        plot = "%s - %sx%s - %s" % (show['seriesname'] or u'',
+                                     episode.get('seasonnumber', u'?'),
+                                     episode.get('episodenumber', u'?'),
+                                     episode.get('overview', u''))
+        if episode.get('firstaired', None) is not None:
             try: year = datetime.strptime(episode['firstaired'], '%Y-%m-%d').year
             except: year = None
         else:
             year = None
 
+        try:
+            id = int(episode['id'])
+        except:
+            id =  None
+
         episode_data = {
-            'id': int(episode['id']),
+            'id': id,
             'type': 'episode',
             'primary_provider': 'thetvdb',
             'via_thetvdb': True,
-            'thetvdb_id': int(episode['id']),
-            'titles': [episode['episodename'], ] or None,
-            'original_title': episode['episodename'] or None,
+            'thetvdb_id': id,
+            'titles': [episode.get('episodename', u''), ],
+            'original_title': episode.get('episodename', u'') ,
             'images': {
                 'poster': [poster] if poster else [],
                 'backdrop': [backdrop] if backdrop else [],
                 'poster_original': [],
                 'backdrop_original': [],
             },
-            'imdb': episode['imdb_id'] or None,
+            'imdb': episode.get('imdb_id', None),
             'runtime': None,
-            'released': episode['firstaired'] or None,
+            'released': episode.get('firstaired', None),
             'year': year,
             'plot': plot,
             'genres': genres,
-            'parent_identifier': show['id'],
-            'seasonnumber': episode['seasonnumber'] or None,
-            'episodenumber': episode['episodenumber'] or None,
-            'combined_episodenumber': episode['combined_episodenumber'] or None,
-            'absolute_number': episode['absolute_number'] or None,
-            'combined_season': episode['combined_season'] or None,
-            'productioncode': episode['productioncode'] or None,
-            'seriesid': episode['seriesid'] or None,
-            'seasonid': episode['seasonid'] or None,
-            'firstaired': episode['firstaired'] or None,
-            'thumb_added': episode['thumb_added'] or None,
-            'thumb_height': episode['thumb_height'] or None,
-            'thumb_width': episode['thumb_width'] or None,
-            'rating': episode['rating'] or None,
-            'ratingcount': episode['ratingcount'] or None,
-            'epimgflag': episode['epimgflag'] or None,
-            'dvd_episodenumber': episode['dvd_episodenumber'] or None,
-            'dvd_discid': episode['dvd_discid'] or None,
-            'dvd_chapter': episode['dvd_chapter'] or None,
-            'dvd_season': episode['dvd_season'] or None,
-            'tms_export': episode['tms_export'] or None,
-            'writer': episode['writer'] or None,
-            'director': episode['director'] or None,
-            'gueststars': episode['gueststars'] or None,
-            'lastupdated': episode['lastupdated'] or None,
-            'language': episode['language'] or None,
+            'parent_identifier': show['id'] or None,
+            'seasonnumber': episode.get('seasonnumber', None),
+            'episodenumber': episode.get('episodenumber', None),
+            'combined_episodenumber': episode.get('combined_episodenumber', None),
+            'absolute_number': episode.get('absolute_number', None),
+            'combined_season': episode.get('combined_season', None),
+            'productioncode': episode.get('productioncode', None),
+            'seriesid': episode.get('seriesid', None),
+            'seasonid': episode.get('seasonid', None),
+            'firstaired': episode.get('firstaired', None),
+            'thumb_added': episode.get('thumb_added', None),
+            'thumb_height': episode.get('thumb_height', None),
+            'thumb_width': episode.get('thumb_width', None),
+            'rating': episode.get('rating', None),
+            'ratingcount': episode.get('ratingcount', None),
+            'epimgflag': episode.get('epimgflag', None),
+            'dvd_episodenumber': episode.get('dvd_episodenumber', None),
+            'dvd_discid': episode.get('dvd_discid', None),
+            'dvd_chapter': episode.get('dvd_chapter', None),
+            'dvd_season': episode.get('dvd_season', None),
+            'tms_export': episode.get('tms_export', None),
+            'writer': episode.get('writer', None),
+            'director': episode.get('director', None),
+            'gueststars': episode.get('gueststars', None),
+            'lastupdated': episode.get('lastupdated', None),
+            'language': episode.get('language', None),
         }
 
         episode_data = dict((k, v) for k, v in episode_data.iteritems() if v)
