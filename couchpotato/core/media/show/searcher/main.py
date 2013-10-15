@@ -1,10 +1,12 @@
 from couchpotato import get_session, Env
 from couchpotato.core.event import addEvent, fireEvent
-from couchpotato.core.helpers.variable import getTitle, tryInt, possibleTitles
+from couchpotato.core.helpers.variable import getTitle, tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.searcher.main import SearchSetupError
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Media, Library
+from qcond import QueryCondenser
+from qcond.helpers import simplify
 
 log = CPLog(__name__)
 
@@ -25,6 +27,8 @@ class ShowSearcher(Plugin):
     def __init__(self):
         super(ShowSearcher, self).__init__()
 
+        self.query_condenser = QueryCondenser()
+
         addEvent('show.searcher.single', self.single)
         addEvent('searcher.get_search_title', self.getSearchTitle)
 
@@ -34,6 +38,7 @@ class ShowSearcher(Plugin):
         addEvent('searcher.get_media_identifier', self.getMediaIdentifier)
         addEvent('searcher.get_media_root', self.getMediaRoot)
         addEvent('searcher.get_media_searcher_id', self.getMediaSearcherId)
+        addEvent('searcher.get_media_titles', self.getMediaTitles)
 
     def single(self, media, search_protocols = None, manual = False):
         if media['type'] == 'show':
@@ -129,26 +134,54 @@ class ShowSearcher(Plugin):
         return ret
 
     def getSearchTitle(self, media):
+        if media['type'] not in ['show', 'season', 'episode']:
+            return
+
         show, season, episode = self.getMedia(media)
         if show is None:
             return None
 
-        # TODO this misses alternative titles from the database
-        show_title = getTitle(show)
-        if not show_title:
+        titles = []
+
+        # Add season map_names if they exist
+        if season is not None and 'map_names' in show.info:
+            season_names = show.info['map_names'].get(str(season.season_number), {})
+
+            # Add titles from all locations
+            # TODO only add name maps from a specific location
+            for location, names in season_names.items():
+                titles += [name for name in names if name not in titles]
+
+        # Add show titles
+        titles += [title.title for title in show.titles if title.title not in titles]
+
+        # Use QueryCondenser to build a list of optimal search titles
+        condensed_titles = self.query_condenser.distinct(titles)
+
+        title = None
+
+        # TODO try other titles if searching doesn't return results
+
+        if len(condensed_titles):
+            # Return the first condensed title if one exists
+            title = condensed_titles[0]
+        elif len(titles):
+            # Fallback to first raw title
+            title = simplify(titles[0])
+        else:
             return None
 
+        # Add the identifier to search title
+        # TODO supporting other identifier formats
         identifier = fireEvent('searcher.get_media_identifier', media['library'], single = True)
 
-        name = show_title
-
         if identifier['season']:
-            name += ' S%02d' % identifier['season']
+            title += ' S%02d' % identifier['season']
 
             if identifier['episode']:
-                name += 'E%02d' % identifier['episode']
+                title += 'E%02d' % identifier['episode']
 
-        return name
+        return title
 
     def correctRelease(self, release = None, media = None, quality = None, **kwargs):
 
