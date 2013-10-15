@@ -98,7 +98,10 @@ Block.Search.ShowItem = new Class({
 
 		Api.request('show.add', {
 			'data': {
-				'identifier': self.info.imdb,
+				'identifier': self.info.id,
+				'id': self.info.id,
+				'type': self.info.type,
+				'primary_provider': self.info.primary_provider,
 				'title': self.title_select.get('value'),
 				'profile_id': self.profile_select.get('value'),
 				'category_id': self.category_select.get('value')
@@ -107,7 +110,7 @@ Block.Search.ShowItem = new Class({
 				self.options_el.empty();
 				self.options_el.adopt(
 					new Element('div.message', {
-						'text': json.added ? 'Movie successfully added.' : 'Movie didn\'t add properly. Check logs'
+						'text': json.added ? 'Show successfully added.' : 'Show didn\'t add properly. Check logs'
 					})
 				);
 				self.mask.fade('out');
