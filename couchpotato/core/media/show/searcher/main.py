@@ -219,11 +219,7 @@ class ShowSearcher(Plugin):
             return False
 
         if not fireEvent('matcher.correct_title', chain, media):
-            log.info("Wrong: '%s', undetermined naming. Looking for '%s (%s)'", (
-                ' '.join(chain.info['show_name']),
-                'library_title',
-                media['library']['year'])
-            )
+            log.info("Wrong: '%s', undetermined naming.", (' '.join(chain.info['show_name'])))
             return False
 
         return True
