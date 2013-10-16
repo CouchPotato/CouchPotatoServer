@@ -1,4 +1,3 @@
-import pprint
 from caper import Caper
 from couchpotato import CPLog, tryInt
 from couchpotato.core.event import addEvent, fireEvent
@@ -36,7 +35,7 @@ class Matcher(Plugin):
 
         return None
 
-    def chainMatches(self, chain, group, tags):
+    def chainMatch(self, chain, group, tags):
         found_tags = []
 
         for match in chain.info[group]:
@@ -83,6 +82,7 @@ class Matcher(Plugin):
         chain_words = [x.lower() for x in chain.info['show_name']]
 
         # Check show titles match
+        # TODO check xem names
         for title in root_library['info']['titles']:
             for valid_words in [x.split(' ') for x in possibleTitles(title)]:
 
@@ -102,7 +102,7 @@ class Matcher(Plugin):
 
         video_tags = quality_map[quality['identifier']]
 
-        if not self.chainMatches(chain, 'video', video_tags):
+        if not self.chainMatch(chain, 'video', video_tags):
             log.info2('Wrong: %s tags not in chain', video_tags)
             return False
 

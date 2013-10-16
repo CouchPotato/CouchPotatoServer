@@ -157,6 +157,7 @@ class Searcher(SearcherBase):
     def search(self, protocols, media, quality):
         results = []
 
+        # TODO could this be handled better? (removing the need for 'searcher.get_media_searcher_id')
         searcher_id = fireEvent('searcher.get_media_searcher_id', media['type'], single = True)
 
         for search_protocol in protocols:
