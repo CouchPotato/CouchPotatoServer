@@ -256,7 +256,10 @@ class YarrProvider(Provider):
             if identifier in qualities:
                 return ids
 
-        return [self.cat_backup_id]
+        if self.cat_backup_id:
+            return [self.cat_backup_id]
+
+        return []
 
 
 class ResultList(list):
