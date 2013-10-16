@@ -28,7 +28,6 @@ class Searcher(SearcherBase):
         addEvent('searcher.try_download_result', self.tryDownloadResult)
         addEvent('searcher.download', self.download)
         addEvent('searcher.search', self.search)
-        addEvent('searcher.create_releases', self.createReleases)
 
         addApiView('searcher.full_search', self.searchAllView, docs = {
             'desc': 'Starts a full search for all media',
@@ -171,53 +170,6 @@ class Searcher(SearcherBase):
             sorted_results = sorted(sorted_results, key = lambda k: k['protocol'][:3], reverse = (download_preference == 'torrent'))
 
         return sorted_results
-
-    def createReleases(self, search_results, media, quality_type):
-
-        available_status = fireEvent('status.get', ['available'], single = True)
-        db = get_session()
-
-        found_releases = []
-
-        for rel in search_results:
-
-            rel_identifier = md5(rel['url'])
-            found_releases.append(rel_identifier)
-
-            rls = db.query(Release).filter_by(identifier = rel_identifier).first()
-            if not rls:
-                rls = Release(
-                    identifier = rel_identifier,
-                    movie_id = media.get('id'),
-                    #media_id = media.get('id'),
-                    quality_id = quality_type.get('quality_id'),
-                    status_id = available_status.get('id')
-                )
-                db.add(rls)
-            else:
-                [db.delete(old_info) for old_info in rls.info]
-                rls.last_edit = int(time.time())
-
-            db.commit()
-
-            for info in rel:
-                try:
-                    if not isinstance(rel[info], (str, unicode, int, long, float)):
-                        continue
-
-                    rls_info = ReleaseInfo(
-                        identifier = info,
-                        value = toUnicode(rel[info])
-                    )
-                    rls.info.append(rls_info)
-                except InterfaceError:
-                    log.debug('Couldn\'t add %s to ReleaseInfo: %s', (info, traceback.format_exc()))
-
-            db.commit()
-
-            rel['status_id'] = rls.status_id
-
-        return found_releases
 
     def getSearchProtocols(self):
 

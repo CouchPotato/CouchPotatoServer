@@ -1,11 +1,12 @@
-from couchpotato import get_session
+from couchpotato import get_session, md5
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, addEvent
-from couchpotato.core.helpers.encoding import ss
+from couchpotato.core.helpers.encoding import ss, toUnicode
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.plugins.scanner.main import Scanner
-from couchpotato.core.settings.model import File, Release as Relea, Media
+from couchpotato.core.settings.model import File, Release as Relea, Media, ReleaseInfo
+from sqlalchemy.exc import InterfaceError
 from sqlalchemy.orm import joinedload_all
 from sqlalchemy.sql.expression import and_, or_
 import os
@@ -45,6 +46,7 @@ class Release(Plugin):
             }
         })
 
+        addEvent('release.create_from_search', self.createFromSearch)
         addEvent('release.for_movie', self.forMovie)
         addEvent('release.delete', self.delete)
         addEvent('release.clean', self.clean)
@@ -244,6 +246,53 @@ class Release(Plugin):
         return {
             'success': False
         }
+
+    def createFromSearch(self, search_results, media, quality_type):
+
+        available_status = fireEvent('status.get', ['available'], single = True)
+        db = get_session()
+
+        found_releases = []
+
+        for rel in search_results:
+
+            rel_identifier = md5(rel['url'])
+            found_releases.append(rel_identifier)
+
+            rls = db.query(Relea).filter_by(identifier = rel_identifier).first()
+            if not rls:
+                rls = Relea(
+                    identifier = rel_identifier,
+                    movie_id = media.get('id'),
+                    #media_id = media.get('id'),
+                    quality_id = quality_type.get('quality_id'),
+                    status_id = available_status.get('id')
+                )
+                db.add(rls)
+            else:
+                [db.delete(old_info) for old_info in rls.info]
+                rls.last_edit = int(time.time())
+
+            db.commit()
+
+            for info in rel:
+                try:
+                    if not isinstance(rel[info], (str, unicode, int, long, float)):
+                        continue
+
+                    rls_info = ReleaseInfo(
+                        identifier = info,
+                        value = toUnicode(rel[info])
+                    )
+                    rls.info.append(rls_info)
+                except InterfaceError:
+                    log.debug('Couldn\'t add %s to ReleaseInfo: %s', (info, traceback.format_exc()))
+
+            db.commit()
+
+            rel['status_id'] = rls.status_id
+
+        return found_releases
 
     def forMovie(self, id = None):
 
