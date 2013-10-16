@@ -23,7 +23,7 @@ class Base(TorrentProvider):
         'base_url' : 'http://www.iptorrents.com',
         'login' : 'http://www.iptorrents.com/torrents/',
         'login_check': 'http://www.iptorrents.com/inbox.php',
-        'search' : 'http://www.iptorrents.com/torrents/?l%d=1%%s&q=%s&qf=ti&p=%%d',
+        'search' : 'http://www.iptorrents.com/torrents/?%s%%s&q=%s&qf=ti&p=%%d',
     }
 
     http_time_between_calls = 1 #seconds
@@ -31,12 +31,13 @@ class Base(TorrentProvider):
 
     def _buildUrl(self, query, quality_identifier, cat_ids_group = None):
 
-        cat_id = self.getCatId(quality_identifier, cat_ids_group)[0]
-        if not cat_id:
+        cat_ids = self.getCatId(quality_identifier, cat_ids_group)
+
+        if not cat_ids or not len(cat_ids):
             log.warning('Unable to find category for quality %s', quality_identifier)
             return
 
-        return self.urls['search'] % (cat_id, tryUrlencode(query).replace('%', '%%'))
+        return self.urls['search'] % ("&".join(("l%d=" % x) for x in cat_ids), tryUrlencode(query).replace('%', '%%'))
 
     def _searchOnTitle(self, title, media, quality, results):
 
@@ -140,8 +141,7 @@ class Show(ShowProvider, Base):
         ]),
         ('episode', [
             ([5], ['hdtv_720p', 'webdl_720p', 'webdl_1080p']),
-            ([78], ['hdtv_sd']),
-            ([4, 79], ['hdtv_sd'])
+            ([4, 78, 79], ['hdtv_sd'])
         ])
     ]
 

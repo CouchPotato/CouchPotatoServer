@@ -38,7 +38,7 @@ class CaptureConstraint(object):
 
     def _compare_eq(self, fragment, name, expected):
         if not hasattr(fragment, name):
-            return None
+            return 1.0, False
 
         return 1.0, getattr(fragment, name) == expected
 

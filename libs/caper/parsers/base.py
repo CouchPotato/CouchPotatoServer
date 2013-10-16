@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from logr import Logr
 from caper import FragmentMatcher
 from caper.group import CaptureGroup
 from caper.result import CaperResult, CaperClosureNode
@@ -58,62 +57,6 @@ class Parser(object):
         """
 
         raise NotImplementedError()
-
-    #
-    # Closure Methods
-    #
-
-    def next_closure(self):
-        self._closure_pos += 1
-        closure = self.closures[self._closure_pos]
-
-        self._history.append(('fragment', -1 - self._fragment_pos))
-        self._fragment_pos = -1
-
-        if self._closure_pos != 0:
-            self._history.append(('closure', 1))
-
-        Logr.debug('(next_closure) closure.value: "%s"', closure.value)
-        return closure
-
-    def closure_available(self):
-        return self._closure_pos + 1 < len(self.closures)
-
-    #
-    # Fragment Methods
-    #
-
-    def next_fragment(self):
-        closure = self.closures[self._closure_pos]
-
-        self._fragment_pos += 1
-        fragment = closure.fragments[self._fragment_pos]
-
-        self._history.append(('fragment', 1))
-
-        Logr.debug('(next_fragment) closure.value "%s" - fragment.value: "%s"', closure.value, fragment.value)
-        return fragment
-
-    def fragment_available(self):
-        if not self.closure_available():
-            return False
-        return self._fragment_pos + 1 < len(self.closures[self._closure_pos].fragments)
-
-    def rewind(self):
-        for source, delta in reversed(self._history):
-            Logr.debug('(rewind) Rewinding step: %s', (source, delta))
-            if source == 'fragment':
-                self._fragment_pos -= delta
-            elif source == 'closure':
-                self._closure_pos -= delta
-            else:
-                raise NotImplementedError()
-
-        self.commit()
-
-    def commit(self):
-        Logr.debug('(commit)')
-        self._history = []
 
     #
     # Capture Methods

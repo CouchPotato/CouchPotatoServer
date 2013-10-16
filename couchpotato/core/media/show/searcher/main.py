@@ -1,14 +1,12 @@
-import pprint
-import re
 from couchpotato import get_session, Env
 from couchpotato.core.event import addEvent, fireEvent
-from couchpotato.core.helpers.encoding import simplifyString
-from couchpotato.core.helpers.variable import getTitle, tryInt, possibleTitles
+from couchpotato.core.helpers.variable import getTitle, tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.searcher.main import SearchSetupError
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Media, Library
-from caper import Caper
+from qcond import QueryCondenser
+from qcond.helpers import simplify
 
 log = CPLog(__name__)
 
@@ -29,38 +27,19 @@ class ShowSearcher(Plugin):
     def __init__(self):
         super(ShowSearcher, self).__init__()
 
+        self.query_condenser = QueryCondenser()
+
         addEvent('show.searcher.single', self.single)
-        addEvent('searcher.correct_release', self.correctRelease)
         addEvent('searcher.get_search_title', self.getSearchTitle)
 
-        self.caper = Caper()
+        addEvent('searcher.correct_match', self.correctMatch)
+        addEvent('searcher.correct_release', self.correctRelease)
 
-    def _lookupMedia(self, media):
-        db = get_session()
+        addEvent('searcher.get_media_identifier', self.getMediaIdentifier)
+        addEvent('searcher.get_media_root', self.getMediaRoot)
+        addEvent('searcher.get_media_searcher_id', self.getMediaSearcherId)
 
-        media_library = db.query(Library).filter_by(id = media['library_id']).first()
-
-        show = None
-        season = None
-        episode = None
-
-        if media['type'] == 'episode':
-            show = media_library.parent.parent
-            season = media_library.parent
-            episode = media_library
-
-        if media['type'] == 'season':
-            show = media_library.parent
-            season = media_library
-
-        if media['type'] == 'show':
-            show = media_library
-
-        return show, season, episode
-
-    def single(self, media, search_protocols = None):
-        pprint.pprint(media)
-
+    def single(self, media, search_protocols = None, manual = False):
         if media['type'] == 'show':
             # TODO handle show searches (scan all seasons)
             return
@@ -72,7 +51,7 @@ class ShowSearcher(Plugin):
         except SearchSetupError:
             return
 
-        done_status = fireEvent('status.get', 'done', single = True)
+        done_status, available_status, ignored_status, failed_status = fireEvent('status.get', ['done', 'available', 'ignored', 'failed'], single = True)
 
         if not media['profile'] or media['status_id'] == done_status.get('id'):
             log.debug('Episode doesn\'t have a profile or already done, assuming in manage tab.')
@@ -80,19 +59,18 @@ class ShowSearcher(Plugin):
 
         db = get_session()
 
-        pre_releases = fireEvent('quality.pre_releases', single = True)
-        available_status, ignored_status, failed_status = fireEvent('status.get', ['available', 'ignored', 'failed'], single = True)
+        #pre_releases = fireEvent('quality.pre_releases', single = True)
 
         found_releases = []
         too_early_to_search = []
 
-        default_title = self.getSearchTitle(media['library'])
+        default_title = self.getSearchTitle(media)
         if not default_title:
             log.error('No proper info found for episode, removing it from library to cause it from having more issues.')
             #fireEvent('episode.delete', episode['id'], single = True)
             return
 
-        show, season, episode = self._lookupMedia(media)
+        show, season, episode = self.getMedia(media)
         if show is None or season is None:
             log.error('Unable to find show or season library in database, missing required data for searching')
             return
@@ -128,9 +106,81 @@ class ShowSearcher(Plugin):
                     break
 
                 # Add them to this movie releases list
-                found_releases += fireEvent('searcher.create_releases', results, media, quality_type, single = True)
+                found_releases += fireEvent('release.create_from_search', results, media, quality_type, single = True)
 
-                log.info('%d results found' % len(results))
+                # Try find a valid result and download it
+                if fireEvent('searcher.try_download_result', results, media, quality_type, manual, single = True):
+                    ret = True
+
+                # Remove releases that aren't found anymore
+                for release in media.get('releases', []):
+                    if release.get('status_id') == available_status.get('id') and release.get('identifier') not in found_releases:
+                        fireEvent('release.delete', release.get('id'), single = True)
+            else:
+                log.info('Better quality (%s) already available or snatched for %s', (quality_type['quality']['label'], default_title))
+                fireEvent('movie.restatus', media['id'])
+                break
+
+            # Break if CP wants to shut down
+            if self.shuttingDown() or ret:
+                break
+
+        if len(too_early_to_search) > 0:
+            log.info2('Too early to search for %s, %s', (too_early_to_search, default_title))
+
+        fireEvent('notify.frontend', type = 'show.searcher.ended.%s' % media['id'], data = True)
+
+        return ret
+
+    def getSearchTitle(self, media):
+        if media['type'] not in ['show', 'season', 'episode']:
+            return
+
+        show, season, episode = self.getMedia(media)
+        if show is None:
+            return None
+
+        titles = []
+
+        # Add season map_names if they exist
+        if season is not None and 'map_names' in show.info:
+            season_names = show.info['map_names'].get(str(season.season_number), {})
+
+            # Add titles from all locations
+            # TODO only add name maps from a specific location
+            for location, names in season_names.items():
+                titles += [name for name in names if name not in titles]
+
+        # Add show titles
+        titles += [title.title for title in show.titles if title.title not in titles]
+
+        # Use QueryCondenser to build a list of optimal search titles
+        condensed_titles = self.query_condenser.distinct(titles)
+
+        title = None
+
+        # TODO try other titles if searching doesn't return results
+
+        if len(condensed_titles):
+            # Return the first condensed title if one exists
+            title = condensed_titles[0]
+        elif len(titles):
+            # Fallback to first raw title
+            title = simplify(titles[0])
+        else:
+            return None
+
+        # Add the identifier to search title
+        # TODO supporting other identifier formats
+        identifier = fireEvent('searcher.get_media_identifier', media['library'], single = True)
+
+        if identifier['season']:
+            title += ' S%02d' % identifier['season']
+
+            if identifier['episode']:
+                title += 'E%02d' % identifier['episode']
+
+        return title
 
     def correctRelease(self, release = None, media = None, quality = None, **kwargs):
 
@@ -146,128 +196,97 @@ class ShowSearcher(Plugin):
         if not fireEvent('searcher.correct_words', release['name'], media, single = True):
             return False
 
-        show, season, episode = self._lookupMedia(media)
+        show, season, episode = self.getMedia(media)
         if show is None or season is None:
             log.error('Unable to find show or season library in database, missing required data for searching')
             return
 
-        release_info = self.caper.parse(release['name'])
-        if len(release_info.chains) < 1:
-            log.info2('Wrong: %s, unable to parse release name (no chains)', release['name'])
-            return False
+        match = fireEvent('matcher.best', release, media, quality, single = True)
+        if match:
+            return match.weight
 
-        # TODO look at all chains
-        chain = release_info.chains[0]
+        return False
 
-        if not self.correctQuality(chain, quality['identifier']):
+    def correctMatch(self, chain, release, media, quality):
+        log.info("Checking if '%s' is valid", release['name'])
+
+        if not fireEvent('matcher.correct_quality', chain, quality, self.quality_map, single = True):
             log.info('Wrong: %s, quality does not match', release['name'])
             return False
 
-        if not self.correctIdentifier(chain, media):
+        if not fireEvent('matcher.correct_identifier', chain, media):
             log.info('Wrong: %s, identifier does not match', release['name'])
             return False
 
-        if 'show_name' not in chain.info or not len(chain.info['show_name']):
-            log.info('Wrong: %s, missing show name in parsed result', release['name'])
-            return False
-
-        chain_words = [x.lower() for x in chain.info['show_name']]
-        chain_title = ' '.join(chain_words)
-
-        library_title = None
-
-        # Check show titles match
-        for raw_title in show.titles:
-            for valid_words in [x.split(' ') for x in possibleTitles(raw_title.title)]:
-                if not library_title:
-                    library_title = ' '.join(valid_words)
-
-                if valid_words == chain_words:
-                    return True
-
-        log.info("Wrong: title '%s', undetermined show naming. Looking for '%s (%s)'", (chain_title, library_title, media['library']['year']))
-        return False
-
-    def correctQuality(self, chain, quality_identifier):
-        if quality_identifier not in self.quality_map:
-            log.info2('Wrong: unknown preferred quality %s for TV searching', quality_identifier)
-            return False
-
-        if 'video' not in chain.info:
-            log.info2('Wrong: no video tags found')
-            return False
-
-        video_tags = self.quality_map[quality_identifier]
-
-        if not self.chainMatches(chain, 'video', video_tags):
-            log.info2('Wrong: %s tags not in chain', video_tags)
+        if not fireEvent('matcher.correct_title', chain, media):
+            log.info("Wrong: '%s', undetermined naming.", (' '.join(chain.info['show_name'])))
             return False
 
         return True
 
-    def correctIdentifier(self, chain, media):
-        required_id = self.getIdentifier(media['library'], 'season_number', 'episode_number')
-
-        if 'identifier' not in chain.info:
-            return False
-
-        # TODO could be handled better?
-        if len(chain.info['identifier']) != 1:
-            return False
-        identifier = chain.info['identifier'][0]
-
-        # TODO air by date episodes
-        release_id = self.getIdentifier(identifier, 'season', 'episode')
-
-        if required_id != release_id:
-            log.info2('Wrong: required identifier %s does not match release identifier %s', (str(required_id), str(release_id)))
-            return False
-
-        return True
-
-    def getIdentifier(self, d, episode_key, season_key):
-        return (
-            tryInt(d.get(season_key), None) if season_key in d else None,
-            tryInt(d.get(episode_key), None) if episode_key in d else None
-        )
-
-    def chainMatches(self, chain, group, tags):
-        found_tags = []
-
-        for match in chain.info[group]:
-            for ck, cv in match.items():
-                if ck in tags and self.cleanMatchValue(cv) in tags[ck]:
-                    found_tags.append(ck)
-
-
-        if set(tags.keys()) == set(found_tags):
-            return True
-
-        return set([key for key, value in tags.items() if value]) == set(found_tags)
-
-    def cleanMatchValue(self, value):
-        value = value.lower()
-        value = value.strip()
-
-        for ch in [' ', '-', '.']:
-            value = value.replace(ch, '')
-
-        return value
-
-    def getSearchTitle(self, media):
-        show, season, episode = self._lookupMedia(media)
-        if show is None:
+    def getMediaIdentifier(self, media_library):
+        if media_library['type'] not in ['show', 'season', 'episode']:
             return None
 
-        name = ''
-        if season is not None:
-            name = ' S%02d' % season.season_number
+        identifier = {
+            'season': None,
+            'episode': None
+        }
 
-            if episode is not None:
-                name += 'E%02d' % episode.episode_number
+        if media_library['type'] == 'episode':
+            map_episode = media_library['info'].get('map_episode')
 
-        show_title = getTitle(show)
-        if not show_title:
+            if map_episode and 'scene' in map_episode:
+                identifier['season'] = map_episode['scene'].get('season')
+                identifier['episode'] = map_episode['scene'].get('episode')
+            else:
+                # TODO xem mapping?
+                identifier['season'] = media_library.get('season_number')
+                identifier['episode'] = media_library.get('episode_number')
+
+        if media_library['type'] == 'season':
+            identifier['season'] = media_library.get('season_number')
+
+        # Try cast identifier values to integers
+        identifier['season'] = tryInt(identifier['season'], None)
+        identifier['episode'] = tryInt(identifier['episode'], None)
+
+        return identifier
+
+    def getMediaRoot(self, media):
+        if media['type'] not in ['show', 'season', 'episode']:
             return None
 
-        return show_title + name
+        show, season, episode = self.getMedia(media)
+        if show is None or season is None:
+            log.error('Unable to find show or season library in database, missing required data for searching')
+            return
+
+        return show.to_dict()
+
+    def getMediaSearcherId(self, media_type):
+        if media_type in ['show', 'season', 'episode']:
+            return 'show'
+
+    def getMedia(self, media):
+        db = get_session()
+
+        media_library = db.query(Library).filter_by(id = media['library_id']).first()
+
+        show = None
+        season = None
+        episode = None
+
+        if media['type'] == 'episode':
+            show = media_library.parent.parent
+            season = media_library.parent
+            episode = media_library
+
+        if media['type'] == 'season':
+            show = media_library.parent
+            season = media_library
+
+        if media['type'] == 'show':
+            show = media_library
+
+        return show, season, episode

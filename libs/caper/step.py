@@ -33,18 +33,6 @@ class CaptureStep(object):
         #: @type: bool
         self.single = single
 
-    def _get_next_subject(self, parser):
-        if self.source == 'fragment':
-            if not parser.fragment_available():
-                return None
-            return parser.next_fragment()
-        elif self.source == 'closure':
-            if not parser.closure_available():
-                return None
-            return parser.next_closure()
-
-        raise NotImplementedError()
-
     def execute(self, fragment):
         if self.regex:
             weight, match, num_fragments = self.capture_group.parser.matcher.fragment_match(fragment, self.regex)
