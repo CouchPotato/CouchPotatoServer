@@ -2,7 +2,8 @@ import pprint
 from caper import Caper
 from couchpotato import CPLog, tryInt
 from couchpotato.core.event import addEvent, fireEvent
-from couchpotato.core.helpers.variable import possibleTitles
+from couchpotato.core.helpers.encoding import simplifyString
+from couchpotato.core.helpers.variable import possibleTitles, dictIsSubset
 from couchpotato.core.plugins.base import Plugin
 
 log = CPLog(__name__)
@@ -40,7 +41,7 @@ class Matcher(Plugin):
 
         for match in chain.info[group]:
             for ck, cv in match.items():
-                if ck in tags and self.cleanMatchValue(cv) in tags[ck]:
+                if ck in tags and simplifyString(cv) in tags[ck]:
                     found_tags.append(ck)
 
 
@@ -48,18 +49,6 @@ class Matcher(Plugin):
             return True
 
         return set([key for key, value in tags.items() if None not in value]) == set(found_tags)
-
-    def cleanMatchValue(self, value):
-        value = value.lower()
-        value = value.strip()
-
-        for ch in [' ', '-', '.']:
-            value = value.replace(ch, '')
-
-        return value
-
-    def dictIsSubset(self, a, b):
-        return all([k in b and b[k] == v for k, v in a.items()])
 
     def correctIdentifier(self, chain, media):
         required_id = fireEvent('searcher.get_media_identifier', media['library'], single = True)
@@ -78,7 +67,7 @@ class Matcher(Plugin):
         for k, v in identifier.items():
             identifier[k] = tryInt(v, None)
 
-        if not self.dictIsSubset(required_id, identifier):
+        if not dictIsSubset(required_id, identifier):
             log.info2('Wrong: required identifier %s does not match release identifier %s', (str(required_id), str(identifier)))
             return False
 

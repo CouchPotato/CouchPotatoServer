@@ -38,7 +38,6 @@ class ShowSearcher(Plugin):
         addEvent('searcher.get_media_identifier', self.getMediaIdentifier)
         addEvent('searcher.get_media_root', self.getMediaRoot)
         addEvent('searcher.get_media_searcher_id', self.getMediaSearcherId)
-        addEvent('searcher.get_media_titles', self.getMediaTitles)
 
     def single(self, media, search_protocols = None, manual = False):
         if media['type'] == 'show':
