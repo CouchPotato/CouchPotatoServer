@@ -213,3 +213,6 @@ def randomString(size = 8, chars = string.ascii_uppercase + string.digits):
 def splitString(str, split_on = ',', clean = True):
     list = [x.strip() for x in str.split(split_on)] if str else []
     return filter(None, list) if clean else list
+
+def dictIsSubset(a, b):
+    return all([k in b and b[k] == v for k, v in a.items()])
