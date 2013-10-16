@@ -7,7 +7,6 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.searcher.base import SearcherBase
 from couchpotato.core.settings.model import Media, Release, ReleaseInfo
 from couchpotato.environment import Env
-from sqlalchemy.exc import InterfaceError
 from inspect import ismethod, isfunction
 import datetime
 import re
@@ -25,9 +24,9 @@ class Searcher(SearcherBase):
         addEvent('searcher.correct_year', self.correctYear)
         addEvent('searcher.correct_name', self.correctName)
         addEvent('searcher.correct_words', self.correctWords)
+        addEvent('searcher.try_download_result', self.tryDownloadResult)
         addEvent('searcher.download', self.download)
         addEvent('searcher.search', self.search)
-        addEvent('searcher.create_releases', self.createReleases)
 
         addApiView('searcher.full_search', self.searchAllView, docs = {
             'desc': 'Starts a full search for all media',
@@ -53,27 +52,51 @@ class Searcher(SearcherBase):
         progress = fireEvent('searcher.progress', merge = True)
         return progress
 
-    def download(self, data, movie, manual = False):
+    def tryDownloadResult(self, results, media, quality_type, manual = False):
+        ignored_status, failed_status = fireEvent('status.get', ['ignored', 'failed'], single = True)
 
-        if not data.get('protocol'):
-            data['protocol'] = data['type']
-            data['type'] = 'movie'
+        for rel in results:
+            if not quality_type.get('finish', False) and quality_type.get('wait_for', 0) > 0 and rel.get('age') <= quality_type.get('wait_for', 0):
+                log.info('Ignored, waiting %s days: %s', (quality_type.get('wait_for'), rel['name']))
+                continue
+
+            if rel['status_id'] in [ignored_status.get('id'), failed_status.get('id')]:
+                log.info('Ignored: %s', rel['name'])
+                continue
+
+            if rel['score'] <= 0:
+                log.info('Ignored, score to low: %s', rel['name'])
+                continue
+
+            downloaded = fireEvent('searcher.download', data = rel, media = media, manual = manual, single = True)
+            if downloaded is True:
+                return True
+            elif downloaded != 'try_next':
+                break
+
+        return False
+
+    def download(self, data, media, manual = False):
+
+        # TODO what is this for?
+        #if not data.get('protocol'):
+        #    data['protocol'] = data['type']
+        #    data['type'] = 'movie'
 
         # Test to see if any downloaders are enabled for this type
         downloader_enabled = fireEvent('download.enabled', manual, data, single = True)
 
         if downloader_enabled:
+            snatched_status, active_status, done_status = fireEvent('status.get', ['snatched', 'active', 'done'], single = True)
 
-            snatched_status = fireEvent('status.get', 'snatched', single = True)
-
-            # Download movie to temp
+            # Download release to temp
             filedata = None
             if data.get('download') and (ismethod(data.get('download')) or isfunction(data.get('download'))):
                 filedata = data.get('download')(url = data.get('url'), nzb_id = data.get('id'))
                 if filedata == 'try_next':
                     return filedata
 
-            download_result = fireEvent('download', data = data, movie = movie, manual = manual, filedata = filedata, single = True)
+            download_result = fireEvent('download', data = data, movie = media, manual = manual, filedata = filedata, single = True)
             log.debug('Downloader result: %s', download_result)
 
             if download_result:
@@ -84,7 +107,6 @@ class Searcher(SearcherBase):
                     if rls:
                         renamer_enabled = Env.setting('enabled', 'renamer')
 
-                        done_status = fireEvent('status.get', 'done', single = True)
                         rls.status_id = done_status.get('id') if not renamer_enabled else snatched_status.get('id')
 
                         # Save download-id info if returned
@@ -97,36 +119,34 @@ class Searcher(SearcherBase):
                                 rls.info.append(rls_info)
                         db.commit()
 
-                        log_movie = '%s (%s) in %s' % (getTitle(movie['library']), movie['library']['year'], rls.quality.label)
+                        log_movie = '%s (%s) in %s' % (getTitle(media['library']), media['library']['year'], rls.quality.label)
                         snatch_message = 'Snatched "%s": %s' % (data.get('name'), log_movie)
                         log.info(snatch_message)
-                        fireEvent('movie.snatched', message = snatch_message, data = rls.to_dict())
+                        fireEvent('%s.snatched' % data['type'], message = snatch_message, data = rls.to_dict())
 
-                        # If renamer isn't used, mark movie done
+                        # If renamer isn't used, mark media done
                         if not renamer_enabled:
-                            active_status = fireEvent('status.get', 'active', single = True)
-                            done_status = fireEvent('status.get', 'done', single = True)
                             try:
-                                if movie['status_id'] == active_status.get('id'):
-                                    for profile_type in movie['profile']['types']:
+                                if media['status_id'] == active_status.get('id'):
+                                    for profile_type in media['profile']['types']:
                                         if profile_type['quality_id'] == rls.quality.id and profile_type['finish']:
-                                            log.info('Renamer disabled, marking movie as finished: %s', log_movie)
+                                            log.info('Renamer disabled, marking media as finished: %s', log_movie)
 
                                             # Mark release done
                                             rls.status_id = done_status.get('id')
                                             rls.last_edit = int(time.time())
                                             db.commit()
 
-                                            # Mark movie done
-                                            mvie = db.query(Media).filter_by(id = movie['id']).first()
-                                            mvie.status_id = done_status.get('id')
-                                            mvie.last_edit = int(time.time())
+                                            # Mark media done
+                                            mdia = db.query(Media).filter_by(id = media['id']).first()
+                                            mdia.status_id = done_status.get('id')
+                                            mdia.last_edit = int(time.time())
                                             db.commit()
                             except:
-                                log.error('Failed marking movie finished, renamer disabled: %s', traceback.format_exc())
+                                log.error('Failed marking media finished, renamer disabled: %s', traceback.format_exc())
 
                 except:
-                    log.error('Failed marking movie finished: %s', traceback.format_exc())
+                    log.error('Failed marking media finished: %s', traceback.format_exc())
 
                 return True
 
@@ -137,14 +157,11 @@ class Searcher(SearcherBase):
     def search(self, protocols, media, quality):
         results = []
 
-        search_type = None
-        if media['type'] == 'movie':
-            search_type = 'movie'
-        elif media['type'] in ['show', 'season', 'episode']:
-            search_type = 'show'
+        # TODO could this be handled better? (removing the need for 'searcher.get_media_searcher_id')
+        searcher_id = fireEvent('searcher.get_media_searcher_id', media['type'], single = True)
 
         for search_protocol in protocols:
-            protocol_results = fireEvent('provider.search.%s.%s' % (search_protocol, search_type), media, quality, merge = True)
+            protocol_results = fireEvent('provider.search.%s.%s' % (search_protocol, searcher_id), media, quality, merge = True)
             if protocol_results:
                 results += protocol_results
 
@@ -155,52 +172,6 @@ class Searcher(SearcherBase):
             sorted_results = sorted(sorted_results, key = lambda k: k['protocol'][:3], reverse = (download_preference == 'torrent'))
 
         return sorted_results
-
-    def createReleases(self, search_results, media, quality_type):
-
-        available_status, ignored_status, failed_status = fireEvent('status.get', ['available', 'ignored', 'failed'], single = True)
-        db = get_session()
-
-        found_releases = []
-
-        for rel in search_results:
-
-            nzb_identifier = md5(rel['url'])
-            found_releases.append(nzb_identifier)
-
-            rls = db.query(Release).filter_by(identifier = nzb_identifier).first()
-            if not rls:
-                rls = Release(
-                    identifier = nzb_identifier,
-                    media_id = media.get('id'),
-                    quality_id = quality_type.get('quality_id'),
-                    status_id = available_status.get('id')
-                )
-                db.add(rls)
-            else:
-                [db.delete(old_info) for old_info in rls.info]
-                rls.last_edit = int(time.time())
-
-            db.commit()
-
-            for info in rel:
-                try:
-                    if not isinstance(rel[info], (str, unicode, int, long, float)):
-                        continue
-
-                    rls_info = ReleaseInfo(
-                        identifier = info,
-                        value = toUnicode(rel[info])
-                    )
-                    rls.info.append(rls_info)
-                except InterfaceError:
-                    log.debug('Couldn\'t add %s to ReleaseInfo: %s', (info, traceback.format_exc()))
-
-            db.commit()
-
-            rel['status_id'] = rls.status_id
-
-        return found_releases
 
     def getSearchProtocols(self):
 
