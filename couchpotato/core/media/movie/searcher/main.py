@@ -176,7 +176,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                     break
 
                 # Add them to this movie releases list
-                found_releases += fireEvent('searcher.create_releases', results, movie, quality_type, single = True)
+                found_releases += fireEvent('release.create_from_search', results, movie, quality_type, single = True)
 
                 # Try find a valid result and download it
                 if fireEvent('searcher.try_download_result', results, movie, quality_type, manual, single = True):
