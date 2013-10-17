@@ -1,18 +1,11 @@
-from couchpotato import get_session
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import simplifyString, toUnicode
 from couchpotato.core.helpers.variable import md5, getTitle, splitString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.searcher.base import SearcherBase
-from couchpotato.core.settings.model import Media, Release, ReleaseInfo
-from couchpotato.environment import Env
-from inspect import ismethod, isfunction
-from sqlalchemy.exc import InterfaceError
 import datetime
 import re
-import time
-import traceback
 
 log = CPLog(__name__)
 
@@ -25,8 +18,6 @@ class Searcher(SearcherBase):
         addEvent('searcher.correct_year', self.correctYear)
         addEvent('searcher.correct_name', self.correctName)
         addEvent('searcher.correct_words', self.correctWords)
-        addEvent('searcher.try_download_result', self.tryDownloadResult)
-        addEvent('searcher.download', self.download)
         addEvent('searcher.search', self.search)
 
         addApiView('searcher.full_search', self.searchAllView, docs = {
@@ -52,105 +43,6 @@ class Searcher(SearcherBase):
     def getProgressForAll(self):
         progress = fireEvent('searcher.progress', merge = True)
         return progress
-
-    def tryDownloadResult(self, results, media, quality_type, manual = False):
-        ignored_status, failed_status = fireEvent('status.get', ['ignored', 'failed'], single = True)
-
-        for rel in results:
-            if not quality_type.get('finish', False) and quality_type.get('wait_for', 0) > 0 and rel.get('age') <= quality_type.get('wait_for', 0):
-                log.info('Ignored, waiting %s days: %s', (quality_type.get('wait_for'), rel['name']))
-                continue
-
-            if rel['status_id'] in [ignored_status.get('id'), failed_status.get('id')]:
-                log.info('Ignored: %s', rel['name'])
-                continue
-
-            if rel['score'] <= 0:
-                log.info('Ignored, score to low: %s', rel['name'])
-                continue
-
-            downloaded = fireEvent('searcher.download', data = rel, media = media, manual = manual, single = True)
-            if downloaded is True:
-                return True
-            elif downloaded != 'try_next':
-                break
-
-        return False
-
-    def download(self, data, media, manual = False):
-
-        if not data.get('protocol'):
-            data['protocol'] = data['type']
-            data['type'] = 'movie'
-
-        # Test to see if any downloaders are enabled for this type
-        downloader_enabled = fireEvent('download.enabled', manual, data, single = True)
-
-        if downloader_enabled:
-            snatched_status, done_status, active_status = fireEvent('status.get', ['snatched', 'done', 'active'], single = True)
-
-            # Download release to temp
-            filedata = None
-            if data.get('download') and (ismethod(data.get('download')) or isfunction(data.get('download'))):
-                filedata = data.get('download')(url = data.get('url'), nzb_id = data.get('id'))
-                if filedata == 'try_next':
-                    return filedata
-
-            download_result = fireEvent('download', data = data, movie = media, manual = manual, filedata = filedata, single = True)
-            log.debug('Downloader result: %s', download_result)
-
-            if download_result:
-                try:
-                    # Mark release as snatched
-                    db = get_session()
-                    rls = db.query(Release).filter_by(identifier = md5(data['url'])).first()
-                    if rls:
-                        renamer_enabled = Env.setting('enabled', 'renamer')
-
-                        # Save download-id info if returned
-                        if isinstance(download_result, dict):
-                            for key in download_result:
-                                rls_info = ReleaseInfo(
-                                    identifier = 'download_%s' % key,
-                                    value = toUnicode(download_result.get(key))
-                                )
-                                rls.info.append(rls_info)
-                        db.commit()
-
-                        log_movie = '%s (%s) in %s' % (getTitle(media['library']), media['library']['year'], rls.quality.label)
-                        snatch_message = 'Snatched "%s": %s' % (data.get('name'), log_movie)
-                        log.info(snatch_message)
-                        fireEvent('%s.snatched' % data['type'], message = snatch_message, data = rls.to_dict())
-
-                        # If renamer isn't used, mark media done
-                        if not renamer_enabled:
-                            try:
-                                if media['status_id'] == active_status.get('id'):
-                                    for profile_type in media['profile']['types']:
-                                        if profile_type['quality_id'] == rls.quality.id and profile_type['finish']:
-                                            log.info('Renamer disabled, marking media as finished: %s', log_movie)
-
-                                            # Mark release done
-                                            fireEvent('release.update_status', rls.id, status = done_status, single = True)
-
-                                            # Mark media done
-                                            mdia = db.query(Media).filter_by(id = media['id']).first()
-                                            mdia.status_id = done_status.get('id')
-                                            mdia.last_edit = int(time.time())
-                                            db.commit()
-                            except:
-                                log.error('Failed marking media finished, renamer disabled: %s', traceback.format_exc())
-                        else:
-                            fireEvent('release.update_status', rls.id, status = snatched_status, single = True)
-
-                except:
-                    log.error('Failed marking media finished: %s', traceback.format_exc())
-
-                return True
-
-        log.info('Tried to download, but none of the "%s" downloaders are enabled or gave an error', (data.get('protocol')))
-
-        return False
 
     def search(self, protocols, media, quality):
         results = []
