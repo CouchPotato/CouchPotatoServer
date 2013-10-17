@@ -138,19 +138,32 @@ class uTorrent(Downloader):
             except:
                 log.debug('Failed getting files from torrent: %s', torrent[2])
 
-            # torrent[21] = Paused | Downloading | Seeding | Finished
+            status_flags = {
+                "STARTED"     : 1,
+                "CHECKING"    : 2,
+                "CHECK-START" : 4,
+                "CHECKED"     : 8,
+                "ERROR"       : 16,
+                "PAUSED"      : 32,
+                "QUEUED"      : 64,
+                "LOADED"      : 128
+            }
+
             status = 'busy'
-            if 'Finished' in torrent[21]:
-                status = 'completed'
-                self.removeReadOnly(torrent_files)
-            elif 'Seeding' in torrent[21]:
+            if (torrent[1] & status_flags["STARTED"] or torrent[1] & status_flags["QUEUED"]) and torrent[4] == 1000:
                 status = 'seeding'
+            elif (torrent[1] & status_flags["ERROR"]):
+                status = 'failed'
+            elif torrent[4] == 1000:
+                status = 'completed'
+
+            if not status == 'busy':
                 self.removeReadOnly(torrent_files)
 
             release_downloads.append({
                 'id': torrent[0],
                 'name': torrent[2],
-                'status':  status,
+                'status': status,
                 'seed_ratio': float(torrent[7]) / 1000,
                 'original_status': torrent[1],
                 'timeleft': str(timedelta(seconds = torrent[10])),
