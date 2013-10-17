@@ -79,10 +79,9 @@ class Searcher(SearcherBase):
 
     def download(self, data, media, manual = False):
 
-        # TODO what is this for?
-        #if not data.get('protocol'):
-        #    data['protocol'] = data['type']
-        #    data['type'] = 'movie'
+        if not data.get('protocol'):
+            data['protocol'] = data['type']
+            data['type'] = 'movie'
 
         # Test to see if any downloaders are enabled for this type
         downloader_enabled = fireEvent('download.enabled', manual, data, single = True)
