@@ -77,6 +77,16 @@
 			
 		}
 
+		.suggestions .media_result .data .info .plot {
+			display: block;
+    			font-size: 11px;
+    			height: 54px;
+			overflow: hidden;
+                }
+		.suggestions .media_result:hover .data .info .plot {
+			height: 35px;
+                }
+
 	.suggestions .media_result .data {
 		cursor: default;
 	}
