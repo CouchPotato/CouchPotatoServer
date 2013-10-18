@@ -1,6 +1,6 @@
 eclipse.preferences.version=1
 encoding//couchpotato/core/providers/trailer/vftrailers/youtube_dl/YoutubeDL.py=utf-8
-encoding//couchpotato/core/providers/trailer/vftrailers/youtube_dl/__init__.py=utf-8
+encoding//couchpotato/core/providers/trailer/vftrailers/youtube_dl/__init__.py=latin1
 encoding//couchpotato/core/providers/trailer/vftrailers/youtube_dl/utils.py=utf-8
 encoding//libs/subliminal/core.py=utf-8
 encoding//libs/subliminal/services/__init__.py=utf-8

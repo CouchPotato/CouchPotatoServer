@@ -44,13 +44,15 @@ class NonBlockHandler(RequestHandler):
 
     def onNewMessage(self, response):
         if self.request.connection.stream.closed():
+            self.on_connection_close()
             return
 
         try:
             self.finish(response)
         except:
-            log.error('Failed doing nonblock request: %s', (traceback.format_exc()))
-            self.finish({'success': False, 'error': 'Failed returning results'})
+            log.debug('Failed doing nonblock request, probably already closed: %s', (traceback.format_exc()))
+            try: self.finish({'success': False, 'error': 'Failed returning results'})
+            except: pass
 
     def on_connection_close(self):
 
@@ -108,6 +110,7 @@ class ApiHandler(RequestHandler):
 
             if jsonp_callback:
                 self.write(str(jsonp_callback) + '(' + json.dumps(result) + ')')
+                self.set_header("Content-Type", "text/javascript")
             elif isinstance(result, tuple) and result[0] == 'redirect':
                 self.redirect(result[1])
             else:

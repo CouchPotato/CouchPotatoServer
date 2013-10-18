@@ -18,11 +18,13 @@ var MovieAction = new Class({
 	create: function(){},
 
 	disable: function(){
-		this.el.addClass('disable')
+		if(this.el)
+			this.el.addClass('disable')
 	},
 
 	enable: function(){
-		this.el.removeClass('disable')
+		if(this.el)
+			this.el.removeClass('disable')
 	},
 
 	getTitle: function(){
@@ -239,7 +241,6 @@ MA.Release = new Class({
 						}
 					})
 				).inject(self.release_container);
-
 				release['el'] = item;
 
 				if(status.identifier == 'ignored' || status.identifier == 'failed' || status.identifier == 'snatched'){
@@ -249,38 +250,65 @@ MA.Release = new Class({
 				else if(!self.next_release && status.identifier == 'available'){
 					self.next_release = release;
 				}
+				
+				var update_handle = function(notification) {
+					var q = self.movie.quality.getElement('.q_id' + release.quality_id), 
+						status = Status.get(release.status_id),
+						new_status = Status.get(notification.data);
+					
+					release.status_id = new_status.id
+					release.el.set('class', 'item ' + new_status.identifier);
+
+					var status_el = release.el.getElement('.release_status');
+					status_el.set('class', 'release_status ' + new_status.identifier);
+					status_el.set('text', new_status.identifier);
+
+					if(!q && (new_status.identifier == 'snatched' || new_status.identifier == 'seeding' || new_status.identifier == 'done'))
+						var q = self.addQuality(release.quality_id);
+
+					if(new_status && q && !q.hasClass(new_status.identifier)) {
+						q.removeClass(status.identifier).addClass(new_status.identifier);
+						q.set('title', q.get('title').replace(status.label, new_status.label));
+					}
+				}
+
+				App.addEvent('release.update_status.' + release.id, update_handle); 
+
 			});
 
 			if(self.last_release)
-				self.release_container.getElement('#release_'+self.last_release.id).addClass('last_release');
+				self.release_container.getElements('#release_'+self.last_release.id).addClass('last_release');
 
 			if(self.next_release)
-				self.release_container.getElement('#release_'+self.next_release.id).addClass('next_release');
+				self.release_container.getElements('#release_'+self.next_release.id).addClass('next_release');
 
 			if(self.next_release || (self.last_release && ['ignored', 'failed'].indexOf(self.last_release.status.identifier) === false)){
 
 				self.trynext_container = new Element('div.buttons.try_container').inject(self.release_container, 'top');
+				
+				var nr = self.next_release,
+					lr = self.last_release;
 
 				self.trynext_container.adopt(
 					new Element('span.or', {
 						'text': 'This movie is snatched, if anything went wrong, download'
 					}),
-					self.last_release ? new Element('a.button.orange', {
+					lr ? new Element('a.button.orange', {
 						'text': 'the same release again',
 						'events': {
 							'click': function(){
-								self.download(self.last_release);
+								self.download(lr);
 							}
 						}
 					}) : null,
-					self.next_release && self.last_release ? new Element('span.or', {
+					nr && lr ? new Element('span.or', {
 						'text': ','
 					}) : null,
-					self.next_release ? [new Element('a.button.green', {
-						'text': self.last_release ? 'another release' : 'the best release',
+					nr ? [new Element('a.button.green', {
+						'text': lr ? 'another release' : 'the best release',
 						'events': {
 							'click': function(){
-								self.download(self.next_release);
+								self.download(nr);
 							}
 						}
 					}),
@@ -362,19 +390,25 @@ MA.Release = new Class({
 		var release_el = self.release_container.getElement('#release_'+release.id),
 			icon = release_el.getElement('.download.icon2');
 
-		icon.addClass('icon spinner').removeClass('download');
+		if(icon)
+			icon.addClass('icon spinner').removeClass('download');
 
 		Api.request('release.download', {
 			'data': {
 				'id': release.id
 			},
 			'onComplete': function(json){
-				icon.removeClass('icon spinner');
+				if(icon)
+					icon.removeClass('icon spinner');
 
-				if(json.success)
-					icon.addClass('completed');
+				if(json.success){
+					if(icon)
+						icon.addClass('completed');
+					release_el.getElement('.release_status').set('text', 'snatched');
+				}
 				else
-					icon.addClass('attention').set('title', 'Something went wrong when downloading, please check logs.');
+					if(icon)
+						icon.addClass('attention').set('title', 'Something went wrong when downloading, please check logs.');
 			}
 		});
 	},
@@ -386,17 +420,6 @@ MA.Release = new Class({
 			'data': {
 				'id': release.id
 			},
-			'onComplete': function(){
-				var el = release.el;
-				if(el.hasClass('failed') || el.hasClass('ignored')){
-					el.removeClass('failed').removeClass('ignored');
-					el.getElement('.release_status').set('text', 'available');
-				}
-				else {
-					el.addClass('ignored');
-					el.getElement('.release_status').set('text', 'ignored');
-				}
-			}
 		})
 
 	},
@@ -683,7 +706,7 @@ MA.Refresh = new Class({
 		var self = this;
 		(e).preventDefault();
 
-		Api.request('movie.refresh', {
+		Api.request('media.refresh', {
 			'data': {
 				'id': self.movie.get('id')
 			}

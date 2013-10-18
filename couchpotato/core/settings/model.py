@@ -78,6 +78,7 @@ class Movie(Entity):
     such as trailers, nfo, thumbnails"""
 
     last_edit = Field(Integer, default = lambda: int(time.time()), index = True)
+    type = 'movie' # Compat tv branch
 
     library = ManyToOne('Library', cascade = 'delete, delete-orphan', single_parent = True)
     status = ManyToOne('Status')
@@ -86,6 +87,7 @@ class Movie(Entity):
     releases = OneToMany('Release', cascade = 'all, delete-orphan')
     files = ManyToMany('File', cascade = 'all, delete-orphan', single_parent = True)
 
+Media = Movie # Compat tv branch
 
 class Library(Entity):
     """"""

@@ -1,78 +1,64 @@
-from couchpotato.core.event import addEvent
-from couchpotato.core.helpers.encoding import tryUrlencode
-from couchpotato.core.helpers.variable import cleanHost, splitString
+from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
-from urllib2 import URLError
-from urlparse import urlparse
-from xml.dom import minidom
-import traceback
+from .client import PlexClientHTTP, PlexClientJSON
+from .server import PlexServer
 
 log = CPLog(__name__)
 
 
 class Plex(Notification):
 
+    http_time_between_calls = 0
+
     def __init__(self):
         super(Plex, self).__init__()
+
+        self.server = PlexServer(self)
+
+        self.client_protocols = {
+            'http': PlexClientHTTP(self),
+            'json': PlexClientJSON(self)
+        }
+
         addEvent('renamer.after', self.addToLibrary)
 
-    def addToLibrary(self, message = None, group = None):
+
+    def addToLibrary(self, message = None, group = {}):
         if self.isDisabled(): return
-        if not group: group = {}
 
-        log.info('Sending notification to Plex')
-        hosts = self.getHosts(port = 32400)
+        return self.server.refresh()
 
-        for host in hosts:
+    def getClientNames(self):
+        return [
+            x.strip().lower()
+            for x in self.conf('clients').split(',')
+        ]
 
-            source_type = ['movie']
-            base_url = '%s/library/sections' % host
-            refresh_url = '%s/%%s/refresh' % base_url
+    def notifyClients(self, message, client_names):
+        success = True
 
-            try:
-                sections_xml = self.urlopen(base_url)
-                xml_sections = minidom.parseString(sections_xml)
-                sections = xml_sections.getElementsByTagName('Directory')
+        for client_name in client_names:
 
-                for s in sections:
-                    if s.getAttribute('type') in source_type:
-                        url = refresh_url % s.getAttribute('key')
-                        self.urlopen(url)
+            client_success = False
+            client = self.server.clients.get(client_name)
 
-            except:
-                log.error('Plex library update failed for %s, Media Server not running: %s', (host, traceback.format_exc(1)))
-                return False
+            if client and client['found']:
+                client_success = fireEvent('notify.plex.notifyClient', client, message, single = True)
 
-        return True
+            if not client_success:
+                if self.server.staleClients() or not client:
+                    log.info('Failed to send notification to client "%s". '
+                             'Client list is stale, updating the client list and retrying.', client_name)
+                    self.server.updateClients(self.getClientNames())
+                else:
+                    log.warning('Failed to send notification to client %s, skipping this time', client_name)
+                    success = False
 
-    def notify(self, message = '', data = None, listener = None):
-        if not data: data = {}
+        return success
 
-        hosts = self.getHosts(port = 3000)
-        successful = 0
-        for host in hosts:
-            if self.send({'command': 'ExecBuiltIn', 'parameter': 'Notification(CouchPotato, %s)' % message}, host):
-                successful += 1
-
-        return successful == len(hosts)
-
-    def send(self, command, host):
-
-        url = '%s/xbmcCmds/xbmcHttp/?%s' % (host, tryUrlencode(command))
-        headers = {}
-
-        try:
-            self.urlopen(url, headers = headers, show_error = False)
-        except URLError:
-            log.error("Couldn't sent command to Plex, probably just running Media Server")
-            return False
-        except:
-            log.error("Couldn't sent command to Plex: %s", traceback.format_exc())
-            return False
-
-        log.info('Plex notification to %s successful.', host)
-        return True
+    def notify(self, message = '', data = {}, listener = None):
+        return self.notifyClients(message, self.getClientNames())
 
     def test(self, **kwargs):
 
@@ -80,28 +66,12 @@ class Plex(Notification):
 
         log.info('Sending test to %s', test_type)
 
-        success = self.notify(
+        notify_success = self.notify(
             message = self.test_message,
             data = {},
             listener = 'test'
         )
-        success2 = self.addToLibrary()
 
-        return {
-            'success': success or success2
-        }
+        refresh_success = self.addToLibrary()
 
-    def getHosts(self, port = None):
-
-        raw_hosts = splitString(self.conf('host'))
-        hosts = []
-
-        for h in raw_hosts:
-            h = cleanHost(h)
-            p = urlparse(h)
-            h = h.rstrip('/')
-            if port and not p.port:
-                h += ':%s' % port
-            hosts.append(h)
-
-        return hosts
+        return {'success': notify_success or refresh_success}

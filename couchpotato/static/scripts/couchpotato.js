@@ -32,7 +32,7 @@
 		self.c.addEvent('click:relay(a[href^=http])', self.openDerefered.bind(self));
 		
 		// Check if device is touchenabled
-		self.touch_device = 'ontouchstart' in document.documentElement;
+		self.touch_device = 'ontouchstart' in window || navigator.msMaxTouchPoints;
 		if(self.touch_device)
 			self.c.addClass('touch_enabled');
 

@@ -28,6 +28,7 @@ rename_options = {
         'cd': 'CD number (cd1)',
         'cd_nr': 'Just the cd nr. (1)',
         'mpaa': 'MPAA Rating',
+        'category': 'Category label',
     },
 }
 
@@ -120,7 +121,13 @@ config = [{
                 {
                     'advanced': True,
                     'name': 'separator',
-                    'label': 'Separator',
+                    'label': 'File-Separator',
+                    'description': 'Replace all the spaces with a character. Example: ".", "-" (without quotes). Leave empty to use spaces.',
+                },
+                {
+                    'advanced': True,
+                    'name': 'foldersep',
+                    'label': 'Folder-Separator',
                     'description': 'Replace all the spaces with a character. Example: ".", "-" (without quotes). Leave empty to use spaces.',
                 },
                 {

@@ -198,13 +198,16 @@ class CoreNotifier(Notification):
     def removeListener(self, callback):
 
         self.m_lock.acquire()
+        new_listeners = []
         for list_tuple in self.listeners:
             try:
                 listener, last_id = list_tuple
-                if listener == callback:
-                    self.listeners.remove(list_tuple)
+                if listener != callback:
+                    new_listeners.append(list_tuple)
             except:
                 log.debug('Failed removing listener: %s', traceback.format_exc())
+
+        self.listeners = new_listeners
         self.m_lock.release()
 
     def cleanMessages(self):
