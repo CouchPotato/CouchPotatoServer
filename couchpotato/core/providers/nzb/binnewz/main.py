@@ -166,6 +166,14 @@ class BinNewz(NZBProvider):
                             newsgroup = "alt.binaries.3d"
                         elif newsgroup == "ab.dvdrip":
                             newsgroup = "alt.binaries.dvdrip"
+                        elif newsgroup == "ab.welovelori":
+                            newsgroup = "alt.binaries.welovelori"
+                        elif newsgroup == "abblu-ray":
+                            newsgroup = "alt.binaries.blu-ray"
+                        elif newsgroup == "ab.bloaf":
+                            newsgroup = "alt.binaries.bloaf"
+                        elif newsgroup == "ab.hdtv.german":
+                            newsgroup = "alt.binaries.hdtv.german"
                         else:
                             log.error(u"Unknown binnewz newsgroup: " + newsgroup)
                             continue
