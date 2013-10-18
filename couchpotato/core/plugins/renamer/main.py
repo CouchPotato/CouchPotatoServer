@@ -603,7 +603,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                 try:
                     os.remove(filename)
                 except:
-                    log.debug('Unable to remove ignore file: %s' % (filename, traceback.format_exc()))
+                    log.debug('Unable to remove ignore file: %s. Error: %s.' % (filename, traceback.format_exc()))
 
     def hastagRelease(self, release_download, tag = ''):
         if not release_download:
@@ -651,7 +651,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                     link(old, dest)
                 except:
                     # Try to simlink next
-                    log.debug('Couldn\'t hardlink file "%s" to "%s". Simlinking instead. Error: %s. ', (old, dest, traceback.format_exc()))
+                    log.debug('Couldn\'t hardlink file "%s" to "%s". Simlinking instead. Error: %s.', (old, dest, traceback.format_exc()))
                     shutil.copy(old, dest)
                     try:
                         symlink(dest, old + '.link')
