@@ -18,6 +18,8 @@ import shutil
 import time
 import traceback
 
+
+
 log = CPLog(__name__)
 
 class Renamer(Plugin):
@@ -568,8 +570,14 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         dest = ss(dest)
         try:
             if forcemove:
+                try:
+                    os.chmod(old,0777)
+                except: pass # ignore all error, if important will raise error later
                 shutil.move(old, dest)
             elif self.conf('file_action') == 'copy':
+                try:
+                    os.chmod(old,0777)
+                except: pass # ignore all error, if important will raise error later
                 shutil.copy(old, dest)
             elif self.conf('file_action') == 'link':
                 # First try to hardlink
@@ -587,12 +595,22 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                     except:
                         log.error('Couldn\'t symlink file "%s" to "%s". Copied instead. Error: %s. ', (old, dest, traceback.format_exc()))
             else:
+                try:
+                    os.chmod(old,0777)
+                except: pass # ignore all error, if important will raise error later
                 shutil.move(old, dest)
 
             try:
                 os.chmod(dest, Env.getPermission('file'))
                 if os.name == 'nt' and self.conf('ntfs_permission'):
                     os.popen('icacls "' + dest + '"* /reset /T')
+                if os.name != 'nt':
+                    try:
+                        uid = Env.getOwnership('user')
+                        gid = Env.getOwnership('group')
+                        os.chown(dest,uid,gid)
+                    except:
+                        log.error('Failed setting ownership for file: %s, %s', (dest, traceback.format_exc(1)))
             except:
                 log.error('Failed setting permissions for file: %s, %s', (dest, traceback.format_exc(1)))
 

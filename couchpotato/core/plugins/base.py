@@ -20,6 +20,7 @@ import time
 import traceback
 import urllib2
 
+
 log = CPLog(__name__)
 
 
@@ -113,6 +114,13 @@ class Plugin(object):
         try:
             if not os.path.isdir(path):
                 os.makedirs(path, Env.getPermission('folder'))
+                if os.name != 'nt':
+                    try:
+                        uid = Env.getOwnership('user')
+                        gid = Env.getOwnership('group')
+                        os.chown(path,uid,gid)
+                    except:
+                        log.error('Failed setting ownership for folder: %s, %s', (path, traceback.format_exc(1)))
             return True
         except Exception, e:
             log.error('Unable to create folder "%s": %s', (path, e))

@@ -94,6 +94,18 @@ config = [{
                     'label': 'File CHMOD',
                     'description': 'Same as Folder CHMOD but for files',
                 },
+                {
+                    'name': 'permission_user',
+                    'default': '',
+                    'label': 'User owner',
+                    'description': 'User id set as owner (leave blank to ignore)',
+                },
+                {
+                    'name': 'permission_group',
+                    'default': '',
+                    'label': 'Group owner',
+                    'description': 'Group id set as owner (leave blank to ignore)',
+                },
             ],
         },
     ],
