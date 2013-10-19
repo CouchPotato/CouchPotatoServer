@@ -6,6 +6,7 @@ from couchpotato.environment import Env
 from datetime import timedelta
 from urllib2 import URLError
 import json
+import os
 import traceback
 
 log = CPLog(__name__)
@@ -117,7 +118,7 @@ class Sabnzbd(Downloader):
                 'status': status,
                 'original_status': nzb['status'],
                 'timeleft': str(timedelta(seconds = 0)),
-                'folder': ss(nzb['storage']),
+                'folder': os.path.dirname(ss(nzb['storage'])) if os.path.isfile(ss(nzb['storage'])) else ss(nzb['storage']),
             })
 
         return release_downloads
