@@ -94,7 +94,7 @@ class Renamer(Plugin):
 
         # Get all folders that should not be processed
         no_process = [self.conf('to')]
-        cat_list = fireEvent('category.all')
+        cat_list = fireEvent('category.all', single = True) or []
         no_process.extend([item['destination'] for item in cat_list])
         try:
             if Env.setting('library', section = 'manage').strip():
