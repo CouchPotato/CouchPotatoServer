@@ -3,7 +3,7 @@ from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
 from couchpotato.core.helpers.encoding import toUnicode, ss
 from couchpotato.core.helpers.variable import getExt, mergeDicts, getTitle, \
-    getImdb, link, symlink, tryInt
+    getImdb, link, symlink, tryInt, splitString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Library, File, Profile, Release, \
@@ -89,19 +89,38 @@ class Renamer(Plugin):
             log.info('Renamer is already running, if you see this often, check the logs above for errors.')
             return
 
+        # Get movie folder to process
         movie_folder = release_download and release_download.get('folder')
 
-        # Check to see if the "to" folder is inside the "from" folder.
-        if movie_folder and not os.path.isdir(movie_folder) or not os.path.isdir(self.conf('from')) or not os.path.isdir(self.conf('to')):
-            l = log.debug if movie_folder else log.error
-            l('Both the "To" and "From" have to exist.')
+        # Get all folders that should not be processed
+        no_process = [self.conf('to')]
+        cat_list = fireEvent('category.all')
+        no_process.extend([item['destination'] for item in cat_list])
+        try:
+            if Env.setting('library', section = 'manage').strip():
+                no_process.extend(splitString(Env.setting('library', section = 'manage'), '::'))
+        except:
+            pass
+
+        # Check to see if the no_process folders are inside the "from" folder.
+        if not os.path.isdir(self.conf('from')) or not os.path.isdir(self.conf('to')):
+            log.error('Both the "To" and "From" have to exist.')
             return
-        elif self.conf('from') in self.conf('to'):
-            log.error('The "to" can\'t be inside of the "from" folder. You\'ll get an infinite loop.')
+        else:
+            for item in no_process:
+                if self.conf('from') in item:
+                    log.error('To protect your data, the movie libraries can\'t be inside of or the same as the "from" folder.')
+                    return
+
+        # Check to see if the no_process folders are inside the provided movie_folder
+        if movie_folder and not os.path.isdir(movie_folder):
+            log.error('The provided movie folder %s does not exist.', movie_folder)
             return
-        elif movie_folder and movie_folder in [self.conf('to'), self.conf('from')]:
-            log.error('The "to" and "from" folders can\'t be inside of or the same as the provided movie folder.')
-            return
+        elif movie_folder:
+            for item in no_process:
+                if movie_folder in item:
+                    log.error('To protect your data, the movie libraries can\'t be inside of or the same as the provided movie folder.')
+                    return
 
         # Make sure a checkSnatched marked all downloads/seeds as such
         if not release_download and self.conf('run_every') > 0:
