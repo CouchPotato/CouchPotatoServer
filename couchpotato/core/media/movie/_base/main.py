@@ -315,25 +315,6 @@ class MovieBase(MovieTypeBase):
             'chars': chars,
         }
 
-    def search(self, q = '', **kwargs):
-
-        cache_key = u'%s/%s' % (__name__, simplifyString(q))
-        movies = Env.get('cache').get(cache_key)
-
-        if not movies:
-
-            if getImdb(q):
-                movies = [fireEvent('movie.info', identifier = q, merge = True)]
-            else:
-                movies = fireEvent('movie.search', q = q, merge = True)
-            Env.get('cache').set(cache_key, movies)
-
-        return {
-            'success': True,
-            'empty': len(movies) == 0 if movies else 0,
-            'movies': movies,
-        }
-
     def add(self, params = None, force_readd = True, search_after = True, update_library = False, status_id = None):
         if not params: params = {}
 
