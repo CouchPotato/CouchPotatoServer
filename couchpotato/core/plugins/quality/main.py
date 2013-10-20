@@ -182,12 +182,6 @@ class QualityPlugin(Plugin):
                 contains_score = self.containsTagScore(quality, words, cur_file)
                 self.calcScore(score, quality, contains_score)
 
-            # Check identifier
-            for quality in qualities:
-                if quality['identifier'] in words:
-                    log.debug('Found via identifier "%s" in %s', (quality['identifier'], cur_file))
-                    self.calcScore(score, quality, 10)
-
         # Try again with loose testing
         for quality in qualities:
             loose_score = self.guessLooseScore(quality, files = files, extra = extra)
