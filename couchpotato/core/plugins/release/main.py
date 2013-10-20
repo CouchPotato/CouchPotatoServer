@@ -270,7 +270,7 @@ class Release(Plugin):
         }
 
     def updateStatus(self, id, status = None):
-        if not status: return
+        if not status: return False
 
         db = get_session()
 
@@ -281,11 +281,20 @@ class Release(Plugin):
             for info in rel.info:
                 item[info.identifier] = info.value
 
+            if rel.files:
+                for file_item in rel.files:
+                    if file_item.type.identifier == 'movie':
+                        release_name = os.path.basename(file_item.path)
+                        break                       
+            else:
+                release_name = item['name']
             #update status in Db
-            log.debug('Marking release %s as %s', (item['name'], status.get("label")))
+            log.debug('Marking release %s as %s', (release_name, status.get("label")))
             rel.status_id = status.get('id')
             rel.last_edit = int(time.time())
             db.commit()
 
             #Update all movie info as there is no release update function
             fireEvent('notify.frontend', type = 'release.update_status.%s' % rel.id, data = status.get('id'))
+
+        return True

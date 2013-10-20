@@ -1,5 +1,5 @@
 from base64 import standard_b64encode
-from couchpotato.core.downloaders.base import Downloader, StatusList
+from couchpotato.core.downloaders.base import Downloader, ReleaseDownloadList
 from couchpotato.core.helpers.encoding import ss
 from couchpotato.core.helpers.variable import tryInt, md5
 from couchpotato.core.logger import CPLog
@@ -99,60 +99,60 @@ class NZBGet(Downloader):
             log.error('Failed getting data: %s', traceback.format_exc(1))
             return False
 
-        statuses = StatusList(self)
+        release_downloads = ReleaseDownloadList(self)
 
-        for item in groups:
-            log.debug('Found %s in NZBGet download queue', item['NZBFilename'])
+        for nzb in groups:
+            log.debug('Found %s in NZBGet download queue', nzb['NZBFilename'])
             try:
-                nzb_id = [param['Value'] for param in item['Parameters'] if param['Name'] == 'couchpotato'][0]
+                nzb_id = [param['Value'] for param in nzb['Parameters'] if param['Name'] == 'couchpotato'][0]
             except:
-                nzb_id = item['NZBID']
+                nzb_id = nzb['NZBID']
 
 
             timeleft = -1
             try:
-                if item['ActiveDownloads'] > 0 and item['DownloadRate'] > 0 and not (status['DownloadPaused'] or status['Download2Paused']):
-                    timeleft = str(timedelta(seconds = item['RemainingSizeMB'] / status['DownloadRate'] * 2 ^ 20))
+                if nzb['ActiveDownloads'] > 0 and nzb['DownloadRate'] > 0 and not (status['DownloadPaused'] or status['Download2Paused']):
+                    timeleft = str(timedelta(seconds = nzb['RemainingSizeMB'] / status['DownloadRate'] * 2 ^ 20))
             except:
                 pass
 
-            statuses.append({
+            release_downloads.append({
                 'id': nzb_id,
-                'name': item['NZBFilename'],
-                'original_status': 'DOWNLOADING' if item['ActiveDownloads'] > 0 else 'QUEUED',
+                'name': nzb['NZBFilename'],
+                'original_status': 'DOWNLOADING' if nzb['ActiveDownloads'] > 0 else 'QUEUED',
                 # Seems to have no native API function for time left. This will return the time left after NZBGet started downloading this item
                 'timeleft': timeleft,
             })
 
-        for item in queue: # 'Parameters' is not passed in rpc.postqueue
-            log.debug('Found %s in NZBGet postprocessing queue', item['NZBFilename'])
-            statuses.append({
-                'id': item['NZBID'],
-                'name': item['NZBFilename'],
-                'original_status': item['Stage'],
+        for nzb in queue: # 'Parameters' is not passed in rpc.postqueue
+            log.debug('Found %s in NZBGet postprocessing queue', nzb['NZBFilename'])
+            release_downloads.append({
+                'id': nzb['NZBID'],
+                'name': nzb['NZBFilename'],
+                'original_status': nzb['Stage'],
                 'timeleft': str(timedelta(seconds = 0)) if not status['PostPaused'] else -1,
             })
 
-        for item in history:
-            log.debug('Found %s in NZBGet history. ParStatus: %s, ScriptStatus: %s, Log: %s', (item['NZBFilename'] , item['ParStatus'], item['ScriptStatus'] , item['Log']))
+        for nzb in history:
+            log.debug('Found %s in NZBGet history. ParStatus: %s, ScriptStatus: %s, Log: %s', (nzb['NZBFilename'] , nzb['ParStatus'], nzb['ScriptStatus'] , nzb['Log']))
             try:
-                nzb_id = [param['Value'] for param in item['Parameters'] if param['Name'] == 'couchpotato'][0]
+                nzb_id = [param['Value'] for param in nzb['Parameters'] if param['Name'] == 'couchpotato'][0]
             except:
-                nzb_id = item['NZBID']
-            statuses.append({
+                nzb_id = nzb['NZBID']
+            release_downloads.append({
                 'id': nzb_id,
-                'name': item['NZBFilename'],
-                'status': 'completed' if item['ParStatus'] in ['SUCCESS','NONE'] and item['ScriptStatus'] in ['SUCCESS','NONE'] else 'failed',
-                'original_status': item['ParStatus'] + ', ' + item['ScriptStatus'],
+                'name': nzb['NZBFilename'],
+                'status': 'completed' if nzb['ParStatus'] in ['SUCCESS','NONE'] and nzb['ScriptStatus'] in ['SUCCESS','NONE'] else 'failed',
+                'original_status': nzb['ParStatus'] + ', ' + nzb['ScriptStatus'],
                 'timeleft': str(timedelta(seconds = 0)),
-                'folder': ss(item['DestDir'])
+                'folder': ss(nzb['DestDir'])
             })
 
-        return statuses
+        return release_downloads
 
-    def removeFailed(self, item):
+    def removeFailed(self, release_download):
 
-        log.info('%s failed downloading, deleting...', item['name'])
+        log.info('%s failed downloading, deleting...', release_download['name'])
 
         url = self.url % {'host': self.conf('host'), 'username': self.conf('username'), 'password': self.conf('password')}
 
@@ -179,7 +179,7 @@ class NZBGet(Downloader):
 
             for hist in history:
                 for param in hist['Parameters']:
-                    if param['Name'] == 'couchpotato' and param['Value'] == item['id']:
+                    if param['Name'] == 'couchpotato' and param['Value'] == release_download['id']:
                         nzb_id = hist['ID']
                         path = hist['DestDir'] 
 
