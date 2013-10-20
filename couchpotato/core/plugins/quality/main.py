@@ -30,6 +30,8 @@ class QualityPlugin(Plugin):
     ]
     pre_releases = ['cam', 'ts', 'tc', 'r5', 'scr']
 
+    cached_qualities = None
+
     def __init__(self):
         addEvent('quality.all', self.all)
         addEvent('quality.single', self.single)
@@ -59,6 +61,9 @@ class QualityPlugin(Plugin):
 
     def all(self):
 
+        if self.cached_qualities:
+            return self.cached_qualities
+
         db = get_session()
 
         qualities = db.query(Quality).all()
@@ -68,6 +73,7 @@ class QualityPlugin(Plugin):
             q = mergeDicts(self.getQuality(quality.identifier), quality.to_dict())
             temp.append(q)
 
+        self.cached_qualities = temp
         return temp
 
     def single(self, identifier = ''):
@@ -95,6 +101,8 @@ class QualityPlugin(Plugin):
         if quality:
             setattr(quality, kwargs.get('value_type'), kwargs.get('value'))
             db.commit()
+
+        self.cached_qualities = None
 
         return {
             'success': True
@@ -185,8 +193,14 @@ class QualityPlugin(Plugin):
             loose_score = self.guessLooseScore(quality, files = files, extra = extra)
             self.calcScore(score, quality, loose_score)
 
+
         # Return nothing if all scores are 0
-        if len(dict((k, v) for k, v in score.iteritems() if v > 0)) == 0:
+        has_non_zero = 0
+        for s in score:
+            if score[s] > 0:
+                has_non_zero += 1
+
+        if not has_non_zero:
             return None
 
         heighest_quality = max(score, key = score.get)
