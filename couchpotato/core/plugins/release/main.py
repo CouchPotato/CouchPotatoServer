@@ -285,7 +285,7 @@ class Release(Plugin):
                 for file_item in rel.files:
                     if file_item.type.identifier == 'movie':
                         release_name = os.path.basename(file_item.path)
-                        break                       
+                        break
             else:
                 release_name = item['name']
             #update status in Db

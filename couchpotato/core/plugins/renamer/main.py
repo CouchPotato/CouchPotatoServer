@@ -615,7 +615,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         for root, dirnames, filenames in os.walk(folder):
             ignore_files.extend(fnmatch.filter([os.path.join(root, filename) for filename in filenames], '*%s.ignore' % tag))
 
-        # Match all found ignore files with the tag_files and delete if found 
+        # Match all found ignore files with the tag_files and delete if found
         for tag_file in tag_files:
             ignore_file = fnmatch.filter(ignore_files, '%s.%s.ignore' % (os.path.splitext(tag_file)[0], tag if tag else '*'))
             for filename in ignore_file:
@@ -647,8 +647,8 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         # Find all .ignore files in folder
         for root, dirnames, filenames in os.walk(folder):
             ignore_files.extend(fnmatch.filter([os.path.join(root, filename) for filename in filenames], '*%s.ignore' % tag))
-                                           
-        # Match all found ignore files with the tag_files and return True found 
+
+        # Match all found ignore files with the tag_files and return True found
         for tag_file in tag_files:
             ignore_file = fnmatch.filter(ignore_files, '%s.%s.ignore' % (os.path.splitext(tag_file)[0], tag if tag else '*'))
             if ignore_file:

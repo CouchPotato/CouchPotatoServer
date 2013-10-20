@@ -3,7 +3,6 @@ from couchpotato.core.downloaders.base import Downloader, ReleaseDownloadList
 from couchpotato.core.helpers.encoding import isInt, ss
 from couchpotato.core.helpers.variable import tryFloat
 from couchpotato.core.logger import CPLog
-from couchpotato.environment import Env
 from datetime import timedelta
 from synchronousdeluge import DelugeClient
 import os.path
