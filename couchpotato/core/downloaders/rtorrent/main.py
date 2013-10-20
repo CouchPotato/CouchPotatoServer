@@ -1,7 +1,7 @@
 from base64 import b16encode, b32decode
 from bencode import bencode, bdecode
 from couchpotato.core.downloaders.base import Downloader, ReleaseDownloadList
-from couchpotato.core.helpers.encoding import ss
+from couchpotato.core.helpers.encoding import sp
 from couchpotato.core.logger import CPLog
 from datetime import timedelta
 from hashlib import sha1
@@ -157,7 +157,7 @@ class rTorrent(Downloader):
             for torrent in torrents:
                 torrent_files = []
                 for file_item in torrent.get_files():
-                    torrent_files.append(os.path.join(torrent.directory, file_item.path))
+                    torrent_files.append(os.path.join(sp(torrent.directory), sp(file_item.path)))
 
                 status = 'busy'
                 if torrent.complete:
@@ -173,8 +173,8 @@ class rTorrent(Downloader):
                     'seed_ratio': torrent.ratio,
                     'original_status': torrent.state,
                     'timeleft': str(timedelta(seconds = float(torrent.left_bytes) / torrent.down_rate)) if torrent.down_rate > 0 else -1,
-                    'folder': ss(torrent.directory),
-                    'files': ss('|'.join(torrent_files))
+                    'folder': sp(torrent.directory),
+                    'files': '|'.join(torrent_files)
                 })
 
             return release_downloads

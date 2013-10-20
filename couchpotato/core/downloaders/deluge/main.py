@@ -1,6 +1,6 @@
 from base64 import b64encode
 from couchpotato.core.downloaders.base import Downloader, ReleaseDownloadList
-from couchpotato.core.helpers.encoding import isInt, ss
+from couchpotato.core.helpers.encoding import isInt, sp
 from couchpotato.core.helpers.variable import tryFloat
 from couchpotato.core.logger import CPLog
 from datetime import timedelta
@@ -111,13 +111,13 @@ class Deluge(Downloader):
             elif torrent['is_seed'] and torrent['is_finished'] and torrent['paused'] and torrent['state'] == 'Paused':
                 status = 'completed'
 
-            download_dir = torrent['save_path']
+            download_dir = sp(torrent['save_path'])
             if torrent['move_on_completed']:
                 download_dir = torrent['move_completed_path']
 
             torrent_files = []
             for file_item in torrent['files']:
-                torrent_files.append(os.path.join(download_dir, file_item['path']))
+                torrent_files.append(os.path.join(download_dir), sp(file_item['path']))
 
             release_downloads.append({
                 'id': torrent['hash'],
@@ -126,8 +126,8 @@ class Deluge(Downloader):
                 'original_status': torrent['state'],
                 'seed_ratio': torrent['ratio'],
                 'timeleft': str(timedelta(seconds = torrent['eta'])),
-                'folder': ss(download_dir) if len(torrent_files) == 1 else ss(os.path.join(download_dir, torrent['name'])),
-                'files': ss('|'.join(torrent_files)),
+                'folder': sp(download_dir) if len(torrent_files) == 1 else os.path.join(sp(download_dir), torrent['name']),
+                'files': '|'.join(torrent_files),
             })
 
         return release_downloads
