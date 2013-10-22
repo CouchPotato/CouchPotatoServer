@@ -51,10 +51,10 @@ class Release(Plugin):
         addEvent('release.update_status', self.updateStatus)
 
         # Clean releases that didn't have activity in the last week
-        addEvent('app.load', self.cleanReleases)
-        fireEvent('schedule.interval', 'movie.clean_releases', self.cleanReleases, hours = 4)
+        addEvent('app.load', self.cleanDone)
+        fireEvent('schedule.interval', 'movie.clean_releases', self.cleanDone, hours = 4)
 
-    def cleanReleases(self):
+    def cleanDone(self):
 
         log.debug('Removing releases from dashboard')
 
@@ -78,7 +78,7 @@ class Release(Plugin):
                     fireEvent('release.delete', id = rel.id, single = True)
                 # Set all snatched and downloaded releases to ignored to make sure they are ignored when re-adding the move
                 elif rel.status_id in [snatched_status.get('id'), downloaded_status.get('id')]:
-                    fireEvent('release.update', id = rel.id, status = ignored_status)
+                    fireEvent('release.update_status', id = rel.id, status = ignored_status)
 
         db.expire_all()
 
@@ -270,7 +270,7 @@ class Release(Plugin):
         }
 
     def updateStatus(self, id, status = None):
-        if not status: return
+        if not status: return False
 
         db = get_session()
 
@@ -281,11 +281,20 @@ class Release(Plugin):
             for info in rel.info:
                 item[info.identifier] = info.value
 
+            if rel.files:
+                for file_item in rel.files:
+                    if file_item.type.identifier == 'movie':
+                        release_name = os.path.basename(file_item.path)
+                        break
+            else:
+                release_name = item['name']
             #update status in Db
-            log.debug('Marking release %s as %s', (item['name'], status.get("label")))
+            log.debug('Marking release %s as %s', (release_name, status.get("label")))
             rel.status_id = status.get('id')
             rel.last_edit = int(time.time())
             db.commit()
 
             #Update all movie info as there is no release update function
             fireEvent('notify.frontend', type = 'release.update_status.%s' % rel.id, data = status.get('id'))
+
+        return True

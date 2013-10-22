@@ -20,15 +20,17 @@ class QualityPlugin(Plugin):
         {'identifier': '1080p', 'hd': True, 'size': (4000, 20000), 'label': '1080p', 'width': 1920, 'height': 1080, 'alternative': [], 'allow': [], 'ext':['mkv', 'm2ts'], 'tags': ['m2ts']},
         {'identifier': '720p', 'hd': True, 'size': (3000, 10000), 'label': '720p', 'width': 1280, 'height': 720, 'alternative': [], 'allow': [], 'ext':['mkv', 'ts']},
         {'identifier': 'brrip', 'hd': True, 'size': (700, 7000), 'label': 'BR-Rip', 'alternative': ['bdrip'], 'allow': ['720p', '1080p'], 'ext':['avi'], 'tags': ['hdtv', 'hdrip', 'webdl', ('web', 'dl')]},
-        {'identifier': 'dvdr', 'size': (3000, 10000), 'label': 'DVD-R', 'alternative': [], 'allow': [], 'ext':['iso', 'img'], 'tags': ['pal', 'ntsc', 'video_ts', 'audio_ts']},
+        {'identifier': 'dvdr', 'size': (3000, 10000), 'label': 'DVD-R', 'alternative': [], 'allow': [], 'ext':['iso', 'img'], 'tags': ['pal', 'ntsc', 'video_ts', 'audio_ts'], 'tags': [('dvd', 'r')]},
         {'identifier': 'dvdrip', 'size': (600, 2400), 'label': 'DVD-Rip', 'width': 720, 'alternative': [], 'allow': [], 'ext':['avi', 'mpg', 'mpeg'], 'tags': [('dvd', 'rip'), ('dvd', 'xvid'), ('dvd', 'divx')]},
-        {'identifier': 'scr', 'size': (600, 1600), 'label': 'Screener', 'alternative': ['screener', 'dvdscr', 'ppvrip', 'dvdscreener', 'hdscr'], 'allow': ['dvdr', 'dvd'], 'ext':['avi', 'mpg', 'mpeg'], 'tags': ['webrip', ('web', 'rip')]},
+        {'identifier': 'scr', 'size': (600, 1600), 'label': 'Screener', 'alternative': ['screener', 'dvdscr', 'ppvrip', 'dvdscreener', 'hdscr'], 'allow': ['dvdr', 'dvdrip'], 'ext':['avi', 'mpg', 'mpeg'], 'tags': ['webrip', ('web', 'rip')]},
         {'identifier': 'r5', 'size': (600, 1000), 'label': 'R5', 'alternative': ['r6'], 'allow': ['dvdr'], 'ext':['avi', 'mpg', 'mpeg']},
         {'identifier': 'tc', 'size': (600, 1000), 'label': 'TeleCine', 'alternative': ['telecine'], 'allow': [], 'ext':['avi', 'mpg', 'mpeg']},
         {'identifier': 'ts', 'size': (600, 1000), 'label': 'TeleSync', 'alternative': ['telesync', 'hdts'], 'allow': [], 'ext':['avi', 'mpg', 'mpeg']},
         {'identifier': 'cam', 'size': (600, 1000), 'label': 'Cam', 'alternative': ['camrip', 'hdcam'], 'allow': [], 'ext':['avi', 'mpg', 'mpeg']}
     ]
     pre_releases = ['cam', 'ts', 'tc', 'r5', 'scr']
+
+    cached_qualities = None
 
     def __init__(self):
         addEvent('quality.all', self.all)
@@ -59,6 +61,9 @@ class QualityPlugin(Plugin):
 
     def all(self):
 
+        if self.cached_qualities:
+            return self.cached_qualities
+
         db = get_session()
 
         qualities = db.query(Quality).all()
@@ -68,6 +73,7 @@ class QualityPlugin(Plugin):
             q = mergeDicts(self.getQuality(quality.identifier), quality.to_dict())
             temp.append(q)
 
+        self.cached_qualities = temp
         return temp
 
     def single(self, identifier = ''):
@@ -95,6 +101,8 @@ class QualityPlugin(Plugin):
         if quality:
             setattr(quality, kwargs.get('value_type'), kwargs.get('value'))
             db.commit()
+
+        self.cached_qualities = None
 
         return {
             'success': True
@@ -161,72 +169,103 @@ class QualityPlugin(Plugin):
         if cached and len(extra) == 0: return cached
 
         qualities = self.all()
+
+        # Start with 0
+        score = {}
+        for quality in qualities:
+            score[quality.get('identifier')] = 0
+
         for cur_file in files:
             words = re.split('\W+', cur_file.lower())
 
-            found = {}
             for quality in qualities:
-                contains = self.containsTag(quality, words, cur_file)
-                if contains:
-                    found[quality['identifier']] = True
-
-            for quality in qualities:
-
-                # Check identifier
-                if quality['identifier'] in words:
-                    if len(found) == 0 or len(found) == 1 and found.get(quality['identifier']):
-                        log.debug('Found via identifier "%s" in %s', (quality['identifier'], cur_file))
-                        return self.setCache(cache_key, quality)
-
-                # Check alt and tags
-                contains = self.containsTag(quality, words, cur_file)
-                if contains:
-                    return self.setCache(cache_key, quality)
+                contains_score = self.containsTagScore(quality, words, cur_file)
+                self.calcScore(score, quality, contains_score)
 
         # Try again with loose testing
-        quality = self.guessLoose(cache_key, files = files, extra = extra)
-        if quality:
-            return self.setCache(cache_key, quality)
+        for quality in qualities:
+            loose_score = self.guessLooseScore(quality, files = files, extra = extra)
+            self.calcScore(score, quality, loose_score)
 
-        log.debug('Could not identify quality for: %s', files)
+
+        # Return nothing if all scores are 0
+        has_non_zero = 0
+        for s in score:
+            if score[s] > 0:
+                has_non_zero += 1
+
+        if not has_non_zero:
+            return None
+
+        heighest_quality = max(score, key = score.get)
+        if heighest_quality:
+            for quality in qualities:
+                if quality.get('identifier') == heighest_quality:
+                    return self.setCache(cache_key, quality)
+
         return None
 
-    def containsTag(self, quality, words, cur_file = ''):
+    def containsTagScore(self, quality, words, cur_file = ''):
         cur_file = ss(cur_file)
+        score = 0
+
+        points = {
+            'identifier': 10,
+            'label': 10,
+            'alternative': 9,
+            'tags': 9
+        }
 
         # Check alt and tags
-        for tag_type in ['alternative', 'tags', 'label']:
+        for tag_type in ['identifier', 'alternative', 'tags', 'label']:
             qualities = quality.get(tag_type, [])
             qualities = [qualities] if isinstance(qualities, (str, unicode)) else qualities
 
             for alt in qualities:
-                if (isinstance(alt, tuple) and '.'.join(alt) in '.'.join(words)) or (isinstance(alt, (str, unicode)) and ss(alt.lower()) in cur_file.lower()):
+                if (isinstance(alt, tuple)):
+                    if len(set(words) & set(alt)) == len(alt):
+                        log.debug('Found %s via %s %s in %s', (quality['identifier'], tag_type, quality.get(tag_type), cur_file))
+                        score += points.get(tag_type)
+                    elif len(set(words) & set(alt)) > 0:
+                        log.debug('Found %s via partial %s %s in %s', (quality['identifier'], tag_type, quality.get(tag_type), cur_file))
+                        score += points.get(tag_type) / 3
+
+                if (isinstance(alt, (str, unicode)) and ss(alt.lower()) in cur_file.lower()):
                     log.debug('Found %s via %s %s in %s', (quality['identifier'], tag_type, quality.get(tag_type), cur_file))
-                    return True
+                    score += points.get(tag_type)
 
             if list(set(qualities) & set(words)):
                 log.debug('Found %s via %s %s in %s', (quality['identifier'], tag_type, quality.get(tag_type), cur_file))
-                return True
+                score += points.get(tag_type)
 
-        return
+        return score
 
-    def guessLoose(self, cache_key, files = None, extra = None):
+    def guessLooseScore(self, quality, files = None, extra = None):
+
+        score = 0
 
         if extra:
-            for quality in self.all():
 
-                # Check width resolution, range 20
-                if quality.get('width') and (quality.get('width') - 20) <= extra.get('resolution_width', 0) <= (quality.get('width') + 20):
-                    log.debug('Found %s via resolution_width: %s == %s', (quality['identifier'], quality.get('width'), extra.get('resolution_width', 0)))
-                    return self.setCache(cache_key, quality)
+            # Check width resolution, range 20
+            if quality.get('width') and (quality.get('width') - 20) <= extra.get('resolution_width', 0) <= (quality.get('width') + 20):
+                log.debug('Found %s via resolution_width: %s == %s', (quality['identifier'], quality.get('width'), extra.get('resolution_width', 0)))
+                score += 5
 
-                # Check height resolution, range 20
-                if quality.get('height') and (quality.get('height') - 20) <= extra.get('resolution_height', 0) <= (quality.get('height') + 20):
-                    log.debug('Found %s via resolution_height: %s == %s', (quality['identifier'], quality.get('height'), extra.get('resolution_height', 0)))
-                    return self.setCache(cache_key, quality)
+            # Check height resolution, range 20
+            if quality.get('height') and (quality.get('height') - 20) <= extra.get('resolution_height', 0) <= (quality.get('height') + 20):
+                log.debug('Found %s via resolution_height: %s == %s', (quality['identifier'], quality.get('height'), extra.get('resolution_height', 0)))
+                score += 5
 
-            if 480 <= extra.get('resolution_width', 0) <= 720:
-                log.debug('Found as dvdrip')
-                return self.setCache(cache_key, self.single('dvdrip'))
+            if quality.get('identifier') == 'dvdrip' and 480 <= extra.get('resolution_width', 0) <= 720:
+                log.debug('Add point for correct dvdrip resolutions')
+                score += 1
 
-        return None
+        return score
+
+    def calcScore(self, score, quality, add_score):
+
+        score[quality['identifier']] += add_score
+
+        if add_score != 0:
+            for allow in quality.get('allow', []):
+                score[allow] -= 40
