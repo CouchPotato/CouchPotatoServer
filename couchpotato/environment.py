@@ -101,6 +101,11 @@ class Env(object):
             return int(perm)
 
     @staticmethod
+    def getOwnership(setting_type):
+        perm = Env.get('settings').get('permission_%s' % setting_type, default = '-1')
+        return int(perm)
+
+    @staticmethod
     def fireEvent(*args, **kwargs):
         return fireEvent(*args, **kwargs)
 
