@@ -1,0 +1,1599 @@
+2009-04-07 15:14  snakeru
+
+	* xmpp/protocol.py: Merged XEP-0004.Multiple.Items.Form.Results
+	  patch. Thanks to Iván Lloro
+
+2009-04-07 12:34  snakeru
+
+	* xmpp/transports.py: Merged a fix for DNS SRV lookup on win32
+
+2009-04-07 11:11  snakeru
+
+	* xmpp/features.py: Fixed crash on whitespace-containing disco
+	  <iq/> reply
+
+2009-04-07 10:19  snakeru
+
+	* xmpp/client.py: Fixed documentation bug in Component.__init__
+
+2009-04-07 09:59  snakeru
+
+	* xmpp/transports.py: Fix for fresh bug: self.server =>
+	  self._server
+
+2009-04-07 09:52  snakeru
+
+	* xmpp/: session.py, transports.py: Replaced couple of 'print'
+	  statements with proper use of self.DEBUG
+
+2009-03-03 13:24  normanr
+
+	* xmpp/simplexml.py: Import simplexml updates from gajim, thanks
+	  mainly to asterix, thorstenp and dwd
+
+2009-02-13 13:26  normanr
+
+	* xmpp/protocol.py: Add extra XEP refs (this has been sitting in my
+	  working copy for about a year)
+
+2008-09-14 01:45  normanr
+
+	* xmpp/auth.py: Allow anonymous auth if username is None
+
+2008-08-09 21:00  normanr
+
+	* doc/examples/xtalk.py, xmpp/auth.py: Fix for incorrect-encoding
+	  during SASL PLAIN auth
+
+2008-02-08 12:00  normanr
+
+	* xmpp/auth.py: Handle spaces in SASL DIGEST-MD5 responses
+	  correctly
+
+2008-01-30 13:12  normanr
+
+	* doc/examples/xtalk.py: Handle missing body, thanks to Brendan
+	  Sleight
+
+2008-01-04 14:32  normanr
+
+	* xmpp/transports.py: HTTPPROXYsocket will send data before we have
+	  a Dispatcher
+
+2008-01-04 00:46  normanr
+
+	* xmpp/jep0106.py: Move jep0106 test code into it's module
+
+2007-09-15 15:34  normanr
+
+	* xmpp/transports.py: Clean up SSL errors a little bit
+
+2007-09-11 16:46  normanr
+
+	* xmpp/simplexml.py: Fixes for children node fetching, still not
+	  perfect, but much better
+
+2007-08-28 14:03  normanr
+
+	* xmpp/: auth.py, client.py: [ 1529650 ] Bug in auth, can't retry
+
+2007-08-28 13:54  normanr
+
+	* xmpp/commands.py: [ 1729857 ] typo in commands.py
+
+2007-08-04 02:35  normanr
+
+	* xmpp/client.py: Fix socket namespace conflict
+
+2007-05-19 03:18  normanr
+
+	* xmpp/: client.py, dispatcher.py, transports.py: More fixes -
+	  reconnectAndReauth now works for Client too
+
+2007-05-19 02:43  normanr
+
+	* xmpp/client.py: Fix PlugOut and reconnectAndReauth code execution
+	  order
+
+2007-05-18 21:41  normanr
+
+	* xmpp/simplexml.py: Ordering fix for when addChild and addData are
+	  used on the same node (may increase memory usage, might need to
+	  watch for that)
+
+2007-05-13 21:55  normanr
+
+	* xmpp/: jep0106.py, protocol.py: change jep references into xep
+
+2007-05-13 21:55  normanr
+
+	* xmpp/browser.py: Fix for non-ascii data in debug message
+
+2007-04-10 00:23  normanr
+
+	* xmpp/protocol.py: moving admin namespace constants from jep0133
+	  to to protocol
+
+2007-04-09 23:22  normanr
+
+	* xmpp/protocol.py: updating namespace constants
+
+2007-04-09 21:50  normanr
+
+	* xmpp/protocol.py: add support for setting the DataField label in
+	  it's constructor
+
+2007-03-20 09:00  snakeru
+
+	* xmpp/simplexml.py: Fixed node attribute deletion with "del
+	  node[attr]" syntax.
+
+2007-03-15 23:49  normanr
+
+	* xmpp/client.py: Handle XCP component:accept namespace
+
+2006-10-06 16:30  normanr
+
+	* doc/examples/: bot.py, xsend.py, xtalk.py: allow the bot to set a
+	  connection resource
+
+2006-10-06 03:30  normanr
+
+	* doc/index.html: missed a few links
+
+2006-10-06 03:14  normanr
+
+	* doc/index.html: updating documentation links
+
+2006-10-06 02:25  normanr
+
+	* setup.py: Debian updates for version 0.4
+
+2006-10-04 00:03  normanr
+
+	* xmpp/protocol.py: add some missing protocol namespaces
+
+2006-09-27 02:12  normanr
+
+	* doc/examples/xtalk.py: initial check-in
+
+2006-09-27 02:12  normanr
+
+	* doc/examples/xsend.py: tweaked login code to fail with reasons
+
+2006-08-21 12:12  normanr
+
+	* doc/examples/xsend.py: Ignore comment lines in config file
+
+2006-08-21 12:11  normanr
+
+	* xmpp/auth.py: Fixing auth splits
+
+2006-06-03 17:53  normanr
+
+	* xmpp/: auth.py, client.py, dispatcher.py: added support for
+	  wildfire component binding
+
+2006-06-03 16:54  normanr
+
+	* doc/examples/commandsbot.py, xmpp/commands.py: fixed command
+	  namespaces and basic circle area math
+
+2006-06-03 16:36  normanr
+
+	* doc/examples/commandsbot.py: added example command bot from
+	  Liorithiel
+
+2006-06-03 16:32  normanr
+
+	* xmpp/commands.py: fixes from Liorithiel
+
+2006-06-03 16:22  normanr
+
+	* xmpp/simplexml.py: added xmlns safety check
+
+2006-06-03 16:15  normanr
+
+	* xmpp/commands.py: fixed command namespaces
+
+2006-05-30 23:55  normanr
+
+	* doc/examples/xsend.py: General cleanups
+
+2006-05-22 12:58  normanr
+
+	* xmpp/transports.py: Fix for non-int ports
+
+2006-05-18 09:53  snakeru
+
+	* xmpp/simplexml.py: Added CDATA extracting method to xml node.
+
+2006-05-15 03:57  normanr
+
+	* xmpp/jep0106.py: moved jep-0106 into xmpp
+
+2006-05-13 18:39  normanr
+
+	* xmpp/commands.py: minor typos
+
+2006-03-25 09:11  snakeru
+
+	* xmpp/debug.py: Re-enabled debugging.
+
+2006-03-25 09:01  snakeru
+
+	* setup.py: Updated version stuff for xmpppy module.
+
+2006-03-25 08:47  snakeru
+
+	* xmpp/features.py: Fixed bug in disco items discovery (thanks
+	  Soren Roug).
+
+2006-02-11 18:45  snakeru
+
+	* xmpp/debug.py: Made NoDebug class usable
+
+2006-02-11 18:37  snakeru
+
+	* xmpp/client.py: fixed resources consumation in many places
+
+2006-02-11 18:36  snakeru
+
+	* xmpp/features.py: fixed features.register
+
+2006-01-26 16:09  snakeru
+
+	* xmpp/transports.py: Bugfix for previous commit
+
+2006-01-26 16:06  snakeru
+
+	* xmpp/: debug.py, transports.py: Made xmpppy to print warnings to
+	  stdout instead of stderr
+
+2006-01-19 00:38  normanr
+
+	* xmpp/: client.py, commands.py, debug.py, protocol.py: xmlns
+	  fixes, and minor tweaks for speed and safety
+
+2006-01-18 22:26  normanr
+
+	* xmpp/: auth.py, dispatcher.py: Namespace fixes
+
+2006-01-10 01:08  normanr
+
+	* xmpp/protocol.py: Message.buildReply fix for Gerard
+
+2006-01-07 21:41  normanr
+
+	* xmpp/protocol.py: Added message events, and minor DataForm fix
+
+2006-01-02 22:40  normanr
+
+	* xmpp/: auth.py, client.py, dispatcher.py, protocol.py: Jabberd2
+	  component protocol support
+
+2006-01-02 22:26  normanr
+
+	* xmpp/debug.py: Enhanced debug output
+
+2005-12-19 17:30  snakeru
+
+	* xmpp/debug.py: Disabled color output on non-un*x-like platforms.
+
+2005-12-11 21:54  normanr
+
+	* xmpp/: client.py, transports.py: made failed connections slightly
+	  more robust.
+
+2005-11-30 20:05  normanr
+
+	* xmpp/auth.py: http://trac.gajim.org/ticket/1188 - fix for base64
+	  encoded strings ending with an equals sign
+
+2005-11-30 20:03  normanr
+
+	* xmpp/commands.py: command nodes now return correct disco#info
+	  values
+
+2005-11-22 08:20  snakeru
+
+	* xmpp/auth.py: Fixed digest-uri parameter in SASL auth.  Thanks to
+	  Le Boulanger Yann and Norman Rasmussen.
+
+2005-10-31 09:15  snakeru
+
+	* xmpp/protocol.py: Fixed timstamp detecting bug (thanks to Daryl
+	  Herzmann).
+
+2005-10-26 12:45  snakeru
+
+	* xmpp/auth.py: Fixed SASL bug on win32 platform. (Thanks to Martin
+	  Thomas)
+
+2005-10-24 23:32  normanr
+
+	* xmpp/: client.py, transports.py: [gajim]it is standarD not with
+	  T; thanks dkm
+
+2005-10-23 01:47  normanr
+
+	* xmpp/: client.py, debug.py, protocol.py: fixed whitespace
+
+2005-10-08 03:17  normanr
+
+	* xmpp/: browser.py, commands.py: fixes for discovery replies that
+	  gajim exposed
+
+2005-10-01 21:53  snakeru
+
+	* xmpp/: client.py, transports.py: Made SRV resolution disableable
+	  (Gajim patch 3658).
+
+2005-10-01 21:51  snakeru
+
+	* xmpp/client.py: Added catchment for exception while tls handshake
+	  (Gajim patch 3323).
+
+2005-10-01 21:41  snakeru
+
+	* xmpp/transports.py: Added events for sent/received bytes (Gajim
+	  patches 2789, 2979, 3254).
+
+2005-10-01 21:40  snakeru
+
+	* xmpp/session.py: Removed useless #!/usr/bin/python header (Gajim
+	  patch 2115)
+
+2005-10-01 21:39  snakeru
+
+	* xmpp/transports.py: Typo and debug line text fixes (Gajim patch
+	  2113).
+
+2005-10-01 21:36  snakeru
+
+	* xmpp/protocol.py: Added method for retrieve nick value in MUC
+	  (Gajim patch 2089).
+
+2005-10-01 21:34  snakeru
+
+	* xmpp/TODO: Added several lines to TODO.
+
+2005-10-01 19:03  snakeru
+
+	* xmpp/client.py: Fixed binding process. Formatiing fixes.
+
+2005-10-01 18:58  snakeru
+
+	* xmpp/protocol.py: Fixed first timestamp detection
+
+2005-10-01 01:34  mikealbon
+
+	* xmpp/client.py: SASL Timeout, Gajim #2066
+
+2005-10-01 01:28  mikealbon
+
+	* xmpp/client.py: Enable SSL on non-standard port. Gajim #2065
+
+2005-10-01 00:13  mikealbon
+
+	* xmpp/features.py: Asynchronous In-band Registration. Gajim
+	  patches #2035 #2318
+
+2005-09-30 01:38  mikealbon
+
+	* xmpp/protocol.py: Bumper pack of namespace definitions. Including
+	  gajim #2637.
+
+2005-09-28 11:20  snakeru
+
+	* xmpp/client.py: Docstring fixes.  Fixed typo in Client.connect
+	  method docstring (Thanks to Andrew Diederich).  Evaluated more
+	  descriptions of Component.__init__ and Component.__connect__ .
+
+2005-09-23 22:32  normanr
+
+	* xmpp/: browser.py, client.py, commands.py: Fixes to make commands
+	  work, when you're working with multiple jids and nodes.
+
+2005-09-21 00:56  normanr
+
+	* xmpp/TODO: some todo items
+
+2005-09-17 19:15  normanr
+
+	* xmpp/protocol.py: tidied disco and muc namespaces
+
+2005-09-17 19:13  normanr
+
+	* xmpp/commands.py: fix for items being returned on non-items disco
+
+2005-09-16 18:28  snakeru
+
+	* xmpp/TODO: Added TODO line about roster parsing traceback.
+
+2005-09-16 18:15  snakeru
+
+	* xmpp/TODO: Added another todo line about input chunking.
+
+2005-09-16 17:59  snakeru
+
+	* xmpp/TODO: Added keepalive feature in TODO list.
+
+2005-09-09 08:12  snakeru
+
+	* doc/examples/xsend.py: Added help message to sample config file.
+
+2005-09-06 02:04  mikealbon
+
+	* xmpp/transports.py: Added SRV record resolution for new client
+	  connections. This is using gajim changesets (2036 2037 2039 2040
+	  3184 3407 3408 3409 3410 3411 3412 3413) Debugging through debug
+	  needs to be fixed.
+
+2005-08-29 01:50  normanr
+
+	* xmpp/commands.py: fixes for error constants
+
+2005-08-19 00:03  normanr
+
+	* xmpp/dispatcher.py: Added support for non-fatal exception
+	  handling, exceptions can also be logged to file.
+
+2005-08-06 08:48  snakeru
+
+	* xmpp/session.py: Fixed usage of .T. and .NT. notation according
+	  to recent change.
+
+2005-08-06 08:44  snakeru
+
+	* xmpp/simplexml.py: WARNING! Incompartible change! Now
+	  newtag=n.T.newtag do not creates new tag but only returns
+	  existing one (if possible). If you need to create tag use either
+	  .NT. method or attribute set (i.e. n.T.newtag=something).
+
+2005-08-05 08:57  snakeru
+
+	* xmpp/features.py: The setPrivacyList function used a nonexistent
+	  payload variable where it should use the list parameter (thanks
+	  to Michal Politowski).
+
+2005-07-13 17:22  snakeru
+
+	* xmpp/roster.py: Docstring fix
+
+2005-07-08 01:34  normanr
+
+	* xmpp/commands.py: Commands now work.	Errors are also returned if
+	  continuing an invalid session.
+
+2005-06-02 16:22  snakeru
+
+	* xmpp/client.py: Changed cl.connected from 'tls' to 'ssl' in case
+	  of port 5223/443.
+
+2005-06-02 16:19  snakeru
+
+	* xmpp/client.py: List of default ssl ports is now [5223,443].
+
+2005-05-28 13:30  mikealbon
+
+	* xmpp/commands.py: Lots of bugfixes -- thanks Norman
+
+2005-05-26 09:04  snakeru
+
+	* xmpp/: auth.py, client.py: Another SASL case was broken. Fix
+	  applied, tested against variety of servers.
+
+2005-05-24 17:59  snakeru
+
+	* xmpp/auth.py: Removed early FeaturesHandler call to not start
+	  auth before credentials got passed.
+
+2005-05-24 17:28  snakeru
+
+	* xmpp/client.py: Added parameter to auth() to disable SASL
+
+2005-05-12 13:20  snakeru
+
+	* xmpp/TODO: Added note about TLS issue
+
+2005-05-12 13:00  snakeru
+
+	* xmpp/client.py: Added return value description to connect()
+	  docstring.
+
+2005-05-12 11:35  snakeru
+
+	* xmpp/transports.py: Fixed TLS-not-disconnects bug
+
+2005-05-11 09:42  snakeru
+
+	* xmpp/roster.py: Added comment about roster's NodeProcessed
+	  behaivoir.
+
+2005-05-11 09:38  snakeru
+
+	* xmpp/roster.py: Roster Iq handler must raise NodeProcessed.
+	  Otherwise, iq's will hit default   handler and <iq type='error'/>
+	  will be sent back.
+
+2005-05-09 21:31  snakeru
+
+	* doc/index.html: Made <a/> tags to not open new windows.
+
+2005-05-09 21:27  snakeru
+
+	* doc/xmpppy_title.png: New design. Big thanks to Marek Kubica for
+	  it.
+
+2005-05-09 21:09  snakeru
+
+	* doc/: index.html, xmpppy.css: New design. Big thanks to Marek
+	  Kubica for it.
+
+2005-05-09 18:51  snakeru
+
+	* xmpp/dispatcher.py: Bugfix: RegisterHandler(...,makefirst=1)
+	  didn't work.
+
+2005-05-08 12:03  snakeru
+
+	* setup.py: Changed download url from whole project to xmpppy
+	  module
+
+2005-05-08 11:54  snakeru
+
+	* setup.py: Add reminder to fix source code release version string
+	  while making release
+
+2005-05-08 08:51  snakeru
+
+	* xmpp/: client.py, dispatcher.py: Added possibility to detect
+	  broken servers that didn't restart stream after     tls start and
+	  disable tls for them.
+
+2005-05-07 20:24  snakeru
+
+	* xmpp/transports.py: Fixed traceback while connecting via proxy
+
+2005-05-07 20:14  snakeru
+
+	* xmpp/protocol.py: Fixed stupid typo in DataForm
+
+2005-05-07 07:26  snakeru
+
+	* xmpp/dispatcher.py: Added non-locking SendAndCallForResponse
+	  method to ease life of realtime clients.
+
+2005-05-07 06:42  snakeru
+
+	* xmpp/auth.py: Auth was failing when server declares XMPP stream
+	  (version="1.0") but	  not supports SASL.
+
+2005-05-06 21:33  snakeru
+
+	* xmpp/protocol.py: Added missing MUC attributes helper.  Added
+	  'instructions' field to XData.asDict()
+
+2005-05-02 12:38  snakeru
+
+	* xmpp/roster.py: Formatting fix.
+
+2005-05-02 12:36  snakeru
+
+	* xmpp/: dispatcher.py, protocol.py: Added stream errors classes
+	  along with default handler
+
+2005-04-30 14:17  snakeru
+
+	* xmpp/: client.py, auth.py: Fixed Non-SASL auth brocken with one
+	  of today's commits.
+
+2005-04-30 12:56  snakeru
+
+	* xmpp/: dispatcher.py, transports.py: Bugfix: TLS mode was unable
+	  to handle big (>1024 bytes) chunks of data.	 Was forced to
+	  change TCPsocket.receive() return values logic.
+
+2005-04-30 12:53  snakeru
+
+	* xmpp/client.py: Fixed auth logic: if SASL failed - then auth
+	  definitely failed too.
+
+2005-04-30 12:14  snakeru
+
+	* xmpp/transports.py: Minor changes in receive() code in
+	  preparation to fix TLS bug.
+
+2005-04-30 12:10  snakeru
+
+	* xmpp/dispatcher.py: Added two docstrings
+
+2005-04-30 11:43  snakeru
+
+	* xmpp/features.py: Fixed getRegInfo to not crash on query's CDATA
+
+2005-04-30 11:33  snakeru
+
+	* xmpp/commands.py: Formatteed/added several docstrings
+
+2005-04-30 11:20  snakeru
+
+	* xmpp/simplexml.py: Cosmetic docstrings changes
+
+2005-04-30 11:17  snakeru
+
+	* xmpp/protocol.py: Added NS_COMMANDS, NS_ENCRYPTED, NS_SIGNED
+	  namespaces.  Added MUC iq attributes functions from jabberpy.
+
+2005-04-30 11:13  snakeru
+
+	* xmpp/browser.py: Fixed RegisterHandler calls to catch only 'get'
+	  iqs.	Fixed DiscoHandler to raise NodeProcessed (or we should
+	  just return instead?)
+
+2005-04-30 11:01  snakeru
+
+	* xmpp/: auth.py, transports.py: Fixed plugout methods to not take
+	  parameter
+
+2005-04-10 12:25  snakeru
+
+	* xmpp/TODO: TODO for 0.2 release
+
+2005-04-10 12:21  snakeru
+
+	* xmpp/simplexml.py: Reduced overload caused by extensive usage of
+	  T/NT classes.
+
+2005-04-10 12:09  snakeru
+
+	* xmpp/client.py: Added back possibility of manual specification of
+	  server type (for Component)	for case if ejabberd team (or
+	  others) will add features to component streams.  Changed default
+	  port for component connection to 5347 (jabberd2 router).
+
+2005-04-10 11:55  snakeru
+
+	* xmpp/client.py: Replaced manual server type specification with
+	  autodetect
+
+2005-03-09 17:18  snakeru
+
+	* doc/examples/logger.py: Added presences tracking
+
+2005-03-09 11:32  snakeru
+
+	* doc/examples/logger.py: Bugfix: proxy was specified incorrectly
+
+2005-03-09 00:18  snakeru
+
+	* doc/index.html: index.html
+
+2005-03-09 00:14  snakeru
+
+	* doc/examples/README.py: Moved to "examples".
+
+2005-03-08 23:57  snakeru
+
+	* doc/examples/logger.py: Conference logging bot example
+
+2005-03-08 23:48  snakeru
+
+	* Makefile: Installer Makefile
+
+2005-03-08 22:50  snakeru
+
+	* xmpp/commands.py: Tuned "import"s stuff to be more in-line with
+	  library
+
+2005-03-08 22:36  snakeru
+
+	* xmpp/: auth.py, client.py, dispatcher.py, protocol.py: Tweaked
+	  library to make it play nice as jabberd2 legacy component.
+
+2005-03-08 19:15  snakeru
+
+	* xmpp/simplexml.py: Some tweaks about determining if node needs
+	  'xmlns' attribute.
+
+2005-03-07 12:34  snakeru
+
+	* xmpp/__init__.py: Added commands module import
+
+2005-03-07 12:07  snakeru
+
+	* xmpp/auth.py: Preserved handlers during auth process to allow
+	  early handlers registration.
+
+2005-02-25 08:49  snakeru
+
+	* xmpp/roster.py: Changed (c) date range
+
+2005-02-25 08:48  snakeru
+
+	* xmpp/roster.py: Fixed Iq callback brocken last commit
+
+2005-02-25 08:35  snakeru
+
+	* xmpp/roster.py: "raise NodeProcessed" removed to allow userspace
+	  catch roster changes too
+
+2005-02-21 14:52  snakeru
+
+	* xmpp/dispatcher.py: Added etherx namespace to the default set to
+	  allow stream errors handling.
+
+2005-02-17 11:16  snakeru
+
+	* xmpp/roster.py: Bugfix: presences should not really inherit
+	  meta-info (like <show/> etc)
+
+2005-02-16 19:33  snakeru
+
+	* xmpp/roster.py: Bugfix: UNbroke accidentally brocken code. Shame
+	  on me.
+
+2005-02-16 19:29  snakeru
+
+	* xmpp/auth.py: Bugfix: (NonSASL) Added removal of empty
+	  <password/> node to achieve JiveMessenger compartibility (Tnx
+	  Brian Tipton)
+
+2005-02-07 21:38  snakeru
+
+	* xmpp/roster.py: BugFix: Roster.PresenceHandler should not raise
+	  NodeProcessed exception.
+
+2005-01-31 16:10  mikealbon
+
+	* xmpp/commands.py: Modified the handlers used. Result messages are
+	  not required for command processor use.
+
+2005-01-21 14:16  mikealbon
+
+	* xmpp/commands.py: Initial version of commands processor
+
+2005-01-16 23:18  snakeru
+
+	* doc/examples/bot.py: Xmpppy-based bot example
+
+2005-01-16 21:32  snakeru
+
+	* doc/examples/xsend.py: Old servers compartibility stuff added.
+	  Tnx google, randomthoughts.
+
+2005-01-04 08:17  snakeru
+
+	* xmpp/session.py: Session class added
+
+2004-12-26 11:54  snakeru
+
+	* setup.py: python distutils install tool
+
+2004-12-26 11:40  snakeru
+
+	* README: README rewrited
+
+2004-12-26 11:34  snakeru
+
+	* doc/index.html: Some more updates
+
+2004-12-26 11:12  snakeru
+
+	* doc/: advanced.html, basic.html, index.html: Documentation
+	  updated: expert docs written, advanced started.
+
+2004-12-26 10:39  snakeru
+
+	* doc/expert.html: Removed since api documentation is maintained
+	  via docstrings.
+
+2004-12-25 23:06  snakeru
+
+	* xmpp/: __init__.py, dispatcher.py, features.py, filetransfer.py,
+	  roster.py, transports.py: Added and/or modifyed docstrings. Now
+	  every method in library is documented\! Hurray\!
+
+2004-12-24 22:56  snakeru
+
+	* xmpp/: browser.py, protocol.py: Pydoc strings added
+
+2004-12-23 23:11  snakeru
+
+	* xmpp/: __init__.py, auth.py, client.py, dispatcher.py,
+	  simplexml.py: Docstrings merged. Most of them were ready already
+	  in (shame!) july.
+
+2004-12-09 18:08  snakeru
+
+	* xmpp/dispatcher.py: Bugfix: complete autodetection of default
+	  handler's namespace
+
+2004-12-09 18:06  snakeru
+
+	* xmpp/dispatcher.py: More wisdom for default handler's namespace
+	  determining
+
+2004-12-09 17:34  snakeru
+
+	* xmpp/dispatcher.py: Added some wisdom to determining of default
+	  handler's namespace.
+
+2004-12-09 17:21  snakeru
+
+	* xmpp/: auth.py, client.py, protocol.py: Fixed component auth that
+	  was brocken by dispatcher's changes.
+
+2004-12-06 17:49  snakeru
+
+	* xmpp/browser.py: Bugfix: typo in _DiscoveryHandler (thanks 2 Mike
+	  Albon)
+
+2004-10-23 11:58  snakeru
+
+	* xmpp/protocol.py: NS_DIALBACK added JID's node and domain now
+	  stored only lowercase Bugfix: don't allow empty type to go into
+	  error node Do not serialise error reply to error stanza (prevent
+	  error bouncing)
+
+2004-10-23 11:53  snakeru
+
+	* xmpp/dispatcher.py: "chained" handlers killed changing type of
+	  incomed stanza only if it is a simple Node (to allow pickling)
+
+2004-10-23 11:51  snakeru
+
+	* xmpp/auth.py: Bugfix: auth details should go into self._owner
+
+2004-10-08 23:10  snakeru
+
+	* xmpp/auth.py: Ensure that username and resourcename got from
+	  server's responce.
+
+2004-10-08 23:06  snakeru
+
+	* xmpp/dispatcher.py: Now stanza properties stored in it's
+	  attribute "props".
+
+2004-10-08 23:01  snakeru
+
+	* xmpp/features.py: Bugfix: don't traceback if DISCO/Browse timed
+	  out.
+
+2004-09-25 23:05  snakeru
+
+	* xmpp/simplexml.py: Rolled back ns vocabularies. They were
+	  potentially messing namespaces.
+
+2004-09-25 22:52  snakeru
+
+	* xmpp/simplexml.py: Allowed attribute values to be objects
+
+2004-09-25 22:50  snakeru
+
+	* xmpp/protocol.py: XMPP streams namespace added.  One more XMPP
+	  stanza error condition added: <not-authorized/> Error conditions
+	  now differs by name: STREAM_, ERR_ and SASL_.  Attribute 'to' and
+	  'from' in protocol instances now JIDs - not strings.	Added
+	  namespace to Protocol element's __init__s.  Changed error forming
+	  process to involve correct namespace setting.
+
+2004-09-25 22:46  snakeru
+
+	* xmpp/dispatcher.py: Namespace handler now comes under the name
+	  "default".
+
+2004-09-20 00:05  snakeru
+
+	* xmpp/client.py: Plugging in now available only once.	Now using
+	  SASL.auth() method instead of SASL()
+
+2004-09-19 16:34  snakeru
+
+	* xmpp/dispatcher.py: Added plugout method for proper destuction of
+	  Stream instance.  Added RegisterNamespace method for registering
+	  default handlers for ns.  Made UnregisterHandler immune to
+	  unregistering absent handler.
+
+2004-09-19 16:31  snakeru
+
+	* xmpp/simplexml.py: added destroy method to NodeBuilder to prevent
+	  memory leak
+
+2004-09-19 16:28  snakeru
+
+	* xmpp/transports.py: Added plugout method to TLS class for
+	  unregistering handlers.  Added raising NodeProcessed in TLS
+	  handler according to dispatcher's architecture.
+
+2004-09-19 16:19  snakeru
+
+	* xmpp/protocol.py: Added SASL error conditions
+
+2004-09-19 15:49  snakeru
+
+	* xmpp/auth.py: SASL.auth method added. Removed credentials passing
+	  from PlugIn.	plugout methods added for unregistering handlers.
+	  NodeProcessed exceptions now raised according to dispatcher
+	  architecture.
+
+2004-09-17 23:28  snakeru
+
+	* xmpp/: auth.py, dispatcher.py, transports.py: Added stanzas
+	  namespace support in dispatcher.
+
+2004-09-17 23:22  snakeru
+
+	* xmpp/protocol.py: Added xmpp streams namespace.  Made
+	  stream-level error conditions render in proper xmlns.  Removed
+	  error text backward compartibility positioning.
+
+2004-09-17 23:19  snakeru
+
+	* xmpp/simplexml.py: XML namespaces vocabulary introduced.  Quick
+	  node access methods introduced.
+
+2004-09-15 22:35  snakeru
+
+	* xmpp/simplexml.py: Bugfix: more delicate namespaces processing.
+	  Slow (again) but sure.  Bugfix: stream-level CDATA processing.
+	  Feature: stream open/close events system.
+
+2004-09-15 22:30  snakeru
+
+	* xmpp/transports.py: Fixed comment.
+
+2004-09-15 22:22  snakeru
+
+	* xmpp/roster.py: Bugfix: handle roster item deletion properly.
+	  Translated comment into english.
+
+2004-09-15 22:19  snakeru
+
+	* xmpp/protocol.py: Added 'jabber:client' and 'jabber:server'
+	  namespaces.
+
+2004-09-15 18:57  snakeru
+
+	* xmpp/filetransfer.py: Comments translated to english.
+
+2004-09-15 18:51  snakeru
+
+	* xmpp/dispatcher.py: Added sessions support.
+
+2004-09-15 07:18  snakeru
+
+	* xmpp/ietf-docs/draft-ietf-xmpp-core.html: Update to revision 24.
+
+2004-09-13 14:32  snakeru
+
+	* doc/examples/xsend.py: Fixed typo: SendInitialPresence =>
+	  SendInitPresence.
+
+2004-08-04 22:41  snakeru
+
+	* xmpp/__init__.py: IBB is fixed and worth inclusion.
+
+2004-08-04 22:39  snakeru
+
+	* xmpp/__init__.py: IBB stuff is fixed and worth inclusion.
+
+2004-08-04 22:30  snakeru
+
+	* xmpp/: __init__.py, features.py, protocol.py: Stable 0.1 will not
+	  include browser and new DataForm class.
+
+2004-08-04 21:35  snakeru
+
+	* xmpp/: client.py, filetransfer.py: Fixed and tested IBB. Added
+	  usual debugging stuff to it.
+
+2004-08-04 21:32  snakeru
+
+	* xmpp/dispatcher.py: Bugfix: typeless stanzas were processed
+	  several times sometimes.
+
+2004-08-04 21:26  snakeru
+
+	* doc/basic.html: Corrections to text donated by Mike Albon.
+
+2004-07-26 17:00  snakeru
+
+	* xmpp/simplexml.py: Bugfix: nodebuilder was tracing on the first
+	  node.
+
+2004-07-23 16:34  snakeru
+
+	* xmpp/protocol.py: Added getQueryChildren method. WARNING: it
+	  behaves gust like getQueryPayload before. And the getQueryPayload
+	  is now different!
+
+2004-07-23 16:31  snakeru
+
+	* xmpp/simplexml.py: Made getPayload to return both CDATA and child
+	  nodes just like setPayload uses.
+
+2004-07-23 16:27  snakeru
+
+	* xmpp/simplexml.py: Fixed bug in CDATA handling code. The data
+	  will not be shifted between tags anymore.
+
+2004-07-12 23:20  snakeru
+
+	* xmpp/: features.py, protocol.py: DataForm class re-implemented to
+	  conform JEP-0004 more closely.
+
+2004-07-11 23:32  snakeru
+
+	* xmpp/protocol.py: Added support for multiple values.	Bugfix:
+	  label is an option's property - not DataField's.
+
+2004-07-11 23:01  snakeru
+
+	* xmpp/protocol.py: Added import of ustr function from simplexml
+	  module.  Bugfix: jid comparsion made less vulnerable to type
+	  mismatches.  Added JID.__hash__ method.
+
+2004-07-11 23:00  snakeru
+
+	* xmpp/browser.py: Added support for several hosts on one
+	  connection.  Argument Handler in setDiscoHandler converted to
+	  lowercase.
+
+2004-06-30 07:30  snakeru
+
+	* xmpp/browser.py: Added support for nodes like
+	  "http://jabber.org/protocol/commands".
+
+2004-06-28 22:58  snakeru
+
+	* xmpp/protocol.py: Added DataField class in preparation to
+	  DataForm rewrite.
+
+2004-06-28 15:55  snakeru
+
+	* xmpp/roster.py: Added raising NodeProcessed exception to mark
+	  already processed iq and presences.
+
+2004-06-28 09:38  snakeru
+
+	* xmpp/simplexml.py: Added Node.has_attr
+
+2004-06-27 23:10  snakeru
+
+	* xmpp/dispatcher.py: Bugfix: the returnStanzaHandler must not
+	  return error stanzas.
+
+2004-06-27 22:24  snakeru
+
+	* xmpp/: __init__.py, browser.py: Browser module tested, fixed and
+	  included into library structure.
+
+2004-06-27 20:00  snakeru
+
+	* xmpp/browser.py: Hand-crafted and logically debugged the heart -
+	  _traversePath. Now need to check other methods.
+
+2004-06-27 17:30  snakeru
+
+	* xmpp/: dispatcher.py, features.py, filetransfer.py, protocol.py:
+	  NodeProcessed mechaniks fixed:     class moved to protocol
+	  module.      try: except: block fixed to catch all needed
+	  exceptions.  Default handler mechanics fixed.
+	  returnStanzaHandler moved from features to dispatcher. It will be
+	  default handler in 0.2.  Dispatcher.UnregisterHandler fixed.
+
+2004-06-27 17:03  snakeru
+
+	* xmpp/protocol.py: Iq.buildReply made to appropriate set the
+	  queryNS value.  Error text message now included in error body tag
+	  for compartibility with     older protocol.
+
+2004-06-26 12:26  snakeru
+
+	* xmpp/dispatcher.py: Bugfix: already dispatched node must not be
+	  changed anymore by NodeBuilder.
+
+2004-06-26 12:24  snakeru
+
+	* xmpp/client.py: Bugfix: TLS failed to restart after disconnect.
+
+2004-06-26 12:20  snakeru
+
+	* xmpp/roster.py: Namespace declarations moved to protocol module.
+	  Protocol module imported to the local namespace.  Bugfix: item
+	  deletion required Node class in local namespace.
+
+2004-06-26 08:42  snakeru
+
+	* xmpp/: auth.py, client.py, dispatcher.py, features.py,
+	  filetransfer.py, protocol.py, transports.py: All namespaces
+	  declarations moved to protocol module.  Introduced politics of
+	  direct protocol module importing.
+
+2004-06-26 08:14  snakeru
+
+	* xmpp/__init__.py: Added direct import from protocol module.
+
+2004-06-23 16:48  snakeru
+
+	* xmpp/protocol.py: Added getQuerynode and setQuerynode methods.
+
+2004-06-20 22:36  snakeru
+
+	* doc/index.html: Hope that Mike will never see it. I am so
+	  ashamed...
+
+2004-06-20 22:30  snakeru
+
+	* doc/: advanced.html, expert.html: Empty file.
+
+2004-06-20 22:29  snakeru
+
+	* doc/basic.html: Unformatted but finished at the first look.
+
+2004-06-20 22:28  snakeru
+
+	* doc/index.html: Added links to documentation and Mike Albon's IRC
+	  transport.
+
+2004-06-20 22:16  snakeru
+
+	* xmpp/simplexml.py: Bugfix: use &quot; to not corrupt XML on some
+	  attribute values.
+
+2004-06-20 13:45  snakeru
+
+	* doc/examples/xsend.py: Example script that is used in "simple"
+	  doc.
+
+2004-06-20 12:39  snakeru
+
+	* README: First documentation appeared.  Added notice about
+	  official Debian's packages.
+
+2004-06-18 07:40  snakeru
+
+	* doc/basic.html: Some more bits.
+
+2004-06-18 07:02  snakeru
+
+	* doc/basic.html: Started attempt to write a docs for library.
+
+2004-06-17 19:57  snakeru
+
+	* xmpp/protocol.py: Bugfix: tag.getError() will not issue a
+	  traceback anymore if there is no error (thanks to sneakin).
+
+2004-06-17 19:13  snakeru
+
+	* xmpp/simplexml.py: Bugfix: bits like xml:lang='en' was processed
+	  incorrectly.	  ** This is a very crude hack. I must think more
+	  on this.
+
+2004-06-03 17:25  snakeru
+
+	* xmpp/: protocol.py, roster.py: Fixed bug with "@" and "/"
+	  characters in the resource string.
+
+2004-06-03 16:38  snakeru
+
+	* xmpp/simplexml.py: Bugfix: addChild now set's child.parent
+	  properly.
+
+2004-05-28 22:08  snakeru
+
+	* README: Some unimportant corrections.
+
+2004-05-28 22:02  snakeru
+
+	* README: Added "normal" README.
+
+2004-05-25 14:46  snakeru
+
+	* xmpp/roster.py: getRoster , getItem methods added
+
+2004-05-25 14:46  snakeru
+
+	* xmpp/client.py: getRoster method added.
+
+2004-05-20 15:56  snakeru
+
+	* xmpp/protocol.py: Fixed backtrace on unhandled condition case.
+
+2004-05-20 11:09  snakeru
+
+	* xmpp/: client.py, debug.py: Bugfix: debug_flags was in "debug"
+	  module namespace instead of being Debug class attribute.
+
+2004-05-17 23:25  snakeru
+
+	* xmpp/protocol.py: JID.__ne__ method added.
+
+2004-05-17 17:30  snakeru
+
+	* xmpp/client.py: DeregisterDisconnectHandler renamed to
+	  UnregisterDisconnectHandler.
+
+2004-05-17 13:32  snakeru
+
+	* xmpp/__init__.py: Added NS_XXX importing into module's namespace.
+
+2004-05-14 09:40  snakeru
+
+	* xmpp/roster.py: Added getItems, keys and __getitem__ methods
+	  (limited mapping interface).	Bugfix: setItem used incorrect XML.
+	  Self contact corrected to have all (though dummy) parameters.
+
+2004-05-05 10:34  snakeru
+
+	* xmpp/: auth.py, client.py: Removed "#!/usr/bin/python" headers to
+	  please lintian.
+
+2004-05-04 12:28  snakeru
+
+	* xmpp/: auth.py, client.py, dispatcher.py, features.py,
+	  protocol.py: Changed all "type" in functions arguments to "typ" .
+	  WARNING: VERY INCOMPARTIBLE CHANGES! This is one more step
+	  away from jabberpy API.
+
+2004-05-04 11:58  snakeru
+
+	* xmpp/filetransfer.py: Very preliminary. It worked recently but
+	  poorly and may be broken already.
+
+2004-05-04 11:54  snakeru
+
+	* xmpp/: features.py, protocol.py: Protocol.Error syntax changed.
+	  WARNING: incompartible changes.
+
+2004-05-03 20:57  snakeru
+
+	* xmpp/: features.py, protocol.py: Error nodes creating and setting
+	  made more (I hope) intuitive. WARNING: uncompartible changes.
+
+2004-05-03 09:33  snakeru
+
+	* xmpp/protocol.py: Python 2.1 compartibility in Protocol.__init__.
+	  Bugfix: Protocol element properties is child's namespaces - w/o
+	  dependency of parent node namespace.
+
+2004-05-03 09:29  snakeru
+
+	* xmpp/simplexml.py: Bugfix: preserve namespace when cloning node.
+	  Bugfix: fixed traceback in NodeBuilder on non-Node object
+	  upgrading.
+
+2004-05-02 22:23  snakeru
+
+	* xmpp/: auth.py, client.py, dispatcher.py, roster.py,
+	  transports.py: Implemented common plugins framework.
+
+2004-04-29 23:21  snakeru
+
+	* xmpp/simplexml.py: Node cloning improved. Full cloning mode
+	  introduced.  NodeBuilder can now take initial node as the base
+	  for building.
+
+2004-04-29 23:14  snakeru
+
+	* xmpp/protocol.py: Message.buildReply and Iq.buildReply
+	  introduced.
+
+2004-04-29 23:10  snakeru
+
+	* xmpp/dispatcher.py: Events introduced.  Cycle (null) handlers
+	  introduced.
+
+2004-04-29 23:06  snakeru
+
+	* xmpp/client.py: Default resource name "xmpppy" now used only when
+	  auth with non-xmpp compliant	   jabberd server. In the other
+	  cases it uses server-provided resource name.
+
+2004-04-29 22:53  snakeru
+
+	* xmpp/protocol.py: DataForm now can use prototype node for
+	  initialisation (as other protocol elements).	DataForm:
+	  workaround for broken jabberd1.4 added to handle double
+	  <password/> tag.  DataForm mapping methods added.
+
+2004-04-29 22:46  snakeru
+
+	* xmpp/features.py: 'jid' replaced by 'host' in registration
+	  methods.  Documentation added to registration methods.  BugTypo:
+	  'res' instead of 'resp' Bugfix: DataForm doesn't take nodename as
+	  parameter.
+
+2004-04-26 23:27  snakeru
+
+	* xmpp/ietf-docs/: draft-ietf-xmpp-core.html,
+	  draft-ietf-xmpp-im.html: Update to current upstream version.
+
+2004-04-25 09:12  snakeru
+
+	* xmpp/: auth.py, client.py, dispatcher.py, features.py,
+	  simplexml.py, transports.py: Date extended in license text.
+
+2004-04-25 09:07  snakeru
+
+	* xmpp/protocol.py: Date extended in license text.  Empty <text/>
+	  node removed from error stanza.
+
+2004-04-18 13:12  snakeru
+
+	* xmpp/dispatcher.py: Added "default handler" mechanizm.  "Process"
+	  function documented.
+
+2004-04-18 13:09  snakeru
+
+	* xmpp/features.py: returnStanzaHandler added.
+
+2004-04-18 13:06  snakeru
+
+	* xmpp/protocol.py: Added translation of error codes to error
+	  conditions.  Default error condition changed to
+	  <undefined-condition/>
+
+2004-04-18 10:24  snakeru
+
+	* xmpp/protocol.py: XMPP-Core stanza and stream level errors
+	  support added.
+
+2004-04-18 08:36  snakeru
+
+	* xmpp/: auth.py, features.py, protocol.py: Function "resultNode"
+	  replaced by "isResultNode".  Function "errorNode" replaced by
+	  "isErrorNode".
+
+2004-03-25 19:25  snakeru
+
+	* xmpp/: dispatcher.py, protocol.py: Changed dispatching policy:
+	  check for ALL child namespaces - not for only first <query/> in
+	  Iq stanza.
+
+2004-03-25 19:24  snakeru
+
+	* xmpp/client.py: Cleanup: import of features no more needed.
+
+2004-03-11 08:49  snakeru
+
+	* xmpp/simplexml.py: All character data is now *STORED* in utf-8
+	  not only printed.  Bugfix: fancy output was incorrect on data
+	  output of child nodes.
+
+2004-03-03 19:03  snakeru
+
+	* doc/index.html: Web page xmpppy.sf.net
+
+2004-02-24 09:20  snakeru
+
+	* xmpp/dispatcher.py: Added "NodeProcessed" mechanism to allow
+	  handlers stop further stanza processing.
+
+2004-02-20 15:16  snakeru
+
+	* xmpp/__init__.py: Added revision control comment line.
+
+2004-02-14 13:16  snakeru
+
+	* xmpp/: dispatcher.py, transports.py: Added experimental support
+	  for live reconnection.
+
+2004-02-14 13:11  snakeru
+
+	* xmpp/client.py: Bugfix: Client.connect doesn't always returned
+	  true when connection estabilished.  Added experimental support
+	  for live reconnection.
+
+2004-02-11 22:27  snakeru
+
+	* xmpp/client.py: Made tests like isConnected()[4:] possible.
+
+2004-02-11 22:24  snakeru
+
+	* xmpp/: client.py, transports.py: Made isConnected return more
+	  meningful result (tcp|tls+old_auth|sasl)
+
+2004-02-11 22:02  snakeru
+
+	* xmpp/client.py: Added isConnected method.
+
+2004-02-11 16:53  snakeru
+
+	* xmpp/: auth.py, client.py, dispatcher.py, transports.py: Fix:
+	  Previous client.py commit broke jabberd2-compartible mechanisms.
+
+2004-02-10 20:25  snakeru
+
+	* xmpp/client.py: Bugfix: Component used 'client' string in debug
+	  output.  Common stuff abstracted from Client and Component to
+	  CommonClient class.  Client.connect and Component.connect methods
+	  merged to new method: CommonClient.connect.
+
+2004-02-10 20:16  snakeru
+
+	* xmpp/auth.py: Fixed error text saying that we can do only PLAIN
+	  authentication.
+
+2004-02-09 11:05  snakeru
+
+	* xmpp/: auth.py, client.py: connect() and auth() methods now
+	  returns result of operation.
+
+2004-02-09 11:03  snakeru
+
+	* xmpp/transports.py: PlugIn methods now returns results of
+	  connection.  connect() method doesn't call 'disconnected' on
+	  failed connect.
+
+2004-02-09 11:01  snakeru
+
+	* xmpp/simplexml.py: Changes in "fancy" node output. Even more
+	  CDATA corruption ;)
+
+2004-01-26 09:30  snakeru
+
+	* xmpp/__init__.py: Simple import of all modules.
+
+2004-01-26 09:25  snakeru
+
+	* xmpp/client.py: Bugfix: non-sasl auth was not recognized.
+
+2004-01-20 11:51  snakeru
+
+	* xmpp/protocol.py: JID.getStripped now returns lower case JID
+	  (questionable change).  DataForm now represents itself as <x
+	  xmlns='jabber:x:data'/> tag.
+
+2004-01-20 11:49  snakeru
+
+	* xmpp/client.py: Added (again) default port for component class.
+	  Disconnect method copied from client to component class.
+
+2004-01-20 11:46  snakeru
+
+	* xmpp/features.py: Bugfixes in privacy lists mangling stuff.
+
+2004-01-15 12:58  snakeru
+
+	* xmpp/transports.py: Maked early start of TLS when connecting to
+	  port 5223 possible.
+
+2004-01-15 12:57  snakeru
+
+	* xmpp/client.py: Bugfix: SASL authentication must be completed
+	  before resource binding.  Added TLS early start when connecting
+	  to port 5223.
+
+2004-01-12 11:35  snakeru
+
+	* xmpp/client.py: Made TLS and SASL use more flexible to work with
+	  ejabberd server.
+
+2004-01-12 11:32  snakeru
+
+	* xmpp/auth.py: Added "any time" SASL auth status.
+
+2004-01-12 11:31  snakeru
+
+	* xmpp/simplexml.py: Added fancy XML formatting (indents and
+	  newlines).
+
+2004-01-12 09:40  snakeru
+
+	* xmpp/auth.py: Maked use of Dispatcher's features tag caching.
+	  Fixed issues with values quoting in ejabberd's challenge
+	  response.
+
+2004-01-12 09:34  snakeru
+
+	* xmpp/: dispatcher.py, transports.py: Maked dispatcher to cache
+	  features tag.
+
+2004-01-10 10:35  snakeru
+
+	* xmpp/protocol.py: Fixed case-handling in JIDs comparsions
+
+2004-01-09 10:14  snakeru
+
+	* xmpp/protocol.py: Added comparsion methods.
+
+2004-01-08 21:10  snakeru
+
+	* xmpp/auth.py: Maked use of resultNode and errorNode service
+	  functions.  Added component:accept authentication.
+
+2004-01-08 21:08  snakeru
+
+	* xmpp/client.py: Bugfixes: replaced "m" with "self" in many cases
+	  in Client code.  Bugfix: Fixed client TLS init to start only if
+	  server supports.  Added Component code.  Cleaned up tetsing stuff
+	  in the end of file.
+
+2004-01-08 20:58  snakeru
+
+	* xmpp/dispatcher.py: Changed WaitForResponse to always return
+	  received Node if it were really received.  Maked send to stamp
+	  not only "ID" field on outgoung stanzas nor also a "from" filed.
+
+2004-01-08 20:56  snakeru
+
+	* xmpp/features.py: Maked use of errorNode and resultNode
+	  conditional functions.
+
+2004-01-08 20:54  snakeru
+
+	* xmpp/protocol.py: Two conditional service functions added:
+	  errorNode and resultNode.
+
+2004-01-08 09:17  snakeru
+
+	* xmpp/simplexml.py: payload again can be of non-[] non-() type.
+	  Optimised adding child node when child already ready.
+
+2004-01-07 12:41  snakeru
+
+	* xmpp/: features.py, protocol.py: Syntactic changes and bugfixes
+	  in protocol.DataForm.
+
+2004-01-07 12:40  snakeru
+
+	* xmpp/simplexml.py: Bugfix: tag.getTags were broken.
+
+2003-12-15 18:04  snakeru
+
+	* xmpp/auth.py: Fixed incompartibilityes with jabberd2 in
+	  MD5-DIGEST algorythm.
+
+2003-12-14 22:32  snakeru
+
+	* xmpp/: auth.py, browser.py, client.py, dispatcher.py,
+	  features.py, protocol.py, roster.py, simplexml.py, transports.py:
+	  Tuned SASL (though it still not working), maked it to restart
+	  Dispatcher after auth.  Added bind (though it also not working on
+	  my server).  Added features import.  Added jabber:x:data handling
+	  into protocol.  Added roster control methods into roster.
+
+2003-12-14 22:13  snakeru
+
+	* xmpp/features.py: Service/agents discovery, [un]registration and
+	  password change, privacy lists handling.
+
+2003-12-14 22:11  snakeru
+
+	* xmpp/features.py: This file prevents main branch from adding the
+	  same file.
+
+2003-12-14 21:41  snakeru
+
+	* xmpp/features.py: Initial revision
+
+2003-12-14 21:41  snakeru
+
+	* xmpp/: auth.py, client.py, dispatcher.py, features.py,
+	  protocol.py, roster.py, simplexml.py: Added service discovery,
+	  [un]registration, privacy lists handling.
+
+2003-12-13 11:30  snakeru
+
+	* xmpp/: auth.py, client.py, simplexml.py: Added and tested SASL
+	  PLAIN.  Added and tested SASL DIGEST-MD5. Though it works only on
+	  test example from RFC2831 :( Added SASL test code to client.
+
+2003-12-12 22:28  snakeru
+
+	* xmpp/: auth.py, browser.py, client.py, debug.py, dispatcher.py,
+	  protocol.py, roster.py, simplexml.py, transports.py,
+	  ietf-docs/draft-ietf-xmpp-core.html,
+	  ietf-docs/draft-ietf-xmpp-im.html: Initial revision
+
+2003-12-12 22:28  snakeru
+
+	* xmpp/: auth.py, browser.py, client.py, debug.py, dispatcher.py,
+	  protocol.py, roster.py, simplexml.py, transports.py,
+	  ietf-docs/draft-ietf-xmpp-core.html,
+	  ietf-docs/draft-ietf-xmpp-im.html: Working items: roster, events
+	  mechanism, starttls, Non-SASL authorization.
+

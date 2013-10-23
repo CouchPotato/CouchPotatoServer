@@ -11,6 +11,7 @@ config = [{
             'list': 'notification_providers',
             'name': 'xmpp',
             'label': 'XMPP',
+            'description`': 'for Jabber, Hangouts (Google Talk), AIM...',
             'options': [
                 {
                     'name': 'enabled',
@@ -28,19 +29,6 @@ config = [{
                 {
                     'name': 'hostname',
                     'default': 'talk.google.com',
-                },
-                {
-                    'name': 'use_tls',
-                    'label': 'Use TLS',
-                    'type': 'bool',
-                    'default': 1,
-                    'advanced': True,
-                },
-                {
-                    'name': 'use_ssl',
-                    'label': 'Use SSL',
-                    'type': 'bool',
-                    'advanced': True,
                 },
                 {
                     'name': 'to',

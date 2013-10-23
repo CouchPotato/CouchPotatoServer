@@ -1,7 +1,7 @@
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
-from libs.sleekxmpp import ClientXMPP
 from time import sleep
+import libs.xmpppy.xmpp as xmpp
 import traceback
 
 log = CPLog(__name__)
@@ -13,25 +13,30 @@ class Xmpp(Notification):
         if not data: data = {}
 
         try:
-            xmpp = ClientXMPP(self.conf('username'), self.conf('password'))
-
-            def on_start(e):
-                xmpp.send_message(mto=self.conf('to'), mbody=message, mtype='chat')
-                xmpp.disconnect(wait=True)
-            xmpp.add_event_handler('session_start', on_start)
+            jid = xmpp.protocol.JID(self.conf('username'))
+            client = xmpp.Client(jid.getDomain(), debug=[])
 
             # Connect
-            for _ in range(5):
-                if xmpp.connect(address=(self.conf('hostname'), self.conf('port')), reattempt=False,
-                                use_tls=self.conf('use_tls'), use_ssl=self.conf('use_ssl')):
-                    xmpp.process(block=True)
-                    sleep(1)
+            if not client.connect(server=(self.conf('hostname'), self.conf('port'))):
+                log.error('XMPP failed: Connection to server failed.')
+                return False
 
-                    log.info('XMPP notifications sent.')
-                    return True
-                sleep(1)
+            # Authenticate
+            if not client.auth(jid.getNode(), self.conf('password'), resource=jid.getResource()):
+                log.error('XMPP failed: Failed to authenticate.')
+                return False
 
-            log.error('XMPP failed: Connection failed, check login.')
+            # Send message
+            client.send(xmpp.protocol.Message(to=self.conf('to'), body=message, typ='chat'))
+
+            # Disconnect
+            # some older servers will not send the message if you disconnect immediately after sending
+            sleep(1)
+            client.disconnect()
+
+            log.info('XMPP notifications sent.')
+            return True
+
         except:
             log.error('XMPP failed: %s', traceback.format_exc())
 
