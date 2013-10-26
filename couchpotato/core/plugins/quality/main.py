@@ -31,6 +31,7 @@ class QualityPlugin(Plugin):
     pre_releases = ['cam', 'ts', 'tc', 'r5', 'scr']
 
     cached_qualities = None
+    cached_order = None
 
     def __init__(self):
         addEvent('quality.all', self.all)
@@ -266,6 +267,12 @@ class QualityPlugin(Plugin):
 
         score[quality['identifier']] += add_score
 
+        # Set order for allow calculation (and cache)
+        if not self.cached_order:
+            self.cached_order = {}
+            for q in self.qualities:
+                self.cached_order[q.get('identifier')] = self.qualities.index(q)
+
         if add_score != 0:
             for allow in quality.get('allow', []):
-                score[allow] -= 40
+                score[allow] -= 40 if self.cached_order[allow] < self.cached_order[quality['identifier']] else 5
