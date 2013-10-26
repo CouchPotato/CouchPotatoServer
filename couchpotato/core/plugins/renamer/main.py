@@ -136,8 +136,8 @@ class Renamer(Plugin):
             movie_folder = movie_folder.rstrip(os.path.sep)
             folder = os.path.dirname(movie_folder)
 
-            if release_download['files']:
-                files = release_download['files'].split('|')
+            if release_download.get('files', ''):
+                files = splitString(release_download['files'], '|')
 
                 # If there is only one file in the torrent, the downloader did not create a subfolder
                 if len(files) == 1:
