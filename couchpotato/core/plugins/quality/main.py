@@ -17,10 +17,10 @@ class QualityPlugin(Plugin):
 
     qualities = [
         {'identifier': 'bd50', 'hd': True, 'size': (15000, 60000), 'label': 'BR-Disk', 'alternative': ['bd25'], 'allow': ['1080p'], 'ext':[], 'tags': ['bdmv', 'certificate', ('complete', 'bluray')]},
-        {'identifier': '1080p', 'hd': True, 'size': (4000, 20000), 'label': '1080p', 'width': 1920, 'height': 1080, 'alternative': [], 'allow': [], 'ext':['mkv', 'm2ts'], 'tags': ['m2ts']},
-        {'identifier': '720p', 'hd': True, 'size': (3000, 10000), 'label': '720p', 'width': 1280, 'height': 720, 'alternative': [], 'allow': [], 'ext':['mkv', 'ts']},
+        {'identifier': '1080p', 'hd': True, 'size': (4000, 20000), 'label': '1080p', 'width': 1920, 'height': 1080, 'alternative': [], 'allow': [], 'ext':['mkv', 'm2ts'], 'tags': ['m2ts', 'x264', 'h264']},
+        {'identifier': '720p', 'hd': True, 'size': (3000, 10000), 'label': '720p', 'width': 1280, 'height': 720, 'alternative': [], 'allow': [], 'ext':['mkv', 'ts'], 'tags': ['x264', 'h264']},
         {'identifier': 'brrip', 'hd': True, 'size': (700, 7000), 'label': 'BR-Rip', 'alternative': ['bdrip'], 'allow': ['720p', '1080p'], 'ext':['avi'], 'tags': ['hdtv', 'hdrip', 'webdl', ('web', 'dl')]},
-        {'identifier': 'dvdr', 'size': (3000, 10000), 'label': 'DVD-R', 'alternative': [], 'allow': [], 'ext':['iso', 'img'], 'tags': ['pal', 'ntsc', 'video_ts', 'audio_ts'], 'tags': [('dvd', 'r')]},
+        {'identifier': 'dvdr', 'size': (3000, 10000), 'label': 'DVD-R', 'alternative': ['br2dvd'], 'allow': [], 'ext':['iso', 'img', 'vob'], 'tags': ['pal', 'ntsc', 'video_ts', 'audio_ts', ('dvd', 'r')]},
         {'identifier': 'dvdrip', 'size': (600, 2400), 'label': 'DVD-Rip', 'width': 720, 'alternative': [], 'allow': [], 'ext':['avi', 'mpg', 'mpeg'], 'tags': [('dvd', 'rip'), ('dvd', 'xvid'), ('dvd', 'divx')]},
         {'identifier': 'scr', 'size': (600, 1600), 'label': 'Screener', 'alternative': ['screener', 'dvdscr', 'ppvrip', 'dvdscreener', 'hdscr'], 'allow': ['dvdr', 'dvdrip'], 'ext':['avi', 'mpg', 'mpeg'], 'tags': ['webrip', ('web', 'rip')]},
         {'identifier': 'r5', 'size': (600, 1000), 'label': 'R5', 'alternative': ['r6'], 'allow': ['dvdr'], 'ext':['avi', 'mpg', 'mpeg']},
@@ -31,6 +31,7 @@ class QualityPlugin(Plugin):
     pre_releases = ['cam', 'ts', 'tc', 'r5', 'scr']
 
     cached_qualities = None
+    cached_order = None
 
     def __init__(self):
         addEvent('quality.all', self.all)
@@ -213,7 +214,8 @@ class QualityPlugin(Plugin):
             'identifier': 10,
             'label': 10,
             'alternative': 9,
-            'tags': 9
+            'tags': 9,
+            'ext': 3,
         }
 
         # Check alt and tags
@@ -232,11 +234,17 @@ class QualityPlugin(Plugin):
 
                 if (isinstance(alt, (str, unicode)) and ss(alt.lower()) in cur_file.lower()):
                     log.debug('Found %s via %s %s in %s', (quality['identifier'], tag_type, quality.get(tag_type), cur_file))
-                    score += points.get(tag_type)
+                    score += points.get(tag_type) / 2
 
             if list(set(qualities) & set(words)):
                 log.debug('Found %s via %s %s in %s', (quality['identifier'], tag_type, quality.get(tag_type), cur_file))
                 score += points.get(tag_type)
+
+        # Check extention
+        for ext in quality.get('ext', []):
+            if ext == words[-1]:
+                log.debug('Found %s extension in %s', (ext, cur_file))
+                score += points['ext']
 
         return score
 
@@ -266,6 +274,12 @@ class QualityPlugin(Plugin):
 
         score[quality['identifier']] += add_score
 
+        # Set order for allow calculation (and cache)
+        if not self.cached_order:
+            self.cached_order = {}
+            for q in self.qualities:
+                self.cached_order[q.get('identifier')] = self.qualities.index(q)
+
         if add_score != 0:
             for allow in quality.get('allow', []):
-                score[allow] -= 40
+                score[allow] -= 40 if self.cached_order[allow] < self.cached_order[quality['identifier']] else 5

@@ -381,7 +381,7 @@ MA.Release = new Class({
 	},
 
 	get: function(release, type){
-		return release.info[type] || 'n/a'
+		return release.info[type] !== undefined ? release.info[type] : 'n/a'
 	},
 
 	download: function(release){
