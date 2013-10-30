@@ -256,7 +256,10 @@ class YarrProvider(Provider):
             if identifier in qualities:
                 return ids
 
-        return [self.cat_backup_id]
+        if self.cat_backup_id:
+            return [self.cat_backup_id]
+
+        return []
 
 
 class ResultList(list):
@@ -284,11 +287,22 @@ class ResultList(list):
 
         new_result = self.fillResult(result)
 
-        is_correct_movie = fireEvent('searcher.correct_release', new_result, self.movie, self.quality,
+        is_correct = fireEvent('searcher.correct_release', new_result, self.movie, self.quality,
                                      imdb_results = self.kwargs.get('imdb_results', False), single = True)
 
-        if is_correct_movie and new_result['id'] not in self.result_ids:
+        if is_correct and new_result['id'] not in self.result_ids:
+            is_correct_weight = float(is_correct)
+
             new_result['score'] += fireEvent('score.calculate', new_result, self.movie, single = True)
+
+            old_score = new_result['score']
+            new_result['score'] = int(old_score * is_correct_weight)
+
+            log.info('Found correct release with weight %.02f, old_score(%d) now scaled to score(%d)', (
+                is_correct_weight,
+                old_score,
+                new_result['score']
+            ))
 
             self.found(new_result)
             self.result_ids.append(result['id'])
