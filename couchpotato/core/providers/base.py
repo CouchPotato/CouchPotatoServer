@@ -1,5 +1,4 @@
 from couchpotato.core.event import addEvent, fireEvent
-from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.variable import tryFloat, mergeDicts, md5, \
     possibleTitles, getTitle
 from couchpotato.core.logger import CPLog
@@ -8,7 +7,6 @@ from couchpotato.environment import Env
 from urlparse import urlparse
 import cookielib
 import json
-import logging
 import re
 import time
 import traceback

@@ -6,7 +6,8 @@ from couchpotato.core.helpers.variable import getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.plugins.scanner.main import Scanner
-from couchpotato.core.settings.model import File, Release as Relea, Media, ReleaseInfo
+from couchpotato.core.settings.model import File, Release as Relea, Media, \
+    ReleaseInfo
 from couchpotato.environment import Env
 from inspect import ismethod, isfunction
 from sqlalchemy.exc import InterfaceError
@@ -85,7 +86,7 @@ class Release(Plugin):
                     fireEvent('release.delete', id = rel.id, single = True)
                 # Set all snatched and downloaded releases to ignored to make sure they are ignored when re-adding the move
                 elif rel.status_id in [snatched_status.get('id'), downloaded_status.get('id')]:
-                    fireEvent('release.update_status', id = rel.id, status = ignored_status)
+                    self.updateStatus(id = rel.id, status = ignored_status)
 
         db.expire_all()
 
@@ -209,8 +210,6 @@ class Release(Plugin):
 
         db = get_session()
 
-        snatched_status, done_status = fireEvent('status.get', ['snatched', 'done'], single = True)
-
         rel = db.query(Relea).filter_by(id = id).first()
         if rel:
             item = {}
@@ -229,12 +228,12 @@ class Release(Plugin):
             if item.get('protocol') != 'torrent_magnet':
                 item['download'] = provider.loginDownload if provider.urls.get('login') else provider.download
 
-            success = fireEvent('release.download', data = item, media = rel.movie.to_dict({
+            success = self.download(data = item, media = rel.movie.to_dict({
                 'profile': {'types': {'quality': {}}},
                 'releases': {'status': {}, 'quality': {}},
                 'library': {'titles': {}, 'files':{}},
                 'files': {}
-            }), manual = True, single = True)
+            }), manual = True)
 
             if success:
                 db.expunge_all()
@@ -305,7 +304,7 @@ class Release(Plugin):
                                             log.info('Renamer disabled, marking media as finished: %s', log_movie)
 
                                             # Mark release done
-                                            fireEvent('release.update_status', rls.id, status = done_status, single = True)
+                                            self.updateStatus(rls.id, status = done_status)
 
                                             # Mark media done
                                             mdia = db.query(Media).filter_by(id = media['id']).first()
@@ -315,7 +314,7 @@ class Release(Plugin):
                             except:
                                 log.error('Failed marking media finished, renamer disabled: %s', traceback.format_exc())
                         else:
-                            fireEvent('release.update_status', rls.id, status = snatched_status, single = True)
+                            self.updateStatus(rls.id, status = snatched_status)
 
                 except:
                     log.error('Failed marking media finished: %s', traceback.format_exc())
