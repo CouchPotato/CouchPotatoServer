@@ -108,7 +108,7 @@ class Transmission(Downloader):
                 torrent_files.append(os.path.normpath(os.path.join(ss(torrent['downloadDir']), ss(file_item['name']))))
 
             status = 'busy'
-            if torrent['isStalled'] and self.conf('stalled_as_failed'):
+            if torrent.get('isStalled') and self.conf('stalled_as_failed'):
                 status = 'failed'
             elif torrent['status'] == 0 and torrent['percentDone'] == 1:
                 status = 'completed'
