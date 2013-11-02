@@ -114,9 +114,31 @@ class Renamer(Plugin):
 
         # Check to see if the no_process folders are inside the provided movie_folder
         if movie_folder and not os.path.isdir(movie_folder):
-            log.error('The provided movie folder %s does not exist.', movie_folder)
-            return
-        elif movie_folder:
+            log.debug('The provided movie folder %s does not exist. Trying to find it in the \'from\' folder.', movie_folder)
+
+            # Update to the from folder
+            if len(release_download.get('files')) == 1:
+                new_movie_folder = ss(self.conf('from')) # ADD 'sp' function when that is pulled
+            else:
+                new_movie_folder = os.path.join(ss(self.conf('from')), os.path.basename(movie_folder)) # ADD 'sp' function when that is pulled
+
+            if not os.path.isdir(new_movie_folder):
+                log.error('The provided movie folder %s does not exist and could also not be found in the \'from\' folder.', movie_folder)
+                return
+
+            # Update the files
+            new_files = [os.path.join(new_movie_folder, os.path.relpath(filename, movie_folder)) for filename in splitString(release_download.get('files'), '|')]
+            if new_files and not os.path.isfile(new_files[0]):
+                log.error('The provided movie folder %s does not exist and its files could also not be found in the \'from\' folder.', movie_folder)
+                return
+
+            # Update release_download info to the from folder
+            log.debug('Release %s found in the \'from\' folder.', movie_folder)
+            release_download['folder'] = new_movie_folder
+            release_download['files'] = '|'.join(new_files)
+            movie_folder = new_movie_folder                
+
+        if movie_folder:
             for item in no_process:
                 if movie_folder in item:
                     log.error('To protect your data, the movie libraries can\'t be inside of or the same as the provided movie folder.')
