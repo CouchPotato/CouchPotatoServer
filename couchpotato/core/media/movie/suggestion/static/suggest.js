@@ -95,6 +95,10 @@ var SuggestList = new Class({
 					);
 					m.data_container.removeEvents('click');
 
+					var plot = false;
+					if(m.info.plot && m.info.plot.length > 0)
+						plot = m.info.plot;
+
 					// Add rating
 					m.info_container.adopt(
 						m.rating = m.info.rating && m.info.rating.imdb.length == 2 && parseFloat(m.info.rating.imdb[0]) > 0  ? new Element('span.rating', {
@@ -103,6 +107,14 @@ var SuggestList = new Class({
 						}) : null,
 						m.genre = m.info.genres && m.info.genres.length > 0 ? new Element('span.genres', {
 							'text': m.info.genres.slice(0, 3).join(', ')
+						}) : null,
+						m.plot = plot ? new Element('span.plot', {
+							'text': plot,
+							'events': {
+								'click': function(){
+									this.toggleClass('full')
+								}
+							}
 						}) : null
 					)
 
