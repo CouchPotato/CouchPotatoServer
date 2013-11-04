@@ -88,7 +88,7 @@
 			background: #4e5969;
 			cursor: pointer;
 			transition: all .4s ease-in-out;
-			padding: 0 0 10px;
+			padding: 0 3px 10px 0;
 		}
 			.suggestions .media_result .data:before {
 				bottom: 0;
