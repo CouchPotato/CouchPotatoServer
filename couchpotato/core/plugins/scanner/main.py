@@ -201,6 +201,11 @@ class Scanner(Plugin):
 
                 has_ignored += 1 if ext == 'ignore' else 0
 
+            if has_ignored == 0:
+                for file_path in list(group['unsorted_files']):
+                    ext = getExt(file_path)
+                    has_ignored += 1 if ext == 'ignore' else 0
+
             if has_ignored > 0:
                 ignored_identifiers.append(identifier)
 
