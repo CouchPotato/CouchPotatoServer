@@ -291,7 +291,7 @@ class Plugin(object):
 
     def createNzbName(self, data, movie):
         tag = self.cpTag(movie)
-        return '%s%s' % (toSafeString(data.get('name')[:127 - len(tag)]), tag)
+        return '%s%s' % (toSafeString(toUnicode(data.get('name'))[:127 - len(tag)]), tag)
 
     def createFileName(self, data, filedata, movie):
         name = os.path.join(self.createNzbName(data, movie))
