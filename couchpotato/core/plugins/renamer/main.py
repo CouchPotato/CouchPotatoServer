@@ -136,7 +136,7 @@ class Renamer(Plugin):
             log.debug('Release %s found in the \'from\' folder.', movie_folder)
             release_download['folder'] = new_movie_folder
             release_download['files'] = '|'.join(new_files)
-            movie_folder = new_movie_folder                
+            movie_folder = new_movie_folder
 
         if movie_folder:
             for item in no_process:
@@ -777,8 +777,8 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
         self.checking_snatched = True
 
-        snatched_status, ignored_status, failed_status, done_status, seeding_status, downloaded_status, missing_status = \
-            fireEvent('status.get', ['snatched', 'ignored', 'failed', 'done', 'seeding', 'downloaded', 'missing'], single = True)
+        snatched_status, ignored_status, failed_status, seeding_status, downloaded_status, missing_status = \
+            fireEvent('status.get', ['snatched', 'ignored', 'failed', 'seeding', 'downloaded', 'missing'], single = True)
 
         db = get_session()
         rels = db.query(Release).filter(
@@ -800,6 +800,11 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                     for rel in rels:
                         rel_dict = rel.to_dict({'info': {}})
                         movie_dict = fireEvent('movie.get', rel.movie_id, single = True)
+
+                        if not isinstance(rel_dict['info'], (dict)):
+                            log.error('Faulty release found without any info, ignoring.')
+                            fireEvent('release.update_status', rel.id, status = ignored_status, single = True)
+                            continue
 
                         # check status
                         nzbname = self.createNzbName(rel_dict['info'], movie_dict)
