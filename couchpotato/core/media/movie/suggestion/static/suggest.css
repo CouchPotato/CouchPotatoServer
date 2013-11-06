@@ -82,7 +82,7 @@
 			overflow: hidden;
 			text-align: justify;
 			height: 100%;
-			z-index: 20;
+			z-index: 2;
 			top: 64px;
 			position: absolute;
 			background: #4e5969;
@@ -104,7 +104,7 @@
 				    rgba(78, 89, 105, 1) 0%,
 				    rgba(78, 89, 105, 0) 100%
 				);
-				z-index: 21;
+				z-index: 3;
 				pointer-events: none;
 			}
 		
