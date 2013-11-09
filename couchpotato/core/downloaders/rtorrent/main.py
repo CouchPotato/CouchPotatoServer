@@ -8,7 +8,6 @@ from hashlib import sha1
 from rtorrent import RTorrent
 from rtorrent.err import MethodError
 import os
-import shutil
 
 log = CPLog(__name__)
 
@@ -202,16 +201,20 @@ class rTorrent(Downloader):
     def processComplete(self, release_download, delete_files):
         log.debug('Requesting rTorrent to remove the torrent %s%s.',
                   (release_download['name'], ' and cleanup the downloaded files' if delete_files else ''))
+
         if not self.connect():
             return False
 
         torrent = self.rt.find_torrent(release_download['id'])
+
         if torrent is None:
             return False
 
-        torrent.erase() # just removes the torrent, doesn't delete data
+        for file_item in torrent.get_files():
+            os.unlink(os.path.join(torrent.directory, file_item.path)
 
-        if delete_files:
-            shutil.rmtree(release_download['folder'], True)
+        # Need a proper solution to remove the torrent folder, if the torrent has one; THE RPC DOESN'T SUPPORT IT!
+
+        torrent.erase() # just removes the torrent, doesn't delete data
 
         return True
