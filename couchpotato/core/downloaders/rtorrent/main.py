@@ -211,9 +211,7 @@ class rTorrent(Downloader):
             return False
 
         for file_item in torrent.get_files():
-            os.unlink(os.path.join(torrent.directory, file_item.path)
-
-        # Need a proper solution to remove the torrent folder, if the torrent has one; THE RPC DOESN'T SUPPORT IT!
+            os.unlink(os.path.join(torrent.directory, file_item.path))
 
         torrent.erase() # just removes the torrent, doesn't delete data
 
