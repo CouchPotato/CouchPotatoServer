@@ -210,8 +210,9 @@ class rTorrent(Downloader):
         if torrent is None:
             return False
 
-        for file_item in torrent.get_files():
-            os.unlink(os.path.join(torrent.directory, file_item.path))
+        if delete_files:
+            for file_item in torrent.get_files(): # will only delete files, not dir/sub-dir
+                os.unlink(os.path.join(torrent.directory, file_item.path))
 
         torrent.erase() # just removes the torrent, doesn't delete data
 
