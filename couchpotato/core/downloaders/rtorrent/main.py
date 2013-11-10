@@ -214,6 +214,14 @@ class rTorrent(Downloader):
             for file_item in torrent.get_files(): # will only delete files, not dir/sub-dir
                 os.unlink(os.path.join(torrent.directory, file_item.path))
 
+            if torrent.is_multi_file() and torrent.directory.endswith(torrent.name):
+                # Remove empty directories bottom up
+                try:
+                    for path, _, _ in os.walk(torrent.directory, topdown=False):
+                        os.rmdir(path)
+                except OSError:
+                    log.info('Directory "%s" contains extra files, unable to remove', torrent.directory)
+
         torrent.erase() # just removes the torrent, doesn't delete data
 
         return True
