@@ -30,7 +30,8 @@ class Renamer(Plugin):
             'desc': 'For the renamer to check for new files to rename in a folder',
             'params': {
                 'async': {'desc': 'Optional: Set to 1 if you dont want to fire the renamer.scan asynchronous.'},
-                'movie_folder': {'desc': 'Optional: The folder of the movie to scan. Keep empty for default renamer folder.'},
+                'base_folder': {'desc': 'Optional: The folder to find releases in. Leave empty for default folder.'},
+                'movie_folder': {'desc': 'Optional: The folder of a specific release to scan. Don\'t use in combination with base_folder.'},
                 'downloader' : {'desc': 'Optional: The downloader the release has been downloaded with. \'download_id\' is required with this option.'},
                 'download_id': {'desc': 'Optional: The nzb/torrent ID of the release in movie_folder. \'downloader\' is required with this option.'},
                 'status': {'desc': 'Optional: The status of the release: \'completed\' (default) or \'seeding\''},
@@ -63,24 +64,26 @@ class Renamer(Plugin):
     def scanView(self, **kwargs):
 
         async = tryInt(kwargs.get('async', 0))
+        base_folder = kwargs.get('base_folder')
         movie_folder = kwargs.get('movie_folder')
         downloader = kwargs.get('downloader')
         download_id = kwargs.get('download_id')
         status = kwargs.get('status', 'completed')
 
-        release_download = {'folder': movie_folder} if movie_folder else None
-        if release_download:
+        release_download = None
+        if not base_folder and movie_folder:
+            release_download = {'folder': movie_folder}
             release_download.update({'id': download_id, 'downloader': downloader, 'status': status} if download_id else {})
 
         fire_handle = fireEvent if not async else fireEventAsync
 
-        fire_handle('renamer.scan', release_download)
+        fire_handle('renamer.scan', base_folder = base_folder, release_download = release_download)
 
         return {
             'success': True
         }
 
-    def scan(self, release_download = None):
+    def scan(self, base_folder = None, release_download = None):
 
         if self.isDisabled():
             return
@@ -88,6 +91,9 @@ class Renamer(Plugin):
         if self.renaming_started is True:
             log.info('Renamer is already running, if you see this often, check the logs above for errors.')
             return
+
+        if not base_folder:
+            base_folder = self.conf('from')
 
         # Get movie folder to process
         movie_folder = release_download and release_download.get('folder')
@@ -103,12 +109,12 @@ class Renamer(Plugin):
             pass
 
         # Check to see if the no_process folders are inside the "from" folder.
-        if not os.path.isdir(self.conf('from')) or not os.path.isdir(self.conf('to')):
+        if not os.path.isdir(base_folder) or not os.path.isdir(self.conf('to')):
             log.error('Both the "To" and "From" have to exist.')
             return
         else:
             for item in no_process:
-                if self.conf('from') in item:
+                if base_folder in item:
                     log.error('To protect your data, the movie libraries can\'t be inside of or the same as the "from" folder.')
                     return
 
@@ -183,7 +189,7 @@ class Renamer(Plugin):
             folder, movie_folder, files, extr_files = self.extractFiles(folder = folder, movie_folder = movie_folder, files = files,
                                                                         cleanup = self.conf('cleanup') and not self.downloadIsTorrent(release_download))
 
-        groups = fireEvent('scanner.scan', folder = folder if folder else self.conf('from'),
+        groups = fireEvent('scanner.scan', folder = folder if folder else base_folder,
                            files = files, release_download = release_download, return_ignored = False, single = True) or []
 
         folder_name = self.conf('folder_name')
@@ -492,7 +498,7 @@ class Renamer(Plugin):
                         os.remove(src)
 
                         parent_dir = os.path.normpath(os.path.dirname(src))
-                        if delete_folders.count(parent_dir) == 0 and os.path.isdir(parent_dir) and not parent_dir in [destination, movie_folder] and not self.conf('from') in parent_dir:
+                        if delete_folders.count(parent_dir) == 0 and os.path.isdir(parent_dir) and not parent_dir in [destination, movie_folder] and not base_folder in parent_dir:
                             delete_folders.append(parent_dir)
 
                 except:
@@ -541,7 +547,7 @@ class Renamer(Plugin):
                     group_folder = movie_folder
                 else:
                     # Delete the first empty subfolder in the tree relative to the 'from' folder
-                    group_folder = os.path.join(self.conf('from'), os.path.relpath(group['parentdir'], self.conf('from')).split(os.path.sep)[0])
+                    group_folder = os.path.join(base_folder, os.path.relpath(group['parentdir'], base_folder).split(os.path.sep)[0])
 
                 try:
                     log.info('Deleting folder: %s', group_folder)
