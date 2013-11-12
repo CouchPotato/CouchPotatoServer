@@ -92,7 +92,8 @@ class MovieLibraryPlugin(LibraryBase):
             library.tagline = toUnicode(info.get('tagline', ''))
             library.year = info.get('year', 0)
             library.status_id = done_status.get('id')
-            library.info.update(info)
+            if library.info is not None:
+                library.info.update(info)
             db.commit()
 
             # Titles
