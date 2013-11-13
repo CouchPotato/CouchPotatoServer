@@ -756,8 +756,11 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         return replaced.replace(' ', ' ' if not sep else sep)
 
     def replaceDoubles(self, string):
-        string = string.replace('  ', ' ').replace(' .', '.').replace('..', '.').replace('--', '-').replace('__', '_')
-        return string.replace('  ', ' ').replace(' .', '.').replace('..', '.').replace('--', '-').replace('__', '_')
+        replaces = [('\s', ' '), ('\s\.', ' '), ('\.', '.'), ('_', '_'), ('-', '-')]
+        for r in replaces:
+            reg, replace_with = r
+            string = re.sub('%s+' % reg, replace_with, string)
+        return string
 
     def deleteEmptyFolder(self, folder, show_error = True):
         folder = ss(folder)
