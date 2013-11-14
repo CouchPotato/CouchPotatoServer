@@ -736,19 +736,35 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
         replaced = toUnicode(string)
         for x, r in replacements.iteritems():
+            if x in ['thename', 'namethe']:
+                continue
             if r is not None:
                 replaced = replaced.replace(u'<%s>' % toUnicode(x), toUnicode(r))
             else:
                 #If information is not available, we don't want the tag in the filename
                 replaced = replaced.replace('<' + x + '>', '')
 
+        replaced = self.replaceDoubles(replaced.lstrip('. '))
+        for x, r in replacements.iteritems():
+            if x in ['thename', 'namethe']:
+                replaced = replaced.replace(u'<%s>' % toUnicode(x), toUnicode(r))
         replaced = re.sub(r"[\x00:\*\?\"<>\|]", '', replaced)
 
         sep = self.conf('foldersep') if folder else self.conf('separator')
-        return self.replaceDoubles(replaced.lstrip('. ')).replace(' ', ' ' if not sep else sep)
+        return replaced.replace(' ', ' ' if not sep else sep)
 
     def replaceDoubles(self, string):
-        return string.replace('  ', ' ').replace(' .', '.')
+
+        replaces = [
+            ('\.+', '.'), ('_+', '_'), ('-+', '-'), ('\s+', ' '),
+            ('(\s\.)+', '.'), ('(-\.)+', '.'), ('(\s-)+', '-'),
+        ]
+
+        for r in replaces:
+            reg, replace_with = r
+            string = re.sub(reg, replace_with, string)
+
+        return string
 
     def deleteEmptyFolder(self, folder, show_error = True):
         folder = ss(folder)
