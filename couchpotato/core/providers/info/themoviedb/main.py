@@ -121,7 +121,7 @@ class TheMovieDb(MovieProvider):
                 'year': year,
                 'plot': movie.overview,
                 'genres': genres,
-                'collection': movie.collection.name,
+                'collection': getattr(movie.collection, 'name', None),
             }
 
             movie_data = dict((k, v) for k, v in movie_data.iteritems() if v)
