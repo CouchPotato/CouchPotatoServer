@@ -748,18 +748,22 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         for x, r in replacements.iteritems():
             if x in ['thename', 'namethe']:
                 replaced = replaced.replace(u'<%s>' % toUnicode(x), toUnicode(r))
-            else:
-                continue
         replaced = re.sub(r"[\x00:\*\?\"<>\|]", '', replaced)
 
         sep = self.conf('foldersep') if folder else self.conf('separator')
         return replaced.replace(' ', ' ' if not sep else sep)
 
     def replaceDoubles(self, string):
-        replaces = [('\s', ' '), ('\s\.', ' '), ('\.', '.'), ('_', '_'), ('-', '-')]
+
+        replaces = [
+            ('\.+', '.'), ('_+', '_'), ('-+', '-'), ('\s+', ' '),
+            ('(\s\.)+', '.'), ('(-\.)+', '.'), ('(\s-)+', '-'),
+        ]
+
         for r in replaces:
             reg, replace_with = r
-            string = re.sub('%s+' % reg, replace_with, string)
+            string = re.sub(reg, replace_with, string)
+
         return string
 
     def deleteEmptyFolder(self, folder, show_error = True):
