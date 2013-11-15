@@ -1,4 +1,6 @@
-from base64 import b64encode
+from base64 import b64encode, b16encode, b32decode
+from bencode import bencode as benc, bdecode
+from hashlib import sha1
 from couchpotato.core.downloaders.base import Downloader, ReleaseDownloadList
 from couchpotato.core.helpers.encoding import isInt, ss
 from couchpotato.core.helpers.variable import tryFloat
@@ -7,6 +9,7 @@ from datetime import timedelta
 from synchronousdeluge import DelugeClient
 import os.path
 import traceback
+import re
 
 log = CPLog(__name__)
 
@@ -71,7 +74,7 @@ class Deluge(Downloader):
             remote_torrent = self.drpc.add_torrent_magnet(data.get('url'), options)
         else:
             filename = self.createFileName(data, filedata, movie)
-            remote_torrent = self.drpc.add_torrent_file(filename, b64encode(filedata), options)
+            remote_torrent = self.drpc.add_torrent_file(filename, filedata, options)
 
         if not remote_torrent:
             log.error('Failed sending torrent to Deluge')
@@ -171,7 +174,10 @@ class DelugeRPC(object):
         try:
             self.connect()
             torrent_id = self.client.core.add_torrent_magnet(torrent, options).get()
-            if options['label']:
+            if not torrent_id:
+                torrent_id = self._check_torrent(True, torrent)
+
+            if torrent_id and options['label']:
                 self.client.label.set_torrent(torrent_id, options['label']).get()
         except Exception, err:
             log.error('Failed to add torrent magnet %s: %s %s', (torrent, err, traceback.format_exc()))
@@ -185,8 +191,11 @@ class DelugeRPC(object):
         torrent_id = False
         try:
             self.connect()
-            torrent_id = self.client.core.add_torrent_file(filename, torrent, options).get()
-            if options['label']:
+            torrent_id = self.client.core.add_torrent_file(filename, b64encode(torrent), options).get()
+            if not torrent_id:
+                torrent_id = self._check_torrent(False, torrent)
+
+            if torrent_id and options['label']:
                 self.client.label.set_torrent(torrent_id, options['label']).get()
         except Exception, err:
             log.error('Failed to add torrent file %s: %s %s', (filename, err, traceback.format_exc()))
@@ -242,3 +251,22 @@ class DelugeRPC(object):
 
     def disconnect(self):
         self.client.disconnect()
+
+    def _check_torrent(self, magnet, torrent):
+        # Torrent not added, check if it already existed.
+        if magnet:
+            torrent_hash = re.findall('urn:btih:([\w]{32,40})', torrent)[0]
+        else:
+            info = bdecode(torrent)["info"]
+            torrent_hash = sha1(benc(info)).hexdigest()
+
+        # Convert base 32 to hex
+        if len(torrent_hash) == 32:
+            torrent_hash = b16encode(b32decode(torrent_hash))
+
+        torrent_hash = torrent_hash.lower()
+        torrent_check = self.client.core.get_torrent_status(torrent_hash, {}).get()
+        if torrent_check['hash']:
+            return torrent_hash
+
+        return False
