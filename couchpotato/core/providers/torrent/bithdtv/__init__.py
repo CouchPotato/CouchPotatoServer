@@ -4,7 +4,7 @@ def start():
     return BiTHDTV()
 
 config = [{
-    'name': 'BiT-HDTV',
+    'name': 'bithdtv',
     'groups': [
         {
             'tab': 'searcher',
