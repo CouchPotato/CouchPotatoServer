@@ -1,15 +1,15 @@
 from base64 import b64encode, b16encode, b32decode
 from bencode import bencode as benc, bdecode
-from hashlib import sha1
 from couchpotato.core.downloaders.base import Downloader, ReleaseDownloadList
 from couchpotato.core.helpers.encoding import isInt, ss
 from couchpotato.core.helpers.variable import tryFloat
 from couchpotato.core.logger import CPLog
 from datetime import timedelta
+from hashlib import sha1
 from synchronousdeluge import DelugeClient
 import os.path
-import traceback
 import re
+import traceback
 
 log = CPLog(__name__)
 
