@@ -1,8 +1,11 @@
 from bs4 import BeautifulSoup
-from couchpotato.core.helpers.variable import tryInt
+from couchpotato.core.helpers.encoding import toUnicode, tryUrlencode
+from couchpotato.core.helpers.variable import tryInt, cleanHost
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.torrent.base import TorrentMagnetProvider
+from couchpotato.environment import Env
 import re
+import time
 import traceback
 
 log = CPLog(__name__)
@@ -11,9 +14,8 @@ log = CPLog(__name__)
 class KickAssTorrents(TorrentMagnetProvider):
 
     urls = {
-        'test': 'https://kickass.to/',
-        'detail': 'https://kickass.to/%s',
-        'search': 'https://kickass.to/%s-i%s/',
+        'detail': '%s/%s',
+        'search': '%s/%s-i%s/',
     }
 
     cat_ids = [
@@ -28,10 +30,22 @@ class KickAssTorrents(TorrentMagnetProvider):
     http_time_between_calls = 1 #seconds
     cat_backup_id = None
 
+    proxy_list = [
+        'https://kickass.to',
+        'http://kickasstorrents.come.in',
+        'http://kickass.pw',
+        'http://www.kickassunblock.info',
+        'http://www.kickassproxy.info',
+    ]
+
+    def __init__(self):
+        self.domain = self.conf('domain')
+        super(KickAssTorrents, self).__init__()
+
     def _search(self, movie, quality, results):
 
-        data = self.getHTMLData(self.urls['search'] % ('m', movie['library']['identifier'].replace('tt', '')))
-
+        data = self.getHTMLData(self.urls['search'] % (self.getDomain(), 'm', movie['library']['identifier'].replace('tt', '')))
+        
         if data:
 
             cat_ids = self.getCatId(quality['identifier'])
@@ -41,7 +55,7 @@ class KickAssTorrents(TorrentMagnetProvider):
                 html = BeautifulSoup(data)
                 resultdiv = html.find('div', attrs = {'class':'tabs'})
                 for result in resultdiv.find_all('div', recursive = False):
-                    if result.get('id').lower() not in cat_ids:
+                    if result.get('id').lower().strip('tab-') not in cat_ids:
                         continue
 
                     try:
@@ -56,12 +70,12 @@ class KickAssTorrents(TorrentMagnetProvider):
                                 column_name = table_order[nr]
                                 if column_name:
 
-                                    if column_name is 'name':
+                                    if column_name == 'name':
                                         link = td.find('div', {'class': 'torrentname'}).find_all('a')[1]
                                         new['id'] = temp.get('id')[-8:]
                                         new['name'] = link.text
                                         new['url'] = td.find('a', 'imagnet')['href']
-                                        new['detail_url'] = self.urls['detail'] % link['href'][1:]
+                                        new['detail_url'] = self.urls['detail'] % (self.getDomain(), link['href'][1:])
                                         new['score'] = 20 if td.find('a', 'iverif') else 0
                                     elif column_name is 'size':
                                         new['size'] = self.parseSize(td.text)
@@ -100,3 +114,36 @@ class KickAssTorrents(TorrentMagnetProvider):
             age += tryInt(nr) * mult
 
         return tryInt(age)
+
+
+    def isEnabled(self):
+        return super(KickAssTorrents, self).isEnabled() and self.getDomain()
+
+    def getDomain(self, url = ''):
+
+        if not self.domain:
+            for proxy in self.proxy_list:
+
+                prop_name = 'kat_proxy.%s' % proxy
+                last_check = float(Env.prop(prop_name, default = 0))
+                if last_check > time.time() - 1209600:
+                    continue
+
+                data = ''
+                try:
+                    data = self.urlopen(proxy, timeout = 3, show_error = False)
+                except:
+                    log.debug('Failed kat proxy %s', proxy)
+
+                if 'search query' in data.lower():
+                    log.debug('Using proxy: %s', proxy)
+                    self.domain = proxy
+                    break
+
+                Env.prop(prop_name, time.time())
+
+        if not self.domain:
+            log.error('No kat proxies left, please add one in settings, or let us know which one to add on the forum.')
+            return None
+
+        return cleanHost(self.domain).rstrip('/') + url
