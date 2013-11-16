@@ -135,7 +135,7 @@ class KickAssTorrents(TorrentMagnetProvider):
                 except:
                     log.debug('Failed kat proxy %s', proxy)
 
-                if 'placeholder="Search query"' in data:
+                if 'search query' in data.lower():
                     log.debug('Using proxy: %s', proxy)
                     self.domain = proxy
                     break
