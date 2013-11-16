@@ -1,6 +1,7 @@
 from couchpotato.core.logger import CPLog
 from string import ascii_letters, digits
 from urllib import quote_plus
+import os
 import re
 import traceback
 import unicodedata
@@ -46,6 +47,10 @@ def ss(original, *args):
     except Exception, e:
         log.debug('Failed ss encoding char, force UTF8: %s', e)
         return u_original.encode('UTF-8')
+
+def sp(path, *args):
+    # Standardise encoding, normalise case, path and strip trailing '/' or '\'
+    return os.path.normcase(os.path.normpath(ss(path, *args))).rstrip(os.path.sep)
 
 def ek(original, *args):
     if isinstance(original, (str, unicode)):

@@ -1,6 +1,6 @@
 from couchpotato import get_session
 from couchpotato.core.event import fireEvent, addEvent
-from couchpotato.core.helpers.encoding import toUnicode, simplifyString, ss
+from couchpotato.core.helpers.encoding import toUnicode, simplifyString, ss, sp
 from couchpotato.core.helpers.variable import getExt, getImdb, tryInt, \
     splitString
 from couchpotato.core.logger import CPLog
@@ -108,7 +108,7 @@ class Scanner(Plugin):
 
     def scan(self, folder = None, files = None, release_download = None, simple = False, newer_than = 0, return_ignored = True, on_found = None):
 
-        folder = ss(os.path.normpath(folder))
+        folder = sp(folder)
 
         if not folder or not os.path.isdir(folder):
             log.error('Folder doesn\'t exists: %s', folder)
@@ -124,7 +124,7 @@ class Scanner(Plugin):
             try:
                 files = []
                 for root, dirs, walk_files in os.walk(folder):
-                    files.extend(os.path.join(root, filename) for filename in walk_files)
+                    files.extend([os.path.join(root, filename) for filename in walk_files])
 
                     # Break if CP wants to shut down
                     if self.shuttingDown():
