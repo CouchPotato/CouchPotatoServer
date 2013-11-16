@@ -22,12 +22,12 @@ Page.Wanted = new Class({
 
             self.scan_folder = new Element('a', {
                 'title': 'Scan a folder and rename all movies in it',
-                'text': 'Scan Folder',
+                'text': 'Manual folder scan',
                 'events':{
-                    'click': self.scanFolder.bind(self, event)
+                    'click': self.scanFolder.bind(self)
                 }
             });
-        
+
 			// Wanted movies
 			self.wanted = new MovieList({
 				'identifier': 'wanted',
@@ -82,21 +82,12 @@ Page.Wanted = new Class({
 	},
 
     scanFolder: function(e) {
-        if (!e)
-          e = window.event;
-
-        //IE9 & Other Browsers
-        if (e.stopPropagation) {
-          e.stopPropagation();
-        }
-        //IE8 and Lower
-        else {
-          e.cancelBubble = true;
-        }
+        (e).stop();
 
         var self = this;
-        var options = {};
-        options.name = "Scan_folder";
+        var options = {
+        	'name': 'Scan_folder'
+        }
 
         if(!self.folder_browser){
             self.folder_browser = new Option['Directory']("Scan", "folder", "", options);
@@ -108,7 +99,7 @@ Page.Wanted = new Class({
                         'base_folder': folder,
                     },
                 });
-            };        
+            };
 
             self.folder_browser.inject(self.el, 'top');
             self.folder_browser.fireEvent('injected');
@@ -120,7 +111,7 @@ Page.Wanted = new Class({
             self.folder_browser.showBrowser();
 
             // Make adjustments to the browser
-            self.folder_browser.browser.getElementsByClassName("clear button")[0].hide()
+            self.folder_browser.browser.getElements('.clear.button').hide();
             self.folder_browser.save_button.text = "Select";
             self.folder_browser.browser.style.zIndex=1000;
         }
