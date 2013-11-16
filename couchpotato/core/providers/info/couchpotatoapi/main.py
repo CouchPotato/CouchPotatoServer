@@ -3,6 +3,7 @@ from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.info.base import MovieProvider
 from couchpotato.environment import Env
+import base64
 import time
 
 log = CPLog(__name__)
@@ -11,6 +12,7 @@ log = CPLog(__name__)
 class CouchPotatoApi(MovieProvider):
 
     urls = {
+        'validate': 'https://api.couchpota.to/validate/%s/',
         'search': 'https://api.couchpota.to/search/%s/',
         'info': 'https://api.couchpota.to/info/%s/',
         'is_movie': 'https://api.couchpota.to/ismovie/%s/',
@@ -29,6 +31,8 @@ class CouchPotatoApi(MovieProvider):
         addEvent('movie.release_date', self.getReleaseDate)
         addEvent('movie.suggest', self.getSuggestions)
         addEvent('movie.is_movie', self.isMovie)
+
+        addEvent('release.validate', self.validate)
 
         addEvent('cp.source_url', self.getSourceUrl)
         addEvent('cp.messages', self.getMessages)
@@ -50,6 +54,14 @@ class CouchPotatoApi(MovieProvider):
 
     def search(self, q, limit = 5):
         return self.getJsonData(self.urls['search'] % tryUrlencode(q) + ('?limit=%s' % limit), headers = self.getRequestHeaders())
+
+    def validate(self, name = None):
+
+        if not name:
+            return
+
+        name_enc = base64.b64encode(name)
+        return self.getJsonData(self.urls['validate'] % name_enc, headers = self.getRequestHeaders())
 
     def isMovie(self, identifier = None):
 
