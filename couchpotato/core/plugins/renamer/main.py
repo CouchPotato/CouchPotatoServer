@@ -30,7 +30,8 @@ class Renamer(Plugin):
             'desc': 'For the renamer to check for new files to rename in a folder',
             'params': {
                 'async': {'desc': 'Optional: Set to 1 if you dont want to fire the renamer.scan asynchronous.'},
-                'movie_folder': {'desc': 'Optional: The folder of the movie to scan. Keep empty for default renamer folder.'},
+                'base_folder': {'desc': 'Optional: The folder to find releases in. Leave empty for default folder.'},
+                'movie_folder': {'desc': 'Optional: The folder of a specific release to scan. Don\'t use in combination with base_folder.'},
                 'downloader' : {'desc': 'Optional: The downloader the release has been downloaded with. \'download_id\' is required with this option.'},
                 'download_id': {'desc': 'Optional: The nzb/torrent ID of the release in movie_folder. \'downloader\' is required with this option.'},
                 'status': {'desc': 'Optional: The status of the release: \'completed\' (default) or \'seeding\''},
@@ -64,23 +65,25 @@ class Renamer(Plugin):
 
         async = tryInt(kwargs.get('async', 0))
         movie_folder = sp(kwargs.get('movie_folder'))
+        base_folder = sp(kwargs.get('base_folder'))
         downloader = kwargs.get('downloader')
         download_id = kwargs.get('download_id')
         status = kwargs.get('status', 'completed')
 
-        release_download = {'folder': movie_folder} if movie_folder else None
-        if release_download:
+        release_download = None
+        if not base_folder and movie_folder:
+            release_download = {'folder': movie_folder}
             release_download.update({'id': download_id, 'downloader': downloader, 'status': status} if download_id else {})
 
         fire_handle = fireEvent if not async else fireEventAsync
 
-        fire_handle('renamer.scan', release_download)
+        fire_handle('renamer.scan', base_folder = base_folder, release_download = release_download)
 
         return {
             'success': True
         }
 
-    def scan(self, release_download = None):
+    def scan(self, base_folder = None, release_download = None):
 
         if self.isDisabled():
             return
@@ -89,11 +92,11 @@ class Renamer(Plugin):
             log.info('Renamer is already running, if you see this often, check the logs above for errors.')
             return
 
-        from_folder = sp(self.conf('from'))
+        from_folder = sp(self.conf('from') if not base_folder else base_folder)
         to_folder = sp(self.conf('to'))
 
         # Get movie folder to process
-        movie_folder = release_download and release_download.get('folder')
+        movie_folder = sp(release_download and release_download.get('folder'))
 
         # Get all folders that should not be processed
         no_process = [to_folder]
@@ -493,7 +496,7 @@ class Renamer(Plugin):
                     if os.path.isfile(src):
                         os.remove(src)
 
-                        parent_dir = os.path.dirname(src)
+                        parent_dir = sp(os.path.dirname(src))
                         if delete_folders.count(parent_dir) == 0 and os.path.isdir(parent_dir) and not parent_dir in [destination, movie_folder] and not from_folder in parent_dir:
                             delete_folders.append(parent_dir)
 
@@ -993,7 +996,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         return release_download['id'] and release_download['downloader'] and release_download['folder']
 
     def movieInFromFolder(self, movie_folder):
-        return movie_folder and sp(self.conf('from')) in movie_folder or not movie_folder
+        return (movie_folder and sp(self.conf('from')) in movie_folder) or not movie_folder
 
     def extractFiles(self, folder = None, movie_folder = None, files = None, cleanup = False):
         if not files: files = []
@@ -1003,9 +1006,11 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         restfile_regex = '(^%s\.(?:part(?!0*1\.rar$)\d+\.rar$|[rstuvw]\d+$))'
         extr_files = []
 
+        from_folder = sp(self.conf('from'))
+
         # Check input variables
         if not folder:
-            folder = sp(self.conf('from'))
+            folder = from_folder
 
         check_file_date = True
         if movie_folder:
@@ -1059,7 +1064,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
             log.info('Archive %s found. Extracting...', os.path.basename(archive['file']))
             try:
                 rar_handle = RarFile(archive['file'])
-                extr_path = os.path.join(sp(self.conf('from')), os.path.relpath(os.path.dirname(archive['file']), folder))
+                extr_path = sp(os.path.join(from_folder, os.path.relpath(os.path.dirname(archive['file']), folder)))
                 self.makeDir(extr_path)
                 for packedinfo in rar_handle.infolist():
                     if not packedinfo.isdir and not os.path.isfile(os.path.join(extr_path, os.path.basename(packedinfo.filename))):
@@ -1082,9 +1087,9 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                 files.remove(filename)
 
         # Move the rest of the files and folders if any files are extracted to the from folder (only if folder was provided)
-        if extr_files and folder != sp(self.conf('from')):
+        if extr_files and sp(folder) != from_folder:
             for leftoverfile in list(files):
-                move_to = os.path.join(sp(self.conf('from')), os.path.relpath(leftoverfile, folder))
+                move_to = sp(os.path.join(from_folder, os.path.relpath(leftoverfile, folder)))
 
                 try:
                     self.makeDir(os.path.dirname(move_to))
@@ -1107,8 +1112,8 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                 log.debug('Removing old movie folder %s...', movie_folder)
                 self.deleteEmptyFolder(movie_folder)
 
-            movie_folder = os.path.join(sp(self.conf('from')), os.path.relpath(movie_folder, folder))
-            folder = sp(self.conf('from'))
+            movie_folder = sp(os.path.join(from_folder, os.path.relpath(movie_folder, folder)))
+            folder = from_folder
 
         if extr_files:
             files.extend(extr_files)
