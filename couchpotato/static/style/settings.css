@@ -113,6 +113,8 @@
 				width: 20px;
 			}
 
+    .Scan_folder { padding: 0 !important; }
+
 	.page .ctrlHolder {
 		line-height: 25px;
 		padding: 10px 10px 10px 30px;
@@ -159,7 +161,7 @@
 		}
 
 		.page .xsmall { width: 20px !important; text-align: center; }
-		
+
 	.page .enabler {
 		display: block;
 	}
