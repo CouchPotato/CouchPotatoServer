@@ -1,7 +1,7 @@
 from base64 import b16encode, b32decode
 from bencode import bencode as benc, bdecode
 from couchpotato.core.downloaders.base import Downloader, ReleaseDownloadList
-from couchpotato.core.helpers.encoding import isInt, ss
+from couchpotato.core.helpers.encoding import isInt, ss, sp
 from couchpotato.core.helpers.variable import tryInt, tryFloat
 from couchpotato.core.logger import CPLog
 from datetime import timedelta
@@ -134,7 +134,7 @@ class uTorrent(Downloader):
             torrent_files = []
             try:
                 torrent_files = json.loads(self.utorrent_api.get_files(torrent[0]))
-                torrent_files = [os.path.join(torrent[26], torrent_file[0]) for torrent_file in torrent_files['files'][1]]
+                torrent_files = [sp(os.path.join(torrent[26], torrent_file[0])) for torrent_file in torrent_files['files'][1]]
             except:
                 log.debug('Failed getting files from torrent: %s', torrent[2])
 
@@ -167,8 +167,8 @@ class uTorrent(Downloader):
                 'seed_ratio': float(torrent[7]) / 1000,
                 'original_status': torrent[1],
                 'timeleft': str(timedelta(seconds = torrent[10])),
-                'folder': ss(torrent[26]),
-                'files': ss('|'.join(torrent_files))
+                'folder': sp(torrent[26]),
+                'files': '|'.join(torrent_files)
             })
 
         return release_downloads

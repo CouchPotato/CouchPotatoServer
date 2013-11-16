@@ -1,11 +1,14 @@
-from base64 import b64encode
+from base64 import b64encode, b16encode, b32decode
+from bencode import bencode as benc, bdecode
 from couchpotato.core.downloaders.base import Downloader, ReleaseDownloadList
-from couchpotato.core.helpers.encoding import isInt, ss
+from couchpotato.core.helpers.encoding import isInt, sp
 from couchpotato.core.helpers.variable import tryFloat
 from couchpotato.core.logger import CPLog
 from datetime import timedelta
+from hashlib import sha1
 from synchronousdeluge import DelugeClient
 import os.path
+import re
 import traceback
 
 log = CPLog(__name__)
@@ -71,7 +74,7 @@ class Deluge(Downloader):
             remote_torrent = self.drpc.add_torrent_magnet(data.get('url'), options)
         else:
             filename = self.createFileName(data, filedata, movie)
-            remote_torrent = self.drpc.add_torrent_file(filename, b64encode(filedata), options)
+            remote_torrent = self.drpc.add_torrent_file(filename, filedata, options)
 
         if not remote_torrent:
             log.error('Failed sending torrent to Deluge')
@@ -111,13 +114,13 @@ class Deluge(Downloader):
             elif torrent['is_seed'] and torrent['is_finished'] and torrent['paused'] and torrent['state'] == 'Paused':
                 status = 'completed'
 
-            download_dir = torrent['save_path']
+            download_dir = sp(torrent['save_path'])
             if torrent['move_on_completed']:
                 download_dir = torrent['move_completed_path']
 
             torrent_files = []
             for file_item in torrent['files']:
-                torrent_files.append(os.path.join(download_dir, file_item['path']))
+                torrent_files.append(os.path.join(download_dir), sp(file_item['path']))
 
             release_downloads.append({
                 'id': torrent['hash'],
@@ -126,8 +129,8 @@ class Deluge(Downloader):
                 'original_status': torrent['state'],
                 'seed_ratio': torrent['ratio'],
                 'timeleft': str(timedelta(seconds = torrent['eta'])),
-                'folder': ss(download_dir) if len(torrent_files) == 1 else ss(os.path.join(download_dir, torrent['name'])),
-                'files': ss('|'.join(torrent_files)),
+                'folder': sp(download_dir if len(torrent_files) == 1 else os.path.join(download_dir, torrent['name'])),
+                'files': '|'.join(torrent_files),
             })
 
         return release_downloads
@@ -171,7 +174,10 @@ class DelugeRPC(object):
         try:
             self.connect()
             torrent_id = self.client.core.add_torrent_magnet(torrent, options).get()
-            if options['label']:
+            if not torrent_id:
+                torrent_id = self._check_torrent(True, torrent)
+
+            if torrent_id and options['label']:
                 self.client.label.set_torrent(torrent_id, options['label']).get()
         except Exception, err:
             log.error('Failed to add torrent magnet %s: %s %s', (torrent, err, traceback.format_exc()))
@@ -185,8 +191,11 @@ class DelugeRPC(object):
         torrent_id = False
         try:
             self.connect()
-            torrent_id = self.client.core.add_torrent_file(filename, torrent, options).get()
-            if options['label']:
+            torrent_id = self.client.core.add_torrent_file(filename, b64encode(torrent), options).get()
+            if not torrent_id:
+                torrent_id = self._check_torrent(False, torrent)
+
+            if torrent_id and options['label']:
                 self.client.label.set_torrent(torrent_id, options['label']).get()
         except Exception, err:
             log.error('Failed to add torrent file %s: %s %s', (filename, err, traceback.format_exc()))
@@ -242,3 +251,22 @@ class DelugeRPC(object):
 
     def disconnect(self):
         self.client.disconnect()
+
+    def _check_torrent(self, magnet, torrent):
+        # Torrent not added, check if it already existed.
+        if magnet:
+            torrent_hash = re.findall('urn:btih:([\w]{32,40})', torrent)[0]
+        else:
+            info = bdecode(torrent)["info"]
+            torrent_hash = sha1(benc(info)).hexdigest()
+
+        # Convert base 32 to hex
+        if len(torrent_hash) == 32:
+            torrent_hash = b16encode(b32decode(torrent_hash))
+
+        torrent_hash = torrent_hash.lower()
+        torrent_check = self.client.core.get_torrent_status(torrent_hash, {}).get()
+        if torrent_check['hash']:
+            return torrent_hash
+
+        return False

@@ -1,14 +1,13 @@
 from couchpotato import get_session
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, fireEventAsync, addEvent
-from couchpotato.core.helpers.encoding import toUnicode, simplifyString
+from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.variable import getImdb, splitString, tryInt, \
     mergeDicts
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media.movie import MovieTypeBase
 from couchpotato.core.settings.model import Library, LibraryTitle, Media, \
     Release
-from couchpotato.environment import Env
 from sqlalchemy.orm import joinedload_all
 from sqlalchemy.sql.expression import or_, asc, not_, desc
 from string import ascii_lowercase

@@ -1,6 +1,6 @@
 from base64 import b64encode
 from couchpotato.core.downloaders.base import Downloader, ReleaseDownloadList
-from couchpotato.core.helpers.encoding import tryUrlencode, ss
+from couchpotato.core.helpers.encoding import tryUrlencode, sp
 from couchpotato.core.helpers.variable import cleanHost
 from couchpotato.core.logger import CPLog
 from urllib2 import URLError
@@ -30,7 +30,7 @@ class NZBVortex(Downloader):
         # Send the nzb
         try:
             nzb_filename = self.createFileName(data, filedata, movie)
-            self.call('nzb/add', params = {'file': (ss(nzb_filename), filedata)}, multipart = True)
+            self.call('nzb/add', params = {'file': (nzb_filename, filedata)}, multipart = True)
 
             raw_statuses = self.call('nzb')
             nzb_id = [nzb['id'] for nzb in raw_statuses.get('nzbs', []) if nzb['name'] == nzb_filename][0]
@@ -59,7 +59,7 @@ class NZBVortex(Downloader):
                 'status': status,
                 'original_status': nzb['state'],
                 'timeleft':-1,
-                'folder': ss(nzb['destinationPath']),
+                'folder': sp(nzb['destinationPath']),
             })
 
         return release_downloads

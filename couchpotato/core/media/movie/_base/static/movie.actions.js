@@ -393,7 +393,7 @@ MA.Release = new Class({
 		if(icon)
 			icon.addClass('icon spinner').removeClass('download');
 
-		Api.request('release.download', {
+		Api.request('release.manual_download', {
 			'data': {
 				'id': release.id
 			},

@@ -1,6 +1,6 @@
 from base64 import standard_b64encode
 from couchpotato.core.downloaders.base import Downloader, ReleaseDownloadList
-from couchpotato.core.helpers.encoding import ss
+from couchpotato.core.helpers.encoding import ss, sp
 from couchpotato.core.helpers.variable import tryInt, md5
 from couchpotato.core.logger import CPLog
 from datetime import timedelta
@@ -145,7 +145,7 @@ class NZBGet(Downloader):
                 'status': 'completed' if nzb['ParStatus'] in ['SUCCESS', 'NONE'] and nzb['ScriptStatus'] in ['SUCCESS', 'NONE'] else 'failed',
                 'original_status': nzb['ParStatus'] + ', ' + nzb['ScriptStatus'],
                 'timeleft': str(timedelta(seconds = 0)),
-                'folder': ss(nzb['DestDir'])
+                'folder': sp(nzb['DestDir'])
             })
 
         return release_downloads

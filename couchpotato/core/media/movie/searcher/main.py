@@ -179,27 +179,11 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                     break
 
                 # Add them to this movie releases list
-                found_releases += fireEvent('searcher.create_releases', results, movie, quality_type, single = True)
+                found_releases += fireEvent('release.create_from_search', results, movie, quality_type, single = True)
 
-                for nzb in results:
-                    if not quality_type.get('finish', False) and quality_type.get('wait_for', 0) > 0 and nzb.get('age') <= quality_type.get('wait_for', 0):
-                        log.info('Ignored, waiting %s days: %s', (quality_type.get('wait_for'), nzb['name']))
-                        continue
-
-                    if nzb['status_id'] in [ignored_status.get('id'), failed_status.get('id')]:
-                        log.info('Ignored: %s', nzb['name'])
-                        continue
-
-                    if nzb['score'] <= 0:
-                        log.info('Ignored, score to low: %s', nzb['name'])
-                        continue
-
-                    downloaded = fireEvent('searcher.download', data = nzb, movie = movie, manual = manual, single = True)
-                    if downloaded is True:
-                        ret = True
-                        break
-                    elif downloaded != 'try_next':
-                        break
+                # Try find a valid result and download it
+                if fireEvent('release.try_download_result', results, movie, quality_type, manual, single = True):
+                    ret = True
 
                 # Remove releases that aren't found anymore
                 for release in movie.get('releases', []):

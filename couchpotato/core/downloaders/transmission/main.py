@@ -1,6 +1,6 @@
 from base64 import b64encode
 from couchpotato.core.downloaders.base import Downloader, ReleaseDownloadList
-from couchpotato.core.helpers.encoding import isInt, ss
+from couchpotato.core.helpers.encoding import isInt, sp
 from couchpotato.core.helpers.variable import tryInt, tryFloat
 from couchpotato.core.logger import CPLog
 from datetime import timedelta
@@ -105,10 +105,10 @@ class Transmission(Downloader):
 
             torrent_files = []
             for file_item in torrent['files']:
-                torrent_files.append(os.path.normpath(os.path.join(ss(torrent['downloadDir']), ss(file_item['name']))))
+                torrent_files.append(sp(os.path.join(torrent['downloadDir'], file_item['name'])))
 
             status = 'busy'
-            if torrent['isStalled'] and self.conf('stalled_as_failed'):
+            if torrent.get('isStalled') and self.conf('stalled_as_failed'):
                 status = 'failed'
             elif torrent['status'] == 0 and torrent['percentDone'] == 1:
                 status = 'completed'
@@ -122,8 +122,8 @@ class Transmission(Downloader):
                 'original_status': torrent['status'],
                 'seed_ratio': torrent['uploadRatio'],
                 'timeleft': str(timedelta(seconds = torrent['eta'])),
-                'folder': os.path.normpath(ss(torrent['downloadDir'])) if len(torrent_files) == 1 else os.path.normpath(os.path.join(ss(torrent['downloadDir']), ss(torrent['name']))),
-                'files': ss('|'.join(torrent_files))
+                'folder': sp(torrent['downloadDir'] if len(torrent_files) == 1 else os.path.join(torrent['downloadDir'], torrent['name'])),
+                'files': '|'.join(torrent_files)
             })
 
         return release_downloads

@@ -1,5 +1,5 @@
 from couchpotato.core.downloaders.base import Downloader, ReleaseDownloadList
-from couchpotato.core.helpers.encoding import tryUrlencode, ss
+from couchpotato.core.helpers.encoding import tryUrlencode, ss, sp
 from couchpotato.core.helpers.variable import cleanHost, mergeDicts
 from couchpotato.core.logger import CPLog
 from couchpotato.environment import Env
@@ -118,7 +118,7 @@ class Sabnzbd(Downloader):
                 'status': status,
                 'original_status': nzb['status'],
                 'timeleft': str(timedelta(seconds = 0)),
-                'folder': os.path.dirname(ss(nzb['storage'])) if os.path.isfile(ss(nzb['storage'])) else ss(nzb['storage']),
+                'folder': sp(os.path.dirname(nzb['storage']) if os.path.isfile(nzb['storage']) else nzb['storage']),
             })
 
         return release_downloads

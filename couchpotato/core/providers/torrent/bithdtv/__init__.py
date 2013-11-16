@@ -1,28 +1,31 @@
-from .main import KickAssTorrents
+from .main import BiTHDTV
 
 def start():
-    return KickAssTorrents()
+    return BiTHDTV()
 
 config = [{
-    'name': 'kickasstorrents',
+    'name': 'BiT-HDTV',
     'groups': [
         {
             'tab': 'searcher',
             'list': 'torrent_providers',
-            'name': 'KickAssTorrents',
-            'description': 'See <a href="https://kat.ph/">KickAssTorrents</a>',
+            'name': 'BiT-HDTV',
+            'description': 'See <a href="http://bit-hdtv.com">BiT-HDTV</a>',
             'wizard': True,
             'options': [
                 {
                     'name': 'enabled',
                     'type': 'enabler',
-                    'default': True,
+                    'default': False,
                 },
                 {
-                    'name': 'domain',
-                    'advanced': True,
-                    'label': 'Proxy server',
-                    'description': 'Domain for requests, keep empty to let CouchPotato pick.',
+                    'name': 'username',
+                    'default': '',
+                },
+                {
+                    'name': 'password',
+                    'default': '',
+                    'type': 'password',
                 },
                 {
                     'name': 'seed_ratio',
@@ -43,7 +46,7 @@ config = [{
                     'advanced': True,
                     'label': 'Extra Score',
                     'type': 'int',
-                    'default': 0,
+                    'default': 20,
                     'description': 'Starting score for each release found via this provider.',
                 }
             ],
