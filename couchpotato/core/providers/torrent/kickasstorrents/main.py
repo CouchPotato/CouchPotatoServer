@@ -1,5 +1,4 @@
 from bs4 import BeautifulSoup
-from couchpotato.core.helpers.encoding import toUnicode, tryUrlencode
 from couchpotato.core.helpers.variable import tryInt, cleanHost
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.torrent.base import TorrentMagnetProvider
@@ -32,7 +31,6 @@ class KickAssTorrents(TorrentMagnetProvider):
 
     proxy_list = [
         'https://kickass.to',
-        'http://kickasstorrents.come.in',
         'http://kickass.pw',
         'http://www.kickassunblock.info',
         'http://www.kickassproxy.info',
@@ -45,7 +43,7 @@ class KickAssTorrents(TorrentMagnetProvider):
     def _search(self, movie, quality, results):
 
         data = self.getHTMLData(self.urls['search'] % (self.getDomain(), 'm', movie['library']['identifier'].replace('tt', '')))
-        
+
         if data:
 
             cat_ids = self.getCatId(quality['identifier'])
