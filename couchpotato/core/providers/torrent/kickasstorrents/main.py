@@ -1,10 +1,8 @@
 from bs4 import BeautifulSoup
-from couchpotato.core.helpers.variable import tryInt, cleanHost
+from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.torrent.base import TorrentMagnetProvider
-from couchpotato.environment import Env
 import re
-import time
 import traceback
 
 log = CPLog(__name__)
@@ -35,10 +33,6 @@ class KickAssTorrents(TorrentMagnetProvider):
         'http://www.kickassunblock.info',
         'http://www.kickassproxy.info',
     ]
-
-    def __init__(self):
-        self.domain = self.conf('domain')
-        super(KickAssTorrents, self).__init__()
 
     def _search(self, movie, quality, results):
 
@@ -117,31 +111,5 @@ class KickAssTorrents(TorrentMagnetProvider):
     def isEnabled(self):
         return super(KickAssTorrents, self).isEnabled() and self.getDomain()
 
-    def getDomain(self, url = ''):
-
-        if not self.domain:
-            for proxy in self.proxy_list:
-
-                prop_name = 'kat_proxy.%s' % proxy
-                last_check = float(Env.prop(prop_name, default = 0))
-                if last_check > time.time() - 1209600:
-                    continue
-
-                data = ''
-                try:
-                    data = self.urlopen(proxy, timeout = 3, show_error = False)
-                except:
-                    log.debug('Failed kat proxy %s', proxy)
-
-                if 'search query' in data.lower():
-                    log.debug('Using proxy: %s', proxy)
-                    self.domain = proxy
-                    break
-
-                Env.prop(prop_name, time.time())
-
-        if not self.domain:
-            log.error('No kat proxies left, please add one in settings, or let us know which one to add on the forum.')
-            return None
-
-        return cleanHost(self.domain).rstrip('/') + url
+    def correctProxy(self, data):
+        return 'search query' in data.lower()
