@@ -8,7 +8,6 @@ config = [{
     'groups': [
         {
             'tab': 'searcher',
-            'subtab': 'providers',
             'list': 'torrent_providers',
             'name': 'BiT-HDTV',
             'description': 'See <a href="http://bit-hdtv.com">BiT-HDTV</a>',
