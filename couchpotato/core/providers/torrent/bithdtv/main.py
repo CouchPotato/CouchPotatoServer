@@ -64,8 +64,8 @@ class BiTHDTV(TorrentProvider):
                         'get_more_info': self.getMoreInfo,
                     })
 
-        except:
-            log.error('Failed getting results from %s: %s', (self.getName(), traceback.format_exc()))
+            except:
+                log.error('Failed getting results from %s: %s', (self.getName(), traceback.format_exc()))
 
     def getLoginParams(self):
         return tryUrlencode({
