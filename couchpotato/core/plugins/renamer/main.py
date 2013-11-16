@@ -89,11 +89,14 @@ class Renamer(Plugin):
             log.info('Renamer is already running, if you see this often, check the logs above for errors.')
             return
 
+        from_folder = sp(self.conf('from'))
+        to_folder = sp(self.conf('to'))
+
         # Get movie folder to process
         movie_folder = release_download and release_download.get('folder')
 
         # Get all folders that should not be processed
-        no_process = [sp(self.conf('to'))]
+        no_process = [to_folder]
         cat_list = fireEvent('category.all', single = True) or []
         no_process.extend([item['destination'] for item in cat_list])
         try:
@@ -103,12 +106,12 @@ class Renamer(Plugin):
             pass
 
         # Check to see if the no_process folders are inside the "from" folder.
-        if not os.path.isdir(sp(self.conf('from'))) or not os.path.isdir(sp(self.conf('to'))):
+        if not os.path.isdir(from_folder) or not os.path.isdir(to_folder):
             log.error('Both the "To" and "From" have to exist.')
             return
         else:
             for item in no_process:
-                if sp(self.conf('from')) in item:
+                if from_folder in item:
                     log.error('To protect your data, the movie libraries can\'t be inside of or the same as the "from" folder.')
                     return
 
@@ -118,9 +121,9 @@ class Renamer(Plugin):
 
             # Update to the from folder
             if len(release_download.get('files')) == 1:
-                new_movie_folder = ss(self.conf('from')) # ADD 'sp' function when that is pulled
+                new_movie_folder = from_folder
             else:
-                new_movie_folder = os.path.join(ss(self.conf('from')), os.path.basename(movie_folder)) # ADD 'sp' function when that is pulled
+                new_movie_folder = sp(os.path.join(from_folder, os.path.basename(movie_folder)))
 
             if not os.path.isdir(new_movie_folder):
                 log.error('The provided movie folder %s does not exist and could also not be found in the \'from\' folder.', movie_folder)
@@ -182,7 +185,7 @@ class Renamer(Plugin):
             folder, movie_folder, files, extr_files = self.extractFiles(folder = folder, movie_folder = movie_folder, files = files,
                                                                         cleanup = self.conf('cleanup') and not self.downloadIsTorrent(release_download))
 
-        groups = fireEvent('scanner.scan', folder = folder if folder else sp(self.conf('from')),
+        groups = fireEvent('scanner.scan', folder = folder if folder else from_folder,
                            files = files, release_download = release_download, return_ignored = False, single = True) or []
 
         folder_name = self.conf('folder_name')
@@ -221,7 +224,7 @@ class Renamer(Plugin):
                 movie_title = getTitle(library)
 
                 # Overwrite destination when set in category
-                destination = sp(self.conf('to'))
+                destination = to_folder
                 category_label = ''
                 for movie in library_ent.movies:
 
@@ -491,7 +494,7 @@ class Renamer(Plugin):
                         os.remove(src)
 
                         parent_dir = os.path.dirname(src)
-                        if delete_folders.count(parent_dir) == 0 and os.path.isdir(parent_dir) and not parent_dir in [destination, movie_folder] and not sp(self.conf('from')) in parent_dir:
+                        if delete_folders.count(parent_dir) == 0 and os.path.isdir(parent_dir) and not parent_dir in [destination, movie_folder] and not from_folder in parent_dir:
                             delete_folders.append(parent_dir)
 
                 except:
@@ -540,7 +543,7 @@ class Renamer(Plugin):
                     group_folder = movie_folder
                 else:
                     # Delete the first empty subfolder in the tree relative to the 'from' folder
-                    group_folder = os.path.join(sp(self.conf('from')), os.path.relpath(group['parentdir'], sp(self.conf('from'))).split(os.path.sep)[0])
+                    group_folder = sp(os.path.join(from_folder, os.path.relpath(group['parentdir'], from_folder)).split(os.path.sep)[0])
 
                 try:
                     log.info('Deleting folder: %s', group_folder)

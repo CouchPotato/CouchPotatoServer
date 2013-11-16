@@ -30,7 +30,7 @@ class NZBVortex(Downloader):
         # Send the nzb
         try:
             nzb_filename = self.createFileName(data, filedata, movie)
-            self.call('nzb/add', params = {'file': (sp(nzb_filename), filedata)}, multipart = True)
+            self.call('nzb/add', params = {'file': (nzb_filename, filedata)}, multipart = True)
 
             raw_statuses = self.call('nzb')
             nzb_id = [nzb['id'] for nzb in raw_statuses.get('nzbs', []) if nzb['name'] == nzb_filename][0]

@@ -118,7 +118,7 @@ class Sabnzbd(Downloader):
                 'status': status,
                 'original_status': nzb['status'],
                 'timeleft': str(timedelta(seconds = 0)),
-                'folder': os.path.dirname(sp(nzb['storage'])) if os.path.isfile(sp(nzb['storage'])) else sp(nzb['storage']),
+                'folder': sp(os.path.dirname(nzb['storage']) if os.path.isfile(nzb['storage']) else nzb['storage']),
             })
 
         return release_downloads

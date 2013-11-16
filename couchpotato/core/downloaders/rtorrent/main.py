@@ -156,7 +156,7 @@ class rTorrent(Downloader):
             for torrent in torrents:
                 torrent_files = []
                 for file_item in torrent.get_files():
-                    torrent_files.append(os.path.join(sp(torrent.directory), sp(file_item.path)))
+                    torrent_files.append(sp(os.path.join(torrent.directory, file_item.path)))
 
                 status = 'busy'
                 if torrent.complete:
@@ -217,7 +217,7 @@ class rTorrent(Downloader):
             if torrent.is_multi_file() and torrent.directory.endswith(torrent.name):
                 # Remove empty directories bottom up
                 try:
-                    for path, _, _ in os.walk(torrent.directory, topdown=False):
+                    for path, _, _ in os.walk(torrent.directory, topdown = False):
                         os.rmdir(path)
                 except OSError:
                     log.info('Directory "%s" contains extra files, unable to remove', torrent.directory)

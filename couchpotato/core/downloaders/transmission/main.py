@@ -105,7 +105,7 @@ class Transmission(Downloader):
 
             torrent_files = []
             for file_item in torrent['files']:
-                torrent_files.append(os.path.join(sp(torrent['downloadDir']), sp(file_item['name'])))
+                torrent_files.append(sp(os.path.join(torrent['downloadDir'], file_item['name'])))
 
             status = 'busy'
             if torrent.get('isStalled') and self.conf('stalled_as_failed'):
@@ -122,7 +122,7 @@ class Transmission(Downloader):
                 'original_status': torrent['status'],
                 'seed_ratio': torrent['uploadRatio'],
                 'timeleft': str(timedelta(seconds = torrent['eta'])),
-                'folder': sp(torrent['downloadDir']) if len(torrent_files) == 1 else os.path.join(sp(torrent['downloadDir']), sp(torrent['name'])),
+                'folder': sp(torrent['downloadDir'] if len(torrent_files) == 1 else os.path.join(torrent['downloadDir'], torrent['name'])),
                 'files': '|'.join(torrent_files)
             })
 

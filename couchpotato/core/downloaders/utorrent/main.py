@@ -134,7 +134,7 @@ class uTorrent(Downloader):
             torrent_files = []
             try:
                 torrent_files = json.loads(self.utorrent_api.get_files(torrent[0]))
-                torrent_files = [os.path.join(sp(torrent[26]), sp(torrent_file[0])) for torrent_file in torrent_files['files'][1]]
+                torrent_files = [sp(os.path.join(torrent[26], torrent_file[0])) for torrent_file in torrent_files['files'][1]]
             except:
                 log.debug('Failed getting files from torrent: %s', torrent[2])
 
