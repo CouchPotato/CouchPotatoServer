@@ -120,7 +120,7 @@ class Deluge(Downloader):
 
             torrent_files = []
             for file_item in torrent['files']:
-                torrent_files.append(os.path.join(download_dir), sp(file_item['path']))
+                torrent_files.append(sp(os.path.join(download_dir, file_item['path'])))
 
             release_downloads.append({
                 'id': torrent['hash'],
