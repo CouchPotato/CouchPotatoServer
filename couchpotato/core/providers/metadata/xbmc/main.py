@@ -105,12 +105,12 @@ class XBMC(MetaDataBase):
             writers.text = toUnicode(writer)
 
         # Sets or collections
-        collection_name = toUnicode(movie_info.get('collection'))
+        collection_name = movie_info.get('collection')
         if collection_name:
             collection = SubElement(nfoxml, 'set')
             collection.text = toUnicode(collection_name)
             sorttitle = SubElement(nfoxml, 'sorttitle')
-            sorttitle.text = '%s %s' % (collection_name, movie_info.get('year'))
+            sorttitle.text = '%s %s' % (toUnicode(collection_name), movie_info.get('year'))
 
         # Clean up the xml and return it
         nfoxml = xml.dom.minidom.parseString(tostring(nfoxml))
