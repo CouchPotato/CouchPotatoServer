@@ -122,7 +122,7 @@ class Renamer(Plugin):
             log.debug('The provided movie folder %s does not exist. Trying to find it in the \'from\' folder.', movie_folder)
 
             # Update to the from folder
-            if len(release_download.get('files')) == 1:
+            if len(splitString(release_download.get('files'), '|')) == 1:
                 new_movie_folder = from_folder
             else:
                 new_movie_folder = os.path.join(from_folder, os.path.basename(movie_folder))
