@@ -67,7 +67,7 @@ class Renamer(Plugin):
         movie_folder = sp(kwargs.get('movie_folder'))
         downloader = kwargs.get('downloader')
         download_id = kwargs.get('download_id')
-        files = ''.join([sp(filename) for filename in splitString(kwargs.get('files'))])
+        files = '|'.join([sp(filename) for filename in splitString(kwargs.get('files'), '|')])
         status = kwargs.get('status', 'completed')
 
         release_download = {'folder': movie_folder} if movie_folder else None
@@ -545,7 +545,7 @@ class Renamer(Plugin):
                     group_folder = movie_folder
                 else:
                     # Delete the first empty subfolder in the tree relative to the 'from' folder
-                    group_folder = sp(os.path.join(from_folder, os.path.relpath(group['parentdir'], from_folder)).split(os.path.sep)[0])
+                    group_folder = sp(os.path.join(from_folder, os.path.relpath(group['parentdir'], from_folder).split(os.path.sep)[0]))
 
                 try:
                     log.info('Deleting folder: %s', group_folder)
