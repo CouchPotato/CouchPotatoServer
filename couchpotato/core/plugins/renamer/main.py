@@ -31,6 +31,7 @@ class Renamer(Plugin):
             'params': {
                 'async': {'desc': 'Optional: Set to 1 if you dont want to fire the renamer.scan asynchronous.'},
                 'movie_folder': {'desc': 'Optional: The folder of the movie to scan. Keep empty for default renamer folder.'},
+                'files': {'desc': 'Optional: Provide the release files if more releases are in the same movie_folder, delimited with a \'|\'. Note that no dedicated release folder is expected for releases with one file.'},
                 'downloader' : {'desc': 'Optional: The downloader the release has been downloaded with. \'download_id\' is required with this option.'},
                 'download_id': {'desc': 'Optional: The nzb/torrent ID of the release in movie_folder. \'downloader\' is required with this option.'},
                 'status': {'desc': 'Optional: The status of the release: \'completed\' (default) or \'seeding\''},
@@ -66,11 +67,12 @@ class Renamer(Plugin):
         movie_folder = sp(kwargs.get('movie_folder'))
         downloader = kwargs.get('downloader')
         download_id = kwargs.get('download_id')
+        files = '|'.join([sp(filename) for filename in splitString(kwargs.get('files'), '|')])
         status = kwargs.get('status', 'completed')
 
         release_download = {'folder': movie_folder} if movie_folder else None
         if release_download:
-            release_download.update({'id': download_id, 'downloader': downloader, 'status': status} if download_id else {})
+            release_download.update({'id': download_id, 'downloader': downloader, 'status': status, 'files': files} if download_id else {})
 
         fire_handle = fireEvent if not async else fireEventAsync
 
@@ -101,7 +103,7 @@ class Renamer(Plugin):
         no_process.extend([item['destination'] for item in cat_list])
         try:
             if Env.setting('library', section = 'manage').strip():
-                no_process.extend(splitString(Env.setting('library', section = 'manage'), '::'))
+                no_process.extend([sp(manage_folder) for manage_folder in splitString(Env.setting('library', section = 'manage'), '::')])
         except:
             pass
 
@@ -123,7 +125,7 @@ class Renamer(Plugin):
             if len(release_download.get('files')) == 1:
                 new_movie_folder = from_folder
             else:
-                new_movie_folder = sp(os.path.join(from_folder, os.path.basename(movie_folder)))
+                new_movie_folder = os.path.join(from_folder, os.path.basename(movie_folder))
 
             if not os.path.isdir(new_movie_folder):
                 log.error('The provided movie folder %s does not exist and could also not be found in the \'from\' folder.', movie_folder)
@@ -170,7 +172,7 @@ class Renamer(Plugin):
                 # Get all files from the specified folder
                 try:
                     for root, folders, names in os.walk(movie_folder):
-                        files.extend([os.path.join(root, name) for name in names])
+                        files.extend([sp(os.path.join(root, name)) for name in names])
                 except:
                     log.error('Failed getting files from %s: %s', (movie_folder, traceback.format_exc()))
 
@@ -543,7 +545,7 @@ class Renamer(Plugin):
                     group_folder = movie_folder
                 else:
                     # Delete the first empty subfolder in the tree relative to the 'from' folder
-                    group_folder = sp(os.path.join(from_folder, os.path.relpath(group['parentdir'], from_folder)).split(os.path.sep)[0])
+                    group_folder = sp(os.path.join(from_folder, os.path.relpath(group['parentdir'], from_folder).split(os.path.sep)[0]))
 
                 try:
                     log.info('Deleting folder: %s', group_folder)
@@ -603,7 +605,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         elif isinstance(release_download, dict):
             # Tag download_files if they are known
             if release_download['files']:
-                tag_files = release_download['files'].split('|')
+                tag_files = splitString(release_download['files'], '|')
 
             # Tag all files in release folder
             else:
@@ -627,17 +629,17 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
         # Untag download_files if they are known
         if release_download['files']:
-            tag_files = release_download['files'].split('|')
+            tag_files = splitString(release_download['files'], '|')
 
         # Untag all files in release folder
         else:
             for root, folders, names in os.walk(release_download['folder']):
-                tag_files.extend([os.path.join(root, name) for name in names if not os.path.splitext(name)[1] == '.ignore'])
+                tag_files.extend([sp(os.path.join(root, name)) for name in names if not os.path.splitext(name)[1] == '.ignore'])
 
         # Find all .ignore files in folder
         ignore_files = []
         for root, dirnames, filenames in os.walk(folder):
-            ignore_files.extend(fnmatch.filter([os.path.join(root, filename) for filename in filenames], '*%s.ignore' % tag))
+            ignore_files.extend(fnmatch.filter([sp(os.path.join(root, filename)) for filename in filenames], '*%s.ignore' % tag))
 
         # Match all found ignore files with the tag_files and delete if found
         for tag_file in tag_files:
@@ -661,16 +663,16 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
         # Find tag on download_files if they are known
         if release_download['files']:
-            tag_files = release_download['files'].split('|')
+            tag_files = splitString(release_download['files'], '|')
 
         # Find tag on all files in release folder
         else:
             for root, folders, names in os.walk(release_download['folder']):
-                tag_files.extend([os.path.join(root, name) for name in names if not os.path.splitext(name)[1] == '.ignore'])
+                tag_files.extend([sp(os.path.join(root, name)) for name in names if not os.path.splitext(name)[1] == '.ignore'])
 
         # Find all .ignore files in folder
         for root, dirnames, filenames in os.walk(folder):
-            ignore_files.extend(fnmatch.filter([os.path.join(root, filename) for filename in filenames], '*%s.ignore' % tag))
+            ignore_files.extend(fnmatch.filter([sp(os.path.join(root, filename)) for filename in filenames], '*%s.ignore' % tag))
 
         # Match all found ignore files with the tag_files and return True found
         for tag_file in tag_files:
@@ -769,7 +771,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         return string
 
     def deleteEmptyFolder(self, folder, show_error = True):
-        folder = ss(folder)
+        folder = sp(folder)
 
         loge = log.error if show_error else log.debug
         for root, dirs, files in os.walk(folder):
@@ -993,7 +995,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         return release_download['id'] and release_download['downloader'] and release_download['folder']
 
     def movieInFromFolder(self, movie_folder):
-        return movie_folder and sp(self.conf('from')) in movie_folder or not movie_folder
+        return movie_folder and sp(self.conf('from')) in sp(movie_folder) or not movie_folder
 
     def extractFiles(self, folder = None, movie_folder = None, files = None, cleanup = False):
         if not files: files = []
@@ -1003,9 +1005,11 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         restfile_regex = '(^%s\.(?:part(?!0*1\.rar$)\d+\.rar$|[rstuvw]\d+$))'
         extr_files = []
 
+        from_folder = sp(self.conf('from'))
+
         # Check input variables
         if not folder:
-            folder = sp(self.conf('from'))
+            folder = from_folder
 
         check_file_date = True
         if movie_folder:
@@ -1013,7 +1017,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
         if not files:
             for root, folders, names in os.walk(folder):
-                files.extend([os.path.join(root, name) for name in names])
+                files.extend([sp(os.path.join(root, name)) for name in names])
 
         # Find all archive files
         archives = [re.search(archive_regex, name).groupdict() for name in files if re.search(archive_regex, name)]
@@ -1059,13 +1063,13 @@ Remove it if you want it to be renamed (again, or at least let it try again)
             log.info('Archive %s found. Extracting...', os.path.basename(archive['file']))
             try:
                 rar_handle = RarFile(archive['file'])
-                extr_path = os.path.join(sp(self.conf('from')), os.path.relpath(os.path.dirname(archive['file']), folder))
+                extr_path = os.path.join(from_folder, os.path.relpath(os.path.dirname(archive['file']), folder))
                 self.makeDir(extr_path)
                 for packedinfo in rar_handle.infolist():
-                    if not packedinfo.isdir and not os.path.isfile(os.path.join(extr_path, os.path.basename(packedinfo.filename))):
+                    if not packedinfo.isdir and not os.path.isfile(sp(os.path.join(extr_path, os.path.basename(packedinfo.filename)))):
                         log.debug('Extracting %s...', packedinfo.filename)
                         rar_handle.extract(condition = [packedinfo.index], path = extr_path, withSubpath = False, overwrite = False)
-                        extr_files.append(os.path.join(extr_path, os.path.basename(packedinfo.filename)))
+                        extr_files.append(sp(os.path.join(extr_path, os.path.basename(packedinfo.filename))))
                 del rar_handle
             except Exception, e:
                 log.error('Failed to extract %s: %s %s', (archive['file'], e, traceback.format_exc()))
@@ -1082,9 +1086,9 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                 files.remove(filename)
 
         # Move the rest of the files and folders if any files are extracted to the from folder (only if folder was provided)
-        if extr_files and folder != sp(self.conf('from')):
+        if extr_files and folder != from_folder:
             for leftoverfile in list(files):
-                move_to = os.path.join(sp(self.conf('from')), os.path.relpath(leftoverfile, folder))
+                move_to = os.path.join(from_folder, os.path.relpath(leftoverfile, folder))
 
                 try:
                     self.makeDir(os.path.dirname(move_to))
@@ -1107,8 +1111,8 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                 log.debug('Removing old movie folder %s...', movie_folder)
                 self.deleteEmptyFolder(movie_folder)
 
-            movie_folder = os.path.join(sp(self.conf('from')), os.path.relpath(movie_folder, folder))
-            folder = sp(self.conf('from'))
+            movie_folder = os.path.join(from_folder, os.path.relpath(movie_folder, folder))
+            folder = from_folder
 
         if extr_files:
             files.extend(extr_files)
