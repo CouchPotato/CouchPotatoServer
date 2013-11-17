@@ -19,6 +19,12 @@ config = [{
                     'default': True,
                 },
                 {
+                    'name': 'domain',
+                    'advanced': True,
+                    'label': 'Proxy server',
+                    'description': 'Domain for requests, keep empty to let CouchPotato pick.',
+                },
+                {
                     'name': 'seed_ratio',
                     'label': 'Seed ratio',
                     'type': 'float',

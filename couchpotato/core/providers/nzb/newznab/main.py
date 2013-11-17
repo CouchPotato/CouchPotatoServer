@@ -1,4 +1,4 @@
-from couchpotato.core.helpers.encoding import tryUrlencode
+from couchpotato.core.helpers.encoding import tryUrlencode, toUnicode
 from couchpotato.core.helpers.rss import RSS
 from couchpotato.core.helpers.variable import cleanHost, splitString, tryInt
 from couchpotato.core.logger import CPLog
@@ -83,7 +83,7 @@ class Newznab(NZBProvider, RSS):
             results.append({
                 'id': nzb_id,
                 'provider_extra': urlparse(host['host']).hostname or host['host'],
-                'name': name,
+                'name': toUnicode(name),
                 'name_extra': name_extra,
                 'age': self.calculateAge(int(time.mktime(parse(date).timetuple()))),
                 'size': int(self.getElement(nzb, 'enclosure').attrib['length']) / 1024 / 1024,

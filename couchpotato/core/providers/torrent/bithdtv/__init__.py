@@ -1,16 +1,16 @@
-from .main import SceneHD
+from .main import BiTHDTV
 
 def start():
-    return SceneHD()
+    return BiTHDTV()
 
 config = [{
-    'name': 'scenehd',
+    'name': 'bithdtv',
     'groups': [
         {
             'tab': 'searcher',
             'list': 'torrent_providers',
-            'name': 'SceneHD',
-            'description': 'See <a href="https://scenehd.org">SceneHD</a>',
+            'name': 'BiT-HDTV',
+            'description': 'See <a href="http://bit-hdtv.com">BiT-HDTV</a>',
             'wizard': True,
             'options': [
                 {
@@ -46,7 +46,7 @@ config = [{
                     'advanced': True,
                     'label': 'Extra Score',
                     'type': 'int',
-                    'default': 0,
+                    'default': 20,
                     'description': 'Starting score for each release found via this provider.',
                 }
             ],

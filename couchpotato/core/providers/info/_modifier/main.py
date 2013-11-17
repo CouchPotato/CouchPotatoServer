@@ -32,8 +32,25 @@ class MovieResultModifier(Plugin):
     }
 
     def __init__(self):
+        addEvent('result.modify.info.search', self.returnByType)
         addEvent('result.modify.movie.search', self.combineOnIMDB)
         addEvent('result.modify.movie.info', self.checkLibrary)
+
+    def returnByType(self, results):
+
+        new_results = {}
+        for r in results:
+            type_name = r.get('type', 'movie') + 's'
+            if not new_results.has_key(type_name):
+                new_results[type_name] = []
+
+            new_results[type_name].append(r)
+
+        # Combine movies, needs a cleaner way..
+        if new_results.has_key('movies'):
+            new_results['movies'] = self.combineOnIMDB(new_results['movies'])
+
+        return new_results
 
     def combineOnIMDB(self, results):
 

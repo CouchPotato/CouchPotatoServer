@@ -15,7 +15,6 @@ import xml.etree.ElementTree as XMLTree
 
 log = CPLog(__name__)
 
-
 class MultiProvider(Plugin):
 
     def __init__(self):
@@ -63,13 +62,17 @@ class Provider(Plugin):
 
         return self.is_available.get(host, False)
 
-    def getJsonData(self, url, **kwargs):
+    def getJsonData(self, url, decode_from = None, **kwargs):
 
         cache_key = '%s%s' % (md5(url), md5('%s' % kwargs.get('params', {})))
         data = self.getCache(cache_key, url, **kwargs)
 
         if data:
             try:
+                data = data.strip()
+                if decode_from:
+                    data = data.decode(decode_from)
+
                 return json.loads(data)
             except:
                 log.error('Failed to parsing %s: %s', (self.getName(), traceback.format_exc()))
@@ -251,7 +254,10 @@ class YarrProvider(Provider):
             if identifier in qualities:
                 return ids
 
-        return [self.cat_backup_id]
+        if self.cat_backup_id:
+            return [self.cat_backup_id]
+
+        return []
 
 
 class ResultList(list):
@@ -279,12 +285,22 @@ class ResultList(list):
 
         new_result = self.fillResult(result)
 
-        is_correct_movie = fireEvent('movie.searcher.correct_movie',
-                                     nzb = new_result, movie = self.movie, quality = self.quality,
+        is_correct = fireEvent('searcher.correct_release', new_result, self.movie, self.quality,
                                      imdb_results = self.kwargs.get('imdb_results', False), single = True)
 
-        if is_correct_movie and new_result['id'] not in self.result_ids:
+        if is_correct and new_result['id'] not in self.result_ids:
+            is_correct_weight = float(is_correct)
+
             new_result['score'] += fireEvent('score.calculate', new_result, self.movie, single = True)
+
+            old_score = new_result['score']
+            new_result['score'] = int(old_score * is_correct_weight)
+
+            log.info('Found correct release with weight %.02f, old_score(%d) now scaled to score(%d)', (
+                is_correct_weight,
+                old_score,
+                new_result['score']
+            ))
 
             self.found(new_result)
             self.result_ids.append(result['id'])

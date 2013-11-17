@@ -1,7 +1,7 @@
 from StringIO import StringIO
 from couchpotato.core.event import fireEvent, addEvent
 from couchpotato.core.helpers.encoding import tryUrlencode, ss, toSafeString, \
-    toUnicode
+    toUnicode, sp
 from couchpotato.core.helpers.variable import getExt, md5, isLocalIP
 from couchpotato.core.logger import CPLog
 from couchpotato.environment import Env
@@ -121,7 +121,7 @@ class Plugin(object):
 
     # http request
     def urlopen(self, url, timeout = 30, params = None, headers = None, opener = None, multipart = False, show_error = True):
-        url = ss(url)
+        url = urllib2.quote(ss(url), safe = "%/:=&?~#+!$,;'@()*[]")
 
         if not headers: headers = {}
         if not params: params = {}
@@ -291,10 +291,10 @@ class Plugin(object):
 
     def createNzbName(self, data, movie):
         tag = self.cpTag(movie)
-        return '%s%s' % (toSafeString(data.get('name')[:127 - len(tag)]), tag)
+        return '%s%s' % (toSafeString(toUnicode(data.get('name'))[:127 - len(tag)]), tag)
 
     def createFileName(self, data, filedata, movie):
-        name = os.path.join(self.createNzbName(data, movie))
+        name = sp(os.path.join(self.createNzbName(data, movie)))
         if data.get('protocol') == 'nzb' and 'DOCTYPE nzb' not in filedata and '</nzb>' not in filedata:
             return '%s.%s' % (name, 'rar')
         return '%s.%s' % (name, data.get('protocol'))

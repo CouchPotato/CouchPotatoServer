@@ -34,7 +34,7 @@ Page.Userscript = new Class({
 				if(json.error)
 					self.frame.set('html', json.error);
 				else {
-					var item = new Block.Search.Item(json.movie);
+					var item = new Block.Search.MovieItem(json.movie);
 					self.frame.adopt(item);
 					item.showOptions();
 				}

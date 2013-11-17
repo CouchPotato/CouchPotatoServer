@@ -65,7 +65,7 @@ class BinSearch(NZBProvider):
                         total = tryInt(parts.group('total'))
                         parts = tryInt(parts.group('parts'))
 
-                        if (total / parts) < 0.95 or ((total / parts) >= 0.95 and not 'par2' in info.text.lower()):
+                        if (total / parts) < 0.95 or ((total / parts) >= 0.95 and not ('par2' in info.text.lower() or 'pa3' in info.text.lower())):
                             log.info2('Wrong: \'%s\', not complete: %s out of %s', (item['name'], parts, total))
                             return False
 

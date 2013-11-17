@@ -20,6 +20,7 @@ class OMDBAPI(MovieProvider):
     http_time_between_calls = 0
 
     def __init__(self):
+        addEvent('info.search', self.search)
         addEvent('movie.search', self.search)
         addEvent('movie.info', self.getInfo)
 
@@ -84,6 +85,7 @@ class OMDBAPI(MovieProvider):
             year = tryInt(movie.get('Year', ''))
 
             movie_data = {
+                'type': 'movie',
                 'via_imdb': True,
                 'titles': [movie.get('Title')] if movie.get('Title') else [],
                 'original_title': movie.get('Title'),

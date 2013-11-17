@@ -23,6 +23,8 @@ config = [{
                 {
                     'name': 'url',
                     'default': 'http://localhost:80/RPC2',
+                    'description': 'XML-RPC Endpoint URI. Usually <strong>scgi://localhost:5000</strong> '
+                                   'or <strong>http://localhost:80/RPC2</strong>'
                 },
                 {
                     'name': 'username',
@@ -34,6 +36,11 @@ config = [{
                 {
                     'name': 'label',
                     'description': 'Label to apply on added torrents.',
+                },
+                {
+                    'name': 'directory',
+                    'type': 'directory',
+                    'description': 'Download to this directory. Keep empty for default rTorrent download directory.',
                 },
                 {
                     'name': 'remove_complete',
@@ -50,6 +57,14 @@ config = [{
                     'type': 'bool',
                     'advanced': True,
                     'description': 'Also remove the leftover files.',
+                },
+                {
+                    'name': 'append_label',
+                    'label': 'Append Label',
+                    'default': False,
+                    'advanced': True,
+                    'type': 'bool',
+                    'description': 'Append label to download location. Requires you to set the download location above.',
                 },
                 {
                     'name': 'paused',
