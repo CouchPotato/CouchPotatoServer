@@ -124,7 +124,7 @@ class Scanner(Plugin):
             try:
                 files = []
                 for root, dirs, walk_files in os.walk(folder):
-                    files.extend([os.path.join(root, filename) for filename in walk_files])
+                    files.extend([sp(os.path.join(root, filename)) for filename in walk_files])
 
                     # Break if CP wants to shut down
                     if self.shuttingDown():
@@ -134,7 +134,7 @@ class Scanner(Plugin):
                 log.error('Failed getting files from %s: %s', (folder, traceback.format_exc()))
         else:
             check_file_date = False
-            files = [ss(x) for x in files]
+            files = [sp(x) for x in files]
 
 
         for file_path in files:
