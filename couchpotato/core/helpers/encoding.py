@@ -50,7 +50,7 @@ def ss(original, *args):
 
 def sp(path, *args):
     # Standardise encoding, normalise case, path and strip trailing '/' or '\'
-    return os.path.normcase(os.path.normpath(ss(path, *args))).rstrip(os.path.sep)
+    return os.path.normcase(os.path.normpath(ss(path, *args))).rstrip(os.path.sep) if path.strip() else ''
 
 def ek(original, *args):
     if isinstance(original, (str, unicode)):
