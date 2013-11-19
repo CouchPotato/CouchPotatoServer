@@ -112,6 +112,15 @@ class XBMC(MetaDataBase):
             sorttitle = SubElement(nfoxml, 'sorttitle')
             sorttitle.text = '%s %s' % (toUnicode(collection_name), movie_info.get('year'))
 
+        # Images
+        for image_url in movie_info['images']['poster_original']:
+            image = SubElement(nfoxml, 'thumb')
+            image.text = toUnicode(image_url)
+        fanart = SubElement(nfoxml, 'fanart')
+        for image_url in movie_info['images']['backdrop_original']:
+            image = SubElement(fanart, 'thumb')
+            image.text = toUnicode(image_url)
+
         # Add trailer if found
         trailer_found = False
         if data.get('renamed_files'):
