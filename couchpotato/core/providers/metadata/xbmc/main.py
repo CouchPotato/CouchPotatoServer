@@ -65,7 +65,7 @@ class XBMC(MetaDataBase):
                 name = type
 
             try:
-                if data['library'].get(type):
+                if movie_info.get(type):
                     el = SubElement(nfoxml, name)
                     el.text = toUnicode(movie_info.get(type, ''))
             except:
