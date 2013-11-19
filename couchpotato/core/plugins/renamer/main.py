@@ -83,6 +83,7 @@ class Renamer(Plugin):
         }
 
     def scan(self, release_download = None):
+        if not release_download: release_download = {}
 
         if self.isDisabled():
             return
@@ -95,7 +96,7 @@ class Renamer(Plugin):
         to_folder = sp(self.conf('to'))
 
         # Get movie folder to process
-        movie_folder = release_download and release_download.get('folder')
+        movie_folder = release_download.get('folder')
 
         # Get all folders that should not be processed
         no_process = [to_folder]
@@ -122,7 +123,7 @@ class Renamer(Plugin):
             log.debug('The provided movie folder %s does not exist. Trying to find it in the \'from\' folder.', movie_folder)
 
             # Update to the from folder
-            if len(release_download.get('files')) == 1:
+            if len(splitString(release_download.get('files'), '|')) == 1:
                 new_movie_folder = from_folder
             else:
                 new_movie_folder = os.path.join(from_folder, os.path.basename(movie_folder))
