@@ -53,6 +53,7 @@ class MovieBase(MovieTypeBase):
             'params': {
                 'identifier': {'desc': 'IMDB id of the movie your want to add.'},
                 'profile_id': {'desc': 'ID of quality profile you want the add the movie in. If empty will use the default profile.'},
+                'category_id': {'desc': 'ID of category you want the add the movie in. If empty will use no category.'},
                 'title': {'desc': 'Movie title to use for searches. Has to be one of the titles returned by movie.search.'},
             }
         })
