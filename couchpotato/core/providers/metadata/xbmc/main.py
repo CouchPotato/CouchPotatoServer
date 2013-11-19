@@ -112,6 +112,18 @@ class XBMC(MetaDataBase):
             sorttitle = SubElement(nfoxml, 'sorttitle')
             sorttitle.text = '%s %s' % (toUnicode(collection_name), movie_info.get('year'))
 
+        # Add trailer if found
+        trailer_found = False
+        if data.get('renamed_files'):
+            for  filename in data.get('renamed_files'):
+                if 'trailer' in filename:
+                    trailer = SubElement(nfoxml, 'trailer')
+                    trailer.text = toUnicode(filename)
+                    trailer_found = True
+        if not trailer_found and data['files'].get('trailer'):
+            trailer = SubElement(nfoxml, 'trailer')
+            trailer.text = toUnicode(data['files']['trailer'][0])
+
         # Clean up the xml and return it
         nfoxml = xml.dom.minidom.parseString(tostring(nfoxml))
         xml_string = nfoxml.toprettyxml(indent = '  ')
