@@ -89,10 +89,16 @@ class XBMC(MetaDataBase):
             genres.text = toUnicode(genre)
 
         # Actors
-        for actor in movie_info.get('actors', []):
-            actors = SubElement(nfoxml, 'actor')
-            name = SubElement(actors, 'name')
-            name.text = toUnicode(actor)
+        for actor_name, role_name in movie_info.get('actors', {}):
+            actor = SubElement(nfoxml, 'actor')
+            name = SubElement(actor, 'name')
+            name.text = toUnicode(actor_name)
+            if role_name:
+                role = SubElement(actor, 'role')
+                role.text = toUnicode(role_name)
+            if movie_info['images'].get('actor %s' % actor_name, ''):
+                thumb = SubElement(actor, 'thumb')
+                thumb.text = toUnicode(movie_info['images'].get('actor %s' % actor_name))
 
         # Directors
         for director_name in movie_info.get('directors', []):
