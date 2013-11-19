@@ -4,6 +4,7 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
 from couchpotato.environment import Env
 from email.mime.text import MIMEText
+from email.utils import formatdate, make_msgid
 import smtplib
 import traceback
 
@@ -30,6 +31,8 @@ class Email(Notification):
         message['Subject'] = self.default_title
         message['From'] = from_address
         message['To'] = to_address
+        message['Date'] = formatdate(localtime = 1)
+        message['Message-ID'] = make_msgid()
 
         try:
             # Open the SMTP connection, via SSL if requested
