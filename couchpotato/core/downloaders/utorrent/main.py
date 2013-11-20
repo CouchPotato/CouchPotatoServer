@@ -339,7 +339,7 @@ class uTorrentAPI(object):
 
             # Create settings dict
             for dir in utorrent_dirs['download_dirs']:
-                settings_dirs[] = dir['path']
+                settings_dirs.append( dir['path'] )
                 log.debug('uTorrent download dir: %s', dir['path'])
 
         except Exception, err:
