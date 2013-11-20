@@ -503,7 +503,7 @@ function randomString(length, extra) {
 					case "string": saveKeyPath(argument.match(/[+-]|[^.]+/g)); break;
 				}
 			});
-			return this.sort(comparer);
+			return this.stableSort(comparer);
 		}
 	});
 
