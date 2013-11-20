@@ -59,14 +59,6 @@ config = [{
                     'description': 'Also remove the leftover files.',
                 },
                 {
-                    'name': 'append_label',
-                    'label': 'Append Label',
-                    'default': False,
-                    'advanced': True,
-                    'type': 'bool',
-                    'description': 'Append label to download location. Requires you to set the download location above.',
-                },
-                {
                     'name': 'paused',
                     'type': 'bool',
                     'advanced': True,
