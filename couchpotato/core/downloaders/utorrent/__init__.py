@@ -42,6 +42,14 @@ config = [{
                     'description': 'Download to this directory. Keep empty for default uTorrent download directory.',
                 },
                 {
+                    'name': 'download_directory',
+                    'description': 'Download to this directory. Use numeric ID (with 0 as default download folder).',
+                },
+                {
+                    'name': 'sub_path',
+                    'description': 'Download directory sub-path',
+                },
+                {
                     'name': 'remove_complete',
                     'label': 'Remove torrent',
                     'default': True,

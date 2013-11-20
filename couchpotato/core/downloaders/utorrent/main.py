@@ -257,12 +257,14 @@ class uTorrentAPI(object):
         action = "action=add-url&s=%s" % urllib.quote(torrent)
         if add_folder:
             action += "&path=%s" % urllib.quote(add_folder)
+        log.debug('Sending command to uTorrent: %s', action)
         return self._request(action)
 
     def add_torrent_file(self, filename, filedata, add_folder = False):
         action = "action=add-file"
         if add_folder:
             action += "&path=%s" % urllib.quote(add_folder)
+        log.debug('Sending command to uTorrent: %s', action)
         return self._request(action, {"torrent_file": (ss(filename), filedata)})
 
     def set_torrent(self, hash, params):
@@ -328,3 +330,21 @@ class uTorrentAPI(object):
     def get_files(self, hash):
         action = "action=getfiles&hash=%s" % hash
         return self._request(action)
+        
+    def get_download_directories(self, hash):
+        action = "action=list-dirs"
+        settings_dirs = []
+        try:
+            utorrent_dirs = json.loads(self._request(action))
+
+            # Create settings dict
+            for dir in utorrent_dirs['download_dirs']:
+                settings_dirs[] = dir['path']
+                log.debug('uTorrent download dir: %s', dir['path'])
+
+        except Exception, err:
+            log.error('Failed to get download directories from uTorrent: %s', err)
+
+        return settings_dirs
+        
+    
