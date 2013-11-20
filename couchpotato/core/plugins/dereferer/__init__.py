@@ -20,6 +20,7 @@ config = [{
                                 'type': 'enabler',
                           },
                           {
+                                'advanced': True,
                                 'name': 'service_url',
                                 'default': 'http://www.dereferer.org/?',
                           },
