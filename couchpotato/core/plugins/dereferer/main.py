@@ -13,7 +13,7 @@ class Dereferer(Plugin):
                 'type': 'object',
                 'example': """{
                     'enabled': "user has enabled the derferer",
-                    'service': "the service's URL. If enabled, this will be prepended to any URL clicked in couchpotato."
+                    'service_url': "the service's URL. If enabled, this will be prepended to any URL clicked in couchpotato."
                 }"""
             }
         })
