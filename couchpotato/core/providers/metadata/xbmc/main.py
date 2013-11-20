@@ -139,6 +139,30 @@ class XBMC(MetaDataBase):
             trailer = SubElement(nfoxml, 'trailer')
             trailer.text = toUnicode(data['files']['trailer'][0])
 
+        # Add file metadata
+        fileinfo = SubElement(nfoxml, 'fileinfo')
+        streamdetails = SubElement(fileinfo, 'streamdetails')
+
+        # Video data
+        if data['meta_data'].get('video'):
+            video = SubElement(streamdetails, 'video')
+            codec = SubElement(video, 'codec')
+            codec.text = toUnicode(data['meta_data']['video'])
+            aspect = SubElement(video, 'aspect')
+            aspect.text = str(data['meta_data']['aspect'])
+            width = SubElement(video, 'width')
+            width.text = str(data['meta_data']['resolution_width'])
+            height = SubElement(video, 'height')
+            height.text = str(data['meta_data']['resolution_height'])
+
+        # Audio data
+        if data['meta_data'].get('audio'):
+            audio = SubElement(streamdetails, 'audio')
+            codec = SubElement(audio, 'codec')
+            codec.text = toUnicode(data['meta_data'].get('audio'))
+            channels = SubElement(audio, 'channels')
+            channels.text = toUnicode(data['meta_data'].get('audio_channels'))
+
         # Clean up the xml and return it
         nfoxml = xml.dom.minidom.parseString(tostring(nfoxml))
         xml_string = nfoxml.toprettyxml(indent = '  ')
