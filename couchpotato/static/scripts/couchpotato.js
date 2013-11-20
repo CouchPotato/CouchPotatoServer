@@ -29,7 +29,7 @@
 
 		History.addEvent('change', self.openPage.bind(self));
 		self.c.addEvent('click:relay(a[href^=/]:not([target]))', self.pushState.bind(self));
-		self.c.addEvent('click:relay(a[href^=http])', self.openDerefered.bind(self));
+        self.c.addEvent('click:relay(a[href^=http])', self.openURL.bind(self));
 		
 		// Check if device is touchenabled
 		self.touch_device = 'ontouchstart' in window || navigator.msMaxTouchPoints;
@@ -294,10 +294,10 @@
 		return this.options.base_url + (action ? action+'/' : '') + (params ? '?'+Object.toQueryString(params) : '')
 	},
 
-	openDerefered: function(e, el){
+	openURL: function(e, el){
 		(e).stop();
 
-		var url = 'http://www.dereferer.org/?' + el.get('href');
+		var url = Dereferer.getURL(el.get('href'));
 
 		if(el.get('target') == '_blank' || (e.meta && Browser.Platform.mac) || (e.control && !Browser.Platform.mac))
 			window.open(url);
