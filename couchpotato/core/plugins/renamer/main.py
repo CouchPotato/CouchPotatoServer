@@ -15,6 +15,7 @@ import fnmatch
 import os
 import re
 import shutil
+import stat
 import time
 import traceback
 
@@ -683,13 +684,88 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
         return False
 
+    def fixSetGroupID(self, childPath):
+        if os.name == 'nt' or os.name == 'ce':
+            return
+
+        parentPath = os.path.dirname(childPath)
+        parentStat = os.stat(parentPath)
+        parentMode = stat.S_IMODE(parentStat[stat.ST_MODE])
+
+        if parentMode & stat.S_ISGID:
+            parentGID = parentStat[stat.ST_GID]
+            childStat = os.stat(childPath)
+            childGID = childStat[stat.ST_GID]
+
+            if childGID == parentGID:
+                return
+
+            childPath_owner = childStat.st_uid
+            user_id = os.geteuid() #only available on UNIX
+
+            if user_id != 0 and user_id != childPath_owner:
+                log.debug('Not running as root or owner of %s, not trying to set the set-group-ID', (childPath))
+                return
+
+            try:
+                os.chown(childPath, -1, parentGID) #@UndefinedVariable - only available on UNIX
+                log.debug('Respecting the set-group-ID bit on the parent directory for %s', (childPath))
+            except OSError:
+                log.debug('Failed to respect the set-group-ID bit on the parent directory for %s (setting group ID %i)', (childPath, parentGID))
+
+    def fileBitFilter(self, mode):
+        for bit in [stat.S_IXUSR, stat.S_IXGRP, stat.S_IXOTH, stat.S_ISUID, stat.S_ISGID]:
+            if mode & bit:
+                mode -= bit
+
+        return mode
+
+    def chmodAsParent(self, childPath):
+        if os.name == 'nt' or os.name == 'ce':
+            return
+
+        parentPath = os.path.dirname(childPath)
+
+        if not parentPath:
+            log.debug('No parent path provided in %s, unable to get permissions from it', (childPath))
+            return
+
+        parentMode = stat.S_IMODE(os.stat(parentPath)[stat.ST_MODE])
+
+        childPathStat = os.stat(childPath)
+        childPath_mode = stat.S_IMODE(childPathStat[stat.ST_MODE])
+
+        if os.path.isfile(childPath):
+            childMode = self.fileBitFilter(parentMode)
+        else:
+            childMode = parentMode
+
+        if childPath_mode == childMode:
+            return
+
+        childPath_owner = childPathStat.st_uid
+        user_id = os.geteuid() #only available on UNIX
+
+        if user_id != 0 and user_id != childPath_owner:
+            log.debug('Not running as root or owner of %s, not trying to set permissions', (childPath))
+            return
+
+        try:
+            os.chmod(childPath, childMode)
+            log.debug('Setting permissions for %s to %o as parent directory has %o', (childPath, childMode, parentMode))
+        except OSError:
+            log.debug('Failed to set permission for %s to %o', (childPath, childMode))
+
     def moveFile(self, old, dest, forcemove = False):
         dest = ss(dest)
         try:
             if forcemove:
                 shutil.move(old, dest)
+                self.fixSetGroupID(dest)
             elif self.conf('file_action') == 'copy':
                 shutil.copy(old, dest)
+                shutil.copymode(old, dest)
+                self.chmodAsParent(dest)        
             elif self.conf('file_action') == 'link':
                 # First try to hardlink
                 try:
@@ -699,6 +775,8 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                     # Try to simlink next
                     log.debug('Couldn\'t hardlink file "%s" to "%s". Simlinking instead. Error: %s.', (old, dest, traceback.format_exc()))
                     shutil.copy(old, dest)
+                    shutil.copymode(old, dest)
+                    self.chmodAsParent(dest)
                     try:
                         symlink(dest, old + '.link')
                         os.unlink(old)
