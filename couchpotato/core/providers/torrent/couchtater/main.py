@@ -58,14 +58,17 @@ class Couchtarter(TorrentProvider):
                             print torrent['Size']
                             print torrent['DownloadURL']
                             #results.append({
-                            #    'id': tryInt(result['TorrentID']),
-                            #    'name': toUnicode(result['ReleaseName']),
-                            #    'size': tryInt(self.parseSize(result['Size'])),
-                            #    'url': result['DownloadURL'],
-                            #    'detail_url': result['DetailURL'],
-                            #    'resoultion': result['Resolution'],
+                            #    'id': tryInt(result.get('TorrentID')),
+                            #    'name': toUnicode(result.get('ReleaseName')),
+                            #    'url': result.get('DownloadURL'),
+                            #    'detail_url': result.get('DetailURL'),
+                            #    'size': tryInt(self.parseSize(result.get('Size'))),
                             #    'score': host['extra_score'],
-                            #    'get_more_info': result['IMDbID']
+                            #    'seeders': tryInt(result.get('Seeders'),
+                            #    'leechers': tryInt(result.get('leechers'),
+                            #    'resoultion': result.get('Resolution'),
+                            #    'source': result.get('Media'),
+                            #    'get_more_info': result.get('IMDbID')
                             #})
 
             except:
