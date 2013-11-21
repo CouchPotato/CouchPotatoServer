@@ -65,7 +65,7 @@ class Couchtarter(TorrentProvider):
                             #    'size': tryInt(self.parseSize(result.get('Size'))),
                             #    'score': host['extra_score'],
                             #    'seeders': tryInt(result.get('Seeders'),
-                            #    'leechers': tryInt(result.get('leechers'),
+                            #    'leechers': tryInt(result.get('Leechers'),
                             #    'resoultion': result.get('Resolution'),
                             #    'source': result.get('Media'),
                             #    'get_more_info': result.get('IMDbID')
