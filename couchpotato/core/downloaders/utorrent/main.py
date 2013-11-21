@@ -1,4 +1,5 @@
 from base64 import b16encode, b32decode
+from couchpotato.api import addApiView
 from bencode import bencode as benc, bdecode
 from couchpotato.core.downloaders.base import Downloader, ReleaseDownloadList
 from couchpotato.core.helpers.encoding import isInt, ss, sp
@@ -24,6 +25,15 @@ class uTorrent(Downloader):
 
     protocol = ['torrent', 'torrent_magnet']
     utorrent_api = None
+
+    def __init__(self):
+        addApiView('utorrent.get_downloads_directories', self.get_download_directories, docs = {
+            'desc': 'List all available download directories',
+            'return': {'type': 'object', 'example': """{
+            'success': True,
+            'directories': array
+}"""}
+        })
 
     def connect(self):
         # Load host from config and split out port.
@@ -204,6 +214,11 @@ class uTorrent(Downloader):
                 #Windows only needs S_IWRITE, but we bitwise-or with current perms to preserve other permission bits on Linux
                 os.chmod(filepath, stat.S_IWRITE | os.stat(filepath).st_mode)
 
+    def get_download_directories(self):
+        dirs = self.utorrent_api.get_download_directories()
+        out = { 'success': True, 'directories': dirs }
+        return out
+
 class uTorrentAPI(object):
 
     def __init__(self, host = 'localhost', port = 8000, username = None, password = None):
@@ -331,20 +346,16 @@ class uTorrentAPI(object):
         action = "action=getfiles&hash=%s" % hash
         return self._request(action)
         
-    def get_download_directories(self, hash):
+    def get_download_directories(self):
         action = "action=list-dirs"
-        settings_dirs = []
+        dirs = []
         try:
             utorrent_dirs = json.loads(self._request(action))
-
-            # Create settings dict
             for dir in utorrent_dirs['download_dirs']:
-                settings_dirs.append( dir['path'] )
+                dirs.append( dir['path'] )
                 log.debug('uTorrent download dir: %s', dir['path'])
-
         except Exception, err:
             log.error('Failed to get download directories from uTorrent: %s', err)
-
-        return settings_dirs
+        return dirs
         
     
