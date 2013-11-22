@@ -6,7 +6,6 @@ from datetime import date, datetime, timedelta
 from time import mktime
 import re
 import sys
-from types import MethodType
 
 __all__ = ('asint', 'asbool', 'convert_to_datetime', 'timedelta_seconds',
            'time_difference', 'datetime_ceil', 'combine_opts',
@@ -64,7 +63,7 @@ def convert_to_datetime(input):
         return input
     elif isinstance(input, date):
         return datetime.fromordinal(input.toordinal())
-    elif isinstance(input, str):
+    elif isinstance(input, basestring):
         m = _DATE_REGEX.match(input)
         if not m:
             raise ValueError('Invalid date string')
@@ -109,7 +108,7 @@ def datetime_ceil(dateval):
     """
     if dateval.microsecond > 0:
         return dateval + timedelta(seconds=1,
-                                   microseconds= -dateval.microsecond)
+                                   microseconds=-dateval.microsecond)
     return dateval
 
 
@@ -143,7 +142,8 @@ def get_callable_name(func):
     if f_self and hasattr(func, '__name__'):
         if isinstance(f_self, type):
             # class method
-            return '%s.%s' % (f_self.__name__, func.__name__)
+            clsname = getattr(f_self, '__qualname__', None) or f_self.__name__
+            return '%s.%s' % (clsname, func.__name__)
         # bound method
         return '%s.%s' % (f_self.__class__.__name__, func.__name__)
 
@@ -169,7 +169,7 @@ def obj_to_ref(obj):
             raise ValueError
     except Exception:
         raise ValueError('Cannot determine the reference to %s' % repr(obj))
-    
+
     return ref
 
 
