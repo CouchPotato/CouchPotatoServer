@@ -57,6 +57,17 @@ Page.Home = new Class({
 			'limit': null,
 			'onLoaded': function(){
 				self.chain.callChain();
+			},
+			'onMovieAdded': function(notification){
+
+				// Track movie added
+				var after_search = function(data){
+					// Force update after search
+					self.available_list.update();
+					App.removeEvent('movie.searcher.ended.' + notification.data.id, after_search);
+				}
+				App.addEvent('movie.searcher.ended.' + notification.data.id, after_search);
+
 			}
 		});
 
