@@ -50,7 +50,7 @@ var NotificationBase = new Class({
 		, 'top');
 		self.notifications.include(result);
 
-		if(result.data.important !== undefined && !result.read){
+		if((result.data.important !== undefined || result.data.sticky !== undefined) && !result.read){
 			var sticky = true
 			App.fireEvent('message', [result.message, sticky, result])
 		}
