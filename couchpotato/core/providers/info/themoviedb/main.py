@@ -111,10 +111,13 @@ class TheMovieDb(MovieProvider):
                 year = None
 
             # Gather actors data
-            actors = []
+            actors = {}
             for cast_item in movie.cast:
-                actors.append({toUnicode(cast_item.name): toUnicode(cast_item.character)})
-                images.append({'actor %s' % toUnicode(cast_item.name): self.getImage(cast_item, type = 'profile', size = 'original')})
+                try:
+                    actors[toUnicode(cast_item.name)] = toUnicode(cast_item.character)
+                    images['actor %s' % toUnicode(cast_item.name)] = self.getImage(cast_item, type = 'profile', size = 'original')
+                except:
+                    log.debug('Error getting cast info for %s: %s', (cast_item, traceback.format_exc()))
 
             movie_data = {
                 'type': 'movie',
@@ -130,7 +133,7 @@ class TheMovieDb(MovieProvider):
                 'plot': movie.overview,
                 'genres': genres,
                 'collection': getattr(movie.collection, 'name', None),
-                'actors': actors
+                'actor_roles': actors
             }
 
             movie_data = dict((k, v) for k, v in movie_data.iteritems() if v)
@@ -154,7 +157,7 @@ class TheMovieDb(MovieProvider):
         try:
             image_url = getattr(movie, type).geturl(size = 'original')
         except:
-            log.debug('Failed getting %s.%s for "%s"', (type, size, movie.title))
+            log.debug('Failed getting %s.%s for "%s"', (type, size, movie))
 
         return image_url
 
