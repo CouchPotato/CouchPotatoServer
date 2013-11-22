@@ -1,4 +1,4 @@
-#  Copyright (c) 2002-2012 Zooko Wilcox-O'Hearn
+#  Copyright (c) 2002-2013 Zooko Wilcox-O'Hearn
 #  This file is part of pyutil; see README.rst for licensing terms.
 
 """
@@ -104,6 +104,24 @@ def makeg(func):
             func()
     return blah
 
+def to_decimal(x):
+    """
+    See if D(x) returns something. If instead it raises TypeError, x must have been a float, so convert it to Decimal by way of string. (In Python >= 2.7, D(x) does this automatically.
+    """
+    try:
+        return D(x)
+    except TypeError:
+        return D("%0.54f" % (x,))
+
+def mult(a, b):
+    """
+    If we get TypeError from * (possibly because one is float and the other is Decimal), then promote them both to Decimal.
+    """
+    try:
+        return a * b
+    except TypeError:
+        return to_decimal(a) * to_decimal(b)
+
 def rep_bench(func, n, initfunc=None, MAXREPS=10, MAXTIME=60.0, profile=False, profresults="pyutil-benchutil.prof", UNITS_PER_SECOND=1, quiet=False):
     """
     Will run the func up to MAXREPS times, but won't start a new run if MAXTIME
@@ -144,12 +162,12 @@ def rep_bench(func, n, initfunc=None, MAXREPS=10, MAXTIME=60.0, profile=False, p
     # etc, so we use mp1 to name it.
     mp1 = m+1
     res = {
-        'worst': (worst*UNITS_PER_SECOND)/n,
-        'best': (best*UNITS_PER_SECOND)/n,
+        'worst': mult(worst, UNITS_PER_SECOND)/n,
+        'best': mult(best, UNITS_PER_SECOND)/n,
         'mp1': mp1,
-        'mth-best': (mthbest*UNITS_PER_SECOND)/n,
-        'mth-worst': (mthworst*UNITS_PER_SECOND)/n,
-        'mean': (mean*UNITS_PER_SECOND)/n,
+        'mth-best': mult(mthbest, UNITS_PER_SECOND)/n,
+        'mth-worst': mult(mthworst, UNITS_PER_SECOND)/n,
+        'mean': mult(mean, UNITS_PER_SECOND)/n,
         'num': len(tls),
         }
 
@@ -178,7 +196,10 @@ class BadMeasure(Exception):
 def do_nothing(n):
     pass
 
-def bench_it(func, n, profile=False, profresults="pyutil-benchutil.prof"):
+def bench_it(func, n, runtime=0.1, profile=False, profresults="pyutil-benchutil.prof"):
+    """
+    runtime is how many seconds to 
+    """
     if profile:
         st = clock()
         cProfile.run('func(n)', profresults)
