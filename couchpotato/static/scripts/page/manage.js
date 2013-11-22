@@ -102,8 +102,8 @@ Page.Manage = new Class({
 						}
 					}
 					else {
-                        // Capture progress so we can use it in our *each* closure
-                        var progress = json.progress
+						// Capture progress so we can use it in our *each* closure
+						var progress = json.progress
 
 						// Don't add loader when page is loading still
 						if(!self.list.navigation)
@@ -114,10 +114,10 @@ Page.Manage = new Class({
 
 						self.progress_container.empty();
 
-                        var sorted_table = self.parseProgress(json.progress)
+						var sorted_table = self.parseProgress(json.progress)
 
 						sorted_table.each(function(folder){
-                            var folder_progress = progress[folder]
+							var folder_progress = progress[folder]
 							new Element('div').adopt(
 								new Element('span.folder', {'text': folder}),
 								new Element('span.percentage', {'text': folder_progress.total ? (((folder_progress.total-folder_progress.to_go)/folder_progress.total)*100).round() + '%' : '0%'})
@@ -129,21 +129,17 @@ Page.Manage = new Class({
 			})
 
 		}, 1000);
-    },
+	},
 
-    parseProgress: function (progress_object) {
-        var folder, temp_array = [];
+	parseProgress: function (progress_object) {
+		var folder, temp_array = [];
 
-        /* Sort the properties on the progress object into an alphabetic array, ensuring that our folders display in appropriate alphabetic order.
-
-           Bugfix for https://github.com/RuudBurger/CouchPotatoServer/issues/1578
-         */
-        for (folder in progress_object) {
-            if (progress_object.hasOwnProperty(folder)) {
-                temp_array.push(folder)
-            }
-        }
-        return temp_array.stableSort()
-    }
+		for (folder in progress_object) {
+			if (progress_object.hasOwnProperty(folder)) {
+				temp_array.push(folder)
+			}
+		}
+		return temp_array.stableSort()
+	}
 
 });
