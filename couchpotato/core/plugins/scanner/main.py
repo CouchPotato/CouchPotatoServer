@@ -124,7 +124,9 @@ class Scanner(Plugin):
             try:
                 files = []
                 for root, dirs, walk_files in os.walk(folder):
-                    files.extend([sp(os.path.join(root, filename)) for filename in walk_files])
+                    for filename in walk_files:
+                        name = toUnicode(os.path.join(root, filename))
+                        files.append(name)
 
                     # Break if CP wants to shut down
                     if self.shuttingDown():
