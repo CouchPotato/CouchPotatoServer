@@ -62,11 +62,13 @@ Page.Home = new Class({
 
 				// Track movie added
 				var after_search = function(data){
+					if(notification.data.id != data.data.id) return;
+
 					// Force update after search
 					self.available_list.update();
-					App.removeEvent('movie.searcher.ended.' + notification.data.id, after_search);
+					App.off('movie.searcher.ended', after_search);
 				}
-				App.addEvent('movie.searcher.ended.' + notification.data.id, after_search);
+				App.on('movie.searcher.ended', after_search);
 
 			}
 		});

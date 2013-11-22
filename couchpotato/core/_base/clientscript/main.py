@@ -35,6 +35,7 @@ class ClientScript(Plugin):
             'scripts/library/scrollspy.js',
             'scripts/library/spin.js',
             'scripts/library/Array.stableSort.js',
+            'scripts/library/async.js',
             'scripts/couchpotato.js',
             'scripts/api.js',
             'scripts/library/history.js',

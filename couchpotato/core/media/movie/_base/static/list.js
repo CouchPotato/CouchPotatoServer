@@ -52,8 +52,8 @@ var MovieList = new Class({
 
 		self.getMovies();
 
-		App.addEvent('movie.added', self.movieAdded.bind(self))
-		App.addEvent('movie.deleted', self.movieDeleted.bind(self))
+		App.on('movie.added', self.movieAdded.bind(self))
+		App.on('movie.deleted', self.movieDeleted.bind(self))
 	},
 
 	movieDeleted: function(notification){
