@@ -128,6 +128,7 @@ class Scanner(Plugin):
                         name = toUnicode(os.path.join(root, filename))
                         files.append(name)
 
+
                     # Break if CP wants to shut down
                     if self.shuttingDown():
                         break
