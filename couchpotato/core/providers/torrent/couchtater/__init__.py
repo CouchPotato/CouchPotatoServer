@@ -1,27 +1,27 @@
-from .main import Couchtarter
+from .main import Couchtater
 
 def start():
-    return Couchtarter()
+    return Couchtater()
 
 config = [{
-    'name': 'couchtart',
+    'name': 'couchtater',
     'groups': [
         {
             'tab': 'searcher',
             'list': 'torrent_providers',
             'name': 'couchtart',
             'order': 10,
-            'description': 'Cocuhtart providers.',
+            'description': 'Couchtater providers.',
             'wizard': True,
             'options': [
                 {
                     'name': 'enabled',
                     'type': 'enabler',
-                    'default': True,
+                    'default': False,
                 },
                 {
                     'name': 'use',
-                    'default': '0,0,0,0,0,0'
+                    'default': ''
                 },
                 {
                     'name': 'host',
@@ -36,7 +36,7 @@ config = [{
                     'description': 'Starting score for each release found via this provider.',
                 },
                 {
-                    'name': 'username',
+                    'name': 'name',
                     'default': '',
                 },
                 {
@@ -45,7 +45,7 @@ config = [{
                     'label': 'Pass Key',
                     'description': 'Can be found on your profile page',
                     'type': 'combined',
-                    'combine': ['use', 'host', 'username', 'pass_key', 'extra_score'],
+                    'combine': ['use', 'host', 'name', 'pass_key', 'extra_score'],
                 },
             ],
         },

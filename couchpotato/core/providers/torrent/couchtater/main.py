@@ -1,14 +1,14 @@
-from couchpotato.core.helpers.encoding import tryUrlencode, toUnicode
+from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.variable import splitString, tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.base import ResultList
 from couchpotato.core.providers.torrent.base import TorrentProvider
-from couchpotato.environment import Env
 import traceback
 
 log = CPLog(__name__)
 
-class Couchtarter(TorrentProvider):
+
+class Couchtater(TorrentProvider):
 
     limits_reached = {}
 
@@ -30,17 +30,17 @@ class Couchtarter(TorrentProvider):
     def _searchOnHost(self, host, movie, quality, results):
 
         arguments = tryUrlencode({
-            'user': host['username'],
+            'user': host['name'],
             'passkey': host['pass_key'],
-            'imdbid': movie['library']['identifier'].replace('tt', '')
+            'imdbid': movie['library']['identifier']
         })
-        url = '%s&%s' % (host['host'], arguments)
+        url = '%s?%s' % (host['host'], arguments)
 
         torrents = self.getJsonData(url, cache_timeout = 1800)
 
         if torrents:
             try:
-                if torrents.get('Error'):
+                if torrents.get('error'):
                     if 'Incorrect parameters.' in torrents['Error']:
                         log.error('Wrong parameters passed to: %s', host['host'])
                     elif 'Death by authorization.' in torrents['Error']:
@@ -49,27 +49,22 @@ class Couchtarter(TorrentProvider):
                         log.error('Unknown error for: %s', host['host'])
                     return #(can I disable this host somehow? and notify user?)
 
-                elif torrents.get('Results'):
-                    if 'None found' in torrents['Results']:
-                        return
-                    else:
-                        for torrent in torrents['Results']:
-                            print torrent['ReleaseName']
-                            print torrent['Size']
-                            print torrent['DownloadURL']
-                            #results.append({
-                            #    'id': tryInt(result.get('TorrentID')),
-                            #    'name': toUnicode(result.get('ReleaseName')),
-                            #    'url': result.get('DownloadURL'),
-                            #    'detail_url': result.get('DetailURL'),
-                            #    'size': tryInt(self.parseSize(result.get('Size'))),
-                            #    'score': host['extra_score'],
-                            #    'seeders': tryInt(result.get('Seeders'),
-                            #    'leechers': tryInt(result.get('Leechers'),
-                            #    'resoultion': result.get('Resolution'),
-                            #    'source': result.get('Media'),
-                            #    'get_more_info': result.get('IMDbID')
-                            #})
+                elif torrents.get('results'):
+                    for torrent in torrents['results']:
+                        print torrent
+                        #results.append({
+                        #    'id': tryInt(result.get('TorrentID')),
+                        #    'name': toUnicode(result.get('ReleaseName')),
+                        #    'url': result.get('DownloadURL'),
+                        #    'detail_url': result.get('DetailURL'),
+                        #    'size': tryInt(self.parseSize(result.get('Size'))),
+                        #    'score': host['extra_score'],
+                        #    'seeders': tryInt(result.get('Seeders'),
+                        #    'leechers': tryInt(result.get('Leechers'),
+                        #    'resoultion': result.get('Resolution'),
+                        #    'source': result.get('Media'),
+                        #    'get_more_info': result.get('IMDbID')
+                        #})
 
             except:
                 log.error('Failed getting results from %s: %s', (host['host'], traceback.format_exc()))
@@ -78,7 +73,7 @@ class Couchtarter(TorrentProvider):
 
         uses = splitString(str(self.conf('use')), clean = False)
         hosts = splitString(self.conf('host'), clean = False)
-        usernames = splitString(self.conf('username'), clean = False)
+        names = splitString(self.conf('name'), clean = False)
         pass_keys = splitString(self.conf('pass_key'), clean = False)
         extra_score = splitString(self.conf('extra_score'), clean = False)
 
@@ -91,9 +86,13 @@ class Couchtarter(TorrentProvider):
             try: host = hosts[nr]
             except: host = ''
 
+            try: name = names[nr]
+            except: name = ''
+
             list.append({
                 'use': uses[nr],
                 'host': host,
+                'name': name,
                 'pass_key': key,
                 'extra_score': tryInt(extra_score[nr]) if len(extra_score) > nr else 0
             })
