@@ -60,12 +60,12 @@ class NamedTypes:
                 tagMap = self.__namedTypes[idx].getType().getTagMap()
                 for t in tagMap.getPosMap():
                     if t in self.__tagToPosIdx:
-                        raise error.PyAsn1Error('Duplicate type %s' % t)
+                        raise error.PyAsn1Error('Duplicate type %s' % (t,))
                     self.__tagToPosIdx[t] = idx
         try:
             return self.__tagToPosIdx[tagSet]
         except KeyError:
-            raise error.PyAsn1Error('Type %s not found' % tagSet)
+            raise error.PyAsn1Error('Type %s not found' % (tagSet,))
         
     def getNameByPosition(self, idx):
         try:
@@ -79,12 +79,12 @@ class NamedTypes:
                 idx = idx - 1
                 n = self.__namedTypes[idx].getName()
                 if n in self.__nameToPosIdx:
-                    raise error.PyAsn1Error('Duplicate name %s' % n)
+                    raise error.PyAsn1Error('Duplicate name %s' % (n,))
                 self.__nameToPosIdx[n] = idx
         try:
             return self.__nameToPosIdx[name]
         except KeyError:
-            raise error.PyAsn1Error('Name %s not found' % name)
+            raise error.PyAsn1Error('Name %s not found' % (name,))
 
     def __buildAmbigiousTagMap(self):
         ambigiousTypes = ()

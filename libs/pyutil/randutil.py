@@ -80,6 +80,5 @@ seed = randobj.seed
 def randstr(n):
     return ''.join(map(chr, map(randrange, [0]*n, [256]*n)))
 
-import random as insecurerandom
 def insecurerandstr(n):
-    return ''.join(map(chr, map(insecurerandom.randrange, [0]*n, [256]*n)))
+    return os.urandom(n)

@@ -11,7 +11,7 @@ def div_ceil(n, d):
     """
     The smallest integer k such that k*d >= n.
     """
-    return (n/d) + (n%d != 0)
+    return int((n//d) + (n%d != 0))
 
 def next_multiple(n, k):
     """

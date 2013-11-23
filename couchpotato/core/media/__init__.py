@@ -38,7 +38,7 @@ class MediaBase(Plugin):
         def notifyFront():
             db = get_session()
             media = db.query(Media).filter_by(id = media_id).first()
-            fireEvent('notify.frontend', type = '%s.update.%s' % (media.type, media.id), data = media.to_dict(self.default_dict))
+            fireEvent('notify.frontend', type = '%s.update' % media.type, data = media.to_dict(self.default_dict))
             db.expire_all()
 
         return notifyFront

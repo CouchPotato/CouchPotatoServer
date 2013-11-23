@@ -446,6 +446,6 @@ class Release(Plugin):
             db.commit()
 
             #Update all movie info as there is no release update function
-            fireEvent('notify.frontend', type = 'release.update_status.%s' % rel.id, data = status.get('id'))
+            fireEvent('notify.frontend', type = 'release.update_status', data = rel.to_dict())
 
         return True
