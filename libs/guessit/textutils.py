@@ -43,10 +43,13 @@ def strip_brackets(s):
     return s
 
 
-def clean_string(s):
-    for c in sep[:-2]: # do not remove dashes ('-')
-        s = s.replace(c, ' ')
-    parts = s.split()
+def clean_string(st):
+    for c in sep:
+        # do not remove certain chars
+        if c in ['-', ',']:
+            continue
+        st = st.replace(c, ' ')
+    parts = st.split()
     result = ' '.join(p for p in parts if p != '')
 
     # now also remove dashes on the outer part of the string

@@ -10,8 +10,8 @@ var NotificationBase = new Class({
 		// Listener
 		App.addEvent('unload', self.stopPoll.bind(self));
 		App.addEvent('reload', self.startInterval.bind(self, [true]));
-		App.addEvent('notification', self.notify.bind(self));
-		App.addEvent('message', self.showMessage.bind(self));
+		App.on('notification', self.notify.bind(self));
+		App.on('message', self.showMessage.bind(self));
 
 		// Add test buttons to settings page
 		App.addEvent('load', self.addTestButtons.bind(self));
@@ -50,9 +50,9 @@ var NotificationBase = new Class({
 		, 'top');
 		self.notifications.include(result);
 
-		if(result.data.important !== undefined && !result.read){
+		if((result.data.important !== undefined || result.data.sticky !== undefined) && !result.read){
 			var sticky = true
-			App.fireEvent('message', [result.message, sticky, result])
+			App.trigger('message', [result.message, sticky, result])
 		}
 		else if(!result.read){
 			self.setBadge(self.notifications.filter(function(n){ return !n.read}).length)
@@ -147,7 +147,7 @@ var NotificationBase = new Class({
 		// Process data
 		if(json){
 			Array.each(json.result, function(result){
-				App.fireEvent(result.type, result);
+				App.trigger(result.type, result);
 				if(result.message && result.read === undefined)
 					self.showMessage(result.message);
 			})
