@@ -1,17 +1,17 @@
-from .main import Couchtater
+from .main import TorrentPotato
 
 def start():
-    return Couchtater()
+    return TorrentPotato()
 
 config = [{
-    'name': 'couchtater',
+    'name': 'torrentpotato',
     'groups': [
         {
             'tab': 'searcher',
             'list': 'torrent_providers',
-            'name': 'couchtart',
+            'name': 'TorrentPotato',
             'order': 10,
-            'description': 'Couchtater providers.',
+            'description': 'CouchPotato torrent provider providers.',
             'wizard': True,
             'options': [
                 {
@@ -26,7 +26,7 @@ config = [{
                 {
                     'name': 'host',
                     'default': '',
-                    'description': 'The url path of your Couchtart provider.',
+                    'description': 'The url path of your TorrentPotato provider.',
                 },
                 {
                     'name': 'extra_score',

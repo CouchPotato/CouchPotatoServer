@@ -1,15 +1,17 @@
-from couchpotato.core.helpers.encoding import tryUrlencode
+from couchpotato.core.helpers.encoding import tryUrlencode, toUnicode
 from couchpotato.core.helpers.variable import splitString, tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.base import ResultList
 from couchpotato.core.providers.torrent.base import TorrentProvider
+import re
 import traceback
 
 log = CPLog(__name__)
 
 
-class Couchtater(TorrentProvider):
+class TorrentPotato(TorrentProvider):
 
+    urls = {}
     limits_reached = {}
 
     http_time_between_calls = 1 # Seconds
@@ -41,30 +43,20 @@ class Couchtater(TorrentProvider):
         if torrents:
             try:
                 if torrents.get('error'):
-                    if 'Incorrect parameters.' in torrents['Error']:
-                        log.error('Wrong parameters passed to: %s', host['host'])
-                    elif 'Death by authorization.' in torrents['Error']:
-                        log.error('Wrong username or pass key for: %s', host['host'])
-                    else:
-                        log.error('Unknown error for: %s', host['host'])
-                    return #(can I disable this host somehow? and notify user?)
-
+                    log.error('%s: %s', (torrents.get('error'), host['host']))
                 elif torrents.get('results'):
-                    for torrent in torrents['results']:
-                        print torrent
-                        #results.append({
-                        #    'id': tryInt(result.get('TorrentID')),
-                        #    'name': toUnicode(result.get('ReleaseName')),
-                        #    'url': result.get('DownloadURL'),
-                        #    'detail_url': result.get('DetailURL'),
-                        #    'size': tryInt(self.parseSize(result.get('Size'))),
-                        #    'score': host['extra_score'],
-                        #    'seeders': tryInt(result.get('Seeders'),
-                        #    'leechers': tryInt(result.get('Leechers'),
-                        #    'resoultion': result.get('Resolution'),
-                        #    'source': result.get('Media'),
-                        #    'get_more_info': result.get('IMDbID')
-                        #})
+                    for torrent in torrents.get('results', []):
+                        results.append({
+                            'id': torrent.get('torrent_id'),
+                            'protocol': 'torrent' if re.match('^(http|https|ftp)://.*$', torrent.get('download_url')) else 'torrent_magnet',
+                            'name': toUnicode(torrent.get('name')),
+                            'url': torrent.get('download_url'),
+                            'detail_url': torrent.get('details_url'),
+                            'size': torrent.get('size'),
+                            'score': host['extra_score'],
+                            'seeders': torrent.get('seeders'),
+                            'leechers': torrent.get('leechers'),
+                        })
 
             except:
                 log.error('Failed getting results from %s: %s', (host['host'], traceback.format_exc()))
@@ -104,7 +96,7 @@ class Couchtater(TorrentProvider):
         hosts = self.getHosts()
 
         for host in hosts:
-            result = super(Couchtater, self).belongsTo(url, host = host['host'], provider = provider)
+            result = super(TorrentPotato, self).belongsTo(url, host = host['host'], provider = provider)
             if result:
                 return result
 
