@@ -546,11 +546,28 @@
 			display: none;
 		}
 		.page .combined_table .head abbr.host {
-			margin-right: 190px;
+			margin-right: 195px;
 		}
+			.page .combined_table input.host {
+				width: 215px;
+			}
+		.page .combined_table .head abbr.name {
+			margin-right: 67px;
+		}
+			.page .combined_table input.name {
+				width: 120px;
+			}
 		.page .combined_table .head abbr.api_key {
+			margin-right: 178px;
+		}
+		.page .combined_table .head abbr.pass_key {
 			margin-right: 171px;
 		}
+			.page .combined_table input.api_key,
+			.page .combined_table input.pass_key {
+				width: 213px;
+			}
+		
 		.page .combined_table .head .extra_score,
 		.page .combined_table .extra_score {
 			width: 70px;

@@ -11,7 +11,7 @@ config = [{
             'list': 'torrent_providers',
             'name': 'TorrentPotato',
             'order': 10,
-            'description': 'CouchPotato torrent provider providers.',
+            'description': 'CouchPotato torrent provider. Checkout <a href="https://github.com/RuudBurger/CouchPotatoServer/wiki/CouchPotato-Torrent-Provider">the wiki page about this provider</a> for more info.',
             'wizard': True,
             'options': [
                 {
@@ -37,6 +37,7 @@ config = [{
                 },
                 {
                     'name': 'name',
+                    'label': 'Username',
                     'default': '',
                 },
                 {
@@ -45,7 +46,7 @@ config = [{
                     'label': 'Pass Key',
                     'description': 'Can be found on your profile page',
                     'type': 'combined',
-                    'combine': ['use', 'host', 'name', 'pass_key', 'extra_score'],
+                    'combine': ['use', 'host', 'pass_key', 'name', 'extra_score'],
                 },
             ],
         },
