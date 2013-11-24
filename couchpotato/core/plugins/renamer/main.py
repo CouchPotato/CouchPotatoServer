@@ -30,10 +30,10 @@ class Renamer(Plugin):
             'desc': 'For the renamer to check for new files to rename in a folder',
             'params': {
                 'async': {'desc': 'Optional: Set to 1 if you dont want to fire the renamer.scan asynchronous.'},
-                'movie_folder': {'desc': 'Optional: The folder of the movie to scan. Keep empty for default renamer folder.'},
-                'files': {'desc': 'Optional: Provide the release files if more releases are in the same movie_folder, delimited with a \'|\'. Note that no dedicated release folder is expected for releases with one file.'},
+                'media_folder': {'desc': 'Optional: The folder of the media to scan. Keep empty for default renamer folder.'},
+                'files': {'desc': 'Optional: Provide the release files if more releases are in the same media_folder, delimited with a \'|\'. Note that no dedicated release folder is expected for releases with one file.'},
                 'downloader' : {'desc': 'Optional: The downloader the release has been downloaded with. \'download_id\' is required with this option.'},
-                'download_id': {'desc': 'Optional: The nzb/torrent ID of the release in movie_folder. \'downloader\' is required with this option.'},
+                'download_id': {'desc': 'Optional: The nzb/torrent ID of the release in media_folder. \'downloader\' is required with this option.'},
                 'status': {'desc': 'Optional: The status of the release: \'completed\' (default) or \'seeding\''},
             },
         })
@@ -64,13 +64,13 @@ class Renamer(Plugin):
     def scanView(self, **kwargs):
 
         async = tryInt(kwargs.get('async', 0))
-        movie_folder = sp(kwargs.get('movie_folder'))
+        media_folder = sp(kwargs.get('media_folder'))
         downloader = kwargs.get('downloader')
         download_id = kwargs.get('download_id')
         files = '|'.join([sp(filename) for filename in splitString(kwargs.get('files'), '|')])
         status = kwargs.get('status', 'completed')
 
-        release_download = {'folder': movie_folder} if movie_folder else None
+        release_download = {'folder': media_folder} if media_folder else None
         if release_download:
             release_download.update({'id': download_id, 'downloader': downloader, 'status': status, 'files': files} if download_id else {})
 
@@ -95,8 +95,8 @@ class Renamer(Plugin):
         from_folder = sp(self.conf('from'))
         to_folder = sp(self.conf('to'))
 
-        # Get movie folder to process
-        movie_folder = release_download.get('folder')
+        # Get media folder to process
+        media_folder = release_download.get('folder')
 
         # Get all folders that should not be processed
         no_process = [to_folder]
@@ -115,39 +115,39 @@ class Renamer(Plugin):
         else:
             for item in no_process:
                 if '%s%s' % (from_folder, os.path.sep) in item:
-                    log.error('To protect your data, the movie libraries can\'t be inside of or the same as the "from" folder.')
+                    log.error('To protect your data, the media libraries can\'t be inside of or the same as the "from" folder.')
                     return
 
-        # Check to see if the no_process folders are inside the provided movie_folder
-        if movie_folder and not os.path.isdir(movie_folder):
-            log.debug('The provided movie folder %s does not exist. Trying to find it in the \'from\' folder.', movie_folder)
+        # Check to see if the no_process folders are inside the provided media_folder
+        if media_folder and not os.path.isdir(media_folder):
+            log.debug('The provided media folder %s does not exist. Trying to find it in the \'from\' folder.', media_folder)
 
             # Update to the from folder
             if len(splitString(release_download.get('files'), '|')) == 1:
-                new_movie_folder = from_folder
+                new_media_folder = from_folder
             else:
-                new_movie_folder = os.path.join(from_folder, os.path.basename(movie_folder))
+                new_media_folder = os.path.join(from_folder, os.path.basename(media_folder))
 
-            if not os.path.isdir(new_movie_folder):
-                log.error('The provided movie folder %s does not exist and could also not be found in the \'from\' folder.', movie_folder)
+            if not os.path.isdir(new_media_folder):
+                log.error('The provided media folder %s does not exist and could also not be found in the \'from\' folder.', media_folder)
                 return
 
             # Update the files
-            new_files = [os.path.join(new_movie_folder, os.path.relpath(filename, movie_folder)) for filename in splitString(release_download.get('files'), '|')]
+            new_files = [os.path.join(new_media_folder, os.path.relpath(filename, media_folder)) for filename in splitString(release_download.get('files'), '|')]
             if new_files and not os.path.isfile(new_files[0]):
-                log.error('The provided movie folder %s does not exist and its files could also not be found in the \'from\' folder.', movie_folder)
+                log.error('The provided media folder %s does not exist and its files could also not be found in the \'from\' folder.', media_folder)
                 return
 
             # Update release_download info to the from folder
-            log.debug('Release %s found in the \'from\' folder.', movie_folder)
-            release_download['folder'] = new_movie_folder
+            log.debug('Release %s found in the \'from\' folder.', media_folder)
+            release_download['folder'] = new_media_folder
             release_download['files'] = '|'.join(new_files)
-            movie_folder = new_movie_folder
+            media_folder = new_media_folder
 
-        if movie_folder:
+        if media_folder:
             for item in no_process:
-                if '%s%s' % (movie_folder, os.path.sep) in item:
-                    log.error('To protect your data, the movie libraries can\'t be inside of or the same as the provided movie folder.')
+                if '%s%s' % (media_folder, os.path.sep) in item:
+                    log.error('To protect your data, the media libraries can\'t be inside of or the same as the provided media folder.')
                     return
 
         # Make sure a checkSnatched marked all downloads/seeds as such
@@ -156,26 +156,26 @@ class Renamer(Plugin):
 
         self.renaming_started = True
 
-        # make sure the movie folder name is included in the search
+        # make sure the media folder name is included in the search
         folder = None
         files = []
-        if movie_folder:
-            log.info('Scanning movie folder %s...', movie_folder)
-            folder = os.path.dirname(movie_folder)
+        if media_folder:
+            log.info('Scanning media folder %s...', media_folder)
+            folder = os.path.dirname(media_folder)
 
             if release_download.get('files', ''):
                 files = splitString(release_download['files'], '|')
 
                 # If there is only one file in the torrent, the downloader did not create a subfolder
                 if len(files) == 1:
-                    folder = movie_folder
+                    folder = media_folder
             else:
                 # Get all files from the specified folder
                 try:
-                    for root, folders, names in os.walk(movie_folder):
+                    for root, folders, names in os.walk(media_folder):
                         files.extend([sp(os.path.join(root, name)) for name in names])
                 except:
-                    log.error('Failed getting files from %s: %s', (movie_folder, traceback.format_exc()))
+                    log.error('Failed getting files from %s: %s', (media_folder, traceback.format_exc()))
 
         db = get_session()
 
@@ -185,7 +185,7 @@ class Renamer(Plugin):
         # Unpack any archives
         extr_files = None
         if self.conf('unrar'):
-            folder, movie_folder, files, extr_files = self.extractFiles(folder = folder, movie_folder = movie_folder, files = files,
+            folder, media_folder, files, extr_files = self.extractFiles(folder = folder, media_folder = media_folder, files = files,
                                                                         cleanup = self.conf('cleanup') and not self.downloadIsTorrent(release_download))
 
         groups = fireEvent('scanner.scan', folder = folder if folder else from_folder,
@@ -497,7 +497,7 @@ class Renamer(Plugin):
                         os.remove(src)
 
                         parent_dir = os.path.dirname(src)
-                        if delete_folders.count(parent_dir) == 0 and os.path.isdir(parent_dir) and not parent_dir in [destination, movie_folder] and not from_folder in parent_dir:
+                        if delete_folders.count(parent_dir) == 0 and os.path.isdir(parent_dir) and not parent_dir in [destination, media_folder] and not from_folder in parent_dir:
                             delete_folders.append(parent_dir)
 
                 except:
@@ -529,7 +529,7 @@ class Renamer(Plugin):
                         self.tagRelease(group = group, tag = 'failed_rename')
 
             # Tag folder if it is in the 'from' folder and it will not be removed because it is a torrent
-            if self.movieInFromFolder(movie_folder) and self.downloadIsTorrent(release_download):
+            if self.movieInFromFolder(media_folder) and self.downloadIsTorrent(release_download):
                 self.tagRelease(group = group, tag = 'renamed_already')
 
             # Remove matching releases
@@ -541,9 +541,9 @@ class Renamer(Plugin):
                     log.error('Failed removing %s: %s', (release.identifier, traceback.format_exc()))
 
             if group['dirname'] and group['parentdir'] and not self.downloadIsTorrent(release_download):
-                if movie_folder:
+                if media_folder:
                     # Delete the movie folder
-                    group_folder = movie_folder
+                    group_folder = media_folder
                 else:
                     # Delete the first empty subfolder in the tree relative to the 'from' folder
                     group_folder = sp(os.path.join(from_folder, os.path.relpath(group['parentdir'], from_folder).split(os.path.sep)[0]))
@@ -1015,10 +1015,10 @@ Remove it if you want it to be renamed (again, or at least let it try again)
     def statusInfoComplete(self, release_download):
         return release_download['id'] and release_download['downloader'] and release_download['folder']
 
-    def movieInFromFolder(self, movie_folder):
-        return movie_folder and sp(self.conf('from')) in sp(movie_folder) or not movie_folder
+    def movieInFromFolder(self, media_folder):
+        return media_folder and sp(self.conf('from')) in sp(media_folder) or not media_folder
 
-    def extractFiles(self, folder = None, movie_folder = None, files = None, cleanup = False):
+    def extractFiles(self, folder = None, media_folder = None, files = None, cleanup = False):
         if not files: files = []
 
         # RegEx for finding rar files
@@ -1033,7 +1033,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
             folder = from_folder
 
         check_file_date = True
-        if movie_folder:
+        if media_folder:
             check_file_date = False
 
         if not files:
@@ -1129,18 +1129,18 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
             if cleanup:
                 # Remove all left over folders
-                log.debug('Removing old movie folder %s...', movie_folder)
-                self.deleteEmptyFolder(movie_folder)
+                log.debug('Removing old movie folder %s...', media_folder)
+                self.deleteEmptyFolder(media_folder)
 
-            movie_folder = os.path.join(from_folder, os.path.relpath(movie_folder, folder))
+            media_folder = os.path.join(from_folder, os.path.relpath(media_folder, folder))
             folder = from_folder
 
         if extr_files:
             files.extend(extr_files)
 
-        # Cleanup files and folder if movie_folder was not provided
-        if not movie_folder:
+        # Cleanup files and folder if media_folder was not provided
+        if not media_folder:
             files = []
             folder = None
 
-        return folder, movie_folder, files, extr_files
+        return folder, media_folder, files, extr_files
