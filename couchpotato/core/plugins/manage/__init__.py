@@ -17,9 +17,14 @@ config = [{
                     'type': 'enabler',
                 },
                 {
-                    'name': 'library',
+                    'name': 'movie_library',
                     'type': 'directories',
                     'description': 'Folder where the movies should be moved to.',
+                },
+                {
+                    'name': 'show_library',
+                    'type': 'directories',
+                    'description': 'Folder where the TV shows should be moved to.',
                 },
                 {
                     'label': 'Cleanup After',

@@ -78,7 +78,7 @@ class Manage(Plugin):
 
         try:
 
-            directories = self.directories()
+            directories = self.directories("movie")
             added_identifiers = []
 
             # Add some progress
@@ -152,7 +152,7 @@ class Manage(Plugin):
         except:
             log.error('Failed updating library: %s', (traceback.format_exc()))
 
-        while True and not self.shuttingDown():
+        while not self.shuttingDown():
 
             delete_me = {}
 
@@ -207,10 +207,10 @@ class Manage(Plugin):
 
         return afterUpdate
 
-    def directories(self):
+    def directories(self, mediaType = 'movie'):
         try:
-            if self.conf('library', default = '').strip():
-                return splitString(self.conf('library', default = ''), '::')
+            if self.conf(mediaType + '_library', default = '').strip():
+                return splitString(self.conf(mediaType + '_library', default = ''), '::')
         except:
             pass
 
@@ -230,6 +230,7 @@ class Manage(Plugin):
     def getDiskSpace(self):
 
         free_space = {}
+        directories = self.directories('movie').update(self.directories('show'))
         for folder in self.directories():
 
             size = None

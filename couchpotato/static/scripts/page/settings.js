@@ -848,7 +848,6 @@ Option.Directories = new Class({
 
 		// Replace some properties
 		dir.save = self.saveItems.bind(self);
-		$(dir).getElement('label').set('text', 'Movie Folder');
 		$(dir).getElement('.formHint').destroy();
 		$(dir).addClass('multi_directory');
 
