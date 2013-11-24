@@ -1,5 +1,5 @@
 from couchpotato.core.helpers.encoding import tryUrlencode, toUnicode
-from couchpotato.core.helpers.variable import splitString, tryInt
+from couchpotato.core.helpers.variable import splitString, tryInt, tryFloat
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.base import ResultList
 from couchpotato.core.providers.torrent.base import TorrentProvider
@@ -58,6 +58,8 @@ class TorrentPotato(TorrentProvider):
                             'score': host['extra_score'],
                             'seeders': torrent.get('seeders'),
                             'leechers': torrent.get('leechers'),
+                            'seed_ratio': host['seed_ratio'],
+                            'seed_time': host['seed_time'],
                         })
 
             except:
@@ -95,8 +97,8 @@ class TorrentPotato(TorrentProvider):
                 'use': uses[nr],
                 'host': host,
                 'name': name,
-                'seed_ratio': ratio,
-                'seed_time': seed_time,
+                'seed_ratio': tryFloat(ratio),
+                'seed_time': tryInt(seed_time),
                 'pass_key': key,
                 'extra_score': tryInt(extra_score[nr]) if len(extra_score) > nr else 0
             })

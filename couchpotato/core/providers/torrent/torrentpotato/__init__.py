@@ -43,15 +43,13 @@ config = [{
                 {
                     'name': 'seed_ratio',
                     'label': 'Seed ratio',
-                    'type': 'float',
-                    'default': 1,
+                    'default': '1',
                     'description': 'Will not be (re)moved until this seed ratio is met.',
                 },
                 {
                     'name': 'seed_time',
                     'label': 'Seed time',
-                    'type': 'int',
-                    'default': 40,
+                    'default': '40',
                     'description': 'Will not be (re)moved until this seed time (in hours) is met.',
                 },
                 {
@@ -60,7 +58,7 @@ config = [{
                     'label': 'Pass Key',
                     'description': 'Can be found on your profile page',
                     'type': 'combined',
-                    'combine': ['use', 'host', 'pass_key', 'name', 'extra_score'],
+                    'combine': ['use', 'host', 'pass_key', 'name', 'seed_ratio', 'seed_time', 'extra_score'],
                 },
             ],
         },

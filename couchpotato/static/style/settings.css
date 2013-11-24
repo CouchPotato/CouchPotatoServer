@@ -545,28 +545,30 @@
 		.page .combined_table .head abbr:first-child {
 			display: none;
 		}
-		.page .combined_table .head abbr.host {
-			margin-right: 195px;
+		.page .combined_table .head abbr.host { margin-right: 120px; }
+			.page .combined_table input.host { width: 140px; }
+		.page .section_newznab .combined_table .head abbr.host { margin-right: 200px; }
+			.page .section_newznab .combined_table input.host { width: 220px; }
+			
+		.page .combined_table .head abbr.name { margin-right: 57px; }
+			.page .combined_table input.name { width: 120px; }
+		.page .combined_table .head abbr.api_key { margin-right: 75px; }
+		
+		.page .combined_table .head abbr.pass_key { margin-right: 71px; }
+			.page .combined_table input.pass_key { width: 113px; }
+			
+		.page .section_newznab .combined_table .head abbr.api_key { margin-right: 185px; }
+			.page .section_newznab .combined_table input.api_key { width: 223px; }
+			
+		.page .combined_table .seed_ratio,
+		.page .combined_table .seed_time {
+			width: 70px;
+			text-align: center;
+			margin-left: 10px;
 		}
-			.page .combined_table input.host {
-				width: 215px;
-			}
-		.page .combined_table .head abbr.name {
-			margin-right: 67px;
+		.page .combined_table .seed_time {
+			margin-right: 10px;
 		}
-			.page .combined_table input.name {
-				width: 120px;
-			}
-		.page .combined_table .head abbr.api_key {
-			margin-right: 178px;
-		}
-		.page .combined_table .head abbr.pass_key {
-			margin-right: 171px;
-		}
-			.page .combined_table input.api_key,
-			.page .combined_table input.pass_key {
-				width: 213px;
-			}
 		
 		.page .combined_table .head .extra_score,
 		.page .combined_table .extra_score {
