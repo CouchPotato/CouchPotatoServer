@@ -17,18 +17,21 @@
 # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+import urllib
+import os.path
+import time
+import xmlrpclib
 
 from rtorrent.common import find_torrent, \
     is_valid_port, convert_version_tuple_to_str
 from rtorrent.lib.torrentparser import TorrentParser
 from rtorrent.lib.xmlrpc.http import HTTPServerProxy
-from rtorrent.rpc import Method, BasicAuthTransport
+from rtorrent.lib.xmlrpc.scgi import SCGIServerProxy
+from rtorrent.rpc import Method
+from rtorrent.lib.xmlrpc.basic_auth import BasicAuthTransport
 from rtorrent.torrent import Torrent
 from rtorrent.group import Group
-import os.path
 import rtorrent.rpc  # @UnresolvedImport
-import time
-import xmlrpclib
 
 __version__ = "0.2.9"
 __author__ = "Chris Lucas"
@@ -43,13 +46,25 @@ class RTorrent:
     """ Create a new rTorrent connection """
     rpc_prefix = None
 
-    def __init__(self, url, username=None, password=None,
-                 verify=False, sp=HTTPServerProxy, sp_kwargs={}):
-        self.url = url  # : From X{__init__(self, url)}
+    def __init__(self, uri, username=None, password=None,
+                 verify=False, sp=None, sp_kwargs=None):
+        self.uri = uri  # : From X{__init__(self, url)}
+
         self.username = username
         self.password = password
-        self.sp = sp
-        self.sp_kwargs = sp_kwargs
+
+        self.schema = urllib.splittype(uri)[0]
+
+        if sp:
+            self.sp = sp
+        elif self.schema in ['http', 'https']:
+            self.sp = HTTPServerProxy
+        elif self.schema == 'scgi':
+            self.sp = SCGIServerProxy
+        else:
+            raise NotImplementedError()
+
+        self.sp_kwargs = sp_kwargs or {}
 
         self.torrents = []  # : List of L{Torrent} instances
         self._rpc_methods = []  # : List of rTorrent RPC methods
@@ -62,12 +77,16 @@ class RTorrent:
     def _get_conn(self):
         """Get ServerProxy instance"""
         if self.username is not None and self.password is not None:
+            if self.schema == 'scgi':
+                raise NotImplementedError()
+
             return self.sp(
-                self.url,
+                self.uri,
                 transport=BasicAuthTransport(self.username, self.password),
                 **self.sp_kwargs
             )
-        return self.sp(self.url, **self.sp_kwargs)
+
+        return self.sp(self.uri, **self.sp_kwargs)
 
     def _verify_conn(self):
         # check for rpc methods that should be available
@@ -96,6 +115,11 @@ class RTorrent:
 
         return self._client_version_tuple
 
+    def _update_rpc_methods(self):
+        self._rpc_methods = self._get_conn().system.listMethods()
+
+        return self._rpc_methods
+
     def _get_rpc_methods(self):
         """ Get list of raw RPC commands
 
@@ -103,10 +127,7 @@ class RTorrent:
         @rtype: list
         """
 
-        if self._rpc_methods == []:
-            self._rpc_methods = self._get_conn().system.listMethods()
-
-        return(self._rpc_methods)
+        return(self._rpc_methods or self._update_rpc_methods())
 
     def get_torrents(self, view="main"):
         """Get list of all torrents in specified view
@@ -297,6 +318,8 @@ class RTorrent:
         else:
             assert view is not None, "view parameter required on non-persistent groups"
             p.group.insert('', name, view)
+
+        self._update_rpc_methods()
 
     def get_group(self, name):
         assert name is not None, "group name required"

@@ -23,6 +23,8 @@ config = [{
                 {
                     'name': 'url',
                     'default': 'http://localhost:80/RPC2',
+                    'description': 'XML-RPC Endpoint URI. Usually <strong>scgi://localhost:5000</strong> '
+                                   'or <strong>http://localhost:80/RPC2</strong>'
                 },
                 {
                     'name': 'username',
@@ -38,7 +40,7 @@ config = [{
                 {
                     'name': 'directory',
                     'type': 'directory',
-                    'description': 'Directory where rtorrent should download the files too.',
+                    'description': 'Download to this directory. Keep empty for default rTorrent download directory.',
                 },
                 {
                     'name': 'remove_complete',
@@ -47,14 +49,6 @@ config = [{
                     'advanced': True,
                     'type': 'bool',
                     'description': 'Remove the torrent after it finishes seeding.',
-                },
-                {
-                    'name': 'append_label',
-                    'label': 'Append Label',
-                    'default': False,
-                    'advanced': True,
-                    'type': 'bool',
-                    'description': 'Append label to download location. Requires you to set the download location above.',
                 },
                 {
                     'name': 'delete_files',

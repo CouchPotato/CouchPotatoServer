@@ -30,10 +30,10 @@
 	}
 
 		.suggestions .media_result .data .info {
-			top: 15px;
+			top: 10px;
 			left: 15px;
 			right: 15px;
-			bottom: 15px;
+			bottom: 10px;
 			overflow: hidden;
 		}
 
@@ -74,8 +74,44 @@
 			font-size: 11px;
 			font-style: italic;
 			text-align: right;
-			
 		}
+
+		.suggestions .media_result .data .info .plot {
+			display: block;
+			font-size: 11px;
+			overflow: hidden;
+			text-align: justify;
+			height: 100%;
+			z-index: 2;
+			top: 64px;
+			position: absolute;
+			background: #4e5969;
+			cursor: pointer;
+			transition: all .4s ease-in-out;
+			padding: 0 3px 10px 0;
+		}
+			.suggestions .media_result .data:before {
+				bottom: 0;
+				content: '';
+				display: block;
+				height: 10px;
+				right: 0;
+				left: 0;
+				bottom: 10px;
+				position: absolute;
+				background: linear-gradient(
+				    0deg,
+				    rgba(78, 89, 105, 1) 0%,
+				    rgba(78, 89, 105, 0) 100%
+				);
+				z-index: 3;
+				pointer-events: none;
+			}
+		
+			.suggestions .media_result .data .info .plot.full {
+				top: 0;
+				overflow: auto;
+			}
 
 	.suggestions .media_result .data {
 		cursor: default;
@@ -102,13 +138,16 @@
 
 	.suggestions .media_result .actions {
 		position: absolute;
-		bottom: 10px;
+		top: 10px;
 		right: 10px;
 		display: none;
 		width: 140px;
 	}
 		.suggestions .media_result:hover .actions {
 			display: block;
+		}
+		.suggestions .media_result:hover h2 .title {
+			opacity: 0;
 		}
 		.suggestions .media_result .data.open .actions {
 			display: none;

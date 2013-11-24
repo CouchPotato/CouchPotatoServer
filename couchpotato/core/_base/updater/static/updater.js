@@ -24,7 +24,7 @@ var UpdaterBase = new Class({
 					self.doUpdate();
 				else {
 					App.unBlockPage();
-					App.fireEvent('message', 'No updates available');
+					App.on('message', 'No updates available');
 				}
 			}
 		})

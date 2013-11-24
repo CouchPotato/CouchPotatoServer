@@ -49,19 +49,13 @@ class Movie(ModifierBase):
 
     def returnByType(self, results):
 
-        new_results = {'unknown':[]}
+        new_results = {}
         for r in results:
-            if r.get('type'):
-                type_name = r.get('type') + 's'
-                if not new_results.has_key(type_name):
-                    new_results[type_name] = []
+            type_name = r.get('type', 'movie') + 's'
+            if not new_results.has_key(type_name):
+                new_results[type_name] = []
 
-                new_results[type_name].append(r)
-            else:
-                new_results['unknown'].append(r)
-
-        if len(new_results['unknown']) == 0:
-            del new_results['unknown']
+            new_results[type_name].append(r)
 
         # Combine movies, needs a cleaner way..
         if new_results.has_key('movies'):

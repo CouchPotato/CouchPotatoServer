@@ -111,6 +111,10 @@ Page.Settings = new Class({
 		Cookie.write('advanced_toggle_checked', +self.advanced_toggle.checked, {'duration': 365});
 	},
 
+    sortByOrder: function(a, b){
+			return (a.order || 100) - (b.order || 100)
+	},
+
 	create: function(json){
 		var self = this;
 
@@ -141,13 +145,11 @@ Page.Settings = new Class({
 			options.include(section);
 		});
 
-		options.sort(function(a, b){
-			return (a.order || 100) - (b.order || 100)
-		}).each(function(section){
+		options.stableSort(self.sortByOrder).each(function(section){
 			var section_name = section.section_name;
 
 			// Add groups to content
-			section.groups.sortBy('order').each(function(group){
+			section.groups.stableSort(self.sortByOrder).each(function(group){
 				if(group.hidden) return;
 
 				if(self.wizard_only && !group.wizard)
@@ -184,9 +186,7 @@ Page.Settings = new Class({
 				}
 
 				// Add options to group
-				group.options.sort(function(a, b){
-					return (a.order || 100) - (b.order || 100)
-				}).each(function(option){
+				group.options.stableSort(self.sortByOrder).each(function(option){
 					if(option.hidden) return;
 					var class_name = (option.type || 'string').capitalize();
 					var input = new Option[class_name](section_name, option.name, self.getValue(section_name, option.name), option);

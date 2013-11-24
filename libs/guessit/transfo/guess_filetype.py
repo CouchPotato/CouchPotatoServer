@@ -20,7 +20,7 @@
 
 from __future__ import unicode_literals
 from guessit import Guess
-from guessit.patterns import (subtitle_exts, video_exts, episode_rexps,
+from guessit.patterns import (subtitle_exts, info_exts, video_exts, episode_rexps,
                               find_properties, compute_canonical_form)
 from guessit.date import valid_year
 from guessit.textutils import clean_string
@@ -53,12 +53,16 @@ def guess_filetype(mtree, filetype):
             filetype_container[0] = 'episode'
         elif filetype_container[0] == 'subtitle':
             filetype_container[0] = 'episodesubtitle'
+        elif filetype_container[0] == 'info':
+            filetype_container[0] = 'episodeinfo'
 
     def upgrade_movie():
         if filetype_container[0] == 'video':
             filetype_container[0] = 'movie'
         elif filetype_container[0] == 'subtitle':
             filetype_container[0] = 'moviesubtitle'
+        elif filetype_container[0] == 'info':
+            filetype_container[0] = 'movieinfo'
 
     def upgrade_subtitle():
         if 'movie' in filetype_container[0]:
@@ -67,6 +71,14 @@ def guess_filetype(mtree, filetype):
             filetype_container[0] = 'episodesubtitle'
         else:
             filetype_container[0] = 'subtitle'
+
+    def upgrade_info():
+        if 'movie' in filetype_container[0]:
+            filetype_container[0] = 'movieinfo'
+        elif 'episode' in filetype_container[0]:
+            filetype_container[0] = 'episodeinfo'
+        else:
+            filetype_container[0] = 'info'
 
     def upgrade(type='unknown'):
         if filetype_container[0] == 'autodetect':
@@ -77,6 +89,9 @@ def guess_filetype(mtree, filetype):
     fileext = os.path.splitext(filename)[1][1:].lower()
     if fileext in subtitle_exts:
         upgrade_subtitle()
+        other = { 'container': fileext }
+    elif fileext in info_exts:
+        upgrade_info()
         other = { 'container': fileext }
     elif fileext in video_exts:
         upgrade(type='video')
@@ -104,17 +119,20 @@ def guess_filetype(mtree, filetype):
     fname = clean_string(filename).lower()
     for m in MOVIES:
         if m in fname:
+            log.debug('Found in exception list of movies -> type = movie')
             upgrade_movie()
     for s in SERIES:
         if s in fname:
+            log.debug('Found in exception list of series -> type = episode')
             upgrade_episode()
 
     # now look whether there are some specific hints for episode vs movie
-    if filetype_container[0] in ('video', 'subtitle'):
+    if filetype_container[0] in ('video', 'subtitle', 'info'):
         # if we have an episode_rexp (eg: s02e13), it is an episode
         for rexp, _, _ in episode_rexps:
             match = re.search(rexp, filename, re.IGNORECASE)
             if match:
+                log.debug('Found matching regexp: "%s" (string = "%s") -> type = episode', rexp, match.group())
                 upgrade_episode()
                 break
 
@@ -133,24 +151,29 @@ def guess_filetype(mtree, filetype):
                 possible = False
 
             if possible:
+                log.debug('Found possible episode number: %s (from string "%s") -> type = episode', epnumber, match.group())
                 upgrade_episode()
 
         # if we have certain properties characteristic of episodes, it is an ep
         for prop, value, _, _ in find_properties(filename):
             log.debug('prop: %s = %s' % (prop, value))
             if prop == 'episodeFormat':
+                log.debug('Found characteristic property of episodes: %s = "%s"', prop, value)
                 upgrade_episode()
                 break
 
             elif compute_canonical_form('format', value) == 'DVB':
+                log.debug('Found characteristic property of episodes: %s = "%s"', prop, value)
                 upgrade_episode()
                 break
 
         # origin-specific type
         if 'tvu.org.ru' in filename:
+            log.debug('Found characteristic property of episodes: %s = "%s"', prop, value)
             upgrade_episode()
 
         # if no episode info found, assume it's a movie
+        log.debug('Nothing characteristic found, assuming type = movie')
         upgrade_movie()
 
     filetype = filetype_container[0]

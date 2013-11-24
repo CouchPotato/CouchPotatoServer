@@ -52,11 +52,24 @@ Page.Home = new Class({
 				})
 			),
 			'filter': {
-				'release_status': 'snatched,available'
+				'release_status': 'snatched,seeding,missing,available,downloaded'
 			},
 			'limit': null,
 			'onLoaded': function(){
 				self.chain.callChain();
+			},
+			'onMovieAdded': function(notification){
+
+				// Track movie added
+				var after_search = function(data){
+					if(notification.data.id != data.data.id) return;
+
+					// Force update after search
+					self.available_list.update();
+					App.off('movie.searcher.ended', after_search);
+				}
+				App.on('movie.searcher.ended', after_search);
+
 			}
 		});
 

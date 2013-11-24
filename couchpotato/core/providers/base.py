@@ -62,13 +62,17 @@ class Provider(Plugin):
 
         return self.is_available.get(host, False)
 
-    def getJsonData(self, url, **kwargs):
+    def getJsonData(self, url, decode_from = None, **kwargs):
 
         cache_key = '%s%s' % (md5(url), md5('%s' % kwargs.get('params', {})))
         data = self.getCache(cache_key, url, **kwargs)
 
         if data:
             try:
+                data = data.strip()
+                if decode_from:
+                    data = data.decode(decode_from)
+
                 return json.loads(data)
             except:
                 log.error('Failed to parsing %s: %s', (self.getName(), traceback.format_exc()))

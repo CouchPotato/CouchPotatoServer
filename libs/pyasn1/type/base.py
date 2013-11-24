@@ -120,7 +120,12 @@ class AbstractSimpleAsn1Item(Asn1ItemBase):
     def prettyIn(self, value): return value
     def prettyOut(self, value): return str(value)
 
-    def prettyPrint(self, scope=0): return self.prettyOut(self._value)
+    def prettyPrint(self, scope=0):
+        if self._value is noValue:
+            return '<no value>'
+        else:
+            return self.prettyOut(self._value)
+
     # XXX Compatibility stub
     def prettyPrinter(self, scope=0): return self.prettyPrint(scope)
     

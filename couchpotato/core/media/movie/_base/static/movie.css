@@ -1036,7 +1036,7 @@
 				text-overflow: ellipsis;
 				overflow: hidden;
 				width: 85%;
-				direction: rtl;
+				direction: ltr;
 				vertical-align: middle;
 			}
 

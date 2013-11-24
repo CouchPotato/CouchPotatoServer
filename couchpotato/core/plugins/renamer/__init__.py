@@ -28,6 +28,7 @@ rename_options = {
         'cd': 'CD number (cd1)',
         'cd_nr': 'Just the cd nr. (1)',
         'mpaa': 'MPAA Rating',
+        'category': 'Category label',
     },
 }
 

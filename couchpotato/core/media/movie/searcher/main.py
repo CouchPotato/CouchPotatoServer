@@ -117,6 +117,10 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
     def single(self, movie, search_protocols = None, manual = False):
 
+        # movies don't contain 'type' yet, so just set to default here
+        if not movie.has_key('type'):
+            movie['type'] = 'movie'
+
         # Find out search type
         try:
             if not search_protocols:
@@ -145,7 +149,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
             fireEvent('movie.delete', movie['id'], single = True)
             return
 
-        fireEvent('notify.frontend', type = 'movie.searcher.started.%s' % movie['id'], data = True, message = 'Searching for "%s"' % default_title)
+        fireEvent('notify.frontend', type = 'movie.searcher.started', data = {'id': movie['id']}, message = 'Searching for "%s"' % default_title)
 
 
         ret = False
@@ -167,7 +171,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                 log.info('Search for %s in %s', (default_title, quality_type['quality']['label']))
                 quality = fireEvent('quality.single', identifier = quality_type['quality']['identifier'], single = True)
 
-                results = fireEvent('searcher.search', search_protocols, movie, quality, single = True)
+                results = fireEvent('searcher.search', search_protocols, movie, quality, single = True) or []
                 if len(results) == 0:
                     log.debug('Nothing found for %s in %s', (default_title, quality_type['quality']['label']))
 
@@ -179,7 +183,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                 found_releases += fireEvent('release.create_from_search', results, movie, quality_type, single = True)
 
                 # Try find a valid result and download it
-                if fireEvent('searcher.try_download_result', results, movie, quality_type, manual, single = True):
+                if fireEvent('release.try_download_result', results, movie, quality_type, manual, single = True):
                     ret = True
 
                 # Remove releases that aren't found anymore
@@ -199,7 +203,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
         if len(too_early_to_search) > 0:
             log.info2('Too early to search for %s, %s', (too_early_to_search, default_title))
 
-        fireEvent('notify.frontend', type = 'movie.searcher.ended.%s' % movie['id'], data = True)
+        fireEvent('notify.frontend', type = 'movie.searcher.ended', data = {'id': movie['id']})
 
         return ret
 
