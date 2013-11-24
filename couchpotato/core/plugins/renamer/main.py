@@ -827,6 +827,11 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                             fireEvent('release.update_status', rel.id, status = ignored_status, single = True)
                             continue
 
+                        if not rel_dict['info'].get('download_id'):
+                            log.debug('Download status functionality is not implemented for downloader (%s) of release %s.', (rel_dict['info'].get('download_downloader', 'unknown'), rel_dict['info']['name']))
+                            scan_required = True
+                            continue
+
                         # check status
                         nzbname = self.createNzbName(rel_dict['info'], movie_dict)
 
