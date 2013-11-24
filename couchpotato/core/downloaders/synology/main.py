@@ -42,7 +42,7 @@ class Synology(Downloader):
         except:
             log.error('Exception while adding torrent: %s', traceback.format_exc())
         finally:
-            return response
+            return self.downloadReturnId('') if response else False
 
     def getEnabledProtocol(self):
         if self.conf('use_for') == 'both':
