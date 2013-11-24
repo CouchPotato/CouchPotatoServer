@@ -68,6 +68,8 @@ class TorrentPotato(TorrentProvider):
         uses = splitString(str(self.conf('use')), clean = False)
         hosts = splitString(self.conf('host'), clean = False)
         names = splitString(self.conf('name'), clean = False)
+        seed_times = splitString(self.conf('seed_time'), clean = False)
+        seed_ratios = splitString(self.conf('seed_ratio'), clean = False)
         pass_keys = splitString(self.conf('pass_key'), clean = False)
         extra_score = splitString(self.conf('extra_score'), clean = False)
 
@@ -83,10 +85,18 @@ class TorrentPotato(TorrentProvider):
             try: name = names[nr]
             except: name = ''
 
+            try: ratio = seed_ratios
+            except: ratio = ''
+
+            try: seed_time = seed_times
+            except: seed_time = ''
+
             list.append({
                 'use': uses[nr],
                 'host': host,
                 'name': name,
+                'seed_ratio': ratio,
+                'seed_time': seed_time,
                 'pass_key': key,
                 'extra_score': tryInt(extra_score[nr]) if len(extra_score) > nr else 0
             })
