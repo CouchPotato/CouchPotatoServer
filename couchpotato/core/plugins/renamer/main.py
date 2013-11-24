@@ -806,131 +806,147 @@ Remove it if you want it to be renamed (again, or at least let it try again)
             Release.status_id.in_([snatched_status.get('id'), seeding_status.get('id'), missing_status.get('id')])
         ).all()
 
+        if not rels:
+            #No releases found that need status checking
+            self.checking_snatched = False
+            return True
+
+        release_downloads = fireEvent('download.status', merge = True)
+        if not release_downloads:
+            log.debug('Download status functionality is not implemented for active downloaders.')
+            fireEvent('renamer.scan')
+
+            self.checking_snatched = False
+            return True
+
         scan_releases = []
         scan_required = False
 
-        if rels:
-            log.debug('Checking status snatched releases...')
+        log.debug('Checking status snatched releases...')
 
-            release_downloads = fireEvent('download.status', merge = True)
-            if not release_downloads:
-                log.debug('Download status functionality is not implemented for active downloaders.')
-                scan_required = True
-            else:
-                try:
-                    for rel in rels:
-                        rel_dict = rel.to_dict({'info': {}})
-                        movie_dict = fireEvent('media.get', media_id = rel.movie_id, single = True)
+        try:
+            for rel in rels:
+                rel_dict = rel.to_dict({'info': {}})
+                movie_dict = fireEvent('media.get', media_id = rel.movie_id, single = True)
 
-                        if not isinstance(rel_dict['info'], (dict)):
-                            log.error('Faulty release found without any info, ignoring.')
+                if not isinstance(rel_dict['info'], (dict)):
+                    log.error('Faulty release found without any info, ignoring.')
+                    fireEvent('release.update_status', rel.id, status = ignored_status, single = True)
+                    continue
+
+                # Check if download ID is available
+                if not rel_dict['info'].get('download_id'):
+                    log.debug('Download status functionality is not implemented for downloader (%s) of release %s.', (rel_dict['info'].get('download_downloader', 'unknown'), rel_dict['info']['name']))
+                    scan_required = True
+
+                    # Continue with next release
+                    continue
+
+                # Find release in downloaders
+                nzbname = self.createNzbName(rel_dict['info'], movie_dict)
+
+                for release_download in release_downloads:
+                    found_release = False
+                    if rel_dict['info'].get('download_id'):
+                        if release_download['id'] == rel_dict['info']['download_id'] and release_download['downloader'] == rel_dict['info']['download_downloader']:
+                            log.debug('Found release by id: %s', release_download['id'])
+                            found_release = True
+                            break
+                    else:
+                        if release_download['name'] == nzbname or rel_dict['info']['name'] in release_download['name'] or getImdb(release_download['name']) == movie_dict['library']['identifier']:
+                            log.debug('Found release by release name or imdb ID: %s', release_download['name'])
+                            found_release = True
+                            break
+
+                if not found_release:
+                    log.info('%s not found in downloaders', nzbname)
+
+                    #Check status if already missing and for how long, if > 1 week, set to ignored else to missing
+                    if rel.status_id == missing_status.get('id'):
+                        if rel.last_edit < int(time.time()) - 7 * 24 * 60 * 60:
                             fireEvent('release.update_status', rel.id, status = ignored_status, single = True)
-                            continue
+                    else:
+                        # Set the release to missing
+                        fireEvent('release.update_status', rel.id, status = missing_status, single = True)
 
-                        if not rel_dict['info'].get('download_id'):
-                            log.debug('Download status functionality is not implemented for downloader (%s) of release %s.', (rel_dict['info'].get('download_downloader', 'unknown'), rel_dict['info']['name']))
-                            scan_required = True
-                            continue
+                    # Continue with next release
+                    continue
 
-                        # check status
-                        nzbname = self.createNzbName(rel_dict['info'], movie_dict)
+                # Log that we found the release
+                timeleft = 'N/A' if release_download['timeleft'] == -1 else release_download['timeleft']
+                log.debug('Found %s: %s, time to go: %s', (release_download['name'], release_download['status'].upper(), timeleft))
 
-                        found = False
-                        for release_download in release_downloads:
-                            found_release = False
-                            if rel_dict['info'].get('download_id'):
-                                if release_download['id'] == rel_dict['info']['download_id'] and release_download['downloader'] == rel_dict['info']['download_downloader']:
-                                    log.debug('Found release by id: %s', release_download['id'])
-                                    found_release = True
+                # Check status of release
+                if release_download['status'] == 'busy':
+                    # Set the release to snatched if it was missing before
+                    fireEvent('release.update_status', rel.id, status = snatched_status, single = True)
+
+                    # Tag folder if it is in the 'from' folder and it will not be processed because it is still downloading
+                    if self.movieInFromFolder(release_download['folder']):
+                        self.tagRelease(release_download = release_download, tag = 'downloading')
+
+                elif release_download['status'] == 'seeding':
+                    #If linking setting is enabled, process release
+                    if self.conf('file_action') != 'move' and not rel.status_id == seeding_status.get('id') and self.statusInfoComplete(release_download):
+                        log.info('Download of %s completed! It is now being processed while leaving the original files alone for seeding. Current ratio: %s.', (release_download['name'], release_download['seed_ratio']))
+
+                        # Remove the downloading tag
+                        self.untagRelease(release_download = release_download, tag = 'downloading')
+
+                        # Scan and set the torrent to paused if required
+                        release_download.update({'pause': True, 'scan': True, 'process_complete': False})
+                        scan_releases.append(release_download)
+                    else:
+                        #let it seed
+                        log.debug('%s is seeding with ratio: %s', (release_download['name'], release_download['seed_ratio']))
+
+                        # Set the release to seeding
+                        fireEvent('release.update_status', rel.id, status = seeding_status, single = True)
+
+                elif release_download['status'] == 'failed':
+                    # Set the release to failed
+                    fireEvent('release.update_status', rel.id, status = failed_status, single = True)
+
+                    fireEvent('download.remove_failed', release_download, single = True)
+
+                    if self.conf('next_on_failed'):
+                		fireEvent('movie.searcher.try_next_release', media_id = rel.movie_id)
+
+                elif release_download['status'] == 'completed':
+                    log.info('Download of %s completed!', release_download['name'])
+
+                    #Make sure the downloader sent over a path to look in
+                    if self.statusInfoComplete(release_download):
+
+                        # If the release has been seeding, process now the seeding is done
+                        if rel.status_id == seeding_status.get('id'):
+                            if self.conf('file_action') != 'move':
+                                # Set the release to done as the movie has already been renamed
+                                fireEvent('release.update_status', rel.id, status = downloaded_status, single = True)
+
+                                # Allow the downloader to clean-up
+                                release_download.update({'pause': False, 'scan': False, 'process_complete': True})
+                                scan_releases.append(release_download)
                             else:
-                                if release_download['name'] == nzbname or rel_dict['info']['name'] in release_download['name'] or getImdb(release_download['name']) == movie_dict['library']['identifier']:
-                                    found_release = True
+                                # Scan and Allow the downloader to clean-up
+                                release_download.update({'pause': False, 'scan': True, 'process_complete': True})
+                                scan_releases.append(release_download)
 
-                            if found_release:
-                                timeleft = 'N/A' if release_download['timeleft'] == -1 else release_download['timeleft']
-                                log.debug('Found %s: %s, time to go: %s', (release_download['name'], release_download['status'].upper(), timeleft))
+                        else:
+                            # Set the release to snatched if it was missing before
+                            fireEvent('release.update_status', rel.id, status = snatched_status, single = True)
 
-                                if release_download['status'] == 'busy':
-                                    # Set the release to snatched if it was missing before
-                                    fireEvent('release.update_status', rel.id, status = snatched_status, single = True)
+                            # Remove the downloading tag
+                            self.untagRelease(release_download = release_download, tag = 'downloading')
 
-                                    # Tag folder if it is in the 'from' folder and it will not be processed because it is still downloading
-                                    if self.movieInFromFolder(release_download['folder']):
-                                        self.tagRelease(release_download = release_download, tag = 'downloading')
+                            # Scan and Allow the downloader to clean-up
+                            release_download.update({'pause': False, 'scan': True, 'process_complete': True})
+                            scan_releases.append(release_download)
+                    else:
+                        scan_required = True
 
-                                elif release_download['status'] == 'seeding':
-                                    #If linking setting is enabled, process release
-                                    if self.conf('file_action') != 'move' and not rel.status_id == seeding_status.get('id') and self.statusInfoComplete(release_download):
-                                        log.info('Download of %s completed! It is now being processed while leaving the original files alone for seeding. Current ratio: %s.', (release_download['name'], release_download['seed_ratio']))
-
-                                        # Remove the downloading tag
-                                        self.untagRelease(release_download = release_download, tag = 'downloading')
-
-                                        # Scan and set the torrent to paused if required
-                                        release_download.update({'pause': True, 'scan': True, 'process_complete': False})
-                                        scan_releases.append(release_download)
-                                    else:
-                                        #let it seed
-                                        log.debug('%s is seeding with ratio: %s', (release_download['name'], release_download['seed_ratio']))
-
-                                        # Set the release to seeding
-                                        fireEvent('release.update_status', rel.id, status = seeding_status, single = True)
-
-                                elif release_download['status'] == 'failed':
-                                    # Set the release to failed
-                                    fireEvent('release.update_status', rel.id, status = failed_status, single = True)
-
-                                    fireEvent('download.remove_failed', release_download, single = True)
-
-                                    if self.conf('next_on_failed'):
-                                        fireEvent('movie.searcher.try_next_release', media_id = rel.movie_id)
-                                elif release_download['status'] == 'completed':
-                                    log.info('Download of %s completed!', release_download['name'])
-                                    if self.statusInfoComplete(release_download):
-
-                                        # If the release has been seeding, process now the seeding is done
-                                        if rel.status_id == seeding_status.get('id'):
-                                            if self.conf('file_action') != 'move':
-                                                # Set the release to done as the movie has already been renamed
-                                                fireEvent('release.update_status', rel.id, status = downloaded_status, single = True)
-
-                                                # Allow the downloader to clean-up
-                                                release_download.update({'pause': False, 'scan': False, 'process_complete': True})
-                                                scan_releases.append(release_download)
-                                            else:
-                                                # Scan and Allow the downloader to clean-up
-                                                release_download.update({'pause': False, 'scan': True, 'process_complete': True})
-                                                scan_releases.append(release_download)
-
-                                        else:
-                                            # Set the release to snatched if it was missing before
-                                            fireEvent('release.update_status', rel.id, status = snatched_status, single = True)
-
-                                            # Remove the downloading tag
-                                            self.untagRelease(release_download = release_download, tag = 'downloading')
-
-                                            # Scan and Allow the downloader to clean-up
-                                            release_download.update({'pause': False, 'scan': True, 'process_complete': True})
-                                            scan_releases.append(release_download)
-                                    else:
-                                        scan_required = True
-
-                                found = True
-                                break
-
-                        if not found:
-                            log.info('%s not found in downloaders', nzbname)
-
-                            #Check status if already missing and for how long, if > 1 week, set to ignored else to missing
-                            if rel.status_id == missing_status.get('id'):
-                                if rel.last_edit < int(time.time()) - 7 * 24 * 60 * 60:
-                                    fireEvent('release.update_status', rel.id, status = ignored_status, single = True)
-                            else:
-                                # Set the release to missing
-                                fireEvent('release.update_status', rel.id, status = missing_status, single = True)
-
-                except:
-                    log.error('Failed checking for release in downloader: %s', traceback.format_exc())
+        except:
+            log.error('Failed checking for release in downloader: %s', traceback.format_exc())
 
         # The following can either be done here, or inside the scanner if we pass it scan_items in one go
         for release_download in scan_releases:
@@ -953,7 +969,6 @@ Remove it if you want it to be renamed (again, or at least let it try again)
             fireEvent('renamer.scan')
 
         self.checking_snatched = False
-
         return True
 
     def extendReleaseDownload(self, release_download):
