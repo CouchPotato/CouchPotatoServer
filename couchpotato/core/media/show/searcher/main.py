@@ -1,6 +1,6 @@
 from couchpotato import get_session, Env
 from couchpotato.core.event import addEvent, fireEvent
-from couchpotato.core.helpers.variable import getTitle, tryInt
+from couchpotato.core.helpers.variable import getTitle, tryInt, toIterable
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.searcher.main import SearchSetupError
 from couchpotato.core.plugins.base import Plugin
@@ -12,6 +12,8 @@ log = CPLog(__name__)
 
 
 class ShowSearcher(Plugin):
+
+    type = ['show', 'season', 'episode']
 
     in_progress = False
 
@@ -29,7 +31,9 @@ class ShowSearcher(Plugin):
 
         self.query_condenser = QueryCondenser()
 
-        addEvent('show.searcher.single', self.single)
+        for type in toIterable(self.type):
+            addEvent('%s.searcher.single' % type, self.single)
+
         addEvent('searcher.get_search_title', self.getSearchTitle)
 
         addEvent('searcher.correct_match', self.correctMatch)
