@@ -76,7 +76,8 @@ PATTERN_GROUPS = [
             'HDTV',
             'PDTV',
             'DSR',
-            'DVDRiP'
+            'DVDRiP',
+            'WEBDL'  # TODO support 'WEB.DL' tag
         ]),
 
         (r'(?P<codec>%s)', [
