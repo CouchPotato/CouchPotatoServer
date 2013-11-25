@@ -1,6 +1,6 @@
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.variable import tryFloat, mergeDicts, md5, \
-    possibleTitles, getTitle
+    possibleTitles, getTitle, toIterable
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
@@ -117,7 +117,9 @@ class YarrProvider(Provider):
     def __init__(self):
         addEvent('provider.enabled_protocols', self.getEnabledProtocol)
         addEvent('provider.belongs_to', self.belongsTo)
-        addEvent('provider.search.%s.%s' % (self.protocol, self.type), self.search)
+
+        for type in toIterable(self.type):
+            addEvent('provider.search.%s.%s' % (self.protocol, type), self.search)
 
     def getEnabledProtocol(self):
         if self.isEnabled():
