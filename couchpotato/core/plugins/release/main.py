@@ -100,14 +100,14 @@ class Release(Plugin):
         done_status, snatched_status = fireEvent('status.get', ['done', 'snatched'], single = True)
 
         # Add movie
-        movie = db.query(Media).filter_by(library_id = group['library'].get('id')).first()
-        if not movie:
-            movie = Media(
+        media = db.query(Media).filter_by(library_id = group['library'].get('id')).first()
+        if not media:
+            media = Media(
                 library_id = group['library'].get('id'),
                 profile_id = 0,
                 status_id = done_status.get('id')
             )
-            db.add(movie)
+            db.add(media)
             db.commit()
 
         # Add Release
@@ -120,7 +120,7 @@ class Release(Plugin):
         if not rel:
             rel = Relea(
                 identifier = identifier,
-                movie = movie,
+                media = media,
                 quality_id = group['meta_data']['quality'].get('id'),
                 status_id = done_status.get('id')
             )
@@ -142,7 +142,7 @@ class Release(Plugin):
         except:
             log.debug('Failed to attach "%s" to release: %s', (added_files, traceback.format_exc()))
 
-        fireEvent('movie.restatus', movie.id)
+        fireEvent('movie.restatus', media.id)
 
         return True
 
@@ -228,7 +228,7 @@ class Release(Plugin):
             if item.get('protocol') != 'torrent_magnet':
                 item['download'] = provider.loginDownload if provider.urls.get('login') else provider.download
 
-            success = self.download(data = item, media = rel.movie.to_dict({
+            success = self.download(data = item, media = rel.media.to_dict({
                 'profile': {'types': {'quality': {}}},
                 'releases': {'status': {}, 'quality': {}},
                 'library': {'titles': {}, 'files':{}},
@@ -365,8 +365,7 @@ class Release(Plugin):
             if not rls:
                 rls = Relea(
                     identifier = rel_identifier,
-                    movie_id = media.get('id'),
-                    #media_id = media.get('id'),
+                    media_id = media.get('id'),
                     quality_id = quality_type.get('quality_id'),
                     status_id = available_status.get('id')
                 )

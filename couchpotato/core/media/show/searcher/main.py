@@ -108,7 +108,7 @@ class ShowSearcher(Plugin):
                 found_releases += fireEvent('release.create_from_search', results, media, quality_type, single = True)
 
                 # Try find a valid result and download it
-                if fireEvent('searcher.try_download_result', results, media, quality_type, manual, single = True):
+                if fireEvent('release.try_download_result', results, media, quality_type, manual, single = True):
                     ret = True
 
                 # Remove releases that aren't found anymore

@@ -24,7 +24,6 @@ class Searcher(SearcherBase):
         addEvent('searcher.correct_year', self.correctYear)
         addEvent('searcher.correct_name', self.correctName)
         addEvent('searcher.correct_words', self.correctWords)
-        addEvent('searcher.try_download_result', self.tryDownloadResult)
         addEvent('searcher.download', self.download)
         addEvent('searcher.search', self.search)
 
@@ -51,30 +50,6 @@ class Searcher(SearcherBase):
     def getProgressForAll(self):
         progress = fireEvent('searcher.progress', merge = True)
         return progress
-
-    def tryDownloadResult(self, results, media, quality_type, manual = False):
-        ignored_status, failed_status = fireEvent('status.get', ['ignored', 'failed'], single = True)
-
-        for rel in results:
-            if not quality_type.get('finish', False) and quality_type.get('wait_for', 0) > 0 and rel.get('age') <= quality_type.get('wait_for', 0):
-                log.info('Ignored, waiting %s days: %s', (quality_type.get('wait_for'), rel['name']))
-                continue
-
-            if rel['status_id'] in [ignored_status.get('id'), failed_status.get('id')]:
-                log.info('Ignored: %s', rel['name'])
-                continue
-
-            if rel['score'] <= 0:
-                log.info('Ignored, score to low: %s', rel['name'])
-                continue
-
-            downloaded = fireEvent('searcher.download', data = rel, media = media, manual = manual, single = True)
-            if downloaded is True:
-                return True
-            elif downloaded != 'try_next':
-                break
-
-        return False
 
     def download(self, data, media, manual = False):
 
