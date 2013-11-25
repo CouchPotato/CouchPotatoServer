@@ -23,13 +23,13 @@ class Matcher(Plugin):
         return self.caper.parse(release['name'])
 
     def best(self, release, media, quality):
-        rel_info = fireEvent('matcher.parse', release, single = True)
+        match = fireEvent('matcher.parse', release, single = True)
 
-        if len(rel_info.chains) < 1:
+        if len(match.chains) < 1:
             log.info2('Wrong: %s, unable to parse release name (no chains)', release['name'])
             return False
 
-        for chain in rel_info.chains:
+        for chain in match.chains:
             if fireEvent('searcher.correct_match', chain, release, media, quality, single = True):
                 return chain
 

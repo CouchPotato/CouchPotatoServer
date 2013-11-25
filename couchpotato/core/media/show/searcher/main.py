@@ -208,6 +208,7 @@ class ShowSearcher(Plugin):
 
     def correctMatch(self, chain, release, media, quality):
         log.info("Checking if '%s' is valid", release['name'])
+        log.info2('Release parsed as: %s', chain.info)
 
         if not fireEvent('matcher.correct_quality', chain, quality, self.quality_map, single = True):
             log.info('Wrong: %s, quality does not match', release['name'])
