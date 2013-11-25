@@ -135,6 +135,9 @@ class MergeTransformer(Transformer):
     def _merge(self, nodes, depth = 0):
         Logr.debug(str('\t' * depth) + str(nodes))
 
+        if not len(nodes):
+            return []
+
         top = nodes[0]
 
         # Merge into top
