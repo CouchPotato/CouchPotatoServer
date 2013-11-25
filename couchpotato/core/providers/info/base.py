@@ -6,4 +6,4 @@ class MovieProvider(Provider):
 
 
 class ShowProvider(Provider):
-    type = 'show'
+    type = ['season', 'episode']

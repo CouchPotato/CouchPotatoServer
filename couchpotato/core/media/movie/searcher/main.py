@@ -31,7 +31,6 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
         addEvent('movie.searcher.could_be_released', self.couldBeReleased)
         addEvent('searcher.correct_release', self.correctRelease)
         addEvent('searcher.get_search_title', self.getSearchTitle)
-        addEvent('searcher.get_media_searcher_id', self.getMediaSearcherId)
 
         addApiView('movie.searcher.try_next', self.tryNextReleaseView, docs = {
             'desc': 'Marks the snatched results as ignored and try the next best release',
@@ -347,10 +346,6 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
     def getSearchTitle(self, media):
         if media['type'] == 'movie':
             return getTitle(media['library'])
-
-    def getMediaSearcherId(self, media_type):
-        if media_type == 'movie':
-            return 'movie'
 
 class SearchSetupError(Exception):
     pass

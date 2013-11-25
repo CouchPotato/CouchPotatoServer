@@ -167,7 +167,7 @@ def natcmp(a, b):
     return cmp(natsortKey(a), natsortKey(b))
 
 def toIterable(value):
-    if isinstance(value, collections.Iterable):
+    if type(value) in [list, tuple]:
         return value
     return [value]
 
