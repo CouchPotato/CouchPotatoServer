@@ -112,6 +112,40 @@ class Library(Entity):
     parent = ManyToOne('Library')
     children = OneToMany('Library')
 
+    def getRelated(self, include_parents = True, include_self = True, include_children = True):
+        libraries = []
+
+        if include_parents and self.parent is not None:
+            libraries += self.parent.getRelated(include_children = False)
+
+        if include_self:
+            libraries += [(self.type, self)]
+
+        if include_children:
+            for child in self.children:
+                libraries += child.getRelated(include_parents = False)
+
+        return libraries
+
+    def to_dict(self, deep = None, exclude = None):
+        if not exclude: exclude = []
+        if not deep: deep = {}
+
+        include_related = deep.pop('related_libraries', None) is not None
+
+        orig_dict = super(Library, self).to_dict(deep = deep, exclude = exclude)
+
+        # Include related libraries (parents and children)
+        if include_related and self.parent is not None:
+            # TODO need a way to flag the root library
+            # TODO converting to a dict will remove libraries with multiple types (episodes, seasons), they need to be merged into a list instead
+            orig_dict['related_libraries'] = dict([
+                (library_type, library.to_dict(deep, exclude))
+                for (library_type, library) in self.getRelated(include_self = False)
+            ])
+
+        return orig_dict
+
 
 class ShowLibrary(Library, DictMixin):
     using_options(inheritance = 'multi')

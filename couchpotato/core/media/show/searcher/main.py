@@ -40,7 +40,6 @@ class ShowSearcher(Plugin):
         addEvent('searcher.correct_release', self.correctRelease)
 
         addEvent('searcher.get_media_identifier', self.getMediaIdentifier)
-        addEvent('searcher.get_media_root', self.getMediaRoot)
 
     def single(self, media, search_protocols = None, manual = False):
         if media['type'] == 'show':
@@ -73,6 +72,7 @@ class ShowSearcher(Plugin):
             #fireEvent('episode.delete', episode['id'], single = True)
             return
 
+        # TODO replace with 'related_libraries'
         show, season, episode = self.getMedia(media)
         if show is None or season is None:
             log.error('Unable to find show or season library in database, missing required data for searching')
@@ -139,6 +139,7 @@ class ShowSearcher(Plugin):
         if media['type'] not in ['show', 'season', 'episode']:
             return
 
+        # TODO replace with 'related_libraries'
         show, season, episode = self.getMedia(media)
         if show is None:
             return None
@@ -199,6 +200,7 @@ class ShowSearcher(Plugin):
         if not fireEvent('searcher.correct_words', release['name'], media, single = True):
             return False
 
+        # TODO replace with 'related_libraries'
         show, season, episode = self.getMedia(media)
         if show is None or season is None:
             log.error('Unable to find show or season library in database, missing required data for searching')
@@ -257,18 +259,6 @@ class ShowSearcher(Plugin):
         identifier['episode'] = tryInt(identifier['episode'], None)
 
         return identifier
-
-    # TODO move this somewhere else
-    def getMediaRoot(self, media):
-        if media['type'] not in ['show', 'season', 'episode']:
-            return None
-
-        show, season, episode = self.getMedia(media)
-        if show is None or season is None:
-            log.error('Unable to find show or season library in database, missing required data for searching')
-            return
-
-        return show.to_dict()
 
     # TODO move this somewhere else
     def getMedia(self, media):

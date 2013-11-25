@@ -11,7 +11,7 @@ class MediaBase(Plugin):
     default_dict = {
         'profile': {'types': {'quality': {}}},
         'releases': {'status': {}, 'quality': {}, 'files':{}, 'info': {}},
-        'library': {'titles': {}, 'files':{}},
+        'library': {'titles': {}, 'files':{}, 'related_libraries': {}},
         'files': {},
         'status': {},
         'category': {},
