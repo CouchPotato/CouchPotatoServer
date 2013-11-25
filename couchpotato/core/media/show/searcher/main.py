@@ -37,7 +37,6 @@ class ShowSearcher(Plugin):
 
         addEvent('searcher.get_media_identifier', self.getMediaIdentifier)
         addEvent('searcher.get_media_root', self.getMediaRoot)
-        addEvent('searcher.get_media_searcher_id', self.getMediaSearcherId)
 
     def single(self, media, search_protocols = None, manual = False):
         if media['type'] == 'show':
@@ -224,6 +223,7 @@ class ShowSearcher(Plugin):
 
         return True
 
+    # TODO move this somewhere else
     def getMediaIdentifier(self, media_library):
         if media_library['type'] not in ['show', 'season', 'episode']:
             return None
@@ -253,6 +253,7 @@ class ShowSearcher(Plugin):
 
         return identifier
 
+    # TODO move this somewhere else
     def getMediaRoot(self, media):
         if media['type'] not in ['show', 'season', 'episode']:
             return None
@@ -264,10 +265,7 @@ class ShowSearcher(Plugin):
 
         return show.to_dict()
 
-    def getMediaSearcherId(self, media_type):
-        if media_type in ['show', 'season', 'episode']:
-            return 'show'
-
+    # TODO move this somewhere else
     def getMedia(self, media):
         db = get_session()
 
