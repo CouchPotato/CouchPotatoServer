@@ -87,10 +87,10 @@ class TorrentPotato(TorrentProvider):
             try: name = names[nr]
             except: name = ''
 
-            try: ratio = seed_ratios
+            try: ratio = seed_ratios[nr]
             except: ratio = ''
 
-            try: seed_time = seed_times
+            try: seed_time = seed_times[nr]
             except: seed_time = ''
 
             list.append({
