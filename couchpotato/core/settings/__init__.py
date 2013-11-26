@@ -71,6 +71,7 @@ class Settings(object):
         addEvent('settings.options', self.addOptions)
         addEvent('settings.register', self.registerDefaults)
         addEvent('settings.save', self.save)
+        addEvent('settings.add_option_item', self.addOptionItem)
 
     def registerDefaults(self, section_name, options = None, save = True):
         if not options: options = {}
@@ -170,6 +171,21 @@ class Settings(object):
             self.options[section_name] = options
         else:
             self.options[section_name] = mergeDicts(self.options[section_name], options)
+
+    def addOptionItem(self, section_name, group, new_option, clearValues = False):
+        if not self.options.get(section_name):
+            return False
+
+        for option_id,option in enumerate(self.options[section_name]['groups'][group]['options']):
+            if option['name'] == new_option['name']:
+                if clearValues:
+                    option.pop('values', None)
+
+                self.options[section_name]['groups'][group]['options'][option_id] = mergeDicts(option, new_option)
+                return True
+
+        self.options[section_name]['groups'][group]['options'].append(new_option)
+        return True
 
     def getOptions(self):
         return self.options
