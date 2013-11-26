@@ -265,16 +265,37 @@ Page.Settings = new Class({
 	},
 
 	createGroup: function(group){
+
+		if((typeOf(group.description) == 'array')){
+			var hint = new Element('span.hint.more_hint', {
+				'html': group.description[0],
+				'title': group.description[1]
+			});
+			var tip = new Tips(hint, {
+				'fixed': true,
+				'offset': {'x': 0, 'y': 0},
+				'onShow': function(tip, hint){
+		            tip.setStyles({
+		            	'margin-top': hint.getSize().y,
+		                'visibility': 'hidden',
+		                'display': 'block'
+		            }).fade('in');
+				}
+			});
+		}
+		else {
+			var hint = new Element('span.hint', {
+				'html': group.description || ''
+			})
+		}
+
+
 		return new Element('fieldset', {
 			'class': (group.advanced ? 'inlineLabels advanced' : 'inlineLabels') + ' group_' + (group.name || '') + ' subtab_' + (group.subtab || '')
-		}).adopt(
+		}).grab(
 				new Element('h2', {
 					'text': group.label || (group.name).capitalize()
-				}).adopt(
-						new Element('span.hint', {
-							'html': group.description || ''
-						})
-					)
+				}).grab(hint)
 			);
 	},
 
@@ -343,10 +364,33 @@ var OptionBase = new Class({
 
 	createHint: function(){
 		var self = this;
-		if(self.options.description)
-			new Element('p.formHint', {
-				'html': self.options.description
-			}).inject(self.el);
+		if(self.options.description){
+
+
+			if((typeOf(self.options.description) == 'array')){
+				var hint = new Element('p.formHint.more_hint', {
+					'html': self.options.description[0],
+					'title': self.options.description[1]
+				}).inject(self.el);
+				var tip = new Tips(hint, {
+					'fixed': true,
+					'offset': {'x': 0, 'y': 0},
+					'onShow': function(tip, hint){
+			            tip.setStyles({
+			            	'margin-left': 13,
+			            	'margin-top': hint.getSize().y+3,
+			                'visibility': 'hidden',
+			                'display': 'block'
+			            }).fade('in');
+					}
+				});
+			}
+			else {
+				var hint = new Element('p.formHint', {
+					'html': self.options.description || ''
+				}).inject(self.el)
+			}
+		}
 	},
 
 	afterInject: function(){

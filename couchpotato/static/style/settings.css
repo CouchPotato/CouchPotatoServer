@@ -700,3 +700,19 @@
 	background: url('../images/imdb_watchlist.png') no-repeat right 50px;
 	min-height: 210px;
 }
+
+.tip-wrap {
+	background: #FFF;
+	color: #000;
+	padding: 10px;
+	width: 300px;
+	z-index: 200;
+}
+	.more_hint:after {
+		position: relative;
+		font-family: 'Elusive-Icons';
+		content: "\e089";
+		display: inline-block;
+		top: 1px;
+		left: 6px;
+	}
