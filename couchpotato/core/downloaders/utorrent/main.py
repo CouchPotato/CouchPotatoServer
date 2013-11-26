@@ -165,7 +165,7 @@ class uTorrent(Downloader):
             status = 'busy'
             if (torrent[1] & status_flags["STARTED"] or torrent[1] & status_flags["QUEUED"]) and torrent[4] == 1000:
                 status = 'seeding'
-            elif (torrent[1] & status_flags["ERROR"]):
+            elif torrent[1] & status_flags["ERROR"]:
                 status = 'failed'
             elif torrent[4] == 1000:
                 status = 'completed'
@@ -223,13 +223,13 @@ class uTorrent(Downloader):
         for dir in self.download_directories:
             directories.append((dir,dir))
 
-        options = {
+        option = {
                 'name': 'download_directory',
                 'values': directories,
         }
 
         class_name = self.getName().lower().split(':')
-        fireEvent('settings.add_sub_options', class_name[0].lower(), 0, options, True)
+        fireEvent('settings.add_option_item', class_name[0].lower(), 0, option, True)
         return True
 
 

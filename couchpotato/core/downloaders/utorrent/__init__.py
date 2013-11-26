@@ -37,11 +37,6 @@ config = [{
                     'description': 'Label to add torrent as.',
                 },
                 {
-                    'name': 'directory',
-                    'type': 'directory',
-                    'description': 'Download to this directory. Keep empty for default uTorrent download directory.',
-                },
-                {
                     'name': 'download_directory',
                     'type': 'dropdown',
                     'values': [ ('Default Directory','Default Directory') ],
