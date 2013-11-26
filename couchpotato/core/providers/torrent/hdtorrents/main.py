@@ -6,7 +6,7 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.torrent.base import TorrentProvider
 import traceback
 import re
-
+#        'search' : 'https://www.hdts.ru/torrents.php?search=%s&active=1&options=%s',
 log = CPLog(__name__)
 
 
@@ -15,28 +15,29 @@ class HDTorrents(TorrentProvider):
     urls = {
         'login' : 'https://www.hdts.ru/login.php',
         'detail' : 'https://www.hdts.ru/details.php?id=%s',
-        'search' : 'https://www.hdts.ru/torrents.php?search=%s&active=1&options=%s',
+        'search' : 'https://www.hdts.ru/torrents.php?search=%s&active=1',
         'home' : 'https://www.hdts.ru/%s',
     }
 
-    cat_ids = [
-        ([1], ['bd50']),
-        ([2], ['1080p', '720p', 'brrip']),
-        ([3], ['720p', 'brrip']),
-        ([5], ['1080p', 'brrip']),
-    ]
+    #cat_ids = [
+    #    ([1], ['bd50']),
+    #    ([3], ['720p', 'brrip']),
+    #    ([5], ['1080p', 'brrip']),
+    #    ([2], ['1080p', '720p', 'brrip']),
+    #]
 
     http_time_between_calls = 1 #seconds
 
     def _search(self, movie, quality, results):
 
-        cats = self.getCatId(quality['identifier'])
-        if not cats:
-            return
+        #cats = self.getCatId(quality['identifier'])
+        #if not cats:
+        #    return
 
-        url = self.urls['search'] % (movie['library']['identifier'], cats[0])
+        url = self.urls['search'] % (movie['library']['identifier'])#, cats[0])
         data = self.getHTMLData(url, opener = self.login_opener)
-        
+        #if cats[0] == 2:#or 3
+        #    x = 20
         
         if data:
           
@@ -48,12 +49,16 @@ class HDTorrents(TorrentProvider):
           try:
               #Get first entry in table
               entries = html.find_all('td', attrs={'align' : 'center'})
+
+              if not entries:
+                  return
+
               torrent_id = entries[21].find('div')['id']
               torrent_age = datetime.now() - datetime.strptime(entries[15].get_text()[:8] + ' ' + entries[15].get_text()[-10::], '%H:%M:%S %d/%m/%Y')
               
               results.append({
                               'id': torrent_id,
-                              'name': entries[28].find('a')['title'].strip('View details: '),
+                              'name': entries[20].find('a')['title'].strip('History - ').replace('Blu-ray', 'bd50'),
                               'url': self.urls['home'] % entries[13].find('a')['href'],
                               'detail_url': self.urls['detail'] % torrent_id,
                               'size': self.parseSize(entries[16].get_text()),
@@ -84,7 +89,7 @@ class HDTorrents(TorrentProvider):
 
                   results.append({
                                   'id': torrent_id,
-                                  'name': cells[1].find('b').get_text().strip('\t '),
+                                  'name': cells[1].find('b').get_text().strip('\t ').replace('Blu-ray', 'bd50'),
                                   'url': self.urls['home'] % cells[3].find('a')['href'],
                                   'detail_url': self.urls['home'] % cells[1].find('a')['href'],
                                   'size': self.parseSize(cells[6].get_text()),
