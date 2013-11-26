@@ -43,10 +43,12 @@ config = [{
                 },
                 {
                     'name': 'download_directory',
-                    'description': 'Download to this directory. Use numeric ID (with 0 as default download folder).',
+                    'type': 'dropdown',
+                    'values': [ ('Default Directory','Default Directory') ],
+                    'description': 'Download to this directory. Folders must be set-up in uTorrent client to appear here.',
                 },
                 {
-                    'name': 'sub_path',
+                    'name': 'download_subpath',
                     'description': 'Download directory sub-path',
                 },
                 {

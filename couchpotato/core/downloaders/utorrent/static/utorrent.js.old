@@ -1,0 +1,101 @@
+var UtorrentBase = new Class({
+
+    directories: { 0: "Default", 1: "C:\\Windows\\System32" },
+    selected_directory_id: 0,
+
+	setup: function(data){
+		var self = this;
+		self.directories = data.directories;
+		self.selected_directory_id = data.selected;
+
+		App.addEvent('load', self.addSettings.bind(self));
+	},
+
+	addSettings: function(){
+		var self = this;
+
+		self.settings = App.getPage('Settings');
+		self.settings.addEvent('create', function(){
+			var tab = self.settings.createSubTab('utorrent', {
+				'label': 'uTorrent',
+				'name': 'utorrent',
+				'subtab_label': 'uTorrents'
+			}, self.settings.tabs.downloaders ,'downloaders');
+
+			self.tab = tab.tab;
+			self.content = tab.content;
+
+			self.addDirectories();
+
+		})
+	},
+
+	addDirectories: function() {
+        self = this;
+
+	    self.el_sub_path = self.settings.el.getElement('fieldset.section_utorrent div.ctrlHolder.utorrent_sub_path');
+
+		self.el_dirs = new Element('select.inlay', {
+			'events': {
+				'change': function() { alert('hey'); } // self.save.bind(self, 0)
+			}
+		});
+
+
+        for (var key in self.directories) {
+            if (self.directories.hasOwnProperty(key)) {
+                 var el_option = new Element('option', {
+                    'text': self.directories[key],
+                    'value': key
+                }).inject(self.el_dirs)
+                if( key == self.selected_directory_id ) el_option.set( {selected: 'selected' } );
+            }
+        }
+
+
+		self.el_ctrlHolder = new Element('div.ctrlHolder.utorrent_download_dirs');
+		self.el_ctrlHolder.adopt(
+		    new Element('label', {'text': 'Down Dirs'}),
+		    self.el_dirs,
+		    new Element('div.formHint', {
+					'html': "Search these qualities (2 minimum), from top to bottom. Use the checkbox, to stop searching after it found this quality."
+				})
+		);
+
+		self.el_sub_path.grab(  self.el_ctrlHolder, 'before' );
+
+	},
+
+/*
+	save: function(delay){
+		var self = this;
+
+		self.selected_directory_id = self.element_dirs.selectedIndex;
+
+		if(self.save_timer) clearTimeout(self.save_timer);
+		self.save_timer = (function(){
+
+
+			Api.request('profile.save', {
+				'data': self.directories[self.selected_directory_id],
+				'useSpinner': true,
+				'spinnerOptions': {
+					'target': self.el
+				},
+				'onComplete': function(json){
+					if(json.success){
+						//self.type_container.getElement('li:first-child input[type=checkbox]')
+						//	.set('checked', true)
+						//	.getParent().addClass('checked');
+					}
+				}
+			});
+
+		}).delay(delay, self);
+
+	},
+*/
+
+})
+
+window.Utorrent = new UtorrentBase();

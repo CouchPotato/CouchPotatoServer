@@ -71,6 +71,7 @@ class Settings(object):
         addEvent('settings.options', self.addOptions)
         addEvent('settings.register', self.registerDefaults)
         addEvent('settings.save', self.save)
+        addEvent('settings.add_sub_options', self.addSubOptions)
 
     def registerDefaults(self, section_name, options = None, save = True):
         if not options: options = {}
@@ -144,6 +145,15 @@ class Settings(object):
                 values[section][option_name] = self.get(option_name, section)
         return values
 
+    #def setValues(self, section, option):
+    #    values = {}
+    #    for section in self.sections():
+    #        values[section] = {}
+    #        for option in self.p.items(section):
+    #            (option_name, option_value) = option
+    #            values[section][option_name] = self.get(option_name, section)
+    #    return values
+
     def save(self):
         with open(self.file, 'wb') as configfile:
             self.p.write(configfile)
@@ -170,6 +180,24 @@ class Settings(object):
             self.options[section_name] = options
         else:
             self.options[section_name] = mergeDicts(self.options[section_name], options)
+
+    def addSubOptions(self, section_name, group, options, clearValues = False):
+        if not self.options.get(section_name):
+            return False
+
+        #self.options[section_name] = mergeDicts(self.options[section_name], options)
+        #self.options[section_name]['groups'][group]['options'] = mergeDicts(self.options[section_name]['groups'][group]['options'], options)
+        for option_id,option in enumerate(self.options[section_name]['groups'][group]['options']):
+            if option['name'] == options['name']:
+                if clearValues:
+                    option.pop('values', None)
+
+                self.options[section_name]['groups'][group]['options'][option_id] = mergeDicts(option, options)
+                return True
+
+        self.options[section_name]['groups'][group]['options'].append(options)
+        return True
+
 
     def getOptions(self):
         return self.options
