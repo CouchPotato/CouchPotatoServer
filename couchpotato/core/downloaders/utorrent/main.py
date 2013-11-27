@@ -1,6 +1,7 @@
 from base64 import b16encode, b32decode
 from bencode import bencode as benc, bdecode
 from couchpotato.core.downloaders.base import Downloader, ReleaseDownloadList
+from couchpotato.core.event import fireEvent
 from couchpotato.core.helpers.encoding import isInt, ss, sp
 from couchpotato.core.helpers.variable import tryInt, tryFloat
 from couchpotato.core.logger import CPLog
@@ -24,6 +25,7 @@ class uTorrent(Downloader):
 
     protocol = ['torrent', 'torrent_magnet']
     utorrent_api = None
+    download_directories = []
 
     def connect(self):
         # Load host from config and split out port.
@@ -33,6 +35,8 @@ class uTorrent(Downloader):
             return False
 
         self.utorrent_api = uTorrentAPI(host[0], port = host[1], username = self.conf('username'), password = self.conf('password'))
+
+        self.registerDownloadDirectories()
 
         return self.utorrent_api
 
@@ -92,11 +96,19 @@ class uTorrent(Downloader):
         if len(torrent_hash) == 32:
             torrent_hash = b16encode(b32decode(torrent_hash))
 
+        # Set download directory
+        download_directory_id = -1
+        if self.conf('download_directory'):
+            directory = self.conf('download_directory')
+            for index,dir in enumerate(self.download_directories):
+                if dir == directory:
+                    download_directory_id = index
+
         # Send request to uTorrent
         if data.get('protocol') == 'torrent_magnet':
-            self.utorrent_api.add_torrent_uri(torrent_filename, data.get('url'), directory)
+            self.utorrent_api.add_torrent_uri(torrent_filename, data.get('url'), download_directory_id, self.conf('download_subpath'))
         else:
-            self.utorrent_api.add_torrent_file(torrent_filename, filedata, directory)
+            self.utorrent_api.add_torrent_file(torrent_filename, filedata, download_directory_id, self.conf('download_subpath'))
 
         # Change settings of added torrent
         self.utorrent_api.set_torrent(torrent_hash, torrent_params)
@@ -153,7 +165,7 @@ class uTorrent(Downloader):
             status = 'busy'
             if (torrent[1] & status_flags["STARTED"] or torrent[1] & status_flags["QUEUED"]) and torrent[4] == 1000:
                 status = 'seeding'
-            elif (torrent[1] & status_flags["ERROR"]):
+            elif torrent[1] & status_flags["ERROR"]:
                 status = 'failed'
             elif torrent[4] == 1000:
                 status = 'completed'
@@ -197,6 +209,29 @@ class uTorrent(Downloader):
             if os.path.isfile(filepath):
                 #Windows only needs S_IWRITE, but we bitwise-or with current perms to preserve other permission bits on Linux
                 os.chmod(filepath, stat.S_IWRITE | os.stat(filepath).st_mode)
+
+
+    def registerDownloadDirectories(self):
+        if not self.utorrent_api:
+            return False
+
+        self.download_directories = self.utorrent_api.get_download_directories()
+        if not self.download_directories:
+            return False
+
+        directories = []
+        for dir in self.download_directories:
+            directories.append((dir,dir))
+
+        option = {
+                'name': 'download_directory',
+                'values': directories,
+        }
+
+        class_name = self.getName().lower().split(':')
+        fireEvent('settings.add_option_item', class_name[0].lower(), 0, option, True)
+        return True
+
 
 class uTorrentAPI(object):
 
@@ -247,16 +282,22 @@ class uTorrentAPI(object):
         token = re.findall("<div.*?>(.*?)</", request.read())[0]
         return token
 
-    def add_torrent_uri(self, filename, torrent, add_folder = False):
+    def add_torrent_uri(self, filename, torrent, download_dir_id = -1, download_subpath = False):
         action = "action=add-url&s=%s" % urllib.quote(torrent)
-        if add_folder:
-            action += "&path=%s" % urllib.quote(filename)
+        if download_dir_id >= 0:
+            action += "&download_dir=%d" % download_dir_id
+        if download_subpath:
+            action += "&path=%s" % urllib.quote(download_subpath)
+        log.debug('Sending command to uTorrent: %s', action)
         return self._request(action)
 
-    def add_torrent_file(self, filename, filedata, add_folder = False):
+    def add_torrent_file(self, filename, filedata, download_dir_id = -1, download_subpath = False):
         action = "action=add-file"
-        if add_folder:
-            action += "&path=%s" % urllib.quote(filename)
+        if download_dir_id >= 0:
+            action += "&download_dir=%d" % download_dir_id
+        if download_subpath:
+            action += "&path=%s" % urllib.quote(download_subpath)
+        log.debug('Sending command to uTorrent: %s', action)
         return self._request(action, {"torrent_file": (ss(filename), filedata)})
 
     def set_torrent(self, hash, params):
@@ -322,3 +363,17 @@ class uTorrentAPI(object):
     def get_files(self, hash):
         action = "action=getfiles&hash=%s" % hash
         return self._request(action)
+        
+    def get_download_directories(self):
+        action = "action=list-dirs"
+        dirs = []
+        try:
+            utorrent_dirs = json.loads(self._request(action))
+            for dir in utorrent_dirs['download-dirs']:
+                dirs.append( dir['path'] )
+                log.debug('uTorrent download dir: %s', dir['path'])
+        except Exception, err:
+            log.error('Failed to get download directories from uTorrent: %s', err)
+        return dirs
+        
+    
