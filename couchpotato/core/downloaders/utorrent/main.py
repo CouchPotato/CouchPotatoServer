@@ -94,9 +94,9 @@ class uTorrent(Downloader):
 
         # Send request to uTorrent
         if data.get('protocol') == 'torrent_magnet':
-            self.utorrent_api.add_torrent_uri(torrent_filename, data.get('url'), directory)
+            self.utorrent_api.add_torrent_uri(torrent_filename, data.get('url'))
         else:
-            self.utorrent_api.add_torrent_file(torrent_filename, filedata, directory)
+            self.utorrent_api.add_torrent_file(torrent_filename, filedata)
 
         # Change settings of added torrent
         self.utorrent_api.set_torrent(torrent_hash, torrent_params)
