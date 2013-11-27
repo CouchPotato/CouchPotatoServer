@@ -44,7 +44,7 @@ config = [{
                 },
                 {
                     'name': 'download_subpath',
-                    'description': 'Download directory sub-path',
+                    'description': 'Download directory sub-path.',
                 },
                 {
                     'name': 'remove_complete',
