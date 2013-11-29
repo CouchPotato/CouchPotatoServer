@@ -811,9 +811,20 @@ Remove it if you want it to be renamed (again, or at least let it try again)
             self.checking_snatched = False
             return True
 
-        release_downloads = fireEvent('download.status', merge = True)
+        # Collect all download information with the download IDs from the releases
+        download_ids = []
+        try:
+            for rel in rels:
+                rel_dict = rel.to_dict({'info': {}})
+                if rel_dict['info'].get('download_id'):
+                    download_ids.append({'id': rel_dict['info']['download_id'], 'downloader': rel_dict['info']['download_downloader']})
+        except:
+            log.error('Error getting download IDs from database')
+            return False
+
+        release_downloads = fireEvent('download.status', download_ids, merge = True)
         if not release_downloads:
-            log.debug('Download status functionality is not implemented for active downloaders.')
+            log.debug('Download status functionality is not implemented for any active downloaders.')
             fireEvent('renamer.scan')
 
             self.checking_snatched = False

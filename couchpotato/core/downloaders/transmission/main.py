@@ -83,7 +83,7 @@ class Transmission(Downloader):
         log.info('Torrent sent to Transmission successfully.')
         return self.downloadReturnId(remote_torrent['torrent-added']['hashString'])
 
-    def getAllDownloadStatus(self):
+    def getAllDownloadStatus(self, ids):
 
         log.debug('Checking Transmission download status.')
 
@@ -102,31 +102,32 @@ class Transmission(Downloader):
             return False
 
         for torrent in queue['torrents']:
-            log.debug('name=%s / id=%s / downloadDir=%s / hashString=%s / percentDone=%s / status=%s / eta=%s / uploadRatio=%s / isFinished=%s',
-                (torrent['name'], torrent['id'], torrent['downloadDir'], torrent['hashString'], torrent['percentDone'], torrent['status'], torrent['eta'], torrent['uploadRatio'], torrent['isFinished']))
-
-            torrent_files = []
-            for file_item in torrent['files']:
-                torrent_files.append(sp(os.path.join(torrent['downloadDir'], file_item['name'])))
-
-            status = 'busy'
-            if torrent.get('isStalled') and self.conf('stalled_as_failed'):
-                status = 'failed'
-            elif torrent['status'] == 0 and torrent['percentDone'] == 1:
-                status = 'completed'
-            elif torrent['status'] in [5, 6]:
-                status = 'seeding'
-
-            release_downloads.append({
-                'id': torrent['hashString'],
-                'name': torrent['name'],
-                'status': status,
-                'original_status': torrent['status'],
-                'seed_ratio': torrent['uploadRatio'],
-                'timeleft': str(timedelta(seconds = torrent['eta'])),
-                'folder': sp(torrent['downloadDir'] if len(torrent_files) == 1 else os.path.join(torrent['downloadDir'], torrent['name'])),
-                'files': '|'.join(torrent_files)
-            })
+            if torrent['hashString'] in ids:
+                log.debug('name=%s / id=%s / downloadDir=%s / hashString=%s / percentDone=%s / status=%s / eta=%s / uploadRatio=%s / isFinished=%s',
+                    (torrent['name'], torrent['id'], torrent['downloadDir'], torrent['hashString'], torrent['percentDone'], torrent['status'], torrent['eta'], torrent['uploadRatio'], torrent['isFinished']))
+    
+                torrent_files = []
+                for file_item in torrent['files']:
+                    torrent_files.append(sp(os.path.join(torrent['downloadDir'], file_item['name'])))
+    
+                status = 'busy'
+                if torrent.get('isStalled') and self.conf('stalled_as_failed'):
+                    status = 'failed'
+                elif torrent['status'] == 0 and torrent['percentDone'] == 1:
+                    status = 'completed'
+                elif torrent['status'] in [5, 6]:
+                    status = 'seeding'
+    
+                release_downloads.append({
+                    'id': torrent['hashString'],
+                    'name': torrent['name'],
+                    'status': status,
+                    'original_status': torrent['status'],
+                    'seed_ratio': torrent['uploadRatio'],
+                    'timeleft': str(timedelta(seconds = torrent['eta'])),
+                    'folder': sp(torrent['downloadDir'] if len(torrent_files) == 1 else os.path.join(torrent['downloadDir'], torrent['name'])),
+                    'files': '|'.join(torrent_files)
+                })
 
         return release_downloads
 

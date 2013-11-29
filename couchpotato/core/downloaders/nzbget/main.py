@@ -67,7 +67,7 @@ class NZBGet(Downloader):
             log.error('NZBGet could not add %s to the queue.', nzb_name)
             return False
 
-    def getAllDownloadStatus(self):
+    def getAllDownloadStatus(self, ids):
 
         log.debug('Checking NZBGet download status.')
 
@@ -102,51 +102,54 @@ class NZBGet(Downloader):
         release_downloads = ReleaseDownloadList(self)
 
         for nzb in groups:
-            log.debug('Found %s in NZBGet download queue', nzb['NZBFilename'])
             try:
                 nzb_id = [param['Value'] for param in nzb['Parameters'] if param['Name'] == 'couchpotato'][0]
             except:
                 nzb_id = nzb['NZBID']
 
-
-            timeleft = -1
-            try:
-                if nzb['ActiveDownloads'] > 0 and nzb['DownloadRate'] > 0 and not (status['DownloadPaused'] or status['Download2Paused']):
-                    timeleft = str(timedelta(seconds = nzb['RemainingSizeMB'] / status['DownloadRate'] * 2 ^ 20))
-            except:
-                pass
-
-            release_downloads.append({
-                'id': nzb_id,
-                'name': nzb['NZBFilename'],
-                'original_status': 'DOWNLOADING' if nzb['ActiveDownloads'] > 0 else 'QUEUED',
-                # Seems to have no native API function for time left. This will return the time left after NZBGet started downloading this item
-                'timeleft': timeleft,
-            })
+            if nzb_id in ids:
+                log.debug('Found %s in NZBGet download queue', nzb['NZBFilename'])
+                timeleft = -1
+                try:
+                    if nzb['ActiveDownloads'] > 0 and nzb['DownloadRate'] > 0 and not (status['DownloadPaused'] or status['Download2Paused']):
+                        timeleft = str(timedelta(seconds = nzb['RemainingSizeMB'] / status['DownloadRate'] * 2 ^ 20))
+                except:
+                    pass
+    
+                release_downloads.append({
+                    'id': nzb_id,
+                    'name': nzb['NZBFilename'],
+                    'original_status': 'DOWNLOADING' if nzb['ActiveDownloads'] > 0 else 'QUEUED',
+                    # Seems to have no native API function for time left. This will return the time left after NZBGet started downloading this item
+                    'timeleft': timeleft,
+                })
 
         for nzb in queue: # 'Parameters' is not passed in rpc.postqueue
-            log.debug('Found %s in NZBGet postprocessing queue', nzb['NZBFilename'])
-            release_downloads.append({
-                'id': nzb['NZBID'],
-                'name': nzb['NZBFilename'],
-                'original_status': nzb['Stage'],
-                'timeleft': str(timedelta(seconds = 0)) if not status['PostPaused'] else -1,
-            })
+            if nzb['NZBID'] in ids:
+                log.debug('Found %s in NZBGet postprocessing queue', nzb['NZBFilename'])
+                release_downloads.append({
+                    'id': nzb['NZBID'],
+                    'name': nzb['NZBFilename'],
+                    'original_status': nzb['Stage'],
+                    'timeleft': str(timedelta(seconds = 0)) if not status['PostPaused'] else -1,
+                })
 
         for nzb in history:
-            log.debug('Found %s in NZBGet history. ParStatus: %s, ScriptStatus: %s, Log: %s', (nzb['NZBFilename'] , nzb['ParStatus'], nzb['ScriptStatus'] , nzb['Log']))
             try:
                 nzb_id = [param['Value'] for param in nzb['Parameters'] if param['Name'] == 'couchpotato'][0]
             except:
                 nzb_id = nzb['NZBID']
-            release_downloads.append({
-                'id': nzb_id,
-                'name': nzb['NZBFilename'],
-                'status': 'completed' if nzb['ParStatus'] in ['SUCCESS', 'NONE'] and nzb['ScriptStatus'] in ['SUCCESS', 'NONE'] else 'failed',
-                'original_status': nzb['ParStatus'] + ', ' + nzb['ScriptStatus'],
-                'timeleft': str(timedelta(seconds = 0)),
-                'folder': sp(nzb['DestDir'])
-            })
+
+            if nzb_id in ids:
+                log.debug('Found %s in NZBGet history. ParStatus: %s, ScriptStatus: %s, Log: %s', (nzb['NZBFilename'] , nzb['ParStatus'], nzb['ScriptStatus'] , nzb['Log']))
+                release_downloads.append({
+                    'id': nzb_id,
+                    'name': nzb['NZBFilename'],
+                    'status': 'completed' if nzb['ParStatus'] in ['SUCCESS', 'NONE'] and nzb['ScriptStatus'] in ['SUCCESS', 'NONE'] else 'failed',
+                    'original_status': nzb['ParStatus'] + ', ' + nzb['ScriptStatus'],
+                    'timeleft': str(timedelta(seconds = 0)),
+                    'folder': sp(nzb['DestDir'])
+                })
 
         return release_downloads
 
