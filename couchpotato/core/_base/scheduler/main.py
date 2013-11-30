@@ -37,7 +37,7 @@ class Scheduler(Plugin):
     def stop(self):
         if self.started:
             log.debug('Stopping scheduler')
-            self.sched.shutdown()
+            self.sched.shutdown(wait = False)
             log.debug('Scheduler stopped')
         self.started = False
 

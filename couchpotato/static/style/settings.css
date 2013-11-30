@@ -128,7 +128,7 @@
 		.page .ctrlHolder.focused:first-child, .page .ctrlHolder:first-child{ background-color: transparent; }
 
 		.page .ctrlHolder .formHint {
-			width: 47%;
+			width: 46%;
 			margin: -18px 0;
             color: #fff !important;
 			display: inline-block;
@@ -720,18 +720,44 @@
 	min-height: 210px;
 }
 
-.tip-wrap {
-	background: #FFF;
-	color: #000;
-	padding: 10px;
-	width: 300px;
-	z-index: 200;
+
+.tooltip {
+	position: absolute;
+	right: 0px;
+	width: 30px;
+	height: 30px;
 }
-	.more_hint:after {
-		position: relative;
-		font-family: 'Elusive-Icons';
-		content: "\e089";
-		display: inline-block;
-		top: 1px;
-		left: 6px;
+
+	.tooltip > a {
+		opacity: .3;
+		font-size: 11px;
+		cursor: pointer;
 	}
+	
+		.tooltip:hover > a {
+			opacity: 1;
+		}
+
+	.tooltip div {
+		background: #FFF;
+		color: #000;
+		padding: 10px;
+		width: 380px;
+		z-index: 200;
+		position: absolute;
+		transition: all .4s cubic-bezier(0.9,0,0.1,1);
+		margin-top: 40px;
+		right: 0;
+		opacity: 0;
+		visibility: hidden;
+	}
+	
+		.tooltip.shown div {
+			margin-top: 10px;
+			opacity: 1;
+			visibility: visible;
+		}
+		
+			.tooltip div a {
+				color: #5b9bd1;
+			}

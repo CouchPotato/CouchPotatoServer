@@ -268,20 +268,10 @@ Page.Settings = new Class({
 
 		if((typeOf(group.description) == 'array')){
 			var hint = new Element('span.hint.more_hint', {
-				'html': group.description[0],
-				'title': group.description[1]
+				'html': group.description[0]
 			});
-			var tip = new Tips(hint, {
-				'fixed': true,
-				'offset': {'x': 0, 'y': 0},
-				'onShow': function(tip, hint){
-		            tip.setStyles({
-		            	'margin-top': hint.getSize().y,
-		                'visibility': 'hidden',
-		                'display': 'block'
-		            }).fade('in');
-				}
-			});
+
+			createTooltip(group.description[1]).inject(hint, 'top');
 		}
 		else {
 			var hint = new Element('span.hint', {
@@ -369,21 +359,10 @@ var OptionBase = new Class({
 
 			if((typeOf(self.options.description) == 'array')){
 				var hint = new Element('p.formHint.more_hint', {
-					'html': self.options.description[0],
-					'title': self.options.description[1]
+					'html': self.options.description[0]
 				}).inject(self.el);
-				var tip = new Tips(hint, {
-					'fixed': true,
-					'offset': {'x': 0, 'y': 0},
-					'onShow': function(tip, hint){
-			            tip.setStyles({
-			            	'margin-left': 13,
-			            	'margin-top': hint.getSize().y+3,
-			                'visibility': 'hidden',
-			                'display': 'block'
-			            }).fade('in');
-					}
-				});
+
+				createTooltip(self.options.description[1]).inject(hint, 'top');
 			}
 			else {
 				var hint = new Element('p.formHint', {
@@ -1457,3 +1436,24 @@ Option.Combined = new Class({
 	}
 
 });
+
+var createTooltip = function(description){
+
+	var tip = new Element('div.tooltip', {
+			'events': {
+				'mouseenter': function(){
+					tip.addClass('shown')
+				},
+				'mouseleave': function(){
+					tip.removeClass('shown')
+				}
+			}
+		}).adopt(
+			new Element('a.icon2.info'),
+			new Element('div.tip', {
+				'html': description
+			})
+		);
+
+	return tip;
+}
