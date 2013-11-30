@@ -142,7 +142,7 @@ class Release(Plugin):
         except:
             log.debug('Failed to attach "%s" to release: %s', (added_files, traceback.format_exc()))
 
-        fireEvent('movie.restatus', movie.id)
+        fireEvent('media.restatus', movie.id)
 
         return True
 

@@ -112,11 +112,11 @@ class Manage(Plugin):
             if self.conf('cleanup') and full and not self.shuttingDown():
 
                 # Get movies with done status
-                total_movies, done_movies = fireEvent('movie.list', status = 'done', single = True)
+                total_movies, done_movies = fireEvent('media.list', types = 'movie', status = 'done', single = True)
 
                 for done_movie in done_movies:
                     if done_movie['library']['identifier'] not in added_identifiers:
-                        fireEvent('movie.delete', movie_id = done_movie['id'], delete_from = 'all')
+                        fireEvent('media.delete', movie_id = done_movie['id'], delete_from = 'all')
                     else:
 
                         releases = fireEvent('release.for_movie', id = done_movie.get('id'), single = True)
@@ -202,7 +202,7 @@ class Manage(Plugin):
 
             self.in_progress[folder]['to_go'] -= 1
             total = self.in_progress[folder]['total']
-            movie_dict = fireEvent('movie.get', identifier, single = True)
+            movie_dict = fireEvent('media.get', identifier, single = True)
 
             fireEvent('notify.frontend', type = 'movie.added', data = movie_dict, message = None if total > 5 else 'Added "%s" to manage.' % getTitle(movie_dict['library']))
 
