@@ -20,7 +20,7 @@ config = [{
                 },
                 {
                     'name': 'languages',
-                    'description': 'Comma separated, 2 letter country code. Example: en, nl. See the codes at <a href="http://en.wikipedia.org/wiki/List_of_ISO_639-1_codes">on Wikipedia</a>',
+                    'description': ('Comma separated, 2 letter country code.', 'Example: en, nl. See the codes at <a href="http://en.wikipedia.org/wiki/List_of_ISO_639-1_codes">on Wikipedia</a>'),
                 },
 #                {
 #                    'name': 'automatic',
