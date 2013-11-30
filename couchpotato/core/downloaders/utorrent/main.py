@@ -36,8 +36,8 @@ class uTorrent(Downloader):
 
         return self.utorrent_api
 
-    def download(self, data = None, movie = None, filedata = None):
-        if not movie: movie = {}
+    def download(self, data = None, media = None, filedata = None):
+        if not media: media = {}
         if not data: data = {}
 
         log.debug('Sending "%s" (%s) to uTorrent.', (data.get('name'), data.get('protocol')))
@@ -78,7 +78,7 @@ class uTorrent(Downloader):
             info = bdecode(filedata)["info"]
             torrent_hash = sha1(benc(info)).hexdigest().upper()
 
-        torrent_filename = self.createFileName(data, filedata, movie)
+        torrent_filename = self.createFileName(data, filedata, media)
 
         if data.get('seed_ratio'):
             torrent_params['seed_override'] = 1

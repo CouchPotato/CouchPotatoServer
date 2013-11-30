@@ -19,8 +19,8 @@ class NZBGet(Downloader):
 
     url = 'http://%(username)s:%(password)s@%(host)s/xmlrpc'
 
-    def download(self, data = None, movie = None, filedata = None):
-        if not movie: movie = {}
+    def download(self, data = None, media = None, filedata = None):
+        if not media: media = {}
         if not data: data = {}
 
         if not filedata:
@@ -30,7 +30,7 @@ class NZBGet(Downloader):
         log.info('Sending "%s" to NZBGet.', data.get('name'))
 
         url = self.url % {'host': self.conf('host'), 'username': self.conf('username'), 'password': self.conf('password')}
-        nzb_name = ss('%s.nzb' % self.createNzbName(data, movie))
+        nzb_name = ss('%s.nzb' % self.createNzbName(data, media))
 
         rpc = xmlrpclib.ServerProxy(url)
         try:

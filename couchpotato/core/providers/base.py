@@ -264,14 +264,14 @@ class ResultList(list):
 
     result_ids = None
     provider = None
-    movie = None
+    media = None
     quality = None
 
-    def __init__(self, provider, movie, quality, **kwargs):
+    def __init__(self, provider, media, quality, **kwargs):
 
         self.result_ids = []
         self.provider = provider
-        self.movie = movie
+        self.media = media
         self.quality = quality
         self.kwargs = kwargs
 
@@ -285,13 +285,13 @@ class ResultList(list):
 
         new_result = self.fillResult(result)
 
-        is_correct = fireEvent('searcher.correct_release', new_result, self.movie, self.quality,
+        is_correct = fireEvent('searcher.correct_release', new_result, self.media, self.quality,
                                      imdb_results = self.kwargs.get('imdb_results', False), single = True)
 
         if is_correct and new_result['id'] not in self.result_ids:
             is_correct_weight = float(is_correct)
 
-            new_result['score'] += fireEvent('score.calculate', new_result, self.movie, single = True)
+            new_result['score'] += fireEvent('score.calculate', new_result, self.media, single = True)
 
             old_score = new_result['score']
             new_result['score'] = int(old_score * is_correct_weight)

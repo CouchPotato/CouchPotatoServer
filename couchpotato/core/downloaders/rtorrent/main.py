@@ -77,7 +77,10 @@ class rTorrent(Downloader):
         return True
 
 
-    def download(self, data, movie, filedata = None):
+    def download(self, data = None, media = None, filedata = None):
+        if not media: media = {}
+        if not data: data = {}
+
         log.debug('Sending "%s" to rTorrent.', (data.get('name')))
 
         if not self.connect():

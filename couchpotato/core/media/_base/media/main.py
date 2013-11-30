@@ -115,11 +115,11 @@ class MediaPlugin(MediaBase):
 
     def getView(self, id = None, **kwargs):
 
-        movie = self.get(id) if id else None
+        media = self.get(id) if id else None
 
         return {
-            'success': movie is not None,
-            'movie': movie,
+            'success': media is not None,
+            'media': media,
         }
 
     def list(self, types = None, status = None, release_status = None, limit_offset = None, starts_with = None, search = None, order = None):
@@ -367,20 +367,20 @@ class MediaPlugin(MediaBase):
 
         db = get_session()
 
-        movie = db.query(Media).filter_by(id = media_id).first()
-        if movie:
+        media = db.query(Media).filter_by(id = media_id).first()
+        if media:
             deleted = False
             if delete_from == 'all':
-                db.delete(movie)
+                db.delete(media)
                 db.commit()
                 deleted = True
             else:
                 done_status = fireEvent('status.get', 'done', single = True)
 
-                total_releases = len(movie.releases)
+                total_releases = len(media.releases)
                 total_deleted = 0
                 new_movie_status = None
-                for release in movie.releases:
+                for release in media.releases:
                     if delete_from in ['wanted', 'snatched', 'late']:
                         if release.status_id != done_status.get('id'):
                             db.delete(release)
@@ -394,19 +394,19 @@ class MediaPlugin(MediaBase):
                 db.commit()
 
                 if total_releases == total_deleted:
-                    db.delete(movie)
+                    db.delete(media)
                     db.commit()
                     deleted = True
                 elif new_movie_status:
                     new_status = fireEvent('status.get', new_movie_status, single = True)
-                    movie.profile_id = None
-                    movie.status_id = new_status.get('id')
+                    media.profile_id = None
+                    media.status_id = new_status.get('id')
                     db.commit()
                 else:
-                    fireEvent('media.restatus', movie.id, single = True)
+                    fireEvent('media.restatus', media.id, single = True)
 
             if deleted:
-                fireEvent('notify.frontend', type = 'movie.deleted', data = movie.to_dict())
+                fireEvent('notify.frontend', type = 'movie.deleted', data = media.to_dict())
 
         db.expire_all()
         return True

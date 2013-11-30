@@ -13,8 +13,8 @@ class Synology(Downloader):
     protocol = ['nzb', 'torrent', 'torrent_magnet']
     log = CPLog(__name__)
 
-    def download(self, data = None, movie = None, filedata = None):
-        if not movie: movie = {}
+    def download(self, data = None, media = None, filedata = None):
+        if not media: media = {}
         if not data: data = {}
 
         response = False

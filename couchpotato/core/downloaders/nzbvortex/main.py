@@ -23,13 +23,13 @@ class NZBVortex(Downloader):
     api_level = None
     session_id = None
 
-    def download(self, data = None, movie = None, filedata = None):
-        if not movie: movie = {}
+    def download(self, data = None, media = None, filedata = None):
+        if not media: media = {}
         if not data: data = {}
 
         # Send the nzb
         try:
-            nzb_filename = self.createFileName(data, filedata, movie)
+            nzb_filename = self.createFileName(data, filedata, media)
             self.call('nzb/add', params = {'file': (nzb_filename, filedata)}, multipart = True)
 
             raw_statuses = self.call('nzb')

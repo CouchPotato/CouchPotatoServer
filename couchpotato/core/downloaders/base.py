@@ -49,13 +49,13 @@ class Downloader(Provider):
 
         return []
 
-    def _download(self, data = None, movie = None, manual = False, filedata = None):
-        if not movie: movie = {}
+    def _download(self, data = None, media = None, manual = False, filedata = None):
+        if not media: media = {}
         if not data: data = {}
 
         if self.isDisabled(manual, data):
             return
-        return self.download(data = data, movie = movie, filedata = filedata)
+        return self.download(data = data, media = media, filedata = filedata)
 
     def _getAllDownloadStatus(self):
         if self.isDisabled(manual = True, data = {}):
