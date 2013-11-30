@@ -77,6 +77,7 @@ class uTorrent(Downloader):
         else:
             info = bdecode(filedata)["info"]
             torrent_hash = sha1(benc(info)).hexdigest().upper()
+
         torrent_filename = self.createFileName(data, filedata, movie)
 
         if data.get('seed_ratio'):
@@ -93,9 +94,9 @@ class uTorrent(Downloader):
 
         # Send request to uTorrent
         if data.get('protocol') == 'torrent_magnet':
-            self.utorrent_api.add_torrent_uri(torrent_filename, data.get('url'))
+            self.utorrent_api.add_torrent_uri(torrent_filename, data.get('url'), directory)
         else:
-            self.utorrent_api.add_torrent_file(torrent_filename, filedata)
+            self.utorrent_api.add_torrent_file(torrent_filename, filedata, directory)
 
         # Change settings of added torrent
         self.utorrent_api.set_torrent(torrent_hash, torrent_params)
