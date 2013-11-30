@@ -142,7 +142,7 @@ class Release(Plugin):
         except:
             log.debug('Failed to attach "%s" to release: %s', (added_files, traceback.format_exc()))
 
-        fireEvent('movie.restatus', media.id)
+        fireEvent('media.restatus', media.id)
 
         return True
 
@@ -269,7 +269,7 @@ class Release(Plugin):
                 if filedata == 'try_next':
                     return filedata
 
-            download_result = fireEvent('download', data = data, movie = media, manual = manual, filedata = filedata, single = True)
+            download_result = fireEvent('download', data = data, media = media, manual = manual, filedata = filedata, single = True)
             log.debug('Downloader result: %s', download_result)
 
             if download_result:

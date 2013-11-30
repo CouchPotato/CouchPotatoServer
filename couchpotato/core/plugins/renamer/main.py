@@ -820,6 +820,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                 try:
                     for rel in rels:
                         rel_dict = rel.to_dict({'info': {}})
+                        movie_dict = fireEvent('media.get', rel.movie_id, single = True)
 
                         if not isinstance(rel_dict['info'], (dict)):
                             log.error('Faulty release found without any info, ignoring.')

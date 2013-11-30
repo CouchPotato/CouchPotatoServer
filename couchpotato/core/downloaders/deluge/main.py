@@ -32,7 +32,10 @@ class Deluge(Downloader):
 
         return self.drpc
 
-    def download(self, data, movie, filedata = None):
+    def download(self, data = None, media = None, filedata = None):
+        if not media: media = {}
+        if not data: data = {}
+
         log.info('Sending "%s" (%s) to Deluge.', (data.get('name'), data.get('protocol')))
 
         if not self.connect():
@@ -73,7 +76,7 @@ class Deluge(Downloader):
         if data.get('protocol') == 'torrent_magnet':
             remote_torrent = self.drpc.add_torrent_magnet(data.get('url'), options)
         else:
-            filename = self.createFileName(data, filedata, movie)
+            filename = self.createFileName(data, filedata, media)
             remote_torrent = self.drpc.add_torrent_file(filename, filedata, options)
 
         if not remote_torrent:

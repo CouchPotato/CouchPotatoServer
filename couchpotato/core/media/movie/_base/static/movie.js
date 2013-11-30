@@ -78,9 +78,9 @@ var Movie = new Class({
 		self.list.checkIfEmpty();
 
 		// Remove events
-		self.global_events.each(function(handle, listener){
+		Object.each(self.global_events, function(handle, listener){
 			App.off(listener, handle);
-		})
+		});
 	},
 
 	busy: function(set_busy, timeout){

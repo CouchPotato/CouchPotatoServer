@@ -145,7 +145,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
         default_title = getTitle(movie['library'])
         if not default_title:
             log.error('No proper info found for movie, removing it from library to cause it from having more issues.')
-            fireEvent('movie.delete', movie['id'], single = True)
+            fireEvent('media.delete', movie['id'], single = True)
             return
 
         fireEvent('notify.frontend', type = 'movie.searcher.started', data = {'id': movie['id']}, message = 'Searching for "%s"' % default_title)
@@ -192,7 +192,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
             else:
                 log.info('Better quality (%s) already available or snatched for %s', (quality_type['quality']['label'], default_title))
-                fireEvent('movie.restatus', movie['id'])
+                fireEvent('media.restatus', movie['id'])
                 break
 
             # Break if CP wants to shut down
@@ -333,7 +333,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                 rel.status_id = ignored_status.get('id')
             db.commit()
 
-            movie_dict = fireEvent('movie.get', movie_id, single = True)
+            movie_dict = fireEvent('media.get', movie_id, single = True)
             log.info('Trying next release for: %s', getTitle(movie_dict['library']))
             fireEvent('movie.searcher.single', movie_dict, manual = manual)
 

@@ -31,7 +31,9 @@ class Transmission(Downloader):
 
         return self.trpc
 
-    def download(self, data, movie, filedata = None):
+    def download(self, data = None, media = None, filedata = None):
+        if not media: media = {}
+        if not data: data = {}
 
         log.info('Sending "%s" (%s) to Transmission.', (data.get('name'), data.get('protocol')))
 

@@ -104,11 +104,11 @@ class Movie(ModifierBase):
 
                 for movie in l.media:
                     if movie.status_id == active_status['id']:
-                        temp['in_wanted'] = fireEvent('movie.get', movie.id, single = True)
+                        temp['in_wanted'] = fireEvent('media.get', movie.id, single = True)
 
                     for release in movie.releases:
                         if release.status_id == done_status['id']:
-                            temp['in_library'] = fireEvent('movie.get', movie.id, single = True)
+                            temp['in_library'] = fireEvent('media.get', movie.id, single = True)
         except:
             log.error('Tried getting more info on searched movies: %s', traceback.format_exc())
 

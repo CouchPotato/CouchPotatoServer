@@ -12,8 +12,8 @@ class Pneumatic(Downloader):
     protocol = ['nzb']
     strm_syntax = 'plugin://plugin.program.pneumatic/?mode=strm&type=add_file&nzb=%s&nzbname=%s'
 
-    def download(self, data = None, movie = None, filedata = None):
-        if not movie: movie = {}
+    def download(self, data = None, media = None, filedata = None):
+        if not media: media = {}
         if not data: data = {}
 
         directory = self.conf('directory')
@@ -25,7 +25,7 @@ class Pneumatic(Downloader):
                     log.error('No nzb available!')
                     return False
 
-                fullPath = os.path.join(directory, self.createFileName(data, filedata, movie))
+                fullPath = os.path.join(directory, self.createFileName(data, filedata, media))
 
                 try:
                     if not os.path.isfile(fullPath):
@@ -33,7 +33,7 @@ class Pneumatic(Downloader):
                         with open(fullPath, 'wb') as f:
                             f.write(filedata)
 
-                        nzb_name = self.createNzbName(data, movie)
+                        nzb_name = self.createNzbName(data, media)
                         strm_path = os.path.join(directory, nzb_name)
 
                         strm_file = open(strm_path + '.strm', 'wb')

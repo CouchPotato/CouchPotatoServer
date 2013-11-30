@@ -36,8 +36,8 @@ class uTorrent(Downloader):
 
         return self.utorrent_api
 
-    def download(self, data = None, movie = None, filedata = None):
-        if not movie: movie = {}
+    def download(self, data = None, media = None, filedata = None):
+        if not media: media = {}
         if not data: data = {}
 
         log.debug('Sending "%s" (%s) to uTorrent.', (data.get('name'), data.get('protocol')))
@@ -78,7 +78,7 @@ class uTorrent(Downloader):
             info = bdecode(filedata)["info"]
             torrent_hash = sha1(benc(info)).hexdigest().upper()
 
-        torrent_filename = self.createFileName(data, filedata, movie)
+        torrent_filename = self.createFileName(data, filedata, media)
 
         if data.get('seed_ratio'):
             torrent_params['seed_override'] = 1
@@ -92,17 +92,11 @@ class uTorrent(Downloader):
         if len(torrent_hash) == 32:
             torrent_hash = b16encode(b32decode(torrent_hash))
 
-        # Set download directory
-        if self.conf('directory'):
-            directory = self.conf('directory')
-        else:
-            directory = False
-
         # Send request to uTorrent
         if data.get('protocol') == 'torrent_magnet':
-            self.utorrent_api.add_torrent_uri(torrent_filename, data.get('url'), directory)
+            self.utorrent_api.add_torrent_uri(torrent_filename, data.get('url'))
         else:
-            self.utorrent_api.add_torrent_file(torrent_filename, filedata, directory)
+            self.utorrent_api.add_torrent_file(torrent_filename, filedata)
 
         # Change settings of added torrent
         self.utorrent_api.set_torrent(torrent_hash, torrent_params)
@@ -256,13 +250,13 @@ class uTorrentAPI(object):
     def add_torrent_uri(self, filename, torrent, add_folder = False):
         action = "action=add-url&s=%s" % urllib.quote(torrent)
         if add_folder:
-            action += "&path=%s" % urllib.quote(add_folder)
+            action += "&path=%s" % urllib.quote(filename)
         return self._request(action)
 
     def add_torrent_file(self, filename, filedata, add_folder = False):
         action = "action=add-file"
         if add_folder:
-            action += "&path=%s" % urllib.quote(add_folder)
+            action += "&path=%s" % urllib.quote(filename)
         return self._request(action, {"torrent_file": (ss(filename), filedata)})
 
     def set_torrent(self, hash, params):

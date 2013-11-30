@@ -289,19 +289,19 @@ class Plugin(object):
         Env.get('cache').set(cache_key_md5, value, timeout)
         return value
 
-    def createNzbName(self, data, movie):
-        tag = self.cpTag(movie)
+    def createNzbName(self, data, media):
+        tag = self.cpTag(media)
         return '%s%s' % (toSafeString(toUnicode(data.get('name'))[:127 - len(tag)]), tag)
 
-    def createFileName(self, data, filedata, movie):
-        name = sp(os.path.join(self.createNzbName(data, movie)))
+    def createFileName(self, data, filedata, media):
+        name = sp(os.path.join(self.createNzbName(data, media)))
         if data.get('protocol') == 'nzb' and 'DOCTYPE nzb' not in filedata and '</nzb>' not in filedata:
             return '%s.%s' % (name, 'rar')
         return '%s.%s' % (name, data.get('protocol'))
 
-    def cpTag(self, movie):
+    def cpTag(self, media):
         if Env.setting('enabled', 'renamer'):
-            return '.cp(' + movie['library'].get('identifier') + ')' if movie['library'].get('identifier') else ''
+            return '.cp(' + media['library'].get('identifier') + ')' if media['library'].get('identifier') else ''
 
         return ''
 

@@ -16,8 +16,8 @@ class Sabnzbd(Downloader):
 
     protocol = ['nzb']
 
-    def download(self, data = None, movie = None, filedata = None):
-        if not movie: movie = {}
+    def download(self, data = None, media = None, filedata = None):
+        if not media: media = {}
         if not data: data = {}
 
         log.info('Sending "%s" to SABnzbd.', data.get('name'))
@@ -25,7 +25,7 @@ class Sabnzbd(Downloader):
         req_params = {
             'cat': self.conf('category'),
             'mode': 'addurl',
-            'nzbname': self.createNzbName(data, movie),
+            'nzbname': self.createNzbName(data, media),
             'priority': self.conf('priority'),
         }
 
@@ -36,7 +36,7 @@ class Sabnzbd(Downloader):
                 return False
 
             # If it's a .rar, it adds the .rar extension, otherwise it stays .nzb
-            nzb_filename = self.createFileName(data, filedata, movie)
+            nzb_filename = self.createFileName(data, filedata, media)
             req_params['mode'] = 'addfile'
         else:
             req_params['name'] = data.get('url')
