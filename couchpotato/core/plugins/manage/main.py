@@ -116,7 +116,7 @@ class Manage(Plugin):
 
                 for done_movie in done_movies:
                     if done_movie['library']['identifier'] not in added_identifiers:
-                        fireEvent('media.delete', movie_id = done_movie['id'], delete_from = 'all')
+                        fireEvent('media.delete', media_id = done_movie['id'], delete_from = 'all')
                     else:
 
                         releases = fireEvent('release.for_movie', id = done_movie.get('id'), single = True)

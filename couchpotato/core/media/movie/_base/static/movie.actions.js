@@ -450,7 +450,7 @@ MA.Release = new Class({
 
 	},
 
-	tryNextRelease: function(movie_id){
+	tryNextRelease: function(){
 		var self = this;
 
 		Api.request('movie.searcher.try_next', {

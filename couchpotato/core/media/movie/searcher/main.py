@@ -318,14 +318,14 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
             'success': trynext
         }
 
-    def tryNextRelease(self, movie_id, manual = False):
+    def tryNextRelease(self, media_id, manual = False):
 
         snatched_status, done_status, ignored_status = fireEvent('status.get', ['snatched', 'done', 'ignored'], single = True)
 
         try:
             db = get_session()
             rels = db.query(Release) \
-                .filter_by(movie_id = movie_id) \
+                .filter_by(movie_id = media_id) \
                 .filter(Release.status_id.in_([snatched_status.get('id'), done_status.get('id')])) \
                 .all()
 
@@ -333,7 +333,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                 rel.status_id = ignored_status.get('id')
             db.commit()
 
-            movie_dict = fireEvent('media.get', movie_id, single = True)
+            movie_dict = fireEvent('media.get', media_id = media_id, single = True)
             log.info('Trying next release for: %s', getTitle(movie_dict['library']))
             fireEvent('movie.searcher.single', movie_dict, manual = manual)
 
