@@ -619,6 +619,11 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                     tag_files.extend([os.path.join(root, name) for name in names])
 
         for filename in tag_files:
+
+            # Dont tag .ignore files
+            if os.path.splitext(filename)[1] == '.ignore':
+                continue
+
             tag_filename = '%s.%s.ignore' % (os.path.splitext(filename)[0], tag)
             if not os.path.isfile(tag_filename):
                 self.createFile(tag_filename, text)
