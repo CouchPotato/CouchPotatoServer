@@ -183,9 +183,6 @@ class GitUpdater(BaseUpdater):
     def doUpdate(self):
 
         try:
-            log.debug('Stashing local changes')
-            self.repo.saveStash()
-
             log.info('Updating to latest version')
             self.repo.pull()
 
