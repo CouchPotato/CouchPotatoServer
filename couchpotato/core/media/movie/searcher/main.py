@@ -325,7 +325,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
         try:
             db = get_session()
             rels = db.query(Release) \
-                .filter_by(movie_id = media_id) \
+                .filter_by(media_id = media_id) \
                 .filter(Release.status_id.in_([snatched_status.get('id'), done_status.get('id')])) \
                 .all()
 

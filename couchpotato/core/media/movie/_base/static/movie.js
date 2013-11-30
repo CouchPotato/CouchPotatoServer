@@ -54,7 +54,7 @@ var Movie = new Class({
 		// Reload when releases have updated
 		self.global_events['release.update_status'] = function(notification){
 			var data = notification.data
-			if(data && self.data.id == data.movie_id){
+			if(data && self.data.id == data.media_id){
 
 				if(!self.data.releases)
 					self.data.releases = [];

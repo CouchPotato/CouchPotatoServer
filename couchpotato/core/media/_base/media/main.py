@@ -203,14 +203,14 @@ class MediaPlugin(MediaBase):
 
         # List release statuses
         releases = db.query(Release) \
-            .filter(Release.movie_id.in_(media_ids)) \
+            .filter(Release.media_id.in_(media_ids)) \
             .all()
 
         release_statuses = dict((m, set()) for m in media_ids)
         releases_count = dict((m, 0) for m in media_ids)
         for release in releases:
-            release_statuses[release.movie_id].add('%d,%d' % (release.status_id, release.quality_id))
-            releases_count[release.movie_id] += 1
+            release_statuses[release.media_id].add('%d,%d' % (release.status_id, release.quality_id))
+            releases_count[release.media_id] += 1
 
         # Get main movie data
         q2 = db.query(Media) \
