@@ -148,9 +148,9 @@ class MovieBase(MovieTypeBase):
         available_status = fireEvent('status.get', 'available', single = True)
 
         ids = splitString(id)
-        for movie_id in ids:
+        for media_id in ids:
 
-            m = db.query(Media).filter_by(id = movie_id).first()
+            m = db.query(Media).filter_by(id = media_id).first()
             if not m:
                 continue
 
@@ -176,7 +176,7 @@ class MovieBase(MovieTypeBase):
             fireEvent('media.restatus', m.id)
 
             movie_dict = m.to_dict(self.default_dict)
-            fireEventAsync('movie.searcher.single', movie_dict, on_complete = self.createNotifyFront(movie_id))
+            fireEventAsync('movie.searcher.single', movie_dict, on_complete = self.createNotifyFront(media_id))
 
         db.expire_all()
         return {
