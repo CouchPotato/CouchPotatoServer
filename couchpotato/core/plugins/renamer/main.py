@@ -65,6 +65,11 @@ class Renamer(Plugin):
 
         async = tryInt(kwargs.get('async', 0))
         media_folder = sp(kwargs.get('media_folder'))
+
+        # Backwards compatibility, to be removed after a few versions :)
+        if not media_folder:
+            media_folder = sp(kwargs.get('movie_folder'))
+
         downloader = kwargs.get('downloader')
         download_id = kwargs.get('download_id')
         files = '|'.join([sp(filename) for filename in splitString(kwargs.get('files'), '|')])
