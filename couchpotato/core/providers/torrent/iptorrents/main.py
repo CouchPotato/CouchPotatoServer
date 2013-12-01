@@ -3,7 +3,7 @@ from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.base import MultiProvider
-from couchpotato.core.providers.info.base import MovieProvider, ShowProvider
+from couchpotato.core.providers.info.base import MovieProvider, SeasonProvider, EpisodeProvider
 from couchpotato.core.providers.torrent.base import TorrentProvider
 import traceback
 
@@ -13,7 +13,7 @@ log = CPLog(__name__)
 class IPTorrents(MultiProvider):
 
     def getTypes(self):
-        return [Movie, Show]
+        return [Movie, Season, Episode]
 
 
 class Base(TorrentProvider):
@@ -29,13 +29,16 @@ class Base(TorrentProvider):
     http_time_between_calls = 1 #seconds
     cat_backup_id = None
 
-    def _buildUrl(self, query, quality_identifier, cat_ids_group = None):
+    def buildUrl(self, title, media, quality):
+        return self._buildUrl(title.replace(':', ''), quality['identifier'])
 
-        cat_ids = self.getCatId(quality_identifier, cat_ids_group)
+    def _buildUrl(self, query, quality_identifier):
 
-        if not cat_ids or not len(cat_ids):
-            log.warning('Unable to find category for quality %s', quality_identifier)
-            return
+        cat_ids = self.getCatId(quality_identifier)
+
+        if not cat_ids:
+            log.warning('Unable to find category ids for identifier "%s"', quality_identifier)
+            return None
 
         return self.urls['search'] % ("&".join(("l%d=" % x) for x in cat_ids), tryUrlencode(query).replace('%', '%%'))
 
@@ -133,20 +136,16 @@ class Movie(MovieProvider, Base):
         return self._buildUrl(query, quality['identifier'])
 
 
-class Show(ShowProvider, Base):
+class Season(SeasonProvider, Base):
 
     cat_ids = [
-        ('season', [
-            ([65], ['hdtv_sd', 'hdtv_720p', 'webdl_720p', 'webdl_1080p']),
-        ]),
-        ('episode', [
-            ([5], ['hdtv_720p', 'webdl_720p', 'webdl_1080p']),
-            ([4, 78, 79], ['hdtv_sd'])
-        ])
+        ([65], ['hdtv_sd', 'hdtv_720p', 'webdl_720p', 'webdl_1080p']),
     ]
 
-    def buildUrl(self, title, media, quality):
-        if media['type'] not in ['season', 'episode']:
-            return
 
-        return self._buildUrl(title.replace(':', ''), quality['identifier'], media['type'])
+class Episode(EpisodeProvider, Base):
+
+    cat_ids = [
+        ([5], ['hdtv_720p', 'webdl_720p', 'webdl_1080p']),
+        ([4, 78, 79], ['hdtv_sd'])
+    ]
