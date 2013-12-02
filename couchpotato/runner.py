@@ -8,6 +8,7 @@ from couchpotato.core.helpers.variable import getDataDir, tryInt
 from logging import handlers
 from tornado.httpserver import HTTPServer
 from tornado.web import Application, StaticFileHandler, RedirectHandler
+from uuid import uuid4
 import locale
 import logging
 import os.path
@@ -144,7 +145,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     Env.set('dev', development)
 
     # Disable logging for some modules
-    for logger_name in ['enzyme', 'guessit', 'subliminal', 'apscheduler']:
+    for logger_name in ['enzyme', 'guessit', 'subliminal', 'apscheduler', 'tornado']:
         logging.getLogger(logger_name).setLevel(logging.ERROR)
 
     for logger_name in ['gntp', 'migrate']:
@@ -215,6 +216,10 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     Env.set('web_base', web_base)
 
     api_key = Env.setting('api_key')
+    if not api_key:
+        api_key = uuid4().hex
+        Env.setting('api_key', value = api_key)
+
     api_base = r'%sapi/%s/' % (web_base, api_key)
     Env.set('api_base', api_base)
 
