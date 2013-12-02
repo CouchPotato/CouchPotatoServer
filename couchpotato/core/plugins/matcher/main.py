@@ -73,8 +73,7 @@ class Matcher(Plugin):
         return True
 
     def correctTitle(self, chain, media):
-        # TODO need to switch this to use media['related_libraries']
-        root_library = fireEvent('searcher.get_media_root', media['library'], single = True)
+        root_library = media['library']['root_library']
 
         if 'show_name' not in chain.info or not len(chain.info['show_name']):
             log.info('Wrong: missing show name in parsed result')

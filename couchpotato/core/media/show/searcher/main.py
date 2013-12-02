@@ -1,10 +1,10 @@
-from couchpotato import get_session, Env
+from couchpotato import Env, get_session
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.variable import getTitle, tryInt, toIterable
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.searcher.main import SearchSetupError
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.core.settings.model import Media, Library
+from couchpotato.core.settings.model import Media
 from qcond import QueryCondenser
 from qcond.helpers import simplify
 
@@ -42,6 +42,8 @@ class ShowSearcher(Plugin):
         addEvent('searcher.get_media_identifier', self.getMediaIdentifier)
 
     def single(self, media, search_protocols = None, manual = False):
+        show, season, episode = self.getLibraries(media['library'])
+
         if media['type'] == 'show':
             # TODO handle show searches (scan all seasons)
             return
@@ -72,9 +74,7 @@ class ShowSearcher(Plugin):
             #fireEvent('episode.delete', episode['id'], single = True)
             return
 
-        # TODO replace with 'related_libraries'
-        show, season, episode = self.getMedia(media)
-        if show is None or season is None:
+        if not show or not season:
             log.error('Unable to find show or season library in database, missing required data for searching')
             return
 
@@ -97,7 +97,7 @@ class ShowSearcher(Plugin):
             # Don't search for quality lower then already available.
             if has_better_quality is 0:
 
-                log.info('Search for %s S%02d%s in %s', (getTitle(show), season.season_number, "E%02d" % episode.episode_number if episode else "", quality_type['quality']['label']))
+                log.info('Search for %s S%02d%s in %s', (getTitle(show), season['season_number'], "E%02d" % episode['episode_number'] if episode else "", quality_type['quality']['label']))
                 quality = fireEvent('quality.single', identifier = quality_type['quality']['identifier'], single = True)
 
                 results = fireEvent('searcher.search', search_protocols, media, quality, single = True)
@@ -139,16 +139,16 @@ class ShowSearcher(Plugin):
         if media['type'] not in ['show', 'season', 'episode']:
             return
 
-        # TODO replace with 'related_libraries'
-        show, season, episode = self.getMedia(media)
-        if show is None:
+        show, season, episode = self.getLibraries(media['library'])
+
+        if not show:
             return None
 
         titles = []
 
         # Add season map_names if they exist
-        if season is not None and 'map_names' in show.info:
-            season_names = show.info['map_names'].get(str(season.season_number), {})
+        if season is not None and 'map_names' in show['info']:
+            season_names = show['info']['map_names'].get(str(season['season_number']), {})
 
             # Add titles from all locations
             # TODO only add name maps from a specific location
@@ -156,7 +156,7 @@ class ShowSearcher(Plugin):
                 titles += [name for name in names if name not in titles]
 
         # Add show titles
-        titles += [title.title for title in show.titles if title.title not in titles]
+        titles += [title['title'] for title in show['titles'] if title['title'] not in titles]
 
         # Use QueryCondenser to build a list of optimal search titles
         condensed_titles = self.query_condenser.distinct(titles)
@@ -199,12 +199,6 @@ class ShowSearcher(Plugin):
         # Check for required and ignored words
         if not fireEvent('searcher.correct_words', release['name'], media, single = True):
             return False
-
-        # TODO replace with 'related_libraries'
-        show, season, episode = self.getMedia(media)
-        if show is None or season is None:
-            log.error('Unable to find show or season library in database, missing required data for searching')
-            return
 
         match = fireEvent('matcher.best', release, media, quality, single = True)
         if match:
@@ -260,26 +254,24 @@ class ShowSearcher(Plugin):
 
         return identifier
 
-    # TODO move this somewhere else
-    def getMedia(self, media):
-        db = get_session()
+    def getLibraries(self, library):
+        if 'related_libraries' not in library:
+            log.warning("'related_libraries' missing from media library, unable to continue searching")
+            return None, None, None
 
-        media_library = db.query(Library).filter_by(id = media['library_id']).first()
+        libraries = library['related_libraries']
 
-        show = None
-        season = None
-        episode = None
+        # Get libraries and return lists only if there is multiple items
+        show = libraries.get('show', [])
+        if len(show) <= 1:
+            show = show[0] if len(show) else None
 
-        if media['type'] == 'episode':
-            show = media_library.parent.parent
-            season = media_library.parent
-            episode = media_library
+        season = libraries.get('season', [])
+        if len(season) <= 1:
+            season = season[0] if len(season) else None
 
-        if media['type'] == 'season':
-            show = media_library.parent
-            season = media_library
-
-        if media['type'] == 'show':
-            show = media_library
+        episode = libraries.get('episode', [])
+        if len(episode) <= 1:
+            episode = episode[0] if len(episode) else None
 
         return show, season, episode
