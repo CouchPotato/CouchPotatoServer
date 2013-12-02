@@ -112,7 +112,7 @@ class Library(Entity):
     parent = ManyToOne('Library')
     children = OneToMany('Library')
 
-    def getRelated(self, include_parents = True, include_self = True, include_children = True):
+    def getRelated(self, include_parents = True, include_self = True, include_children = True, merge=False):
         libraries = []
 
         if include_parents and self.parent is not None:
@@ -125,7 +125,20 @@ class Library(Entity):
             for child in self.children:
                 libraries += child.getRelated(include_parents = False)
 
-        return libraries
+        # Return plain results if we aren't merging the results
+        if not merge:
+            return libraries
+
+        # Merge the results into a dict ({type: [<library>,...]})
+        results = {}
+
+        for key, library in libraries:
+            if key not in results:
+                results[key] = []
+
+            results[key].append(library)
+
+        return results
 
     def to_dict(self, deep = None, exclude = None):
         if not exclude: exclude = []
@@ -136,14 +149,21 @@ class Library(Entity):
         orig_dict = super(Library, self).to_dict(deep = deep, exclude = exclude)
 
         # Include related libraries (parents and children)
-        if include_related and self.parent is not None:
-            # TODO need a way to flag the root library
-            # TODO converting to a dict will remove libraries with multiple types (episodes, seasons), they need to be merged into a list instead
-            orig_dict['related_libraries'] = dict([
-                (library_type, library.to_dict(deep, exclude))
-                for (library_type, library) in self.getRelated(include_self = False)
+        if include_related:
+            # Fetch and serialize all the child and parent libraries
+            related_libraries = dict([
+                (key, [library.to_dict(deep, exclude) for library in libraries])
+                for (key, libraries) in self.getRelated(include_self = False, merge=True).items()
             ])
 
+            # Add a reference to the current library dict into related_libraries
+            if orig_dict['type'] not in related_libraries:
+                related_libraries[orig_dict['type']] = []
+
+            related_libraries[orig_dict['type']].append(orig_dict)
+
+            # Update the dict for this library
+            orig_dict['related_libraries'] = related_libraries
         return orig_dict
 
 
