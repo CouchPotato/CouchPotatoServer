@@ -1,17 +1,17 @@
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
-from couchpotato.core.providers.torrent.base import TorrentProvider
+from couchpotato.core.providers.torrent.base import TorrentMagnetProvider
 import traceback
 
 log = CPLog(__name__)
 
 
-class Yify(TorrentProvider):
+class Yify(TorrentMagnetProvider):
 
     urls = {
-        'test' : 'https://yify-torrents.com/api',
-        'search' : 'https://yify-torrents.com/api/list.json?keywords=%s&quality=%s',
-        'detail': 'https://yify-torrents.com/api/movie.json?id=%s'
+        'test' : 'http://yify.ftwnet.co.uk/api',
+        'search' : 'http://yify.ftwnet.co.uk/api/list.json?keywords=%s&quality=%s',
+        'detail': 'http://yify.ftwnet.co.uk/api/movie.json?id=%s'
     }
 
     http_time_between_calls = 1 #seconds
@@ -41,7 +41,7 @@ class Yify(TorrentProvider):
                     results.append({
                         'id': result['MovieID'],
                         'name': title,
-                        'url': result['TorrentUrl'],
+                        'url': result['TorrentMagnetUrl'],
                         'detail_url': self.urls['detail'] % result['MovieID'],
                         'size': self.parseSize(result['Size']),
                         'seeders': tryInt(result['TorrentSeeds']),
