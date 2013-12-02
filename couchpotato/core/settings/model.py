@@ -90,6 +90,7 @@ class Media(Entity):
     files = ManyToMany('File', cascade = 'all, delete-orphan', single_parent = True)
 
 
+
 class Library(Entity):
     """"""
     using_options(inheritance = 'multi')
@@ -130,30 +131,44 @@ class Library(Entity):
             return libraries
 
         # Merge the results into a dict ({type: [<library>,...]})
+        root_key = None
         results = {}
 
         for key, library in libraries:
+            if root_key is None:
+                root_key = key
+
             if key not in results:
                 results[key] = []
 
             results[key].append(library)
 
-        return results
+        return root_key, results
 
     def to_dict(self, deep = None, exclude = None):
         if not exclude: exclude = []
         if not deep: deep = {}
 
-        include_related = deep.pop('related_libraries', None) is not None
+        include_related = False
+        include_root = False
+
+        if any(x in deep for x in ['related_libraries', 'root_library']):
+            deep = deep.copy()
+
+            include_related = deep.pop('related_libraries', None) is not None
+            include_root = deep.pop('root_library', None) is not None
 
         orig_dict = super(Library, self).to_dict(deep = deep, exclude = exclude)
 
         # Include related libraries (parents and children)
         if include_related:
-            # Fetch and serialize all the child and parent libraries
+            # Fetch child and parent libraries and determine root type
+            root_key, related_libraries = self.getRelated(include_self = False, merge=True)
+
+            # Serialize libraries
             related_libraries = dict([
                 (key, [library.to_dict(deep, exclude) for library in libraries])
-                for (key, libraries) in self.getRelated(include_self = False, merge=True).items()
+                for (key, libraries) in related_libraries.items()
             ])
 
             # Add a reference to the current library dict into related_libraries
@@ -164,6 +179,11 @@ class Library(Entity):
 
             # Update the dict for this library
             orig_dict['related_libraries'] = related_libraries
+
+            if include_root:
+                root_library = related_libraries.get(root_key)
+                orig_dict['root_library'] = root_library[0] if len(root_library) else None
+
         return orig_dict
 
 
