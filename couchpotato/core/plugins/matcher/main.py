@@ -50,7 +50,7 @@ class Matcher(Plugin):
         return set([key for key, value in tags.items() if None not in value]) == set(found_tags)
 
     def correctIdentifier(self, chain, media):
-        required_id = fireEvent('searcher.get_media_identifier', media['library'], single = True)
+        required_id = fireEvent('library.identifier', media['library'], single = True)
 
         if 'identifier' not in chain.info:
             return False

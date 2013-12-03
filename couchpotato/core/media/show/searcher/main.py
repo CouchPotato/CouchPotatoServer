@@ -39,8 +39,6 @@ class ShowSearcher(Plugin):
         addEvent('searcher.correct_match', self.correctMatch)
         addEvent('searcher.correct_release', self.correctRelease)
 
-        addEvent('searcher.get_media_identifier', self.getMediaIdentifier)
-
     def single(self, media, search_protocols = None, manual = False):
         show, season, episode = self.getLibraries(media['library'])
 
@@ -175,9 +173,9 @@ class ShowSearcher(Plugin):
             return None
 
         # Add the identifier to search title
-        # TODO supporting other identifier formats
-        identifier = fireEvent('searcher.get_media_identifier', media['library'], single = True)
+        identifier = fireEvent('library.identifier', media['library'], single = True)
 
+        # TODO this needs to support other identifier formats
         if identifier['season']:
             title += ' S%02d' % identifier['season']
 
@@ -200,6 +198,7 @@ class ShowSearcher(Plugin):
         if not fireEvent('searcher.correct_words', release['name'], media, single = True):
             return False
 
+        # TODO Matching is quite costly, maybe we should be caching release matches somehow? (also look at caper optimizations)
         match = fireEvent('matcher.best', release, media, quality, single = True)
         if match:
             return match.weight
@@ -223,36 +222,6 @@ class ShowSearcher(Plugin):
             return False
 
         return True
-
-    # TODO move this somewhere else
-    def getMediaIdentifier(self, media_library):
-        if media_library['type'] not in ['show', 'season', 'episode']:
-            return None
-
-        identifier = {
-            'season': None,
-            'episode': None
-        }
-
-        if media_library['type'] == 'episode':
-            map_episode = media_library['info'].get('map_episode')
-
-            if map_episode and 'scene' in map_episode:
-                identifier['season'] = map_episode['scene'].get('season')
-                identifier['episode'] = map_episode['scene'].get('episode')
-            else:
-                # TODO xem mapping?
-                identifier['season'] = media_library.get('season_number')
-                identifier['episode'] = media_library.get('episode_number')
-
-        if media_library['type'] == 'season':
-            identifier['season'] = media_library.get('season_number')
-
-        # Try cast identifier values to integers
-        identifier['season'] = tryInt(identifier['season'], None)
-        identifier['episode'] = tryInt(identifier['episode'], None)
-
-        return identifier
 
     def getLibraries(self, library):
         if 'related_libraries' not in library:

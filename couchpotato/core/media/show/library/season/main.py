@@ -17,9 +17,21 @@ class SeasonLibraryPlugin(LibraryBase):
     default_dict = {'titles': {}, 'files':{}}
 
     def __init__(self):
+        addEvent('library.identifier', self.identifier)
         addEvent('library.add.season', self.add)
         addEvent('library.update.season', self.update)
         addEvent('library.update.season_release_date', self.updateReleaseDate)
+
+    def identifier(self, library):
+        if library.get('type') != 'season':
+            return
+
+        season_num = tryInt(library['season_number'], None)
+
+        return {
+            'season': season_num,
+            'episode': None
+        }
 
     def add(self, attrs = {}, update_after = True):
         type = attrs.get('type', 'season')
