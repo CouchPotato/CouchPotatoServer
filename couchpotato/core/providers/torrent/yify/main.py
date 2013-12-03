@@ -9,12 +9,20 @@ log = CPLog(__name__)
 class Yify(TorrentMagnetProvider):
 
     urls = {
-        'test' : 'http://yify.ftwnet.co.uk/api',
-        'search' : 'http://yify.ftwnet.co.uk/api/list.json?keywords=%s&quality=%s',
-        'detail': 'http://yify.ftwnet.co.uk/api/movie.json?id=%s'
+        'test' : '%s/api',
+        'search' : '%s/api/list.json?keywords=%s&quality=%s',
+        'detail': '%s/api/movie.json?id=%s'
     }
 
     http_time_between_calls = 1 #seconds
+    
+    proxy_list = [
+        'https://yify-torrents.com',
+        'http://yify.unlocktorrent.com',
+        'http://yify.ftwnet.co.uk',
+        'http://yify-torrents.com.come.in',
+        'http://yify-torrents.com.prx2.unblocksit.es',
+    ]
 
     def search(self, movie, quality):
 
@@ -25,7 +33,9 @@ class Yify(TorrentMagnetProvider):
 
     def _search(self, movie, quality, results):
 
-        data = self.getJsonData(self.urls['search'] % (movie['library']['identifier'], quality['identifier']))
+        search_url = self.urls['search'] % (self.getDomain(), movie['library']['identifier'], quality['identifier'])
+
+        data = self.getJsonData(search_url)
 
         if data and data.get('MovieList'):
             try:
@@ -42,7 +52,7 @@ class Yify(TorrentMagnetProvider):
                         'id': result['MovieID'],
                         'name': title,
                         'url': result['TorrentMagnetUrl'],
-                        'detail_url': self.urls['detail'] % result['MovieID'],
+                        'detail_url': self.urls['detail'] % (self.getDomain(),result['MovieID']),
                         'size': self.parseSize(result['Size']),
                         'seeders': tryInt(result['TorrentSeeds']),
                         'leechers': tryInt(result['TorrentPeers'])
@@ -51,3 +61,5 @@ class Yify(TorrentMagnetProvider):
             except:
                 log.error('Failed getting results from %s: %s', (self.getName(), traceback.format_exc()))
 
+    def correctProxy(self, data):
+        return 'title="YIFY-Torrents RSS feed"' in data
