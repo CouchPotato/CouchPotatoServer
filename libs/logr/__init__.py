@@ -32,8 +32,11 @@ class Logr(object):
     loggers = {}
     handler = None
 
+    trace_origin = False
+    name = "Logr"
+
     @staticmethod
-    def configure(level=logging.WARNING, handler=None, formatter=None):
+    def configure(level=logging.WARNING, handler=None, formatter=None, trace_origin=False, name="Logr"):
         """Configure Logr
 
         @param handler: Logger message handler
@@ -52,6 +55,9 @@ class Logr(object):
         handler.setLevel(level)
         Logr.handler = handler
 
+        Logr.trace_origin = trace_origin
+        Logr.name = name
+
     @staticmethod
     def configure_check():
         if Logr.handler is None:
@@ -65,7 +71,29 @@ class Logr(object):
             return "<unknown>"
 
     @staticmethod
+    def get_frame_class(frame):
+        if len(frame.f_code.co_varnames) <= 0:
+            return None
+
+        farg = frame.f_code.co_varnames[0]
+
+        if farg not in frame.f_locals:
+            return None
+
+        if farg == 'self':
+            return frame.f_locals[farg].__class__
+
+        if farg == 'cls':
+            return frame.f_locals[farg]
+
+        return None
+
+
+    @staticmethod
     def get_logger_name():
+        if not Logr.trace_origin:
+            return Logr.name
+
         stack = inspect.stack()
 
         for x in xrange_six(len(stack)):
@@ -73,20 +101,16 @@ class Logr(object):
             name = None
 
             # Try find name of function defined inside a class
-            if len(frame.f_code.co_varnames) > 0:
-                self_argument = frame.f_code.co_varnames[0]
+            frame_class = Logr.get_frame_class(frame)
 
-                if self_argument == 'self' and self_argument in frame.f_locals:
-                    instance = frame.f_locals[self_argument]
+            if frame_class:
+                class_name = frame_class.__name__
+                module_name = frame_class.__module__
 
-                    class_ = instance.__class__
-                    class_name = class_.__name__
-                    module_name = class_.__module__
-
-                    if module_name != '__main__':
-                        name = module_name + '.' + class_name
-                    else:
-                        name = class_name
+                if module_name != '__main__':
+                    name = module_name + '.' + class_name
+                else:
+                    name = class_name
 
             # Try find name of function defined outside of a class
             if name is None:

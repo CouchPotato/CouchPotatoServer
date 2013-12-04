@@ -18,7 +18,9 @@ from caper.result import CaperResult, CaperClosureNode
 
 
 class Parser(object):
-    def __init__(self, pattern_groups):
+    def __init__(self, pattern_groups, debug=False):
+        self.debug = debug
+
         self.matcher = FragmentMatcher(pattern_groups)
 
         self.closures = None

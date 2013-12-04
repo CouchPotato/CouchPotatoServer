@@ -98,8 +98,8 @@ PATTERN_GROUPS = [
 
 
 class SceneParser(Parser):
-    def __init__(self):
-        super(SceneParser, self).__init__(PATTERN_GROUPS)
+    def __init__(self, debug=False):
+        super(SceneParser, self).__init__(PATTERN_GROUPS, debug)
 
     def capture_group(self, fragment):
         if fragment.left_sep == '-' and not fragment.right:
@@ -133,6 +133,9 @@ class SceneParser(Parser):
         return self.result
 
     def print_tree(self, heads):
+        if not self.debug:
+            return
+
         for head in heads:
             head = head if type(head) is list else [head]
 
