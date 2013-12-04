@@ -17,9 +17,38 @@ class EpisodeLibraryPlugin(LibraryBase):
     default_dict = {'titles': {}, 'files':{}}
 
     def __init__(self):
+        addEvent('library.identifier', self.identifier)
         addEvent('library.add.episode', self.add)
         addEvent('library.update.episode', self.update)
         addEvent('library.update.episode_release_date', self.updateReleaseDate)
+
+    def identifier(self, library):
+        if library.get('type') != 'episode':
+            return
+
+        identifier = {
+            'season': None,
+            'episode': None
+        }
+
+        scene_map = library['info'].get('map_episode', {}).get('scene')
+
+        if scene_map:
+            # Use scene mappings if they are available
+            identifier['season'] = scene_map.get('season')
+            identifier['episode'] = scene_map.get('episode')
+        else:
+            # Fallback to normal season/episode numbers
+            identifier['season'] = library.get('season_number')
+            identifier['episode'] = library.get('episode_number')
+
+
+        # Cast identifiers to integers
+        # TODO this will need changing to support identifiers with trailing 'a', 'b' characters
+        identifier['season'] = tryInt(identifier['season'], None)
+        identifier['episode'] = tryInt(identifier['episode'], None)
+
+        return identifier
 
     def add(self, attrs = {}, update_after = True):
         type = attrs.get('type', 'episode')

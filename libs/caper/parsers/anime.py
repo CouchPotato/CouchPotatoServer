@@ -53,8 +53,8 @@ PATTERN_GROUPS = [
 
 
 class AnimeParser(Parser):
-    def __init__(self):
-        super(AnimeParser, self).__init__(PATTERN_GROUPS)
+    def __init__(self, debug=False):
+        super(AnimeParser, self).__init__(PATTERN_GROUPS, debug)
 
     def capture_group(self, fragment):
         match = REGEX_GROUP.match(fragment.value)

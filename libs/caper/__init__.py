@@ -19,7 +19,7 @@ from caper.parsers.anime import AnimeParser
 from caper.parsers.scene import SceneParser
 
 
-__version_info__ = ('0', '2', '2')
+__version_info__ = ('0', '2', '3')
 __version_branch__ = 'master'
 
 __version__ = "%s%s" % (
@@ -43,10 +43,10 @@ CL_END = 1
 
 
 class Caper(object):
-    def __init__(self):
+    def __init__(self, debug=False):
         self.parsers = {
-            'scene': SceneParser(),
-            'anime': AnimeParser()
+            'scene': SceneParser(debug),
+            'anime': AnimeParser(debug)
         }
 
     def _closure_split(self, name):

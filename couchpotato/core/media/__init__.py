@@ -1,5 +1,6 @@
 from couchpotato import get_session
 from couchpotato.core.event import addEvent, fireEventAsync, fireEvent
+from couchpotato.core.helpers.variable import mergeDicts
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Media
 
@@ -17,6 +18,13 @@ class MediaBase(Plugin):
         'category': {},
     }
 
+    search_dict = mergeDicts(default_dict, {
+        'library': {
+            'related_libraries': {},
+            'root_library': {}
+        },
+    })
+
     def initType(self):
         addEvent('media.types', self.getType)
 
@@ -28,7 +36,7 @@ class MediaBase(Plugin):
         def onComplete():
             db = get_session()
             media = db.query(Media).filter_by(id = id).first()
-            fireEventAsync('%s.searcher.single' % media.type, media.to_dict(self.default_dict), on_complete = self.createNotifyFront(id))
+            fireEventAsync('%s.searcher.single' % media.type, media.to_dict(self.search_dict), on_complete = self.createNotifyFront(id))
             db.expire_all()
 
         return onComplete
