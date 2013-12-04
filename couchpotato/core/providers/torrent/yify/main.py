@@ -21,7 +21,6 @@ class Yify(TorrentMagnetProvider):
         'http://yify.unlocktorrent.com',
         'http://yify.ftwnet.co.uk',
         'http://yify-torrents.com.come.in',
-        'http://yify-torrents.com.prx2.unblocksit.es',
     ]
 
     def search(self, movie, quality):
