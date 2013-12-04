@@ -33,7 +33,7 @@ class Matcher(Plugin):
             if fireEvent('searcher.correct_match', chain, release, media, quality, single = True):
                 return chain
 
-        return None
+        return False
 
     def chainMatch(self, chain, group, tags):
         found_tags = []

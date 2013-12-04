@@ -39,8 +39,8 @@ class EpisodeLibraryPlugin(LibraryBase):
             identifier['episode'] = scene_map.get('episode')
         else:
             # Fallback to normal season/episode numbers
-            identifier['season'] = library.get('season')
-            identifier['episode'] = library.get('episode')
+            identifier['season'] = library.get('season_number')
+            identifier['episode'] = library.get('episode_number')
 
 
         # Cast identifiers to integers
