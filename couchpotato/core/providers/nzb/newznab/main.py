@@ -46,14 +46,7 @@ class Base(NZBProvider, RSS):
 
     def _searchOnHost(self, host, media, quality, results):
 
-        if media['type'] in ['show', 'season', 'episode']:
-            release = fireEvent('searcher.get_search_title', media['library']['root_library'])  # release name
-            identifier = fireEvent('library.identifier', media['library'])  # {'season': 3, 'episode': 7} (No episode for season libraries)
-        else:
-            release = media['library']['identifier'].replace('tt', '')  # IMDB ID
-            identifier = ''  # Not used for movies
-
-        query = self.buildUrl(release, identifier, host['api_key'])
+        query = self.buildUrl(media, host['api_key'])
 
         url = '%s&%s' % (self.getUrl(host['host']), query)
 
@@ -186,24 +179,24 @@ class Base(NZBProvider, RSS):
 
 class Movie(MovieProvider, Base):
 
-    def buildUrl(self, title, identifier, api_key):
+    def buildUrl(self, media, api_key):
         query = tryUrlencode({
             't': 'movie',
-            'imdbid': title,
+            'imdbid': media['library']['identifier'].replace('tt', ''),
             'apikey': api_key,
             'extended': 1
         })
         return query
 
-# do we really need 2 separate classes for the "same" search? Newznab can searched using rage ID!
 class Season(SeasonProvider, Base):
 
-    def buildUrl(self, title, identifier, api_key):
+    def buildUrl(self, media, api_key):
+        search_title = fireEvent('searcher.get_search_title', media['library']['root_library'])
+        identifier = fireEvent('library.identifier', media['library'])
 
         query = tryUrlencode({
             't': 'tvsearch',
-            'q': title,  # Not needed when we have rid
-            #'rid': rage_id,  #Search using Rage ID - we don't have this yet
+            'q': search_title,
             'season': identifier[0]['season'],
             'apikey': api_key,
             'extended': 1
@@ -212,12 +205,13 @@ class Season(SeasonProvider, Base):
 
 class Episode(EpisodeProvider, Base):
 
-    def buildUrl(self, title, identifier, api_key):
+    def buildUrl(self, media, api_key):
+        search_title = fireEvent('searcher.get_search_title', media['library']['root_library'])
+        identifier = fireEvent('library.identifier', media['library'])
 
         query = tryUrlencode({
             't': 'tvsearch',
-            'q': title,  # Not needed when we have rid
-            #'rid': rage_id, #Search using Rage ID - we don't have this yet
+            'q': search_title,
             'season': identifier[0]['season'],
             'ep': identifier[0]['episode'],
             'apikey': api_key,
