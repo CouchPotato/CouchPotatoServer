@@ -2,7 +2,8 @@ from couchpotato.core.helpers.encoding import tryUrlencode, toUnicode
 from couchpotato.core.helpers.rss import RSS
 from couchpotato.core.helpers.variable import cleanHost, splitString, tryInt
 from couchpotato.core.logger import CPLog
-from couchpotato.core.providers.base import ResultList
+from couchpotato.core.providers.base import MultiProvider, ResultList
+from couchpotato.core.providers.info.base import MovieProvider, SeasonProvider, EpisodeProvider
 from couchpotato.core.providers.nzb.base import NZBProvider
 from couchpotato.environment import Env
 from dateutil.parser import parse
@@ -13,40 +14,41 @@ import traceback
 
 log = CPLog(__name__)
 
+class Newznab(MultiProvider):
 
-class Newznab(NZBProvider, RSS):
+    def getTypes(self):
+        return [Movie, Season, Episode]
+
+class Base(NZBProvider, RSS):
 
     urls = {
-        'download': 'get&id=%s',
         'detail': 'details&id=%s',
-        'search': 'movie',
+        'download': 't=get&id=%s'
     }
 
     limits_reached = {}
 
     http_time_between_calls = 1 # Seconds
 
-    def search(self, movie, quality):
+    def search(self, media, quality):
         hosts = self.getHosts()
 
-        results = ResultList(self, movie, quality, imdb_results = True)
+        results = ResultList(self, media, quality, imdb_results = True)
 
         for host in hosts:
             if self.isDisabled(host):
                 continue
 
-            self._searchOnHost(host, movie, quality, results)
+            self._searchOnHost(host, media, quality, results)
 
         return results
 
-    def _searchOnHost(self, host, movie, quality, results):
+    def _searchOnHost(self, host, media, quality, results):
 
-        arguments = tryUrlencode({
-            'imdbid': movie['library']['identifier'].replace('tt', ''),
-            'apikey': host['api_key'],
-            'extended': 1
-        })
-        url = '%s&%s' % (self.getUrl(host['host'], self.urls['search']), arguments)
+        query = self.buildUrl(media, host['api_key'])
+
+        url = '%s&%s' % (self.getUrl(host['host']), query)
+
 
         nzbs = self.getRSSData(url, cache_timeout = 1800, headers = {'User-Agent': Env.getIdentifier()})
 
@@ -87,7 +89,7 @@ class Newznab(NZBProvider, RSS):
                 'name_extra': name_extra,
                 'age': self.calculateAge(int(time.mktime(parse(date).timetuple()))),
                 'size': int(self.getElement(nzb, 'enclosure').attrib['length']) / 1024 / 1024,
-                'url': (self.getUrl(host['host'], self.urls['download']) % tryUrlencode(nzb_id)) + self.getApiExt(host),
+                'url': ((self.getUrl(host['host']) + self.urls['download']) % tryUrlencode(nzb_id)) + self.getApiExt(host),
                 'detail_url': '%sdetails/%s' % (cleanHost(host['host']), tryUrlencode(nzb_id)),
                 'content': self.getTextElement(nzb, 'description'),
                 'score': host['extra_score'],
@@ -127,11 +129,11 @@ class Newznab(NZBProvider, RSS):
             if result:
                 return result
 
-    def getUrl(self, host, type):
+    def getUrl(self, host):
         if '?page=newznabapi' in host:
-            return cleanHost(host)[:-1] + '&t=' + type
+            return cleanHost(host)[:-1] + '&'
 
-        return cleanHost(host) + 'api?t=' + type
+        return cleanHost(host) + 'api?'
 
     def isDisabled(self, host = None):
         return not self.isEnabled(host)
@@ -174,3 +176,40 @@ class Newznab(NZBProvider, RSS):
             log.error('Failed download from %s: %s', (host, traceback.format_exc()))
 
         return 'try_next'
+
+class Movie(MovieProvider, Base):
+
+    def buildUrl(self, media, api_key):
+        query = tryUrlencode({
+            't': 'movie',
+            'imdbid': media['library']['identifier'].replace('tt', ''),
+            'apikey': api_key,
+            'extended': 1
+        })
+        return query
+
+# do we really need 2 separate classes for the "same" search? Newznab can search using rage ID!
+class Season(SeasonProvider, Base):
+
+    def buildUrl(self, media, api_key):
+        query = tryUrlencode({
+            't': 'tvsearch',
+            'q': media['library']['related_libraries']['season']['titles'][0]['simple_title'], # is this correct?
+            'season': media['library']['related_libraries']['season']['season_number'], # is this correct?
+            'apikey': api_key,
+            'extended': 1
+        })
+        return query
+
+class Episode(EpisodeProvider, Base):
+
+    def buildUrl(self, media, api_key):
+        query = tryUrlencode({
+            't': 'tvsearch',
+            'q': media['library']['root_library']['titles'][0]['simple_title'], # is this correct?
+            'season': media['library']['info']['seasonnumber'], # is this correct?
+            'ep': media['library']['info']['episodenumber'], # is this correct?
+            'apikey': api_key,
+            'extended': 1
+        })
+        return query
