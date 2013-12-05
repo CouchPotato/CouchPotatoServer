@@ -1,5 +1,6 @@
 from couchpotato.core.helpers.encoding import tryUrlencode, toUnicode
 from couchpotato.core.helpers.rss import RSS
+from couchpotato.core.event import fireEvent
 from couchpotato.core.helpers.variable import cleanHost, splitString, tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.base import MultiProvider, ResultList
@@ -45,10 +46,16 @@ class Base(NZBProvider, RSS):
 
     def _searchOnHost(self, host, media, quality, results):
 
-        query = self.buildUrl(media, host['api_key'])
+        if media['type'] in ['show', 'season', 'episode']:
+            release = fireEvent('searcher.get_search_title', media['library']['root_library'])  # release name
+            identifier = fireEvent('library.identifier', media['library'])  # {'season': 3, 'episode': 7} (No episode for season libraries)
+        else:
+            release = media['library']['identifier'].replace('tt', '')  # IMDB ID
+            identifier = ''  # Not used for movies
+
+        query = self.buildUrl(release, identifier, host['api_key'])
 
         url = '%s&%s' % (self.getUrl(host['host']), query)
-
 
         nzbs = self.getRSSData(url, cache_timeout = 1800, headers = {'User-Agent': Env.getIdentifier()})
 
@@ -179,23 +186,25 @@ class Base(NZBProvider, RSS):
 
 class Movie(MovieProvider, Base):
 
-    def buildUrl(self, media, api_key):
+    def buildUrl(self, title, identifier, api_key):
         query = tryUrlencode({
             't': 'movie',
-            'imdbid': media['library']['identifier'].replace('tt', ''),
+            'imdbid': title,
             'apikey': api_key,
             'extended': 1
         })
         return query
 
-# do we really need 2 separate classes for the "same" search? Newznab can search using rage ID!
+# do we really need 2 separate classes for the "same" search? Newznab can searched using rage ID!
 class Season(SeasonProvider, Base):
 
-    def buildUrl(self, media, api_key):
+    def buildUrl(self, title, identifier, api_key):
+
         query = tryUrlencode({
             't': 'tvsearch',
-            'q': media['library']['related_libraries']['season']['titles'][0]['simple_title'], # is this correct?
-            'season': media['library']['related_libraries']['season']['season_number'], # is this correct?
+            'q': title,  # Not needed when we have rid
+            #'rid': rage_id,  #Search using Rage ID - we don't have this yet
+            'season': identifier[0]['season'],
             'apikey': api_key,
             'extended': 1
         })
@@ -203,12 +212,14 @@ class Season(SeasonProvider, Base):
 
 class Episode(EpisodeProvider, Base):
 
-    def buildUrl(self, media, api_key):
+    def buildUrl(self, title, identifier, api_key):
+
         query = tryUrlencode({
             't': 'tvsearch',
-            'q': media['library']['root_library']['titles'][0]['simple_title'], # is this correct?
-            'season': media['library']['info']['seasonnumber'], # is this correct?
-            'ep': media['library']['info']['episodenumber'], # is this correct?
+            'q': title,  # Not needed when we have rid
+            #'rid': rage_id, #Search using Rage ID - we don't have this yet
+            'season': identifier[0]['season'],
+            'ep': identifier[0]['episode'],
             'apikey': api_key,
             'extended': 1
         })
