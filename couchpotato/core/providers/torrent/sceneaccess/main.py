@@ -1,9 +1,10 @@
 from bs4 import BeautifulSoup
 from couchpotato.core.helpers.encoding import tryUrlencode, toUnicode
 from couchpotato.core.helpers.variable import tryInt
+from couchpotato.core.event import fireEvent
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.base import MultiProvider
-from couchpotato.core.providers.info.base import MovieProvider
+from couchpotato.core.providers.info.base import MovieProvider, SeasonProvider, EpisodeProvider
 from couchpotato.core.providers.torrent.base import TorrentProvider
 import traceback
 
@@ -13,7 +14,7 @@ log = CPLog(__name__)
 class SceneAccess(MultiProvider):
 
     def getTypes(self):
-        return [Movie]
+        return [Movie, Season, Episode]
 
 
 class Base(TorrentProvider):
@@ -113,3 +114,26 @@ class Movie(MovieProvider, Base):
     def buildUrl(self, media, quality):
         return self._buildUrl(media['library']['identifier'], quality['identifier'])
 
+class Season(SeasonProvider, Base):
+
+    cat_ids = [
+        ([27], ['hdtv_720p', 'webdl_720p', 'webdl_1080p']),
+        ([17, 11], ['hdtv_sd'])
+    ]
+
+    def buildUrl(self, media, quality):
+        print "########################"
+        print quality['identifier']
+        return self._buildUrl(fireEvent('searcher.get_search_title', media['library']['root_library']), quality['identifier'])
+
+class Episode(EpisodeProvider, Base):
+
+    cat_ids = [
+        ([27], ['hdtv_720p', 'webdl_720p', 'webdl_1080p']),
+        ([17, 11], ['hdtv_sd'])
+    ]
+
+    def buildUrl(self, media, quality):
+        print "########################"
+        print quality['identifier']
+        return self._buildUrl(fireEvent('searcher.get_search_title', media['library']['root_library']), quality['identifier'])
