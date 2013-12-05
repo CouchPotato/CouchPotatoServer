@@ -182,7 +182,7 @@ class Library(Entity):
 
             if include_root:
                 root_library = related_libraries.get(root_key)
-                orig_dict['root_library'] = root_library[0] if len(root_library) else None
+                orig_dict['root_library'] = root_library[0] if root_library else None
 
         return orig_dict
 
