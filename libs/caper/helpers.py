@@ -51,6 +51,18 @@ def clean_dict(target, remove=None):
     return target
 
 
+def update_dict(a, b):
+    for key, value in b.items():
+        if key not in a:
+            a[key] = value
+        elif isinstance(a[key], dict) and isinstance(value, dict):
+            update_dict(a[key], value)
+        elif isinstance(a[key], list):
+            a[key].append(value)
+        else:
+            a[key] = [a[key], value]
+
+
 def xrange_six(start, stop=None, step=None):
     if stop is not None and step is not None:
         if PY3:

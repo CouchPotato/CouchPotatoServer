@@ -14,13 +14,16 @@
 
 import re
 from logr import Logr
-from caper.helpers import is_list_type
+from caper.helpers import is_list_type, update_dict
 
 
 class FragmentMatcher(object):
     def __init__(self, pattern_groups):
         self.regex = {}
 
+        self.construct_patterns(pattern_groups)
+
+    def construct_patterns(self, pattern_groups):
         for group_name, patterns in pattern_groups:
             if group_name not in self.regex:
                 self.regex[group_name] = []
@@ -120,7 +123,7 @@ class FragmentMatcher(object):
 
                     match = fragment_pattern.match(cur_fragment.value)
                     if match:
-                        result.update(match.groupdict())
+                        update_dict(result, match.groupdict())
                     else:
                         success = False
                         break
