@@ -1,12 +1,19 @@
 from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
+from couchpotato.core.providers.base import MultiProvider
+from couchpotato.core.providers.info.base import MovieProvider, SeasonProvider, EpisodeProvider
 from couchpotato.core.providers.torrent.base import TorrentProvider
 
 log = CPLog(__name__)
 
 
-class TorrentDay(TorrentProvider):
+class TorrentDay(MultiProvider):
+
+    def getTypes(self):
+        return [Movie, Season, Episode]
+
+class Base(TorrentProvider):
 
     urls = {
         'test': 'http://www.td.af/',
@@ -17,18 +24,16 @@ class TorrentDay(TorrentProvider):
         'download': 'http://www.td.af/download.php/%s/%s',
     }
 
-    cat_ids = [
-        ([11], ['720p', '1080p']),
-        ([1, 21, 25], ['cam', 'ts', 'dvdrip', 'tc', 'r5', 'scr', 'brrip']),
-        ([3], ['dvdr']),
-        ([5], ['bd50']),
-    ]
-
     http_time_between_calls = 1 #seconds
 
-    def _searchOnTitle(self, title, movie, quality, results):
+    def _searchOnTitle(self, title, media, quality, results):
 
-        q = '"%s %s"' % (title, movie['library']['year'])
+        if media['type'] in 'movie':
+            year = media['library']['year']
+        else:
+            year = ''
+
+        q = '"%s %s"' % (title, year)
 
         params = {
             '/browse.php?': None,
@@ -65,3 +70,25 @@ class TorrentDay(TorrentProvider):
 
     def loginCheckSuccess(self, output):
         return 'logout.php' in output.lower()
+
+class Movie(MovieProvider, Base):
+
+    cat_ids = [
+        ([11], ['720p', '1080p']),
+        ([1, 21, 25], ['cam', 'ts', 'dvdrip', 'tc', 'r5', 'scr', 'brrip']),
+        ([3], ['dvdr']),
+        ([5], ['bd50']),
+    ]
+
+class Season(SeasonProvider, Base):
+
+    cat_ids = [
+        ([14], ['hdtv_sd', 'hdtv_720p', 'webdl_720p', 'webdl_1080p']),
+    ]
+
+class Episode(EpisodeProvider, Base):
+
+    cat_ids = [
+        ([7], ['hdtv_720p', 'webdl_720p', 'webdl_1080p']),
+        ([2], [24], [26], ['hdtv_sd'])
+    ]
