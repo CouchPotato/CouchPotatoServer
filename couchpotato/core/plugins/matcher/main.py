@@ -40,9 +40,19 @@ class Matcher(Plugin):
 
         for match in chain.info[group]:
             for ck, cv in match.items():
-                if ck in tags and simplifyString(cv) in tags[ck]:
+                if ck not in tags:
+                    continue
+
+                if isinstance(cv, basestring) and simplifyString(cv) in tags[ck]:
                     found_tags.append(ck)
 
+                elif isinstance(cv, list):
+                    simple_list = [simplifyString(x) for x in cv]
+
+                    if simple_list in tags[ck]:
+                        found_tags.append(ck)
+
+        log.debug('tags found: %s, required: %s' % (found_tags, tags.keys()))
 
         if set(tags.keys()) == set(found_tags):
             return True

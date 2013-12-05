@@ -19,8 +19,8 @@ class ShowSearcher(Plugin):
 
     # TODO come back to this later, think this could be handled better
     quality_map = {
-        'webdl_1080p': {'resolution': ['1080p'], 'source': ['webdl']},
-        'webdl_720p': {'resolution': ['720p'], 'source': ['webdl']},
+        'webdl_1080p': {'resolution': ['1080p'], 'source': ['webdl', ['web', 'dl']]},
+        'webdl_720p': {'resolution': ['720p'], 'source': ['webdl', ['web', 'dl']]},
 
         'hdtv_720p': {'resolution': ['720p'], 'source': ['hdtv']},
         'hdtv_sd': {'resolution': ['480p', None], 'source': ['hdtv']},
