@@ -2,14 +2,19 @@ from bs4 import BeautifulSoup
 from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
+from couchpotato.core.providers.base import MultiProvider
+from couchpotato.core.providers.info.base import MovieProvider, SeasonProvider, EpisodeProvider
 from couchpotato.core.providers.torrent.base import TorrentProvider
 import traceback
 
-
 log = CPLog(__name__)
 
+class TorrentLeech(MultiProvider):
 
-class TorrentLeech(TorrentProvider):
+    def getTypes(self):
+        return [Movie, Season, Episode]
+
+class Base(TorrentProvider):
 
     urls = {
         'test' : 'http://www.torrentleech.org/',
@@ -20,22 +25,18 @@ class TorrentLeech(TorrentProvider):
         'download' : 'http://www.torrentleech.org%s',
     }
 
-    cat_ids = [
-        ([13], ['720p', '1080p']),
-        ([8], ['cam']),
-        ([9], ['ts', 'tc']),
-        ([10], ['r5', 'scr']),
-        ([11], ['dvdrip']),
-        ([14], ['brrip']),
-        ([12], ['dvdr']),
-    ]
-
     http_time_between_calls = 1 #seconds
     cat_backup_id = None
 
-    def _searchOnTitle(self, title, movie, quality, results):
+    def _searchOnTitle(self, title, media, quality, results):
 
-        url = self.urls['search'] % (tryUrlencode('%s %s' % (title.replace(':', ''), movie['library']['year'])), self.getCatId(quality['identifier'])[0])
+        if media['type'] in 'movie':
+            year = media['library']['year']
+        else:
+            year = ''
+
+        url = self.urls['search'] % (tryUrlencode('%s %s' % (title.replace(':', ''), year)), self.getCatId(quality['identifier'])[0])
+
         data = self.getHTMLData(url, opener = self.login_opener)
 
         if data:
@@ -79,3 +80,28 @@ class TorrentLeech(TorrentProvider):
         return '/user/account/logout' in output.lower() or 'welcome back' in output.lower()
 
     loginCheckSuccess = loginSuccess
+
+class Movie(MovieProvider, Base):
+
+    cat_ids = [
+        ([13], ['720p', '1080p']),
+        ([8], ['cam']),
+        ([9], ['ts', 'tc']),
+        ([10], ['r5', 'scr']),
+        ([11], ['dvdrip']),
+        ([14], ['brrip']),
+        ([12], ['dvdr']),
+    ]
+
+class Season(SeasonProvider, Base):
+
+    cat_ids = [
+        ([27], ['hdtv_sd', 'hdtv_720p', 'webdl_720p', 'webdl_1080p']),
+    ]
+
+class Episode(EpisodeProvider, Base):
+
+    cat_ids = [
+        ([32], ['hdtv_720p', 'webdl_720p', 'webdl_1080p']),
+        ([26], ['hdtv_sd'])
+    ]
