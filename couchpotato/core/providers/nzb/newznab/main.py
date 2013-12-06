@@ -191,7 +191,7 @@ class Movie(MovieProvider, Base):
 class Season(SeasonProvider, Base):
 
     def buildUrl(self, media, api_key):
-        search_title = fireEvent('searcher.get_search_title', media['library']['root_library'])
+        search_title = fireEvent('searcher.get_search_title', media['library'])
         identifier = fireEvent('library.identifier', media['library'])
 
         query = tryUrlencode({
@@ -206,7 +206,7 @@ class Season(SeasonProvider, Base):
 class Episode(EpisodeProvider, Base):
 
     def buildUrl(self, media, api_key):
-        search_title = fireEvent('searcher.get_search_title', media['library']['root_library'])
+        search_title = fireEvent('searcher.get_search_title', media['library'])
         identifier = fireEvent('library.identifier', media['library'])
 
         query = tryUrlencode({

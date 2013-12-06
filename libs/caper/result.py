@@ -95,7 +95,7 @@ class CaperResult(object):
                 self.chains.append(chain)
 
         for chain in self.chains:
-            chain.weights.append(chain.num_matched / float(max_matched))
+            chain.weights.append(chain.num_matched / float(max_matched or chain.num_matched))
             chain.finish()
 
         self.chains.sort(key=lambda chain: chain.weight, reverse=True)

@@ -19,8 +19,8 @@ class ShowSearcher(Plugin):
 
     # TODO come back to this later, think this could be handled better
     quality_map = {
-        'webdl_1080p': {'resolution': ['1080p'], 'source': ['webdl']},
-        'webdl_720p': {'resolution': ['720p'], 'source': ['webdl']},
+        'webdl_1080p': {'resolution': ['1080p'], 'source': ['webdl', ['web', 'dl']]},
+        'webdl_720p': {'resolution': ['720p'], 'source': ['webdl', ['web', 'dl']]},
 
         'hdtv_720p': {'resolution': ['720p'], 'source': ['hdtv']},
         'hdtv_sd': {'resolution': ['480p', None], 'source': ['hdtv']},
@@ -133,11 +133,11 @@ class ShowSearcher(Plugin):
 
         return ret
 
-    def getSearchTitle(self, media):
-        if media['type'] not in ['show', 'season', 'episode']:
+    def getSearchTitle(self, library, include_identifier = False):
+        if library['type'] not in ['show', 'season', 'episode']:
             return
 
-        show, season, episode = self.getLibraries(media['library'])
+        show, season, episode = self.getLibraries(library)
 
         if not show:
             return None
@@ -172,8 +172,12 @@ class ShowSearcher(Plugin):
         else:
             return None
 
+        # Return show title if we aren't including the identifier
+        if not include_identifier:
+            return title
+
         # Add the identifier to search title
-        identifier = fireEvent('library.identifier', media['library'], single = True)
+        identifier = fireEvent('library.identifier', library, single = True)
 
         # TODO this needs to support other identifier formats
         if identifier['season']:
