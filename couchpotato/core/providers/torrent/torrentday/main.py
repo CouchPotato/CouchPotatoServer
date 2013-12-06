@@ -29,19 +29,14 @@ class Base(TorrentProvider):
 
     def _search(self, media, quality, results):
 
-        if media['type'] in 'movie':
-            q = '"%s %s"' % (fireEvent('searcher.get_search_title', media['library'], single = True), media['library']['year'])
-        else:
-            q = '"%s"' % fireEvent('searcher.get_search_title',
-                media['library'], include_identifier = True, single = True)
-
+        query = self.buildUrl(media)
 
         params = {
             '/browse.php?': None,
             'cata': 'yes',
             'jxt': 8,
             'jxw': 'b',
-            'search': q,
+            'search': query,
         }
 
         data = self.getJsonData(self.urls['search'], params = params, opener = self.login_opener)
@@ -80,16 +75,25 @@ class Movie(MovieProvider, Base):
         ([3], ['dvdr']),
         ([5], ['bd50']),
     ]
+    def buildUrl(self, media):
+        query = '"%s %s"' % (fireEvent('searcher.get_search_title',
+                                       media['library'], single = True), media['library']['year'])
+
+        return query
 
 class Season(SeasonProvider, Base):
 
     cat_ids = [
         ([14], ['hdtv_sd', 'hdtv_720p', 'webdl_720p', 'webdl_1080p']),
     ]
+    def buildUrl(self, media):
+        return fireEvent('searcher.get_search_title', media['library'], include_identifier = True, single = True)
 
 class Episode(EpisodeProvider, Base):
-
     cat_ids = [
         ([7], ['hdtv_720p', 'webdl_720p', 'webdl_1080p']),
         ([2], [24], [26], ['hdtv_sd'])
     ]
+    def buildUrl(self, media):
+        return fireEvent('searcher.get_search_title', media['library'], include_identifier = True, single = True)
+

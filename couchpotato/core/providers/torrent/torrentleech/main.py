@@ -31,12 +31,7 @@ class Base(TorrentProvider):
 
     def _search(self, media, quality, results):
 
-        if media['type'] in 'movie':
-            url = self.urls['search'] % (tryUrlencode('%s %s' % (fireEvent('searcher.get_search_title',
-                media['library'], single = True), media['library']['year'])), self.getCatId(quality['identifier'])[0])
-        else:
-            url = self.urls['search'] % (tryUrlencode('%s' % fireEvent('searcher.get_search_title',
-                media['library'], include_identifier = True, single = True)), self.getCatId(quality['identifier'])[0])
+        url = self.urls['search'] % self.buildUrl(media, quality)
 
         data = self.getHTMLData(url, opener = self.login_opener)
 
@@ -94,11 +89,21 @@ class Movie(MovieProvider, Base):
         ([12], ['dvdr']),
     ]
 
+    def buildUrl(self, media, quality):
+        query = (tryUrlencode('%s %s' % (fireEvent('searcher.get_search_title',
+                                                   media['library'], single = True), media['library']['year'])), self.getCatId(quality['identifier'])[0])
+        return query
+
 class Season(SeasonProvider, Base):
 
     cat_ids = [
         ([27], ['hdtv_sd', 'hdtv_720p', 'webdl_720p', 'webdl_1080p']),
     ]
+
+    def buildUrl(self, media, quality):
+        query = (tryUrlencode('%s' % fireEvent('searcher.get_search_title',
+                                               media['library'], include_identifier = True, single = True)), self.getCatId(quality['identifier'])[0])
+        return query
 
 class Episode(EpisodeProvider, Base):
 
@@ -106,3 +111,8 @@ class Episode(EpisodeProvider, Base):
         ([32], ['hdtv_720p', 'webdl_720p', 'webdl_1080p']),
         ([26], ['hdtv_sd'])
     ]
+
+    def buildUrl(self, media, quality):
+        query = (tryUrlencode('%s' % fireEvent('searcher.get_search_title',
+                                               media['library'], include_identifier = True, single = True)), self.getCatId(quality['identifier'])[0])
+        return query
