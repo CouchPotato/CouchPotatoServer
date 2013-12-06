@@ -1,6 +1,7 @@
 from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
+from couchpotato.core.event import fireEvent
 from couchpotato.core.providers.base import MultiProvider
 from couchpotato.core.providers.info.base import MovieProvider, SeasonProvider, EpisodeProvider
 from couchpotato.core.providers.torrent.base import TorrentProvider
@@ -26,14 +27,13 @@ class Base(TorrentProvider):
 
     http_time_between_calls = 1 #seconds
 
-    def _searchOnTitle(self, title, media, quality, results):
+    def _search(self, media, quality, results):
 
         if media['type'] in 'movie':
-            year = media['library']['year']
+            q = '"%s %s"' % (fireEvent('searcher.get_search_title', media['library']), media['library']['year'])
         else:
-            year = ''
+            q = '"%s"' % fireEvent('searcher.get_search_title', media['library'], include_identifier = True)
 
-        q = '"%s %s"' % (title, year)
 
         params = {
             '/browse.php?': None,
