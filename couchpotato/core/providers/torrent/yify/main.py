@@ -1,12 +1,18 @@
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
+from couchpotato.core.providers.base import MultiProvider
+from couchpotato.core.providers.info.base import MovieProvider
 from couchpotato.core.providers.torrent.base import TorrentProvider
 import traceback
 
 log = CPLog(__name__)
 
+class Yify(MultiProvider):
 
-class Yify(TorrentProvider):
+    def getTypes(self):
+        return [Movie]
+
+class Base(TorrentProvider):
 
     urls = {
         'test' : 'https://yify-torrents.com/api',
@@ -21,7 +27,7 @@ class Yify(TorrentProvider):
         if not quality.get('hd', False):
             return []
 
-        return super(Yify, self).search(movie, quality)
+        return super(Base, self).search(movie, quality)
 
     def _search(self, movie, quality, results):
 
@@ -51,3 +57,5 @@ class Yify(TorrentProvider):
             except:
                 log.error('Failed getting results from %s: %s', (self.getName(), traceback.format_exc()))
 
+class Movie(MovieProvider, Base):
+    pass
