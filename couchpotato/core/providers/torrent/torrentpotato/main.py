@@ -1,6 +1,9 @@
 from couchpotato.core.helpers.encoding import tryUrlencode, toUnicode
 from couchpotato.core.helpers.variable import splitString, tryInt, tryFloat
 from couchpotato.core.logger import CPLog
+from couchpotato.core.event import fireEvent
+from couchpotato.core.providers.base import MultiProvider
+from couchpotato.core.providers.info.base import MovieProvider, SeasonProvider, EpisodeProvider
 from couchpotato.core.providers.base import ResultList
 from couchpotato.core.providers.torrent.base import TorrentProvider
 from urlparse import urlparse
@@ -9,37 +12,34 @@ import traceback
 
 log = CPLog(__name__)
 
+class TorrentPotato(MultiProvider):
 
-class TorrentPotato(TorrentProvider):
+    def getTypes(self):
+        return [Movie, Season, Episode]
+
+class Base(TorrentProvider):
 
     urls = {}
     limits_reached = {}
 
     http_time_between_calls = 1 # Seconds
 
-    def search(self, movie, quality):
+    def search(self, media, quality):
         hosts = self.getHosts()
 
-        results = ResultList(self, movie, quality, imdb_results = True)
+        results = ResultList(self, media, quality, imdb_results = True)
 
         for host in hosts:
             if self.isDisabled(host):
                 continue
 
-            self._searchOnHost(host, movie, quality, results)
+            self._searchOnHost(host, media, quality, results)
 
         return results
 
-    def _searchOnHost(self, host, movie, quality, results):
+    def _searchOnHost(self, host, media, quality, results):
 
-        arguments = tryUrlencode({
-            'user': host['name'],
-            'passkey': host['pass_key'],
-            'imdbid': movie['library']['identifier']
-        })
-        url = '%s?%s' % (host['host'], arguments)
-
-        torrents = self.getJsonData(url, cache_timeout = 1800)
+        torrents = self.getJsonData(self.buildUrl(media, host), cache_timeout = 1800)
 
         if torrents:
             try:
@@ -110,7 +110,7 @@ class TorrentPotato(TorrentProvider):
         hosts = self.getHosts()
 
         for host in hosts:
-            result = super(TorrentPotato, self).belongsTo(url, host = host['host'], provider = provider)
+            result = super(Base, self).belongsTo(url, host = host['host'], provider = provider)
             if result:
                 return result
 
@@ -127,3 +127,33 @@ class TorrentPotato(TorrentProvider):
             return False
 
         return TorrentProvider.isEnabled(self) and host['host'] and host['pass_key'] and int(host['use'])
+
+class Movie(MovieProvider, Base):
+
+    def buildUrl(self, media, host):
+        arguments = tryUrlencode({
+            'user': host['name'],
+            'passkey': host['pass_key'],
+            'imdbid': media['library']['identifier']
+        })
+        return '%s?%s' % (host['host'], arguments)
+
+class Season(SeasonProvider, Base):
+
+    def buildUrl(self, media, host):
+        arguments = tryUrlencode({
+            'user': host['name'],
+            'passkey': host['pass_key'],
+            'search': fireEvent('searcher.get_search_title', media['library'], include_identifier = True, single = True)
+        })
+        return '%s?%s' % (host['host'], arguments)
+
+class Episode(EpisodeProvider, Base):
+
+    def buildUrl(self, media, host):
+        arguments = tryUrlencode({
+            'user': host['name'],
+            'passkey': host['pass_key'],
+            'search': fireEvent('searcher.get_search_title', media['library'], include_identifier = True, single = True)
+        })
+        return '%s?%s' % (host['host'], arguments)
