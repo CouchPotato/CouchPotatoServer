@@ -66,7 +66,7 @@ class ShowSearcher(Plugin):
         found_releases = []
         too_early_to_search = []
 
-        default_title = self.getSearchTitle(media)
+        default_title = self.getSearchTitle(media['library'])
         if not default_title:
             log.error('No proper info found for episode, removing it from library to cause it from having more issues.')
             #fireEvent('episode.delete', episode['id'], single = True)
