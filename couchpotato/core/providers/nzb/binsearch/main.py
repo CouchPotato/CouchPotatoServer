@@ -2,6 +2,9 @@ from bs4 import BeautifulSoup
 from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
+from couchpotato.core.event import fireEvent
+from couchpotato.core.providers.base import MultiProvider
+from couchpotato.core.providers.info.base import MovieProvider, SeasonProvider, EpisodeProvider
 from couchpotato.core.providers.nzb.base import NZBProvider
 from couchpotato.environment import Env
 import re
@@ -9,8 +12,12 @@ import traceback
 
 log = CPLog(__name__)
 
+class BinSearch(MultiProvider):
 
-class BinSearch(NZBProvider):
+    def getTypes(self):
+        return [Movie, Season, Episode]
+
+class Base(NZBProvider):
 
     urls = {
         'download': 'https://www.binsearch.info/fcgi/nzb.fcgi?q=%s',
@@ -20,21 +27,9 @@ class BinSearch(NZBProvider):
 
     http_time_between_calls = 4 # Seconds
 
-    def _search(self, movie, quality, results):
+    def _search(self, media, quality, results):
 
-        arguments = tryUrlencode({
-            'q': movie['library']['identifier'],
-            'm': 'n',
-            'max': 400,
-            'adv_age': Env.setting('retention', 'nzb'),
-            'adv_sort': 'date',
-            'adv_col': 'on',
-            'adv_nfo': 'on',
-            'minsize': quality.get('size_min'),
-            'maxsize': quality.get('size_max'),
-        })
-
-        data = self.getHTMLData(self.urls['search'] % arguments)
+        data = self.getHTMLData(self.urls['search'] % self.buildUrl(media, quality))
 
         if data:
             try:
@@ -102,3 +97,50 @@ class BinSearch(NZBProvider):
 
         return 'try_next'
 
+class Movie(MovieProvider, Base):
+
+    def buildUrl(self, media, quality):
+        query = tryUrlencode({
+            'q': media['library']['identifier'],
+            'm': 'n',
+            'max': 400,
+            'adv_age': Env.setting('retention', 'nzb'),
+            'adv_sort': 'date',
+            'adv_col': 'on',
+            'adv_nfo': 'on',
+            'minsize': quality.get('size_min'),
+            'maxsize': quality.get('size_max'),
+        })
+        return query
+
+class Season(SeasonProvider, Base):
+
+    def buildUrl(self, media, quality):
+        query = tryUrlencode({
+            'q': fireEvent('searcher.get_search_title', media['library'], include_identifier = True, single = True),
+            'm': 'n',
+            'max': 400,
+            'adv_age': Env.setting('retention', 'nzb'),
+            'adv_sort': 'date',
+            'adv_col': 'on',
+            'adv_nfo': 'on',
+            'minsize': quality.get('size_min'),
+            'maxsize': quality.get('size_max'),
+        })
+        return query
+
+class Episode(EpisodeProvider, Base):
+
+    def buildUrl(self, media, quality):
+        query = tryUrlencode({
+            'q': fireEvent('searcher.get_search_title', media['library'], include_identifier = True, single = True),
+            'm': 'n',
+            'max': 400,
+            'adv_age': Env.setting('retention', 'nzb'),
+            'adv_sort': 'date',
+            'adv_col': 'on',
+            'adv_nfo': 'on',
+            'minsize': quality.get('size_min'),
+            'maxsize': quality.get('size_max'),
+        })
+        return query
