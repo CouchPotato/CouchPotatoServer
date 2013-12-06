@@ -3,6 +3,9 @@ from couchpotato.core.helpers.encoding import toUnicode, tryUrlencode
 from couchpotato.core.helpers.rss import RSS
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
+from couchpotato.core.event import fireEvent
+from couchpotato.core.providers.base import MultiProvider
+from couchpotato.core.providers.info.base import MovieProvider, SeasonProvider, EpisodeProvider
 from couchpotato.core.providers.nzb.base import NZBProvider
 from couchpotato.environment import Env
 from dateutil.parser import parse
@@ -11,8 +14,13 @@ import time
 
 log = CPLog(__name__)
 
+class NzbIndex(MultiProvider):
 
-class NzbIndex(NZBProvider, RSS):
+    def getTypes(self):
+        return [Movie, Season, Episode]
+
+
+class Base(NZBProvider, RSS):
 
     urls = {
         'download': 'https://www.nzbindex.com/download/',
@@ -21,22 +29,9 @@ class NzbIndex(NZBProvider, RSS):
 
     http_time_between_calls = 1 # Seconds
 
-    def _searchOnTitle(self, title, movie, quality, results):
+    def _search(self, media, quality, results):
 
-        q = '"%s %s" | "%s (%s)"' % (title, movie['library']['year'], title, movie['library']['year'])
-        arguments = tryUrlencode({
-            'q': q,
-            'age': Env.setting('retention', 'nzb'),
-            'sort': 'agedesc',
-            'minsize': quality.get('size_min'),
-            'maxsize': quality.get('size_max'),
-            'rating': 1,
-            'max': 250,
-            'more': 1,
-            'complete': 1,
-        })
-
-        nzbs = self.getRSSData(self.urls['search'] % arguments)
+        nzbs = self.getRSSData(self.urls['search'] % self.buildUrl(media, quality))
 
         for nzb in nzbs:
 
@@ -77,3 +72,53 @@ class NzbIndex(NZBProvider, RSS):
         except:
             pass
 
+class Movie(MovieProvider, Base):
+
+    def buildUrl(self, media):
+        title = fireEvent('searcher.get_search_title', media['library'], single = True)
+        year =  media['library']['year']
+
+        query = tryUrlencode({
+            'q': '"%s %s" | "%s (%s)"' % (title, year, title, year),
+            'age': Env.setting('retention', 'nzb'),
+            'sort': 'agedesc',
+            'minsize': quality.get('size_min'),
+            'maxsize': quality.get('size_max'),
+            'rating': 1,
+            'max': 250,
+            'more': 1,
+            'complete': 1,
+        })
+        return query
+
+class Season(SeasonProvider, Base):
+
+    def buildUrl(self, media, quality):
+        query = tryUrlencode({
+            'q': fireEvent('searcher.get_search_title', media['library'], include_identifier = True, single = True),
+            'age': Env.setting('retention', 'nzb'),
+            'sort': 'agedesc',
+            'minsize': quality.get('size_min'),
+            'maxsize': quality.get('size_max'),
+            'rating': 1,
+            'max': 250,
+            'more': 1,
+            'complete': 1,
+        })
+        return query
+
+class Episode(EpisodeProvider, Base):
+
+    def buildUrl(self, media, quality):
+        query = tryUrlencode({
+            'q': fireEvent('searcher.get_search_title', media['library'], include_identifier = True, single = True),
+            'age': Env.setting('retention', 'nzb'),
+            'sort': 'agedesc',
+            'minsize': quality.get('size_min'),
+            'maxsize': quality.get('size_max'),
+            'rating': 1,
+            'max': 250,
+            'more': 1,
+            'complete': 1,
+        })
+        return query
