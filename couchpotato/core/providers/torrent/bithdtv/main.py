@@ -2,12 +2,20 @@ from bs4 import BeautifulSoup
 from couchpotato.core.helpers.encoding import tryUrlencode, toUnicode
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
+from couchpotato.core.event import fireEvent
+from couchpotato.core.providers.base import MultiProvider
+from couchpotato.core.providers.info.base import MovieProvider, SeasonProvider, EpisodeProvider
 from couchpotato.core.providers.torrent.base import TorrentProvider
 import traceback
 
 log = CPLog(__name__)
 
-class BiTHDTV(TorrentProvider):
+class BiTHDTV(MultiProvider):
+
+    def getTypes(self):
+        return [Movie, Season, Episode]
+
+class Base(TorrentProvider):
 
     urls = {
         'test' : 'http://www.bit-hdtv.com/',
@@ -18,18 +26,13 @@ class BiTHDTV(TorrentProvider):
     }
 
     # Searches for movies only - BiT-HDTV's subcategory and resolution search filters appear to be broken
-    cat_id_movies = 7
-
     http_time_between_calls = 1 #seconds
 
-    def _searchOnTitle(self, title, movie, quality, results):
+    def _search(self, media, quality, results):
 
-        arguments = tryUrlencode({
-            'search': '%s %s' % (title.replace(':', ''), movie['library']['year']),
-            'cat': self.cat_id_movies
-        })
+        query = self.buildUrl(media)
 
-        url = "%s&%s" % (self.urls['search'], arguments)
+        url = "%s&%s" % (self.urls['search'], query)
 
         data = self.getHTMLData(url, opener = self.login_opener)
 
@@ -86,3 +89,34 @@ class BiTHDTV(TorrentProvider):
         return 'logout.php' in output.lower()
 
     loginCheckSuccess = loginSuccess
+
+# Only searches BiT-HDTV's main category, subcategory and resolution search filters appear to be broken
+class Movie(MovieProvider, Base):
+
+    def buildUrl(self, media):
+        query = tryUrlencode({
+            'search': '%s %s' % (fireEvent('searcher.get_search_title',
+                                           media['library'], single = True), media['library']['year']),
+            'cat': 7 # Movie cat
+        })
+        return query
+
+class Season(SeasonProvider, Base):
+
+    def buildUrl(self, media):
+        query = tryUrlencode({
+            'search': fireEvent('searcher.get_search_title', media['library'],
+                                include_identifier = True, single = True),
+            'cat': 12 # Season cat
+        })
+        return query
+
+class Episode(EpisodeProvider, Base):
+
+    def buildUrl(self, media):
+        query = tryUrlencode({
+            'search': fireEvent('searcher.get_search_title', media['library'],
+                                include_identifier = True, single = True),
+            'cat': 10 # Episode cat
+        })
+        return query
