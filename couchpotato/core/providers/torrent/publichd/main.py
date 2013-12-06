@@ -33,7 +33,7 @@ class Base(TorrentMagnetProvider):
 
         return super(Base, self).search(movie, quality)
 
-    def _searchOnTitle(self, title, media, quality, results):
+    def _search(self, media, quality, results):
 
         query = self.buildUrl(media)
 
