@@ -30,9 +30,10 @@ class Base(TorrentProvider):
     def _search(self, media, quality, results):
 
         if media['type'] in 'movie':
-            q = '"%s %s"' % (fireEvent('searcher.get_search_title', media['library']), media['library']['year'])
+            q = '"%s %s"' % (fireEvent('searcher.get_search_title', media['library'], single = True), media['library']['year'])
         else:
-            q = '"%s"' % fireEvent('searcher.get_search_title', media['library'], include_identifier = True)
+            q = '"%s"' % fireEvent('searcher.get_search_title',
+                media['library'], include_identifier = True, single = True)
 
 
         params = {
