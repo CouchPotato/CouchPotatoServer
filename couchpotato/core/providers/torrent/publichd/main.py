@@ -2,15 +2,21 @@ from bs4 import BeautifulSoup
 from couchpotato.core.helpers.encoding import tryUrlencode, toUnicode
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
+from couchpotato.core.event import fireEvent
+from couchpotato.core.providers.base import MultiProvider
+from couchpotato.core.providers.info.base import MovieProvider, SeasonProvider, EpisodeProvider
 from couchpotato.core.providers.torrent.base import TorrentMagnetProvider
 from urlparse import parse_qs
 import re
 import traceback
 
 log = CPLog(__name__)
+class PublicHD(MultiProvider):
 
+    def getTypes(self):
+        return [Movie, Season, Episode]
 
-class PublicHD(TorrentMagnetProvider):
+class Base(TorrentMagnetProvider):
 
     urls = {
         'test': 'https://publichd.se',
@@ -24,13 +30,15 @@ class PublicHD(TorrentMagnetProvider):
         if not quality.get('hd', False):
             return []
 
-        return super(PublicHD, self).search(movie, quality)
+        return super(Base, self).search(movie, quality)
 
-    def _searchOnTitle(self, title, movie, quality, results):
+    def _searchOnTitle(self, title, media, quality, results):
+
+        query = self.buildUrl(media)
 
         params = tryUrlencode({
             'page':'torrents',
-            'search': '%s %s' % (title, movie['library']['year']),
+            'search': query,
             'active': 1,
         })
 
@@ -86,3 +94,20 @@ class PublicHD(TorrentMagnetProvider):
 
         item['description'] = description
         return item
+
+class Movie(MovieProvider, Base):
+
+    def buildUrl(self, media):
+        query = '%s %s' % (fireEvent('searcher.get_search_title',
+                                     media['library'], single = True), media['library']['year'])
+        return query
+
+class Season(SeasonProvider, Base):
+
+    def buildUrl(self, media):
+        return fireEvent('searcher.get_search_title', media['library'], include_identifier = True, single = True)
+
+class Episode(EpisodeProvider, Base):
+
+    def buildUrl(self, media):
+        return fireEvent('searcher.get_search_title', media['library'], include_identifier = True, single = True)
