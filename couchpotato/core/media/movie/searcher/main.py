@@ -343,7 +343,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
             log.error('Failed searching for next release: %s', traceback.format_exc())
             return False
 
-    def getSearchTitle(self, library):
+    def getSearchTitle(self, library, include_identifier = False):
         if library['type'] == 'movie':
             return getTitle(library)
 
