@@ -3,14 +3,22 @@ from couchpotato.core.helpers.encoding import toUnicode, tryUrlencode
 from couchpotato.core.helpers.rss import RSS
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
+from couchpotato.core.event import fireEvent
+from couchpotato.core.providers.base import MultiProvider
+from couchpotato.core.providers.info.base import MovieProvider, SeasonProvider, EpisodeProvider
 from couchpotato.core.providers.nzb.base import NZBProvider
 from dateutil.parser import parse
 import time
 
 log = CPLog(__name__)
 
+class NZBClub(MultiProvider):
 
-class NZBClub(NZBProvider, RSS):
+    def getTypes(self):
+        return [Movie, Season, Episode]
+
+
+class Base(NZBProvider, RSS):
 
     urls = {
         'search': 'http://www.nzbclub.com/nzbfeed.aspx?%s',
@@ -18,20 +26,9 @@ class NZBClub(NZBProvider, RSS):
 
     http_time_between_calls = 4 #seconds
 
-    def _searchOnTitle(self, title, movie, quality, results):
+    def _search(self, media, quality, results):
 
-        q = '"%s %s"' % (title, movie['library']['year'])
-
-        params = tryUrlencode({
-            'q': q,
-            'ig': 1,
-            'rpp': 200,
-            'st': 5,
-            'sp': 1,
-            'ns': 1,
-        })
-
-        nzbs = self.getRSSData(self.urls['search'] % params)
+        nzbs = self.getRSSData(self.urls['search'] % self.buildUrl(media))
 
         for nzb in nzbs:
 
@@ -78,3 +75,43 @@ class NZBClub(NZBProvider, RSS):
             return False
 
         return True
+
+class Movie(MovieProvider, Base):
+
+    def buildUrl(self, media):
+        query = tryUrlencode({
+            'q': '"%s %s"' % (fireEvent('searcher.get_search_title', media['library'], include_identifier = True,
+                                        single = True), media['library']['year']),
+            'ig': 1,
+            'rpp': 200,
+            'st': 5,
+            'sp': 1,
+            'ns': 1,
+        })
+        return query
+
+class Season(SeasonProvider, Base):
+
+    def buildUrl(self, media):
+        query = tryUrlencode({
+            'q': fireEvent('searcher.get_search_title', media['library'], include_identifier = True, single = True),
+            'ig': 1,
+            'rpp': 200,
+            'st': 5,
+            'sp': 1,
+            'ns': 1,
+        })
+        return query
+
+class Episode(EpisodeProvider, Base):
+
+    def buildUrl(self, media):
+        query = tryUrlencode({
+            'q': fireEvent('searcher.get_search_title', media['library'], include_identifier = True, single = True),
+            'ig': 1,
+            'rpp': 200,
+            'st': 5,
+            'sp': 1,
+            'ns': 1,
+        })
+        return query
