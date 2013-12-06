@@ -133,11 +133,11 @@ class ShowSearcher(Plugin):
 
         return ret
 
-    def getSearchTitle(self, media):
-        if media['type'] not in ['show', 'season', 'episode']:
+    def getSearchTitle(self, library):
+        if library['type'] not in ['show', 'season', 'episode']:
             return
 
-        show, season, episode = self.getLibraries(media['library'])
+        show, season, episode = self.getLibraries(library)
 
         if not show:
             return None
@@ -173,7 +173,7 @@ class ShowSearcher(Plugin):
             return None
 
         # Add the identifier to search title
-        identifier = fireEvent('library.identifier', media['library'], single = True)
+        identifier = fireEvent('library.identifier', library, single = True)
 
         # TODO this needs to support other identifier formats
         if identifier['season']:

@@ -210,7 +210,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
         if media.get('type') != 'movie': return
 
-        media_title = fireEvent('searcher.get_search_title', media, single = True)
+        media_title = fireEvent('searcher.get_search_title', media['library'], single = True)
 
         imdb_results = kwargs.get('imdb_results', False)
         retention = Env.setting('retention', section = 'nzb')
@@ -343,9 +343,9 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
             log.error('Failed searching for next release: %s', traceback.format_exc())
             return False
 
-    def getSearchTitle(self, media):
-        if media['type'] == 'movie':
-            return getTitle(media['library'])
+    def getSearchTitle(self, library):
+        if library['type'] == 'movie':
+            return getTitle(library)
 
 class SearchSetupError(Exception):
     pass
