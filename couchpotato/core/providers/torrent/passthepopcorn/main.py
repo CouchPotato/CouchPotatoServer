@@ -1,6 +1,8 @@
 from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.variable import getTitle, tryInt, mergeDicts
 from couchpotato.core.logger import CPLog
+from couchpotato.core.providers.base import MultiProvider
+from couchpotato.core.providers.info.base import MovieProvider
 from couchpotato.core.providers.torrent.base import TorrentProvider
 from dateutil.parser import parse
 import htmlentitydefs
@@ -11,8 +13,13 @@ import traceback
 
 log = CPLog(__name__)
 
+class PassThePopcorn(MultiProvider):
 
-class PassThePopcorn(TorrentProvider):
+    def getTypes(self):
+        return [Movie]
+
+
+class Base(TorrentProvider):
 
     urls = {
          'domain': 'https://tls.passthepopcorn.me',
@@ -25,43 +32,15 @@ class PassThePopcorn(TorrentProvider):
 
     http_time_between_calls = 2
 
-    quality_search_params = {
-        'bd50':     {'media': 'Blu-ray', 'format': 'BD50'},
-        '1080p':    {'resolution': '1080p'},
-        '720p':     {'resolution': '720p'},
-        'brrip':    {'media': 'Blu-ray'},
-        'dvdr':     {'resolution': 'anysd'},
-        'dvdrip':   {'media': 'DVD'},
-        'scr':      {'media': 'DVD-Screener'},
-        'r5':       {'media': 'R5'},
-        'tc':       {'media': 'TC'},
-        'ts':       {'media': 'TS'},
-        'cam':      {'media': 'CAM'}
-    }
+    def _search(self, media, quality, results):
 
-    post_search_filters = {
-        'bd50':     {'Codec': ['BD50']},
-        '1080p':    {'Resolution': ['1080p']},
-        '720p':     {'Resolution': ['720p']},
-        'brrip':    {'Source': ['Blu-ray'], 'Quality': ['High Definition'], 'Container': ['!ISO']},
-        'dvdr':     {'Codec': ['DVD5', 'DVD9']},
-        'dvdrip':   {'Source': ['DVD'], 'Codec': ['!DVD5', '!DVD9']},
-        'scr':      {'Source': ['DVD-Screener']},
-        'r5':       {'Source': ['R5']},
-        'tc':       {'Source': ['TC']},
-        'ts':       {'Source': ['TS']},
-        'cam':      {'Source': ['CAM']}
-    }
-
-    def _search(self, movie, quality, results):
-
-        movie_title = getTitle(movie['library'])
+        movie_title = getTitle(media['library'])
         quality_id = quality['identifier']
 
         params = mergeDicts(self.quality_search_params[quality_id].copy(), {
             'order_by': 'relevance',
             'order_way': 'descending',
-            'searchstr': movie['library']['identifier']
+            'searchstr': media['library']['identifier']
         })
 
         url = '%s?json=noredirect&%s' % (self.urls['torrent'], tryUrlencode(params))
@@ -203,3 +182,33 @@ class PassThePopcorn(TorrentProvider):
             return False
 
     loginCheckSuccess = loginSuccess
+
+class Movie(MovieProvider, Base):
+
+    quality_search_params = {
+        'bd50':     {'media': 'Blu-ray', 'format': 'BD50'},
+        '1080p':    {'resolution': '1080p'},
+        '720p':     {'resolution': '720p'},
+        'brrip':    {'media': 'Blu-ray'},
+        'dvdr':     {'resolution': 'anysd'},
+        'dvdrip':   {'media': 'DVD'},
+        'scr':      {'media': 'DVD-Screener'},
+        'r5':       {'media': 'R5'},
+        'tc':       {'media': 'TC'},
+        'ts':       {'media': 'TS'},
+        'cam':      {'media': 'CAM'}
+    }
+
+    post_search_filters = {
+        'bd50':     {'Codec': ['BD50']},
+        '1080p':    {'Resolution': ['1080p']},
+        '720p':     {'Resolution': ['720p']},
+        'brrip':    {'Source': ['Blu-ray'], 'Quality': ['High Definition'], 'Container': ['!ISO']},
+        'dvdr':     {'Codec': ['DVD5', 'DVD9']},
+        'dvdrip':   {'Source': ['DVD'], 'Codec': ['!DVD5', '!DVD9']},
+        'scr':      {'Source': ['DVD-Screener']},
+        'r5':       {'Source': ['R5']},
+        'tc':       {'Source': ['TC']},
+        'ts':       {'Source': ['TS']},
+        'cam':      {'Source': ['CAM']}
+    }
