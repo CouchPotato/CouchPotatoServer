@@ -191,13 +191,13 @@ class Movie(MovieProvider, Base):
 class Season(SeasonProvider, Base):
 
     def buildUrl(self, media, api_key):
-        search_title = fireEvent('searcher.get_search_title', media['library'])
-        identifier = fireEvent('library.identifier', media['library'])
+        search_title = fireEvent('searcher.get_search_title', media['library'], single = True)
+        identifier = fireEvent('library.identifier', media['library'], single = True)
 
         query = tryUrlencode({
             't': 'tvsearch',
             'q': search_title,
-            'season': identifier[0]['season'],
+            'season': identifier['season'],
             'apikey': api_key,
             'extended': 1
         })
@@ -206,14 +206,14 @@ class Season(SeasonProvider, Base):
 class Episode(EpisodeProvider, Base):
 
     def buildUrl(self, media, api_key):
-        search_title = fireEvent('searcher.get_search_title', media['library'])
-        identifier = fireEvent('library.identifier', media['library'])
+        search_title = fireEvent('searcher.get_search_title', media['library'], single = True)
+        identifier = fireEvent('library.identifier', media['library'], single = True)
 
         query = tryUrlencode({
             't': 'tvsearch',
             'q': search_title,
-            'season': identifier[0]['season'],
-            'ep': identifier[0]['episode'],
+            'season': identifier['season'],
+            'ep': identifier['episode'],
             'apikey': api_key,
             'extended': 1
         })
