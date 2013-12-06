@@ -2,6 +2,7 @@ from bs4 import BeautifulSoup
 from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
+from couchpotato.core.event import fireEvent
 from couchpotato.core.providers.base import MultiProvider
 from couchpotato.core.providers.info.base import MovieProvider, SeasonProvider, EpisodeProvider
 from couchpotato.core.providers.torrent.base import TorrentProvider
@@ -28,14 +29,14 @@ class Base(TorrentProvider):
     http_time_between_calls = 1 #seconds
     cat_backup_id = None
 
-    def _searchOnTitle(self, title, media, quality, results):
+    def _search(self, media, quality, results):
 
         if media['type'] in 'movie':
-            year = media['library']['year']
+            url = self.urls['search'] % (tryUrlencode('%s %s' % (fireEvent('searcher.get_search_title',
+                media['library'], single = True), media['library']['year'])), self.getCatId(quality['identifier'])[0])
         else:
-            year = ''
-
-        url = self.urls['search'] % (tryUrlencode('%s %s' % (title.replace(':', ''), year)), self.getCatId(quality['identifier'])[0])
+            url = self.urls['search'] % (tryUrlencode('%s' % fireEvent('searcher.get_search_title',
+                media['library'], include_identifier = True, single = True)), self.getCatId(quality['identifier'])[0])
 
         data = self.getHTMLData(url, opener = self.login_opener)
 
