@@ -11,6 +11,7 @@ import re
 import traceback
 
 log = CPLog(__name__)
+
 class PublicHD(MultiProvider):
 
     def getTypes(self):
