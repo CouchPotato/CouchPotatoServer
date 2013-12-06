@@ -2,26 +2,26 @@ from bs4 import BeautifulSoup
 from couchpotato.core.helpers.encoding import toUnicode, tryUrlencode
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
+from couchpotato.core.event import fireEvent
+from couchpotato.core.providers.base import MultiProvider
+from couchpotato.core.providers.info.base import MovieProvider, SeasonProvider, EpisodeProvider
 from couchpotato.core.providers.torrent.base import TorrentMagnetProvider
 import re
 import traceback
 
 log = CPLog(__name__)
 
+class ThePirateBay(MultiProvider):
 
-class ThePirateBay(TorrentMagnetProvider):
+    def getTypes(self):
+        return [Movie, Season, Episode]
+
+class Base(TorrentMagnetProvider):
 
     urls = {
          'detail': '%s/torrent/%s',
-         'search': '%s/search/%s/%s/7/%s'
+         'search': '%s/search/%%s/%%s/7/%%s'
     }
-
-    cat_ids = [
-       ([207], ['720p', '1080p']),
-       ([201], ['cam', 'ts', 'dvdrip', 'tc', 'r5', 'scr']),
-       ([201, 207], ['brrip']),
-       ([202], ['dvdr'])
-    ]
 
     cat_backup_id = 200
     disable_provider = False
@@ -41,15 +41,18 @@ class ThePirateBay(TorrentMagnetProvider):
         'https://kuiken.co',
     ]
 
-    def _searchOnTitle(self, title, movie, quality, results):
+    def _search(self, media, quality, results):
 
         page = 0
         total_pages = 1
         cats = self.getCatId(quality['identifier'])
 
+        search_url = self.urls['search'] % self.getDomain()
+
         while page < total_pages:
 
-            search_url = self.urls['search'] % (self.getDomain(), tryUrlencode('"%s" %s' % (title, movie['library']['year'])), page, ','.join(str(x) for x in cats))
+            search_url = search_url % self.buildUrl(media, page, cats)
+
             page += 1
 
             data = self.getHTMLData(search_url)
@@ -103,7 +106,7 @@ class ThePirateBay(TorrentMagnetProvider):
                     log.error('Failed getting results from %s: %s', (self.getName(), traceback.format_exc()))
 
     def isEnabled(self):
-        return super(ThePirateBay, self).isEnabled() and self.getDomain()
+        return super(Base, self).isEnabled() and self.getDomain()
 
     def correctProxy(self, data):
         return 'title="Pirate Search"' in data
@@ -116,3 +119,41 @@ class ThePirateBay(TorrentMagnetProvider):
 
         item['description'] = description
         return item
+
+class Movie(MovieProvider, Base):
+
+    cat_ids = [
+       ([207], ['720p', '1080p']),
+       ([201], ['cam', 'ts', 'dvdrip', 'tc', 'r5', 'scr']),
+       ([201, 207], ['brrip']),
+       ([202], ['dvdr'])
+    ]
+
+    def buildUrl(self, media, page, cats):
+        query = tryUrlencode('"%s" %s' % (fireEvent('searcher.get_search_title', media['library'],
+                                                    single = True), media['library']['year'])), page, ','.join(str(x) for x in cats)
+        return query
+
+class Season(SeasonProvider, Base):
+
+    cat_ids = [
+        ([208], ['hdtv_720p', 'webdl_720p', 'webdl_1080p']),
+        ([205], ['hdtv_sd'])
+    ]
+
+    def buildUrl(self, media, page, cats):
+        query = tryUrlencode('"%s"' % fireEvent('searcher.get_search_title', media['library'],
+                                                include_identifier = True, single = True)), page, ','.join(str(x) for x in cats)
+        return query
+
+class Episode(EpisodeProvider, Base):
+
+    cat_ids = [
+        ([208], ['hdtv_720p', 'webdl_720p', 'webdl_1080p']),
+        ([205], ['hdtv_sd'])
+    ]
+
+    def buildUrl(self, media, page, cats):
+        query = tryUrlencode('"%s"' % fireEvent('searcher.get_search_title', media['library'],
+                                                include_identifier = True, single = True)), page, ','.join(str(x) for x in cats)
+        return query
