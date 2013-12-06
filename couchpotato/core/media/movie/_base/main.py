@@ -175,7 +175,7 @@ class MovieBase(MovieTypeBase):
 
             fireEvent('media.restatus', m.id)
 
-            movie_dict = m.to_dict(self.default_dict)
+            movie_dict = m.to_dict(self.search_dict)
             fireEventAsync('movie.searcher.single', movie_dict, on_complete = self.createNotifyFront(media_id))
 
         db.expire_all()

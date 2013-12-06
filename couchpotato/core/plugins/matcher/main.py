@@ -89,11 +89,24 @@ class Matcher(Plugin):
             log.info('Wrong: missing show name in parsed result')
             return False
 
+        # Get the lower-case parsed show name from the chain
         chain_words = [x.lower() for x in chain.info['show_name']]
+
+        # Build a list of possible titles of the media we are searching for
+        titles = root_library['info']['titles']
+
+        # Add year suffix titles (will result in ['<name_one>', '<name_one> <suffix_one>', '<name_two>', ...])
+        suffixes = [None, root_library['info']['year']]
+
+        titles = [
+            title + ((' %s' % suffix) if suffix else '')
+            for title in titles
+            for suffix in suffixes
+        ]
 
         # Check show titles match
         # TODO check xem names
-        for title in root_library['info']['titles']:
+        for title in titles:
             for valid_words in [x.split(' ') for x in possibleTitles(title)]:
 
                 if valid_words == chain_words:

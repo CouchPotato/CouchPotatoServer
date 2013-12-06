@@ -18,12 +18,12 @@ class MediaBase(Plugin):
         'category': {},
     }
 
-    search_dict = mergeDicts(default_dict, {
+    search_dict = mergeDicts({
         'library': {
             'related_libraries': {},
             'root_library': {}
         },
-    })
+    }, default_dict)
 
     def initType(self):
         addEvent('media.types', self.getType)

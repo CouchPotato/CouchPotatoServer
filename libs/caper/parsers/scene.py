@@ -85,8 +85,12 @@ PATTERN_GROUPS = [
 
         (r'(?P<codec>%s)', [
             'x264',
-            'XViD'
+            'XViD',
+            'H264'
         ]),
+
+        # For 'H 264' tags
+        ('(?P<codec>H)', '(?P<codec>264)'),
 
         (r'(?P<language>%s)', [
             'GERMAN',
