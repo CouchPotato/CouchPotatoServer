@@ -122,7 +122,7 @@ class Season(SeasonProvider, Base):
     ]
 
     def buildUrl(self, media, quality):
-        return self._buildUrl(fireEvent('searcher.get_search_title', media['library'], include_identifier = True))
+        return self._buildUrl(fireEvent('searcher.get_search_title', media['library'], include_identifier = True, single = True), quality['identifier'])
 
 class Episode(EpisodeProvider, Base):
 
@@ -132,4 +132,4 @@ class Episode(EpisodeProvider, Base):
     ]
 
     def buildUrl(self, media, quality):
-        return self._buildUrl(fireEvent('searcher.get_search_title', media['library'], include_identifier = True))
+        return self._buildUrl(fireEvent('searcher.get_search_title', media['library'], include_identifier = True, single = True), quality['identifier'])
