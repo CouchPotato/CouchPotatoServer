@@ -105,7 +105,12 @@ class ShowSearcher(Plugin):
             # Don't search for quality lower then already available.
             if has_better_quality is 0:
 
-                log.info('Search for %s S%02d%s in %s', (getTitle(show), season['season_number'], "E%02d" % episode['episode_number'] if episode else "", quality_type['quality']['label']))
+                log.info('Search for %s S%02d%s in %s', (
+                    getTitle(show),
+                    season['season_number'],
+                    "E%02d" % episode['episode_number'] if episode and len(episode) == 1 else "",
+                    quality_type['quality']['label'])
+                )
                 quality = fireEvent('quality.single', identifier = quality_type['quality']['identifier'], single = True)
 
                 results = fireEvent('searcher.search', search_protocols, media, quality, single = True)
@@ -129,7 +134,7 @@ class ShowSearcher(Plugin):
                         fireEvent('release.delete', release.get('id'), single = True)
             else:
                 log.info('Better quality (%s) already available or snatched for %s', (quality_type['quality']['label'], default_title))
-                fireEvent('movie.restatus', media['id'])
+                fireEvent('media.restatus', media['id'])
                 break
 
             # Break if CP wants to shut down
