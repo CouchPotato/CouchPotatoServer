@@ -1,8 +1,9 @@
 from couchpotato import Env, get_session
 from couchpotato.core.event import addEvent, fireEvent
-from couchpotato.core.helpers.variable import getTitle, tryInt, toIterable
+from couchpotato.core.helpers.variable import getTitle, toIterable
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.searcher.main import SearchSetupError
+from couchpotato.core.media.show._base import ShowBase
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Media
 from qcond import QueryCondenser
@@ -17,10 +18,20 @@ class ShowSearcher(Plugin):
 
     in_progress = False
 
-    # TODO come back to this later, think this could be handled better
+    # TODO come back to this later, think this could be handled better, this is starting to get out of hand....
     quality_map = {
+        'bluray_1080p': {'resolution': ['1080p'], 'source': ['bluray']},
+        'bluray_720p': {'resolution': ['720p'], 'source': ['bluray']},
+
+        'bdrip_1080p': {'resolution': ['1080p'], 'source': ['BDRip']},
+        'bdrip_720p': {'resolution': ['720p'], 'source': ['BDRip']},
+
+        'brrip_1080p': {'resolution': ['1080p'], 'source': ['BRRip']},
+        'brrip_720p': {'resolution': ['720p'], 'source': ['BRRip']},
+
         'webdl_1080p': {'resolution': ['1080p'], 'source': ['webdl', ['web', 'dl']]},
         'webdl_720p': {'resolution': ['720p'], 'source': ['webdl', ['web', 'dl']]},
+        'webdl_480p': {'resolution': ['480p'], 'source': ['webdl', ['web', 'dl']]},
 
         'hdtv_720p': {'resolution': ['720p'], 'source': ['hdtv']},
         'hdtv_sd': {'resolution': ['480p', None], 'source': ['hdtv']},
@@ -42,8 +53,15 @@ class ShowSearcher(Plugin):
     def single(self, media, search_protocols = None, manual = False):
         show, season, episode = self.getLibraries(media['library'])
 
+        db = get_session()
+
         if media['type'] == 'show':
-            # TODO handle show searches (scan all seasons)
+            for library in season:
+                # TODO ideally we shouldn't need to fetch the media for each season library here
+                m = db.query(Media).filter_by(library_id = library['library_id']).first()
+
+                fireEvent('season.searcher.single', m.to_dict(ShowBase.search_dict))
+
             return
 
         # Find out search type
@@ -58,8 +76,6 @@ class ShowSearcher(Plugin):
         if not media['profile'] or media['status_id'] == done_status.get('id'):
             log.debug('Episode doesn\'t have a profile or already done, assuming in manage tab.')
             return
-
-        db = get_session()
 
         #pre_releases = fireEvent('quality.pre_releases', single = True)
 
@@ -95,7 +111,12 @@ class ShowSearcher(Plugin):
             # Don't search for quality lower then already available.
             if has_better_quality is 0:
 
-                log.info('Search for %s S%02d%s in %s', (getTitle(show), season['season_number'], "E%02d" % episode['episode_number'] if episode else "", quality_type['quality']['label']))
+                log.info('Search for %s S%02d%s in %s', (
+                    getTitle(show),
+                    season['season_number'],
+                    "E%02d" % episode['episode_number'] if episode and len(episode) == 1 else "",
+                    quality_type['quality']['label'])
+                )
                 quality = fireEvent('quality.single', identifier = quality_type['quality']['identifier'], single = True)
 
                 results = fireEvent('searcher.search', search_protocols, media, quality, single = True)
@@ -119,7 +140,7 @@ class ShowSearcher(Plugin):
                         fireEvent('release.delete', release.get('id'), single = True)
             else:
                 log.info('Better quality (%s) already available or snatched for %s', (quality_type['quality']['label'], default_title))
-                fireEvent('movie.restatus', media['id'])
+                fireEvent('media.restatus', media['id'])
                 break
 
             # Break if CP wants to shut down
@@ -128,6 +149,16 @@ class ShowSearcher(Plugin):
 
         if len(too_early_to_search) > 0:
             log.info2('Too early to search for %s, %s', (too_early_to_search, default_title))
+        elif media['type'] == 'season' and not ret:
+            # If nothing was found, start searching for episodes individually
+            log.info('No season pack found, starting individual episode search')
+
+            for library in episode:
+                # TODO ideally we shouldn't need to fetch the media for each episode library here
+                m = db.query(Media).filter_by(library_id = library['library_id']).first()
+
+                fireEvent('episode.searcher.single', m.to_dict(ShowBase.search_dict))
+
 
         fireEvent('notify.frontend', type = 'show.searcher.ended.%s' % media['id'], data = True)
 
@@ -234,17 +265,18 @@ class ShowSearcher(Plugin):
 
         libraries = library['related_libraries']
 
-        # Get libraries and return lists only if there is multiple items
+        # Show always collapses as there can never be any multiples
         show = libraries.get('show', [])
-        if len(show) <= 1:
-            show = show[0] if len(show) else None
+        show = show[0] if len(show) else None
 
+        # Season collapses if the subject is a season or episode
         season = libraries.get('season', [])
-        if len(season) <= 1:
+        if library['type'] in ['season', 'episode']:
             season = season[0] if len(season) else None
 
+        # Episode collapses if the subject is a episode
         episode = libraries.get('episode', [])
-        if len(episode) <= 1:
+        if library['type'] == 'episode':
             episode = episode[0] if len(episode) else None
 
         return show, season, episode
