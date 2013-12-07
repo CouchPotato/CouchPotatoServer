@@ -502,7 +502,7 @@ class Renamer(Plugin):
                         os.remove(src)
 
                         parent_dir = os.path.dirname(src)
-                        if delete_folders.count(parent_dir) == 0 and os.path.isdir(parent_dir) and not parent_dir in [destination, media_folder] and not from_folder in parent_dir:
+                        if delete_folders.count(parent_dir) == 0 and os.path.isdir(parent_dir) and not '%s%s' % (parent_dir, os.path.sep) in [destination, media_folder] and not '%s%s' % (from_folder, os.path.sep) in parent_dir:
                             delete_folders.append(parent_dir)
 
                 except:
@@ -1037,7 +1037,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         return release_download['id'] and release_download['downloader'] and release_download['folder']
 
     def movieInFromFolder(self, media_folder):
-        return media_folder and sp(self.conf('from')) in sp(media_folder) or not media_folder
+        return media_folder and '%s%s' % (sp(self.conf('from')), os.path.sep) in sp(media_folder) or not media_folder
 
     def extractFiles(self, folder = None, media_folder = None, files = None, cleanup = False):
         if not files: files = []
