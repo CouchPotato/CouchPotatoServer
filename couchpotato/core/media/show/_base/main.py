@@ -134,9 +134,14 @@ class ShowBase(MediaBase):
                                                              single_episode.get('original_title', '')))
                         e = self.addToDatabase(params = single_episode, type = "episode")
 
+        # Start searching now that all the media has been added
+        if search_after:
+            onComplete = self.createOnComplete(parent['id'])
+            onComplete()
+
         return parent
 
-    def addToDatabase(self, params = {}, type = "show", force_readd = True, search_after = True, update_library = False, status_id = None):
+    def addToDatabase(self, params = {}, type = "show", force_readd = True, search_after = False, update_library = False, status_id = None):
         log.debug("show.addToDatabase")
 
         if not params.get('identifier'):
