@@ -35,29 +35,46 @@ class Matcher(Plugin):
 
         return False
 
+    def flattenInfo(self, info):
+        flat_info = {}
+
+        for match in info:
+            for key, value in match.items():
+                if key not in flat_info:
+                    flat_info[key] = []
+
+                flat_info[key].append(value)
+
+        return flat_info
+
+    def simplifyValue(self, value):
+        if not value:
+            return value
+
+        if isinstance(value, basestring):
+            return simplifyString(value)
+
+        if isinstance(value, list):
+            return [self.simplifyValue(x) for x in value]
+
+        raise ValueError("Unsupported value type")
+
     def chainMatch(self, chain, group, tags):
+        info = self.flattenInfo(chain.info[group])
+
         found_tags = []
+        for tag, accepted in tags.items():
+            values = [self.simplifyValue(x) for x in info.get(tag, [None])]
 
-        for match in chain.info[group]:
-            for ck, cv in match.items():
-                if ck not in tags:
-                    continue
-
-                if isinstance(cv, basestring) and simplifyString(cv) in tags[ck]:
-                    found_tags.append(ck)
-
-                elif isinstance(cv, list):
-                    simple_list = [simplifyString(x) for x in cv]
-
-                    if simple_list in tags[ck]:
-                        found_tags.append(ck)
+            if any([val in accepted for val in values]):
+                found_tags.append(tag)
 
         log.debug('tags found: %s, required: %s' % (found_tags, tags.keys()))
 
         if set(tags.keys()) == set(found_tags):
             return True
 
-        return set([key for key, value in tags.items() if None not in value]) == set(found_tags)
+        return all([key in found_tags for key, value in tags.items()])
 
     def correctIdentifier(self, chain, media):
         required_id = fireEvent('library.identifier', media['library'], single = True)
@@ -75,6 +92,14 @@ class Matcher(Plugin):
         # TODO this should support identifiers with characters 'a', 'b', etc..
         for k, v in identifier.items():
             identifier[k] = tryInt(v, None)
+
+        if any([x in identifier for x in ['episode_from', 'episode_to']]):
+            log.info2('Wrong: releases with identifier ranges are not supported yet')
+            return False
+
+        # 'episode' is required in identifier for subset matching
+        if 'episode' not in identifier:
+            identifier['episode'] = None
 
         if not dictIsSubset(required_id, identifier):
             log.info2('Wrong: required identifier %s does not match release identifier %s', (str(required_id), str(identifier)))
