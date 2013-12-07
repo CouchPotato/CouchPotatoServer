@@ -138,13 +138,21 @@ class Movie(MovieProvider, Base):
 
 class Season(SeasonProvider, Base):
 
+    # TODO come back to this later, a better quality system needs to be created
     cat_ids = [
-        ([65], ['hdtv_sd', 'hdtv_720p', 'webdl_720p', 'webdl_1080p']),
+        ([65], [
+            'bluray_1080p', 'bluray_720p',
+            'bdrip_1080p', 'bdrip_720p',
+            'brrip_1080p', 'brrip_720p',
+            'webdl_1080p', 'webdl_720p', 'webdl_480p',
+            'hdtv_720p', 'hdtv_sd'
+        ]),
     ]
 
 
 class Episode(EpisodeProvider, Base):
 
+    # TODO come back to this later, a better quality system needs to be created
     cat_ids = [
         ([5], ['hdtv_720p', 'webdl_720p', 'webdl_1080p']),
         ([4, 78, 79], ['hdtv_sd'])
