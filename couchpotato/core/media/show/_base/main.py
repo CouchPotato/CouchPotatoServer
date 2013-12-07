@@ -94,6 +94,8 @@ class ShowBase(MediaBase):
                 season_params = {'season_identifier':  season_id}
                 # Calling all info providers; merge your info now for individual season
                 single_season = fireEvent('season.info', merge = True, identifier = identifier, params = season_params)
+                single_season['category_id'] = params.get('category_id')
+                single_season['profile_id'] = params.get('profile_id')
                 single_season['title'] = single_season.get('original_title', None)
                 single_season['identifier'] = season_id
                 single_season['parent_identifier'] = identifier
@@ -125,6 +127,8 @@ class ShowBase(MediaBase):
                             episode_params['absolute'] = absolute_number
                         # Calling all info providers; merge your info now for individual episode
                         single_episode = fireEvent('episode.info', merge = True, identifier = identifier, params = episode_params)
+                        single_episode['category_id'] = params.get('category_id')
+                        single_episode['profile_id'] = params.get('profile_id')
                         single_episode['title'] = single_episode.get('original_title', None)
                         single_episode['identifier'] = episode_id
                         single_episode['parent_identifier'] = single_season['identifier']
