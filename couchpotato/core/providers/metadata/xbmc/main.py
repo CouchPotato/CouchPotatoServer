@@ -65,7 +65,7 @@ class XBMC(MetaDataBase):
                 name = type
 
             try:
-                if data['library'].get(type):
+                if movie_info.get(type):
                     el = SubElement(nfoxml, name)
                     el.text = toUnicode(movie_info.get(type, ''))
             except:
@@ -89,10 +89,18 @@ class XBMC(MetaDataBase):
             genres.text = toUnicode(genre)
 
         # Actors
-        for actor in movie_info.get('actors', []):
-            actors = SubElement(nfoxml, 'actor')
-            name = SubElement(actors, 'name')
-            name.text = toUnicode(actor)
+        for actor_name in movie_info.get('actor_roles', {}):
+            role_name = movie_info['actor_roles'][actor_name]
+
+            actor = SubElement(nfoxml, 'actor')
+            name = SubElement(actor, 'name')
+            name.text = toUnicode(actor_name)
+            if role_name:
+                role = SubElement(actor, 'role')
+                role.text = toUnicode(role_name)
+            if movie_info['images'].get('actor %s' % actor_name, ''):
+                thumb = SubElement(actor, 'thumb')
+                thumb.text = toUnicode(movie_info['images'].get('actor %s' % actor_name))
 
         # Directors
         for director_name in movie_info.get('directors', []):
@@ -111,6 +119,51 @@ class XBMC(MetaDataBase):
             collection.text = toUnicode(collection_name)
             sorttitle = SubElement(nfoxml, 'sorttitle')
             sorttitle.text = '%s %s' % (toUnicode(collection_name), movie_info.get('year'))
+
+        # Images
+        for image_url in movie_info['images']['poster_original']:
+            image = SubElement(nfoxml, 'thumb')
+            image.text = toUnicode(image_url)
+        fanart = SubElement(nfoxml, 'fanart')
+        for image_url in movie_info['images']['backdrop_original']:
+            image = SubElement(fanart, 'thumb')
+            image.text = toUnicode(image_url)
+
+        # Add trailer if found
+        trailer_found = False
+        if data.get('renamed_files'):
+            for  filename in data.get('renamed_files'):
+                if 'trailer' in filename:
+                    trailer = SubElement(nfoxml, 'trailer')
+                    trailer.text = toUnicode(filename)
+                    trailer_found = True
+        if not trailer_found and data['files'].get('trailer'):
+            trailer = SubElement(nfoxml, 'trailer')
+            trailer.text = toUnicode(data['files']['trailer'][0])
+
+        # Add file metadata
+        fileinfo = SubElement(nfoxml, 'fileinfo')
+        streamdetails = SubElement(fileinfo, 'streamdetails')
+
+        # Video data
+        if data['meta_data'].get('video'):
+            video = SubElement(streamdetails, 'video')
+            codec = SubElement(video, 'codec')
+            codec.text = toUnicode(data['meta_data']['video'])
+            aspect = SubElement(video, 'aspect')
+            aspect.text = str(data['meta_data']['aspect'])
+            width = SubElement(video, 'width')
+            width.text = str(data['meta_data']['resolution_width'])
+            height = SubElement(video, 'height')
+            height.text = str(data['meta_data']['resolution_height'])
+
+        # Audio data
+        if data['meta_data'].get('audio'):
+            audio = SubElement(streamdetails, 'audio')
+            codec = SubElement(audio, 'codec')
+            codec.text = toUnicode(data['meta_data'].get('audio'))
+            channels = SubElement(audio, 'channels')
+            channels.text = toUnicode(data['meta_data'].get('audio_channels'))
 
         # Clean up the xml and return it
         nfoxml = xml.dom.minidom.parseString(tostring(nfoxml))

@@ -36,7 +36,7 @@ class XBMC(Notification):
 
                 if data and data.get('destination_dir') and (not self.conf('only_first') or hosts.index(host) == 0):
                     param = {}
-                    if self.conf('remote_dir_scan') or socket.getfqdn('localhost') == socket.getfqdn(host.split(':')[0]):
+                    if not self.conf('force_full_scan') and (self.conf('remote_dir_scan') or socket.getfqdn('localhost') == socket.getfqdn(host.split(':')[0])):
                         param = {'directory': data['destination_dir']}
 
                     calls.append(('VideoLibrary.Scan', param))
