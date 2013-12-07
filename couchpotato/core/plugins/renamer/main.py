@@ -3,7 +3,7 @@ from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
 from couchpotato.core.helpers.encoding import toUnicode, ss, sp
 from couchpotato.core.helpers.variable import getExt, mergeDicts, getTitle, \
-    getImdb, link, symlink, tryInt, splitString
+    getImdb, link, symlink, tryInt, splitString, fnEscape
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Library, File, Profile, Release, \
@@ -644,7 +644,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
         # Match all found ignore files with the tag_files and delete if found
         for tag_file in tag_files:
-            ignore_file = fnmatch.filter(ignore_files, '%s.%s.ignore' % (re.escape(os.path.splitext(tag_file)[0]), tag if tag else '*'))
+            ignore_file = fnmatch.filter(ignore_files, fnEscape('%s.%s.ignore' % (os.path.splitext(tag_file)[0], tag if tag else '*')))
             for filename in ignore_file:
                 try:
                     os.remove(filename)
@@ -677,7 +677,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
         # Match all found ignore files with the tag_files and return True found
         for tag_file in tag_files:
-            ignore_file = fnmatch.filter(ignore_files, '%s.%s.ignore' % (os.path.splitext(tag_file)[0], tag if tag else '*'))
+            ignore_file = fnmatch.filter(ignore_files, fnEscape('%s.%s.ignore' % (os.path.splitext(tag_file)[0], tag if tag else '*')))
             if ignore_file:
                 return True
 
