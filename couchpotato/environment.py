@@ -78,6 +78,7 @@ class Env(object):
             return s.get(attr, default = default, section = section, type = type)
 
         # Set setting
+        s.addSection(section)
         s.set(section, attr, value)
         s.save()
 

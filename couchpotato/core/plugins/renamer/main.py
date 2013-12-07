@@ -114,7 +114,7 @@ class Renamer(Plugin):
             return
         else:
             for item in no_process:
-                if from_folder in item:
+                if '%s%s' % (from_folder, os.path.sep) in item:
                     log.error('To protect your data, the movie libraries can\'t be inside of or the same as the "from" folder.')
                     return
 
@@ -146,7 +146,7 @@ class Renamer(Plugin):
 
         if movie_folder:
             for item in no_process:
-                if movie_folder in item:
+                if '%s%s' % (movie_folder, os.path.sep) in item:
                     log.error('To protect your data, the movie libraries can\'t be inside of or the same as the provided movie folder.')
                     return
 
