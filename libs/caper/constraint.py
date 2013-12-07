@@ -53,11 +53,8 @@ class CaptureConstraint(object):
         elif hasattr(fragment, name):
             match = self.capture_group.parser.matcher.value_match(getattr(fragment, name), arg, single=True)
             return 1.0, match is not None
-
-        if not hasattr(fragment, name):
-            raise ValueError("Unable to find fragment with name '%s'" % name)
         else:
-            raise ValueError("Unexpected argument type")
+            raise ValueError("Unable to find attribute with name '%s'" % name)
 
     def execute(self, fragment):
         results = []

@@ -22,6 +22,12 @@ PATTERN_GROUPS = [
         (1.0, [
             # S01E01-E02
             ('^S(?P<season>\d+)E(?P<episode_from>\d+)$', '^E(?P<episode_to>\d+)$'),
+            # S03 E01 to E08
+            ('^S(?P<season>\d+)$', '^E(?P<episode_from>\d+)$', '^to$', '^E(?P<episode_to>\d+)$'),
+
+            # S01-S03
+            ('^S(?P<season_from>\d+)$', '^S(?P<season_to>\d+)$'),
+
             # S02E13
             r'^S(?P<season>\d+)E(?P<episode>\d+)$',
             # S01 E13
@@ -72,25 +78,62 @@ PATTERN_GROUPS = [
             '1080p'
         ]),
 
+        #
+        # Source
+        #
+
         (r'(?P<source>%s)', [
+            'DVDRiP',
+            # HDTV
             'HDTV',
             'PDTV',
             'DSR',
-            'DVDRiP',
-            'WEBDL'
+            # WEB
+            'WEBRip',
+            'WEBDL',
+            # BluRay
+            'BluRay',
+            'B(D|R)Rip',
+            # DVD
+            'DVDR',
+            'DVD9',
+            'DVD5'
         ]),
 
-        # For 'WEB-DL', 'WEB DL', etc...
-        ('(?P<source>WEB)', '(?P<source>DL)'),
+        # For multi-fragment 'WEB-DL', 'WEB-Rip', etc... matches
+        ('(?P<source>WEB)', '(?P<source>DL|Rip)'),
+
+        #
+        # Codec
+        #
 
         (r'(?P<codec>%s)', [
             'x264',
             'XViD',
-            'H264'
+            'H264',
+            'AVC'
         ]),
 
-        # For 'H 264' tags
+        # For multi-fragment 'H 264' tags
         ('(?P<codec>H)', '(?P<codec>264)'),
+    ]),
+
+    ('dvd', [
+        r'D(ISC)?(?P<disc>\d+)',
+
+        r'R(?P<region>[0-8])',
+
+        (r'(?P<encoding>%s)', [
+            'PAL',
+            'NTSC'
+        ]),
+    ]),
+
+    ('audio', [
+        (r'(?P<codec>%s)', [
+            'AC3',
+            'TrueHD'
+        ]),
 
         (r'(?P<language>%s)', [
             'GERMAN',
@@ -100,6 +143,10 @@ PATTERN_GROUPS = [
             'DANiSH',
             'iTALiAN'
         ]),
+    ]),
+
+    ('scene', [
+        r'(?P<proper>PROPER|REAL)',
     ])
 ]
 
@@ -123,11 +170,17 @@ class SceneParser(Parser):
 
         self.capture_fragment('show_name', single=False)\
             .until(fragment__re='identifier')\
-            .until(fragment__re='video')\
+            .until(fragment__re='video') \
+            .until(fragment__re='dvd') \
+            .until(fragment__re='audio') \
+            .until(fragment__re='scene') \
             .execute()
 
         self.capture_fragment('identifier', regex='identifier', single=False)\
-            .capture_fragment('video', regex='video', single=False)\
+            .capture_fragment('video', regex='video', single=False) \
+            .capture_fragment('dvd', regex='dvd', single=False) \
+            .capture_fragment('audio', regex='audio', single=False) \
+            .capture_fragment('scene', regex='scene', single=False) \
             .until(left_sep__eq='-', right__eq=None)\
             .execute()
 

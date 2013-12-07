@@ -19,7 +19,7 @@ from caper.parsers.anime import AnimeParser
 from caper.parsers.scene import SceneParser
 
 
-__version_info__ = ('0', '2', '5')
+__version_info__ = ('0', '2', '6')
 __version_branch__ = 'master'
 
 __version__ = "%s%s" % (
