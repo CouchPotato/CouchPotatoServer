@@ -15,13 +15,14 @@
 from caper import FragmentMatcher
 from caper.group import CaptureGroup
 from caper.result import CaperResult, CaperClosureNode
+from logr import Logr
 
 
 class Parser(object):
-    def __init__(self, pattern_groups, debug=False):
+    def __init__(self, matcher, debug=False):
         self.debug = debug
 
-        self.matcher = FragmentMatcher(pattern_groups)
+        self.matcher = matcher
 
         self.closures = None
         #: :type: caper.result.CaperResult

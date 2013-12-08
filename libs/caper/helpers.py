@@ -74,3 +74,7 @@ def xrange_six(start, stop=None, step=None):
             return range(start)
         else:
             return xrange(start)
+
+
+def delta_seconds(td):
+    return (td.microseconds + (td.seconds + td.days * 24 * 3600) * 1e6) / 1e6
