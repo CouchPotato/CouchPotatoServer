@@ -18,25 +18,6 @@ class ShowSearcher(Plugin):
 
     in_progress = False
 
-    # TODO come back to this later, think this could be handled better, this is starting to get out of hand....
-    quality_map = {
-        'bluray_1080p': {'resolution': ['1080p'], 'source': ['bluray']},
-        'bluray_720p': {'resolution': ['720p'], 'source': ['bluray']},
-
-        'bdrip_1080p': {'resolution': ['1080p'], 'source': ['BDRip']},
-        'bdrip_720p': {'resolution': ['720p'], 'source': ['BDRip']},
-
-        'brrip_1080p': {'resolution': ['1080p'], 'source': ['BRRip']},
-        'brrip_720p': {'resolution': ['720p'], 'source': ['BRRip']},
-
-        'webdl_1080p': {'resolution': ['1080p'], 'source': ['webdl', ['web', 'dl']]},
-        'webdl_720p': {'resolution': ['720p'], 'source': ['webdl', ['web', 'dl']]},
-        'webdl_480p': {'resolution': ['480p'], 'source': ['webdl', ['web', 'dl']]},
-
-        'hdtv_720p': {'resolution': ['720p'], 'source': ['hdtv']},
-        'hdtv_sd': {'resolution': ['480p', None], 'source': ['hdtv']},
-    }
-
     def __init__(self):
         super(ShowSearcher, self).__init__()
 
@@ -46,8 +27,6 @@ class ShowSearcher(Plugin):
             addEvent('%s.searcher.single' % type, self.single)
 
         addEvent('searcher.get_search_title', self.getSearchTitle)
-
-        addEvent('searcher.correct_match', self.correctMatch)
         addEvent('searcher.correct_release', self.correctRelease)
 
     def single(self, media, search_protocols = None, manual = False):
@@ -234,29 +213,11 @@ class ShowSearcher(Plugin):
             return False
 
         # TODO Matching is quite costly, maybe we should be caching release matches somehow? (also look at caper optimizations)
-        match = fireEvent('matcher.best', release, media, quality, single = True)
+        match = fireEvent('matcher.match', release, media, quality, single = True)
         if match:
             return match.weight
 
         return False
-
-    def correctMatch(self, chain, release, media, quality):
-        log.info("Checking if '%s' is valid", release['name'])
-        log.info2('Release parsed as: %s', chain.info)
-
-        if not fireEvent('matcher.correct_quality', chain, quality, self.quality_map, single = True):
-            log.info('Wrong: %s, quality does not match', release['name'])
-            return False
-
-        if not fireEvent('matcher.correct_identifier', chain, media):
-            log.info('Wrong: %s, identifier does not match', release['name'])
-            return False
-
-        if not fireEvent('matcher.correct_title', chain, media):
-            log.info("Wrong: '%s', undetermined naming.", (' '.join(chain.info['show_name'])))
-            return False
-
-        return True
 
     def getLibraries(self, library):
         if 'related_libraries' not in library:
