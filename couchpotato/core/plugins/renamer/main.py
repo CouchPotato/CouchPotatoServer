@@ -931,7 +931,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                     fireEvent('download.remove_failed', release_download, single = True)
 
                     if self.conf('next_on_failed'):
-                		fireEvent('movie.searcher.try_next_release', media_id = rel.movie_id)
+                        fireEvent('movie.searcher.try_next_release', media_id = rel.movie_id)
 
                 elif release_download['status'] == 'completed':
                     log.info('Download of %s completed!', release_download['name'])
