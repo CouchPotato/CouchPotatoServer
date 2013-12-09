@@ -1,3 +1,4 @@
+from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import simplifyString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
@@ -6,6 +7,15 @@ log = CPLog(__name__)
 
 
 class MatcherBase(Plugin):
+    type = None
+
+    def __init__(self):
+        if self.type:
+            addEvent('%s.matcher.correct' % self.type, self.correct)
+
+    def correct(self, chain, release, media, quality):
+        raise NotImplementedError()
+
     def flattenInfo(self, info):
         flat_info = {}
 

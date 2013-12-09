@@ -193,7 +193,7 @@ class ShowSearcher(Plugin):
         if identifier['season']:
             title += ' S%02d' % identifier['season']
 
-            if identifier['episode']:
+            if identifier.get('episode'):
                 title += 'E%02d' % identifier['episode']
 
         return title

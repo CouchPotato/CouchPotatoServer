@@ -2,14 +2,18 @@ from couchpotato import CPLog
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.variable import dictIsSubset, tryInt, toIterable
 from couchpotato.core.media._base.matcher.base import MatcherBase
+from couchpotato.core.providers.base import MultiProvider
 
 log = CPLog(__name__)
 
 
-class ShowMatcher(MatcherBase):
+class ShowMatcher(MultiProvider):
 
-    type = ['show', 'season', 'episode']
+    def getTypes(self):
+        return [Season, Episode]
 
+
+class Base(MatcherBase):
     # TODO come back to this later, think this could be handled better, this is starting to get out of hand....
     quality_map = {
         'bluray_1080p': {'resolution': ['1080p'], 'source': ['bluray']},
@@ -30,11 +34,9 @@ class ShowMatcher(MatcherBase):
     }
 
     def __init__(self):
-        super(ShowMatcher, self).__init__()
+        super(Base, self).__init__()
 
-        for type in toIterable(self.type):
-            addEvent('%s.matcher.correct' % type, self.correct)
-            addEvent('%s.matcher.correct_identifier' % type, self.correctIdentifier)
+        addEvent('%s.matcher.correct_identifier' % self.type, self.correctIdentifier)
 
     def correct(self, chain, release, media, quality):
         log.info("Checking if '%s' is valid", release['name'])
@@ -44,7 +46,7 @@ class ShowMatcher(MatcherBase):
             log.info('Wrong: %s, quality does not match', release['name'])
             return False
 
-        if not fireEvent('show.matcher.correct_identifier', chain, media):
+        if not fireEvent('%s.matcher.correct_identifier' % self.type, chain, media):
             log.info('Wrong: %s, identifier does not match', release['name'])
             return False
 
@@ -55,32 +57,71 @@ class ShowMatcher(MatcherBase):
         return True
 
     def correctIdentifier(self, chain, media):
-        required_id = fireEvent('library.identifier', media['library'], single = True)
+        raise NotImplementedError()
 
+    def getChainIdentifier(self, chain):
         if 'identifier' not in chain.info:
+            return None
+
+        identifier = self.flattenInfo(chain.info['identifier'])
+
+        # Try cast values to integers
+        for key, value in identifier.items():
+            if isinstance(value, list):
+                if len(value) <= 1:
+                    value = value[0]
+                else:
+                    log.warning('Wrong: identifier contains multiple season or episode values, unsupported')
+                    return None
+
+            identifier[key] = tryInt(value, value)
+
+        return identifier
+
+
+class Episode(Base):
+    type = 'episode'
+
+    def correctIdentifier(self, chain, media):
+        identifier = self.getChainIdentifier(chain)
+        if not identifier:
+            log.info2('Wrong: release identifier is not valid (unsupported or missing identifier)')
             return False
 
-        # TODO could be handled better?
-        if len(chain.info['identifier']) != 1:
-            return False
-        identifier = chain.info['identifier'][0]
-
-        # TODO air by date episodes
-
-        # TODO this should support identifiers with characters 'a', 'b', etc..
-        for k, v in identifier.items():
-            identifier[k] = tryInt(v, None)
-
+        # TODO - Parse episode ranges from identifier to determine if they are multi-part episodes
         if any([x in identifier for x in ['episode_from', 'episode_to']]):
             log.info2('Wrong: releases with identifier ranges are not supported yet')
             return False
 
-        # 'episode' is required in identifier for subset matching
-        if 'episode' not in identifier:
-            identifier['episode'] = None
+        required = fireEvent('library.identifier', media['library'], single = True)
 
-        if not dictIsSubset(required_id, identifier):
-            log.info2('Wrong: required identifier %s does not match release identifier %s', (str(required_id), str(identifier)))
+        # TODO - Support air by date episodes
+        # TODO - Support episode parts
+
+        if identifier != required:
+            log.info2('Wrong: required identifier (%s) does not match release identifier (%s)', (required, identifier))
+            return False
+
+        return True
+
+class Season(Base):
+    type = 'season'
+
+    def correctIdentifier(self, chain, media):
+        identifier = self.getChainIdentifier(chain)
+        if not identifier:
+            log.info2('Wrong: release identifier is not valid (unsupported or missing identifier)')
+            return False
+
+        # TODO - Parse episode ranges from identifier to determine if they are season packs
+        if any([x in identifier for x in ['episode_from', 'episode_to']]):
+            log.info2('Wrong: releases with identifier ranges are not supported yet')
+            return False
+
+        required = fireEvent('library.identifier', media['library'], single = True)
+
+        if identifier != required:
+            log.info2('Wrong: required identifier (%s) does not match release identifier (%s)', (required, identifier))
             return False
 
         return True
