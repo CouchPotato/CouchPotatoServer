@@ -73,3 +73,29 @@ class Bluray(Automation, RSS):
                     movies.append(imdb['imdb'])
 
         return movies
+
+
+    def getChartList(self):
+        # Nearly identical to 'getIMDBids', but we don't care about minimalMovie and return all movie data (not just id)
+        movie_list = {'name': 'Blu-ray.com - New Releases','list': []}
+        max_items = int(self.conf('max_items', section='charts', default=5))
+        rss_movies = self.getRSSData(self.rss_url)
+
+        for movie in rss_movies:
+            name = self.getTextElement(movie, 'title').lower().split('blu-ray')[0].strip('(').rstrip()
+            year = self.getTextElement(movie, 'description').split('|')[1].strip('(').strip()
+
+            if not name.find('/') == -1: # make sure it is not a double movie release
+                continue
+
+            movie = self.search(name, year)
+
+            if movie:
+                movie_list['list'].append( movie )
+                if len(movie_list['list']) >= max_items:
+                    break
+
+        if not movie_list['list']:
+            return
+
+        return [ movie_list ]
