@@ -74,6 +74,8 @@ class ShowSearcher(Plugin):
         fireEvent('notify.frontend', type = 'show.searcher.started.%s' % media['id'], data = True, message = 'Searching for "%s"' % default_title)
 
         ret = False
+        has_better_quality = None
+
         for quality_type in media['profile']['types']:
             # TODO check air date?
             #if not self.conf('always_search') and not self.couldBeReleased(quality_type['quality']['identifier'] in pre_releases, release_dates, movie['library']['year']):
@@ -128,7 +130,7 @@ class ShowSearcher(Plugin):
 
         if len(too_early_to_search) > 0:
             log.info2('Too early to search for %s, %s', (too_early_to_search, default_title))
-        elif media['type'] == 'season' and not ret:
+        elif media['type'] == 'season' and not ret and has_better_quality is 0:
             # If nothing was found, start searching for episodes individually
             log.info('No season pack found, starting individual episode search')
 
