@@ -1,45 +1,50 @@
 var DerefererBase = new Class({
 
-        Implements: [Events],
+	Implements: [Events],
 
-        initialize: function(){
-                var self = this;
+	initialize: function () {
+		var self = this;
 
-                App.addEvent('load', self.info.bind(self, 2000))
-                App.addEvent('unload', function(){
-                        if(self.timer)
-                                clearTimeout(self.timer);
-                });
-        },
+		App.on('dereferer.update_config', self.setConfig.bind(self));
+	},
 
-        info: function(timeout){
-                var self = this;
+	getConfigFromApi: function () {
+		var self = this;
 
-                if(self.timer) clearTimeout(self.timer);
+		Api.request('dereferer.settings', {
+			'onComplete': function (json) {
+				self.config = json;
+			}
+		});
+	},
 
-                self.timer = setTimeout(function(){
-                        Api.request('dereferer.info', {
-                                'onComplete': function(json){
-                                        self.json = json;
-                                        self.fireEvent('loaded', [json]);
-                                }
-                        })
-                }, (timeout || 0))
+	setConfig: function (notification) {
+		var self = this;
 
-        },
+		self.config = notification.data;
+	},
 
-    getURL: function(target) {
-        var url = target;
-        if (this.json.enabled) {
-            url = this.json.service_url + target;
-        }
 
-        return url;
-    },
+	getURL: function (target) {
+		var url = target;
+		var self = this;
 
-        getInfo: function(){
-                return this.json;
-        }
+		if (self.config.enabled) {
+			url = self.config.service_url + target;
+		}
+
+		return url;
+	},
+
+	getInfo: function () {
+		var self = this;
+
+		return self.config;
+	}
 });
 
 var Dereferer = new DerefererBase();
+
+window.addEvent('load', function () {
+	Dereferer.getConfigFromApi();
+});
