@@ -826,10 +826,11 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         try:
             for rel in rels:
                 rel_dict = rel.to_dict({'info': {}})
-                if rel_dict['info'].get('download_id'):
+                if rel_dict['info'].get('download_id') and rel_dict['info'].get('download_downloader'):
                     download_ids.append({'id': rel_dict['info']['download_id'], 'downloader': rel_dict['info']['download_downloader']})
         except:
             log.error('Error getting download IDs from database')
+            self.checking_snatched = False
             return False
 
         release_downloads = fireEvent('download.status', download_ids, merge = True)
