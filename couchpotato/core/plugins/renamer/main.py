@@ -857,7 +857,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                     continue
 
                 # Check if download ID is available
-                if not rel_dict['info'].get('download_id'):
+                if not rel_dict['info'].get('download_id') or not rel_dict['info'].get('download_downloader'):
                     log.debug('Download status functionality is not implemented for downloader (%s) of release %s.', (rel_dict['info'].get('download_downloader', 'unknown'), rel_dict['info']['name']))
                     scan_required = True
 
