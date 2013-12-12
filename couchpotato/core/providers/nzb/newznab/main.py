@@ -10,6 +10,7 @@ from urllib2 import HTTPError
 from urlparse import urlparse
 import time
 import traceback
+import urllib2
 
 log = CPLog(__name__)
 
@@ -159,7 +160,15 @@ class Newznab(NZBProvider, RSS):
                 return 'try_next'
 
         try:
-            data = self.urlopen(url, show_error = False)
+            # Get final redirected url
+            log.debug('Checking %s for redirects.', url)
+            req = urllib2.Request(url)
+            res = urllib2.urlopen(req)
+            finalurl = res.geturl()
+            if finalurl != url:
+                log.debug('Redirect url used: %s', finalurl)
+
+            data = self.urlopen(finalurl, show_error = False)
             self.limits_reached[host] = False
             return data
         except HTTPError, e:
