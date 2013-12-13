@@ -16,7 +16,12 @@ from caper.helpers import xrange_six
 
 
 class CaperClosure(object):
-    def __init__(self, value):
+    __key__ = 'closure'
+
+    def __init__(self, index, value):
+        #: :type: int
+        self.index = index
+
         #: :type: str
         self.value = value
 
@@ -28,9 +33,20 @@ class CaperClosure(object):
         #: :type: list of CaperFragment
         self.fragments = []
 
+    def __str__(self):
+        return "<CaperClosure value: %s" % repr(self.value)
+
+    def __repr__(self):
+        return self.__str__()
+
 
 class CaperFragment(object):
-    def __init__(self):
+    __key__ = 'fragment'
+
+    def __init__(self, closure=None):
+        #: :type: CaperClosure
+        self.closure = closure
+
         #: :type: str
         self.value = ""
 
@@ -73,3 +89,36 @@ class CaperFragment(object):
 
     def take_right(self, count, include_self=True):
         return self.take('right', count, include_self)
+
+    def __str__(self):
+        return "<CaperFragment value: %s" % repr(self.value)
+
+    def __repr__(self):
+        return self.__str__()
+
+
+class CaptureMatch(object):
+    def __init__(self, tag, step, success=False, weight=None, result=None, num_fragments=1):
+        #: :type: bool
+        self.success = success
+
+        #: :type: float
+        self.weight = weight
+
+        #: :type: dict or str
+        self.result = result
+
+        #: :type: int
+        self.num_fragments = num_fragments
+
+        #: :type: str
+        self.tag = tag
+
+        #: :type: CaptureStep
+        self.step = step
+
+    def __str__(self):
+        return "<CaperMatch result: %s>" % repr(self.result)
+
+    def __repr__(self):
+        return self.__str__()

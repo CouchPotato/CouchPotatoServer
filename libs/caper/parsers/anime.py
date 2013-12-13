@@ -75,8 +75,8 @@ class AnimeParser(Parser):
             .execute(once=True)
 
         self.capture_fragment('show_name', single=False)\
-            .until(value__re='identifier')\
-            .until(value__re='video')\
+            .until_fragment(value__re='identifier')\
+            .until_fragment(value__re='video')\
             .execute()
 
         self.capture_fragment('identifier', regex='identifier') \

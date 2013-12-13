@@ -38,6 +38,35 @@ class Base(NZBProvider, RSS):
             enclosure = self.getElement(nzb, 'enclosure').attrib
             nzbindex_id = int(self.getTextElement(nzb, "link").split('/')[4])
 
+            title = self.getTextElement(nzb, "title")
+
+            match = fireEvent('matcher.parse', title, parser='usenet', single = True)
+            if not match.chains:
+                log.info('Unable to parse release with title "%s"', title)
+                continue
+
+            # TODO should we consider other lower-weight chains here?
+            info = fireEvent('matcher.flatten_info', match.chains[0].info, single = True)
+
+            release_name = fireEvent('matcher.construct_from_raw', info.get('release_name'), single = True)
+
+            file_name = info.get('detail', {}).get('file_name')
+            file_name = file_name[0] if file_name else None
+
+            title = release_name or file_name
+
+            # Strip extension from parsed title (if one exists)
+            ext_pos = title.rfind('.')
+
+            # Assume extension if smaller than 4 characters
+            # TODO this should probably be done a better way
+            if len(title[ext_pos + 1:]) <= 4:
+                title = title[:ext_pos]
+
+            if not title:
+                log.info('Unable to find release name from match')
+                continue
+
             try:
                 description = self.getTextElement(nzb, "description")
             except:
@@ -52,7 +81,7 @@ class Base(NZBProvider, RSS):
 
             results.append({
                 'id': nzbindex_id,
-                'name': self.getTextElement(nzb, "title"),
+                'name': title,
                 'age': self.calculateAge(int(time.mktime(parse(self.getTextElement(nzb, "pubDate")).timetuple()))),
                 'size': tryInt(enclosure['length']) / 1024 / 1024,
                 'url': enclosure['url'],
@@ -74,7 +103,7 @@ class Base(NZBProvider, RSS):
 
 class Movie(MovieProvider, Base):
 
-    def buildUrl(self, media):
+    def buildUrl(self, media, quality):
         title = fireEvent('searcher.get_search_title', media['library'], single = True)
         year =  media['library']['year']
 

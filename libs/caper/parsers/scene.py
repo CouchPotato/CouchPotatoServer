@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from logr import Logr
+from caper import FragmentMatcher
 from caper.parsers.base import Parser
 from caper.result import CaperFragmentNode
 
@@ -22,8 +23,10 @@ PATTERN_GROUPS = [
         (1.0, [
             # S01E01-E02
             ('^S(?P<season>\d+)E(?P<episode_from>\d+)$', '^E(?P<episode_to>\d+)$'),
-            # S03 E01 to E08
-            ('^S(?P<season>\d+)$', '^E(?P<episode_from>\d+)$', '^to$', '^E(?P<episode_to>\d+)$'),
+            # 'S03 E01 to E08' or 'S03 E01 - E09'
+            ('^S(?P<season>\d+)$', '^E(?P<episode_from>\d+)$', '^(to|-)$', '^E(?P<episode_to>\d+)$'),
+            # 'E01 to E08' or 'E01 - E09'
+            ('^E(?P<episode_from>\d+)$', '^(to|-)$', '^E(?P<episode_to>\d+)$'),
 
             # S01-S03
             ('^S(?P<season_from>\d+)$', '^S(?P<season_to>\d+)$'),
@@ -58,6 +61,9 @@ PATTERN_GROUPS = [
             # Part.3
             # Part.1.and.Part.3
             ('^Part$', '(?P<part>\d+)'),
+
+            r'(?P<extra>Special)',
+            r'(?P<country>NZ|AU|US|UK)'
         ]),
         (0.8, [
             # 100 - 1899, 2100 - 9999 (skips 1900 to 2099 - so we don't get years my mistake)
@@ -69,6 +75,7 @@ PATTERN_GROUPS = [
             r'^(?P<season>([1-9])|([1-9][0-9]))(?P<episode>\d{2})$'
         ])
     ]),
+
     ('video', [
         r'(?P<aspect>FS|WS)',
 
@@ -152,14 +159,23 @@ PATTERN_GROUPS = [
 
 
 class SceneParser(Parser):
+    matcher = None
+
     def __init__(self, debug=False):
-        super(SceneParser, self).__init__(PATTERN_GROUPS, debug)
+        if not SceneParser.matcher:
+            SceneParser.matcher = FragmentMatcher(PATTERN_GROUPS)
+            Logr.info("Fragment matcher for %s created", self.__class__.__name__)
+
+        super(SceneParser, self).__init__(SceneParser.matcher, debug)
 
     def capture_group(self, fragment):
-        if fragment.left_sep == '-' and not fragment.right:
-            return fragment.value
+        if fragment.closure.index + 1 != len(self.closures):
+            return None
 
-        return None
+        if fragment.left_sep != '-' or fragment.right:
+            return None
+
+        return fragment.value
 
     def run(self, closures):
         """
@@ -169,19 +185,19 @@ class SceneParser(Parser):
         self.setup(closures)
 
         self.capture_fragment('show_name', single=False)\
-            .until(fragment__re='identifier')\
-            .until(fragment__re='video') \
-            .until(fragment__re='dvd') \
-            .until(fragment__re='audio') \
-            .until(fragment__re='scene') \
+            .until_fragment(node__re='identifier')\
+            .until_fragment(node__re='video')\
+            .until_fragment(node__re='dvd')\
+            .until_fragment(node__re='audio')\
+            .until_fragment(node__re='scene')\
             .execute()
 
         self.capture_fragment('identifier', regex='identifier', single=False)\
-            .capture_fragment('video', regex='video', single=False) \
-            .capture_fragment('dvd', regex='dvd', single=False) \
-            .capture_fragment('audio', regex='audio', single=False) \
-            .capture_fragment('scene', regex='scene', single=False) \
-            .until(left_sep__eq='-', right__eq=None)\
+            .capture_fragment('video', regex='video', single=False)\
+            .capture_fragment('dvd', regex='dvd', single=False)\
+            .capture_fragment('audio', regex='audio', single=False)\
+            .capture_fragment('scene', regex='scene', single=False)\
+            .until_fragment(left_sep__eq='-', right__eq=None)\
             .execute()
 
         self.capture_fragment('group', func=self.capture_group)\
@@ -206,7 +222,9 @@ class SceneParser(Parser):
                 Logr.debug(head[0].closure.value)
 
             for node in head:
-                Logr.debug('\t' + str(node).ljust(55) + '\t' + str(node.weight) + '\t' + str(node.match))
+                Logr.debug('\t' + str(node).ljust(55) + '\t' + (
+                    str(node.match.weight) + '\t' + str(node.match.result)
+                ) if node.match else '')
 
             if len(head) > 0 and head[0].parent:
                 self.print_tree([head[0].parent])

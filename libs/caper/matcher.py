@@ -12,9 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import re
+from caper.helpers import is_list_type, update_dict, delta_seconds
+from datetime import datetime
 from logr import Logr
-from caper.helpers import is_list_type, update_dict
+import re
 
 
 class FragmentMatcher(object):
@@ -24,6 +25,9 @@ class FragmentMatcher(object):
         self.construct_patterns(pattern_groups)
 
     def construct_patterns(self, pattern_groups):
+        compile_start = datetime.now()
+        compile_count = 0
+
         for group_name, patterns in pattern_groups:
             if group_name not in self.regex:
                 self.regex[group_name] = []
@@ -54,17 +58,20 @@ class FragmentMatcher(object):
                                 value = value[0]
 
                         result.append(re.compile(value, re.IGNORECASE))
+                        compile_count += 1
 
                     weight_patterns.append(tuple(result))
 
                 self.regex[group_name].append((weight, weight_patterns))
+
+        Logr.info("Compiled %s patterns in %ss", compile_count, delta_seconds(datetime.now() - compile_start))
 
     def find_group(self, name):
         for group_name, weight_groups in self.regex.items():
             if group_name and group_name == name:
                 return group_name, weight_groups
 
-        return None
+        return None, None
 
     def value_match(self, value, group_name=None, single=True):
         result = None
