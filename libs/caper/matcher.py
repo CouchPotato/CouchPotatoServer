@@ -71,7 +71,7 @@ class FragmentMatcher(object):
             if group_name and group_name == name:
                 return group_name, weight_groups
 
-        return None
+        return None, None
 
     def value_match(self, value, group_name=None, single=True):
         result = None

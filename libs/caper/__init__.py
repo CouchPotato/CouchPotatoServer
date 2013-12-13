@@ -17,9 +17,10 @@ from caper.matcher import FragmentMatcher
 from caper.objects import CaperFragment, CaperClosure
 from caper.parsers.anime import AnimeParser
 from caper.parsers.scene import SceneParser
+from caper.parsers.usenet import UsenetParser
 
 
-__version_info__ = ('0', '2', '9')
+__version_info__ = ('0', '3', '1')
 __version_branch__ = 'master'
 
 __version__ = "%s%s" % (
@@ -28,8 +29,9 @@ __version__ = "%s%s" % (
 )
 
 
-CL_START_CHARS = ['(', '[']
-CL_END_CHARS = [')', ']']
+CL_START_CHARS = ['(', '[', '<', '>']
+CL_END_CHARS = [')', ']', '<', '>']
+CL_END_STRINGS = [' - ']
 
 STRIP_START_CHARS = ''.join(CL_START_CHARS)
 STRIP_END_CHARS = ''.join(CL_END_CHARS)
@@ -47,8 +49,9 @@ class Caper(object):
         self.debug = debug
 
         self.parsers = {
+            'anime': AnimeParser,
             'scene': SceneParser,
-            'anime': AnimeParser
+            'usenet': UsenetParser
         }
 
     def _closure_split(self, name):
@@ -62,7 +65,7 @@ class Caper(object):
 
         def end_closure(closures, buf):
             buf = buf.strip(STRIP_CHARS)
-            if len(buf) < 1:
+            if len(buf) < 2:
                 return
 
             cur = CaperClosure(len(closures), buf)
@@ -76,6 +79,7 @@ class Caper(object):
         state = CL_START
         buf = ""
         for x, ch in enumerate(name):
+            # Check for start characters
             if state == CL_START and ch in CL_START_CHARS:
                 end_closure(closures, buf)
 
@@ -85,7 +89,14 @@ class Caper(object):
             buf += ch
 
             if state == CL_END and ch in CL_END_CHARS:
+                # End character found, create the closure
                 end_closure(closures, buf)
+
+                state = CL_START
+                buf = ""
+            elif state == CL_START and buf[-3:] in CL_END_STRINGS:
+                # End string found, create the closure
+                end_closure(closures, buf[:-3])
 
                 state = CL_START
                 buf = ""
@@ -173,6 +184,9 @@ class Caper(object):
         # Print closures
         for closure in closures:
             Logr.debug("closure [%s]", closure.value)
+
+            for fragment in closure.fragments:
+                Logr.debug("\tfragment [%s]", fragment.value)
 
         if parser not in self.parsers:
             raise ValueError("Unknown parser")

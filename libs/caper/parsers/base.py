@@ -14,7 +14,7 @@
 
 from caper import FragmentMatcher
 from caper.group import CaptureGroup
-from caper.result import CaperResult, CaperClosureNode
+from caper.result import CaperResult, CaperClosureNode, CaperRootNode
 from logr import Logr
 
 
@@ -52,7 +52,7 @@ class Parser(object):
         self.reset()
         self.closures = closures
 
-        self.result.heads = [CaperClosureNode(closures[0])]
+        self.result.heads = [CaperRootNode(closures[0])]
 
     def run(self, closures):
         """
@@ -65,18 +65,20 @@ class Parser(object):
     # Capture Methods
     #
 
-    def capture_fragment(self, tag, regex=None, func=None, single=True):
+    def capture_fragment(self, tag, regex=None, func=None, single=True, **kwargs):
         return CaptureGroup(self, self.result).capture_fragment(
             tag,
             regex=regex,
             func=func,
-            single=single
+            single=single,
+            **kwargs
         )
 
-    def capture_closure(self, tag, regex=None, func=None, single=True):
+    def capture_closure(self, tag, regex=None, func=None, single=True, **kwargs):
         return CaptureGroup(self, self.result).capture_closure(
             tag,
             regex=regex,
             func=func,
-            single=single
+            single=single,
+            **kwargs
         )
