@@ -16,6 +16,9 @@ class Matcher(MatcherBase):
         addEvent('matcher.parse', self.parse)
         addEvent('matcher.match', self.match)
 
+        addEvent('matcher.flatten_info', self.flattenInfo)
+        addEvent('matcher.construct_from_raw', self.constructFromRaw)
+
         addEvent('matcher.correct_title', self.correctTitle)
         addEvent('matcher.correct_quality', self.correctQuality)
 

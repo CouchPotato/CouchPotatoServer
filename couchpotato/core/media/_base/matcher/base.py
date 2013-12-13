@@ -17,16 +17,42 @@ class MatcherBase(Plugin):
         raise NotImplementedError()
 
     def flattenInfo(self, info):
-        flat_info = {}
+        # Flatten dictionary of matches (chain info)
+        if isinstance(info, dict):
+            return dict([(key, self.flattenInfo(value)) for key, value in info.items()])
+
+        # Flatten matches
+        result = None
 
         for match in info:
-            for key, value in match.items():
-                if key not in flat_info:
-                    flat_info[key] = []
+            if isinstance(match, dict):
+                if result is None:
+                    result = {}
 
-                flat_info[key].append(value)
+                for key, value in match.items():
+                    if key not in result:
+                        result[key] = []
 
-        return flat_info
+                    result[key].append(value)
+            else:
+                if result is None:
+                    result = []
+
+                result.append(match)
+
+        return result
+
+    def constructFromRaw(self, match):
+        if not match:
+            return None
+
+        parts = [
+            ''.join([
+                y for y in x[1:] if y
+            ]) for x in match
+        ]
+
+        return ''.join(parts)[:-1].strip()
 
     def simplifyValue(self, value):
         if not value:
