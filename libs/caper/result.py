@@ -20,7 +20,7 @@ GROUP_MATCHES = ['identifier']
 
 
 class CaperNode(object):
-    def __init__(self, closure, parent=None, tag=None, weight=None, match=None):
+    def __init__(self, closure, parent=None, match=None):
         """
         :type parent: CaperNode
         :type weight: float
@@ -28,41 +28,77 @@ class CaperNode(object):
 
         #: :type: caper.objects.CaperClosure
         self.closure = closure
+
         #: :type: CaperNode
         self.parent = parent
-        #: :type: str
-        self.tag = tag
-        #: :type: float
-        self.weight = weight
-        #: :type: dict
+
+        #: :type: CaptureMatch
         self.match = match
+
         #: :type: list of CaptureGroup
         self.finished_groups = []
 
     def next(self):
         raise NotImplementedError()
 
+    def captured(self):
+        cur = self
 
-class CaperClosureNode(CaperNode):
-    def __init__(self, closure, parent=None, tag=None, weight=None, match=None):
+        if cur.match:
+            yield cur.match.tag, cur.match.result
+
+        while cur.parent:
+            cur = cur.parent
+
+            if cur.match:
+                yield cur.match.tag, cur.match.result
+
+
+class CaperRootNode(CaperNode):
+    def __init__(self, closure):
         """
         :type closure: caper.objects.CaperClosure or list of caper.objects.CaperClosure
         """
-        super(CaperClosureNode, self).__init__(closure, parent, tag, weight, match)
+        super(CaperRootNode, self).__init__(closure)
 
     def next(self):
-        if self.closure and len(self.closure.fragments) > 0:
+        return self.closure
+
+
+class CaperClosureNode(CaperNode):
+    def __init__(self, closure, parent=None, match=None):
+        """
+        :type closure: caper.objects.CaperClosure or list of caper.objects.CaperClosure
+        """
+        super(CaperClosureNode, self).__init__(closure, parent, match)
+
+    def next(self):
+        if not self.closure:
+            return None
+
+        if self.match:
+            # Jump to next closure if we have a match
+            return self.closure.right
+        elif len(self.closure.fragments) > 0:
+            # Otherwise parse the fragments
             return self.closure.fragments[0]
+
         return None
+
+    def __str__(self):
+        return "<CaperClosureNode match: %s>" % repr(self.match)
+
+    def __repr__(self):
+        return self.__str__()
 
 
 class CaperFragmentNode(CaperNode):
-    def __init__(self, closure, fragments, parent=None, tag=None, weight=None, match=None):
+    def __init__(self, closure, fragments, parent=None, match=None):
         """
         :type closure: caper.objects.CaperClosure
         :type fragments: list of caper.objects.CaperFragment
         """
-        super(CaperFragmentNode, self).__init__(closure, parent, tag, weight, match)
+        super(CaperFragmentNode, self).__init__(closure, parent, match)
 
         #: :type: caper.objects.CaperFragment or list of caper.objects.CaperFragment
         self.fragments = fragments
@@ -75,6 +111,12 @@ class CaperFragmentNode(CaperNode):
             return self.closure.right
 
         return None
+
+    def __str__(self):
+        return "<CaperFragmentNode match: %s>" % repr(self.match)
+
+    def __repr__(self):
+        return self.__str__()
 
 
 class CaperResult(object):
@@ -122,15 +164,8 @@ class CaperResult(object):
                 result.append(node_chain)
                 continue
 
-            # Skip over closure nodes
-            if type(node) is CaperClosureNode:
-                result.extend(self.combine_chain(node.parent, node_chain))
-
-            # Parse fragment matches
-            if type(node) is CaperFragmentNode:
-                node_chain.update(node)
-
-                result.extend(self.combine_chain(node.parent, node_chain))
+            node_chain.update(node)
+            result.extend(self.combine_chain(node.parent, node_chain))
 
         return result
 
@@ -145,17 +180,23 @@ class CaperResultChain(object):
         self.weights = []
 
     def update(self, subject):
-        if subject.weight is None:
+        """
+        :type subject: CaperFragmentNode
+        """
+        if not subject.match or not subject.match.success:
             return
 
-        self.num_matched += len(subject.fragments) if subject.fragments is not None else 0
-        self.weights.append(subject.weight)
+        # TODO this should support closure nodes
+        if type(subject) is CaperFragmentNode:
+            self.num_matched += len(subject.fragments) if subject.fragments is not None else 0
+
+        self.weights.append(subject.match.weight)
 
         if subject.match:
-            if subject.tag not in self.info:
-                self.info[subject.tag] = []
+            if subject.match.tag not in self.info:
+                self.info[subject.match.tag] = []
 
-            self.info[subject.tag].insert(0, subject.match)
+            self.info[subject.match.tag].insert(0, subject.match.result)
 
     def finish(self):
         self.weight = sum(self.weights) / len(self.weights)

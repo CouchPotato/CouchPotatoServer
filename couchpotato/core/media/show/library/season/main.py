@@ -26,11 +26,8 @@ class SeasonLibraryPlugin(LibraryBase):
         if library.get('type') != 'season':
             return
 
-        season_num = tryInt(library['season_number'], None)
-
         return {
-            'season': season_num,
-            'episode': None
+            'season': tryInt(library['season_number'], None)
         }
 
     def add(self, attrs = {}, update_after = True):
