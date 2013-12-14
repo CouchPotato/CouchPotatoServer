@@ -54,6 +54,10 @@ def sp(path, *args):
     if not path or len(path) == 0:
         return path
 
+    # convert windows path (from remote box) to *nix path
+    if os.path.sep == '/' and '\\' in path:
+        path = '/' + path.replace(':', '').replace('\\', '/')
+
     path = os.path.normcase(os.path.normpath(ss(path, *args)))
 
     if path != os.path.sep:
