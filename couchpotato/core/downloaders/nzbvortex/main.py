@@ -8,9 +8,11 @@ from uuid import uuid4
 import hashlib
 import httplib
 import json
+import os
 import socket
 import ssl
 import sys
+import time
 import traceback
 import urllib2
 
@@ -32,35 +34,37 @@ class NZBVortex(Downloader):
             nzb_filename = self.createFileName(data, filedata, media)
             self.call('nzb/add', params = {'file': (nzb_filename, filedata)}, multipart = True)
 
+            time.sleep(10)
             raw_statuses = self.call('nzb')
-            nzb_id = [nzb['id'] for nzb in raw_statuses.get('nzbs', []) if nzb['name'] == nzb_filename][0]
+            nzb_id = [nzb['id'] for nzb in raw_statuses.get('nzbs', []) if os.path.basename(item['nzbFileName']) == nzb_filename][0]
             return self.downloadReturnId(nzb_id)
         except:
             log.error('Something went wrong sending the NZB file: %s', traceback.format_exc())
             return False
 
-    def getAllDownloadStatus(self):
+    def getAllDownloadStatus(self, ids):
 
         raw_statuses = self.call('nzb')
 
         release_downloads = ReleaseDownloadList(self)
         for nzb in raw_statuses.get('nzbs', []):
+            if nzb['id'] in ids:
 
-            # Check status
-            status = 'busy'
-            if nzb['state'] == 20:
-                status = 'completed'
-            elif nzb['state'] in [21, 22, 24]:
-                status = 'failed'
-
-            release_downloads.append({
-                'id': nzb['id'],
-                'name': nzb['uiTitle'],
-                'status': status,
-                'original_status': nzb['state'],
-                'timeleft':-1,
-                'folder': sp(nzb['destinationPath']),
-            })
+                # Check status
+                status = 'busy'
+                if nzb['state'] == 20:
+                    status = 'completed'
+                elif nzb['state'] in [21, 22, 24]:
+                    status = 'failed'
+    
+                release_downloads.append({
+                    'id': nzb['id'],
+                    'name': nzb['uiTitle'],
+                    'status': status,
+                    'original_status': nzb['state'],
+                    'timeleft':-1,
+                    'folder': sp(nzb['destinationPath']),
+                })
 
         return release_downloads
 

@@ -51,10 +51,10 @@ class Blackhole(Downloader):
                         with open(full_path, 'wb') as f:
                             f.write(filedata)
                         os.chmod(full_path, Env.getPermission('file'))
-                        return True
+                        return self.downloadReturnId('')
                     else:
                         log.info('File %s already exists.', full_path)
-                        return True
+                        return self.downloadReturnId('')
 
                 except:
                     log.error('Failed to download to blackhole %s', traceback.format_exc())

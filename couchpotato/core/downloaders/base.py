@@ -57,13 +57,18 @@ class Downloader(Provider):
             return
         return self.download(data = data, media = media, filedata = filedata)
 
-    def _getAllDownloadStatus(self):
+    def _getAllDownloadStatus(self, download_ids):
         if self.isDisabled(manual = True, data = {}):
             return
 
-        return self.getAllDownloadStatus()
+        ids = [download_id['id'] for download_id in download_ids if download_id['downloader'] == self.getName()]
 
-    def getAllDownloadStatus(self):
+        if ids:
+            return self.getAllDownloadStatus(ids)
+        else:
+            return
+
+    def getAllDownloadStatus(self, ids):
         return
 
     def _removeFailed(self, release_download):

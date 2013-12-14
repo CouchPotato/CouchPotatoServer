@@ -64,7 +64,7 @@ class Sabnzbd(Downloader):
             log.error('Error getting data from SABNZBd: %s', sab_data)
             return False
 
-    def getAllDownloadStatus(self):
+    def getAllDownloadStatus(self, ids):
 
         log.debug('Checking SABnzbd download status.')
 
@@ -91,35 +91,36 @@ class Sabnzbd(Downloader):
 
         # Get busy releases
         for nzb in queue.get('slots', []):
-            status = 'busy'
-            if 'ENCRYPTED / ' in nzb['filename']:
-                status = 'failed'
-
-            release_downloads.append({
-                'id': nzb['nzo_id'],
-                'name': nzb['filename'],
-                'status': status,
-                'original_status': nzb['status'],
-                'timeleft': nzb['timeleft'] if not queue['paused'] else -1,
-            })
+            if nzb['nzo_id'] in ids:
+                status = 'busy'
+                if 'ENCRYPTED / ' in nzb['filename']:
+                    status = 'failed'
+    
+                release_downloads.append({
+                    'id': nzb['nzo_id'],
+                    'name': nzb['filename'],
+                    'status': status,
+                    'original_status': nzb['status'],
+                    'timeleft': nzb['timeleft'] if not queue['paused'] else -1,
+                })
 
         # Get old releases
         for nzb in history.get('slots', []):
-
-            status = 'busy'
-            if nzb['status'] == 'Failed' or (nzb['status'] == 'Completed' and nzb['fail_message'].strip()):
-                status = 'failed'
-            elif nzb['status'] == 'Completed':
-                status = 'completed'
-
-            release_downloads.append({
-                'id': nzb['nzo_id'],
-                'name': nzb['name'],
-                'status': status,
-                'original_status': nzb['status'],
-                'timeleft': str(timedelta(seconds = 0)),
-                'folder': sp(os.path.dirname(nzb['storage']) if os.path.isfile(nzb['storage']) else nzb['storage']),
-            })
+            if nzb['nzo_id'] in ids:
+                status = 'busy'
+                if nzb['status'] == 'Failed' or (nzb['status'] == 'Completed' and nzb['fail_message'].strip()):
+                    status = 'failed'
+                elif nzb['status'] == 'Completed':
+                    status = 'completed'
+    
+                release_downloads.append({
+                    'id': nzb['nzo_id'],
+                    'name': nzb['name'],
+                    'status': status,
+                    'original_status': nzb['status'],
+                    'timeleft': str(timedelta(seconds = 0)),
+                    'folder': sp(os.path.dirname(nzb['storage']) if os.path.isfile(nzb['storage']) else nzb['storage']),
+                })
 
         return release_downloads
 
