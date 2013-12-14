@@ -24,26 +24,12 @@ class Base(TorrentProvider):
         'login': 'https://www.sceneaccess.eu/login',
         'login_check': 'https://www.sceneaccess.eu/inbox',
         'detail': 'https://www.sceneaccess.eu/details?id=%s',
-        'search': 'https://www.sceneaccess.eu/browse?method=2&c%d=%d',
+        'search': 'https://www.sceneaccess.eu/browse?c%d=%d',
+        'archive': 'https://www.sceneaccess.eu/archive?&c%d=%d',
         'download': 'https://www.sceneaccess.eu/%s',
     }
 
     http_time_between_calls = 1 #seconds
-
-    def _buildUrl(self, search, quality_identifier):
-
-        url = self.urls['search'] % (
-           self.getCatId(quality_identifier)[0],
-           self.getCatId(quality_identifier)[0]
-        )
-
-        arguments = tryUrlencode({
-            'search': search,
-            'method': 1,
-        })
-        url = "%s&%s" % (url, arguments)
-
-        return url
 
     def _search(self, media, quality, results):
 
@@ -112,17 +98,38 @@ class Movie(MovieProvider, Base):
     ]
 
     def buildUrl(self, media, quality):
-        return self._buildUrl(media['library']['identifier'], quality['identifier'])
+        url = self.urls['search'] % (
+           self.getCatId(quality['identifier'])[0],
+           self.getCatId(quality['identifier'])[0]
+        )
+
+        arguments = tryUrlencode({
+            'search': fireEvent('searcher.get_search_title', media['library'], include_identifier = True, single = True),
+            'method': 2,
+        })
+        query = "%s&%s" % (url, arguments)
+
+        return query
 
 class Season(SeasonProvider, Base):
 
     cat_ids = [
-        ([27], ['hdtv_720p', 'webdl_720p', 'webdl_1080p']),
-        ([17, 11], ['hdtv_sd'])
+        ([26], ['hdtv_sd', 'hdtv_720p', 'webdl_720p', 'webdl_1080p']),
     ]
 
     def buildUrl(self, media, quality):
-        return self._buildUrl(fireEvent('searcher.get_search_title', media['library'], include_identifier = True, single = True), quality['identifier'])
+        url = self.urls['archive'] % (
+           self.getCatId(quality['identifier'])[0],
+           self.getCatId(quality['identifier'])[0]
+        )
+
+        arguments = tryUrlencode({
+            'search': fireEvent('searcher.get_search_title', media['library'], include_identifier = True, single = True),
+            'method': 2,
+        })
+        query = "%s&%s" % (url, arguments)
+
+        return query
 
 class Episode(EpisodeProvider, Base):
 
@@ -132,4 +139,15 @@ class Episode(EpisodeProvider, Base):
     ]
 
     def buildUrl(self, media, quality):
-        return self._buildUrl(fireEvent('searcher.get_search_title', media['library'], include_identifier = True, single = True), quality['identifier'])
+        url = self.urls['search'] % (
+           self.getCatId(quality['identifier'])[0],
+           self.getCatId(quality['identifier'])[0]
+        )
+
+        arguments = tryUrlencode({
+            'search': fireEvent('searcher.get_search_title', media['library'], include_identifier = True, single = True),
+            'method': 2,
+        })
+        query = "%s&%s" % (url, arguments)
+
+        return query
