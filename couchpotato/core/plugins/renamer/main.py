@@ -403,13 +403,13 @@ class Renamer(Plugin):
                 remove_leftovers = True
 
                 # Add it to the wanted list before we continue
-                if len(library_ent.media) == 0:
+                if len(library_ent.movies) == 0:
                     profile = db.query(Profile).filter_by(core = True, label = group['meta_data']['quality']['label']).first()
                     fireEvent('movie.add', params = {'identifier': group['library']['identifier'], 'profile_id': profile.id}, search_after = False)
                     db.expire_all()
                     library_ent = db.query(Library).filter_by(identifier = group['library']['identifier']).first()
 
-                for movie in library_ent.media:
+                for movie in library_ent.movies:
 
                     # Mark movie "done" once it's found the quality with the finish check
                     try:
@@ -820,7 +820,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                 try:
                     for rel in rels:
                         rel_dict = rel.to_dict({'info': {}})
-                        movie_dict = fireEvent('media.get', media_id = rel.media_id, single = True)
+                        movie_dict = fireEvent('media.get', media_id = rel.movie_id, single = True)
 
                         if not isinstance(rel_dict['info'], (dict)):
                             log.error('Faulty release found without any info, ignoring.')
@@ -878,7 +878,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                                     fireEvent('download.remove_failed', release_download, single = True)
 
                                     if self.conf('next_on_failed'):
-                                        fireEvent('movie.searcher.try_next_release', media_id = rel.media_id)
+                                        fireEvent('movie.searcher.try_next_release', media_id = rel.movie_id)
                                 elif release_download['status'] == 'completed':
                                     log.info('Download of %s completed!', release_download['name'])
                                     if self.statusInfoComplete(release_download):

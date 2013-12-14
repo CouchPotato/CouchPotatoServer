@@ -288,7 +288,7 @@ class Release(Plugin):
                                     value = toUnicode(download_result.get(key))
                                 )
                                 rls.info.append(rls_info)
-                        db.commit()
+                            db.commit()
 
                         log_movie = '%s (%s) in %s' % (getTitle(media['library']), media['library']['year'], rls.quality.label)
                         snatch_message = 'Snatched "%s": %s' % (data.get('name'), log_movie)

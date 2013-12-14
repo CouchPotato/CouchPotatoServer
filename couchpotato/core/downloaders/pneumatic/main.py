@@ -41,11 +41,11 @@ class Pneumatic(Downloader):
                         strm_file.write(strmContent)
                         strm_file.close()
 
-                        return True
+                        return self.downloadReturnId('')
 
                     else:
                         log.info('File %s already exists.', fullPath)
-                        return True
+                        return self.downloadReturnId('')
 
                 except:
                     log.error('Failed to download .strm: %s', traceback.format_exc())
