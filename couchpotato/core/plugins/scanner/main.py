@@ -454,7 +454,7 @@ class Scanner(Plugin):
                 data['resolution_width'] = meta.get('resolution_width', 720)
                 data['resolution_height'] = meta.get('resolution_height', 480)
                 data['audio_channels'] = meta.get('audio_channels', 2.0)
-                data['aspect'] = meta.get('resolution_width', 720) / meta.get('resolution_height', 480)
+                data['aspect'] = round(float(meta.get('resolution_width', 720)) / meta.get('resolution_height', 480), 2)
             except:
                 log.debug('Error parsing metadata: %s %s', (cur_file, traceback.format_exc()))
                 pass

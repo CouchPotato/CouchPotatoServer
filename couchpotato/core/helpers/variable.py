@@ -11,6 +11,9 @@ import sys
 
 log = CPLog(__name__)
 
+def fnEscape(pattern):
+    return pattern.replace('[','[[').replace(']','[]]').replace('[[','[[]')
+
 def link(src, dst):
     if os.name == 'nt':
         import ctypes
