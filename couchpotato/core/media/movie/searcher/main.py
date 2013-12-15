@@ -345,7 +345,13 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
     def getSearchTitle(self, library, include_identifier = False):
         if library['type'] == 'movie':
-            return getTitle(library)
+            title = getTitle(library)
+
+        # Use year as identifier
+        if include_identifier:
+            title += ' %s' % str(library['year'])
+
+        return title
 
 class SearchSetupError(Exception):
     pass
