@@ -260,7 +260,7 @@ class Release(Plugin):
         downloader_enabled = fireEvent('download.enabled', manual, data, single = True)
 
         if downloader_enabled:
-            snatched_status, done_status, active_status = fireEvent('status.get', ['snatched', 'done', 'active'], single = True)
+            snatched_status, done_status, downloaded_status, active_status = fireEvent('status.get', ['snatched', 'done', 'downloaded', 'active'], single = True)
 
             # Download release to temp
             filedata = None
@@ -297,6 +297,9 @@ class Release(Plugin):
 
                         # If renamer isn't used, mark media done
                         if not renamer_enabled:
+                            # Mark release downloaded
+                            self.updateStatus(rls.id, status = downloaded_status)
+
                             try:
                                 if media['status_id'] == active_status.get('id'):
                                     for profile_type in media['profile']['types']:
