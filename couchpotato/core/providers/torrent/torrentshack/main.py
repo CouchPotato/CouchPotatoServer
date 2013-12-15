@@ -1,39 +1,37 @@
 from bs4 import BeautifulSoup
+from couchpotato.core.event import fireEvent
 from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
+from couchpotato.core.providers.base import MultiProvider
+from couchpotato.core.providers.info.base import EpisodeProvider, SeasonProvider, MovieProvider
 from couchpotato.core.providers.torrent.base import TorrentProvider
 import traceback
 
 log = CPLog(__name__)
 
 
-class TorrentShack(TorrentProvider):
+class TorrentShack(MultiProvider):
+
+    def getTypes(self):
+        return [Movie, Season, Episode]
+
+class Base(TorrentProvider):
 
     urls = {
         'test' : 'https://torrentshack.net/',
         'login' : 'https://torrentshack.net/login.php',
         'login_check': 'https://torrentshack.net/inbox.php',
         'detail' : 'https://torrentshack.net/torrent/%s',
-        'search' : 'https://torrentshack.net/torrents.php?action=advanced&searchstr=%s&scene=%s&filter_cat[%d]=1',
+        'search' : 'https://torrentshack.net/torrents.php?action=advanced&searchstr=%s&filter_cat[%d]=1&scene=%s',
         'download' : 'https://torrentshack.net/%s',
     }
 
-    cat_ids = [
-        ([970], ['bd50']),
-        ([300], ['720p', '1080p']),
-        ([350], ['dvdr']),
-        ([400], ['brrip', 'dvdrip']),
-    ]
-
     http_time_between_calls = 1 #seconds
-    cat_backup_id = 400
 
-    def _searchOnTitle(self, title, movie, quality, results):
+    def _search(self, media, quality, results):
 
-        scene_only = '1' if self.conf('scene_only') else ''
-
-        url = self.urls['search'] % (tryUrlencode('%s %s' % (title.replace(':', ''), movie['library']['year'])), scene_only, self.getCatId(quality['identifier'])[0])
+        url = self.urls['search'] % self.buildUrl(media, quality)
         data = self.getHTMLData(url, opener = self.login_opener)
 
         if data:
@@ -76,3 +74,68 @@ class TorrentShack(TorrentProvider):
         return 'logout.php' in output.lower()
 
     loginCheckSuccess = loginSuccess
+
+    def getSceneOnly(self):
+        return '1' if self.conf('scene_only') else ''
+
+class Movie(MovieProvider, Base):
+    # TorrentShack movie search categories
+    #   Movies/x264 - 300
+    #   Movies/DVD-R - 350
+    #   Movies/XviD - 400
+    #   Full Blu-ray - 970
+    #
+    #   REMUX - 320 (not included)
+    #   Movies-HD Pack - 982 (not included)
+    #   Movies-SD Pack - 983 (not included)
+    cat_ids = [
+        ([970], ['bd50']),
+        ([300], ['720p', '1080p']),
+        ([350], ['dvdr']),
+        ([400], ['brrip', 'dvdrip']),
+    ]
+    cat_backup_id = 400
+
+    def buildUrl(self, media, quality):
+        query = (tryUrlencode('%s %s' % (fireEvent('searcher.get_search_title',
+                                                   media['library'], single = True), media['library']['year'])),
+                 self.getCatId(quality['identifier'])[0],
+                 self.getSceneOnly())
+        return query
+
+class Season(SeasonProvider, Base):
+    # TorrentShack tv season search categories
+    #   TV-SD Pack - 980
+    #   TV-HD Pack - 981
+    #   Full Blu-ray - 970
+    cat_ids = [
+        ([980], ['hdtv_sd']),
+        ([981], ['hdtv_720p', 'webdl_720p', 'webdl_1080p', 'bdrip_1080p', 'bdrip_720p', 'brrip_1080p', 'brrip_720p']),
+        ([970], ['bluray_1080p', 'bluray_720p']),
+    ]
+    cat_backup_id = 980
+
+    def buildUrl(self, media, quality):
+        query = (tryUrlencode('%s' % fireEvent('searcher.get_search_title',
+                                               media['library'], include_identifier = True, single = True)),
+                 self.getCatId(quality['identifier'])[0],
+                 self.getSceneOnly())
+        return query
+
+class Episode(EpisodeProvider, Base):
+    # TorrentShack tv episode search categories
+    #   TV/x264-HD - 600
+    #   TV/x264-SD - 620
+    #   TV/DVDrip - 700
+    cat_ids = [
+        ([600], ['hdtv_720p', 'webdl_720p', 'webdl_1080p', 'bdrip_1080p', 'bdrip_720p', 'brrip_1080p', 'brrip_720p']),
+        ([620], ['hdtv_sd'])
+    ]
+    cat_backup_id = 620
+
+    def buildUrl(self, media, quality):
+        query = (tryUrlencode('%s' % fireEvent('searcher.get_search_title',
+                                               media['library'], include_identifier = True, single = True)),
+                 self.getCatId(quality['identifier'])[0],
+                 self.getSceneOnly())
+        return query
