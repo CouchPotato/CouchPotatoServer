@@ -99,8 +99,8 @@ class Movie(MovieProvider, Base):
 
     def buildUrl(self, media, quality):
         url = self.urls['search'] % (
-           self.getCatId(quality['identifier'])[0],
-           self.getCatId(quality['identifier'])[0]
+            self.getCatId(quality['identifier'])[0],
+            self.getCatId(quality['identifier'])[0]
         )
 
         arguments = tryUrlencode({
@@ -119,8 +119,8 @@ class Season(SeasonProvider, Base):
 
     def buildUrl(self, media, quality):
         url = self.urls['archive'] % (
-           self.getCatId(quality['identifier'])[0],
-           self.getCatId(quality['identifier'])[0]
+            self.getCatId(quality['identifier'])[0],
+            self.getCatId(quality['identifier'])[0]
         )
 
         arguments = tryUrlencode({
@@ -140,8 +140,8 @@ class Episode(EpisodeProvider, Base):
 
     def buildUrl(self, media, quality):
         url = self.urls['search'] % (
-           self.getCatId(quality['identifier'])[0],
-           self.getCatId(quality['identifier'])[0]
+            self.getCatId(quality['identifier'])[0],
+            self.getCatId(quality['identifier'])[0]
         )
 
         arguments = tryUrlencode({

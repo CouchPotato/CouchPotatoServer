@@ -95,8 +95,8 @@ class Movie(MovieProvider, Base):
 
     def buildUrl(self, media):
         query = tryUrlencode({
-            'search': '%s %s' % (fireEvent('searcher.get_search_title',
-                                           media['library'], single = True), media['library']['year']),
+            'search': fireEvent('searcher.get_search_title', media['library'],
+                                include_identifier = True, single = True),
             'cat': 7 # Movie cat
         })
         return query

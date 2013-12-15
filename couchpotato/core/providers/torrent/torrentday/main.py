@@ -76,10 +76,7 @@ class Movie(MovieProvider, Base):
         ([5], ['bd50']),
     ]
     def buildUrl(self, media):
-        query = '"%s %s"' % (fireEvent('searcher.get_search_title',
-                                       media['library'], single = True), media['library']['year'])
-
-        return query
+        return fireEvent('searcher.get_search_title', media['library'], include_identifier = True, single = True)
 
 class Season(SeasonProvider, Base):
 
