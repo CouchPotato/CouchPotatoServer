@@ -82,6 +82,10 @@ class OMDBAPI(MovieProvider):
                 if tmp_movie.get(key).lower() == 'n/a':
                     del movie[key]
 
+            # Ignore series from omdbapi for now, should we use this in the future?
+            if movie.get('Type') == "series":
+                return
+
             year = tryInt(movie.get('Year', ''))
 
             actors = {}
