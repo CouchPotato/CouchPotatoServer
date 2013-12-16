@@ -32,6 +32,7 @@ class Renamer(Plugin):
                 'async': {'desc': 'Optional: Set to 1 if you dont want to fire the renamer.scan asynchronous.'},
                 'media_folder': {'desc': 'Optional: The folder of the media to scan. Keep empty for default renamer folder.'},
                 'files': {'desc': 'Optional: Provide the release files if more releases are in the same media_folder, delimited with a \'|\'. Note that no dedicated release folder is expected for releases with one file.'},
+                'base_folder': {'desc': 'Optional: The folder to find releases in. Leave empty for default folder.'},
                 'downloader' : {'desc': 'Optional: The downloader the release has been downloaded with. \'download_id\' is required with this option.'},
                 'download_id': {'desc': 'Optional: The nzb/torrent ID of the release in media_folder. \'downloader\' is required with this option.'},
                 'status': {'desc': 'Optional: The status of the release: \'completed\' (default) or \'seeding\''},
@@ -64,6 +65,7 @@ class Renamer(Plugin):
     def scanView(self, **kwargs):
 
         async = tryInt(kwargs.get('async', 0))
+        base_folder = kwargs.get('base_folder')
         media_folder = sp(kwargs.get('media_folder'))
 
         # Backwards compatibility, to be removed after a few versions :)
@@ -75,19 +77,20 @@ class Renamer(Plugin):
         files = '|'.join([sp(filename) for filename in splitString(kwargs.get('files'), '|')])
         status = kwargs.get('status', 'completed')
 
-        release_download = {'folder': media_folder} if media_folder else None
-        if release_download:
+        release_download = None
+        if not base_folder and media_folder:
+            release_download = {'folder': media_folder}
             release_download.update({'id': download_id, 'downloader': downloader, 'status': status, 'files': files} if download_id else {})
 
         fire_handle = fireEvent if not async else fireEventAsync
 
-        fire_handle('renamer.scan', release_download)
+        fire_handle('renamer.scan', base_folder = base_folder, release_download = release_download)
 
         return {
             'success': True
         }
 
-    def scan(self, release_download = None):
+    def scan(self, base_folder = None, release_download = None):
         if not release_download: release_download = {}
 
         if self.isDisabled():
@@ -96,6 +99,9 @@ class Renamer(Plugin):
         if self.renaming_started is True:
             log.info('Renamer is already running, if you see this often, check the logs above for errors.')
             return
+
+        if not base_folder:
+            base_folder = self.conf('from')
 
         from_folder = sp(self.conf('from'))
         to_folder = sp(self.conf('to'))
@@ -114,12 +120,12 @@ class Renamer(Plugin):
             pass
 
         # Check to see if the no_process folders are inside the "from" folder.
-        if not os.path.isdir(from_folder) or not os.path.isdir(to_folder):
-            log.error('Both the "To" and "From" have to exist.')
+        if not os.path.isdir(base_folder) or not os.path.isdir(to_folder):
+            log.error('Both the "To" and "From" folder have to exist.')
             return
         else:
             for item in no_process:
-                if '%s%s' % (from_folder, os.path.sep) in item:
+                if '%s%s' % (base_folder, os.path.sep) in item:
                     log.error('To protect your data, the media libraries can\'t be inside of or the same as the "from" folder.')
                     return
 
@@ -193,7 +199,7 @@ class Renamer(Plugin):
             folder, media_folder, files, extr_files = self.extractFiles(folder = folder, media_folder = media_folder, files = files,
                                                                         cleanup = self.conf('cleanup') and not self.downloadIsTorrent(release_download))
 
-        groups = fireEvent('scanner.scan', folder = folder if folder else from_folder,
+        groups = fireEvent('scanner.scan', folder = folder if folder else base_folder,
                            files = files, release_download = release_download, return_ignored = False, single = True) or []
 
         folder_name = self.conf('folder_name')
@@ -502,7 +508,7 @@ class Renamer(Plugin):
                         os.remove(src)
 
                         parent_dir = os.path.dirname(src)
-                        if delete_folders.count(parent_dir) == 0 and os.path.isdir(parent_dir) and not '%s%s' % (parent_dir, os.path.sep) in [destination, media_folder] and not '%s%s' % (from_folder, os.path.sep) in parent_dir:
+                        if delete_folders.count(parent_dir) == 0 and os.path.isdir(parent_dir) and not '%s%s' % (parent_dir, os.path.sep) in [destination, media_folder] and not '%s%s' % (base_folder, os.path.sep) in parent_dir:
                             delete_folders.append(parent_dir)
 
                 except:
@@ -551,7 +557,7 @@ class Renamer(Plugin):
                     group_folder = media_folder
                 else:
                     # Delete the first empty subfolder in the tree relative to the 'from' folder
-                    group_folder = sp(os.path.join(from_folder, os.path.relpath(group['parentdir'], from_folder).split(os.path.sep)[0]))
+                    group_folder = sp(os.path.join(base_folder, os.path.relpath(group['parentdir'], base_folder).split(os.path.sep)[0]))
 
                 try:
                     log.info('Deleting folder: %s', group_folder)
