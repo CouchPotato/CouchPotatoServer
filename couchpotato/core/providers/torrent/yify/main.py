@@ -17,7 +17,7 @@ class Yify(TorrentMagnetProvider):
     http_time_between_calls = 1 #seconds
     
     proxy_list = [
-        'https://yify-torrents.com',
+        'https://yify-torrents.im',
         'http://yify.unlocktorrent.com',
         'http://yify.ftwnet.co.uk',
         'http://yify-torrents.com.come.in',
