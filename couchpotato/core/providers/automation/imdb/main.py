@@ -73,6 +73,12 @@ class IMDBAutomation(IMDBBase):
         'boxoffice': 'http://www.imdb.com/chart/',
     }
 
+    chart_names = {
+        'theater': 'IMDB - Movies in Theaters',
+        'top250': 'IMDB - Top 250 Movies',
+        'boxoffice': 'IMDB - Box Office',
+    }
+
     first_table = ['boxoffice']
 
     def getIMDBids(self):
@@ -109,3 +115,43 @@ class IMDBAutomation(IMDBBase):
                         log.error('Failed loading IMDB chart results from %s: %s', (url, traceback.format_exc()))
 
         return movies
+
+
+    def getChartList(self):
+        # Nearly identical to 'getIMDBids', but we don't care about minimalMovie and return all movie data (not just id)
+        movie_lists = []
+        max_items = int(self.conf('max_items', section='charts', default=5))
+
+        for url in self.chart_urls:
+            if self.conf('chart_display_%s' % url):
+                movie_list = {'name': self.chart_names[url], 'list': []}
+                data = self.getHTMLData(self.chart_urls[url])
+                if data:
+                    html = BeautifulSoup(data)
+
+                    try:
+                        result_div = html.find('div', attrs = {'id': 'main'})
+
+                        try:
+                            if url in self.first_table:
+                                table = result_div.find('table')
+                                result_div = table if table else result_div
+                        except:
+                            pass
+
+                        imdb_ids = getImdb(str(result_div), multiple = True)
+
+                        for imdb_id in imdb_ids[0:max_items]:
+                            info = self.getInfo(imdb_id)
+                            movie_list['list'].append(info)
+
+                            if self.shuttingDown():
+                                break
+                    except:
+                        log.error('Failed loading IMDB chart results from %s: %s', (url, traceback.format_exc()))
+
+                    if movie_list['list']:
+                            movie_lists.append(movie_list)
+
+
+        return movie_lists

@@ -59,7 +59,42 @@ config = [{
                 {
                     'name': 'automation_charts_boxoffice',
                     'type': 'bool',
-                    'label': 'Box offce TOP 10',
+                    'label': 'Box office TOP 10',
+                    'description': 'IMDB Box office <a href="http://www.imdb.com/chart/">TOP 10</a> chart',
+                    'default': True,
+                },
+            ],
+        },
+        {
+            'tab': 'display',
+            'list': 'charts_providers',
+            'name': 'imdb_charts_display',
+            'label': 'IMDB',
+            'description': 'Display movies from IMDB Charts',
+            'options': [
+                {
+                    'name': 'chart_display_enabled',
+                    'default': False,
+                    'type': 'enabler',
+                },
+                {
+                    'name': 'chart_display_theater',
+                    'type': 'bool',
+                    'label': 'In Theaters',
+                    'description': 'New Movies <a href="http://www.imdb.com/movies-in-theaters/">In-Theaters</a> chart',
+                    'default': False,
+                },
+                {
+                    'name': 'chart_display_top250',
+                    'type': 'bool',
+                    'label': 'TOP 250',
+                    'description': 'IMDB <a href="http://www.imdb.com/chart/top/">TOP 250</a> chart',
+                    'default': False,
+                },
+                {
+                    'name': 'chart_display_boxoffice',
+                    'type': 'bool',
+                    'label': 'Box office TOP 10',
                     'description': 'IMDB Box office <a href="http://www.imdb.com/chart/">TOP 10</a> chart',
                     'default': True,
                 },

@@ -27,5 +27,19 @@ config = [{
                 },
             ],
         },
+        {
+            'tab': 'display',
+            'list': 'charts_providers',
+            'name': 'bluray_charts_display',
+            'label': 'Blu-ray.com',
+            'description': 'Display new releases from Blu-ray.com',
+            'options': [
+                {
+                    'name': 'chart_display_enabled',
+                    'default': False,
+                    'type': 'enabler',
+                },
+            ],
+        },
     ],
 }]
