@@ -333,7 +333,7 @@ class Release(Plugin):
             log.error('Failed storing download status: %s', traceback.format_exc())
             return False
 
-        return False
+        return True
 
     def tryDownloadResult(self, results, media, quality_type, manual = False):
         ignored_status, failed_status = fireEvent('status.get', ['ignored', 'failed'], single = True)
