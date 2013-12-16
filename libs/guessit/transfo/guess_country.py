@@ -45,4 +45,4 @@ def process(mtree):
             except ValueError:
                 continue
 
-            node.guess = Guess(country=country, confidence=1.0)
+            node.guess = Guess(country=country, confidence=1.0, raw=c)

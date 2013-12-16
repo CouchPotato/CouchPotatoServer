@@ -1,6 +1,6 @@
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, addEvent, fireEventAsync
-from couchpotato.core.helpers.encoding import ss
+from couchpotato.core.helpers.encoding import sp
 from couchpotato.core.helpers.variable import splitString, getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
@@ -79,6 +79,7 @@ class Manage(Plugin):
         try:
 
             directories = self.directories()
+            directories.sort()
             added_identifiers = []
 
             # Add some progress
@@ -111,22 +112,20 @@ class Manage(Plugin):
             if self.conf('cleanup') and full and not self.shuttingDown():
 
                 # Get movies with done status
-                total_movies, done_movies = fireEvent('movie.list', status = 'done', single = True)
+                total_movies, done_movies = fireEvent('media.list', types = 'movie', status = 'done', single = True)
 
                 for done_movie in done_movies:
                     if done_movie['library']['identifier'] not in added_identifiers:
-                        fireEvent('movie.delete', movie_id = done_movie['id'], delete_from = 'all')
+                        fireEvent('media.delete', media_id = done_movie['id'], delete_from = 'all')
                     else:
 
                         releases = fireEvent('release.for_movie', id = done_movie.get('id'), single = True)
 
                         for release in releases:
-                            if len(release.get('files', [])) == 0:
-                                fireEvent('release.delete', release['id'])
-                            else:
+                            if len(release.get('files', [])) > 0:
                                 for release_file in release.get('files', []):
                                     # Remove release not available anymore
-                                    if not os.path.isfile(ss(release_file['path'])):
+                                    if not os.path.isfile(sp(release_file['path'])):
                                         fireEvent('release.clean', release['id'])
                                         break
 
@@ -201,7 +200,7 @@ class Manage(Plugin):
 
             self.in_progress[folder]['to_go'] -= 1
             total = self.in_progress[folder]['total']
-            movie_dict = fireEvent('movie.get', identifier, single = True)
+            movie_dict = fireEvent('media.get', identifier, single = True)
 
             fireEvent('notify.frontend', type = 'movie.added', data = movie_dict, message = None if total > 5 else 'Added "%s" to manage.' % getTitle(movie_dict['library']))
 

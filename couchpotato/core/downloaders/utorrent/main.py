@@ -36,8 +36,8 @@ class uTorrent(Downloader):
 
         return self.utorrent_api
 
-    def download(self, data = None, movie = None, filedata = None):
-        if not movie: movie = {}
+    def download(self, data = None, media = None, filedata = None):
+        if not media: media = {}
         if not data: data = {}
 
         log.debug('Sending "%s" (%s) to uTorrent.', (data.get('name'), data.get('protocol')))
@@ -77,7 +77,8 @@ class uTorrent(Downloader):
         else:
             info = bdecode(filedata)["info"]
             torrent_hash = sha1(benc(info)).hexdigest().upper()
-        torrent_filename = self.createFileName(data, filedata, movie)
+
+        torrent_filename = self.createFileName(data, filedata, media)
 
         if data.get('seed_ratio'):
             torrent_params['seed_override'] = 1
@@ -104,7 +105,7 @@ class uTorrent(Downloader):
 
         return self.downloadReturnId(torrent_hash)
 
-    def getAllDownloadStatus(self):
+    def getAllDownloadStatus(self, ids):
 
         log.debug('Checking uTorrent download status.')
 
@@ -129,47 +130,48 @@ class uTorrent(Downloader):
 
         # Get torrents
         for torrent in queue['torrents']:
+            if torrent[0] in ids:
 
-            #Get files of the torrent
-            torrent_files = []
-            try:
-                torrent_files = json.loads(self.utorrent_api.get_files(torrent[0]))
-                torrent_files = [sp(os.path.join(torrent[26], torrent_file[0])) for torrent_file in torrent_files['files'][1]]
-            except:
-                log.debug('Failed getting files from torrent: %s', torrent[2])
-
-            status_flags = {
-                "STARTED"     : 1,
-                "CHECKING"    : 2,
-                "CHECK-START" : 4,
-                "CHECKED"     : 8,
-                "ERROR"       : 16,
-                "PAUSED"      : 32,
-                "QUEUED"      : 64,
-                "LOADED"      : 128
-            }
-
-            status = 'busy'
-            if (torrent[1] & status_flags["STARTED"] or torrent[1] & status_flags["QUEUED"]) and torrent[4] == 1000:
-                status = 'seeding'
-            elif (torrent[1] & status_flags["ERROR"]):
-                status = 'failed'
-            elif torrent[4] == 1000:
-                status = 'completed'
-
-            if not status == 'busy':
-                self.removeReadOnly(torrent_files)
-
-            release_downloads.append({
-                'id': torrent[0],
-                'name': torrent[2],
-                'status': status,
-                'seed_ratio': float(torrent[7]) / 1000,
-                'original_status': torrent[1],
-                'timeleft': str(timedelta(seconds = torrent[10])),
-                'folder': sp(torrent[26]),
-                'files': '|'.join(torrent_files)
-            })
+                #Get files of the torrent
+                torrent_files = []
+                try:
+                    torrent_files = json.loads(self.utorrent_api.get_files(torrent[0]))
+                    torrent_files = [sp(os.path.join(torrent[26], torrent_file[0])) for torrent_file in torrent_files['files'][1]]
+                except:
+                    log.debug('Failed getting files from torrent: %s', torrent[2])
+    
+                status_flags = {
+                    "STARTED"     : 1,
+                    "CHECKING"    : 2,
+                    "CHECK-START" : 4,
+                    "CHECKED"     : 8,
+                    "ERROR"       : 16,
+                    "PAUSED"      : 32,
+                    "QUEUED"      : 64,
+                    "LOADED"      : 128
+                }
+    
+                status = 'busy'
+                if (torrent[1] & status_flags["STARTED"] or torrent[1] & status_flags["QUEUED"]) and torrent[4] == 1000:
+                    status = 'seeding'
+                elif (torrent[1] & status_flags["ERROR"]):
+                    status = 'failed'
+                elif torrent[4] == 1000:
+                    status = 'completed'
+    
+                if not status == 'busy':
+                    self.removeReadOnly(torrent_files)
+    
+                release_downloads.append({
+                    'id': torrent[0],
+                    'name': torrent[2],
+                    'status': status,
+                    'seed_ratio': float(torrent[7]) / 1000,
+                    'original_status': torrent[1],
+                    'timeleft': str(timedelta(seconds = torrent[10])),
+                    'folder': sp(torrent[26]),
+                    'files': '|'.join(torrent_files)
+                })
 
         return release_downloads
 

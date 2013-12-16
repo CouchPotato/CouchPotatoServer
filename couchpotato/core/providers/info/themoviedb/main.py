@@ -92,6 +92,13 @@ class TheMovieDb(MovieProvider):
             poster_original = self.getImage(movie, type = 'poster', size = 'original')
             backdrop_original = self.getImage(movie, type = 'backdrop', size = 'original')
 
+            images = {
+                'poster': [poster] if poster else [],
+                #'backdrop': [backdrop] if backdrop else [],
+                'poster_original': [poster_original] if poster_original else [],
+                'backdrop_original': [backdrop_original] if backdrop_original else [],
+            }
+
             # Genres
             try:
                 genres = [genre.name for genre in movie.genres]
@@ -103,18 +110,22 @@ class TheMovieDb(MovieProvider):
             if not movie.releasedate or year == '1900' or year.lower() == 'none':
                 year = None
 
+            # Gather actors data
+            actors = {}
+            for cast_item in movie.cast:
+                try:
+                    actors[toUnicode(cast_item.name)] = toUnicode(cast_item.character)
+                    images['actor %s' % toUnicode(cast_item.name)] = self.getImage(cast_item, type = 'profile', size = 'original')
+                except:
+                    log.debug('Error getting cast info for %s: %s', (cast_item, traceback.format_exc()))
+
             movie_data = {
                 'type': 'movie',
                 'via_tmdb': True,
                 'tmdb_id': movie.id,
                 'titles': [toUnicode(movie.title)],
                 'original_title': movie.originaltitle,
-                'images': {
-                    'poster': [poster] if poster else [],
-                    #'backdrop': [backdrop] if backdrop else [],
-                    'poster_original': [poster_original] if poster_original else [],
-                    'backdrop_original': [backdrop_original] if backdrop_original else [],
-                },
+                'images': images,
                 'imdb': movie.imdb,
                 'runtime': movie.runtime,
                 'released': str(movie.releasedate),
@@ -122,6 +133,7 @@ class TheMovieDb(MovieProvider):
                 'plot': movie.overview,
                 'genres': genres,
                 'collection': getattr(movie.collection, 'name', None),
+                'actor_roles': actors
             }
 
             movie_data = dict((k, v) for k, v in movie_data.iteritems() if v)
@@ -145,7 +157,7 @@ class TheMovieDb(MovieProvider):
         try:
             image_url = getattr(movie, type).geturl(size = 'original')
         except:
-            log.debug('Failed getting %s.%s for "%s"', (type, size, movie.title))
+            log.debug('Failed getting %s.%s for "%s"', (type, size, movie))
 
         return image_url
 

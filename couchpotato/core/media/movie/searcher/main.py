@@ -145,10 +145,10 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
         default_title = getTitle(movie['library'])
         if not default_title:
             log.error('No proper info found for movie, removing it from library to cause it from having more issues.')
-            fireEvent('movie.delete', movie['id'], single = True)
+            fireEvent('media.delete', movie['id'], single = True)
             return
 
-        fireEvent('notify.frontend', type = 'movie.searcher.started.%s' % movie['id'], data = True, message = 'Searching for "%s"' % default_title)
+        fireEvent('notify.frontend', type = 'movie.searcher.started', data = {'id': movie['id']}, message = 'Searching for "%s"' % default_title)
 
 
         ret = False
@@ -192,7 +192,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
             else:
                 log.info('Better quality (%s) already available or snatched for %s', (quality_type['quality']['label'], default_title))
-                fireEvent('movie.restatus', movie['id'])
+                fireEvent('media.restatus', movie['id'])
                 break
 
             # Break if CP wants to shut down
@@ -202,7 +202,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
         if len(too_early_to_search) > 0:
             log.info2('Too early to search for %s, %s', (too_early_to_search, default_title))
 
-        fireEvent('notify.frontend', type = 'movie.searcher.ended.%s' % movie['id'], data = True)
+        fireEvent('notify.frontend', type = 'movie.searcher.ended', data = {'id': movie['id']})
 
         return ret
 
@@ -318,14 +318,14 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
             'success': trynext
         }
 
-    def tryNextRelease(self, movie_id, manual = False):
+    def tryNextRelease(self, media_id, manual = False):
 
         snatched_status, done_status, ignored_status = fireEvent('status.get', ['snatched', 'done', 'ignored'], single = True)
 
         try:
             db = get_session()
             rels = db.query(Release) \
-                .filter_by(movie_id = movie_id) \
+                .filter_by(movie_id = media_id) \
                 .filter(Release.status_id.in_([snatched_status.get('id'), done_status.get('id')])) \
                 .all()
 
@@ -333,7 +333,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                 rel.status_id = ignored_status.get('id')
             db.commit()
 
-            movie_dict = fireEvent('movie.get', movie_id, single = True)
+            movie_dict = fireEvent('media.get', media_id = media_id, single = True)
             log.info('Trying next release for: %s', getTitle(movie_dict['library']))
             fireEvent('movie.searcher.single', movie_dict, manual = manual)
 

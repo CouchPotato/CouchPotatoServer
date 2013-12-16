@@ -12,8 +12,8 @@ class Blackhole(Downloader):
 
     protocol = ['nzb', 'torrent', 'torrent_magnet']
 
-    def download(self, data = None, movie = None, filedata = None):
-        if not movie: movie = {}
+    def download(self, data = None, media = None, filedata = None):
+        if not media: media = {}
         if not data: data = {}
 
         directory = self.conf('directory')
@@ -33,7 +33,7 @@ class Blackhole(Downloader):
                         log.error('No nzb/torrent available: %s', data.get('url'))
                         return False
 
-                file_name = self.createFileName(data, filedata, movie)
+                file_name = self.createFileName(data, filedata, media)
                 full_path = os.path.join(directory, file_name)
 
                 if self.conf('create_subdir'):
@@ -51,10 +51,10 @@ class Blackhole(Downloader):
                         with open(full_path, 'wb') as f:
                             f.write(filedata)
                         os.chmod(full_path, Env.getPermission('file'))
-                        return True
+                        return self.downloadReturnId('')
                     else:
                         log.info('File %s already exists.', full_path)
-                        return True
+                        return self.downloadReturnId('')
 
                 except:
                     log.error('Failed to download to blackhole %s', traceback.format_exc())

@@ -147,7 +147,7 @@ class Searcher(SearcherBase):
         except: pass
 
         # Match longest name between []
-        try: check_names.append(max(check_name.split('['), key = len))
+        try: check_names.append(max(re.findall(r'[^[]*\[([^]]*)\]', check_name), key = len).strip())
         except: pass
 
         for check_name in list(set(check_names)):

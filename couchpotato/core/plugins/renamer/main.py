@@ -3,7 +3,7 @@ from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
 from couchpotato.core.helpers.encoding import toUnicode, ss, sp
 from couchpotato.core.helpers.variable import getExt, mergeDicts, getTitle, \
-    getImdb, link, symlink, tryInt, splitString
+    getImdb, link, symlink, tryInt, splitString, fnEscape
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Library, File, Profile, Release, \
@@ -30,10 +30,10 @@ class Renamer(Plugin):
             'desc': 'For the renamer to check for new files to rename in a folder',
             'params': {
                 'async': {'desc': 'Optional: Set to 1 if you dont want to fire the renamer.scan asynchronous.'},
-                'base_folder': {'desc': 'Optional: The folder to find releases in. Leave empty for default folder.'},
-                'movie_folder': {'desc': 'Optional: The folder of a specific release to scan. Don\'t use in combination with base_folder.'},
+                'media_folder': {'desc': 'Optional: The folder of the media to scan. Keep empty for default renamer folder.'},
+                'files': {'desc': 'Optional: Provide the release files if more releases are in the same media_folder, delimited with a \'|\'. Note that no dedicated release folder is expected for releases with one file.'},
                 'downloader' : {'desc': 'Optional: The downloader the release has been downloaded with. \'download_id\' is required with this option.'},
-                'download_id': {'desc': 'Optional: The nzb/torrent ID of the release in movie_folder. \'downloader\' is required with this option.'},
+                'download_id': {'desc': 'Optional: The nzb/torrent ID of the release in media_folder. \'downloader\' is required with this option.'},
                 'status': {'desc': 'Optional: The status of the release: \'completed\' (default) or \'seeding\''},
             },
         })
@@ -64,26 +64,31 @@ class Renamer(Plugin):
     def scanView(self, **kwargs):
 
         async = tryInt(kwargs.get('async', 0))
-        movie_folder = sp(kwargs.get('movie_folder'))
-        base_folder = sp(kwargs.get('base_folder'))
+        media_folder = sp(kwargs.get('media_folder'))
+
+        # Backwards compatibility, to be removed after a few versions :)
+        if not media_folder:
+            media_folder = sp(kwargs.get('movie_folder'))
+
         downloader = kwargs.get('downloader')
         download_id = kwargs.get('download_id')
+        files = '|'.join([sp(filename) for filename in splitString(kwargs.get('files'), '|')])
         status = kwargs.get('status', 'completed')
 
-        release_download = None
-        if not base_folder and movie_folder:
-            release_download = {'folder': movie_folder}
-            release_download.update({'id': download_id, 'downloader': downloader, 'status': status} if download_id else {})
+        release_download = {'folder': media_folder} if media_folder else None
+        if release_download:
+            release_download.update({'id': download_id, 'downloader': downloader, 'status': status, 'files': files} if download_id else {})
 
         fire_handle = fireEvent if not async else fireEventAsync
 
-        fire_handle('renamer.scan', base_folder = base_folder, release_download = release_download)
+        fire_handle('renamer.scan', release_download)
 
         return {
             'success': True
         }
 
-    def scan(self, base_folder = None, release_download = None):
+    def scan(self, release_download = None):
+        if not release_download: release_download = {}
 
         if self.isDisabled():
             return
@@ -92,11 +97,11 @@ class Renamer(Plugin):
             log.info('Renamer is already running, if you see this often, check the logs above for errors.')
             return
 
-        from_folder = sp(self.conf('from') if not base_folder else base_folder)
+        from_folder = sp(self.conf('from'))
         to_folder = sp(self.conf('to'))
 
-        # Get movie folder to process
-        movie_folder = sp(release_download and release_download.get('folder'))
+        # Get media folder to process
+        media_folder = release_download.get('folder')
 
         # Get all folders that should not be processed
         no_process = [to_folder]
@@ -104,7 +109,7 @@ class Renamer(Plugin):
         no_process.extend([item['destination'] for item in cat_list])
         try:
             if Env.setting('library', section = 'manage').strip():
-                no_process.extend(splitString(Env.setting('library', section = 'manage'), '::'))
+                no_process.extend([sp(manage_folder) for manage_folder in splitString(Env.setting('library', section = 'manage'), '::')])
         except:
             pass
 
@@ -114,40 +119,40 @@ class Renamer(Plugin):
             return
         else:
             for item in no_process:
-                if from_folder in item:
-                    log.error('To protect your data, the movie libraries can\'t be inside of or the same as the "from" folder.')
+                if '%s%s' % (from_folder, os.path.sep) in item:
+                    log.error('To protect your data, the media libraries can\'t be inside of or the same as the "from" folder.')
                     return
 
-        # Check to see if the no_process folders are inside the provided movie_folder
-        if movie_folder and not os.path.isdir(movie_folder):
-            log.debug('The provided movie folder %s does not exist. Trying to find it in the \'from\' folder.', movie_folder)
+        # Check to see if the no_process folders are inside the provided media_folder
+        if media_folder and not os.path.isdir(media_folder):
+            log.debug('The provided media folder %s does not exist. Trying to find it in the \'from\' folder.', media_folder)
 
             # Update to the from folder
-            if len(release_download.get('files')) == 1:
-                new_movie_folder = from_folder
+            if len(splitString(release_download.get('files'), '|')) == 1:
+                new_media_folder = from_folder
             else:
-                new_movie_folder = sp(os.path.join(from_folder, os.path.basename(movie_folder)))
+                new_media_folder = os.path.join(from_folder, os.path.basename(media_folder))
 
-            if not os.path.isdir(new_movie_folder):
-                log.error('The provided movie folder %s does not exist and could also not be found in the \'from\' folder.', movie_folder)
+            if not os.path.isdir(new_media_folder):
+                log.error('The provided media folder %s does not exist and could also not be found in the \'from\' folder.', media_folder)
                 return
 
             # Update the files
-            new_files = [os.path.join(new_movie_folder, os.path.relpath(filename, movie_folder)) for filename in splitString(release_download.get('files'), '|')]
+            new_files = [os.path.join(new_media_folder, os.path.relpath(filename, media_folder)) for filename in splitString(release_download.get('files'), '|')]
             if new_files and not os.path.isfile(new_files[0]):
-                log.error('The provided movie folder %s does not exist and its files could also not be found in the \'from\' folder.', movie_folder)
+                log.error('The provided media folder %s does not exist and its files could also not be found in the \'from\' folder.', media_folder)
                 return
 
             # Update release_download info to the from folder
-            log.debug('Release %s found in the \'from\' folder.', movie_folder)
-            release_download['folder'] = new_movie_folder
+            log.debug('Release %s found in the \'from\' folder.', media_folder)
+            release_download['folder'] = new_media_folder
             release_download['files'] = '|'.join(new_files)
-            movie_folder = new_movie_folder
+            media_folder = new_media_folder
 
-        if movie_folder:
+        if media_folder:
             for item in no_process:
-                if movie_folder in item:
-                    log.error('To protect your data, the movie libraries can\'t be inside of or the same as the provided movie folder.')
+                if '%s%s' % (media_folder, os.path.sep) in item:
+                    log.error('To protect your data, the media libraries can\'t be inside of or the same as the provided media folder.')
                     return
 
         # Make sure a checkSnatched marked all downloads/seeds as such
@@ -156,26 +161,26 @@ class Renamer(Plugin):
 
         self.renaming_started = True
 
-        # make sure the movie folder name is included in the search
+        # make sure the media folder name is included in the search
         folder = None
         files = []
-        if movie_folder:
-            log.info('Scanning movie folder %s...', movie_folder)
-            folder = os.path.dirname(movie_folder)
+        if media_folder:
+            log.info('Scanning media folder %s...', media_folder)
+            folder = os.path.dirname(media_folder)
 
             if release_download.get('files', ''):
                 files = splitString(release_download['files'], '|')
 
                 # If there is only one file in the torrent, the downloader did not create a subfolder
                 if len(files) == 1:
-                    folder = movie_folder
+                    folder = media_folder
             else:
                 # Get all files from the specified folder
                 try:
-                    for root, folders, names in os.walk(movie_folder):
-                        files.extend([os.path.join(root, name) for name in names])
+                    for root, folders, names in os.walk(media_folder):
+                        files.extend([sp(os.path.join(root, name)) for name in names])
                 except:
-                    log.error('Failed getting files from %s: %s', (movie_folder, traceback.format_exc()))
+                    log.error('Failed getting files from %s: %s', (media_folder, traceback.format_exc()))
 
         db = get_session()
 
@@ -185,7 +190,7 @@ class Renamer(Plugin):
         # Unpack any archives
         extr_files = None
         if self.conf('unrar'):
-            folder, movie_folder, files, extr_files = self.extractFiles(folder = folder, movie_folder = movie_folder, files = files,
+            folder, media_folder, files, extr_files = self.extractFiles(folder = folder, media_folder = media_folder, files = files,
                                                                         cleanup = self.conf('cleanup') and not self.downloadIsTorrent(release_download))
 
         groups = fireEvent('scanner.scan', folder = folder if folder else from_folder,
@@ -496,8 +501,8 @@ class Renamer(Plugin):
                     if os.path.isfile(src):
                         os.remove(src)
 
-                        parent_dir = sp(os.path.dirname(src))
-                        if delete_folders.count(parent_dir) == 0 and os.path.isdir(parent_dir) and not parent_dir in [destination, movie_folder] and not from_folder in parent_dir:
+                        parent_dir = os.path.dirname(src)
+                        if delete_folders.count(parent_dir) == 0 and os.path.isdir(parent_dir) and not '%s%s' % (parent_dir, os.path.sep) in [destination, media_folder] and not '%s%s' % (from_folder, os.path.sep) in parent_dir:
                             delete_folders.append(parent_dir)
 
                 except:
@@ -529,7 +534,7 @@ class Renamer(Plugin):
                         self.tagRelease(group = group, tag = 'failed_rename')
 
             # Tag folder if it is in the 'from' folder and it will not be removed because it is a torrent
-            if self.movieInFromFolder(movie_folder) and self.downloadIsTorrent(release_download):
+            if self.movieInFromFolder(media_folder) and self.downloadIsTorrent(release_download):
                 self.tagRelease(group = group, tag = 'renamed_already')
 
             # Remove matching releases
@@ -541,12 +546,12 @@ class Renamer(Plugin):
                     log.error('Failed removing %s: %s', (release.identifier, traceback.format_exc()))
 
             if group['dirname'] and group['parentdir'] and not self.downloadIsTorrent(release_download):
-                if movie_folder:
+                if media_folder:
                     # Delete the movie folder
-                    group_folder = movie_folder
+                    group_folder = media_folder
                 else:
                     # Delete the first empty subfolder in the tree relative to the 'from' folder
-                    group_folder = sp(os.path.join(from_folder, os.path.relpath(group['parentdir'], from_folder)).split(os.path.sep)[0])
+                    group_folder = sp(os.path.join(from_folder, os.path.relpath(group['parentdir'], from_folder).split(os.path.sep)[0]))
 
                 try:
                     log.info('Deleting folder: %s', group_folder)
@@ -606,7 +611,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         elif isinstance(release_download, dict):
             # Tag download_files if they are known
             if release_download['files']:
-                tag_files = release_download['files'].split('|')
+                tag_files = splitString(release_download['files'], '|')
 
             # Tag all files in release folder
             else:
@@ -614,6 +619,11 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                     tag_files.extend([os.path.join(root, name) for name in names])
 
         for filename in tag_files:
+
+            # Dont tag .ignore files
+            if os.path.splitext(filename)[1] == '.ignore':
+                continue
+
             tag_filename = '%s.%s.ignore' % (os.path.splitext(filename)[0], tag)
             if not os.path.isfile(tag_filename):
                 self.createFile(tag_filename, text)
@@ -630,21 +640,21 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
         # Untag download_files if they are known
         if release_download['files']:
-            tag_files = release_download['files'].split('|')
+            tag_files = splitString(release_download['files'], '|')
 
         # Untag all files in release folder
         else:
             for root, folders, names in os.walk(release_download['folder']):
-                tag_files.extend([os.path.join(root, name) for name in names if not os.path.splitext(name)[1] == '.ignore'])
+                tag_files.extend([sp(os.path.join(root, name)) for name in names if not os.path.splitext(name)[1] == '.ignore'])
 
         # Find all .ignore files in folder
         ignore_files = []
         for root, dirnames, filenames in os.walk(folder):
-            ignore_files.extend(fnmatch.filter([os.path.join(root, filename) for filename in filenames], '*%s.ignore' % tag))
+            ignore_files.extend(fnmatch.filter([sp(os.path.join(root, filename)) for filename in filenames], '*%s.ignore' % tag))
 
         # Match all found ignore files with the tag_files and delete if found
         for tag_file in tag_files:
-            ignore_file = fnmatch.filter(ignore_files, '%s.%s.ignore' % (re.escape(os.path.splitext(tag_file)[0]), tag if tag else '*'))
+            ignore_file = fnmatch.filter(ignore_files, fnEscape('%s.%s.ignore' % (os.path.splitext(tag_file)[0], tag if tag else '*')))
             for filename in ignore_file:
                 try:
                     os.remove(filename)
@@ -664,20 +674,20 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
         # Find tag on download_files if they are known
         if release_download['files']:
-            tag_files = release_download['files'].split('|')
+            tag_files = splitString(release_download['files'], '|')
 
         # Find tag on all files in release folder
         else:
             for root, folders, names in os.walk(release_download['folder']):
-                tag_files.extend([os.path.join(root, name) for name in names if not os.path.splitext(name)[1] == '.ignore'])
+                tag_files.extend([sp(os.path.join(root, name)) for name in names if not os.path.splitext(name)[1] == '.ignore'])
 
         # Find all .ignore files in folder
         for root, dirnames, filenames in os.walk(folder):
-            ignore_files.extend(fnmatch.filter([os.path.join(root, filename) for filename in filenames], '*%s.ignore' % tag))
+            ignore_files.extend(fnmatch.filter([sp(os.path.join(root, filename)) for filename in filenames], '*%s.ignore' % tag))
 
         # Match all found ignore files with the tag_files and return True found
         for tag_file in tag_files:
-            ignore_file = fnmatch.filter(ignore_files, '%s.%s.ignore' % (os.path.splitext(tag_file)[0], tag if tag else '*'))
+            ignore_file = fnmatch.filter(ignore_files, fnEscape('%s.%s.ignore' % (os.path.splitext(tag_file)[0], tag if tag else '*')))
             if ignore_file:
                 return True
 
@@ -772,7 +782,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         return string
 
     def deleteEmptyFolder(self, folder, show_error = True):
-        folder = ss(folder)
+        folder = sp(folder)
 
         loge = log.error if show_error else log.debug
         for root, dirs, files in os.walk(folder):
@@ -806,126 +816,159 @@ Remove it if you want it to be renamed (again, or at least let it try again)
             Release.status_id.in_([snatched_status.get('id'), seeding_status.get('id'), missing_status.get('id')])
         ).all()
 
+        if not rels:
+            #No releases found that need status checking
+            self.checking_snatched = False
+            return True
+
+        # Collect all download information with the download IDs from the releases
+        download_ids = []
+        try:
+            for rel in rels:
+                rel_dict = rel.to_dict({'info': {}})
+                if rel_dict['info'].get('download_id') and rel_dict['info'].get('download_downloader'):
+                    download_ids.append({'id': rel_dict['info']['download_id'], 'downloader': rel_dict['info']['download_downloader']})
+        except:
+            log.error('Error getting download IDs from database')
+            self.checking_snatched = False
+            return False
+
+        release_downloads = fireEvent('download.status', download_ids, merge = True)
+        if not release_downloads:
+            log.debug('Download status functionality is not implemented for any active downloaders.')
+            fireEvent('renamer.scan')
+
+            self.checking_snatched = False
+            return True
+
         scan_releases = []
         scan_required = False
 
-        if rels:
-            log.debug('Checking status snatched releases...')
+        log.debug('Checking status snatched releases...')
 
-            release_downloads = fireEvent('download.status', merge = True)
-            if not release_downloads:
-                log.debug('Download status functionality is not implemented for active downloaders.')
-                scan_required = True
-            else:
-                try:
-                    for rel in rels:
-                        rel_dict = rel.to_dict({'info': {}})
-                        movie_dict = fireEvent('movie.get', rel.movie_id, single = True)
+        try:
+            for rel in rels:
+                rel_dict = rel.to_dict({'info': {}})
+                movie_dict = fireEvent('media.get', media_id = rel.movie_id, single = True)
 
-                        if not isinstance(rel_dict['info'], (dict)):
-                            log.error('Faulty release found without any info, ignoring.')
+                if not isinstance(rel_dict['info'], (dict)):
+                    log.error('Faulty release found without any info, ignoring.')
+                    fireEvent('release.update_status', rel.id, status = ignored_status, single = True)
+                    continue
+
+                # Check if download ID is available
+                if not rel_dict['info'].get('download_id') or not rel_dict['info'].get('download_downloader'):
+                    log.debug('Download status functionality is not implemented for downloader (%s) of release %s.', (rel_dict['info'].get('download_downloader', 'unknown'), rel_dict['info']['name']))
+                    scan_required = True
+
+                    # Continue with next release
+                    continue
+
+                # Find release in downloaders
+                nzbname = self.createNzbName(rel_dict['info'], movie_dict)
+
+                for release_download in release_downloads:
+                    found_release = False
+                    if rel_dict['info'].get('download_id'):
+                        if release_download['id'] == rel_dict['info']['download_id'] and release_download['downloader'] == rel_dict['info']['download_downloader']:
+                            log.debug('Found release by id: %s', release_download['id'])
+                            found_release = True
+                            break
+                    else:
+                        if release_download['name'] == nzbname or rel_dict['info']['name'] in release_download['name'] or getImdb(release_download['name']) == movie_dict['library']['identifier']:
+                            log.debug('Found release by release name or imdb ID: %s', release_download['name'])
+                            found_release = True
+                            break
+
+                if not found_release:
+                    log.info('%s not found in downloaders', nzbname)
+
+                    #Check status if already missing and for how long, if > 1 week, set to ignored else to missing
+                    if rel.status_id == missing_status.get('id'):
+                        if rel.last_edit < int(time.time()) - 7 * 24 * 60 * 60:
                             fireEvent('release.update_status', rel.id, status = ignored_status, single = True)
-                            continue
+                    else:
+                        # Set the release to missing
+                        fireEvent('release.update_status', rel.id, status = missing_status, single = True)
 
-                        # check status
-                        nzbname = self.createNzbName(rel_dict['info'], movie_dict)
+                    # Continue with next release
+                    continue
 
-                        found = False
-                        for release_download in release_downloads:
-                            found_release = False
-                            if rel_dict['info'].get('download_id'):
-                                if release_download['id'] == rel_dict['info']['download_id'] and release_download['downloader'] == rel_dict['info']['download_downloader']:
-                                    log.debug('Found release by id: %s', release_download['id'])
-                                    found_release = True
+                # Log that we found the release
+                timeleft = 'N/A' if release_download['timeleft'] == -1 else release_download['timeleft']
+                log.debug('Found %s: %s, time to go: %s', (release_download['name'], release_download['status'].upper(), timeleft))
+
+                # Check status of release
+                if release_download['status'] == 'busy':
+                    # Set the release to snatched if it was missing before
+                    fireEvent('release.update_status', rel.id, status = snatched_status, single = True)
+
+                    # Tag folder if it is in the 'from' folder and it will not be processed because it is still downloading
+                    if self.movieInFromFolder(release_download['folder']):
+                        self.tagRelease(release_download = release_download, tag = 'downloading')
+
+                elif release_download['status'] == 'seeding':
+                    #If linking setting is enabled, process release
+                    if self.conf('file_action') != 'move' and not rel.status_id == seeding_status.get('id') and self.statusInfoComplete(release_download):
+                        log.info('Download of %s completed! It is now being processed while leaving the original files alone for seeding. Current ratio: %s.', (release_download['name'], release_download['seed_ratio']))
+
+                        # Remove the downloading tag
+                        self.untagRelease(release_download = release_download, tag = 'downloading')
+
+                        # Scan and set the torrent to paused if required
+                        release_download.update({'pause': True, 'scan': True, 'process_complete': False})
+                        scan_releases.append(release_download)
+                    else:
+                        #let it seed
+                        log.debug('%s is seeding with ratio: %s', (release_download['name'], release_download['seed_ratio']))
+
+                        # Set the release to seeding
+                        fireEvent('release.update_status', rel.id, status = seeding_status, single = True)
+
+                elif release_download['status'] == 'failed':
+                    # Set the release to failed
+                    fireEvent('release.update_status', rel.id, status = failed_status, single = True)
+
+                    fireEvent('download.remove_failed', release_download, single = True)
+
+                    if self.conf('next_on_failed'):
+                        fireEvent('movie.searcher.try_next_release', media_id = rel.movie_id)
+
+                elif release_download['status'] == 'completed':
+                    log.info('Download of %s completed!', release_download['name'])
+
+                    #Make sure the downloader sent over a path to look in
+                    if self.statusInfoComplete(release_download):
+
+                        # If the release has been seeding, process now the seeding is done
+                        if rel.status_id == seeding_status.get('id'):
+                            if self.conf('file_action') != 'move':
+                                # Set the release to done as the movie has already been renamed
+                                fireEvent('release.update_status', rel.id, status = downloaded_status, single = True)
+
+                                # Allow the downloader to clean-up
+                                release_download.update({'pause': False, 'scan': False, 'process_complete': True})
+                                scan_releases.append(release_download)
                             else:
-                                if release_download['name'] == nzbname or rel_dict['info']['name'] in release_download['name'] or getImdb(release_download['name']) == movie_dict['library']['identifier']:
-                                    found_release = True
+                                # Scan and Allow the downloader to clean-up
+                                release_download.update({'pause': False, 'scan': True, 'process_complete': True})
+                                scan_releases.append(release_download)
 
-                            if found_release:
-                                timeleft = 'N/A' if release_download['timeleft'] == -1 else release_download['timeleft']
-                                log.debug('Found %s: %s, time to go: %s', (release_download['name'], release_download['status'].upper(), timeleft))
+                        else:
+                            # Set the release to snatched if it was missing before
+                            fireEvent('release.update_status', rel.id, status = snatched_status, single = True)
 
-                                if release_download['status'] == 'busy':
-                                    # Set the release to snatched if it was missing before
-                                    fireEvent('release.update_status', rel.id, status = snatched_status, single = True)
+                            # Remove the downloading tag
+                            self.untagRelease(release_download = release_download, tag = 'downloading')
 
-                                    # Tag folder if it is in the 'from' folder and it will not be processed because it is still downloading
-                                    if self.movieInFromFolder(release_download['folder']):
-                                        self.tagRelease(release_download = release_download, tag = 'downloading')
+                            # Scan and Allow the downloader to clean-up
+                            release_download.update({'pause': False, 'scan': True, 'process_complete': True})
+                            scan_releases.append(release_download)
+                    else:
+                        scan_required = True
 
-                                elif release_download['status'] == 'seeding':
-                                    #If linking setting is enabled, process release
-                                    if self.conf('file_action') != 'move' and not rel.status_id == seeding_status.get('id') and self.statusInfoComplete(release_download):
-                                        log.info('Download of %s completed! It is now being processed while leaving the original files alone for seeding. Current ratio: %s.', (release_download['name'], release_download['seed_ratio']))
-
-                                        # Remove the downloading tag
-                                        self.untagRelease(release_download = release_download, tag = 'downloading')
-
-                                        # Scan and set the torrent to paused if required
-                                        release_download.update({'pause': True, 'scan': True, 'process_complete': False})
-                                        scan_releases.append(release_download)
-                                    else:
-                                        #let it seed
-                                        log.debug('%s is seeding with ratio: %s', (release_download['name'], release_download['seed_ratio']))
-
-                                        # Set the release to seeding
-                                        fireEvent('release.update_status', rel.id, status = seeding_status, single = True)
-
-                                elif release_download['status'] == 'failed':
-                                    # Set the release to failed
-                                    fireEvent('release.update_status', rel.id, status = failed_status, single = True)
-
-                                    fireEvent('download.remove_failed', release_download, single = True)
-
-                                    if self.conf('next_on_failed'):
-                                        fireEvent('movie.searcher.try_next_release', movie_id = rel.movie_id)
-                                elif release_download['status'] == 'completed':
-                                    log.info('Download of %s completed!', release_download['name'])
-                                    if self.statusInfoComplete(release_download):
-
-                                        # If the release has been seeding, process now the seeding is done
-                                        if rel.status_id == seeding_status.get('id'):
-                                            if self.conf('file_action') != 'move':
-                                                # Set the release to done as the movie has already been renamed
-                                                fireEvent('release.update_status', rel.id, status = downloaded_status, single = True)
-
-                                                # Allow the downloader to clean-up
-                                                release_download.update({'pause': False, 'scan': False, 'process_complete': True})
-                                                scan_releases.append(release_download)
-                                            else:
-                                                # Scan and Allow the downloader to clean-up
-                                                release_download.update({'pause': False, 'scan': True, 'process_complete': True})
-                                                scan_releases.append(release_download)
-
-                                        else:
-                                            # Set the release to snatched if it was missing before
-                                            fireEvent('release.update_status', rel.id, status = snatched_status, single = True)
-
-                                            # Remove the downloading tag
-                                            self.untagRelease(release_download = release_download, tag = 'downloading')
-
-                                            # Scan and Allow the downloader to clean-up
-                                            release_download.update({'pause': False, 'scan': True, 'process_complete': True})
-                                            scan_releases.append(release_download)
-                                    else:
-                                        scan_required = True
-
-                                found = True
-                                break
-
-                        if not found:
-                            log.info('%s not found in downloaders', nzbname)
-
-                            #Check status if already missing and for how long, if > 1 week, set to ignored else to missing
-                            if rel.status_id == missing_status.get('id'):
-                                if rel.last_edit < int(time.time()) - 7 * 24 * 60 * 60:
-                                    fireEvent('release.update_status', rel.id, status = ignored_status, single = True)
-                            else:
-                                # Set the release to missing
-                                fireEvent('release.update_status', rel.id, status = missing_status, single = True)
-
-                except:
-                    log.error('Failed checking for release in downloader: %s', traceback.format_exc())
+        except:
+            log.error('Failed checking for release in downloader: %s', traceback.format_exc())
 
         # The following can either be done here, or inside the scanner if we pass it scan_items in one go
         for release_download in scan_releases:
@@ -948,7 +991,6 @@ Remove it if you want it to be renamed (again, or at least let it try again)
             fireEvent('renamer.scan')
 
         self.checking_snatched = False
-
         return True
 
     def extendReleaseDownload(self, release_download):
@@ -995,10 +1037,10 @@ Remove it if you want it to be renamed (again, or at least let it try again)
     def statusInfoComplete(self, release_download):
         return release_download['id'] and release_download['downloader'] and release_download['folder']
 
-    def movieInFromFolder(self, movie_folder):
-        return (movie_folder and sp(self.conf('from')) in movie_folder) or not movie_folder
+    def movieInFromFolder(self, media_folder):
+        return media_folder and '%s%s' % (sp(self.conf('from')), os.path.sep) in sp(media_folder) or not media_folder
 
-    def extractFiles(self, folder = None, movie_folder = None, files = None, cleanup = False):
+    def extractFiles(self, folder = None, media_folder = None, files = None, cleanup = False):
         if not files: files = []
 
         # RegEx for finding rar files
@@ -1013,12 +1055,12 @@ Remove it if you want it to be renamed (again, or at least let it try again)
             folder = from_folder
 
         check_file_date = True
-        if movie_folder:
+        if media_folder:
             check_file_date = False
 
         if not files:
             for root, folders, names in os.walk(folder):
-                files.extend([os.path.join(root, name) for name in names])
+                files.extend([sp(os.path.join(root, name)) for name in names])
 
         # Find all archive files
         archives = [re.search(archive_regex, name).groupdict() for name in files if re.search(archive_regex, name)]
@@ -1064,13 +1106,13 @@ Remove it if you want it to be renamed (again, or at least let it try again)
             log.info('Archive %s found. Extracting...', os.path.basename(archive['file']))
             try:
                 rar_handle = RarFile(archive['file'])
-                extr_path = sp(os.path.join(from_folder, os.path.relpath(os.path.dirname(archive['file']), folder)))
+                extr_path = os.path.join(from_folder, os.path.relpath(os.path.dirname(archive['file']), folder))
                 self.makeDir(extr_path)
                 for packedinfo in rar_handle.infolist():
-                    if not packedinfo.isdir and not os.path.isfile(os.path.join(extr_path, os.path.basename(packedinfo.filename))):
+                    if not packedinfo.isdir and not os.path.isfile(sp(os.path.join(extr_path, os.path.basename(packedinfo.filename)))):
                         log.debug('Extracting %s...', packedinfo.filename)
                         rar_handle.extract(condition = [packedinfo.index], path = extr_path, withSubpath = False, overwrite = False)
-                        extr_files.append(os.path.join(extr_path, os.path.basename(packedinfo.filename)))
+                        extr_files.append(sp(os.path.join(extr_path, os.path.basename(packedinfo.filename))))
                 del rar_handle
             except Exception, e:
                 log.error('Failed to extract %s: %s %s', (archive['file'], e, traceback.format_exc()))
@@ -1087,9 +1129,9 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                 files.remove(filename)
 
         # Move the rest of the files and folders if any files are extracted to the from folder (only if folder was provided)
-        if extr_files and sp(folder) != from_folder:
+        if extr_files and folder != from_folder:
             for leftoverfile in list(files):
-                move_to = sp(os.path.join(from_folder, os.path.relpath(leftoverfile, folder)))
+                move_to = os.path.join(from_folder, os.path.relpath(leftoverfile, folder))
 
                 try:
                     self.makeDir(os.path.dirname(move_to))
@@ -1109,18 +1151,18 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
             if cleanup:
                 # Remove all left over folders
-                log.debug('Removing old movie folder %s...', movie_folder)
-                self.deleteEmptyFolder(movie_folder)
+                log.debug('Removing old movie folder %s...', media_folder)
+                self.deleteEmptyFolder(media_folder)
 
-            movie_folder = sp(os.path.join(from_folder, os.path.relpath(movie_folder, folder)))
+            media_folder = os.path.join(from_folder, os.path.relpath(media_folder, folder))
             folder = from_folder
 
         if extr_files:
             files.extend(extr_files)
 
-        # Cleanup files and folder if movie_folder was not provided
-        if not movie_folder:
+        # Cleanup files and folder if media_folder was not provided
+        if not media_folder:
             files = []
             folder = None
 
-        return folder, movie_folder, files, extr_files
+        return folder, media_folder, files, extr_files

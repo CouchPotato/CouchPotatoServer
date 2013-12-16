@@ -1,8 +1,8 @@
 # BER encoder
 from pyasn1.type import base, tag, univ, char, useful
 from pyasn1.codec.ber import eoo
-from pyasn1.compat.octets import int2oct, ints2octs, null, str2octs
-from pyasn1 import error
+from pyasn1.compat.octets import int2oct, oct2int, ints2octs, null, str2octs
+from pyasn1 import debug, error
 
 class Error(Exception): pass
 
@@ -78,9 +78,24 @@ class ExplicitlyTaggedItemEncoder(AbstractItemEncoder):
 
 explicitlyTaggedItemEncoder = ExplicitlyTaggedItemEncoder()
 
+class BooleanEncoder(AbstractItemEncoder):
+    supportIndefLenMode = 0
+    _true = ints2octs((1,))
+    _false = ints2octs((0,))
+    def encodeValue(self, encodeFun, value, defMode, maxChunkSize):
+        return value and self._true or self._false, 0
+
 class IntegerEncoder(AbstractItemEncoder):
     supportIndefLenMode = 0
+    supportCompactZero = False
     def encodeValue(self, encodeFun, value, defMode, maxChunkSize):
+        if value == 0:  # shortcut for zero value
+            if self.supportCompactZero:
+                # this seems to be a correct way for encoding zeros
+                return null, 0
+            else:
+                # this seems to be a widespread way for encoding zeros
+                return ints2octs((0,)), 0
         octets = []
         value = int(value) # to save on ops on asn1 type
         while 1:
@@ -149,18 +164,15 @@ class ObjectIdentifierEncoder(AbstractItemEncoder):
             index = 5
         else:
             if len(oid) < 2:
-                raise error.PyAsn1Error('Short OID %s' % value)
+                raise error.PyAsn1Error('Short OID %s' % (value,))
 
             # Build the first twos
-            index = 0
-            subid = oid[index] * 40
-            subid = subid + oid[index+1]
-            if subid < 0 or subid > 0xff:
+            if oid[0] > 6 or oid[1] > 39 or oid[0] == 6 and oid[1] > 15:
                 raise error.PyAsn1Error(
-                    'Initial sub-ID overflow %s in OID %s' % (oid[index:], value)
+                    'Initial sub-ID overflow %s in OID %s' % (oid[:2], value)
                     )
-            octets = (subid,)
-            index = index + 2
+            octets = (oid[0] * 40 + oid[1],)
+            index = 2
 
         # Cycle through subids
         for subid in oid[index:]:
@@ -184,6 +196,7 @@ class ObjectIdentifierEncoder(AbstractItemEncoder):
         return ints2octs(octets), 0
 
 class RealEncoder(AbstractItemEncoder):
+    supportIndefLenMode = 0
     def encodeValue(self, encodeFun, value, defMode, maxChunkSize):
         if value.isPlusInfinity():
             return int2oct(0x40), 0
@@ -206,9 +219,11 @@ class RealEncoder(AbstractItemEncoder):
                 m >>= 1
                 e += 1
             eo = null
-            while e:
+            while e not in (0, -1):
                 eo = int2oct(e&0xff) + eo
                 e >>= 8
+            if e == 0 and eo and oct2int(eo[0]) & 0x80:
+                eo = int2oct(0) + eo
             n = len(eo)
             if n > 0xff:
                 raise error.PyAsn1Error('Real exponent overflow')
@@ -268,7 +283,7 @@ class AnyEncoder(OctetStringEncoder):
 
 tagMap = {
     eoo.endOfOctets.tagSet: EndOfOctetsEncoder(),
-    univ.Boolean.tagSet: IntegerEncoder(),
+    univ.Boolean.tagSet: BooleanEncoder(),
     univ.Integer.tagSet: IntegerEncoder(),
     univ.BitString.tagSet: BitStringEncoder(),
     univ.OctetString.tagSet: OctetStringEncoder(),
@@ -313,6 +328,7 @@ class Encoder:
         self.__typeMap = typeMap
 
     def __call__(self, value, defMode=1, maxChunkSize=0):
+        debug.logger & debug.flagEncoder and debug.logger('encoder called in %sdef mode, chunk size %s for type %s, value:\n%s' % (not defMode and 'in' or '', maxChunkSize, value.__class__.__name__, value.prettyPrint()))
         tagSet = value.getTagSet()
         if len(tagSet) > 1:
             concreteEncoder = explicitlyTaggedItemEncoder
@@ -322,13 +338,16 @@ class Encoder:
             elif tagSet in self.__tagMap:
                 concreteEncoder = self.__tagMap[tagSet]
             else:
-                baseTagSet = value.baseTagSet
-                if baseTagSet in self.__tagMap:
-                    concreteEncoder = self.__tagMap[baseTagSet]
+                tagSet = value.baseTagSet
+                if tagSet in self.__tagMap:
+                    concreteEncoder = self.__tagMap[tagSet]
                 else:
-                    raise Error('No encoder for %s' % value)
-        return concreteEncoder.encode(
+                    raise Error('No encoder for %s' % (value,))
+        debug.logger & debug.flagEncoder and debug.logger('using value codec %s chosen by %r' % (concreteEncoder.__class__.__name__, tagSet))
+        substrate = concreteEncoder.encode(
             self, value, defMode, maxChunkSize
             )
+        debug.logger & debug.flagEncoder and debug.logger('built %s octets of substrate: %s\nencoder completed' % (len(substrate), debug.hexdump(substrate)))
+        return substrate
 
 encode = Encoder(tagMap, typeMap)

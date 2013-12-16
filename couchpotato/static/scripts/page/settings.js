@@ -111,6 +111,10 @@ Page.Settings = new Class({
 		Cookie.write('advanced_toggle_checked', +self.advanced_toggle.checked, {'duration': 365});
 	},
 
+    sortByOrder: function(a, b){
+			return (a.order || 100) - (b.order || 100)
+	},
+
 	create: function(json){
 		var self = this;
 
@@ -141,13 +145,11 @@ Page.Settings = new Class({
 			options.include(section);
 		});
 
-		options.sort(function(a, b){
-			return (a.order || 100) - (b.order || 100)
-		}).each(function(section){
+		options.stableSort(self.sortByOrder).each(function(section){
 			var section_name = section.section_name;
 
 			// Add groups to content
-			section.groups.sortBy('order').each(function(group){
+			section.groups.stableSort(self.sortByOrder).each(function(group){
 				if(group.hidden) return;
 
 				if(self.wizard_only && !group.wizard)
@@ -184,9 +186,7 @@ Page.Settings = new Class({
 				}
 
 				// Add options to group
-				group.options.sort(function(a, b){
-					return (a.order || 100) - (b.order || 100)
-				}).each(function(option){
+				group.options.stableSort(self.sortByOrder).each(function(option){
 					if(option.hidden) return;
 					var class_name = (option.type || 'string').capitalize();
 					var input = new Option[class_name](section_name, option.name, self.getValue(section_name, option.name), option);
@@ -265,16 +265,27 @@ Page.Settings = new Class({
 	},
 
 	createGroup: function(group){
+
+		if((typeOf(group.description) == 'array')){
+			var hint = new Element('span.hint.more_hint', {
+				'html': group.description[0]
+			});
+
+			createTooltip(group.description[1]).inject(hint, 'top');
+		}
+		else {
+			var hint = new Element('span.hint', {
+				'html': group.description || ''
+			})
+		}
+
+
 		return new Element('fieldset', {
 			'class': (group.advanced ? 'inlineLabels advanced' : 'inlineLabels') + ' group_' + (group.name || '') + ' subtab_' + (group.subtab || '')
-		}).adopt(
+		}).grab(
 				new Element('h2', {
 					'text': group.label || (group.name).capitalize()
-				}).adopt(
-						new Element('span.hint', {
-							'html': group.description || ''
-						})
-					)
+				}).grab(hint)
 			);
 	},
 
@@ -343,10 +354,22 @@ var OptionBase = new Class({
 
 	createHint: function(){
 		var self = this;
-		if(self.options.description)
-			new Element('p.formHint', {
-				'html': self.options.description
-			}).inject(self.el);
+		if(self.options.description){
+
+
+			if((typeOf(self.options.description) == 'array')){
+				var hint = new Element('p.formHint.more_hint', {
+					'html': self.options.description[0]
+				}).inject(self.el);
+
+				createTooltip(self.options.description[1]).inject(hint, 'top');
+			}
+			else {
+				var hint = new Element('p.formHint', {
+					'html': self.options.description || ''
+				}).inject(self.el)
+			}
+		}
 	},
 
 	afterInject: function(){
@@ -1413,3 +1436,24 @@ Option.Combined = new Class({
 	}
 
 });
+
+var createTooltip = function(description){
+
+	var tip = new Element('div.tooltip', {
+			'events': {
+				'mouseenter': function(){
+					tip.addClass('shown')
+				},
+				'mouseleave': function(){
+					tip.removeClass('shown')
+				}
+			}
+		}).adopt(
+			new Element('a.icon2.info'),
+			new Element('div.tip', {
+				'html': description
+			})
+		);
+
+	return tip;
+}

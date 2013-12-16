@@ -16,8 +16,8 @@ class Sabnzbd(Downloader):
 
     protocol = ['nzb']
 
-    def download(self, data = None, movie = None, filedata = None):
-        if not movie: movie = {}
+    def download(self, data = None, media = None, filedata = None):
+        if not media: media = {}
         if not data: data = {}
 
         log.info('Sending "%s" to SABnzbd.', data.get('name'))
@@ -25,7 +25,7 @@ class Sabnzbd(Downloader):
         req_params = {
             'cat': self.conf('category'),
             'mode': 'addurl',
-            'nzbname': self.createNzbName(data, movie),
+            'nzbname': self.createNzbName(data, media),
             'priority': self.conf('priority'),
         }
 
@@ -36,7 +36,7 @@ class Sabnzbd(Downloader):
                 return False
 
             # If it's a .rar, it adds the .rar extension, otherwise it stays .nzb
-            nzb_filename = self.createFileName(data, filedata, movie)
+            nzb_filename = self.createFileName(data, filedata, media)
             req_params['mode'] = 'addfile'
         else:
             req_params['name'] = data.get('url')
@@ -64,7 +64,7 @@ class Sabnzbd(Downloader):
             log.error('Error getting data from SABNZBd: %s', sab_data)
             return False
 
-    def getAllDownloadStatus(self):
+    def getAllDownloadStatus(self, ids):
 
         log.debug('Checking SABnzbd download status.')
 
@@ -91,35 +91,36 @@ class Sabnzbd(Downloader):
 
         # Get busy releases
         for nzb in queue.get('slots', []):
-            status = 'busy'
-            if 'ENCRYPTED / ' in nzb['filename']:
-                status = 'failed'
-
-            release_downloads.append({
-                'id': nzb['nzo_id'],
-                'name': nzb['filename'],
-                'status': status,
-                'original_status': nzb['status'],
-                'timeleft': nzb['timeleft'] if not queue['paused'] else -1,
-            })
+            if nzb['nzo_id'] in ids:
+                status = 'busy'
+                if 'ENCRYPTED / ' in nzb['filename']:
+                    status = 'failed'
+    
+                release_downloads.append({
+                    'id': nzb['nzo_id'],
+                    'name': nzb['filename'],
+                    'status': status,
+                    'original_status': nzb['status'],
+                    'timeleft': nzb['timeleft'] if not queue['paused'] else -1,
+                })
 
         # Get old releases
         for nzb in history.get('slots', []):
-
-            status = 'busy'
-            if nzb['status'] == 'Failed' or (nzb['status'] == 'Completed' and nzb['fail_message'].strip()):
-                status = 'failed'
-            elif nzb['status'] == 'Completed':
-                status = 'completed'
-
-            release_downloads.append({
-                'id': nzb['nzo_id'],
-                'name': nzb['name'],
-                'status': status,
-                'original_status': nzb['status'],
-                'timeleft': str(timedelta(seconds = 0)),
-                'folder': sp(os.path.dirname(nzb['storage']) if os.path.isfile(nzb['storage']) else nzb['storage']),
-            })
+            if nzb['nzo_id'] in ids:
+                status = 'busy'
+                if nzb['status'] == 'Failed' or (nzb['status'] == 'Completed' and nzb['fail_message'].strip()):
+                    status = 'failed'
+                elif nzb['status'] == 'Completed':
+                    status = 'completed'
+    
+                release_downloads.append({
+                    'id': nzb['nzo_id'],
+                    'name': nzb['name'],
+                    'status': status,
+                    'original_status': nzb['status'],
+                    'timeleft': str(timedelta(seconds = 0)),
+                    'folder': sp(os.path.dirname(nzb['storage']) if os.path.isfile(nzb['storage']) else nzb['storage']),
+                })
 
         return release_downloads
 

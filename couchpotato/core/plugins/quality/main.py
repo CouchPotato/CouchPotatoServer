@@ -2,7 +2,7 @@ from couchpotato import get_session
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import toUnicode, ss
-from couchpotato.core.helpers.variable import mergeDicts, md5, getExt
+from couchpotato.core.helpers.variable import mergeDicts, getExt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Quality, Profile, ProfileType
@@ -19,14 +19,14 @@ class QualityPlugin(Plugin):
         {'identifier': 'bd50', 'hd': True, 'size': (15000, 60000), 'label': 'BR-Disk', 'alternative': ['bd25'], 'allow': ['1080p'], 'ext':[], 'tags': ['bdmv', 'certificate', ('complete', 'bluray')]},
         {'identifier': '1080p', 'hd': True, 'size': (4000, 20000), 'label': '1080p', 'width': 1920, 'height': 1080, 'alternative': [], 'allow': [], 'ext':['mkv', 'm2ts'], 'tags': ['m2ts', 'x264', 'h264']},
         {'identifier': '720p', 'hd': True, 'size': (3000, 10000), 'label': '720p', 'width': 1280, 'height': 720, 'alternative': [], 'allow': [], 'ext':['mkv', 'ts'], 'tags': ['x264', 'h264']},
-        {'identifier': 'brrip', 'hd': True, 'size': (700, 7000), 'label': 'BR-Rip', 'alternative': ['bdrip'], 'allow': ['720p', '1080p'], 'ext':['avi'], 'tags': ['hdtv', 'hdrip', 'webdl', ('web', 'dl')]},
+        {'identifier': 'brrip', 'hd': True, 'size': (700, 7000), 'label': 'BR-Rip', 'alternative': ['bdrip'], 'allow': ['720p', '1080p'], 'ext':[], 'tags': ['hdtv', 'hdrip', 'webdl', ('web', 'dl')]},
         {'identifier': 'dvdr', 'size': (3000, 10000), 'label': 'DVD-R', 'alternative': ['br2dvd'], 'allow': [], 'ext':['iso', 'img', 'vob'], 'tags': ['pal', 'ntsc', 'video_ts', 'audio_ts', ('dvd', 'r')]},
-        {'identifier': 'dvdrip', 'size': (600, 2400), 'label': 'DVD-Rip', 'width': 720, 'alternative': [], 'allow': [], 'ext':['avi', 'mpg', 'mpeg'], 'tags': [('dvd', 'rip'), ('dvd', 'xvid'), ('dvd', 'divx')]},
-        {'identifier': 'scr', 'size': (600, 1600), 'label': 'Screener', 'alternative': ['screener', 'dvdscr', 'ppvrip', 'dvdscreener', 'hdscr'], 'allow': ['dvdr', 'dvdrip', '720p'], 'ext':['avi', 'mpg', 'mpeg'], 'tags': ['webrip', ('web', 'rip')]},
-        {'identifier': 'r5', 'size': (600, 1000), 'label': 'R5', 'alternative': ['r6'], 'allow': ['dvdr'], 'ext':['avi', 'mpg', 'mpeg']},
-        {'identifier': 'tc', 'size': (600, 1000), 'label': 'TeleCine', 'alternative': ['telecine'], 'allow': [], 'ext':['avi', 'mpg', 'mpeg']},
-        {'identifier': 'ts', 'size': (600, 1000), 'label': 'TeleSync', 'alternative': ['telesync', 'hdts'], 'allow': [], 'ext':['avi', 'mpg', 'mpeg']},
-        {'identifier': 'cam', 'size': (600, 1000), 'label': 'Cam', 'alternative': ['camrip', 'hdcam'], 'allow': [], 'ext':['avi', 'mpg', 'mpeg']}
+        {'identifier': 'dvdrip', 'size': (600, 2400), 'label': 'DVD-Rip', 'width': 720, 'alternative': [], 'allow': [], 'ext':[], 'tags': [('dvd', 'rip'), ('dvd', 'xvid'), ('dvd', 'divx')]},
+        {'identifier': 'scr', 'size': (600, 1600), 'label': 'Screener', 'alternative': ['screener', 'dvdscr', 'ppvrip', 'dvdscreener', 'hdscr'], 'allow': ['dvdr', 'dvdrip', '720p', '1080p'], 'ext':[], 'tags': ['webrip', ('web', 'rip')]},
+        {'identifier': 'r5', 'size': (600, 1000), 'label': 'R5', 'alternative': ['r6'], 'allow': ['dvdr'], 'ext':[]},
+        {'identifier': 'tc', 'size': (600, 1000), 'label': 'TeleCine', 'alternative': ['telecine'], 'allow': [], 'ext':[]},
+        {'identifier': 'ts', 'size': (600, 1000), 'label': 'TeleSync', 'alternative': ['telesync', 'hdts'], 'allow': [], 'ext':[]},
+        {'identifier': 'cam', 'size': (600, 1000), 'label': 'Cam', 'alternative': ['camrip', 'hdcam'], 'allow': [], 'ext':[]}
     ]
     pre_releases = ['cam', 'ts', 'tc', 'r5', 'scr']
 
@@ -49,6 +49,8 @@ class QualityPlugin(Plugin):
         })
 
         addEvent('app.initialize', self.fill, priority = 10)
+
+        addEvent('app.test', self.doTest)
 
     def preReleases(self):
         return self.pre_releases
@@ -165,9 +167,10 @@ class QualityPlugin(Plugin):
         if not extra: extra = {}
 
         # Create hash for cache
-        cache_key = md5(str([f.replace('.' + getExt(f), '') for f in files]))
+        cache_key = str([f.replace('.' + getExt(f), '') if len(getExt(f)) < 4 else f for f in files])
         cached = self.getCache(cache_key)
-        if cached and len(extra) == 0: return cached
+        if cached and len(extra) == 0:
+            return cached
 
         qualities = self.all()
 
@@ -228,11 +231,6 @@ class QualityPlugin(Plugin):
                     if len(set(words) & set(alt)) == len(alt):
                         log.debug('Found %s via %s %s in %s', (quality['identifier'], tag_type, quality.get(tag_type), cur_file))
                         score += points.get(tag_type)
-                    elif len(set(words) & set(alt)) > 0:
-                        partial = list(set(words) & set(alt))[0]
-                        if len(partial) > 2:
-                            log.debug('Found %s via partial %s %s in %s', (quality['identifier'], tag_type, quality.get(tag_type), cur_file))
-                            score += points.get(tag_type) / 3
 
                 if (isinstance(alt, (str, unicode)) and ss(alt.lower()) in cur_file.lower()):
                     log.debug('Found %s via %s %s in %s', (quality['identifier'], tag_type, quality.get(tag_type), cur_file))
@@ -285,3 +283,33 @@ class QualityPlugin(Plugin):
         if add_score != 0:
             for allow in quality.get('allow', []):
                 score[allow] -= 40 if self.cached_order[allow] < self.cached_order[quality['identifier']] else 5
+
+    def doTest(self):
+
+        tests = {
+            'Movie Name (1999)-DVD-Rip.avi': 'dvdrip',
+            'Movie Name 1999 720p Bluray.mkv': '720p',
+            'Movie Name 1999 BR-Rip 720p.avi': 'brrip',
+            'Movie Name 1999 720p Web Rip.avi': 'scr',
+            'Movie Name 1999 Web DL.avi': 'brrip',
+            'Movie.Name.1999.1080p.WEBRip.H264-Group': 'scr',
+            'Movie.Name.1999.DVDRip-Group': 'dvdrip',
+            'Movie.Name.1999.DVD-Rip-Group': 'dvdrip',
+            'Movie.Name.1999.DVD-R-Group': 'dvdr',
+        }
+
+        correct = 0
+        for name in tests:
+            success = self.guess([name]).get('identifier') == tests[name]
+            if not success:
+                log.error('%s failed check, thinks it\'s %s', (name, self.guess([name]).get('identifier')))
+
+            correct += success
+
+        if correct == len(tests):
+            log.info('Quality test successful')
+            return True
+        else:
+            log.error('Quality test failed: %s out of %s succeeded', (correct, len(tests)))
+
+

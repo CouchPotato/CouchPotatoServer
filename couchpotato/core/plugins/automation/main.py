@@ -43,7 +43,7 @@ class Automation(Plugin):
             if self.shuttingDown():
                 break
 
-            movie_dict = fireEvent('movie.get', movie_id, single = True)
+            movie_dict = fireEvent('media.get', movie_id, single = True)
             fireEvent('movie.searcher.single', movie_dict)
 
         return True

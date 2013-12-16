@@ -22,22 +22,34 @@ from __future__ import unicode_literals
 from guessit import Guess
 from guessit.transfo import SingleNodeGuesser
 from guessit.language import search_language
-from guessit.textutils import clean_string, find_words
 import logging
 
 log = logging.getLogger(__name__)
 
 
-def guess_language(string):
-    language, span, confidence = search_language(string)
+def guess_language(string, node, skip=None):
+    if skip:
+        relative_skip = []
+        for entry in skip:
+            node_idx = entry['node_idx']
+            span = entry['span']
+            if node_idx == node.node_idx[:len(node_idx)]:
+                relative_span = (span[0] - node.offset + 1, span[1] - node.offset + 1)
+                relative_skip.append(relative_span)
+        skip = relative_skip
+
+    language, span, confidence = search_language(string, skip=skip)
     if language:
         return (Guess({'language': language},
-                      confidence=confidence),
+                      confidence=confidence,
+                      raw= string[span[0]:span[1]]),
                 span)
 
     return None, None
 
+guess_language.use_node = True
 
-def process(mtree):
-    SingleNodeGuesser(guess_language, None, log).process(mtree)
+
+def process(mtree, *args, **kwargs):
+    SingleNodeGuesser(guess_language, None, log, *args, **kwargs).process(mtree)
     # Note: 'language' is promoted to 'subtitleLanguage' in the post_process transfo

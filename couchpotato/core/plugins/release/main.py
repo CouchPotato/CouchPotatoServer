@@ -100,14 +100,14 @@ class Release(Plugin):
         done_status, snatched_status = fireEvent('status.get', ['done', 'snatched'], single = True)
 
         # Add movie
-        movie = db.query(Media).filter_by(library_id = group['library'].get('id')).first()
-        if not movie:
-            movie = Media(
+        media = db.query(Media).filter_by(library_id = group['library'].get('id')).first()
+        if not media:
+            media = Media(
                 library_id = group['library'].get('id'),
                 profile_id = 0,
                 status_id = done_status.get('id')
             )
-            db.add(movie)
+            db.add(media)
             db.commit()
 
         # Add Release
@@ -120,7 +120,7 @@ class Release(Plugin):
         if not rel:
             rel = Relea(
                 identifier = identifier,
-                movie = movie,
+                movie = media,
                 quality_id = group['meta_data']['quality'].get('id'),
                 status_id = done_status.get('id')
             )
@@ -142,7 +142,7 @@ class Release(Plugin):
         except:
             log.debug('Failed to attach "%s" to release: %s', (added_files, traceback.format_exc()))
 
-        fireEvent('movie.restatus', movie.id)
+        fireEvent('media.restatus', media.id)
 
         return True
 
@@ -269,7 +269,7 @@ class Release(Plugin):
                 if filedata == 'try_next':
                     return filedata
 
-            download_result = fireEvent('download', data = data, movie = media, manual = manual, filedata = filedata, single = True)
+            download_result = fireEvent('download', data = data, media = media, manual = manual, filedata = filedata, single = True)
             log.debug('Downloader result: %s', download_result)
 
             if download_result:
@@ -288,7 +288,7 @@ class Release(Plugin):
                                     value = toUnicode(download_result.get(key))
                                 )
                                 rls.info.append(rls_info)
-                        db.commit()
+                            db.commit()
 
                         log_movie = '%s (%s) in %s' % (getTitle(media['library']), media['library']['year'], rls.quality.label)
                         snatch_message = 'Snatched "%s": %s' % (data.get('name'), log_movie)
@@ -446,6 +446,6 @@ class Release(Plugin):
             db.commit()
 
             #Update all movie info as there is no release update function
-            fireEvent('notify.frontend', type = 'release.update_status.%s' % rel.id, data = status.get('id'))
+            fireEvent('notify.frontend', type = 'release.update_status', data = rel.to_dict())
 
         return True

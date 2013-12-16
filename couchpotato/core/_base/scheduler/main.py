@@ -31,13 +31,13 @@ class Scheduler(Plugin):
                 pass
 
     def doShutdown(self):
-        super(Scheduler, self).doShutdown()
         self.stop()
+        return super(Scheduler, self).doShutdown()
 
     def stop(self):
         if self.started:
             log.debug('Stopping scheduler')
-            self.sched.shutdown()
+            self.sched.shutdown(wait = False)
             log.debug('Scheduler stopped')
         self.started = False
 

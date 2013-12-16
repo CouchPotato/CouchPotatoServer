@@ -296,7 +296,7 @@ UNDETERMINED = Language('und')
 ALL_LANGUAGES = frozenset(Language(lng) for lng in lng_all_names) - frozenset([UNDETERMINED])
 ALL_LANGUAGES_NAMES = lng_all_names
 
-def search_language(string, lang_filter=None):
+def search_language(string, lang_filter=None, skip=None):
     """Looks for language patterns, and if found return the language object,
     its group span and an associated confidence.
 
@@ -345,6 +345,16 @@ def search_language(string, lang_filter=None):
 
         if pos != -1:
             end = pos + len(lang)
+            
+            # skip if span in in skip list
+            while skip and (pos - 1, end - 1) in skip:
+                pos = slow.find(lang, end)
+                if pos == -1:
+                    continue
+                end = pos + len(lang)                
+            if pos == -1:
+                continue
+                            
             # make sure our word is always surrounded by separators
             if slow[pos - 1] not in sep or slow[end] not in sep:
                 continue

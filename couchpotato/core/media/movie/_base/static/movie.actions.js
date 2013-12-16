@@ -126,7 +126,9 @@ MA.Release = new Class({
 		else
 			self.showHelper();
 
-		App.addEvent('movie.searcher.ended.'+self.movie.data.id, function(notification){
+		App.on('movie.searcher.ended', function(notification){
+			if(self.movie.data.id != notification.data.id) return;
+
 			self.releases = null;
 			if(self.options_container){
 				self.options_container.destroy();
@@ -250,12 +252,14 @@ MA.Release = new Class({
 				else if(!self.next_release && status.identifier == 'available'){
 					self.next_release = release;
 				}
-				
+
 				var update_handle = function(notification) {
-					var q = self.movie.quality.getElement('.q_id' + release.quality_id), 
+					if(notification.data.id != release.id) return;
+
+					var q = self.movie.quality.getElement('.q_id' + release.quality_id),
 						status = Status.get(release.status_id),
-						new_status = Status.get(notification.data);
-					
+						new_status = Status.get(notification.data.status_id);
+
 					release.status_id = new_status.id
 					release.el.set('class', 'item ' + new_status.identifier);
 
@@ -272,7 +276,7 @@ MA.Release = new Class({
 					}
 				}
 
-				App.addEvent('release.update_status.' + release.id, update_handle); 
+				App.on('release.update_status', update_handle);
 
 			});
 
@@ -285,7 +289,7 @@ MA.Release = new Class({
 			if(self.next_release || (self.last_release && ['ignored', 'failed'].indexOf(self.last_release.status.identifier) === false)){
 
 				self.trynext_container = new Element('div.buttons.try_container').inject(self.release_container, 'top');
-				
+
 				var nr = self.next_release,
 					lr = self.last_release;
 
@@ -427,7 +431,7 @@ MA.Release = new Class({
 	markMovieDone: function(){
 		var self = this;
 
-		Api.request('movie.delete', {
+		Api.request('media.delete', {
 			'data': {
 				'id': self.movie.get('id'),
 				'delete_from': 'wanted'
@@ -446,7 +450,7 @@ MA.Release = new Class({
 
 	},
 
-	tryNextRelease: function(movie_id){
+	tryNextRelease: function(){
 		var self = this;
 
 		Api.request('movie.searcher.try_next', {
@@ -817,7 +821,7 @@ MA.Delete = new Class({
 				self.callChain();
 			},
 			function(){
-				Api.request('movie.delete', {
+				Api.request('media.delete', {
 					'data': {
 						'id': self.movie.get('id'),
 						'delete_from': self.movie.list.options.identifier
