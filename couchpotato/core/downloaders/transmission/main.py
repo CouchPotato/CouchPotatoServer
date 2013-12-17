@@ -103,15 +103,15 @@ class Transmission(Downloader):
 
         for torrent in queue['torrents']:
             if torrent['hashString'] in ids:
-                log.debug('name=%s / id=%s / downloadDir=%s / hashString=%s / percentDone=%s / status=%s / eta=%s / uploadRatio=%s / isFinished=%s',
-                    (torrent['name'], torrent['id'], torrent['downloadDir'], torrent['hashString'], torrent['percentDone'], torrent['status'], torrent['eta'], torrent['uploadRatio'], torrent['isFinished']))
+                log.debug('name=%s / id=%s / downloadDir=%s / hashString=%s / percentDone=%s / status=%s / isStalled=%s / eta=%s / uploadRatio=%s / isFinished=%s',
+                    (torrent['name'], torrent['id'], torrent['downloadDir'], torrent['hashString'], torrent['percentDone'], torrent['status'], torrent.get('isStalled', 'N/A'), torrent['eta'], torrent['uploadRatio'], torrent['isFinished']))
     
                 torrent_files = []
                 for file_item in torrent['files']:
                     torrent_files.append(sp(os.path.join(torrent['downloadDir'], file_item['name'])))
     
                 status = 'busy'
-                if torrent.get('isStalled') and self.conf('stalled_as_failed'):
+                if torrent.get('isStalled') and not torrent['percentDone'] == 1 and self.conf('stalled_as_failed'):
                     status = 'failed'
                 elif torrent['status'] == 0 and torrent['percentDone'] == 1:
                     status = 'completed'
