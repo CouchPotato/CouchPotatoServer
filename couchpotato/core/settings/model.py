@@ -184,6 +184,15 @@ class Library(Entity):
                 root_library = related_libraries.get(root_key)
                 orig_dict['root_library'] = root_library[0] if root_library else None
 
+            # Add references to children
+            for key, libraries in related_libraries.items():
+                for library in libraries:
+                    # Add related_libraries
+                    library['related_libraries'] = orig_dict['related_libraries']
+
+                    # Add root_library
+                    library['root_library'] = orig_dict['root_library']
+
         return orig_dict
 
 
