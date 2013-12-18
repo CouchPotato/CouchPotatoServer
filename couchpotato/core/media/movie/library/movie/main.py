@@ -16,9 +16,25 @@ class MovieLibraryPlugin(LibraryBase):
     default_dict = {'titles': {}, 'files':{}}
 
     def __init__(self):
+        addEvent('library.title', self.title)
         addEvent('library.add.movie', self.add)
         addEvent('library.update.movie', self.update)
         addEvent('library.update.movie.release_date', self.updateReleaseDate)
+
+    def title(self, library, first = True, condense = False, include_identifier = True):
+        if library.get('type') != 'movie':
+            return
+
+        titles = [title['title'] for title in library['titles']]
+
+        # Add year identifier to titles
+        if include_identifier:
+            titles = [title + (' %s' % str(library['year'])) for title in titles]
+
+        if first:
+            return titles[0] if titles else None
+
+        return titles
 
     def add(self, attrs = {}, update_after = True):
         # movies don't yet contain these, so lets make sure to set defaults

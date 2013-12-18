@@ -117,7 +117,7 @@ class Season(SeasonProvider, Base):
 
     def buildUrl(self, media, quality):
         query = tryUrlencode({
-            'q': fireEvent('searcher.get_search_title', media['library'], include_identifier = True, single = True),
+            'q': fireEvent('library.title', media['library'], condense = True, single = True),
             'm': 'n',
             'max': 400,
             'adv_age': Env.setting('retention', 'nzb'),
@@ -133,7 +133,7 @@ class Episode(EpisodeProvider, Base):
 
     def buildUrl(self, media, quality):
         query = tryUrlencode({
-            'q': fireEvent('searcher.get_search_title', media['library'], include_identifier = True, single = True),
+            'q': fireEvent('library.title', media['library'], condense = True, single = True),
             'm': 'n',
             'max': 400,
             'adv_age': Env.setting('retention', 'nzb'),

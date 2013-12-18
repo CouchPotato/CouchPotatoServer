@@ -4,6 +4,8 @@ from couchpotato.core.helpers.encoding import toUnicode, simplifyString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.settings.model import ShowLibrary, LibraryTitle, File
 from couchpotato.core.media._base.library import LibraryBase
+from qcond.helpers import simplify
+from qcond import QueryCondenser
 from string import ascii_letters
 import time
 import traceback
@@ -16,9 +18,34 @@ class ShowLibraryPlugin(LibraryBase):
     default_dict = {'titles': {}, 'files':{}}
 
     def __init__(self):
+        self.query_condenser = QueryCondenser()
+
+        addEvent('library.title', self.title)
         addEvent('library.add.show', self.add)
         addEvent('library.update.show', self.update)
         addEvent('library.update.show_release_date', self.updateReleaseDate)
+
+    def title(self, library, first=True, condense=False, include_identifier=None):
+        if library is list or library.get('type') != 'show':
+            return
+
+        titles = [title['title'] for title in library['titles']]
+
+        if condense:
+            # Use QueryCondenser to build a list of optimal search titles
+            condensed_titles = self.query_condenser.distinct(titles)
+
+            if condensed_titles:
+                # Use condensed titles if we got a valid result
+                titles = condensed_titles
+            else:
+                # Fallback to simplifying titles
+                titles = [simplify(title) for title in titles]
+
+        if first:
+            return titles[0] if titles else None
+
+        return titles
 
     def add(self, attrs = {}, update_after = True):
         type = attrs.get('type', 'show')

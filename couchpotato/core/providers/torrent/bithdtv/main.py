@@ -95,8 +95,7 @@ class Movie(MovieProvider, Base):
 
     def buildUrl(self, media):
         query = tryUrlencode({
-            'search': fireEvent('searcher.get_search_title', media['library'],
-                                include_identifier = True, single = True),
+            'search': fireEvent('library.title', media['library'], condense = True, single = True),
             'cat': 7 # Movie cat
         })
         return query
@@ -105,8 +104,7 @@ class Season(SeasonProvider, Base):
 
     def buildUrl(self, media):
         query = tryUrlencode({
-            'search': fireEvent('searcher.get_search_title', media['library'],
-                                include_identifier = True, single = True),
+            'search': fireEvent('library.title', media['library'], condense = True, single = True),
             'cat': 12 # Season cat
         })
         return query
@@ -115,8 +113,7 @@ class Episode(EpisodeProvider, Base):
 
     def buildUrl(self, media):
         query = tryUrlencode({
-            'search': fireEvent('searcher.get_search_title', media['library'],
-                                include_identifier = True, single = True),
+            'search': fireEvent('library.title', media['library'], condense = True, single = True),
             'cat': 10 # Episode cat
         })
         return query

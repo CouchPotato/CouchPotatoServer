@@ -17,10 +17,43 @@ class EpisodeLibraryPlugin(LibraryBase):
     default_dict = {'titles': {}, 'files':{}}
 
     def __init__(self):
+        addEvent('library.title', self.title)
         addEvent('library.identifier', self.identifier)
         addEvent('library.add.episode', self.add)
         addEvent('library.update.episode', self.update)
         addEvent('library.update.episode_release_date', self.updateReleaseDate)
+
+    def title(self, library, first=True, condense=False, include_identifier=True):
+        if library is list or library.get('type') != 'episode':
+            return
+
+        # Get the titles of the season
+        if not library.get('related_libraries', {}).get('season', []):
+            log.warning('Invalid library, unable to determine title.')
+            return
+
+        titles = fireEvent(
+            'library.title',
+            library['related_libraries']['season'][0],
+            first=False,
+            include_identifier=include_identifier,
+            condense=condense,
+
+            single=True
+        )
+
+        identifier = fireEvent('library.identifier', library, single = True)
+
+        # Add episode identifier to titles
+        if include_identifier and identifier.get('episode'):
+            titles = [title + ('E%02d' % identifier['episode']) for title in titles]
+
+
+        if first:
+            return titles[0] if titles else None
+
+        return titles
+
 
     def identifier(self, library):
         if library.get('type') != 'episode':

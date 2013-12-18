@@ -26,7 +26,6 @@ class ShowSearcher(Plugin):
         for type in toIterable(self.type):
             addEvent('%s.searcher.single' % type, self.single)
 
-        addEvent('searcher.get_search_title', self.getSearchTitle)
         addEvent('searcher.correct_release', self.correctRelease)
 
     def single(self, media, search_protocols = None, manual = False):
@@ -61,7 +60,7 @@ class ShowSearcher(Plugin):
         found_releases = []
         too_early_to_search = []
 
-        default_title = self.getSearchTitle(media['library'])
+        default_title = fireEvent('library.title', media['library'], single=True)
         if not default_title:
             log.error('No proper info found for episode, removing it from library to cause it from having more issues.')
             #fireEvent('episode.delete', episode['id'], single = True)
@@ -144,61 +143,6 @@ class ShowSearcher(Plugin):
         fireEvent('notify.frontend', type = 'show.searcher.ended.%s' % media['id'], data = True)
 
         return ret
-
-    def getSearchTitle(self, library, include_identifier = False):
-        if library['type'] not in ['show', 'season', 'episode']:
-            return
-
-        show, season, episode = self.getLibraries(library)
-
-        if not show:
-            return None
-
-        titles = []
-
-        # Add season map_names if they exist
-        if season is not None and 'map_names' in show['info']:
-            season_names = show['info']['map_names'].get(str(season['season_number']), {})
-
-            # Add titles from all locations
-            # TODO only add name maps from a specific location
-            for location, names in season_names.items():
-                titles += [name for name in names if name not in titles]
-
-        # Add show titles
-        titles += [title['title'] for title in show['titles'] if title['title'] not in titles]
-
-        # Use QueryCondenser to build a list of optimal search titles
-        condensed_titles = self.query_condenser.distinct(titles)
-
-        title = None
-
-        # TODO try other titles if searching doesn't return results
-
-        if len(condensed_titles):
-            # Return the first condensed title if one exists
-            title = condensed_titles[0]
-        elif len(titles):
-            # Fallback to first raw title
-            title = simplify(titles[0])
-        else:
-            return None
-
-        # Return show title if we aren't including the identifier
-        if not include_identifier:
-            return title
-
-        # Add the identifier to search title
-        identifier = fireEvent('library.identifier', library, single = True)
-
-        # TODO this needs to support other identifier formats
-        if identifier['season']:
-            title += ' S%02d' % identifier['season']
-
-            if identifier.get('episode'):
-                title += 'E%02d' % identifier['episode']
-
-        return title
 
     def correctRelease(self, release = None, media = None, quality = None, **kwargs):
 
