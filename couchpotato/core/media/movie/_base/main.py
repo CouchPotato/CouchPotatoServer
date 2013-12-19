@@ -1,4 +1,3 @@
-import os
 from couchpotato import get_session
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, fireEventAsync, addEvent
@@ -71,7 +70,6 @@ class MovieBase(MovieTypeBase):
             'params': {
                 'id': {'desc': 'Movie ID(s) you want to delete.', 'type': 'int (comma separated)'},
                 'delete_from': {'desc': 'Delete movie from this page', 'type': 'string: all (default), wanted, manage'},
-                'with_files': {'desc': 'Delete the files as well', 'type': 'bool (true or false)'},
             }
         })
 
@@ -463,64 +461,18 @@ class MovieBase(MovieTypeBase):
 
         ids = splitString(id)
         for movie_id in ids:
-            self.delete(movie_id, delete_from = kwargs.get('delete_from', 'all'), with_files = kwargs.get('with_files'))
+            self.delete(movie_id, delete_from = kwargs.get('delete_from', 'all'))
 
         return {
             'success': True,
         }
 
-    def deleteFiles(self, instance):
-        directories = dict()
-
-        # Walk through all files in the Couch database
-        for file_ in instance.files:
-            # Add the directories and filename prefixes to a list so we can
-            # remove the directories and related files as well
-            directory = os.path.dirname(file_.path)
-            if directory not in directories:
-                directories[directory] = set()
-            directories[directory].add(os.path.splitext(file_.path)[0])
-
-            if os.path.isfile(file_.path):
-                try:
-                    os.remove(file_.path)
-                    log.info('Removed %s', file_.path)
-                except:
-                    log.error('Unable to remove %s', file_.path)
-
-        # Walk through the directories and file prefixes for removal if
-        # possible
-        for directory, prefixes in directories.iteritems():
-            if os.path.isdir(directory):
-
-                # If the files in the directory have the same name as the
-                # expected files (except for extensions and stuff), remove them
-                files = os.listdir(directory)
-                for file_ in files:
-                    for prefix in prefixes:
-                        if file_.startswith(prefix):
-                            try:
-                                os.remove(file_)
-                                print 'rmoeving', file_
-                                log.info('Removed %s', file_)
-                            except:
-                                log.error('Unable to remove %s', file_)
-
-                try:
-                    os.rmdir(directory)
-                    log.info('Removed %s', directory)
-                except:
-                    log.error('Unable to remove %s', directory)
-
-    def delete(self, movie_id, delete_from = None, with_files = False):
+    def delete(self, movie_id, delete_from = None):
 
         db = get_session()
 
         movie = db.query(Media).filter_by(id = movie_id).first()
         if movie:
-            if with_files:
-                self.deleteFiles(movie)
-
             deleted = False
             if delete_from == 'all':
                 db.delete(movie)
@@ -533,9 +485,6 @@ class MovieBase(MovieTypeBase):
                 total_deleted = 0
                 new_movie_status = None
                 for release in movie.releases:
-                    if with_files:
-                        self.deleteFiles(release)
-
                     if delete_from in ['wanted', 'snatched', 'late']:
                         if release.status_id != done_status.get('id'):
                             db.delete(release)
