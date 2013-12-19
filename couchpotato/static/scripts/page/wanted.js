@@ -4,6 +4,7 @@ Page.Wanted = new Class({
 
 	name: 'wanted',
 	title: 'Gimmy gimmy gimmy!',
+	folder_browser: null,
 
 	indexAction: function(){
 		var self = this;
@@ -18,13 +19,22 @@ Page.Wanted = new Class({
 				}
 			});
 
+
+            self.scan_folder = new Element('a', {
+                'title': 'Scan a folder and rename all movies in it',
+                'text': 'Manual folder scan',
+                'events':{
+                    'click': self.scanFolder.bind(self)
+                }
+            });
+
 			// Wanted movies
 			self.wanted = new MovieList({
 				'identifier': 'wanted',
 				'status': 'active',
 				'actions': [MA.IMDB, MA.Trailer, MA.Release, MA.Edit, MA.Refresh, MA.Readd, MA.Delete],
 				'add_new': true,
-				'menu': [self.manual_search],
+				'menu': [self.manual_search, self.scan_folder],
 				'on_empty_element': App.createUserscriptButtons().addClass('empty_wanted')
 			});
 			$(self.wanted).inject(self.el);
@@ -69,6 +79,45 @@ Page.Wanted = new Class({
 			});
 		}, 1000);
 
-	}
+	},
+
+    scanFolder: function(e) {
+        (e).stop();
+
+        var self = this;
+        var options = {
+        	'name': 'Scan_folder'
+        }
+
+        if(!self.folder_browser){
+            self.folder_browser = new Option['Directory']("Scan", "folder", "", options);
+
+            self.folder_browser.save = function() {
+                var folder = self.folder_browser.getValue();
+                Api.request('renamer.scan', {
+                    'data': {
+                        'base_folder': folder,
+                    },
+                });
+            };
+
+            self.folder_browser.inject(self.el, 'top');
+            self.folder_browser.fireEvent('injected');
+
+            // Hide the settings box
+            self.folder_browser.directory_inlay.hide();
+            self.folder_browser.el.removeChild(self.folder_browser.el.firstChild);
+
+            self.folder_browser.showBrowser();
+
+            // Make adjustments to the browser
+            self.folder_browser.browser.getElements('.clear.button').hide();
+            self.folder_browser.save_button.text = "Select";
+            self.folder_browser.browser.style.zIndex=1000;
+        }
+        else{
+            self.folder_browser.showBrowser();
+        }
+    }
 
 });
