@@ -431,7 +431,7 @@ MA.Release = new Class({
 	markMovieDone: function(){
 		var self = this;
 
-		Api.request('media.delete', {
+		Api.request('movie.delete', {
 			'data': {
 				'id': self.movie.get('id'),
 				'delete_from': 'wanted'
@@ -450,7 +450,7 @@ MA.Release = new Class({
 
 	},
 
-	tryNextRelease: function(){
+	tryNextRelease: function(movie_id){
 		var self = this;
 
 		Api.request('movie.searcher.try_next', {
@@ -792,10 +792,27 @@ MA.Delete = new Class({
 				new Element('a.button.delete', {
 					'text': 'Delete ' + self.movie.title.get('text'),
 					'events': {
-						'click': self.del.bind(self)
+						'click': self.del.bind(self, false)
 					}
 				})
-			).inject(self.movie, 'top');
+			);
+
+            /* Deleting files is only useful if it's already downloaded */
+		    if(self.movie.list.options.identifier == 'manage'){
+			    self.delete_container.adopt(
+				    new Element('span', {
+					    'text': ' '
+				    }),
+				    new Element('a.button.delete', {
+					    'text': '+ Files',
+					    'events': {
+						    'click': self.del.bind(self, true)
+					    }
+				    })
+				);
+			}
+
+			self.delete_container.inject(self.movie, 'top');
 		}
 
 		self.movie.slide('in', self.delete_container);
@@ -810,7 +827,7 @@ MA.Delete = new Class({
 		self.movie.slide('out');
 	},
 
-	del: function(e){
+	del: function(withFiles, e){
 		(e).preventDefault();
 		var self = this;
 
@@ -821,10 +838,11 @@ MA.Delete = new Class({
 				self.callChain();
 			},
 			function(){
-				Api.request('media.delete', {
+				Api.request('movie.delete', {
 					'data': {
 						'id': self.movie.get('id'),
-						'delete_from': self.movie.list.options.identifier
+						'delete_from': self.movie.list.options.identifier,
+				        'with_files': !!withFiles
 					},
 					'onComplete': function(){
 						movie.set('tween', {
@@ -840,7 +858,6 @@ MA.Delete = new Class({
 		);
 
 		self.callChain();
-
 	}
 
 });
