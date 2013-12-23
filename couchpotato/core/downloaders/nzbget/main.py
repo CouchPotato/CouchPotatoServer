@@ -17,7 +17,7 @@ class NZBGet(Downloader):
 
     protocol = ['nzb']
 
-    url = '%(protocol)://%(username)s:%(password)s@%(host)s/xmlrpc'
+    url = '%(protocol)s://%(username)s:%(password)s@%(host)s/xmlrpc'
 
     def download(self, data = None, media = None, filedata = None):
         if not media: media = {}
@@ -71,7 +71,7 @@ class NZBGet(Downloader):
 
         log.debug('Checking NZBGet download status.')
 
-        url = self.url % {'host': self.conf('host'), 'username': self.conf('username'), 'password': self.conf('password')}
+        url = self.url % {'protocol': 'https' if self.conf('ssl') else 'http', 'host': self.conf('host'), 'username': self.conf('username'), 'password': self.conf('password')}
 
         rpc = xmlrpclib.ServerProxy(url)
         try:
