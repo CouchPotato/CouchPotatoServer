@@ -17,7 +17,7 @@ class NZBGet(Downloader):
 
     protocol = ['nzb']
 
-    url = 'http://%(username)s:%(password)s@%(host)s/xmlrpc'
+    url = '%(protocol)://%(username)s:%(password)s@%(host)s/xmlrpc'
 
     def download(self, data = None, media = None, filedata = None):
         if not media: media = {}
@@ -29,7 +29,7 @@ class NZBGet(Downloader):
 
         log.info('Sending "%s" to NZBGet.', data.get('name'))
 
-        url = self.url % {'host': self.conf('host'), 'username': self.conf('username'), 'password': self.conf('password')}
+        url = self.url % {'protocol': 'https' if self.conf('ssl') else 'http', 'host': self.conf('host'), 'username': self.conf('username'), 'password': self.conf('password')}
         nzb_name = ss('%s.nzb' % self.createNzbName(data, media))
 
         rpc = xmlrpclib.ServerProxy(url)

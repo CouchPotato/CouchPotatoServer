@@ -26,6 +26,13 @@ config = [{
                     'description': 'Hostname with port. Usually <strong>localhost:6789</strong>',
                 },
                 {
+                    'name': 'ssl',
+                    'default': 0,
+                    'type': 'bool',
+                    'advanced': True,
+                    'description': 'Use HyperText Transfer Protocol Secure, or <strong>https</strong>',
+                },
+                {
                     'name': 'username',
                     'default': 'nzbget',
                     'advanced': True,
