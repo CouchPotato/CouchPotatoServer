@@ -164,13 +164,13 @@ class ProfilePlugin(Plugin):
 
         profiles = [{
             'label': 'Best',
-            'qualities': ['720p', '1080p', 'brrip', 'dvdrip']
+            'qualities': ['1080p', '720p', 'brrip', 'dvdrip', 'scr', 'r5', 'tc', 'ts', 'cam']
         }, {
             'label': 'HD',
-            'qualities': ['720p', '1080p']
+            'qualities': ['1080p', '720p']
         }, {
-            'label': 'SD',
-            'qualities': ['dvdrip', 'dvdr']
+            'label': 'SD', #I don't think searching for raw DVD images should be default here
+            'qualities': ['dvdrip', 'scr', 'r5']
         }]
 
         # Create default quality profile
