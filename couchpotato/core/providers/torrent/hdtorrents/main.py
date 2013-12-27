@@ -6,7 +6,7 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.torrent.base import TorrentProvider
 import traceback
 import re
-#        'search' : 'https://www.hdts.ru/torrents.php?search=%s&active=1&options=%s',
+
 log = CPLog(__name__)
 
 
@@ -19,25 +19,12 @@ class HDTorrents(TorrentProvider):
         'home' : 'https://www.hdts.ru/%s',
     }
 
-    #cat_ids = [
-    #    ([1], ['bd50']),
-    #    ([3], ['720p', 'brrip']),
-    #    ([5], ['1080p', 'brrip']),
-    #    ([2], ['1080p', '720p', 'brrip']),
-    #]
-
     http_time_between_calls = 1 #seconds
 
     def _search(self, movie, quality, results):
 
-        #cats = self.getCatId(quality['identifier'])
-        #if not cats:
-        #    return
-
         url = self.urls['search'] % (movie['library']['identifier'])#, cats[0])
         data = self.getHTMLData(url, opener = self.login_opener)
-        #if cats[0] == 2:#or 3
-        #    x = 20
         
         if data:
           
