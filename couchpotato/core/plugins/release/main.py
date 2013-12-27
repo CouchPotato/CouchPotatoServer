@@ -241,13 +241,13 @@ class Release(Plugin):
             'files': {}
         }), manual = True)
 
-        if success:
+        if success == True:
             db.expunge_all()
             rel = db.query(Relea).filter_by(id = id).first() # Get release again @RuudBurger why do we need to get it again??
 
             fireEvent('notify.frontend', type = 'release.manual_download', data = True, message = 'Successfully snatched "%s"' % item['name'])
         return {
-            'success': success
+            'success': success == True
         }
 
     def download(self, data, media, manual = False):
