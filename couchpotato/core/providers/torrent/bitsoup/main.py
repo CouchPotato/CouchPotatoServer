@@ -18,12 +18,20 @@ class Bitsoup(TorrentProvider):
         'baseurl': 'https://www.bitsoup.me/%s',
     }
 
+    cat_ids = [
+       ([41], ['720p', '1080p']),
+       ([19], ['cam', 'ts', 'tc', 'r5', 'scr', 'dvdrip', 'brrip']),
+       ([20], ['dvdr'])
+    ]
+
+    cat_backup_id = 0
     http_time_between_calls = 1 #seconds
 
     def _searchOnTitle(self, title, movie, quality, results):
 
         q = '"%s" %s' % (simplifyString(title), movie['library']['year'])
         arguments = tryUrlencode({
+            'cat': self.getCatId(quality['identifier'])[0],
             'search': q,
         })
         url = "%s&%s" % (self.urls['search'], arguments)
@@ -31,10 +39,13 @@ class Bitsoup(TorrentProvider):
         data = self.getHTMLData(url, opener = self.login_opener)
 
         if data:
-            html = BeautifulSoup(data)
+            html = BeautifulSoup(data, "html.parser")
 
             try:
                 result_table = html.find('table', attrs = {'class': 'koptekst'})
+                if not result_table or 'nothing found!' in data.lower():
+                    return
+
                 entries = result_table.find_all('tr')
                 for result in entries[1:]:
 
