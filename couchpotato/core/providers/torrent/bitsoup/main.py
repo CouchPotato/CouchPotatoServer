@@ -18,12 +18,20 @@ class Bitsoup(TorrentProvider):
         'baseurl': 'https://www.bitsoup.me/%s',
     }
 
+    cat_ids = [
+       ([41], ['720p', '1080p']),
+       ([19], ['cam', 'ts', 'tc', 'r5', 'scr', 'dvdrip', 'brrip']),
+       ([20], ['dvdr'])
+    ]
+
+    cat_backup_id = 0
     http_time_between_calls = 1 #seconds
 
     def _searchOnTitle(self, title, movie, quality, results):
 
         q = '"%s" %s' % (simplifyString(title), movie['library']['year'])
         arguments = tryUrlencode({
+            'cat': self.getCatId(quality['identifier'])[0],
             'search': q,
         })
         url = "%s&%s" % (self.urls['search'], arguments)
