@@ -31,10 +31,13 @@ class Bitsoup(TorrentProvider):
         data = self.getHTMLData(url, opener = self.login_opener)
 
         if data:
-            html = BeautifulSoup(data)
+            html = BeautifulSoup(data, "html.parser")
 
             try:
                 result_table = html.find('table', attrs = {'class': 'koptekst'})
+                if not result_table or 'nothing found!' in data.lower():
+                    return
+
                 entries = result_table.find_all('tr')
                 for result in entries[1:]:
 
