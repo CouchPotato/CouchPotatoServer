@@ -3,7 +3,7 @@ from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
 from couchpotato.core.helpers.encoding import toUnicode, ss, sp
 from couchpotato.core.helpers.variable import getExt, mergeDicts, getTitle, \
-    getImdb, link, symlink, tryInt, splitString, fnEscape
+    getImdb, link, symlink, tryInt, splitString, fnEscape, isSubFolder
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Library, File, Profile, Release, \
@@ -125,7 +125,7 @@ class Renamer(Plugin):
             return
         else:
             for item in no_process:
-                if '%s%s' % (base_folder, os.path.sep) in item:
+                if isSubFolder(item, base_folder):
                     log.error('To protect your data, the media libraries can\'t be inside of or the same as the "from" folder.')
                     return
 
@@ -157,7 +157,7 @@ class Renamer(Plugin):
 
         if media_folder:
             for item in no_process:
-                if '%s%s' % (media_folder, os.path.sep) in item:
+                if isSubFolder(item, media_folder):
                     log.error('To protect your data, the media libraries can\'t be inside of or the same as the provided media folder.')
                     return
 
@@ -508,7 +508,10 @@ class Renamer(Plugin):
                         os.remove(src)
 
                         parent_dir = os.path.dirname(src)
-                        if delete_folders.count(parent_dir) == 0 and os.path.isdir(parent_dir) and not '%s%s' % (parent_dir, os.path.sep) in [destination, media_folder] and not '%s%s' % (base_folder, os.path.sep) in parent_dir:
+                        if delete_folders.count(parent_dir) == 0 and os.path.isdir(parent_dir) and \
+                            not isSubFolder(destination, parent_dir) and not isSubFolder(media_folder, parent_dir) and \
+                            not isSubFolder(parent_dir, base_folder):
+
                             delete_folders.append(parent_dir)
 
                 except:
@@ -1044,7 +1047,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         return release_download['id'] and release_download['downloader'] and release_download['folder']
 
     def movieInFromFolder(self, media_folder):
-        return media_folder and '%s%s' % (sp(self.conf('from')), os.path.sep) in sp(media_folder) or not media_folder
+        return media_folder and isSubFolder(media_folder, sp(self.conf('from'))) or not media_folder
 
     def extractFiles(self, folder = None, media_folder = None, files = None, cleanup = False):
         if not files: files = []

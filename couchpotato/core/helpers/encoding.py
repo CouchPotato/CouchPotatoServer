@@ -60,8 +60,13 @@ def sp(path, *args):
 
     path = os.path.normcase(os.path.normpath(ss(path, *args)))
 
+    # Remove any trailing path separators
     if path != os.path.sep:
         path = path.rstrip(os.path.sep)
+
+    # Add a trailing separator in case it is a root folder on windows
+    if len(path) == 2 and path[1] == ':':
+        path = path + os.path.sep
 
     return path
 
