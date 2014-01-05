@@ -39,6 +39,7 @@ class Plugin(object):
     http_time_between_calls = 0
     http_failed_request = {}
     http_failed_disabled = {}
+    http_opener = None
 
     def __new__(typ, *args, **kwargs):
         new_plugin = super(Plugin, typ).__new__(typ)
@@ -137,6 +138,14 @@ class Plugin(object):
         headers['Connection'] = headers.get('Connection', 'keep-alive')
         headers['Cache-Control'] = headers.get('Cache-Control', 'max-age=0')
 
+        # Create opener
+        if not opener:
+            if not self.http_opener:
+                cookies = cookielib.CookieJar()
+                self.http_opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookies))
+
+            opener = self.http_opener
+
         # Don't try for failed requests
         if self.http_failed_disabled.get(host, 0) > 0:
             if self.http_failed_disabled[host] > (time.time() - 900):
@@ -153,18 +162,13 @@ class Plugin(object):
         try:
 
             # Make sure opener has the correct headers
-            if opener:
-                opener.add_headers = headers
+            opener.add_headers = headers
 
             if multipart:
                 log.info('Opening multipart url: %s, params: %s', (url, [x for x in params.iterkeys()] if isinstance(params, dict) else 'with data'))
                 request = urllib2.Request(url, params, headers)
 
-                if opener:
-                    opener.add_handler(MultipartPostHandler())
-                else:
-                    cookies = cookielib.CookieJar()
-                    opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookies), MultipartPostHandler)
+                opener.add_handler(MultipartPostHandler())
 
                 response = opener.open(request, timeout = timeout)
             else:
@@ -177,10 +181,7 @@ class Plugin(object):
 
                 request = urllib2.Request(url, data, headers)
 
-                if opener:
-                    response = opener.open(request, timeout = timeout)
-                else:
-                    response = urllib2.urlopen(request, timeout = timeout)
+                response = opener.open(request, timeout = timeout)
 
             # unzip if needed
             if response.info().get('Content-Encoding') == 'gzip':
