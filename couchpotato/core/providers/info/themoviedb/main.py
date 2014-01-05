@@ -45,7 +45,7 @@ class TheMovieDb(MovieProvider):
                     nr = 0
 
                     for movie in raw:
-                        results.append(self.parseMovie(movie, with_titles = False))
+                        results.append(self.parseMovie(movie, extended = False))
 
                         nr += 1
                         if nr == limit:
@@ -73,14 +73,14 @@ class TheMovieDb(MovieProvider):
             try:
                 log.debug('Getting info: %s', cache_key)
                 movie = tmdb3.Movie(identifier)
-                result = self.parseMovie(movie, with_actors = extended)
+                result = self.parseMovie(movie, extended = extended)
                 self.setCache(cache_key, result)
             except:
                 pass
 
         return result
 
-    def parseMovie(self, movie, with_titles = True, with_actors = True):
+    def parseMovie(self, movie, extended = True):
 
         cache_key = 'tmdb.cache.%s' % movie.id
         movie_data = self.getCache(cache_key)
@@ -113,7 +113,7 @@ class TheMovieDb(MovieProvider):
 
             # Gather actors data
             actors = {}
-            if with_actors:
+            if extended:
                 for cast_item in movie.cast:
                     try:
                         actors[toUnicode(cast_item.name)] = toUnicode(cast_item.character)
@@ -141,7 +141,7 @@ class TheMovieDb(MovieProvider):
             movie_data = dict((k, v) for k, v in movie_data.iteritems() if v)
 
             # Add alternative names
-            if with_titles:
+            if extended:
                 movie_data['titles'].append(movie.originaltitle)
                 for alt in movie.alternate_titles:
                     alt_name = alt.title
