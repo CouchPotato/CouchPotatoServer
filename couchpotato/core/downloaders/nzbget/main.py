@@ -1,7 +1,7 @@
 from base64 import standard_b64encode
 from couchpotato.core.downloaders.base import Downloader, ReleaseDownloadList
 from couchpotato.core.helpers.encoding import ss, sp
-from couchpotato.core.helpers.variable import tryInt, md5
+from couchpotato.core.helpers.variable import tryInt, md5, cleanHost
 from couchpotato.core.logger import CPLog
 from datetime import timedelta
 import re
@@ -17,7 +17,7 @@ class NZBGet(Downloader):
 
     protocol = ['nzb']
 
-    url = '%(protocol)s://%(username)s:%(password)s@%(host)s/xmlrpc'
+    rpc = 'xmlrpc'
 
     def download(self, data = None, media = None, filedata = None):
         if not media: media = {}
@@ -29,10 +29,11 @@ class NZBGet(Downloader):
 
         log.info('Sending "%s" to NZBGet.', data.get('name'))
 
-        url = self.url % {'protocol': 'https' if self.conf('ssl') else 'http', 'host': self.conf('host'), 'username': self.conf('username'), 'password': self.conf('password')}
         nzb_name = ss('%s.nzb' % self.createNzbName(data, media))
 
+        url = cleanHost(host = self.conf('host'), ssl = self.conf('ssl'), username = self.conf('username'), password = self.conf('password')) + self.rpc
         rpc = xmlrpclib.ServerProxy(url)
+
         try:
             if rpc.writelog('INFO', 'CouchPotato connected to drop off %s.' % nzb_name):
                 log.debug('Successfully connected to NZBGet')
@@ -71,9 +72,9 @@ class NZBGet(Downloader):
 
         log.debug('Checking NZBGet download status.')
 
-        url = self.url % {'protocol': 'https' if self.conf('ssl') else 'http', 'host': self.conf('host'), 'username': self.conf('username'), 'password': self.conf('password')}
-
+        url = cleanHost(host = self.conf('host'), ssl = self.conf('ssl'), username = self.conf('username'), password = self.conf('password')) + self.rpc
         rpc = xmlrpclib.ServerProxy(url)
+
         try:
             if rpc.writelog('INFO', 'CouchPotato connected to check status'):
                 log.debug('Successfully connected to NZBGet')
@@ -157,9 +158,9 @@ class NZBGet(Downloader):
 
         log.info('%s failed downloading, deleting...', release_download['name'])
 
-        url = self.url % {'host': self.conf('host'), 'username': self.conf('username'), 'password': self.conf('password')}
-
+        url = cleanHost(host = self.conf('host'), ssl = self.conf('ssl'), username = self.conf('username'), password = self.conf('password')) + self.rpc
         rpc = xmlrpclib.ServerProxy(url)
+
         try:
             if rpc.writelog('INFO', 'CouchPotato connected to delete some history'):
                 log.debug('Successfully connected to NZBGet')

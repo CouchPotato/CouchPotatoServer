@@ -1,5 +1,6 @@
 from couchpotato.core.downloaders.base import Downloader
 from couchpotato.core.helpers.encoding import isInt
+from couchpotato.core.helpers.variable import cleanHost
 from couchpotato.core.logger import CPLog
 import json
 import requests
@@ -21,7 +22,7 @@ class Synology(Downloader):
         log.error('Sending "%s" (%s) to Synology.', (data['name'], data['protocol']))
 
         # Load host from config and split out port.
-        host = self.conf('host').split(':')
+        host = cleanHost(self.conf('host'), protocol = False).split(':')
         if not isInt(host[1]):
             log.error('Config properties are not filled in correctly, port is missing.')
             return False

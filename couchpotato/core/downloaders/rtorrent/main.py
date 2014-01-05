@@ -2,6 +2,7 @@ from base64 import b16encode, b32decode
 from bencode import bencode, bdecode
 from couchpotato.core.downloaders.base import Downloader, ReleaseDownloadList
 from couchpotato.core.helpers.encoding import sp
+from couchpotato.core.helpers.variable import cleanHost
 from couchpotato.core.logger import CPLog
 from datetime import timedelta
 from hashlib import sha1
@@ -22,19 +23,16 @@ class rTorrent(Downloader):
         if self.rt is not None:
             return self.rt
 
-        # Ensure url is set
-        if not self.conf('url'):
-            log.error('Config properties are not filled in correctly, url is missing.')
-            return False
+        url = cleanHost(self.conf('host'), protocol = True, ssl = self.conf('ssl')) + '/' + self.conf('rpc_url').strip('/ ') + '/'
 
         if self.conf('username') and self.conf('password'):
             self.rt = RTorrent(
-                self.conf('url'),
+                url,
                 self.conf('username'),
                 self.conf('password')
             )
         else:
-            self.rt = RTorrent(self.conf('url'))
+            self.rt = RTorrent(url)
 
         return self.rt
 
