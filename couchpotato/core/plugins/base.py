@@ -219,15 +219,19 @@ class Plugin(object):
         return data
 
     def wait(self, host = ''):
+        if self.http_time_between_calls == 0:
+            return
+
         now = time.time()
 
         last_use = self.http_last_use.get(host, 0)
+        if last_use > 0:
 
-        wait = math.ceil(last_use - now + self.http_time_between_calls)
+            wait = (last_use - now) + self.http_time_between_calls
 
-        if wait > 0:
-            log.debug('Waiting for %s, %d seconds', (self.getName(), wait))
-            time.sleep(last_use - now + self.http_time_between_calls)
+            if wait > 0:
+                log.debug('Waiting for %s, %d seconds', (self.getName(), wait))
+                time.sleep(wait)
 
     def beforeCall(self, handler):
         self.isRunning('%s.%s' % (self.getName(), handler.__name__))
