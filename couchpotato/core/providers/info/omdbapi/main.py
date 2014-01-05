@@ -46,7 +46,7 @@ class OMDBAPI(MovieProvider):
 
         return []
 
-    def getInfo(self, identifier = None):
+    def getInfo(self, identifier = None, **kwargs):
 
         if not identifier:
             return {}

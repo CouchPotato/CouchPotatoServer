@@ -74,7 +74,7 @@ class CouchPotatoApi(MovieProvider):
 
         return True
 
-    def getInfo(self, identifier = None):
+    def getInfo(self, identifier = None, **kwargs):
 
         if not identifier:
             return
