@@ -97,6 +97,7 @@ class TheMovieDb(MovieProvider):
                 #'backdrop': [backdrop] if backdrop else [],
                 'poster_original': [poster_original] if poster_original else [],
                 'backdrop_original': [backdrop_original] if backdrop_original else [],
+                'actors': {}
             }
 
             # Genres
@@ -116,7 +117,7 @@ class TheMovieDb(MovieProvider):
                 for cast_item in movie.cast:
                     try:
                         actors[toUnicode(cast_item.name)] = toUnicode(cast_item.character)
-                        images['actor %s' % toUnicode(cast_item.name)] = self.getImage(cast_item, type = 'profile', size = 'original')
+                        images['actors'][toUnicode(cast_item.name)] = self.getImage(cast_item, type = 'profile', size = 'original')
                     except:
                         log.debug('Error getting cast info for %s: %s', (cast_item, traceback.format_exc()))
 
