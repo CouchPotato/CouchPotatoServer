@@ -35,6 +35,9 @@ class Bitsoup(TorrentProvider):
 
             try:
                 result_table = html.find('table', attrs = {'class': 'koptekst'})
+                if not result_table or 'nothing found!' in data.lower():
+                    return
+
                 entries = result_table.find_all('tr')
                 for result in entries[1:]:
 
