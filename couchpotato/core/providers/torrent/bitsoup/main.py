@@ -31,7 +31,7 @@ class Bitsoup(TorrentProvider):
         data = self.getHTMLData(url, opener = self.login_opener)
 
         if data:
-            html = BeautifulSoup(data)
+            html = BeautifulSoup(data, "html.parser")
 
             try:
                 result_table = html.find('table', attrs = {'class': 'koptekst'})
