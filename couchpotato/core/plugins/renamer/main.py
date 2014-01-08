@@ -212,6 +212,10 @@ class Renamer(Plugin):
         done_status, active_status, downloaded_status, snatched_status, seeding_status = \
             fireEvent('status.get', ['done', 'active', 'downloaded', 'snatched', 'seeding'], single = True)
 
+        # Tag release folder as failed_rename in case no groups were found. This prevents check_snatched from removing the release from the downloader.
+        if not groups and self.statusInfoComplete(release_download):
+            self.tagRelease(release_download = release_download, tag = 'failed_rename')
+
         for group_identifier in groups:
 
             group = groups[group_identifier]
@@ -527,6 +531,7 @@ class Renamer(Plugin):
 
             # Rename all files marked
             group['renamed_files'] = []
+            failed_rename = False
             for src in rename_files:
                 if rename_files[src]:
                     dst = rename_files[src]
@@ -539,8 +544,17 @@ class Renamer(Plugin):
                         self.moveFile(src, dst, forcemove = not self.downloadIsTorrent(release_download) or self.fileIsAdded(src, group))
                         group['renamed_files'].append(dst)
                     except:
-                        log.error('Failed moving the file "%s" : %s', (os.path.basename(src), traceback.format_exc()))
-                        self.tagRelease(group = group, tag = 'failed_rename')
+                        log.error('Failed ranaming the file "%s" : %s', (os.path.basename(src), traceback.format_exc()))
+                        failed_rename = True
+                        break
+
+            # If renaming failed tag the release folder as failed and continue with next group. Note that all old files have already been deleted.
+            if failed_rename:
+                self.tagRelease(group = group, tag = 'failed_rename')
+                continue
+            # If renaming succeeded, make sure it is not tagged as failed (scanner didn't return a group, but a download_ID was provided in an earlier attempt)
+            else:
+                self.untagRelease(group = group, tag = 'failed_rename')
 
             # Tag folder if it is in the 'from' folder and it will not be removed because it is a torrent
             if self.movieInFromFolder(media_folder) and self.downloadIsTorrent(release_download):
@@ -1053,7 +1067,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         return src in group['before_rename']
 
     def statusInfoComplete(self, release_download):
-        return release_download['id'] and release_download['downloader'] and release_download['folder']
+        return release_download.get('id') and release_download.get('downloader') and release_download.get('folder')
 
     def movieInFromFolder(self, media_folder):
         return media_folder and isSubFolder(media_folder, sp(self.conf('from'))) or not media_folder
