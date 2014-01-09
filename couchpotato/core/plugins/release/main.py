@@ -384,6 +384,7 @@ class Release(Plugin):
                 db.add(rls)
             else:
                 [db.delete(old_info) for old_info in rls.info]
+                rls.quality_id = quality_type.get('quality_id')
                 rls.last_edit = int(time.time())
 
             db.commit()
