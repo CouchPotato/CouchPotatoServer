@@ -284,6 +284,10 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
             return True
         else:
 
+            # Don't allow movies with years to far in the future
+            if year is not None and year > now_year + 1:
+                return False
+
             # For movies before 1972
             if not dates or dates.get('theater', 0) < 0 or dates.get('dvd', 0) < 0:
                 return True
