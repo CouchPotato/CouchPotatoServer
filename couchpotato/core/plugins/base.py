@@ -117,7 +117,7 @@ class Plugin(object):
         return False
 
     # http request
-    def urlopen(self, url, timeout = 30, data = None, headers = None, files = None, show_error = True):
+    def urlopen(self, url, timeout = 30, data = None, headers = None, files = None, show_error = True, return_raw = False):
         url = urllib2.quote(ss(url), safe = "%/:=&?~#+!$,;'@()*[]")
 
         if not headers: headers = {}
@@ -162,7 +162,7 @@ class Plugin(object):
             log.info('Opening url: %s %s, data: %s', (method, url, [x for x in data.iterkeys()] if isinstance(data, dict) else 'with data'))
             response = r.request(method, url, verify = False, **kwargs)
 
-            data = response.text
+            data = response.content if return_raw else response.text
 
             self.http_failed_request[host] = 0
         except IOError:
