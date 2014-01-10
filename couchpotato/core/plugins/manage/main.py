@@ -79,6 +79,7 @@ class Manage(Plugin):
         try:
 
             directories = self.directories()
+            directories.sort()
             added_identifiers = []
 
             # Add some progress

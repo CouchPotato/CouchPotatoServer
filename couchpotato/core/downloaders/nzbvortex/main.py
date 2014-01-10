@@ -1,6 +1,6 @@
 from base64 import b64encode
-from couchpotato.core.downloaders.base import Downloader, StatusList
-from couchpotato.core.helpers.encoding import tryUrlencode, ss
+from couchpotato.core.downloaders.base import Downloader, ReleaseDownloadList
+from couchpotato.core.helpers.encoding import tryUrlencode, sp
 from couchpotato.core.helpers.variable import cleanHost
 from couchpotato.core.logger import CPLog
 from urllib2 import URLError
@@ -30,10 +30,10 @@ class NZBVortex(Downloader):
         # Send the nzb
         try:
             nzb_filename = self.createFileName(data, filedata, movie)
-            self.call('nzb/add', params = {'file': (ss(nzb_filename), filedata)}, multipart = True)
+            self.call('nzb/add', params = {'file': (nzb_filename, filedata)}, multipart = True)
 
             raw_statuses = self.call('nzb')
-            nzb_id = [item['id'] for item in raw_statuses.get('nzbs', []) if item['name'] == nzb_filename][0]
+            nzb_id = [nzb['id'] for nzb in raw_statuses.get('nzbs', []) if nzb['name'] == nzb_filename][0]
             return self.downloadReturnId(nzb_id)
         except:
             log.error('Something went wrong sending the NZB file: %s', traceback.format_exc())
@@ -43,33 +43,33 @@ class NZBVortex(Downloader):
 
         raw_statuses = self.call('nzb')
 
-        statuses = StatusList(self)
-        for item in raw_statuses.get('nzbs', []):
+        release_downloads = ReleaseDownloadList(self)
+        for nzb in raw_statuses.get('nzbs', []):
 
             # Check status
             status = 'busy'
-            if item['state'] == 20:
+            if nzb['state'] == 20:
                 status = 'completed'
-            elif item['state'] in [21, 22, 24]:
+            elif nzb['state'] in [21, 22, 24]:
                 status = 'failed'
 
-            statuses.append({
-                'id': item['id'],
-                'name': item['uiTitle'],
+            release_downloads.append({
+                'id': nzb['id'],
+                'name': nzb['uiTitle'],
                 'status': status,
-                'original_status': item['state'],
+                'original_status': nzb['state'],
                 'timeleft':-1,
-                'folder': ss(item['destinationPath']),
+                'folder': sp(nzb['destinationPath']),
             })
 
-        return statuses
+        return release_downloads
 
-    def removeFailed(self, item):
+    def removeFailed(self, release_download):
 
-        log.info('%s failed downloading, deleting...', item['name'])
+        log.info('%s failed downloading, deleting...', release_download['name'])
 
         try:
-            self.call('nzb/%s/cancel' % item['id'])
+            self.call('nzb/%s/cancel' % release_download['id'])
         except:
             log.error('Failed deleting: %s', traceback.format_exc(0))
             return False

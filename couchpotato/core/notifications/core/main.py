@@ -21,6 +21,12 @@ class CoreNotifier(Notification):
 
     m_lock = None
 
+    listen_to = [
+        'renamer.after', 'movie.snatched',
+        'updater.available', 'updater.updated',
+        'core.message', 'core.message.important',
+    ]
+
     def __init__(self):
         super(CoreNotifier, self).__init__()
 
@@ -121,7 +127,10 @@ class CoreNotifier(Notification):
 
         for message in messages:
             if message.get('time') > last_check:
-                fireEvent('core.message', message = message.get('message'), data = message)
+                message['sticky'] = True # Always sticky core messages
+
+                message_type = 'core.message.important' if message.get('important') else 'core.message'
+                fireEvent(message_type, message = message.get('message'), data = message)
 
             if last_check < message.get('time'):
                 last_check = message.get('time')

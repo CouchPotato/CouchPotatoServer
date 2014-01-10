@@ -1,14 +1,13 @@
 from couchpotato import get_session
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, fireEventAsync, addEvent
-from couchpotato.core.helpers.encoding import toUnicode, simplifyString
+from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.variable import getImdb, splitString, tryInt, \
     mergeDicts
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media.movie import MovieTypeBase
 from couchpotato.core.settings.model import Library, LibraryTitle, Media, \
     Release
-from couchpotato.environment import Env
 from sqlalchemy.orm import joinedload_all
 from sqlalchemy.sql.expression import or_, asc, not_, desc
 from string import ascii_lowercase
@@ -54,6 +53,7 @@ class MovieBase(MovieTypeBase):
             'params': {
                 'identifier': {'desc': 'IMDB id of the movie your want to add.'},
                 'profile_id': {'desc': 'ID of quality profile you want the add the movie in. If empty will use the default profile.'},
+                'category_id': {'desc': 'ID of category you want the add the movie in. If empty will use no category.'},
                 'title': {'desc': 'Movie title to use for searches. Has to be one of the titles returned by movie.search.'},
             }
         })
@@ -313,25 +313,6 @@ class MovieBase(MovieTypeBase):
             'success': True,
             'empty': len(chars) == 0,
             'chars': chars,
-        }
-
-    def search(self, q = '', **kwargs):
-
-        cache_key = u'%s/%s' % (__name__, simplifyString(q))
-        movies = Env.get('cache').get(cache_key)
-
-        if not movies:
-
-            if getImdb(q):
-                movies = [fireEvent('movie.info', identifier = q, merge = True)]
-            else:
-                movies = fireEvent('movie.search', q = q, merge = True)
-            Env.get('cache').set(cache_key, movies)
-
-        return {
-            'success': True,
-            'empty': len(movies) == 0 if movies else 0,
-            'movies': movies,
         }
 
     def add(self, params = None, force_readd = True, search_after = True, update_library = False, status_id = None):

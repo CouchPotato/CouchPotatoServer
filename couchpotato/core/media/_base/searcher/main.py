@@ -1,18 +1,11 @@
-from couchpotato import get_session
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent
-from couchpotato.core.helpers.encoding import simplifyString, toUnicode
-from couchpotato.core.helpers.variable import md5, getTitle, splitString
+from couchpotato.core.helpers.encoding import simplifyString
+from couchpotato.core.helpers.variable import splitString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.searcher.base import SearcherBase
-from couchpotato.core.settings.model import Media, Release, ReleaseInfo
-from couchpotato.environment import Env
-from inspect import ismethod, isfunction
-from sqlalchemy.exc import InterfaceError
 import datetime
 import re
-import time
-import traceback
 
 log = CPLog(__name__)
 
@@ -25,9 +18,7 @@ class Searcher(SearcherBase):
         addEvent('searcher.correct_year', self.correctYear)
         addEvent('searcher.correct_name', self.correctName)
         addEvent('searcher.correct_words', self.correctWords)
-        addEvent('searcher.download', self.download)
         addEvent('searcher.search', self.search)
-        addEvent('searcher.create_releases', self.createReleases)
 
         addApiView('searcher.full_search', self.searchAllView, docs = {
             'desc': 'Starts a full search for all media',
@@ -53,93 +44,11 @@ class Searcher(SearcherBase):
         progress = fireEvent('searcher.progress', merge = True)
         return progress
 
-    def download(self, data, movie, manual = False):
-
-        if not data.get('protocol'):
-            data['protocol'] = data['type']
-            data['type'] = 'movie'
-
-        # Test to see if any downloaders are enabled for this type
-        downloader_enabled = fireEvent('download.enabled', manual, data, single = True)
-
-        if downloader_enabled:
-
-            snatched_status, done_status, active_status = fireEvent('status.get', ['snatched', 'done', 'active'], single = True)
-
-            # Download movie to temp
-            filedata = None
-            if data.get('download') and (ismethod(data.get('download')) or isfunction(data.get('download'))):
-                filedata = data.get('download')(url = data.get('url'), nzb_id = data.get('id'))
-                if filedata == 'try_next':
-                    return filedata
-
-            download_result = fireEvent('download', data = data, movie = movie, manual = manual, filedata = filedata, single = True)
-            log.debug('Downloader result: %s', download_result)
-
-            if download_result:
-                try:
-                    # Mark release as snatched
-                    db = get_session()
-                    rls = db.query(Release).filter_by(identifier = md5(data['url'])).first()
-                    if rls:
-                        renamer_enabled = Env.setting('enabled', 'renamer')
-
-                        # Save download-id info if returned
-                        if isinstance(download_result, dict):
-                            for key in download_result:
-                                rls_info = ReleaseInfo(
-                                    identifier = 'download_%s' % key,
-                                    value = toUnicode(download_result.get(key))
-                                )
-                                rls.info.append(rls_info)
-                        db.commit()
-
-                        log_movie = '%s (%s) in %s' % (getTitle(movie['library']), movie['library']['year'], rls.quality.label)
-                        snatch_message = 'Snatched "%s": %s' % (data.get('name'), log_movie)
-                        log.info(snatch_message)
-                        fireEvent('movie.snatched', message = snatch_message, data = rls.to_dict())
-
-                        # If renamer isn't used, mark movie done
-                        if not renamer_enabled:
-                            try:
-                                if movie['status_id'] == active_status.get('id'):
-                                    for profile_type in movie['profile']['types']:
-                                        if profile_type['quality_id'] == rls.quality.id and profile_type['finish']:
-                                            log.info('Renamer disabled, marking movie as finished: %s', log_movie)
-
-                                            # Mark release done
-                                            fireEvent('release.update_status', rls.id, status = done_status, single = True)
-
-                                            # Mark movie done
-                                            mvie = db.query(Media).filter_by(id = movie['id']).first()
-                                            mvie.status_id = done_status.get('id')
-                                            mvie.last_edit = int(time.time())
-                                            db.commit()
-                            except:
-                                log.error('Failed marking movie finished, renamer disabled: %s', traceback.format_exc())
-                        else:
-                            fireEvent('release.update_status', rls.id, status = snatched_status, single = True)
-
-                except:
-                    log.error('Failed marking movie finished: %s', traceback.format_exc())
-
-                return True
-
-        log.info('Tried to download, but none of the "%s" downloaders are enabled or gave an error', (data.get('protocol')))
-
-        return False
-
     def search(self, protocols, media, quality):
         results = []
 
-        search_type = None
-        if media['type'] == 'movie':
-            search_type = 'movie'
-        elif media['type'] in ['show', 'season', 'episode']:
-            search_type = 'show'
-
         for search_protocol in protocols:
-            protocol_results = fireEvent('provider.search.%s.%s' % (search_protocol, search_type), media, quality, merge = True)
+            protocol_results = fireEvent('provider.search.%s.%s' % (search_protocol, media['type']), media, quality, merge = True)
             if protocol_results:
                 results += protocol_results
 
@@ -150,53 +59,6 @@ class Searcher(SearcherBase):
             sorted_results = sorted(sorted_results, key = lambda k: k['protocol'][:3], reverse = (download_preference == 'torrent'))
 
         return sorted_results
-
-    def createReleases(self, search_results, media, quality_type):
-
-        available_status = fireEvent('status.get', ['available'], single = True)
-        db = get_session()
-
-        found_releases = []
-
-        for rel in search_results:
-
-            nzb_identifier = md5(rel['url'])
-            found_releases.append(nzb_identifier)
-
-            rls = db.query(Release).filter_by(identifier = nzb_identifier).first()
-            if not rls:
-                rls = Release(
-                    identifier = nzb_identifier,
-                    movie_id = media.get('id'),
-                    #media_id = media.get('id'),
-                    quality_id = quality_type.get('quality_id'),
-                    status_id = available_status.get('id')
-                )
-                db.add(rls)
-            else:
-                [db.delete(old_info) for old_info in rls.info]
-                rls.last_edit = int(time.time())
-
-            db.commit()
-
-            for info in rel:
-                try:
-                    if not isinstance(rel[info], (str, unicode, int, long, float)):
-                        continue
-
-                    rls_info = ReleaseInfo(
-                        identifier = info,
-                        value = toUnicode(rel[info])
-                    )
-                    rls.info.append(rls_info)
-                except InterfaceError:
-                    log.debug('Couldn\'t add %s to ReleaseInfo: %s', (info, traceback.format_exc()))
-
-            db.commit()
-
-            rel['status_id'] = rls.status_id
-
-        return found_releases
 
     def getSearchProtocols(self):
 
@@ -285,7 +147,7 @@ class Searcher(SearcherBase):
         except: pass
 
         # Match longest name between []
-        try: check_names.append(max(check_name.split('['), key = len))
+        try: check_names.append(max(re.findall(r'[^[]*\[([^]]*)\]', check_name), key = len).strip())
         except: pass
 
         for check_name in list(set(check_names)):

@@ -1,13 +1,13 @@
 from base64 import b16encode, b32decode
 from bencode import bencode, bdecode
-from couchpotato.core.downloaders.base import Downloader, StatusList
-from couchpotato.core.helpers.encoding import ss
+from couchpotato.core.downloaders.base import Downloader, ReleaseDownloadList
+from couchpotato.core.helpers.encoding import sp
 from couchpotato.core.logger import CPLog
 from datetime import timedelta
 from hashlib import sha1
 from rtorrent import RTorrent
 from rtorrent.err import MethodError
-import shutil, os
+import os
 
 log = CPLog(__name__)
 
@@ -125,9 +125,7 @@ class rTorrent(Downloader):
             if self.conf('label'):
                 torrent.set_custom(1, self.conf('label'))
 
-            if self.conf('directory') and self.conf('append_label'):
-                torrent.set_directory(os.path.join(self.conf('directory'), self.conf('label')))
-            elif self.conf('directory'):
+            if self.conf('directory'):
                 torrent.set_directory(self.conf('directory'))
 
             # Set Ratio Group
@@ -151,37 +149,42 @@ class rTorrent(Downloader):
         try:
             torrents = self.rt.get_torrents()
 
-            statuses = StatusList(self)
+            release_downloads = ReleaseDownloadList(self)
 
-            for item in torrents:
+            for torrent in torrents:
+                torrent_files = []
+                for file_item in torrent.get_files():
+                    torrent_files.append(sp(os.path.join(torrent.directory, file_item.path)))
+
                 status = 'busy'
-                if item.complete:
-                    if item.active:
+                if torrent.complete:
+                    if torrent.active:
                         status = 'seeding'
                     else:
                         status = 'completed'
 
-                statuses.append({
-                    'id': item.info_hash,
-                    'name': item.name,
+                release_downloads.append({
+                    'id': torrent.info_hash,
+                    'name': torrent.name,
                     'status': status,
-                    'seed_ratio': item.ratio,
-                    'original_status': item.state,
-                    'timeleft': str(timedelta(seconds = float(item.left_bytes) / item.down_rate)) if item.down_rate > 0 else -1,
-                    'folder': ss(item.directory)
+                    'seed_ratio': torrent.ratio,
+                    'original_status': torrent.state,
+                    'timeleft': str(timedelta(seconds = float(torrent.left_bytes) / torrent.down_rate)) if torrent.down_rate > 0 else -1,
+                    'folder': sp(torrent.directory),
+                    'files': '|'.join(torrent_files)
                 })
 
-            return statuses
+            return release_downloads
 
         except Exception, err:
             log.error('Failed to get status from rTorrent: %s', err)
             return False
 
-    def pause(self, download_info, pause = True):
+    def pause(self, release_download, pause = True):
         if not self.connect():
             return False
 
-        torrent = self.rt.find_torrent(download_info['id'])
+        torrent = self.rt.find_torrent(release_download['id'])
         if torrent is None:
             return False
 
@@ -189,23 +192,34 @@ class rTorrent(Downloader):
             return torrent.pause()
         return torrent.resume()
 
-    def removeFailed(self, item):
-        log.info('%s failed downloading, deleting...', item['name'])
-        return self.processComplete(item, delete_files = True)
+    def removeFailed(self, release_download):
+        log.info('%s failed downloading, deleting...', release_download['name'])
+        return self.processComplete(release_download, delete_files = True)
 
-    def processComplete(self, item, delete_files):
+    def processComplete(self, release_download, delete_files):
         log.debug('Requesting rTorrent to remove the torrent %s%s.',
-                  (item['name'], ' and cleanup the downloaded files' if delete_files else ''))
+                  (release_download['name'], ' and cleanup the downloaded files' if delete_files else ''))
+
         if not self.connect():
             return False
 
-        torrent = self.rt.find_torrent(item['id'])
+        torrent = self.rt.find_torrent(release_download['id'])
+
         if torrent is None:
             return False
 
-        torrent.erase() # just removes the torrent, doesn't delete data
-
         if delete_files:
-            shutil.rmtree(item['folder'], True)
+            for file_item in torrent.get_files(): # will only delete files, not dir/sub-dir
+                os.unlink(os.path.join(torrent.directory, file_item.path))
+
+            if torrent.is_multi_file() and torrent.directory.endswith(torrent.name):
+                # Remove empty directories bottom up
+                try:
+                    for path, _, _ in os.walk(torrent.directory, topdown = False):
+                        os.rmdir(path)
+                except OSError:
+                    log.info('Directory "%s" contains extra files, unable to remove', torrent.directory)
+
+        torrent.erase() # just removes the torrent, doesn't delete data
 
         return True

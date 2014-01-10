@@ -27,7 +27,7 @@ class HTML5TreeBuilder(HTMLTreeBuilder):
     def prepare_markup(self, markup, user_specified_encoding):
         # Store the user-specified encoding for use later on.
         self.user_specified_encoding = user_specified_encoding
-        return markup, None, None, False
+        yield (markup, None, None, False)
 
     # These methods are defined by Beautiful Soup.
     def feed(self, markup):
@@ -123,17 +123,50 @@ class Element(html5lib.treebuilders._base.Node):
         self.namespace = namespace
 
     def appendChild(self, node):
-        if (node.element.__class__ == NavigableString and self.element.contents
+        string_child = child = None
+        if isinstance(node, basestring):
+            # Some other piece of code decided to pass in a string
+            # instead of creating a TextElement object to contain the
+            # string.
+            string_child = child = node
+        elif isinstance(node, Tag):
+            # Some other piece of code decided to pass in a Tag
+            # instead of creating an Element object to contain the
+            # Tag.
+            child = node
+        elif node.element.__class__ == NavigableString:
+            string_child = child = node.element
+        else:
+            child = node.element
+
+        if not isinstance(child, basestring) and child.parent is not None:
+            node.element.extract()
+
+        if (string_child and self.element.contents
             and self.element.contents[-1].__class__ == NavigableString):
-            # Concatenate new text onto old text node
-            # XXX This has O(n^2) performance, for input like
+            # We are appending a string onto another string.
+            # TODO This has O(n^2) performance, for input like
             # "a</a>a</a>a</a>..."
             old_element = self.element.contents[-1]
-            new_element = self.soup.new_string(old_element + node.element)
+            new_element = self.soup.new_string(old_element + string_child)
             old_element.replace_with(new_element)
+            self.soup._most_recent_element = new_element
         else:
-            self.element.append(node.element)
-            node.parent = self
+            if isinstance(node, basestring):
+                # Create a brand new NavigableString from this string.
+                child = self.soup.new_string(node)
+
+            # Tell Beautiful Soup to act as if it parsed this element
+            # immediately after the parent's last descendant. (Or
+            # immediately after the parent, if it has no children.)
+            if self.element.contents:
+                most_recent_element = self.element._last_descendant(False)
+            else:
+                most_recent_element = self.element
+
+            self.soup.object_was_parsed(
+                child, parent=self.element,
+                most_recent_element=most_recent_element)
 
     def getAttributes(self):
         return AttrList(self.element)
@@ -162,11 +195,11 @@ class Element(html5lib.treebuilders._base.Node):
     attributes = property(getAttributes, setAttributes)
 
     def insertText(self, data, insertBefore=None):
-        text = TextNode(self.soup.new_string(data), self.soup)
         if insertBefore:
-            self.insertBefore(text, insertBefore)
+            text = TextNode(self.soup.new_string(data), self.soup)
+            self.insertBefore(data, insertBefore)
         else:
-            self.appendChild(text)
+            self.appendChild(data)
 
     def insertBefore(self, node, refNode):
         index = self.element.index(refNode.element)
@@ -183,16 +216,46 @@ class Element(html5lib.treebuilders._base.Node):
     def removeChild(self, node):
         node.element.extract()
 
-    def reparentChildren(self, newParent):
-        while self.element.contents:
-            child = self.element.contents[0]
-            child.extract()
-            if isinstance(child, Tag):
-                newParent.appendChild(
-                    Element(child, self.soup, namespaces["html"]))
-            else:
-                newParent.appendChild(
-                    TextNode(child, self.soup))
+    def reparentChildren(self, new_parent):
+        """Move all of this tag's children into another tag."""
+        element = self.element
+        new_parent_element = new_parent.element
+        # Determine what this tag's next_element will be once all the children
+        # are removed.
+        final_next_element = element.next_sibling
+
+        new_parents_last_descendant = new_parent_element._last_descendant(False, False)
+        if len(new_parent_element.contents) > 0:
+            # The new parent already contains children. We will be
+            # appending this tag's children to the end.
+            new_parents_last_child = new_parent_element.contents[-1]
+            new_parents_last_descendant_next_element = new_parents_last_descendant.next_element
+        else:
+            # The new parent contains no children.
+            new_parents_last_child = None
+            new_parents_last_descendant_next_element = new_parent_element.next_element
+
+        to_append = element.contents
+        append_after = new_parent.element.contents
+        if len(to_append) > 0:
+            # Set the first child's previous_element and previous_sibling
+            # to elements within the new parent
+            first_child = to_append[0]
+            first_child.previous_element = new_parents_last_descendant
+            first_child.previous_sibling = new_parents_last_child
+
+            # Fix the last child's next_element and next_sibling
+            last_child = to_append[-1]
+            last_child.next_element = new_parents_last_descendant_next_element
+            last_child.next_sibling = None
+
+        for child in to_append:
+            child.parent = new_parent_element
+            new_parent_element.contents.append(child)
+
+        # Now that this element has no children, change its .next_element.
+        element.contents = []
+        element.next_element = final_next_element
 
     def cloneNode(self):
         tag = self.soup.new_tag(self.element.name, self.namespace)

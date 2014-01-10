@@ -25,6 +25,8 @@ import re
 
 subtitle_exts = [ 'srt', 'idx', 'sub', 'ssa' ]
 
+info_exts = [ 'nfo' ]
+
 video_exts = ['3g2', '3gp', '3gp2', 'asf', 'avi', 'divx', 'flv', 'm4v', 'mk2',
               'mka', 'mkv', 'mov', 'mp4', 'mp4a', 'mpeg', 'mpg', 'ogg', 'ogm',
               'ogv', 'qt', 'ra', 'ram', 'rm', 'ts', 'wav', 'webm', 'wma', 'wmv']
@@ -32,7 +34,7 @@ video_exts = ['3g2', '3gp', '3gp2', 'asf', 'avi', 'divx', 'flv', 'm4v', 'mk2',
 group_delimiters = [ '()', '[]', '{}' ]
 
 # separator character regexp
-sep = r'[][)(}{+ /\._-]' # regexp art, hehe :D
+sep = r'[][,)(}{+ /\._-]' # regexp art, hehe :D
 
 # character used to represent a deleted char (when matching groups)
 deleted = '_'
@@ -49,7 +51,7 @@ episode_rexps = [ # ... Season 2 ...
                   #(r'[Ss](?P<season>[0-9]{1,3})[^0-9]?(?P<bonusNumber>(?:-?[xX-][0-9]{1,3})+)[^0-9]', 1.0, (0, -1)),
 
                   # ... 2x13 ...
-                  (r'[^0-9](?P<season>[0-9]{1,2})[^0-9]?(?P<episodeNumber>(?:-?[xX][0-9]{1,3})+)[^0-9]', 1.0, (1, -1)),
+                  (r'[^0-9](?P<season>[0-9]{1,2})[^0-9 .-]?(?P<episodeNumber>(?:-?[xX][0-9]{1,3})+)[^0-9]', 1.0, (1, -1)),
 
                   # ... s02 ...
                   #(sep + r's(?P<season>[0-9]{1,2})' + sep, 0.6, (1, -1)),
@@ -122,9 +124,12 @@ prop_multi = { 'format': { 'DVD': [ 'DVD', 'DVD-Rip', 'VIDEO-TS', 'DVDivX' ],
                            'VHS': [ 'VHS' ],
                            'WEB-DL': [ 'WEB-DL' ] },
 
+               'is3D': { True: [ '3D' ] },
+
                'screenSize': { '480p': [ '480[pi]?' ],
                                '720p': [ '720[pi]?' ],
-                               '1080p': [ '1080[pi]?' ] },
+                               '1080i': [ '1080i' ],
+                               '1080p': [ '1080p', '1080[^i]' ] },
 
                'videoCodec': { 'XviD': [ 'Xvid' ],
                                'DivX': [ 'DVDivX', 'DivX' ],
@@ -140,7 +145,7 @@ prop_multi = { 'format': { 'DVD': [ 'DVD', 'DVD-Rip', 'VIDEO-TS', 'DVDivX' ],
                                'DTS': [ 'DTS' ],
                                'AAC': [ 'He-AAC', 'AAC-He', 'AAC' ] },
 
-               'audioChannels': { '5.1': [ r'5\.1', 'DD5[\._ ]1', '5ch' ] },
+               'audioChannels': { '5.1': [ r'5\.1', 'DD5[._ ]1', '5ch' ] },
 
                'episodeFormat': { 'Minisode': [ 'Minisodes?' ] }
 
@@ -170,7 +175,7 @@ prop_single = { 'releaseGroup': [ 'ESiR', 'WAF', 'SEPTiC', r'\[XCT\]', 'iNT', 'P
                 }
 
 _dash = '-'
-_psep = '[-\. _]?'
+_psep = '[-. _]?'
 
 def _to_rexp(prop):
     return re.compile(prop.replace(_dash, _psep), re.IGNORECASE)
@@ -237,8 +242,9 @@ def canonical_form(string):
 def compute_canonical_form(property_name, value):
     """Return the canonical form of a property given its type if it is a valid
     one, None otherwise."""
-    for canonical_form, rexps in properties_rexps[property_name].items():
-        for rexp in rexps:
-            if rexp.match(value):
-                return canonical_form
+    if isinstance(value, basestring):
+        for canonical_form, rexps in properties_rexps[property_name].items():
+            for rexp in rexps:
+                if rexp.match(value):
+                    return canonical_form
     return None

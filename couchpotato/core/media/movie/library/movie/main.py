@@ -151,7 +151,7 @@ class MovieLibraryPlugin(LibraryBase):
         else:
             dates = library.info.get('release_date')
 
-        if dates and dates.get('expires', 0) < time.time() or not dates:
+        if dates and (dates.get('expires', 0) < time.time() or dates.get('expires', 0) > time.time() + (604800 * 4)) or not dates:
             dates = fireEvent('movie.release_date', identifier = identifier, merge = True)
             library.info.update({'release_date': dates })
             db.commit()
