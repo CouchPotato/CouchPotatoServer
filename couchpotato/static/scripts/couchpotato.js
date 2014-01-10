@@ -11,6 +11,12 @@
 	pages: [],
 	block: [],
 
+	initialize: function(){
+		var self = this;
+
+		self.global_events = {};
+	},
+
 	setup: function(options) {
 		var self = this;
 		self.setOptions(options);
@@ -30,7 +36,7 @@
 		History.addEvent('change', self.openPage.bind(self));
 		self.c.addEvent('click:relay(a[href^=/]:not([target]))', self.pushState.bind(self));
 		self.c.addEvent('click:relay(a[href^=http])', self.openDerefered.bind(self));
-		
+
 		// Check if device is touchenabled
 		self.touch_device = 'ontouchstart' in window || navigator.msMaxTouchPoints;
 		if(self.touch_device)
@@ -55,7 +61,7 @@
 				History.push(url);
 		}
 	},
-	
+
 	isMac: function(){
 		return Browser.Platform.mac
 	},
@@ -111,7 +117,7 @@
 				}
 			})
 		];
-		
+
 		setting_links.each(function(a){
 			self.block.more.addLink(a)
 		});
@@ -336,6 +342,66 @@
 				})
 			)
 		);
+	},
+
+	/*
+	 * Global events
+	 */
+	on: function(name, handle){
+		var self = this;
+
+		if(!self.global_events[name])
+			self.global_events[name] = [];
+
+		self.global_events[name].push(handle);
+
+	},
+
+	trigger: function(name, args, on_complete){
+		var self = this;
+
+		if(!self.global_events[name]){ return; }
+
+		if(!on_complete && typeOf(args) == 'function'){
+			on_complete = args;
+			args = {};
+		}
+
+		// Create parallel callback
+		var callbacks = [];
+		self.global_events[name].each(function(handle, nr){
+
+			callbacks.push(function(callback){
+				var results = handle(args || {});
+				callback(null, results || null);
+			});
+
+		});
+
+		// Fire events
+		async.parallel(callbacks, function(err, results){
+			if(err) p(err);
+
+			if(on_complete)
+				on_complete(results);
+		});
+
+	},
+
+	off: function(name, handle){
+		var self = this;
+
+		if(!self.global_events[name]) return;
+
+		// Remove single
+		if(handle){
+			self.global_events[name] = self.global_events[name].erase(handle);
+		}
+		// Reset full event
+		else {
+			self.global_events[name] = [];
+		}
+
 	}
 
 });
@@ -503,7 +569,7 @@ function randomString(length, extra) {
 					case "string": saveKeyPath(argument.match(/[+-]|[^.]+/g)); break;
 				}
 			});
-			return this.sort(comparer);
+			return this.stableSort(comparer);
 		}
 	});
 

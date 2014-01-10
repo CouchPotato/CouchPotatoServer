@@ -31,14 +31,15 @@ RED_FONT = "\x1B[0;31m"
 RESET_FONT = "\x1B[0m"
 
 
-def setupLogging(colored=True, with_time=False, with_thread=False, filename=None):
+def setupLogging(colored=True, with_time=False, with_thread=False, filename=None, with_lineno=False):
     """Set up a nice colored logger as the main application logger."""
 
     class SimpleFormatter(logging.Formatter):
         def __init__(self, with_time, with_thread):
             self.fmt = (('%(asctime)s ' if with_time else '') +
                         '%(levelname)-8s ' +
-                        '[%(name)s:%(funcName)s]' +
+                        '[%(name)s:%(funcName)s' +
+                        (':%(lineno)s' if with_lineno else '') + ']' +
                         ('[%(threadName)s]' if with_thread else '') +
                         ' -- %(message)s')
             logging.Formatter.__init__(self, self.fmt)
@@ -47,7 +48,8 @@ def setupLogging(colored=True, with_time=False, with_thread=False, filename=None
         def __init__(self, with_time, with_thread):
             self.fmt = (('%(asctime)s ' if with_time else '') +
                         '-CC-%(levelname)-8s ' +
-                        BLUE_FONT + '[%(name)s:%(funcName)s]' +
+                        BLUE_FONT + '[%(name)s:%(funcName)s' +
+                        (':%(lineno)s' if with_lineno else '') + ']' +
                         RESET_FONT + ('[%(threadName)s]' if with_thread else '') +
                         ' -- %(message)s')
 

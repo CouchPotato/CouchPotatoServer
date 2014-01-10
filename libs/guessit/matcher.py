@@ -21,14 +21,14 @@
 from __future__ import unicode_literals
 from guessit import PY3, u, base_text_type
 from guessit.matchtree import MatchTree
-from guessit.textutils import normalize_unicode
+from guessit.textutils import normalize_unicode, clean_string
 import logging
 
 log = logging.getLogger(__name__)
 
 
 class IterativeMatcher(object):
-    def __init__(self, filename, filetype='autodetect', opts=None):
+    def __init__(self, filename, filetype='autodetect', opts=None, transfo_opts=None):
         """An iterative matcher tries to match different patterns that appear
         in the filename.
 
@@ -38,7 +38,8 @@ class IterativeMatcher(object):
         a movie.
 
         The recognized 'filetype' values are:
-        [ autodetect, subtitle, movie, moviesubtitle, episode, episodesubtitle ]
+        [ autodetect, subtitle, info, movie, moviesubtitle, movieinfo, episode,
+        episodesubtitle, episodeinfo ]
 
 
         The IterativeMatcher works mainly in 2 steps:
@@ -61,15 +62,20 @@ class IterativeMatcher(object):
         it corresponds to a video codec, denoted by the letter'v' in the 4th line.
         (for more info, see guess.matchtree.to_string)
 
+        Second, it tries to merge all this information into a single object
+        containing all the found properties, and does some (basic) conflict
+        resolution when they arise.
 
-         Second, it tries to merge all this information into a single object
-         containing all the found properties, and does some (basic) conflict
-         resolution when they arise.
+
+        When you create the Matcher, you can pass it:
+         - a list 'opts' of option names, that act as global flags
+         - a dict 'transfo_opts' of { transfo_name: (transfo_args, transfo_kwargs) }
+           with which to call the transfo.process() function.
         """
 
-        valid_filetypes = ('autodetect', 'subtitle', 'video',
-                           'movie', 'moviesubtitle',
-                           'episode', 'episodesubtitle')
+        valid_filetypes = ('autodetect', 'subtitle', 'info', 'video',
+                           'movie', 'moviesubtitle', 'movieinfo',
+                           'episode', 'episodesubtitle', 'episodeinfo')
         if filetype not in valid_filetypes:
             raise ValueError("filetype needs to be one of %s" % valid_filetypes)
         if not PY3 and not isinstance(filename, unicode):
@@ -80,10 +86,22 @@ class IterativeMatcher(object):
 
         if opts is None:
             opts = []
-        elif isinstance(opts, base_text_type):
-            opts = opts.split()
+        if not isinstance(opts, list):
+            raise ValueError('opts must be a list of option names! Received: type=%s val=%s',
+                             type(opts), opts)
+
+        if transfo_opts is None:
+            transfo_opts = {}
+        if not isinstance(transfo_opts, dict):
+            raise ValueError('transfo_opts must be a dict of { transfo_name: (args, kwargs) }. '+
+                             'Received: type=%s val=%s', type(transfo_opts), transfo_opts)
 
         self.match_tree = MatchTree(filename)
+
+        # sanity check: make sure we don't process a (mostly) empty string
+        if clean_string(filename) == '':
+            return
+
         mtree = self.match_tree
         mtree.guess.set('type', filetype, confidence=1.0)
 
@@ -91,7 +109,11 @@ class IterativeMatcher(object):
             transfo = __import__('guessit.transfo.' + transfo_name,
                                  globals=globals(), locals=locals(),
                                  fromlist=['process'], level=0)
-            transfo.process(mtree, *args, **kwargs)
+            default_args, default_kwargs = transfo_opts.get(transfo_name, ((), {}))
+            all_args = args or default_args
+            all_kwargs = dict(default_kwargs)
+            all_kwargs.update(kwargs) # keep all kwargs merged together
+            transfo.process(mtree, *all_args, **all_kwargs)
 
         # 1- first split our path into dirs + basename + ext
         apply_transfo('split_path_components')
@@ -111,7 +133,7 @@ class IterativeMatcher(object):
         #       - language before episodes_rexps
         #       - properties before language (eg: he-aac vs hebrew)
         #       - release_group before properties (eg: XviD-?? vs xvid)
-        if mtree.guess['type'] in ('episode', 'episodesubtitle'):
+        if mtree.guess['type'] in ('episode', 'episodesubtitle', 'episodeinfo'):
             strategy = [ 'guess_date', 'guess_website', 'guess_release_group',
                          'guess_properties', 'guess_language',
                          'guess_video_rexps',
@@ -123,6 +145,7 @@ class IterativeMatcher(object):
 
         if 'nolanguage' in opts:
             strategy.remove('guess_language')
+
 
         for name in strategy:
             apply_transfo(name)
@@ -143,7 +166,7 @@ class IterativeMatcher(object):
 
         # 5- try to identify the remaining unknown groups by looking at their
         #    position relative to other known elements
-        if mtree.guess['type'] in ('episode', 'episodesubtitle'):
+        if mtree.guess['type'] in ('episode', 'episodesubtitle', 'episodeinfo'):
             apply_transfo('guess_episode_info_from_position')
         else:
             apply_transfo('guess_movie_title_from_position')

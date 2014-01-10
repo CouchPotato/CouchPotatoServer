@@ -20,7 +20,7 @@
 
 from __future__ import unicode_literals
 
-__version__ = '0.7-dev'
+__version__ = '0.6.2'
 __all__ = ['Guess', 'Language',
            'guess_file_info', 'guess_video_info',
            'guess_movie_info', 'guess_episode_info']
@@ -76,6 +76,7 @@ from guessit.language import Language
 from guessit.matcher import IterativeMatcher
 from guessit.textutils import clean_string
 import logging
+import json
 
 log = logging.getLogger(__name__)
 
@@ -105,17 +106,74 @@ def _guess_filename(filename, filetype):
 
     mtree = IterativeMatcher(filename, filetype=filetype)
 
+    m = mtree.matched()
+
+    second_pass_opts = []
+    second_pass_transfo_opts = {}
+
     # if there are multiple possible years found, we assume the first one is
     # part of the title, reparse the tree taking this into account
     years = set(n.value for n in find_nodes(mtree.match_tree, 'year'))
     if len(years) >= 2:
-        mtree = IterativeMatcher(filename, filetype=filetype,
-                                 opts=['skip_first_year'])
+        second_pass_opts.append('skip_first_year')
 
+    to_skip_language_nodes = []
+
+    title_nodes = set(n for n in find_nodes(mtree.match_tree, ['title', 'series']))
+    title_spans = {}
+    for title_node in title_nodes:
+        title_spans[title_node.span[0]] = title_node
+        title_spans[title_node.span[1]] = title_node
+
+    for lang_key in ('language', 'subtitleLanguage'):
+        langs = {}
+        lang_nodes = set(n for n in find_nodes(mtree.match_tree, lang_key))
+
+        for lang_node in lang_nodes:
+            lang = lang_node.guess.get(lang_key, None)
+            if len(lang_node.value) > 3 and (lang_node.span[0] in title_spans.keys() or lang_node.span[1] in title_spans.keys()):
+                # Language is next or before title, and is not a language code. Add to skip for 2nd pass.
+
+                # if filetype is subtitle and the language appears last, just before
+                # the extension, then it is likely a subtitle language
+                parts = clean_string(lang_node.root.value).split()
+                if m['type'] in ['moviesubtitle', 'episodesubtitle'] and (parts.index(lang_node.value) == len(parts) - 2):
+                    continue
+
+                to_skip_language_nodes.append(lang_node)
+            elif not lang in langs:
+                langs[lang] = lang_node
+            else:
+                # The same language was found. Keep the more confident one, and add others to skip for 2nd pass.
+                existing_lang_node = langs[lang]
+                to_skip = None
+                if existing_lang_node.guess.confidence('language') >= lang_node.guess.confidence('language'):
+                    # lang_node is to remove
+                    to_skip = lang_node
+                else:
+                    # existing_lang_node is to remove
+                    langs[lang] = lang_node
+                    to_skip = existing_lang_node
+                to_skip_language_nodes.append(to_skip)
+
+
+    if to_skip_language_nodes:
+        second_pass_transfo_opts['guess_language'] = (
+            ((), { 'skip': [ { 'node_idx': node.parent.node_idx,
+                               'span': node.span }
+                             for node in to_skip_language_nodes ] }))
+
+    if second_pass_opts or second_pass_transfo_opts:
+        # 2nd pass is needed
+        log.info("Running 2nd pass with options: %s" % second_pass_opts)
+        log.info("Transfo options: %s" % second_pass_transfo_opts)
+        mtree = IterativeMatcher(filename, filetype=filetype,
+                                 opts=second_pass_opts,
+                                 transfo_opts=second_pass_transfo_opts)
 
     m = mtree.matched()
 
-    if 'language' not in m and 'subtitleLanguage' not in m:
+    if 'language' not in m and 'subtitleLanguage' not in m or 'title' not in m:
         return m
 
     # if we found some language, make sure we didn't cut a title or sth...
@@ -123,50 +181,9 @@ def _guess_filename(filename, filetype):
                               opts=['nolanguage', 'nocountry'])
     m2 = mtree2.matched()
 
-
-    if m.get('title') is None:
-        return m
-
     if m.get('title') != m2.get('title'):
         title = next(find_nodes(mtree.match_tree, 'title'))
         title2 = next(find_nodes(mtree2.match_tree, 'title'))
-
-        langs = list(find_nodes(mtree.match_tree, ['language', 'subtitleLanguage']))
-        if not langs:
-            return warning('A weird error happened with language detection')
-
-        # find the language that is likely more relevant
-        for lng in langs:
-            if lng.value in title2.value:
-                # if the language was detected as part of a potential title,
-                # look at this one in particular
-                lang = lng
-                break
-        else:
-            # pick the first one if we don't have a better choice
-            lang = langs[0]
-
-
-        # language code are rarely part of a title, and those
-        # should be handled by the Language exceptions anyway
-        if len(lang.value) <= 3:
-            return m
-
-
-        # if filetype is subtitle and the language appears last, just before
-        # the extension, then it is likely a subtitle language
-        parts = clean_string(title.root.value).split()
-        if (m['type'] in ['moviesubtitle', 'episodesubtitle'] and
-            parts.index(lang.value) == len(parts) - 2):
-            return m
-
-        # if the language was in the middle of the other potential title,
-        # keep the other title (eg: The Italian Job), except if it is at the
-        # very beginning, in which case we consider it an error
-        if m2['title'].startswith(lang.value):
-            return m
-        elif lang.value in title2.value:
-            return m2
 
         # if a node is in an explicit group, then the correct title is probably
         # the other one
@@ -174,9 +191,6 @@ def _guess_filename(filename, filetype):
             return m2
         elif title2.root.node_at(title2.node_idx[:2]).is_explicit():
             return m
-
-        return warning('Not sure of the title because of the language position')
-
 
     return m
 
