@@ -833,8 +833,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                         found = False
                         for release_download in release_downloads:
                             found_release = False
-                            if rel_dict['info'].get('download_id'):
-                                if release_download['id'] == rel_dict['info']['download_id'] and release_download['downloader'] == rel_dict['info']['download_downloader']:
+                            if rel_dict['info'].get('download_id') and release_download['id'] == rel_dict['info']['download_id'] and release_download['downloader'] == rel_dict['info']['download_downloader']:
                                     log.debug('Found release by id: %s', release_download['id'])
                                     found_release = True
                             else:
