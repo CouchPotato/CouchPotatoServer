@@ -103,7 +103,9 @@ class Plugin(object):
             f.close()
             os.chmod(path, Env.getPermission('file'))
         except Exception, e:
-            log.error('Unable writing to file "%s": %s', (path, e))
+            log.error('Unable writing to file "%s": %s', (path, traceback.format_exc()))
+            if os.path.isfile(path):
+                os.remove(path)
 
     def makeDir(self, path):
         path = ss(path)
