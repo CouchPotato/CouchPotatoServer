@@ -37,7 +37,7 @@ class IPTorrents(TorrentProvider):
         while current_page <= pages and not self.shuttingDown():
 
             url = self.urls['search'] % (self.getCatId(quality['identifier'])[0], freeleech, tryUrlencode('%s %s' % (title.replace(':', ''), movie['library']['year'])), current_page)
-            data = self.getHTMLData(url, opener = self.login_opener)
+            data = self.getHTMLData(url)
 
             if data:
                 html = BeautifulSoup(data)
@@ -90,11 +90,11 @@ class IPTorrents(TorrentProvider):
             current_page += 1
 
     def getLoginParams(self):
-        return tryUrlencode({
+        return {
             'username': self.conf('username'),
             'password': self.conf('password'),
             'login': 'submit',
-        })
+        }
 
     def loginSuccess(self, output):
         return 'don\'t have an account' not in output.lower()

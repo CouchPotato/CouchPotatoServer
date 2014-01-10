@@ -43,7 +43,7 @@ class Sabnzbd(Downloader):
 
         try:
             if nzb_filename and req_params.get('mode') is 'addfile':
-                sab_data = self.call(req_params, params = {'nzbfile': (ss(nzb_filename), filedata)}, multipart = True)
+                sab_data = self.call(req_params, files = {'nzbfile': (ss(nzb_filename), filedata)})
             else:
                 sab_data = self.call(req_params)
         except URLError:

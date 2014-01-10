@@ -5,12 +5,10 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
 from urlparse import urlparse
-import cookielib
 import json
 import re
 import time
 import traceback
-import urllib2
 import xml.etree.ElementTree as XMLTree
 
 log = CPLog(__name__)
@@ -95,7 +93,7 @@ class Provider(Plugin):
 
     def getHTMLData(self, url, **kwargs):
 
-        cache_key = '%s%s' % (md5(url), md5('%s' % kwargs.get('params', {})))
+        cache_key = '%s%s' % (md5(url), md5('%s' % kwargs.get('data', {})))
         return self.getCache(cache_key, url, **kwargs)
 
 
@@ -111,8 +109,7 @@ class YarrProvider(Provider):
     sizeMb = ['mb', 'mib']
     sizeKb = ['kb', 'kib']
 
-    login_opener = None
-    last_login_check = 0
+    last_login_check = None
 
     def __init__(self):
         addEvent('provider.enabled_protocols', self.getEnabledProtocol)
@@ -129,35 +126,30 @@ class YarrProvider(Provider):
 
         # Check if we are still logged in every hour
         now = time.time()
-        if self.login_opener and self.last_login_check < (now - 3600):
+        if self.last_login_check and self.last_login_check < (now - 3600):
             try:
-                output = self.urlopen(self.urls['login_check'], opener = self.login_opener)
+                output = self.urlopen(self.urls['login_check'])
                 if self.loginCheckSuccess(output):
                     self.last_login_check = now
                     return True
-                else:
-                    self.login_opener = None
-            except:
-                self.login_opener = None
+            except: pass
+            self.last_login_check = None
 
-        if self.login_opener:
+        if self.last_login_check:
             return True
 
         try:
-            cookiejar = cookielib.CookieJar()
-            opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookiejar))
-            output = self.urlopen(self.urls['login'], params = self.getLoginParams(), opener = opener)
+            output = self.urlopen(self.urls['login'], data = self.getLoginParams())
 
             if self.loginSuccess(output):
                 self.last_login_check = now
-                self.login_opener = opener
                 return True
 
             error = 'unknown'
         except:
             error = traceback.format_exc()
 
-        self.login_opener = None
+        self.last_login_check = None
         log.error('Failed to login %s: %s', (self.getName(), error))
         return False
 
@@ -171,12 +163,12 @@ class YarrProvider(Provider):
         try:
             if not self.login():
                 log.error('Failed downloading from %s', self.getName())
-            return self.urlopen(url, opener = self.login_opener)
+            return self.urlopen(url)
         except:
             log.error('Failed downloading from %s: %s', (self.getName(), traceback.format_exc()))
 
     def getLoginParams(self):
-        return ''
+        return {}
 
     def download(self, url = '', nzb_id = ''):
         try:

@@ -202,7 +202,7 @@ class XBMC(Notification):
 
         try:
             log.debug('Sending request to %s: %s', (host, data))
-            response = self.getJsonData(server, headers = headers, params = data, timeout = 3, show_error = False)
+            response = self.getJsonData(server, headers = headers, data = data, timeout = 3, show_error = False)
             log.debug('Returned from request %s: %s', (host, response))
 
             return response

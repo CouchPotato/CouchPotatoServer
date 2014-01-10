@@ -28,7 +28,7 @@ class Bitsoup(TorrentProvider):
         })
         url = "%s&%s" % (self.urls['search'], arguments)
 
-        data = self.getHTMLData(url, opener = self.login_opener)
+        data = self.getHTMLData(url)
 
         if data:
             html = BeautifulSoup(data)
@@ -73,11 +73,11 @@ class Bitsoup(TorrentProvider):
 
 
     def getLoginParams(self):
-        return tryUrlencode({
+        return {
             'username': self.conf('username'),
             'password': self.conf('password'),
             'ssl': 'yes',
-        })
+        }
 
 
     def loginSuccess(self, output):

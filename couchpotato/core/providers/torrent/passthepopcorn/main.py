@@ -65,7 +65,7 @@ class PassThePopcorn(TorrentProvider):
         })
 
         url = '%s?json=noredirect&%s' % (self.urls['torrent'], tryUrlencode(params))
-        res = self.getJsonData(url, opener = self.login_opener)
+        res = self.getJsonData(url)
 
         try:
             if not 'Movies' in res:
@@ -188,13 +188,13 @@ class PassThePopcorn(TorrentProvider):
         return self.unicodeToASCII(self.htmlToUnicode(text))
 
     def getLoginParams(self):
-        return tryUrlencode({
+        return {
              'username': self.conf('username'),
              'password': self.conf('password'),
              'passkey': self.conf('passkey'),
              'keeplogged': '1',
              'login': 'Login'
-        })
+        }
 
     def loginSuccess(self, output):
         try:

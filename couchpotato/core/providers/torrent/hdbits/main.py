@@ -1,5 +1,4 @@
 from bs4 import BeautifulSoup
-from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.torrent.base import TorrentProvider
@@ -23,7 +22,7 @@ class HDBits(TorrentProvider):
 
     def _search(self, movie, quality, results):
 
-        data = self.getJsonData(self.urls['search'] % movie['library']['identifier'], opener = self.login_opener)
+        data = self.getJsonData(self.urls['search'] % movie['library']['identifier'])
 
         if data:
             try:
@@ -42,15 +41,17 @@ class HDBits(TorrentProvider):
                 log.error('Failed getting results from %s: %s', (self.getName(), traceback.format_exc()))
 
     def getLoginParams(self):
-        data = self.getHTMLData('https://hdbits.org/login')
+        data = self.getHTMLData('https://hdbits.org/login', cache_timeout = 0)
+
         bs = BeautifulSoup(data)
         secret = bs.find('input', attrs = {'name': 'lol'})['value']
 
-        return tryUrlencode({
+        return {
             'uname': self.conf('username'),
             'password': self.conf('password'),
+            'returnto': '/',
             'lol': secret
-        })
+        }
 
     def loginSuccess(self, output):
         return '/logout.php' in output.lower()

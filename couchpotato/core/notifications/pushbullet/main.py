@@ -74,9 +74,9 @@ class Pushbullet(Notification):
             }
 
             if cache:
-                return self.getJsonData(self.url % method, headers = headers, params = kwargs)
+                return self.getJsonData(self.url % method, headers = headers, data = kwargs)
             else:
-                data = self.urlopen(self.url % method, headers = headers, params = kwargs)
+                data = self.urlopen(self.url % method, headers = headers, data = kwargs)
                 return json.loads(data)
 
         except Exception, ex:

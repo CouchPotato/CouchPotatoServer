@@ -45,7 +45,7 @@ class SceneAccess(TorrentProvider):
         url = "%s&%s" % (url, arguments)
 
 
-        data = self.getHTMLData(url, opener = self.login_opener)
+        data = self.getHTMLData(url)
 
         if data:
             html = BeautifulSoup(data)
@@ -78,11 +78,11 @@ class SceneAccess(TorrentProvider):
                 log.error('Failed getting results from %s: %s', (self.getName(), traceback.format_exc()))
 
     def getLoginParams(self):
-        return tryUrlencode({
+        return {
             'username': self.conf('username'),
             'password': self.conf('password'),
             'submit': 'come on in',
-        })
+        }
 
     def getMoreInfo(self, item):
         full_description = self.getCache('sceneaccess.%s' % item['id'], item['detail_url'], cache_timeout = 25920000)
