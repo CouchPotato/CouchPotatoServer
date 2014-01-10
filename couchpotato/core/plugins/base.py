@@ -160,7 +160,7 @@ class Plugin(object):
             method = 'post' if len(data) > 0 or files else 'get'
 
             log.info('Opening url: %s %s, data: %s', (method, url, [x for x in data.iterkeys()] if isinstance(data, dict) else 'with data'))
-            response = r.request(method, url, **kwargs)
+            response = r.request(method, url, verify = False, **kwargs)
 
             data = response.text
 
