@@ -91,7 +91,7 @@ class Deluge(Downloader):
         log.debug('Checking Deluge download status.')
 
         if not self.connect():
-            return False
+            return []
 
         release_downloads = ReleaseDownloadList(self)
 
@@ -99,7 +99,7 @@ class Deluge(Downloader):
 
         if not queue:
             log.debug('Nothing in queue or error')
-            return False
+            return []
 
         for torrent_id in queue:
             torrent = queue[torrent_id]

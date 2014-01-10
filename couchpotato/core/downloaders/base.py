@@ -13,6 +13,7 @@ class Downloader(Provider):
 
     protocol = []
     http_time_between_calls = 0
+    status_support = True
 
     torrent_sources = [
         'http://torrage.com/torrent/%s.torrent',
@@ -69,7 +70,7 @@ class Downloader(Provider):
             return
 
     def getAllDownloadStatus(self, ids):
-        return
+        return []
 
     def _removeFailed(self, release_download):
         if self.isDisabled(manual = True, data = {}):
@@ -133,6 +134,7 @@ class Downloader(Provider):
     def downloadReturnId(self, download_id):
         return {
             'downloader': self.getName(),
+            'status_support': self.status_support,
             'id': download_id
         }
 

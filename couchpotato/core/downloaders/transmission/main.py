@@ -88,7 +88,7 @@ class Transmission(Downloader):
         log.debug('Checking Transmission download status.')
 
         if not self.connect():
-            return False
+            return []
 
         release_downloads = ReleaseDownloadList(self)
 
@@ -99,7 +99,7 @@ class Transmission(Downloader):
         queue = self.trpc.get_alltorrents(return_params)
         if not (queue and queue.get('torrents')):
             log.debug('Nothing in queue or error')
-            return False
+            return []
 
         for torrent in queue['torrents']:
             if torrent['hashString'] in ids:

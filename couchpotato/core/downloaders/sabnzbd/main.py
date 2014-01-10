@@ -75,7 +75,7 @@ class Sabnzbd(Downloader):
             })
         except:
             log.error('Failed getting queue: %s', traceback.format_exc(1))
-            return False
+            return []
 
         # Go through history items
         try:
@@ -85,7 +85,7 @@ class Sabnzbd(Downloader):
             })
         except:
             log.error('Failed getting history json: %s', traceback.format_exc(1))
-            return False
+            return []
 
         release_downloads = ReleaseDownloadList(self)
 

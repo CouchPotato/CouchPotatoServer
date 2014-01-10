@@ -163,7 +163,7 @@ class Renamer(Plugin):
 
         # Make sure a checkSnatched marked all downloads/seeds as such
         if not release_download and self.conf('run_every') > 0:
-            fireEvent('renamer.check_snatched')
+            self.checkSnatched(fire_scan = False)
 
         self.renaming_started = True
 
@@ -578,7 +578,7 @@ class Renamer(Plugin):
             # Break if CP wants to shut down
             if self.shuttingDown():
                 break
-
+ 
         self.renaming_started = False
 
     def getRenameExtras(self, extra_type = '', replacements = None, folder_name = '', file_name = '', destination = '', group = None, current_file = '', remove_multiple = False):
@@ -809,7 +809,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         except:
             loge('Couldn\'t remove empty directory %s: %s', (folder, traceback.format_exc()))
 
-    def checkSnatched(self):
+    def checkSnatched(self, fire_scan = True):
 
         if self.checking_snatched:
             log.debug('Already checking snatched')
@@ -832,20 +832,29 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
         # Collect all download information with the download IDs from the releases
         download_ids = []
+        no_status_support = []
         try:
             for rel in rels:
                 rel_dict = rel.to_dict({'info': {}})
                 if rel_dict['info'].get('download_id') and rel_dict['info'].get('download_downloader'):
                     download_ids.append({'id': rel_dict['info']['download_id'], 'downloader': rel_dict['info']['download_downloader']})
+
+                ds = rel_dict['info'].get('download_status_support')
+                if ds == False or ds == 'False':
+                    no_status_support.append(ss(rel_dict['info'].get('download_downloader')))
         except:
             log.error('Error getting download IDs from database')
             self.checking_snatched = False
             return False
 
-        release_downloads = fireEvent('download.status', download_ids, merge = True)
+        release_downloads = fireEvent('download.status', download_ids, merge = True) if download_ids else []
+
+        if len(no_status_support) > 0:
+            log.debug('Download status functionality is not implemented for one of the active downloaders: %s', no_status_support)
+
         if not release_downloads:
-            log.debug('Download status functionality is not implemented for any active downloaders.')
-            fireEvent('renamer.scan')
+            if fire_scan:
+                self.scan()
 
             self.checking_snatched = False
             return True
@@ -985,7 +994,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
             if release_download['scan']:
                 if release_download['pause'] and self.conf('file_action') == 'link':
                     fireEvent('download.pause', release_download = release_download, pause = True, single = True)
-                fireEvent('renamer.scan', release_download = release_download)
+                self.scan(release_download = release_download)
                 if release_download['pause'] and self.conf('file_action') == 'link':
                     fireEvent('download.pause', release_download = release_download, pause = False, single = True)
             if release_download['process_complete']:
@@ -996,8 +1005,8 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                     # Ask the downloader to process the item
                     fireEvent('download.process_complete', release_download = release_download, single = True)
 
-        if scan_required:
-            fireEvent('renamer.scan')
+        if fire_scan and (scan_required or len(no_status_support) > 0):
+            self.scan()
 
         self.checking_snatched = False
         return True

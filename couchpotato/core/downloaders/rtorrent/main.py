@@ -147,7 +147,7 @@ class rTorrent(Downloader):
         log.debug('Checking rTorrent download status.')
 
         if not self.connect():
-            return False
+            return []
 
         try:
             torrents = self.rt.get_torrents()
@@ -182,7 +182,7 @@ class rTorrent(Downloader):
 
         except Exception, err:
             log.error('Failed to get status from rTorrent: %s', err)
-            return False
+            return []
 
     def pause(self, release_download, pause = True):
         if not self.connect():

@@ -81,13 +81,13 @@ class NZBGet(Downloader):
                 log.info('Successfully connected to NZBGet, but unable to send a message')
         except socket.error:
             log.error('NZBGet is not responding. Please ensure that NZBGet is running and host setting is correct.')
-            return False
+            return []
         except xmlrpclib.ProtocolError, e:
             if e.errcode == 401:
                 log.error('Password is incorrect.')
             else:
                 log.error('Protocol Error: %s', e)
-            return False
+            return []
 
         # Get NZBGet data
         try:
@@ -97,7 +97,7 @@ class NZBGet(Downloader):
             history = rpc.history()
         except:
             log.error('Failed getting data: %s', traceback.format_exc(1))
-            return False
+            return []
 
         release_downloads = ReleaseDownloadList(self)
 
