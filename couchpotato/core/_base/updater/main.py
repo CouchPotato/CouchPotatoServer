@@ -124,7 +124,7 @@ class Updater(Plugin):
 
 class BaseUpdater(Plugin):
 
-    repo_user = 'sarakha63'
+    repo_user = 'nqntRench'
     repo_name = 'CouchPotatoServer'
     branch = version.BRANCH
 
