@@ -104,8 +104,8 @@ class Transmission(Downloader):
 
         for torrent in queue['torrents']:
             if torrent['hashString'] in ids:
-                log.debug('name=%s / id=%s / downloadDir=%s / hashString=%s / percentDone=%s / status=%s / isStalled=%s / eta=%s / uploadRatio=%s / isFinished=%s',
-                    (torrent['name'], torrent['id'], torrent['downloadDir'], torrent['hashString'], torrent['percentDone'], torrent['status'], torrent.get('isStalled', 'N/A'), torrent['eta'], torrent['uploadRatio'], torrent['isFinished']))
+                log.debug('name=%s / id=%s / downloadDir=%s / hashString=%s / percentDone=%s / status=%s / isStalled=%s / eta=%s / uploadRatio=%s / isFinished=%s / incomplete-dir-enabled=%s / incomplete-dir=%s',
+                    (torrent['name'], torrent['id'], torrent['downloadDir'], torrent['hashString'], torrent['percentDone'], torrent['status'], torrent.get('isStalled', 'N/A'), torrent['eta'], torrent['uploadRatio'], torrent['isFinished'], session['incomplete-dir-enabled'], session['incomplete-dir']))
 
                 status = 'busy'
                 if torrent.get('isStalled') and not torrent['percentDone'] == 1 and self.conf('stalled_as_failed'):
