@@ -44,7 +44,7 @@ class t411(TorrentProvider):
 
     def getSearchParams(self, movie, quality):
 		FilterTrueFrench = ''
-		if self.conf('true_french_enly') :
+		if self.conf('true_french_only') :
 			FilterTrueFrench = '&term%5B17%5D%5B%5D=541&term%5B17%5D%5B%5D=542'
 			
         results = []
