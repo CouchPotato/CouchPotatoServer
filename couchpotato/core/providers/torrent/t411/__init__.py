@@ -28,7 +28,7 @@ config = [{
                     'type': 'password',
                 },
                 {
-                    'name': 'true_french_enly',
+                    'name': 'true_french_only',
                     'label': 'Only true french result',
                     'type': 'enabler',
                     'default': True,
