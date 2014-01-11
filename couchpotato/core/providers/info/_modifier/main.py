@@ -32,14 +32,17 @@ class Movie(ModifierBase):
             'poster': [],
             'backdrop': [],
             'poster_original': [],
-            'backdrop_original': []
+            'backdrop_original': [],
+            'actors': {}
         },
         'runtime': 0,
         'plot': '',
         'tagline': '',
         'imdb': '',
         'genres': [],
-        'mpaa': None
+        'mpaa': None,
+        'actors': [],
+        'actor_roles': {}
     }
 
     def __init__(self):

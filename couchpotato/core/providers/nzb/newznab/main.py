@@ -165,6 +165,7 @@ class Base(NZBProvider, RSS):
             # Get final redirected url
             log.debug('Checking %s for redirects.', url)
             req = urllib2.Request(url)
+            req.add_header('User-Agent', self.user_agent)
             res = urllib2.urlopen(req)
             finalurl = res.geturl()
             if finalurl != url:

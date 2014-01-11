@@ -11,6 +11,7 @@ class Pneumatic(Downloader):
 
     protocol = ['nzb']
     strm_syntax = 'plugin://plugin.program.pneumatic/?mode=strm&type=add_file&nzb=%s&nzbname=%s'
+    status_support = False
 
     def download(self, data = None, media = None, filedata = None):
         if not media: media = {}

@@ -1,19 +1,15 @@
-from StringIO import StringIO
 from couchpotato.core.event import fireEvent, addEvent
-from couchpotato.core.helpers.encoding import tryUrlencode, ss, toSafeString, \
+from couchpotato.core.helpers.encoding import ss, toSafeString, \
     toUnicode, sp
 from couchpotato.core.helpers.variable import getExt, md5, isLocalIP
 from couchpotato.core.logger import CPLog
 from couchpotato.environment import Env
-from multipartpost import MultipartPostHandler
+import requests
 from tornado import template
 from tornado.web import StaticFileHandler
 from urlparse import urlparse
-import cookielib
 import glob
-import gzip
 import inspect
-import math
 import os.path
 import re
 import time
@@ -39,6 +35,7 @@ class Plugin(object):
     http_time_between_calls = 0
     http_failed_request = {}
     http_failed_disabled = {}
+    http_opener = requests.Session()
 
     def __new__(typ, *args, **kwargs):
         new_plugin = super(Plugin, typ).__new__(typ)
@@ -106,7 +103,9 @@ class Plugin(object):
             f.close()
             os.chmod(path, Env.getPermission('file'))
         except Exception, e:
-            log.error('Unable writing to file "%s": %s', (path, e))
+            log.error('Unable writing to file "%s": %s', (path, traceback.format_exc()))
+            if os.path.isfile(path):
+                os.remove(path)
 
     def makeDir(self, path):
         path = ss(path)
@@ -120,11 +119,11 @@ class Plugin(object):
         return False
 
     # http request
-    def urlopen(self, url, timeout = 30, params = None, headers = None, opener = None, multipart = False, show_error = True):
+    def urlopen(self, url, timeout = 30, data = None, headers = None, files = None, show_error = True, return_raw = False):
         url = urllib2.quote(ss(url), safe = "%/:=&?~#+!$,;'@()*[]")
 
         if not headers: headers = {}
-        if not params: params = {}
+        if not data: data = {}
 
         # Fill in some headers
         parsed_url = urlparse(url)
@@ -136,6 +135,8 @@ class Plugin(object):
         headers['Accept-encoding'] = headers.get('Accept-encoding', 'gzip')
         headers['Connection'] = headers.get('Connection', 'keep-alive')
         headers['Cache-Control'] = headers.get('Cache-Control', 'max-age=0')
+
+        r = self.http_opener
 
         # Don't try for failed requests
         if self.http_failed_disabled.get(host, 0) > 0:
@@ -152,45 +153,18 @@ class Plugin(object):
         self.wait(host)
         try:
 
-            # Make sure opener has the correct headers
-            if opener:
-                opener.add_headers = headers
+            kwargs = {
+                'headers': headers,
+                'data': data if len(data) > 0 else None,
+                'timeout': timeout,
+                'files': files,
+            }
+            method = 'post' if len(data) > 0 or files else 'get'
 
-            if multipart:
-                log.info('Opening multipart url: %s, params: %s', (url, [x for x in params.iterkeys()] if isinstance(params, dict) else 'with data'))
-                request = urllib2.Request(url, params, headers)
+            log.info('Opening url: %s %s, data: %s', (method, url, [x for x in data.iterkeys()] if isinstance(data, dict) else 'with data'))
+            response = r.request(method, url, verify = False, **kwargs)
 
-                if opener:
-                    opener.add_handler(MultipartPostHandler())
-                else:
-                    cookies = cookielib.CookieJar()
-                    opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookies), MultipartPostHandler)
-
-                response = opener.open(request, timeout = timeout)
-            else:
-                log.info('Opening url: %s, params: %s', (url, [x for x in params.iterkeys()] if isinstance(params, dict) else 'with data'))
-
-                if isinstance(params, (str, unicode)) and len(params) > 0:
-                    data = params
-                else:
-                    data = tryUrlencode(params) if len(params) > 0 else None
-
-                request = urllib2.Request(url, data, headers)
-
-                if opener:
-                    response = opener.open(request, timeout = timeout)
-                else:
-                    response = urllib2.urlopen(request, timeout = timeout)
-
-            # unzip if needed
-            if response.info().get('Content-Encoding') == 'gzip':
-                buf = StringIO(response.read())
-                f = gzip.GzipFile(fileobj = buf)
-                data = f.read()
-                f.close()
-            else:
-                data = response.read()
-            response.close()
+            data = response.content if return_raw else response.text
 
             self.http_failed_request[host] = 0
         except IOError:
@@ -218,15 +192,19 @@ class Plugin(object):
         return data
 
     def wait(self, host = ''):
+        if self.http_time_between_calls == 0:
+            return
+
         now = time.time()
 
         last_use = self.http_last_use.get(host, 0)
+        if last_use > 0:
 
-        wait = math.ceil(last_use - now + self.http_time_between_calls)
+            wait = (last_use - now) + self.http_time_between_calls
 
-        if wait > 0:
-            log.debug('Waiting for %s, %d seconds', (self.getName(), wait))
-            time.sleep(last_use - now + self.http_time_between_calls)
+            if wait > 0:
+                log.debug('Waiting for %s, %d seconds', (self.getName(), wait))
+                time.sleep(wait)
 
     def beforeCall(self, handler):
         self.isRunning('%s.%s' % (self.getName(), handler.__name__))
@@ -269,18 +247,19 @@ class Plugin(object):
             try:
 
                 cache_timeout = 300
-                if kwargs.get('cache_timeout'):
+                if kwargs.has_key('cache_timeout'):
                     cache_timeout = kwargs.get('cache_timeout')
                     del kwargs['cache_timeout']
 
                 data = self.urlopen(url, **kwargs)
-                if data:
+                if data and cache_timeout > 0:
                     self.setCache(cache_key, data, timeout = cache_timeout)
                 return data
             except:
                 if not kwargs.get('show_error', True):
                     raise
 
+                log.error('Failed getting cache: %s', (traceback.format_exc()))
                 return ''
 
     def setCache(self, cache_key, value, timeout = 300):

@@ -35,6 +35,7 @@ class MovieBase(MovieTypeBase):
             'params': {
                 'id': {'desc': 'Movie ID(s) you want to edit.', 'type': 'int (comma separated)'},
                 'profile_id': {'desc': 'ID of quality profile you want the edit the movie to.'},
+                'category_id': {'desc': 'ID of category you want the add the movie in. If empty will use no category.'},
                 'default_title': {'desc': 'Movie title to use for searches. Has to be one of the titles returned by movie.search.'},
             }
         })

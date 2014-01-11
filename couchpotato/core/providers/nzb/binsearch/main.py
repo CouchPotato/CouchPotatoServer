@@ -85,13 +85,13 @@ class Base(NZBProvider):
 
     def download(self, url = '', nzb_id = ''):
 
-        params = {
+        data = {
             'action': 'nzb',
             nzb_id: 'on'
         }
 
         try:
-            return self.urlopen(url, params = params, show_error = False)
+            return self.urlopen(url, data = data, show_error = False)
         except:
             log.error('Failed getting nzb from %s: %s', (self.getName(), traceback.format_exc()))
 

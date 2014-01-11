@@ -11,8 +11,8 @@ log = CPLog(__name__)
 class TheMovieDb(MovieProvider):
 
     def __init__(self):
-        addEvent('info.search', self.search, priority = 2)
-        addEvent('movie.search', self.search, priority = 2)
+        #addEvent('info.search', self.search, priority = 2)
+        #addEvent('movie.search', self.search, priority = 2)
         addEvent('movie.info', self.getInfo, priority = 2)
         addEvent('movie.info_by_tmdb', self.getInfo)
 
@@ -45,7 +45,7 @@ class TheMovieDb(MovieProvider):
                     nr = 0
 
                     for movie in raw:
-                        results.append(self.parseMovie(movie, with_titles = False))
+                        results.append(self.parseMovie(movie, extended = False))
 
                         nr += 1
                         if nr == limit:
@@ -61,7 +61,7 @@ class TheMovieDb(MovieProvider):
 
         return results
 
-    def getInfo(self, identifier = None):
+    def getInfo(self, identifier = None, extended = True):
 
         if not identifier:
             return {}
@@ -73,14 +73,14 @@ class TheMovieDb(MovieProvider):
             try:
                 log.debug('Getting info: %s', cache_key)
                 movie = tmdb3.Movie(identifier)
-                result = self.parseMovie(movie)
+                result = self.parseMovie(movie, extended = extended)
                 self.setCache(cache_key, result)
             except:
                 pass
 
         return result
 
-    def parseMovie(self, movie, with_titles = True):
+    def parseMovie(self, movie, extended = True):
 
         cache_key = 'tmdb.cache.%s' % movie.id
         movie_data = self.getCache(cache_key)
@@ -97,6 +97,7 @@ class TheMovieDb(MovieProvider):
                 #'backdrop': [backdrop] if backdrop else [],
                 'poster_original': [poster_original] if poster_original else [],
                 'backdrop_original': [backdrop_original] if backdrop_original else [],
+                'actors': {}
             }
 
             # Genres
@@ -112,12 +113,13 @@ class TheMovieDb(MovieProvider):
 
             # Gather actors data
             actors = {}
-            for cast_item in movie.cast:
-                try:
-                    actors[toUnicode(cast_item.name)] = toUnicode(cast_item.character)
-                    images['actor %s' % toUnicode(cast_item.name)] = self.getImage(cast_item, type = 'profile', size = 'original')
-                except:
-                    log.debug('Error getting cast info for %s: %s', (cast_item, traceback.format_exc()))
+            if extended:
+                for cast_item in movie.cast:
+                    try:
+                        actors[toUnicode(cast_item.name)] = toUnicode(cast_item.character)
+                        images['actors'][toUnicode(cast_item.name)] = self.getImage(cast_item, type = 'profile', size = 'original')
+                    except:
+                        log.debug('Error getting cast info for %s: %s', (cast_item, traceback.format_exc()))
 
             movie_data = {
                 'type': 'movie',
@@ -139,7 +141,7 @@ class TheMovieDb(MovieProvider):
             movie_data = dict((k, v) for k, v in movie_data.iteritems() if v)
 
             # Add alternative names
-            if with_titles:
+            if extended:
                 movie_data['titles'].append(movie.originaltitle)
                 for alt in movie.alternate_titles:
                     alt_name = alt.title

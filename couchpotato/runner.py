@@ -147,7 +147,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     Env.set('dev', development)
 
     # Disable logging for some modules
-    for logger_name in ['enzyme', 'guessit', 'subliminal', 'apscheduler', 'tornado']:
+    for logger_name in ['enzyme', 'guessit', 'subliminal', 'apscheduler', 'tornado', 'requests']:
         logging.getLogger(logger_name).setLevel(logging.ERROR)
 
     for logger_name in ['gntp', 'migrate']:

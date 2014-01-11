@@ -9,7 +9,7 @@ This module contains the set of Requests' exceptions.
 """
 
 
-class RequestException(RuntimeError):
+class RequestException(IOError):
     """There was an ambiguous exception that occurred while handling your
     request."""
 
@@ -25,6 +25,10 @@ class HTTPError(RequestException):
 
 class ConnectionError(RequestException):
     """A Connection error occurred."""
+
+
+class ProxyError(ConnectionError):
+    """A proxy error occurred."""
 
 
 class SSLError(ConnectionError):
@@ -53,3 +57,7 @@ class InvalidSchema(RequestException, ValueError):
 
 class InvalidURL(RequestException, ValueError):
     """ The URL provided was somehow invalid. """
+
+
+class ChunkedEncodingError(RequestException):
+    """The server declared chunked encoding but sent an invalid chunk."""

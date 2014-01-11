@@ -11,7 +11,7 @@ log = CPLog(__name__)
 class Synology(Downloader):
 
     protocol = ['nzb', 'torrent', 'torrent_magnet']
-    log = CPLog(__name__)
+    status_support = False
 
     def download(self, data = None, media = None, filedata = None):
         if not media: media = {}

@@ -247,13 +247,13 @@ class Release(Plugin):
             'files': {}
         }), manual = True)
 
-        if success:
+        if success == True:
             db.expunge_all()
             rel = db.query(Relea).filter_by(id = id).first() # Get release again @RuudBurger why do we need to get it again??
 
             fireEvent('notify.frontend', type = 'release.manual_download', data = True, message = 'Successfully snatched "%s"' % item['name'])
         return {
-            'success': success
+            'success': success == True
         }
 
     def download(self, data, media, manual = False):
@@ -266,20 +266,21 @@ class Release(Plugin):
         # Test to see if any downloaders are enabled for this type
         downloader_enabled = fireEvent('download.enabled', manual, data, single = True)
         if not downloader_enabled:
-            log.info('Tried to download, but none of the "%s" downloaders are enabled or gave an error', (data.get('protocol')))
+            log.info('Tried to download, but none of the "%s" downloaders are enabled or gave an error', data.get('protocol'))
             return False
 
         # Download NZB or torrent file
         filedata = None
         if data.get('download') and (ismethod(data.get('download')) or isfunction(data.get('download'))):
             filedata = data.get('download')(url = data.get('url'), nzb_id = data.get('id'))
+            log.info('Tried to download, but the "%s" provider gave an error', data.get('protocol'))
             if filedata == 'try_next':
                 return filedata
 
         # Send NZB or torrent file to downloader
         download_result = fireEvent('download', data = data, media = media, manual = manual, filedata = filedata, single = True)
         if not download_result:
-            log.info('Tried to download, but the "%s" downloader gave an error', (data.get('protocol')))
+            log.info('Tried to download, but the "%s" downloader gave an error', data.get('protocol'))
             return False
         log.debug('Downloader result: %s', download_result)
 

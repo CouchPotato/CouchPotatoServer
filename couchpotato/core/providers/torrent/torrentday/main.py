@@ -1,4 +1,3 @@
-from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.event import fireEvent
@@ -31,7 +30,7 @@ class Base(TorrentProvider):
 
         query = self.buildUrl(media)
 
-        params = {
+        data = {
             '/browse.php?': None,
             'cata': 'yes',
             'jxt': 8,
@@ -39,7 +38,7 @@ class Base(TorrentProvider):
             'search': query,
         }
 
-        data = self.getJsonData(self.urls['search'], params = params, opener = self.login_opener)
+        data = self.getJsonData(self.urls['search'], data = data)
         try: torrents = data.get('Fs', [])[0].get('Cn', {}).get('torrents', [])
         except: return
 
@@ -55,11 +54,13 @@ class Base(TorrentProvider):
             })
 
     def getLoginParams(self):
-        return tryUrlencode({
+        return {
             'username': self.conf('username'),
             'password': self.conf('password'),
+            'submit.x': 18,
+            'submit.y': 11,
             'submit': 'submit',
-        })
+        }
 
     def loginSuccess(self, output):
         return 'Password not correct' not in output

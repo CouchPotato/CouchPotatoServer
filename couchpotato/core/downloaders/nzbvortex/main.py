@@ -32,7 +32,7 @@ class NZBVortex(Downloader):
         # Send the nzb
         try:
             nzb_filename = self.createFileName(data, filedata, media)
-            self.call('nzb/add', params = {'file': (nzb_filename, filedata)}, multipart = True)
+            self.call('nzb/add', files = {'file': (nzb_filename, filedata)})
 
             time.sleep(10)
             raw_statuses = self.call('nzb')
@@ -117,10 +117,9 @@ class NZBVortex(Downloader):
         params = tryUrlencode(parameters)
 
         url = cleanHost(self.conf('host')) + 'api/' + call
-        url_opener = urllib2.build_opener(HTTPSHandler())
 
         try:
-            data = self.urlopen('%s?%s' % (url, params), opener = url_opener, *args, **kwargs)
+            data = self.urlopen('%s?%s' % (url, params), *args, **kwargs)
 
             if data:
                 return json.loads(data)
@@ -142,10 +141,9 @@ class NZBVortex(Downloader):
         if not self.api_level:
 
             url = cleanHost(self.conf('host')) + 'api/app/apilevel'
-            url_opener = urllib2.build_opener(HTTPSHandler())
 
             try:
-                data = self.urlopen(url, opener = url_opener, show_error = False)
+                data = self.urlopen(url, show_error = False)
                 self.api_level = float(json.loads(data).get('apilevel'))
             except URLError, e:
                 if hasattr(e, 'code') and e.code == 403:

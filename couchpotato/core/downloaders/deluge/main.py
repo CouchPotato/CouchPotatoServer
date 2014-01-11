@@ -91,51 +91,50 @@ class Deluge(Downloader):
         log.debug('Checking Deluge download status.')
 
         if not self.connect():
-            return False
+            return []
 
         release_downloads = ReleaseDownloadList(self)
 
-        queue = self.drpc.get_alltorrents()
+        queue = self.drpc.get_alltorrents(ids)
 
         if not queue:
             log.debug('Nothing in queue or error')
-            return False
+            return []
 
         for torrent_id in queue:
             torrent = queue[torrent_id]
-            if torrent['hash'] in ids:
-                log.debug('name=%s / id=%s / save_path=%s / move_completed_path=%s / hash=%s / progress=%s / state=%s / eta=%s / ratio=%s / stop_ratio=%s / is_seed=%s / is_finished=%s / paused=%s', (torrent['name'], torrent['hash'], torrent['save_path'], torrent['move_completed_path'], torrent['hash'], torrent['progress'], torrent['state'], torrent['eta'], torrent['ratio'], torrent['stop_ratio'], torrent['is_seed'], torrent['is_finished'], torrent['paused']))
+            log.debug('name=%s / id=%s / save_path=%s / move_completed_path=%s / hash=%s / progress=%s / state=%s / eta=%s / ratio=%s / stop_ratio=%s / is_seed=%s / is_finished=%s / paused=%s', (torrent['name'], torrent['hash'], torrent['save_path'], torrent['move_completed_path'], torrent['hash'], torrent['progress'], torrent['state'], torrent['eta'], torrent['ratio'], torrent['stop_ratio'], torrent['is_seed'], torrent['is_finished'], torrent['paused']))
     
-                # Deluge has no easy way to work out if a torrent is stalled or failing.
-                #status = 'failed'
-                status = 'busy'
-                if torrent['is_seed'] and tryFloat(torrent['ratio']) < tryFloat(torrent['stop_ratio']):
-                    # We have torrent['seeding_time'] to work out what the seeding time is, but we do not
-                    # have access to the downloader seed_time, as with deluge we have no way to pass it
-                    # when the torrent is added. So Deluge will only look at the ratio.
-                    # See above comment in download().
-                    status = 'seeding'
-                elif torrent['is_seed'] and torrent['is_finished'] and torrent['paused'] and torrent['state'] == 'Paused':
-                    status = 'completed'
+            # Deluge has no easy way to work out if a torrent is stalled or failing.
+            #status = 'failed'
+            status = 'busy'
+            if torrent['is_seed'] and tryFloat(torrent['ratio']) < tryFloat(torrent['stop_ratio']):
+                # We have torrent['seeding_time'] to work out what the seeding time is, but we do not
+                # have access to the downloader seed_time, as with deluge we have no way to pass it
+                # when the torrent is added. So Deluge will only look at the ratio.
+                # See above comment in download().
+                status = 'seeding'
+            elif torrent['is_seed'] and torrent['is_finished'] and torrent['paused'] and torrent['state'] == 'Paused':
+                status = 'completed'
+
+            download_dir = sp(torrent['save_path'])
+            if torrent['move_on_completed']:
+                download_dir = torrent['move_completed_path']
     
-                download_dir = sp(torrent['save_path'])
-                if torrent['move_on_completed']:
-                    download_dir = torrent['move_completed_path']
+            torrent_files = []
+            for file_item in torrent['files']:
+                torrent_files.append(sp(os.path.join(download_dir, file_item['path'])))
     
-                torrent_files = []
-                for file_item in torrent['files']:
-                    torrent_files.append(sp(os.path.join(download_dir, file_item['path'])))
-    
-                release_downloads.append({
-                    'id': torrent['hash'],
-                    'name': torrent['name'],
-                    'status': status,
-                    'original_status': torrent['state'],
-                    'seed_ratio': torrent['ratio'],
-                    'timeleft': str(timedelta(seconds = torrent['eta'])),
-                    'folder': sp(download_dir if len(torrent_files) == 1 else os.path.join(download_dir, torrent['name'])),
-                    'files': '|'.join(torrent_files),
-                })
+            release_downloads.append({
+                'id': torrent['hash'],
+                'name': torrent['name'],
+                'status': status,
+                'original_status': torrent['state'],
+                'seed_ratio': torrent['ratio'],
+                'timeleft': str(timedelta(seconds = torrent['eta'])),
+                'folder': sp(download_dir if len(torrent_files) == 1 else os.path.join(download_dir, torrent['name'])),
+                'files': '|'.join(torrent_files),
+            })
 
         return release_downloads
 
@@ -209,11 +208,11 @@ class DelugeRPC(object):
 
         return torrent_id
 
-    def get_alltorrents(self):
+    def get_alltorrents(self, ids):
         ret = False
         try:
             self.connect()
-            ret = self.client.core.get_torrents_status({}, {}).get()
+            ret = self.client.core.get_torrents_status({'id': ids}, {}).get()
         except Exception, err:
             log.error('Failed to get all torrents: %s %s', (err, traceback.format_exc()))
         finally:

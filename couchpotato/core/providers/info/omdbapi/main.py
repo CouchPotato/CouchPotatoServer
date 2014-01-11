@@ -46,7 +46,7 @@ class OMDBAPI(MovieProvider):
 
         return []
 
-    def getInfo(self, identifier = None):
+    def getInfo(self, identifier = None, **kwargs):
 
         if not identifier:
             return {}
@@ -88,10 +88,6 @@ class OMDBAPI(MovieProvider):
 
             year = tryInt(movie.get('Year', ''))
 
-            actors = {}
-            for actor in splitString(movie.get('Actors', '')):
-                actors[actor] = '' #omdb does not return actor roles
-
             movie_data = {
                 'type': 'movie',
                 'via_imdb': True,
@@ -113,7 +109,7 @@ class OMDBAPI(MovieProvider):
                 'genres': splitString(movie.get('Genre', '')),
                 'directors': splitString(movie.get('Director', '')),
                 'writers': splitString(movie.get('Writer', '')),
-                'actor_roles': actors,
+                'actors': splitString(movie.get('Actors', '')),
             }
             movie_data = dict((k, v) for k, v in movie_data.iteritems() if v)
         except:

@@ -11,6 +11,7 @@ log = CPLog(__name__)
 class Blackhole(Downloader):
 
     protocol = ['nzb', 'torrent', 'torrent_magnet']
+    status_support = False
 
     def download(self, data = None, media = None, filedata = None):
         if not media: media = {}

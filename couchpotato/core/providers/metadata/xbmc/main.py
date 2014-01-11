@@ -98,9 +98,9 @@ class XBMC(MetaDataBase):
             if role_name:
                 role = SubElement(actor, 'role')
                 role.text = toUnicode(role_name)
-            if movie_info['images'].get('actor %s' % actor_name, ''):
+            if movie_info['images']['actors'].get(actor_name):
                 thumb = SubElement(actor, 'thumb')
-                thumb.text = toUnicode(movie_info['images'].get('actor %s' % actor_name))
+                thumb.text = toUnicode(movie_info['images']['actors'].get(actor_name))
 
         # Directors
         for director_name in movie_info.get('directors', []):

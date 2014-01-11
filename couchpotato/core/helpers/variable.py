@@ -2,7 +2,7 @@ from couchpotato.core.helpers.encoding import simplifyString, toSafeString, ss
 from couchpotato.core.logger import CPLog
 import collections
 import hashlib
-import os.path
+import os
 import platform
 import random
 import re
@@ -219,3 +219,7 @@ def splitString(str, split_on = ',', clean = True):
 
 def dictIsSubset(a, b):
     return all([k in b and b[k] == v for k, v in a.items()])
+
+def isSubFolder(sub_folder, base_folder):
+    # Returns True is sub_folder is the same as or in base_folder
+    return base_folder.rstrip(os.path.sep) + os.path.sep in sub_folder.rstrip(os.path.sep) + os.path.sep
