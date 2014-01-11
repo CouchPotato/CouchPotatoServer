@@ -209,13 +209,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
         if media.get('type') != 'movie': return
 
-        media_title = fireEvent(
-            'library.title', media['library'],
-            condense = False,
-            include_year = False,
-            include_identifier = False,
-            single = True
-        )
+        media_title = fireEvent('library.title', media['library'], single = True)
 
         imdb_results = kwargs.get('imdb_results', False)
         retention = Env.setting('retention', section = 'nzb')

@@ -2,7 +2,7 @@ from couchpotato import get_session
 from couchpotato.core.event import addEvent, fireEventAsync, fireEvent
 from couchpotato.core.helpers.encoding import toUnicode, simplifyString
 from couchpotato.core.logger import CPLog
-from couchpotato.core.media._base.library import LibraryBase
+from couchpotato.core.media._base.library.base import LibraryBase
 from couchpotato.core.settings.model import Library, LibraryTitle, File
 from string import ascii_letters
 import time

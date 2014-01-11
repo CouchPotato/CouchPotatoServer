@@ -3,7 +3,7 @@ from couchpotato.core.event import addEvent, fireEventAsync, fireEvent
 from couchpotato.core.helpers.encoding import toUnicode, simplifyString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.settings.model import ShowLibrary, LibraryTitle, File
-from couchpotato.core.media._base.library import LibraryBase
+from couchpotato.core.media._base.library.base import LibraryBase
 from qcond.helpers import simplify
 from qcond import QueryCondenser
 from string import ascii_letters
