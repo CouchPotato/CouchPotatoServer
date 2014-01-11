@@ -2,7 +2,7 @@ from couchpotato import get_session
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, fireEventAsync, addEvent
 from couchpotato.core.helpers.encoding import toUnicode
-from couchpotato.core.helpers.variable import splitString, tryInt
+from couchpotato.core.helpers.variable import splitString, tryInt, getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media.movie import MovieTypeBase
 from couchpotato.core.settings.model import Media
@@ -129,7 +129,15 @@ class MovieBase(MovieTypeBase):
             onComplete()
 
         if added:
-            fireEvent('notify.frontend', type = 'movie.added', data = movie_dict, message = 'Successfully added "%s" to your wanted list.' % params.get('title', ''))
+            if params.get('title'):
+                message = 'Successfully added "%s" to your wanted list.' % params.get('title', '')
+            else:
+                title = getTitle(m.library)
+                if title:
+                    message = 'Successfully added "%s" to your wanted list.' % title
+                else:
+                    message = 'Succesfully added to your wanted list.'
+            fireEvent('notify.frontend', type = 'movie.added', data = movie_dict, message = message)
 
         db.expire_all()
         return movie_dict
