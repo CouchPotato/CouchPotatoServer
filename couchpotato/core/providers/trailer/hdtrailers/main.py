@@ -100,7 +100,7 @@ class HDTrailers(TrailerProvider):
                         continue
                     resolutions = tr.find_all('td', attrs = {'class':'bottomTableResolution'})
                     for res in resolutions:
-                        if res.a:
+                        if res.a and str(res.a.contents[0]) in results:
                             results[str(res.a.contents[0])].insert(0, res.a['href'])
 
         except AttributeError:
