@@ -130,8 +130,11 @@ class Movie(MovieProvider, Base):
     ]
 
     def buildUrl(self, media, page, cats):
-        return tryUrlencode('"%s"' % fireEvent('library.title', media['library'],
-                                               condense = True, single = True)), page, ','.join(str(x) for x in cats)
+        return (
+            tryUrlencode('"%s"' % fireEvent('library.title', media['library'], single = True)),
+            page,
+            ','.join(str(x) for x in cats)
+        )
 
 class Season(SeasonProvider, Base):
 
@@ -141,8 +144,11 @@ class Season(SeasonProvider, Base):
     ]
 
     def buildUrl(self, media, page, cats):
-        return tryUrlencode('"%s"' % fireEvent('library.title', media['library'],
-                                               condense = True, single = True)), page, ','.join(str(x) for x in cats)
+        return (
+            tryUrlencode('"%s"' % fireEvent('library.title', media['library'], single = True)),
+            page,
+            ','.join(str(x) for x in cats)
+        )
 
 class Episode(EpisodeProvider, Base):
 
@@ -152,5 +158,8 @@ class Episode(EpisodeProvider, Base):
     ]
 
     def buildUrl(self, media, page, cats):
-        return tryUrlencode('"%s"' % fireEvent('library.title', media['library'],
-                                               condense = True, single = True)), page, ','.join(str(x) for x in cats)
+        return (
+            tryUrlencode('"%s"' % fireEvent('library.title', media['library'], single = True)),
+            page,
+            ','.join(str(x) for x in cats)
+        )

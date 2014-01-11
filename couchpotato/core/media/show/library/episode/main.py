@@ -23,7 +23,7 @@ class EpisodeLibraryPlugin(LibraryBase):
         addEvent('library.update.episode', self.update)
         addEvent('library.update.episode_release_date', self.updateReleaseDate)
 
-    def title(self, library, first=True, condense=False, include_identifier=True):
+    def title(self, library, first = True, condense = True, include_identifier = True, **kwargs):
         if library is list or library.get('type') != 'episode':
             return
 

@@ -171,7 +171,13 @@ class Searcher(SearcherBase):
         return False
 
     def correctWords(self, rel_name, media):
-        media_title = fireEvent('library.title', media['library'], include_identifier = False, single = True)
+        media_title = fireEvent(
+            'library.title', media['library'],
+            condense = False,
+            include_year = False,
+            include_identifier = False,
+            single = True
+        )
         media_words = re.split('\W+', simplifyString(media_title))
 
         rel_name = simplifyString(rel_name)

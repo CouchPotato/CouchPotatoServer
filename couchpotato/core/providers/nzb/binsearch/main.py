@@ -101,7 +101,7 @@ class Movie(MovieProvider, Base):
 
     def buildUrl(self, media, quality):
         query = tryUrlencode({
-            'q': media['library']['identifier'],
+            'q': media['library']['identifier'],  # TODO should this use library.title?
             'm': 'n',
             'max': 400,
             'adv_age': Env.setting('retention', 'nzb'),
@@ -117,7 +117,7 @@ class Season(SeasonProvider, Base):
 
     def buildUrl(self, media, quality):
         query = tryUrlencode({
-            'q': fireEvent('library.title', media['library'], condense = True, single = True),
+            'q': fireEvent('library.title', media['library'], single = True),
             'm': 'n',
             'max': 400,
             'adv_age': Env.setting('retention', 'nzb'),
@@ -133,7 +133,7 @@ class Episode(EpisodeProvider, Base):
 
     def buildUrl(self, media, quality):
         query = tryUrlencode({
-            'q': fireEvent('library.title', media['library'], condense = True, single = True),
+            'q': fireEvent('library.title', media['library'], single = True),
             'm': 'n',
             'max': 400,
             'adv_age': Env.setting('retention', 'nzb'),

@@ -104,7 +104,7 @@ class Base(NZBProvider, RSS):
 class Movie(MovieProvider, Base):
 
     def buildUrl(self, media, quality):
-        title = fireEvent('library.title', media['library'], condense = True, include_identifier = False, single = True)
+        title = fireEvent('library.title', media['library'], include_year = False, single = True)
         year =  media['library']['year']
 
         query = tryUrlencode({
@@ -124,7 +124,7 @@ class Season(SeasonProvider, Base):
 
     def buildUrl(self, media, quality):
         query = tryUrlencode({
-            'q': fireEvent('library.title', media['library'], condense = True, single = True),
+            'q': fireEvent('library.title', media['library'], single = True),
             'age': Env.setting('retention', 'nzb'),
             'sort': 'agedesc',
             'minsize': quality.get('size_min'),
@@ -140,7 +140,7 @@ class Episode(EpisodeProvider, Base):
 
     def buildUrl(self, media, quality):
         query = tryUrlencode({
-            'q': fireEvent('library.title', media['library'], condense = True, single = True),
+            'q': fireEvent('library.title', media['library'], single = True),
             'age': Env.setting('retention', 'nzb'),
             'sort': 'agedesc',
             'minsize': quality.get('size_min'),

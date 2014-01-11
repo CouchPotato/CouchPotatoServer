@@ -80,8 +80,7 @@ class Movie(MovieProvider, Base):
 
     def buildUrl(self, media):
         query = tryUrlencode({
-            'q': '"%s %s"' % (fireEvent('library.title', media['library'], condense = True,
-                                        single = True), media['library']['year']),
+            'q': '"%s"' % fireEvent('library.title', media['library'], single = True),
             'ig': 1,
             'rpp': 200,
             'st': 5,
@@ -94,7 +93,7 @@ class Season(SeasonProvider, Base):
 
     def buildUrl(self, media):
         query = tryUrlencode({
-            'q': fireEvent('library.title', media['library'], condense = True, single = True),
+            'q': fireEvent('library.title', media['library'], single = True),
             'ig': 1,
             'rpp': 200,
             'st': 5,
@@ -107,7 +106,7 @@ class Episode(EpisodeProvider, Base):
 
     def buildUrl(self, media):
         query = tryUrlencode({
-            'q': fireEvent('library.title', media['library'], condense = True, single = True),
+            'q': fireEvent('library.title', media['library'], single = True),
             'ig': 1,
             'rpp': 200,
             'st': 5,

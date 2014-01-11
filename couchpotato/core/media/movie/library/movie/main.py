@@ -21,14 +21,14 @@ class MovieLibraryPlugin(LibraryBase):
         addEvent('library.update.movie', self.update)
         addEvent('library.update.movie.release_date', self.updateReleaseDate)
 
-    def title(self, library, first = True, condense = False, include_identifier = True):
+    def title(self, library, first = True, include_year = True, **kwargs):
         if library.get('type') != 'movie':
             return
 
         titles = [title['title'] for title in library['titles']]
 
         # Add year identifier to titles
-        if include_identifier:
+        if include_year:
             titles = [title + (' %s' % str(library['year'])) for title in titles]
 
         if first:

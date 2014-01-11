@@ -23,7 +23,7 @@ class SeasonLibraryPlugin(LibraryBase):
         addEvent('library.update.season', self.update)
         addEvent('library.update.season_release_date', self.updateReleaseDate)
 
-    def title(self, library, first=True, condense=False, include_identifier=True):
+    def title(self, library, first = True, condense = True, include_identifier = True, **kwargs):
         if library is list or library.get('type') != 'season':
             return
 
@@ -32,7 +32,14 @@ class SeasonLibraryPlugin(LibraryBase):
             log.warning('Invalid library, unable to determine title.')
             return
 
-        titles = fireEvent('library.title', library['related_libraries']['show'][0], first=False, condense=condense, single=True)
+        titles = fireEvent(
+            'library.title',
+            library['related_libraries']['show'][0],
+            first=False,
+            condense=condense,
+
+            single=True
+        )
 
         # Add season map_names if they exist
         if 'map_names' in library['info']:
