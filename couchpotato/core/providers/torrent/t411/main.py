@@ -43,10 +43,10 @@ class t411(TorrentProvider):
                 raise t411.NotLoggedInHTTPError(req.get_full_url(), code, msg, headers, fp)
 
     def getSearchParams(self, movie, quality):
-		FilterTrueFrench = ''
-		if self.conf('true_french_only') :
-			FilterTrueFrench = '&term%5B17%5D%5B%5D=541&term%5B17%5D%5B%5D=542'
-			
+        FilterTrueFrench = ''
+        if self.conf('true_french_only'):
+            FilterTrueFrench = '&term%5B17%5D%5B%5D=541&term%5B17%5D%5B%5D=542'
+        
         results = []
         MovieTitles = movie['library']['info']['titles']
         moviequality = simplifyString(quality['identifier'])
