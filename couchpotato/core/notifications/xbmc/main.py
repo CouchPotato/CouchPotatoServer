@@ -7,6 +7,7 @@ import json
 import socket
 import traceback
 import urllib
+import requests
 
 log = CPLog(__name__)
 
@@ -167,22 +168,18 @@ class XBMC(Notification):
                 # manually fake expected response array
                 return [{'result': 'Error'}]
 
-        except URLError, e:
-            if isinstance(e.reason, socket.timeout):
-                log.info('Couldn\'t send request to XBMC, assuming it\'s turned off')
-                return [{'result': 'Error'}]
-            else:
-                log.error('Failed sending non-JSON-type request to XBMC: %s', traceback.format_exc())
-                return [{'result': 'Error'}]
+        except requests.exceptions.Timeout:
+            log.info2('Couldn\'t send request to XBMC, assuming it\'s turned off')
+            return [{'result': 'Error'}]
         except:
             log.error('Failed sending non-JSON-type request to XBMC: %s', traceback.format_exc())
             return [{'result': 'Error'}]
 
-    def request(self, host, requests):
+    def request(self, host, do_requests):
         server = 'http://%s/jsonrpc' % host
 
         data = []
-        for req in requests:
+        for req in do_requests:
             method, kwargs = req
             data.append({
                 'method': method,
@@ -206,13 +203,9 @@ class XBMC(Notification):
             log.debug('Returned from request %s: %s', (host, response))
 
             return response
-        except URLError, e:
-            if isinstance(e.reason, socket.timeout):
-                log.info('Couldn\'t send request to XBMC, assuming it\'s turned off')
-                return []
-            else:
-                log.error('Failed sending request to XBMC: %s', traceback.format_exc())
-                return []
+        except requests.exceptions.Timeout:
+            log.info2('Couldn\'t send request to XBMC, assuming it\'s turned off')
+            return []
         except:
             log.error('Failed sending request to XBMC: %s', traceback.format_exc())
             return []
