@@ -52,10 +52,7 @@ class Base(TorrentProvider):
         pages = 1
         current_page = 1
         while current_page <= pages and not self.shuttingDown():
-            data = self.getHTMLData(
-                base_url  % (freeleech, current_page),
-                opener = self.login_opener
-            )
+            data = self.getHTMLData(base_url % (freeleech, current_page))
 
             if data:
                 html = BeautifulSoup(data)
