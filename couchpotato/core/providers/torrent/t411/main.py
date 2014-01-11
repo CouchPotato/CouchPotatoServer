@@ -74,7 +74,7 @@ class t411(TorrentProvider):
                 results.append(urllib.urlencode( {'search': TitleStringReal, 'cat' : 210, 'submit' : 'Recherche' } ) + "&term%5B7%5D%5B0%5D=10&order=seeders&type=desc")
                 results.append(urllib.urlencode( {'search': simplifyString(TitleStringReal), 'cat' : 210, 'submit' : 'Recherche' } ) + "&term%5B7%5D%5B0%5D=10&order=seeders&type=desc")
             
-        return results
+        return results + FilterTrueFrench
     
     def _search(self, movie, quality, results):
 
