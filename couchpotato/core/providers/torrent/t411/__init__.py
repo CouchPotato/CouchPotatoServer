@@ -29,8 +29,8 @@ config = [{
                 },
                 {
                     'name': 'true_french_only',
-                    'label': 'Only true french result',
-                    'type': 'enabler',
+                    'label': 'Only true french',
+                    'type': 'checkbox',
                     'default': True,
                     'description': 'Show only true french audio',
                 },
