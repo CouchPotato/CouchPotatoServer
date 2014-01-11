@@ -2,7 +2,7 @@ from couchpotato import get_session
 from couchpotato.core.event import addEvent, fireEventAsync, fireEvent
 from couchpotato.core.helpers.encoding import toUnicode, simplifyString
 from couchpotato.core.logger import CPLog
-from couchpotato.core.media._base.library import LibraryBase
+from couchpotato.core.media._base.library.base import LibraryBase
 from couchpotato.core.settings.model import Library, LibraryTitle, File
 from string import ascii_letters
 import time
@@ -16,9 +16,25 @@ class MovieLibraryPlugin(LibraryBase):
     default_dict = {'titles': {}, 'files':{}}
 
     def __init__(self):
+        addEvent('library.query', self.query)
         addEvent('library.add.movie', self.add)
         addEvent('library.update.movie', self.update)
         addEvent('library.update.movie.release_date', self.updateReleaseDate)
+
+    def query(self, library, first = True, include_year = True, **kwargs):
+        if library.get('type') != 'movie':
+            return
+
+        titles = [title['title'] for title in library['titles']]
+
+        # Add year identifier to titles
+        if include_year:
+            titles = [title + (' %s' % str(library['year'])) for title in titles]
+
+        if first:
+            return titles[0] if titles else None
+
+        return titles
 
     def add(self, attrs = {}, update_after = True):
         # movies don't yet contain these, so lets make sure to set defaults

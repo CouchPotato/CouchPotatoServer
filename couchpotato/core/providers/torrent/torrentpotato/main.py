@@ -144,7 +144,7 @@ class Season(SeasonProvider, Base):
         arguments = tryUrlencode({
             'user': host['name'],
             'passkey': host['pass_key'],
-            'search': fireEvent('searcher.get_search_title', media['library'], include_identifier = True, single = True)
+            'search': fireEvent('library.query', media['library'], single = True)
         })
         return '%s?%s' % (host['host'], arguments)
 
@@ -154,6 +154,6 @@ class Episode(EpisodeProvider, Base):
         arguments = tryUrlencode({
             'user': host['name'],
             'passkey': host['pass_key'],
-            'search': fireEvent('searcher.get_search_title', media['library'], include_identifier = True, single = True)
+            'search': fireEvent('library.query', media['library'], single = True)
         })
         return '%s?%s' % (host['host'], arguments)

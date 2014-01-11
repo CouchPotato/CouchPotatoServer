@@ -113,9 +113,10 @@ class Movie(MovieProvider, Base):
 
     def buildUrl(self, media, quality):
         query = tryUrlencode({
-            'search': '"%s" %s' % (fireEvent('searcher.get_search_title',
-                                  media['library'], include_identifier = False, single = True),
-                                  media['library']['year']),
+            'search': '"%s" %s' % (
+                fireEvent('library.query', media['library'], include_year = False, single = True),
+                media['library']['year']
+            ),
             'cat': self.getCatId(quality['identifier'])[0],
         })
         return query
@@ -124,8 +125,7 @@ class Season(SeasonProvider, Base):
     # For season bundles, bitsoup currently only has one category
     def buildUrl(self, media, quality):
         query = tryUrlencode({
-            'search': fireEvent('searcher.get_search_title', media['library'],
-                                include_identifier = True, single = True),
+            'search': fireEvent('library.query', media['library'], single = True),
             'cat': 45 # TV-Packs Category
         })
         return query
@@ -139,8 +139,7 @@ class Episode(EpisodeProvider, Base):
 
     def buildUrl(self, media, quality):
         query = tryUrlencode({
-            'search': fireEvent('searcher.get_search_title', media['library'],
-                                include_identifier = True, single = True),
+            'search': fireEvent('library.query', media['library'], single = True),
             'cat': self.getCatId(quality['identifier'])[0],
         })
         return query

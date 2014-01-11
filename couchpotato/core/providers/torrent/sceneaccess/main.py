@@ -104,7 +104,7 @@ class Movie(MovieProvider, Base):
         )
 
         arguments = tryUrlencode({
-            'search': fireEvent('searcher.get_search_title', media['library'], include_identifier = True, single = True),
+            'search': fireEvent('library.query', media['library'], single = True),
             'method': 2,
         })
         query = "%s&%s" % (url, arguments)
@@ -124,7 +124,7 @@ class Season(SeasonProvider, Base):
         )
 
         arguments = tryUrlencode({
-            'search': fireEvent('searcher.get_search_title', media['library'], include_identifier = True, single = True),
+            'search': fireEvent('library.query', media['library'], single = True),
             'method': 2,
         })
         query = "%s&%s" % (url, arguments)
@@ -145,7 +145,7 @@ class Episode(EpisodeProvider, Base):
         )
 
         arguments = tryUrlencode({
-            'search': fireEvent('searcher.get_search_title', media['library'], include_identifier = True, single = True),
+            'search': fireEvent('library.query', media['library'], single = True),
             'method': 2,
         })
         query = "%s&%s" % (url, arguments)

@@ -3,7 +3,7 @@ from couchpotato.core.event import addEvent, fireEventAsync, fireEvent
 from couchpotato.core.helpers.encoding import toUnicode, simplifyString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.settings.model import SeasonLibrary, ShowLibrary, LibraryTitle, File
-from couchpotato.core.media._base.library import LibraryBase
+from couchpotato.core.media._base.library.base import LibraryBase
 from couchpotato.core.helpers.variable import tryInt
 from string import ascii_letters
 import time
@@ -17,10 +17,51 @@ class SeasonLibraryPlugin(LibraryBase):
     default_dict = {'titles': {}, 'files':{}}
 
     def __init__(self):
+        addEvent('library.query', self.query)
         addEvent('library.identifier', self.identifier)
         addEvent('library.add.season', self.add)
         addEvent('library.update.season', self.update)
         addEvent('library.update.season_release_date', self.updateReleaseDate)
+
+    def query(self, library, first = True, condense = True, include_identifier = True, **kwargs):
+        if library is list or library.get('type') != 'season':
+            return
+
+        # Get the titles of the show
+        if not library.get('related_libraries', {}).get('show', []):
+            log.warning('Invalid library, unable to determine title.')
+            return
+
+        titles = fireEvent(
+            'library.query',
+            library['related_libraries']['show'][0],
+            first=False,
+            condense=condense,
+
+            single=True
+        )
+
+        # Add season map_names if they exist
+        if 'map_names' in library['info']:
+            season_names = library['info']['map_names'].get(str(library['season_number']), {})
+
+            # Add titles from all locations
+            # TODO only add name maps from a specific location
+            for location, names in season_names.items():
+                titles += [name for name in names if name and name not in titles]
+
+
+        identifier = fireEvent('library.identifier', library, single = True)
+
+        # Add season identifier to titles
+        if include_identifier and identifier.get('season') is not None:
+            titles = [title + (' S%02d' % identifier['season']) for title in titles]
+
+
+        if first:
+            return titles[0] if titles else None
+
+        return titles
 
     def identifier(self, library):
         if library.get('type') != 'season':

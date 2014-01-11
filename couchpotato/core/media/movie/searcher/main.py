@@ -30,7 +30,6 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
         addEvent('movie.searcher.try_next_release', self.tryNextRelease)
         addEvent('movie.searcher.could_be_released', self.couldBeReleased)
         addEvent('searcher.correct_release', self.correctRelease)
-        addEvent('searcher.get_search_title', self.getSearchTitle)
 
         addApiView('movie.searcher.try_next', self.tryNextReleaseView, docs = {
             'desc': 'Marks the snatched results as ignored and try the next best release',
@@ -210,7 +209,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
         if media.get('type') != 'movie': return
 
-        media_title = fireEvent('searcher.get_search_title', media['library'], single = True)
+        media_title = fireEvent('library.title', media['library'], single = True)
 
         imdb_results = kwargs.get('imdb_results', False)
         retention = Env.setting('retention', section = 'nzb')
@@ -342,16 +341,6 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
         except:
             log.error('Failed searching for next release: %s', traceback.format_exc())
             return False
-
-    def getSearchTitle(self, library, include_identifier = False):
-        if library['type'] == 'movie':
-            title = getTitle(library)
-
-        # Use year as identifier
-        if include_identifier:
-            title += ' %s' % str(library['year'])
-
-        return title
 
 class SearchSetupError(Exception):
     pass
