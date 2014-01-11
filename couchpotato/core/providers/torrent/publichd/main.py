@@ -99,14 +99,14 @@ class Base(TorrentMagnetProvider):
 class Movie(MovieProvider, Base):
 
     def buildUrl(self, media):
-        return fireEvent('library.title', media['library'], single = True)
+        return fireEvent('library.query', media['library'], single = True)
 
 class Season(SeasonProvider, Base):
 
     def buildUrl(self, media):
-        return fireEvent('library.title', media['library'], single = True)
+        return fireEvent('library.query', media['library'], single = True)
 
 class Episode(EpisodeProvider, Base):
 
     def buildUrl(self, media):
-        return fireEvent('library.title', media['library'], single = True)
+        return fireEvent('library.query', media['library'], single = True)

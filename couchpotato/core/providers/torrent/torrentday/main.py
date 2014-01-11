@@ -76,7 +76,7 @@ class Movie(MovieProvider, Base):
         ([5], ['bd50']),
     ]
     def buildUrl(self, media):
-        return fireEvent('library.title', media['library'], single = True)
+        return fireEvent('library.query', media['library'], single = True)
 
 class Season(SeasonProvider, Base):
 
@@ -84,7 +84,7 @@ class Season(SeasonProvider, Base):
         ([14], ['hdtv_sd', 'hdtv_720p', 'webdl_720p', 'webdl_1080p']),
     ]
     def buildUrl(self, media):
-        return fireEvent('library.title', media['library'], single = True)
+        return fireEvent('library.query', media['library'], single = True)
 
 class Episode(EpisodeProvider, Base):
     cat_ids = [
@@ -92,5 +92,5 @@ class Episode(EpisodeProvider, Base):
         ([2], [24], [26], ['hdtv_sd'])
     ]
     def buildUrl(self, media):
-        return fireEvent('library.title', media['library'], single = True)
+        return fireEvent('library.query', media['library'], single = True)
 

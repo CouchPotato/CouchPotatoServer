@@ -16,12 +16,12 @@ class MovieLibraryPlugin(LibraryBase):
     default_dict = {'titles': {}, 'files':{}}
 
     def __init__(self):
-        addEvent('library.title', self.title)
+        addEvent('library.query', self.query)
         addEvent('library.add.movie', self.add)
         addEvent('library.update.movie', self.update)
         addEvent('library.update.movie.release_date', self.updateReleaseDate)
 
-    def title(self, library, first = True, include_year = True, **kwargs):
+    def query(self, library, first = True, include_year = True, **kwargs):
         if library.get('type') != 'movie':
             return
 

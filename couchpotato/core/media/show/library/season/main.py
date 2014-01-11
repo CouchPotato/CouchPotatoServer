@@ -17,13 +17,13 @@ class SeasonLibraryPlugin(LibraryBase):
     default_dict = {'titles': {}, 'files':{}}
 
     def __init__(self):
-        addEvent('library.title', self.title)
+        addEvent('library.query', self.query)
         addEvent('library.identifier', self.identifier)
         addEvent('library.add.season', self.add)
         addEvent('library.update.season', self.update)
         addEvent('library.update.season_release_date', self.updateReleaseDate)
 
-    def title(self, library, first = True, condense = True, include_identifier = True, **kwargs):
+    def query(self, library, first = True, condense = True, include_identifier = True, **kwargs):
         if library is list or library.get('type') != 'season':
             return
 
@@ -33,7 +33,7 @@ class SeasonLibraryPlugin(LibraryBase):
             return
 
         titles = fireEvent(
-            'library.title',
+            'library.query',
             library['related_libraries']['show'][0],
             first=False,
             condense=condense,

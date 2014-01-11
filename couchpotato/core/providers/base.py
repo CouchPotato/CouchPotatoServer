@@ -207,7 +207,7 @@ class YarrProvider(Provider):
             self._search(media, quality, results)
         # Search possible titles
         else:
-            media_title = fireEvent('library.title', media['library'], single = True)
+            media_title = fireEvent('library.query', media['library'], single = True)
 
             for title in possibleTitles(media_title):
                 self._searchOnTitle(title, media, quality, results)

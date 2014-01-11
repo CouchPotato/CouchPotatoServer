@@ -97,7 +97,7 @@ class Movie(MovieProvider, Base):
     cat_backup_id = 400
 
     def buildUrl(self, media, quality):
-        query = (tryUrlencode(fireEvent('library.title', media['library'], single = True)),
+        query = (tryUrlencode(fireEvent('library.query', media['library'], single = True)),
                  self.getCatId(quality['identifier'])[0],
                  self.getSceneOnly())
         return query
@@ -115,7 +115,7 @@ class Season(SeasonProvider, Base):
     cat_backup_id = 980
 
     def buildUrl(self, media, quality):
-        query = (tryUrlencode(fireEvent('library.title', media['library'], single = True)),
+        query = (tryUrlencode(fireEvent('library.query', media['library'], single = True)),
                  self.getCatId(quality['identifier'])[0],
                  self.getSceneOnly())
         return query
@@ -132,7 +132,7 @@ class Episode(EpisodeProvider, Base):
     cat_backup_id = 620
 
     def buildUrl(self, media, quality):
-        query = (tryUrlencode(fireEvent('library.title', media['library'], single = True)),
+        query = (tryUrlencode(fireEvent('library.query', media['library'], single = True)),
                  self.getCatId(quality['identifier'])[0],
                  self.getSceneOnly())
         return query

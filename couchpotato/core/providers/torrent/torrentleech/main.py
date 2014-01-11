@@ -91,7 +91,7 @@ class Movie(MovieProvider, Base):
 
     def buildUrl(self, media, quality):
         return (
-            tryUrlencode(fireEvent('library.title', media['library'], single = True)),
+            tryUrlencode(fireEvent('library.query', media['library'], single = True)),
             self.getCatId(quality['identifier'])[0]
         )
 
@@ -103,7 +103,7 @@ class Season(SeasonProvider, Base):
 
     def buildUrl(self, media, quality):
         return (
-            tryUrlencode(fireEvent('library.title', media['library'], single = True)),
+            tryUrlencode(fireEvent('library.query', media['library'], single = True)),
             self.getCatId(quality['identifier'])[0]
         )
 
@@ -116,6 +116,6 @@ class Episode(EpisodeProvider, Base):
 
     def buildUrl(self, media, quality):
         return (
-            tryUrlencode(fireEvent('library.title', media['library'], single = True)),
+            tryUrlencode(fireEvent('library.query', media['library'], single = True)),
             self.getCatId(quality['identifier'])[0]
         )

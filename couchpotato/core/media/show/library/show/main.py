@@ -20,12 +20,12 @@ class ShowLibraryPlugin(LibraryBase):
     def __init__(self):
         self.query_condenser = QueryCondenser()
 
-        addEvent('library.title', self.title)
+        addEvent('library.query', self.query)
         addEvent('library.add.show', self.add)
         addEvent('library.update.show', self.update)
         addEvent('library.update.show_release_date', self.updateReleaseDate)
 
-    def title(self, library, first = True, condense = True, **kwargs):
+    def query(self, library, first = True, condense = True, **kwargs):
         if library is list or library.get('type') != 'show':
             return
 

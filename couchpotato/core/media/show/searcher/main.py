@@ -60,7 +60,7 @@ class ShowSearcher(Plugin):
         found_releases = []
         too_early_to_search = []
 
-        default_title = fireEvent('library.title', media['library'], condense = False, single=True)
+        default_title = fireEvent('library.query', media['library'], condense = False, single=True)
         if not default_title:
             log.error('No proper info found for episode, removing it from library to cause it from having more issues.')
             #fireEvent('episode.delete', episode['id'], single = True)
