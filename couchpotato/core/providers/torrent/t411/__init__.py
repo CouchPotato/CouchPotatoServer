@@ -30,8 +30,10 @@ config = [{
                 {
                     'name': 'true_french_only',
                     'label': 'Only true french',
-                    'type': 'checkbox',
-                    'default': True,
+                    'type': 'bool',
+                    'default': 1,
+                    'advanced': True,
+
                     'description': 'Show only true french audio',
                 },
                 {
