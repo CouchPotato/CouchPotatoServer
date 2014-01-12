@@ -32,6 +32,8 @@ config = [{
                     'label': 'Only true french',
                     'type': 'bool',
                     'default': 1,
+                    'advanced': True,
+
                     'description': 'Show only true french audio',
                 },
                 {
