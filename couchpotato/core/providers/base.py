@@ -1,4 +1,5 @@
 from couchpotato.core.event import addEvent, fireEvent
+from couchpotato.core.helpers.encoding import ss
 from couchpotato.core.helpers.variable import tryFloat, mergeDicts, md5, \
     possibleTitles, getTitle
 from couchpotato.core.logger import CPLog
@@ -84,7 +85,7 @@ class Provider(Plugin):
 
         if data and len(data) > 0:
             try:
-                data = XMLTree.fromstring(data)
+                data = XMLTree.fromstring(ss(data))
                 return self.getElements(data, item_path)
             except:
                 log.error('Failed to parsing %s: %s', (self.getName(), traceback.format_exc()))
