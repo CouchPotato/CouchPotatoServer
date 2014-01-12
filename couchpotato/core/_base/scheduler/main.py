@@ -17,6 +17,7 @@ class Scheduler(Plugin):
         addEvent('schedule.cron', self.cron)
         addEvent('schedule.interval', self.interval)
         addEvent('schedule.remove', self.remove)
+        addEvent('schedule.queue', self.queue)
 
         self.sched = Sched(misfire_grace_time = 60)
         self.sched.start()
@@ -64,3 +65,14 @@ class Scheduler(Plugin):
             'seconds': seconds,
             'job': self.sched.add_interval_job(handle, hours = hours, minutes = minutes, seconds = seconds)
         }
+
+    def queue(self, handlers = None):
+        if not handlers: handlers = []
+
+        for h in handlers:
+            h()
+
+            if self.shuttingDown():
+                break
+
+        return True

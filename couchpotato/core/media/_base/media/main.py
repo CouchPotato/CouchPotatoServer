@@ -1,8 +1,8 @@
-from couchpotato import get_session
+from couchpotato import get_session, tryInt
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, fireEventAsync, addEvent
 from couchpotato.core.helpers.encoding import toUnicode
-from couchpotato.core.helpers.variable import mergeDicts, splitString, getImdb
+from couchpotato.core.helpers.variable import mergeDicts, splitString, getImdb, getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media import MediaBase
 from couchpotato.core.settings.model import Library, LibraryTitle, Release, \
@@ -72,23 +72,38 @@ class MediaPlugin(MediaBase):
     def refresh(self, id = '', **kwargs):
         db = get_session()
 
-        for x in splitString(id):
-            media = db.query(Media).filter_by(id = x).first()
+        handlers = []
+        ids = splitString(id)
 
-            if media:
-                # Get current selected title
-                default_title = ''
-                for title in media.library.titles:
-                    if title.default: default_title = title.title
+        for x in ids:
 
-                fireEvent('notify.frontend', type = '%s.busy' % media.type, data = {'id': x})
-                fireEventAsync('library.update.%s' % media.type, identifier = media.library.identifier, default_title = default_title, force = True, on_complete = self.createOnComplete(x))
+            refresh_handler = self.createRefreshHandler(x)
+            if refresh_handler:
+                handlers.append(refresh_handler)
 
-        db.expire_all()
+        fireEvent('notify.frontend', type = 'media.busy', data = {'id': [tryInt(x) for x in ids]})
+        fireEventAsync('schedule.queue', handlers = handlers)
 
         return {
             'success': True,
         }
+
+    def createRefreshHandler(self, id):
+        db = get_session()
+
+        media = db.query(Media).filter_by(id = id).first()
+
+        if media:
+
+            default_title = getTitle(media.library)
+            identifier = media.library.identifier
+            db.expire_all()
+
+            def handler():
+                fireEvent('library.update.%s' % media.type, identifier = identifier, default_title = default_title, force = True, on_complete = self.createOnComplete(id))
+
+
+            return handler
 
     def addSingleRefreshView(self):
 

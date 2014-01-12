@@ -36,10 +36,10 @@ var Movie = new Class({
 		App.on('movie.update', self.global_events['movie.update']);
 
 		// Add spinner on load / search
-		['movie.busy', 'movie.searcher.started'].each(function(listener){
+		['media.busy', 'movie.searcher.started'].each(function(listener){
 			self.global_events[listener] = function(notification){
-				if(notification.data && self.data.id == notification.data.id)
-					self.busy(true)
+				if(notification.data && (self.data.id == notification.data.id || (typeOf(notification.data.id) == 'array' && notification.data.id.indexOf(self.data.id) > -1)))
+					self.busy(true);
 			}
 			App.on(listener, self.global_events[listener]);
 		})
