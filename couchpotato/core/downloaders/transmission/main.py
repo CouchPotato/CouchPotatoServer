@@ -96,6 +96,7 @@ class Transmission(Downloader):
             'fields': ['id', 'name', 'hashString', 'percentDone', 'status', 'eta', 'isStalled', 'isFinished', 'downloadDir', 'uploadRatio', 'secondsSeeding', 'seedIdleLimit', 'files']
         }
 
+        session = self.trpc.get_session()
         queue = self.trpc.get_alltorrents(return_params)
         if not (queue and queue.get('torrents')):
             log.debug('Nothing in queue or error')
@@ -103,13 +104,9 @@ class Transmission(Downloader):
 
         for torrent in queue['torrents']:
             if torrent['hashString'] in ids:
-                log.debug('name=%s / id=%s / downloadDir=%s / hashString=%s / percentDone=%s / status=%s / isStalled=%s / eta=%s / uploadRatio=%s / isFinished=%s',
-                    (torrent['name'], torrent['id'], torrent['downloadDir'], torrent['hashString'], torrent['percentDone'], torrent['status'], torrent.get('isStalled', 'N/A'), torrent['eta'], torrent['uploadRatio'], torrent['isFinished']))
-    
-                torrent_files = []
-                for file_item in torrent['files']:
-                    torrent_files.append(sp(os.path.join(torrent['downloadDir'], file_item['name'])))
-    
+                log.debug('name=%s / id=%s / downloadDir=%s / hashString=%s / percentDone=%s / status=%s / isStalled=%s / eta=%s / uploadRatio=%s / isFinished=%s / incomplete-dir-enabled=%s / incomplete-dir=%s',
+                    (torrent['name'], torrent['id'], torrent['downloadDir'], torrent['hashString'], torrent['percentDone'], torrent['status'], torrent.get('isStalled', 'N/A'), torrent['eta'], torrent['uploadRatio'], torrent['isFinished'], session['incomplete-dir-enabled'], session['incomplete-dir']))
+
                 status = 'busy'
                 if torrent.get('isStalled') and not torrent['percentDone'] == 1 and self.conf('stalled_as_failed'):
                     status = 'failed'
@@ -117,7 +114,16 @@ class Transmission(Downloader):
                     status = 'completed'
                 elif torrent['status'] in [5, 6]:
                     status = 'seeding'
-    
+
+                if session['incomplete-dir-enabled'] and status == 'busy':
+                    torrent_folder = session['incomplete-dir']
+                else:
+                    torrent_folder = torrent['downloadDir']
+
+                torrent_files = []
+                for file_item in torrent['files']:
+                    torrent_files.append(sp(os.path.join(torrent_folder, file_item['name'])))
+
                 release_downloads.append({
                     'id': torrent['hashString'],
                     'name': torrent['name'],
@@ -125,7 +131,7 @@ class Transmission(Downloader):
                     'original_status': torrent['status'],
                     'seed_ratio': torrent['uploadRatio'],
                     'timeleft': str(timedelta(seconds = torrent['eta'])),
-                    'folder': sp(torrent['downloadDir'] if len(torrent_files) == 1 else os.path.join(torrent['downloadDir'], torrent['name'])),
+                    'folder': sp(torrent_folder if len(torrent_files) == 1 else os.path.join(torrent_folder, torrent['name'])),
                     'files': '|'.join(torrent_files)
                 })
 
