@@ -1,5 +1,5 @@
 .page.settings {
-	min-width: 960px;	
+	min-width: 960px;
 }
 
 .page.settings:after {
@@ -34,7 +34,7 @@
 			color: rgba(255, 255, 255, 0.8);
 			text-shadow: none;
 		}
-			.page.settings .tabs a:hover, 
+			.page.settings .tabs a:hover,
 			.page.settings .tabs .active a {
 				background: rgb(78, 89, 105);
 				color: #fff;
@@ -113,7 +113,7 @@
 				width: 20px;
 			}
 
-    .Scan_folder { padding: 0 !important; }
+	.Scan_folder { padding: 0 !important; }
 
 	.page .ctrlHolder {
 		line-height: 25px;
@@ -132,13 +132,13 @@
 		.page .ctrlHolder .formHint {
 			width: 46%;
 			margin: -18px 0;
-            color: #fff !important;
+			color: #fff !important;
 			display: inline-block;
 			vertical-align: middle;
-            padding: 0 0 0 2%;
-            line-height: 14px;
+			padding: 0 0 0 2%;
+			line-height: 14px;
 		}
-		
+
 			.page .check {
 				margin-top: 6px;
 			}
@@ -165,28 +165,28 @@
 	.page .enabler {
 		display: block;
 	}
-	
+
 	.page .option_list {
 		margin-bottom: 20px;
 	}
-	
+
 		.page .option_list .check {
 			margin-top: 5px;
 		}
-	
+
 		.page .option_list .enabler {
 			padding: 0;
 			margin-left: 5px !important;
 		}
-		
+
 			.page .option_list .enabler:not(.disabled) {
 				margin: 0 0 0 30px;
 			}
-			
+
 				.page .option_list .enabler:not(.disabled) .ctrlHolder:first-child {
 					margin: 10px 0 -33px 0;
 				}
-	
+
 		.page .option_list h3 {
 			padding: 0;
 			margin: 10px 5px 0;
@@ -197,7 +197,7 @@
 			font-size: 12px;
 			background: rgba(255,255,255,0.03);
 		}
-	
+
 	.page .option_list .enabler.disabled {
 		display: inline-block;
 		margin: 3px 3px 3px 20px;
@@ -205,14 +205,14 @@
 		width: 173px;
 		vertical-align: top;
 	}
-		
+
 		.page .option_list .enabler.disabled h2 {
 			border: none;
 			box-shadow: none;
 			padding: 0 10px 0 25px;
 			font-size: 16px;
 		}
-		
+
 			.page .option_list .enabler:not(.disabled) h2 {
 				font-size: 16px;
 				font-weight: bold;
@@ -226,7 +226,7 @@
 					border: none;
 					box-shadow: none;
 				}
-		
+
 		.page .option_list .enabler.disabled h2 .hint {
 			display: none;
 		}
@@ -336,7 +336,7 @@
 			.page .directory_list li:hover {
 				background-color: #515c68;
 			}
-			
+
 		.page .directory_list li.empty {
 			background: none;
 			height: 100px;
@@ -526,7 +526,7 @@
 				);
 				background-size: 65%;
 			}
-			.page .tag_input .choice:hover .delete, 
+			.page .tag_input .choice:hover .delete,
 			.page .tag_input .choice.selected .delete { display: inline-block; }
 			.page .tag_input .choice .delete:hover {
 				height: 14px;
@@ -549,39 +549,55 @@
 		}
 		.page .combined_table .head abbr.host { margin-right: 120px; }
 			.page .combined_table input.host { width: 140px; }
-		.page .section_newznab .combined_table .head abbr.host { margin-right: 200px; }
-			.page .section_newznab .combined_table input.host { width: 220px; }
-			
+		.page .section_newznab .combined_table .head abbr.host { margin-right: 180px; }
+			.page .section_newznab .combined_table input.host { width: 200px; }
+
 		.page .combined_table .head abbr.name { margin-right: 57px; }
 			.page .combined_table input.name { width: 120px; }
 		.page .combined_table .head abbr.api_key { margin-right: 75px; }
-		
+
 		.page .combined_table .head abbr.pass_key { margin-right: 71px; }
 			.page .combined_table input.pass_key { width: 113px; }
-			
-		.page .section_newznab .combined_table .head abbr.api_key { margin-right: 185px; }
-			.page .section_newznab .combined_table input.api_key { width: 223px; }
-			
-		.page .combined_table .seed_ratio,
-		.page .combined_table .seed_time {
-			width: 70px;
-			text-align: center;
-			margin-left: 10px;
+
+		.page .section_newznab .combined_table .head abbr.api_key { margin-right: 170px; }
+			.page .section_newznab .combined_table input.api_key { width: 203px; }
+
+		.page .combined_table .head abbr.extra_score {
+		    margin-right: 15px;
+		    display: none;
 		}
-		.page .combined_table .seed_time {
-			margin-right: 10px;
-		}
-		
-		.page .combined_table .head .extra_score,
-		.page .combined_table .extra_score {
-			width: 70px;
-			text-align: center;
+		.page .combined_table input.extra_score {
+			width: 75px;
 			display: none;
 		}
 			.page.show_advanced .combined_table .head .extra_score,
 			.page.show_advanced .combined_table .extra_score {
 				display: inline-block;
 			}
+
+		.page .combined_table .head abbr.custom_tag {
+		    margin-right: 15px;
+			display: none;
+		}
+		.page .combined_table input.custom_tag {
+			width: 140px;
+			display: none;
+		}
+			.page.show_advanced .combined_table .head .custom_tag,
+			.page.show_advanced .combined_table .custom_tag {
+				display: inline-block;
+			}
+
+
+	.page .combined_table .seed_ratio,
+	.page .combined_table .seed_time {
+		width: 70px;
+		text-align: center;
+		margin-left: 10px;
+	}
+	.page .combined_table .seed_time {
+		margin-right: 10px;
+	}
 
 	.page .combined_table .ctrlHolder {
 		padding-top: 2px;
@@ -716,7 +732,7 @@
 			margin-left: 10px;
 			display: inline-block;
 		}
-		
+
 .active .group_imdb_automation:not(.disabled) {
 	background: url('../images/imdb_watchlist.png') no-repeat right 50px;
 	min-height: 210px;
@@ -735,7 +751,7 @@
 		font-size: 11px;
 		cursor: pointer;
 	}
-	
+
 		.tooltip:hover > a {
 			opacity: 1;
 		}
@@ -753,13 +769,13 @@
 		opacity: 0;
 		visibility: hidden;
 	}
-	
+
 		.tooltip.shown div {
 			margin-top: 10px;
 			opacity: 1;
 			visibility: visible;
 		}
-		
+
 			.tooltip div a {
 				color: #5b9bd1;
 			}

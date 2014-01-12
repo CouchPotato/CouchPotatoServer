@@ -1287,6 +1287,7 @@ Option.Combined = new Class({
 		self.inputs = {};
 		self.items = [];
 		self.labels = {};
+		self.descriptions = {};
 
 		self.options.combine.each(function(name){
 
@@ -1307,9 +1308,12 @@ Option.Combined = new Class({
 
 		Object.each(self.inputs, function(input, name){
 			self.labels[name] = input.getPrevious().get('text');
+			self.descriptions[name] = (_in = input.getNext()) ? _in.get('text') : '';
+
 			new Element('abbr', {
 				'class': name,
-				'text': self.labels[name]
+				'text': self.labels[name],
+				'title': self.descriptions[name]
 			}).inject(head)
 		});
 
