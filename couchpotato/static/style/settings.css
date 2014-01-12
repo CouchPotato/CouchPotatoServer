@@ -549,8 +549,8 @@
 		}
 		.page .combined_table .head abbr.host { margin-right: 120px; }
 			.page .combined_table input.host { width: 140px; }
-		.page .section_newznab .combined_table .head abbr.host { margin-right: 200px; }
-			.page .section_newznab .combined_table input.host { width: 220px; }
+		.page .section_newznab .combined_table .head abbr.host { margin-right: 180px; }
+			.page .section_newznab .combined_table input.host { width: 200px; }
 
 		.page .combined_table .head abbr.name { margin-right: 57px; }
 			.page .combined_table input.name { width: 120px; }
@@ -559,15 +559,15 @@
 		.page .combined_table .head abbr.pass_key { margin-right: 71px; }
 			.page .combined_table input.pass_key { width: 113px; }
 
-		.page .section_newznab .combined_table .head abbr.api_key { margin-right: 190px; }
-			.page .section_newznab .combined_table input.api_key { width: 223px; }
+		.page .section_newznab .combined_table .head abbr.api_key { margin-right: 170px; }
+			.page .section_newznab .combined_table input.api_key { width: 203px; }
 
 		.page .combined_table .head abbr.extra_score {
-		    margin-right: 25px;
+		    margin-right: 15px;
 		    display: none;
 		}
 		.page .combined_table input.extra_score {
-			width: 80px;
+			width: 75px;
 			display: none;
 		}
 			.page.show_advanced .combined_table .head .extra_score,
@@ -580,7 +580,7 @@
 			display: none;
 		}
 		.page .combined_table input.custom_tag {
-			width: 84px;
+			width: 140px;
 			display: none;
 		}
 			.page.show_advanced .combined_table .head .custom_tag,
