@@ -27,7 +27,14 @@ config = [{
                     'default': '',
                     'type': 'password',
                 },
-                        {
+                {
+                    'name': 'true_french_only',
+                    'label': 'Only true french',
+                    'type': 'checkbox',
+                    'default': True,
+                    'description': 'Show only true french audio',
+                },
+                {
                     'name': 'seed_ratio',
                     'label': 'Seed ratio',
                     'type': 'float',
