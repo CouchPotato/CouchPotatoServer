@@ -73,7 +73,7 @@ class t411(TorrentProvider):
             if self.conf('true_french_only'):
                 results.append('&term%5B17%5D%5B%5D=541&term%5B17%5D%5B%5D=542')
                 
-        return results + FilterTrueFrench
+        return results
     
     def _search(self, movie, quality, results):
 
