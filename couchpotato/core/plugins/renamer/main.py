@@ -3,7 +3,7 @@ from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
 from couchpotato.core.helpers.encoding import toUnicode, ss, sp
 from couchpotato.core.helpers.variable import getExt, mergeDicts, getTitle, \
-    getImdb, link, symlink, tryInt, splitString, fnEscape, isSubFolder
+    getImdb, link, symlink, tryInt, splitString, fnEscape, isSubFolder, preserveCase
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Library, File, Profile, Release, \
@@ -313,7 +313,7 @@ class Renamer(Plugin):
                         current_file = toUnicode(current_file)
 
                         # Original filename
-                        replacements['original'] = os.path.splitext(os.path.basename(current_file))[0]
+                        replacements['original'] = os.path.splitext(os.path.basename(preserveCase(current_file)))[0]
                         replacements['original_folder'] = fireEvent('scanner.remove_cptag', group['dirname'], single = True)
 
                         # Extension

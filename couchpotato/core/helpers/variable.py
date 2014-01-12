@@ -11,6 +11,32 @@ import sys
 
 log = CPLog(__name__)
 
+def preserveCase(path):
+    if os.name == 'nt' and os.path.exists(path):
+        split_path = path.split(os.path.sep)
+        real_path = ''
+
+        for dir_name in split_path:
+            if not real_path:
+                if ':' in dir_name:
+                    real_path = dir_name + os.path.sep
+                    continue
+                elif path.startswith('\\\\'):
+                    real_path = '\\\\' + dir_name + os.path.sep
+                    continue
+                else:
+                    log.error('Path %s starts with unknown root', path)
+                    break
+
+            files = os.listdir(real_path)
+            for f in files:
+                if dir_name.lower() == f.lower():
+                    real_path = os.path.join(real_path, f)
+
+        return real_path
+    else:
+        return path
+
 def fnEscape(pattern):
     return pattern.replace('[','[[').replace(']','[]]').replace('[[','[[]')
 
