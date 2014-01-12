@@ -761,7 +761,8 @@ class Scanner(Plugin):
 
         # Year
         if year and identifier[:4] != year:
-            identifier = '%s %s' % (identifier.split(year)[0].strip(), year)
+            split_by = ':::' if ':::' in identifier else year
+            identifier = '%s %s' % (identifier.split(split_by)[0].strip(), year)
         else:
             identifier = identifier.split('::')[0]
 
