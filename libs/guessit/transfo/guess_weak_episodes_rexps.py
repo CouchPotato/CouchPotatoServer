@@ -48,9 +48,9 @@ def guess_weak_episodes_rexps(string, node):
                     continue
                 return Guess({ 'season': season,
                                'episodeNumber': epnum },
-                             confidence=0.6), span
+                             confidence=0.6, raw=string[span[0]:span[1]]), span
             else:
-                return Guess(metadata, confidence=0.3), span
+                return Guess(metadata, confidence=0.3, raw=string[span[0]:span[1]]), span
 
     return None, None
 

@@ -5,6 +5,7 @@ encoding//couchpotato/core/providers/trailer/vftrailers/youtube_dl/utils.py=utf-
 encoding//libs/subliminal/core.py=utf-8
 encoding//libs/subliminal/services/__init__.py=utf-8
 encoding//libs/subliminal/services/addic7ed.py=utf-8
+encoding//libs/subliminal/services/opensubtitles.py=utf-8
 encoding//libs/tmdb3/locales.py=utf-8
 encoding//libs/tmdb3/request.py=utf-8
 encoding//libs/tmdb3/tmdb_api.py=utf-8

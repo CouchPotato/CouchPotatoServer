@@ -21,8 +21,10 @@ class CronTrigger(object):
         if self.start_date:
             self.start_date = convert_to_datetime(self.start_date)
 
-        # Yank out all None valued fields
+        # Check field names and yank out all None valued fields
         for key, value in list(iteritems(values)):
+            if key not in self.FIELD_NAMES:
+                raise TypeError('Invalid field name: %s' % key)
             if value is None:
                 del values[key]
 
@@ -111,17 +113,17 @@ class CronTrigger(object):
 
             if next_value is None:
                 # No valid value was found
-                next_date, fieldnum = self._increment_field_value(next_date,
-                                                                  fieldnum - 1)
+                next_date, fieldnum = self._increment_field_value(
+                    next_date, fieldnum - 1)
             elif next_value > curr_value:
                 # A valid, but higher than the starting value, was found
                 if field.REAL:
-                    next_date = self._set_field_value(next_date, fieldnum,
-                                                      next_value)
+                    next_date = self._set_field_value(
+                        next_date, fieldnum, next_value)
                     fieldnum += 1
                 else:
-                    next_date, fieldnum = self._increment_field_value(next_date,
-                                                                      fieldnum)
+                    next_date, fieldnum = self._increment_field_value(
+                        next_date, fieldnum)
             else:
                 # A valid value was found, no changes necessary
                 fieldnum += 1

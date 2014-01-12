@@ -1,6 +1,6 @@
 from couchpotato import get_session
 from couchpotato.core.event import addEvent, fireEvent
-from couchpotato.core.helpers.encoding import toUnicode
+from couchpotato.core.helpers.encoding import toUnicode, sp
 from couchpotato.core.helpers.variable import splitString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
@@ -58,9 +58,9 @@ class Subtitle(Plugin):
 
             for d_sub in downloaded:
                 log.info('Found subtitle (%s): %s', (d_sub.language.alpha2, files))
-                group['files']['subtitle'].append(d_sub.path)
-                group['before_rename'].append(d_sub.path)
-                group['subtitle_language'][d_sub.path] = [d_sub.language.alpha2]
+                group['files']['subtitle'].append(sp(d_sub.path))
+                group['before_rename'].append(sp(d_sub.path))
+                group['subtitle_language'][sp(d_sub.path)] = [d_sub.language.alpha2]
 
             return True
 

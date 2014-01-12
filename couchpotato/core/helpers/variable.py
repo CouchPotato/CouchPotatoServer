@@ -1,6 +1,6 @@
-import collections
 from couchpotato.core.helpers.encoding import simplifyString, toSafeString, ss
 from couchpotato.core.logger import CPLog
+import collections
 import hashlib
 import os.path
 import platform
@@ -137,16 +137,18 @@ def getImdb(txt, check_inside = False, multiple = False):
         output.close()
 
     try:
-        ids = re.findall('(tt\d{7})', txt)
+        ids = re.findall('(tt\d{4,7})', txt)
+
         if multiple:
-            return list(set(ids)) if len(ids) > 0 else []
-        return ids[0]
+            return list(set(['tt%07d' % tryInt(x[2:]) for x in ids])) if len(ids) > 0 else []
+
+        return 'tt%07d' % tryInt(ids[0][2:])
     except IndexError:
         pass
 
     return False
 
-def tryInt(s, default=0):
+def tryInt(s, default = 0):
     try: return int(s)
     except: return default
 
@@ -211,3 +213,6 @@ def randomString(size = 8, chars = string.ascii_uppercase + string.digits):
 def splitString(str, split_on = ',', clean = True):
     list = [x.strip() for x in str.split(split_on)] if str else []
     return filter(None, list) if clean else list
+
+def dictIsSubset(a, b):
+    return all([k in b and b[k] == v for k, v in a.items()])

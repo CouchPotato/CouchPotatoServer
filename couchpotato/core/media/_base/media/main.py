@@ -34,7 +34,7 @@ class MediaPlugin(MediaBase):
                 for title in media.library.titles:
                     if title.default: default_title = title.title
 
-                fireEvent('notify.frontend', type = '%s.busy.%s' % (media.type, x), data = True)
+                fireEvent('notify.frontend', type = '%s.busy' % media.type, data = {'id': x})
                 fireEventAsync('library.update.%s' % media.type, identifier = media.library.identifier, default_title = default_title, force = True, on_complete = self.createOnComplete(x))
 
         db.expire_all()

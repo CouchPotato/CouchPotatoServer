@@ -18,7 +18,7 @@ class Tag:
     def __init__(self, tagClass, tagFormat, tagId):
         if tagId < 0:
             raise error.PyAsn1Error(
-                'Negative tag ID (%s) not allowed' % tagId
+                'Negative tag ID (%s) not allowed' % (tagId,)
                 )
         self.__tag = (tagClass, tagFormat, tagId)
         self.uniq = (tagClass, tagId)

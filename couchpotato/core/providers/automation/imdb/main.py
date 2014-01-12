@@ -70,7 +70,10 @@ class IMDBAutomation(IMDBBase):
     chart_urls = {
         'theater': 'http://www.imdb.com/movies-in-theaters/',
         'top250': 'http://www.imdb.com/chart/top',
+        'boxoffice': 'http://www.imdb.com/chart/',
     }
+
+    first_table = ['boxoffice']
 
     def getIMDBids(self):
 
@@ -84,6 +87,14 @@ class IMDBAutomation(IMDBBase):
 
                     try:
                         result_div = html.find('div', attrs = {'id': 'main'})
+
+                        try:
+                            if url in self.first_table:
+                                table = result_div.find('table')
+                                result_div = table if table else result_div
+                        except:
+                            pass
+
                         imdb_ids = getImdb(str(result_div), multiple = True)
 
                         for imdb_id in imdb_ids:
