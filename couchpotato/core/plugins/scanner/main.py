@@ -2,7 +2,7 @@ from couchpotato import get_session
 from couchpotato.core.event import fireEvent, addEvent
 from couchpotato.core.helpers.encoding import toUnicode, simplifyString, ss, sp
 from couchpotato.core.helpers.variable import getExt, getImdb, tryInt, \
-    splitString
+    splitString, preserveCase
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import File, Media
@@ -392,7 +392,7 @@ class Scanner(Plugin):
                 group['parentdir'] = os.path.dirname(movie_file)
                 group['dirname'] = None
 
-                folder_names = group['parentdir'].replace(folder, '').split(os.path.sep)
+                folder_names = preserveCase(group['parentdir']).replace(folder, '').split(os.path.sep)
                 folder_names.reverse()
 
                 # Try and get a proper dirname, so no "A", "Movie", "Download" etc
