@@ -1,7 +1,7 @@
 CouchPotato Server VF
 =====
 
-Based on Ruudburger work
+Based on Ruudburger and sarakha63 work
 
 CouchPotato (CP) is an automatic NZB and torrent downloader. You can keep a "movies I want"-list and it will search for NZBs/torrents of these movies every X hours.
 Once a movie is found, it will send it to SABnzbd or download the torrent to a specified directory.
@@ -17,7 +17,7 @@ Windows, see [the CP forum](http://couchpota.to/forum/showthread.php?tid=14) for
 * Then install [PyWin32 2.7](http://sourceforge.net/projects/pywin32/files/pywin32/Build%20217/) and [GIT](http://git-scm.com/)
 * If you come and ask on the forums 'why directory selection no work?', I will kill a kitten, also this is because you need PyWin32
 * Open up `Git Bash` (or CMD) and go to the folder you want to install CP. Something like Program Files.
-* Run `git clone https://github.com/RuudBurger/CouchPotatoServer.git`.
+* Run `git clone https://github.com/nqntRench/CouchPotatoServer.git`.
 * You can now start CP via `CouchPotatoServer\CouchPotato.py` to start
 * Your browser should open up, but if it doesn't go to: `http://localhost:5050/`
 
@@ -27,7 +27,7 @@ OSx:
 * Install [GIT](http://git-scm.com/)
 * Open up `Terminal`
 * Go to your App folder `cd /Applications`
-* Run `git clone https://github.com/RuudBurger/CouchPotatoServer.git`
+* Run `git clone https://github.com/nqntRench/CouchPotatoServer.git`
 * Then do `python CouchPotatoServer/CouchPotato.py`
 * Your browser should open up, but if it doesn't go to: `http://localhost:5050/`
 
@@ -35,7 +35,7 @@ Linux (ubuntu / debian):
 
 * Install [GIT](http://git-scm.com/) with `apt-get install git-core`
 * 'cd' to the folder of your choosing.
-* Run `git clone https://github.com/RuudBurger/CouchPotatoServer.git`
+* Run `git clone https://github.com/nqntRench/CouchPotatoServer.git`
 * Then do `python CouchPotatoServer/CouchPotato.py` to start
 * To run on boot copy the init script. `sudo cp CouchPotatoServer/init/ubuntu /etc/init.d/couchpotato`
 * Change the paths inside the init script. `sudo nano /etc/init.d/couchpotato`
@@ -55,7 +55,7 @@ FreeBSD :
 * Install port [textproc/docbook-xml-450](http://www.freshports.org/textproc/docbook-xml-450) with `cd /usr/ports/textproc/docbook-xml-450; sudo make install clean`
 * Install port [GIT](http://git-scm.com/) with `cd /usr/ports/devel/git; sudo make install clean`
 * 'cd' to the folder of your choosing.
-* Run `git clone https://github.com/RuudBurger/CouchPotatoServer.git`
+* Run `git clone https://github.com/nqntRench/CouchPotatoServer.git`
 * Then run `sudo python CouchPotatoServer/CouchPotato.py` to start for the first time
 * To run on boot copy the init script. `sudo cp CouchPotatoServer/init/freebsd /etc/rc.d/couchpotato`
 * Change the paths inside the init script. `sudo vim /etc/init.d/couchpotato`
