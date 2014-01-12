@@ -58,7 +58,7 @@ def sp(path, *args):
     if os.path.sep == '/' and '\\' in path:
         path = '/' + path.replace(':', '').replace('\\', '/')
 
-    path = os.path.normcase(os.path.normpath(ss(path, *args)))
+    path = os.path.normpath(ss(path, *args))
 
     # Remove any trailing path separators
     if path != os.path.sep:
