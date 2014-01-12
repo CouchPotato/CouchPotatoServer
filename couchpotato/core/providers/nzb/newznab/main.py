@@ -46,7 +46,7 @@ class Newznab(NZBProvider, RSS):
             'imdbid': movie['library']['identifier'].replace('tt', ''),
             'apikey': host['api_key'],
             'extended': 1
-        }) + ('&%s' % host['tag'] if host['tag'] else '')
+        }) + ('&%s' % host['custom_tag'] if host.get('custom_tag') else '')
         url = '%s&%s' % (self.getUrl(host['host'], self.urls['search']), arguments)
 
         nzbs = self.getRSSData(url, cache_timeout = 1800, headers = {'User-Agent': Env.getIdentifier()})
@@ -114,15 +114,15 @@ class Newznab(NZBProvider, RSS):
             try: score = tryInt(extra_score[nr])
             except: score = 0
 
-            try: tag = custom_tags[nr]
-            except: tag = ''
+            try: custom_tag = custom_tags[nr]
+            except: custom_tag = ''
 
             list.append({
                 'use': uses[nr],
                 'host': host,
                 'api_key': key,
                 'extra_score': score,
-                'custom_tag': tag
+                'custom_tag': custom_tag
             })
 
         return list
