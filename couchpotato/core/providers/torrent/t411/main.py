@@ -56,25 +56,25 @@ class t411(TorrentProvider):
             except:
                 TitleStringReal = str(MovieTitle.encode("utf-8").replace('-',' '))
             if moviequality in ['br-disk']:
-                results.append(urllib.urlencode( {'search': TitleStringReal, 'cat' : 210, 'submit' : 'Recherche' } ) + "&term%5B7%5D%5B0%5D=17&order=seeders&type=desc")
-                results.append(urllib.urlencode( {'search': simplifyString(TitleStringReal), 'cat' : 210, 'submit' : 'Recherche' } ) + "&term%5B7%5D%5B0%5D=17&order=seeders&type=desc")
+                results.append(urllib.urlencode( {'search': TitleStringReal, 'cat' : 210, 'submit' : 'Recherche' } ) + "&term%5B7%5D%5B0%5D=17&order=seeders&type=desc" + FilterTrueFrench)
+                results.append(urllib.urlencode( {'search': simplifyString(TitleStringReal), 'cat' : 210, 'submit' : 'Recherche' } ) + "&term%5B7%5D%5B0%5D=17&order=seeders&type=desc" + FilterTrueFrench)
             elif moviequality in ['1080p']:
-                results.append(urllib.urlencode( {'search': TitleStringReal, 'cat' : 210, 'submit' : 'Recherche' } ) + "&term%5B7%5D%5B0%5D=16&order=seeders&type=desc")
-                results.append(urllib.urlencode( {'search': simplifyString(TitleStringReal), 'cat' : 210, 'submit' : 'Recherche' } ) + "&term%5B7%5D%5B0%5D=16&order=seeders&type=desc")
+                results.append(urllib.urlencode( {'search': TitleStringReal, 'cat' : 210, 'submit' : 'Recherche' } ) + "&term%5B7%5D%5B0%5D=16&order=seeders&type=desc" + FilterTrueFrench)
+                results.append(urllib.urlencode( {'search': simplifyString(TitleStringReal), 'cat' : 210, 'submit' : 'Recherche' } ) + "&term%5B7%5D%5B0%5D=16&order=seeders&type=desc" + FilterTrueFrench)
             elif moviequality in ['720p']:
-                results.append(urllib.urlencode( {'search': TitleStringReal, 'cat' : 210, 'submit' : 'Recherche' } ) + "&term%5B7%5D%5B0%5D=15&order=seeders&type=desc")
-                results.append(urllib.urlencode( {'search': simplifyString(TitleStringReal), 'cat' : 210, 'submit' : 'Recherche' } ) + "&term%5B7%5D%5B0%5D=15&order=seeders&type=desc")
+                results.append(urllib.urlencode( {'search': TitleStringReal, 'cat' : 210, 'submit' : 'Recherche' } ) + "&term%5B7%5D%5B0%5D=15&order=seeders&type=desc" + FilterTrueFrench)
+                results.append(urllib.urlencode( {'search': simplifyString(TitleStringReal), 'cat' : 210, 'submit' : 'Recherche' } ) + "&term%5B7%5D%5B0%5D=15&order=seeders&type=desc" + FilterTrueFrench)
             elif moviequality in ['br-rip']:
-                results.append(urllib.urlencode( {'search': TitleStringReal, 'cat' : 210, 'submit' : 'Recherche' } ) + "&term%5B7%5D%5B0%5D=9&order=seeders&type=desc")
-                results.append(urllib.urlencode( {'search': simplifyString(TitleStringReal), 'cat' : 210, 'submit' : 'Recherche' } ) + "&term%5B7%5D%5B0%5D=9&order=seeders&type=desc")            
+                results.append(urllib.urlencode( {'search': TitleStringReal, 'cat' : 210, 'submit' : 'Recherche' } ) + "&term%5B7%5D%5B0%5D=9&order=seeders&type=desc" + FilterTrueFrench)
+                results.append(urllib.urlencode( {'search': simplifyString(TitleStringReal), 'cat' : 210, 'submit' : 'Recherche' } ) + "&term%5B7%5D%5B0%5D=9&order=seeders&type=desc" + FilterTrueFrench)            
             elif moviequality in ['dvd-r']:
-                results.append(urllib.urlencode( {'search': TitleStringReal, 'cat' : 210, 'submit' : 'Recherche' } ) + "&term%5B7%5D%5B0%5D=14&order=seeders&type=desc")
-                results.append(urllib.urlencode( {'search': simplifyString(TitleStringReal), 'cat' : 210, 'submit' : 'Recherche' } ) + "&term%5B7%5D%5B0%5D=14&order=seeders&type=desc")
+                results.append(urllib.urlencode( {'search': TitleStringReal, 'cat' : 210, 'submit' : 'Recherche' } ) + "&term%5B7%5D%5B0%5D=14&order=seeders&type=desc" + FilterTrueFrench)
+                results.append(urllib.urlencode( {'search': simplifyString(TitleStringReal), 'cat' : 210, 'submit' : 'Recherche' } ) + "&term%5B7%5D%5B0%5D=14&order=seeders&type=desc" + FilterTrueFrench)
             else:
-                results.append(urllib.urlencode( {'search': TitleStringReal, 'cat' : 210, 'submit' : 'Recherche' } ) + "&term%5B7%5D%5B0%5D=10&order=seeders&type=desc")
-                results.append(urllib.urlencode( {'search': simplifyString(TitleStringReal), 'cat' : 210, 'submit' : 'Recherche' } ) + "&term%5B7%5D%5B0%5D=10&order=seeders&type=desc")
+                results.append(urllib.urlencode( {'search': TitleStringReal, 'cat' : 210, 'submit' : 'Recherche' } ) + "&term%5B7%5D%5B0%5D=10&order=seeders&type=desc" + FilterTrueFrench)
+                results.append(urllib.urlencode( {'search': simplifyString(TitleStringReal), 'cat' : 210, 'submit' : 'Recherche' } ) + "&term%5B7%5D%5B0%5D=10&order=seeders&type=desc" + FilterTrueFrench)
             
-        return results + FilterTrueFrench
+        return results
     
     def _search(self, movie, quality, results):
 
