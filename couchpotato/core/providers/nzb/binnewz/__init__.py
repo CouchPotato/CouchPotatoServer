@@ -19,6 +19,14 @@ config = [{
                     'default': False,
                 },
                 {
+                    'name': 'true_french_only',
+                    'label': 'Only true french',
+                    'type': 'bool',
+                    'default': 1,
+                    'advanced': True,
+                    'description': 'Show only true french audio',
+                },
+                {
                     'name': 'extra_score',
                     'advanced': True,
                     'label': 'Extra Score',

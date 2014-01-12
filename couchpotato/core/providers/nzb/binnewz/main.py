@@ -49,6 +49,9 @@ class BinNewz(NZBProvider):
         MovieTitles = movie['library']['info']['titles']
         moviequality = simplifyString(quality['identifier'])
         movieyear = movie['library']['year']
+        if self.conf('true_french_only'):
+            FilterTrueFrench = '&cats%5B%5D=2&cats%5B%5D=7&cats%5B%5D=9&cats%5B%5D=5'
+        
         if moviequality in ("720p","1080p","bd50"):
             cat1='39'
             cat2='49'
@@ -60,11 +63,11 @@ class BinNewz(NZBProvider):
         else:
             cat1='6'
             cat2='27'
-            minSize = 500      
+            minSize = 500
             
         for MovieTitle in MovieTitles:
             TitleStringReal = str(MovieTitle.encode("utf-8").replace('-',' '))
-            data = 'chkInit=1&edTitre='+TitleStringReal+'&chkTitre=on&chkFichier=on&chkCat=on&cats%5B%5D='+cat1+'&cats%5B%5D='+cat2+'&edAge=&edYear='
+            data = 'chkInit=1&edTitre='+TitleStringReal+'&chkTitre=on&chkFichier=on&chkCat=on&cats%5B%5D='+cat1+'&cats%5B%5D='+cat2+'&edAge=&edYear=' + FilterTrueFrench
             try:
                 soup = BeautifulSoup( urllib2.urlopen("http://www.binnews.in/_bin/search2.php", data) )
             except Exception, e:
