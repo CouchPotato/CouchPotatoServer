@@ -14,7 +14,8 @@ log = CPLog(__name__)
 class OMGWTFNZBs(NZBProvider, RSS):
 
     urls = {
-        'search': 'http://rss.omgwtfnzbs.org/rss-search.php?%s',
+        'search': 'https://rss.omgwtfnzbs.org/rss-search.php?%s',
+        'detail_url': 'https://omgwtfnzbs.org/details.php?id=%s',
     }
 
     http_time_between_calls = 1 #seconds
@@ -49,13 +50,14 @@ class OMGWTFNZBs(NZBProvider, RSS):
         for nzb in nzbs:
 
             enclosure = self.getElement(nzb, 'enclosure').attrib
+            nzb_id = parse_qs(urlparse(self.getTextElement(nzb, 'link')).query).get('id')[0]
 
             results.append({
-                'id': parse_qs(urlparse(self.getTextElement(nzb, 'link')).query).get('id')[0],
+                'id': nzb_id,
                 'name': toUnicode(self.getTextElement(nzb, 'title')),
                 'age': self.calculateAge(int(time.mktime(parse(self.getTextElement(nzb, 'pubDate')).timetuple()))),
                 'size': tryInt(enclosure['length']) / 1024 / 1024,
                 'url': enclosure['url'],
-                'detail_url': self.getTextElement(nzb, 'link'),
+                'detail_url': self.urls['detail_url'] % nzb_id,
                 'description': self.getTextElement(nzb, 'description')
             })

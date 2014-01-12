@@ -23,23 +23,49 @@ var Movie = new Class({
 	addEvents: function(){
 		var self = this;
 
-		App.addEvent('movie.update.'+self.data.id, function(notification){
+		self.global_events = {}
+
+		// Do refresh with new data
+		self.global_events['movie.update'] = function(notification){
+			if(self.data.id != notification.data.id) return;
+
 			self.busy(false);
 			self.removeView();
 			self.update.delay(2000, self, notification);
-		});
+		}
+		App.on('movie.update', self.global_events['movie.update']);
 
+		// Add spinner on load / search
 		['movie.busy', 'movie.searcher.started'].each(function(listener){
-			App.addEvent(listener+'.'+self.data.id, function(notification){
-				if(notification.data)
+			self.global_events[listener] = function(notification){
+				if(notification.data && self.data.id == notification.data.id)
 					self.busy(true)
-			});
+			}
+			App.on(listener, self.global_events[listener]);
 		})
 
-		App.addEvent('movie.searcher.ended.'+self.data.id, function(notification){
-			if(notification.data)
+		// Remove spinner
+		self.global_events['movie.searcher.ended'] = function(notification){
+			if(notification.data && self.data.id == notification.data.id)
 				self.busy(false)
-		});
+		}
+		App.on('movie.searcher.ended', self.global_events['movie.searcher.ended']);
+
+		// Reload when releases have updated
+		self.global_events['release.update_status'] = function(notification){
+			var data = notification.data
+			if(data && self.data.id == data.movie_id){
+
+				if(!self.data.releases)
+					self.data.releases = [];
+
+				self.data.releases.push({'quality_id': data.quality_id, 'status_id': data.status_id});
+				self.updateReleases();
+			}
+		}
+
+		App.on('release.update_status', self.global_events['release.update_status']);
+
 	},
 
 	destroy: function(){
@@ -52,10 +78,9 @@ var Movie = new Class({
 		self.list.checkIfEmpty();
 
 		// Remove events
-		App.removeEvents('movie.update.'+self.data.id);
-		['movie.busy', 'movie.searcher.started'].each(function(listener){
-			App.removeEvents(listener+'.'+self.data.id);
-		})
+		Object.each(self.global_events, function(handle, listener){
+			App.off(listener, handle);
+		});
 	},
 
 	busy: function(set_busy, timeout){
@@ -179,21 +204,7 @@ var Movie = new Class({
 			});
 
 		// Add releases
-		if(self.data.releases)
-			self.data.releases.each(function(release){
-
-				var q = self.quality.getElement('.q_id'+ release.quality_id),
-					status = Status.get(release.status_id);
-
-				if(!q && (status.identifier == 'snatched' || status.identifier == 'seeding' || status.identifier == 'done'))
-					var q = self.addQuality(release.quality_id)
-
-				if (status && q && !q.hasClass(status.identifier)){
-					q.addClass(status.identifier);
-					q.set('title', (q.get('title') ? q.get('title') : '') + ' status: '+ status.label)
-				}
-
-			});
+		self.updateReleases();
 
 		Object.each(self.options.actions, function(action, key){
 			self.action[key.toLowerCase()] = action = new self.options.actions[key](self)
@@ -201,6 +212,26 @@ var Movie = new Class({
 				self.actions.adopt(action)
 		});
 
+	},
+
+	updateReleases: function(){
+		var self = this;
+		if(!self.data.releases || self.data.releases.length == 0) return;
+
+		self.data.releases.each(function(release){
+
+			var q = self.quality.getElement('.q_id'+ release.quality_id),
+				status = Status.get(release.status_id);
+
+			if(!q && (status.identifier == 'snatched' || status.identifier == 'seeding' || status.identifier == 'done'))
+				var q = self.addQuality(release.quality_id)
+
+			if (status && q && !q.hasClass(status.identifier)){
+				q.addClass(status.identifier);
+				q.set('title', (q.get('title') ? q.get('title') : '') + ' status: '+ status.label)
+			}
+
+		});
 	},
 
 	addQuality: function(quality_id){

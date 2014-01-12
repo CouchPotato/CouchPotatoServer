@@ -31,8 +31,8 @@ class Scheduler(Plugin):
                 pass
 
     def doShutdown(self):
-        super(Scheduler, self).doShutdown()
         self.stop()
+        return super(Scheduler, self).doShutdown()
 
     def stop(self):
         if self.started:

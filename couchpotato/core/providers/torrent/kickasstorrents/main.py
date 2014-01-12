@@ -11,9 +11,8 @@ log = CPLog(__name__)
 class KickAssTorrents(TorrentMagnetProvider):
 
     urls = {
-        'test': 'https://kickass.to/',
-        'detail': 'https://kickass.to/%s',
-        'search': 'https://kickass.to/%s-i%s/',
+        'detail': '%s/%s',
+        'search': '%s/%s-i%s/',
     }
 
     cat_ids = [
@@ -28,9 +27,16 @@ class KickAssTorrents(TorrentMagnetProvider):
     http_time_between_calls = 1 #seconds
     cat_backup_id = None
 
+    proxy_list = [
+        'https://kickass.to',
+        'http://kickass.pw',
+        'http://www.kickassunblock.info',
+        'http://www.kickassproxy.info',
+    ]
+
     def _search(self, movie, quality, results):
 
-        data = self.getHTMLData(self.urls['search'] % ('m', movie['library']['identifier'].replace('tt', '')))
+        data = self.getHTMLData(self.urls['search'] % (self.getDomain(), 'm', movie['library']['identifier'].replace('tt', '')))
 
         if data:
 
@@ -41,7 +47,7 @@ class KickAssTorrents(TorrentMagnetProvider):
                 html = BeautifulSoup(data)
                 resultdiv = html.find('div', attrs = {'class':'tabs'})
                 for result in resultdiv.find_all('div', recursive = False):
-                    if result.get('id').lower() not in cat_ids:
+                    if result.get('id').lower().strip('tab-') not in cat_ids:
                         continue
 
                     try:
@@ -56,12 +62,12 @@ class KickAssTorrents(TorrentMagnetProvider):
                                 column_name = table_order[nr]
                                 if column_name:
 
-                                    if column_name is 'name':
+                                    if column_name == 'name':
                                         link = td.find('div', {'class': 'torrentname'}).find_all('a')[1]
                                         new['id'] = temp.get('id')[-8:]
                                         new['name'] = link.text
                                         new['url'] = td.find('a', 'imagnet')['href']
-                                        new['detail_url'] = self.urls['detail'] % link['href'][1:]
+                                        new['detail_url'] = self.urls['detail'] % (self.getDomain(), link['href'][1:])
                                         new['score'] = 20 if td.find('a', 'iverif') else 0
                                     elif column_name is 'size':
                                         new['size'] = self.parseSize(td.text)
@@ -100,3 +106,10 @@ class KickAssTorrents(TorrentMagnetProvider):
             age += tryInt(nr) * mult
 
         return tryInt(age)
+
+
+    def isEnabled(self):
+        return super(KickAssTorrents, self).isEnabled() and self.getDomain()
+
+    def correctProxy(self, data):
+        return 'search query' in data.lower()

@@ -52,8 +52,8 @@ var MovieList = new Class({
 
 		self.getMovies();
 
-		App.addEvent('movie.added', self.movieAdded.bind(self))
-		App.addEvent('movie.deleted', self.movieDeleted.bind(self))
+		App.on('movie.added', self.movieAdded.bind(self))
+		App.on('movie.deleted', self.movieDeleted.bind(self))
 	},
 
 	movieDeleted: function(notification){
@@ -65,6 +65,7 @@ var MovieList = new Class({
 					movie.destroy();
 					delete self.movies_added[notification.data.id];
 					self.setCounter(self.counter_count-1);
+					self.total_movies--;
 				}
 			})
 		}
@@ -75,6 +76,7 @@ var MovieList = new Class({
 	movieAdded: function(notification){
 		var self = this;
 
+		self.fireEvent('movieAdded', notification);
 		if(self.options.add_new && !self.movies_added[notification.data.id] && notification.data.status.identifier == self.options.status){
 			window.scroll(0,0);
 			self.createMovie(notification.data, 'top');
@@ -390,6 +392,7 @@ var MovieList = new Class({
 								self.movies.erase(movie);
 								movie.destroy();
 								self.setCounter(self.counter_count-1);
+								self.total_movies--;
 							});
 
 							self.calculateSelected();
