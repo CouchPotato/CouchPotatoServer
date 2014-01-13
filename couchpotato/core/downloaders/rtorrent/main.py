@@ -1,6 +1,7 @@
 from base64 import b16encode, b32decode
 from bencode import bencode, bdecode
 from couchpotato.core.downloaders.base import Downloader, ReleaseDownloadList
+from couchpotato.core.event import fireEvent
 from couchpotato.core.helpers.encoding import sp
 from couchpotato.core.helpers.variable import cleanHost
 from couchpotato.core.logger import CPLog
@@ -17,6 +18,15 @@ class rTorrent(Downloader):
 
     protocol = ['torrent', 'torrent_magnet']
     rt = None
+
+    # Migration url to host options
+    def __init__(self):
+        super(rTorrent, self).__init__()
+        if self.conf('url'):
+            self.conf('ssl', value = (self.conf('url').split('://')[0].strip() == 'https'))
+            self.conf('host', value = self.conf('url').split('://')[-1].split('/')[0].strip())
+            self.conf('rpc_url', value = self.conf('url').split('://')[-1].split('/',1)[1].strip('/ '))
+            self.conf('url', value = '')
 
     def connect(self):
         # Already connected?
