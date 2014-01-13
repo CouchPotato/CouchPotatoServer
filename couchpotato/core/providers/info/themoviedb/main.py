@@ -73,10 +73,16 @@ class TheMovieDb(MovieProvider):
             try:
                 log.debug('Getting info: %s', cache_key)
                 movie = tmdb3.Movie(identifier)
-                result = self.parseMovie(movie, extended = extended)
-                self.setCache(cache_key, result)
+                try: exists = movie.title is not None
+                except: exists = False
+
+                if exists:
+                    result = self.parseMovie(movie, extended = extended)
+                    self.setCache(cache_key, result)
+                else:
+                    result = {}
             except:
-                pass
+                log.error('Failed getting info for %s: %s', (identifier, traceback.format_exc()))
 
         return result
 
@@ -157,9 +163,9 @@ class TheMovieDb(MovieProvider):
 
         image_url = ''
         try:
-            image_url = getattr(movie, type).geturl(size = 'original')
+            image_url = getattr(movie, type).geturl(size = size)
         except:
-            log.debug('Failed getting %s.%s for "%s"', (type, size, movie))
+            log.debug('Failed getting %s.%s for "%s"', (type, size, str(movie)))
 
         return image_url
 
