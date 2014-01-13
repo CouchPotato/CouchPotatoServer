@@ -98,7 +98,7 @@ class Plugin(object):
         self.makeDir(os.path.dirname(path))
 
         if os.path.exists(path):
-            log.info('%s already exists, overwriting file with new version', path)
+            log.debug('%s already exists, overwriting file with new version', path)
 
         try:
             f = open(path, 'w+' if not binary else 'w+b')
