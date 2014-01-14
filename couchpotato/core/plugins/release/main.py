@@ -266,10 +266,16 @@ class Release(Plugin):
         # Download NZB or torrent file
         filedata = None
         if data.get('download') and (ismethod(data.get('download')) or isfunction(data.get('download'))):
-            filedata = data.get('download')(url = data.get('url'), nzb_id = data.get('id'))
-            log.info('Tried to download, but the "%s" provider gave an error', data.get('protocol'))
+            try:
+                filedata = data.get('download')(url = data.get('url'), nzb_id = data.get('id'))
+            except:
+                log.error('Tried to download, but the "%s" provider gave an error: %s', (data.get('protocol'), traceback.format_exc()))
+                return False
+
             if filedata == 'try_next':
                 return filedata
+            elif not filedata:
+                return False
 
         # Send NZB or torrent file to downloader
         download_result = fireEvent('download', data = data, media = media, manual = manual, filedata = filedata, single = True)
