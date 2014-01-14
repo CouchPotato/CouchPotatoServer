@@ -651,24 +651,33 @@ Remove it if you want it to be renamed (again, or at least let it try again)
             if not os.path.isfile(tag_filename):
                 self.createFile(tag_filename, text)
 
-    def untagRelease(self, release_download, tag = ''):
+    def untagRelease(self, group = None, release_download = None, tag = ''):
         if not release_download:
             return
 
         tag_files = []
 
-        folder = release_download['folder']
-        if not os.path.isdir(folder):
-            return False
+        # Tag movie files if they are known
+        if isinstance(group, dict):
+            tag_files = [sorted(list(group['files']['movie']))[0]]
 
-        # Untag download_files if they are known
-        if release_download['files']:
-            tag_files = splitString(release_download['files'], '|')
+            folder = group['parentdir']
+            if not group.get('dirname') or not os.path.isdir(folder):
+                return False
 
-        # Untag all files in release folder
-        else:
-            for root, folders, names in os.walk(release_download['folder']):
-                tag_files.extend([sp(os.path.join(root, name)) for name in names if not os.path.splitext(name)[1] == '.ignore'])
+        elif isinstance(release_download, dict):
+            # Untag download_files if they are known
+            if release_download['files']:
+                tag_files = splitString(release_download['files'], '|')
+
+            # Untag all files in release folder
+            else:
+                for root, folders, names in os.walk(release_download['folder']):
+                    tag_files.extend([sp(os.path.join(root, name)) for name in names if not os.path.splitext(name)[1] == '.ignore'])
+
+            folder = release_download['folder']
+            if not os.path.isdir(folder):
+                return False
 
         # Find all .ignore files in folder
         ignore_files = []
