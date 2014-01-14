@@ -656,6 +656,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
             return
 
         tag_files = []
+        folder = None
 
         # Tag movie files if they are known
         if isinstance(group, dict):
@@ -678,6 +679,9 @@ Remove it if you want it to be renamed (again, or at least let it try again)
             folder = release_download['folder']
             if not os.path.isdir(folder):
                 return False
+
+        if not folder:
+            return False
 
         # Find all .ignore files in folder
         ignore_files = []
@@ -892,7 +896,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                 rel_dict = rel.to_dict({'info': {}})
                 movie_dict = fireEvent('media.get', media_id = rel.movie_id, single = True)
 
-                if not isinstance(rel_dict['info'], (dict)):
+                if not isinstance(rel_dict['info'], dict):
                     log.error('Faulty release found without any info, ignoring.')
                     fireEvent('release.update_status', rel.id, status = ignored_status, single = True)
                     continue
@@ -908,6 +912,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                 # Find release in downloaders
                 nzbname = self.createNzbName(rel_dict['info'], movie_dict)
 
+                found_release = False
                 for release_download in release_downloads:
                     found_release = False
                     if rel_dict['info'].get('download_id'):
