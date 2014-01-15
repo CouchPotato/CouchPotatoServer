@@ -116,7 +116,7 @@ class NZBVortex(Downloader):
 
         params = tryUrlencode(parameters)
 
-        url = cleanHost(self.conf('host')) + 'api/' + call
+        url = cleanHost(self.conf('host'), ssl = self.conf('ssl')) + 'api/' + call
 
         try:
             data = self.urlopen('%s?%s' % (url, params), *args, **kwargs)
