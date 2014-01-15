@@ -168,7 +168,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
         logger.addHandler(hdlr)
 
     # To file
-    hdlr2 = handlers.RotatingFileHandler(Env.get('log_path'), 'a', 500000, 10)
+    hdlr2 = handlers.RotatingFileHandler(Env.get('log_path'), 'a', 500000, 10, encoding = Env.get('encoding'))
     hdlr2.setFormatter(formatter)
     logger.addHandler(hdlr2)
 

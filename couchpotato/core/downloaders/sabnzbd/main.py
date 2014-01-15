@@ -165,7 +165,7 @@ class Sabnzbd(Downloader):
 
     def call(self, request_params, use_json = True, **kwargs):
 
-        url = cleanHost(self.conf('host')) + 'api?' + tryUrlencode(mergeDicts(request_params, {
+        url = cleanHost(self.conf('host'), ssl = self.conf('ssl')) + 'api?' + tryUrlencode(mergeDicts(request_params, {
            'apikey': self.conf('api_key'),
            'output': 'json'
         }))
