@@ -35,7 +35,7 @@ class Trakt(Notification):
     def call(self, method_url, post_data):
 
         try:
-            response = self.getJsonData(self.urls['base'] % method_url, params = post_data, cache_timeout = 1)
+            response = self.getJsonData(self.urls['base'] % method_url, data = post_data, cache_timeout = 1)
             if response:
                 if response.get('status') == "success":
                     log.info('Successfully called Trakt')

@@ -59,7 +59,7 @@ config = [{
                 {
                     'name': 'automation_charts_boxoffice',
                     'type': 'bool',
-                    'label': 'Box offce TOP 10',
+                    'label': 'Box office TOP 10',
                     'description': 'IMDB Box office <a href="http://www.imdb.com/chart/">TOP 10</a> chart',
                     'default': True,
                 },

@@ -11,8 +11,8 @@ log = CPLog(__name__)
 class TheMovieDb(MovieProvider):
 
     def __init__(self):
-        addEvent('info.search', self.search, priority = 2)
-        addEvent('movie.search', self.search, priority = 2)
+        #addEvent('info.search', self.search, priority = 2)
+        #addEvent('movie.search', self.search, priority = 2)
         addEvent('movie.info', self.getInfo, priority = 2)
         addEvent('movie.info_by_tmdb', self.getInfo)
 
@@ -45,7 +45,7 @@ class TheMovieDb(MovieProvider):
                     nr = 0
 
                     for movie in raw:
-                        results.append(self.parseMovie(movie, with_titles = False))
+                        results.append(self.parseMovie(movie, extended = False))
 
                         nr += 1
                         if nr == limit:
@@ -61,7 +61,7 @@ class TheMovieDb(MovieProvider):
 
         return results
 
-    def getInfo(self, identifier = None):
+    def getInfo(self, identifier = None, extended = True):
 
         if not identifier:
             return {}
@@ -73,14 +73,20 @@ class TheMovieDb(MovieProvider):
             try:
                 log.debug('Getting info: %s', cache_key)
                 movie = tmdb3.Movie(identifier)
-                result = self.parseMovie(movie)
-                self.setCache(cache_key, result)
+                try: exists = movie.title is not None
+                except: exists = False
+
+                if exists:
+                    result = self.parseMovie(movie, extended = extended)
+                    self.setCache(cache_key, result)
+                else:
+                    result = {}
             except:
-                pass
+                log.error('Failed getting info for %s: %s', (identifier, traceback.format_exc()))
 
         return result
 
-    def parseMovie(self, movie, with_titles = True):
+    def parseMovie(self, movie, extended = True):
 
         cache_key = 'tmdb.cache.%s' % movie.id
         movie_data = self.getCache(cache_key)
@@ -91,6 +97,14 @@ class TheMovieDb(MovieProvider):
             poster = self.getImage(movie, type = 'poster', size = 'poster')
             poster_original = self.getImage(movie, type = 'poster', size = 'original')
             backdrop_original = self.getImage(movie, type = 'backdrop', size = 'original')
+
+            images = {
+                'poster': [poster] if poster else [],
+                #'backdrop': [backdrop] if backdrop else [],
+                'poster_original': [poster_original] if poster_original else [],
+                'backdrop_original': [backdrop_original] if backdrop_original else [],
+                'actors': {}
+            }
 
             # Genres
             try:
@@ -103,18 +117,23 @@ class TheMovieDb(MovieProvider):
             if not movie.releasedate or year == '1900' or year.lower() == 'none':
                 year = None
 
+            # Gather actors data
+            actors = {}
+            if extended:
+                for cast_item in movie.cast:
+                    try:
+                        actors[toUnicode(cast_item.name)] = toUnicode(cast_item.character)
+                        images['actors'][toUnicode(cast_item.name)] = self.getImage(cast_item, type = 'profile', size = 'original')
+                    except:
+                        log.debug('Error getting cast info for %s: %s', (cast_item, traceback.format_exc()))
+
             movie_data = {
                 'type': 'movie',
                 'via_tmdb': True,
                 'tmdb_id': movie.id,
                 'titles': [toUnicode(movie.title)],
                 'original_title': movie.originaltitle,
-                'images': {
-                    'poster': [poster] if poster else [],
-                    #'backdrop': [backdrop] if backdrop else [],
-                    'poster_original': [poster_original] if poster_original else [],
-                    'backdrop_original': [backdrop_original] if backdrop_original else [],
-                },
+                'images': images,
                 'imdb': movie.imdb,
                 'runtime': movie.runtime,
                 'released': str(movie.releasedate),
@@ -122,12 +141,13 @@ class TheMovieDb(MovieProvider):
                 'plot': movie.overview,
                 'genres': genres,
                 'collection': getattr(movie.collection, 'name', None),
+                'actor_roles': actors
             }
 
             movie_data = dict((k, v) for k, v in movie_data.iteritems() if v)
 
             # Add alternative names
-            if with_titles:
+            if extended:
                 movie_data['titles'].append(movie.originaltitle)
                 for alt in movie.alternate_titles:
                     alt_name = alt.title
@@ -143,9 +163,9 @@ class TheMovieDb(MovieProvider):
 
         image_url = ''
         try:
-            image_url = getattr(movie, type).geturl(size = 'original')
+            image_url = getattr(movie, type).geturl(size = size)
         except:
-            log.debug('Failed getting %s.%s for "%s"', (type, size, movie.title))
+            log.debug('Failed getting %s.%s for "%s"', (type, size, str(movie)))
 
         return image_url
 

@@ -39,14 +39,14 @@ class OMDBAPI(MovieProvider):
         if cached:
             result = self.parseMovie(cached)
             if result.get('titles') and len(result.get('titles')) > 0:
-                log.info('Found: %s', result['titles'][0] + ' (' + str(result['year']) + ')')
+                log.info('Found: %s', result['titles'][0] + ' (' + str(result.get('year')) + ')')
                 return [result]
 
             return []
 
         return []
 
-    def getInfo(self, identifier = None):
+    def getInfo(self, identifier = None, **kwargs):
 
         if not identifier:
             return {}

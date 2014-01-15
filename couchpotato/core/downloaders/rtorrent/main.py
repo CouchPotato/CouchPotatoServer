@@ -77,7 +77,10 @@ class rTorrent(Downloader):
         return True
 
 
-    def download(self, data, movie, filedata = None):
+    def download(self, data = None, media = None, filedata = None):
+        if not media: media = {}
+        if not data: data = {}
+
         log.debug('Sending "%s" to rTorrent.', (data.get('name')))
 
         if not self.connect():
@@ -140,11 +143,11 @@ class rTorrent(Downloader):
             log.error('Failed to send torrent to rTorrent: %s', err)
             return False
 
-    def getAllDownloadStatus(self):
+    def getAllDownloadStatus(self, ids):
         log.debug('Checking rTorrent download status.')
 
         if not self.connect():
-            return False
+            return []
 
         try:
             torrents = self.rt.get_torrents()
@@ -152,33 +155,34 @@ class rTorrent(Downloader):
             release_downloads = ReleaseDownloadList(self)
 
             for torrent in torrents:
-                torrent_files = []
-                for file_item in torrent.get_files():
-                    torrent_files.append(sp(os.path.join(torrent.directory, file_item.path)))
-
-                status = 'busy'
-                if torrent.complete:
-                    if torrent.active:
-                        status = 'seeding'
-                    else:
-                        status = 'completed'
-
-                release_downloads.append({
-                    'id': torrent.info_hash,
-                    'name': torrent.name,
-                    'status': status,
-                    'seed_ratio': torrent.ratio,
-                    'original_status': torrent.state,
-                    'timeleft': str(timedelta(seconds = float(torrent.left_bytes) / torrent.down_rate)) if torrent.down_rate > 0 else -1,
-                    'folder': sp(torrent.directory),
-                    'files': '|'.join(torrent_files)
-                })
+                if torrent.info_hash in ids:
+                    torrent_files = []
+                    for file_item in torrent.get_files():
+                        torrent_files.append(sp(os.path.join(torrent.directory, file_item.path)))
+    
+                    status = 'busy'
+                    if torrent.complete:
+                        if torrent.active:
+                            status = 'seeding'
+                        else:
+                            status = 'completed'
+    
+                    release_downloads.append({
+                        'id': torrent.info_hash,
+                        'name': torrent.name,
+                        'status': status,
+                        'seed_ratio': torrent.ratio,
+                        'original_status': torrent.state,
+                        'timeleft': str(timedelta(seconds = float(torrent.left_bytes) / torrent.down_rate)) if torrent.down_rate > 0 else -1,
+                        'folder': sp(torrent.directory),
+                        'files': '|'.join(torrent_files)
+                    })
 
             return release_downloads
 
         except Exception, err:
             log.error('Failed to get status from rTorrent: %s', err)
-            return False
+            return []
 
     def pause(self, release_download, pause = True):
         if not self.connect():

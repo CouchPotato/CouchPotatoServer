@@ -431,7 +431,7 @@ MA.Release = new Class({
 	markMovieDone: function(){
 		var self = this;
 
-		Api.request('movie.delete', {
+		Api.request('media.delete', {
 			'data': {
 				'id': self.movie.get('id'),
 				'delete_from': 'wanted'
@@ -450,7 +450,7 @@ MA.Release = new Class({
 
 	},
 
-	tryNextRelease: function(movie_id){
+	tryNextRelease: function(){
 		var self = this;
 
 		Api.request('movie.searcher.try_next', {
@@ -821,7 +821,7 @@ MA.Delete = new Class({
 				self.callChain();
 			},
 			function(){
-				Api.request('movie.delete', {
+				Api.request('media.delete', {
 					'data': {
 						'id': self.movie.get('id'),
 						'delete_from': self.movie.list.options.identifier

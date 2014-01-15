@@ -281,7 +281,7 @@ var MovieList = new Class({
 
 			// Get available chars and highlight
 			if(!available_chars && (self.navigation.isDisplayed() || self.navigation.isVisible()))
-				Api.request('movie.available_chars', {
+				Api.request('media.available_chars', {
 					'data': Object.merge({
 						'status': self.options.status
 					}, self.filter),
@@ -372,7 +372,7 @@ var MovieList = new Class({
 				'click': function(e){
 					(e).preventDefault();
 					this.set('text', 'Deleting..')
-					Api.request('movie.delete', {
+					Api.request('media.delete', {
 						'data': {
 							'id': ids.join(','),
 							'delete_from': self.options.identifier
@@ -550,8 +550,9 @@ var MovieList = new Class({
 
 		}
 
-		Api.request(self.options.api_call || 'movie.list', {
+		Api.request(self.options.api_call || 'media.list', {
 			'data': Object.merge({
+				'type': 'movie',
 				'status': self.options.status,
 				'limit_offset': self.options.limit ? self.options.limit + ',' + self.offset : null
 			}, self.filter),

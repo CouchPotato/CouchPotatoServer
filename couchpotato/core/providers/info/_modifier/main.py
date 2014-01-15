@@ -21,14 +21,17 @@ class MovieResultModifier(Plugin):
             'poster': [],
             'backdrop': [],
             'poster_original': [],
-            'backdrop_original': []
+            'backdrop_original': [],
+            'actors': {}
         },
         'runtime': 0,
         'plot': '',
         'tagline': '',
         'imdb': '',
         'genres': [],
-        'mpaa': None
+        'mpaa': None,
+        'actors': [],
+        'actor_roles': {}
     }
 
     def __init__(self):
@@ -93,11 +96,11 @@ class MovieResultModifier(Plugin):
 
                 for movie in l.movies:
                     if movie.status_id == active_status['id']:
-                        temp['in_wanted'] = fireEvent('movie.get', movie.id, single = True)
+                        temp['in_wanted'] = fireEvent('media.get', movie.id, single = True)
 
                     for release in movie.releases:
                         if release.status_id == done_status['id']:
-                            temp['in_library'] = fireEvent('movie.get', movie.id, single = True)
+                            temp['in_library'] = fireEvent('media.get', movie.id, single = True)
         except:
             log.error('Tried getting more info on searched movies: %s', traceback.format_exc())
 

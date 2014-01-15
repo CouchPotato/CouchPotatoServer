@@ -80,7 +80,8 @@ class Scanner(Plugin):
         'hdtv': ['hdtv']
     }
 
-    clean = '[ _\,\.\(\)\[\]\-](extended.cut|directors.cut|french|swedisch|danish|dutch|swesub|spanish|german|ac3|dts|custom|dc|divx|divx5|dsr|dsrip|dutch|dvd|dvdr|dvdrip|dvdscr|dvdscreener|screener|dvdivx|cam|fragment|fs|hdtv|hdrip|hdtvrip|internal|limited|multisubs|ntsc|ogg|ogm|pal|pdtv|proper|repack|rerip|retail|r3|r5|bd5|se|svcd|swedish|german|read.nfo|nfofix|unrated|ws|telesync|ts|telecine|tc|brrip|bdrip|video_ts|audio_ts|480p|480i|576p|576i|720p|720i|1080p|1080i|hrhd|hrhdtv|hddvd|bluray|x264|h264|xvid|xvidvd|xxx|www.www|cd[1-9]|\[.*\])([ _\,\.\(\)\[\]\-]|$)'
+    clean = '[ _\,\.\(\)\[\]\-]?(extended.cut|directors.cut|french|swedisch|danish|dutch|swesub|spanish|german|ac3|dts|custom|dc|divx|divx5|dsr|dsrip|dutch|dvd|dvdr|dvdrip|dvdscr|dvdscreener|screener|dvdivx|cam|fragment|fs|hdtv|hdrip' \
+            '|hdtvrip|internal|limited|multisubs|ntsc|ogg|ogm|pal|pdtv|proper|repack|rerip|retail|r3|r5|bd5|se|svcd|swedish|german|read.nfo|nfofix|unrated|ws|telesync|ts|telecine|tc|brrip|bdrip|video_ts|audio_ts|480p|480i|576p|576i|720p|720i|1080p|1080i|hrhd|hrhdtv|hddvd|bluray|x264|h264|xvid|xvidvd|xxx|www.www|cd[1-9]|\[.*\])([ _\,\.\(\)\[\]\-]|$)'
     multipart_regex = [
         '[ _\.-]+cd[ _\.-]*([0-9a-d]+)', #*cd1
         '[ _\.-]+dvd[ _\.-]*([0-9a-d]+)', #*dvd1
@@ -454,7 +455,7 @@ class Scanner(Plugin):
                 data['resolution_width'] = meta.get('resolution_width', 720)
                 data['resolution_height'] = meta.get('resolution_height', 480)
                 data['audio_channels'] = meta.get('audio_channels', 2.0)
-                data['aspect'] = meta.get('resolution_width', 720) / meta.get('resolution_height', 480)
+                data['aspect'] = round(float(meta.get('resolution_width', 720)) / meta.get('resolution_height', 480), 2)
             except:
                 log.debug('Error parsing metadata: %s %s', (cur_file, traceback.format_exc()))
                 pass
@@ -760,7 +761,8 @@ class Scanner(Plugin):
 
         # Year
         if year and identifier[:4] != year:
-            identifier = '%s %s' % (identifier.split(year)[0].strip(), year)
+            split_by = ':::' if ':::' in identifier else year
+            identifier = '%s %s' % (identifier.split(split_by)[0].strip(), year)
         else:
             identifier = identifier.split('::')[0]
 

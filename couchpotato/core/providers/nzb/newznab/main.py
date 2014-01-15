@@ -10,6 +10,7 @@ from urllib2 import HTTPError
 from urlparse import urlparse
 import time
 import traceback
+import urllib2
 
 log = CPLog(__name__)
 
@@ -45,7 +46,7 @@ class Newznab(NZBProvider, RSS):
             'imdbid': movie['library']['identifier'].replace('tt', ''),
             'apikey': host['api_key'],
             'extended': 1
-        })
+        }) + ('&%s' % host['custom_tag'] if host.get('custom_tag') else '')
         url = '%s&%s' % (self.getUrl(host['host'], self.urls['search']), arguments)
 
         nzbs = self.getRSSData(url, cache_timeout = 1800, headers = {'User-Agent': Env.getIdentifier()})
@@ -99,6 +100,7 @@ class Newznab(NZBProvider, RSS):
         hosts = splitString(self.conf('host'), clean = False)
         api_keys = splitString(self.conf('api_key'), clean = False)
         extra_score = splitString(self.conf('extra_score'), clean = False)
+        custom_tags = splitString(self.conf('custom_tag'), clean = False)
 
         list = []
         for nr in range(len(hosts)):
@@ -109,11 +111,18 @@ class Newznab(NZBProvider, RSS):
             try: host = hosts[nr]
             except: host = ''
 
+            try: score = tryInt(extra_score[nr])
+            except: score = 0
+
+            try: custom_tag = custom_tags[nr]
+            except: custom_tag = ''
+
             list.append({
                 'use': uses[nr],
                 'host': host,
                 'api_key': key,
-                'extra_score': tryInt(extra_score[nr]) if len(extra_score) > nr else 0
+                'extra_score': score,
+                'custom_tag': custom_tag
             })
 
         return list
@@ -159,7 +168,16 @@ class Newznab(NZBProvider, RSS):
                 return 'try_next'
 
         try:
-            data = self.urlopen(url, show_error = False)
+            # Get final redirected url
+            log.debug('Checking %s for redirects.', url)
+            req = urllib2.Request(url)
+            req.add_header('User-Agent', self.user_agent)
+            res = urllib2.urlopen(req)
+            finalurl = res.geturl()
+            if finalurl != url:
+                log.debug('Redirect url used: %s', finalurl)
+
+            data = self.urlopen(finalurl, show_error = False)
             self.limits_reached[host] = False
             return data
         except HTTPError, e:

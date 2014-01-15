@@ -8,4 +8,4 @@ class IMDB(UserscriptBase):
     includes = ['*://*.imdb.com/title/tt*', '*://imdb.com/title/tt*']
 
     def getMovie(self, url):
-        return fireEvent('movie.info', identifier = getImdb(url), merge = True)
+        return self.getInfo(getImdb(url))

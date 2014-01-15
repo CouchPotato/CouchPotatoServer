@@ -11,10 +11,10 @@ log = CPLog(__name__)
 class Synology(Downloader):
 
     protocol = ['nzb', 'torrent', 'torrent_magnet']
-    log = CPLog(__name__)
+    status_support = False
 
-    def download(self, data = None, movie = None, filedata = None):
-        if not movie: movie = {}
+    def download(self, data = None, media = None, filedata = None):
+        if not media: media = {}
         if not data: data = {}
 
         response = False
@@ -42,7 +42,7 @@ class Synology(Downloader):
         except:
             log.error('Exception while adding torrent: %s', traceback.format_exc())
         finally:
-            return response
+            return self.downloadReturnId('') if response else False
 
     def getEnabledProtocol(self):
         if self.conf('use_for') == 'both':

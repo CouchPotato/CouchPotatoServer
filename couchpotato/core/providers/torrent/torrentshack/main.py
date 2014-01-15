@@ -34,7 +34,7 @@ class TorrentShack(TorrentProvider):
         scene_only = '1' if self.conf('scene_only') else ''
 
         url = self.urls['search'] % (tryUrlencode('%s %s' % (title.replace(':', ''), movie['library']['year'])), scene_only, self.getCatId(quality['identifier'])[0])
-        data = self.getHTMLData(url, opener = self.login_opener)
+        data = self.getHTMLData(url)
 
         if data:
             html = BeautifulSoup(data)
@@ -65,12 +65,12 @@ class TorrentShack(TorrentProvider):
                 log.error('Failed to parsing %s: %s', (self.getName(), traceback.format_exc()))
 
     def getLoginParams(self):
-        return tryUrlencode({
+        return {
             'username': self.conf('username'),
             'password': self.conf('password'),
             'keeplogged': '1',
             'login': 'Login',
-        })
+        }
 
     def loginSuccess(self, output):
         return 'logout.php' in output.lower()

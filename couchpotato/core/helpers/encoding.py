@@ -54,10 +54,22 @@ def sp(path, *args):
     if not path or len(path) == 0:
         return path
 
-    path = os.path.normcase(os.path.normpath(ss(path, *args)))
+    # convert windows path (from remote box) to *nix path
+    if os.path.sep == '/' and '\\' in path:
+        path = '/' + path.replace(':', '').replace('\\', '/')
 
+    path = os.path.normpath(ss(path, *args))
+
+    # Remove any trailing path separators
     if path != os.path.sep:
         path = path.rstrip(os.path.sep)
+
+    # Add a trailing separator in case it is a root folder on windows (crashes guessit)
+    if len(path) == 2 and path[1] == ':':
+        path = path + os.path.sep
+
+    # Replace *NIX ambiguous '//' at the beginning of a path with '/' (crashes guessit)
+    path = re.sub('^//', '/', path)
 
     return path
 

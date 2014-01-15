@@ -74,7 +74,7 @@ class CouchPotatoApi(MovieProvider):
 
         return True
 
-    def getInfo(self, identifier = None):
+    def getInfo(self, identifier = None, **kwargs):
 
         if not identifier:
             return
@@ -97,7 +97,7 @@ class CouchPotatoApi(MovieProvider):
         if not ignore: ignore = []
         if not movies: movies = []
 
-        suggestions = self.getJsonData(self.urls['suggest'], params = {
+        suggestions = self.getJsonData(self.urls['suggest'], data = {
             'movies': ','.join(movies),
             'ignore': ','.join(ignore),
         }, headers = self.getRequestHeaders())

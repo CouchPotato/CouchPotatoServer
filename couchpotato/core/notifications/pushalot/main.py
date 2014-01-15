@@ -29,7 +29,7 @@ class Pushalot(Notification):
         }
 
         try:
-            self.urlopen(self.urls['api'], headers = headers, params = data, multipart = True, show_error = False)
+            self.urlopen(self.urls['api'], headers = headers, data = data, show_error = False)
             return True
         except:
             log.error('PushAlot failed: %s', traceback.format_exc())

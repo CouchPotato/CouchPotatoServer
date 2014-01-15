@@ -93,7 +93,7 @@ config = [{
                     'default': 1,
                     'type': 'int',
                     'unit': 'min(s)',
-                    'description': 'Detect movie status every X minutes. Will start the renamer if movie is <strong>completed</strong> or handle <strong>failed</strong> download if these options are enabled',
+                    'description': ('Detect movie status every X minutes.', 'Will start the renamer if movie is <strong>completed</strong> or handle <strong>failed</strong> download if these options are enabled'),
                 },
                 {
                     'advanced': True,
@@ -122,13 +122,13 @@ config = [{
                     'advanced': True,
                     'name': 'separator',
                     'label': 'File-Separator',
-                    'description': 'Replace all the spaces with a character. Example: ".", "-" (without quotes). Leave empty to use spaces.',
+                    'description': ('Replace all the spaces with a character.', 'Example: ".", "-" (without quotes). Leave empty to use spaces.'),
                 },
                 {
                     'advanced': True,
                     'name': 'foldersep',
                     'label': 'Folder-Separator',
-                    'description': 'Replace all the spaces with a character. Example: ".", "-" (without quotes). Leave empty to use spaces.',
+                    'description': ('Replace all the spaces with a character.', 'Example: ".", "-" (without quotes). Leave empty to use spaces.'),
                 },
                 {
                     'name': 'file_action',
@@ -136,7 +136,7 @@ config = [{
                     'default': 'link',
                     'type': 'dropdown',
                     'values': [('Link', 'link'), ('Copy', 'copy'), ('Move', 'move')],
-                    'description': '<strong>Link</strong> or <strong>Copy</strong> after downloading completed (and allow for seeding), or <strong>Move</strong> after seeding completed. Link first tries <a href="http://en.wikipedia.org/wiki/Hard_link">hard link</a>, then <a href="http://en.wikipedia.org/wiki/Sym_link">sym link</a> and falls back to Copy.',
+                    'description': ('<strong>Link</strong>, <strong>Copy</strong> or <strong>Move</strong> after download completed.', 'Link first tries <a href="http://en.wikipedia.org/wiki/Hard_link">hard link</a>, then <a href="http://en.wikipedia.org/wiki/Sym_link">sym link</a> and falls back to Copy. It is perfered to use link when downloading torrents as it will save you space, while still beeing able to seed.'),
                     'advanced': True,
                 },
                 {

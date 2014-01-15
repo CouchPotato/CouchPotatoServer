@@ -447,7 +447,11 @@ class RequestHandler(object):
         The name of the argument is provided if known, but may be None
         (e.g. for unnamed groups in the url regex).
         """
-        return _unicode(value)
+        try:
+            return _unicode(value)
+        except UnicodeDecodeError:
+            raise HTTPError(400, "Invalid unicode in %s: %r" %
+                            (name or "url", value[:40]))
 
     @property
     def cookies(self):
@@ -1908,7 +1912,7 @@ class StaticFileHandler(RequestHandler):
                 # content, or when a suffix with length 0 is specified
                 self.set_status(416)  # Range Not Satisfiable
                 self.set_header("Content-Type", "text/plain")
-                self.set_header("Content-Range", "bytes */%s" %(size, ))
+                self.set_header("Content-Range", "bytes */%s" % (size, ))
                 return
             if start is not None and start < 0:
                 start += size
