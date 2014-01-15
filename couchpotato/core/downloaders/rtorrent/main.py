@@ -29,7 +29,6 @@ class rTorrent(Downloader):
 
         url = self.conf('url')
         if url:
-            print url
 
             url = 'http://localhost:8080/RPC2teasd/asdasd//'
             host_split = splitString(url.split('://')[-1], split_on = '/')
@@ -39,7 +38,6 @@ class rTorrent(Downloader):
             self.conf('rpc_url', value = '/'.join(host_split[1:]))
 
             self.deleteConf('url')
-            #self.conf('url', value = '')
 
     def connect(self):
         # Already connected?
