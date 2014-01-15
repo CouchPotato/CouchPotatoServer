@@ -1,9 +1,9 @@
 from base64 import b16encode, b32decode
 from bencode import bencode, bdecode
 from couchpotato.core.downloaders.base import Downloader, ReleaseDownloadList
-from couchpotato.core.event import fireEvent
+from couchpotato.core.event import fireEvent, addEvent
 from couchpotato.core.helpers.encoding import sp
-from couchpotato.core.helpers.variable import cleanHost
+from couchpotato.core.helpers.variable import cleanHost, splitString
 from couchpotato.core.logger import CPLog
 from datetime import timedelta
 from hashlib import sha1
@@ -22,11 +22,24 @@ class rTorrent(Downloader):
     # Migration url to host options
     def __init__(self):
         super(rTorrent, self).__init__()
-        if self.conf('url'):
-            self.conf('ssl', value = (self.conf('url').split('://')[0].strip() == 'https'))
-            self.conf('host', value = self.conf('url').split('://')[-1].split('/')[0].strip())
-            self.conf('rpc_url', value = self.conf('url').split('://')[-1].split('/',1)[1].strip('/ '))
-            self.conf('url', value = '')
+
+        addEvent('app.load', self.migrate)
+
+    def migrate(self):
+
+        url = self.conf('url')
+        if url:
+            print url
+
+            url = 'http://localhost:8080/RPC2teasd/asdasd//'
+            host_split = splitString(url.split('://')[-1], split_on = '/')
+
+            self.conf('ssl', value = url.startswith('https'))
+            self.conf('host', value = host_split[0].strip())
+            self.conf('rpc_url', value = '/'.join(host_split[1:]))
+
+            self.deleteConf('url')
+            #self.conf('url', value = '')
 
     def connect(self):
         # Already connected?
@@ -167,14 +180,14 @@ class rTorrent(Downloader):
                     torrent_files = []
                     for file_item in torrent.get_files():
                         torrent_files.append(sp(os.path.join(torrent.directory, file_item.path)))
-    
+
                     status = 'busy'
                     if torrent.complete:
                         if torrent.active:
                             status = 'seeding'
                         else:
                             status = 'completed'
-    
+
                     release_downloads.append({
                         'id': torrent.info_hash,
                         'name': torrent.name,
