@@ -174,6 +174,8 @@ class BinNewz(NZBProvider):
                             newsgroup = "alt.binaries.bloaf"
                         elif newsgroup == "ab.hdtv.german":
                             newsgroup = "alt.binaries.hdtv.german"
+                        elif newsgroup == "abmd":
+                            newsgroup = "alt.binaries.movies.divx"
                         else:
                             log.error(u"Unknown binnewz newsgroup: " + newsgroup)
                             continue
