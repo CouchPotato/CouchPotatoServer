@@ -164,7 +164,7 @@ class YarrProvider(Provider):
         try:
             if not self.login():
                 log.error('Failed downloading from %s', self.getName())
-            return self.urlopen(url)
+            return self.urlopen(url, return_raw = True)
         except:
             log.error('Failed downloading from %s: %s', (self.getName(), traceback.format_exc()))
 
@@ -173,7 +173,7 @@ class YarrProvider(Provider):
 
     def download(self, url = '', nzb_id = ''):
         try:
-            return self.urlopen(url, headers = {'User-Agent': Env.getIdentifier()}, show_error = False)
+            return self.urlopen(url, headers = {'User-Agent': Env.getIdentifier()}, show_error = False, return_raw = True)
         except:
             log.error('Failed getting nzb from %s: %s', (self.getName(), traceback.format_exc()))
 
