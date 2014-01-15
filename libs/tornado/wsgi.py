@@ -33,7 +33,6 @@ from __future__ import absolute_import, division, print_function, with_statement
 
 import sys
 import time
-import copy
 import tornado
 
 from tornado import escape
@@ -143,14 +142,11 @@ class HTTPRequest(object):
         self.path += urllib_parse.quote(from_wsgi_str(environ.get("PATH_INFO", "")))
         self.uri = self.path
         self.arguments = {}
-        self.query_arguments = {}
-        self.body_arguments = {}
         self.query = environ.get("QUERY_STRING", "")
         if self.query:
             self.uri += "?" + self.query
             self.arguments = parse_qs_bytes(native_str(self.query),
                                             keep_blank_values=True)
-            self.query_arguments = copy.deepcopy(self.arguments)
         self.version = "HTTP/1.1"
         self.headers = httputil.HTTPHeaders()
         if environ.get("CONTENT_TYPE"):
@@ -175,10 +171,7 @@ class HTTPRequest(object):
         # Parse request body
         self.files = {}
         httputil.parse_body_arguments(self.headers.get("Content-Type", ""),
-                                      self.body, self.body_arguments, self.files)
-
-        for k, v in self.body_arguments.items():
-            self.arguments.setdefault(k, []).extend(v)
+                                      self.body, self.arguments, self.files)
 
         self._start_time = time.time()
         self._finish_time = None

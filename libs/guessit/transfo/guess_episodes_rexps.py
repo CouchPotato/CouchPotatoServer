@@ -40,22 +40,27 @@ def guess_episodes_rexps(string):
     for rexp, confidence, span_adjust in episode_rexps:
         match = re.search(rexp, string, re.IGNORECASE)
         if match:
-            span = (match.start() + span_adjust[0], 
+            guess = Guess(match.groupdict(), confidence=confidence)
+            span = (match.start() + span_adjust[0],
                     match.end() + span_adjust[1])
-            guess = Guess(match.groupdict(), confidence=confidence, raw=string[span[0]:span[1]])
+
+            # episodes which have a season > 30 are most likely errors
+            # (Simpsons is at 24!)
+            if int(guess.get('season', 0)) > 30:
+                continue
 
             # decide whether we have only a single episode number or an
             # episode list
             if guess.get('episodeNumber'):
                 eplist = number_list(guess['episodeNumber'])
-                guess.set('episodeNumber', eplist[0], confidence=confidence, raw=string[span[0]:span[1]])
+                guess.set('episodeNumber', eplist[0], confidence=confidence)
 
                 if len(eplist) > 1:
-                    guess.set('episodeList', eplist, confidence=confidence, raw=string[span[0]:span[1]])
+                    guess.set('episodeList', eplist, confidence=confidence)
 
             if guess.get('bonusNumber'):
                 eplist = number_list(guess['bonusNumber'])
-                guess.set('bonusNumber', eplist[0], confidence=confidence, raw=string[span[0]:span[1]])
+                guess.set('bonusNumber', eplist[0], confidence=confidence)
 
             return guess, span
 

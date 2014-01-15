@@ -1,6 +1,3 @@
-# Copyright: 2013 Paul Traylor
-# These sources are released under the terms of the MIT license: see LICENSE
-
 """
 The gntp.notifier module is provided as a simple way to send notifications
 using GNTP
@@ -12,15 +9,10 @@ using GNTP
 	`Original Python bindings <http://code.google.com/p/growl/source/browse/Bindings/python/Growl.py>`_
 
 """
+import gntp
+import socket
 import logging
 import platform
-import socket
-import sys
-
-from gntp.version import __version__
-import gntp.core
-import gntp.errors as errors
-import gntp.shim
 
 __all__ = [
 	'mini',
@@ -45,9 +37,9 @@ class GrowlNotifier(object):
 	passwordHash = 'MD5'
 	socketTimeout = 3
 
-	def __init__(self, applicationName='Python GNTP', notifications=[],
-			defaultNotifications=None, applicationIcon=None, hostname='localhost',
-			password=None, port=23053):
+	def __init__(self, applicationName = 'Python GNTP', notifications = [],
+			defaultNotifications = None, applicationIcon = None, hostname = 'localhost',
+			password = None, port = 23053):
 
 		self.applicationName = applicationName
 		self.notifications = list(notifications)
@@ -69,7 +61,7 @@ class GrowlNotifier(object):
 		then we return False
 		'''
 		logger.info('Checking icon')
-		return gntp.shim.u(data).startswith('http')
+		return data.startswith('http')
 
 	def register(self):
 		"""Send GNTP Registration
@@ -79,7 +71,7 @@ class GrowlNotifier(object):
 			sent a registration message at least once
 		"""
 		logger.info('Sending registration to %s:%s', self.hostname, self.port)
-		register = gntp.core.GNTPRegister()
+		register = gntp.GNTPRegister()
 		register.add_header('Application-Name', self.applicationName)
 		for notification in self.notifications:
 			enabled = notification in self.defaultNotifications
@@ -88,16 +80,16 @@ class GrowlNotifier(object):
 			if self._checkIcon(self.applicationIcon):
 				register.add_header('Application-Icon', self.applicationIcon)
 			else:
-				resource = register.add_resource(self.applicationIcon)
-				register.add_header('Application-Icon', resource)
+				id = register.add_resource(self.applicationIcon)
+				register.add_header('Application-Icon', id)
 		if self.password:
 			register.set_password(self.password, self.passwordHash)
 		self.add_origin_info(register)
 		self.register_hook(register)
 		return self._send('register', register)
 
-	def notify(self, noteType, title, description, icon=None, sticky=False,
-			priority=None, callback=None, identifier=None, custom={}):
+	def notify(self, noteType, title, description, icon = None, sticky = False,
+			priority = None, callback = None, identifier = None):
 		"""Send a GNTP notifications
 
 		.. warning::
@@ -110,8 +102,6 @@ class GrowlNotifier(object):
 		:param boolean sticky: Sticky notification
 		:param integer priority: Message priority level from -2 to 2
 		:param string callback:  URL callback
-		:param dict custom: Custom attributes. Key names should be prefixed with X-
-			according to the spec but this is not enforced by this class
 
 		.. warning::
 			For now, only URL callbacks are supported. In the future, the
@@ -119,7 +109,7 @@ class GrowlNotifier(object):
 		"""
 		logger.info('Sending notification [%s] to %s:%s', noteType, self.hostname, self.port)
 		assert noteType in self.notifications
-		notice = gntp.core.GNTPNotice()
+		notice = gntp.GNTPNotice()
 		notice.add_header('Application-Name', self.applicationName)
 		notice.add_header('Notification-Name', noteType)
 		notice.add_header('Notification-Title', title)
@@ -133,8 +123,8 @@ class GrowlNotifier(object):
 			if self._checkIcon(icon):
 				notice.add_header('Notification-Icon', icon)
 			else:
-				resource = notice.add_resource(icon)
-				notice.add_header('Notification-Icon', resource)
+				id = notice.add_resource(icon)
+				notice.add_header('Notification-Icon', id)
 
 		if description:
 			notice.add_header('Notification-Text', description)
@@ -143,9 +133,6 @@ class GrowlNotifier(object):
 		if identifier:
 			notice.add_header('Notification-Coalescing-ID', identifier)
 
-		for key in custom:
-			notice.add_header(key, custom[key])
-
 		self.add_origin_info(notice)
 		self.notify_hook(notice)
 
@@ -153,7 +140,7 @@ class GrowlNotifier(object):
 
 	def subscribe(self, id, name, port):
 		"""Send a Subscribe request to a remote machine"""
-		sub = gntp.core.GNTPSubscribe()
+		sub = gntp.GNTPSubscribe()
 		sub.add_header('Subscriber-ID', id)
 		sub.add_header('Subscriber-Name', name)
 		sub.add_header('Subscriber-Port', port)
@@ -169,7 +156,7 @@ class GrowlNotifier(object):
 		"""Add optional Origin headers to message"""
 		packet.add_header('Origin-Machine-Name', platform.node())
 		packet.add_header('Origin-Software-Name', 'gntp.py')
-		packet.add_header('Origin-Software-Version', __version__)
+		packet.add_header('Origin-Software-Version', gntp.__version__)
 		packet.add_header('Origin-Platform-Name', platform.system())
 		packet.add_header('Origin-Platform-Version', platform.platform())
 
@@ -192,33 +179,27 @@ class GrowlNotifier(object):
 
 		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		s.settimeout(self.socketTimeout)
-		try:
-			s.connect((self.hostname, self.port))
-			s.send(data)
-			recv_data = s.recv(1024)
-			while not recv_data.endswith(gntp.shim.b("\r\n\r\n")):
-				recv_data += s.recv(1024)
-		except socket.error:
-			# Python2.5 and Python3 compatibile exception
-			exc = sys.exc_info()[1]
-			raise errors.NetworkError(exc)
-
-		response = gntp.core.parse_gntp(recv_data)
+		s.connect((self.hostname, self.port))
+		s.send(data)
+		recv_data = s.recv(1024)
+		while not recv_data.endswith("\r\n\r\n"):
+			recv_data += s.recv(1024)
+		response = gntp.parse_gntp(recv_data)
 		s.close()
 
 		logger.debug('From : %s:%s <%s>\n%s', self.hostname, self.port, response.__class__, response)
 
-		if type(response) == gntp.core.GNTPOK:
+		if type(response) == gntp.GNTPOK:
 			return True
 		logger.error('Invalid response: %s', response.error())
 		return response.error()
 
 
-def mini(description, applicationName='PythonMini', noteType="Message",
-			title="Mini Message", applicationIcon=None, hostname='localhost',
-			password=None, port=23053, sticky=False, priority=None,
-			callback=None, notificationIcon=None, identifier=None,
-			notifierFactory=GrowlNotifier):
+def mini(description, applicationName = 'PythonMini', noteType = "Message",
+			title = "Mini Message", applicationIcon = None, hostname = 'localhost',
+			password = None, port = 23053, sticky = False, priority = None,
+			callback = None, notificationIcon = None, identifier = None,
+			notifierFactory = GrowlNotifier):
 	"""Single notification function
 
 	Simple notification function in one line. Has only one required parameter
@@ -229,37 +210,32 @@ def mini(description, applicationName='PythonMini', noteType="Message",
 			For now, only URL callbacks are supported. In the future, the
 			callback argument will also support a function
 	"""
-	try:
-		growl = notifierFactory(
-			applicationName=applicationName,
-			notifications=[noteType],
-			defaultNotifications=[noteType],
-			applicationIcon=applicationIcon,
-			hostname=hostname,
-			password=password,
-			port=port,
-		)
-		result = growl.register()
-		if result is not True:
-			return result
+	growl = notifierFactory(
+		applicationName = applicationName,
+		notifications = [noteType],
+		defaultNotifications = [noteType],
+		applicationIcon = applicationIcon,
+		hostname = hostname,
+		password = password,
+		port = port,
+	)
+	result = growl.register()
+	if result is not True:
+		return result
 
-		return growl.notify(
-			noteType=noteType,
-			title=title,
-			description=description,
-			icon=notificationIcon,
-			sticky=sticky,
-			priority=priority,
-			callback=callback,
-			identifier=identifier,
-		)
-	except Exception:
-		# We want the "mini" function to be simple and swallow Exceptions
-		# in order to be less invasive
-		logger.exception("Growl error")
+	return growl.notify(
+		noteType = noteType,
+		title = title,
+		description = description,
+		icon = notificationIcon,
+		sticky = sticky,
+		priority = priority,
+		callback = callback,
+		identifier = identifier,
+	)
 
 if __name__ == '__main__':
 	# If we're running this module directly we're likely running it as a test
 	# so extra debugging is useful
-	logging.basicConfig(level=logging.INFO)
+	logging.basicConfig(level = logging.INFO)
 	mini('Testing mini notification')

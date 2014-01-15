@@ -1,4 +1,4 @@
-#  Copyright (c) 2002-2013 Zooko Wilcox-O'Hearn
+#  Copyright (c) 2002-2012 Zooko Wilcox-O'Hearn
 #  This file is part of pyutil; see README.rst for licensing terms.
 
 """
@@ -21,10 +21,10 @@ the second, e.g.:
 >>> rep_bench(fib, 25, UNITS_PER_SECOND=1000)
 best: 1.968e+00,   3th-best: 1.987e+00, mean: 2.118e+00,   3th-worst: 2.175e+00, worst: 2.503e+00 (of     10)
 
-The output is reporting the number of milliseconds that executing the
-function took, divided by N, from ten different invocations of
-fib(). It reports the best, worst, M-th best, M-th worst, and mean,
-where "M" is 1/4 of the number of invocations (in this case 10).
+The output is reporting the number of milliseconds that executing the function
+took, divided by N, from ten different invocations of fib(). It reports the
+best, worst, M-th best, M-th worst, and mean, where "M" is the natural log of
+the number of invocations (in this case 10).
 
 2. Now run it with different values of N and look for patterns:
 
@@ -74,12 +74,10 @@ and the main function is to make them be methods of the same object, e.g.:
 
 4. Things to fix:
 
- a. I used to have it hooked up to use the "hotshot" profiler on the
- code being measured. I recently tried to change it to use the newer
- cProfile profiler instead, but I don't understand the interface to
- cProfiler so it just gives an exception if you pass
- profile=True. Please fix this and send me a patch. xxx change it to
- statprof
+ a. I used to have it hooked up to use the "hotshot" profiler on the code being
+ measured. I recently tried to change it to use the newer cProfile profiler
+ instead, but I don't understand the interface to cProfiler so it just gives an
+ exception if you pass profile=True. Please fix this and send me a patch.
 
  b. Wouldn't it be great if this script emitted results in a json format that
  was understood by a tool to make pretty interactive explorable graphs? The
@@ -124,7 +122,7 @@ def mult(a, b):
     except TypeError:
         return to_decimal(a) * to_decimal(b)
 
-def rep_bench(func, n, runtime=1.0, initfunc=None, MAXREPS=10, MAXTIME=60.0, profile=False, profresults="pyutil-benchutil.prof", UNITS_PER_SECOND=1, quiet=False):
+def rep_bench(func, n, initfunc=None, MAXREPS=10, MAXTIME=60.0, profile=False, profresults="pyutil-benchutil.prof", UNITS_PER_SECOND=1, quiet=False):
     """
     Will run the func up to MAXREPS times, but won't start a new run if MAXTIME
     (wall-clock time) has already elapsed (unless MAXTIME is None).
@@ -132,43 +130,33 @@ def rep_bench(func, n, runtime=1.0, initfunc=None, MAXREPS=10, MAXTIME=60.0, pro
     @param quiet Don't print anything--just return the results dict.
     """
     assert isinstance(n, int), (n, type(n))
-    global worstemptymeasure
-    emsta = clock()
-    do_nothing(2**32)
-    emstop = clock()
-    empty = emstop - emsta
-    if empty > worstemptymeasure:
-        worstemptymeasure = empty
-        if (worstemptymeasure*2) >= runtime:
-            raise BadMeasure("Apparently simply invoking an empty Python function can take as long as %0.10f seconds, and we were running iterations for only about %0.10f seconds. So the measurement of the runtime of the code under benchmark is not reliable. Please pass a higher number for the 'runtime' argument to bench_it().")
-
     startwallclocktime = time.time()
-    tls = [] # (elapsed time per iter in seconds, iters)
+    tls = [] # elapsed time in seconds
     bmes = []
     while ((len(tls) < MAXREPS) or (MAXREPS is None)) and ((MAXTIME is None) or ((time.time() - startwallclocktime) < MAXTIME)):
         if initfunc:
             initfunc(n)
         try:
-            tl, iters = bench_it(func, n, runtime=runtime, profile=profile, profresults=profresults)
+            tl = bench_it(func, n, profile=profile, profresults=profresults)
         except BadMeasure, bme:
             bmes.append(bme)
         else:
-            tls.append((tl, iters))
+            tls.append(tl)
     if len(tls) == 0:
         raise Exception("Couldn't get any measurements within time limits or number-of-attempts limits. Maybe something is wrong with your clock? %s" % (bmes,))
-    sumtls = sum([tl for (tl, iters) in tls])
+    sumtls = reduce(operator.__add__, tls)
     mean = sumtls / len(tls)
     tls.sort()
-    worst = tls[-1][0]
-    best = tls[0][0]
-
+    worst = tls[-1]
+    best = tls[0]
+    _assert(best > worstemptymeasure*MARGINOFERROR, "%s(n=%s) took %0.10f seconds, but we cannot measure times much less than about %0.10f seconds. Try a more time-consuming variant (such as higher n)." % (func, n, best, worstemptymeasure*MARGINOFERROR,))
     m = len(tls)/4
     if m > 0:
-        mthbest = tls[m-1][0]
-        mthworst = tls[-m][0]
+        mthbest = tls[m-1]
+        mthworst = tls[-m]
     else:
-        mthbest = tls[0][0]
-        mthworst = tls[-1][0]
+        mthbest = tls[0]
+        mthworst = tls[-1]
 
     # The +/-0 index is the best/worst, the +/-1 index is the 2nd-best/worst,
     # etc, so we use mp1 to name it.
@@ -208,22 +196,26 @@ class BadMeasure(Exception):
 def do_nothing(n):
     pass
 
-def bench_it(func, n, runtime=1.0, profile=False, profresults="pyutil-benchutil.prof"):
+def bench_it(func, n, profile=False, profresults="pyutil-benchutil.prof"):
     if profile:
-        raise NotImplementedException()
-    else:
-        iters = 0
         st = clock()
-        deadline = st + runtime
+        cProfile.run('func(n)', profresults)
         sto = clock()
-        while sto < deadline:
-            func(n)
-            iters += 1
-            sto = clock()
+    else:
+        st = clock()
+        func(n)
+        sto = clock()
     timeelapsed = sto - st
-    if (timeelapsed <= 0) or (iters == 0):
-        raise BadMeasure((timeelapsed, iters))
-    return (timeelapsed / iters, iters)
+    if timeelapsed <= 0:
+        raise BadMeasure(timeelapsed)
+    global worstemptymeasure
+    emsta = clock()
+    do_nothing(2**32)
+    emstop = clock()
+    empty = emstop - emsta
+    if empty > worstemptymeasure:
+        worstemptymeasure = empty
+    return timeelapsed
 
 def bench(func, initfunc=None, TOPXP=21, MAXREPS=5, MAXTIME=60.0, profile=False, profresults="pyutil-benchutil.prof", outputjson=False, jsonresultsfname="pyutil-benchutil-results.json", UNITS_PER_SECOND=1):
     BSIZES = []

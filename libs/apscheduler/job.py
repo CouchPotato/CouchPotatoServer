@@ -16,25 +16,22 @@ class MaxInstancesReachedError(Exception):
 class Job(object):
     """
     Encapsulates the actual Job along with its metadata. Job instances
-    are created by the scheduler when adding jobs, and should not be
-    directly instantiated. These options can be set when adding jobs
-    to the scheduler (see :ref:`job_options`).
+    are created by the scheduler when adding jobs, and it should not be
+    directly instantiated.
 
-    :var trigger: trigger that determines the execution times
-    :var func: callable to call when the trigger is triggered
-    :var args: list of positional arguments to call func with
-    :var kwargs: dict of keyword arguments to call func with
-    :var name: name of the job
-    :var misfire_grace_time: seconds after the designated run time that
+    :param trigger: trigger that determines the execution times
+    :param func: callable to call when the trigger is triggered
+    :param args: list of positional arguments to call func with
+    :param kwargs: dict of keyword arguments to call func with
+    :param name: name of the job (optional)
+    :param misfire_grace_time: seconds after the designated run time that
         the job is still allowed to be run
-    :var coalesce: run once instead of many times if the scheduler determines
+    :param coalesce: run once instead of many times if the scheduler determines
         that the job should be run more than once in succession
-    :var max_runs: maximum number of times this job is allowed to be
+    :param max_runs: maximum number of times this job is allowed to be
         triggered
-    :var max_instances: maximum number of concurrently running
+    :param max_instances: maximum number of concurrently running
         instances allowed for this job
-    :var runs: number of times this job has been triggered
-    :var instances: number of concurrently running instances of this job
     """
     id = None
     next_run_time = None
@@ -133,5 +130,5 @@ class Job(object):
         return '<Job (name=%s, trigger=%s)>' % (self.name, repr(self.trigger))
 
     def __str__(self):
-        return '%s (trigger: %s, next run at: %s)' % (
-            self.name, str(self.trigger), str(self.next_run_time))
+        return '%s (trigger: %s, next run at: %s)' % (self.name,
+            str(self.trigger), str(self.next_run_time))

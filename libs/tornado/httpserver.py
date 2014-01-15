@@ -29,7 +29,6 @@ from __future__ import absolute_import, division, print_function, with_statement
 import socket
 import ssl
 import time
-import copy
 
 from tornado.escape import native_str, parse_qs_bytes
 from tornado import httputil
@@ -327,8 +326,8 @@ class HTTPConnection(object):
 
             self.request_callback(self._request)
         except _BadRequestException as e:
-            gen_log.info("Malformed HTTP request from %r: %s",
-                         self.address, e)
+            gen_log.info("Malformed HTTP request from %s: %s",
+                         self.address[0], e)
             self.close()
             return
 
@@ -337,10 +336,7 @@ class HTTPConnection(object):
         if self._request.method in ("POST", "PATCH", "PUT"):
             httputil.parse_body_arguments(
                 self._request.headers.get("Content-Type", ""), data,
-                self._request.body_arguments, self._request.files)
-
-            for k, v in self._request.body_arguments.items():
-                self._request.arguments.setdefault(k, []).extend(v)
+                self._request.arguments, self._request.files)
         self.request_callback(self._request)
 
 
@@ -407,20 +403,6 @@ class HTTPRequest(object):
        `.RequestHandler.get_argument`, which returns argument values as
        unicode strings.
 
-    .. attribute:: query_arguments
-
-       Same format as ``arguments``, but contains only arguments extracted
-       from the query string.
-
-       .. versionadded:: 3.2
-
-    .. attribute:: body_arguments
-
-       Same format as ``arguments``, but contains only arguments extracted
-       from the request body.
-
-       .. versionadded:: 3.2
-
     .. attribute:: files
 
        File uploads are available in the files property, which maps file
@@ -475,8 +457,6 @@ class HTTPRequest(object):
 
         self.path, sep, self.query = uri.partition('?')
         self.arguments = parse_qs_bytes(self.query, keep_blank_values=True)
-        self.query_arguments = copy.deepcopy(self.arguments)
-        self.body_arguments = {}
 
     def supports_http_1_1(self):
         """Returns True if this request supports HTTP/1.1 semantics"""

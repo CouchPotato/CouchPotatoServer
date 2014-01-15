@@ -8,27 +8,23 @@ implements a 'serialize' method taking a tree as sole argument and
 returning an iterator generating tokens.
 """
 
-from __future__ import absolute_import, division, unicode_literals
-
-import sys
-
-from ..utils import default_etree
-
 treeWalkerCache = {}
-
 
 def getTreeWalker(treeType, implementation=None, **kwargs):
     """Get a TreeWalker class for various types of tree with built-in support
 
     treeType - the name of the tree type required (case-insensitive). Supported
-               values are:
+               values are "simpletree", "dom", "etree" and "beautifulsoup"
 
+               "simpletree" - a built-in DOM-ish tree type with support for some
+                              more pythonic idioms.
                 "dom" - The xml.dom.minidom DOM implementation
                 "pulldom" - The xml.dom.pulldom event stream
                 "etree" - A generic walker for tree implementations exposing an
                           elementtree-like interface (known to work with
                           ElementTree, cElementTree and lxml.etree).
                 "lxml" - Optimized walker for lxml.etree
+                "beautifulsoup" - Beautiful soup (if installed)
                 "genshi" - a Genshi stream
 
     implementation - (Currently applies to the "etree" tree type only). A module
@@ -37,21 +33,20 @@ def getTreeWalker(treeType, implementation=None, **kwargs):
 
     treeType = treeType.lower()
     if treeType not in treeWalkerCache:
-        if treeType in ("dom", "pulldom"):
-            name = "%s.%s" % (__name__, treeType)
-            __import__(name)
-            mod = sys.modules[name]
+        if treeType in ("dom", "pulldom", "simpletree"):
+            mod = __import__(treeType, globals())
             treeWalkerCache[treeType] = mod.TreeWalker
         elif treeType == "genshi":
-            from . import genshistream
+            import genshistream
             treeWalkerCache[treeType] = genshistream.TreeWalker
+        elif treeType == "beautifulsoup":
+            import soup
+            treeWalkerCache[treeType] = soup.TreeWalker
         elif treeType == "lxml":
-            from . import lxmletree
+            import lxmletree
             treeWalkerCache[treeType] = lxmletree.TreeWalker
         elif treeType == "etree":
-            from . import etree
-            if implementation is None:
-                implementation = default_etree
+            import etree
             # XXX: NEVER cache here, caching is done in the etree submodule
             return etree.getETreeModule(implementation, **kwargs).TreeWalker
     return treeWalkerCache.get(treeType)

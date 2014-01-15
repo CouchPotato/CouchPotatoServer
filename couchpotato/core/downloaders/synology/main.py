@@ -3,7 +3,6 @@ from couchpotato.core.helpers.encoding import isInt
 from couchpotato.core.logger import CPLog
 import json
 import requests
-import traceback
 
 log = CPLog(__name__)
 
@@ -35,12 +34,12 @@ class Synology(Downloader):
             elif data['protocol'] in ['nzb', 'torrent']:
                 log.info('Adding %s' % data['protocol'])
                 if not filedata:
-                    log.error('No %s data found', data['protocol'])
+                    log.error('No %s data found' % data['protocol'])
                 else:
                     filename = data['name'] + '.' + data['protocol']
                     response = srpc.create_task(filename = filename, filedata = filedata)
-        except:
-            log.error('Exception while adding torrent: %s', traceback.format_exc())
+        except Exception, err:
+            log.error('Exception while adding torrent: %s', err)
         finally:
             return response
 

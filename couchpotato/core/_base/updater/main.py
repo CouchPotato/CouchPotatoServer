@@ -298,7 +298,6 @@ class SourceUpdater(BaseUpdater):
 
     def replaceWith(self, path):
         app_dir = ss(Env.get('app_dir'))
-        data_dir = ss(Env.get('data_dir'))
 
         # Get list of files we want to overwrite
         self.deletePyc()
@@ -330,15 +329,12 @@ class SourceUpdater(BaseUpdater):
                         log.error('Failed overwriting file "%s": %s', (tofile, traceback.format_exc()))
                         return False
 
-        for still_exists in existing_files:
-
-            if data_dir in still_exists:
-                continue
-
-            try:
-                os.remove(still_exists)
-            except:
-                log.error('Failed removing non-used file: %s', traceback.format_exc())
+        if Env.get('app_dir') not in Env.get('data_dir'):
+            for still_exists in existing_files:
+                try:
+                    os.remove(still_exists)
+                except:
+                    log.error('Failed removing non-used file: %s', traceback.format_exc())
 
         return True
 

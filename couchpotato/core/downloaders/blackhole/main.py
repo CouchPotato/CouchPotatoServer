@@ -1,4 +1,4 @@
-from __future__ import with_statement
+ from __future__ import with_statement
 from couchpotato.core.downloaders.base import Downloader
 from couchpotato.core.logger import CPLog
 from couchpotato.environment import Env

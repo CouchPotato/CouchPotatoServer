@@ -1,12 +1,9 @@
-from __future__ import absolute_import, division, unicode_literals
-
 from xml.dom.pulldom import START_ELEMENT, END_ELEMENT, \
     COMMENT, IGNORABLE_WHITESPACE, CHARACTERS
 
-from . import _base
+import _base
 
-from ..constants import voidElements
-
+from html5lib.constants import voidElements
 
 class TreeWalker(_base.TreeWalker):
     def __iter__(self):
@@ -14,7 +11,7 @@ class TreeWalker(_base.TreeWalker):
         previous = None
         for event in self.tree:
             if previous is not None and \
-                    (ignore_until is None or previous[1] is ignore_until):
+              (ignore_until is None or previous[1] is ignore_until):
                 if previous[1] is ignore_until:
                     ignore_until = None
                 for token in self.tokens(previous, event):
@@ -34,9 +31,9 @@ class TreeWalker(_base.TreeWalker):
             name = node.nodeName
             namespace = node.namespaceURI
             attrs = {}
-            for attr in list(node.attributes.keys()):
+            for attr in node.attributes.keys():
                 attr = node.getAttributeNode(attr)
-                attrs[(attr.namespaceURI, attr.localName)] = attr.value
+                attrs[(attr.namespaceURI,attr.localName)] = attr.value
             if name in voidElements:
                 for token in self.emptyTag(namespace,
                                            name,

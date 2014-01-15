@@ -250,7 +250,7 @@ class RequestHandler(object):
                 not self.request.connection.no_keep_alive):
             conn_header = self.request.headers.get("Connection")
             if conn_header and (conn_header.lower() == "keep-alive"):
-                self._headers["Connection"] = "Keep-Alive"
+                self.set_header("Connection", "Keep-Alive")
         self._write_buffer = []
         self._status_code = 200
         self._reason = httputil.responses[200]
@@ -348,7 +348,12 @@ class RequestHandler(object):
 
         The returned value is always unicode.
         """
-        return self._get_argument(name, default, self.request.arguments, strip)
+        args = self.get_arguments(name, strip=strip)
+        if not args:
+            if default is self._ARG_DEFAULT:
+                raise MissingArgumentError(name)
+            return default
+        return args[-1]
 
     def get_arguments(self, name, strip=True):
         """Returns a list of the arguments with the given name.
@@ -357,73 +362,9 @@ class RequestHandler(object):
 
         The returned values are always unicode.
         """
-        return self._get_arguments(name, self.request.arguments, strip)
 
-    def get_body_argument(self, name, default=_ARG_DEFAULT, strip=True):
-        """Returns the value of the argument with the given name
-        from the request body.
-
-        If default is not provided, the argument is considered to be
-        required, and we raise a `MissingArgumentError` if it is missing.
-
-        If the argument appears in the url more than once, we return the
-        last value.
-
-        The returned value is always unicode.
-
-        .. versionadded:: 3.2
-        """
-        return self._get_argument(name, default, self.request.body_arguments, strip)
-
-    def get_body_arguments(self, name, strip=True):
-        """Returns a list of the body arguments with the given name.
-
-        If the argument is not present, returns an empty list.
-
-        The returned values are always unicode.
-
-        .. versionadded:: 3.2
-        """
-        return self._get_arguments(name, self.request.body_arguments, strip)
-
-    def get_query_argument(self, name, default=_ARG_DEFAULT, strip=True):
-        """Returns the value of the argument with the given name
-        from the request query string.
-
-        If default is not provided, the argument is considered to be
-        required, and we raise a `MissingArgumentError` if it is missing.
-
-        If the argument appears in the url more than once, we return the
-        last value.
-
-        The returned value is always unicode.
-
-        .. versionadded:: 3.2
-        """
-        return self._get_argument(name, default, self.request.query_arguments, strip)
-
-    def get_query_arguments(self, name, strip=True):
-        """Returns a list of the query arguments with the given name.
-
-        If the argument is not present, returns an empty list.
-
-        The returned values are always unicode.
-
-        .. versionadded:: 3.2
-        """
-        return self._get_arguments(name, self.request.query_arguments, strip)
-
-    def _get_argument(self, name, default, source, strip=True):
-        args = self._get_arguments(name, source, strip=strip)
-        if not args:
-            if default is self._ARG_DEFAULT:
-                raise MissingArgumentError(name)
-            return default
-        return args[-1]
-
-    def _get_arguments(self, name, source, strip=True):
         values = []
-        for v in source.get(name, []):
+        for v in self.request.arguments.get(name, []):
             v = self.decode_argument(v, name=name)
             if isinstance(v, unicode_type):
                 # Get rid of any weird control chars (unless decoding gave
@@ -897,7 +838,7 @@ class RequestHandler(object):
             else:
                 self.finish(self.get_error_html(status_code, **kwargs))
             return
-        if self.settings.get("serve_traceback") and "exc_info" in kwargs:
+        if self.settings.get("debug") and "exc_info" in kwargs:
             # in debug mode, try to send a traceback
             self.set_header('Content-Type', 'text/plain')
             for line in traceback.format_exception(*kwargs["exc_info"]):
@@ -1377,12 +1318,6 @@ def asynchronous(method):
                     if not self._finished:
                         self.finish()
                 IOLoop.current().add_future(result, future_complete)
-                # Once we have done this, hide the Future from our
-                # caller (i.e. RequestHandler._when_complete), which
-                # would otherwise set up its own callback and
-                # exception handler (resulting in exceptions being
-                # logged twice).
-                return None
             return result
     return wrapper
 
@@ -1448,16 +1383,10 @@ class Application(object):
     or (regexp, request_class) tuples. When we receive requests, we
     iterate over the list in order and instantiate an instance of the
     first request class whose regexp matches the request path.
-    The request class can be specified as either a class object or a
-    (fully-qualified) name.
 
-    Each tuple can contain additional elements, which correspond to the
-    arguments to the `URLSpec` constructor.  (Prior to Tornado 3.2, this
-    only tuples of two or three elements were allowed).
-
-    A dictionary may be passed as the third element of the tuple,
-    which will be used as keyword arguments to the handler's
-    constructor and `~RequestHandler.initialize` method.  This pattern
+    Each tuple can contain an optional third element, which should be
+    a dictionary if it is present. That dictionary is passed as
+    keyword arguments to the contructor of the handler. This pattern
     is used for the `StaticFileHandler` in this example (note that a
     `StaticFileHandler` can be installed automatically with the
     static_path setting described below)::
@@ -1480,7 +1409,6 @@ class Application(object):
     and ``/robots.txt`` from the same directory.  A custom subclass of
     `StaticFileHandler` can be specified with the
     ``static_handler_class`` setting.
-
     """
     def __init__(self, handlers=None, default_host="", transforms=None,
                  wsgi=False, **settings):
@@ -1519,14 +1447,8 @@ class Application(object):
         if handlers:
             self.add_handlers(".*$", handlers)
 
-        if self.settings.get('debug'):
-            self.settings.setdefault('autoreload', True)
-            self.settings.setdefault('compiled_template_cache', False)
-            self.settings.setdefault('static_hash_cache', False)
-            self.settings.setdefault('serve_traceback', True)
-
         # Automatically reload modified modules
-        if self.settings.get('autoreload') and not wsgi:
+        if self.settings.get("debug") and not wsgi:
             from tornado import autoreload
             autoreload.start()
 
@@ -1571,8 +1493,20 @@ class Application(object):
 
         for spec in host_handlers:
             if isinstance(spec, (tuple, list)):
-                assert len(spec) in (2, 3, 4)
-                spec = URLSpec(*spec)
+                assert len(spec) in (2, 3)
+                pattern = spec[0]
+                handler = spec[1]
+
+                if isinstance(handler, str):
+                    # import the Module and instantiate the class
+                    # Must be a fully qualified name (module.ClassName)
+                    handler = import_object(handler)
+
+                if len(spec) == 3:
+                    kwargs = spec[2]
+                else:
+                    kwargs = {}
+                spec = URLSpec(pattern, handler, kwargs)
             handlers.append(spec)
             if spec.name:
                 if spec.name in self.named_handlers:
@@ -1663,23 +1597,14 @@ class Application(object):
                             args = [unquote(s) for s in match.groups()]
                     break
             if not handler:
-                if self.settings.get('default_handler_class'):
-                    handler_class = self.settings['default_handler_class']
-                    handler_args = self.settings.get(
-                        'default_handler_args', {})
-                else:
-                    handler_class = ErrorHandler
-                    handler_args = dict(status_code=404)
-                handler = handler_class(self, request, **handler_args)
+                handler = ErrorHandler(self, request, status_code=404)
 
-        # If template cache is disabled (usually in the debug mode),
-        # re-compile templates and reload static files on every
+        # In debug mode, re-compile templates and reload static files on every
         # request so you don't need to restart to see changes
-        if not self.settings.get("compiled_template_cache", True):
+        if self.settings.get("debug"):
             with RequestHandler._template_loader_lock:
                 for loader in RequestHandler._template_loaders.values():
                     loader.reset()
-        if not self.settings.get('static_hash_cache', True):
             StaticFileHandler.reset()
 
         handler._execute(transforms, *args, **kwargs)
@@ -2529,7 +2454,7 @@ class _UIModuleNamespace(object):
 
 class URLSpec(object):
     """Specifies mappings between URLs and handlers."""
-    def __init__(self, pattern, handler, kwargs=None, name=None):
+    def __init__(self, pattern, handler_class, kwargs=None, name=None):
         """Parameters:
 
         * ``pattern``: Regular expression to be matched.  Any groups
@@ -2550,13 +2475,7 @@ class URLSpec(object):
         assert len(self.regex.groupindex) in (0, self.regex.groups), \
             ("groups in url regexes must either be all named or all "
              "positional: %r" % self.regex.pattern)
-
-        if isinstance(handler, str):
-            # import the Module and instantiate the class
-            # Must be a fully qualified name (module.ClassName)
-            handler = import_object(handler)
-
-        self.handler_class = handler
+        self.handler_class = handler_class
         self.kwargs = kwargs or {}
         self.name = name
         self._path, self._group_count = self._find_groups()

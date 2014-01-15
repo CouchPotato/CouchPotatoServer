@@ -1,5 +1,3 @@
-#!/bin/sh
-#
 ### BEGIN INIT INFO
 # Provides:          CouchPotato application instance
 # Required-Start:    $all

@@ -126,9 +126,7 @@ MA.Release = new Class({
 		else
 			self.showHelper();
 
-		App.on('movie.searcher.ended', function(notification){
-			if(self.movie.data.id != notification.data.id) return;
-
+		App.addEvent('movie.searcher.ended.'+self.movie.data.id, function(notification){
 			self.releases = null;
 			if(self.options_container){
 				self.options_container.destroy();
@@ -252,14 +250,12 @@ MA.Release = new Class({
 				else if(!self.next_release && status.identifier == 'available'){
 					self.next_release = release;
 				}
-
+				
 				var update_handle = function(notification) {
-					if(notification.data.id != release.id) return;
-
-					var q = self.movie.quality.getElement('.q_id' + release.quality_id),
+					var q = self.movie.quality.getElement('.q_id' + release.quality_id), 
 						status = Status.get(release.status_id),
-						new_status = Status.get(notification.data.status_id);
-
+						new_status = Status.get(notification.data);
+					
 					release.status_id = new_status.id
 					release.el.set('class', 'item ' + new_status.identifier);
 
@@ -276,7 +272,7 @@ MA.Release = new Class({
 					}
 				}
 
-				App.on('release.update_status', update_handle);
+				App.addEvent('release.update_status.' + release.id, update_handle); 
 
 			});
 
@@ -289,7 +285,7 @@ MA.Release = new Class({
 			if(self.next_release || (self.last_release && ['ignored', 'failed'].indexOf(self.last_release.status.identifier) === false)){
 
 				self.trynext_container = new Element('div.buttons.try_container').inject(self.release_container, 'top');
-
+				
 				var nr = self.next_release,
 					lr = self.last_release;
 
@@ -385,7 +381,7 @@ MA.Release = new Class({
 	},
 
 	get: function(release, type){
-		return release.info[type] !== undefined ? release.info[type] : 'n/a'
+		return release.info[type] || 'n/a'
 	},
 
 	download: function(release){
@@ -397,7 +393,7 @@ MA.Release = new Class({
 		if(icon)
 			icon.addClass('icon spinner').removeClass('download');
 
-		Api.request('release.manual_download', {
+		Api.request('release.download', {
 			'data': {
 				'id': release.id
 			},

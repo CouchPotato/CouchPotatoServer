@@ -1,8 +1,9 @@
 from base64 import b64encode
-from couchpotato.core.downloaders.base import Downloader, ReleaseDownloadList
-from couchpotato.core.helpers.encoding import isInt, sp
+from couchpotato.core.downloaders.base import Downloader, StatusList
+from couchpotato.core.helpers.encoding import isInt, ss
 from couchpotato.core.helpers.variable import tryInt, tryFloat
 from couchpotato.core.logger import CPLog
+from couchpotato.environment import Env
 from datetime import timedelta
 import httplib
 import json
@@ -88,10 +89,10 @@ class Transmission(Downloader):
         if not self.connect():
             return False
 
-        release_downloads = ReleaseDownloadList(self)
+        statuses = StatusList(self)
 
         return_params = {
-            'fields': ['id', 'name', 'hashString', 'percentDone', 'status', 'eta', 'isStalled', 'isFinished', 'downloadDir', 'uploadRatio', 'secondsSeeding', 'seedIdleLimit', 'files']
+            'fields': ['id', 'name', 'hashString', 'percentDone', 'status', 'eta', 'isStalled', 'isFinished', 'downloadDir', 'uploadRatio', 'secondsSeeding', 'seedIdleLimit']
         }
 
         queue = self.trpc.get_alltorrents(return_params)
@@ -99,48 +100,47 @@ class Transmission(Downloader):
             log.debug('Nothing in queue or error')
             return False
 
-        for torrent in queue['torrents']:
+        for item in queue['torrents']:
             log.debug('name=%s / id=%s / downloadDir=%s / hashString=%s / percentDone=%s / status=%s / eta=%s / uploadRatio=%s / isFinished=%s',
-                (torrent['name'], torrent['id'], torrent['downloadDir'], torrent['hashString'], torrent['percentDone'], torrent['status'], torrent['eta'], torrent['uploadRatio'], torrent['isFinished']))
+                (item['name'], item['id'], item['downloadDir'], item['hashString'], item['percentDone'], item['status'], item['eta'], item['uploadRatio'], item['isFinished']))
 
-            torrent_files = []
-            for file_item in torrent['files']:
-                torrent_files.append(sp(os.path.join(torrent['downloadDir'], file_item['name'])))
+            if not os.path.isdir(Env.setting('from', 'renamer')):
+                log.error('Renamer "from" folder doesn\'t to exist.')
+                return
 
             status = 'busy'
-            if torrent.get('isStalled') and self.conf('stalled_as_failed'):
+            if item['isStalled'] and self.conf('stalled_as_failed'):
                 status = 'failed'
-            elif torrent['status'] == 0 and torrent['percentDone'] == 1:
+            elif item['status'] == 0 and item['percentDone'] == 1:
                 status = 'completed'
-            elif torrent['status'] in [5, 6]:
+            elif item['status'] in [5, 6]:
                 status = 'seeding'
 
-            release_downloads.append({
-                'id': torrent['hashString'],
-                'name': torrent['name'],
+            statuses.append({
+                'id': item['hashString'],
+                'name': item['name'],
                 'status': status,
-                'original_status': torrent['status'],
-                'seed_ratio': torrent['uploadRatio'],
-                'timeleft': str(timedelta(seconds = torrent['eta'])),
-                'folder': sp(torrent['downloadDir'] if len(torrent_files) == 1 else os.path.join(torrent['downloadDir'], torrent['name'])),
-                'files': '|'.join(torrent_files)
+                'original_status': item['status'],
+                'seed_ratio': item['uploadRatio'],
+                'timeleft': str(timedelta(seconds = item['eta'])),
+                'folder': ss(os.path.join(item['downloadDir'], item['name'])),
             })
 
-        return release_downloads
+        return statuses
 
-    def pause(self, release_download, pause = True):
+    def pause(self, item, pause = True):
         if pause:
-            return self.trpc.stop_torrent(release_download['id'])
+            return self.trpc.stop_torrent(item['id'])
         else:
-            return self.trpc.start_torrent(release_download['id'])
+            return self.trpc.start_torrent(item['id'])
 
-    def removeFailed(self, release_download):
-        log.info('%s failed downloading, deleting...', release_download['name'])
-        return self.trpc.remove_torrent(release_download['id'], True)
+    def removeFailed(self, item):
+        log.info('%s failed downloading, deleting...', item['name'])
+        return self.trpc.remove_torrent(item['id'], True)
 
-    def processComplete(self, release_download, delete_files = False):
-        log.debug('Requesting Transmission to remove the torrent %s%s.', (release_download['name'], ' and cleanup the downloaded files' if delete_files else ''))
-        return self.trpc.remove_torrent(release_download['id'], delete_files)
+    def processComplete(self, item, delete_files = False):
+        log.debug('Requesting Transmission to remove the torrent %s%s.', (item['name'], ' and cleanup the downloaded files' if delete_files else ''))
+        return self.trpc.remove_torrent(item['id'], delete_files)
 
 class TransmissionRPC(object):
 

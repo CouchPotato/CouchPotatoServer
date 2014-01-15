@@ -28,7 +28,7 @@ log = logging.getLogger(__name__)
 
 
 def found_property(node, name, confidence):
-    node.guess = Guess({name: node.clean_value}, confidence=confidence, raw=node.value)
+    node.guess = Guess({name: node.clean_value}, confidence=confidence)
     log.debug('Found with confidence %.2f: %s' % (confidence, node.guess))
 
 
@@ -52,17 +52,11 @@ def format_guess(guess):
 
 def find_and_split_node(node, strategy, logger):
     string = ' %s ' % node.value # add sentinels
-    for matcher, confidence, args, kwargs in strategy:
-        all_args = [string]
+    for matcher, confidence in strategy:
         if getattr(matcher, 'use_node', False):
-            all_args.append(node)
-        if args:
-            all_args.append(args)
-
-        if kwargs:
-            result, span = matcher(*all_args, **kwargs)
+            result, span = matcher(string, node)
         else:
-            result, span = matcher(*all_args)
+            result, span = matcher(string)
 
         if result:
             # readjust span to compensate for sentinels
@@ -75,7 +69,7 @@ def find_and_split_node(node, strategy, logger):
                 if confidence is None:
                     confidence = 1.0
 
-            guess = format_guess(Guess(result, confidence=confidence, raw=string[span[0] + 1:span[1] + 1]))
+            guess = format_guess(Guess(result, confidence=confidence))
             msg = 'Found with confidence %.2f: %s' % (confidence, guess)
             (logger or log).debug(msg)
 
@@ -90,12 +84,10 @@ def find_and_split_node(node, strategy, logger):
 
 
 class SingleNodeGuesser(object):
-    def __init__(self, guess_func, confidence, logger, *args, **kwargs):
+    def __init__(self, guess_func, confidence, logger=None):
         self.guess_func = guess_func
         self.confidence = confidence
         self.logger = logger
-        self.args = args
-        self.kwargs = kwargs
 
     def process(self, mtree):
         # strategy is a list of pairs (guesser, confidence)
@@ -103,7 +95,7 @@ class SingleNodeGuesser(object):
         #   it will override it, otherwise it will leave the guess confidence
         # - if the guesser returns a simple dict as a guess and confidence is
         #   specified, it will use it, or 1.0 otherwise
-        strategy = [ (self.guess_func, self.confidence, self.args, self.kwargs) ]
+        strategy = [ (self.guess_func, self.confidence) ]
 
         for node in mtree.unidentified_leaves():
             find_and_split_node(node, strategy, self.logger)

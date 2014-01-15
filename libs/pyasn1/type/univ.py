@@ -69,18 +69,13 @@ class Integer(base.AbstractSimpleAsn1Item):
 
     def prettyIn(self, value):
         if not isinstance(value, str):
-            try:
-                return int(value)
-            except:
-                raise error.PyAsn1Error(
-                    'Can\'t coerce %s into integer: %s' % (value, sys.exc_info()[1])
-                    )
+            return int(value)
         r = self.__namedValues.getValue(value)
         if r is not None:
             return r
         try:
             return int(value)
-        except:
+        except ValueError:
             raise error.PyAsn1Error(
                 'Can\'t coerce %s into integer: %s' % (value, sys.exc_info()[1])
                 )
@@ -229,14 +224,14 @@ class BitString(base.AbstractSimpleAsn1Item):
                     return tuple(r)
                 else:
                     raise error.PyAsn1Error(
-                        'Bad BIT STRING value notation %s' % (value,)
+                        'Bad BIT STRING value notation %s' % value
                         )                
             else:
                 for i in value.split(','):
                     j = self.__namedValues.getValue(i)
                     if j is None:
                         raise error.PyAsn1Error(
-                            'Unknown bit identifier \'%s\'' % (i,)
+                            'Unknown bit identifier \'%s\'' % i
                             )
                     if j >= len(r):
                         r.extend([0]*(j-len(r)+1))
@@ -533,7 +528,7 @@ class Real(base.AbstractSimpleAsn1Item):
                         )
             if value[1] not in (2, 10):
                 raise error.PyAsn1Error(
-                    'Prohibited base for Real value: %s' % (value[1],)
+                    'Prohibited base for Real value: %s' % value[1]
                     )
             if value[1] == 10:
                 value = self.__normalizeBase10(value)
@@ -653,7 +648,7 @@ class SetOf(base.AbstractConstructedAsn1Item):
     def _verifyComponent(self, idx, value):
         if self._componentType is not None and \
                not self._componentType.isSuperTypeOf(value):
-            raise error.PyAsn1Error('Component type error %s' % (value,))
+            raise error.PyAsn1Error('Component type error %s' % value)
 
     def getComponentByPosition(self, idx): return self._componentValues[idx]
     def setComponentByPosition(self, idx, value=None, verifyConstraints=True):
@@ -929,9 +924,9 @@ class Choice(Set):
             return self._componentValues[self._currentIdx] >= other
         return NotImplemented
     if sys.version_info[0] <= 2:
-        def __nonzero__(self): return bool(self._componentValues)
+        def __nonzero__(self, other): return bool(self._componentValues)
     else:
-        def __bool__(self): return bool(self._componentValues)
+        def __bool__(self, other): return bool(self._componentValues)
 
     def __len__(self): return self._currentIdx is not None and 1 or 0
     

@@ -38,10 +38,9 @@ def guess_video_rexps(string):
             # the soonest that we can catch it)
             if metadata.get('cdNumberTotal', -1) is None:
                 del metadata['cdNumberTotal']
-            span = (match.start() + span_adjust[0],
-                    match.end() + span_adjust[1] - 2)
-            return (Guess(metadata, confidence=confidence, raw=string[span[0]:span[1]]),
-                    span)
+            return (Guess(metadata, confidence=confidence),
+                    (match.start() + span_adjust[0],
+                     match.end() + span_adjust[1] - 2))
 
     return None, None
 

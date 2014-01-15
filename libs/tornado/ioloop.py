@@ -676,7 +676,8 @@ class PollIOLoop(IOLoop):
             while self._events:
                 fd, events = self._events.popitem()
                 try:
-                    self._handlers[fd](fd, events)
+                    if self._handlers.has_key(fd):
+                        self._handlers[fd](fd, events)
                 except (OSError, IOError) as e:
                     if e.args[0] == errno.EPIPE:
                         # Happens when the client closes the connection

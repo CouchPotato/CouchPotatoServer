@@ -545,31 +545,12 @@
 		.page .combined_table .head abbr:first-child {
 			display: none;
 		}
-		.page .combined_table .head abbr.host { margin-right: 120px; }
-			.page .combined_table input.host { width: 140px; }
-		.page .section_newznab .combined_table .head abbr.host { margin-right: 200px; }
-			.page .section_newznab .combined_table input.host { width: 220px; }
-			
-		.page .combined_table .head abbr.name { margin-right: 57px; }
-			.page .combined_table input.name { width: 120px; }
-		.page .combined_table .head abbr.api_key { margin-right: 75px; }
-		
-		.page .combined_table .head abbr.pass_key { margin-right: 71px; }
-			.page .combined_table input.pass_key { width: 113px; }
-			
-		.page .section_newznab .combined_table .head abbr.api_key { margin-right: 185px; }
-			.page .section_newznab .combined_table input.api_key { width: 223px; }
-			
-		.page .combined_table .seed_ratio,
-		.page .combined_table .seed_time {
-			width: 70px;
-			text-align: center;
-			margin-left: 10px;
+		.page .combined_table .head abbr.host {
+			margin-right: 190px;
 		}
-		.page .combined_table .seed_time {
-			margin-right: 10px;
+		.page .combined_table .head abbr.api_key {
+			margin-right: 171px;
 		}
-		
 		.page .combined_table .head .extra_score,
 		.page .combined_table .extra_score {
 			width: 70px;
@@ -719,19 +700,3 @@
 	background: url('../images/imdb_watchlist.png') no-repeat right 50px;
 	min-height: 210px;
 }
-
-.tip-wrap {
-	background: #FFF;
-	color: #000;
-	padding: 10px;
-	width: 300px;
-	z-index: 200;
-}
-	.more_hint:after {
-		position: relative;
-		font-family: 'Elusive-Icons';
-		content: "\e089";
-		display: inline-block;
-		top: 1px;
-		left: 6px;
-	}

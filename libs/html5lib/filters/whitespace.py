@@ -1,13 +1,16 @@
-from __future__ import absolute_import, division, unicode_literals
+try:
+    frozenset
+except NameError:
+    # Import from the sets module for python 2.3
+    from sets import ImmutableSet as frozenset
 
 import re
 
-from . import _base
-from ..constants import rcdataElements, spaceCharacters
-spaceCharacters = "".join(spaceCharacters)
+import _base
+from html5lib.constants import rcdataElements, spaceCharacters
+spaceCharacters = u"".join(spaceCharacters)
 
-SPACES_REGEX = re.compile("[%s]+" % spaceCharacters)
-
+SPACES_REGEX = re.compile(u"[%s]+" % spaceCharacters)
 
 class Filter(_base.Filter):
 
@@ -18,7 +21,7 @@ class Filter(_base.Filter):
         for token in _base.Filter.__iter__(self):
             type = token["type"]
             if type == "StartTag" \
-                    and (preserve or token["name"] in self.spacePreserveElements):
+              and (preserve or token["name"] in self.spacePreserveElements):
                 preserve += 1
 
             elif type == "EndTag" and preserve:
@@ -26,13 +29,13 @@ class Filter(_base.Filter):
 
             elif not preserve and type == "SpaceCharacters" and token["data"]:
                 # Test on token["data"] above to not introduce spaces where there were not
-                token["data"] = " "
+                token["data"] = u" "
 
             elif not preserve and type == "Characters":
                 token["data"] = collapse_spaces(token["data"])
 
             yield token
 
-
 def collapse_spaces(text):
     return SPACES_REGEX.sub(' ', text)
+
