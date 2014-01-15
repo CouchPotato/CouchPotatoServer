@@ -29,8 +29,6 @@ class rTorrent(Downloader):
 
         url = self.conf('url')
         if url:
-
-            url = 'http://localhost:8080/RPC2teasd/asdasd//'
             host_split = splitString(url.split('://')[-1], split_on = '/')
 
             self.conf('ssl', value = url.startswith('https'))
