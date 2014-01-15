@@ -32,6 +32,7 @@ class Updater(Plugin):
         else:
             self.updater = SourceUpdater()
 
+        addEvent('app.load', self.logVersion, priority = 10000)
         addEvent('app.load', self.setCrons)
         addEvent('updater.info', self.info)
 
@@ -52,6 +53,10 @@ class Updater(Plugin):
         })
 
         addEvent('setting.save.updater.enabled.after', self.setCrons)
+
+    def logVersion(self):
+        info = self.info()
+        log.info('=== VERSION %s, using %s ===', (info.get('version', {}).get('repr', 'UNKNOWN'), self.updater.getName()))
 
     def setCrons(self):
 
@@ -204,6 +209,7 @@ class GitUpdater(BaseUpdater):
                 output = self.repo.getHead() # Yes, please
                 log.debug('Git version output: %s', output.hash)
                 self.version = {
+                    'repr': 'git:(%s:%s % s) %s (%s)' % (self.repo_user, self.repo_name, self.branch, output.hash[:8], datetime.fromtimestamp(output.getDate())),
                     'hash': output.hash[:8],
                     'date': output.getDate(),
                     'type': 'git',
@@ -231,7 +237,7 @@ class GitUpdater(BaseUpdater):
                 local = self.repo.getHead()
                 remote = branch.getHead()
 
-                log.info('Versions, local:%s, remote:%s', (local.hash[:8], remote.hash[:8]))
+                log.debug('Versions, local:%s, remote:%s', (local.hash[:8], remote.hash[:8]))
 
                 if local.getDate() < remote.getDate():
                     self.update_version = {
@@ -359,6 +365,7 @@ class SourceUpdater(BaseUpdater):
                 log.debug('Source version output: %s', output)
                 self.version = output
                 self.version['type'] = 'source'
+                self.version['repr'] = 'source:(%s:%s % s) %s (%s)' % (self.repo_user, self.repo_name, self.branch, output.get('hash', '')[:8], datetime.fromtimestamp(output.get('date', 0)))
             except Exception, e:
                 log.error('Failed using source updater. %s', e)
                 return {}
@@ -446,6 +453,7 @@ class DesktopUpdater(BaseUpdater):
 
     def getVersion(self):
         return {
+            'repr': 'desktop: %s' % self.desktop._esky.active_version,
             'hash': self.desktop._esky.active_version,
             'date': None,
             'type': 'desktop',
