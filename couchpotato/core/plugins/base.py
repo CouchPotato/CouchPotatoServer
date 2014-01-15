@@ -52,8 +52,11 @@ class Plugin(object):
             self.registerStatic(inspect.getfile(self.__class__))
 
     def conf(self, attr, value = None, default = None, section = None):
-        class_name = self.getName().lower().split(':')
-        return Env.setting(attr, section = section if section else class_name[0].lower(), value = value, default = default)
+        class_name = self.getName().lower().split(':')[0].lower()
+        return Env.setting(attr, section = section if section else class_name, value = value, default = default)
+
+    def deleteConf(self, attr):
+        return Env._settings.delete(attr, section = self.getName().lower().split(':')[0].lower())
 
     def getName(self):
         return self._class_name or self.__class__.__name__
