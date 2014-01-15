@@ -5,6 +5,8 @@ from couchpotato.core.helpers.variable import getExt, md5, isLocalIP
 from couchpotato.core.logger import CPLog
 from couchpotato.environment import Env
 import requests
+from requests.packages.urllib3 import Timeout
+from requests.packages.urllib3.exceptions import MaxRetryError
 from tornado import template
 from tornado.web import StaticFileHandler
 from urlparse import urlparse
@@ -173,9 +175,9 @@ class Plugin(object):
             data = response.content if return_raw else response.text
 
             self.http_failed_request[host] = 0
-        except IOError:
+        except (IOError, MaxRetryError, Timeout):
             if show_error:
-                log.error('Failed opening url in %s: %s %s', (self.getName(), url, traceback.format_exc(1)))
+                log.error('Failed opening url in %s: %s %s', (self.getName(), url, traceback.format_exc(0)))
 
             # Save failed requests by hosts
             try:
@@ -265,7 +267,7 @@ class Plugin(object):
                 if not kwargs.get('show_error', True):
                     raise
 
-                log.error('Failed getting cache: %s', (traceback.format_exc()))
+                log.debug('Failed getting cache: %s', (traceback.format_exc(0)))
                 return ''
 
     def setCache(self, cache_key, value, timeout = 300):
