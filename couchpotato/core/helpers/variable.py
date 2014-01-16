@@ -118,12 +118,22 @@ def isLocalIP(ip):
 def getExt(filename):
     return os.path.splitext(filename)[1][1:]
 
-def cleanHost(host):
-    if not host.startswith(('http://', 'https://')):
-        host = 'http://' + host
+def cleanHost(host, protocol = True, ssl = False, username = None, password = None):
 
-    host = host.rstrip('/')
-    host += '/'
+    if not '://' in host and protocol:
+        host = 'https://' if ssl else 'http://' + host
+
+    if not protocol:
+        host = host.split('://', 1)[-1]
+
+    if protocol and username and password:
+        login = '%s:%s@' % (username, password)
+        if not login in host:
+            host.replace('://', '://' + login, 1) 
+
+    host = host.rstrip('/ ')
+    if protocol:
+        host += '/'
 
     return host
 

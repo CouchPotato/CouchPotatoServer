@@ -5,6 +5,8 @@ from couchpotato.core.helpers.variable import getExt, md5, isLocalIP
 from couchpotato.core.logger import CPLog
 from couchpotato.environment import Env
 import requests
+from requests.packages.urllib3 import Timeout
+from requests.packages.urllib3.exceptions import MaxRetryError
 from tornado import template
 from tornado.web import StaticFileHandler
 from urlparse import urlparse
@@ -52,8 +54,11 @@ class Plugin(object):
             self.registerStatic(inspect.getfile(self.__class__))
 
     def conf(self, attr, value = None, default = None, section = None):
-        class_name = self.getName().lower().split(':')
-        return Env.setting(attr, section = section if section else class_name[0].lower(), value = value, default = default)
+        class_name = self.getName().lower().split(':')[0].lower()
+        return Env.setting(attr, section = section if section else class_name, value = value, default = default)
+
+    def deleteConf(self, attr):
+        return Env._settings.delete(attr, section = self.getName().lower().split(':')[0].lower())
 
     def getName(self):
         return self._class_name or self.__class__.__name__
@@ -170,9 +175,9 @@ class Plugin(object):
             data = response.content if return_raw else response.text
 
             self.http_failed_request[host] = 0
-        except IOError:
+        except (IOError, MaxRetryError, Timeout):
             if show_error:
-                log.error('Failed opening url in %s: %s %s', (self.getName(), url, traceback.format_exc(1)))
+                log.error('Failed opening url in %s: %s %s', (self.getName(), url, traceback.format_exc(0)))
 
             # Save failed requests by hosts
             try:
@@ -262,7 +267,7 @@ class Plugin(object):
                 if not kwargs.get('show_error', True):
                     raise
 
-                log.error('Failed getting cache: %s', (traceback.format_exc()))
+                log.debug('Failed getting cache: %s', (traceback.format_exc(0)))
                 return ''
 
     def setCache(self, cache_key, value, timeout = 300):

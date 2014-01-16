@@ -2,7 +2,7 @@ from base64 import b16encode, b32decode
 from bencode import bencode as benc, bdecode
 from couchpotato.core.downloaders.base import Downloader, ReleaseDownloadList
 from couchpotato.core.helpers.encoding import isInt, ss, sp
-from couchpotato.core.helpers.variable import tryInt, tryFloat
+from couchpotato.core.helpers.variable import tryInt, tryFloat, cleanHost
 from couchpotato.core.logger import CPLog
 from datetime import timedelta
 from hashlib import sha1
@@ -37,7 +37,7 @@ class uTorrent(Downloader):
 
     def connect(self):
         # Load host from config and split out port.
-        host = self.conf('host').split(':')
+        host = cleanHost(self.conf('host'), protocol = False).split(':')
         if not isInt(host[1]):
             log.error('Config properties are not filled in correctly, port is missing.')
             return False

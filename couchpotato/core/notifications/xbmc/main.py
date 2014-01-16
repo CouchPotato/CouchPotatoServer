@@ -8,6 +8,7 @@ import socket
 import traceback
 import urllib
 import requests
+from requests.packages.urllib3.exceptions import MaxRetryError
 
 log = CPLog(__name__)
 
@@ -168,7 +169,7 @@ class XBMC(Notification):
                 # manually fake expected response array
                 return [{'result': 'Error'}]
 
-        except requests.exceptions.Timeout:
+        except (MaxRetryError, requests.exceptions.Timeout):
             log.info2('Couldn\'t send request to XBMC, assuming it\'s turned off')
             return [{'result': 'Error'}]
         except:
@@ -203,7 +204,7 @@ class XBMC(Notification):
             log.debug('Returned from request %s: %s', (host, response))
 
             return response
-        except requests.exceptions.Timeout:
+        except (MaxRetryError, requests.exceptions.Timeout):
             log.info2('Couldn\'t send request to XBMC, assuming it\'s turned off')
             return []
         except:

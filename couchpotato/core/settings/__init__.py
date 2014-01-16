@@ -110,6 +110,10 @@ class Settings(object):
         except:
             return default
 
+    def delete(self, option = '', section = 'core'):
+        self.p.remove_option(section, option)
+        self.save()
+
     def getEnabler(self, section, option):
         return self.getBool(section, option)
 
