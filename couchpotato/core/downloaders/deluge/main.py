@@ -103,7 +103,12 @@ class Deluge(Downloader):
 
         for torrent_id in queue:
             torrent = queue[torrent_id]
-            log.debug('name=%s / id=%s / save_path=%s / move_completed_path=%s / hash=%s / progress=%s / state=%s / eta=%s / ratio=%s / stop_ratio=%s / is_seed=%s / is_finished=%s / paused=%s', (torrent['name'], torrent['hash'], torrent['save_path'], torrent['move_completed_path'], torrent['hash'], torrent['progress'], torrent['state'], torrent['eta'], torrent['ratio'], torrent['stop_ratio'], torrent['is_seed'], torrent['is_finished'], torrent['paused']))
+
+            if not 'hash' in torrent:
+                # When given a list of ids, deluge will return an empty item for a non-existant torrent.
+                continue
+
+            log.debug('name=%s / id=%s / save_path=%s / move_on_completed=%s / move_completed_path=%s / hash=%s / progress=%s / state=%s / eta=%s / ratio=%s / stop_ratio=%s / is_seed=%s / is_finished=%s / paused=%s', (torrent['name'], torrent['hash'], torrent['save_path'], torrent['move_on_completed'], torrent['move_completed_path'], torrent['hash'], torrent['progress'], torrent['state'], torrent['eta'], torrent['ratio'], torrent['stop_ratio'], torrent['is_seed'], torrent['is_finished'], torrent['paused']))
     
             # Deluge has no easy way to work out if a torrent is stalled or failing.
             #status = 'failed'
@@ -212,7 +217,7 @@ class DelugeRPC(object):
         ret = False
         try:
             self.connect()
-            ret = self.client.core.get_torrents_status({'id': ids}, {}).get()
+            ret = self.client.core.get_torrents_status({'id': ids}, ('name', 'hash', 'save_path', 'move_completed_path', 'progress', 'state', 'eta', 'ratio', 'stop_ratio', 'is_seed', 'is_finished', 'paused', 'move_on_completed', 'files')).get()
         except Exception, err:
             log.error('Failed to get all torrents: %s %s', (err, traceback.format_exc()))
         finally:
