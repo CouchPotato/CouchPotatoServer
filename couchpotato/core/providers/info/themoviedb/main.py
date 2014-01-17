@@ -66,7 +66,7 @@ class TheMovieDb(MovieProvider):
         if not identifier:
             return {}
 
-        cache_key = 'tmdb.cache.%s' % identifier
+        cache_key = 'tmdb.cache.%s%s' % (identifier, '.ex' if extended else '')
         result = self.getCache(cache_key)
 
         if not result:
@@ -88,7 +88,7 @@ class TheMovieDb(MovieProvider):
 
     def parseMovie(self, movie, extended = True):
 
-        cache_key = 'tmdb.cache.%s' % movie.id
+        cache_key = 'tmdb.cache.%s%s' % (movie.id, '.ex' if extended else '')
         movie_data = self.getCache(cache_key)
 
         if not movie_data:
