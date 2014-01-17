@@ -25,7 +25,7 @@ class IMDBBase(Automation, RSS):
     interval = 1800
 
     def getInfo(self, imdb_id):
-        return fireEvent('movie.info', identifier = imdb_id, merge = True)
+        return fireEvent('movie.info', identifier = imdb_id, extended = False, merge = True)
 
 
 class IMDBWatchlist(IMDBBase):

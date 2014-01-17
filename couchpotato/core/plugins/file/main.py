@@ -93,7 +93,7 @@ class FileManager(Plugin):
             return dest
 
         try:
-            filedata = self.urlopen(url, return_raw = True, **urlopen_kwargs)
+            filedata = self.urlopen(url, **urlopen_kwargs)
         except:
             log.error('Failed downloading file %s: %s', (url, traceback.format_exc()))
             return False
