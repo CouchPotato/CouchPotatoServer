@@ -28,8 +28,11 @@ class MediaBase(Plugin):
         def onComplete():
             db = get_session()
             media = db.query(Media).filter_by(id = id).first()
-            fireEventAsync('%s.searcher.single' % media.type, media.to_dict(self.default_dict), on_complete = self.createNotifyFront(id))
+            media_dict = media.to_dict(self.default_dict)
+            event_name = '%s.searcher.single' % media.type
             db.expire_all()
+
+            fireEvent(event_name, media_dict, on_complete = self.createNotifyFront(id))
 
         return onComplete
 
@@ -38,7 +41,10 @@ class MediaBase(Plugin):
         def notifyFront():
             db = get_session()
             media = db.query(Media).filter_by(id = media_id).first()
-            fireEvent('notify.frontend', type = '%s.update' % media.type, data = media.to_dict(self.default_dict))
+            media_dict = media.to_dict(self.default_dict)
+            event_name = '%s.update' % media.type
             db.expire_all()
+
+            fireEvent('notify.frontend', type = event_name, data = media_dict)
 
         return notifyFront

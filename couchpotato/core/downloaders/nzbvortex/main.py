@@ -8,9 +8,11 @@ from uuid import uuid4
 import hashlib
 import httplib
 import json
+import os
 import socket
 import ssl
 import sys
+import time
 import traceback
 import urllib2
 
@@ -23,44 +25,46 @@ class NZBVortex(Downloader):
     api_level = None
     session_id = None
 
-    def download(self, data = None, movie = None, filedata = None):
-        if not movie: movie = {}
+    def download(self, data = None, media = None, filedata = None):
+        if not media: media = {}
         if not data: data = {}
 
         # Send the nzb
         try:
-            nzb_filename = self.createFileName(data, filedata, movie)
-            self.call('nzb/add', params = {'file': (nzb_filename, filedata)}, multipart = True)
+            nzb_filename = self.createFileName(data, filedata, media)
+            self.call('nzb/add', files = {'file': (nzb_filename, filedata)})
 
+            time.sleep(10)
             raw_statuses = self.call('nzb')
-            nzb_id = [nzb['id'] for nzb in raw_statuses.get('nzbs', []) if nzb['name'] == nzb_filename][0]
+            nzb_id = [nzb['id'] for nzb in raw_statuses.get('nzbs', []) if os.path.basename(item['nzbFileName']) == nzb_filename][0]
             return self.downloadReturnId(nzb_id)
         except:
             log.error('Something went wrong sending the NZB file: %s', traceback.format_exc())
             return False
 
-    def getAllDownloadStatus(self):
+    def getAllDownloadStatus(self, ids):
 
         raw_statuses = self.call('nzb')
 
         release_downloads = ReleaseDownloadList(self)
         for nzb in raw_statuses.get('nzbs', []):
+            if nzb['id'] in ids:
 
-            # Check status
-            status = 'busy'
-            if nzb['state'] == 20:
-                status = 'completed'
-            elif nzb['state'] in [21, 22, 24]:
-                status = 'failed'
-
-            release_downloads.append({
-                'id': nzb['id'],
-                'name': nzb['uiTitle'],
-                'status': status,
-                'original_status': nzb['state'],
-                'timeleft':-1,
-                'folder': sp(nzb['destinationPath']),
-            })
+                # Check status
+                status = 'busy'
+                if nzb['state'] == 20:
+                    status = 'completed'
+                elif nzb['state'] in [21, 22, 24]:
+                    status = 'failed'
+    
+                release_downloads.append({
+                    'id': nzb['id'],
+                    'name': nzb['uiTitle'],
+                    'status': status,
+                    'original_status': nzb['state'],
+                    'timeleft':-1,
+                    'folder': sp(nzb['destinationPath']),
+                })
 
         return release_downloads
 
@@ -112,11 +116,10 @@ class NZBVortex(Downloader):
 
         params = tryUrlencode(parameters)
 
-        url = cleanHost(self.conf('host')) + 'api/' + call
-        url_opener = urllib2.build_opener(HTTPSHandler())
+        url = cleanHost(self.conf('host'), ssl = self.conf('ssl')) + 'api/' + call
 
         try:
-            data = self.urlopen('%s?%s' % (url, params), opener = url_opener, *args, **kwargs)
+            data = self.urlopen('%s?%s' % (url, params), *args, **kwargs)
 
             if data:
                 return json.loads(data)
@@ -138,10 +141,9 @@ class NZBVortex(Downloader):
         if not self.api_level:
 
             url = cleanHost(self.conf('host')) + 'api/app/apilevel'
-            url_opener = urllib2.build_opener(HTTPSHandler())
 
             try:
-                data = self.urlopen(url, opener = url_opener, show_error = False)
+                data = self.urlopen(url, show_error = False)
                 self.api_level = float(json.loads(data).get('apilevel'))
             except URLError, e:
                 if hasattr(e, 'code') and e.code == 403:

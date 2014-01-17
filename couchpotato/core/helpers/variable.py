@@ -2,7 +2,7 @@ from couchpotato.core.helpers.encoding import simplifyString, toSafeString, ss
 from couchpotato.core.logger import CPLog
 import collections
 import hashlib
-import os.path
+import os
 import platform
 import random
 import re
@@ -10,6 +10,9 @@ import string
 import sys
 
 log = CPLog(__name__)
+
+def fnEscape(pattern):
+    return pattern.replace('[','[[').replace(']','[]]').replace('[[','[[]')
 
 def link(src, dst):
     if os.name == 'nt':
@@ -115,12 +118,22 @@ def isLocalIP(ip):
 def getExt(filename):
     return os.path.splitext(filename)[1][1:]
 
-def cleanHost(host):
-    if not host.startswith(('http://', 'https://')):
-        host = 'http://' + host
+def cleanHost(host, protocol = True, ssl = False, username = None, password = None):
 
-    host = host.rstrip('/')
-    host += '/'
+    if not '://' in host and protocol:
+        host = 'https://' if ssl else 'http://' + host
+
+    if not protocol:
+        host = host.split('://', 1)[-1]
+
+    if protocol and username and password:
+        login = '%s:%s@' % (username, password)
+        if not login in host:
+            host.replace('://', '://' + login, 1) 
+
+    host = host.rstrip('/ ')
+    if protocol:
+        host += '/'
 
     return host
 
@@ -216,3 +229,7 @@ def splitString(str, split_on = ',', clean = True):
 
 def dictIsSubset(a, b):
     return all([k in b and b[k] == v for k, v in a.items()])
+
+def isSubFolder(sub_folder, base_folder):
+    # Returns True if sub_folder is the same as or inside base_folder
+    return base_folder and sub_folder and os.path.normpath(base_folder).rstrip(os.path.sep) + os.path.sep in os.path.normpath(sub_folder).rstrip(os.path.sep) + os.path.sep

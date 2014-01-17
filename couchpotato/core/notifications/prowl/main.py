@@ -26,7 +26,7 @@ class Prowl(Notification):
         }
 
         try:
-            self.urlopen(self.urls['api'], headers = headers, params = data, multipart = True, show_error = False)
+            self.urlopen(self.urls['api'], headers = headers, data = data, show_error = False)
             log.info('Prowl notifications sent.')
             return True
         except:

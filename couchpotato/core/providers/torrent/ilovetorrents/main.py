@@ -42,7 +42,7 @@ class ILoveTorrents(TorrentProvider):
             search_url = self.urls['search'] % (movieTitle, page, cats[0])
             page += 1
 
-            data = self.getHTMLData(search_url, opener = self.login_opener)
+            data = self.getHTMLData(search_url)
             if data:
                 try:
                     soup = BeautifulSoup(data)
@@ -96,11 +96,11 @@ class ILoveTorrents(TorrentProvider):
                     log.error('Failed getting results from %s: %s', (self.getName(), traceback.format_exc()))
 
     def getLoginParams(self):
-        return tryUrlencode({
+        return {
             'username': self.conf('username'),
             'password': self.conf('password'),
             'submit': 'Welcome to ILT',
-        })
+        }
 
     def getMoreInfo(self, item):
         cache_key = 'ilt.%s' % item['id']
@@ -109,7 +109,7 @@ class ILoveTorrents(TorrentProvider):
         if not description:
 
             try:
-                full_description = self.getHTMLData(item['detail_url'], opener = self.login_opener)
+                full_description = self.getHTMLData(item['detail_url'])
                 html = BeautifulSoup(full_description)
                 nfo_pre = html.find('td', attrs = {'class':'main'}).findAll('table')[1]
                 description = toUnicode(nfo_pre.text) if nfo_pre else ''

@@ -22,7 +22,15 @@ config = [{
                 },
                 {
                     'name': 'host',
-                    'default': 'https://localhost:4321',
+                    'default': 'localhost:4321',
+                    'description': 'Hostname with port. Usually <strong>localhost:4321</strong>',
+                },
+                {
+                    'name': 'ssl',
+                    'default': 1,
+                    'type': 'bool',
+                    'advanced': True,
+                    'description': 'Use HyperText Transfer Protocol Secure, or <strong>https</strong>',
                 },
                 {
                     'name': 'api_key',

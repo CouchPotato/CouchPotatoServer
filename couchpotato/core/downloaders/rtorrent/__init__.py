@@ -20,11 +20,32 @@ config = [{
                     'type': 'enabler',
                     'radio_group': 'torrent',
                 },
+# @RuudBurger: How do I migrate this?
+#                {
+#                    'name': 'url',
+#                    'default': 'http://localhost:80/RPC2',
+#                    'description': 'XML-RPC Endpoint URI. Usually <strong>scgi://localhost:5000</strong> '
+#                                   'or <strong>http://localhost:80/RPC2</strong>'
+#                },
                 {
-                    'name': 'url',
-                    'default': 'http://localhost:80/RPC2',
-                    'description': 'XML-RPC Endpoint URI. Usually <strong>scgi://localhost:5000</strong> '
-                                   'or <strong>http://localhost:80/RPC2</strong>'
+                    'name': 'host',
+                    'default': 'localhost:80',
+                    'description': 'Hostname with port or XML-RPC Endpoint URI. Usually <strong>scgi://localhost:5000</strong> '
+                                   'or <strong>localhost:80</strong>'
+                },
+                {
+                    'name': 'ssl',
+                    'default': 0,
+                    'type': 'bool',
+                    'advanced': True,
+                    'description': 'Use HyperText Transfer Protocol Secure, or <strong>https</strong>',
+                },
+                {
+                    'name': 'rpc_url',
+                    'type': 'string',
+                    'default': 'RPC2',
+                    'advanced': True,
+                    'description': 'Change if you don\'t run rTorrent RPC at the default url.',
                 },
                 {
                     'name': 'username',

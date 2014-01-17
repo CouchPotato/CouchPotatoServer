@@ -55,6 +55,10 @@ class Core(Plugin):
         if not Env.get('desktop'):
             self.signalHandler()
 
+        # Set default urlopen timeout
+        import socket
+        socket.setdefaulttimeout(30)
+
     def md5Password(self, value):
         return md5(value) if value else ''
 

@@ -16,14 +16,14 @@ class Boxcar(Notification):
         try:
             message = message.strip()
 
-            params = {
+            data = {
                 'email': self.conf('email'),
                 'notification[from_screen_name]': self.default_title,
                 'notification[message]': toUnicode(message),
                 'notification[from_remote_service_id]': int(time.time()),
             }
 
-            self.urlopen(self.url, params = params)
+            self.urlopen(self.url, data = data)
         except:
             log.error('Check your email and added services on boxcar.io')
             return False

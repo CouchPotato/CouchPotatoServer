@@ -35,8 +35,8 @@ class Score(Plugin):
         # Torrents only
         if nzb.get('seeders'):
             try:
-                score += nzb.get('seeders') / 5
-                score += nzb.get('leechers') / 10
+                score += nzb.get('seeders') * 100 / 15
+                score += nzb.get('leechers') * 100 / 30
             except:
                 pass
 

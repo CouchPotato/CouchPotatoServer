@@ -36,7 +36,7 @@ class TorrentLeech(TorrentProvider):
     def _searchOnTitle(self, title, movie, quality, results):
 
         url = self.urls['search'] % (tryUrlencode('%s %s' % (title.replace(':', ''), movie['library']['year'])), self.getCatId(quality['identifier'])[0])
-        data = self.getHTMLData(url, opener = self.login_opener)
+        data = self.getHTMLData(url)
 
         if data:
             html = BeautifulSoup(data)
@@ -68,12 +68,12 @@ class TorrentLeech(TorrentProvider):
                 log.error('Failed to parsing %s: %s', (self.getName(), traceback.format_exc()))
 
     def getLoginParams(self):
-        return tryUrlencode({
+        return {
             'username': self.conf('username'),
             'password': self.conf('password'),
             'remember_me': 'on',
             'login': 'submit',
-        })
+        }
 
     def loginSuccess(self, output):
         return '/user/account/logout' in output.lower() or 'welcome back' in output.lower()

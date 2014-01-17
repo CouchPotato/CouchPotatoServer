@@ -2,7 +2,7 @@ from base64 import b64encode, b16encode, b32decode
 from bencode import bencode as benc, bdecode
 from couchpotato.core.downloaders.base import Downloader, ReleaseDownloadList
 from couchpotato.core.helpers.encoding import isInt, sp
-from couchpotato.core.helpers.variable import tryFloat
+from couchpotato.core.helpers.variable import tryFloat, cleanHost
 from couchpotato.core.logger import CPLog
 from datetime import timedelta
 from hashlib import sha1
@@ -22,7 +22,7 @@ class Deluge(Downloader):
 
     def connect(self):
         # Load host from config and split out port.
-        host = self.conf('host').split(':')
+        host = cleanHost(self.conf('host'), protocol = False).split(':')
         if not isInt(host[1]):
             log.error('Config properties are not filled in correctly, port is missing.')
             return False
@@ -32,7 +32,10 @@ class Deluge(Downloader):
 
         return self.drpc
 
-    def download(self, data, movie, filedata = None):
+    def download(self, data = None, media = None, filedata = None):
+        if not media: media = {}
+        if not data: data = {}
+
         log.info('Sending "%s" (%s) to Deluge.', (data.get('name'), data.get('protocol')))
 
         if not self.connect():
@@ -73,7 +76,7 @@ class Deluge(Downloader):
         if data.get('protocol') == 'torrent_magnet':
             remote_torrent = self.drpc.add_torrent_magnet(data.get('url'), options)
         else:
-            filename = self.createFileName(data, filedata, movie)
+            filename = self.createFileName(data, filedata, media)
             remote_torrent = self.drpc.add_torrent_file(filename, filedata, options)
 
         if not remote_torrent:
@@ -83,25 +86,30 @@ class Deluge(Downloader):
         log.info('Torrent sent to Deluge successfully.')
         return self.downloadReturnId(remote_torrent)
 
-    def getAllDownloadStatus(self):
+    def getAllDownloadStatus(self, ids):
 
         log.debug('Checking Deluge download status.')
 
         if not self.connect():
-            return False
+            return []
 
         release_downloads = ReleaseDownloadList(self)
 
-        queue = self.drpc.get_alltorrents()
+        queue = self.drpc.get_alltorrents(ids)
 
         if not queue:
             log.debug('Nothing in queue or error')
-            return False
+            return []
 
         for torrent_id in queue:
             torrent = queue[torrent_id]
-            log.debug('name=%s / id=%s / save_path=%s / move_completed_path=%s / hash=%s / progress=%s / state=%s / eta=%s / ratio=%s / stop_ratio=%s / is_seed=%s / is_finished=%s / paused=%s', (torrent['name'], torrent['hash'], torrent['save_path'], torrent['move_completed_path'], torrent['hash'], torrent['progress'], torrent['state'], torrent['eta'], torrent['ratio'], torrent['stop_ratio'], torrent['is_seed'], torrent['is_finished'], torrent['paused']))
 
+            if not 'hash' in torrent:
+                # When given a list of ids, deluge will return an empty item for a non-existant torrent.
+                continue
+
+            log.debug('name=%s / id=%s / save_path=%s / move_on_completed=%s / move_completed_path=%s / hash=%s / progress=%s / state=%s / eta=%s / ratio=%s / stop_ratio=%s / is_seed=%s / is_finished=%s / paused=%s', (torrent['name'], torrent['hash'], torrent['save_path'], torrent['move_on_completed'], torrent['move_completed_path'], torrent['hash'], torrent['progress'], torrent['state'], torrent['eta'], torrent['ratio'], torrent['stop_ratio'], torrent['is_seed'], torrent['is_finished'], torrent['paused']))
+    
             # Deluge has no easy way to work out if a torrent is stalled or failing.
             #status = 'failed'
             status = 'busy'
@@ -117,11 +125,11 @@ class Deluge(Downloader):
             download_dir = sp(torrent['save_path'])
             if torrent['move_on_completed']:
                 download_dir = torrent['move_completed_path']
-
+    
             torrent_files = []
             for file_item in torrent['files']:
                 torrent_files.append(sp(os.path.join(download_dir, file_item['path'])))
-
+    
             release_downloads.append({
                 'id': torrent['hash'],
                 'name': torrent['name'],
@@ -205,11 +213,11 @@ class DelugeRPC(object):
 
         return torrent_id
 
-    def get_alltorrents(self):
+    def get_alltorrents(self, ids):
         ret = False
         try:
             self.connect()
-            ret = self.client.core.get_torrents_status({}, {}).get()
+            ret = self.client.core.get_torrents_status({'id': ids}, ('name', 'hash', 'save_path', 'move_completed_path', 'progress', 'state', 'eta', 'ratio', 'stop_ratio', 'is_seed', 'is_finished', 'paused', 'move_on_completed', 'files')).get()
         except Exception, err:
             log.error('Failed to get all torrents: %s %s', (err, traceback.format_exc()))
         finally:

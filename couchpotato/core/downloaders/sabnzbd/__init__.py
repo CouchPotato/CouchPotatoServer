@@ -25,6 +25,13 @@ config = [{
                     'default': 'localhost:8080',
                 },
                 {
+                    'name': 'ssl',
+                    'default': 0,
+                    'type': 'bool',
+                    'advanced': True,
+                    'description': 'Use HyperText Transfer Protocol Secure, or <strong>https</strong>',
+                },
+                {
                     'name': 'api_key',
                     'label': 'Api Key',
                     'description': 'Used for all calls to Sabnzbd.',
