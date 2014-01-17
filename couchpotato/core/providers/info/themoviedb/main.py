@@ -1,5 +1,6 @@
 from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import simplifyString, toUnicode
+from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.info.base import MovieProvider
 import tmdb3
@@ -137,7 +138,7 @@ class TheMovieDb(MovieProvider):
                 'imdb': movie.imdb,
                 'runtime': movie.runtime,
                 'released': str(movie.releasedate),
-                'year': year,
+                'year': tryInt(year, None),
                 'plot': movie.overview,
                 'genres': genres,
                 'collection': getattr(movie.collection, 'name', None),
