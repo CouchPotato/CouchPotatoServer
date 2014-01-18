@@ -1159,7 +1159,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                     if not packedinfo.isdir and not os.path.isfile(extr_file_path):
                         log.debug('Extracting %s...', packedinfo.filename)
                         rar_handle.extract(condition = [packedinfo.index], path = extr_path, withSubpath = False, overwrite = False)
-                        os.utime(extr_file_path, None)
+                        os.utime(extr_file_path, (os.path.getatime(archive['file']),os.path.getmtime(archive['file'])) )
                         extr_files.append(extr_file_path)
                 del rar_handle
             except Exception, e:
