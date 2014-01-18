@@ -1,4 +1,6 @@
 .suggestions {
+    clear: both;
+    padding-top: 10px;
 }
 
 	.suggestions > h2 {

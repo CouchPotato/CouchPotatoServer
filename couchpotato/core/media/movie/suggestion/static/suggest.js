@@ -42,11 +42,7 @@ var SuggestList = new Class({
 
 				}
 			}
-		}).grab(
-			new Element('h2', {
-				'text': 'You might like these'
-			})
-		);
+		});
 
 		self.api_request = Api.request('suggestion.view', {
 			'onComplete': self.fill.bind(self)

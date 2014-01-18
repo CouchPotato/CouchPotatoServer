@@ -1,4 +1,6 @@
 .charts {
+    clear: both;
+    display: none;
 }
 
 	.charts > h2 {
@@ -146,7 +148,7 @@
         left: 50px;
 	}
     
-    .charts .chart .media_result span.chart_number {
+    .charts .chart .media_result div.chart_number {
         color: white;
         position: absolute;
         top: 0;
@@ -158,6 +160,15 @@
         font: bold 2em/1em Helvetica, Sans-Serif;
         width: 50px;
         height: 60px;
+    }
+
+    .charts .chart .media_result div.chart_number.chart_in_wanted {
+        background: rgb(0, 255, 40); /* fallback color */
+        background: rgba(0, 255, 40, 0.3);
+    }
+    .charts .chart .media_result div.chart_number.chart_in_library {
+        background: rgb(0, 202, 32); /* fallback color */
+        background: rgba(0, 202, 32, 0.3);
     }
 
 
@@ -183,3 +194,27 @@
 			vertical-align: middle;
 		}
 
+    .toggle_menu {
+        height: 50px;
+    }
+    .toggle_menu a {
+        display: block;
+        width: 50%;
+        float: left;
+        color: #fff;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.0666667);
+        text-align: center;
+    }
+    .toggle_menu a:hover {
+        border-color: #047792;
+        border-width: 4px;
+    }
+    .toggle_menu a.active {
+        border-bottom: 4px solid #04bce6;
+    }
+    .toggle_menu a:last-child {
+        float: right;
+    }
+    .toggle_menu h2 {
+        height: 40px;
+    }

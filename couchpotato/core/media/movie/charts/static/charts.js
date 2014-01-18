@@ -12,16 +12,61 @@ var Charts = new Class({
 	create: function(){
 		var self = this;
 
-		self.el = new Element('div.charts').grab(
-			new Element('h2', {
-				'text': 'Charts'
-			})
+		self.el = new Element('div.charts');
+
+
+		self.el_toggle_menu = new Element('div.toggle_menu', {
+
+        });
+
+        self.el_toggle_menu.grab( new Element('a.toggle_suggestions.active', {
+                'href': '#',
+                'events': { 'click': function(e) {
+                        e.preventDefault();
+                        self.toggle_menu('suggestions');
+                    }
+                }
+            }).grab( new Element('h2', {'text': 'Suggestions'}))
 		);
+		self.el_toggle_menu.grab( new Element('a.toggle_charts', {
+                'href': '#',
+                'events': { 'click': function(e) {
+                        e.preventDefault();
+                        self.toggle_menu('charts');
+                    }
+                }
+            }).grab( new Element('h2', {'text': 'Charts'}))
+		);
+
 
 		self.api_request = Api.request('charts.view', {
 			'onComplete': self.fill.bind(self)
 		});
 
+	},
+
+	toggle_menu: function(menu_id){
+	    var self = this;
+	    var menu_list = ['suggestions','charts'];
+	    var menu_index = -1;
+	    for( var i = 0; i < menu_list.length; i++) {
+	        if( menu_id == menu_list[i] ) {
+	            menu_index = i;
+	            break;
+	        }
+	    }
+	    if( menu_index == -1 ) return false;
+
+	    for( var i = 0; i < menu_list.length; i++) {
+	        if( i != menu_index ) {
+	            $$('div.'+menu_list[i]).hide();
+	            $$('a.toggle_'+menu_list[i]).removeClass('active');
+	        };
+	    }
+
+	    $$('div.'+menu_id).show();
+	    $$('a.toggle_'+menu_id).addClass('active');
+	    return true;
 	},
 
 	fill: function(json){
@@ -32,6 +77,7 @@ var Charts = new Class({
 			self.el.hide();
 		}
 		else {
+            self.el_toggle_menu.inject( self.el, 'before');
 
 			Object.each(json.charts, function(chart){
 
@@ -50,7 +96,9 @@ var Charts = new Class({
 						self.afterAdded(m, movie)
 					}
 				});
-				    m.el.grab( new Element('span.chart_number', { 'text': it++ }));
+				    var in_database_class = movie.in_wanted ? '.chart_in_wanted' : (movie.in_library ? '.chart_in_library' : '');
+				    var in_database_title = movie.in_wanted ? 'Movie in wanted list' : (movie.in_library ? 'Movie in library' : '');
+				    m.el.grab( new Element('div.chart_number' + in_database_class, { 'text': it++, 'title': in_database_title }));
 					m.data_container.grab(
 						new Element('div.actions').adopt(
 							new Element('a.add.icon2', {
@@ -108,7 +156,8 @@ var Charts = new Class({
 	afterAdded: function(m, movie){
 		var self = this;
 
-		// Maybe do something here in the future
+		$(m).getElement('div.chart_number').addClass('chart_in_wanted').setProperty('title','Movie in wanted list');
+
 
 	},
 
