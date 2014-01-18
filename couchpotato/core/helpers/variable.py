@@ -129,7 +129,7 @@ def cleanHost(host, protocol = True, ssl = False, username = None, password = No
     if protocol and username and password:
         login = '%s:%s@' % (username, password)
         if not login in host:
-            host.replace('://', '://' + login, 1) 
+            host = host.replace('://', '://' + login, 1) 
 
     host = host.rstrip('/ ')
     if protocol:
