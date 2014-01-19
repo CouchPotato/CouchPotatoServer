@@ -497,6 +497,8 @@ Option.String = new Class({
 Option.Dropdown = new Class({
 	Extends: OptionBase,
 
+	dd: null,
+
 	create: function(){
 		var self = this;
 
@@ -516,9 +518,12 @@ Option.Dropdown = new Class({
 
 		self.input.set('value', self.getSettingValue());
 
-		var dd = new Form.Dropdown(self.input, {
+		dd = new Form.Dropdown(self.input, {
 			'onChange': self.changed.bind(self)
 		});
+
+		dd.element.addEvent('update_options', dd.updateOptions.bind(dd));
+
 		self.input = dd.input;
 	}
 });

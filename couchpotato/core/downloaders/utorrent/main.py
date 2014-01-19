@@ -1,5 +1,6 @@
 from base64 import b16encode, b32decode
 from bencode import bencode as benc, bdecode
+from couchpotato.api import addApiView
 from couchpotato.core.downloaders.base import Downloader, ReleaseDownloadList
 from couchpotato.core.event import fireEvent
 from couchpotato.core.helpers.encoding import isInt, ss, sp
@@ -27,18 +28,33 @@ class uTorrent(Downloader):
     utorrent_api = None
     download_directories = []
 
-    def connect(self):
+    def __init__(self):
+        self.registerDownloadDirectories()
+        addApiView('download.utorrent.get_dirs', self.getDownloadDirectories)
+        super(uTorrent, self).__init__()
+
+    def connect(self, registerDownloadDirs = True):
         # Load host from config and split out port.
         host = self.conf('host').split(':')
         if not isInt(host[1]):
             log.error('Config properties are not filled in correctly, port is missing.')
             return False
 
-        self.utorrent_api = uTorrentAPI(host[0], port = host[1], username = self.conf('username'), password = self.conf('password'))
+        try:
+            self.utorrent_api = uTorrentAPI(host[0], port = host[1], username = self.conf('username'), password = self.conf('password'))
+        except:
+            self.unregisterDownloadDirectories()
+            return False
 
-        self.registerDownloadDirectories()
+        if registerDownloadDirs:
+            self.registerDownloadDirectories()
 
         return self.utorrent_api
+
+    def test(self):
+        if self.connect() and self.utorrent_api.get_status():
+            return True
+        return False
 
     def download(self, data = None, movie = None, filedata = None):
         if not movie: movie = {}
@@ -210,9 +226,14 @@ class uTorrent(Downloader):
                 #Windows only needs S_IWRITE, but we bitwise-or with current perms to preserve other permission bits on Linux
                 os.chmod(filepath, stat.S_IWRITE | os.stat(filepath).st_mode)
 
+    def getDownloadDirectories(self):
+        if not self.registerDownloadDirectories():
+            return {'success': False}
+
+        return { 'success': True, 'directories':self.download_directories }
 
     def registerDownloadDirectories(self):
-        if not self.utorrent_api:
+        if not self.connect(False):
             return False
 
         self.download_directories = self.utorrent_api.get_download_directories()
@@ -226,6 +247,16 @@ class uTorrent(Downloader):
         option = {
                 'name': 'download_directory',
                 'values': directories,
+        }
+
+        class_name = self.getName().lower().split(':')
+        fireEvent('settings.add_option_item', class_name[0].lower(), 0, option, True)
+        return True
+
+    def unregisterDownloadDirectories(self):
+        option = {
+                'name': 'download_directory',
+                'values': [('Default Directory','Default Directory')],
         }
 
         class_name = self.getName().lower().split(':')

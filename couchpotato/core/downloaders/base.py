@@ -1,4 +1,5 @@
 from base64 import b32decode, b16encode
+from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.variable import mergeDicts
 from couchpotato.core.logger import CPLog
@@ -41,6 +42,8 @@ class Downloader(Provider):
         addEvent('download.remove_failed', self._removeFailed)
         addEvent('download.pause', self._pause)
         addEvent('download.process_complete', self._processComplete)
+        addApiView('download.%s.is_testable' % self.getName().lower(), self.isTestable)
+        addApiView('download.%s.test' % self.getName().lower(), self._test)
 
     def getEnabledProtocol(self):
         for download_protocol in self.protocol:
@@ -56,6 +59,20 @@ class Downloader(Provider):
         if self.isDisabled(manual, data):
             return
         return self.download(data = data, movie = movie, filedata = filedata)
+
+    def isTestable(self):
+        # Checks whether 'test' function has been overrided
+        this_method = getattr(self, 'test')
+        base_method = getattr(Downloader, 'test')
+        if this_method.__func__ is not base_method.__func__:
+            return {'success': True }
+        return {'success': False }
+
+    def _test(self):
+        return {'success': self.test()}
+
+    def test(self):
+        return False
 
     def _getAllDownloadStatus(self):
         if self.isDisabled(manual = True, data = {}):

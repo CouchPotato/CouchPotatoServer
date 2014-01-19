@@ -49,6 +49,7 @@ class ClientScript(Plugin):
             'scripts/page/settings.js',
             'scripts/page/about.js',
             'scripts/page/manage.js',
+            'scripts/misc/downloaders.js',
         ],
     }
 
