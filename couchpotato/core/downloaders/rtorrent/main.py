@@ -173,9 +173,16 @@ class rTorrent(Downloader):
 
             for torrent in torrents:
                 if torrent.info_hash in ids:
+                    torrent_directory = os.path.normpath(torrent.directory)
                     torrent_files = []
-                    for file_item in torrent.get_files():
-                        torrent_files.append(sp(os.path.join(torrent.directory, file_item.path)))
+
+                    for file in torrent.get_files():
+                        if not os.path.normpath(file.path).startswith(torrent_directory):
+                            file_path = os.path.join(torrent_directory, file.path.lstrip('/'))
+                        else:
+                            file_path = file.path
+
+                        torrent_files.append(sp(file_path))
 
                     status = 'busy'
                     if torrent.complete:
