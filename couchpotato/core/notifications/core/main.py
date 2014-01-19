@@ -71,7 +71,6 @@ class CoreNotifier(Notification):
         db.query(Notif).filter(Notif.added <= (int(time.time()) - 2419200)).delete()
         db.commit()
 
-
     def markAsRead(self, ids = None, **kwargs):
 
         ids = splitString(ids) if ids else None

@@ -11,11 +11,11 @@ log = CPLog(__name__)
 class IPTorrents(TorrentProvider):
 
     urls = {
-        'test' : 'http://www.iptorrents.com/',
-        'base_url' : 'http://www.iptorrents.com',
-        'login' : 'http://www.iptorrents.com/torrents/',
+        'test': 'http://www.iptorrents.com/',
+        'base_url': 'http://www.iptorrents.com',
+        'login': 'http://www.iptorrents.com/torrents/',
         'login_check': 'http://www.iptorrents.com/inbox.php',
-        'search' : 'http://www.iptorrents.com/torrents/?l%d=1%s&q=%s&qf=ti&p=%d',
+        'search': 'http://www.iptorrents.com/torrents/?l%d=1%s&q=%s&qf=ti&p=%d',
     }
 
     cat_ids = [

@@ -61,7 +61,6 @@ class MovieBase(MovieTypeBase):
             except:
                 pass
 
-
         library = fireEvent('library.add.movie', single = True, attrs = params, update_after = update_library)
 
         # Status

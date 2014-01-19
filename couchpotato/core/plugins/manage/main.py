@@ -14,6 +14,7 @@ import traceback
 
 log = CPLog(__name__)
 
+
 class Manage(Plugin):
 
     in_progress = False

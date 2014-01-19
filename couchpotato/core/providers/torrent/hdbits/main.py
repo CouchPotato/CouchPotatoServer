@@ -10,11 +10,11 @@ log = CPLog(__name__)
 class HDBits(TorrentProvider):
 
     urls = {
-        'test' : 'https://hdbits.org/',
-        'login' : 'https://hdbits.org/login/doLogin/',
-        'detail' : 'https://hdbits.org/details.php?id=%s&source=browse',
-        'search' : 'https://hdbits.org/json_search.php?imdb=%s',
-        'download' : 'https://hdbits.org/download.php/%s.torrent?id=%s&passkey=%s&source=details.browse',
+        'test': 'https://hdbits.org/',
+        'login': 'https://hdbits.org/login/doLogin/',
+        'detail': 'https://hdbits.org/details.php?id=%s&source=browse',
+        'search': 'https://hdbits.org/json_search.php?imdb=%s',
+        'download': 'https://hdbits.org/download.php/%s.torrent?id=%s&passkey=%s&source=details.browse',
         'login_check': 'http://hdbits.org/inbox.php',
     }
 

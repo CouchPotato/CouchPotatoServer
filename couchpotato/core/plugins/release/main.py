@@ -96,7 +96,6 @@ class Release(Plugin):
 
         identifier = '%s.%s.%s' % (group['library']['identifier'], group['meta_data'].get('audio', 'unknown'), group['meta_data']['quality']['identifier'])
 
-
         done_status, snatched_status = fireEvent('status.get', ['done', 'snatched'], single = True)
 
         # Add movie
@@ -237,15 +236,15 @@ class Release(Plugin):
         success = self.download(data = item, media = rel.movie.to_dict({
             'profile': {'types': {'quality': {}}},
             'releases': {'status': {}, 'quality': {}},
-            'library': {'titles': {}, 'files':{}},
+            'library': {'titles': {}, 'files': {}},
             'files': {}
         }), manual = True)
 
-        if success == True:
-            db.expunge_all()
-            rel = db.query(Relea).filter_by(id = id).first() # Get release again @RuudBurger why do we need to get it again??
+        db.expunge_all()
 
+        if success:
             fireEvent('notify.frontend', type = 'release.manual_download', data = True, message = 'Successfully snatched "%s"' % item['name'])
+
         return {
             'success': success == True
         }
@@ -317,8 +316,8 @@ class Release(Plugin):
             # If renamer isn't used, mark media done if finished or release downloaded
             else:
                 if media['status_id'] == active_status.get('id'):
-                    finished = next((True for profile_type in media['profile']['types'] if \
-                                     profile_type['quality_id'] == rls.quality.id and profile_type['finish']), False)
+                    finished = next((True for profile_type in media['profile']['types']
+                                     if profile_type['quality_id'] == rls.quality.id and profile_type['finish']), False)
                     if finished:
                         log.info('Renamer disabled, marking media as finished: %s', log_movie)
 
@@ -423,7 +422,7 @@ class Release(Plugin):
             .filter(Relea.movie_id == id) \
             .all()
 
-        releases = [r.to_dict({'info':{}, 'files':{}}) for r in releases_raw]
+        releases = [r.to_dict({'info': {}, 'files': {}}) for r in releases_raw]
         releases = sorted(releases, key = lambda k: k['info'].get('score', 0), reverse = True)
 
         return releases
@@ -449,6 +448,7 @@ class Release(Plugin):
             for info in rel.info:
                 item[info.identifier] = info.value
 
+            release_name = None
             if rel.files:
                 for file_item in rel.files:
                     if file_item.type.identifier == 'movie':
@@ -456,6 +456,7 @@ class Release(Plugin):
                         break
             else:
                 release_name = item['name']
+
             #update status in Db
             log.debug('Marking release %s as %s', (release_name, status.get("label")))
             rel.status_id = status.get('id')

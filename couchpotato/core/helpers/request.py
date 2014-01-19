@@ -37,6 +37,7 @@ def getParams(params):
 
     return dictToList(temp)
 
+
 def dictToList(params):
 
     if type(params) is dict:

@@ -110,5 +110,5 @@ class CouchPotatoApi(MovieProvider):
             'X-CP-Version': fireEvent('app.version', single = True),
             'X-CP-API': self.api_version,
             'X-CP-Time': time.time(),
-            'X-CP-Identifier': '+%s' % Env.setting('api_key', 'core')[:10], # Use first 10 as identifier, so we don't need to use IP address in api stats
+            'X-CP-Identifier': '+%s' % Env.setting('api_key', 'core')[:10],  # Use first 10 as identifier, so we don't need to use IP address in api stats
         }

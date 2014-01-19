@@ -6,6 +6,7 @@ from sqlalchemy.orm import scoped_session
 from sqlalchemy.orm.session import sessionmaker
 import os
 
+
 class Env(object):
 
     _appname = 'CouchPotato'

@@ -23,9 +23,9 @@ class Plex(Notification):
 
         addEvent('renamer.after', self.addToLibrary)
 
-
-    def addToLibrary(self, message = None, group = {}):
+    def addToLibrary(self, message = None, group = None):
         if self.isDisabled(): return
+        if not group: group = {}
 
         return self.server.refresh()
 
@@ -57,7 +57,8 @@ class Plex(Notification):
 
         return success
 
-    def notify(self, message = '', data = {}, listener = None):
+    def notify(self, message = '', data = None, listener = None):
+        if not data: data = {}
         return self.notifyClients(message, self.getClientNames())
 
     def test(self, **kwargs):

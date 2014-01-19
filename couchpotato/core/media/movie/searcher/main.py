@@ -91,7 +91,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                     'category': {},
                     'profile': {'types': {'quality': {}}},
                     'releases': {'status': {}, 'quality': {}},
-                    'library': {'titles': {}, 'files':{}},
+                    'library': {'titles': {}, 'files': {}},
                     'files': {},
                 })
 
@@ -117,7 +117,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
     def single(self, movie, search_protocols = None, manual = False):
 
         # movies don't contain 'type' yet, so just set to default here
-        if not movie.has_key('type'):
+        if 'type' not in movie:
             movie['type'] = 'movie'
 
         # Find out search type

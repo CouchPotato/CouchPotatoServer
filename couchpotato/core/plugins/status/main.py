@@ -33,7 +33,7 @@ class StatusPlugin(Plugin):
         addEvent('status.get_by_id', self.getById)
         addEvent('status.all', self.all)
         addEvent('app.initialize', self.fill)
-        addEvent('app.load', self.all) # Cache all statuses
+        addEvent('app.load', self.all)  # Cache all statuses
 
         addApiView('status.list', self.list, docs = {
             'desc': 'Check for available update',

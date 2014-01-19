@@ -101,7 +101,7 @@ class CategoryPlugin(Plugin):
             self.removeFromMovie(id)
 
             success = True
-        except Exception, e:
+        except Exception as e:
             message = log.error('Failed deleting category: %s', e)
 
         db.expire_all()

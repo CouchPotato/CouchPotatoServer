@@ -14,22 +14,6 @@ class TorrentProvider(YarrProvider):
     proxy_domain = None
     proxy_list = []
 
-    def imdbMatch(self, url, imdbId):
-        if getImdb(url) == imdbId:
-            return True
-
-        if url[:4] == 'http':
-            try:
-                cache_key = md5(url)
-                data = self.getCache(cache_key, url)
-            except IOError:
-                log.error('Failed to open %s.', url)
-                return False
-
-            return getImdb(data) == imdbId
-
-        return False
-
     def getDomain(self, url = ''):
 
         forced_domain = self.conf('domain')
@@ -63,8 +47,9 @@ class TorrentProvider(YarrProvider):
 
         return cleanHost(self.proxy_domain).rstrip('/') + url
 
-    def correctProxy(self):
+    def correctProxy(self, data):
         return True
+
 
 class TorrentMagnetProvider(TorrentProvider):
 

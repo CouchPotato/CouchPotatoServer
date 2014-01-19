@@ -63,7 +63,7 @@ class Updater(Plugin):
         fireEvent('schedule.remove', 'updater.check', single = True)
         if self.isEnabled():
             fireEvent('schedule.interval', 'updater.check', self.autoUpdate, hours = 6)
-            self.autoUpdate() # Check after enabling
+            self.autoUpdate()  # Check after enabling
 
     def autoUpdate(self):
         if self.isEnabled() and self.check() and self.conf('automatic') and not self.updater.update_failed:
@@ -151,6 +151,9 @@ class BaseUpdater(Plugin):
             'branch': self.branch,
         }
 
+    def getVersion(self):
+        pass
+
     def check(self):
         pass
 
@@ -179,7 +182,6 @@ class BaseUpdater(Plugin):
                         log.error('Couldn\'t remove empty directory %s: %s', (full_path, traceback.format_exc()))
 
 
-
 class GitUpdater(BaseUpdater):
 
     def __init__(self, git_command):
@@ -206,7 +208,7 @@ class GitUpdater(BaseUpdater):
 
         if not self.version:
             try:
-                output = self.repo.getHead() # Yes, please
+                output = self.repo.getHead()  # Yes, please
                 log.debug('Git version output: %s', output.hash)
                 self.version = {
                     'repr': 'git:(%s:%s % s) %s (%s)' % (self.repo_user, self.repo_name, self.branch, output.hash[:8], datetime.fromtimestamp(output.getDate())),
@@ -214,7 +216,7 @@ class GitUpdater(BaseUpdater):
                     'date': output.getDate(),
                     'type': 'git',
                 }
-            except Exception, e:
+            except Exception as e:
                 log.error('Failed using GIT updater, running from source, you need to have GIT installed. %s', e)
                 return 'No GIT'
 
@@ -250,7 +252,6 @@ class GitUpdater(BaseUpdater):
         return False
 
 
-
 class SourceUpdater(BaseUpdater):
 
     def __init__(self):
@@ -276,9 +277,9 @@ class SourceUpdater(BaseUpdater):
 
             # Extract
             if download_data.get('type') == 'zip':
-                zip = zipfile.ZipFile(destination)
-                zip.extractall(extracted_path)
-                zip.close()
+                zip_file = zipfile.ZipFile(destination)
+                zip_file.extractall(extracted_path)
+                zip_file.close()
             else:
                 tar = tarfile.open(destination)
                 tar.extractall(path = extracted_path)
@@ -345,7 +346,6 @@ class SourceUpdater(BaseUpdater):
 
         return True
 
-
     def removeDir(self, path):
         try:
             if os.path.isdir(path):
@@ -366,7 +366,7 @@ class SourceUpdater(BaseUpdater):
                 self.version = output
                 self.version['type'] = 'source'
                 self.version['repr'] = 'source:(%s:%s % s) %s (%s)' % (self.repo_user, self.repo_name, self.branch, output.get('hash', '')[:8], datetime.fromtimestamp(output.get('date', 0)))
-            except Exception, e:
+            except Exception as e:
                 log.error('Failed using source updater. %s', e)
                 return {}
 
@@ -396,7 +396,7 @@ class SourceUpdater(BaseUpdater):
 
             return {
                 'hash': commit['sha'],
-                'date':  int(time.mktime(parse(commit['commit']['committer']['date']).timetuple())),
+                'date': int(time.mktime(parse(commit['commit']['committer']['date']).timetuple())),
             }
         except:
             log.error('Failed getting latest request from github: %s', traceback.format_exc())
@@ -441,7 +441,7 @@ class DesktopUpdater(BaseUpdater):
             if latest and latest != current_version.get('hash'):
                 self.update_version = {
                     'hash': latest,
-                    'date':  None,
+                    'date': None,
                     'changelog': self.desktop._changelogURL,
                 }
 

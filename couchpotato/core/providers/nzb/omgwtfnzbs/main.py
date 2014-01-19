@@ -18,7 +18,7 @@ class OMGWTFNZBs(NZBProvider, RSS):
         'detail_url': 'https://omgwtfnzbs.org/details.php?id=%s',
     }
 
-    http_time_between_calls = 1 #seconds
+    http_time_between_calls = 1  #seconds
 
     cat_ids = [
         ([15], ['dvdrip']),

@@ -11,12 +11,12 @@ log = CPLog(__name__)
 class TorrentBytes(TorrentProvider):
 
     urls = {
-        'test' : 'https://www.torrentbytes.net/',
-        'login' : 'https://www.torrentbytes.net/takelogin.php',
-        'login_check' : 'https://www.torrentbytes.net/inbox.php',
-        'detail' : 'https://www.torrentbytes.net/details.php?id=%s',
-        'search' : 'https://www.torrentbytes.net/browse.php?search=%s&cat=%d',
-        'download' : 'https://www.torrentbytes.net/download.php?id=%s&name=%s',
+        'test': 'https://www.torrentbytes.net/',
+        'login': 'https://www.torrentbytes.net/takelogin.php',
+        'login_check': 'https://www.torrentbytes.net/inbox.php',
+        'detail': 'https://www.torrentbytes.net/details.php?id=%s',
+        'search': 'https://www.torrentbytes.net/browse.php?search=%s&cat=%d',
+        'download': 'https://www.torrentbytes.net/download.php?id=%s&name=%s',
     }
 
     cat_ids = [

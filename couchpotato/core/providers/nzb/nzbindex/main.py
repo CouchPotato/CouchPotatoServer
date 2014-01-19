@@ -19,7 +19,7 @@ class NzbIndex(NZBProvider, RSS):
         'search': 'https://www.nzbindex.com/rss/?%s',
     }
 
-    http_time_between_calls = 1 # Seconds
+    http_time_between_calls = 1  # Seconds
 
     def _searchOnTitle(self, title, movie, quality, results):
 

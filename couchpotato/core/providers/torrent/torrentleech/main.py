@@ -12,12 +12,12 @@ log = CPLog(__name__)
 class TorrentLeech(TorrentProvider):
 
     urls = {
-        'test' : 'http://www.torrentleech.org/',
-        'login' : 'http://www.torrentleech.org/user/account/login/',
+        'test': 'http://www.torrentleech.org/',
+        'login': 'http://www.torrentleech.org/user/account/login/',
         'login_check': 'http://torrentleech.org/user/messages',
-        'detail' : 'http://www.torrentleech.org/torrent/%s',
-        'search' : 'http://www.torrentleech.org/torrents/browse/index/query/%s/categories/%d',
-        'download' : 'http://www.torrentleech.org%s',
+        'detail': 'http://www.torrentleech.org/torrent/%s',
+        'search': 'http://www.torrentleech.org/torrents/browse/index/query/%s/categories/%d',
+        'download': 'http://www.torrentleech.org%s',
     }
 
     cat_ids = [

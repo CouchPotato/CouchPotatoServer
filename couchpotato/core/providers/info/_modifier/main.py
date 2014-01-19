@@ -44,13 +44,13 @@ class MovieResultModifier(Plugin):
         new_results = {}
         for r in results:
             type_name = r.get('type', 'movie') + 's'
-            if not new_results.has_key(type_name):
+            if type_name not in new_results:
                 new_results[type_name] = []
 
             new_results[type_name].append(r)
 
         # Combine movies, needs a cleaner way..
-        if new_results.has_key('movies'):
+        if 'movies' in new_results:
             new_results['movies'] = self.combineOnIMDB(new_results['movies'])
 
         return new_results

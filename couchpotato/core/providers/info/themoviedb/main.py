@@ -56,7 +56,7 @@ class TheMovieDb(MovieProvider):
 
                     self.setCache(cache_key, results)
                     return results
-                except SyntaxError, e:
+                except SyntaxError as e:
                     log.error('Failed to parse XML response: %s', e)
                     return False
 

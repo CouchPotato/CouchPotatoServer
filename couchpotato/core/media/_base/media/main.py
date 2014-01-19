@@ -102,7 +102,6 @@ class MediaPlugin(MediaBase):
             def handler():
                 fireEvent('library.update.%s' % media.type, identifier = identifier, default_title = default_title, force = True, on_complete = self.createOnComplete(id))
 
-
             return handler
 
     def addSingleRefreshView(self):
@@ -254,7 +253,7 @@ class MediaPlugin(MediaBase):
 
             # Merge releases with movie dict
             movies.append(mergeDicts(movie_dict[media_id].to_dict({
-                'library': {'titles': {}, 'files':{}},
+                'library': {'titles': {}, 'files': {}},
                 'files': {},
             }), {
                 'releases': releases,

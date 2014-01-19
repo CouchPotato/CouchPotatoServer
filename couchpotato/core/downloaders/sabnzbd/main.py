@@ -95,7 +95,7 @@ class Sabnzbd(Downloader):
                 status = 'busy'
                 if 'ENCRYPTED / ' in nzb['filename']:
                     status = 'failed'
-    
+
                 release_downloads.append({
                     'id': nzb['nzo_id'],
                     'name': nzb['filename'],
@@ -112,7 +112,7 @@ class Sabnzbd(Downloader):
                     status = 'failed'
                 elif nzb['status'] == 'Completed':
                     status = 'completed'
-    
+
                 release_downloads.append({
                     'id': nzb['nzo_id'],
                     'name': nzb['name'],
@@ -166,8 +166,8 @@ class Sabnzbd(Downloader):
     def call(self, request_params, use_json = True, **kwargs):
 
         url = cleanHost(self.conf('host'), ssl = self.conf('ssl')) + 'api?' + tryUrlencode(mergeDicts(request_params, {
-           'apikey': self.conf('api_key'),
-           'output': 'json'
+            'apikey': self.conf('api_key'),
+            'output': 'json'
         }))
 
         data = self.urlopen(url, timeout = 60, show_error = False, headers = {'User-Agent': Env.getIdentifier()}, **kwargs)

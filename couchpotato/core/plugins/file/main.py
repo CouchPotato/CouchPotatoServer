@@ -82,7 +82,6 @@ class FileManager(Plugin):
     def showCacheFile(self, route, **kwargs):
         Env.get('app').add_handlers(".*$", [('%s%s' % (Env.get('api_base'), route), StaticFileHandler, {'path': Env.get('cache_dir')})])
 
-
     def download(self, url = '', dest = None, overwrite = False, urlopen_kwargs = None):
         if not urlopen_kwargs: urlopen_kwargs = {}
 

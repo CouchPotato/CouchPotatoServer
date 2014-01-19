@@ -66,7 +66,7 @@ class uTorrent(Downloader):
             new_settings['seed_prio_limitul_flag'] = True
             log.info('Updated uTorrent settings to set a torrent to complete after it the seeding requirements are met.')
 
-        if settings.get('bt.read_only_on_complete'): #This doesn't work as this option seems to be not available through the api. Mitigated with removeReadOnly function
+        if settings.get('bt.read_only_on_complete'):  #This doesn't work as this option seems to be not available through the api. Mitigated with removeReadOnly function
             new_settings['bt.read_only_on_complete'] = False
             log.info('Updated uTorrent settings to not set the files to read only after completing.')
 
@@ -149,7 +149,7 @@ class uTorrent(Downloader):
                     torrent_files = [sp(os.path.join(torrent[26], torrent_file[0])) for torrent_file in torrent_files['files'][1]]
                 except:
                     log.debug('Failed getting files from torrent: %s', torrent[2])
-    
+
                 status = 'busy'
                 if (torrent[1] & self.status_flags['STARTED'] or torrent[1] & self.status_flags['QUEUED']) and torrent[4] == 1000:
                     status = 'seeding'
@@ -157,10 +157,10 @@ class uTorrent(Downloader):
                     status = 'failed'
                 elif torrent[4] == 1000:
                     status = 'completed'
-    
+
                 if not status == 'busy':
                     self.removeReadOnly(torrent_files)
-    
+
                 release_downloads.append({
                     'id': torrent[0],
                     'name': torrent[2],

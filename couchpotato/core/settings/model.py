@@ -18,6 +18,7 @@ options_defaults["shortnames"] = True
 # http://elixir.ematia.de/trac/wiki/Recipes/MultipleDatabasesOneMetadata
 __session__ = None
 
+
 class SetEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, set):
@@ -39,6 +40,7 @@ class JsonType(TypeDecorator):
 
     def process_result_value(self, value, dialect):
         return json.loads(value if value else '{}')
+
 
 class MutableDict(Mutable, dict):
 
@@ -78,7 +80,7 @@ class Movie(Entity):
     such as trailers, nfo, thumbnails"""
 
     last_edit = Field(Integer, default = lambda: int(time.time()), index = True)
-    type = 'movie' # Compat tv branch
+    type = 'movie'  # Compat tv branch
 
     library = ManyToOne('Library', cascade = 'delete, delete-orphan', single_parent = True)
     status = ManyToOne('Status')
@@ -87,7 +89,8 @@ class Movie(Entity):
     releases = OneToMany('Release', cascade = 'all, delete-orphan')
     files = ManyToMany('File', cascade = 'all, delete-orphan', single_parent = True)
 
-Media = Movie # Compat tv branch
+Media = Movie  # Compat tv branch
+
 
 class Library(Entity):
     """"""
@@ -214,6 +217,7 @@ class Profile(Entity):
         orig_dict['hide'] = orig_dict.get('hide') or False
 
         return orig_dict
+
 
 class Category(Entity):
     """"""

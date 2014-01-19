@@ -9,13 +9,13 @@ log = CPLog(__name__)
 class Yify(TorrentMagnetProvider):
 
     urls = {
-        'test' : '%s/api',
-        'search' : '%s/api/list.json?keywords=%s&quality=%s',
+        'test': '%s/api',
+        'search': '%s/api/list.json?keywords=%s&quality=%s',
         'detail': '%s/api/movie.json?id=%s'
     }
 
-    http_time_between_calls = 1 #seconds
-    
+    http_time_between_calls = 1  #seconds
+
     proxy_list = [
         'https://yify-torrents.im',
         'http://yify.unlocktorrent.com',
@@ -51,7 +51,7 @@ class Yify(TorrentMagnetProvider):
                         'id': result['MovieID'],
                         'name': title,
                         'url': result['TorrentMagnetUrl'],
-                        'detail_url': self.urls['detail'] % (self.getDomain(),result['MovieID']),
+                        'detail_url': self.urls['detail'] % (self.getDomain(), result['MovieID']),
                         'size': self.parseSize(result['Size']),
                         'seeders': tryInt(result['TorrentSeeds']),
                         'leechers': tryInt(result['TorrentPeers'])

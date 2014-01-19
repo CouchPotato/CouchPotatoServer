@@ -26,26 +26,26 @@ class Pneumatic(Downloader):
                     log.error('No nzb available!')
                     return False
 
-                fullPath = os.path.join(directory, self.createFileName(data, filedata, media))
+                full_path = os.path.join(directory, self.createFileName(data, filedata, media))
 
                 try:
-                    if not os.path.isfile(fullPath):
-                        log.info('Downloading %s to %s.', (data.get('protocol'), fullPath))
-                        with open(fullPath, 'wb') as f:
+                    if not os.path.isfile(full_path):
+                        log.info('Downloading %s to %s.', (data.get('protocol'), full_path))
+                        with open(full_path, 'wb') as f:
                             f.write(filedata)
 
                         nzb_name = self.createNzbName(data, media)
                         strm_path = os.path.join(directory, nzb_name)
 
                         strm_file = open(strm_path + '.strm', 'wb')
-                        strmContent = self.strm_syntax % (fullPath, nzb_name)
+                        strmContent = self.strm_syntax % (full_path, nzb_name)
                         strm_file.write(strmContent)
                         strm_file.close()
 
                         return self.downloadReturnId('')
 
                     else:
-                        log.info('File %s already exists.', fullPath)
+                        log.info('File %s already exists.', full_path)
                         return self.downloadReturnId('')
 
                 except:

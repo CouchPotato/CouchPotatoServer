@@ -13,7 +13,7 @@ log = CPLog(__name__)
 
 class MovieLibraryPlugin(LibraryBase):
 
-    default_dict = {'titles': {}, 'files':{}}
+    default_dict = {'titles': {}, 'files': {}}
 
     def __init__(self):
         addEvent('library.add.movie', self.add)

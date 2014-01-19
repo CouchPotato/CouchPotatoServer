@@ -1,5 +1,6 @@
 from .main import NotifyMyWP
 
+
 def start():
     return NotifyMyWP()
 

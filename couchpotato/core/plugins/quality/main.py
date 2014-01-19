@@ -133,10 +133,10 @@ class QualityPlugin(Plugin):
 
             # Create single quality profile
             prof = db.query(Profile).filter(
-                    Profile.core == True
-                ).filter(
-                    Profile.types.any(quality = qual)
-                ).all()
+                Profile.core == True
+            ).filter(
+                Profile.types.any(quality = qual)
+            ).all()
 
             if not prof:
                 log.info('Creating profile: %s', q.get('label'))

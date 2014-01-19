@@ -21,7 +21,7 @@ class Bluray(Automation, RSS):
 
             page = 0
             while True:
-                page = page + 1
+                page += 1
 
                 url = self.backlog_url % page
                 data = self.getHTMLData(url)
@@ -37,7 +37,7 @@ class Bluray(Automation, RSS):
                         name = table.h3.get_text().lower().split('blu-ray')[0].strip()
                         year = table.small.get_text().split('|')[1].strip()
 
-                        if not name.find('/') == -1: # make sure it is not a double movie release
+                        if not name.find('/') == -1:  # make sure it is not a double movie release
                             continue
 
                         if tryInt(year) < self.getMinimal('year'):

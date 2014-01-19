@@ -40,7 +40,7 @@ class Suggestion(Plugin):
                 movies.extend(splitString(Env.prop('suggest_seen', default = '')))
 
             suggestions = fireEvent('movie.suggest', movies = movies, ignore = ignored, single = True)
-            self.setCache('suggestion_cached', suggestions, timeout = 6048000) # Cache for 10 weeks
+            self.setCache('suggestion_cached', suggestions, timeout = 6048000)  # Cache for 10 weeks
 
         return {
             'success': True,

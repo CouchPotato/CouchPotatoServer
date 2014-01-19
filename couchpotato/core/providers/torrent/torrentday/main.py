@@ -23,7 +23,7 @@ class TorrentDay(TorrentProvider):
         ([5], ['bd50']),
     ]
 
-    http_time_between_calls = 1 #seconds
+    http_time_between_calls = 1  #seconds
 
     def _searchOnTitle(self, title, movie, quality, results):
 

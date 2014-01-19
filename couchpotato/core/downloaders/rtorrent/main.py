@@ -111,7 +111,6 @@ class rTorrent(Downloader):
         if self.conf('label'):
             torrent_params['label'] = self.conf('label')
 
-
         if not filedata and data.get('protocol') == 'torrent':
             log.error('Failed sending torrent, no data')
             return False

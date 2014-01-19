@@ -10,8 +10,8 @@ class MediaBase(Plugin):
 
     default_dict = {
         'profile': {'types': {'quality': {}}},
-        'releases': {'status': {}, 'quality': {}, 'files':{}, 'info': {}},
-        'library': {'titles': {}, 'files':{}},
+        'releases': {'status': {}, 'quality': {}, 'files': {}, 'info': {}},
+        'library': {'titles': {}, 'files': {}},
         'files': {},
         'status': {},
         'category': {},

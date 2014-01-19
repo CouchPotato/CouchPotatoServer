@@ -11,12 +11,12 @@ log = CPLog(__name__)
 class TorrentShack(TorrentProvider):
 
     urls = {
-        'test' : 'https://torrentshack.net/',
-        'login' : 'https://torrentshack.net/login.php',
+        'test': 'https://torrentshack.net/',
+        'login': 'https://torrentshack.net/login.php',
         'login_check': 'https://torrentshack.net/inbox.php',
-        'detail' : 'https://torrentshack.net/torrent/%s',
-        'search' : 'https://torrentshack.net/torrents.php?action=advanced&searchstr=%s&scene=%s&filter_cat[%d]=1',
-        'download' : 'https://torrentshack.net/%s',
+        'detail': 'https://torrentshack.net/torrent/%s',
+        'search': 'https://torrentshack.net/torrents.php?action=advanced&searchstr=%s&scene=%s&filter_cat[%d]=1',
+        'download': 'https://torrentshack.net/%s',
     }
 
     cat_ids = [

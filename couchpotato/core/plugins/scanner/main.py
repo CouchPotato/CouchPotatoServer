@@ -23,7 +23,7 @@ class Scanner(Plugin):
 
     ignored_in_path = [os.path.sep + 'extracted' + os.path.sep, 'extracting', '_unpack', '_failed_', '_unknown_', '_exists_', '_failed_remove_',
                        '_failed_rename_', '.appledouble', '.appledb', '.appledesktop', os.path.sep + '._', '.ds_store', 'cp.cpnfo',
-                       'thumbs.db', 'ehthumbs.db', 'desktop.ini'] #unpacking, smb-crap, hidden files
+                       'thumbs.db', 'ehthumbs.db', 'desktop.ini']  #unpacking, smb-crap, hidden files
     ignore_names = ['extract', 'extracting', 'extracted', 'movie', 'movies', 'film', 'films', 'download', 'downloads', 'video_ts', 'audio_ts', 'bdmv', 'certificate']
     extensions = {
         'movie': ['mkv', 'wmv', 'avi', 'mpg', 'mpeg', 'mp4', 'm2ts', 'iso', 'img', 'mdf', 'ts', 'm4v'],
@@ -48,7 +48,7 @@ class Scanner(Plugin):
         'leftover': ('leftover', 'leftover'),
     }
 
-    file_sizes = { # in MB
+    file_sizes = {  # in MB
         'movie': {'min': 300},
         'trailer': {'min': 2, 'max': 250},
         'backdrop': {'min': 0, 'max': 5},
@@ -83,17 +83,17 @@ class Scanner(Plugin):
     clean = '[ _\,\.\(\)\[\]\-]?(extended.cut|directors.cut|french|swedisch|danish|dutch|swesub|spanish|german|ac3|dts|custom|dc|divx|divx5|dsr|dsrip|dutch|dvd|dvdr|dvdrip|dvdscr|dvdscreener|screener|dvdivx|cam|fragment|fs|hdtv|hdrip' \
             '|hdtvrip|internal|limited|multisubs|ntsc|ogg|ogm|pal|pdtv|proper|repack|rerip|retail|r3|r5|bd5|se|svcd|swedish|german|read.nfo|nfofix|unrated|ws|telesync|ts|telecine|tc|brrip|bdrip|video_ts|audio_ts|480p|480i|576p|576i|720p|720i|1080p|1080i|hrhd|hrhdtv|hddvd|bluray|x264|h264|xvid|xvidvd|xxx|www.www|cd[1-9]|\[.*\])([ _\,\.\(\)\[\]\-]|$)'
     multipart_regex = [
-        '[ _\.-]+cd[ _\.-]*([0-9a-d]+)', #*cd1
-        '[ _\.-]+dvd[ _\.-]*([0-9a-d]+)', #*dvd1
-        '[ _\.-]+part[ _\.-]*([0-9a-d]+)', #*part1
-        '[ _\.-]+dis[ck][ _\.-]*([0-9a-d]+)', #*disk1
-        'cd[ _\.-]*([0-9a-d]+)$', #cd1.ext
-        'dvd[ _\.-]*([0-9a-d]+)$', #dvd1.ext
-        'part[ _\.-]*([0-9a-d]+)$', #part1.mkv
-        'dis[ck][ _\.-]*([0-9a-d]+)$', #disk1.mkv
+        '[ _\.-]+cd[ _\.-]*([0-9a-d]+)',  #*cd1
+        '[ _\.-]+dvd[ _\.-]*([0-9a-d]+)',  #*dvd1
+        '[ _\.-]+part[ _\.-]*([0-9a-d]+)',  #*part1
+        '[ _\.-]+dis[ck][ _\.-]*([0-9a-d]+)',  #*disk1
+        'cd[ _\.-]*([0-9a-d]+)$',  #cd1.ext
+        'dvd[ _\.-]*([0-9a-d]+)$',  #dvd1.ext
+        'part[ _\.-]*([0-9a-d]+)$',  #part1.mkv
+        'dis[ck][ _\.-]*([0-9a-d]+)$',  #disk1.mkv
         '()[ _\.-]+([0-9]*[abcd]+)(\.....?)$',
         '([a-z])([0-9]+)(\.....?)$',
-        '()([ab])(\.....?)$' #*a.mkv
+        '()([ab])(\.....?)$'  #*a.mkv
     ]
 
     cp_imdb = '(.cp.(?P<id>tt[0-9{7}]+).)'
@@ -263,7 +263,7 @@ class Scanner(Plugin):
                     delete_identifiers.append(identifier)
 
                     # Remove the found files from the leftover stack
-                    leftovers = leftovers - set([ff])
+                    leftovers -= leftovers - set([ff])
 
             # Break if CP wants to shut down
             if self.shuttingDown():
@@ -445,7 +445,7 @@ class Scanner(Plugin):
         files = list(group['files']['movie'])
 
         for cur_file in files:
-            if not self.filesizeBetween(cur_file, self.file_sizes['movie']): continue # Ignore smaller files
+            if not self.filesizeBetween(cur_file, self.file_sizes['movie']): continue  # Ignore smaller files
 
             meta = self.getMeta(cur_file)
 
@@ -727,7 +727,9 @@ class Scanner(Plugin):
         if is_sample: log.debug('Is sample file: %s', filename)
         return is_sample
 
-    def filesizeBetween(self, file, file_size = []):
+    def filesizeBetween(self, file, file_size = None):
+        if not file_size: file_size = []
+
         try:
             return (file_size.get('min', 0) * 1048576) < os.path.getsize(file) < (file_size.get('max', 100000) * 1048576)
         except:
@@ -875,7 +877,7 @@ class Scanner(Plugin):
             except:
                 pass
 
-        if not cp_guess: # Split name on multiple spaces
+        if not cp_guess:  # Split name on multiple spaces
             try:
                 movie_name = cleaned.split('  ').pop(0).strip()
                 cp_guess = {

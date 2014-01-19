@@ -109,7 +109,7 @@ class Deluge(Downloader):
                 continue
 
             log.debug('name=%s / id=%s / save_path=%s / move_on_completed=%s / move_completed_path=%s / hash=%s / progress=%s / state=%s / eta=%s / ratio=%s / stop_ratio=%s / is_seed=%s / is_finished=%s / paused=%s', (torrent['name'], torrent['hash'], torrent['save_path'], torrent['move_on_completed'], torrent['move_completed_path'], torrent['hash'], torrent['progress'], torrent['state'], torrent['eta'], torrent['ratio'], torrent['stop_ratio'], torrent['is_seed'], torrent['is_finished'], torrent['paused']))
-    
+
             # Deluge has no easy way to work out if a torrent is stalled or failing.
             #status = 'failed'
             status = 'busy'
@@ -125,11 +125,11 @@ class Deluge(Downloader):
             download_dir = sp(torrent['save_path'])
             if torrent['move_on_completed']:
                 download_dir = torrent['move_completed_path']
-    
+
             torrent_files = []
             for file_item in torrent['files']:
                 torrent_files.append(sp(os.path.join(download_dir, file_item['path'])))
-    
+
             release_downloads.append({
                 'id': torrent['hash'],
                 'name': torrent['name'],
@@ -156,6 +156,7 @@ class Deluge(Downloader):
     def processComplete(self, release_download, delete_files = False):
         log.debug('Requesting Deluge to remove the torrent %s%s.', (release_download['name'], ' and cleanup the downloaded files' if delete_files else ''))
         return self.drpc.remove_torrent(release_download['id'], remove_local_data = delete_files)
+
 
 class DelugeRPC(object):
 

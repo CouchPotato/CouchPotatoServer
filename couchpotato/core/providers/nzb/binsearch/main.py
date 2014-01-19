@@ -18,7 +18,7 @@ class BinSearch(NZBProvider):
         'search': 'https://www.binsearch.info/index.php?%s',
     }
 
-    http_time_between_calls = 4 # Seconds
+    http_time_between_calls = 4  # Seconds
 
     def _search(self, movie, quality, results):
 

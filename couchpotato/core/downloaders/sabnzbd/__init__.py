@@ -1,5 +1,6 @@
 from .main import Sabnzbd
 
+
 def start():
     return Sabnzbd()
 

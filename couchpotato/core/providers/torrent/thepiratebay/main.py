@@ -12,15 +12,15 @@ log = CPLog(__name__)
 class ThePirateBay(TorrentMagnetProvider):
 
     urls = {
-         'detail': '%s/torrent/%s',
-         'search': '%s/search/%s/%s/7/%s'
+        'detail': '%s/torrent/%s',
+        'search': '%s/search/%s/%s/7/%s'
     }
 
     cat_ids = [
-       ([207], ['720p', '1080p']),
-       ([201], ['cam', 'ts', 'dvdrip', 'tc', 'r5', 'scr']),
-       ([201, 207], ['brrip']),
-       ([202], ['dvdr'])
+        ([207], ['720p', '1080p']),
+        ([201], ['cam', 'ts', 'dvdrip', 'tc', 'r5', 'scr']),
+        ([201, 207], ['brrip']),
+        ([202], ['dvdr'])
     ]
 
     cat_backup_id = 200
@@ -111,7 +111,7 @@ class ThePirateBay(TorrentMagnetProvider):
     def getMoreInfo(self, item):
         full_description = self.getCache('tpb.%s' % item['id'], item['detail_url'], cache_timeout = 25920000)
         html = BeautifulSoup(full_description)
-        nfo_pre = html.find('div', attrs = {'class':'nfo'})
+        nfo_pre = html.find('div', attrs = {'class': 'nfo'})
         description = toUnicode(nfo_pre.text) if nfo_pre else ''
 
         item['description'] = description

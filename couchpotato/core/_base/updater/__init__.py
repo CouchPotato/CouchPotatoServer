@@ -2,6 +2,7 @@ from .main import Updater
 from couchpotato.environment import Env
 import os
 
+
 def start():
     return Updater()
 

@@ -149,7 +149,7 @@ class ProfilePlugin(Plugin):
             self.forceDefaults()
 
             success = True
-        except Exception, e:
+        except Exception as e:
             message = log.error('Failed deleting Profile: %s', e)
 
         db.expire_all()

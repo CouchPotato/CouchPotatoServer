@@ -42,7 +42,7 @@ class Userscript(Plugin):
             'excludes': fireEvent('userscript.get_excludes', merge = True),
         }
 
-    def getUserScript(self, route, **kwargs):
+    def getUserScript(self, script_route, **kwargs):
 
         klass = self
 
@@ -63,8 +63,7 @@ class Userscript(Plugin):
 
                 self.redirect(Env.get('api_base') + 'file.cache/couchpotato.user.js')
 
-        Env.get('app').add_handlers(".*$", [('%s%s' % (Env.get('api_base'), route), UserscriptHandler)])
-
+        Env.get('app').add_handlers(".*$", [('%s%s' % (Env.get('api_base'), script_route), UserscriptHandler)])
 
     def getVersion(self):
 

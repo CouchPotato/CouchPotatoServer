@@ -20,6 +20,7 @@ import traceback
 
 log = CPLog(__name__)
 
+
 class Renamer(Plugin):
 
     renaming_started = False
@@ -33,7 +34,7 @@ class Renamer(Plugin):
                 'media_folder': {'desc': 'Optional: The folder of the media to scan. Keep empty for default renamer folder.'},
                 'files': {'desc': 'Optional: Provide the release files if more releases are in the same media_folder, delimited with a \'|\'. Note that no dedicated release folder is expected for releases with one file.'},
                 'base_folder': {'desc': 'Optional: The folder to find releases in. Leave empty for default folder.'},
-                'downloader' : {'desc': 'Optional: The downloader the release has been downloaded with. \'download_id\' is required with this option.'},
+                'downloader': {'desc': 'Optional: The downloader the release has been downloaded with. \'download_id\' is required with this option.'},
                 'download_id': {'desc': 'Optional: The nzb/torrent ID of the release in media_folder. \'downloader\' is required with this option.'},
                 'status': {'desc': 'Optional: The status of the release: \'completed\' (default) or \'seeding\''},
             },
@@ -274,25 +275,25 @@ class Renamer(Plugin):
                     name_the = movie_name[4:] + ', The'
 
                 replacements = {
-                     'ext': 'mkv',
-                     'namethe': name_the.strip(),
-                     'thename': movie_name.strip(),
-                     'year': library['year'],
-                     'first': name_the[0].upper(),
-                     'quality': group['meta_data']['quality']['label'],
-                     'quality_type': group['meta_data']['quality_type'],
-                     'video': group['meta_data'].get('video'),
-                     'audio': group['meta_data'].get('audio'),
-                     'group': group['meta_data']['group'],
-                     'source': group['meta_data']['source'],
-                     'resolution_width': group['meta_data'].get('resolution_width'),
-                     'resolution_height': group['meta_data'].get('resolution_height'),
-                     'audio_channels': group['meta_data'].get('audio_channels'),
-                     'imdb_id': library['identifier'],
-                     'cd': '',
-                     'cd_nr': '',
-                     'mpaa': library['info'].get('mpaa', ''),
-                     'category': category_label,
+                    'ext': 'mkv',
+                    'namethe': name_the.strip(),
+                    'thename': movie_name.strip(),
+                    'year': library['year'],
+                    'first': name_the[0].upper(),
+                    'quality': group['meta_data']['quality']['label'],
+                    'quality_type': group['meta_data']['quality_type'],
+                    'video': group['meta_data'].get('video'),
+                    'audio': group['meta_data'].get('audio'),
+                    'group': group['meta_data']['group'],
+                    'source': group['meta_data']['source'],
+                    'resolution_width': group['meta_data'].get('resolution_width'),
+                    'resolution_height': group['meta_data'].get('resolution_height'),
+                    'audio_channels': group['meta_data'].get('audio_channels'),
+                    'imdb_id': library['identifier'],
+                    'cd': '',
+                    'cd_nr': '',
+                    'mpaa': library['info'].get('mpaa', ''),
+                    'category': category_label,
                 }
 
                 for file_type in group['files']:
@@ -434,7 +435,7 @@ class Renamer(Plugin):
                                     movie.status_id = done_status.get('id')
                                     movie.last_edit = int(time.time())
                                     db.commit()
-                    except Exception, e:
+                    except Exception as e:
                         log.error('Failed marking movie finished: %s %s', (e, traceback.format_exc()))
 
                     # Go over current movie releases
@@ -526,7 +527,7 @@ class Renamer(Plugin):
             for delete_folder in delete_folders:
                 try:
                     self.deleteEmptyFolder(delete_folder, show_error = False)
-                except Exception, e:
+                except Exception as e:
                     log.error('Failed to delete folder: %s %s', (e, traceback.format_exc()))
 
             # Rename all files marked
@@ -592,7 +593,7 @@ class Renamer(Plugin):
             # Break if CP wants to shut down
             if self.shuttingDown():
                 break
- 
+
         self.renaming_started = False
 
     def getRenameExtras(self, extra_type = '', replacements = None, folder_name = '', file_name = '', destination = '', group = None, current_file = '', remove_multiple = False):
@@ -1160,7 +1161,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                         rar_handle.extract(condition = [packedinfo.index], path = extr_path, withSubpath = False, overwrite = False)
                         extr_files.append(sp(os.path.join(extr_path, os.path.basename(packedinfo.filename))))
                 del rar_handle
-            except Exception, e:
+            except Exception as e:
                 log.error('Failed to extract %s: %s %s', (archive['file'], e, traceback.format_exc()))
                 continue
 
@@ -1169,7 +1170,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                 if cleanup:
                     try:
                         os.remove(filename)
-                    except Exception, e:
+                    except Exception as e:
                         log.error('Failed to remove %s: %s %s', (filename, e, traceback.format_exc()))
                         continue
                 files.remove(filename)
@@ -1182,7 +1183,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                 try:
                     self.makeDir(os.path.dirname(move_to))
                     self.moveFile(leftoverfile, move_to, cleanup)
-                except Exception, e:
+                except Exception as e:
                     log.error('Failed moving left over file %s to %s: %s %s', (leftoverfile, move_to, e, traceback.format_exc()))
                     # As we probably tried to overwrite the nfo file, check if it exists and then remove the original
                     if os.path.isfile(move_to):

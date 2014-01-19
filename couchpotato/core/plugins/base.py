@@ -85,7 +85,7 @@ class Plugin(object):
         class_name = re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
 
         # View path
-        path = 'static/plugin/%s/' % (class_name)
+        path = 'static/plugin/%s/' % class_name
 
         # Add handler to Tornado
         Env.get('app').add_handlers(".*$", [(Env.get('web_base') + path + '(.*)', StaticFileHandler, {'path': static_folder})])
@@ -110,7 +110,7 @@ class Plugin(object):
             f.write(content)
             f.close()
             os.chmod(path, Env.getPermission('file'))
-        except Exception, e:
+        except Exception as e:
             log.error('Unable writing to file "%s": %s', (path, traceback.format_exc()))
             if os.path.isfile(path):
                 os.remove(path)
@@ -121,7 +121,7 @@ class Plugin(object):
             if not os.path.isdir(path):
                 os.makedirs(path, Env.getPermission('folder'))
             return True
-        except Exception, e:
+        except Exception as e:
             log.error('Unable to create folder "%s": %s', (path, e))
 
         return False
@@ -243,7 +243,6 @@ class Plugin(object):
             except:
                 log.error("Something went wrong when finishing the plugin function. Could not find the 'is_running' key")
 
-
     def getCache(self, cache_key, url = None, **kwargs):
         cache_key_md5 = md5(cache_key)
         cache = Env.get('cache').get(cache_key_md5)
@@ -255,7 +254,7 @@ class Plugin(object):
             try:
 
                 cache_timeout = 300
-                if kwargs.has_key('cache_timeout'):
+                if 'cache_timeout' in kwargs:
                     cache_timeout = kwargs.get('cache_timeout')
                     del kwargs['cache_timeout']
 

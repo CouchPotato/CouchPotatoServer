@@ -25,7 +25,7 @@ class SceneAccess(TorrentProvider):
         ([8], ['dvdr']),
     ]
 
-    http_time_between_calls = 1 #seconds
+    http_time_between_calls = 1  #seconds
 
     def _search(self, movie, quality, results):
 

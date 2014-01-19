@@ -1,7 +1,7 @@
 from .main import MovieResultModifier
 
-def start():
 
+def start():
     return MovieResultModifier()
 
 config = []

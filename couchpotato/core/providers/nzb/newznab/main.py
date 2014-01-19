@@ -25,7 +25,7 @@ class Newznab(NZBProvider, RSS):
 
     limits_reached = {}
 
-    http_time_between_calls = 1 # Seconds
+    http_time_between_calls = 1  # Seconds
 
     def search(self, movie, quality):
         hosts = self.getHosts()
@@ -180,7 +180,7 @@ class Newznab(NZBProvider, RSS):
             data = self.urlopen(finalurl, show_error = False)
             self.limits_reached[host] = False
             return data
-        except HTTPError, e:
+        except HTTPError as e:
             if e.code == 503:
                 response = e.read().lower()
                 if 'maximum api' in response or 'download limit' in response:

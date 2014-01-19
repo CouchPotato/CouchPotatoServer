@@ -53,9 +53,9 @@ class ClientScript(Plugin):
     }
 
 
-    urls = {'style': {}, 'script': {}, }
-    minified = {'style': {}, 'script': {}, }
-    paths = {'style': {}, 'script': {}, }
+    urls = {'style': {}, 'script': {}}
+    minified = {'style': {}, 'script': {}}
+    paths = {'style': {}, 'script': {}}
     comment = {
        'style': '/*** %s:%d ***/\n',
        'script': '// %s:%d\n'

@@ -37,7 +37,7 @@ class Growl(Notification):
             )
             self.growl.register()
             self.registered = True
-        except Exception, e:
+        except Exception as e:
             if 'timed out' in str(e):
                 self.registered = True
             else:

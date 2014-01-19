@@ -44,7 +44,7 @@ class Letterboxd(Automation):
 
             soup = BeautifulSoup(self.getHTMLData(self.url % username))
 
-            for movie in soup.find_all('a', attrs = { 'class': 'frame' }):
+            for movie in soup.find_all('a', attrs = {'class': 'frame'}):
                 match = filter(None, self.pattern.split(movie['title']))
                 movies.append({'title': match[0], 'year': match[1] })
 

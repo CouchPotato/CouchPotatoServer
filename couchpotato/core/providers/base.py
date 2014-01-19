@@ -14,6 +14,7 @@ import xml.etree.ElementTree as XMLTree
 
 log = CPLog(__name__)
 
+
 class MultiProvider(Plugin):
 
     def __init__(self):
@@ -36,8 +37,8 @@ class MultiProvider(Plugin):
 
 class Provider(Plugin):
 
-    type = None # movie, show, subtitle, trailer, ...
-    http_time_between_calls = 10 # Default timeout for url requests
+    type = None  # movie, show, subtitle, trailer, ...
+    http_time_between_calls = 10  # Default timeout for url requests
 
     last_available_check = {}
     is_available = {}
@@ -100,15 +101,15 @@ class Provider(Plugin):
 
 class YarrProvider(Provider):
 
-    protocol = None # nzb, torrent, torrent_magnet
+    protocol = None  # nzb, torrent, torrent_magnet
     type = 'movie'
 
     cat_ids = {}
     cat_backup_id = None
 
-    sizeGb = ['gb', 'gib']
-    sizeMb = ['mb', 'mib']
-    sizeKb = ['kb', 'kib']
+    size_gb = ['gb', 'gib']
+    size_mb = ['mb', 'mib']
+    size_kb = ['kb', 'kib']
 
     last_login_check = None
 
@@ -223,19 +224,19 @@ class YarrProvider(Provider):
 
     def parseSize(self, size):
 
-        sizeRaw = size.lower()
+        size_raw = size.lower()
         size = tryFloat(re.sub(r'[^0-9.]', '', size).strip())
 
-        for s in self.sizeGb:
-            if s in sizeRaw:
+        for s in self.size_gb:
+            if s in size_raw:
                 return size * 1024
 
-        for s in self.sizeMb:
-            if s in sizeRaw:
+        for s in self.size_mb:
+            if s in size_raw:
                 return size
 
-        for s in self.sizeKb:
-            if s in sizeRaw:
+        for s in self.size_kb:
+            if s in size_raw:
                 return size / 1024
 
         return 0
@@ -279,7 +280,7 @@ class ResultList(list):
         new_result = self.fillResult(result)
 
         is_correct = fireEvent('searcher.correct_release', new_result, self.media, self.quality,
-                                     imdb_results = self.kwargs.get('imdb_results', False), single = True)
+                               imdb_results = self.kwargs.get('imdb_results', False), single = True)
 
         if is_correct and new_result['id'] not in self.result_ids:
             is_correct_weight = float(is_correct)

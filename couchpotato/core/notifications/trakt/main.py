@@ -3,6 +3,7 @@ from couchpotato.core.notifications.base import Notification
 
 log = CPLog(__name__)
 
+
 class Trakt(Notification):
 
     urls = {

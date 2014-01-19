@@ -65,6 +65,7 @@ class Synology(Downloader):
         return super(Synology, self).isEnabled(manual, data) and\
                ((self.conf('use_for') in for_protocol))
 
+
 class SynologyRPC(object):
 
     """SynologyRPC lite library"""

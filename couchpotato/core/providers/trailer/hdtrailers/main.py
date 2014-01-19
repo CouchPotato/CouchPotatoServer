@@ -29,7 +29,7 @@ class HDTrailers(TrailerProvider):
             log.debug('No page found for: %s', movie_name)
             data = None
 
-        result_data = {'480p':[], '720p':[], '1080p':[]}
+        result_data = {'480p': [], '720p': [], '1080p': []}
 
         if not data:
             return result_data

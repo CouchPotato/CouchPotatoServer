@@ -64,7 +64,7 @@ class Twitter(Notification):
                         api.PostUpdate(update_message[135:] + ' 2/2')
                 else:
                     api.PostUpdate(update_message)
-        except Exception, e:
+        except Exception as e:
             log.error('Error sending tweet: %s', e)
             return False
 

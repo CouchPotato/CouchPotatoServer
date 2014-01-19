@@ -1,5 +1,6 @@
 from .main import NMJ
 
+
 def start():
     return NMJ()
 

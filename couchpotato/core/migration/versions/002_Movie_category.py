@@ -13,5 +13,6 @@ def upgrade(migrate_engine):
     create_column(category_column, movie)
     Index('ix_movie_category_id', movie.c.category_id).create()
 
+
 def downgrade(migrate_engine):
     pass
