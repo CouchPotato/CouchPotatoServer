@@ -18,6 +18,7 @@ class rTorrent(Downloader):
 
     protocol = ['torrent', 'torrent_magnet']
     rt = None
+    testable = True
 
     # Migration url to host options
     def __init__(self):
@@ -37,9 +38,9 @@ class rTorrent(Downloader):
 
             self.deleteConf('url')
 
-    def connect(self):
+    def connect(self, reconnect = False):
         # Already connected?
-        if self.rt is not None:
+        if not reconnect and self.rt is not None:
             return self.rt
 
         url = cleanHost(self.conf('host'), protocol = True, ssl = self.conf('ssl')) + '/' + self.conf('rpc_url').strip('/ ') + '/'
@@ -53,7 +54,15 @@ class rTorrent(Downloader):
         else:
             self.rt = RTorrent(url)
 
+        if not self.rt.test_connection():
+            self.rt = None
+
         return self.rt
+
+    def test(self):
+        if not self.connect(True):
+            return False
+        return True
 
     def _update_provider_group(self, name, data):
         if data.get('seed_time'):

@@ -15,6 +15,17 @@ log = CPLog(__name__)
 class Sabnzbd(Downloader):
 
     protocol = ['nzb']
+    testable = True
+
+    def test(self):
+        try:
+            queue = self.call({
+                'mode': 'version',
+            })
+        except:
+            return False
+
+        return bool(queue)
 
     def download(self, data = None, media = None, filedata = None):
         if not media: media = {}

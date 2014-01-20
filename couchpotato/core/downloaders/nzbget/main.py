@@ -18,6 +18,28 @@ class NZBGet(Downloader):
     protocol = ['nzb']
 
     rpc = 'xmlrpc'
+    testable = True
+
+    def test(self):
+        url = cleanHost(host = self.conf('host'), ssl = self.conf('ssl'), username = self.conf('username'), password = self.conf('password')) + self.rpc
+        rpc = xmlrpclib.ServerProxy(url)
+
+        try:
+            if rpc.writelog('INFO', 'CouchPotato connected to test connection'):
+                log.debug('Successfully connected to NZBGet')
+            else:
+                log.info('Successfully connected to NZBGet, but unable to send a message')
+        except socket.error:
+            log.error('NZBGet is not responding. Please ensure that NZBGet is running and host setting is correct.')
+            return False
+        except xmlrpclib.ProtocolError as e:
+            if e.errcode == 401:
+                log.error('Password is incorrect.')
+            else:
+                log.error('Protocol Error: %s', e)
+            return False
+
+        return True
 
     def download(self, data = None, media = None, filedata = None):
         if not media: media = {}

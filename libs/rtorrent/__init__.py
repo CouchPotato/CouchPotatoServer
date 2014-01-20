@@ -98,6 +98,13 @@ class RTorrent:
             "Error: Minimum rTorrent version required is {0}".format(
             MIN_RTORRENT_VERSION_STR)
 
+    def test_connection(self):
+        try:
+            self._verify_conn()
+        except:
+            return False
+        return True
+
     def _meets_version_requirement(self):
         return self._get_client_version_tuple() >= MIN_RTORRENT_VERSION
 
