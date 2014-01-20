@@ -1,6 +1,6 @@
 from couchpotato.core.event import fireEvent
 from couchpotato.core.logger import CPLog
-from importlib import import_module
+from importhelper import import_module
 import os
 import sys
 import traceback
