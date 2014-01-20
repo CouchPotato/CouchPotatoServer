@@ -1,4 +1,4 @@
-from main import Yify
+from .main import Yify
 
 
 def start():

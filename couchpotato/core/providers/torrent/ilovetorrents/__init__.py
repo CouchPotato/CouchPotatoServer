@@ -1,4 +1,4 @@
-from main import ILoveTorrents
+from .main import ILoveTorrents
 
 
 def start():
