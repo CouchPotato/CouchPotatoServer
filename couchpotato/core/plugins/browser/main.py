@@ -4,6 +4,7 @@ from couchpotato.core.plugins.base import Plugin
 import ctypes
 import os
 import string
+import six
 
 if os.name == 'nt':
     import imp
@@ -96,7 +97,7 @@ class FileBrowser(Plugin):
 
     def has_hidden_attribute(self, filepath):
         try:
-            attrs = ctypes.windll.kernel32.GetFileAttributesW(unicode(filepath)) #@UndefinedVariable
+            attrs = ctypes.windll.kernel32.GetFileAttributesW(six.text_type(filepath)) #@UndefinedVariable
             assert attrs != -1
             result = bool(attrs & 2)
         except (AttributeError, AssertionError):

@@ -8,6 +8,8 @@ import random
 import re
 import string
 import sys
+import six
+from six.moves import map, zip
 
 log = CPLog(__name__)
 
@@ -19,7 +21,7 @@ def fnEscape(pattern):
 def link(src, dst):
     if os.name == 'nt':
         import ctypes
-        if ctypes.windll.kernel32.CreateHardLinkW(unicode(dst), unicode(src), 0) == 0: raise ctypes.WinError()
+        if ctypes.windll.kernel32.CreateHardLinkW(six.text_type(dst), six.text_type(src), 0) == 0: raise ctypes.WinError()
     else:
         os.link(src, dst)
 
@@ -27,7 +29,7 @@ def link(src, dst):
 def symlink(src, dst):
     if os.name == 'nt':
         import ctypes
-        if ctypes.windll.kernel32.CreateSymbolicLinkW(unicode(dst), unicode(src), 1 if os.path.isdir(src) else 0) in [0, 1280]: raise ctypes.WinError()
+        if ctypes.windll.kernel32.CreateSymbolicLinkW(six.text_type(dst), six.text_type(src), 1 if os.path.isdir(src) else 0) in [0, 1280]: raise ctypes.WinError()
     else:
         os.symlink(src, dst)
 
@@ -253,7 +255,7 @@ def randomString(size = 8, chars = string.ascii_uppercase + string.digits):
 
 def splitString(str, split_on = ',', clean = True):
     l = [x.strip() for x in str.split(split_on)] if str else []
-    return filter(None, l) if clean else l
+    return [x for x in l if x] if clean else l
 
 
 def dictIsSubset(a, b):

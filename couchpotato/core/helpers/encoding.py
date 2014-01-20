@@ -5,6 +5,7 @@ import os
 import re
 import traceback
 import unicodedata
+import six
 
 log = CPLog(__name__)
 
@@ -29,7 +30,7 @@ def toUnicode(original, *args):
             return original
         else:
             try:
-                return unicode(original, *args)
+                return six.text_type(original, *args)
             except:
                 try:
                     return ek(original, *args)
@@ -102,10 +103,10 @@ def stripAccents(s):
 
 
 def tryUrlencode(s):
-    new = u''
+    new = six.u('')
     if isinstance(s, dict):
-        for key, value in s.iteritems():
-            new += u'&%s=%s' % (key, tryUrlencode(value))
+        for key, value in s.items():
+            new += six.u('&%s=%s') % (key, tryUrlencode(value))
 
         return new[1:]
     else:

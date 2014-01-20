@@ -107,7 +107,7 @@ class OMDBAPI(MovieProvider):
                 'writers': splitString(movie.get('Writer', '')),
                 'actors': splitString(movie.get('Actors', '')),
             }
-            movie_data = dict((k, v) for k, v in movie_data.iteritems() if v)
+            movie_data = dict((k, v) for k, v in movie_data.items() if v)
         except:
             log.error('Failed parsing IMDB API json: %s', traceback.format_exc())
 

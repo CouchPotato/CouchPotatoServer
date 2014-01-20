@@ -7,6 +7,7 @@ from couchpotato.core.settings.model import Library, LibraryTitle, File
 from string import ascii_letters
 import time
 import traceback
+import six
 
 log = CPLog(__name__)
 
@@ -109,7 +110,7 @@ class MovieLibraryPlugin(LibraryBase):
                 t = LibraryTitle(
                     title = title,
                     simple_title = self.simplifyTitle(title),
-                    default = (len(default_title) == 0 and counter == 0) or len(titles) == 1 or title.lower() == toUnicode(default_title.lower()) or (toUnicode(default_title) == u'' and toUnicode(titles[0]) == title)
+                    default = (len(default_title) == 0 and counter == 0) or len(titles) == 1 or title.lower() == toUnicode(default_title.lower()) or (toUnicode(default_title) == six.u('') and toUnicode(titles[0]) == title)
                 )
                 library.titles.append(t)
                 counter += 1

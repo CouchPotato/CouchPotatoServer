@@ -5,6 +5,7 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.torrent.base import TorrentMagnetProvider
 import re
 import traceback
+import six
 
 log = CPLog(__name__)
 
@@ -73,7 +74,7 @@ class ThePirateBay(TorrentMagnetProvider):
                         download = result.find(href = re.compile('magnet:'))
 
                         try:
-                            size = re.search('Size (?P<size>.+),', unicode(result.select('font.detDesc')[0])).group('size')
+                            size = re.search('Size (?P<size>.+),', six.text_type(result.select('font.detDesc')[0])).group('size')
                         except:
                             continue
 

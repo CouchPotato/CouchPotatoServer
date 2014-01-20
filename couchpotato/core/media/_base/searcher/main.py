@@ -6,6 +6,7 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.searcher.base import SearcherBase
 import datetime
 import re
+from six.moves import filter
 
 log = CPLog(__name__)
 

@@ -108,7 +108,7 @@ class StatusPlugin(Plugin):
 
         db = get_session()
 
-        for identifier, label in self.statuses.iteritems():
+        for identifier, label in self.statuses.items():
             s = db.query(Status).filter_by(identifier = identifier).first()
             if not s:
                 log.info('Creating status: %s', label)

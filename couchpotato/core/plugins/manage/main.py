@@ -223,7 +223,7 @@ class Manage(Plugin):
         groups = fireEvent('scanner.scan', folder = folder, files = files, single = True)
 
         if groups:
-            for group in groups.itervalues():
+            for group in groups.values():
                 if group['library'] and group['library'].get('identifier'):
                     fireEvent('release.add', group = group)
 

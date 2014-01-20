@@ -3,6 +3,7 @@ from couchpotato.core.helpers.variable import tryInt, splitString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.automation.base import Automation
 import re
+from six.moves import filter
 
 log = CPLog(__name__)
 

@@ -15,6 +15,7 @@ import time
 import traceback
 import version
 import zipfile
+from six.moves import filter
 
 log = CPLog(__name__)
 
@@ -350,8 +351,8 @@ class SourceUpdater(BaseUpdater):
         try:
             if os.path.isdir(path):
                 shutil.rmtree(path)
-        except OSError, inst:
-            os.chmod(inst.filename, 0777)
+        except OSError as inst:
+            os.chmod(inst.filename, 0o777)
             self.removeDir(path)
 
     def getVersion(self):

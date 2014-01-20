@@ -51,7 +51,7 @@ class CPLog(object):
                 else:
                     msg = msg % ss(replace_tuple)
             except Exception as e:
-                self.logger.error(u'Failed encoding stuff to log "%s": %s' % (msg, e))
+                self.logger.error('Failed encoding stuff to log "%s": %s' % (msg, e))
 
         if not Env.get('dev'):
 

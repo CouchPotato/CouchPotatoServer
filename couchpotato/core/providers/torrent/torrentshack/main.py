@@ -4,6 +4,7 @@ from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.torrent.base import TorrentProvider
 import traceback
+import six
 
 log = CPLog(__name__)
 
@@ -53,7 +54,7 @@ class TorrentShack(TorrentProvider):
 
                     results.append({
                         'id': link['href'].replace('torrents.php?torrentid=', ''),
-                        'name': unicode(link.span.string).translate({ord(u'\xad'): None}),
+                        'name': six.text_type(link.span.string).translate({ord(six.u('\xad')): None}),
                         'url': self.urls['download'] % url['href'],
                         'detail_url': self.urls['download'] % link['href'],
                         'size': self.parseSize(result.find_all('td')[4].string),

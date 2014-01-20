@@ -8,6 +8,7 @@ import json
 import re
 import time
 import traceback
+import six
 
 log = CPLog(__name__)
 
@@ -178,7 +179,7 @@ class PassThePopcorn(TorrentProvider):
                 except KeyError:
                     pass
             return text # leave as is
-        return re.sub("&#?\w+;", fixup, u'%s' % text)
+        return re.sub("&#?\w+;", fixup, six.u('%s') % text)
 
     def unicodeToASCII(self, text):
         import unicodedata

@@ -15,6 +15,7 @@ import re
 import threading
 import time
 import traceback
+from six.moves import filter, map, zip
 
 log = CPLog(__name__)
 
@@ -187,7 +188,7 @@ class Scanner(Plugin):
 
         # Group files minus extension
         ignored_identifiers = []
-        for identifier, group in movie_files.iteritems():
+        for identifier, group in movie_files.items():
             if identifier not in group['identifiers'] and len(identifier) > 0: group['identifiers'].append(identifier)
 
             log.debug('Grouping files: %s', identifier)
@@ -228,7 +229,7 @@ class Scanner(Plugin):
 
         # Group the files based on the identifier
         delete_identifiers = []
-        for identifier, found_files in path_identifiers.iteritems():
+        for identifier, found_files in path_identifiers.items():
             log.debug('Grouping files on identifier: %s', identifier)
 
             group = movie_files.get(identifier)
@@ -251,7 +252,7 @@ class Scanner(Plugin):
 
         # Group based on folder
         delete_identifiers = []
-        for identifier, found_files in path_identifiers.iteritems():
+        for identifier, found_files in path_identifiers.items():
             log.debug('Grouping files on foldername: %s', identifier)
 
             for ff in found_files:

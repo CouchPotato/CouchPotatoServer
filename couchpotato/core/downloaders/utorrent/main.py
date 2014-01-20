@@ -261,7 +261,7 @@ class uTorrentAPI(object):
 
     def set_torrent(self, hash, params):
         action = 'action=setprops&hash=%s' % hash
-        for k, v in params.iteritems():
+        for k, v in params.items():
             action += '&s=%s&v=%s' % (k, v)
         return self._request(action)
 

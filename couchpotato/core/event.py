@@ -29,7 +29,7 @@ def addEvent(name, handler, priority = 100):
             has_parent = hasattr(handler, 'im_self')
             parent = None
             if has_parent:
-                parent = handler.im_self
+                parent = handler.__self__
                 bc = hasattr(parent, 'beforeCall')
                 if bc: parent.beforeCall(handler)
 

@@ -17,6 +17,8 @@ import re
 import shutil
 import time
 import traceback
+import six
+from six.moves import filter
 
 log = CPLog(__name__)
 
@@ -787,19 +789,19 @@ Remove it if you want it to be renamed (again, or at least let it try again)
             replacements['cd_nr'] = ''
 
         replaced = toUnicode(string)
-        for x, r in replacements.iteritems():
+        for x, r in replacements.items():
             if x in ['thename', 'namethe']:
                 continue
             if r is not None:
-                replaced = replaced.replace(u'<%s>' % toUnicode(x), toUnicode(r))
+                replaced = replaced.replace(six.u('<%s>') % toUnicode(x), toUnicode(r))
             else:
                 #If information is not available, we don't want the tag in the filename
                 replaced = replaced.replace('<' + x + '>', '')
 
         replaced = self.replaceDoubles(replaced.lstrip('. '))
-        for x, r in replacements.iteritems():
+        for x, r in replacements.items():
             if x in ['thename', 'namethe']:
-                replaced = replaced.replace(u'<%s>' % toUnicode(x), toUnicode(r))
+                replaced = replaced.replace(six.u('<%s>') % toUnicode(x), toUnicode(r))
         replaced = re.sub(r"[\x00:\*\?\"<>\|]", '', replaced)
 
         sep = self.conf('foldersep') if folder else self.conf('separator')

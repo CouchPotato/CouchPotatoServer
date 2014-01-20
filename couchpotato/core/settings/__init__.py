@@ -77,7 +77,7 @@ class Settings(object):
 
         self.addSection(section_name)
 
-        for option_name, option in options.iteritems():
+        for option_name, option in options.items():
             self.setDefault(section_name, option_name, option.get('default', ''))
 
             # Migrate old settings from old location to the new location

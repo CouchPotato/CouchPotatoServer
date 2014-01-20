@@ -60,10 +60,7 @@ addView('', index)
 
 # API docs
 def apiDocs():
-    routes = []
-
-    for route in api.iterkeys():
-        routes.append(route)
+    routes = list(api.keys())
 
     if api_docs.get(''):
         del api_docs['']
