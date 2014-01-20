@@ -8,6 +8,8 @@ python3.4 -m tornado.test.runtests --ioloop=tornado.platform.asyncio.AsyncIOMain
 (the tests log a few warnings with AsyncIOMainLoop because they leave some
 unfinished callbacks on the event loop that fail when it resumes)
 """
+
+from __future__ import absolute_import, division, print_function, with_statement
 import asyncio
 import datetime
 import functools
@@ -34,7 +36,10 @@ class BaseAsyncIOLoop(IOLoop):
         for fd in list(self.handlers):
             self.remove_handler(fd)
             if all_fds:
-                os.close(fd)
+                try:
+                    os.close(fd)
+                except OSError:
+                    pass
         if self.close_loop:
             self.asyncio_loop.close()
 
@@ -86,6 +91,7 @@ class BaseAsyncIOLoop(IOLoop):
         self.handlers[fd](fd, events)
 
     def start(self):
+        self._setup_logging()
         self.asyncio_loop.run_forever()
 
     def stop(self):
