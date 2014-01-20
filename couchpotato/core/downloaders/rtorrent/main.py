@@ -87,7 +87,7 @@ class rTorrent(Downloader):
                 # Reset group action and disable it
                 group.set_command()
                 group.disable()
-        except MethodError, err:
+        except MethodError as err:
             log.error('Unable to set group options: %s', err.msg)
             return False
 
@@ -155,7 +155,7 @@ class rTorrent(Downloader):
                 torrent.start()
 
             return self.downloadReturnId(torrent_hash)
-        except Exception, err:
+        except Exception as err:
             log.error('Failed to send torrent to rTorrent: %s', err)
             return False
 
@@ -203,7 +203,7 @@ class rTorrent(Downloader):
 
             return release_downloads
 
-        except Exception, err:
+        except Exception as err:
             log.error('Failed to get status from rTorrent: %s', err)
             return []
 

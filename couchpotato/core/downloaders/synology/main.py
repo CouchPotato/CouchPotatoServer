@@ -108,11 +108,11 @@ class SynologyRPC(object):
             if response['success']:
                 log.info('Synology action successfull')
             return response
-        except requests.ConnectionError, err:
+        except requests.ConnectionError as err:
             log.error('Synology connection error, check your config %s', err)
-        except requests.HTTPError, err:
+        except requests.HTTPError as err:
             log.error('SynologyRPC HTTPError: %s', err)
-        except Exception, err:
+        except Exception as err:
             log.error('Exception: %s', err)
         finally:
             return response

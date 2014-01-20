@@ -188,7 +188,7 @@ class DelugeRPC(object):
 
             if torrent_id and options['label']:
                 self.client.label.set_torrent(torrent_id, options['label']).get()
-        except Exception, err:
+        except Exception as err:
             log.error('Failed to add torrent magnet %s: %s %s', (torrent, err, traceback.format_exc()))
         finally:
             if self.client:
@@ -206,7 +206,7 @@ class DelugeRPC(object):
 
             if torrent_id and options['label']:
                 self.client.label.set_torrent(torrent_id, options['label']).get()
-        except Exception, err:
+        except Exception as err:
             log.error('Failed to add torrent file %s: %s %s', (filename, err, traceback.format_exc()))
         finally:
             if self.client:
@@ -219,7 +219,7 @@ class DelugeRPC(object):
         try:
             self.connect()
             ret = self.client.core.get_torrents_status({'id': ids}, ('name', 'hash', 'save_path', 'move_completed_path', 'progress', 'state', 'eta', 'ratio', 'stop_ratio', 'is_seed', 'is_finished', 'paused', 'move_on_completed', 'files')).get()
-        except Exception, err:
+        except Exception as err:
             log.error('Failed to get all torrents: %s %s', (err, traceback.format_exc()))
         finally:
             if self.client:
@@ -230,7 +230,7 @@ class DelugeRPC(object):
         try:
             self.connect()
             self.client.core.pause_torrent(torrent_ids).get()
-        except Exception, err:
+        except Exception as err:
             log.error('Failed to pause torrent: %s %s', (err, traceback.format_exc()))
         finally:
             if self.client:
@@ -240,7 +240,7 @@ class DelugeRPC(object):
         try:
             self.connect()
             self.client.core.resume_torrent(torrent_ids).get()
-        except Exception, err:
+        except Exception as err:
             log.error('Failed to resume torrent: %s %s', (err, traceback.format_exc()))
         finally:
             if self.client:
@@ -251,7 +251,7 @@ class DelugeRPC(object):
         try:
             self.connect()
             ret = self.client.core.remove_torrent(torrent_id, remove_local_data).get()
-        except Exception, err:
+        except Exception as err:
             log.error('Failed to remove torrent: %s %s', (err, traceback.format_exc()))
         finally:
             if self.client:

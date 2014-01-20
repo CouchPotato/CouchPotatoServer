@@ -29,7 +29,7 @@ class PlexClientHTTP(PlexClientProtocol):
 
         try:
             self.plex.urlopen(url, headers = headers, timeout = 3, show_error = False)
-        except Exception, err:
+        except Exception as err:
             log.error("Couldn't sent command to Plex: %s", err)
             return False
 
@@ -68,7 +68,7 @@ class PlexClientJSON(PlexClientProtocol):
 
         try:
             requests.post(url, headers = headers, timeout = 3, data = json.dumps(request))
-        except Exception, err:
+        except Exception as err:
             log.error("Couldn't sent command to Plex: %s", err)
             return False
 

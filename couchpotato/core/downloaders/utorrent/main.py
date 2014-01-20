@@ -231,14 +231,14 @@ class uTorrentAPI(object):
                 return response
             else:
                 log.debug('Unknown failure sending command to uTorrent. Return text is: %s', response)
-        except httplib.InvalidURL, err:
+        except httplib.InvalidURL as err:
             log.error('Invalid uTorrent host, check your config %s', err)
-        except urllib2.HTTPError, err:
+        except urllib2.HTTPError as err:
             if err.code == 401:
                 log.error('Invalid uTorrent Username or Password, check your config')
             else:
                 log.error('uTorrent HTTPError: %s', err)
-        except urllib2.URLError, err:
+        except urllib2.URLError as err:
             log.error('Unable to connect to uTorrent %s', err)
         return False
 
@@ -304,7 +304,7 @@ class uTorrentAPI(object):
 
             #log.debug('uTorrent settings: %s', settings_dict)
 
-        except Exception, err:
+        except Exception as err:
             log.error('Failed to get settings from uTorrent: %s', err)
 
         return settings_dict

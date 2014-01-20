@@ -762,7 +762,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
             except:
                 log.error('Failed setting permissions for file: %s, %s', (dest, traceback.format_exc(1)))
 
-        except OSError, err:
+        except OSError as err:
             # Copying from a filesystem with octal permission to an NTFS file system causes a permission error.  In this case ignore it.
             if not hasattr(os, 'chmod') or err.errno != errno.EPERM:
                 raise
