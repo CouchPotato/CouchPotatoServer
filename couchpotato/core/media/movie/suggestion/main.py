@@ -79,8 +79,10 @@ class Suggestion(Plugin):
         seen = [] if not seen else seen
 
         if ignore_imdb:
+            suggested_imdbs = []
             for cs in cached_suggestion:
-                if cs.get('imdb') != ignore_imdb:
+                if cs.get('imdb') != ignore_imdb and cs.get('imdb') not in suggested_imdbs:
+                    suggested_imdbs.append(cs.get('imdb'))
                     new_suggestions.append(cs)
 
         # Get new results and add them
