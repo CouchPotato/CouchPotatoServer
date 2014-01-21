@@ -7,9 +7,11 @@ var DownloadersBase = new Class({
 
 		// Add refresh link for uTorrent download dirs
         App.addEvent('load', function() {
-            var setting_page = App.getPage('Settings');
-            setting_page.addEvent('create', function(){
-                self.addRefreshUtorrentDirsButton( setting_page.tabs.downloaders.groups.utorrent );
+            App.getPage('Settings').addEvent('create', function(){
+                self.addRefreshUtorrentDirsButton( App.getPage('Settings').tabs.downloaders.groups.utorrent );
+            });
+            App.getPage('Wizard').addEvent('create', function(){
+                self.addRefreshUtorrentDirsButton( App.getPage('Wizard').tabs.downloaders.groups.utorrent );
             });
         });
 
