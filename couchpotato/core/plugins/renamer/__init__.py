@@ -89,14 +89,6 @@ config = [{
                     'default': False,
                 },
                 {
-                    'advanced': True,
-                    'name': 'reset_file_date',
-                    'label': 'Reset file date',
-                    'type': 'bool',
-                    'description': 'Set modify date of all processed files to current date and time.',
-                    'default': False,
-                },
-                {
                     'name': 'cleanup',
                     'type': 'bool',
                     'description': 'Cleanup leftover files after successful rename.',
