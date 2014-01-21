@@ -21,20 +21,20 @@ class Deluge(Downloader):
     drpc = None
     testable = True
 
-    def connect(self):
+    def connect(self, reconnect = False):
         # Load host from config and split out port.
         host = cleanHost(self.conf('host'), protocol = False).split(':')
         if not isInt(host[1]):
             log.error('Config properties are not filled in correctly, port is missing.')
             return False
 
-        if not (self.drpc and self.drpc.test()):
+        if not self.drpc or reconnect:
             self.drpc = DelugeRPC(host[0], port = host[1], username = self.conf('username'), password = self.conf('password'))
 
         return self.drpc
 
     def test(self):
-        if self.connect() and self.drpc.test():
+        if self.connect(True) and self.drpc.test():
             return True
         return False
 
