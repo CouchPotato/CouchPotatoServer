@@ -18,6 +18,7 @@ class Transmission(Downloader):
     protocol = ['torrent', 'torrent_magnet']
     log = CPLog(__name__)
     trpc = None
+    testable = True
 
     def connect(self):
         # Load host from config and split out port.
@@ -26,10 +27,15 @@ class Transmission(Downloader):
             log.error('Config properties are not filled in correctly, port is missing.')
             return False
 
-        if not self.trpc:
+        if not (self.trpc and self.trpc.get_session()):
             self.trpc = TransmissionRPC(host[0], port = host[1], rpc_url = self.conf('rpc_url').strip('/ '), username = self.conf('username'), password = self.conf('password'))
 
         return self.trpc
+
+    def test(self):
+        if self.connect() and self.trpc.get_session():
+            return True
+        return False
 
     def download(self, data = None, media = None, filedata = None):
         if not media: media = {}
