@@ -19,13 +19,13 @@ class Sabnzbd(Downloader):
 
     def test(self):
         try:
-            queue = self.call({
+            sab_data = self.call({
                 'mode': 'version',
             })
         except:
             return False
 
-        return bool(queue)
+        return bool(sab_data)
 
     def download(self, data = None, media = None, filedata = None):
         if not media: media = {}
