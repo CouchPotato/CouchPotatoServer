@@ -64,7 +64,7 @@ class Provider(Plugin):
 
     def getJsonData(self, url, decode_from = None, **kwargs):
 
-        cache_key = '%s%s' % (md5(url), md5('%s' % kwargs.get('params', {})))
+        cache_key = md5(url)
         data = self.getCache(cache_key, url, **kwargs)
 
         if data:
@@ -81,7 +81,7 @@ class Provider(Plugin):
 
     def getRSSData(self, url, item_path = 'channel/item', **kwargs):
 
-        cache_key = '%s%s' % (md5(url), md5('%s' % kwargs.get('params', {})))
+        cache_key = md5(url)
         data = self.getCache(cache_key, url, **kwargs)
 
         if data and len(data) > 0:
