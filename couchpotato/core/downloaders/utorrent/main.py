@@ -51,11 +51,6 @@ class uTorrent(Downloader):
 
         return self.utorrent_api
 
-    def test(self):
-        if self.connect() and self.utorrent_api.get_status():
-            return True
-        return False
-
     def download(self, data = None, movie = None, filedata = None):
         if not movie: movie = {}
         if not data: data = {}

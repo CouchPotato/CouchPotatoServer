@@ -39,9 +39,8 @@ config = [{
                 {
                     'name': 'download_directory',
                     'type': 'dropdown',
-                    'advanced': True,
                     'values': [ ('Default Directory','Default Directory') ],
-                    'description': 'Download to this directory. Folders must be set-up in uTorrent client to appear here.',
+                    'description': ('Download to this directory. Folders must be set-up in uTorrent client to appear here.','In your uTorrent application, go to <strong>Options &#8594; Preferences &#8594; Advanced &#8594; Web UI</strong>. Then you can add folders under <strong>Download directories</strong>.'),
                 },
                 {
                     'name': 'download_subpath',
