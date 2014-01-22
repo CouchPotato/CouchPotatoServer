@@ -1,5 +1,5 @@
-from __future__ import print_function
 #!/usr/bin/env python
+from __future__ import print_function
 from logging import handlers
 from os.path import dirname
 import logging
