@@ -50,7 +50,7 @@ class IMDBWatchlist(IMDBBase):
                     watchlist_url = 'http://www.imdb.com/list/%s/?view=compact&sort=created:asc' % ids[0]
                 # Try find user id with watchlist
                 else:
-                    userids = re.findall('(ur\d{7})', watchlist_url)
+                    userids = re.findall('(ur\d{7,9})', watchlist_url)
                     if len(userids) == 1:
                         watchlist_url = 'http://www.imdb.com/user/%s/watchlist?view=compact&sort=created:asc' % userids[0]
             except:
