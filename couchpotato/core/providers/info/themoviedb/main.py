@@ -1,5 +1,5 @@
 from couchpotato.core.event import addEvent
-from couchpotato.core.helpers.encoding import simplifyString, toUnicode
+from couchpotato.core.helpers.encoding import simplifyString, toUnicode, ss
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.info.base import MovieProvider
@@ -166,7 +166,7 @@ class TheMovieDb(MovieProvider):
         try:
             image_url = getattr(movie, type).geturl(size = size)
         except:
-            log.debug('Failed getting %s.%s for "%s"', (type, size, str(movie)))
+            log.debug('Failed getting %s.%s for "%s"', (type, size, ss(str(movie))))
 
         return image_url
 
