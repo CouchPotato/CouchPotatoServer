@@ -95,7 +95,7 @@ class Provider(Plugin):
 
     def getHTMLData(self, url, **kwargs):
 
-        cache_key = '%s%s' % (md5(url), md5('%s' % kwargs.get('data', {})))
+        cache_key = md5(url)
         return self.getCache(cache_key, url, **kwargs)
 
 
