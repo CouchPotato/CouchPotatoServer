@@ -23,11 +23,6 @@ config = [{
                     'default': '',
                 },
                 {
-                    'name': 'password',
-                    'default': '',
-                    'type': 'password',
-                },
-                {
                     'name': 'passkey',
                     'default': '',
                 },
