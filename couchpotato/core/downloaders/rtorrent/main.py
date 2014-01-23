@@ -134,7 +134,7 @@ class rTorrent(Downloader):
         # Send request to rTorrent
         try:
             # Send torrent to rTorrent
-            torrent = self.rt.load_torrent(filedata)
+            torrent = self.rt.load_torrent(filedata, verify_retries=10)
 
             if not torrent:
                 log.error('Unable to find the torrent, did it fail to load?')
