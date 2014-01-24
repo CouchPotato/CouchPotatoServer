@@ -9,7 +9,7 @@ import re
 import string
 import sys
 import six
-from six.moves import map, zip
+from six.moves import map, zip, filter
 
 log = CPLog(__name__)
 
@@ -260,7 +260,16 @@ def randomString(size = 8, chars = string.ascii_uppercase + string.digits):
 
 def splitString(str, split_on = ',', clean = True):
     l = [x.strip() for x in str.split(split_on)] if str else []
-    return [x for x in l if x] if clean else l
+    return removeEmpty(l) if clean else l
+
+
+def removeEmpty(l):
+    return list(filter(None, l))
+
+
+def removeDuplicate(l):
+    seen = set()
+    return [x for x in l if x not in seen and not seen.add(x)]
 
 
 def dictIsSubset(a, b):

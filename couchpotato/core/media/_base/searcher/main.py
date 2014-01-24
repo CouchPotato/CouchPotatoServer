@@ -1,12 +1,11 @@
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import simplifyString
-from couchpotato.core.helpers.variable import splitString
+from couchpotato.core.helpers.variable import splitString, removeEmpty
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.searcher.base import SearcherBase
 import datetime
 import re
-from six.moves import filter
 
 log = CPLog(__name__)
 
@@ -155,8 +154,8 @@ class Searcher(SearcherBase):
             check_movie = fireEvent('scanner.name_year', check_name, single = True)
 
             try:
-                check_words = filter(None, re.split('\W+', check_movie.get('name', '')))
-                movie_words = filter(None, re.split('\W+', simplifyString(movie_name)))
+                check_words = removeEmpty(re.split('\W+', check_movie.get('name', '')))
+                movie_words = removeEmpty(re.split('\W+', simplifyString(movie_name)))
 
                 if len(check_words) > 0 and len(movie_words) > 0 and len(list(set(check_words) - set(movie_words))) == 0:
                     return True
