@@ -1,7 +1,7 @@
 from couchpotato import get_session
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent
-from couchpotato.core.helpers.variable import splitString
+from couchpotato.core.helpers.variable import splitString, removeDuplicate
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Media, Library
 from couchpotato.environment import Env
@@ -99,7 +99,7 @@ class Suggestion(Plugin):
             movies.extend(seen)
 
             ignored.extend([x.get('imdb') for x in cached_suggestion])
-            suggestions = fireEvent('movie.suggest', movies = movies, ignore = list(set(ignored)), single = True)
+            suggestions = fireEvent('movie.suggest', movies = movies, ignore = removeDuplicate(ignored), single = True)
 
             if suggestions:
                 new_suggestions.extend(suggestions)

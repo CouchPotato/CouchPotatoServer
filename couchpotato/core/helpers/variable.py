@@ -176,7 +176,7 @@ def getImdb(txt, check_inside = False, multiple = False):
         ids = re.findall('(tt\d{4,7})', txt)
 
         if multiple:
-            return list(set(['tt%07d' % tryInt(x[2:]) for x in ids])) if len(ids) > 0 else []
+            return removeDuplicate(['tt%07d' % tryInt(x[2:]) for x in ids]) if len(ids) > 0 else []
 
         return 'tt%07d' % tryInt(ids[0][2:])
     except IndexError:
@@ -251,7 +251,7 @@ def possibleTitles(raw_title):
     new_title = raw_title.replace('&', 'and')
     titles.append(simplifyString(new_title))
 
-    return list(set(titles))
+    return removeDuplicate(titles)
 
 
 def randomString(size = 8, chars = string.ascii_uppercase + string.digits):
