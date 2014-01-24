@@ -144,9 +144,14 @@ def cleanHost(host, protocol = True, ssl = False, username = None, password = No
         host = host.split('://', 1)[-1]
 
     if protocol and username and password:
-        login = '%s:%s@' % (username, password)
-        if not login in host:
-            host = host.replace('://', '://' + login, 1)
+        try:
+            auth = re.findall('^(?:.+?//)(.+?):(.+?)@(?:.+)$', host)
+            if auth:
+                log.error('Cleanhost error: auth already defined in url: %s, please remove BasicAuth from url.', host)
+            else:
+                host = host.replace('://', '://%s:%s@' % (username, password), 1)
+        except:
+            pass
 
     host = host.rstrip('/ ')
     if protocol:
