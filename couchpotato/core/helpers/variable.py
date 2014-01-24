@@ -278,4 +278,4 @@ def dictIsSubset(a, b):
 
 def isSubFolder(sub_folder, base_folder):
     # Returns True if sub_folder is the same as or inside base_folder
-    return base_folder and sub_folder and os.path.normpath(base_folder).rstrip(os.path.sep) + os.path.sep in os.path.normpath(sub_folder).rstrip(os.path.sep) + os.path.sep
+    return base_folder and sub_folder and ss(os.path.normpath(base_folder).rstrip(os.path.sep) + os.path.sep) in ss(os.path.normpath(sub_folder).rstrip(os.path.sep) + os.path.sep)

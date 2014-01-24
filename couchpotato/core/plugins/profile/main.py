@@ -46,6 +46,8 @@ class ProfilePlugin(Plugin):
                 movie.profile_id = default_profile.get('id')
                 db.commit()
 
+        db.expire_all()
+
     def allView(self, **kwargs):
 
         return {

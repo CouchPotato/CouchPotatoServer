@@ -134,6 +134,8 @@ class Scanner(Plugin):
 
             except:
                 log.error('Failed getting files from %s: %s', (folder, traceback.format_exc()))
+
+            log.debug('Found %s files to scan and group in %s', (len(files), folder))
         else:
             check_file_date = False
             files = [sp(x) for x in files]
@@ -421,6 +423,7 @@ class Scanner(Plugin):
             else:
                 movie = db.query(Media).filter_by(library_id = group['library']['id']).first()
                 group['movie_id'] = None if not movie else movie.id
+                db.expire_all()
 
             processed_movies[identifier] = group
 
@@ -604,6 +607,7 @@ class Scanner(Plugin):
                     break
                 except:
                     pass
+            db.expire_all()
 
         # Search based on identifiers
         if not imdb_id:
@@ -637,7 +641,7 @@ class Scanner(Plugin):
         try:
             m = re.search(self.cp_imdb, string.lower())
             id = m.group('id')
-            if id:  return id
+            if id: return id
         except AttributeError:
             pass
 

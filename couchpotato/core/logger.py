@@ -38,7 +38,7 @@ class CPLog(object):
     def safeMessage(self, msg, replace_tuple = ()):
 
         from couchpotato.environment import Env
-        from couchpotato.core.helpers.encoding import ss
+        from couchpotato.core.helpers.encoding import ss, toUnicode
 
         msg = ss(msg)
 
@@ -67,4 +67,4 @@ class CPLog(object):
             except:
                 pass
 
-        return msg
+        return toUnicode(msg)

@@ -73,10 +73,23 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
         db = get_session()
 
-        movies = db.query(Media).filter(
+        movies_raw = db.query(Media).filter(
             Media.status.has(identifier = 'active')
         ).all()
+
         random.shuffle(movies)
+
+        movies = []
+        for m in movies_raw:
+            movies.append(m.to_dict({
+                'category': {},
+                'profile': {'types': {'quality': {}}},
+                'releases': {'status': {}, 'quality': {}},
+                'library': {'titles': {}, 'files': {}},
+                'files': {},
+            }))
+
+        db.expire_all()
 
         self.in_progress = {
             'total': len(movies),
@@ -87,21 +100,14 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
             search_protocols = fireEvent('searcher.protocols', single = True)
 
             for movie in movies:
-                movie_dict = movie.to_dict({
-                    'category': {},
-                    'profile': {'types': {'quality': {}}},
-                    'releases': {'status': {}, 'quality': {}},
-                    'library': {'titles': {}, 'files': {}},
-                    'files': {},
-                })
 
                 try:
-                    self.single(movie_dict, search_protocols)
+                    self.single(movie, search_protocols)
                 except IndexError:
-                    log.error('Forcing library update for %s, if you see this often, please report: %s', (movie_dict['library']['identifier'], traceback.format_exc()))
-                    fireEvent('library.update.movie', movie_dict['library']['identifier'], force = True)
+                    log.error('Forcing library update for %s, if you see this often, please report: %s', (movie['library']['identifier'], traceback.format_exc()))
+                    fireEvent('library.update.movie', movie['library']['identifier'])
                 except:
-                    log.error('Search failed for %s: %s', (movie_dict['library']['identifier'], traceback.format_exc()))
+                    log.error('Search failed for %s: %s', (movie['library']['identifier'], traceback.format_exc()))
 
                 self.in_progress['to_go'] -= 1
 
@@ -133,8 +139,6 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
             log.debug('Movie doesn\'t have a profile or already done, assuming in manage tab.')
             return
 
-        db = get_session()
-
         pre_releases = fireEvent('quality.pre_releases', single = True)
         release_dates = fireEvent('library.update.movie.release_date', identifier = movie['library']['identifier'], merge = True)
         available_status, ignored_status, failed_status = fireEvent('status.get', ['available', 'ignored', 'failed'], single = True)
@@ -150,6 +154,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
         fireEvent('notify.frontend', type = 'movie.searcher.started', data = {'id': movie['id']}, message = 'Searching for "%s"' % default_title)
 
+        db = get_session()
 
         ret = False
         for quality_type in movie['profile']['types']:
@@ -204,6 +209,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
         fireEvent('notify.frontend', type = 'movie.searcher.ended', data = {'id': movie['id']})
 
+        db.expire_all()
         return ret
 
     def correctRelease(self, nzb = None, media = None, quality = None, **kwargs):
@@ -336,6 +342,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
             for rel in rels:
                 rel.status_id = ignored_status.get('id')
             db.commit()
+            db.expire_all()
 
             movie_dict = fireEvent('media.get', media_id = media_id, single = True)
             log.info('Trying next release for: %s', getTitle(movie_dict['library']))

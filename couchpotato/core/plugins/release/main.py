@@ -143,6 +143,7 @@ class Release(Plugin):
 
         fireEvent('media.restatus', media.id)
 
+        db.expire_all()
         return True
 
     def saveFile(self, filepath, type = 'unknown', include_media_info = False):
@@ -338,6 +339,8 @@ class Release(Plugin):
         except:
             log.error('Failed storing download status: %s', traceback.format_exc())
             return False
+        finally:
+            db.expire_all()
 
         return True
 
@@ -466,4 +469,5 @@ class Release(Plugin):
             #Update all movie info as there is no release update function
             fireEvent('notify.frontend', type = 'release.update_status', data = rel.to_dict())
 
+        db.expire_all()
         return True

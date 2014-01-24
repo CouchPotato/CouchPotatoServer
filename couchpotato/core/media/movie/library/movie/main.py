@@ -60,7 +60,7 @@ class MovieLibraryPlugin(LibraryBase):
         db.expire_all()
         return library_dict
 
-    def update(self, identifier, default_title = '', force = False):
+    def update(self, identifier, default_title = '', extended = False):
 
         if self.shuttingDown():
             return
@@ -69,13 +69,7 @@ class MovieLibraryPlugin(LibraryBase):
         library = db.query(Library).filter_by(identifier = identifier).first()
         done_status = fireEvent('status.get', 'done', single = True)
 
-        library_dict = None
-        if library:
-            library_dict = library.to_dict(self.default_dict)
-
-        do_update = True
-
-        info = fireEvent('movie.info', merge = True, identifier = identifier)
+        info = fireEvent('movie.info', merge = True, extended = extended, identifier = identifier)
 
         # Don't need those here
         try: del info['in_wanted']
@@ -88,55 +82,54 @@ class MovieLibraryPlugin(LibraryBase):
             return False
 
         # Main info
-        if do_update:
-            library.plot = toUnicode(info.get('plot', ''))
-            library.tagline = toUnicode(info.get('tagline', ''))
-            library.year = info.get('year', 0)
-            library.status_id = done_status.get('id')
-            library.info.update(info)
-            db.commit()
+        library.plot = toUnicode(info.get('plot', ''))
+        library.tagline = toUnicode(info.get('tagline', ''))
+        library.year = info.get('year', 0)
+        library.status_id = done_status.get('id')
+        library.info.update(info)
+        db.commit()
 
-            # Titles
-            [db.delete(title) for title in library.titles]
-            db.commit()
+        # Titles
+        [db.delete(title) for title in library.titles]
+        db.commit()
 
-            titles = info.get('titles', [])
-            log.debug('Adding titles: %s', titles)
-            counter = 0
-            for title in titles:
-                if not title:
+        titles = info.get('titles', [])
+        log.debug('Adding titles: %s', titles)
+        counter = 0
+        for title in titles:
+            if not title:
+                continue
+            title = toUnicode(title)
+            t = LibraryTitle(
+                title = title,
+                simple_title = self.simplifyTitle(title),
+                default = (len(default_title) == 0 and counter == 0) or len(titles) == 1 or title.lower() == toUnicode(default_title.lower()) or (toUnicode(default_title) == six.u('') and toUnicode(titles[0]) == title)
+            )
+            library.titles.append(t)
+            counter += 1
+
+        db.commit()
+
+        # Files
+        images = info.get('images', [])
+        for image_type in ['poster']:
+            for image in images.get(image_type, []):
+                if not isinstance(image, (str, unicode)):
                     continue
-                title = toUnicode(title)
-                t = LibraryTitle(
-                    title = title,
-                    simple_title = self.simplifyTitle(title),
-                    default = (len(default_title) == 0 and counter == 0) or len(titles) == 1 or title.lower() == toUnicode(default_title.lower()) or (toUnicode(default_title) == six.u('') and toUnicode(titles[0]) == title)
-                )
-                library.titles.append(t)
-                counter += 1
 
-            db.commit()
+                file_path = fireEvent('file.download', url = image, single = True)
+                if file_path:
+                    file_obj = fireEvent('file.add', path = file_path, type_tuple = ('image', image_type), single = True)
+                    try:
+                        file_obj = db.query(File).filter_by(id = file_obj.get('id')).one()
+                        library.files.append(file_obj)
+                        db.commit()
 
-            # Files
-            images = info.get('images', [])
-            for image_type in ['poster']:
-                for image in images.get(image_type, []):
-                    if not isinstance(image, (str, unicode)):
-                        continue
+                        break
+                    except:
+                        log.debug('Failed to attach to library: %s', traceback.format_exc())
 
-                    file_path = fireEvent('file.download', url = image, single = True)
-                    if file_path:
-                        file_obj = fireEvent('file.add', path = file_path, type_tuple = ('image', image_type), single = True)
-                        try:
-                            file_obj = db.query(File).filter_by(id = file_obj.get('id')).one()
-                            library.files.append(file_obj)
-                            db.commit()
-
-                            break
-                        except:
-                            log.debug('Failed to attach to library: %s', traceback.format_exc())
-
-            library_dict = library.to_dict(self.default_dict)
+        library_dict = library.to_dict(self.default_dict)
 
         db.expire_all()
         return library_dict
@@ -147,14 +140,14 @@ class MovieLibraryPlugin(LibraryBase):
         library = db.query(Library).filter_by(identifier = identifier).first()
 
         if not library.info:
-            library_dict = self.update(identifier, force = True)
+            library_dict = self.update(identifier)
             dates = library_dict.get('info', {}).get('release_date')
         else:
             dates = library.info.get('release_date')
 
         if dates and (dates.get('expires', 0) < time.time() or dates.get('expires', 0) > time.time() + (604800 * 4)) or not dates:
             dates = fireEvent('movie.release_date', identifier = identifier, merge = True)
-            library.info.update({'release_date': dates })
+            library.info.update({'release_date': dates})
             db.commit()
 
         db.expire_all()

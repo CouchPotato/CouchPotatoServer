@@ -119,3 +119,5 @@ class CategoryPlugin(Plugin):
             for movie in movies:
                 movie.category_id = None
                 db.commit()
+
+        db.expire_all()

@@ -70,8 +70,6 @@ class MediaPlugin(MediaBase):
         addEvent('media.restatus', self.restatus)
 
     def refresh(self, id = '', **kwargs):
-        db = get_session()
-
         handlers = []
         ids = splitString(id)
 
@@ -97,11 +95,14 @@ class MediaPlugin(MediaBase):
 
             default_title = getTitle(media.library)
             identifier = media.library.identifier
-            db.expire_all()
+            event = 'library.update.%s' % media.type
 
             def handler():
-                fireEvent('library.update.%s' % media.type, identifier = identifier, default_title = default_title, force = True, on_complete = self.createOnComplete(id))
+                fireEvent(event, identifier = identifier, default_title = default_title, on_complete = self.createOnComplete(id))
 
+        db.expire_all()
+
+        if handler:
             return handler
 
     def addSingleRefreshView(self):
@@ -467,6 +468,7 @@ class MediaPlugin(MediaBase):
             m.status_id = active_status.get('id') if move_to_wanted else done_status.get('id')
 
         db.commit()
+        db.expire_all()
 
         return True
 
