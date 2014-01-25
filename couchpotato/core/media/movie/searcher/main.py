@@ -77,7 +77,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
             Media.status.has(identifier = 'active')
         ).all()
 
-        random.shuffle(movies)
+        random.shuffle(movies_raw)
 
         movies = []
         for m in movies_raw:
