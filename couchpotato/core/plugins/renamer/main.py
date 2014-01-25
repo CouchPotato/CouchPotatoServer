@@ -439,6 +439,7 @@ class Renamer(Plugin):
                                     db.commit()
                     except Exception as e:
                         log.error('Failed marking movie finished: %s %s', (e, traceback.format_exc()))
+                        db.rollback()
 
                     # Go over current movie releases
                     for release in movie.releases:

@@ -119,7 +119,6 @@ class Dashboard(Plugin):
                         'files': {},
                     }))
 
-        db.expire_all()
         return {
             'success': True,
             'empty': len(movies) == 0,

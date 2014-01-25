@@ -89,8 +89,6 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                 'files': {},
             }))
 
-        db.expire_all()
-
         self.in_progress = {
             'total': len(movies),
             'to_go': len(movies),
@@ -209,7 +207,6 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
         fireEvent('notify.frontend', type = 'movie.searcher.ended', data = {'id': movie['id']})
 
-        db.expire_all()
         return ret
 
     def correctRelease(self, nzb = None, media = None, quality = None, **kwargs):
@@ -342,7 +339,6 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
             for rel in rels:
                 rel.status_id = ignored_status.get('id')
             db.commit()
-            db.expire_all()
 
             movie_dict = fireEvent('media.get', media_id = media_id, single = True)
             log.info('Trying next release for: %s', getTitle(movie_dict['library']))
@@ -352,7 +348,10 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
         except:
             log.error('Failed searching for next release: %s', traceback.format_exc())
+            db.rollback()
             return False
+        finally:
+            db.close()
 
     def getSearchTitle(self, media):
         if media['type'] == 'movie':

@@ -597,6 +597,7 @@ class Scanner(Plugin):
 
         # Check if path is already in db
         if not imdb_id:
+
             db = get_session()
             for cf in files['movie']:
                 f = db.query(File).filter_by(path = toUnicode(cf)).first()
@@ -607,7 +608,6 @@ class Scanner(Plugin):
                     break
                 except:
                     pass
-            db.expire_all()
 
         # Search based on identifiers
         if not imdb_id:
