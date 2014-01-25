@@ -96,6 +96,17 @@ class MovieLibraryPlugin(LibraryBase):
         titles = info.get('titles', [])
         log.debug('Adding titles: %s', titles)
         counter = 0
+
+        def_title = None
+        for title in titles:
+            if (len(default_title) == 0 and counter == 0) or len(titles) == 1 or title.lower() == toUnicode(default_title.lower()) or (toUnicode(default_title) == six.u('') and toUnicode(titles[0]) == title):
+                def_title = toUnicode(title)
+                break
+            counter += 1
+
+        #if not def_title:
+        #    def_title = toUnicode(titles[0])
+
         for title in titles:
             if not title:
                 continue
@@ -103,10 +114,9 @@ class MovieLibraryPlugin(LibraryBase):
             t = LibraryTitle(
                 title = title,
                 simple_title = self.simplifyTitle(title),
-                default = (len(default_title) == 0 and counter == 0) or len(titles) == 1 or title.lower() == toUnicode(default_title.lower()) or (toUnicode(default_title) == six.u('') and toUnicode(titles[0]) == title)
+                default = title == def_title
             )
             library.titles.append(t)
-            counter += 1
 
         db.commit()
 
