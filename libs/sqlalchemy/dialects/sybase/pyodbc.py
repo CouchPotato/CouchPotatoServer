@@ -1,18 +1,16 @@
 # sybase/pyodbc.py
-# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2014 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 
 """
-Support for Sybase via pyodbc.
+.. dialect:: sybase+pyodbc
+    :name: PyODBC
+    :dbapi: pyodbc
+    :connectstring: sybase+pyodbc://<username>:<password>@<dsnname>[/<database>]
+    :url: http://pypi.python.org/pypi/pyodbc/
 
-http://pypi.python.org/pypi/pyodbc/
-
-Connect strings are of the form::
-
-    sybase+pyodbc://<username>:<password>@<dsn>/
-    sybase+pyodbc://<username>:<password>@<host>/<database>
 
 Unicode Support
 ---------------
@@ -37,8 +35,9 @@ Currently *not* supported are::
 from sqlalchemy.dialects.sybase.base import SybaseDialect,\
                                             SybaseExecutionContext
 from sqlalchemy.connectors.pyodbc import PyODBCConnector
-from sqlalchemy import types as sqltypes, util, processors
-from sqlalchemy.util.compat import decimal
+from sqlalchemy import types as sqltypes, processors
+import decimal
+
 
 class _SybNumeric_pyodbc(sqltypes.Numeric):
     """Turns Decimals with adjusted() < -6 into floats.
@@ -50,7 +49,7 @@ class _SybNumeric_pyodbc(sqltypes.Numeric):
     """
 
     def bind_processor(self, dialect):
-        super_process = super(_SybNumeric_pyodbc,self).\
+        super_process = super(_SybNumeric_pyodbc, self).\
                                     bind_processor(dialect)
 
         def process(value):
@@ -66,6 +65,7 @@ class _SybNumeric_pyodbc(sqltypes.Numeric):
                 return value
         return process
 
+
 class SybaseExecutionContext_pyodbc(SybaseExecutionContext):
     def set_ddl_autocommit(self, connection, value):
         if value:
@@ -73,11 +73,12 @@ class SybaseExecutionContext_pyodbc(SybaseExecutionContext):
         else:
             connection.autocommit = False
 
+
 class SybaseDialect_pyodbc(PyODBCConnector, SybaseDialect):
     execution_ctx_cls = SybaseExecutionContext_pyodbc
 
     colspecs = {
-        sqltypes.Numeric:_SybNumeric_pyodbc,
+        sqltypes.Numeric: _SybNumeric_pyodbc,
     }
 
 dialect = SybaseDialect_pyodbc

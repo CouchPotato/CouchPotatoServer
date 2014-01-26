@@ -1,5 +1,5 @@
 # ext/serializer.py
-# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2014 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -39,44 +39,30 @@ The serializer module is only appropriate for query structures.  It is not
 needed for:
 
 * instances of user-defined classes.   These contain no references to engines,
-  sessions or expression constructs in the typical case and can be serialized directly.
+  sessions or expression constructs in the typical case and can be serialized
+  directly.
 
-* Table metadata that is to be loaded entirely from the serialized structure (i.e. is
-  not already declared in the application).   Regular pickle.loads()/dumps() can
-  be used to fully dump any ``MetaData`` object, typically one which was reflected
-  from an existing database at some previous point in time.  The serializer module
-  is specifically for the opposite case, where the Table metadata is already present
-  in memory.
+* Table metadata that is to be loaded entirely from the serialized structure
+  (i.e. is not already declared in the application).   Regular
+  pickle.loads()/dumps() can be used to fully dump any ``MetaData`` object,
+  typically one which was reflected from an existing database at some previous
+  point in time.  The serializer module is specifically for the opposite case,
+  where the Table metadata is already present in memory.
 
 """
 
-from sqlalchemy.orm import class_mapper, Query
-from sqlalchemy.orm.session import Session
-from sqlalchemy.orm.mapper import Mapper
-from sqlalchemy.orm.attributes import QueryableAttribute
-from sqlalchemy import Table, Column
-from sqlalchemy.engine import Engine
-from sqlalchemy.util import pickle
+from ..orm import class_mapper
+from ..orm.session import Session
+from ..orm.mapper import Mapper
+from ..orm.interfaces import MapperProperty
+from ..orm.attributes import QueryableAttribute
+from .. import Table, Column
+from ..engine import Engine
+from ..util import pickle, byte_buffer, b64encode, b64decode, text_type
 import re
-import base64
-# Py3K
-#from io import BytesIO as byte_buffer
-# Py2K
-from cStringIO import StringIO as byte_buffer
-# end Py2K
 
-# Py3K
-#def b64encode(x):
-#    return base64.b64encode(x).decode('ascii')
-#def b64decode(x):
-#    return base64.b64decode(x.encode('ascii'))
-# Py2K
-b64encode = base64.b64encode
-b64decode = base64.b64decode
-# end Py2K
 
 __all__ = ['Serializer', 'Deserializer', 'dumps', 'loads']
-
 
 
 def Serializer(*args, **kw):
@@ -90,10 +76,13 @@ def Serializer(*args, **kw):
             id = "attribute:" + key + ":" + b64encode(pickle.dumps(cls))
         elif isinstance(obj, Mapper) and not obj.non_primary:
             id = "mapper:" + b64encode(pickle.dumps(obj.class_))
+        elif isinstance(obj, MapperProperty) and not obj.parent.non_primary:
+            id = "mapperprop:" + b64encode(pickle.dumps(obj.parent.class_)) + \
+                                    ":" + obj.key
         elif isinstance(obj, Table):
-            id = "table:" + str(obj)
+            id = "table:" + text_type(obj.key)
         elif isinstance(obj, Column) and isinstance(obj.table, Table):
-            id = "column:" + str(obj.table) + ":" + obj.key
+            id = "column:" + text_type(obj.table.key) + ":" + text_type(obj.key)
         elif isinstance(obj, Session):
             id = "session:"
         elif isinstance(obj, Engine):
@@ -105,7 +94,9 @@ def Serializer(*args, **kw):
     pickler.persistent_id = persistent_id
     return pickler
 
-our_ids = re.compile(r'(mapper|table|column|session|attribute|engine):(.*)')
+our_ids = re.compile(
+            r'(mapperprop|mapper|table|column|session|attribute|engine):(.*)')
+
 
 def Deserializer(file, metadata=None, scoped_session=None, engine=None):
     unpickler = pickle.Unpickler(file)
@@ -121,7 +112,7 @@ def Deserializer(file, metadata=None, scoped_session=None, engine=None):
             return None
 
     def persistent_load(id):
-        m = our_ids.match(id)
+        m = our_ids.match(text_type(id))
         if not m:
             return None
         else:
@@ -133,6 +124,10 @@ def Deserializer(file, metadata=None, scoped_session=None, engine=None):
             elif type_ == "mapper":
                 cls = pickle.loads(b64decode(args))
                 return class_mapper(cls)
+            elif type_ == "mapperprop":
+                mapper, keyname = args.split(':')
+                cls = pickle.loads(b64decode(mapper))
+                return class_mapper(cls).attrs[keyname]
             elif type_ == "table":
                 return metadata.tables[args]
             elif type_ == "column":
@@ -147,15 +142,15 @@ def Deserializer(file, metadata=None, scoped_session=None, engine=None):
     unpickler.persistent_load = persistent_load
     return unpickler
 
+
 def dumps(obj, protocol=0):
     buf = byte_buffer()
     pickler = Serializer(buf, protocol)
     pickler.dump(obj)
     return buf.getvalue()
 
+
 def loads(data, metadata=None, scoped_session=None, engine=None):
     buf = byte_buffer(data)
     unpickler = Deserializer(buf, metadata, scoped_session, engine)
     return unpickler.load()
-
-

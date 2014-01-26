@@ -1,13 +1,13 @@
 # postgresql/base.py
-# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2014 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 
-"""Support for the PostgreSQL database.
+"""
+.. dialect:: postgresql
+    :name: PostgreSQL
 
-For information on connecting using specific drivers, see the documentation
-section regarding that driver.
 
 Sequences/SERIAL
 ----------------
@@ -41,23 +41,40 @@ case.
 To force the usage of RETURNING by default off, specify the flag
 ``implicit_returning=False`` to :func:`.create_engine`.
 
+.. _postgresql_isolation_level:
+
 Transaction Isolation Level
 ---------------------------
 
-:func:`.create_engine` accepts an ``isolation_level`` parameter which results
-in the command ``SET SESSION CHARACTERISTICS AS TRANSACTION ISOLATION LEVEL
-<level>`` being invoked for every new connection. Valid values for this
-parameter are ``READ COMMITTED``, ``READ UNCOMMITTED``, ``REPEATABLE READ``,
-and ``SERIALIZABLE``::
+All Postgresql dialects support setting of transaction isolation level
+both via a dialect-specific parameter ``isolation_level``
+accepted by :func:`.create_engine`,
+as well as the ``isolation_level`` argument as passed to :meth:`.Connection.execution_options`.
+When using a non-psycopg2 dialect, this feature works by issuing the
+command ``SET SESSION CHARACTERISTICS AS TRANSACTION ISOLATION LEVEL
+<level>`` for each new connection.
+
+To set isolation level using :func:`.create_engine`::
 
     engine = create_engine(
                     "postgresql+pg8000://scott:tiger@localhost/test",
                     isolation_level="READ UNCOMMITTED"
                 )
 
-When using the psycopg2 dialect, a psycopg2-specific method of setting
-transaction isolation level is used, but the API of ``isolation_level``
-remains the same - see :ref:`psycopg2_isolation`.
+To set using per-connection execution options::
+
+    connection = engine.connect()
+    connection = connection.execution_options(isolation_level="READ COMMITTED")
+
+Valid values for ``isolation_level`` include:
+
+* ``READ COMMITTED``
+* ``READ UNCOMMITTED``
+* ``REPEATABLE READ``
+* ``SERIALIZABLE``
+
+The :mod:`~sqlalchemy.dialects.postgresql.psycopg2` dialect also offers the special level ``AUTOCOMMIT``.  See
+:ref:`psycopg2_isolation_level` for details.
 
 
 Remote / Cross-Schema Table Introspection
@@ -114,6 +131,62 @@ use the :meth:`._UpdateBase.returning` method on a per-statement basis::
         where(table.c.name=='foo')
     print result.fetchall()
 
+.. _postgresql_match:
+
+Full Text Search
+----------------
+
+SQLAlchemy makes available the Postgresql ``@@`` operator via the
+:meth:`.ColumnElement.match` method on any textual column expression.
+On a Postgresql dialect, an expression like the following::
+
+    select([sometable.c.text.match("search string")])
+
+will emit to the database::
+
+    SELECT text @@ to_tsquery('search string') FROM table
+
+The Postgresql text search functions such as ``to_tsquery()``
+and ``to_tsvector()`` are available
+explicitly using the standard :attr:`.func` construct.  For example::
+
+    select([
+        func.to_tsvector('fat cats ate rats').match('cat & rat')
+    ])
+
+Emits the equivalent of::
+
+    SELECT to_tsvector('fat cats ate rats') @@ to_tsquery('cat & rat')
+
+The :class:`.postgresql.TSVECTOR` type can provide for explicit CAST::
+
+    from sqlalchemy.dialects.postgresql import TSVECTOR
+    from sqlalchemy import select, cast
+    select([cast("some text", TSVECTOR)])
+
+produces a statement equivalent to::
+
+    SELECT CAST('some text' AS TSVECTOR) AS anon_1
+
+
+FROM ONLY ...
+------------------------
+
+The dialect supports PostgreSQL's ONLY keyword for targeting only a particular
+table in an inheritance hierarchy. This can be used to produce the
+``SELECT ... FROM ONLY``, ``UPDATE ONLY ...``, and ``DELETE FROM ONLY ...``
+syntaxes. It uses SQLAlchemy's hints mechanism::
+
+    # SELECT ... FROM ONLY ...
+    result = table.select().with_hint(table, 'ONLY', 'postgresql')
+    print result.fetchall()
+
+    # UPDATE ONLY ...
+    table.update(values=dict(foo='bar')).with_hint('ONLY',
+                                                   dialect_name='postgresql')
+
+    # DELETE FROM ONLY ...
+    table.delete().with_hint('ONLY', dialect_name='postgresql')
 
 .. _postgresql_indexes:
 
@@ -136,9 +209,10 @@ Operator Classes
 ^^^^^^^^^^^^^^^^^
 
 PostgreSQL allows the specification of an *operator class* for each column of
-an index (see http://www.postgresql.org/docs/8.3/interactive/indexes-opclass.html).
-The :class:`.Index` construct allows these to be specified via the ``postgresql_ops``
-keyword argument::
+an index (see
+http://www.postgresql.org/docs/8.3/interactive/indexes-opclass.html).
+The :class:`.Index` construct allows these to be specified via the
+``postgresql_ops`` keyword argument::
 
     Index('my_index', my_table.c.id, my_table.c.data,
                             postgresql_ops={
@@ -150,15 +224,15 @@ keyword argument::
     ``postgresql_ops`` keyword argument to :class:`.Index` construct.
 
 Note that the keys in the ``postgresql_ops`` dictionary are the "key" name of
-the :class:`.Column`, i.e. the name used to access it from the ``.c`` collection
-of :class:`.Table`, which can be configured to be different than the actual
-name of the column as expressed in the database.
+the :class:`.Column`, i.e. the name used to access it from the ``.c``
+collection of :class:`.Table`, which can be configured to be different than
+the actual name of the column as expressed in the database.
 
 Index Types
 ^^^^^^^^^^^^
 
-PostgreSQL provides several index types: B-Tree, Hash, GiST, and GIN, as well as
-the ability for users to create their own (see
+PostgreSQL provides several index types: B-Tree, Hash, GiST, and GIN, as well
+as the ability for users to create their own (see
 http://www.postgresql.org/docs/8.3/static/indexes-types.html). These can be
 specified on :class:`.Index` using the ``postgresql_using`` keyword argument::
 
@@ -169,13 +243,13 @@ underlying CREATE INDEX command, so it *must* be a valid index type for your
 version of PostgreSQL.
 
 """
-
+from collections import defaultdict
 import re
 
-from sqlalchemy import sql, schema, exc, util
-from sqlalchemy.engine import default, reflection
-from sqlalchemy.sql import compiler, expression, util as sql_util
-from sqlalchemy import types as sqltypes
+from ... import sql, schema, exc, util
+from ...engine import default, reflection
+from ...sql import compiler, expression, operators
+from ... import types as sqltypes
 
 try:
     from uuid import UUID as _python_UUID
@@ -194,7 +268,7 @@ RESERVED_WORDS = set(
     "default", "deferrable", "desc", "distinct", "do", "else", "end",
     "except", "false", "fetch", "for", "foreign", "from", "grant", "group",
     "having", "in", "initially", "intersect", "into", "leading", "limit",
-    "localtime", "localtimestamp", "new", "not", "null", "off", "offset",
+    "localtime", "localtimestamp", "new", "not", "null", "of", "off", "offset",
     "old", "on", "only", "or", "order", "placing", "primary", "references",
     "returning", "select", "session_user", "some", "symmetric", "table",
     "then", "to", "trailing", "true", "union", "unique", "user", "using",
@@ -208,23 +282,29 @@ _DECIMAL_TYPES = (1231, 1700)
 _FLOAT_TYPES = (700, 701, 1021, 1022)
 _INT_TYPES = (20, 21, 23, 26, 1005, 1007, 1016)
 
+
 class BYTEA(sqltypes.LargeBinary):
     __visit_name__ = 'BYTEA'
 
+
 class DOUBLE_PRECISION(sqltypes.Float):
     __visit_name__ = 'DOUBLE_PRECISION'
+
 
 class INET(sqltypes.TypeEngine):
     __visit_name__ = "INET"
 PGInet = INET
 
+
 class CIDR(sqltypes.TypeEngine):
     __visit_name__ = "CIDR"
 PGCidr = CIDR
 
+
 class MACADDR(sqltypes.TypeEngine):
     __visit_name__ = "MACADDR"
 PGMacAddr = MACADDR
+
 
 class TIMESTAMP(sqltypes.TIMESTAMP):
     def __init__(self, timezone=False, precision=None):
@@ -237,6 +317,7 @@ class TIME(sqltypes.TIME):
         super(TIME, self).__init__(timezone=timezone)
         self.precision = precision
 
+
 class INTERVAL(sqltypes.TypeEngine):
     """Postgresql INTERVAL type.
 
@@ -245,6 +326,7 @@ class INTERVAL(sqltypes.TypeEngine):
 
     """
     __visit_name__ = 'INTERVAL'
+
     def __init__(self, precision=None):
         self.precision = precision
 
@@ -258,8 +340,10 @@ class INTERVAL(sqltypes.TypeEngine):
 
 PGInterval = INTERVAL
 
+
 class BIT(sqltypes.TypeEngine):
     __visit_name__ = 'BIT'
+
     def __init__(self, length=None, varying=False):
         if not varying:
             # BIT without VARYING defaults to length 1
@@ -270,6 +354,7 @@ class BIT(sqltypes.TypeEngine):
         self.varying = varying
 
 PGBit = BIT
+
 
 class UUID(sqltypes.TypeEngine):
     """Postgresql UUID type.
@@ -295,15 +380,15 @@ class UUID(sqltypes.TypeEngine):
          """
         if as_uuid and _python_UUID is None:
             raise NotImplementedError(
-                    "This version of Python does not support the native UUID type."
-                )
+                "This version of Python does not support the native UUID type."
+            )
         self.as_uuid = as_uuid
 
     def bind_processor(self, dialect):
         if self.as_uuid:
             def process(value):
                 if value is not None:
-                    value = str(value)
+                    value = util.text_type(value)
                 return value
             return process
         else:
@@ -321,19 +406,302 @@ class UUID(sqltypes.TypeEngine):
 
 PGUuid = UUID
 
-class ARRAY(sqltypes.MutableType, sqltypes.Concatenable, sqltypes.TypeEngine):
+class TSVECTOR(sqltypes.TypeEngine):
+    """The :class:`.postgresql.TSVECTOR` type implements the Postgresql
+    text search type TSVECTOR.
+
+    It can be used to do full text queries on natural language
+    documents.
+
+    .. versionadded:: 0.9.0
+
+    .. seealso::
+
+        :ref:`postgresql_match`
+
+    """
+    __visit_name__ = 'TSVECTOR'
+
+
+
+class _Slice(expression.ColumnElement):
+    __visit_name__ = 'slice'
+    type = sqltypes.NULLTYPE
+
+    def __init__(self, slice_, source_comparator):
+        self.start = source_comparator._check_literal(
+                            source_comparator.expr,
+                            operators.getitem, slice_.start)
+        self.stop = source_comparator._check_literal(
+                            source_comparator.expr,
+                            operators.getitem, slice_.stop)
+
+
+class Any(expression.ColumnElement):
+    """Represent the clause ``left operator ANY (right)``.  ``right`` must be
+    an array expression.
+
+    .. seealso::
+
+        :class:`.postgresql.ARRAY`
+
+        :meth:`.postgresql.ARRAY.Comparator.any` - ARRAY-bound method
+
+    """
+    __visit_name__ = 'any'
+
+    def __init__(self, left, right, operator=operators.eq):
+        self.type = sqltypes.Boolean()
+        self.left = expression._literal_as_binds(left)
+        self.right = right
+        self.operator = operator
+
+
+class All(expression.ColumnElement):
+    """Represent the clause ``left operator ALL (right)``.  ``right`` must be
+    an array expression.
+
+    .. seealso::
+
+        :class:`.postgresql.ARRAY`
+
+        :meth:`.postgresql.ARRAY.Comparator.all` - ARRAY-bound method
+
+    """
+    __visit_name__ = 'all'
+
+    def __init__(self, left, right, operator=operators.eq):
+        self.type = sqltypes.Boolean()
+        self.left = expression._literal_as_binds(left)
+        self.right = right
+        self.operator = operator
+
+
+class array(expression.Tuple):
+    """A Postgresql ARRAY literal.
+
+    This is used to produce ARRAY literals in SQL expressions, e.g.::
+
+        from sqlalchemy.dialects.postgresql import array
+        from sqlalchemy.dialects import postgresql
+        from sqlalchemy import select, func
+
+        stmt = select([
+                        array([1,2]) + array([3,4,5])
+                    ])
+
+        print stmt.compile(dialect=postgresql.dialect())
+
+    Produces the SQL::
+
+        SELECT ARRAY[%(param_1)s, %(param_2)s] ||
+            ARRAY[%(param_3)s, %(param_4)s, %(param_5)s]) AS anon_1
+
+    An instance of :class:`.array` will always have the datatype
+    :class:`.ARRAY`.  The "inner" type of the array is inferred from
+    the values present, unless the ``type_`` keyword argument is passed::
+
+        array(['foo', 'bar'], type_=CHAR)
+
+    .. versionadded:: 0.8 Added the :class:`~.postgresql.array` literal type.
+
+    See also:
+
+    :class:`.postgresql.ARRAY`
+
+    """
+    __visit_name__ = 'array'
+
+    def __init__(self, clauses, **kw):
+        super(array, self).__init__(*clauses, **kw)
+        self.type = ARRAY(self.type)
+
+    def _bind_param(self, operator, obj):
+        return array(*[
+            expression.BindParameter(None, o, _compared_to_operator=operator,
+                             _compared_to_type=self.type, unique=True)
+            for o in obj
+        ])
+
+    def self_group(self, against=None):
+        return self
+
+
+class ARRAY(sqltypes.Concatenable, sqltypes.TypeEngine):
     """Postgresql ARRAY type.
 
     Represents values as Python lists.
 
-    The ARRAY type may not be supported on all DBAPIs.
+    An :class:`.ARRAY` type is constructed given the "type"
+    of element::
+
+        mytable = Table("mytable", metadata,
+                Column("data", ARRAY(Integer))
+            )
+
+    The above type represents an N-dimensional array,
+    meaning Postgresql will interpret values with any number
+    of dimensions automatically.   To produce an INSERT
+    construct that passes in a 1-dimensional array of integers::
+
+        connection.execute(
+                mytable.insert(),
+                data=[1,2,3]
+        )
+
+    The :class:`.ARRAY` type can be constructed given a fixed number
+    of dimensions::
+
+        mytable = Table("mytable", metadata,
+                Column("data", ARRAY(Integer, dimensions=2))
+            )
+
+    This has the effect of the :class:`.ARRAY` type
+    specifying that number of bracketed blocks when a :class:`.Table`
+    is used in a CREATE TABLE statement, or when the type is used
+    within a :func:`.expression.cast` construct; it also causes
+    the bind parameter and result set processing of the type
+    to optimize itself to expect exactly that number of dimensions.
+    Note that Postgresql itself still allows N dimensions with such a type.
+
+    SQL expressions of type :class:`.ARRAY` have support for "index" and
+    "slice" behavior.  The Python ``[]`` operator works normally here, given
+    integer indexes or slices.  Note that Postgresql arrays default
+    to 1-based indexing.  The operator produces binary expression
+    constructs which will produce the appropriate SQL, both for
+    SELECT statements::
+
+        select([mytable.c.data[5], mytable.c.data[2:7]])
+
+    as well as UPDATE statements when the :meth:`.Update.values` method
+    is used::
+
+        mytable.update().values({
+            mytable.c.data[5]: 7,
+            mytable.c.data[2:7]: [1, 2, 3]
+        })
+
+    :class:`.ARRAY` provides special methods for containment operations,
+    e.g.::
+
+        mytable.c.data.contains([1, 2])
+
+    For a full list of special methods see :class:`.ARRAY.Comparator`.
+
+    .. versionadded:: 0.8 Added support for index and slice operations
+       to the :class:`.ARRAY` type, including support for UPDATE
+       statements, and special array containment operations.
+
+    The :class:`.ARRAY` type may not be supported on all DBAPIs.
     It is known to work on psycopg2 and not pg8000.
 
+    See also:
+
+    :class:`.postgresql.array` - produce a literal array value.
 
     """
     __visit_name__ = 'ARRAY'
 
-    def __init__(self, item_type, mutable=False, as_tuple=False):
+    class Comparator(sqltypes.Concatenable.Comparator):
+        """Define comparison operations for :class:`.ARRAY`."""
+
+        def __getitem__(self, index):
+            if isinstance(index, slice):
+                index = _Slice(index, self)
+                return_type = self.type
+            else:
+                return_type = self.type.item_type
+            return self._binary_operate(self.expr, operators.getitem, index,
+                            result_type=return_type)
+
+        def any(self, other, operator=operators.eq):
+            """Return ``other operator ANY (array)`` clause.
+
+            Argument places are switched, because ANY requires array
+            expression to be on the right hand-side.
+
+            E.g.::
+
+                from sqlalchemy.sql import operators
+
+                conn.execute(
+                    select([table.c.data]).where(
+                            table.c.data.any(7, operator=operators.lt)
+                        )
+                )
+
+            :param other: expression to be compared
+            :param operator: an operator object from the
+             :mod:`sqlalchemy.sql.operators`
+             package, defaults to :func:`.operators.eq`.
+
+            .. seealso::
+
+                :class:`.postgresql.Any`
+
+                :meth:`.postgresql.ARRAY.Comparator.all`
+
+            """
+            return Any(other, self.expr, operator=operator)
+
+        def all(self, other, operator=operators.eq):
+            """Return ``other operator ALL (array)`` clause.
+
+            Argument places are switched, because ALL requires array
+            expression to be on the right hand-side.
+
+            E.g.::
+
+                from sqlalchemy.sql import operators
+
+                conn.execute(
+                    select([table.c.data]).where(
+                            table.c.data.all(7, operator=operators.lt)
+                        )
+                )
+
+            :param other: expression to be compared
+            :param operator: an operator object from the
+             :mod:`sqlalchemy.sql.operators`
+             package, defaults to :func:`.operators.eq`.
+
+            .. seealso::
+
+                :class:`.postgresql.All`
+
+                :meth:`.postgresql.ARRAY.Comparator.any`
+
+            """
+            return All(other, self.expr, operator=operator)
+
+        def contains(self, other, **kwargs):
+            """Boolean expression.  Test if elements are a superset of the
+            elements of the argument array expression.
+            """
+            return self.expr.op('@>')(other)
+
+        def contained_by(self, other):
+            """Boolean expression.  Test if elements are a proper subset of the
+            elements of the argument array expression.
+            """
+            return self.expr.op('<@')(other)
+
+        def overlap(self, other):
+            """Boolean expression.  Test if array has elements in common with
+            an argument array expression.
+            """
+            return self.expr.op('&&')(other)
+
+        def _adapt_expression(self, op, other_comparator):
+            if isinstance(op, operators.custom_op):
+                if op.opstring in ['@>', '<@', '&&']:
+                    return op, sqltypes.Boolean
+            return sqltypes.Concatenable.Comparator.\
+                _adapt_expression(self, op, other_comparator)
+
+    comparator_factory = Comparator
+
+    def __init__(self, item_type, as_tuple=False, dimensions=None):
         """Construct an ARRAY.
 
         E.g.::
@@ -345,31 +713,20 @@ class ARRAY(sqltypes.MutableType, sqltypes.Concatenable, sqltypes.TypeEngine):
         :param item_type: The data type of items of this array. Note that
           dimensionality is irrelevant here, so multi-dimensional arrays like
           ``INTEGER[][]``, are constructed as ``ARRAY(Integer)``, not as
-          ``ARRAY(ARRAY(Integer))`` or such. The type mapping figures out on
-          the fly
-
-        :param mutable=False: Specify whether lists passed to this
-          class should be considered mutable - this enables
-          "mutable types" mode in the ORM.  Be sure to read the
-          notes for :class:`.MutableType` regarding ORM
-          performance implications.
-
-          .. versionchanged:: 0.7.0
-              Default changed from ``True``\ .
-
-          .. versionchanged:: 0.7
-              This functionality is now superseded by the
-              ``sqlalchemy.ext.mutable`` extension described in
-              :ref:`mutable_toplevel`.
+          ``ARRAY(ARRAY(Integer))`` or such.
 
         :param as_tuple=False: Specify whether return results
           should be converted to tuples from lists. DBAPIs such
           as psycopg2 return lists by default. When tuples are
-          returned, the results are hashable. This flag can only
-          be set to ``True`` when ``mutable`` is set to
-          ``False``.
+          returned, the results are hashable.
 
-          .. versionadded:: 0.6.5
+        :param dimensions: if non-None, the ARRAY will assume a fixed
+         number of dimensions.  This will cause the DDL emitted for this
+         ARRAY to include the exact number of bracket clauses ``[]``,
+         and will also optimize the performance of the type overall.
+         Note that PG arrays are always implicitly "non-dimensioned",
+         meaning they can store any number of dimensions no matter how
+         they were declared.
 
         """
         if isinstance(item_type, ARRAY):
@@ -378,76 +735,67 @@ class ARRAY(sqltypes.MutableType, sqltypes.Concatenable, sqltypes.TypeEngine):
         if isinstance(item_type, type):
             item_type = item_type()
         self.item_type = item_type
-        self.mutable = mutable
-        if mutable and as_tuple:
-            raise exc.ArgumentError(
-                "mutable must be set to False if as_tuple is True."
-            )
         self.as_tuple = as_tuple
-
-    def copy_value(self, value):
-        if value is None:
-            return None
-        elif self.mutable:
-            return list(value)
-        else:
-            return value
+        self.dimensions = dimensions
 
     def compare_values(self, x, y):
         return x == y
 
-    def is_mutable(self):
-        return self.mutable
+    def _proc_array(self, arr, itemproc, dim, collection):
+        if dim is None:
+            arr = list(arr)
+        if dim == 1 or dim is None and (
+                        # this has to be (list, tuple), or at least
+                        # not hasattr('__iter__'), since Py3K strings
+                        # etc. have __iter__
+                        not arr or not isinstance(arr[0], (list, tuple))):
+            if itemproc:
+                return collection(itemproc(x) for x in arr)
+            else:
+                return collection(arr)
+        else:
+            return collection(
+                    self._proc_array(
+                            x, itemproc,
+                            dim - 1 if dim is not None else None,
+                            collection)
+                    for x in arr
+                )
 
     def bind_processor(self, dialect):
-        item_proc = self.item_type.dialect_impl(dialect).bind_processor(dialect)
-        if item_proc:
-            def convert_item(item):
-                if isinstance(item, (list, tuple)):
-                    return [convert_item(child) for child in item]
-                else:
-                    return item_proc(item)
-        else:
-            def convert_item(item):
-                if isinstance(item, (list, tuple)):
-                    return [convert_item(child) for child in item]
-                else:
-                    return item
+        item_proc = self.item_type.\
+                        dialect_impl(dialect).\
+                        bind_processor(dialect)
+
         def process(value):
             if value is None:
                 return value
-            return [convert_item(item) for item in value]
+            else:
+                return self._proc_array(
+                            value,
+                            item_proc,
+                            self.dimensions,
+                            list)
         return process
 
     def result_processor(self, dialect, coltype):
-        item_proc = self.item_type.dialect_impl(dialect).result_processor(dialect, coltype)
-        if item_proc:
-            def convert_item(item):
-                if isinstance(item, list):
-                    r = [convert_item(child) for child in item]
-                    if self.as_tuple:
-                        r = tuple(r)
-                    return r
-                else:
-                    return item_proc(item)
-        else:
-            def convert_item(item):
-                if isinstance(item, list):
-                    r = [convert_item(child) for child in item]
-                    if self.as_tuple:
-                        r = tuple(r)
-                    return r
-                else:
-                    return item
+        item_proc = self.item_type.\
+                        dialect_impl(dialect).\
+                        result_processor(dialect, coltype)
+
         def process(value):
             if value is None:
                 return value
-            r = [convert_item(item) for item in value]
-            if self.as_tuple:
-                r = tuple(r)
-            return r
+            else:
+                return self._proc_array(
+                            value,
+                            item_proc,
+                            self.dimensions,
+                            tuple if self.as_tuple else list)
         return process
+
 PGArray = ARRAY
+
 
 class ENUM(sqltypes.Enum):
     """Postgresql ENUM type.
@@ -585,71 +933,107 @@ class ENUM(sqltypes.Enum):
             self.drop(bind=bind, checkfirst=checkfirst)
 
 colspecs = {
-    sqltypes.Interval:INTERVAL,
-    sqltypes.Enum:ENUM,
+    sqltypes.Interval: INTERVAL,
+    sqltypes.Enum: ENUM,
 }
 
 ischema_names = {
-    'integer' : INTEGER,
-    'bigint' : BIGINT,
-    'smallint' : SMALLINT,
-    'character varying' : VARCHAR,
-    'character' : CHAR,
-    '"char"' : sqltypes.String,
-    'name' : sqltypes.String,
-    'text' : TEXT,
-    'numeric' : NUMERIC,
-    'float' : FLOAT,
-    'real' : REAL,
+    'integer': INTEGER,
+    'bigint': BIGINT,
+    'smallint': SMALLINT,
+    'character varying': VARCHAR,
+    'character': CHAR,
+    '"char"': sqltypes.String,
+    'name': sqltypes.String,
+    'text': TEXT,
+    'numeric': NUMERIC,
+    'float': FLOAT,
+    'real': REAL,
     'inet': INET,
     'cidr': CIDR,
     'uuid': UUID,
     'bit': BIT,
     'bit varying': BIT,
     'macaddr': MACADDR,
-    'double precision' : DOUBLE_PRECISION,
-    'timestamp' : TIMESTAMP,
-    'timestamp with time zone' : TIMESTAMP,
-    'timestamp without time zone' : TIMESTAMP,
-    'time with time zone' : TIME,
-    'time without time zone' : TIME,
-    'date' : DATE,
+    'double precision': DOUBLE_PRECISION,
+    'timestamp': TIMESTAMP,
+    'timestamp with time zone': TIMESTAMP,
+    'timestamp without time zone': TIMESTAMP,
+    'time with time zone': TIME,
+    'time without time zone': TIME,
+    'date': DATE,
     'time': TIME,
-    'bytea' : BYTEA,
-    'boolean' : BOOLEAN,
-    'interval':INTERVAL,
-    'interval year to month':INTERVAL,
-    'interval day to second':INTERVAL,
+    'bytea': BYTEA,
+    'boolean': BOOLEAN,
+    'interval': INTERVAL,
+    'interval year to month': INTERVAL,
+    'interval day to second': INTERVAL,
+    'tsvector' : TSVECTOR
 }
-
 
 
 class PGCompiler(compiler.SQLCompiler):
 
-    def visit_match_op(self, binary, **kw):
+    def visit_array(self, element, **kw):
+        return "ARRAY[%s]" % self.visit_clauselist(element, **kw)
+
+    def visit_slice(self, element, **kw):
+        return "%s:%s" % (
+                    self.process(element.start, **kw),
+                    self.process(element.stop, **kw),
+                )
+
+    def visit_any(self, element, **kw):
+        return "%s%sANY (%s)" % (
+            self.process(element.left, **kw),
+            compiler.OPERATORS[element.operator],
+            self.process(element.right, **kw)
+        )
+
+    def visit_all(self, element, **kw):
+        return "%s%sALL (%s)" % (
+            self.process(element.left, **kw),
+            compiler.OPERATORS[element.operator],
+            self.process(element.right, **kw)
+        )
+
+    def visit_getitem_binary(self, binary, operator, **kw):
+        return "%s[%s]" % (
+                self.process(binary.left, **kw),
+                self.process(binary.right, **kw)
+            )
+
+    def visit_match_op_binary(self, binary, operator, **kw):
         return "%s @@ to_tsquery(%s)" % (
-                        self.process(binary.left),
-                        self.process(binary.right))
+                        self.process(binary.left, **kw),
+                        self.process(binary.right, **kw))
 
-    def visit_ilike_op(self, binary, **kw):
+    def visit_ilike_op_binary(self, binary, operator, **kw):
         escape = binary.modifiers.get("escape", None)
-        return '%s ILIKE %s' % \
-                (self.process(binary.left), self.process(binary.right)) \
-                + (escape and
-                        (' ESCAPE ' + self.render_literal_value(escape, None))
-                        or '')
 
-    def visit_notilike_op(self, binary, **kw):
+        return '%s ILIKE %s' % \
+                (self.process(binary.left, **kw),
+                    self.process(binary.right, **kw)) \
+            + (
+                ' ESCAPE ' +
+                self.render_literal_value(escape, sqltypes.STRINGTYPE)
+                if escape else ''
+            )
+
+    def visit_notilike_op_binary(self, binary, operator, **kw):
         escape = binary.modifiers.get("escape", None)
         return '%s NOT ILIKE %s' % \
-                (self.process(binary.left), self.process(binary.right)) \
-                + (escape and
-                        (' ESCAPE ' + self.render_literal_value(escape, None))
-                        or '')
+                (self.process(binary.left, **kw),
+                    self.process(binary.right, **kw)) \
+            + (
+                ' ESCAPE ' +
+                self.render_literal_value(escape, sqltypes.STRINGTYPE)
+                if escape else ''
+            )
 
     def render_literal_value(self, value, type_):
         value = super(PGCompiler, self).render_literal_value(value, type_)
-        # TODO: need to inspect "standard_conforming_strings"
+
         if self.dialect._backslash_escapes:
             value = value.replace('\\', '\\\\')
         return value
@@ -660,12 +1044,17 @@ class PGCompiler(compiler.SQLCompiler):
     def limit_clause(self, select):
         text = ""
         if select._limit is not None:
-            text +=  " \n LIMIT " + self.process(sql.literal(select._limit))
+            text += " \n LIMIT " + self.process(sql.literal(select._limit))
         if select._offset is not None:
             if select._limit is None:
                 text += " \n LIMIT ALL"
             text += " OFFSET " + self.process(sql.literal(select._offset))
         return text
+
+    def format_from_hint_text(self, sqltext, table, hint, iscrud):
+        if hint.upper() != 'ONLY':
+            raise exc.CompileError("Unrecognized hint: %r" % hint)
+        return "ONLY " + sqltext
 
     def get_select_precolumns(self, select):
         if select._distinct is not False:
@@ -674,70 +1063,72 @@ class PGCompiler(compiler.SQLCompiler):
             elif isinstance(select._distinct, (list, tuple)):
                 return "DISTINCT ON (" + ', '.join(
                     [self.process(col) for col in select._distinct]
-                )+ ") "
+                ) + ") "
             else:
                 return "DISTINCT ON (" + self.process(select._distinct) + ") "
         else:
             return ""
 
     def for_update_clause(self, select):
-        if select.for_update == 'nowait':
-            return " FOR UPDATE NOWAIT"
-        elif select.for_update == 'read':
-            return " FOR SHARE"
-        elif select.for_update == 'read_nowait':
-            return " FOR SHARE NOWAIT"
+
+        if select._for_update_arg.read:
+            tmp = " FOR SHARE"
         else:
-            return super(PGCompiler, self).for_update_clause(select)
+            tmp = " FOR UPDATE"
+
+        if select._for_update_arg.of:
+            tables = util.OrderedSet(
+                            c.table if isinstance(c, expression.ColumnClause)
+                            else c for c in select._for_update_arg.of)
+            tmp += " OF " + ", ".join(
+                                self.process(table, ashint=True)
+                                for table in tables
+                            )
+
+        if select._for_update_arg.nowait:
+            tmp += " NOWAIT"
+
+        return tmp
 
     def returning_clause(self, stmt, returning_cols):
 
         columns = [
-                self.process(
-                    self.label_select_column(None, c, asfrom=False),
-                    within_columns_clause=True,
-                    result_map=self.result_map)
+                self._label_select_column(None, c, True, False, {})
                 for c in expression._select_iterables(returning_cols)
             ]
 
         return 'RETURNING ' + ', '.join(columns)
 
-    def visit_extract(self, extract, **kwargs):
-        field = self.extract_map.get(extract.field, extract.field)
-        if extract.expr.type:
-            affinity = extract.expr.type._type_affinity
-        else:
-            affinity = None
 
-        casts = {
-                    sqltypes.Date:'date',
-                    sqltypes.DateTime:'timestamp',
-                    sqltypes.Interval:'interval', sqltypes.Time:'time'
-                }
-        cast = casts.get(affinity, None)
-        if isinstance(extract.expr, sql.ColumnElement) and cast is not None:
-            expr = extract.expr.op('::')(sql.literal_column(cast))
+    def visit_substring_func(self, func, **kw):
+        s = self.process(func.clauses.clauses[0], **kw)
+        start = self.process(func.clauses.clauses[1], **kw)
+        if len(func.clauses.clauses) > 2:
+            length = self.process(func.clauses.clauses[2], **kw)
+            return "SUBSTRING(%s FROM %s FOR %s)" % (s, start, length)
         else:
-            expr = extract.expr
-        return "EXTRACT(%s FROM %s)" % (
-            field, self.process(expr))
+            return "SUBSTRING(%s FROM %s)" % (s, start)
 
 class PGDDLCompiler(compiler.DDLCompiler):
     def get_column_specification(self, column, **kwargs):
+
         colspec = self.preparer.format_column(column)
         impl_type = column.type.dialect_impl(self.dialect)
         if column.primary_key and \
             column is column.table._autoincrement_column and \
-            not isinstance(impl_type, sqltypes.SmallInteger) and \
             (
+                self.dialect.supports_smallserial or
+                not isinstance(impl_type, sqltypes.SmallInteger)
+            ) and (
                 column.default is None or
                 (
                     isinstance(column.default, schema.Sequence) and
                     column.default.optional
-                )
-            ):
+                )):
             if isinstance(impl_type, sqltypes.BigInteger):
                 colspec += " BIGSERIAL"
+            elif isinstance(impl_type, sqltypes.SmallInteger):
+                colspec += " SMALLSERIAL"
             else:
                 colspec += " SERIAL"
         else:
@@ -755,7 +1146,9 @@ class PGDDLCompiler(compiler.DDLCompiler):
 
         return "CREATE TYPE %s AS ENUM (%s)" % (
             self.preparer.format_type(type_),
-            ",".join("'%s'" % e for e in type_.enums)
+            ", ".join(
+                self.sql_compiler.process(sql.literal(e), literal_binds=True)
+                        for e in type_.enums)
         )
 
     def visit_drop_enum_type(self, drop):
@@ -768,46 +1161,67 @@ class PGDDLCompiler(compiler.DDLCompiler):
     def visit_create_index(self, create):
         preparer = self.preparer
         index = create.element
+        self._verify_index_table(index)
         text = "CREATE "
         if index.unique:
             text += "UNIQUE "
-        ops = index.kwargs.get('postgresql_ops', {})
         text += "INDEX %s ON %s " % (
-                    preparer.quote(
-                        self._index_identifier(index.name), index.quote),
+                        self._prepared_index_name(index,
+                                include_schema=False),
                     preparer.format_table(index.table)
                 )
 
         if 'postgresql_using' in index.kwargs:
             using = index.kwargs['postgresql_using']
-            text += "USING %s " % preparer.quote(using, index.quote)
+            text += "USING %s " % preparer.quote(using)
 
+        ops = index.kwargs.get('postgresql_ops', {})
         text += "(%s)" \
                 % (
                     ', '.join([
-                        preparer.format_column(c) +
+                        self.sql_compiler.process(
+                                expr.self_group()
+                                if not isinstance(expr, expression.ColumnClause)
+                                    else expr,
+                                include_table=False, literal_binds=True) +
                         (c.key in ops and (' ' + ops[c.key]) or '')
-                        for c in index.columns])
+                        for expr, c in zip(index.expressions, index.columns)])
                     )
 
-        if "postgres_where" in index.kwargs:
-            whereclause = index.kwargs['postgres_where']
-            util.warn_deprecated(
-                    "The 'postgres_where' argument has been renamed "
-                    "to 'postgresql_where'.")
-        elif 'postgresql_where' in index.kwargs:
+        if 'postgresql_where' in index.kwargs:
             whereclause = index.kwargs['postgresql_where']
         else:
             whereclause = None
 
         if whereclause is not None:
-            whereclause = sql_util.expression_as_ddl(whereclause)
-            where_compiled = self.sql_compiler.process(whereclause)
+            where_compiled = self.sql_compiler.process(
+                                    whereclause, include_table=False,
+                                    literal_binds=True)
             text += " WHERE " + where_compiled
+        return text
+
+    def visit_exclude_constraint(self, constraint):
+        text = ""
+        if constraint.name is not None:
+            text += "CONSTRAINT %s " % \
+                    self.preparer.format_constraint(constraint)
+        elements = []
+        for c in constraint.columns:
+            op = constraint.operators[c.name]
+            elements.append(self.preparer.quote(c.name) + ' WITH '+op)
+        text += "EXCLUDE USING %s (%s)" % (constraint.using, ', '.join(elements))
+        if constraint.where is not None:
+            text += ' WHERE (%s)' % self.sql_compiler.process(
+                                            constraint.where,
+                                            literal_binds=True)
+        text += self.define_constraint_deferrability(constraint)
         return text
 
 
 class PGTypeCompiler(compiler.GenericTypeCompiler):
+    def visit_TSVECTOR(self, type):
+        return "TSVECTOR"
+
     def visit_INET(self, type_):
         return "INET"
 
@@ -828,6 +1242,30 @@ class PGTypeCompiler(compiler.GenericTypeCompiler):
 
     def visit_BIGINT(self, type_):
         return "BIGINT"
+
+    def visit_HSTORE(self, type_):
+        return "HSTORE"
+
+    def visit_JSON(self, type_):
+        return "JSON"
+
+    def visit_INT4RANGE(self, type_):
+        return "INT4RANGE"
+
+    def visit_INT8RANGE(self, type_):
+        return "INT8RANGE"
+
+    def visit_NUMRANGE(self, type_):
+        return "NUMRANGE"
+
+    def visit_DATERANGE(self, type_):
+        return "DATERANGE"
+
+    def visit_TSRANGE(self, type_):
+        return "TSRANGE"
+
+    def visit_TSTZRANGE(self, type_):
+        return "TSTZRANGE"
 
     def visit_datetime(self, type_):
         return self.visit_TIMESTAMP(type_)
@@ -880,7 +1318,9 @@ class PGTypeCompiler(compiler.GenericTypeCompiler):
         return "BYTEA"
 
     def visit_ARRAY(self, type_):
-        return self.process(type_.item_type) + '[]'
+        return self.process(type_.item_type) + ('[]' * (type_.dimensions
+                                                if type_.dimensions
+                                                is not None else 1))
 
 
 class PGIdentifierPreparer(compiler.IdentifierPreparer):
@@ -897,10 +1337,11 @@ class PGIdentifierPreparer(compiler.IdentifierPreparer):
         if not type_.name:
             raise exc.CompileError("Postgresql ENUM type requires a name.")
 
-        name = self.quote(type_.name, type_.quote)
+        name = self.quote(type_.name)
         if not self.omit_schema and use_schema and type_.schema is not None:
-            name = self.quote_schema(type_.schema, type_.quote) + "." + name
+            name = self.quote_schema(type_.schema) + "." + name
         return name
+
 
 class PGInspector(reflection.Inspector):
 
@@ -913,11 +1354,14 @@ class PGInspector(reflection.Inspector):
         return self.dialect.get_table_oid(self.bind, table_name, schema,
                                           info_cache=self.info_cache)
 
+
 class CreateEnumType(schema._CreateDropBase):
-  __visit_name__ = "create_enum_type"
+    __visit_name__ = "create_enum_type"
+
 
 class DropEnumType(schema._CreateDropBase):
-  __visit_name__ = "drop_enum_type"
+    __visit_name__ = "drop_enum_type"
+
 
 class PGExecutionContext(default.DefaultExecutionContext):
     def fire_sequence(self, seq, type_):
@@ -947,7 +1391,8 @@ class PGExecutionContext(default.DefaultExecutionContext):
                     col = column.name
                     tab = tab[0:29 + max(0, (29 - len(col)))]
                     col = col[0:29 + max(0, (29 - len(tab)))]
-                    column._postgresql_seq_name = seq_name = "%s_%s_seq" % (tab, col)
+                    name = "%s_%s_seq" % (tab, col)
+                    column._postgresql_seq_name = seq_name = name
 
                 sch = column.table.schema
                 if sch is not None:
@@ -961,6 +1406,7 @@ class PGExecutionContext(default.DefaultExecutionContext):
 
         return super(PGExecutionContext, self).get_insert_default(column)
 
+
 class PGDialect(default.DefaultDialect):
     name = 'postgresql'
     supports_alter = True
@@ -969,6 +1415,7 @@ class PGDialect(default.DefaultDialect):
 
     supports_native_enum = True
     supports_native_boolean = True
+    supports_smallserial = True
 
     supports_sequences = True
     sequences_optional = True
@@ -977,6 +1424,7 @@ class PGDialect(default.DefaultDialect):
 
     supports_default_values = True
     supports_empty_insert = False
+    supports_multivalues_insert = True
     default_paramstyle = 'pyformat'
     ischema_names = ischema_names
     colspecs = colspecs
@@ -989,12 +1437,14 @@ class PGDialect(default.DefaultDialect):
     inspector = PGInspector
     isolation_level = None
 
-    # TODO: need to inspect "standard_conforming_strings"
     _backslash_escapes = True
 
-    def __init__(self, isolation_level=None, **kwargs):
+    def __init__(self, isolation_level=None, json_serializer=None,
+                    json_deserializer=None, **kwargs):
         default.DefaultDialect.__init__(self, **kwargs)
         self.isolation_level = isolation_level
+        self._json_deserializer = json_deserializer
+        self._json_serializer = json_serializer
 
     def initialize(self, connection):
         super(PGDialect, self).initialize(connection)
@@ -1007,6 +1457,13 @@ class PGDialect(default.DefaultDialect):
             self.colspecs.pop(sqltypes.Enum, None)
             # psycopg2, others may have placed ENUM here as well
             self.colspecs.pop(ENUM, None)
+
+        # http://www.postgresql.org/docs/9.3/static/release-9-2.html#AEN116689
+        self.supports_smallserial = self.server_version_info >= (9, 2)
+
+        self._backslash_escapes = connection.scalar(
+                                    "show standard_conforming_strings"
+                                    ) == 'off'
 
     def on_connect(self):
         if self.isolation_level is not None:
@@ -1082,12 +1539,13 @@ class PGDialect(default.DefaultDialect):
         return connection.scalar("select current_schema()")
 
     def has_schema(self, connection, schema):
+        query = "select nspname from pg_namespace where lower(nspname)=:schema"
         cursor = connection.execute(
             sql.text(
-                "select nspname from pg_namespace where lower(nspname)=:schema",
+                query,
                 bindparams=[
                     sql.bindparam(
-                        'schema', unicode(schema.lower()),
+                        'schema', util.text_type(schema.lower()),
                         type_=sqltypes.Unicode)]
             )
         )
@@ -1103,7 +1561,7 @@ class PGDialect(default.DefaultDialect):
                 "n.oid=c.relnamespace where n.nspname=current_schema() and "
                 "relname=:name",
                 bindparams=[
-                        sql.bindparam('name', unicode(table_name),
+                        sql.bindparam('name', util.text_type(table_name),
                         type_=sqltypes.Unicode)]
                 )
             )
@@ -1115,9 +1573,9 @@ class PGDialect(default.DefaultDialect):
                 "relname=:name",
                     bindparams=[
                         sql.bindparam('name',
-                        unicode(table_name), type_=sqltypes.Unicode),
+                        util.text_type(table_name), type_=sqltypes.Unicode),
                         sql.bindparam('schema',
-                        unicode(schema), type_=sqltypes.Unicode)]
+                        util.text_type(schema), type_=sqltypes.Unicode)]
                 )
             )
         return bool(cursor.first())
@@ -1131,7 +1589,7 @@ class PGDialect(default.DefaultDialect):
                     "n.nspname=current_schema() "
                     "and relname=:name",
                     bindparams=[
-                        sql.bindparam('name', unicode(sequence_name),
+                        sql.bindparam('name', util.text_type(sequence_name),
                         type_=sqltypes.Unicode)
                     ]
                 )
@@ -1143,10 +1601,10 @@ class PGDialect(default.DefaultDialect):
                 "n.oid=c.relnamespace where relkind='S' and "
                 "n.nspname=:schema and relname=:name",
                 bindparams=[
-                    sql.bindparam('name', unicode(sequence_name),
+                    sql.bindparam('name', util.text_type(sequence_name),
                      type_=sqltypes.Unicode),
                     sql.bindparam('schema',
-                                unicode(schema), type_=sqltypes.Unicode)
+                                util.text_type(schema), type_=sqltypes.Unicode)
                 ]
             )
             )
@@ -1154,12 +1612,6 @@ class PGDialect(default.DefaultDialect):
         return bool(cursor.first())
 
     def has_type(self, connection, type_name, schema=None):
-        bindparams = [
-            sql.bindparam('typname',
-                unicode(type_name), type_=sqltypes.Unicode),
-            sql.bindparam('nspname',
-                unicode(schema), type_=sqltypes.Unicode),
-            ]
         if schema is not None:
             query = """
             SELECT EXISTS (
@@ -1169,6 +1621,7 @@ class PGDialect(default.DefaultDialect):
                 AND n.nspname = :nspname
                 )
                 """
+            query = sql.text(query)
         else:
             query = """
             SELECT EXISTS (
@@ -1177,12 +1630,25 @@ class PGDialect(default.DefaultDialect):
                 AND pg_type_is_visible(t.oid)
                 )
                 """
-        cursor = connection.execute(sql.text(query, bindparams=bindparams))
+            query = sql.text(query)
+        query = query.bindparams(
+                sql.bindparam('typname',
+                    util.text_type(type_name), type_=sqltypes.Unicode),
+                )
+        if schema is not None:
+            query = query.bindparams(
+                    sql.bindparam('nspname',
+                        util.text_type(schema), type_=sqltypes.Unicode),
+                    )
+        cursor = connection.execute(query)
         return bool(cursor.scalar())
 
     def _get_server_version_info(self, connection):
         v = connection.execute("select version()").scalar()
-        m = re.match('PostgreSQL (\d+)\.(\d+)(?:\.(\d+))?(?:devel)?', v)
+        m = re.match(
+            '.*(?:PostgreSQL|EnterpriseDB) '
+            '(\d+)\.(\d+)(?:\.(\d+))?(?:\.\d+)?(?:devel)?',
+            v)
         if not m:
             raise AssertionError(
                     "Could not determine version from string '%s'" % v)
@@ -1211,15 +1677,13 @@ class PGDialect(default.DefaultDialect):
         """ % schema_where_clause
         # Since we're binding to unicode, table_name and schema_name must be
         # unicode.
-        table_name = unicode(table_name)
+        table_name = util.text_type(table_name)
         if schema is not None:
-            schema = unicode(schema)
-        s = sql.text(query, bindparams=[
-            sql.bindparam('table_name', type_=sqltypes.Unicode),
-            sql.bindparam('schema', type_=sqltypes.Unicode)
-            ],
-            typemap={'oid':sqltypes.Integer}
-        )
+            schema = util.text_type(schema)
+        s = sql.text(query).bindparams(table_name=sqltypes.Unicode)
+        s = s.columns(oid=sqltypes.Integer)
+        if schema:
+            s = s.bindparams(sql.bindparam('schema', type_=sqltypes.Unicode))
         c = connection.execute(s, table_name=table_name, schema=schema)
         table_oid = c.scalar()
         if table_oid is None:
@@ -1235,13 +1699,13 @@ class PGDialect(default.DefaultDialect):
         """
         rp = connection.execute(s)
         # what about system tables?
-        # Py3K
-        #schema_names = [row[0] for row in rp \
-        #                if not row[0].startswith('pg_')]
-        # Py2K
-        schema_names = [row[0].decode(self.encoding) for row in rp \
+
+        if util.py2k:
+            schema_names = [row[0].decode(self.encoding) for row in rp \
                         if not row[0].startswith('pg_')]
-        # end Py2K
+        else:
+            schema_names = [row[0] for row in rp \
+                        if not row[0].startswith('pg_')]
         return schema_names
 
     @reflection.cache
@@ -1252,16 +1716,15 @@ class PGDialect(default.DefaultDialect):
             current_schema = self.default_schema_name
 
         result = connection.execute(
-            sql.text(u"SELECT relname FROM pg_class c "
+            sql.text("SELECT relname FROM pg_class c "
                 "WHERE relkind = 'r' "
                 "AND '%s' = (select nspname from pg_namespace n "
                 "where n.oid = c.relnamespace) " %
                 current_schema,
-                typemap = {'relname':sqltypes.Unicode}
+                typemap={'relname': sqltypes.Unicode}
             )
         )
         return [row[0] for row in result]
-
 
     @reflection.cache
     def get_view_names(self, connection, schema=None, **kw):
@@ -1276,12 +1739,12 @@ class PGDialect(default.DefaultDialect):
           AND '%(schema)s' = (select nspname from pg_namespace n
           where n.oid = c.relnamespace)
         """ % dict(schema=current_schema)
-        # Py3K
-        #view_names = [row[0] for row in connection.execute(s)]
-        # Py2K
-        view_names = [row[0].decode(self.encoding)
+
+        if util.py2k:
+            view_names = [row[0].decode(self.encoding)
                             for row in connection.execute(s)]
-        # end Py2K
+        else:
+            view_names = [row[0] for row in connection.execute(s)]
         return view_names
 
     @reflection.cache
@@ -1298,11 +1761,10 @@ class PGDialect(default.DefaultDialect):
         rp = connection.execute(sql.text(s),
                                 view_name=view_name, schema=current_schema)
         if rp:
-            # Py3K
-            #view_def = rp.scalar()
-            # Py2K
-            view_def = rp.scalar().decode(self.encoding)
-            # end Py2K
+            if util.py2k:
+                view_def = rp.scalar().decode(self.encoding)
+            else:
+                view_def = rp.scalar()
             return view_def
 
     @reflection.cache
@@ -1313,8 +1775,7 @@ class PGDialect(default.DefaultDialect):
         SQL_COLS = """
             SELECT a.attname,
               pg_catalog.format_type(a.atttypid, a.atttypmod),
-              (SELECT substring(pg_catalog.pg_get_expr(d.adbin, d.adrelid)
-                for 128)
+              (SELECT pg_catalog.pg_get_expr(d.adbin, d.adrelid)
                 FROM pg_catalog.pg_attrdef d
                WHERE d.adrelid = a.attrelid AND d.adnum = a.attnum
                AND a.atthasdef)
@@ -1327,7 +1788,7 @@ class PGDialect(default.DefaultDialect):
         """
         s = sql.text(SQL_COLS,
             bindparams=[sql.bindparam('table_oid', type_=sqltypes.Integer)],
-            typemap={'attname':sqltypes.Unicode, 'default':sqltypes.Unicode}
+            typemap={'attname': sqltypes.Unicode, 'default': sqltypes.Unicode}
         )
         c = connection.execute(s, table_oid=table_oid)
         rows = c.fetchall()
@@ -1337,117 +1798,125 @@ class PGDialect(default.DefaultDialect):
         # format columns
         columns = []
         for name, format_type, default, notnull, attnum, table_oid in rows:
-            ## strip (5) from character varying(5), timestamp(5)
-            # with time zone, etc
-            attype = re.sub(r'\([\d,]+\)', '', format_type)
-
-            # strip '[]' from integer[], etc.
-            attype = re.sub(r'\[\]', '', attype)
-
-            nullable = not notnull
-            is_array = format_type.endswith('[]')
-            charlen = re.search('\(([\d,]+)\)', format_type)
-            if charlen:
-                charlen = charlen.group(1)
-            kwargs = {}
-            args = None
-
-            if attype == 'numeric':
-                if charlen:
-                    prec, scale = charlen.split(',')
-                    args = (int(prec), int(scale))
-                else:
-                    args = ()
-            elif attype == 'double precision':
-                args = (53, )
-            elif attype == 'integer':
-                args = ()
-            elif attype in ('timestamp with time zone',
-                            'time with time zone'):
-                kwargs['timezone'] = True
-                if charlen:
-                    kwargs['precision'] = int(charlen)
-                args = ()
-            elif attype in ('timestamp without time zone',
-                            'time without time zone', 'time'):
-                kwargs['timezone'] = False
-                if charlen:
-                    kwargs['precision'] = int(charlen)
-                args = ()
-            elif attype == 'bit varying':
-                kwargs['varying'] = True
-                if charlen:
-                    args = (int(charlen),)
-                else:
-                    args = ()
-            elif attype in ('interval','interval year to month',
-                                'interval day to second'):
-                if charlen:
-                    kwargs['precision'] = int(charlen)
-                args = ()
-            elif charlen:
-                args = (int(charlen),)
-            else:
-                args = ()
-
-            while True:
-                if attype in self.ischema_names:
-                    coltype = self.ischema_names[attype]
-                    break
-                elif attype in enums:
-                    enum = enums[attype]
-                    coltype = ENUM
-                    if "." in attype:
-                        kwargs['schema'], kwargs['name'] = attype.split('.')
-                    else:
-                        kwargs['name'] = attype
-                    args = tuple(enum['labels'])
-                    break
-                elif attype in domains:
-                    domain = domains[attype]
-                    attype = domain['attype']
-                    # A table can't override whether the domain is nullable.
-                    nullable = domain['nullable']
-                    if domain['default'] and not default:
-                        # It can, however, override the default
-                        # value, but can't set it to null.
-                        default = domain['default']
-                    continue
-                else:
-                    coltype = None
-                    break
-
-            if coltype:
-                coltype = coltype(*args, **kwargs)
-                if is_array:
-                    coltype = ARRAY(coltype)
-            else:
-                util.warn("Did not recognize type '%s' of column '%s'" %
-                          (attype, name))
-                coltype = sqltypes.NULLTYPE
-            # adjust the default value
-            autoincrement = False
-            if default is not None:
-                match = re.search(r"""(nextval\(')([^']+)('.*$)""", default)
-                if match is not None:
-                    autoincrement = True
-                    # the default is related to a Sequence
-                    sch = schema
-                    if '.' not in match.group(2) and sch is not None:
-                        # unconditionally quote the schema name.  this could
-                        # later be enhanced to obey quoting rules /
-                        # "quote schema"
-                        default = match.group(1) + \
-                                    ('"%s"' % sch) + '.' + \
-                                    match.group(2) + match.group(3)
-
-            column_info = dict(name=name, type=coltype, nullable=nullable,
-                               default=default, autoincrement=autoincrement)
+            column_info = self._get_column_info(
+                name, format_type, default, notnull, domains, enums, schema)
             columns.append(column_info)
         return columns
 
+    def _get_column_info(self, name, format_type, default,
+                         notnull, domains, enums, schema):
+        ## strip (*) from character varying(5), timestamp(5)
+        # with time zone, geometry(POLYGON), etc.
+        attype = re.sub(r'\(.*\)', '', format_type)
+
+        # strip '[]' from integer[], etc.
+        attype = re.sub(r'\[\]', '', attype)
+
+        nullable = not notnull
+        is_array = format_type.endswith('[]')
+        charlen = re.search('\(([\d,]+)\)', format_type)
+        if charlen:
+            charlen = charlen.group(1)
+        args = re.search('\((.*)\)', format_type)
+        if args and args.group(1):
+            args = tuple(re.split('\s*,\s*', args.group(1)))
+        else:
+            args = ()
+        kwargs = {}
+
+        if attype == 'numeric':
+            if charlen:
+                prec, scale = charlen.split(',')
+                args = (int(prec), int(scale))
+            else:
+                args = ()
+        elif attype == 'double precision':
+            args = (53, )
+        elif attype == 'integer':
+            args = ()
+        elif attype in ('timestamp with time zone',
+                        'time with time zone'):
+            kwargs['timezone'] = True
+            if charlen:
+                kwargs['precision'] = int(charlen)
+            args = ()
+        elif attype in ('timestamp without time zone',
+                        'time without time zone', 'time'):
+            kwargs['timezone'] = False
+            if charlen:
+                kwargs['precision'] = int(charlen)
+            args = ()
+        elif attype == 'bit varying':
+            kwargs['varying'] = True
+            if charlen:
+                args = (int(charlen),)
+            else:
+                args = ()
+        elif attype in ('interval', 'interval year to month',
+                            'interval day to second'):
+            if charlen:
+                kwargs['precision'] = int(charlen)
+            args = ()
+        elif charlen:
+            args = (int(charlen),)
+
+        while True:
+            if attype in self.ischema_names:
+                coltype = self.ischema_names[attype]
+                break
+            elif attype in enums:
+                enum = enums[attype]
+                coltype = ENUM
+                if "." in attype:
+                    kwargs['schema'], kwargs['name'] = attype.split('.')
+                else:
+                    kwargs['name'] = attype
+                args = tuple(enum['labels'])
+                break
+            elif attype in domains:
+                domain = domains[attype]
+                attype = domain['attype']
+                # A table can't override whether the domain is nullable.
+                nullable = domain['nullable']
+                if domain['default'] and not default:
+                    # It can, however, override the default
+                    # value, but can't set it to null.
+                    default = domain['default']
+                continue
+            else:
+                coltype = None
+                break
+
+        if coltype:
+            coltype = coltype(*args, **kwargs)
+            if is_array:
+                coltype = ARRAY(coltype)
+        else:
+            util.warn("Did not recognize type '%s' of column '%s'" %
+                      (attype, name))
+            coltype = sqltypes.NULLTYPE
+        # adjust the default value
+        autoincrement = False
+        if default is not None:
+            match = re.search(r"""(nextval\(')([^']+)('.*$)""", default)
+            if match is not None:
+                autoincrement = True
+                # the default is related to a Sequence
+                sch = schema
+                if '.' not in match.group(2) and sch is not None:
+                    # unconditionally quote the schema name.  this could
+                    # later be enhanced to obey quoting rules /
+                    # "quote schema"
+                    default = match.group(1) + \
+                                ('"%s"' % sch) + '.' + \
+                                match.group(2) + match.group(3)
+
+        column_info = dict(name=name, type=coltype, nullable=nullable,
+                           default=default, autoincrement=autoincrement)
+        return column_info
+
     @reflection.cache
-    def get_primary_keys(self, connection, table_name, schema=None, **kw):
+    def get_pk_constraint(self, connection, table_name, schema=None, **kw):
         table_oid = self.get_table_oid(connection, table_name, schema,
                                        info_cache=kw.get('info_cache'))
 
@@ -1479,16 +1948,7 @@ class PGDialect(default.DefaultDialect):
             """
         t = sql.text(PK_SQL, typemap={'attname': sqltypes.Unicode})
         c = connection.execute(t, table_oid=table_oid)
-        primary_keys = [r[0] for r in c.fetchall()]
-        return primary_keys
-
-    @reflection.cache
-    def get_pk_constraint(self, connection, table_name, schema=None, **kw):
-        cols = self.get_primary_keys(connection, table_name,
-                                            schema=schema, **kw)
-
-        table_oid = self.get_table_oid(connection, table_name, schema,
-                                       info_cache=kw.get('info_cache'))
+        cols = [r[0] for r in c.fetchall()]
 
         PK_CONS_SQL = """
         SELECT conname
@@ -1496,13 +1956,11 @@ class PGDialect(default.DefaultDialect):
            WHERE r.conrelid = :table_oid AND r.contype = 'p'
            ORDER BY 1
         """
-        t = sql.text(PK_CONS_SQL, typemap={'conname':sqltypes.Unicode})
+        t = sql.text(PK_CONS_SQL, typemap={'conname': sqltypes.Unicode})
         c = connection.execute(t, table_oid=table_oid)
         name = c.scalar()
-        return {
-            'constrained_columns':cols,
-            'name':name
-        }
+
+        return {'constrained_columns': cols, 'name': name}
 
     @reflection.cache
     def get_foreign_keys(self, connection, table_name, schema=None, **kw):
@@ -1524,22 +1982,34 @@ class PGDialect(default.DefaultDialect):
                 n.oid = c.relnamespace
           ORDER BY 1
         """
+        # http://www.postgresql.org/docs/9.0/static/sql-createtable.html
+        FK_REGEX = re.compile(
+            r'FOREIGN KEY \((.*?)\) REFERENCES (?:(.*?)\.)?(.*?)\((.*?)\)'
+            r'[\s]?(MATCH (FULL|PARTIAL|SIMPLE)+)?'
+            r'[\s]?(ON UPDATE (CASCADE|RESTRICT|NO ACTION|SET NULL|SET DEFAULT)+)?'
+            r'[\s]?(ON DELETE (CASCADE|RESTRICT|NO ACTION|SET NULL|SET DEFAULT)+)?'
+            r'[\s]?(DEFERRABLE|NOT DEFERRABLE)?'
+            r'[\s]?(INITIALLY (DEFERRED|IMMEDIATE)+)?'
+        )
 
         t = sql.text(FK_SQL, typemap={
-                                'conname':sqltypes.Unicode,
-                                'condef':sqltypes.Unicode})
+                                'conname': sqltypes.Unicode,
+                                'condef': sqltypes.Unicode})
         c = connection.execute(t, table=table_oid)
         fkeys = []
         for conname, condef, conschema in c.fetchall():
-            m = re.search('FOREIGN KEY \((.*?)\) REFERENCES '
-                            '(?:(.*?)\.)?(.*?)\((.*?)\)', condef).groups()
+            m = re.search(FK_REGEX, condef).groups()
             constrained_columns, referred_schema, \
-                    referred_table, referred_columns = m
+                    referred_table, referred_columns, \
+                    _, match, _, onupdate, _, ondelete, \
+                    deferrable, _, initially = m
+            if deferrable is not None:
+                deferrable = True if deferrable == 'DEFERRABLE' else False
             constrained_columns = [preparer._unquote_identifier(x)
                         for x in re.split(r'\s*,\s*', constrained_columns)]
 
             if referred_schema:
-                referred_schema =\
+                referred_schema = \
                                 preparer._unquote_identifier(referred_schema)
             elif schema is not None and schema == conschema:
                 # no schema was returned by pg_get_constraintdef().  This
@@ -1553,11 +2023,18 @@ class PGDialect(default.DefaultDialect):
             referred_columns = [preparer._unquote_identifier(x)
                         for x in re.split(r'\s*,\s', referred_columns)]
             fkey_d = {
-                'name' : conname,
-                'constrained_columns' : constrained_columns,
-                'referred_schema' : referred_schema,
-                'referred_table' : referred_table,
-                'referred_columns' : referred_columns
+                'name': conname,
+                'constrained_columns': constrained_columns,
+                'referred_schema': referred_schema,
+                'referred_table': referred_table,
+                'referred_columns': referred_columns,
+                'options': {
+                    'onupdate': onupdate,
+                    'ondelete': ondelete,
+                    'deferrable': deferrable,
+                    'initially': initially,
+                    'match': match
+                }
             }
             fkeys.append(fkey_d)
         return fkeys
@@ -1567,11 +2044,14 @@ class PGDialect(default.DefaultDialect):
         table_oid = self.get_table_oid(connection, table_name, schema,
                                        info_cache=kw.get('info_cache'))
 
+        # cast indkey as varchar since it's an int2vector,
+        # returned as a list by some drivers such as pypostgresql
+
         IDX_SQL = """
           SELECT
               i.relname as relname,
               ix.indisunique, ix.indexprs, ix.indpred,
-              a.attname
+              a.attname, a.attnum, ix.indkey::varchar
           FROM
               pg_class t
                     join pg_index ix on t.oid = ix.indrelid
@@ -1588,14 +2068,15 @@ class PGDialect(default.DefaultDialect):
               i.relname
         """
 
-        t = sql.text(IDX_SQL, typemap={'attname':sqltypes.Unicode})
+        t = sql.text(IDX_SQL, typemap={'attname': sqltypes.Unicode})
         c = connection.execute(t, table_oid=table_oid)
 
-        index_names = {}
-        indexes = []
+        indexes = defaultdict(lambda: defaultdict(dict))
+
         sv_idx_name = None
         for row in c.fetchall():
-            idx_name, unique, expr, prd, col = row
+            idx_name, unique, expr, prd, col, col_num, idx_key = row
+
             if expr:
                 if idx_name != sv_idx_name:
                     util.warn(
@@ -1604,22 +2085,61 @@ class PGDialect(default.DefaultDialect):
                       % idx_name)
                 sv_idx_name = idx_name
                 continue
+
             if prd and not idx_name == sv_idx_name:
                 util.warn(
                    "Predicate of partial index %s ignored during reflection"
                    % idx_name)
                 sv_idx_name = idx_name
-            if idx_name in index_names:
-                index_d = index_names[idx_name]
-            else:
-                index_d = {'column_names':[]}
-                indexes.append(index_d)
-                index_names[idx_name] = index_d
-            index_d['name'] = idx_name
+
+            index = indexes[idx_name]
             if col is not None:
-                index_d['column_names'].append(col)
-            index_d['unique'] = unique
-        return indexes
+                index['cols'][col_num] = col
+            index['key'] = [int(k.strip()) for k in idx_key.split()]
+            index['unique'] = unique
+
+        return [
+            {'name': name,
+             'unique': idx['unique'],
+             'column_names': [idx['cols'][i] for i in idx['key']]}
+            for name, idx in indexes.items()
+        ]
+
+    @reflection.cache
+    def get_unique_constraints(self, connection, table_name,
+                               schema=None, **kw):
+        table_oid = self.get_table_oid(connection, table_name, schema,
+                                       info_cache=kw.get('info_cache'))
+
+        UNIQUE_SQL = """
+            SELECT
+                cons.conname as name,
+                cons.conkey as key,
+                a.attnum as col_num,
+                a.attname as col_name
+            FROM
+                pg_catalog.pg_constraint cons
+                join pg_attribute a
+                  on cons.conrelid = a.attrelid AND a.attnum = ANY(cons.conkey)
+            WHERE
+                cons.conrelid = :table_oid AND
+                cons.contype = 'u'
+        """
+
+        t = sql.text(UNIQUE_SQL, typemap={'col_name': sqltypes.Unicode})
+        c = connection.execute(t, table_oid=table_oid)
+
+        uniques = defaultdict(lambda: defaultdict(dict))
+        for row in c.fetchall():
+            uc = uniques[row.name]
+            uc["key"] = row.key
+            uc["cols"][row.col_num] = row.col_name
+
+        return [
+            {'name': name,
+             'column_names': [uc["cols"][i] for i in uc["key"]]}
+            for name, uc in uniques.items()
+        ]
 
     def _load_enums(self, connection):
         if not self.supports_native_enum:
@@ -1641,8 +2161,8 @@ class PGDialect(default.DefaultDialect):
         """
 
         s = sql.text(SQL_ENUMS, typemap={
-                                'attname':sqltypes.Unicode,
-                                'label':sqltypes.Unicode})
+                                'attname': sqltypes.Unicode,
+                                'label': sqltypes.Unicode})
         c = connection.execute(s)
 
         enums = {}
@@ -1679,7 +2199,7 @@ class PGDialect(default.DefaultDialect):
             WHERE t.typtype = 'd'
         """
 
-        s = sql.text(SQL_DOMAINS, typemap={'attname':sqltypes.Unicode})
+        s = sql.text(SQL_DOMAINS, typemap={'attname': sqltypes.Unicode})
         c = connection.execute(s)
 
         domains = {}
@@ -1696,10 +2216,9 @@ class PGDialect(default.DefaultDialect):
                 name = "%s.%s" % (domain['schema'], domain['name'])
 
             domains[name] = {
-                    'attype':attype,
+                    'attype': attype,
                     'nullable': domain['nullable'],
                     'default': domain['default']
                 }
 
         return domains
-

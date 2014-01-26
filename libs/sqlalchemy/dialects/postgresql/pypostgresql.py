@@ -1,22 +1,23 @@
 # postgresql/pypostgresql.py
-# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2014 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 
-"""Support for the PostgreSQL database via py-postgresql.
-
-Connecting
-----------
-
-URLs are of the form ``postgresql+pypostgresql://user:password@host:port/dbname[?key=value&key=value...]``.
+"""
+.. dialect:: postgresql+pypostgresql
+    :name: py-postgresql
+    :dbapi: pypostgresql
+    :connectstring: postgresql+pypostgresql://user:password@host:port/dbname[?key=value&key=value...]
+    :url: http://python.projects.pgfoundry.org/
 
 
 """
-from sqlalchemy import util
-from sqlalchemy import types as sqltypes
-from sqlalchemy.dialects.postgresql.base import PGDialect, PGExecutionContext
-from sqlalchemy import processors
+from ... import util
+from ... import types as sqltypes
+from .base import PGDialect, PGExecutionContext
+from ... import processors
+
 
 class PGNumeric(sqltypes.Numeric):
     def bind_processor(self, dialect):
@@ -28,8 +29,10 @@ class PGNumeric(sqltypes.Numeric):
         else:
             return processors.to_float
 
+
 class PGExecutionContext_pypostgresql(PGExecutionContext):
     pass
+
 
 class PGDialect_pypostgresql(PGDialect):
     driver = 'pypostgresql'
@@ -48,8 +51,10 @@ class PGDialect_pypostgresql(PGDialect):
     colspecs = util.update_copy(
         PGDialect.colspecs,
         {
-            sqltypes.Numeric : PGNumeric,
-            sqltypes.Float: sqltypes.Float,  # prevents PGNumeric from being used
+            sqltypes.Numeric: PGNumeric,
+
+            # prevents PGNumeric from being used
+            sqltypes.Float: sqltypes.Float,
         }
     )
 

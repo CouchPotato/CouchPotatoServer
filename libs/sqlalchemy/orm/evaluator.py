@@ -1,12 +1,11 @@
 # orm/evaluator.py
-# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2014 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 
 import operator
-from sqlalchemy.sql import operators, functions
-from sqlalchemy.sql import expression as sql
+from ..sql import operators
 
 
 class UnevaluatableError(Exception):
@@ -14,23 +13,23 @@ class UnevaluatableError(Exception):
 
 _straight_ops = set(getattr(operators, op)
                     for op in ('add', 'mul', 'sub',
-                                # Py2K
                                 'div',
-                                # end Py2K
                                 'mod', 'truediv',
                                'lt', 'le', 'ne', 'gt', 'ge', 'eq'))
 
 
 _notimplemented_ops = set(getattr(operators, op)
-                          for op in ('like_op', 'notlike_op', 'ilike_op',
-                                     'notilike_op', 'between_op', 'in_op',
-                                     'notin_op', 'endswith_op', 'concat_op'))
+                      for op in ('like_op', 'notlike_op', 'ilike_op',
+                                 'notilike_op', 'between_op', 'in_op',
+                                 'notin_op', 'endswith_op', 'concat_op'))
+
 
 class EvaluatorCompiler(object):
     def process(self, clause):
         meth = getattr(self, "visit_%s" % clause.__visit_name__, None)
         if not meth:
-            raise UnevaluatableError("Cannot evaluate %s" % type(clause).__name__)
+            raise UnevaluatableError(
+                "Cannot evaluate %s" % type(clause).__name__)
         return meth(clause)
 
     def visit_grouping(self, clause):
@@ -38,6 +37,12 @@ class EvaluatorCompiler(object):
 
     def visit_null(self, clause):
         return lambda obj: None
+
+    def visit_false(self, clause):
+        return lambda obj: False
+
+    def visit_true(self, clause):
+        return lambda obj: True
 
     def visit_column(self, clause):
         if 'parentmapper' in clause._annotations:
@@ -49,7 +54,7 @@ class EvaluatorCompiler(object):
         return lambda obj: get_corresponding_attr(obj)
 
     def visit_clauselist(self, clause):
-        evaluators = map(self.process, clause.clauses)
+        evaluators = list(map(self.process, clause.clauses))
         if clause.operator is operators.or_:
             def evaluate(obj):
                 has_null = False
@@ -71,12 +76,15 @@ class EvaluatorCompiler(object):
                         return False
                 return True
         else:
-            raise UnevaluatableError("Cannot evaluate clauselist with operator %s" % clause.operator)
+            raise UnevaluatableError(
+                "Cannot evaluate clauselist with operator %s" %
+                clause.operator)
 
         return evaluate
 
     def visit_binary(self, clause):
-        eval_left,eval_right = map(self.process, [clause.left, clause.right])
+        eval_left, eval_right = list(map(self.process,
+                                [clause.left, clause.right]))
         operator = clause.operator
         if operator is operators.is_:
             def evaluate(obj):
@@ -92,7 +100,9 @@ class EvaluatorCompiler(object):
                     return None
                 return operator(eval_left(obj), eval_right(obj))
         else:
-            raise UnevaluatableError("Cannot evaluate %s with operator %s" % (type(clause).__name__, clause.operator))
+            raise UnevaluatableError(
+                    "Cannot evaluate %s with operator %s" %
+                    (type(clause).__name__, clause.operator))
         return evaluate
 
     def visit_unary(self, clause):
@@ -104,7 +114,9 @@ class EvaluatorCompiler(object):
                     return None
                 return not value
             return evaluate
-        raise UnevaluatableError("Cannot evaluate %s with operator %s" % (type(clause).__name__, clause.operator))
+        raise UnevaluatableError(
+                    "Cannot evaluate %s with operator %s" %
+                    (type(clause).__name__, clause.operator))
 
     def visit_bindparam(self, clause):
         val = clause.value

@@ -1,28 +1,18 @@
 # mssql/mxodbc.py
-# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2014 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 
 """
-Support for MS-SQL via mxODBC.
-
-mxODBC is available at:
-
-    http://www.egenix.com/
-
-This was tested with mxODBC 3.1.2 and the SQL Server Native
-Client connected to MSSQL 2005 and 2008 Express Editions.
-
-Connecting
-~~~~~~~~~~
-
-Connection is via DSN::
-
-    mssql+mxodbc://<username>:<password>@<dsnname>
+.. dialect:: mssql+mxodbc
+    :name: mxODBC
+    :dbapi: mxodbc
+    :connectstring: mssql+mxodbc://<username>:<password>@<dsnname>
+    :url: http://www.egenix.com/
 
 Execution Modes
-~~~~~~~~~~~~~~~
+---------------
 
 mxODBC features two styles of statement execution, using the
 ``cursor.execute()`` and ``cursor.executedirect()`` methods (the second being
@@ -52,13 +42,37 @@ of ``False`` will unconditionally use string-escaped parameters.
 """
 
 
-from sqlalchemy import types as sqltypes
-from sqlalchemy.connectors.mxodbc import MxODBCConnector
-from sqlalchemy.dialects.mssql.pyodbc import MSExecutionContext_pyodbc
-from sqlalchemy.dialects.mssql.base import (MSDialect,
+from ... import types as sqltypes
+from ...connectors.mxodbc import MxODBCConnector
+from .pyodbc import MSExecutionContext_pyodbc, _MSNumeric_pyodbc
+from .base import (MSDialect,
                                             MSSQLStrictCompiler,
-                                            _MSDateTime, _MSDate, TIME)
+                                            _MSDateTime, _MSDate, _MSTime)
 
+
+class _MSNumeric_mxodbc(_MSNumeric_pyodbc):
+    """Include pyodbc's numeric processor.
+    """
+
+
+class _MSDate_mxodbc(_MSDate):
+    def bind_processor(self, dialect):
+        def process(value):
+            if value is not None:
+                return "%s-%s-%s" % (value.year, value.month, value.day)
+            else:
+                return None
+        return process
+
+
+class _MSTime_mxodbc(_MSTime):
+    def bind_processor(self, dialect):
+        def process(value):
+            if value is not None:
+                return "%s:%s:%s" % (value.hour, value.minute, value.second)
+            else:
+                return None
+        return process
 
 
 class MSExecutionContext_mxodbc(MSExecutionContext_pyodbc):
@@ -71,23 +85,27 @@ class MSExecutionContext_mxodbc(MSExecutionContext_pyodbc):
     #       is really only being used in cases where OUTPUT
     #       won't work.
 
+
 class MSDialect_mxodbc(MxODBCConnector, MSDialect):
 
-    # TODO: may want to use this only if FreeTDS is not in use,
-    # since FreeTDS doesn't seem to use native binds.
-    statement_compiler = MSSQLStrictCompiler
+    # this is only needed if "native ODBC" mode is used,
+    # which is now disabled by default.
+    #statement_compiler = MSSQLStrictCompiler
+
     execution_ctx_cls = MSExecutionContext_mxodbc
+
+    # flag used by _MSNumeric_mxodbc
+    _need_decimal_fix = True
+
     colspecs = {
-        #sqltypes.Numeric : _MSNumeric,
-        sqltypes.DateTime : _MSDateTime,
-        sqltypes.Date : _MSDate,
-        sqltypes.Time : TIME,
+        sqltypes.Numeric: _MSNumeric_mxodbc,
+        sqltypes.DateTime: _MSDateTime,
+        sqltypes.Date: _MSDate_mxodbc,
+        sqltypes.Time: _MSTime_mxodbc,
     }
 
-
-    def __init__(self, description_encoding='latin-1', **params):
+    def __init__(self, description_encoding=None, **params):
         super(MSDialect_mxodbc, self).__init__(**params)
         self.description_encoding = description_encoding
 
 dialect = MSDialect_mxodbc
-

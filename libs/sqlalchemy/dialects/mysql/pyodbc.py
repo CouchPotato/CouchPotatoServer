@@ -1,21 +1,18 @@
 # mysql/pyodbc.py
-# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2014 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 
-"""Support for the MySQL database via the pyodbc adapter.
+"""
 
-pyodbc is available at:
 
-    http://pypi.python.org/pypi/pyodbc/
+.. dialect:: mysql+pyodbc
+    :name: PyODBC
+    :dbapi: pyodbc
+    :connectstring: mysql+pyodbc://<username>:<password>@<dsnname>
+    :url: http://pypi.python.org/pypi/pyodbc/
 
-Connecting
-----------
-
-Connect string::
-
-    mysql+pyodbc://<username>:<password>@<dsnname>
 
 Limitations
 -----------
@@ -27,11 +24,11 @@ of OurSQL, MySQLdb, or MySQL-connector/Python.
 
 """
 
-from sqlalchemy.dialects.mysql.base import MySQLDialect, MySQLExecutionContext
-from sqlalchemy.connectors.pyodbc import PyODBCConnector
-from sqlalchemy.engine import base as engine_base
-from sqlalchemy import util
+from .base import MySQLDialect, MySQLExecutionContext
+from ...connectors.pyodbc import PyODBCConnector
+from ... import util
 import re
+
 
 class MySQLExecutionContext_pyodbc(MySQLExecutionContext):
 
@@ -41,6 +38,7 @@ class MySQLExecutionContext_pyodbc(MySQLExecutionContext):
         lastrowid = cursor.fetchone()[0]
         cursor.close()
         return lastrowid
+
 
 class MySQLDialect_pyodbc(PyODBCConnector, MySQLDialect):
     supports_unicode_statements = False

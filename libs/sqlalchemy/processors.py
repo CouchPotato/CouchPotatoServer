@@ -1,5 +1,5 @@
 # sqlalchemy/processors.py
-# Copyright (C) 2010-2011 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2010-2014 the SQLAlchemy authors and contributors <see AUTHORS file>
 # Copyright (C) 2010 Gaetan de Menten gdementen@gmail.com
 #
 # This module is part of SQLAlchemy and is released under
@@ -16,10 +16,13 @@ import codecs
 import re
 import datetime
 
+
 def str_to_datetime_processor_factory(regexp, type_):
     rmatch = regexp.match
     # Even on python2.6 datetime.strptime is both slower than this code
     # and it does not support microseconds.
+    has_named_groups = bool(regexp.groupindex)
+
     def process(value):
         if value is None:
             return None
@@ -28,18 +31,26 @@ def str_to_datetime_processor_factory(regexp, type_):
                 m = rmatch(value)
             except TypeError:
                 raise ValueError("Couldn't parse %s string '%r' "
-                                "- value is not a string." % (type_.__name__ , value))
+                                "- value is not a string." %
+                                (type_.__name__, value))
             if m is None:
                 raise ValueError("Couldn't parse %s string: "
-                                "'%s'" % (type_.__name__ , value))
-            return type_(*map(int, m.groups(0)))
+                                "'%s'" % (type_.__name__, value))
+            if has_named_groups:
+                groups = m.groupdict(0)
+                return type_(**dict(list(zip(iter(groups.keys()),
+                                        list(map(int, iter(groups.values())))))))
+            else:
+                return type_(*list(map(int, m.groups(0))))
     return process
+
 
 def boolean_to_int(value):
     if value is None:
         return None
     else:
         return int(value)
+
 
 def py_fallback():
     def to_unicode_processor_factory(encoding, errors=None):
@@ -55,7 +66,7 @@ def py_fallback():
                 return decoder(value, errors)[0]
         return process
 
-    def to_decimal_processor_factory(target_class, scale=10):
+    def to_decimal_processor_factory(target_class, scale):
         fstring = "%%.%df" % scale
 
         def process(value):
@@ -108,7 +119,7 @@ try:
         else:
             return UnicodeResultProcessor(encoding).process
 
-    def to_decimal_processor_factory(target_class, scale=10):
+    def to_decimal_processor_factory(target_class, scale):
         # Note that the scale argument is not taken into account for integer
         # values in the C implementation while it is in the Python one.
         # For example, the Python implementation might return
@@ -118,4 +129,3 @@ try:
 
 except ImportError:
     globals().update(py_fallback())
-

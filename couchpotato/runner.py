@@ -188,7 +188,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     db_exists = os.path.isfile(toUnicode(db_path))
 
     # Load migrations
-    if db_exists:
+    if False and db_exists:
 
         from migrate.versioning.api import version_control, db_version, version, upgrade
         repo = os.path.join(base_path, 'couchpotato', 'core', 'migration')

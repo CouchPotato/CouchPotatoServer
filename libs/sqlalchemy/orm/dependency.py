@@ -1,5 +1,5 @@
 # orm/dependency.py
-# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2014 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -8,10 +8,11 @@
 
 """
 
-from sqlalchemy import sql, util, exc as sa_exc
-from sqlalchemy.orm import attributes, exc, sync, unitofwork, \
+from .. import sql, util, exc as sa_exc
+from . import attributes, exc, sync, unitofwork, \
                                         util as mapperutil
-from sqlalchemy.orm.interfaces import ONETOMANY, MANYTOONE, MANYTOMANY
+from .interfaces import ONETOMANY, MANYTOONE, MANYTOMANY
+
 
 class DependencyProcessor(object):
     def __init__(self, prop):
@@ -32,7 +33,7 @@ class DependencyProcessor(object):
         if self.passive_updates:
             self._passive_update_flag = attributes.PASSIVE_NO_INITIALIZE
         else:
-            self._passive_update_flag= attributes.PASSIVE_OFF
+            self._passive_update_flag = attributes.PASSIVE_OFF
 
         self.key = prop.key
         if not self.prop.synchronize_pairs:
@@ -62,7 +63,6 @@ class DependencyProcessor(object):
 
         """
         uow.register_preprocessor(self, True)
-
 
     def per_property_flush_actions(self, uow):
         after_save = unitofwork.ProcessAll(uow, self, False, True)
@@ -94,7 +94,6 @@ class DependencyProcessor(object):
                                         after_save,
                                         before_delete
                                         )
-
 
     def per_state_flush_actions(self, uow, states, isdelete):
         """establish actions and dependencies related to a flush.
@@ -159,7 +158,8 @@ class DependencyProcessor(object):
             # detect if there's anything changed or loaded
             # by a preprocessor on this state/attribute.  if not,
             # we should be able to skip it entirely.
-            sum_ = state.manager[self.key].impl.get_all_pending(state, state.dict)
+            sum_ = state.manager[self.key].impl.get_all_pending(
+                state, state.dict)
 
             if not sum_:
                 continue
@@ -210,7 +210,6 @@ class DependencyProcessor(object):
                                                 after_save, before_delete,
                                                 isdelete, childisdelete)
 
-
     def presort_deletes(self, uowcommit, states):
         return False
 
@@ -247,7 +246,11 @@ class DependencyProcessor(object):
                 self.mapper in uowcommit.mappers
 
     def _verify_canload(self, state):
-        if state is not None and \
+        if self.prop.uselist and state is None:
+            raise exc.FlushError(
+                    "Can't flush None value found in "
+                    "collection %s" % (self.prop, ))
+        elif state is not None and \
             not self.mapper._canload(state,
                             allow_subtypes=not self.enable_typechecks):
             if self.mapper._canload(state, allow_subtypes=True):
@@ -309,6 +312,7 @@ class DependencyProcessor(object):
 
     def __repr__(self):
         return "%s(%s)" % (self.__class__.__name__, self.prop)
+
 
 class OneToManyDP(DependencyProcessor):
 
@@ -432,8 +436,6 @@ class OneToManyDP(DependencyProcessor):
                         if child is not None:
                             uowcommit.register_object(child,
                                     operation="delete", prop=self.prop)
-
-
 
     def presort_saves(self, uowcommit, states):
         children_added = uowcommit.memo(('children_added', self), set)
@@ -559,10 +561,10 @@ class OneToManyDP(DependencyProcessor):
                             pks_changed):
         source = state
         dest = child
+        self._verify_canload(child)
         if dest is None or \
                 (not self.post_update and uowcommit.is_deleted(dest)):
             return
-        self._verify_canload(child)
         if clearkeys:
             sync.clear(dest, self.mapper, self.prop.synchronize_pairs)
         else:
@@ -576,6 +578,7 @@ class OneToManyDP(DependencyProcessor):
                             state,
                             self.parent,
                             self.prop.synchronize_pairs)
+
 
 class ManyToOneDP(DependencyProcessor):
     def __init__(self, prop):
@@ -690,8 +693,8 @@ class ManyToOneDP(DependencyProcessor):
                             continue
                         uowcommit.register_object(child, isdelete=True,
                                         operation="delete", prop=self.prop)
-                        for c, m, st_, dct_ in self.mapper.cascade_iterator(
-                                                            'delete', child):
+                        t = self.mapper.cascade_iterator('delete', child)
+                        for c, m, st_, dct_ in t:
                             uowcommit.register_object(
                                 st_, isdelete=True)
 
@@ -704,17 +707,14 @@ class ManyToOneDP(DependencyProcessor):
                                         self.key,
                                         self._passive_delete_flag)
                 if history:
-                    ret = True
                     for child in history.deleted:
                         if self.hasparent(child) is False:
                             uowcommit.register_object(child, isdelete=True,
                                         operation="delete", prop=self.prop)
 
-                            for c, m, st_, dct_ in self.mapper.cascade_iterator(
-                                                            'delete', child):
-                                uowcommit.register_object(
-                                    st_,
-                                    isdelete=True)
+                            t = self.mapper.cascade_iterator('delete', child)
+                            for c, m, st_, dct_ in t:
+                                uowcommit.register_object(st_, isdelete=True)
 
     def process_deletes(self, uowcommit, states):
         if self.post_update and \
@@ -772,6 +772,7 @@ class ManyToOneDP(DependencyProcessor):
                             self.prop.synchronize_pairs,
                             uowcommit,
                             False)
+
 
 class DetectKeySwitch(DependencyProcessor):
     """For many-to-one relationships with no one-to-many backref,
@@ -862,7 +863,7 @@ class DetectKeySwitch(DependencyProcessor):
                 related = state.get_impl(self.key).get(state, dict_,
                         passive=self._passive_update_flag)
                 if related is not attributes.PASSIVE_NO_RESULT and \
-                    related is not None:
+                        related is not None:
                     related_state = attributes.instance_state(dict_[self.key])
                     if related_state in switchers:
                         uowcommit.register_object(state,
@@ -932,12 +933,14 @@ class ManyToManyDP(DependencyProcessor):
             ])
 
     def presort_deletes(self, uowcommit, states):
+        # TODO: no tests fail if this whole
+        # thing is removed !!!!
         if not self.passive_deletes:
             # if no passive deletes, load history on
             # the collection, so that prop_has_changes()
             # returns True
             for state in states:
-                history = uowcommit.get_attribute_history(
+                uowcommit.get_attribute_history(
                                         state,
                                         self.key,
                                         self._passive_delete_flag)
@@ -1031,8 +1034,7 @@ class ManyToManyDP(DependencyProcessor):
                                                 passive)
             if history:
                 for child in history.added:
-                    if child is None or \
-                            (processed is not None and
+                    if (processed is not None and
                                 (state, child) in processed):
                         continue
                     associationrow = {}
@@ -1043,8 +1045,7 @@ class ManyToManyDP(DependencyProcessor):
                         continue
                     secondary_insert.append(associationrow)
                 for child in history.deleted:
-                    if child is None or \
-                            (processed is not None and
+                    if (processed is not None and
                             (state, child) in processed):
                         continue
                     associationrow = {}
@@ -1097,11 +1098,11 @@ class ManyToManyDP(DependencyProcessor):
             if result.supports_sane_multi_rowcount() and \
                         result.rowcount != len(secondary_delete):
                 raise exc.StaleDataError(
-                        "DELETE statement on table '%s' expected to delete %d row(s); "
-                        "Only %d were matched." %
-                        (self.secondary.description, len(secondary_delete),
-                        result.rowcount)
-                    )
+                    "DELETE statement on table '%s' expected to delete "
+                    "%d row(s); Only %d were matched." %
+                    (self.secondary.description, len(secondary_delete),
+                    result.rowcount)
+                )
 
         if secondary_update:
             associationrow = secondary_update[0]
@@ -1114,11 +1115,11 @@ class ManyToManyDP(DependencyProcessor):
             if result.supports_sane_multi_rowcount() and \
                         result.rowcount != len(secondary_update):
                 raise exc.StaleDataError(
-                        "UPDATE statement on table '%s' expected to update %d row(s); "
-                        "Only %d were matched." %
-                        (self.secondary.description, len(secondary_update),
-                        result.rowcount)
-                    )
+                    "UPDATE statement on table '%s' expected to update "
+                    "%d row(s); Only %d were matched." %
+                    (self.secondary.description, len(secondary_update),
+                    result.rowcount)
+                )
 
         if secondary_insert:
             statement = self.secondary.insert()
@@ -1126,8 +1127,14 @@ class ManyToManyDP(DependencyProcessor):
 
     def _synchronize(self, state, child, associationrow,
                                             clearkeys, uowcommit, operation):
-        if associationrow is None:
-            return
+
+        # this checks for None if uselist=True
+        self._verify_canload(child)
+
+        # but if uselist=False we get here.   If child is None,
+        # no association row can be generated, so return.
+        if child is None:
+            return False
 
         if child is not None and not uowcommit.session._contains_state(child):
             if not child.deleted:
@@ -1136,8 +1143,6 @@ class ManyToManyDP(DependencyProcessor):
                     "operation along '%s' won't proceed" %
                     (mapperutil.state_class_str(child), operation, self.prop))
             return False
-
-        self._verify_canload(child)
 
         sync.populate_dict(state, self.parent, associationrow,
                                         self.prop.synchronize_pairs)
@@ -1154,8 +1159,7 @@ class ManyToManyDP(DependencyProcessor):
                             self.prop.synchronize_pairs)
 
 _direction_to_processor = {
-    ONETOMANY : OneToManyDP,
+    ONETOMANY: OneToManyDP,
     MANYTOONE: ManyToOneDP,
-    MANYTOMANY : ManyToManyDP,
+    MANYTOMANY: ManyToManyDP,
 }
-

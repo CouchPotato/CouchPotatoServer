@@ -1,5 +1,5 @@
 # ext/associationproxy.py
-# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2014 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -15,11 +15,9 @@ See the example ``examples/association/proxied_association.py``.
 import itertools
 import operator
 import weakref
-from sqlalchemy import exceptions
-from sqlalchemy import orm
-from sqlalchemy import util
-from sqlalchemy.orm import collections, ColumnProperty
-from sqlalchemy.sql import not_
+from .. import exc, orm, util
+from ..orm import collections, interfaces
+from ..sql import not_, or_
 
 
 def association_proxy(target_collection, attr, **kw):
@@ -29,24 +27,25 @@ def association_proxy(target_collection, attr, **kw):
 
     The returned value is an instance of :class:`.AssociationProxy`.
 
-    Implements a Python property representing a relationship as a collection of
-    simpler values, or a scalar value.  The proxied property will mimic the collection type of
-    the target (list, dict or set), or, in the case of a one to one relationship,
-    a simple scalar value.
+    Implements a Python property representing a relationship as a collection
+    of simpler values, or a scalar value.  The proxied property will mimic
+    the collection type of the target (list, dict or set), or, in the case of
+    a one to one relationship, a simple scalar value.
 
     :param target_collection: Name of the attribute we'll proxy to.
       This attribute is typically mapped by
       :func:`~sqlalchemy.orm.relationship` to link to a target collection, but
       can also be a many-to-one or non-scalar relationship.
 
-    :param attr: Attribute on the associated instance or instances we'll proxy for.
+    :param attr: Attribute on the associated instance or instances we'll
+      proxy for.
 
       For example, given a target collection of [obj1, obj2], a list created
       by this proxy property would look like [getattr(obj1, *attr*),
       getattr(obj2, *attr*)]
 
-      If the relationship is one-to-one or otherwise uselist=False, then simply:
-      getattr(obj, *attr*)
+      If the relationship is one-to-one or otherwise uselist=False, then
+      simply: getattr(obj, *attr*)
 
     :param creator: optional.
 
@@ -76,8 +75,21 @@ def association_proxy(target_collection, attr, **kw):
     return AssociationProxy(target_collection, attr, **kw)
 
 
-class AssociationProxy(object):
+ASSOCIATION_PROXY = util.symbol('ASSOCIATION_PROXY')
+"""Symbol indicating an :class:`_InspectionAttr` that's
+    of type :class:`.AssociationProxy`.
+
+   Is assigned to the :attr:`._InspectionAttr.extension_type`
+   attibute.
+
+"""
+
+class AssociationProxy(interfaces._InspectionAttr):
     """A descriptor that presents a read/write view of an object attribute."""
+
+    is_attribute = False
+    extension_type = ASSOCIATION_PROXY
+
 
     def __init__(self, target_collection, attr, creator=None,
                  getset_factory=None, proxy_factory=None,
@@ -91,34 +103,36 @@ class AssociationProxy(object):
         :param target_collection: Name of the collection we'll proxy to,
           usually created with :func:`.relationship`.
 
-        :param attr: Attribute on the collected instances we'll proxy for.  For example,
-          given a target collection of [obj1, obj2], a list created by this
-          proxy property would look like [getattr(obj1, attr), getattr(obj2,
-          attr)]
+        :param attr: Attribute on the collected instances we'll proxy
+          for.  For example, given a target collection of [obj1, obj2], a
+          list created by this proxy property would look like
+          [getattr(obj1, attr), getattr(obj2, attr)]
 
-        :param creator: Optional. When new items are added to this proxied collection, new
-          instances of the class collected by the target collection will be
-          created.  For list and set collections, the target class constructor
-          will be called with the 'value' for the new instance.  For dict
-          types, two arguments are passed: key and value.
+        :param creator: Optional. When new items are added to this proxied
+          collection, new instances of the class collected by the target
+          collection will be created.  For list and set collections, the
+          target class constructor will be called with the 'value' for the
+          new instance.  For dict types, two arguments are passed:
+          key and value.
 
           If you want to construct instances differently, supply a 'creator'
           function that takes arguments as above and returns instances.
 
-        :param getset_factory: Optional.  Proxied attribute access is automatically handled by
-          routines that get and set values based on the `attr` argument for
-          this proxy.
+        :param getset_factory: Optional.  Proxied attribute access is
+          automatically handled by routines that get and set values based on
+          the `attr` argument for this proxy.
 
           If you would like to customize this behavior, you may supply a
           `getset_factory` callable that produces a tuple of `getter` and
           `setter` functions.  The factory is called with two arguments, the
           abstract type of the underlying collection and this proxy instance.
 
-        :param proxy_factory: Optional.  The type of collection to emulate is determined by
-          sniffing the target collection.  If your collection type can't be
-          determined by duck typing or you'd like to use a different
-          collection implementation, you may supply a factory function to
-          produce those collections.  Only applicable to non-scalar relationships.
+        :param proxy_factory: Optional.  The type of collection to emulate is
+          determined by sniffing the target collection.  If your collection
+          type can't be determined by duck typing or you'd like to use a
+          different collection implementation, you may supply a factory
+          function to produce those collections.  Only applicable to
+          non-scalar relationships.
 
         :param proxy_bulk_set: Optional, use with proxy_factory.  See
           the _set() method for details.
@@ -217,6 +231,10 @@ class AssociationProxy(object):
         return not self._get_property().\
                     mapper.get_property(self.value_attr).uselist
 
+    @util.memoized_property
+    def _target_is_object(self):
+        return getattr(self.target_class, self.value_attr).impl.uses_objects
+
     def __get__(self, obj, class_):
         if self.owning_class is None:
             self.owning_class = class_ and class_ or type(obj)
@@ -224,7 +242,11 @@ class AssociationProxy(object):
             return self
 
         if self.scalar:
-            return self._scalar_get(getattr(obj, self.target_collection))
+            target = getattr(obj, self.target_collection)
+            if target is not None:
+                return self._scalar_get(target)
+            else:
+                return None
         else:
             try:
                 # If the owning instance is reborn (orm session resurrect,
@@ -281,7 +303,8 @@ class AssociationProxy(object):
         self.collection_class = util.duck_type_collection(lazy_collection())
 
         if self.proxy_factory:
-            return self.proxy_factory(lazy_collection, creator, self.value_attr, self)
+            return self.proxy_factory(
+                lazy_collection, creator, self.value_attr, self)
 
         if self.getset_factory:
             getter, setter = self.getset_factory(self.collection_class, self)
@@ -289,13 +312,16 @@ class AssociationProxy(object):
             getter, setter = self._default_getset(self.collection_class)
 
         if self.collection_class is list:
-            return _AssociationList(lazy_collection, creator, getter, setter, self)
+            return _AssociationList(
+                lazy_collection, creator, getter, setter, self)
         elif self.collection_class is dict:
-            return _AssociationDict(lazy_collection, creator, getter, setter, self)
+            return _AssociationDict(
+                lazy_collection, creator, getter, setter, self)
         elif self.collection_class is set:
-            return _AssociationSet(lazy_collection, creator, getter, setter, self)
+            return _AssociationSet(
+                lazy_collection, creator, getter, setter, self)
         else:
-            raise exceptions.ArgumentError(
+            raise exc.ArgumentError(
                 'could not guess which interface to use for '
                 'collection_class "%s" backing "%s"; specify a '
                 'proxy_factory and proxy_bulk_set manually' %
@@ -323,7 +349,7 @@ class AssociationProxy(object):
         elif self.collection_class is set:
             proxy.update(values)
         else:
-            raise exceptions.ArgumentError(
+            raise exc.ArgumentError(
                'no proxy_bulk_set supplied for custom '
                'collection_class implementation')
 
@@ -342,9 +368,11 @@ class AssociationProxy(object):
         """
 
         if self._value_is_scalar:
-            value_expr = getattr(self.target_class, self.value_attr).has(criterion, **kwargs)
+            value_expr = getattr(
+                self.target_class, self.value_attr).has(criterion, **kwargs)
         else:
-            value_expr = getattr(self.target_class, self.value_attr).any(criterion, **kwargs)
+            value_expr = getattr(
+                self.target_class, self.value_attr).any(criterion, **kwargs)
 
         # check _value_is_scalar here, otherwise
         # we're scalar->scalar - call .any() so that
@@ -368,10 +396,17 @@ class AssociationProxy(object):
 
         """
 
-        return self._comparator.has(
+        if self._target_is_object:
+            return self._comparator.has(
                     getattr(self.target_class, self.value_attr).\
                         has(criterion, **kwargs)
                 )
+        else:
+            if criterion is not None or kwargs:
+                raise exc.ArgumentError(
+                        "Non-empty has() not allowed for "
+                        "column-targeted association proxy; use ==")
+            return self._comparator.has()
 
     def contains(self, obj):
         """Produce a proxied 'contains' expression using EXISTS.
@@ -391,10 +426,21 @@ class AssociationProxy(object):
             return self._comparator.any(**{self.value_attr: obj})
 
     def __eq__(self, obj):
-        return self._comparator.has(**{self.value_attr: obj})
+        # note the has() here will fail for collections; eq_()
+        # is only allowed with a scalar.
+        if obj is None:
+            return or_(
+                        self._comparator.has(**{self.value_attr: obj}),
+                        self._comparator == None
+                    )
+        else:
+            return self._comparator.has(**{self.value_attr: obj})
 
     def __ne__(self, obj):
-        return not_(self.__eq__(obj))
+        # note the has() here will fail for collections; eq_()
+        # is only allowed with a scalar.
+        return self._comparator.has(
+                    getattr(self.target_class, self.value_attr) != obj)
 
 
 class _lazy_collection(object):
@@ -405,17 +451,18 @@ class _lazy_collection(object):
     def __call__(self):
         obj = self.ref()
         if obj is None:
-            raise exceptions.InvalidRequestError(
+            raise exc.InvalidRequestError(
                "stale association proxy, parent object has gone out of "
                "scope")
         return getattr(obj, self.target)
 
     def __getstate__(self):
-        return {'obj':self.ref(), 'target':self.target}
+        return {'obj': self.ref(), 'target': self.target}
 
     def __setstate__(self, state):
         self.ref = weakref.ref(state['obj'])
         self.target = state['target']
+
 
 class _AssociationCollection(object):
     def __init__(self, lazy_collection, creator, getter, setter, parent):
@@ -454,16 +501,19 @@ class _AssociationCollection(object):
     def __len__(self):
         return len(self.col)
 
-    def __nonzero__(self):
+    def __bool__(self):
         return bool(self.col)
 
+    __nonzero__ = __bool__
+
     def __getstate__(self):
-        return {'parent':self.parent, 'lazy_collection':self.lazy_collection}
+        return {'parent': self.parent, 'lazy_collection': self.lazy_collection}
 
     def __setstate__(self, state):
         self.parent = state['parent']
         self.lazy_collection = state['lazy_collection']
         self.parent._inflate(self)
+
 
 class _AssociationList(_AssociationCollection):
     """Generic, converting, list-to-list proxy."""
@@ -492,7 +542,7 @@ class _AssociationList(_AssociationCollection):
                 stop = index.stop
             step = index.step or 1
 
-            rng = range(index.start or 0, stop, step)
+            rng = list(range(index.start or 0, stop, step))
             if step == 1:
                 for i in rng:
                     del self[index.start]
@@ -547,7 +597,7 @@ class _AssociationList(_AssociationCollection):
 
     def count(self, value):
         return sum([1 for _ in
-                    itertools.ifilter(lambda v: v == value, iter(self))])
+                    util.itertools_filter(lambda v: v == value, iter(self))])
 
     def extend(self, values):
         for v in values:
@@ -646,14 +696,16 @@ class _AssociationList(_AssociationCollection):
     def __hash__(self):
         raise TypeError("%s objects are unhashable" % type(self).__name__)
 
-    for func_name, func in locals().items():
-        if (util.callable(func) and func.func_name == func_name and
+    for func_name, func in list(locals().items()):
+        if (util.callable(func) and func.__name__ == func_name and
             not func.__doc__ and hasattr(list, func_name)):
             func.__doc__ = getattr(list, func_name).__doc__
     del func_name, func
 
 
 _NotProvided = util.symbol('_NotProvided')
+
+
 class _AssociationDict(_AssociationCollection):
     """Generic, converting, dict-to-dict proxy."""
 
@@ -687,7 +739,7 @@ class _AssociationDict(_AssociationCollection):
         return key in self.col
 
     def __iter__(self):
-        return self.col.iterkeys()
+        return iter(self.col.keys())
 
     def clear(self):
         self.col.clear()
@@ -732,24 +784,27 @@ class _AssociationDict(_AssociationCollection):
     def keys(self):
         return self.col.keys()
 
-    def iterkeys(self):
-        return self.col.iterkeys()
+    if util.py2k:
+        def iteritems(self):
+            return ((key, self._get(self.col[key])) for key in self.col)
 
-    def values(self):
-        return [ self._get(member) for member in self.col.values() ]
+        def itervalues(self):
+            return (self._get(self.col[key]) for key in self.col)
 
-    def itervalues(self):
-        for key in self.col:
-            yield self._get(self.col[key])
-        raise StopIteration
+        def iterkeys(self):
+            return self.col.iterkeys()
 
-    def items(self):
-        return [(k, self._get(self.col[k])) for k in self]
+        def values(self):
+            return [self._get(member) for member in self.col.values()]
 
-    def iteritems(self):
-        for key in self.col:
-            yield (key, self._get(self.col[key]))
-        raise StopIteration
+        def items(self):
+            return [(k, self._get(self.col[k])) for k in self]
+    else:
+        def items(self):
+            return ((key, self._get(self.col[key])) for key in self.col)
+
+        def values(self):
+            return (self._get(self.col[key]) for key in self.col)
 
     def pop(self, key, default=_NotProvided):
         if default is _NotProvided:
@@ -768,8 +823,8 @@ class _AssociationDict(_AssociationCollection):
                             len(a))
         elif len(a) == 1:
             seq_or_map = a[0]
-            # discern dict from sequence - took the advice
-            # from http://www.voidspace.org.uk/python/articles/duck_typing.shtml
+            # discern dict from sequence - took the advice from
+            # http://www.voidspace.org.uk/python/articles/duck_typing.shtml
             # still not perfect :(
             if hasattr(seq_or_map, 'keys'):
                 for item in seq_or_map:
@@ -792,8 +847,8 @@ class _AssociationDict(_AssociationCollection):
     def __hash__(self):
         raise TypeError("%s objects are unhashable" % type(self).__name__)
 
-    for func_name, func in locals().items():
-        if (util.callable(func) and func.func_name == func_name and
+    for func_name, func in list(locals().items()):
+        if (util.callable(func) and func.__name__ == func_name and
             not func.__doc__ and hasattr(dict, func_name)):
             func.__doc__ = getattr(dict, func_name).__doc__
     del func_name, func
@@ -814,11 +869,13 @@ class _AssociationSet(_AssociationCollection):
     def __len__(self):
         return len(self.col)
 
-    def __nonzero__(self):
+    def __bool__(self):
         if self.col:
             return True
         else:
             return False
+
+    __nonzero__ = __bool__
 
     def __contains__(self, value):
         for member in self.col:
@@ -990,8 +1047,8 @@ class _AssociationSet(_AssociationCollection):
     def __hash__(self):
         raise TypeError("%s objects are unhashable" % type(self).__name__)
 
-    for func_name, func in locals().items():
-        if (util.callable(func) and func.func_name == func_name and
+    for func_name, func in list(locals().items()):
+        if (util.callable(func) and func.__name__ == func_name and
             not func.__doc__ and hasattr(set, func_name)):
             func.__doc__ = getattr(set, func_name).__doc__
     del func_name, func

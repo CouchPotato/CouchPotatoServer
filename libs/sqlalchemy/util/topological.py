@@ -1,16 +1,16 @@
 # util/topological.py
-# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2014 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 
 """Topological sorting algorithms."""
 
-from sqlalchemy.exc import CircularDependencyError
-from sqlalchemy import util
-
+from ..exc import CircularDependencyError
+from .. import util
 
 __all__ = ['sort', 'sort_as_subsets', 'find_cycles']
+
 
 def sort_as_subsets(tuples, allitems):
 
@@ -36,6 +36,7 @@ def sort_as_subsets(tuples, allitems):
         todo.difference_update(output)
         yield output
 
+
 def sort(tuples, allitems):
     """sort the given list of items by dependency.
 
@@ -46,8 +47,10 @@ def sort(tuples, allitems):
         for s in set_:
             yield s
 
+
 def find_cycles(tuples, allitems):
-    # straight from gvr with some mods
+    # adapted from:
+    # http://neopythonic.blogspot.com/2009/01/detecting-cycles-in-directed-graph.html
 
     edges = util.defaultdict(set)
     for parent, child in tuples:
@@ -83,6 +86,7 @@ def find_cycles(tuples, allitems):
             else:
                 node = stack.pop()
     return output
+
 
 def _gen_edges(edges):
     return set([

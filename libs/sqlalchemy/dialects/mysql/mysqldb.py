@@ -1,23 +1,17 @@
 # mysql/mysqldb.py
-# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2014 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 
-"""Support for the MySQL database via the MySQL-python adapter.
+"""
 
-MySQL-Python is available at:
+.. dialect:: mysql+mysqldb
+    :name: MySQL-Python
+    :dbapi: mysqldb
+    :connectstring: mysql+mysqldb://<user>:<password>@<host>[:<port>]/<dbname>
+    :url: http://sourceforge.net/projects/mysql-python
 
-    http://sourceforge.net/projects/mysql-python
-
-At least version 1.2.1 or 1.2.2 should be used.
-
-Connecting
------------
-
-Connect string format::
-
-    mysql+mysqldb://<user>:<password>@<host>[:<port>]/<dbname>
 
 Unicode
 -------
@@ -54,14 +48,15 @@ It is strongly advised to use the latest version of MySQL-Python.
 
 """
 
-from sqlalchemy.dialects.mysql.base import (MySQLDialect, MySQLExecutionContext,
+from .base import (MySQLDialect, MySQLExecutionContext,
                                             MySQLCompiler, MySQLIdentifierPreparer)
-from sqlalchemy.connectors.mysqldb import (
+from ...connectors.mysqldb import (
                         MySQLDBExecutionContext,
                         MySQLDBCompiler,
                         MySQLDBIdentifierPreparer,
                         MySQLDBConnector
                     )
+
 
 class MySQLExecutionContext_mysqldb(MySQLDBExecutionContext, MySQLExecutionContext):
     pass
@@ -73,6 +68,7 @@ class MySQLCompiler_mysqldb(MySQLDBCompiler, MySQLCompiler):
 
 class MySQLIdentifierPreparer_mysqldb(MySQLDBIdentifierPreparer, MySQLIdentifierPreparer):
     pass
+
 
 class MySQLDialect_mysqldb(MySQLDBConnector, MySQLDialect):
     execution_ctx_cls = MySQLExecutionContext_mysqldb

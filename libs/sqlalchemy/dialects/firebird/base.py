@@ -1,16 +1,16 @@
 # firebird/base.py
-# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2014 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 
 """
-Support for the Firebird database.
 
-Connectivity is usually supplied via the kinterbasdb_ DBAPI module.
+.. dialect:: firebird
+    :name: Firebird
 
-Dialects
-~~~~~~~~
+Firebird Dialects
+-----------------
 
 Firebird offers two distinct dialects_ (not to be confused with a
 SQLAlchemy ``Dialect``):
@@ -27,7 +27,7 @@ support for dialect 1 is not well tested and probably has
 incompatibilities.
 
 Locking Behavior
-~~~~~~~~~~~~~~~~
+----------------
 
 Firebird locks tables aggressively.  For this reason, a DROP TABLE may
 hang until other transactions are released.  SQLAlchemy does its best
@@ -47,7 +47,7 @@ The above use case can be alleviated by calling ``first()`` on the
 all remaining cursor/connection resources.
 
 RETURNING support
-~~~~~~~~~~~~~~~~~
+-----------------
 
 Firebird 2.0 supports returning a result set from inserts, and 2.1
 extends that to deletes and updates. This is generically exposed by
@@ -69,7 +69,7 @@ the SQLAlchemy ``returning()`` method, such as::
 
 """
 
-import datetime, re
+import datetime
 
 from sqlalchemy import schema as sa_schema
 from sqlalchemy import exc, types as sqltypes, sql, util
@@ -78,9 +78,8 @@ from sqlalchemy.engine import base, default, reflection
 from sqlalchemy.sql import compiler
 
 
-from sqlalchemy.types import (BIGINT, BLOB, BOOLEAN, DATE,
-                              FLOAT, INTEGER, NUMERIC, SMALLINT,
-                              TEXT, TIME, TIMESTAMP)
+from sqlalchemy.types import (BIGINT, BLOB, DATE, FLOAT, INTEGER, NUMERIC,
+                              SMALLINT, TEXT, TIME, TIMESTAMP, Integer)
 
 
 RESERVED_WORDS = set([
@@ -126,36 +125,49 @@ RESERVED_WORDS = set([
 class _StringType(sqltypes.String):
     """Base for Firebird string types."""
 
-    def __init__(self, charset = None, **kw):
+    def __init__(self, charset=None, **kw):
         self.charset = charset
         super(_StringType, self).__init__(**kw)
+
 
 class VARCHAR(_StringType, sqltypes.VARCHAR):
     """Firebird VARCHAR type"""
     __visit_name__ = 'VARCHAR'
 
-    def __init__(self, length = None, **kwargs):
+    def __init__(self, length=None, **kwargs):
         super(VARCHAR, self).__init__(length=length, **kwargs)
+
 
 class CHAR(_StringType, sqltypes.CHAR):
     """Firebird CHAR type"""
     __visit_name__ = 'CHAR'
 
-    def __init__(self, length = None, **kwargs):
+    def __init__(self, length=None, **kwargs):
         super(CHAR, self).__init__(length=length, **kwargs)
 
+
+class _FBDateTime(sqltypes.DateTime):
+    def bind_processor(self, dialect):
+        def process(value):
+            if type(value) == datetime.date:
+                return datetime.datetime(value.year, value.month, value.day)
+            else:
+                return value
+        return process
+
 colspecs = {
+    sqltypes.DateTime: _FBDateTime
 }
 
 ischema_names = {
       'SHORT': SMALLINT,
-       'LONG': BIGINT,
+       'LONG': INTEGER,
        'QUAD': FLOAT,
       'FLOAT': FLOAT,
        'DATE': DATE,
        'TIME': TIME,
        'TEXT': TEXT,
-      'INT64': NUMERIC,
+      'INT64': BIGINT,
      'DOUBLE': FLOAT,
   'TIMESTAMP': TIMESTAMP,
     'VARYING': VARCHAR,
@@ -192,20 +204,42 @@ class FBTypeCompiler(compiler.GenericTypeCompiler):
         return self._extend_string(type_, basic)
 
     def visit_VARCHAR(self, type_):
+        if not type_.length:
+            raise exc.CompileError(
+                    "VARCHAR requires a length on dialect %s" %
+                    self.dialect.name)
         basic = super(FBTypeCompiler, self).visit_VARCHAR(type_)
         return self._extend_string(type_, basic)
-
 
 
 class FBCompiler(sql.compiler.SQLCompiler):
     """Firebird specific idiosyncrasies"""
 
-    def visit_mod(self, binary, **kw):
-        # Firebird lacks a builtin modulo operator, but there is
-        # an equivalent function in the ib_udf library.
+    ansi_bind_rules = True
+
+    #def visit_contains_op_binary(self, binary, operator, **kw):
+        # cant use CONTAINING b.c. it's case insensitive.
+
+    #def visit_notcontains_op_binary(self, binary, operator, **kw):
+        # cant use NOT CONTAINING b.c. it's case insensitive.
+
+    def visit_now_func(self, fn, **kw):
+        return "CURRENT_TIMESTAMP"
+
+    def visit_startswith_op_binary(self, binary, operator, **kw):
+        return '%s STARTING WITH %s' % (
+                            binary.left._compiler_dispatch(self, **kw),
+                            binary.right._compiler_dispatch(self, **kw))
+
+    def visit_notstartswith_op_binary(self, binary, operator, **kw):
+        return '%s NOT STARTING WITH %s' % (
+                            binary.left._compiler_dispatch(self, **kw),
+                            binary.right._compiler_dispatch(self, **kw))
+
+    def visit_mod_binary(self, binary, operator, **kw):
         return "mod(%s, %s)" % (
-                                self.process(binary.left),
-                                self.process(binary.right))
+                                self.process(binary.left, **kw),
+                                self.process(binary.right, **kw))
 
     def visit_alias(self, alias, asfrom=False, **kwargs):
         if self.dialect._version_two:
@@ -249,7 +283,7 @@ class FBCompiler(sql.compiler.SQLCompiler):
         # may require parens - see similar example in the oracle
         # dialect
         if func.clauses is not None and len(func.clauses):
-            return self.process(func.clause_expr)
+            return self.process(func.clause_expr, **kw)
         else:
             return ""
 
@@ -267,9 +301,9 @@ class FBCompiler(sql.compiler.SQLCompiler):
 
         result = ""
         if select._limit:
-            result += "FIRST %s "  % self.process(sql.literal(select._limit))
+            result += "FIRST %s " % self.process(sql.literal(select._limit))
         if select._offset:
-            result +="SKIP %s "  %  self.process(sql.literal(select._offset))
+            result += "SKIP %s " % self.process(sql.literal(select._offset))
         if select._distinct:
             result += "DISTINCT "
         return result
@@ -280,15 +314,11 @@ class FBCompiler(sql.compiler.SQLCompiler):
         return ""
 
     def returning_clause(self, stmt, returning_cols):
-
         columns = [
-                self.process(
-                    self.label_select_column(None, c, asfrom=False),
-                    within_columns_clause=True,
-                    result_map=self.result_map
-                )
+                self._label_select_column(None, c, True, False, {})
                 for c in expression._select_iterables(returning_cols)
             ]
+
         return 'RETURNING ' + ', '.join(columns)
 
 
@@ -329,6 +359,7 @@ class FBIdentifierPreparer(sql.compiler.IdentifierPreparer):
     """Install Firebird specific reserved words."""
 
     reserved_words = RESERVED_WORDS
+    illegal_initial_characters = compiler.ILLEGAL_INITIAL_CHARACTERS.union(['_'])
 
     def __init__(self, dialect):
         super(FBIdentifierPreparer, self).__init__(dialect, omit_schema=True)
@@ -444,18 +475,34 @@ class FBDialect(default.DefaultDialect):
 
     @reflection.cache
     def get_table_names(self, connection, schema=None, **kw):
+        # there are two queries commonly mentioned for this.
+        # this one, using view_blr, is at the Firebird FAQ among other places:
+        # http://www.firebirdfaq.org/faq174/
         s = """
-        SELECT DISTINCT rdb$relation_name
-        FROM rdb$relation_fields
-        WHERE rdb$system_flag=0 AND rdb$view_context IS NULL
+        select rdb$relation_name
+        from rdb$relations
+        where rdb$view_blr is null
+        and (rdb$system_flag is null or rdb$system_flag = 0);
         """
+
+        # the other query is this one.  It's not clear if there's really
+        # any difference between these two.  This link:
+        # http://www.alberton.info/firebird_sql_meta_info.html#.Ur3vXfZGni8
+        # states them as interchangeable.  Some discussion at [ticket:2898]
+        # SELECT DISTINCT rdb$relation_name
+        # FROM rdb$relation_fields
+        # WHERE rdb$system_flag=0 AND rdb$view_context IS NULL
+
         return [self.normalize_name(row[0]) for row in connection.execute(s)]
 
     @reflection.cache
     def get_view_names(self, connection, schema=None, **kw):
+        # see http://www.firebirdfaq.org/faq174/
         s = """
-        SELECT distinct rdb$view_name
-        FROM rdb$view_relations
+        select rdb$relation_name
+        from rdb$relations
+        where rdb$view_blr is not null
+        and (rdb$system_flag is null or rdb$system_flag = 0);
         """
         return [self.normalize_name(row[0]) for row in connection.execute(s)]
 
@@ -474,7 +521,7 @@ class FBDialect(default.DefaultDialect):
             return None
 
     @reflection.cache
-    def get_primary_keys(self, connection, table_name, schema=None, **kw):
+    def get_pk_constraint(self, connection, table_name, schema=None, **kw):
         # Query to extract the PK/FK constrained fields of the given table
         keyqry = """
         SELECT se.rdb$field_name AS fname
@@ -486,7 +533,7 @@ class FBDialect(default.DefaultDialect):
         # get primary key fields
         c = connection.execute(keyqry, ["PRIMARY KEY", tablename])
         pkfields = [self.normalize_name(r['fname']) for r in c.fetchall()]
-        return pkfields
+        return {'constrained_columns': pkfields, 'name': None}
 
     @reflection.cache
     def get_column_sequence(self, connection,
@@ -541,7 +588,8 @@ class FBDialect(default.DefaultDialect):
         ORDER BY r.rdb$field_position
         """
         # get the PK, used to determine the eventual associated sequence
-        pkey_cols = self.get_primary_keys(connection, table_name)
+        pk_constraint = self.get_pk_constraint(connection, table_name)
+        pkey_cols = pk_constraint['constrained_columns']
 
         tablename = self.denormalize_name(table_name)
         # get all of the fields for this table
@@ -561,8 +609,8 @@ class FBDialect(default.DefaultDialect):
                 util.warn("Did not recognize type '%s' of column '%s'" %
                           (colspec, name))
                 coltype = sqltypes.NULLTYPE
-            elif colspec == 'INT64':
-                coltype = coltype(
+            elif issubclass(coltype, Integer) and row['fprec'] != 0:
+                coltype = NUMERIC(
                                 precision=row['fprec'],
                                 scale=row['fscale'] * -1)
             elif colspec in ('VARYING', 'CSTRING'):
@@ -593,11 +641,11 @@ class FBDialect(default.DefaultDialect):
                     # Redundant
                     defvalue = None
             col_d = {
-                'name' : name,
-                'type' : coltype,
-                'nullable' :  not bool(row['null_flag']),
-                'default' : defvalue,
-                'autoincrement':defvalue is None
+                'name': name,
+                'type': coltype,
+                'nullable': not bool(row['null_flag']),
+                'default': defvalue,
+                'autoincrement': defvalue is None
             }
 
             if orig_colname.lower() == orig_colname:
@@ -605,7 +653,7 @@ class FBDialect(default.DefaultDialect):
 
             # if the PK is a single field, try to see if its linked to
             # a sequence thru a trigger
-            if len(pkey_cols)==1 and name==pkey_cols[0]:
+            if len(pkey_cols) == 1 and name == pkey_cols[0]:
                 seq_d = self.get_column_sequence(connection, tablename, name)
                 if seq_d is not None:
                     col_d['sequence'] = seq_d
@@ -635,12 +683,12 @@ class FBDialect(default.DefaultDialect):
         tablename = self.denormalize_name(table_name)
 
         c = connection.execute(fkqry, ["FOREIGN KEY", tablename])
-        fks = util.defaultdict(lambda:{
-            'name' : None,
-            'constrained_columns' : [],
-            'referred_schema' : None,
-            'referred_table' : None,
-            'referred_columns' : []
+        fks = util.defaultdict(lambda: {
+            'name': None,
+            'constrained_columns': [],
+            'referred_schema': None,
+            'referred_table': None,
+            'referred_columns': []
         })
 
         for row in c:
@@ -653,7 +701,7 @@ class FBDialect(default.DefaultDialect):
                                 self.normalize_name(row['fname']))
             fk['referred_columns'].append(
                                 self.normalize_name(row['targetfname']))
-        return fks.values()
+        return list(fks.values())
 
     @reflection.cache
     def get_indexes(self, connection, table_name, schema=None, **kw):
@@ -669,7 +717,7 @@ class FBDialect(default.DefaultDialect):
                         ic.rdb$index_name
         WHERE ix.rdb$relation_name=? AND ix.rdb$foreign_key IS NULL
           AND rdb$relation_constraints.rdb$constraint_type IS NULL
-        ORDER BY index_name, field_name
+        ORDER BY index_name, ic.rdb$field_position
         """
         c = connection.execute(qry, [self.denormalize_name(table_name)])
 
@@ -684,17 +732,5 @@ class FBDialect(default.DefaultDialect):
             indexrec['column_names'].append(
                                 self.normalize_name(row['field_name']))
 
-        return indexes.values()
+        return list(indexes.values())
 
-    def do_execute(self, cursor, statement, parameters, context=None):
-        # kinterbase does not accept a None, but wants an empty list
-        # when there are no arguments.
-        cursor.execute(statement, parameters or [])
-
-    def do_rollback(self, connection):
-        # Use the retaining feature, that keeps the transaction going
-        connection.rollback(True)
-
-    def do_commit(self, connection):
-        # Use the retaining feature, that keeps the transaction going
-        connection.commit(True)

@@ -1,47 +1,52 @@
 # util/queue.py
-# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2014 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 
 """An adaptation of Py2.3/2.4's Queue module which supports reentrant
-behavior, using RLock instead of Lock for its mutex object.
+behavior, using RLock instead of Lock for its mutex object.  The
+Queue object is used exclusively by the sqlalchemy.pool.QueuePool
+class.
 
 This is to support the connection pool's usage of weakref callbacks to return
 connections to the underlying Queue, which can in extremely
 rare cases be invoked within the ``get()`` method of the Queue itself,
 producing a ``put()`` inside the ``get()`` and therefore a reentrant
-condition."""
+condition.
+
+An additional change includes a special "abort" method which can be used
+to immediately raise a special exception for threads that are blocking
+on get().  This is to accommodate a rare race condition that can occur
+within QueuePool.
+
+"""
 
 from collections import deque
 from time import time as _time
-from sqlalchemy.util import threading
-import sys
-
-if sys.version_info < (2, 6):
-    def notify_all(condition):
-        condition.notify()
-else:
-    def notify_all(condition):
-        condition.notify_all()
+from .compat import threading
 
 
-__all__ = ['Empty', 'Full', 'Queue']
+__all__ = ['Empty', 'Full', 'Queue', 'SAAbort']
+
 
 class Empty(Exception):
     "Exception raised by Queue.get(block=0)/get_nowait()."
 
     pass
 
+
 class Full(Exception):
     "Exception raised by Queue.put(block=0)/put_nowait()."
 
     pass
 
+
 class SAAbort(Exception):
     "Special SQLA exception to abort waiting"
     def __init__(self, context):
         self.context = context
+
 
 class Queue:
     def __init__(self, maxsize=0):
@@ -146,7 +151,6 @@ class Queue:
         return an item if one is immediately available, else raise the
         ``Empty`` exception (`timeout` is ignored in that case).
         """
-
         self.not_empty.acquire()
         try:
             if not block:
@@ -154,7 +158,11 @@ class Queue:
                     raise Empty
             elif timeout is None:
                 while self._empty():
-                    self.not_empty.wait()
+                    # wait for only half a second, then
+                    # loop around, so that we can see a change in
+                    # _sqla_abort_context in case we missed the notify_all()
+                    # called by abort()
+                    self.not_empty.wait(.5)
                     if self._sqla_abort_context:
                         raise SAAbort(self._sqla_abort_context)
             else:
@@ -183,7 +191,10 @@ class Queue:
         if not self.not_full.acquire(False):
             return
         try:
-            notify_all(self.not_empty)
+            # note that this is now optional
+            # as the waiters in get() both loop around
+            # to check the _sqla_abort_context flag periodically
+            self.not_empty.notify_all()
         finally:
             self.not_full.release()
 

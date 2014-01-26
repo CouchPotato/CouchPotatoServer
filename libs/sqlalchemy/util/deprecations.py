@@ -1,5 +1,5 @@
 # util/deprecations.py
-# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2014 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -7,16 +7,19 @@
 """Helpers related to deprecation of functions, methods, classes, other
 functionality."""
 
-from sqlalchemy import exc
+from .. import exc
 import warnings
 import re
-from langhelpers import decorator
+from .langhelpers import decorator
+
 
 def warn_deprecated(msg, stacklevel=3):
     warnings.warn(msg, exc.SADeprecationWarning, stacklevel=stacklevel)
 
+
 def warn_pending_deprecation(msg, stacklevel=3):
     warnings.warn(msg, exc.SAPendingDeprecationWarning, stacklevel=stacklevel)
+
 
 def deprecated(version, message=None, add_deprecation_to_docstring=True):
     """Decorates a function and issues a deprecation warning on use.
@@ -46,6 +49,7 @@ def deprecated(version, message=None, add_deprecation_to_docstring=True):
             fn, exc.SADeprecationWarning,
             message % dict(func=fn.__name__), header)
     return decorate
+
 
 def pending_deprecation(version, message=None,
                         add_deprecation_to_docstring=True):
@@ -80,6 +84,7 @@ def pending_deprecation(version, message=None,
             message % dict(func=fn.__name__), header)
     return decorate
 
+
 def _sanitize_restructured_text(text):
     def repl(m):
         type_, name = m.group(1, 2)
@@ -102,17 +107,37 @@ def _decorate_with_warning(func, wtype, message, docstring_header=None):
     doc = func.__doc__ is not None and func.__doc__ or ''
     if docstring_header is not None:
         docstring_header %= dict(func=func.__name__)
-        docs = doc and doc.expandtabs().split('\n') or []
-        indent = ''
-        for line in docs[1:]:
-            text = line.lstrip()
-            if text:
-                indent = line[0:len(line) - len(text)]
-                break
-        point = min(len(docs), 1)
-        docs.insert(point, '\n' + indent + docstring_header.rstrip())
-        doc = '\n'.join(docs)
+
+        doc = inject_docstring_text(doc, docstring_header, 1)
 
     decorated = warned(func)
     decorated.__doc__ = doc
     return decorated
+
+import textwrap
+
+def _dedent_docstring(text):
+    split_text = text.split("\n", 1)
+    if len(split_text) == 1:
+        return text
+    else:
+        firstline, remaining = split_text
+    if not firstline.startswith(" "):
+        return firstline + "\n" + textwrap.dedent(remaining)
+    else:
+        return textwrap.dedent(text)
+
+def inject_docstring_text(doctext, injecttext, pos):
+    doctext = _dedent_docstring(doctext or "")
+    lines = doctext.split('\n')
+    injectlines = textwrap.dedent(injecttext).split("\n")
+    if injectlines[0]:
+        injectlines.insert(0, "")
+
+    blanks = [num for num, line in enumerate(lines) if not line.strip()]
+    blanks.insert(0, 0)
+
+    inject_pos = blanks[min(pos, len(blanks) - 1)]
+
+    lines = lines[0:inject_pos] + injectlines + lines[inject_pos:]
+    return "\n".join(lines)

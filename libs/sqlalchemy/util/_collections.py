@@ -1,43 +1,110 @@
 # util/_collections.py
-# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2014 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 
 """Collection classes and helpers."""
 
-import sys
-import itertools
+from __future__ import absolute_import
 import weakref
 import operator
-from langhelpers import symbol
-from compat import time_func, threading
+from .compat import threading, itertools_filterfalse
+from . import py2k
+import types
 
 EMPTY_SET = frozenset()
 
 
-class NamedTuple(tuple):
-    """tuple() subclass that adds labeled names.
+class KeyedTuple(tuple):
+    """``tuple`` subclass that adds labeled names.
 
-    Is also pickleable.
+    E.g.::
+
+        >>> k = KeyedTuple([1, 2, 3], labels=["one", "two", "three"])
+        >>> k.one
+        1
+        >>> k.two
+        2
+
+    Result rows returned by :class:`.Query` that contain multiple
+    ORM entities and/or column expressions make use of this
+    class to return rows.
+
+    The :class:`.KeyedTuple` exhibits similar behavior to the
+    ``collections.namedtuple()`` construct provided in the Python
+    standard library, however is architected very differently.
+    Unlike ``collections.namedtuple()``, :class:`.KeyedTuple` is
+    does not rely on creation of custom subtypes in order to represent
+    a new series of keys, instead each :class:`.KeyedTuple` instance
+    receives its list of keys in place.   The subtype approach
+    of ``collections.namedtuple()`` introduces significant complexity
+    and performance overhead, which is not necessary for the
+    :class:`.Query` object's use case.
+
+    .. versionchanged:: 0.8
+        Compatibility methods with ``collections.namedtuple()`` have been
+        added including :attr:`.KeyedTuple._fields` and
+        :meth:`.KeyedTuple._asdict`.
+
+    .. seealso::
+
+        :ref:`ormtutorial_querying`
 
     """
 
     def __new__(cls, vals, labels=None):
         t = tuple.__new__(cls, vals)
+        t._labels = []
         if labels:
             t.__dict__.update(zip(labels, vals))
             t._labels = labels
         return t
 
     def keys(self):
+        """Return a list of string key names for this :class:`.KeyedTuple`.
+
+        .. seealso::
+
+            :attr:`.KeyedTuple._fields`
+
+        """
+
         return [l for l in self._labels if l is not None]
+
+    @property
+    def _fields(self):
+        """Return a tuple of string key names for this :class:`.KeyedTuple`.
+
+        This method provides compatibility with ``collections.namedtuple()``.
+
+        .. versionadded:: 0.8
+
+        .. seealso::
+
+            :meth:`.KeyedTuple.keys`
+
+        """
+        return tuple(self.keys())
+
+    def _asdict(self):
+        """Return the contents of this :class:`.KeyedTuple` as a dictionary.
+
+        This method provides compatibility with ``collections.namedtuple()``,
+        with the exception that the dictionary returned is **not** ordered.
+
+        .. versionadded:: 0.8
+
+        """
+        return dict((key, self.__dict__[key]) for key in self.keys())
+
 
 class ImmutableContainer(object):
     def _immutable(self, *arg, **kw):
         raise TypeError("%s object is immutable" % self.__class__.__name__)
 
     __delitem__ = __setitem__ = __setattr__ = _immutable
+
 
 class immutabledict(ImmutableContainer, dict):
 
@@ -66,6 +133,7 @@ class immutabledict(ImmutableContainer, dict):
     def __repr__(self):
         return "immutabledict(%s)" % dict.__repr__(self)
 
+
 class Properties(object):
     """Provide a __getattr__/__setattr__ interface over a dict."""
 
@@ -76,7 +144,7 @@ class Properties(object):
         return len(self._data)
 
     def __iter__(self):
-        return self._data.itervalues()
+        return iter(list(self._data.values()))
 
     def __add__(self, other):
         return list(self) + list(other)
@@ -123,13 +191,20 @@ class Properties(object):
             return default
 
     def keys(self):
-        return self._data.keys()
+        return list(self._data)
+
+    def values(self):
+        return list(self._data.values())
+
+    def items(self):
+        return list(self._data.items())
 
     def has_key(self, key):
         return key in self._data
 
     def clear(self):
         self._data.clear()
+
 
 class OrderedProperties(Properties):
     """Provide a __getattr__/__setattr__ interface with an OrderedDict
@@ -187,23 +262,55 @@ class OrderedDict(dict):
     def __iter__(self):
         return iter(self._list)
 
-    def values(self):
-        return [self[key] for key in self._list]
 
-    def itervalues(self):
-        return iter([self[key] for key in self._list])
+    if py2k:
+        def values(self):
+            return [self[key] for key in self._list]
 
-    def keys(self):
-        return list(self._list)
+        def keys(self):
+            return self._list
 
-    def iterkeys(self):
-        return iter(self.keys())
+        def itervalues(self):
+            return iter([self[key] for key in self._list])
 
-    def items(self):
-        return [(key, self[key]) for key in self.keys()]
+        def iterkeys(self):
+            return iter(self)
 
-    def iteritems(self):
-        return iter(self.items())
+        def iteritems(self):
+            return iter(self.items())
+
+        def items(self):
+            return [(key, self[key]) for key in self._list]
+    else:
+        def values(self):
+            #return (self[key] for key in self)
+            return (self[key] for key in self._list)
+
+        def keys(self):
+            #return iter(self)
+            return iter(self._list)
+
+        def items(self):
+            #return ((key, self[key]) for key in self)
+            return ((key, self[key]) for key in self._list)
+
+    _debug_iter = False
+    if _debug_iter:
+        # normally disabled to reduce function call
+        # overhead
+        def __iter__(self):
+            len_ = len(self._list)
+            for item in self._list:
+                yield item
+                assert len_ == len(self._list), \
+                   "Dictionary changed size during iteration"
+        def values(self):
+            return (self[key] for key in self)
+        def keys(self):
+            return iter(self)
+        def items(self):
+            return ((key, self[key]) for key in self)
+
 
     def __setitem__(self, key, object):
         if key not in self:
@@ -230,6 +337,7 @@ class OrderedDict(dict):
         item = dict.popitem(self)
         self._list.remove(item[0])
         return item
+
 
 class OrderedSet(set):
     def __init__(self, d=None):
@@ -314,22 +422,22 @@ class OrderedSet(set):
     def intersection_update(self, other):
         other = set(other)
         set.intersection_update(self, other)
-        self._list = [ a for a in self._list if a in other]
+        self._list = [a for a in self._list if a in other]
         return self
 
     __iand__ = intersection_update
 
     def symmetric_difference_update(self, other):
         set.symmetric_difference_update(self, other)
-        self._list =  [ a for a in self._list if a in self]
-        self._list += [ a for a in other._list if a in self]
+        self._list = [a for a in self._list if a in self]
+        self._list += [a for a in other._list if a in self]
         return self
 
     __ixor__ = symmetric_difference_update
 
     def difference_update(self, other):
         set.difference_update(self, other)
-        self._list = [ a for a in self._list if a in self]
+        self._list = [a for a in self._list if a in self]
         return self
 
     __isub__ = difference_update
@@ -376,9 +484,6 @@ class IdentitySet(object):
     def clear(self):
         self._members.clear()
 
-    def __sub__(self, other):
-        return self.difference(other)
-
     def __cmp__(self, other):
         raise TypeError('cannot compare sets using cmp()')
 
@@ -399,8 +504,8 @@ class IdentitySet(object):
 
         if len(self) > len(other):
             return False
-        for m in itertools.ifilterfalse(other._members.__contains__,
-                                        self._members.iterkeys()):
+        for m in itertools_filterfalse(other._members.__contains__,
+                                        iter(self._members.keys())):
             return False
         return True
 
@@ -420,8 +525,8 @@ class IdentitySet(object):
         if len(self) < len(other):
             return False
 
-        for m in itertools.ifilterfalse(self._members.__contains__,
-                                        other._members.iterkeys()):
+        for m in itertools_filterfalse(self._members.__contains__,
+                                        iter(other._members.keys())):
             return False
         return True
 
@@ -438,8 +543,9 @@ class IdentitySet(object):
     def union(self, iterable):
         result = type(self)()
         # testlib.pragma exempt:__hash__
-        result._members.update(
-            self._working_set(self._member_id_tuples()).union(_iter_id(iterable)))
+        members = self._member_id_tuples()
+        other = _iter_id(iterable)
+        result._members.update(self._working_set(members).union(other))
         return result
 
     def __or__(self, other):
@@ -459,8 +565,9 @@ class IdentitySet(object):
     def difference(self, iterable):
         result = type(self)()
         # testlib.pragma exempt:__hash__
-        result._members.update(
-            self._working_set(self._member_id_tuples()).difference(_iter_id(iterable)))
+        members = self._member_id_tuples()
+        other = _iter_id(iterable)
+        result._members.update(self._working_set(members).difference(other))
         return result
 
     def __sub__(self, other):
@@ -480,8 +587,9 @@ class IdentitySet(object):
     def intersection(self, iterable):
         result = type(self)()
         # testlib.pragma exempt:__hash__
-        result._members.update(
-            self._working_set(self._member_id_tuples()).intersection(_iter_id(iterable)))
+        members = self._member_id_tuples()
+        other = _iter_id(iterable)
+        result._members.update(self._working_set(members).intersection(other))
         return result
 
     def __and__(self, other):
@@ -501,12 +609,14 @@ class IdentitySet(object):
     def symmetric_difference(self, iterable):
         result = type(self)()
         # testlib.pragma exempt:__hash__
+        members = self._member_id_tuples()
+        other = _iter_id(iterable)
         result._members.update(
-            self._working_set(self._member_id_tuples()).symmetric_difference(_iter_id(iterable)))
+            self._working_set(members).symmetric_difference(other))
         return result
 
     def _member_id_tuples(self):
-        return ((id(v), v) for v in self._members.itervalues())
+        return ((id(v), v) for v in self._members.values())
 
     def __xor__(self, other):
         if not isinstance(other, IdentitySet):
@@ -523,7 +633,7 @@ class IdentitySet(object):
         return self
 
     def copy(self):
-        return type(self)(self._members.itervalues())
+        return type(self)(iter(self._members.values()))
 
     __copy__ = copy
 
@@ -531,13 +641,41 @@ class IdentitySet(object):
         return len(self._members)
 
     def __iter__(self):
-        return self._members.itervalues()
+        return iter(self._members.values())
 
     def __hash__(self):
         raise TypeError('set objects are unhashable')
 
     def __repr__(self):
-        return '%s(%r)' % (type(self).__name__, self._members.values())
+        return '%s(%r)' % (type(self).__name__, list(self._members.values()))
+
+
+class WeakSequence(object):
+    def __init__(self, __elements=()):
+        self._storage = [
+            weakref.ref(element, self._remove) for element in __elements
+        ]
+
+    def append(self, item):
+        self._storage.append(weakref.ref(item, self._remove))
+
+    def _remove(self, ref):
+        self._storage.remove(ref)
+
+    def __len__(self):
+        return len(self._storage)
+
+    def __iter__(self):
+        return (obj for obj in
+                    (ref() for ref in self._storage) if obj is not None)
+
+    def __getitem__(self, index):
+        try:
+            obj = self._storage[index]
+        except KeyError:
+            raise IndexError("Index %s out of range" % index)
+        else:
+            return obj()
 
 
 class OrderedIdentitySet(IdentitySet):
@@ -556,37 +694,25 @@ class OrderedIdentitySet(IdentitySet):
                 self.add(o)
 
 
-if sys.version_info >= (2, 5):
-    class PopulateDict(dict):
-        """A dict which populates missing values via a creation function.
+class PopulateDict(dict):
+    """A dict which populates missing values via a creation function.
 
-        Note the creation function takes a key, unlike
-        collections.defaultdict.
+    Note the creation function takes a key, unlike
+    collections.defaultdict.
 
-        """
+    """
 
-        def __init__(self, creator):
-            self.creator = creator
+    def __init__(self, creator):
+        self.creator = creator
 
-        def __missing__(self, key):
-            self[key] = val = self.creator(key)
-            return val
-else:
-    class PopulateDict(dict):
-        """A dict which populates missing values via a creation function."""
+    def __missing__(self, key):
+        self[key] = val = self.creator(key)
+        return val
 
-        def __init__(self, creator):
-            self.creator = creator
-
-        def __getitem__(self, key):
-            try:
-                return dict.__getitem__(self, key)
-            except KeyError:
-                self[key] = value = self.creator(key)
-                return value
-
-# define collections that are capable of storing
+# Define collections that are capable of storing
 # ColumnElement objects as hashable keys/elements.
+# At this point, these are mostly historical, things
+# used to be more complicated.
 column_set = set
 column_dict = dict
 ordered_column_set = OrderedSet
@@ -602,6 +728,7 @@ def unique_list(seq, hashfunc=None):
         return [x for x in seq
                 if hashfunc(x) not in seen
                 and not seen.__setitem__(hashfunc(x), True)]
+
 
 class UniqueAppender(object):
     """Appends items to a collection ensuring uniqueness.
@@ -629,6 +756,12 @@ class UniqueAppender(object):
     def __iter__(self):
         return iter(self.data)
 
+def coerce_generator_arg(arg):
+    if len(arg) == 1 and isinstance(arg[0], types.GeneratorType):
+        return list(arg[0])
+    else:
+        return arg
+
 def to_list(x, default=None):
     if x is None:
         return default
@@ -636,6 +769,7 @@ def to_list(x, default=None):
         return [x]
     else:
         return x
+
 
 def to_set(x):
     if x is None:
@@ -645,6 +779,7 @@ def to_set(x):
     else:
         return x
 
+
 def to_column_set(x):
     if x is None:
         return column_set()
@@ -652,6 +787,7 @@ def to_column_set(x):
         return column_set(to_list(x))
     else:
         return x
+
 
 def update_copy(d, _new=None, **kw):
     """Copy the given dict and update with the given values."""
@@ -662,103 +798,18 @@ def update_copy(d, _new=None, **kw):
     d.update(**kw)
     return d
 
+
 def flatten_iterator(x):
     """Given an iterator of which further sub-elements may also be
     iterators, flatten the sub-elements into a single iterator.
 
     """
     for elem in x:
-        if not isinstance(elem, basestring) and hasattr(elem, '__iter__'):
+        if not isinstance(elem, str) and hasattr(elem, '__iter__'):
             for y in flatten_iterator(elem):
                 yield y
         else:
             yield elem
-
-class WeakIdentityMapping(weakref.WeakKeyDictionary):
-    """A WeakKeyDictionary with an object identity index.
-
-    Adds a .by_id dictionary to a regular WeakKeyDictionary.  Trades
-    performance during mutation operations for accelerated lookups by id().
-
-    The usual cautions about weak dictionaries and iteration also apply to
-    this subclass.
-
-    """
-    _none = symbol('none')
-
-    def __init__(self):
-        weakref.WeakKeyDictionary.__init__(self)
-        self.by_id = {}
-        self._weakrefs = {}
-
-    def __setitem__(self, object, value):
-        oid = id(object)
-        self.by_id[oid] = value
-        if oid not in self._weakrefs:
-            self._weakrefs[oid] = self._ref(object)
-        weakref.WeakKeyDictionary.__setitem__(self, object, value)
-
-    def __delitem__(self, object):
-        del self._weakrefs[id(object)]
-        del self.by_id[id(object)]
-        weakref.WeakKeyDictionary.__delitem__(self, object)
-
-    def setdefault(self, object, default=None):
-        value = weakref.WeakKeyDictionary.setdefault(self, object, default)
-        oid = id(object)
-        if value is default:
-            self.by_id[oid] = default
-        if oid not in self._weakrefs:
-            self._weakrefs[oid] = self._ref(object)
-        return value
-
-    def pop(self, object, default=_none):
-        if default is self._none:
-            value = weakref.WeakKeyDictionary.pop(self, object)
-        else:
-            value = weakref.WeakKeyDictionary.pop(self, object, default)
-        if id(object) in self.by_id:
-            del self._weakrefs[id(object)]
-            del self.by_id[id(object)]
-        return value
-
-    def popitem(self):
-        item = weakref.WeakKeyDictionary.popitem(self)
-        oid = id(item[0])
-        del self._weakrefs[oid]
-        del self.by_id[oid]
-        return item
-
-    def clear(self):
-        # Py2K
-        # in 3k, MutableMapping calls popitem()
-        self._weakrefs.clear()
-        self.by_id.clear()
-        # end Py2K
-        weakref.WeakKeyDictionary.clear(self)
-
-    def update(self, *a, **kw):
-        raise NotImplementedError
-
-    def _cleanup(self, wr, key=None):
-        if key is None:
-            key = wr.key
-        try:
-            del self._weakrefs[key]
-        except (KeyError, AttributeError):  # pragma: no cover
-            pass                            # pragma: no cover
-        try:
-            del self.by_id[key]
-        except (KeyError, AttributeError):  # pragma: no cover
-            pass                            # pragma: no cover
-
-    class _keyed_weakref(weakref.ref):
-        def __init__(self, object, callback):
-            weakref.ref.__init__(self, object, callback)
-            self.key = id(object)
-
-    def _ref(self, object):
-        return self._keyed_weakref(object, self._cleanup)
 
 
 class LRUCache(dict):
@@ -869,6 +920,7 @@ class ScopedRegistry(object):
         except KeyError:
             pass
 
+
 class ThreadLocalRegistry(ScopedRegistry):
     """A :class:`.ScopedRegistry` that uses a ``threading.local()``
     variable for storage.
@@ -897,9 +949,9 @@ class ThreadLocalRegistry(ScopedRegistry):
         except AttributeError:
             pass
 
+
 def _iter_id(iterable):
     """Generator: ((id(o), o) for o in iterable)."""
 
     for item in iterable:
         yield id(item), item
-

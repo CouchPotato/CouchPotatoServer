@@ -1,5 +1,5 @@
 # ext/mutable.py
-# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2014 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -7,13 +7,9 @@
 """Provide support for tracking of in-place changes to scalar values,
 which are propagated into ORM change events on owning parent objects.
 
-The :mod:`sqlalchemy.ext.mutable` extension replaces SQLAlchemy's legacy approach to in-place
-mutations of scalar values, established by the :class:`.types.MutableType`
-class as well as the ``mutable=True`` type flag, with a system that allows
-change events to be propagated from the value to the owning parent, thereby
-removing the need for the ORM to maintain copies of values as well as the very
-expensive requirement of scanning through all "mutable" values on each flush
-call, looking for changes.
+.. versionadded:: 0.7 :mod:`sqlalchemy.ext.mutable` replaces SQLAlchemy's
+   legacy approach to in-place mutations of scalar values; see
+   :ref:`07_migration_mutation_extension`.
 
 .. _mutable_scalars:
 
@@ -43,27 +39,27 @@ JSON strings before being persisted::
                 value = json.loads(value)
             return value
 
-The usage of ``json`` is only for the purposes of example. The :mod:`sqlalchemy.ext.mutable`
-extension can be used
+The usage of ``json`` is only for the purposes of example. The
+:mod:`sqlalchemy.ext.mutable` extension can be used
 with any type whose target Python type may be mutable, including
 :class:`.PickleType`, :class:`.postgresql.ARRAY`, etc.
 
 When using the :mod:`sqlalchemy.ext.mutable` extension, the value itself
-tracks all parents which reference it.  Here we will replace the usage
-of plain Python dictionaries with a dict subclass that implements
-the :class:`.Mutable` mixin::
+tracks all parents which reference it.  Below, we illustrate the a simple
+version of the :class:`.MutableDict` dictionary object, which applies
+the :class:`.Mutable` mixin to a plain Python dictionary::
 
     import collections
     from sqlalchemy.ext.mutable import Mutable
 
-    class MutationDict(Mutable, dict):
+    class MutableDict(Mutable, dict):
         @classmethod
         def coerce(cls, key, value):
-            "Convert plain dictionaries to MutationDict."
+            "Convert plain dictionaries to MutableDict."
 
-            if not isinstance(value, MutationDict):
+            if not isinstance(value, MutableDict):
                 if isinstance(value, dict):
-                    return MutationDict(value)
+                    return MutableDict(value)
 
                 # this call will raise ValueError
                 return Mutable.coerce(key, value)
@@ -84,23 +80,23 @@ the :class:`.Mutable` mixin::
 
 The above dictionary class takes the approach of subclassing the Python
 built-in ``dict`` to produce a dict
-subclass which routes all mutation events through ``__setitem__``. There are
-many variants on this approach, such as subclassing ``UserDict.UserDict``,
-the newer ``collections.MutableMapping``,  etc. The part that's important to this
-example is that the :meth:`.Mutable.changed` method is called whenever an in-place change to the
-datastructure takes place.
+subclass which routes all mutation events through ``__setitem__``.  There are
+variants on this approach, such as subclassing ``UserDict.UserDict`` or
+``collections.MutableMapping``; the part that's important to this example is
+that the :meth:`.Mutable.changed` method is called whenever an in-place
+change to the datastructure takes place.
 
 We also redefine the :meth:`.Mutable.coerce` method which will be used to
-convert any values that are not instances of ``MutationDict``, such
+convert any values that are not instances of ``MutableDict``, such
 as the plain dictionaries returned by the ``json`` module, into the
-appropriate type.  Defining this method is optional; we could just as well created our
-``JSONEncodedDict`` such that it always returns an instance of ``MutationDict``,
-and additionally ensured that all calling code uses ``MutationDict``
-explicitly.  When :meth:`.Mutable.coerce` is not overridden, any values
-applied to a parent object which are not instances of the mutable type
-will raise a ``ValueError``.
+appropriate type.  Defining this method is optional; we could just as well
+created our ``JSONEncodedDict`` such that it always returns an instance
+of ``MutableDict``, and additionally ensured that all calling code
+uses ``MutableDict`` explicitly.  When :meth:`.Mutable.coerce` is not
+overridden, any values applied to a parent object which are not instances
+of the mutable type will raise a ``ValueError``.
 
-Our new ``MutationDict`` type offers a class method
+Our new ``MutableDict`` type offers a class method
 :meth:`~.Mutable.as_mutable` which we can use within column metadata
 to associate with types. This method grabs the given type object or
 class and associates a listener that will detect all future mappings
@@ -111,7 +107,7 @@ attribute. Such as, with classical table metadata::
 
     my_data = Table('my_data', metadata,
         Column('id', Integer, primary_key=True),
-        Column('data', MutationDict.as_mutable(JSONEncodedDict))
+        Column('data', MutableDict.as_mutable(JSONEncodedDict))
     )
 
 Above, :meth:`~.Mutable.as_mutable` returns an instance of ``JSONEncodedDict``
@@ -139,7 +135,7 @@ There's no difference in usage when using declarative::
     class MyDataClass(Base):
         __tablename__ = 'my_data'
         id = Column(Integer, primary_key=True)
-        data = Column(MutationDict.as_mutable(JSONEncodedDict))
+        data = Column(MutableDict.as_mutable(JSONEncodedDict))
 
 Any in-place changes to the ``MyDataClass.data`` member
 will flag the attribute as "dirty" on the parent object::
@@ -155,13 +151,14 @@ will flag the attribute as "dirty" on the parent object::
     >>> assert m1 in sess.dirty
     True
 
-The ``MutationDict`` can be associated with all future instances
-of ``JSONEncodedDict`` in one step, using :meth:`~.Mutable.associate_with`.  This
-is similar to :meth:`~.Mutable.as_mutable` except it will intercept
-all occurrences of ``MutationDict`` in all mappings unconditionally, without
+The ``MutableDict`` can be associated with all future instances
+of ``JSONEncodedDict`` in one step, using
+:meth:`~.Mutable.associate_with`.  This is similar to
+:meth:`~.Mutable.as_mutable` except it will intercept all occurrences
+of ``MutableDict`` in all mappings unconditionally, without
 the need to declare it individually::
 
-    MutationDict.associate_with(JSONEncodedDict)
+    MutableDict.associate_with(JSONEncodedDict)
 
     class MyDataClass(Base):
         __tablename__ = 'my_data'
@@ -181,7 +178,7 @@ callbacks. In our case, this is a good thing, since if this dictionary were
 picklable, it could lead to an excessively large pickle size for our value
 objects that are pickled by themselves outside of the context of the parent.
 The developer responsibility here is only to provide a ``__getstate__`` method
-that excludes the :meth:`~.MutableBase._parents` collection from the pickle
+that excludes the :meth:`~MutableBase._parents` collection from the pickle
 stream::
 
     class MyMutableType(Mutable):
@@ -193,7 +190,7 @@ stream::
 With our dictionary example, we need to return the contents of the dict itself
 (and also restore them on __setstate__)::
 
-    class MutationDict(Mutable, dict):
+    class MutableDict(Mutable, dict):
         # ....
 
         def __getstate__(self):
@@ -331,7 +328,7 @@ Supporting Pickling
 
 As is the case with :class:`.Mutable`, the :class:`.MutableComposite` helper
 class uses a ``weakref.WeakKeyDictionary`` available via the
-:meth:`.MutableBase._parents` attribute which isn't picklable. If we need to
+:meth:`MutableBase._parents` attribute which isn't picklable. If we need to
 pickle instances of ``Point`` or its owning class ``Vertex``, we at least need
 to define a ``__getstate__`` that doesn't include the ``_parents`` dictionary.
 Below we define both a ``__getstate__`` and a ``__setstate__`` that package up
@@ -348,17 +345,21 @@ the minimal form of our ``Point`` class::
 
 As with :class:`.Mutable`, the :class:`.MutableComposite` augments the
 pickling process of the parent's object-relational state so that the
-:meth:`.MutableBase._parents` collection is restored to all ``Point`` objects.
+:meth:`MutableBase._parents` collection is restored to all ``Point`` objects.
 
 """
-from sqlalchemy.orm.attributes import flag_modified
-from sqlalchemy import event, types
-from sqlalchemy.orm import mapper, object_mapper, Mapper
-from sqlalchemy.util import memoized_property
+from ..orm.attributes import flag_modified
+from .. import event, types
+from ..orm import mapper, object_mapper, Mapper
+from ..util import memoized_property
 import weakref
 
+
 class MutableBase(object):
-    """Common base class to :class:`.Mutable` and :class:`.MutableComposite`."""
+    """Common base class to :class:`.Mutable`
+    and :class:`.MutableComposite`.
+
+    """
 
     @memoized_property
     def _parents(self):
@@ -398,7 +399,8 @@ class MutableBase(object):
         """
         if value is None:
             return None
-        raise ValueError("Attribute '%s' does not accept objects of type %s" % (key, type(value)))
+        msg = "Attribute '%s' does not accept objects of type %s"
+        raise ValueError(msg % (key, type(value)))
 
     @classmethod
     def _listen_on_attribute(cls, attribute, coerce, parent_cls):
@@ -456,12 +458,17 @@ class MutableBase(object):
                 for val in state_dict['ext.mutable.values']:
                     val._parents[state.obj()] = key
 
+        event.listen(parent_cls, 'load', load,
+            raw=True, propagate=True)
+        event.listen(parent_cls, 'refresh', load,
+            raw=True, propagate=True)
+        event.listen(attribute, 'set', set,
+            raw=True, retval=True, propagate=True)
+        event.listen(parent_cls, 'pickle', pickle,
+            raw=True, propagate=True)
+        event.listen(parent_cls, 'unpickle', unpickle,
+            raw=True, propagate=True)
 
-        event.listen(parent_cls, 'load', load, raw=True, propagate=True)
-        event.listen(parent_cls, 'refresh', load, raw=True, propagate=True)
-        event.listen(attribute, 'set', set, raw=True, retval=True, propagate=True)
-        event.listen(parent_cls, 'pickle', pickle, raw=True, propagate=True)
-        event.listen(parent_cls, 'unpickle', unpickle, raw=True, propagate=True)
 
 class Mutable(MutableBase):
     """Mixin that defines transparent propagation of change
@@ -490,23 +497,23 @@ class Mutable(MutableBase):
         """Associate this wrapper with all future mapped columns
         of the given type.
 
-        This is a convenience method that calls ``associate_with_attribute`` automatically.
+        This is a convenience method that calls
+        ``associate_with_attribute`` automatically.
 
         .. warning::
 
            The listeners established by this method are *global*
            to all mappers, and are *not* garbage collected.   Only use
-           :meth:`.associate_with` for types that are permanent to an application,
-           not with ad-hoc types else this will cause unbounded growth
-           in memory usage.
+           :meth:`.associate_with` for types that are permanent to an
+           application, not with ad-hoc types else this will cause unbounded
+           growth in memory usage.
 
         """
 
         def listen_for_type(mapper, class_):
-            for prop in mapper.iterate_properties:
-                if hasattr(prop, 'columns'):
-                    if isinstance(prop.columns[0].type, sqltype):
-                        cls.associate_with_attribute(getattr(class_, prop.key))
+            for prop in mapper.column_attrs:
+                if isinstance(prop.columns[0].type, sqltype):
+                    cls.associate_with_attribute(getattr(class_, prop.key))
 
         event.listen(mapper, 'mapper_configured', listen_for_type)
 
@@ -526,12 +533,12 @@ class Mutable(MutableBase):
             )
 
         Note that the returned type is always an instance, even if a class
-        is given, and that only columns which are declared specifically with that
-        type instance receive additional instrumentation.
+        is given, and that only columns which are declared specifically with
+        that type instance receive additional instrumentation.
 
         To associate a particular mutable type with all occurrences of a
         particular type, use the :meth:`.Mutable.associate_with` classmethod
-        of the particular :meth:`.Mutable` subclass to establish a global
+        of the particular :class:`.Mutable` subclass to establish a global
         association.
 
         .. warning::
@@ -546,14 +553,15 @@ class Mutable(MutableBase):
         sqltype = types.to_instance(sqltype)
 
         def listen_for_type(mapper, class_):
-            for prop in mapper.iterate_properties:
-                if hasattr(prop, 'columns'):
-                    if prop.columns[0].type is sqltype:
-                        cls.associate_with_attribute(getattr(class_, prop.key))
+            for prop in mapper.column_attrs:
+                if prop.columns[0].type is sqltype:
+                    cls.associate_with_attribute(getattr(class_, prop.key))
 
         event.listen(mapper, 'mapper_configured', listen_for_type)
 
         return sqltype
+
+
 
 class MutableComposite(MutableBase):
     """Mixin that defines transparent propagation of change
@@ -561,14 +569,6 @@ class MutableComposite(MutableBase):
     owning parent or parents.
 
     See the example in :ref:`mutable_composites` for usage information.
-
-    .. warning::
-
-       The listeners established by the :class:`.MutableComposite`
-       class are *global* to all mappers, and are *not* garbage collected.   Only use
-       :class:`.MutableComposite` for types that are permanent to an application,
-       not with ad-hoc types else this will cause unbounded growth
-       in memory usage.
 
     """
 
@@ -583,14 +583,52 @@ class MutableComposite(MutableBase):
                                     prop._attribute_keys):
                 setattr(parent, attr_name, value)
 
-
 def _setup_composite_listener():
     def _listen_for_type(mapper, class_):
         for prop in mapper.iterate_properties:
             if (hasattr(prop, 'composite_class') and
-                issubclass(prop.composite_class, MutableComposite)):
+                isinstance(prop.composite_class, type) and
+                 issubclass(prop.composite_class, MutableComposite)):
                 prop.composite_class._listen_on_attribute(
                     getattr(class_, prop.key), False, class_)
-    if not Mapper.dispatch.mapper_configured._contains(Mapper, _listen_for_type):
+    if not event.contains(Mapper, "mapper_configured", _listen_for_type):
         event.listen(Mapper, 'mapper_configured', _listen_for_type)
 _setup_composite_listener()
+
+
+class MutableDict(Mutable, dict):
+    """A dictionary type that implements :class:`.Mutable`.
+
+    .. versionadded:: 0.8
+
+    """
+
+    def __setitem__(self, key, value):
+        """Detect dictionary set events and emit change events."""
+        dict.__setitem__(self, key, value)
+        self.changed()
+
+    def __delitem__(self, key):
+        """Detect dictionary del events and emit change events."""
+        dict.__delitem__(self, key)
+        self.changed()
+
+    def clear(self):
+        dict.clear(self)
+        self.changed()
+
+    @classmethod
+    def coerce(cls, key, value):
+        """Convert plain dictionary to MutableDict."""
+        if not isinstance(value, MutableDict):
+            if isinstance(value, dict):
+                return MutableDict(value)
+            return Mutable.coerce(key, value)
+        else:
+            return value
+
+    def __getstate__(self):
+        return dict(self)
+
+    def __setstate__(self, state):
+        self.update(state)

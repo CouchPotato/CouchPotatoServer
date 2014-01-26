@@ -1,18 +1,18 @@
 # mssql/pyodbc.py
-# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2014 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 
 """
-Support for MS-SQL via pyodbc.
+.. dialect:: mssql+pyodbc
+    :name: PyODBC
+    :dbapi: pyodbc
+    :connectstring: mssql+pyodbc://<username>:<password>@<dsnname>
+    :url: http://pypi.python.org/pypi/pyodbc/
 
-pyodbc is available at:
-
-    http://pypi.python.org/pypi/pyodbc/
-
-Connecting
-^^^^^^^^^^
+Additional Connection Examples
+-------------------------------
 
 Examples of pyodbc connection string URLs:
 
@@ -81,7 +81,7 @@ the python shell. For example::
     'dsn%3Dmydsn%3BDatabase%3Ddb'
 
 Unicode Binds
-^^^^^^^^^^^^^
+-------------
 
 The current state of PyODBC on a unix backend with FreeTDS and/or
 EasySoft is poor regarding unicode; different OS platforms and versions of UnixODBC
@@ -111,23 +111,23 @@ for unix + PyODBC.
 
 """
 
-from sqlalchemy.dialects.mssql.base import MSExecutionContext, MSDialect
-from sqlalchemy.connectors.pyodbc import PyODBCConnector
-from sqlalchemy import types as sqltypes, util
+from .base import MSExecutionContext, MSDialect
+from ...connectors.pyodbc import PyODBCConnector
+from ... import types as sqltypes, util
 import decimal
 
-class _MSNumeric_pyodbc(sqltypes.Numeric):
+class _ms_numeric_pyodbc(object):
+
     """Turns Decimals with adjusted() < 0 or > 7 into strings.
 
-    This is the only method that is proven to work with Pyodbc+MSSQL
-    without crashing (floats can be used but seem to cause sporadic
-    crashes).
+    The routines here are needed for older pyodbc versions
+    as well as current mxODBC versions.
 
     """
 
     def bind_processor(self, dialect):
 
-        super_process = super(_MSNumeric_pyodbc, self).\
+        super_process = super(_ms_numeric_pyodbc, self).\
                         bind_processor(dialect)
 
         if not dialect._need_decimal_fix:
@@ -164,7 +164,7 @@ class _MSNumeric_pyodbc(sqltypes.Numeric):
             result = "%s%s%s" % (
                     (value < 0 and '-' or ''),
                     "".join([str(s) for s in _int]),
-                    "0" * (value.adjusted() - (len(_int)-1)))
+                    "0" * (value.adjusted() - (len(_int) - 1)))
         else:
             if (len(_int) - 1) > value.adjusted():
                 result = "%s%s.%s" % (
@@ -180,6 +180,11 @@ class _MSNumeric_pyodbc(sqltypes.Numeric):
                     [str(s) for s in _int][0:value.adjusted() + 1]))
         return result
 
+class _MSNumeric_pyodbc(_ms_numeric_pyodbc, sqltypes.Numeric):
+    pass
+
+class _MSFloat_pyodbc(_ms_numeric_pyodbc, sqltypes.Float):
+    pass
 
 class MSExecutionContext_pyodbc(MSExecutionContext):
     _embedded_scope_identity = False
@@ -219,7 +224,7 @@ class MSExecutionContext_pyodbc(MSExecutionContext):
                     # without closing it (FreeTDS particularly)
                     row = self.cursor.fetchall()[0]
                     break
-                except self.dialect.dbapi.Error, e:
+                except self.dialect.dbapi.Error as e:
                     # no way around this - nextset() consumes the previous set
                     # so we need to just keep flipping
                     self.cursor.nextset()
@@ -238,11 +243,12 @@ class MSDialect_pyodbc(PyODBCConnector, MSDialect):
     colspecs = util.update_copy(
         MSDialect.colspecs,
         {
-            sqltypes.Numeric:_MSNumeric_pyodbc
+            sqltypes.Numeric: _MSNumeric_pyodbc,
+            sqltypes.Float: _MSFloat_pyodbc
         }
     )
 
-    def __init__(self, description_encoding='latin-1', **params):
+    def __init__(self, description_encoding=None, **params):
         super(MSDialect_pyodbc, self).__init__(**params)
         self.description_encoding = description_encoding
         self.use_scope_identity = self.use_scope_identity and \

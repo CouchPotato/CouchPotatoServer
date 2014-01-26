@@ -1,23 +1,16 @@
 # mysql/zxjdbc.py
-# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2014 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 
-"""Support for the MySQL database via Jython's zxjdbc JDBC connector.
+"""
 
-JDBC Driver
------------
-
-The official MySQL JDBC driver is at
-http://dev.mysql.com/downloads/connector/j/.
-
-Connecting
-----------
-
-Connect string format:
-
-    mysql+zxjdbc://<user>:<password>@<hostname>[:<port>]/<database>
+.. dialect:: mysql+zxjdbc
+    :name: zxjdbc for Jython
+    :dbapi: zxjdbc
+    :connectstring: mysql+zxjdbc://<user>:<password>@<hostname>[:<port>]/<database>
+    :driverurl: http://dev.mysql.com/downloads/connector/j/
 
 Character Sets
 --------------
@@ -31,9 +24,10 @@ overriden via a ``create_engine`` URL parameter.
 """
 import re
 
-from sqlalchemy import types as sqltypes, util
-from sqlalchemy.connectors.zxJDBC import ZxJDBCConnector
-from sqlalchemy.dialects.mysql.base import BIT, MySQLDialect, MySQLExecutionContext
+from ... import types as sqltypes, util
+from ...connectors.zxJDBC import ZxJDBCConnector
+from .base import BIT, MySQLDialect, MySQLExecutionContext
+
 
 class _ZxJDBCBit(BIT):
     def result_processor(self, dialect, coltype):
@@ -43,7 +37,7 @@ class _ZxJDBCBit(BIT):
                 return value
             if isinstance(value, bool):
                 return int(value)
-            v = 0L
+            v = 0
             for i in value:
                 v = v << 8 | (i & 0xff)
             value = v
@@ -103,7 +97,7 @@ class MySQLDialect_zxjdbc(ZxJDBCConnector, MySQLDialect):
         if c:
             return int(c)
 
-    def _get_server_version_info(self,connection):
+    def _get_server_version_info(self, connection):
         dbapi_con = connection.connection
         version = []
         r = re.compile('[.\-]')

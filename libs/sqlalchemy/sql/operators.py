@@ -1,5 +1,5 @@
 # sql/operators.py
-# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2014 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -9,21 +9,29 @@
 
 """Defines operators used in SQL expressions."""
 
+from .. import util
+
+
 from operator import (
-    and_, or_, inv, add, mul, sub, mod, truediv, lt, le, ne, gt, ge, eq, neg
+    and_, or_, inv, add, mul, sub, mod, truediv, lt, le, ne, gt, ge, eq, neg,
+    getitem, lshift, rshift
     )
 
-# Py2K
-from operator import (div,)
-# end Py2K
+if util.py2k:
+    from operator import div
+else:
+    div = truediv
 
-from sqlalchemy.util import symbol
+
 
 class Operators(object):
     """Base of comparison and logical operators.
 
-    Implements base methods :meth:`operate` and :meth:`reverse_operate`,
-    as well as :meth:`__and__`, :meth:`__or__`, :meth:`__invert__`.
+    Implements base methods :meth:`~sqlalchemy.sql.operators.Operators.operate` and
+    :meth:`~sqlalchemy.sql.operators.Operators.reverse_operate`, as well as
+    :meth:`~sqlalchemy.sql.operators.Operators.__and__`,
+    :meth:`~sqlalchemy.sql.operators.Operators.__or__`,
+    :meth:`~sqlalchemy.sql.operators.Operators.__invert__`.
 
     Usually is used via its most common subclass
     :class:`.ColumnOperators`.
@@ -94,7 +102,7 @@ class Operators(object):
         """
         return self.operate(inv)
 
-    def op(self, opstring):
+    def op(self, opstring, precedence=0):
         """produce a generic operator function.
 
         e.g.::
@@ -105,21 +113,37 @@ class Operators(object):
 
           somecolumn * 5
 
-        :param operator: a string which will be output as the infix operator
-          between this :class:`.ClauseElement` and the expression passed to the
-          generated function.
-
         This function can also be used to make bitwise operators explicit. For
         example::
 
           somecolumn.op('&')(0xff)
 
-        is a bitwise AND of the value in somecolumn.
+        is a bitwise AND of the value in ``somecolumn``.
+
+        :param operator: a string which will be output as the infix operator
+          between this element and the expression passed to the
+          generated function.
+
+        :param precedence: precedence to apply to the operator, when
+         parenthesizing expressions.  A lower number will cause the expression
+         to be parenthesized when applied against another operator with
+         higher precedence.  The default value of ``0`` is lower than all
+         operators except for the comma (``,``) and ``AS`` operators.
+         A value of 100 will be higher or equal to all operators, and -100
+         will be lower than or equal to all operators.
+
+         .. versionadded:: 0.8 - added the 'precedence' argument.
+
+        .. seealso::
+
+            :ref:`types_operators`
 
         """
-        def _op(b):
-            return self.operate(op, opstring, b)
-        return _op
+        operator = custom_op(opstring, precedence)
+
+        def against(other):
+            return operator(self, other)
+        return against
 
     def operate(self, op, *other, **kwargs):
         """Operate on an argument.
@@ -155,11 +179,48 @@ class Operators(object):
         """
         raise NotImplementedError(str(op))
 
-class ColumnOperators(Operators):
-    """Defines comparison and math operations.
 
-    By default all methods call down to
-    :meth:`Operators.operate` or :meth:`Operators.reverse_operate`
+class custom_op(object):
+    """Represent a 'custom' operator.
+
+    :class:`.custom_op` is normally instantitated when the
+    :meth:`.ColumnOperators.op` method is used to create a
+    custom operator callable.  The class can also be used directly
+    when programmatically constructing expressions.   E.g.
+    to represent the "factorial" operation::
+
+        from sqlalchemy.sql import UnaryExpression
+        from sqlalchemy.sql import operators
+        from sqlalchemy import Numeric
+
+        unary = UnaryExpression(table.c.somecolumn,
+                modifier=operators.custom_op("!"),
+                type_=Numeric)
+
+    """
+    __name__ = 'custom_op'
+
+    def __init__(self, opstring, precedence=0):
+        self.opstring = opstring
+        self.precedence = precedence
+
+    def __eq__(self, other):
+        return isinstance(other, custom_op) and \
+            other.opstring == self.opstring
+
+    def __hash__(self):
+        return id(self)
+
+    def __call__(self, left, right, **kw):
+        return left.operate(self, right, **kw)
+
+
+class ColumnOperators(Operators):
+    """Defines boolean, comparison, and other operators for
+    :class:`.ColumnElement` expressions.
+
+    By default, all methods call down to
+    :meth:`.operate` or :meth:`.reverse_operate`,
     passing in the appropriate operator function from the
     Python builtin ``operator`` module or
     a SQLAlchemy-specific operator function from
@@ -174,15 +235,21 @@ class ColumnOperators(Operators):
         def eq(a, b):
             return a == b
 
-    A SQLAlchemy construct like :class:`.ColumnElement` ultimately
+    The core column expression unit :class:`.ColumnElement`
     overrides :meth:`.Operators.operate` and others
-    to return further :class:`.ClauseElement` constructs,
+    to return further :class:`.ColumnElement` constructs,
     so that the ``==`` operation above is replaced by a clause
     construct.
 
-    The docstrings here will describe column-oriented
-    behavior of each operator.  For ORM-based operators
-    on related objects and collections, see :class:`.RelationshipProperty.Comparator`.
+    See also:
+
+    :ref:`types_operators`
+
+    :attr:`.TypeEngine.comparator_factory`
+
+    :class:`.ColumnOperators`
+
+    :class:`.PropComparator`
 
     """
 
@@ -249,6 +316,33 @@ class ColumnOperators(Operators):
         """
         return self.operate(neg)
 
+    def __getitem__(self, index):
+        """Implement the [] operator.
+
+        This can be used by some database-specific types
+        such as Postgresql ARRAY and HSTORE.
+
+        """
+        return self.operate(getitem, index)
+
+    def __lshift__(self, other):
+        """implement the << operator.
+
+        Not used by SQLAlchemy core, this is provided
+        for custom operator systems which want to use
+        << as an extension point.
+        """
+        return self.operate(lshift, other)
+
+    def __rshift__(self, other):
+        """implement the >> operator.
+
+        Not used by SQLAlchemy core, this is provided
+        for custom operator systems which want to use
+        >> as an extension point.
+        """
+        return self.operate(rshift, other)
+
     def concat(self, other):
         """Implement the 'concat' operator.
 
@@ -263,6 +357,20 @@ class ColumnOperators(Operators):
 
         In a column context, produces the clause ``a LIKE other``.
 
+        E.g.::
+
+            select([sometable]).where(sometable.c.column.like("%foobar%"))
+
+        :param other: expression to be compared
+        :param escape: optional escape character, renders the ``ESCAPE``
+          keyword, e.g.::
+
+            somecolumn.like("foo/%bar", escape="/")
+
+        .. seealso::
+
+            :meth:`.ColumnOperators.ilike`
+
         """
         return self.operate(like_op, other, escape=escape)
 
@@ -270,6 +378,20 @@ class ColumnOperators(Operators):
         """Implement the ``ilike`` operator.
 
         In a column context, produces the clause ``a ILIKE other``.
+
+        E.g.::
+
+            select([sometable]).where(sometable.c.column.ilike("%foobar%"))
+
+        :param other: expression to be compared
+        :param escape: optional escape character, renders the ``ESCAPE``
+          keyword, e.g.::
+
+            somecolumn.ilike("foo/%bar", escape="/")
+
+        .. seealso::
+
+            :meth:`.ColumnOperators.like`
 
         """
         return self.operate(ilike_op, other, escape=escape)
@@ -283,6 +405,51 @@ class ColumnOperators(Operators):
 
         """
         return self.operate(in_op, other)
+
+    def notin_(self, other):
+        """implement the ``NOT IN`` operator.
+
+        This is equivalent to using negation with :meth:`.ColumnOperators.in_`,
+        i.e. ``~x.in_(y)``.
+
+        .. versionadded:: 0.8
+
+        .. seealso::
+
+            :meth:`.ColumnOperators.in_`
+
+        """
+        return self.operate(notin_op, other)
+
+    def notlike(self, other, escape=None):
+        """implement the ``NOT LIKE`` operator.
+
+        This is equivalent to using negation with
+        :meth:`.ColumnOperators.like`, i.e. ``~x.like(y)``.
+
+        .. versionadded:: 0.8
+
+        .. seealso::
+
+            :meth:`.ColumnOperators.like`
+
+        """
+        return self.operate(notlike_op, other, escape=escape)
+
+    def notilike(self, other, escape=None):
+        """implement the ``NOT ILIKE`` operator.
+
+        This is equivalent to using negation with
+        :meth:`.ColumnOperators.ilike`, i.e. ``~x.ilike(y)``.
+
+        .. versionadded:: 0.8
+
+        .. seealso::
+
+            :meth:`.ColumnOperators.ilike`
+
+        """
+        return self.operate(notilike_op, other, escape=escape)
 
     def is_(self, other):
         """Implement the ``IS`` operator.
@@ -376,7 +543,7 @@ class ColumnOperators(Operators):
     def __radd__(self, other):
         """Implement the ``+`` operator in reverse.
 
-        See :meth:`__add__`.
+        See :meth:`.ColumnOperators.__add__`.
 
         """
         return self.reverse_operate(add, other)
@@ -384,7 +551,7 @@ class ColumnOperators(Operators):
     def __rsub__(self, other):
         """Implement the ``-`` operator in reverse.
 
-        See :meth:`__sub__`.
+        See :meth:`.ColumnOperators.__sub__`.
 
         """
         return self.reverse_operate(sub, other)
@@ -392,7 +559,7 @@ class ColumnOperators(Operators):
     def __rmul__(self, other):
         """Implement the ``*`` operator in reverse.
 
-        See :meth:`__mul__`.
+        See :meth:`.ColumnOperators.__mul__`.
 
         """
         return self.reverse_operate(mul, other)
@@ -400,7 +567,7 @@ class ColumnOperators(Operators):
     def __rdiv__(self, other):
         """Implement the ``/`` operator in reverse.
 
-        See :meth:`__div__`.
+        See :meth:`.ColumnOperators.__div__`.
 
         """
         return self.reverse_operate(div, other)
@@ -411,7 +578,10 @@ class ColumnOperators(Operators):
         return self.operate(between_op, cleft, cright)
 
     def distinct(self):
-        """Produce a :func:`~.expression.distinct` clause against the parent object."""
+        """Produce a :func:`~.expression.distinct` clause against the
+        parent object.
+
+        """
         return self.operate(distinct_op)
 
     def __add__(self, other):
@@ -421,7 +591,7 @@ class ColumnOperators(Operators):
         if the parent object has non-string affinity.
         If the parent object has a string affinity,
         produces the concatenation operator, ``a || b`` -
-        see :meth:`concat`.
+        see :meth:`.ColumnOperators.concat`.
 
         """
         return self.operate(add, other)
@@ -469,90 +639,142 @@ class ColumnOperators(Operators):
     def __rtruediv__(self, other):
         """Implement the ``//`` operator in reverse.
 
-        See :meth:`__truediv__`.
+        See :meth:`.ColumnOperators.__truediv__`.
 
         """
         return self.reverse_operate(truediv, other)
 
+
 def from_():
     raise NotImplementedError()
+
 
 def as_():
     raise NotImplementedError()
 
+
 def exists():
+    raise NotImplementedError()
+
+
+def istrue(a):
+    raise NotImplementedError()
+
+def isfalse(a):
     raise NotImplementedError()
 
 def is_(a, b):
     return a.is_(b)
 
+
 def isnot(a, b):
     return a.isnot(b)
+
 
 def collate(a, b):
     return a.collate(b)
 
+
 def op(a, opstring, b):
     return a.op(opstring)(b)
+
 
 def like_op(a, b, escape=None):
     return a.like(b, escape=escape)
 
+
 def notlike_op(a, b, escape=None):
-    return ~a.like(b, escape=escape)
+    return a.notlike(b, escape=escape)
+
 
 def ilike_op(a, b, escape=None):
     return a.ilike(b, escape=escape)
 
+
 def notilike_op(a, b, escape=None):
-    return ~a.ilike(b, escape=escape)
+    return a.notilike(b, escape=escape)
+
 
 def between_op(a, b, c):
     return a.between(b, c)
 
+
 def in_op(a, b):
     return a.in_(b)
 
+
 def notin_op(a, b):
-    return ~a.in_(b)
+    return a.notin_(b)
+
 
 def distinct_op(a):
     return a.distinct()
 
+
 def startswith_op(a, b, escape=None):
     return a.startswith(b, escape=escape)
+
+
+def notstartswith_op(a, b, escape=None):
+    return ~a.startswith(b, escape=escape)
+
 
 def endswith_op(a, b, escape=None):
     return a.endswith(b, escape=escape)
 
+
+def notendswith_op(a, b, escape=None):
+    return ~a.endswith(b, escape=escape)
+
+
 def contains_op(a, b, escape=None):
     return a.contains(b, escape=escape)
+
+
+def notcontains_op(a, b, escape=None):
+    return ~a.contains(b, escape=escape)
+
 
 def match_op(a, b):
     return a.match(b)
 
+
 def comma_op(a, b):
     raise NotImplementedError()
+
 
 def concat_op(a, b):
     return a.concat(b)
 
+
 def desc_op(a):
     return a.desc()
+
 
 def asc_op(a):
     return a.asc()
 
+
 def nullsfirst_op(a):
     return a.nullsfirst()
+
 
 def nullslast_op(a):
     return a.nullslast()
 
+
 _commutative = set([eq, ne, add, mul])
+
+_comparison = set([eq, ne, lt, gt, ge, le, between_op])
+
+
+def is_comparison(op):
+    return op in _comparison
+
 
 def is_commutative(op):
     return op in _commutative
+
 
 def is_ordering_modifier(op):
     return op in (asc_op, desc_op,
@@ -560,53 +782,73 @@ def is_ordering_modifier(op):
 
 _associative = _commutative.union([concat_op, and_, or_])
 
+_natural_self_precedent = _associative.union([getitem])
+"""Operators where if we have (a op b) op c, we don't want to
+parenthesize (a op b).
 
-_smallest = symbol('_smallest')
-_largest = symbol('_largest')
+"""
+
+_asbool = util.symbol('_asbool', canonical=-10)
+_smallest = util.symbol('_smallest', canonical=-100)
+_largest = util.symbol('_largest', canonical=100)
 
 _PRECEDENCE = {
     from_: 15,
-    mul: 7,
-    truediv: 7,
-    # Py2K
-    div: 7,
-    # end Py2K
-    mod: 7,
-    neg: 7,
-    add: 6,
-    sub: 6,
+    getitem: 15,
+    mul: 8,
+    truediv: 8,
+    div: 8,
+    mod: 8,
+    neg: 8,
+    add: 7,
+    sub: 7,
+
     concat_op: 6,
     match_op: 6,
-    ilike_op: 5,
-    notilike_op: 5,
-    like_op: 5,
-    notlike_op: 5,
-    in_op: 5,
-    notin_op: 5,
-    is_: 5,
-    isnot: 5,
+
+    ilike_op: 6,
+    notilike_op: 6,
+    like_op: 6,
+    notlike_op: 6,
+    in_op: 6,
+    notin_op: 6,
+
+    is_: 6,
+    isnot: 6,
+
     eq: 5,
     ne: 5,
     gt: 5,
     lt: 5,
     ge: 5,
     le: 5,
+
     between_op: 5,
     distinct_op: 5,
     inv: 5,
+    istrue: 5,
+    isfalse: 5,
     and_: 3,
     or_: 2,
     comma_op: -1,
-    collate: 7,
+
+    desc_op: 3,
+    asc_op: 3,
+    collate: 4,
+
     as_: -1,
     exists: 0,
-    _smallest: -1000,
-    _largest: 1000
+    _asbool: -10,
+    _smallest: _smallest,
+    _largest: _largest
 }
 
+
 def is_precedent(operator, against):
-    if operator is against and operator in _associative:
+    if operator is against and operator in _natural_self_precedent:
         return False
     else:
-        return (_PRECEDENCE.get(operator, _PRECEDENCE[_smallest]) <=
-            _PRECEDENCE.get(against, _PRECEDENCE[_largest]))
+        return (_PRECEDENCE.get(operator,
+                getattr(operator, 'precedence', _smallest)) <=
+            _PRECEDENCE.get(against,
+                getattr(against, 'precedence', _largest)))

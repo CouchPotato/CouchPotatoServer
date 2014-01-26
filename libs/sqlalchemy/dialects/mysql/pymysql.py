@@ -1,21 +1,16 @@
 # mysql/pymysql.py
-# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2014 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 
-"""Support for the MySQL database via the pymysql adapter.
+"""
 
-pymysql is available at:
-
-    http://code.google.com/p/pymysql/
-
-Connecting
-----------
-
-Connect string::
-
-    mysql+pymysql://<username>:<password>@<host>/<dbname>[?<options>]
+.. dialect:: mysql+pymysql
+    :name: PyMySQL
+    :dbapi: pymysql
+    :connectstring: mysql+pymysql://<username>:<password>@<host>/<dbname>[?<options>]
+    :url: http://code.google.com/p/pymysql/
 
 MySQL-Python Compatibility
 --------------------------
@@ -26,14 +21,24 @@ the pymysql driver as well.
 
 """
 
-from sqlalchemy.dialects.mysql.mysqldb import MySQLDialect_mysqldb
+from .mysqldb import MySQLDialect_mysqldb
+from ...util import py3k
 
 class MySQLDialect_pymysql(MySQLDialect_mysqldb):
     driver = 'pymysql'
 
     description_encoding = None
+    if py3k:
+        supports_unicode_statements = True
+
     @classmethod
     def dbapi(cls):
         return __import__('pymysql')
+
+    if py3k:
+        def _extract_error_code(self, exception):
+            if isinstance(exception.args[0], Exception):
+                exception = exception.args[0]
+            return exception.args[0]
 
 dialect = MySQLDialect_pymysql
