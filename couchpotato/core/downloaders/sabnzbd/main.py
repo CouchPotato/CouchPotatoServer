@@ -20,7 +20,7 @@ class Sabnzbd(Downloader):
     def test(self):
         try:
             sab_data = self.call({
-                'mode': 'version',
+                'mode': 'qstatus',
             })
         except:
             return False
