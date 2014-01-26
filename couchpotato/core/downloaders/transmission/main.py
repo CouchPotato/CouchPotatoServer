@@ -20,7 +20,7 @@ class Transmission(Downloader):
     trpc = None
     testable = True
 
-    def connect(self, reconnect = True):
+    def connect(self, reconnect = False):
         # Load host from config and split out port.
         host = cleanHost(self.conf('host'), protocol = False).split(':')
         if not isInt(host[1]):
