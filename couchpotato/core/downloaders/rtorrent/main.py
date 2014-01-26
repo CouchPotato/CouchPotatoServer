@@ -42,7 +42,7 @@ class rTorrent(Downloader):
         if self.rt is not None:
             return self.rt
 
-        url = cleanHost(self.conf('host'), protocol = True, ssl = self.conf('ssl')) + '/' + self.conf('rpc_url').strip('/ ') + '/'
+        url = cleanHost(self.conf('host'), protocol = True, ssl = self.conf('ssl')) + self.conf('rpc_url')
 
         if self.conf('username') and self.conf('password'):
             self.rt = RTorrent(
