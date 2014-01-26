@@ -1,3 +1,4 @@
+import traceback
 from couchpotato.core.helpers.variable import getImdb, md5, cleanHost
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.base import YarrProvider
@@ -32,7 +33,7 @@ class TorrentProvider(YarrProvider):
                 try:
                     data = self.urlopen(proxy, timeout = 3, show_error = False)
                 except:
-                    log.debug('Failed %s proxy %s', (self.getName(), proxy))
+                    log.debug('Failed %s proxy %s: %s', (self.getName(), proxy, traceback.format_exc()))
 
                 if self.correctProxy(data):
                     log.debug('Using proxy for %s: %s', (self.getName(), proxy))

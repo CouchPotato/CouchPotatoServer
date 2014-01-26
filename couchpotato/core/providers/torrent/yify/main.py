@@ -17,10 +17,11 @@ class Yify(TorrentMagnetProvider):
     http_time_between_calls = 1  #seconds
 
     proxy_list = [
-        'https://yify-torrents.im',
         'http://yify.unlocktorrent.com',
         'http://yify.ftwnet.co.uk',
         'http://yify-torrents.com.come.in',
+        'http://yts.re',
+        'https://yify-torrents.im',
     ]
 
     def search(self, movie, quality):
@@ -61,4 +62,5 @@ class Yify(TorrentMagnetProvider):
                 log.error('Failed getting results from %s: %s', (self.getName(), traceback.format_exc()))
 
     def correctProxy(self, data):
-        return 'title="YIFY-Torrents RSS feed"' in data
+        data = data.lower()
+        return 'yify' in data and 'yts' in data
