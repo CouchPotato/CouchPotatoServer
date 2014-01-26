@@ -118,20 +118,18 @@ Page.Settings = new Class({
 	create: function(json){
 		var self = this;
 
-		self.el.adopt(
-			self.tabs_container = new Element('ul.tabs'),
-			self.containers = new Element('form.uniForm.containers').adopt(
-				new Element('label.advanced_toggle').adopt(
-					new Element('span', {
-						'text': 'Show advanced settings'
-					}),
-					self.advanced_toggle = new Element('input[type=checkbox].inlay', {
-						'checked': +Cookie.read('advanced_toggle_checked'),
-						'events': {
-							'change': self.showAdvanced.bind(self)
-						}
-					})
-				)
+		self.tabs_container = new Element('ul.tabs');
+		self.containers = new Element('form.uniForm.containers').adopt(
+			new Element('label.advanced_toggle').adopt(
+				new Element('span', {
+					'text': 'Show advanced settings'
+				}),
+				self.advanced_toggle = new Element('input[type=checkbox].inlay', {
+					'checked': +Cookie.read('advanced_toggle_checked'),
+					'events': {
+						'change': self.showAdvanced.bind(self)
+					}
+				})
 			)
 		);
 		self.showAdvanced();
@@ -197,8 +195,15 @@ Page.Settings = new Class({
 			});
 		});
 
-		self.fireEvent('create');
-		self.openTab();
+		setTimeout(function(){
+			self.fireEvent('create');
+			self.openTab();
+
+			self.el.adopt(
+				self.tabs_container,
+				self.containers
+			);
+		}, 0);
 
 	},
 
