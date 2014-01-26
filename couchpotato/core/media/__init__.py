@@ -1,3 +1,4 @@
+import traceback
 from couchpotato import get_session
 from couchpotato.core.event import addEvent, fireEventAsync, fireEvent
 from couchpotato.core.plugins.base import Plugin
@@ -26,25 +27,33 @@ class MediaBase(Plugin):
     def createOnComplete(self, id):
 
         def onComplete():
-            db = get_session()
-            media = db.query(Media).filter_by(id = id).first()
-            media_dict = media.to_dict(self.default_dict)
-            event_name = '%s.searcher.single' % media.type
-            db.expire_all()
+            try:
+                db = get_session()
+                media = db.query(Media).filter_by(id = id).first()
+                media_dict = media.to_dict(self.default_dict)
+                event_name = '%s.searcher.single' % media.type
 
-            fireEvent(event_name, media_dict, on_complete = self.createNotifyFront(id))
+                fireEvent(event_name, media_dict, on_complete = self.createNotifyFront(id))
+            except:
+                log.error('Failed creating onComplete: %s', traceback.format_exc())
+            finally:
+                db.close()
 
         return onComplete
 
     def createNotifyFront(self, media_id):
 
         def notifyFront():
-            db = get_session()
-            media = db.query(Media).filter_by(id = media_id).first()
-            media_dict = media.to_dict(self.default_dict)
-            event_name = '%s.update' % media.type
-            db.expire_all()
+            try:
+                db = get_session()
+                media = db.query(Media).filter_by(id = media_id).first()
+                media_dict = media.to_dict(self.default_dict)
+                event_name = '%s.update' % media.type
 
-            fireEvent('notify.frontend', type = event_name, data = media_dict)
+                fireEvent('notify.frontend', type = event_name, data = media_dict)
+            except:
+                log.error('Failed creating onComplete: %s', traceback.format_exc())
+            finally:
+                db.close()
 
         return notifyFront

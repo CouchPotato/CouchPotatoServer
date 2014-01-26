@@ -48,8 +48,8 @@ def addView(route, func, static = False):
     views[route] = func
 
 
-def get_session(engine = None):
-    return Env.getSession(engine)
+def get_session():
+    return Env.getSession()
 
 
 # Web view
