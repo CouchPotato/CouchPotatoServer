@@ -17,7 +17,7 @@ class Yify(TorrentMagnetProvider):
     http_time_between_calls = 1 #seconds
     
     proxy_list = [
-        'http://static.yts.re.prx2.unblocksit.es/',
+        'http://static.yts.re.prx2.unblocksit.es',
            ]
 
     def search(self, movie, quality):
