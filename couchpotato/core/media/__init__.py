@@ -1,8 +1,10 @@
 import traceback
-from couchpotato import get_session
+from couchpotato import get_session, CPLog
 from couchpotato.core.event import addEvent, fireEventAsync, fireEvent
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Media
+
+log = CPLog(__name__)
 
 
 class MediaBase(Plugin):
