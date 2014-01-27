@@ -292,7 +292,7 @@ class Release(Base, TableHelper):
     files = relationship('File', secondary = release_files)
     info = relationship('ReleaseInfo') #, cascade = 'all, delete-orphan')
 
-    def to_dict(self, deep = None, exclude = None):
+    def to_dict(self, deep = None, exclude = None, **kwargs):
         if not exclude: exclude = []
         if not deep: deep = {}
 
@@ -373,7 +373,7 @@ class Profile(Base, TableHelper):
     movie = relationship('Movie')
     types = relationship('ProfileType', order_by="asc(ProfileType.order)") #, cascade = 'all, delete-orphan')
 
-    def to_dict(self, deep = None, exclude = None):
+    def to_dict(self, deep = None, exclude = None, **kwargs):
         if not exclude: exclude = []
         if not deep: deep = {}
 
