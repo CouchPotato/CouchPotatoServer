@@ -17,11 +17,8 @@ class Yify(TorrentMagnetProvider):
     http_time_between_calls = 1 #seconds
     
     proxy_list = [
-        'https://yify-torrents.im',
-        'http://yify.unlocktorrent.com',
-        'http://yify.ftwnet.co.uk',
-        'http://yify-torrents.com.come.in',
-    ]
+        'http://static.yts.re.prx2.unblocksit.es',
+           ]
 
     def search(self, movie, quality):
 
