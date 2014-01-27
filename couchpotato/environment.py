@@ -2,6 +2,7 @@ from couchpotato.core.event import fireEvent, addEvent
 from couchpotato.core.loader import Loader
 from couchpotato.core.settings import Settings
 from sqlalchemy.engine import create_engine
+from sqlalchemy.orm import scoped_session
 from sqlalchemy.orm.session import sessionmaker
 import os
 
@@ -24,6 +25,7 @@ class Env(object):
     _daemonized = False
     _desktop = None
     _engine = None
+    _session = None
 
     ''' Data paths and directories '''
     _app_dir = ""
@@ -54,7 +56,13 @@ class Env(object):
 
     @staticmethod
     def getSession():
-        session = sessionmaker(bind = Env.getEngine())
+        existing_session = Env.get('session')
+        if existing_session:
+            return existing_session()
+
+        session = scoped_session(sessionmaker(bind = Env.getEngine()))
+        Env.set('session', session)
+
         return session()
 
     @staticmethod
