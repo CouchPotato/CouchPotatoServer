@@ -55,7 +55,7 @@ class StatusPlugin(Plugin):
         db = get_session()
         status = db.query(Status).filter_by(id = id).first()
         status_dict = status.to_dict()
-        #db.close()
+        db.close()
 
         return status_dict
 
@@ -73,6 +73,7 @@ class StatusPlugin(Plugin):
             # Update cache
             self.status_cached[status.identifier] = s
 
+        db.close()
         return temp
 
     def get(self, identifiers):

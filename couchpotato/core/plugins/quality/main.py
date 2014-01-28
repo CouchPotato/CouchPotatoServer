@@ -78,6 +78,8 @@ class QualityPlugin(Plugin):
             temp.append(q)
 
         self.cached_qualities = temp
+
+        db.close()
         return temp
 
     def single(self, identifier = ''):
@@ -89,6 +91,7 @@ class QualityPlugin(Plugin):
         if quality:
             quality_dict = dict(self.getQuality(quality.identifier), **quality.to_dict())
 
+        db.close()
         return quality_dict
 
     def getQuality(self, identifier):

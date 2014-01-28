@@ -101,6 +101,8 @@ class MediaPlugin(MediaBase):
             def handler():
                 fireEvent(event, identifier = identifier, default_title = default_title, on_complete = self.createOnComplete(id))
 
+        db.close()
+
         if handler:
             return handler
 
@@ -124,6 +126,7 @@ class MediaPlugin(MediaBase):
         if m:
             results = m.to_dict(self.default_dict)
 
+        db.close()
         return results
 
     def getView(self, id = None, **kwargs):
@@ -259,6 +262,7 @@ class MediaPlugin(MediaBase):
                 'releases_count': releases_count.get(media_id),
             }))
 
+        db.close()
         return total_count, movies
 
     def listView(self, **kwargs):
@@ -352,6 +356,7 @@ class MediaPlugin(MediaBase):
             if len(chars) == 25:
                 break
 
+        db.close()
         return ''.join(sorted(chars))
 
     def charView(self, **kwargs):

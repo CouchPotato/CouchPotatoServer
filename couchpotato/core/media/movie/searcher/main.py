@@ -117,6 +117,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
             pass
 
         self.in_progress = False
+        db.close()
 
     def single(self, movie, search_protocols = None, manual = False):
 
@@ -207,6 +208,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
         fireEvent('notify.frontend', type = 'movie.searcher.ended', data = {'id': movie['id']})
 
+        db.close()
         return ret
 
     def correctRelease(self, nzb = None, media = None, quality = None, **kwargs):

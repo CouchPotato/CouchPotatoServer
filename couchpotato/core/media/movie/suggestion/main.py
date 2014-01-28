@@ -33,6 +33,7 @@ class Suggestion(Plugin):
                     .options(joinedload_all('library')) \
                     .filter(or_(*[Media.status.has(identifier = s) for s in ['active', 'done']])).all()
                 movies = [x.library.identifier for x in active_movies]
+                db.close()
 
             if not ignored or len(ignored) == 0:
                 ignored = splitString(Env.prop('suggest_ignore', default = ''))
@@ -97,6 +98,7 @@ class Suggestion(Plugin):
                 .filter(Media.status_id.in_([active_status.get('id'), done_status.get('id')])).all()
             movies = [x[0] for x in active_movies]
             movies.extend(seen)
+            db.close()
 
             ignored.extend([x.get('imdb') for x in cached_suggestion])
             suggestions = fireEvent('movie.suggest', movies = movies, ignore = removeDuplicate(ignored), single = True)

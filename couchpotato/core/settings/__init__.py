@@ -216,6 +216,7 @@ class Settings(object):
         except:
             pass
 
+        db.close()
         return prop
 
     def setProperty(self, identifier, value = ''):

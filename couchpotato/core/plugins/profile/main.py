@@ -71,6 +71,7 @@ class ProfilePlugin(Plugin):
         for profile in profiles:
             temp.append(profile.to_dict(self.to_dict))
 
+        db.close()
         return temp
 
     def save(self, **kwargs):
@@ -127,6 +128,7 @@ class ProfilePlugin(Plugin):
             .options(joinedload_all('types')) \
             .first()
         default_dict = default.to_dict(self.to_dict)
+        db.close()
 
         return default_dict
 

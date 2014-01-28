@@ -166,6 +166,7 @@ class FileManager(Plugin):
         for type_object in results:
             types.append(type_object.to_dict())
 
+        db.close()
         return types
 
     def getTypesView(self, **kwargs):

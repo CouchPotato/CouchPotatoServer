@@ -88,6 +88,8 @@ class Release(Plugin):
                 elif rel.status_id in [snatched_status.get('id'), downloaded_status.get('id')]:
                     self.updateStatus(id = rel.id, status = ignored_status)
 
+        db.close()
+
 
     def add(self, group):
 
@@ -176,7 +178,7 @@ class Release(Plugin):
 
             rel = db.query(Relea).filter_by(id = id).first()
             if rel:
-                rel.delete()
+                db.delete(rel)
                 db.commit()
                 return True
         except:
@@ -220,6 +222,7 @@ class Release(Plugin):
             ignored_status, failed_status, available_status = fireEvent('status.get', ['ignored', 'failed', 'available'], single = True)
             self.updateStatus(id, available_status if rel.status_id in [ignored_status.get('id'), failed_status.get('id')] else ignored_status)
 
+        db.close()
         return {
             'success': True
         }
@@ -259,11 +262,10 @@ class Release(Plugin):
             'files': {}
         }), manual = True)
 
-        db.expunge_all()
-
         if success:
             fireEvent('notify.frontend', type = 'release.manual_download', data = True, message = 'Successfully snatched "%s"' % item['name'])
 
+        db.close()
         return {
             'success': success == True
         }
@@ -456,6 +458,7 @@ class Release(Plugin):
         releases = [r.to_dict({'info': {}, 'files': {}}) for r in releases_raw]
         releases = sorted(releases, key = lambda k: k['info'].get('score', 0), reverse = True)
 
+        db.close()
         return releases
 
     def forMovieView(self, id = None, **kwargs):

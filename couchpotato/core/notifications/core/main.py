@@ -126,6 +126,7 @@ class CoreNotifier(Notification):
             ndict['type'] = 'notification'
             notifications.append(ndict)
 
+        db.close()
         return {
             'success': True,
             'empty': len(notifications) == 0,
@@ -172,6 +173,7 @@ class CoreNotifier(Notification):
 
             self.frontend(type = listener, data = data)
 
+            db.close()
             return True
         except:
             log.error('Failed notify: %s', traceback.format_exc())
@@ -286,6 +288,8 @@ class CoreNotifier(Notification):
                 ndict = n.to_dict()
                 ndict['type'] = 'notification'
                 messages.append(ndict)
+
+            db.close()
 
         return {
             'success': True,
