@@ -1,11 +1,12 @@
 import traceback
-from couchpotato import get_session, tryInt
+from couchpotato import get_session, tryInt, get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, fireEventAsync, addEvent
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.variable import mergeDicts, splitString, getImdb, getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media import MediaBase
+from .index import MediaIMDBIndex, TitleIndex, MediaStatusIndex
 from couchpotato.core.settings.model import Library, LibraryTitle, Release, \
     Media
 from sqlalchemy.orm import joinedload_all
@@ -60,15 +61,39 @@ class MediaPlugin(MediaBase):
 
         addApiView('media.available_chars', self.charView)
 
-        addEvent('app.load', self.addSingleRefreshView)
-        addEvent('app.load', self.addSingleListView)
-        addEvent('app.load', self.addSingleCharView)
-        addEvent('app.load', self.addSingleDeleteView)
+        addEvent('database.setup', self.databaseSetup)
+
+        addEvent('app.load2', self.addSingleRefreshView)
+        addEvent('app.load2', self.addSingleListView)
+        addEvent('app.load2', self.addSingleCharView)
+        addEvent('app.load2', self.addSingleDeleteView)
 
         addEvent('media.get', self.get)
         addEvent('media.list', self.list)
         addEvent('media.delete', self.delete)
         addEvent('media.restatus', self.restatus)
+
+    def databaseSetup(self):
+
+        db = get_db()
+
+        try:
+            db.add_index(MediaIMDBIndex(db.path, 'media'))
+        except:
+            log.debug('Index already exists')
+            db.update_index(MediaIMDBIndex(db.path, 'media'))
+
+        try:
+            db.add_index(TitleIndex(db.path, 'media_title'))
+        except:
+            log.debug('Index already exists')
+            db.update_index(TitleIndex(db.path, 'media_title'))
+
+        try:
+            db.add_index(MediaStatusIndex(db.path, 'media_status'))
+        except:
+            log.debug('Index already exists')
+            db.update_index(MediaStatusIndex(db.path, 'media_status'))
 
     def refresh(self, id = '', **kwargs):
         handlers = []
@@ -87,24 +112,23 @@ class MediaPlugin(MediaBase):
             'success': True,
         }
 
-    def createRefreshHandler(self, id):
-        db = get_session()
+    def createRefreshHandler(self, media_id):
 
-        media = db.query(Media).filter_by(id = id).first()
+        try:
+            media = get_db().get('id', media_id)
 
-        if media:
-
-            default_title = getTitle(media.library)
-            identifier = media.library.identifier
-            event = 'library.update.%s' % media.type
+            default_title = getTitle(media_id)
+            event = 'library.update.%s' % media.get('type')
 
             def handler():
-                fireEvent(event, identifier = identifier, default_title = default_title, on_complete = self.createOnComplete(id))
+                fireEvent(event, identifier = media.get('identifier'), default_title = default_title, on_complete = self.createOnComplete(media_id))
 
-        db.close()
+            if handler:
+                return handler
 
-        if handler:
-            return handler
+        except:
+            log.error('Refresh handler for non existing media: %s', traceback.format_exc())
+
 
     def addSingleRefreshView(self):
 
@@ -113,20 +137,19 @@ class MediaPlugin(MediaBase):
 
     def get(self, media_id):
 
-        db = get_session()
+        db = get_db()
 
         imdb_id = getImdb(str(media_id))
 
         if imdb_id:
-            m = db.query(Media).filter(Media.library.has(identifier = imdb_id)).first()
+            m = db.get('media', imdb_id, with_doc = True)['doc']
         else:
-            m = db.query(Media).filter_by(id = media_id).first()
+            m = db.get('id', media_id)
 
         results = None
         if m:
-            results = m.to_dict(self.default_dict)
+            results = db.run('media', 'to_dict', m, self.default_dict)
 
-        db.close()
         return results
 
     def getView(self, id = None, **kwargs):
@@ -262,7 +285,7 @@ class MediaPlugin(MediaBase):
                 'releases_count': releases_count.get(media_id),
             }))
 
-        db.close()
+        pass  #db.close()
         return total_count, movies
 
     def listView(self, **kwargs):
@@ -356,7 +379,7 @@ class MediaPlugin(MediaBase):
             if len(chars) == 25:
                 break
 
-        db.close()
+        pass  #db.close()
         return ''.join(sorted(chars))
 
     def charView(self, **kwargs):
@@ -428,7 +451,7 @@ class MediaPlugin(MediaBase):
             log.error('Failed deleting media: %s', traceback.format_exc())
             db.rollback()
         finally:
-            db.close()
+            pass  #db.close()
 
         return True
 
@@ -481,5 +504,5 @@ class MediaPlugin(MediaBase):
             log.error('Failed restatus: %s', traceback.format_exc())
             db.rollback()
         finally:
-            db.close()
+            pass  #db.close()
 

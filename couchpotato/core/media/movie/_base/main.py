@@ -1,5 +1,5 @@
 import traceback
-from couchpotato import get_session
+from couchpotato import get_session, get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, fireEventAsync, addEvent
 from couchpotato.core.helpers.encoding import toUnicode
@@ -62,78 +62,78 @@ class MovieBase(MovieTypeBase):
             except:
                 pass
 
-        library = fireEvent('library.add.movie', single = True, attrs = params, update_after = update_library)
-
-        # Status
-        status_active, snatched_status, ignored_status, done_status, downloaded_status = \
-            fireEvent('status.get', ['active', 'snatched', 'ignored', 'done', 'downloaded'], single = True)
+        # library = fireEvent('library.add.movie', single = True, attrs = params, update_after = update_library)
+        info = fireEvent('movie.info', merge = True, extended = False, identifier = params.get('identifier'))
 
         default_profile = fireEvent('profile.default', single = True)
         cat_id = params.get('category_id')
 
         try:
-            db = get_session()
-            m = db.query(Media).filter_by(library_id = library.get('id')).first()
+            db = get_db()
+
+            new = False
+            try:
+                m = db.get('movie', params.get('identifier'), with_doc = True)['doc']
+            except:
+                new = True
+                m = db.insert({
+                    'type': 'movie',
+                    'identifier': params.get('identifier'),
+                    'status': status_id if status_id else 'active',
+                    'profile_id': params.get('profile_id', default_profile.get('id')),
+                    'category_id': tryInt(cat_id) if cat_id is not None and tryInt(cat_id) > 0 else None,
+                })
+
             added = True
             do_search = False
             search_after = search_after and self.conf('search_on_add', section = 'moviesearcher')
-            if not m:
-                m = Media(
-                    library_id = library.get('id'),
-                    profile_id = params.get('profile_id', default_profile.get('id')),
-                    status_id = status_id if status_id else status_active.get('id'),
-                    category_id = tryInt(cat_id) if cat_id is not None and tryInt(cat_id) > 0 else None,
-                )
-                db.add(m)
-                db.commit()
-
+            if new:
                 onComplete = None
                 if search_after:
-                    onComplete = self.createOnComplete(m.id)
+                    onComplete = self.createOnComplete(m['_id'])
 
-                fireEventAsync('library.update.movie', params.get('identifier'), default_title = params.get('title', ''), on_complete = onComplete)
+                # fireEventAsync('library.update.movie', params.get('identifier'), default_title = params.get('title', ''), on_complete = onComplete)
                 search_after = False
             elif force_readd:
 
                 # Clean snatched history
-                for release in m.releases:
-                    if release.status_id in [downloaded_status.get('id'), snatched_status.get('id'), done_status.get('id')]:
+                for release in db.run('release', 'for_media', m['_id']):
+                    if release.get('status') in ['downloaded', 'snatched', 'done']:
                         if params.get('ignore_previous', False):
-                            release.status_id = ignored_status.get('id')
+                            release['status'] = 'ignored'
+                            db.update(release)
                         else:
-                            fireEvent('release.delete', release.id, single = True)
+                            fireEvent('release.delete', release['_id'], single = True)
 
-                m.profile_id = params.get('profile_id', default_profile.get('id'))
-                m.category_id = tryInt(cat_id) if cat_id is not None and tryInt(cat_id) > 0 else (m.category_id or None)
+                m['profile_id'] = params.get('profile_id', default_profile.get('id'))
+                m['category_id'] = tryInt(cat_id) if cat_id is not None and tryInt(cat_id) > 0 else (m['category_id'] or None)
             else:
                 log.debug('Movie already exists, not updating: %s', params)
                 added = False
 
             if force_readd:
-                m.status_id = status_id if status_id else status_active.get('id')
-                m.last_edit = int(time.time())
+                m['status'] = status_id if status_id else 'active'
+                m['last_edit'] = int(time.time())
                 do_search = True
 
-            db.commit()
+            db.update(m)
 
             # Remove releases
-            available_status = fireEvent('status.get', 'available', single = True)
-            for rel in m.releases:
-                if rel.status_id is available_status.get('id'):
+            for rel in db.run('release', 'for_media', m['_id']):
+                if rel['status'] is 'available':
                     db.delete(rel)
-                    db.commit()
 
-            movie_dict = m.to_dict(self.default_dict)
+            movie_dict = db.run('movie', 'to_dict', m['_id'])
 
             if do_search and search_after:
-                onComplete = self.createOnComplete(m.id)
+                onComplete = self.createOnComplete(m['_id'])
                 onComplete()
 
             if added:
                 if params.get('title'):
                     message = 'Successfully added "%s" to your wanted list.' % params.get('title', '')
                 else:
-                    title = getTitle(m.library)
+                    title = getTitle(m)
                     if title:
                         message = 'Successfully added "%s" to your wanted list.' % title
                     else:
@@ -142,10 +142,7 @@ class MovieBase(MovieTypeBase):
 
             return movie_dict
         except:
-            log.error('Failed deleting media: %s', traceback.format_exc())
-            db.rollback()
-        finally:
-            db.close()
+            log.error('Failed adding media: %s', traceback.format_exc())
 
     def addView(self, **kwargs):
         add_dict = self.add(params = kwargs)
@@ -158,49 +155,44 @@ class MovieBase(MovieTypeBase):
     def edit(self, id = '', **kwargs):
 
         try:
-            db = get_session()
-
-            available_status = fireEvent('status.get', 'available', single = True)
+            db = get_db()
 
             ids = splitString(id)
             for media_id in ids:
 
-                m = db.query(Media).filter_by(id = media_id).first()
-                if not m:
-                    continue
+                try:
+                    m = db.get('media', media_id)
+                    m['profile_id'] = kwargs.get('profile_id')
 
-                m.profile_id = kwargs.get('profile_id')
+                    cat_id = kwargs.get('category_id')
+                    if cat_id is not None:
+                        m['category_id'] = tryInt(cat_id) if tryInt(cat_id) > 0 else None
 
-                cat_id = kwargs.get('category_id')
-                if cat_id is not None:
-                    m.category_id = tryInt(cat_id) if tryInt(cat_id) > 0 else None
+                    # Remove releases
+                    for rel in db.run('release', 'for_media', m['_id']):
+                        if rel['status'] is 'available':
+                            db.delete(rel)
 
-                # Remove releases
-                for rel in m.releases:
-                    if rel.status_id is available_status.get('id'):
-                        db.delete(rel)
-                        db.commit()
+                    # Default title
+                    if kwargs.get('default_title'):
+                        for title in m['titles']:
+                            title.default = toUnicode(kwargs.get('default_title', '')).lower() == toUnicode(title.title).lower()
 
-                # Default title
-                if kwargs.get('default_title'):
-                    for title in m.library.titles:
-                        title.default = toUnicode(kwargs.get('default_title', '')).lower() == toUnicode(title.title).lower()
+                    db.update(m)
 
-                db.commit()
+                    fireEvent('media.restatus', m['_id'])
 
-                fireEvent('media.restatus', m.id)
+                    movie_dict = db.run('media', 'to_dict', m['_id'])
+                    fireEventAsync('movie.searcher.single', movie_dict, on_complete = self.createNotifyFront(media_id))
 
-                movie_dict = m.to_dict(self.default_dict)
-                fireEventAsync('movie.searcher.single', movie_dict, on_complete = self.createNotifyFront(media_id))
+                except:
+                    log.error('Can\'t edit non-existing media')
 
             return {
                 'success': True,
             }
         except:
-            log.error('Failed deleting media: %s', traceback.format_exc())
-            db.rollback()
-        finally:
-            db.close()
+            log.error('Failed editing media: %s', traceback.format_exc())
 
         return {
             'success': False,

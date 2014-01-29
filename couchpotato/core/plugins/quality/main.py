@@ -79,7 +79,7 @@ class QualityPlugin(Plugin):
 
         self.cached_qualities = temp
 
-        db.close()
+        pass  #db.close()
         return temp
 
     def single(self, identifier = ''):
@@ -91,7 +91,7 @@ class QualityPlugin(Plugin):
         if quality:
             quality_dict = dict(self.getQuality(quality.identifier), **quality.to_dict())
 
-        db.close()
+        pass  #db.close()
         return quality_dict
 
     def getQuality(self, identifier):
@@ -119,7 +119,7 @@ class QualityPlugin(Plugin):
             log.error('Failed: %s', traceback.format_exc())
             db.rollback()
         finally:
-            db.close()
+            pass  #db.close()
 
         return {
             'success': False
@@ -181,7 +181,7 @@ class QualityPlugin(Plugin):
             log.error('Failed: %s', traceback.format_exc())
             db.rollback()
         finally:
-            db.close()
+            pass  #db.close()
 
         return False
 

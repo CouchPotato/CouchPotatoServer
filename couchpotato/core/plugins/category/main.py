@@ -42,7 +42,7 @@ class CategoryPlugin(Plugin):
         for category in categories:
             temp.append(category.to_dict())
 
-        db.close()
+        pass  #db.close()
         return temp
 
     def save(self, **kwargs):
@@ -66,7 +66,7 @@ class CategoryPlugin(Plugin):
 
             category_dict = c.to_dict()
 
-            db.close()
+            pass  #db.close()
             return {
                 'success': True,
                 'category': category_dict
@@ -75,7 +75,7 @@ class CategoryPlugin(Plugin):
             log.error('Failed: %s', traceback.format_exc())
             db.rollback()
         finally:
-            db.close()
+            pass  #db.close()
 
         return {
             'success': False,
@@ -96,7 +96,7 @@ class CategoryPlugin(Plugin):
 
             db.commit()
 
-            db.close()
+            pass  #db.close()
             return {
                 'success': True
             }
@@ -104,7 +104,7 @@ class CategoryPlugin(Plugin):
             log.error('Failed: %s', traceback.format_exc())
             db.rollback()
         finally:
-            db.close()
+            pass  #db.close()
 
         return {
             'success': False
@@ -129,7 +129,7 @@ class CategoryPlugin(Plugin):
             except Exception as e:
                 message = log.error('Failed deleting category: %s', e)
 
-            db.close()
+            pass  #db.close()
             return {
                 'success': success,
                 'message': message
@@ -138,7 +138,7 @@ class CategoryPlugin(Plugin):
             log.error('Failed: %s', traceback.format_exc())
             db.rollback()
         finally:
-            db.close()
+            pass  #db.close()
 
         return {
             'success': False
@@ -158,4 +158,4 @@ class CategoryPlugin(Plugin):
             log.error('Failed: %s', traceback.format_exc())
             db.rollback()
         finally:
-            db.close()
+            pass  #db.close()

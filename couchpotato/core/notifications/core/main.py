@@ -1,14 +1,13 @@
-from couchpotato import get_session
+from couchpotato import get_db
 from couchpotato.api import addApiView, addNonBlockApiView
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.variable import tryInt, splitString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
-from couchpotato.core.settings.model import Notification as Notif
+from .index import NotificationIndex, NotificationUnreadIndex
 from couchpotato.environment import Env
 from operator import itemgetter
-from sqlalchemy.sql.expression import or_
 import threading
 import time
 import traceback
@@ -58,48 +57,55 @@ class CoreNotifier(Notification):
         fireEvent('schedule.interval', 'core.check_messages', self.checkMessages, hours = 12, single = True)
         fireEvent('schedule.interval', 'core.clean_messages', self.cleanMessages, seconds = 15, single = True)
 
-        addEvent('app.load', self.clean)
-        addEvent('app.load', self.checkMessages)
+        addEvent('app.load2', self.clean)
+        addEvent('app.load2', self.checkMessages)
+
+        addEvent('database.setup', self.databaseSetup)
 
         self.messages = []
         self.listeners = []
         self.m_lock = threading.Lock()
 
-    def clean(self):
+    def databaseSetup(self):
+
+        db = get_db()
 
         try:
-            db = get_session()
-            db.query(Notif).filter(Notif.added <= (int(time.time()) - 2419200)).delete()
-            db.commit()
+            db.add_index(NotificationIndex(db.path, 'notification'))
+        except:
+            log.debug('Index already exists')
+            db.edit_index(NotificationIndex(db.path, 'notification'))
+
+        try:
+            db.add_index(NotificationUnreadIndex(db.path, 'notification_unread'))
+        except:
+            log.debug('Index already exists')
+            db.edit_index(NotificationUnreadIndex(db.path, 'notification_unread'))
+
+    def clean(self):
+        try:
+            db = get_db()
+            for n in db.all('notification', with_doc = True):
+                if n['doc']['added'] <= (int(time.time()) - 2419200):
+                    db.delete(n['doc'])
         except:
             log.error('Failed cleaning notification: %s', traceback.format_exc())
-            db.rollback()
-        finally:
-            db.close()
 
     def markAsRead(self, ids = None, **kwargs):
 
         ids = splitString(ids) if ids else None
 
         try:
-            db = get_session()
-
-            if ids:
-                q = db.query(Notif).filter(or_(*[Notif.id == tryInt(s) for s in ids]))
-            else:
-                q = db.query(Notif).filter_by(read = False)
-
-            q.update({Notif.read: True})
-            db.commit()
-
+            db = get_db()
+            for x in db.all('notification_unread', with_doc = True):
+                if not ids or x['_id'] in ids:
+                    x['doc']['read'] = True
+                    db.update(x['doc'])
             return {
                 'success': True
             }
         except:
             log.error('Failed mark as read: %s', traceback.format_exc())
-            db.rollback()
-        finally:
-            db.close()
 
         return {
             'success': False
@@ -107,26 +113,20 @@ class CoreNotifier(Notification):
 
     def listView(self, limit_offset = None, **kwargs):
 
-        db = get_session()
-
-        q = db.query(Notif)
+        db = get_db()
 
         if limit_offset:
             splt = splitString(limit_offset)
             limit = splt[0]
             offset = 0 if len(splt) is 1 else splt[1]
-            q = q.limit(limit).offset(offset)
+            results = db.get_many('notification', limit = limit, offset = offset, with_doc = True)
         else:
-            q = q.limit(200)
+            results = db.get_many('notification', limit = 200, with_doc = True)
 
-        results = q.all()
         notifications = []
         for n in results:
-            ndict = n.to_dict()
-            ndict['type'] = 'notification'
-            notifications.append(ndict)
+            notifications.append(n['doc'])
 
-        db.close()
         return {
             'success': True,
             'empty': len(notifications) == 0,
@@ -156,30 +156,23 @@ class CoreNotifier(Notification):
         if not data: data = {}
 
         try:
-            db = get_session()
+            db = get_db()
 
             data['notification_type'] = listener if listener else 'unknown'
 
-            n = Notif(
-                message = toUnicode(message),
-                data = data
-            )
-            db.add(n)
-            db.commit()
+            n = {
+                'type': 'notification',
+                'time': time.time(),
+                'message': toUnicode(message),
+                'data': data
+            }
+            db.insert(n)
 
-            ndict = n.to_dict()
-            ndict['type'] = 'notification'
-            ndict['time'] = time.time()
+            self.frontend(type = listener, data = n)
 
-            self.frontend(type = listener, data = data)
-
-            db.close()
             return True
         except:
             log.error('Failed notify: %s', traceback.format_exc())
-            db.rollback()
-        finally:
-            db.close()
 
     def frontend(self, type = 'notification', data = None, message = None):
         if not data: data = {}
@@ -278,18 +271,13 @@ class CoreNotifier(Notification):
 
         # Get unread
         if init:
-            db = get_session()
+            db = get_db()
 
-            notifications = db.query(Notif) \
-                .filter(or_(Notif.read == False, Notif.added > (time.time() - 259200))) \
-                .all()
+            notifications = db.all('notification_unread', with_doc = True)
 
             for n in notifications:
-                ndict = n.to_dict()
-                ndict['type'] = 'notification'
-                messages.append(ndict)
-
-            db.close()
+                if n['doc'].get('added') > (time.time() - 259200):
+                    messages.append(n['doc'])
 
         return {
             'success': True,

@@ -1,5 +1,5 @@
 import traceback
-from couchpotato import get_session
+from couchpotato import get_session, get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import toUnicode
@@ -31,27 +31,24 @@ class ProfilePlugin(Plugin):
         })
 
         addEvent('app.initialize', self.fill, priority = 90)
-        addEvent('app.load', self.forceDefaults)
+        addEvent('app.load2', self.forceDefaults)
 
     def forceDefaults(self):
 
         # Get all active movies without profile
-        active_status = fireEvent('status.get', 'active', single = True)
-
         try:
-            db = get_session()
-            movies = db.query(Media).filter(Media.status_id == active_status.get('id'), Media.profile == None).all()
+            db = get_db()
+            medias = db.run('media', 'with_status', ['active'])
 
-            if len(movies) > 0:
-                default_profile = self.default()
-                for movie in movies:
-                    movie.profile_id = default_profile.get('id')
-                    db.commit()
+            profile_ids = [x.get('_id') for x in self.all()]
+
+            for media in medias:
+                if media['profile_id'] not in profile_ids:
+                    default_profile = self.default()
+                    media['profile_id'] = default_profile.get('id')
+                    db.update(media)
         except:
             log.error('Failed: %s', traceback.format_exc())
-            db.rollback()
-        finally:
-            db.close()
 
     def allView(self, **kwargs):
 
@@ -62,17 +59,10 @@ class ProfilePlugin(Plugin):
 
     def all(self):
 
-        db = get_session()
-        profiles = db.query(Profile) \
-            .options(joinedload_all('types')) \
-            .all()
+        db = get_db()
+        profiles = db.all('profile', with_doc = True)
 
-        temp = []
-        for profile in profiles:
-            temp.append(profile.to_dict(self.to_dict))
-
-        db.close()
-        return temp
+        return list(profiles)
 
     def save(self, **kwargs):
 
@@ -115,7 +105,7 @@ class ProfilePlugin(Plugin):
             log.error('Failed: %s', traceback.format_exc())
             db.rollback()
         finally:
-            db.close()
+            pass  #db.close()
 
         return {
             'success': False
@@ -128,7 +118,7 @@ class ProfilePlugin(Plugin):
             .options(joinedload_all('types')) \
             .first()
         default_dict = default.to_dict(self.to_dict)
-        db.close()
+        pass  #db.close()
 
         return default_dict
 
@@ -154,7 +144,7 @@ class ProfilePlugin(Plugin):
             log.error('Failed: %s', traceback.format_exc())
             db.rollback()
         finally:
-            db.close()
+            pass  #db.close()
 
         return {
             'success': False
@@ -188,7 +178,7 @@ class ProfilePlugin(Plugin):
             log.error('Failed: %s', traceback.format_exc())
             db.rollback()
         finally:
-            db.close()
+            pass  #db.close()
 
         return {
             'success': False
@@ -243,6 +233,6 @@ class ProfilePlugin(Plugin):
             log.error('Failed: %s', traceback.format_exc())
             db.rollback()
         finally:
-            db.close()
+            pass  #db.close()
 
         return False

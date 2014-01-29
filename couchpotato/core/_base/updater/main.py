@@ -33,8 +33,8 @@ class Updater(Plugin):
         else:
             self.updater = SourceUpdater()
 
-        addEvent('app.load', self.logVersion, priority = 10000)
-        addEvent('app.load', self.setCrons)
+        addEvent('app.load2', self.logVersion, priority = 10000)
+        addEvent('app.load2', self.setCrons)
         addEvent('updater.info', self.info)
 
         addApiView('updater.info', self.info, docs = {

@@ -598,7 +598,7 @@ class Renamer(Plugin):
                 break
 
         self.renaming_started = False
-        db.close()
+        pass  #db.close()
 
     def getRenameExtras(self, extra_type = '', replacements = None, folder_name = '', file_name = '', destination = '', group = None, current_file = '', remove_multiple = False):
         if not group: group = {}
@@ -1045,7 +1045,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
             self.checking_snatched = False
             return True
         finally:
-            db.close()
+            pass  #db.close()
 
     def extendReleaseDownload(self, release_download):
 
@@ -1068,7 +1068,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
             if not rls:
                 log.error('Download ID %s from downloader %s not found in releases', (release_download.get('id'), release_download.get('downloader')))
 
-            db.close()
+            pass  #db.close()
 
         if rls:
 

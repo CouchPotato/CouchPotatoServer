@@ -31,7 +31,7 @@ class Env(object):
     _app_dir = ""
     _data_dir = ""
     _cache_dir = ""
-    _db_path = ""
+    _db = ""
     _log_path = ""
 
     @staticmethod
@@ -53,28 +53,6 @@ class Env(object):
     @staticmethod
     def set(attr, value):
         return setattr(Env, '_' + attr, value)
-
-    @staticmethod
-    def getSession():
-        existing_session = Env.get('session')
-        if existing_session:
-            return existing_session()
-
-        session = scoped_session(sessionmaker(bind = Env.getEngine()))
-        Env.set('session', session)
-
-        return session()
-
-    @staticmethod
-    def getEngine():
-        existing_engine = Env.get('engine')
-        if existing_engine:
-            return existing_engine
-
-        engine = create_engine(Env.get('db_path'), echo = False)
-        Env.set('engine', engine)
-
-        return engine
 
     @staticmethod
     def setting(attr, section = 'core', value = None, default = '', type = None):

@@ -23,7 +23,7 @@ class rTorrent(Downloader):
     def __init__(self):
         super(rTorrent, self).__init__()
 
-        addEvent('app.load', self.migrate)
+        addEvent('app.load2', self.migrate)
 
     def migrate(self):
 

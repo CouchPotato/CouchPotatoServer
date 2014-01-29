@@ -49,7 +49,11 @@ def addView(route, func, static = False):
 
 
 def get_session():
-    return Env.getSession()
+    return None
+
+
+def get_db():
+    return Env.get('db')
 
 
 # Web view

@@ -10,10 +10,10 @@ class Automation(Plugin):
 
     def __init__(self):
 
-        addEvent('app.load', self.setCrons)
+        addEvent('app.load2', self.setCrons)
 
         if not Env.get('dev'):
-            addEvent('app.load', self.addMovies)
+            addEvent('app.load2', self.addMovies)
 
         addEvent('setting.save.automation.hour.after', self.setCrons)
 

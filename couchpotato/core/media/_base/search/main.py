@@ -25,7 +25,7 @@ class Search(Plugin):
 }"""}
         })
 
-        addEvent('app.load', self.addSingleSearches)
+        addEvent('app.load2', self.addSingleSearches)
 
     def search(self, q = '', types = None, **kwargs):
 

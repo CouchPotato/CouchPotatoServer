@@ -4,6 +4,7 @@ from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.variable import mergeDicts, tryInt, tryFloat
+from couchpotato.core.settings.index import PropertyIndex
 from couchpotato.core.settings.model import Properties
 import ConfigParser
 
@@ -42,6 +43,7 @@ class Settings(object):
     }
 }"""}
         })
+
         addApiView('settings.save', self.saveView, docs = {
             'desc': 'Save setting to config file (settings.conf)',
             'params': {
@@ -50,6 +52,8 @@ class Settings(object):
                 'value': {'desc': 'The value you want to save'},
             }
         })
+
+        addEvent('database.setup', self.databaseSetup)
 
     def setFile(self, config_file):
         self.file = config_file
@@ -61,6 +65,17 @@ class Settings(object):
         self.log = CPLog(__name__)
 
         self.connectEvents()
+
+    def databaseSetup(self):
+        from couchpotato import get_db
+
+        db = get_db()
+
+        try:
+            db.add_index(PropertyIndex(db.path, 'property'))
+        except:
+            self.log.debug('Index already exists')
+            db.edit_index(PropertyIndex(db.path, 'property'))
 
     def parser(self):
         return self.p
@@ -206,36 +221,33 @@ class Settings(object):
         }
 
     def getProperty(self, identifier):
-        from couchpotato import get_session
+        from couchpotato import get_db
 
-        db = get_session()
+        db = get_db()
         prop = None
         try:
-            propert = db.query(Properties).filter_by(identifier = identifier).first()
-            prop = propert.value
+            propert = db.get('property', identifier, with_doc = True)
+            prop = propert['doc']['value']
         except:
-            pass
+            self.log.debug('Property doesn\'t exist: %s', traceback.format_exc(0))
 
-        db.close()
         return prop
 
     def setProperty(self, identifier, value = ''):
-        from couchpotato import get_session
+        from couchpotato import get_db
+
+        db = get_db()
 
         try:
-            db = get_session()
-
-            p = db.query(Properties).filter_by(identifier = identifier).first()
-            if not p:
-                p = Properties()
-                db.add(p)
-
-            p.identifier = identifier
-            p.value = toUnicode(value)
-
-            db.commit()
+            p = db.get('property', identifier, with_doc = True)
+            p['doc'].update({
+                'identifier': identifier,
+                'value': toUnicode(value),
+            })
+            db.update(p['doc'])
         except:
-            self.log.error('Failed: %s', traceback.format_exc())
-            db.rollback()
-        finally:
-            db.close()
+            db.insert({
+                'type': 'property',
+                'identifier': identifier,
+                'value': toUnicode(value),
+            })

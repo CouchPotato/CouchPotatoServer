@@ -1,8 +1,10 @@
 import traceback
-from couchpotato import get_session
+from couchpotato import get_session, get_db, CPLog
 from couchpotato.core.event import addEvent, fireEventAsync, fireEvent
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Media
+
+log = CPLog(__name__)
 
 
 class MediaBase(Plugin):
@@ -24,20 +26,19 @@ class MediaBase(Plugin):
     def getType(self):
         return self._type
 
-    def createOnComplete(self, id):
+    def createOnComplete(self, media_id):
 
         def onComplete():
             try:
-                db = get_session()
-                media = db.query(Media).filter_by(id = id).first()
-                media_dict = media.to_dict(self.default_dict)
-                event_name = '%s.searcher.single' % media.type
+                db = get_db()
+                media = db.get('id', media_id)
+                event_name = '%s.searcher.single' % media.get('type')
 
-                fireEvent(event_name, media_dict, on_complete = self.createNotifyFront(id))
+                fireEvent(event_name, media, on_complete = self.createNotifyFront(media_id))
             except:
                 log.error('Failed creating onComplete: %s', traceback.format_exc())
             finally:
-                db.close()
+                pass  #db.close()
 
         return onComplete
 
@@ -45,15 +46,14 @@ class MediaBase(Plugin):
 
         def notifyFront():
             try:
-                db = get_session()
-                media = db.query(Media).filter_by(id = media_id).first()
-                media_dict = media.to_dict(self.default_dict)
-                event_name = '%s.update' % media.type
+                db = get_db()
+                media = db.get('id', media_id)
+                event_name = '%s.update' % media.get('type')
 
-                fireEvent('notify.frontend', type = event_name, data = media_dict)
+                fireEvent('notify.frontend', type = event_name, data = media)
             except:
                 log.error('Failed creating onComplete: %s', traceback.format_exc())
             finally:
-                db.close()
+                pass  #db.close()
 
         return notifyFront

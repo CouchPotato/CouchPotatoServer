@@ -74,7 +74,7 @@ class ClientScript(Plugin):
         addEvent('clientscript.get_scripts', self.getScripts)
 
         if not Env.get('dev'):
-            addEvent('app.load', self.minify)
+            addEvent('app.load2', self.minify)
 
         self.addCore()
 

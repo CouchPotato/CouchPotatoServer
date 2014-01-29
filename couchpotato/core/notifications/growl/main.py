@@ -16,7 +16,7 @@ class Growl(Notification):
         super(Growl, self).__init__()
 
         if self.isEnabled():
-            addEvent('app.load', self.register)
+            addEvent('app.load2', self.register)
 
     def register(self):
         if self.registered: return

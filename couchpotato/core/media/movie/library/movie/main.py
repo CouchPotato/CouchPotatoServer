@@ -62,7 +62,7 @@ class MovieLibraryPlugin(LibraryBase):
             log.error('Failed adding media: %s', traceback.format_exc())
             db.rollback()
         finally:
-            db.close()
+            pass  #db.close()
 
         return {}
 
@@ -130,31 +130,24 @@ class MovieLibraryPlugin(LibraryBase):
 
             # Files
             images = info.get('images', [])
+            library['files'] = []
             for image_type in ['poster']:
                 for image in images.get(image_type, []):
                     if not isinstance(image, (str, unicode)):
                         continue
 
                     file_path = fireEvent('file.download', url = image, single = True)
-                    if file_path:
-                        file_obj = fireEvent('file.add', path = file_path, type_tuple = ('image', image_type), single = True)
-                        try:
-                            file_obj = db.query(File).filter_by(id = file_obj.get('id')).one()
-                            library.files.append(file_obj)
-                            db.commit()
 
-                            break
-                        except:
-                            log.debug('Failed to attach to library: %s', traceback.format_exc())
-                            db.rollback()
+                    # TODO: save in movie doc
+                    library['files'].append({
+                        'type': 'image_%s' % image_type,
+                        'path': file_path
+                    })
 
             library_dict = library.to_dict(self.default_dict)
             return library_dict
         except:
             log.error('Failed update media: %s', traceback.format_exc())
-            db.rollback()
-        finally:
-            db.close()
 
         return {}
 
@@ -180,7 +173,7 @@ class MovieLibraryPlugin(LibraryBase):
             log.error('Failed updating release dates: %s', traceback.format_exc())
             db.rollback()
         finally:
-            db.close()
+            pass  #db.close()
 
         return {}
 

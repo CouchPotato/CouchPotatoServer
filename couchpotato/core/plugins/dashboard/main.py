@@ -119,7 +119,7 @@ class Dashboard(Plugin):
                         'files': {},
                     }))
 
-        db.close()
+        pass  #db.close()
         return {
             'success': True,
             'empty': len(movies) == 0,

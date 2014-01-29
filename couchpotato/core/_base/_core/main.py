@@ -42,11 +42,11 @@ class Core(Plugin):
 
         addEvent('app.shutdown', self.shutdown)
         addEvent('app.restart', self.restart)
-        addEvent('app.load', self.launchBrowser, priority = 1)
+        addEvent('app.load2', self.launchBrowser, priority = 1)
         addEvent('app.base_url', self.createBaseUrl)
         addEvent('app.api_url', self.createApiUrl)
         addEvent('app.version', self.version)
-        addEvent('app.load', self.checkDataDir)
+        addEvent('app.load2', self.checkDataDir)
 
         addEvent('setting.save.core.password', self.md5Password)
         addEvent('setting.save.core.api_key', self.checkApikey)

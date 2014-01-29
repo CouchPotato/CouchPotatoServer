@@ -90,6 +90,7 @@ class MetaDataBase(Plugin):
         file_type = {}
 
         for ft in file_types:
+            # TODO: change type to "image_"+wanted_file_type
             if ft.get('identifier') == wanted_file_type:
                 file_type = ft
                 break

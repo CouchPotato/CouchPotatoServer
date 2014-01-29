@@ -441,7 +441,7 @@ class Scanner(Plugin):
         else:
             log.debug('Found no movies in the folder %s', folder)
 
-        db.close()
+        pass  #db.close()
         return processed_movies
 
     def getMetaData(self, group, folder = '', release_download = None):
@@ -609,7 +609,7 @@ class Scanner(Plugin):
                     break
                 except:
                     pass
-            db.close()
+            pass  #db.close()
 
         # Search based on identifiers
         if not imdb_id:
