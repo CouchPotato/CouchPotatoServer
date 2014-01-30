@@ -1,10 +1,11 @@
 import traceback
-from couchpotato import get_session
+from couchpotato import get_session, get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
+from .index import CategoryIndex
 from couchpotato.core.settings.model import Media, Category
 
 log = CPLog(__name__)
@@ -13,8 +14,6 @@ log = CPLog(__name__)
 class CategoryPlugin(Plugin):
 
     def __init__(self):
-        addEvent('category.all', self.all)
-
         addApiView('category.save', self.save)
         addApiView('category.save_order', self.saveOrder)
         addApiView('category.delete', self.delete)
@@ -26,6 +25,20 @@ class CategoryPlugin(Plugin):
 }"""}
         })
 
+        addEvent('category.all', self.all)
+        addEvent('database.setup', self.databaseSetup)
+
+    def databaseSetup(self):
+
+        db = get_db()
+
+        # Release media_id index
+        try:
+            db.add_index(CategoryIndex(db.path, 'category'))
+        except:
+            log.debug('Index already exists')
+            db.edit_index(CategoryIndex(db.path, 'category'))
+
     def allView(self, **kwargs):
 
         return {
@@ -35,47 +48,45 @@ class CategoryPlugin(Plugin):
 
     def all(self):
 
-        db = get_session()
-        categories = db.query(Category).all()
+        db = get_db()
+        categories = db.all('category', with_doc = True)
 
         temp = []
         for category in categories:
-            temp.append(category.to_dict())
+            temp.append(category['doc'])
 
-        pass  #db.close()
         return temp
 
     def save(self, **kwargs):
 
         try:
-            db = get_session()
+            db = get_db()
 
-            c = db.query(Category).filter_by(id = kwargs.get('id')).first()
-            if not c:
-                c = Category()
-                db.add(c)
+            category = {
+                'order': kwargs.get('order', 0),
+                'label': toUnicode(kwargs.get('label', '')),
+                'ignored': toUnicode(kwargs.get('ignored', '')),
+                'preferred': toUnicode(kwargs.get('preferred', '')),
+                'required': toUnicode(kwargs.get('required', '')),
+                'destination': toUnicode(kwargs.get('destination', '')),
+            }
 
-            c.order = kwargs.get('order', c.order if c.order else 0)
-            c.label = toUnicode(kwargs.get('label', ''))
-            c.ignored = toUnicode(kwargs.get('ignored', ''))
-            c.preferred = toUnicode(kwargs.get('preferred', ''))
-            c.required = toUnicode(kwargs.get('required', ''))
-            c.destination = toUnicode(kwargs.get('destination', ''))
+            try:
+                c = db.get('id', kwargs.get('id'))
+                category['order'] = c.get('order', category['order'])
+                c.update(category)
 
-            db.commit()
+                db.update(c)
+            except:
+                c = db.insert(category)
+                c.update(category)
 
-            category_dict = c.to_dict()
-
-            pass  #db.close()
             return {
                 'success': True,
-                'category': category_dict
+                'category': c
             }
         except:
             log.error('Failed: %s', traceback.format_exc())
-            db.rollback()
-        finally:
-            pass  #db.close()
 
         return {
             'success': False,

@@ -1,4 +1,4 @@
-from couchpotato import get_session
+from couchpotato import get_session, get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
 from couchpotato.core.helpers.encoding import toUnicode, ss, sp
@@ -6,7 +6,7 @@ from couchpotato.core.helpers.variable import getExt, mergeDicts, getTitle, \
     getImdb, link, symlink, tryInt, splitString, fnEscape, isSubFolder
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.core.settings.model import Library, File, Profile, Release, \
+from couchpotato.core.settings.model import Library, File, Profile, \
     ReleaseInfo
 from couchpotato.environment import Env
 from unrar2 import RarFile
@@ -45,7 +45,7 @@ class Renamer(Plugin):
         addEvent('renamer.scan', self.scan)
         addEvent('renamer.check_snatched', self.checkSnatched)
 
-        addEvent('app.load', self.scan)
+        addEvent('app.load2', self.scan)
         addEvent('app.load', self.setCrons)
 
         # Enable / disable interval
@@ -210,10 +210,6 @@ class Renamer(Plugin):
         trailer_name = self.conf('trailer_name')
         nfo_name = self.conf('nfo_name')
         separator = self.conf('separator')
-
-        # Statuses
-        done_status, active_status, downloaded_status, snatched_status, seeding_status = \
-            fireEvent('status.get', ['done', 'active', 'downloaded', 'snatched', 'seeding'], single = True)
 
         # Tag release folder as failed_rename in case no groups were found. This prevents check_snatched from removing the release from the downloader.
         if not groups and self.statusInfoComplete(release_download):
@@ -849,14 +845,10 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
         self.checking_snatched = True
 
-        snatched_status, ignored_status, failed_status, seeding_status, downloaded_status, missing_status = \
-            fireEvent('status.get', ['snatched', 'ignored', 'failed', 'seeding', 'downloaded', 'missing'], single = True)
-
         try:
-            db = get_session()
-            rels = db.query(Release).filter(
-                Release.status_id.in_([snatched_status.get('id'), seeding_status.get('id'), missing_status.get('id')])
-            ).all()
+            db = get_db()
+
+            rels = list(db.get_many('release', 'with_status', ['snatched', 'seeding', 'missing']))
 
             if not rels:
                 #No releases found that need status checking
@@ -868,13 +860,12 @@ Remove it if you want it to be renamed (again, or at least let it try again)
             no_status_support = []
             try:
                 for rel in rels:
-                    rel_dict = rel.to_dict({'info': {}})
-                    if rel_dict['info'].get('download_id') and rel_dict['info'].get('download_downloader'):
-                        download_ids.append({'id': rel_dict['info']['download_id'], 'downloader': rel_dict['info']['download_downloader']})
+                    if rel['info'].get('download_id') and rel['info'].get('download_downloader'):
+                        download_ids.append({'id': rel['info']['download_id'], 'downloader': rel['info']['download_downloader']})
 
-                    ds = rel_dict['info'].get('download_status_support')
-                    if ds == False or ds == 'False':
-                        no_status_support.append(ss(rel_dict['info'].get('download_downloader')))
+                    ds = rel['info'].get('download_status_support')
+                    if ds is False or ds == 'False':
+                        no_status_support.append(ss(rel['info'].get('download_downloader')))
             except:
                 log.error('Error getting download IDs from database')
                 self.checking_snatched = False
@@ -899,35 +890,34 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
             try:
                 for rel in rels:
-                    rel_dict = rel.to_dict({'info': {}})
-                    movie_dict = fireEvent('media.get', media_id = rel.movie_id, single = True)
+                    movie_dict = db.get('id', rel.get('media_id'))
 
-                    if not isinstance(rel_dict['info'], dict):
+                    if not isinstance(rel['info'], dict):
                         log.error('Faulty release found without any info, ignoring.')
-                        fireEvent('release.update_status', rel.id, status = ignored_status, single = True)
+                        fireEvent('release.update_status', rel.get('_id'), status = 'ignored', single = True)
                         continue
 
                     # Check if download ID is available
-                    if not rel_dict['info'].get('download_id') or not rel_dict['info'].get('download_downloader'):
-                        log.debug('Download status functionality is not implemented for downloader (%s) of release %s.', (rel_dict['info'].get('download_downloader', 'unknown'), rel_dict['info']['name']))
+                    if not rel['info'].get('download_id') or not rel['info'].get('download_downloader'):
+                        log.debug('Download status functionality is not implemented for downloader (%s) of release %s.', (rel['info'].get('download_downloader', 'unknown'), rel['info']['name']))
                         scan_required = True
 
                         # Continue with next release
                         continue
 
                     # Find release in downloaders
-                    nzbname = self.createNzbName(rel_dict['info'], movie_dict)
+                    nzbname = self.createNzbName(rel['info'], movie_dict)
 
                     found_release = False
                     for release_download in release_downloads:
                         found_release = False
-                        if rel_dict['info'].get('download_id'):
-                            if release_download['id'] == rel_dict['info']['download_id'] and release_download['downloader'] == rel_dict['info']['download_downloader']:
+                        if rel['info'].get('download_id'):
+                            if release_download['id'] == rel['info']['download_id'] and release_download['downloader'] == rel['info']['download_downloader']:
                                 log.debug('Found release by id: %s', release_download['id'])
                                 found_release = True
                                 break
                         else:
-                            if release_download['name'] == nzbname or rel_dict['info']['name'] in release_download['name'] or getImdb(release_download['name']) == movie_dict['library']['identifier']:
+                            if release_download['name'] == nzbname or rel['info']['name'] in release_download['name'] or getImdb(release_download['name']) == movie_dict['library']['identifier']:
                                 log.debug('Found release by release name or imdb ID: %s', release_download['name'])
                                 found_release = True
                                 break
@@ -936,12 +926,12 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                         log.info('%s not found in downloaders', nzbname)
 
                         #Check status if already missing and for how long, if > 1 week, set to ignored else to missing
-                        if rel.status_id == missing_status.get('id'):
+                        if rel.get('status') == 'missing':
                             if rel.last_edit < int(time.time()) - 7 * 24 * 60 * 60:
-                                fireEvent('release.update_status', rel.id, status = ignored_status, single = True)
+                                fireEvent('release.update_status', rel.get('_id'), status = 'ignored', single = True)
                         else:
                             # Set the release to missing
-                            fireEvent('release.update_status', rel.id, status = missing_status, single = True)
+                            fireEvent('release.update_status', rel.get('_id'), status = 'missing', single = True)
 
                         # Continue with next release
                         continue
@@ -953,7 +943,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                     # Check status of release
                     if release_download['status'] == 'busy':
                         # Set the release to snatched if it was missing before
-                        fireEvent('release.update_status', rel.id, status = snatched_status, single = True)
+                        fireEvent('release.update_status', rel.get('_id'), status = 'snatched', single = True)
 
                         # Tag folder if it is in the 'from' folder and it will not be processed because it is still downloading
                         if self.movieInFromFolder(release_download['folder']):
@@ -961,7 +951,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
                     elif release_download['status'] == 'seeding':
                         #If linking setting is enabled, process release
-                        if self.conf('file_action') != 'move' and not rel.status_id == seeding_status.get('id') and self.statusInfoComplete(release_download):
+                        if self.conf('file_action') != 'move' and not rel.status_id == 'seeding' and self.statusInfoComplete(release_download):
                             log.info('Download of %s completed! It is now being processed while leaving the original files alone for seeding. Current ratio: %s.', (release_download['name'], release_download['seed_ratio']))
 
                             # Remove the downloading tag
@@ -975,16 +965,16 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                             log.debug('%s is seeding with ratio: %s', (release_download['name'], release_download['seed_ratio']))
 
                             # Set the release to seeding
-                            fireEvent('release.update_status', rel.id, status = seeding_status, single = True)
+                            fireEvent('release.update_status', rel.get('_id'), status = 'seeding', single = True)
 
                     elif release_download['status'] == 'failed':
                         # Set the release to failed
-                        fireEvent('release.update_status', rel.id, status = failed_status, single = True)
+                        fireEvent('release.update_status', rel.get('_id'), status = 'failed', single = True)
 
                         fireEvent('download.remove_failed', release_download, single = True)
 
                         if self.conf('next_on_failed'):
-                            fireEvent('movie.searcher.try_next_release', media_id = rel.movie_id)
+                            fireEvent('movie.searcher.try_next_release', media_id = rel.get('media_id'))
 
                     elif release_download['status'] == 'completed':
                         log.info('Download of %s completed!', release_download['name'])
@@ -993,10 +983,10 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                         if self.statusInfoComplete(release_download):
 
                             # If the release has been seeding, process now the seeding is done
-                            if rel.status_id == seeding_status.get('id'):
+                            if rel.get('status') == 'seeding':
                                 if self.conf('file_action') != 'move':
                                     # Set the release to done as the movie has already been renamed
-                                    fireEvent('release.update_status', rel.id, status = downloaded_status, single = True)
+                                    fireEvent('release.update_status', rel.get('_id'), status = 'downloaded', single = True)
 
                                     # Allow the downloader to clean-up
                                     release_download.update({'pause': False, 'scan': False, 'process_complete': True})
@@ -1008,7 +998,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
                             else:
                                 # Set the release to snatched if it was missing before
-                                fireEvent('release.update_status', rel.id, status = snatched_status, single = True)
+                                fireEvent('release.update_status', rel.get('_id'), status = 'snatched', single = True)
 
                                 # Remove the downloading tag
                                 self.untagRelease(release_download = release_download, tag = 'downloading')
@@ -1044,8 +1034,11 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
             self.checking_snatched = False
             return True
-        finally:
-            pass  #db.close()
+        except:
+            log.error('Failed checking snatched: %s', traceback.format_exc())
+
+        self.checking_snatched = False
+        return False
 
     def extendReleaseDownload(self, release_download):
 

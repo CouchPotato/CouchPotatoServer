@@ -6,7 +6,7 @@ from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.variable import mergeDicts, splitString, getImdb, getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media import MediaBase
-from .index import MediaIMDBIndex, TitleIndex, MediaStatusIndex
+from .index import MediaIMDBIndex, TitleIndex, MediaStatusIndex, YearIndex
 from couchpotato.core.settings.model import Library, LibraryTitle, Release, \
     Media
 from sqlalchemy.orm import joinedload_all
@@ -77,23 +77,32 @@ class MediaPlugin(MediaBase):
 
         db = get_db()
 
+        # IMDB index
         try:
             db.add_index(MediaIMDBIndex(db.path, 'media'))
         except:
             log.debug('Index already exists')
-            db.update_index(MediaIMDBIndex(db.path, 'media'))
+            db.edit_index(MediaIMDBIndex(db.path, 'media'))
 
+        # Title index
         try:
             db.add_index(TitleIndex(db.path, 'media_title'))
         except:
             log.debug('Index already exists')
-            db.update_index(TitleIndex(db.path, 'media_title'))
+            db.edit_index(TitleIndex(db.path, 'media_title'))
 
+        # Status index
         try:
             db.add_index(MediaStatusIndex(db.path, 'media_status'))
         except:
             log.debug('Index already exists')
-            db.update_index(MediaStatusIndex(db.path, 'media_status'))
+            db.edit_index(MediaStatusIndex(db.path, 'media_status'))
+
+        # Year index
+        try: db.add_index(YearIndex(db.path, 'year'))
+        except:
+            log.debug('Index already exists')
+            db.edit_index(YearIndex(db.path, 'year'))
 
     def refresh(self, id = '', **kwargs):
         handlers = []

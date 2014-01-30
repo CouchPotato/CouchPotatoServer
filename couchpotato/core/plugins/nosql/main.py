@@ -1,7 +1,8 @@
 import time
-from couchpotato import CPLog
+from couchpotato import CPLog, get_db
+from couchpotato.core.event import addEvent
 from couchpotato.core.plugins.base import Plugin
-from .index import ReleaseIndex, MediaIMDBIndex, TitleIndex
+from .index import ReleaseIndex, NameIndex
 
 log = CPLog(__name__)
 
@@ -10,9 +11,20 @@ class NoSQL(Plugin):
 
     db = None
 
+    def __init__(self):
+
+        pass #addEvent('app.load2', self.test)
+
     def test(self):
 
-        db = self.db
+        db = get_db()
+
+        try: db.add_index(YearIndex(db.path, 'year'))
+        except:
+            log.debug('Index already exists')
+            db.edit_index(YearIndex(db.path, 'year'))
+
+        return
 
         try: db.add_index(ReleaseIndex(db.path, 'release'))
         except: log.debug('Index already exists')
@@ -51,8 +63,6 @@ class NoSQL(Plugin):
         start = time.time()
         print list(db.get_many('media_title', 'lord of'))
         print time.time() - start
-
-        return
 
         return
 

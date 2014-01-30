@@ -5,6 +5,7 @@ from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
+from .index import ProfileIndex
 from couchpotato.core.settings.model import Profile, ProfileType, Media
 from sqlalchemy.orm import joinedload_all
 
@@ -30,8 +31,21 @@ class ProfilePlugin(Plugin):
 }"""}
         })
 
+        addEvent('database.setup', self.databaseSetup)
+
         addEvent('app.initialize', self.fill, priority = 90)
         addEvent('app.load2', self.forceDefaults)
+
+    def databaseSetup(self):
+
+        db = get_db()
+
+        try:
+            db.add_index(ProfileIndex(db.path, 'profile'))
+        except:
+            log.debug('Index already exists')
+            db.edit_index(ProfileIndex(db.path, 'profile'))
+
 
     def forceDefaults(self):
 
@@ -112,15 +126,8 @@ class ProfilePlugin(Plugin):
         }
 
     def default(self):
-
-        db = get_session()
-        default = db.query(Profile) \
-            .options(joinedload_all('types')) \
-            .first()
-        default_dict = default.to_dict(self.to_dict)
-        pass  #db.close()
-
-        return default_dict
+        db = get_db()
+        return db.get_many('profile', limit = 1, with_doc = True)[0]
 
     def saveOrder(self, **kwargs):
 
@@ -187,7 +194,7 @@ class ProfilePlugin(Plugin):
     def fill(self):
 
         try:
-            db = get_session()
+            db = get_db()
 
             profiles = [{
                 'label': 'Best',
@@ -201,38 +208,32 @@ class ProfilePlugin(Plugin):
             }]
 
             # Create default quality profile
-            order = -2
+            order = 0
             for profile in profiles:
                 log.info('Creating default profile: %s', profile.get('label'))
-                p = Profile(
-                    label = toUnicode(profile.get('label')),
-                    order = order
-                )
-                db.add(p)
 
-                quality_order = 0
-                for quality in profile.get('qualities'):
-                    quality = fireEvent('quality.single', identifier = quality, single = True)
-                    profile_type = ProfileType(
-                        quality_id = quality.get('id'),
-                        profile = p,
-                        finish = True,
-                        wait_for = 0,
-                        order = quality_order
-                    )
-                    p.types.append(profile_type)
+                pro = {
+                    'type': 'profile',
+                    'identifier': profile.get('label').lower(),
+                    'label': toUnicode(profile.get('label')),
+                    'order': order,
+                    'qualities': profile.get('qualities'),
+                    'finish': [],
+                    'wait_for': []
+                }
 
-                    quality_order += 1
+                for q in profile.get('qualities'):
+                    pro['finish'].append(True)
+                    pro['wait_for'].append(0)
 
+                db.insert(pro)
                 order += 1
 
-            db.commit()
+            for x in db.all('profile', with_doc = True):
+                log.info(x)
 
             return True
         except:
             log.error('Failed: %s', traceback.format_exc())
-            db.rollback()
-        finally:
-            pass  #db.close()
 
         return False

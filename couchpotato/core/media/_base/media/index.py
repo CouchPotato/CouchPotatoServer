@@ -1,5 +1,7 @@
+from itertools import izip
 from CodernityDB.hash_index import HashIndex
-from CodernityDB.tree_index import MultiTreeBasedIndex
+from CodernityDB.tree_index import MultiTreeBasedIndex, TreeBasedIndex
+from hashlib import md5
 
 
 class MediaIMDBIndex(HashIndex):
@@ -15,19 +17,27 @@ class MediaIMDBIndex(HashIndex):
         if data.get('type') == 'media' and data.get('identifier'):
             return int(data['identifier'].strip('t')), None
 
+    def run_with_status(self, db, status = []):
 
-class MediaStatusIndex(HashIndex):
+        status = list(status if isinstance(status, (list, tuple)) else [status])
+
+        for s in status:
+            for ms in db.get_many('media_status', s, with_doc = True):
+                yield ms['doc']
+
+
+class MediaStatusIndex(TreeBasedIndex):
 
     def __init__(self, *args, **kwargs):
-        kwargs['key_format'] = 's'
+        kwargs['key_format'] = '16s'
         super(MediaStatusIndex, self).__init__(*args, **kwargs)
 
     def make_key(self, key):
-        return int(key.strip('t'))
+        return md5(key).digest()
 
     def make_key_value(self, data):
-        if data.get('type') == 'media' and data.get('identifier'):
-            return int(data['identifier'].strip('t')), None
+        if data.get('type') == 'media' and data.get('status'):
+            return md5(data.get('status')).digest(), None
 
 
 class TitleIndex(MultiTreeBasedIndex):
@@ -58,3 +68,17 @@ from itertools import izip"""
 
     def make_key(self, key):
         return key.rjust(32, '_').lower()
+
+
+class YearIndex(TreeBasedIndex):
+
+    def __init__(self, *args, **kwargs):
+        kwargs['key_format'] = 'i'
+        super(YearIndex, self).__init__(*args, **kwargs)
+
+    def make_key(self, key):
+        return key
+
+    def make_key_value(self, data):
+        if data.get('type') == 'media' and data.get('year') is not None:
+            return data['year'], None

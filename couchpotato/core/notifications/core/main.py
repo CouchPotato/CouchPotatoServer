@@ -86,7 +86,7 @@ class CoreNotifier(Notification):
         try:
             db = get_db()
             for n in db.all('notification', with_doc = True):
-                if n['doc']['added'] <= (int(time.time()) - 2419200):
+                if n['doc'].get('time', 0) <= (int(time.time()) - 2419200):
                     db.delete(n['doc'])
         except:
             log.error('Failed cleaning notification: %s', traceback.format_exc())
@@ -162,7 +162,7 @@ class CoreNotifier(Notification):
 
             n = {
                 'type': 'notification',
-                'time': time.time(),
+                'time': int(time.time()),
                 'message': toUnicode(message),
                 'data': data
             }
@@ -276,7 +276,7 @@ class CoreNotifier(Notification):
             notifications = db.all('notification_unread', with_doc = True)
 
             for n in notifications:
-                if n['doc'].get('added') > (time.time() - 259200):
+                if n['doc'].get('time') > (time.time() - 259200):
                     messages.append(n['doc'])
 
         return {

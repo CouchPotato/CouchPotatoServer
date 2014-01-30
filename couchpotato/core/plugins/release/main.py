@@ -5,8 +5,9 @@ from couchpotato.core.helpers.encoding import ss, toUnicode
 from couchpotato.core.helpers.variable import getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
+from .index import ReleaseIndex, ReleaseStatusIndex
 from couchpotato.core.plugins.scanner.main import Scanner
-from couchpotato.core.settings.model import File, Release as Relea, Media, \
+from couchpotato.core.settings.model import Release as Relea, Media, \
     ReleaseInfo
 from couchpotato.environment import Env
 from inspect import ismethod, isfunction
@@ -23,8 +24,6 @@ log = CPLog(__name__)
 class Release(Plugin):
 
     def __init__(self):
-        addEvent('release.add', self.add)
-
         addApiView('release.manual_download', self.manualDownload, docs = {
             'desc': 'Send a release manually to the downloaders',
             'params': {
@@ -50,6 +49,7 @@ class Release(Plugin):
             }
         })
 
+        addEvent('release.add', self.add)
         addEvent('release.download', self.download)
         addEvent('release.try_download_result', self.tryDownloadResult)
         addEvent('release.create_from_search', self.createFromSearch)
@@ -58,19 +58,35 @@ class Release(Plugin):
         addEvent('release.clean', self.clean)
         addEvent('release.update_status', self.updateStatus)
 
+        addEvent('database.setup', self.databaseSetup)
+
         # Clean releases that didn't have activity in the last week
-        addEvent('app.load', self.cleanDone)
+        addEvent('app.load2', self.cleanDone)
         fireEvent('schedule.interval', 'movie.clean_releases', self.cleanDone, hours = 4)
 
-    def cleanDone(self):
+    def databaseSetup(self):
 
+        db = get_db()
+
+        # Release media_id index
+        try:
+            db.add_index(ReleaseIndex(db.path, 'release'))
+        except:
+            log.debug('Index already exists')
+            db.edit_index(ReleaseIndex(db.path, 'release'))
+
+        # Release status index
+        try:
+            db.add_index(ReleaseStatusIndex(db.path, 'release_status'))
+        except:
+            log.debug('Index already exists')
+            db.edit_index(ReleaseStatusIndex(db.path, 'release_status'))
+
+    def cleanDone(self):
         log.debug('Removing releases from dashboard')
 
         now = time.time()
         week = 262080
-
-        done_status, available_status, snatched_status, downloaded_status, ignored_status = \
-            fireEvent('status.get', ['done', 'available', 'snatched', 'downloaded', 'ignored'], single = True)
 
         db = get_db()
 
@@ -78,23 +94,23 @@ class Release(Plugin):
         medias = db.run('media', 'with_status', ['done'])
 
         for media in medias:
-            if media['last_edit'] > (now - week):
+            if media.get('last_edit', 0) > (now - week):
                 continue
 
             for rel in db.run('release', 'for_media', media['_id']):
+
                 # Remove all available releases
                 if rel['status'] in ['available']:
-                    fireEvent('release.delete', id = rel['_id'], single = True)
+                    self.delete(rel['_id'])
 
                 # Set all snatched and downloaded releases to ignored to make sure they are ignored when re-adding the move
                 elif rel['status'] in ['snatched', 'downloaded']:
-                    self.updateStatus(id = rel['id'], status = ignored_status)
-
+                    self.updateStatus(rel['_id'], status = 'ignore')
 
     def add(self, group):
 
         try:
-            db = get_db()
+            db = get_session()
 
             identifier = '%s.%s.%s' % (group['library']['identifier'], group['meta_data'].get('audio', 'unknown'), group['meta_data']['quality']['identifier'])
 
@@ -160,9 +176,8 @@ class Release(Plugin):
 
         try:
             db = get_db()
-
-            rel = db.get('release', release_id, with_doc = True)
-            db.delete(rel['doc'])
+            rel = db.get('id', release_id)
+            db.delete(rel)
             return True
         except:
             log.error('Failed: %s', traceback.format_exc())
@@ -173,16 +188,17 @@ class Release(Plugin):
 
         try:
             db = get_db()
+            rel = db.get('id', release_id)
 
-            rel = db.get('release', release_id, with_doc = True)
-            files = []
-            for release_file in rel['files']:
-                if os.path.isfile(ss(release_file['path'])):
-                    files.append(release_file)
-
-            if len(rel['files']) == 0:
+            if len(rel.get('files')) == 0:
                 self.delete(rel['_id'])
             else:
+
+                files = []
+                for release_file in rel.get('files'):
+                    if os.path.isfile(ss(release_file['path'])):
+                        files.append(release_file)
+
                 rel['files'] = files
                 db.update(rel)
 
@@ -197,7 +213,7 @@ class Release(Plugin):
         db = get_db()
 
         try:
-            rel = db.get('release', release_id, with_doc = True)['doc']
+            rel = db.get('id', release_id, with_doc = True)
             self.updateStatus(release_id, 'available' if rel['status'] in ['ignored', 'failed'] else 'ignored')
 
             return {
@@ -453,42 +469,34 @@ class Release(Plugin):
             'success': True
         }
 
-    def updateStatus(self, id, status = None):
+    def updateStatus(self, release_id, status = None):
         if not status: return False
 
         try:
-            db = get_session()
+            db = get_db()
 
-            rel = db.query(Relea).filter_by(id = id).first()
-            if rel and status and rel.status_id != status.get('id'):
+            rel = db.get('id', release_id)
+            if rel and rel.get('status') != status:
 
-                item = {}
-                for info in rel.info:
-                    item[info.identifier] = info.value
-
-                release_name = None
-                if rel.files:
-                    for file_item in rel.files:
-                        if file_item.type.identifier == 'movie':
-                            release_name = os.path.basename(file_item.path)
+                release_name = rel.get('name')
+                if rel.get('files'):
+                    for file_item in rel.get('files', []):
+                        if file_item.get('type') == 'movie':
+                            release_name = os.path.basename(file_item.get('path'))
                             break
-                else:
-                    release_name = item['name']
 
                 #update status in Db
-                log.debug('Marking release %s as %s', (release_name, status.get("label")))
-                rel.status_id = status.get('id')
-                rel.last_edit = int(time.time())
-                db.commit()
+                log.debug('Marking release %s as %s', (release_name, status))
+                rel['status'] = status
+                rel['last_edit'] = int(time.time())
+
+                db.update(rel)
 
                 #Update all movie info as there is no release update function
-                fireEvent('notify.frontend', type = 'release.update_status', data = rel.to_dict())
+                fireEvent('notify.frontend', type = 'release.update_status', data = rel)
 
             return True
         except:
             log.error('Failed: %s', traceback.format_exc())
-            db.rollback()
-        finally:
-            pass  #db.close()
 
         return False
