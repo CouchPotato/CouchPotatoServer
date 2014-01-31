@@ -136,9 +136,25 @@ def getExt(filename):
 
 
 def cleanHost(host, protocol = True, ssl = False, username = None, password = None):
+    """Return a cleaned up host with given url options set
+
+    Changes protocol to https if ssl is set to True and http if ssl is set to false.
+    >>> cleanHost("localhost:80", ssl=True)
+    'https://localhost:80/'
+    >>> cleanHost("localhost:80", ssl=False)
+    'http://localhost:80/'
+
+    Username and password is managed with the username and password variables
+    >>> cleanHost("localhost:80", username="user", password="passwd")
+    'http://user:passwd@localhost:80/'
+
+    Output without scheme (protocol) can be forced with protocol=False
+    >>> cleanHost("localhost:80", protocol=False)
+    'localhost:80'
+    """
 
     if not '://' in host and protocol:
-        host = 'https://' if ssl else 'http://' + host
+        host = ('https://' if ssl else 'http://') + host
 
     if not protocol:
         host = host.split('://', 1)[-1]
