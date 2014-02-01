@@ -99,7 +99,10 @@ class IPTorrents(TorrentProvider):
         result = {}
 
         for x, col in enumerate(entries[0].find_all('th')):
-            key = toSafeString(col.text).strip().lower()
+            content = col.string
+            if content == None:
+                content = col.find_all('img')[0].get('alt', '')
+            key = toSafeString(content).strip().lower()
 
             if not key:
                 continue
