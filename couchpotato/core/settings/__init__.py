@@ -5,7 +5,6 @@ from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.variable import mergeDicts, tryInt, tryFloat
 from couchpotato.core.settings.index import PropertyIndex
-from couchpotato.core.settings.model import Properties
 import ConfigParser
 
 
@@ -247,7 +246,7 @@ class Settings(object):
             db.update(p['doc'])
         except:
             db.insert({
-                'type': 'property',
+                '_t': 'property',
                 'identifier': identifier,
                 'value': toUnicode(value),
             })

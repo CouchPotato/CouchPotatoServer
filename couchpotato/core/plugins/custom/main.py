@@ -10,7 +10,7 @@ log = CPLog(__name__)
 class Custom(Plugin):
 
     def __init__(self):
-        addEvent('app.load2', self.createStructure)
+        addEvent('app.load', self.createStructure)
 
     def createStructure(self):
 

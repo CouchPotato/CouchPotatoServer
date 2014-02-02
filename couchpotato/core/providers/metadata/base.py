@@ -25,8 +25,7 @@ class MetaDataBase(Plugin):
 
         # Update library to get latest info
         try:
-            updated_library = fireEvent('library.update.movie', group['library']['identifier'], extended = True, single = True)
-            group['library'] = mergeDicts(group['library'], updated_library)
+            group['media'] = fireEvent('movie.update_info', group['media']['identifier'], extended = True, single = True)
         except:
             log.error('Failed to update movie, before creating metadata: %s', traceback.format_exc())
 
@@ -34,7 +33,7 @@ class MetaDataBase(Plugin):
         meta_name = os.path.basename(root_name)
         root = os.path.dirname(root_name)
 
-        movie_info = group['library'].get('info')
+        movie_info = group['media'].get('info')
 
         for file_type in ['nfo', 'thumbnail', 'fanart']:
             try:
@@ -96,13 +95,13 @@ class MetaDataBase(Plugin):
                 break
 
         # See if it is in current files
-        for cur_file in data['library'].get('files', []):
+        for cur_file in data.get('files', []):
             if cur_file.get('type_id') is file_type.get('id') and os.path.isfile(cur_file.get('path')):
                 return cur_file.get('path')
 
         # Download using existing info
         try:
-            images = data['library']['info']['images'][wanted_file_type]
+            images = data['info']['images'][wanted_file_type]
             file_path = fireEvent('file.download', url = images[0], single = True)
             return file_path
         except:

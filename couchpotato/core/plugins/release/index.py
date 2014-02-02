@@ -5,15 +5,15 @@ from CodernityDB.tree_index import TreeBasedIndex
 class ReleaseIndex(TreeBasedIndex):
 
     def __init__(self, *args, **kwargs):
-        kwargs['key_format'] = '16s'
+        kwargs['key_format'] = '32s'
         super(ReleaseIndex, self).__init__(*args, **kwargs)
 
     def make_key(self, key):
-        return md5(key).digest()
+        return md5(key).hexdigest()
 
     def make_key_value(self, data):
-        if data.get('type') == 'release' and data.get('media_id'):
-            return md5(data['media_id']).digest(), {'media_id': data.get('media_id')}
+        if data.get('_t') == 'release' and data.get('media_id'):
+            return md5(data['media_id']).hexdigest(), {'media_id': data.get('media_id')}
 
     def run_for_media(self, db, media_id):
         for release in db.get_many('release', media_id, with_doc = True):
@@ -31,12 +31,26 @@ class ReleaseIndex(TreeBasedIndex):
 class ReleaseStatusIndex(TreeBasedIndex):
 
     def __init__(self, *args, **kwargs):
-        kwargs['key_format'] = '16s'
+        kwargs['key_format'] = '32s'
         super(ReleaseStatusIndex, self).__init__(*args, **kwargs)
 
     def make_key(self, key):
-        return md5(key).digest()
+        return md5(key).hexdigest()
 
     def make_key_value(self, data):
-        if data.get('type') == 'release' and data.get('status'):
-            return md5(data.get('status')).digest(), None
+        if data.get('_t') == 'release' and data.get('status'):
+            return md5(data.get('status')).hexdigest(), None
+
+
+class ReleaseIDIndex(TreeBasedIndex):
+
+    def __init__(self, *args, **kwargs):
+        kwargs['key_format'] = '32s'
+        super(ReleaseIDIndex, self).__init__(*args, **kwargs)
+
+    def make_key(self, key):
+        return md5(key).hexdigest()
+
+    def make_key_value(self, data):
+        if data.get('_t') == 'release' and data.get('identifier'):
+            return md5(data.get('identifier')).hexdigest(), None

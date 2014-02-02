@@ -26,7 +26,7 @@ class BiTHDTV(TorrentProvider):
     def _searchOnTitle(self, title, movie, quality, results):
 
         arguments = tryUrlencode({
-            'search': '%s %s' % (title.replace(':', ''), movie['library']['year']),
+            'search': '%s %s' % (title.replace(':', ''), movie['info']['year']),
             'cat': self.cat_id_movies
         })
 

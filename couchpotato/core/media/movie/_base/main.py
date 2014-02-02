@@ -1,13 +1,13 @@
 import traceback
-from couchpotato import get_session, get_db
+from couchpotato import get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, fireEventAsync, addEvent
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.variable import splitString, tryInt, getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media.movie import MovieTypeBase
-from couchpotato.core.settings.model import Media
 import time
+import six
 
 log = CPLog(__name__)
 
@@ -42,8 +42,10 @@ class MovieBase(MovieTypeBase):
         })
 
         addEvent('movie.add', self.add)
+        addEvent('movie.update_info', self.updateInfo)
+        addEvent('movie.update_release_dates', self.updateReleaseDate)
 
-    def add(self, params = None, force_readd = True, search_after = True, update_library = False, status_id = None):
+    def add(self, params = None, force_readd = True, search_after = True, update_library = False, status = None):
         if not params: params = {}
 
         if not params.get('identifier'):
@@ -62,27 +64,55 @@ class MovieBase(MovieTypeBase):
             except:
                 pass
 
-        # library = fireEvent('library.add.movie', single = True, attrs = params, update_after = update_library)
         info = fireEvent('movie.info', merge = True, extended = False, identifier = params.get('identifier'))
 
+        # Set default title
+        default_title = toUnicode(info.get('title'))
+        titles = info.get('titles', [])
+        counter = 0
+        def_title = None
+        for title in titles:
+            if (len(default_title) == 0 and counter == 0) or len(titles) == 1 or title.lower() == toUnicode(default_title.lower()) or (toUnicode(default_title) == six.u('') and toUnicode(titles[0]) == title):
+                def_title = toUnicode(title)
+                break
+            counter += 1
+
+        if not def_title:
+            def_title = toUnicode(titles[0])
+
+        # Default profile and category
         default_profile = fireEvent('profile.default', single = True)
         cat_id = params.get('category_id')
 
         try:
             db = get_db()
 
+            media = {
+                '_t': 'media',
+                'type': 'movie',
+                'title': def_title,
+                'identifier': params.get('identifier'),
+                'status': status if status else 'active',
+                'profile_id': params.get('profile_id', default_profile.get('_id')),
+                'category_id': tryInt(cat_id) if cat_id is not None and tryInt(cat_id) > 0 else None,
+            }
+
             new = False
             try:
-                m = db.get('movie', params.get('identifier'), with_doc = True)['doc']
+                m = db.get('media', params.get('identifier'), with_doc = True)['doc']
             except:
                 new = True
-                m = db.insert({
-                    'type': 'movie',
-                    'identifier': params.get('identifier'),
-                    'status': status_id if status_id else 'active',
-                    'profile_id': params.get('profile_id', default_profile.get('id')),
-                    'category_id': tryInt(cat_id) if cat_id is not None and tryInt(cat_id) > 0 else None,
-                })
+                m = db.insert(media)
+
+            # Update dict to be usable
+            m.update(media)
+
+            # Update movie info
+            try: del info['in_wanted']
+            except: pass
+            try: del info['in_library']
+            except: pass
+            m['info'] = info
 
             added = True
             do_search = False
@@ -92,7 +122,7 @@ class MovieBase(MovieTypeBase):
                 if search_after:
                     onComplete = self.createOnComplete(m['_id'])
 
-                # fireEventAsync('library.update.movie', params.get('identifier'), default_title = params.get('title', ''), on_complete = onComplete)
+                fireEventAsync('movie.update_info', m['_id'], default_title = params.get('title', ''), on_complete = onComplete)
                 search_after = False
             elif force_readd:
 
@@ -106,24 +136,24 @@ class MovieBase(MovieTypeBase):
                             fireEvent('release.delete', release['_id'], single = True)
 
                 m['profile_id'] = params.get('profile_id', default_profile.get('id'))
-                m['category_id'] = tryInt(cat_id) if cat_id is not None and tryInt(cat_id) > 0 else (m['category_id'] or None)
+                m['category_id'] = tryInt(cat_id) if cat_id is not None and tryInt(cat_id) > 0 else (m.get('category_id') or None)
             else:
                 log.debug('Movie already exists, not updating: %s', params)
                 added = False
 
             if force_readd:
-                m['status'] = status_id if status_id else 'active'
                 m['last_edit'] = int(time.time())
                 do_search = True
 
-            db.update(m)
+            if added:
+                db.update(m)
 
             # Remove releases
             for rel in db.run('release', 'for_media', m['_id']):
                 if rel['status'] is 'available':
                     db.delete(rel)
 
-            movie_dict = db.run('movie', 'to_dict', m['_id'])
+            movie_dict = db.run('media', 'to_dict', m['_id'])
 
             if do_search and search_after:
                 onComplete = self.createOnComplete(m['_id'])
@@ -137,7 +167,7 @@ class MovieBase(MovieTypeBase):
                     if title:
                         message = 'Successfully added "%s" to your wanted list.' % title
                     else:
-                        message = 'Succesfully added to your wanted list.'
+                        message = 'Successfully added to your wanted list.'
                 fireEvent('notify.frontend', type = 'movie.added', data = movie_dict, message = message)
 
             return movie_dict
@@ -161,7 +191,7 @@ class MovieBase(MovieTypeBase):
             for media_id in ids:
 
                 try:
-                    m = db.get('media', media_id)
+                    m = db.get('id', media_id)
                     m['profile_id'] = kwargs.get('profile_id')
 
                     cat_id = kwargs.get('category_id')
@@ -197,3 +227,128 @@ class MovieBase(MovieTypeBase):
         return {
             'success': False,
         }
+
+    def updateInfo(self, media_id = None, identifier = None, default_title = None, extended = False):
+        """
+        Update movie information inside media['doc']['info']
+
+        @param media_id: document id
+        @param default_title: default title, if empty, use first one or existing one
+        @param extended: update with extended info (parses more info, actors, images from some info providers)
+        @return: dict, with media
+        """
+
+        if self.shuttingDown():
+            return
+
+        try:
+            db = get_db()
+
+            if media_id:
+                media = db.get('id', media_id)
+            else:
+                media = db.get('media', identifier, with_doc = True)['doc']
+
+            info = fireEvent('movie.info', merge = True, extended = extended, identifier = media.get('identifier'))
+
+            # Don't need those here
+            try: del info['in_wanted']
+            except: pass
+            try: del info['in_library']
+            except: pass
+
+            if not info or len(info) == 0:
+                log.error('Could not update, no movie info to work with: %s', media.get('identifier'))
+                return False
+
+            # Update basic info
+            media['info'] = info
+
+            titles = info.get('titles', [])
+            log.debug('Adding titles: %s', titles)
+            counter = 0
+
+            def_title = None
+            for title in titles:
+                if (len(default_title) == 0 and counter == 0) or len(titles) == 1 or title.lower() == toUnicode(default_title.lower()) or (toUnicode(default_title) == six.u('') and toUnicode(titles[0]) == title):
+                    def_title = toUnicode(title)
+                    break
+                counter += 1
+
+            if not def_title:
+                def_title = toUnicode(titles[0])
+
+            media = {
+                'title': def_title,
+            }
+
+            # Files
+            images = info.get('images', [])
+            media['files'] = media.get('filed', [])
+            for image_type in ['poster']:
+                for image in images.get(image_type, []):
+                    if not isinstance(image, (str, unicode)):
+                        continue
+
+                    file_path = fireEvent('file.download', url = image, single = True)
+                    media['files'].append({
+                        'type': 'image_%s' % image_type,
+                        'path': file_path
+                    })
+
+            db.update(media)
+
+            return media
+        except:
+            log.error('Failed update media: %s', traceback.format_exc())
+
+        return {}
+
+    def updateReleaseDate(self, media_id):
+        """
+        Update releasedate (eta) info only
+
+        @param media_id: document id
+        @return: dict, with dates dvd, theater, bluray, expires
+        """
+
+        try:
+            db = get_db()
+
+            media = db.get('id', media_id)
+
+            if not media.get('info'):
+                info_dict = self.updateInfo(media_id)
+                dates = info_dict.get('info', {}).get('release_date')
+            else:
+                dates = media.get('info').get('release_date')
+
+            if dates and (dates.get('expires', 0) < time.time() or dates.get('expires', 0) > time.time() + (604800 * 4)) or not dates:
+                dates = fireEvent('movie.info.release_date', identifier = media['identifier'], merge = True)
+                media['info'].update({'release_date': dates})
+                db.update(media)
+
+            return dates
+        except:
+            log.error('Failed updating release dates: %s', traceback.format_exc())
+
+        return {}
+
+    def simplifyTitle(self, title):
+        """
+        Removes all special chars from a title so it's easier to make sortable
+        @param title: media title
+        @return: string, simplified title
+        """
+
+        title = toUnicode(title)
+
+        nr_prefix = '' if title[0] in ascii_letters else '#'
+        title = simplifyString(title)
+
+        for prefix in ['the ']:
+            if prefix == title[:len(prefix)]:
+                title = title[len(prefix):]
+                break
+
+        return nr_prefix + title

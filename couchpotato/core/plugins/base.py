@@ -291,7 +291,7 @@ class Plugin(object):
 
     def cpTag(self, media):
         if Env.setting('enabled', 'renamer'):
-            return '.cp(' + media['library'].get('identifier') + ')' if media['library'].get('identifier') else ''
+            return '.cp(' + media.get('identifier') + ')' if media.get('identifier') else ''
 
         return ''
 

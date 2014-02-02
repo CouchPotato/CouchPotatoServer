@@ -20,11 +20,11 @@ class HDTrailers(TrailerProvider):
 
     def search(self, group):
 
-        movie_name = getTitle(group['library'])
+        movie_name = getTitle(group)
 
         url = self.urls['api'] % self.movieUrlName(movie_name)
         try:
-            data = self.getCache('hdtrailers.%s' % group['library']['identifier'], url, show_error = False)
+            data = self.getCache('hdtrailers.%s' % group['identifier'], url, show_error = False)
         except HTTPError:
             log.debug('No page found for: %s', movie_name)
             data = None
@@ -50,11 +50,11 @@ class HDTrailers(TrailerProvider):
     def findViaAlternative(self, group):
         results = {'480p':[], '720p':[], '1080p':[]}
 
-        movie_name = getTitle(group['library'])
+        movie_name = getTitle(group)
 
         url = "%s?%s" % (self.urls['backup'], tryUrlencode({'s':movie_name}))
         try:
-            data = self.getCache('hdtrailers.alt.%s' % group['library']['identifier'], url, show_error = False)
+            data = self.getCache('hdtrailers.alt.%s' % group['identifier'], url, show_error = False)
         except HTTPError:
             log.debug('No alternative page found for: %s', movie_name)
             data = None

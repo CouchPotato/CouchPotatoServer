@@ -34,7 +34,7 @@ class TorrentShack(TorrentProvider):
 
         scene_only = '1' if self.conf('scene_only') else ''
 
-        url = self.urls['search'] % (tryUrlencode('%s %s' % (title.replace(':', ''), movie['library']['year'])), scene_only, self.getCatId(quality['identifier'])[0])
+        url = self.urls['search'] % (tryUrlencode('%s %s' % (title.replace(':', ''), movie['info']['year'])), scene_only, self.getCatId(quality['identifier'])[0])
         data = self.getHTMLData(url)
 
         if data:

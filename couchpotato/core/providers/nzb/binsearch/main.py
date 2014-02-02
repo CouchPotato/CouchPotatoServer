@@ -23,7 +23,7 @@ class BinSearch(NZBProvider):
     def _search(self, movie, quality, results):
 
         arguments = tryUrlencode({
-            'q': movie['library']['identifier'],
+            'q': movie['identifier'],
             'm': 'n',
             'max': 400,
             'adv_age': Env.setting('retention', 'nzb'),

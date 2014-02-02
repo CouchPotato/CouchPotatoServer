@@ -2,7 +2,6 @@ import time
 from couchpotato import CPLog, get_db
 from couchpotato.core.event import addEvent
 from couchpotato.core.plugins.base import Plugin
-from .index import ReleaseIndex, NameIndex
 
 log = CPLog(__name__)
 
@@ -13,7 +12,7 @@ class NoSQL(Plugin):
 
     def __init__(self):
 
-        pass #addEvent('app.load2', self.test)
+        pass #addEvent('app.load', self.test)
 
     def test(self):
 
@@ -31,7 +30,8 @@ class NoSQL(Plugin):
 
         for id in range(10):
             media = db.insert({
-                'type': 'media',
+                '_t': 'media',
+                'type': 'movie',
                 'tmdb': id,
                 'imdb': 'tt%s' % id,
                 'last_edit': 0,

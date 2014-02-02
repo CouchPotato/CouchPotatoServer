@@ -223,9 +223,9 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     loader.run()
 
     # Fill database with needed stuff
+    fireEvent('database.setup') 
     if not db_exists:
         fireEvent('app.initialize', in_order = True)
-    fireEvent('database.setup')
 
     # Go go go!
     from tornado.ioloop import IOLoop
@@ -234,7 +234,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     # Some logging and fire load event
     try: log.info('Starting server on port %(port)s', config)
     except: pass
-    fireEventAsync('app.load2')
+    fireEventAsync('app.load')
 
     if config['ssl_cert'] and config['ssl_key']:
         server = HTTPServer(application, no_keep_alive = True, ssl_options = {

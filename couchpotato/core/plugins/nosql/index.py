@@ -12,6 +12,6 @@ class NameIndex(TreeBasedIndex):
         return key
 
     def make_key_value(self, data):
-        if data.get('type') == 'media' and data.get('title') is not None:
+        if data.get('_t') == 'media' and data.get('title') is not None:
             return data.get('title'), None
 

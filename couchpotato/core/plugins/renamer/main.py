@@ -45,7 +45,7 @@ class Renamer(Plugin):
         addEvent('renamer.scan', self.scan)
         addEvent('renamer.check_snatched', self.checkSnatched)
 
-        addEvent('app.load2', self.scan)
+        addEvent('app.load', self.scan)
         addEvent('app.load', self.setCrons)
 
         # Enable / disable interval
@@ -222,23 +222,20 @@ class Renamer(Plugin):
             remove_files = []
             remove_releases = []
 
-            movie_title = getTitle(group['library'])
+            movie_title = getTitle(group)
 
             # Add _UNKNOWN_ if no library item is connected
-            if not group['library'] or not movie_title:
+            if not group.get('info') or not movie_title:
                 self.tagRelease(group = group, tag = 'unknown')
                 continue
             # Rename the files using the library data
             else:
-                group['library'] = fireEvent('library.update.movie', identifier = group['library']['identifier'], single = True)
-                if not group['library']:
+                group['media'] = fireEvent('movie.update_info', identifier = group['media']['identifier'], single = True)
+                if not group['media']:
                     log.error('Could not rename, no library item to work with: %s', group_identifier)
                     continue
 
-                library = group['library']
-                library_ent = db.query(Library).filter_by(identifier = group['library']['identifier']).first()
-
-                movie_title = getTitle(library)
+                movie_title = getTitle(group['media'])
 
                 # Overwrite destination when set in category
                 destination = to_folder
@@ -419,19 +416,19 @@ class Renamer(Plugin):
                 # Add it to the wanted list before we continue
                 if len(library_ent.movies) == 0:
                     profile = db.query(Profile).filter_by(core = True, label = group['meta_data']['quality']['label']).first()
-                    fireEvent('movie.add', params = {'identifier': group['library']['identifier'], 'profile_id': profile.id}, search_after = False)
+                    fireEvent('movie.add', params = {'identifier': group['identifier'], 'profile_id': profile.id}, search_after = False)
                     db.expire_all()
-                    library_ent = db.query(Library).filter_by(identifier = group['library']['identifier']).first()
+                    library_ent = db.query(Library).filter_by(identifier = group['identifier']).first()
 
                 for movie in library_ent.movies:
 
                     # Mark movie "done" once it's found the quality with the finish check
                     try:
-                        if movie.status_id == active_status.get('id') and movie.profile:
+                        if movie.get('status') == 'active' and movie.get('profile_id'):
                             for profile_type in movie.profile.types:
                                 if profile_type.quality_id == group['meta_data']['quality']['id'] and profile_type.finish:
-                                    movie.status_id = done_status.get('id')
-                                    movie.last_edit = int(time.time())
+                                    movie['status'] = 'done'
+                                    movie['last_edit'] = int(time.time())
                                     db.commit()
                     except Exception as e:
                         log.error('Failed marking movie finished: %s %s', (e, traceback.format_exc()))
@@ -441,7 +438,7 @@ class Renamer(Plugin):
                     for release in movie.releases:
 
                         # When a release already exists
-                        if release.status_id is done_status.get('id'):
+                        if release.get('status') == 'done':
 
                             # This is where CP removes older, lesser quality releases
                             if release.quality.order > group['meta_data']['quality']['order']:
@@ -470,7 +467,7 @@ class Renamer(Plugin):
 
                                 break
 
-                        elif release.status_id in [snatched_status.get('id'), seeding_status.get('id')]:
+                        elif release.get('status') in ['snatched', 'seeding']:
                             if release_download and release_download.get('rls_id'):
                                 if release_download['rls_id'] == release.id:
                                     if release_download['status'] == 'completed':
@@ -917,7 +914,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                                 found_release = True
                                 break
                         else:
-                            if release_download['name'] == nzbname or rel['info']['name'] in release_download['name'] or getImdb(release_download['name']) == movie_dict['library']['identifier']:
+                            if release_download['name'] == nzbname or rel['info']['name'] in release_download['name'] or getImdb(release_download['name']) == movie_dict['identifier']:
                                 log.debug('Found release by release name or imdb ID: %s', release_download['name'])
                                 found_release = True
                                 break
@@ -951,7 +948,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
                     elif release_download['status'] == 'seeding':
                         #If linking setting is enabled, process release
-                        if self.conf('file_action') != 'move' and not rel.status_id == 'seeding' and self.statusInfoComplete(release_download):
+                        if self.conf('file_action') != 'move' and not rel.get('status') == 'seeding' and self.statusInfoComplete(release_download):
                             log.info('Download of %s completed! It is now being processed while leaving the original files alone for seeding. Current ratio: %s.', (release_download['name'], release_download['seed_ratio']))
 
                             # Remove the downloading tag

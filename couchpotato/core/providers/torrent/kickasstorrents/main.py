@@ -36,7 +36,7 @@ class KickAssTorrents(TorrentMagnetProvider):
 
     def _search(self, movie, quality, results):
 
-        data = self.getHTMLData(self.urls['search'] % (self.getDomain(), 'm', movie['library']['identifier'].replace('tt', '')))
+        data = self.getHTMLData(self.urls['search'] % (self.getDomain(), 'm', movie['identifier'].replace('tt', '')))
 
         if data:
 

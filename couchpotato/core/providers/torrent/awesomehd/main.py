@@ -20,7 +20,7 @@ class AwesomeHD(TorrentProvider):
 
     def _search(self, movie, quality, results):
 
-        data = self.getHTMLData(self.urls['search'] % (self.conf('passkey'), movie['library']['identifier'], self.conf('only_internal')))
+        data = self.getHTMLData(self.urls['search'] % (self.conf('passkey'), movie['identifier'], self.conf('only_internal')))
 
         if data:
             try:

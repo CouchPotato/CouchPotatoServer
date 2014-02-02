@@ -47,7 +47,7 @@ class Manage(Plugin):
         })
 
         if not Env.get('dev') and self.conf('startup_scan'):
-            addEvent('app.load2', self.updateLibraryQuick)
+            addEvent('app.load', self.updateLibraryQuick)
 
     def getProgress(self, **kwargs):
         return {
@@ -120,7 +120,7 @@ class Manage(Plugin):
                 total_movies, done_movies = fireEvent('media.list', types = 'movie', status = 'done', single = True)
 
                 for done_movie in done_movies:
-                    if done_movie['library']['identifier'] not in added_identifiers:
+                    if done_movie['identifier'] not in added_identifiers:
                         fireEvent('media.delete', media_id = done_movie['id'], delete_from = 'all')
                     else:
 
@@ -184,13 +184,13 @@ class Manage(Plugin):
                     'to_go': total_found,
                 })
 
-            if group['library'] and group['library'].get('identifier'):
-                identifier = group['library'].get('identifier')
+            if group['media'] and group['media'].get('identifier'):
+                identifier = group['media'].get('identifier')
                 added_identifiers.append(identifier)
 
                 # Add it to release and update the info
                 fireEvent('release.add', group = group)
-                fireEvent('library.update.movie', identifier = identifier, on_complete = self.createAfterUpdate(folder, identifier))
+                fireEvent('movie.update_info', identifier = identifier, on_complete = self.createAfterUpdate(folder, identifier))
             else:
                 self.updateProgress(folder)
 
@@ -207,7 +207,7 @@ class Manage(Plugin):
             total = self.in_progress[folder]['total']
             movie_dict = fireEvent('media.get', identifier, single = True)
 
-            fireEvent('notify.frontend', type = 'movie.added', data = movie_dict, message = None if total > 5 else 'Added "%s" to manage.' % getTitle(movie_dict['library']))
+            fireEvent('notify.frontend', type = 'movie.added', data = movie_dict, message = None if total > 5 else 'Added "%s" to manage.' % getTitle(movie_dict))
 
         return afterUpdate
 
@@ -237,7 +237,7 @@ class Manage(Plugin):
 
         if groups:
             for group in groups.values():
-                if group['library'] and group['library'].get('identifier'):
+                if group.get('info'):
                     fireEvent('release.add', group = group)
 
     def getDiskSpace(self):

@@ -1,16 +1,15 @@
-from CodernityDB.hash_index import HashIndex
-from hashlib import md5
+from CodernityDB.tree_index import TreeBasedIndex
 
 
-class ProfileIndex(HashIndex):
+class ProfileIndex(TreeBasedIndex):
 
     def __init__(self, *args, **kwargs):
-        kwargs['key_format'] = '16s'
+        kwargs['key_format'] = 'i'
         super(ProfileIndex, self).__init__(*args, **kwargs)
 
     def make_key(self, key):
-        return md5(key).digest()
+        return key
 
     def make_key_value(self, data):
-        if data.get('type') == 'profile' and data.get('identifier'):
-            return md5(data.get('identifier')).digest(), None
+        if data.get('_t') == 'profile':
+            return data.get('order', 99), None

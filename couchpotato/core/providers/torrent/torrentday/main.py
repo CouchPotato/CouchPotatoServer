@@ -27,7 +27,7 @@ class TorrentDay(TorrentProvider):
 
     def _searchOnTitle(self, title, movie, quality, results):
 
-        q = '"%s %s"' % (title, movie['library']['year'])
+        q = '"%s %s"' % (title, movie['info']['year'])
 
         data = {
             '/browse.php?': None,

@@ -39,7 +39,7 @@ class SceneAccess(TorrentProvider):
         )
 
         arguments = tryUrlencode({
-            'search': movie['library']['identifier'],
+            'search': movie['identifier'],
             'method': 1,
         })
         url = "%s&%s" % (url, arguments)

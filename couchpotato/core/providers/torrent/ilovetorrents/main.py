@@ -38,7 +38,7 @@ class ILoveTorrents(TorrentProvider):
 
         while page < total_pages:
 
-            movieTitle = tryUrlencode('"%s" %s' % (title, movie['library']['year']))
+            movieTitle = tryUrlencode('"%s" %s' % (title, movie['info']['year']))
             search_url = self.urls['search'] % (movieTitle, page, cats[0])
             page += 1
 

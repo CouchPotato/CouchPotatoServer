@@ -33,7 +33,7 @@ class Yify(TorrentMagnetProvider):
 
     def _search(self, movie, quality, results):
 
-        search_url = self.urls['search'] % (self.getDomain(), movie['library']['identifier'], quality['identifier'])
+        search_url = self.urls['search'] % (self.getDomain(), movie['identifier'], quality['identifier'])
 
         data = self.getJsonData(search_url)
 

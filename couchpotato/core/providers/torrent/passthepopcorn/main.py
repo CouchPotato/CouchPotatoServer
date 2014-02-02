@@ -56,13 +56,13 @@ class PassThePopcorn(TorrentProvider):
 
     def _search(self, movie, quality, results):
 
-        movie_title = getTitle(movie['library'])
+        movie_title = getTitle(movie)
         quality_id = quality['identifier']
 
         params = mergeDicts(self.quality_search_params[quality_id].copy(), {
             'order_by': 'relevance',
             'order_way': 'descending',
-            'searchstr': movie['library']['identifier']
+            'searchstr': movie['identifier']
         })
 
         url = '%s?json=noredirect&%s' % (self.urls['torrent'], tryUrlencode(params))

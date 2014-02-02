@@ -5,7 +5,7 @@ from couchpotato.core.helpers.variable import getExt, getImdb, tryInt, \
     splitString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.core.settings.model import File, Media
+from couchpotato.core.settings.model import File
 from enzyme.exceptions import NoParserError, ParseError
 from guessit import guess_movie_info
 from subliminal.videos import Video
@@ -417,13 +417,11 @@ class Scanner(Plugin):
             del group['unsorted_files']
 
             # Determine movie
-            group['library'] = self.determineMovie(group, release_download = release_download)
-            if not group['library']:
-                log.error('Unable to determine movie: %s', group['identifiers'])
+            group['media'] = self.determineMedia(group, release_download = release_download)
+            if not group['media']:
+                log.error('Unable to determine media: %s', group['identifiers'])
             else:
-                movie = db.query(Media).filter_by(library_id = group['library']['id']).first()
-                group['movie_id'] = None if not movie else movie.id
-                db.expire_all()
+                group['identifier'] = group['media']['identifier']
 
             processed_movies[identifier] = group
 
@@ -554,7 +552,7 @@ class Scanner(Plugin):
 
         return detected_languages
 
-    def determineMovie(self, group, release_download = None):
+    def determineMedia(self, group, release_download = None):
 
         # Get imdb id from downloader
         imdb_id = release_download and release_download.get('imdb_id')

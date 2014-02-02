@@ -30,21 +30,21 @@ class XBMC(MetaDataBase):
 
         # return imdb url only
         if self.conf('meta_url_only'):
-            return 'http://www.imdb.com/title/%s/' % toUnicode(data['library']['identifier'])
+            return 'http://www.imdb.com/title/%s/' % toUnicode(data['identifier'])
 
         nfoxml = Element('movie')
 
         # Title
         try:
             el = SubElement(nfoxml, 'title')
-            el.text = toUnicode(getTitle(data['library']))
+            el.text = toUnicode(getTitle(data))
         except:
             pass
 
         # IMDB id
         try:
             el = SubElement(nfoxml, 'id')
-            el.text = toUnicode(data['library']['identifier'])
+            el.text = toUnicode(data['identifier'])
         except:
             pass
 

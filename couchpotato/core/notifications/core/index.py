@@ -15,7 +15,7 @@ import time"""
         return key
 
     def make_key_value(self, data):
-        if data.get('type') == 'notification':
+        if data.get('_t') == 'notification':
             added = data.get('added', time.time())
             data['added'] = added
 
@@ -35,7 +35,7 @@ import time"""
         return key
 
     def make_key_value(self, data):
-        if data.get('type') == 'notification' and not data.get('read'):
+        if data.get('_t') == 'notification' and not data.get('read'):
             added = data.get('added', time.time())
             data['added'] = added
 

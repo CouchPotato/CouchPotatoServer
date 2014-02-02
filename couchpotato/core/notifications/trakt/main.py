@@ -1,3 +1,4 @@
+from couchpotato.core.helpers.variable import getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
 
@@ -21,9 +22,9 @@ class Trakt(Notification):
             'username': self.conf('automation_username'),
             'password' : self.conf('automation_password'),
             'movies': [{
-                'imdb_id': data['library']['identifier'],
-                'title': data['library']['titles'][0]['title'],
-                'year': data['library']['year']
+                'imdb_id': data['identifier'],
+                'title': getTitle(data),
+                'year': data['info']['year']
             }] if data else []
         }
 

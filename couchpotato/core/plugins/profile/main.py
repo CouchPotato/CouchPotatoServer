@@ -1,13 +1,12 @@
 import traceback
 from couchpotato import get_session, get_db
 from couchpotato.api import addApiView
-from couchpotato.core.event import addEvent, fireEvent
+from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from .index import ProfileIndex
-from couchpotato.core.settings.model import Profile, ProfileType, Media
-from sqlalchemy.orm import joinedload_all
+from couchpotato.core.settings.model import Profile, ProfileType
 
 log = CPLog(__name__)
 
@@ -34,7 +33,7 @@ class ProfilePlugin(Plugin):
         addEvent('database.setup', self.databaseSetup)
 
         addEvent('app.initialize', self.fill, priority = 90)
-        addEvent('app.load2', self.forceDefaults)
+        addEvent('app.load', self.forceDefaults)
 
     def databaseSetup(self):
 
@@ -46,7 +45,6 @@ class ProfilePlugin(Plugin):
             log.debug('Index already exists')
             db.edit_index(ProfileIndex(db.path, 'profile'))
 
-
     def forceDefaults(self):
 
         # Get all active movies without profile
@@ -57,7 +55,7 @@ class ProfilePlugin(Plugin):
             profile_ids = [x.get('_id') for x in self.all()]
 
             for media in medias:
-                if media['profile_id'] not in profile_ids:
+                if media.get('profile_id') not in profile_ids:
                     default_profile = self.default()
                     media['profile_id'] = default_profile.get('id')
                     db.update(media)
@@ -76,7 +74,7 @@ class ProfilePlugin(Plugin):
         db = get_db()
         profiles = db.all('profile', with_doc = True)
 
-        return list(profiles)
+        return [x['doc'] for x in profiles]
 
     def save(self, **kwargs):
 
@@ -127,7 +125,7 @@ class ProfilePlugin(Plugin):
 
     def default(self):
         db = get_db()
-        return db.get_many('profile', limit = 1, with_doc = True)[0]
+        return list(db.all('profile', limit = 1, with_doc = True))[0]['doc']
 
     def saveOrder(self, **kwargs):
 
@@ -213,8 +211,7 @@ class ProfilePlugin(Plugin):
                 log.info('Creating default profile: %s', profile.get('label'))
 
                 pro = {
-                    'type': 'profile',
-                    'identifier': profile.get('label').lower(),
+                    '_t': 'profile',
                     'label': toUnicode(profile.get('label')),
                     'order': order,
                     'qualities': profile.get('qualities'),
@@ -228,9 +225,6 @@ class ProfilePlugin(Plugin):
 
                 db.insert(pro)
                 order += 1
-
-            for x in db.all('profile', with_doc = True):
-                log.info(x)
 
             return True
         except:

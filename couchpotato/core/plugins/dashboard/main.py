@@ -49,7 +49,6 @@ class Dashboard(Plugin):
             limit = tryInt(splt[0])
 
         # Get all active movies
-        active_status, ignored_status = fireEvent('status.get', ['active', 'ignored'], single = True)
         q = db.query(Media) \
             .join(Library) \
             .outerjoin(Media.releases) \

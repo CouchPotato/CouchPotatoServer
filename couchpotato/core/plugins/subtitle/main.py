@@ -25,14 +25,13 @@ class Subtitle(Plugin):
         db = get_session()
 
         library = db.query(Library).all()
-        done_status = fireEvent('status.get', 'done', single = True)
 
         for movie in library.movies:
 
             for release in movie.releases:
 
                 # get releases and their movie files
-                if release.status_id is done_status.get('id'):
+                if release.get('status') == 'done':
 
                     files = []
                     for file in release.files.filter(FileType.status.has(identifier = 'movie')).all():

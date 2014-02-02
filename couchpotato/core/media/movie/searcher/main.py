@@ -1,4 +1,4 @@
-from couchpotato import get_session, get_db
+from couchpotato import get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
 from couchpotato.core.helpers.encoding import simplifyString
@@ -6,7 +6,6 @@ from couchpotato.core.helpers.variable import getTitle, possibleTitles, getImdb
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.searcher.base import SearcherBase
 from couchpotato.core.media.movie import MovieTypeBase
-from couchpotato.core.settings.model import Media, Release
 from couchpotato.environment import Env
 from datetime import date
 import random
@@ -51,7 +50,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
         })
 
         if self.conf('run_on_launch'):
-            addEvent('app.load2', self.searchAll)
+            addEvent('app.load', self.searchAll)
 
     def searchAllView(self, **kwargs):
 
@@ -94,7 +93,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                     self.single(movie_dict, search_protocols)
                 except IndexError:
                     log.error('Forcing library update for %s, if you see this often, please report: %s', (movie['identifier'], traceback.format_exc()))
-                    fireEvent('library.update.movie', movie['identifier'])
+                    fireEvent('movie.update_info', movie['_id'])
                 except:
                     log.error('Search failed for %s: %s', (movie['identifier'], traceback.format_exc()))
 
@@ -111,10 +110,6 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
     def single(self, movie, search_protocols = None, manual = False):
 
-        # movies don't contain 'type' yet, so just set to default here
-        if 'type' not in movie:
-            movie['type'] = 'movie'
-
         # Find out search type
         try:
             if not search_protocols:
@@ -127,7 +122,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
             return
 
         pre_releases = fireEvent('quality.pre_releases', single = True)
-        release_dates = fireEvent('library.update.movie.release_date', identifier = movie['library']['identifier'], merge = True)
+        release_dates = fireEvent('movie.update_release_date', media_id = movie['_id'], merge = True)
 
         found_releases = []
         too_early_to_search = []
@@ -142,39 +137,50 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
         db = get_db()
 
+        profile = db.get('id', movie['profile_id'])
+        quality_order = fireEvent('quality.order', single = True)
+        media_releases = db.get_many('release', movie['_id'])
+
         ret = False
 
-        for quality_type in movie['profile']['types']:
-            if not self.conf('always_search') and not self.couldBeReleased(quality_type['quality']['identifier'] in pre_releases, release_dates, movie['year']):
-                too_early_to_search.append(quality_type['quality']['identifier'])
+        for q_identifier in profile.get('qualities'):
+            index = profile['qualities'].index(q_identifier)
+            quality_custom = {
+                'quality': q_identifier,
+                'finish': profile['finish'][index],
+                'wait_for': profile['wait_for'][index]
+            }
+
+            if not self.conf('always_search') and not self.couldBeReleased(q_identifier in pre_releases, release_dates, movie['info']['year']):
+                too_early_to_search.append(q_identifier)
                 continue
 
             has_better_quality = 0
 
             # See if better quality is available
-            for release in movie['releases']:
-                if release['quality']['order'] <= quality_type['quality']['order'] and release['status'] not in ['available', 'ignored', 'failed']:
+            for release in media_releases:
+                if quality_order.index(release['quality']) <= quality_order.index(q_identifier) and release['status'] not in ['available', 'ignored', 'failed']:
                     has_better_quality += 1
 
             # Don't search for quality lower then already available.
             if has_better_quality is 0:
 
-                log.info('Search for %s in %s', (default_title, quality_type['quality']['label']))
-                quality = fireEvent('quality.single', identifier = quality_type['quality']['identifier'], single = True)
+                quality = fireEvent('quality.single', identifier = q_identifier, single = True)
+                log.info('Search for %s in %s', (default_title, quality['label']))
 
                 results = fireEvent('searcher.search', search_protocols, movie, quality, single = True) or []
                 if len(results) == 0:
-                    log.debug('Nothing found for %s in %s', (default_title, quality_type['quality']['label']))
+                    log.debug('Nothing found for %s in %s', (default_title, quality['label']))
 
                 # Check if movie isn't deleted while searching
                 if not fireEvent('media.get', movie.get('_id'), single = True):
                     break
 
                 # Add them to this movie releases list
-                found_releases += fireEvent('release.create_from_search', results, movie, quality_type, single = True)
+                found_releases += fireEvent('release.create_from_search', results, movie, quality, single = True)
 
                 # Try find a valid result and download it
-                if fireEvent('release.try_download_result', results, movie, quality_type, manual, single = True):
+                if fireEvent('release.try_download_result', results, movie, quality_custom, manual, single = True):
                     ret = True
 
                 # Remove releases that aren't found anymore
@@ -183,7 +189,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                         fireEvent('release.delete', release.get('_id'), single = True)
 
             else:
-                log.info('Better quality (%s) already available or snatched for %s', (quality_type['quality']['label'], default_title))
+                log.info('Better quality (%s) already available or snatched for %s', (quality['label'], default_title))
                 fireEvent('media.restatus', movie['_id'])
                 break
 
@@ -219,7 +225,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
         preferred_quality = fireEvent('quality.single', identifier = quality['identifier'], single = True)
 
         # Contains lower quality string
-        if fireEvent('searcher.contains_other_quality', nzb, movie_year = media['library']['year'], preferred_quality = preferred_quality, single = True):
+        if fireEvent('searcher.contains_other_quality', nzb, movie_year = media['info']['year'], preferred_quality = preferred_quality, single = True):
             log.info2('Wrong: %s, looking for %s', (nzb['name'], quality['label']))
             return False
 
@@ -249,23 +255,23 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
             return True
 
         # Check if nzb contains imdb link
-        if getImdb(nzb.get('description', '')) == media['library']['identifier']:
+        if getImdb(nzb.get('description', '')) == media['identifier']:
             return True
 
-        for raw_title in media['library']['titles']:
-            for movie_title in possibleTitles(raw_title['title']):
+        for raw_title in media['info']['titles']:
+            for movie_title in possibleTitles(raw_title):
                 movie_words = re.split('\W+', simplifyString(movie_title))
 
                 if fireEvent('searcher.correct_name', nzb['name'], movie_title, single = True):
                     # if no IMDB link, at least check year range 1
-                    if len(movie_words) > 2 and fireEvent('searcher.correct_year', nzb['name'], media['library']['year'], 1, single = True):
+                    if len(movie_words) > 2 and fireEvent('searcher.correct_year', nzb['name'], media['info']['year'], 1, single = True):
                         return True
 
                     # if no IMDB link, at least check year
-                    if len(movie_words) <= 2 and fireEvent('searcher.correct_year', nzb['name'], media['library']['year'], 0, single = True):
+                    if len(movie_words) <= 2 and fireEvent('searcher.correct_year', nzb['name'], media['info']['year'], 0, single = True):
                         return True
 
-        log.info("Wrong: %s, undetermined naming. Looking for '%s (%s)'", (nzb['name'], media_title, media['library']['year']))
+        log.info("Wrong: %s, undetermined naming. Looking for '%s (%s)'", (nzb['name'], media_title, media['info']['year']))
         return False
 
     def couldBeReleased(self, is_pre_release, dates, year = None):
@@ -337,7 +343,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
     def getSearchTitle(self, media):
         if media['type'] == 'movie':
-            return getTitle(media['library'])
+            return getTitle(media)
 
 class SearchSetupError(Exception):
     pass

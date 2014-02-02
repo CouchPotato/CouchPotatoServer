@@ -1,8 +1,7 @@
 import traceback
-from couchpotato import get_session, get_db, CPLog
-from couchpotato.core.event import addEvent, fireEventAsync, fireEvent
+from couchpotato import get_db, CPLog
+from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.core.settings.model import Media
 
 log = CPLog(__name__)
 
@@ -34,11 +33,9 @@ class MediaBase(Plugin):
                 media = db.get('id', media_id)
                 event_name = '%s.searcher.single' % media.get('type')
 
-                fireEvent(event_name, media, on_complete = self.createNotifyFront(media_id))
+                fireEventAsync(event_name, media, on_complete = self.createNotifyFront(media_id))
             except:
                 log.error('Failed creating onComplete: %s', traceback.format_exc())
-            finally:
-                pass  #db.close()
 
         return onComplete
 
@@ -53,7 +50,5 @@ class MediaBase(Plugin):
                 fireEvent('notify.frontend', type = event_name, data = media)
             except:
                 log.error('Failed creating onComplete: %s', traceback.format_exc())
-            finally:
-                pass  #db.close()
 
         return notifyFront

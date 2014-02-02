@@ -57,8 +57,8 @@ class CoreNotifier(Notification):
         fireEvent('schedule.interval', 'core.check_messages', self.checkMessages, hours = 12, single = True)
         fireEvent('schedule.interval', 'core.clean_messages', self.cleanMessages, seconds = 15, single = True)
 
-        addEvent('app.load2', self.clean)
-        addEvent('app.load2', self.checkMessages)
+        addEvent('app.load', self.clean)
+        addEvent('app.load', self.checkMessages)
 
         addEvent('database.setup', self.databaseSetup)
 
@@ -161,7 +161,7 @@ class CoreNotifier(Notification):
             data['notification_type'] = listener if listener else 'unknown'
 
             n = {
-                'type': 'notification',
+                '_t': 'notification',
                 'time': int(time.time()),
                 'message': toUnicode(message),
                 'data': data

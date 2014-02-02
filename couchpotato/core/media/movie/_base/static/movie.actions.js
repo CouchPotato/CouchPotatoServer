@@ -191,11 +191,9 @@ MA.Release = new Class({
 
 			self.releases.each(function(release){
 
-				var status = Status.get(release.status_id),
-					quality = Quality.getProfile(release.quality_id) || {},
+				var quality = Quality.getProfile(release.quality_id) || {},
 					info = release.info,
 					provider = self.get(release, 'provider') + (release.info['provider_extra'] ? self.get(release, 'provider_extra') : '');
-				release.status = status;
 
 				var release_name = self.get(release, 'name');
 				if(release.files && release.files.length > 0){
@@ -215,7 +213,7 @@ MA.Release = new Class({
 					'id': 'release_'+release.id
 				}).adopt(
 					new Element('span.name', {'text': release_name, 'title': release_name}),
-					new Element('span.status', {'text': status.identifier, 'class': 'release_status '+status.identifier}),
+					new Element('span.status', {'text': status.identifier, 'class': 'release_status '+release.status}),
 					new Element('span.quality', {'text': quality.get('label') || 'n/a'}),
 					new Element('span.size', {'text': release.info['size'] ? Math.floor(self.get(release, 'size')) : 'n/a'}),
 					new Element('span.age', {'text': self.get(release, 'age')}),
@@ -257,22 +255,20 @@ MA.Release = new Class({
 					if(notification.data.id != release.id) return;
 
 					var q = self.movie.quality.getElement('.q_id' + release.quality_id),
-						status = Status.get(release.status_id),
-						new_status = Status.get(notification.data.status_id);
+						new_status = notification.data.status;
 
-					release.status_id = new_status.id
-					release.el.set('class', 'item ' + new_status.identifier);
+					release.el.set('class', 'item ' + new_status);
 
 					var status_el = release.el.getElement('.release_status');
-					status_el.set('class', 'release_status ' + new_status.identifier);
+					status_el.set('class', 'release_status ' + new_status);
 					status_el.set('text', new_status.identifier);
 
-					if(!q && (new_status.identifier == 'snatched' || new_status.identifier == 'seeding' || new_status.identifier == 'done'))
+					if(!q && (new_status == 'snatched' || new_status == 'seeding' || new_status == 'done'))
 						var q = self.addQuality(release.quality_id);
 
-					if(new_status && q && !q.hasClass(new_status.identifier)) {
-						q.removeClass(status.identifier).addClass(new_status.identifier);
-						q.set('title', q.get('title').replace(status.label, new_status.label));
+					if(q && !q.hasClass(new_status)) {
+						q.removeClass(release.status).addClass(new_status);
+						q.set('title', q.get('title').replace(status, new_status));
 					}
 				}
 
@@ -344,12 +340,10 @@ MA.Release = new Class({
 		self.movie.data.releases.each(function(release){
 			if(has_available && has_snatched) return;
 
-			var status = Status.get(release.status_id);
-
-			if(['snatched', 'downloaded', 'seeding'].contains(status.identifier))
+			if(['snatched', 'downloaded', 'seeding'].contains(release.status))
 				has_snatched = true;
 
-			if(['available'].contains(status.identifier))
+			if(['available'].contains(release.status))
 				has_available = true;
 
 		});
@@ -726,10 +720,10 @@ MA.Readd = new Class({
 	create: function(){
 		var self = this;
 
-		var movie_done = Status.get(self.movie.data.status_id).identifier == 'done';
+		var movie_done = self.movie.data.status == 'done';
 		if(!movie_done)
 			var snatched = self.movie.data.releases.filter(function(release){
-				return release.status && (release.status.identifier == 'snatched' || release.status.identifier == 'downloaded' || release.status.identifier == 'done');
+				return release.status && (release.status == 'snatched' || release.status == 'downloaded' || release.status == 'done');
 			}).length;
 
 		if(movie_done || snatched && snatched > 0)

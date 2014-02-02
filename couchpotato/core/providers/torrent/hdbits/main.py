@@ -43,7 +43,7 @@ class HDBits(TorrentProvider):
 
     def _search(self, movie, quality, results):
 
-        match = re.match(r'tt(\d{7})', movie['library']['identifier'])
+        match = re.match(r'tt(\d{7})', movie['identifier'])
 
         data = self._post_query(imdb = {'id': match.group(1)})
 

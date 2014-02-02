@@ -199,7 +199,7 @@ class YarrProvider(Provider):
             self._search(movie, quality, results)
         # Search possible titles
         else:
-            for title in possibleTitles(getTitle(movie['library'])):
+            for title in possibleTitles(getTitle(movie)):
                 self._searchOnTitle(title, movie, quality, results)
 
         return results

@@ -1,9 +1,9 @@
-from couchpotato import get_session
-from couchpotato.core.event import addEvent, fireEvent
+from CodernityDB.database import RecordNotFound
+from couchpotato import get_db
+from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.variable import mergeDicts, randomString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.core.settings.model import Library
 import copy
 import traceback
 
@@ -86,25 +86,26 @@ class MovieResultModifier(Plugin):
         }
 
         # Add release info from current library
-        db = get_session()
+        db = get_db()
         try:
-            l = db.query(Library).filter_by(identifier = imdb).first()
-            if l:
 
-                # Statuses
-                active_status, done_status = fireEvent('status.get', ['active', 'done'], single = True)
+            media = None
+            try:
+                media = db.get('media', imdb, with_doc = True)['doc']
+            except RecordNotFound:
+                pass
 
-                for movie in l.movies:
-                    if movie.status_id == active_status['id']:
-                        temp['in_wanted'] = fireEvent('media.get', movie.id, single = True)
+            if media:
 
-                    for release in movie.releases:
-                        if release.status_id == done_status['id']:
-                            temp['in_library'] = fireEvent('media.get', movie.id, single = True)
+                if media.get('status') == 'active':
+                    temp['in_wanted'] = media
+
+                for release in db.get_many('release', media.get('_id'), with_doc = True):
+                    if release.get('status') == 'done':
+                        temp['in_library'] = media
         except:
             log.error('Tried getting more info on searched movies: %s', traceback.format_exc())
 
-        pass  #db.close()
         return temp
 
     def checkLibrary(self, result):

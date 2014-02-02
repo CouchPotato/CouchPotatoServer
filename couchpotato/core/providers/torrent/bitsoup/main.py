@@ -22,7 +22,7 @@ class Bitsoup(TorrentProvider):
 
     def _searchOnTitle(self, title, movie, quality, results):
 
-        q = '"%s" %s' % (simplifyString(title), movie['library']['year'])
+        q = '"%s" %s' % (simplifyString(title), movie['info']['year'])
         arguments = tryUrlencode({
             'search': q,
         })

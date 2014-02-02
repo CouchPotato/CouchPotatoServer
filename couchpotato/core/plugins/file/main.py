@@ -5,8 +5,7 @@ from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.variable import md5, getExt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.core.plugins.scanner.main import Scanner
-from couchpotato.core.settings.model import FileType, File
+from couchpotato.core.settings.model import File
 from couchpotato.environment import Env
 from tornado.web import StaticFileHandler
 import os.path

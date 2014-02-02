@@ -35,7 +35,7 @@ class TorrentPotato(TorrentProvider):
         arguments = tryUrlencode({
             'user': host['name'],
             'passkey': host['pass_key'],
-            'imdbid': movie['library']['identifier']
+            'imdbid': movie['identifier']
         })
         url = '%s?%s' % (host['host'], arguments)
 

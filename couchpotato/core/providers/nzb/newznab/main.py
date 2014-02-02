@@ -43,7 +43,7 @@ class Newznab(NZBProvider, RSS):
     def _searchOnHost(self, host, movie, quality, results):
 
         arguments = tryUrlencode({
-            'imdbid': movie['library']['identifier'].replace('tt', ''),
+            'imdbid': movie['identifier'].replace('tt', ''),
             'apikey': host['api_key'],
             'extended': 1
         }) + ('&%s' % host['custom_tag'] if host.get('custom_tag') else '')

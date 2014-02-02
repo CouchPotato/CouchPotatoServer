@@ -50,7 +50,7 @@ class ThePirateBay(TorrentMagnetProvider):
 
         while page < total_pages:
 
-            search_url = self.urls['search'] % (self.getDomain(), tryUrlencode('"%s" %s' % (title, movie['library']['year'])), page, ','.join(str(x) for x in cats))
+            search_url = self.urls['search'] % (self.getDomain(), tryUrlencode('"%s" %s' % (title, movie['info']['year'])), page, ','.join(str(x) for x in cats))
             page += 1
 
             data = self.getHTMLData(search_url)

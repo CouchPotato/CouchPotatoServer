@@ -89,8 +89,6 @@ class Suggestion(Plugin):
         # Get new results and add them
         if len(new_suggestions) - 1 < limit:
 
-            active_status, done_status = fireEvent('status.get', ['active', 'done'], single = True)
-
             db = get_session()
             active_movies = db.query(Media) \
                 .join(Library) \

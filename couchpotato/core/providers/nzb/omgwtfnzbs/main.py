@@ -37,7 +37,7 @@ class OMGWTFNZBs(NZBProvider, RSS):
 
     def _searchOnTitle(self, title, movie, quality, results):
 
-        q = '%s %s' % (title, movie['library']['year'])
+        q = '%s %s' % (title, movie['info']['year'])
         params = tryUrlencode({
             'search': q,
             'catid': ','.join([str(x) for x in self.getCatId(quality['identifier'])]),

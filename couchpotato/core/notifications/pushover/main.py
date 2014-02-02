@@ -23,16 +23,16 @@ class Pushover(Notification):
             'priority': self.conf('priority'),
         }
 
-        if data and data.get('library'):
+        if data and data.get('identifier'):
             api_data.update({
-                'url': toUnicode('http://www.imdb.com/title/%s/' % data['library']['identifier']),
-                'url_title': toUnicode('%s on IMDb' % getTitle(data['library'])),
+                'url': toUnicode('http://www.imdb.com/title/%s/' % data['identifier']),
+                'url_title': toUnicode('%s on IMDb' % getTitle(data)),
             })
 
         http_handler.request('POST',
-                             "/1/messages.json",
-                             headers = {'Content-type': 'application/x-www-form-urlencoded'},
-                             body = tryUrlencode(api_data)
+            "/1/messages.json",
+            headers = {'Content-type': 'application/x-www-form-urlencoded'},
+            body = tryUrlencode(api_data)
         )
 
         response = http_handler.getresponse()

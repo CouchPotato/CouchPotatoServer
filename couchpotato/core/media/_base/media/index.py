@@ -14,8 +14,13 @@ class MediaIMDBIndex(HashIndex):
         return int(key.strip('t'))
 
     def make_key_value(self, data):
-        if data.get('type') == 'media' and data.get('identifier'):
+        if data.get('_t') == 'media' and data.get('identifier'):
             return int(data['identifier'].strip('t')), None
+
+    def run_to_dict(self, db, media_id, dict = None):
+        if not dict: dict = {}
+
+        return db.get('id', media_id)
 
     def run_with_status(self, db, status = []):
 
@@ -29,15 +34,15 @@ class MediaIMDBIndex(HashIndex):
 class MediaStatusIndex(TreeBasedIndex):
 
     def __init__(self, *args, **kwargs):
-        kwargs['key_format'] = '16s'
+        kwargs['key_format'] = '32s'
         super(MediaStatusIndex, self).__init__(*args, **kwargs)
 
     def make_key(self, key):
-        return md5(key).digest()
+        return md5(key).hexdigest()
 
     def make_key_value(self, data):
-        if data.get('type') == 'media' and data.get('status'):
-            return md5(data.get('status')).digest(), None
+        if data.get('_t') == 'media' and data.get('status'):
+            return md5(data.get('status')).hexdigest(), None
 
 
 class TitleIndex(MultiTreeBasedIndex):
@@ -52,7 +57,7 @@ from itertools import izip"""
 
     def make_key_value(self, data):
 
-        if data.get('type') == 'title' and len(data.get('title', '')) > 0:
+        if data.get('_t') == 'title' and len(data.get('title', '')) > 0:
 
             out = set()
             title = data.get('title').lower()
@@ -80,5 +85,5 @@ class YearIndex(TreeBasedIndex):
         return key
 
     def make_key_value(self, data):
-        if data.get('type') == 'media' and data.get('year') is not None:
+        if data.get('_t') == 'media' and data.get('year') is not None:
             return data['year'], None

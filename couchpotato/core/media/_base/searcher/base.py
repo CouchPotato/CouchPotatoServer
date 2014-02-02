@@ -28,7 +28,7 @@ class SearcherBase(Plugin):
             fireEvent('schedule.cron', '%s.searcher.all' % _type, self.searchAll,
                       day = self.conf('cron_day'), hour = self.conf('cron_hour'), minute = self.conf('cron_minute'))
 
-        addEvent('app.load2', setCrons)
+        addEvent('app.load', setCrons)
         addEvent('setting.save.%s_searcher.cron_day.after' % _type, setCrons)
         addEvent('setting.save.%s_searcher.cron_hour.after' % _type, setCrons)
         addEvent('setting.save.%s_searcher.cron_minute.after' % _type, setCrons)

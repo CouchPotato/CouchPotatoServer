@@ -36,7 +36,7 @@ class IPTorrents(TorrentProvider):
         current_page = 1
         while current_page <= pages and not self.shuttingDown():
 
-            url = self.urls['search'] % (self.getCatId(quality['identifier'])[0], freeleech, tryUrlencode('%s %s' % (title.replace(':', ''), movie['library']['year'])), current_page)
+            url = self.urls['search'] % (self.getCatId(quality['identifier'])[0], freeleech, tryUrlencode('%s %s' % (title.replace(':', ''), movie['info']['year'])), current_page)
             data = self.getHTMLData(url)
 
             if data:

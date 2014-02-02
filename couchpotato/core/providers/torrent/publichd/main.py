@@ -30,7 +30,7 @@ class PublicHD(TorrentMagnetProvider):
 
         params = tryUrlencode({
             'page':'torrents',
-            'search': '%s %s' % (title, movie['library']['year']),
+            'search': '%s %s' % (title, movie['info']['year']),
             'active': 1,
         })
 

@@ -59,7 +59,7 @@ var Movie = new Class({
 				if(!self.data.releases)
 					self.data.releases = [];
 
-				self.data.releases.push({'quality_id': data.quality_id, 'status_id': data.status_id});
+				self.data.releases.push({'quality_id': data.quality_id, 'status': data.status});
 				self.updateReleases();
 			}
 		}
@@ -146,8 +146,7 @@ var Movie = new Class({
 	create: function(){
 		var self = this;
 
-		var s = Status.get(self.get('status_id'));
-		self.el.addClass('status_'+s.identifier);
+		self.el.addClass('status_'+self.get('status'));
 
 		self.el.adopt(
 			self.select_checkbox = new Element('input[type=checkbox].inlay', {
@@ -157,7 +156,7 @@ var Movie = new Class({
 					}
 				}
 			}),
-			self.thumbnail = File.Select.single('poster', self.data.library.files),
+			self.thumbnail = File.Select.single('poster', self.data.files || []),
 			self.data_container = new Element('div.data.inlay.light').adopt(
 				self.info_container = new Element('div.info').adopt(
 					new Element('div.title').adopt(
@@ -165,11 +164,11 @@ var Movie = new Class({
 							'text': self.getTitle() || 'n/a'
 						}),
 						self.year = new Element('div.year', {
-							'text': self.data.library.year || 'n/a'
+							'text': self.data.info.year || 'n/a'
 						})
 					),
 					self.description = new Element('div.description', {
-						'text': self.data.library.plot
+						'text': self.data.info.plot
 					}),
 					self.quality = new Element('div.quality', {
 						'events': {
@@ -221,14 +220,14 @@ var Movie = new Class({
 		self.data.releases.each(function(release){
 
 			var q = self.quality.getElement('.q_id'+ release.quality_id),
-				status = Status.get(release.status_id);
+				status = release.status;
 
-			if(!q && (status.identifier == 'snatched' || status.identifier == 'seeding' || status.identifier == 'done'))
+			if(!q && (status == 'snatched' || status == 'seeding' || status == 'done'))
 				var q = self.addQuality(release.quality_id)
 
-			if (status && q && !q.hasClass(status.identifier)){
-				q.addClass(status.identifier);
-				q.set('title', (q.get('title') ? q.get('title') : '') + ' status: '+ status.label)
+			if (q && !q.hasClass(status)){
+				q.addClass(status);
+				q.set('title', (q.get('title') ? q.get('title') : '') + ' status: '+ status)
 			}
 
 		});
@@ -249,16 +248,10 @@ var Movie = new Class({
 	getTitle: function(){
 		var self = this;
 
-		var titles = self.data.library.titles;
-
-		var title = titles.filter(function(title){
-			return title['default']
-		}).pop()
-
-		if(title)
-			return self.getUnprefixedTitle(title.title)
-		else if(titles.length > 0)
-			return self.getUnprefixedTitle(titles[0].title)
+		if(self.data.title)
+			return self.getUnprefixedTitle(self.data.title)
+		else if(self.data.info.titles.length > 0)
+			return self.getUnprefixedTitle(self.data.info.titles[0])
 
 		return 'Unknown movie'
 	},
@@ -313,7 +306,7 @@ var Movie = new Class({
 	},
 
 	get: function(attr){
-		return this.data[attr] || this.data.library[attr]
+		return this.data[attr] || this.data.info[attr]
 	},
 
 	select: function(bool){

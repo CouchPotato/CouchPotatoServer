@@ -20,7 +20,7 @@ class NZBClub(NZBProvider, RSS):
 
     def _searchOnTitle(self, title, movie, quality, results):
 
-        q = '"%s %s"' % (title, movie['library']['year'])
+        q = '"%s %s"' % (title, movie['info']['year'])
 
         params = tryUrlencode({
             'q': q,

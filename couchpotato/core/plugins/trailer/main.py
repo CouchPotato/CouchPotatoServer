@@ -18,7 +18,7 @@ class Trailer(Plugin):
 
         trailers = fireEvent('trailer.search', group = group, merge = True)
         if not trailers or trailers == []:
-            log.info('No trailers found for: %s', getTitle(group['library']))
+            log.info('No trailers found for: %s', getTitle(group))
             return False
 
         for trailer in trailers.get(self.conf('quality'), []):

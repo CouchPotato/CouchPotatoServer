@@ -216,26 +216,24 @@ def toIterable(value):
     return [value]
 
 
-def getTitle(library_dict):
+def getTitle(media_dict):
     try:
         try:
-            return library_dict['titles'][0]['title']
+            return media_dict['title']
         except:
             try:
-                for title in library_dict.titles:
-                    if title.default:
-                        return title.title
+                return media_dict['titles'][0]
             except:
                 try:
-                    return library_dict['info']['titles'][0]
+                    return media_dict['info']['titles'][0]
                 except:
-                    log.error('Could not get title for %s', library_dict.identifier)
+                    log.error('Could not get title for %s', media_dict.get('identifier'))
                     return None
 
-        log.error('Could not get title for %s', library_dict['identifier'])
+        log.error('Could not get title for %s', media_dict['identifier'])
         return None
     except:
-        log.error('Could not get title for library item: %s', library_dict)
+        log.error('Could not get title for library item: %s', media_dict)
         return None
 
 
