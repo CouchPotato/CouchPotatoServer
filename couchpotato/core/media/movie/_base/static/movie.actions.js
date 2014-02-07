@@ -427,7 +427,7 @@ MA.Release = new Class({
 
 		Api.request('media.delete', {
 			'data': {
-				'id': self.movie.get('id'),
+				'id': self.movie.get('_id'),
 				'delete_from': 'wanted'
 			},
 			'onComplete': function(){
@@ -449,7 +449,7 @@ MA.Release = new Class({
 
 		Api.request('movie.searcher.try_next', {
 			'data': {
-				'id': self.movie.get('id')
+				'id': self.movie.get('_id')
 			}
 		});
 
@@ -604,13 +604,13 @@ MA.Edit = new Class({
 				)
 			).inject(self.movie, 'top');
 
-			Array.each(self.movie.data.library.titles, function(alt){
+			Array.each(self.movie.data.info.titles, function(title){
 				new Element('option', {
-					'text': alt.title
+					'text': title
 				}).inject(self.title_select);
 
-				if(alt['default'])
-					self.title_select.set('value', alt.title);
+				if(title == self.movie.data.title)
+					self.title_select.set('value', title);
 			});
 
 
@@ -643,7 +643,7 @@ MA.Edit = new Class({
 
 			profiles.each(function(profile){
 
-				var profile_id = profile.id ? profile.id : profile.data.id;
+				var profile_id = profile.get('_id');
 
 				new Element('option', {
 					'value': profile_id,
@@ -666,7 +666,7 @@ MA.Edit = new Class({
 
 		Api.request('movie.edit', {
 			'data': {
-				'id': self.movie.get('id'),
+				'id': self.movie.get('_id'),
 				'default_title': self.title_select.get('value'),
 				'profile_id': self.profile_select.get('value'),
 				'category_id': self.category_select.get('value')
@@ -706,7 +706,7 @@ MA.Refresh = new Class({
 
 		Api.request('media.refresh', {
 			'data': {
-				'id': self.movie.get('id')
+				'id': self.movie.get('_id')
 			}
 		});
 	}
@@ -817,7 +817,7 @@ MA.Delete = new Class({
 			function(){
 				Api.request('media.delete', {
 					'data': {
-						'id': self.movie.get('id'),
+						'id': self.movie.get('_id'),
 						'delete_from': self.movie.list.options.identifier
 					},
 					'onComplete': function(){

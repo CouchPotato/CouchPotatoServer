@@ -19,13 +19,13 @@ class ReleaseIndex(TreeBasedIndex):
         for release in db.get_many('release', media_id, with_doc = True):
             yield release['doc']
 
-    def run_with_status(self, db, status = []):
+    def run_with_status(self, db, status = [], with_doc = True):
 
         status = list(status if isinstance(status, (list, tuple)) else [status])
 
         for s in status:
-            for ms in db.get_many('release_status', s, with_doc = True):
-                yield ms['doc']
+            for ms in db.get_many('release_status', s, with_doc = with_doc):
+                yield ms['doc'] if with_doc else ms
 
 
 class ReleaseStatusIndex(TreeBasedIndex):
@@ -39,7 +39,7 @@ class ReleaseStatusIndex(TreeBasedIndex):
 
     def make_key_value(self, data):
         if data.get('_t') == 'release' and data.get('status'):
-            return md5(data.get('status')).hexdigest(), None
+            return md5(data.get('status')).hexdigest(), {'media_id': data.get('media_id')}
 
 
 class ReleaseIDIndex(TreeBasedIndex):
@@ -53,4 +53,4 @@ class ReleaseIDIndex(TreeBasedIndex):
 
     def make_key_value(self, data):
         if data.get('_t') == 'release' and data.get('identifier'):
-            return md5(data.get('identifier')).hexdigest(), None
+            return md5(data.get('identifier')).hexdigest(), {'media_id': data.get('media_id')}

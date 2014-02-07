@@ -124,7 +124,7 @@ class Manage(Plugin):
                         fireEvent('media.delete', media_id = done_movie['id'], delete_from = 'all')
                     else:
 
-                        releases = fireEvent('release.for_movie', id = done_movie.get('id'), single = True)
+                        releases = fireEvent('release.for_movie', id = done_movie.get('_id'), single = True)
 
                         for release in releases:
                             if len(release.get('files', [])) > 0:

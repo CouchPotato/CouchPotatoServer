@@ -59,7 +59,7 @@ var Movie = new Class({
 				if(!self.data.releases)
 					self.data.releases = [];
 
-				self.data.releases.push({'quality_id': data.quality_id, 'status': data.status});
+				self.data.releases.push({'quality_identifier': data.quality_identifier, 'status': data.status});
 				self.updateReleases();
 			}
 		}
@@ -156,7 +156,10 @@ var Movie = new Class({
 					}
 				}
 			}),
-			self.thumbnail = File.Select.single('poster', self.data.files || []),
+			self.thumbnail = (self.data.files && self.data.files.image_poster) ? new Element('img', {
+				'class': 'type_image poster',
+				'src': Api.createUrl('file.cache') + (self.data.files || {})['image_poster'][0]
+			}): null,
 			self.data_container = new Element('div.data.inlay.light').adopt(
 				self.info_container = new Element('div.info').adopt(
 					new Element('div.title').adopt(
@@ -194,7 +197,7 @@ var Movie = new Class({
 		if(self.profile.data)
 			self.profile.getTypes().each(function(type){
 
-				var q = self.addQuality(type.quality_id || type.get('quality_id'));
+				var q = self.addQuality(type.quality_identifier || type.get('quality_identifier'));
 				if((type.finish == true || type.get('finish')) && !q.hasClass('finish')){
 					q.addClass('finish');
 					q.set('title', q.get('title') + ' Will finish searching for this movie if this quality is found.')
@@ -223,7 +226,7 @@ var Movie = new Class({
 				status = release.status;
 
 			if(!q && (status == 'snatched' || status == 'seeding' || status == 'done'))
-				var q = self.addQuality(release.quality_id)
+				var q = self.addQuality(release.quality_identifier)
 
 			if (q && !q.hasClass(status)){
 				q.addClass(status);
@@ -233,10 +236,10 @@ var Movie = new Class({
 		});
 	},
 
-	addQuality: function(quality_id){
+	addQuality: function(quality_identifier){
 		var self = this;
 
-		var q = Quality.getQuality(quality_id);
+		var q = Quality.getQuality(quality_identifier);
 		return new Element('span', {
 			'text': q.label,
 			'class': 'q_'+q.identifier + ' q_id' + q.id,

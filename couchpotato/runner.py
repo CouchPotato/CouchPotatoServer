@@ -223,7 +223,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     loader.run()
 
     # Fill database with needed stuff
-    fireEvent('database.setup') 
+    fireEvent('database.setup')
     if not db_exists:
         fireEvent('app.initialize', in_order = True)
 

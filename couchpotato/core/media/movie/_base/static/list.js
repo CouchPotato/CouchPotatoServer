@@ -59,9 +59,9 @@ var MovieList = new Class({
 	movieDeleted: function(notification){
 		var self = this;
 
-		if(self.movies_added[notification.data.id]){
+		if(self.movies_added[notification.data._id]){
 			self.movies.each(function(movie){
-				if(movie.get('id') == notification.data.id){
+				if(movie.get('_id') == notification.data._id){
 					movie.destroy();
 					delete self.movies_added[notification.data.id];
 					self.setCounter(self.counter_count-1);
@@ -288,7 +288,7 @@ var MovieList = new Class({
 					'onSuccess': function(json){
 						available_chars = json.chars
 
-						json.chars.split('').each(function(c){
+						available_chars.each(function(c){
 							self.letters[c.capitalize()].addClass('available')
 						})
 
@@ -438,7 +438,7 @@ var MovieList = new Class({
 		var ids = []
 		self.movies.each(function(movie){
 			if (movie.isSelected())
-				ids.include(movie.get('id'))
+				ids.include(movie.get('_id'))
 		});
 
 		return ids
@@ -467,7 +467,7 @@ var MovieList = new Class({
 
 		self.offset = 0;
 		if(self.scrollspy){
-			self.load_more.show();
+			//self.load_more.show();
 			self.scrollspy.start();
 		}
 	},

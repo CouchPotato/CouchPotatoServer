@@ -1,14 +1,13 @@
 import traceback
-import time
 from couchpotato import get_session, tryInt, get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, fireEventAsync, addEvent
-from couchpotato.core.helpers.variable import mergeDicts, splitString, getImdb, getTitle
+from couchpotato.core.helpers.encoding import toUnicode
+from couchpotato.core.helpers.variable import splitString, getImdb, getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media import MediaBase
-from .index import MediaIMDBIndex, TitleIndex, MediaStatusIndex, YearIndex
-from couchpotato.core.settings.model import Library, LibraryTitle, Release, \
-    Media
+from .index import MediaIMDBIndex, MediaStatusIndex, YearIndex, MediaTypeIndex, TitleSearchIndex, TitleIndex, StartsWithIndex
+from couchpotato.core.settings.model import Media
 from string import ascii_lowercase
 
 log = CPLog(__name__)
@@ -61,10 +60,10 @@ class MediaPlugin(MediaBase):
 
         addEvent('database.setup', self.databaseSetup)
 
-        addEvent('app.load', self.addSingleRefreshView)
-        addEvent('app.load', self.addSingleListView)
-        addEvent('app.load', self.addSingleCharView)
-        addEvent('app.load', self.addSingleDeleteView)
+        addEvent('app.load', self.addSingleRefreshView, priority = 100)
+        addEvent('app.load', self.addSingleListView, priority = 100)
+        addEvent('app.load', self.addSingleCharView, priority = 100)
+        addEvent('app.load', self.addSingleDeleteView, priority = 100)
 
         addEvent('media.get', self.get)
         addEvent('media.list', self.list)
@@ -84,10 +83,10 @@ class MediaPlugin(MediaBase):
 
         # Title index
         try:
-            db.add_index(TitleIndex(db.path, 'media_title'))
+            db.add_index(TitleSearchIndex(db.path, 'media_search_title'))
         except:
             log.debug('Index already exists')
-            db.edit_index(TitleIndex(db.path, 'media_title'))
+            db.edit_index(TitleSearchIndex(db.path, 'media_search_title'))
 
         # Status index
         try:
@@ -96,11 +95,31 @@ class MediaPlugin(MediaBase):
             log.debug('Index already exists')
             db.edit_index(MediaStatusIndex(db.path, 'media_status'))
 
-        # Year index
-        try: db.add_index(YearIndex(db.path, 'year'))
+        # Type index
+        try:
+            db.add_index(MediaTypeIndex(db.path, 'media_by_type'))
         except:
             log.debug('Index already exists')
-            db.edit_index(YearIndex(db.path, 'year'))
+            db.edit_index(MediaTypeIndex(db.path, 'media_by_type'))
+
+        # Year index
+        try: db.add_index(YearIndex(db.path, 'media_year'))
+        except:
+            log.debug('Index already exists')
+            db.edit_index(YearIndex(db.path, 'media_year'))
+
+        # Title index
+        try: db.add_index(TitleIndex(db.path, 'media_title'))
+        except:
+            log.debug('Index already exists')
+            db.edit_index(TitleIndex(db.path, 'media_title'))
+
+        # Startswith index
+        try: db.add_index(StartsWithIndex(db.path, 'media_startswith'))
+        except:
+            log.debug('Index already exists')
+            db.edit_index(StartsWithIndex(db.path, 'media_startswith'))
+
 
     def refresh(self, id = '', **kwargs):
         handlers = []
@@ -112,7 +131,7 @@ class MediaPlugin(MediaBase):
             if refresh_handler:
                 handlers.append(refresh_handler)
 
-        fireEvent('notify.frontend', type = 'media.busy', data = {'id': [tryInt(x) for x in ids]})
+        fireEvent('notify.frontend', type = 'media.busy', data = {'id': ids})
         fireEventAsync('schedule.queue', handlers = handlers)
 
         return {
@@ -124,8 +143,9 @@ class MediaPlugin(MediaBase):
         try:
             media = get_db().get('id', media_id)
 
+
             default_title = getTitle(media)
-            event = 'library.update.%s' % media.get('type')
+            event = '%s.update_info' % media.get('type')
 
             def handler():
                 fireEvent(event, identifier = media.get('identifier'), default_title = default_title, on_complete = self.createOnComplete(media_id))
@@ -172,8 +192,6 @@ class MediaPlugin(MediaBase):
 
         db = get_db()
 
-        start = time.time()
-
         # Make a list from string
         if status and not isinstance(status, (list, tuple)):
             status = [status]
@@ -183,125 +201,73 @@ class MediaPlugin(MediaBase):
             types = [types]
 
         # query media ids
-        all_media_ids = set([x['_id'] for x in db.all('media')])
+        if types:
+            all_media_ids = set()
+            for media_type in types:
+                all_media_ids = all_media_ids.union(set([x['_id'] for x in db.get_many('media_by_type', media_type)]))
+        else:
+            all_media_ids = set([x['_id'] for x in db.all('media')])
+
         media_ids = all_media_ids
         filter_by = {}
 
         # Filter on movie status
         if status and len(status) > 0:
             filter_by['media_status'] = set()
-            for media_status in db.run('media', 'with_status', status):
+            for media_status in db.run('media', 'with_status', status, with_doc = False):
                 filter_by['media_status'].add(media_status.get('_id'))
 
         # Filter on release status
         if release_status and len(release_status) > 0:
             filter_by['release_status'] = set()
-            for release_status in db.run('release', 'with_status', release_status):
+            for release_status in db.run('release', 'with_status', release_status, with_doc = False):
                 filter_by['release_status'].add(release_status.get('media_id'))
+
+        # Add search filters
+        if starts_with:
+            filter_by['starts_with'] = set()
+            starts_with = toUnicode(starts_with.lower())[0]
+            starts_with = starts_with if starts_with in ascii_lowercase else '#'
+            filter_by['starts_with'] = [x['_id'] for x in db.get_many('media_startswith', starts_with)]
+
+        # Filter with search query
+        if search:
+            filter_by['search'] = [x['_id'] for x in db.get_many('media_search_title', search)]
 
         # Filter by combining ids
         for x in filter_by:
-            media_ids = media_ids & filter_by[x]
-
-        # Filter on type
-        # if types and len(types) > 0:
-        #     try: q = q.filter(Media.type.in_(types))
-        #     except: pass
-
-        # Only join when searching / ordering
-        # if starts_with or search or order != 'release_order':
-        #     q = q.join(Media.library, Library.titles) \
-        #         .filter(LibraryTitle.default == True)
-
-        # Add search filters
-        # filter_or = []
-        # if starts_with:
-        #     starts_with = toUnicode(starts_with.lower())
-        #     if starts_with in ascii_lowercase:
-        #         filter_or.append(LibraryTitle.simple_title.startswith(starts_with))
-        #     else:
-        #         ignore = []
-        #         for letter in ascii_lowercase:
-        #             ignore.append(LibraryTitle.simple_title.startswith(toUnicode(letter)))
-        #         filter_or.append(not_(or_(*ignore)))
-
-        if search:
-            search_ids = db.get_many('media_title', search)
-            for search_id in search_ids:
-                print search_id
-
-        #if len(filter_or) > 0:
-        #    pass #q = q.filter(or_(*filter_or))
+            media_ids = [n for n in media_ids if n in filter_by[x]]
 
         total_count = len(media_ids)
         if total_count == 0:
             return 0, []
 
-        # if order == 'release_order':
-        #     q = q.order_by(desc(Release.last_edit))
-        # else:
-        #     q = q.order_by(asc(LibraryTitle.simple_title))
+        if limit_offset:
+            splt = splitString(limit_offset) if isinstance(limit_offset, (str, unicode)) else limit_offset
+            limit = tryInt(splt[0])
+            offset = tryInt(0 if len(splt) is 1 else splt[1])
+            start = offset * limit
+            end = start + limit
+            media_ids = media_ids[start:end]
 
-        # if limit_offset:
-        #     splt = splitString(limit_offset) if isinstance(limit_offset, (str, unicode)) else limit_offset
-        #     limit = splt[0]
-        #     offset = 0 if len(splt) is 1 else splt[1]
-        #     q = q.limit(limit).offset(offset)
-
-        # Get all media_ids in sorted order
-        # media_ids = [m.id for m in q.all()]
-
-        # List release statuses
-        # releases = db.query(Release) \
-        #     .filter(Release.movie_id.in_(media_ids)) \
-        #     .all()
-
-        # release_statuses = dict((m, set()) for m in media_ids)
-        # releases_count = dict((m, 0) for m in media_ids)
-        # for release in releases:
-        #     release_statuses[release.movie_id].add('%d,%d' % (release.status_id, release.quality_id))
-        #     releases_count[release.movie_id] += 1
-
-        # Get main movie data
-        # q2 = db.query(Media) \
-        #     .options(joinedload_all('library.titles')) \
-        #     .options(joinedload_all('library.files')) \
-        #     .options(joinedload_all('status')) \
-        #     .options(joinedload_all('files'))
-
-        # q2 = q2.filter(Media.id.in_(media_ids))
-
-        # results = q2.all()
-
-        # Create dict by movie id
-        # medias = {}
-        # for media in media_ids:
-        #     movie_dict[movie.id] = movie
-
-        # List movies based on media_ids order
+        # List movies based on title order
         medias = []
-        for media_id in media_ids:
+        for m in db.all('media_title'):
+            media_id = m['_id']
+            if media_id not in media_ids: continue
 
-            media = db.run('media', 'to_dict', media_id, {
-                'library': {'titles': {}, 'files': {}},
-                'files': {},
-            })
+            media = db.run('media', 'to_dict', media_id)
 
             media['releases'] = []
             for r in db.get_many('release', media_id, with_doc = True):
-                media['releases'].append(r)
+                media['releases'].append(r['doc'])
 
             # Merge releases with movie dict
             medias.append(media)
-            # medias.append(mergeDicts(movie_dict[media_id].to_dict({
-            #     'library': {'titles': {}, 'files': {}},
-            #     'files': {},
-            # }), {
-            #     'releases': releases,
-            #     'releases_count': releases_count.get(media_id),
-            # }))
 
-        print time.time() - start
+            # remove from media ids
+            media_ids.remove(media_id)
+            if len(media_ids) == 0: break
 
         return total_count, medias
 
@@ -341,63 +307,52 @@ class MediaPlugin(MediaBase):
 
     def availableChars(self, types = None, status = None, release_status = None):
 
-        types = types or []
-        status = status or []
-        release_status = release_status or []
-
-        db = get_session()
+        db = get_db()
 
         # Make a list from string
-        if not isinstance(status, (list, tuple)):
+        if status and not isinstance(status, (list, tuple)):
             status = [status]
         if release_status and not isinstance(release_status, (list, tuple)):
             release_status = [release_status]
         if types and not isinstance(types, (list, tuple)):
             types = [types]
 
-        q = db.query(Media)
+        # query media ids
+        if types:
+            all_media_ids = set()
+            for media_type in types:
+                all_media_ids = all_media_ids.union(set([x['_id'] for x in db.get_many('media_by_type', media_type)]))
+        else:
+            all_media_ids = set([x['_id'] for x in db.all('media')])
+
+        media_ids = all_media_ids
+        filter_by = {}
 
         # Filter on movie status
         if status and len(status) > 0:
-            statuses = fireEvent('status.get', status, single = len(release_status) > 1)
-            statuses = [s.get('id') for s in statuses]
-
-            q = q.filter(Media.status_id.in_(statuses))
+            filter_by['media_status'] = set()
+            for media_status in db.run('media', 'with_status', status, with_doc = False):
+                filter_by['media_status'].add(media_status.get('_id'))
 
         # Filter on release status
         if release_status and len(release_status) > 0:
+            filter_by['release_status'] = set()
+            for release_status in db.run('release', 'with_status', release_status, with_doc = False):
+                filter_by['release_status'].add(release_status.get('media_id'))
 
-            statuses = fireEvent('status.get', release_status, single = len(release_status) > 1)
-            statuses = [s.get('id') for s in statuses]
-
-            q = q.join(Media.releases) \
-                .filter(Release.status_id.in_(statuses))
-
-        # Filter on type
-        if types and len(types) > 0:
-            try: q = q.filter(Media.type.in_(types))
-            except: pass
-
-        q = q.join(Library, LibraryTitle) \
-            .with_entities(LibraryTitle.simple_title) \
-            .filter(LibraryTitle.default == True)
-
-        titles = q.all()
+        # Filter by combining ids
+        for x in filter_by:
+            media_ids = [n for n in media_ids if n in filter_by[x]]
 
         chars = set()
-        for title in titles:
-            try:
-                char = title[0][0]
-                char = char if char in ascii_lowercase else '#'
-                chars.add(str(char))
-            except:
-                log.error('Failed getting title for %s', title.libraries_id)
+        for x in db.all('media_startswith'):
+            if x['_id'] in media_ids:
+                chars.add(x['key'])
 
             if len(chars) == 25:
                 break
 
-        pass  #db.close()
-        return ''.join(sorted(chars))
+        return list(chars)
 
     def charView(self, **kwargs):
 
@@ -487,32 +442,30 @@ class MediaPlugin(MediaBase):
     def restatus(self, media_id):
 
         try:
-            db = get_session()
+            db = get_db()
 
-            m = db.query(Media).filter_by(id = media_id).first()
-            if not m or len(m.library.titles) == 0:
-                log.debug('Can\'t restatus movie, doesn\'t seem to exist.')
-                return False
+            m = db.get('id', media_id)
 
-            log.debug('Changing status for %s', m.library.titles[0].title)
+            log.debug('Changing status for %s', getTitle(m))
             if not m['profile_id']:
                 m['status'] = 'done'
             else:
                 move_to_wanted = True
 
-                for t in m.profile.types:
-                    for release in m.releases:
-                        if t.quality.identifier is release.quality.identifier and (release.get('status') == 'done' and t.finish):
+                profile = db.get('id', m['profile_id'])
+                media_releases = db.get_many('release', m['_id'])
+
+                for q_identifier in profile['qualities']:
+                    index = profile['qualities'].index(q_identifier)
+
+                    for release in media_releases:
+                        if q_identifier is release['quality'] and (release.get('status') == 'done' and profile['finish'][index]):
                             move_to_wanted = False
 
                 m['status'] = 'active' if move_to_wanted else 'done'
 
-            db.commit()
+            db.update(m)
 
             return True
         except:
             log.error('Failed restatus: %s', traceback.format_exc())
-            db.rollback()
-        finally:
-            pass  #db.close()
-

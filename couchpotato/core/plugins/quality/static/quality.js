@@ -17,7 +17,7 @@ var QualityBase = new Class({
 
 	getProfile: function(id){
 		return this.profiles.filter(function(profile){
-			return profile.data.id == id
+			return profile.data._id == id
 		}).pick()
 	},
 
@@ -28,9 +28,9 @@ var QualityBase = new Class({
 		});
 	},
 
-	getQuality: function(id){
+	getQuality: function(identifier){
 		return this.qualities.filter(function(q){
-			return q.id == id;
+			return q.identifier == identifier;
 		}).pick();
 	},
 

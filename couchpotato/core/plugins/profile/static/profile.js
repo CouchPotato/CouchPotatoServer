@@ -54,10 +54,20 @@ var Profile = new Class({
 			)
 		);
 
-		self.makeSortable()
+		self.makeSortable();
+
+		// Combine qualities and properties into types
+		data.types = [];
+		data.qualities.each(function(quality, nr){
+			data.types.include({
+				'quality_identifier': quality,
+				'finish': data.finish[nr] || false,
+				'wait_for': data.wait_for[nr] || 0
+			})
+		});
 
 		if(data.types)
-			Object.each(data.types, self.addType.bind(self))
+			data.types.each(self.addType.bind(self));
 		else
 			self.delete_button.hide();
 
@@ -111,8 +121,9 @@ var Profile = new Class({
 		Array.each(self.type_container.getElements('.type'), function(type){
 			if(!type.hasClass('deleted') && type.getElement('select').get('value') > 0)
 				data.types.include({
-					'quality_id': type.getElement('select').get('value'),
-					'finish': +type.getElement('input[type=checkbox]').checked
+					'quality_identifier': type.getElement('select').get('value'),
+					'finish': +type.getElement('input[type=checkbox]').checked,
+					'wait_for': 0
 				});
 		})
 
@@ -145,7 +156,7 @@ var Profile = new Class({
 		var self = this;
 
 		return self.types.filter(function(type){
-			return type.get('quality_id')
+			return type.get('quality_identifier')
 		});
 
 	},
@@ -264,7 +275,7 @@ Profile.Type = new Class({
 			new Element('span.handle')
 		);
 
-		self.el[self.data.quality_id > 0 ? 'removeClass' : 'addClass']('is_empty');
+		self.el[self.data.quality_identifier ? 'removeClass' : 'addClass']('is_empty');
 
 		self.finish_class = new Form.Check(self.finish);
 
@@ -287,11 +298,11 @@ Profile.Type = new Class({
 		Object.each(Quality.qualities, function(q){
 			new Element('option', {
 				'text': q.label,
-				'value': q.id
+				'value': q.identifier
 			}).inject(self.qualities)
 		});
 
-		self.qualities.set('value', self.data.quality_id);
+		self.qualities.set('value', self.data.quality_identifier);
 
 		return self.qualities;
 
@@ -301,8 +312,9 @@ Profile.Type = new Class({
 		var self = this;
 
 		return {
-			'quality_id': self.qualities.get('value'),
-			'finish': +self.finish.checked
+			'quality_identifier': self.qualities.get('value'),
+			'finish': +self.finish.checked,
+			'wait_for': 0
 		}
 	},
 

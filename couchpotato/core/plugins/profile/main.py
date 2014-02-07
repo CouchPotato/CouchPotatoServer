@@ -56,8 +56,7 @@ class ProfilePlugin(Plugin):
 
             for media in medias:
                 if media.get('profile_id') not in profile_ids:
-                    default_profile = self.default()
-                    media['profile_id'] = default_profile.get('id')
+                    media['profile_id'] = profile_ids[0].get('_id')
                     db.update(media)
         except:
             log.error('Failed: %s', traceback.format_exc())

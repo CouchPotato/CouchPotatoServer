@@ -122,7 +122,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
             return
 
         pre_releases = fireEvent('quality.pre_releases', single = True)
-        release_dates = fireEvent('movie.update_release_date', media_id = movie['_id'], merge = True)
+        release_dates = fireEvent('movie.update_release_dates', movie['_id'], merge = True)
 
         found_releases = []
         too_early_to_search = []

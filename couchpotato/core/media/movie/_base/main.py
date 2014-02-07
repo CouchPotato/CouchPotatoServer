@@ -117,12 +117,11 @@ class MovieBase(MovieTypeBase):
             added = True
             do_search = False
             search_after = search_after and self.conf('search_on_add', section = 'moviesearcher')
+            onComplete = None
+
             if new:
-                onComplete = None
                 if search_after:
                     onComplete = self.createOnComplete(m['_id'])
-
-                fireEventAsync('movie.update_info', m['_id'], default_title = params.get('title', ''), on_complete = onComplete)
                 search_after = False
             elif force_readd:
 
@@ -147,6 +146,9 @@ class MovieBase(MovieTypeBase):
 
             if added:
                 db.update(m)
+
+                # Do full update to get images etc
+                fireEventAsync('movie.update_info', m['_id'], default_title = params.get('title'), on_complete = onComplete)
 
             # Remove releases
             for rel in db.run('release', 'for_media', m['_id']):
@@ -205,8 +207,9 @@ class MovieBase(MovieTypeBase):
 
                     # Default title
                     if kwargs.get('default_title'):
-                        for title in m['titles']:
-                            title.default = toUnicode(kwargs.get('default_title', '')).lower() == toUnicode(title.title).lower()
+                        m['title'] = kwargs.get('default_title')
+
+                    print m
 
                     db.update(m)
 
@@ -266,35 +269,36 @@ class MovieBase(MovieTypeBase):
 
             titles = info.get('titles', [])
             log.debug('Adding titles: %s', titles)
-            counter = 0
 
+            # Define default title
             def_title = None
-            for title in titles:
-                if (len(default_title) == 0 and counter == 0) or len(titles) == 1 or title.lower() == toUnicode(default_title.lower()) or (toUnicode(default_title) == six.u('') and toUnicode(titles[0]) == title):
-                    def_title = toUnicode(title)
-                    break
-                counter += 1
+            if default_title:
+                counter = 0
+                for title in titles:
+                    if title.lower() == toUnicode(default_title.lower()) or (toUnicode(default_title) == six.u('') and toUnicode(titles[0]) == title):
+                        def_title = toUnicode(title)
+                        break
+                    counter += 1
 
             if not def_title:
                 def_title = toUnicode(titles[0])
 
-            media = {
-                'title': def_title,
-            }
+            media['title'] = def_title
 
             # Files
             images = info.get('images', [])
-            media['files'] = media.get('filed', [])
+            media['files'] = media.get('files', {})
             for image_type in ['poster']:
                 for image in images.get(image_type, []):
                     if not isinstance(image, (str, unicode)):
                         continue
 
-                    file_path = fireEvent('file.download', url = image, single = True)
-                    media['files'].append({
-                        'type': 'image_%s' % image_type,
-                        'path': file_path
-                    })
+                    file_type = 'image_%s' % image_type
+                    if file_type not in media['files']:
+                        file_path = fireEvent('file.download', url = image, single = True)
+                        media['files']['image_%s' % image_type] = [file_path];
+
+                    break
 
             db.update(media)
 
@@ -306,7 +310,7 @@ class MovieBase(MovieTypeBase):
 
     def updateReleaseDate(self, media_id):
         """
-        Update releasedate (eta) info only
+        Update release_date (eta) info only
 
         @param media_id: document id
         @return: dict, with dates dvd, theater, bluray, expires
@@ -318,8 +322,8 @@ class MovieBase(MovieTypeBase):
             media = db.get('id', media_id)
 
             if not media.get('info'):
-                info_dict = self.updateInfo(media_id)
-                dates = info_dict.get('info', {}).get('release_date')
+                media = self.updateInfo(media_id)
+                dates = media.get('info', {}).get('release_date')
             else:
                 dates = media.get('info').get('release_date')
 
