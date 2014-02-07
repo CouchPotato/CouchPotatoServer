@@ -20,12 +20,12 @@ class TorrentBytes(TorrentProvider):
     }
 
     cat_ids = [
-        ([5], ['720p', '1080p']),
+        ([5], ['720p', '1080p', 'bd50']),
         ([19], ['cam']),
         ([19], ['ts', 'tc']),
         ([19], ['r5', 'scr']),
         ([19], ['dvdrip']),
-        ([5], ['brrip']),
+        ([19], ['brrip']),
         ([20], ['dvdr']),
     ]
 
