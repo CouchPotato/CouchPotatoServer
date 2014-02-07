@@ -64,7 +64,7 @@ class rTorrent(Downloader):
 
         return self.rt
 
-    def _update_provider_group(self, name, data):
+    def updateProviderGroup(self, name, data):
         if data.get('seed_time'):
             log.info('seeding time ignored, not supported')
 
@@ -113,7 +113,7 @@ class rTorrent(Downloader):
             return False
 
         group_name = 'cp_' + data.get('provider').lower()
-        if not self._update_provider_group(group_name, data):
+        if not self.updateProviderGroup(group_name, data):
             return False
 
         torrent_params = {}
