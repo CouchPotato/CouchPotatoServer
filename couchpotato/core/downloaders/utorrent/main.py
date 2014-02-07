@@ -1,5 +1,6 @@
 from base64 import b16encode, b32decode
 from bencode import bencode as benc, bdecode
+from couchpotato.api import addApiView
 from couchpotato.core.downloaders.base import Downloader, ReleaseDownloadList
 from couchpotato.core.helpers.encoding import isInt, ss, sp
 from couchpotato.core.helpers.variable import tryInt, tryFloat, cleanHost
@@ -24,6 +25,7 @@ class uTorrent(Downloader):
 
     protocol = ['torrent', 'torrent_magnet']
     utorrent_api = None
+    testable = True
     status_flags = {
         'STARTED'     : 1,
         'CHECKING'    : 2,
@@ -45,6 +47,11 @@ class uTorrent(Downloader):
         self.utorrent_api = uTorrentAPI(host[0], port = host[1], username = self.conf('username'), password = self.conf('password'))
 
         return self.utorrent_api
+
+    def test(self):
+        if self.connect() and self.utorrent_api.get_status():
+            return True
+        return False
 
     def download(self, data = None, media = None, filedata = None):
         if not media: media = {}
