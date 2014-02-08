@@ -117,7 +117,7 @@ var QualityBase = new Class({
 
 		Array.each(self.profiles, function(profile){
 			var check;
-			new Element('li', {'data-id': profile.data.id}).adopt(
+			new Element('li', {'data-id': profile.data._id}).adopt(
 				check = new Element('input.inlay[type=checkbox]', {
 					'checked': !profile.data.hide,
 					'events': {

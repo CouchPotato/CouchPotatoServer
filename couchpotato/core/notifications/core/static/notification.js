@@ -77,7 +77,7 @@ var NotificationBase = new Class({
 
 			var ids = []
 			rn.each(function(n){
-				ids.include(n.id)
+				ids.include(n._id)
 			})
 		}
 
@@ -187,7 +187,7 @@ var NotificationBase = new Class({
 				new Element('a.close.icon2', {
 					'events': {
 						'click': function(){
-							self.markAsRead([data.id]);
+							self.markAsRead([data._id]);
 							hide_message();
 						}
 					}

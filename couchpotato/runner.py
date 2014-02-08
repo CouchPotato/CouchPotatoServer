@@ -86,8 +86,6 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     db_path = toUnicode(os.path.join(data_dir, 'database'))
 
     # Check if database exists
-    print db_path
-
     db = ThreadSafeDatabase(db_path)
     db_exists = db.exists()
     if db_exists:

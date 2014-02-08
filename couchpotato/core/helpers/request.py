@@ -9,6 +9,7 @@ def getParams(params):
     reg = re.compile('^[a-z0-9_\.]+$')
 
     temp = {}
+
     for param, value in sorted(params.items()):
 
         nest = re.split("([\[\]]+)", param)
@@ -44,7 +45,10 @@ def dictToList(params):
         new = {}
         for x, value in params.items():
             try:
-                new_value = [dictToList(value[k]) for k in sorted(value.keys(), cmp = natcmp)]
+                convert = lambda text: int(text) if text.isdigit() else text.lower()
+                alphanum_key = lambda key: [convert(c) for c in re.split('([0-9]+)', key)]
+                sorted_keys = sorted(value.keys(), key = alphanum_key)
+                new_value = [dictToList(value[k]) for k in sorted_keys]
             except:
                 new_value = value
 

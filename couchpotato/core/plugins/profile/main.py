@@ -1,8 +1,9 @@
 import traceback
-from couchpotato import get_session, get_db
+from couchpotato import get_session, get_db, tryInt
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import toUnicode
+from couchpotato.core.helpers.variable import splitString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from .index import ProfileIndex
@@ -78,45 +79,41 @@ class ProfilePlugin(Plugin):
     def save(self, **kwargs):
 
         try:
-            db = get_session()
+            db = get_db()
 
-            p = db.query(Profile).filter_by(id = kwargs.get('id')).first()
-            if not p:
-                p = Profile()
-                db.add(p)
+            profile = {
+                'label': toUnicode(kwargs.get('label')),
+                'order': tryInt(kwargs.get('order', 999)),
+                'core': kwargs.get('core', False),
+                'qualities': [],
+                'wait_for': [],
+                'finish': []
+            }
 
-            p.label = toUnicode(kwargs.get('label'))
-            p.order = kwargs.get('order', p.order if p.order else 0)
-            p.core = kwargs.get('core', False)
-
-            #delete old types
-            [db.delete(t) for t in p.types]
-
+            # Update types
             order = 0
             for type in kwargs.get('types', []):
-                t = ProfileType(
-                    order = order,
-                    finish = type.get('finish') if order > 0 else 1,
-                    wait_for = kwargs.get('wait_for'),
-                    quality_id = type.get('quality_id')
-                )
-                p.types.append(t)
-
+                profile['qualities'].append(type.get('quality'))
+                profile['wait_for'].append(tryInt(type.get('wait_for')))
+                profile['finish'].append((tryInt(type.get('finish')) == 1) if order > 0 else True)
                 order += 1
 
-            db.commit()
+            id = kwargs.get('id')
+            try:
+                p = db.get('id', id)
+            except:
+                p = db.insert(profile)
+                p.update(profile)
 
-            profile_dict = p.to_dict(self.to_dict)
+            p['order'] = tryInt(kwargs.get('order', p.get('order', 999)))
+            db.update(p)
 
             return {
                 'success': True,
-                'profile': profile_dict
+                'profile': p
             }
         except:
             log.error('Failed: %s', traceback.format_exc())
-            db.rollback()
-        finally:
-            pass  #db.close()
 
         return {
             'success': False
@@ -129,26 +126,23 @@ class ProfilePlugin(Plugin):
     def saveOrder(self, **kwargs):
 
         try:
-            db = get_session()
+            db = get_db()
 
             order = 0
-            for profile in kwargs.get('ids', []):
-                p = db.query(Profile).filter_by(id = profile).first()
-                p.hide = kwargs.get('hidden')[order]
-                p.order = order
+
+            for profile_id in kwargs.get('ids', []):
+                p = db.get('id', profile_id)
+                p['hide'] = tryInt(kwargs.get('hidden')[order]) == 1
+                p['order'] = order
+                db.update(p)
 
                 order += 1
-
-            db.commit()
 
             return {
                 'success': True
             }
         except:
             log.error('Failed: %s', traceback.format_exc())
-            db.rollback()
-        finally:
-            pass  #db.close()
 
         return {
             'success': False
@@ -180,9 +174,6 @@ class ProfilePlugin(Plugin):
             }
         except:
             log.error('Failed: %s', traceback.format_exc())
-            db.rollback()
-        finally:
-            pass  #db.close()
 
         return {
             'success': False

@@ -92,20 +92,6 @@ from couchpotato.core.helpers.encoding import simplifyString"""
         return key.rjust(32, '_').lower()
 
 
-class YearIndex(TreeBasedIndex):
-
-    def __init__(self, *args, **kwargs):
-        kwargs['key_format'] = 'i'
-        super(YearIndex, self).__init__(*args, **kwargs)
-
-    def make_key(self, key):
-        return key
-
-    def make_key_value(self, data):
-        if data.get('_t') == 'media' and data.get('year') is not None:
-            return data['year'], None
-
-
 class TitleIndex(TreeBasedIndex):
 
     custom_header = """from CodernityDB.tree_index import TreeBasedIndex

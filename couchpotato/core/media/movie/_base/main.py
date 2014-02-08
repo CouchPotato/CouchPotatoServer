@@ -94,7 +94,7 @@ class MovieBase(MovieTypeBase):
                 'identifier': params.get('identifier'),
                 'status': status if status else 'active',
                 'profile_id': params.get('profile_id', default_profile.get('_id')),
-                'category_id': tryInt(cat_id) if cat_id is not None and tryInt(cat_id) > 0 else None,
+                'category_id': cat_id if cat_id is not None and len(cat_id) > 0 else None,
             }
 
             new = False
@@ -135,7 +135,7 @@ class MovieBase(MovieTypeBase):
                             fireEvent('release.delete', release['_id'], single = True)
 
                 m['profile_id'] = params.get('profile_id', default_profile.get('id'))
-                m['category_id'] = tryInt(cat_id) if cat_id is not None and tryInt(cat_id) > 0 else (m.get('category_id') or None)
+                m['category_id'] = cat_id if cat_id is not None and len(cat_id) > 0 else (m.get('category_id') or None)
             else:
                 log.debug('Movie already exists, not updating: %s', params)
                 added = False
@@ -198,7 +198,7 @@ class MovieBase(MovieTypeBase):
 
                     cat_id = kwargs.get('category_id')
                     if cat_id is not None:
-                        m['category_id'] = tryInt(cat_id) if tryInt(cat_id) > 0 else None
+                        m['category_id'] = cat_id if len(cat_id) > 0 else None
 
                     # Remove releases
                     for rel in db.run('release', 'for_media', m['_id']):
@@ -209,11 +209,11 @@ class MovieBase(MovieTypeBase):
                     if kwargs.get('default_title'):
                         m['title'] = kwargs.get('default_title')
 
-                    print m
-
                     db.update(m)
 
                     fireEvent('media.restatus', m['_id'])
+
+                    m = db.get('id', media_id)
 
                     movie_dict = db.run('media', 'to_dict', m['_id'])
                     fireEventAsync('movie.searcher.single', movie_dict, on_complete = self.createNotifyFront(media_id))

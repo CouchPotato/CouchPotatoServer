@@ -1,11 +1,9 @@
-from couchpotato import get_session
 from couchpotato.core.event import fireEvent, addEvent
-from couchpotato.core.helpers.encoding import toUnicode, simplifyString, ss, sp
+from couchpotato.core.helpers.encoding import toUnicode, simplifyString, sp
 from couchpotato.core.helpers.variable import getExt, getImdb, tryInt, \
     splitString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.core.settings.model import File
 from enzyme.exceptions import NoParserError, ParseError
 from guessit import guess_movie_info
 from subliminal.videos import Video
@@ -352,7 +350,6 @@ class Scanner(Plugin):
             release_download = None
 
         # Determine file types
-        db = get_session()
         processed_movies = {}
         while True and not self.shuttingDown():
             try:
@@ -439,7 +436,6 @@ class Scanner(Plugin):
         else:
             log.debug('Found no movies in the folder %s', folder)
 
-        pass  #db.close()
         return processed_movies
 
     def getMetaData(self, group, folder = '', release_download = None):
@@ -593,21 +589,6 @@ class Scanner(Plugin):
                             break
             except:
                 pass
-
-        # Check if path is already in db
-        if not imdb_id:
-
-            db = get_session()
-            for cf in files['movie']:
-                f = db.query(File).filter_by(path = toUnicode(cf)).first()
-                try:
-                    imdb_id = f.library[0].identifier
-                    log.debug('Found movie via database: %s', cf)
-                    cur_file = cf
-                    break
-                except:
-                    pass
-            pass  #db.close()
 
         # Search based on identifiers
         if not imdb_id:

@@ -100,7 +100,7 @@ class MovieResultModifier(Plugin):
                 if media.get('status') == 'active':
                     temp['in_wanted'] = media
 
-                for release in db.get_many('release', media.get('_id'), with_doc = True):
+                for release in db.run('release', 'for_media', media.get('_id')):
                     if release.get('status') == 'done':
                         temp['in_library'] = media
         except:

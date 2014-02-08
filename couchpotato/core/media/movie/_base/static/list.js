@@ -63,7 +63,7 @@ var MovieList = new Class({
 			self.movies.each(function(movie){
 				if(movie.get('_id') == notification.data._id){
 					movie.destroy();
-					delete self.movies_added[notification.data.id];
+					delete self.movies_added[notification.data._id];
 					self.setCounter(self.counter_count-1);
 					self.total_movies--;
 				}
@@ -77,7 +77,7 @@ var MovieList = new Class({
 		var self = this;
 
 		self.fireEvent('movieAdded', notification);
-		if(self.options.add_new && !self.movies_added[notification.data.id] && notification.data.status.identifier == self.options.status){
+		if(self.options.add_new && !self.movies_added[notification.data._id] && notification.data.status == self.options.status){
 			window.scroll(0,0);
 			self.createMovie(notification.data, 'top');
 			self.setCounter(self.counter_count+1);
@@ -180,7 +180,7 @@ var MovieList = new Class({
 		m.fireEvent('injected');
 
 		self.movies.include(m)
-		self.movies_added[movie.id] = true;
+		self.movies_added[movie._id] = true;
 	},
 
 	createNavigation: function(){
@@ -259,8 +259,8 @@ var MovieList = new Class({
 		self.mass_edit_select_class = new Form.Check(self.mass_edit_select);
 		Quality.getActiveProfiles().each(function(profile){
 			new Element('option', {
-				'value': profile.id ? profile.id : profile.data.id,
-				'text': profile.label ? profile.label : profile.data.label
+				'value': profile.get('_id'),
+				'text': profile.get('label')
 			}).inject(self.mass_edit_quality)
 		});
 

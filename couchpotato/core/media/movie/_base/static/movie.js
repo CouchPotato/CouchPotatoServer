@@ -27,7 +27,7 @@ var Movie = new Class({
 
 		// Do refresh with new data
 		self.global_events['movie.update'] = function(notification){
-			if(self.data.id != notification.data.id) return;
+			if(self.data._id != notification.data._id) return;
 
 			self.busy(false);
 			self.removeView();
@@ -38,7 +38,7 @@ var Movie = new Class({
 		// Add spinner on load / search
 		['media.busy', 'movie.searcher.started'].each(function(listener){
 			self.global_events[listener] = function(notification){
-				if(notification.data && (self.data.id == notification.data.id || (typeOf(notification.data.id) == 'array' && notification.data.id.indexOf(self.data.id) > -1)))
+				if(notification.data && (self.data._id == notification.data._id || (typeOf(notification.data._id) == 'array' && notification.data._id.indexOf(self.data._id) > -1)))
 					self.busy(true);
 			}
 			App.on(listener, self.global_events[listener]);
@@ -46,7 +46,7 @@ var Movie = new Class({
 
 		// Remove spinner
 		self.global_events['movie.searcher.ended'] = function(notification){
-			if(notification.data && self.data.id == notification.data.id)
+			if(notification.data && self.data._id == notification.data._id)
 				self.busy(false)
 		}
 		App.on('movie.searcher.ended', self.global_events['movie.searcher.ended']);
@@ -54,12 +54,12 @@ var Movie = new Class({
 		// Reload when releases have updated
 		self.global_events['release.update_status'] = function(notification){
 			var data = notification.data
-			if(data && self.data.id == data.movie_id){
+			if(data && self.data._id == data.movie_id){
 
 				if(!self.data.releases)
 					self.data.releases = [];
 
-				self.data.releases.push({'quality_identifier': data.quality_identifier, 'status': data.status});
+				self.data.releases.push({'quality': data.quality, 'status': data.status});
 				self.updateReleases();
 			}
 		}
@@ -197,7 +197,7 @@ var Movie = new Class({
 		if(self.profile.data)
 			self.profile.getTypes().each(function(type){
 
-				var q = self.addQuality(type.quality_identifier || type.get('quality_identifier'));
+				var q = self.addQuality(type.get('quality'));
 				if((type.finish == true || type.get('finish')) && !q.hasClass('finish')){
 					q.addClass('finish');
 					q.set('title', q.get('title') + ' Will finish searching for this movie if this quality is found.')
@@ -222,11 +222,11 @@ var Movie = new Class({
 
 		self.data.releases.each(function(release){
 
-			var q = self.quality.getElement('.q_id'+ release.quality_id),
+			var q = self.quality.getElement('.q_'+ release.quality),
 				status = release.status;
 
 			if(!q && (status == 'snatched' || status == 'seeding' || status == 'done'))
-				var q = self.addQuality(release.quality_identifier)
+				var q = self.addQuality(release.quality)
 
 			if (q && !q.hasClass(status)){
 				q.addClass(status);
@@ -236,13 +236,13 @@ var Movie = new Class({
 		});
 	},
 
-	addQuality: function(quality_identifier){
+	addQuality: function(quality){
 		var self = this;
 
-		var q = Quality.getQuality(quality_identifier);
+		var q = Quality.getQuality(quality);
 		return new Element('span', {
 			'text': q.label,
-			'class': 'q_'+q.identifier + ' q_id' + q.id,
+			'class': 'q_'+q.identifier,
 			'title': ''
 		}).inject(self.quality);
 

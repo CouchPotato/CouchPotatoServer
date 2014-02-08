@@ -184,7 +184,7 @@ Block.Search.MovieItem = new Class({
 				self.category_select.show();
 				categories.each(function(category){
 					new Element('option', {
-						'value': category.data.id,
+						'value': category.data._id,
 						'text': category.data.label
 					}).inject(self.category_select);
 				});

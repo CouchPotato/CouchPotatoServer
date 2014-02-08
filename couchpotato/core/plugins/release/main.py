@@ -42,18 +42,11 @@ class Release(Plugin):
                 'id': {'type': 'id', 'desc': 'ID of the release object in release-table'}
             }
         })
-        addApiView('release.for_movie', self.forMovieView, docs = {
-            'desc': 'Returns all releases for a movie. Ordered by score(desc)',
-            'params': {
-                'id': {'type': 'id', 'desc': 'ID of the movie'}
-            }
-        })
 
         addEvent('release.add', self.add)
         addEvent('release.download', self.download)
         addEvent('release.try_download_result', self.tryDownloadResult)
         addEvent('release.create_from_search', self.createFromSearch)
-        addEvent('release.for_movie', self.forMovie)
         addEvent('release.delete', self.delete)
         addEvent('release.clean', self.clean)
         addEvent('release.update_status', self.updateStatus)
@@ -266,7 +259,6 @@ class Release(Plugin):
         if success:
             fireEvent('notify.frontend', type = 'release.manual_download', data = True, message = 'Successfully snatched "%s"' % item['name'])
 
-        pass  #db.close()
         return {
             'success': success == True
         }
@@ -352,10 +344,7 @@ class Release(Plugin):
 
         except:
             log.error('Failed storing download status: %s', traceback.format_exc())
-            db.rollback()
             return False
-        finally:
-            pass  #db.close()
 
         return True
 
@@ -430,31 +419,6 @@ class Release(Plugin):
             log.error('Failed: %s', traceback.format_exc())
 
         return []
-
-    def forMovie(self, id = None):
-
-        db = get_session()
-
-        releases_raw = db.query(Relea) \
-            .options(joinedload_all('info')) \
-            .options(joinedload_all('files')) \
-            .filter(Relea.movie_id == id) \
-            .all()
-
-        releases = [r.to_dict({'info': {}, 'files': {}}) for r in releases_raw]
-        releases = sorted(releases, key = lambda k: k['info'].get('score', 0), reverse = True)
-
-        pass  #db.close()
-        return releases
-
-    def forMovieView(self, id = None, **kwargs):
-
-        releases = self.forMovie(id)
-
-        return {
-            'releases': releases,
-            'success': True
-        }
 
     def updateStatus(self, release_id, status = None):
         if not status: return False

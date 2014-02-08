@@ -139,7 +139,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
         profile = db.get('id', movie['profile_id'])
         quality_order = fireEvent('quality.order', single = True)
-        media_releases = db.get_many('release', movie['_id'])
+        media_releases = db.run('release', 'for_media', movie['_id'])
 
         ret = False
 
@@ -202,7 +202,6 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
         fireEvent('notify.frontend', type = 'movie.searcher.ended', data = {'id': movie['_id']})
 
-        pass  #db.close()
         return ret
 
     def correctRelease(self, nzb = None, media = None, quality = None, **kwargs):

@@ -138,9 +138,6 @@ class QualityPlugin(Plugin):
             }
         except:
             log.error('Failed: %s', traceback.format_exc())
-            db.rollback()
-        finally:
-            pass  #db.close()
 
         return {
             'success': False

@@ -62,7 +62,7 @@ Page.Home = new Class({
 
 				// Track movie added
 				var after_search = function(data){
-					if(notification.data.id != data.data.id) return;
+					if(notification.data._id != data.data._id) return;
 
 					// Force update after search
 					self.available_list.update();

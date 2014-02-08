@@ -127,7 +127,7 @@ MA.Release = new Class({
 			self.showHelper();
 
 		App.on('movie.searcher.ended', function(notification){
-			if(self.movie.data.id != notification.data.id) return;
+			if(self.movie.data._id != notification.data._id) return;
 
 			self.releases = null;
 			if(self.options_container){
@@ -143,30 +143,7 @@ MA.Release = new Class({
 		if(e)
 			(e).preventDefault();
 
-		if(self.releases)
-			self.createReleases();
-		else {
-
-			self.movie.busy(true);
-
-			Api.request('release.for_movie', {
-				'data': {
-					'id': self.movie.data.id
-				},
-				'onComplete': function(json){
-					self.movie.busy(false, 1);
-
-					if(json && json.releases){
-						self.releases = json.releases;
-						self.createReleases();
-					}
-					else
-						alert('Something went wrong, check the logs.');
-				}
-			});
-
-		}
-
+		self.createReleases();
 
 	},
 
@@ -189,9 +166,9 @@ MA.Release = new Class({
 				new Element('span.provider', {'text': 'Provider'})
 			).inject(self.release_container)
 
-			self.releases.each(function(release){
+			self.movie.data.releases.each(function(release){
 
-				var quality = Quality.getProfile(release.quality_id) || {},
+				var quality = Quality.getQuality(release.quality) || {},
 					info = release.info,
 					provider = self.get(release, 'provider') + (release.info['provider_extra'] ? self.get(release, 'provider_extra') : '');
 
@@ -209,12 +186,12 @@ MA.Release = new Class({
 
 				// Create release
 				var item = new Element('div', {
-					'class': 'item '+status.identifier,
-					'id': 'release_'+release.id
+					'class': 'item '+release.status,
+					'id': 'release_'+release._id
 				}).adopt(
 					new Element('span.name', {'text': release_name, 'title': release_name}),
-					new Element('span.status', {'text': status.identifier, 'class': 'release_status '+release.status}),
-					new Element('span.quality', {'text': quality.get('label') || 'n/a'}),
+					new Element('span.status', {'text': release.status, 'class': 'release_status '+release.status}),
+					new Element('span.quality', {'text': quality.label || 'n/a'}),
 					new Element('span.size', {'text': release.info['size'] ? Math.floor(self.get(release, 'size')) : 'n/a'}),
 					new Element('span.age', {'text': self.get(release, 'age')}),
 					new Element('span.score', {'text': self.get(release, 'score')}),
@@ -243,32 +220,32 @@ MA.Release = new Class({
 				).inject(self.release_container);
 				release['el'] = item;
 
-				if(status.identifier == 'ignored' || status.identifier == 'failed' || status.identifier == 'snatched'){
-					if(!self.last_release || (self.last_release && self.last_release.status.identifier != 'snatched' && status.identifier == 'snatched'))
+				if(release.status == 'ignored' || release.status == 'failed' || release.status == 'snatched'){
+					if(!self.last_release || (self.last_release && self.last_release.status != 'snatched' && release.status == 'snatched'))
 						self.last_release = release;
 				}
-				else if(!self.next_release && status.identifier == 'available'){
+				else if(!self.next_release && release.status == 'available'){
 					self.next_release = release;
 				}
 
 				var update_handle = function(notification) {
-					if(notification.data.id != release.id) return;
+					if(notification.data._id != release._id) return;
 
-					var q = self.movie.quality.getElement('.q_id' + release.quality_id),
+					var q = self.movie.quality.getElement('.q_' + release.quality),
 						new_status = notification.data.status;
 
 					release.el.set('class', 'item ' + new_status);
 
 					var status_el = release.el.getElement('.release_status');
 					status_el.set('class', 'release_status ' + new_status);
-					status_el.set('text', new_status.identifier);
+					status_el.set('text', new_status);
 
 					if(!q && (new_status == 'snatched' || new_status == 'seeding' || new_status == 'done'))
 						var q = self.addQuality(release.quality_id);
 
 					if(q && !q.hasClass(new_status)) {
 						q.removeClass(release.status).addClass(new_status);
-						q.set('title', q.get('title').replace(status, new_status));
+						q.set('title', q.get('title').replace(release.status, new_status));
 					}
 				}
 
@@ -277,12 +254,12 @@ MA.Release = new Class({
 			});
 
 			if(self.last_release)
-				self.release_container.getElements('#release_'+self.last_release.id).addClass('last_release');
+				self.release_container.getElements('#release_'+self.last_release._id).addClass('last_release');
 
 			if(self.next_release)
-				self.release_container.getElements('#release_'+self.next_release.id).addClass('next_release');
+				self.release_container.getElements('#release_'+self.next_release._id).addClass('next_release');
 
-			if(self.next_release || (self.last_release && ['ignored', 'failed'].indexOf(self.last_release.status.identifier) === false)){
+			if(self.next_release || (self.last_release && ['ignored', 'failed'].indexOf(self.last_release.status) === false)){
 
 				self.trynext_container = new Element('div.buttons.try_container').inject(self.release_container, 'top');
 
@@ -385,7 +362,7 @@ MA.Release = new Class({
 	download: function(release){
 		var self = this;
 
-		var release_el = self.release_container.getElement('#release_'+release.id),
+		var release_el = self.release_container.getElement('#release_'+release._id),
 			icon = release_el.getElement('.download.icon2');
 
 		if(icon)
@@ -393,7 +370,7 @@ MA.Release = new Class({
 
 		Api.request('release.manual_download', {
 			'data': {
-				'id': release.id
+				'id': release._id
 			},
 			'onComplete': function(json){
 				if(icon)
@@ -416,7 +393,7 @@ MA.Release = new Class({
 
 		Api.request('release.ignore', {
 			'data': {
-				'id': release.id
+				'id': release._id
 			},
 		})
 
@@ -623,14 +600,14 @@ MA.Edit = new Class({
 				self.category_select.show();
 				categories.each(function(category){
 
-					var category_id = category.data.id;
+					var category_id = category.data._id;
 
 					new Element('option', {
 						'value': category_id,
 						'text': category.data.label
 					}).inject(self.category_select);
 
-					if(self.movie.category && self.movie.category.data && self.movie.category.data.id == category_id)
+					if(self.movie.category && self.movie.category.data && self.movie.category.data._id == category_id)
 						self.category_select.set('value', category_id);
 
 				});
@@ -859,29 +836,7 @@ MA.Files = new Class({
 		var self = this;
 		(e).preventDefault();
 
-		if(self.releases)
-			self.showFiles();
-		else {
-
-			self.movie.busy(true);
-
-			Api.request('release.for_movie', {
-				'data': {
-					'id': self.movie.data.id
-				},
-				'onComplete': function(json){
-					self.movie.busy(false, 1);
-
-					if(json && json.releases){
-						self.releases = json.releases;
-						self.showFiles();
-					}
-					else
-						alert('Something went wrong, check the logs.');
-				}
-			});
-
-		}
+		self.showFiles();
 
 	},
 

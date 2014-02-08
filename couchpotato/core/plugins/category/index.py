@@ -1,16 +1,29 @@
-from hashlib import md5
 from CodernityDB.tree_index import TreeBasedIndex
 
 
 class CategoryIndex(TreeBasedIndex):
 
     def __init__(self, *args, **kwargs):
-        kwargs['key_format'] = '32s'
+        kwargs['key_format'] = 'i'
         super(CategoryIndex, self).__init__(*args, **kwargs)
 
     def make_key(self, key):
-        return md5(key).hexdigest()
+        return key
 
     def make_key_value(self, data):
         if data.get('_t') == 'category':
-            return md5(data['media_id']).hexdigest(), None
+            return data.get('order', -99), None
+
+
+class CategoryMediaIndex(TreeBasedIndex):
+
+    def __init__(self, *args, **kwargs):
+        kwargs['key_format'] = '32s'
+        super(CategoryMediaIndex, self).__init__(*args, **kwargs)
+
+    def make_key(self, key):
+        return str(key)
+
+    def make_key_value(self, data):
+        if data.get('_t') == 'media' and data.get('category_id'):
+            return str(data.get('category_id')), None

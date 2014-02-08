@@ -1,13 +1,12 @@
 import traceback
-from couchpotato import get_session, tryInt, get_db
+from couchpotato import tryInt, get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, fireEventAsync, addEvent
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.variable import splitString, getImdb, getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media import MediaBase
-from .index import MediaIMDBIndex, MediaStatusIndex, YearIndex, MediaTypeIndex, TitleSearchIndex, TitleIndex, StartsWithIndex
-from couchpotato.core.settings.model import Media
+from .index import MediaIMDBIndex, MediaStatusIndex, MediaTypeIndex, TitleSearchIndex, TitleIndex, StartsWithIndex
 from string import ascii_lowercase
 
 log = CPLog(__name__)
@@ -101,12 +100,6 @@ class MediaPlugin(MediaBase):
         except:
             log.debug('Index already exists')
             db.edit_index(MediaTypeIndex(db.path, 'media_by_type'))
-
-        # Year index
-        try: db.add_index(YearIndex(db.path, 'media_year'))
-        except:
-            log.debug('Index already exists')
-            db.edit_index(YearIndex(db.path, 'media_year'))
 
         # Title index
         try: db.add_index(TitleIndex(db.path, 'media_title'))
@@ -377,46 +370,45 @@ class MediaPlugin(MediaBase):
     def delete(self, media_id, delete_from = None):
 
         try:
-            db = get_session()
+            db = get_db()
 
-            media = db.query(Media).filter_by(id = media_id).first()
+            media = db.get('id', media_id)
             if media:
                 deleted = False
                 if delete_from == 'all':
                     db.delete(media)
-                    db.commit()
                     deleted = True
                 else:
 
-                    total_releases = len(media.releases)
+                    media_releases = list(db.run('release', 'for_media', media['_id']))
+
+                    total_releases = len(media_releases)
                     total_deleted = 0
-                    new_movie_status = None
-                    for release in media.releases:
+                    new_media_status = None
+
+                    for release in media_releases:
                         if delete_from in ['wanted', 'snatched', 'late']:
                             if release.get('status') != 'done':
                                 db.delete(release)
                                 total_deleted += 1
-                            new_movie_status = 'done'
+                            new_media_status = 'done'
                         elif delete_from == 'manage':
                             if release.get('status') == 'done':
                                 db.delete(release)
                                 total_deleted += 1
-                            new_movie_status = 'active'
-                    db.commit()
+                            new_media_status = 'active'
 
                     if total_releases == total_deleted:
                         db.delete(media)
-                        db.commit()
                         deleted = True
-                    elif new_movie_status:
-                        media.profile_id = None
-                        media['status'] = new_status
-                        db.commit()
+                    elif new_media_status:
+                        media['status'] = new_media_status
+                        db.update(media)
                     else:
-                        fireEvent('media.restatus', media.id, single = True)
+                        fireEvent('media.restatus', media.get('_id'), single = True)
 
                 if deleted:
-                    fireEvent('notify.frontend', type = 'movie.deleted', data = media.to_dict())
+                    fireEvent('notify.frontend', type = 'media.deleted', data = media)
         except:
             log.error('Failed deleting media: %s', traceback.format_exc())
 
@@ -453,7 +445,7 @@ class MediaPlugin(MediaBase):
                 move_to_wanted = True
 
                 profile = db.get('id', m['profile_id'])
-                media_releases = db.get_many('release', m['_id'])
+                media_releases = db.run('release', 'for_media', m['_id'])
 
                 for q_identifier in profile['qualities']:
                     index = profile['qualities'].index(q_identifier)

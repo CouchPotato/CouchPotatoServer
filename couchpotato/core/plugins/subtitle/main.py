@@ -1,10 +1,8 @@
-from couchpotato import get_session
-from couchpotato.core.event import addEvent, fireEvent
+from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import toUnicode, sp
 from couchpotato.core.helpers.variable import splitString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.core.settings.model import Library, FileType
 from couchpotato.environment import Env
 import subliminal
 import traceback
@@ -18,29 +16,6 @@ class Subtitle(Plugin):
 
     def __init__(self):
         addEvent('renamer.before', self.searchSingle)
-
-    def searchLibrary(self):
-
-        # Get all active and online movies
-        db = get_session()
-
-        library = db.query(Library).all()
-
-        for movie in library.movies:
-
-            for release in movie.releases:
-
-                # get releases and their movie files
-                if release.get('status') == 'done':
-
-                    files = []
-                    for file in release.files.filter(FileType.status.has(identifier = 'movie')).all():
-                        files.append(file.path)
-
-                    # get subtitles for those files
-                    subliminal.list_subtitles(files, cache_dir = Env.get('cache_dir'), multi = True, languages = self.getLanguages(), services = self.services)
-
-        pass  #db.close()
 
     def searchSingle(self, group):
         if self.isDisabled(): return
