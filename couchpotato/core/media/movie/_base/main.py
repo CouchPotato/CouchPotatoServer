@@ -45,7 +45,7 @@ class MovieBase(MovieTypeBase):
         addEvent('movie.update_info', self.updateInfo)
         addEvent('movie.update_release_dates', self.updateReleaseDate)
 
-    def add(self, params = None, force_readd = True, search_after = True, update_library = False, status = None):
+    def add(self, params = None, force_readd = True, search_after = True, status = None):
         if not params: params = {}
 
         if not params.get('identifier'):

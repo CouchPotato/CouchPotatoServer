@@ -48,6 +48,7 @@ class Manage(Plugin):
 
         if not Env.get('dev') and self.conf('startup_scan'):
             addEvent('app.load', self.updateLibraryQuick)
+        addEvent('app.load', self.updateLibrary)
 
     def getProgress(self, **kwargs):
         return {
@@ -67,7 +68,7 @@ class Manage(Plugin):
         return self.updateLibrary(full = False)
 
     def updateLibrary(self, full = True):
-        last_update = float(Env.prop('manage.last_update', default = 0))
+        last_update = 0 #float(Env.prop('manage.last_update', default = 0))
 
         if self.in_progress:
             log.info('Already updating library: %s', self.in_progress)
@@ -184,13 +185,12 @@ class Manage(Plugin):
                     'to_go': total_found,
                 })
 
-            if group['media'] and group['media'].get('identifier'):
-                identifier = group['media'].get('identifier')
-                added_identifiers.append(identifier)
+            if group['media'] and group['identifier']:
+                added_identifiers.append(group['identifier'])
 
                 # Add it to release and update the info
                 fireEvent('release.add', group = group)
-                fireEvent('movie.update_info', identifier = identifier, on_complete = self.createAfterUpdate(folder, identifier))
+                fireEvent('movie.update_info', identifier = group['identifier'], on_complete = self.createAfterUpdate(folder, group['identifier']))
             else:
                 self.updateProgress(folder)
 

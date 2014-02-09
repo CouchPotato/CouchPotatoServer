@@ -1,5 +1,4 @@
 from couchpotato.core.helpers.encoding import toUnicode
-from couchpotato.core.helpers.variable import natcmp
 from urllib import unquote
 import re
 

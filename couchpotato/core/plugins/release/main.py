@@ -12,7 +12,6 @@ from couchpotato.core.settings.model import Release as Relea, Media, \
 from couchpotato.environment import Env
 from inspect import ismethod, isfunction
 from sqlalchemy.exc import InterfaceError
-from sqlalchemy.orm import joinedload_all
 from sqlalchemy.sql.expression import and_, or_
 import os
 import time
@@ -110,44 +109,43 @@ class Release(Plugin):
     def add(self, group):
 
         try:
-            db = get_session()
+            db = get_db()
 
             identifier = '%s.%s.%s' % (group['identifier'], group['meta_data'].get('audio', 'unknown'), group['meta_data']['quality']['identifier'])
 
-            # Add movie
-            media = db.query(Media).filter_by(library_id = group['library'].get('id')).first()
-            if not media:
-                media = Media(
-                    library_id = group['library'].get('id'),
-                    profile_id = 0,
-                    status = 'done'
-                )
-                db.add(media)
-                db.commit()
+            # Add movie if it doesn't exist
+            try:
+                media = db.get('media', group['identifier'], with_doc = True)['doc']
+                media['status'] = 'done'
+                db.update(media)
+            except:
+                media = {
+                    '_t': 'media',
+                    'identifier': group['identifier'],
+                    'profile_id': None,
+                    'status': 'done'
+                }
+                m = db.insert(media)
+                media.update(m)
 
             # Add Release
-            rel = db.query(Relea).filter(
-                or_(
-                    Relea.identifier == identifier,
-                    and_(Relea.identifier.startswith(group['identifier']), Relea.status == 'snatched')
-                )
-            ).first()
-            if not rel:
-                rel = Relea(
-                    identifier = identifier,
-                    movie = media,
-                    quality_id = group['meta_data']['quality'].get('id'),
-                    status = 'done'
-                )
-                db.add(rel)
-                db.commit()
+            release = {
+                '_t': 'release',
+                'media_id': media['_id'],
+                'identifier': identifier,
+                'quality': group['meta_data']['quality'].get('identifier'),
+                'status': 'done'
+            }
+            try:
+                r = db.get('release_identifier', identifier, with_doc = True)['doc']
+                release.update(r)
+                db.update(release)
+            except:
+                r = db.insert(release)
+                release.update(r)
 
             # Add each file type
-            rel['files'] = []
-            for type in group['files']:
-                for cur_file in group['files'][type]:
-                    added_file = self.saveFile(cur_file, type = type)
-                    rel['files'].append(added_file.get('id'))
+            release['files'] = dict((k, v) for k, v in group['files'].items() if v)
 
             fireEvent('media.restatus', media['_id'])
 
@@ -156,15 +154,6 @@ class Release(Plugin):
             log.error('Failed: %s', traceback.format_exc())
 
         return False
-
-    def saveFile(self, filepath, type = 'unknown', include_media_info = False):
-
-        # Check database and update/insert if necessary
-        return {
-            'type': '%s_%s' % Scanner.file_types.get(type),
-            'path': filepath,
-            'part': fireEvent('scanner.partnumber', file, single = True),
-        }
 
     def deleteView(self, id = None, **kwargs):
 

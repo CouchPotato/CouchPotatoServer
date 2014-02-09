@@ -1,13 +1,11 @@
 import traceback
-from couchpotato import get_session, get_db, tryInt
+from couchpotato import get_db, tryInt
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import toUnicode
-from couchpotato.core.helpers.variable import splitString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from .index import ProfileIndex
-from couchpotato.core.settings.model import Profile, ProfileType
 
 log = CPLog(__name__)
 
@@ -82,6 +80,7 @@ class ProfilePlugin(Plugin):
             db = get_db()
 
             profile = {
+                '_t': 'profile',
                 'label': toUnicode(kwargs.get('label')),
                 'order': tryInt(kwargs.get('order', 999)),
                 'core': kwargs.get('core', False),
@@ -101,11 +100,11 @@ class ProfilePlugin(Plugin):
             id = kwargs.get('id')
             try:
                 p = db.get('id', id)
+                profile['order'] = tryInt(kwargs.get('order', p.get('order', 999)))
             except:
                 p = db.insert(profile)
-                p.update(profile)
 
-            p['order'] = tryInt(kwargs.get('order', p.get('order', 999)))
+            p.update(profile)
             db.update(p)
 
             return {
@@ -151,15 +150,14 @@ class ProfilePlugin(Plugin):
     def delete(self, id = None, **kwargs):
 
         try:
-            db = get_session()
+            db = get_db()
 
             success = False
             message = ''
-            try:
-                p = db.query(Profile).filter_by(id = id).first()
 
+            try:
+                p = db.get('id', id)
                 db.delete(p)
-                db.commit()
 
                 # Force defaults on all empty profile movies
                 self.forceDefaults()

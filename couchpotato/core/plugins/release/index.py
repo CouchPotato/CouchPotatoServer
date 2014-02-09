@@ -9,11 +9,11 @@ class ReleaseIndex(TreeBasedIndex):
         super(ReleaseIndex, self).__init__(*args, **kwargs)
 
     def make_key(self, key):
-        return md5(key).hexdigest()
+        return key
 
     def make_key_value(self, data):
         if data.get('_t') == 'release' and data.get('media_id'):
-            return md5(data['media_id']).hexdigest(), {'media_id': data.get('media_id')}
+            return data['media_id'], None
 
     def run_for_media(self, db, media_id):
         for release in db.get_many('release', media_id, with_doc = True):
@@ -49,6 +49,7 @@ class ReleaseIDIndex(TreeBasedIndex):
         super(ReleaseIDIndex, self).__init__(*args, **kwargs)
 
     def make_key(self, key):
+        print key
         return md5(key).hexdigest()
 
     def make_key_value(self, data):

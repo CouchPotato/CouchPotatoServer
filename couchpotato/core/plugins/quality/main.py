@@ -1,5 +1,5 @@
 import traceback
-from couchpotato import get_session, get_db
+from couchpotato import get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import toUnicode, ss
@@ -7,7 +7,6 @@ from couchpotato.core.helpers.variable import mergeDicts, getExt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.plugins.quality.index import QualityIndex
-from couchpotato.core.settings.model import Quality
 import re
 
 log = CPLog(__name__)
@@ -124,12 +123,12 @@ class QualityPlugin(Plugin):
     def saveSize(self, **kwargs):
 
         try:
-            db = get_session()
-            quality = db.query(Quality).filter_by(identifier = kwargs.get('identifier')).first()
+            db = get_db()
+            quality = db.get('quality', kwargs.get('identifier'), with_doc = True)
 
             if quality:
-                setattr(quality, kwargs.get('value_type'), kwargs.get('value'))
-                db.commit()
+                quality['doc'][kwargs.get('value_type')] = kwargs.get('value')
+                db.update(quality['doc'])
 
             self.cached_qualities = None
 

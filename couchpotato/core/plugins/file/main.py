@@ -1,12 +1,12 @@
-from couchpotato import get_session
+from couchpotato import get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.variable import md5, getExt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.core.settings.model import File
 from couchpotato.environment import Env
+from scandir import scandir
 from tornado.web import StaticFileHandler
 import os.path
 import time
@@ -28,22 +28,30 @@ class FileManager(Plugin):
             'return': {'type': 'file'}
         })
 
+        addEvent('app.load', self.cleanup)
+
     def cleanup(self):
-        # TODO: unused
 
         # Wait a bit after starting before cleanup
-        time.sleep(3)
+        time.sleep(2)
         log.debug('Cleaning up unused files')
 
         try:
-            db = get_session()
-            for root, dirs, walk_files in os.walk(Env.get('cache_dir')):
-                for filename in walk_files:
-                    if os.path.splitext(filename)[1] in ['.png', '.jpg', '.jpeg']:
-                        file_path = os.path.join(root, filename)
-                        f = db.query(File).filter(File.path == toUnicode(file_path)).first()
-                        if not f:
-                            os.remove(file_path)
+            db = get_db()
+            cache_dir = Env.get('cache_dir')
+            medias = db.all('media', with_doc = True)
+
+            files = []
+            for media in medias:
+                file_dict = media['doc'].get('files', {})
+                for x in file_dict.keys():
+                    files.extend(file_dict[x])
+
+            for file in scandir.scandir(cache_dir):
+                if os.path.splitext(file.name)[1] in ['.png', '.jpg', '.jpeg']:
+                    file_path = os.path.join(cache_dir, file.name)
+                    if toUnicode(file_path) not in files:
+                        os.remove(file_path)
         except:
             log.error('Failed removing unused file: %s', traceback.format_exc())
 

@@ -1,3 +1,4 @@
+from couchpotato import get_db
 from couchpotato.core.event import fireEvent, addEvent
 from couchpotato.core.helpers.encoding import toUnicode, simplifyString, sp
 from couchpotato.core.helpers.variable import getExt, getImdb, tryInt, \
@@ -6,6 +7,7 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from enzyme.exceptions import NoParserError, ParseError
 from guessit import guess_movie_info
+from scandir import scandir
 from subliminal.videos import Video
 import enzyme
 import os
@@ -123,7 +125,7 @@ class Scanner(Plugin):
             check_file_date = True
             try:
                 files = []
-                for root, dirs, walk_files in os.walk(folder):
+                for root, dirs, walk_files in scandir.walk(folder):
                     files.extend([sp(os.path.join(root, filename)) for filename in walk_files])
 
                     # Break if CP wants to shut down
@@ -137,7 +139,6 @@ class Scanner(Plugin):
         else:
             check_file_date = False
             files = [sp(x) for x in files]
-
 
         for file_path in files:
 
@@ -418,7 +419,7 @@ class Scanner(Plugin):
             if not group['media']:
                 log.error('Unable to determine media: %s', group['identifiers'])
             else:
-                group['identifier'] = group['media']['identifier']
+                group['identifier'] = group['media']['imdb']
 
             processed_movies[identifier] = group
 
@@ -610,9 +611,12 @@ class Scanner(Plugin):
                     log.debug('Identifier to short to use for search: %s', identifier)
 
         if imdb_id:
-            return fireEvent('library.add.movie', attrs = {
-                'identifier': imdb_id
-            }, update_after = False, single = True)
+            try:
+                db = get_db()
+                return db.get('media', imdb_id, with_doc = True)['doc']['info']
+            except:
+                log.debug('Movie "%s" not in library, just getting info', imdb_id)
+                return fireEvent('movie.info', identifier = imdb_id, merge = True, extended = False)
 
         log.error('No imdb_id found for %s. Add a NFO file with IMDB id or add the year to the filename.', group['identifiers'])
         return {}
