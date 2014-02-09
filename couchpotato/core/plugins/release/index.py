@@ -1,4 +1,5 @@
 from hashlib import md5
+from CodernityDB.hash_index import HashIndex
 from CodernityDB.tree_index import TreeBasedIndex
 
 
@@ -42,14 +43,13 @@ class ReleaseStatusIndex(TreeBasedIndex):
             return md5(data.get('status')).hexdigest(), {'media_id': data.get('media_id')}
 
 
-class ReleaseIDIndex(TreeBasedIndex):
+class ReleaseIDIndex(HashIndex):
 
     def __init__(self, *args, **kwargs):
         kwargs['key_format'] = '32s'
         super(ReleaseIDIndex, self).__init__(*args, **kwargs)
 
     def make_key(self, key):
-        print key
         return md5(key).hexdigest()
 
     def make_key_value(self, data):

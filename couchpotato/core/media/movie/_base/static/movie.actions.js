@@ -121,7 +121,7 @@ MA.Release = new Class({
 			}
 		});
 
-		if(self.movie.data.releases.length == 0)
+		if(!self.movie.data.releases || self.movie.data.releases.length == 0)
 			self.el.hide()
 		else
 			self.showHelper();
@@ -166,92 +166,93 @@ MA.Release = new Class({
 				new Element('span.provider', {'text': 'Provider'})
 			).inject(self.release_container)
 
-			self.movie.data.releases.each(function(release){
+			if(self.movie.data.releases)
+				self.movie.data.releases.each(function(release){
 
-				var quality = Quality.getQuality(release.quality) || {},
-					info = release.info,
-					provider = self.get(release, 'provider') + (release.info['provider_extra'] ? self.get(release, 'provider_extra') : '');
+					var quality = Quality.getQuality(release.quality) || {},
+						info = release.info,
+						provider = self.get(release, 'provider') + (release.info['provider_extra'] ? self.get(release, 'provider_extra') : '');
 
-				var release_name = self.get(release, 'name');
-				if(release.files && release.files.length > 0){
-					try {
-						var movie_file = release.files.filter(function(file){
-							var type = File.Type.get(file.type_id);
-							return type && type.identifier == 'movie'
-						}).pick();
-						release_name = movie_file.path.split(Api.getOption('path_sep')).getLast();
-					}
-					catch(e){}
-				}
-
-				// Create release
-				var item = new Element('div', {
-					'class': 'item '+release.status,
-					'id': 'release_'+release._id
-				}).adopt(
-					new Element('span.name', {'text': release_name, 'title': release_name}),
-					new Element('span.status', {'text': release.status, 'class': 'release_status '+release.status}),
-					new Element('span.quality', {'text': quality.label || 'n/a'}),
-					new Element('span.size', {'text': release.info['size'] ? Math.floor(self.get(release, 'size')) : 'n/a'}),
-					new Element('span.age', {'text': self.get(release, 'age')}),
-					new Element('span.score', {'text': self.get(release, 'score')}),
-					new Element('span.provider', { 'text': provider, 'title': provider }),
-					release.info['detail_url'] ? new Element('a.info.icon2', {
-						'href': release.info['detail_url'],
-						'target': '_blank'
-					}) : new Element('a'),
-					new Element('a.download.icon2', {
-						'events': {
-							'click': function(e){
-								(e).preventDefault();
-								if(!this.hasClass('completed'))
-									self.download(release);
-							}
+					var release_name = self.get(release, 'name');
+					if(release.files && release.files.length > 0){
+						try {
+							var movie_file = release.files.filter(function(file){
+								var type = File.Type.get(file.type_id);
+								return type && type.identifier == 'movie'
+							}).pick();
+							release_name = movie_file.path.split(Api.getOption('path_sep')).getLast();
 						}
-					}),
-					new Element('a.delete.icon2', {
-						'events': {
-							'click': function(e){
-								(e).preventDefault();
-								self.ignore(release);
-							}
-						}
-					})
-				).inject(self.release_container);
-				release['el'] = item;
-
-				if(release.status == 'ignored' || release.status == 'failed' || release.status == 'snatched'){
-					if(!self.last_release || (self.last_release && self.last_release.status != 'snatched' && release.status == 'snatched'))
-						self.last_release = release;
-				}
-				else if(!self.next_release && release.status == 'available'){
-					self.next_release = release;
-				}
-
-				var update_handle = function(notification) {
-					if(notification.data._id != release._id) return;
-
-					var q = self.movie.quality.getElement('.q_' + release.quality),
-						new_status = notification.data.status;
-
-					release.el.set('class', 'item ' + new_status);
-
-					var status_el = release.el.getElement('.release_status');
-					status_el.set('class', 'release_status ' + new_status);
-					status_el.set('text', new_status);
-
-					if(!q && (new_status == 'snatched' || new_status == 'seeding' || new_status == 'done'))
-						var q = self.addQuality(release.quality_id);
-
-					if(q && !q.hasClass(new_status)) {
-						q.removeClass(release.status).addClass(new_status);
-						q.set('title', q.get('title').replace(release.status, new_status));
+						catch(e){}
 					}
-				}
 
-				App.on('release.update_status', update_handle);
+					// Create release
+					var item = new Element('div', {
+						'class': 'item '+release.status,
+						'id': 'release_'+release._id
+					}).adopt(
+						new Element('span.name', {'text': release_name, 'title': release_name}),
+						new Element('span.status', {'text': release.status, 'class': 'release_status '+release.status}),
+						new Element('span.quality', {'text': quality.label || 'n/a'}),
+						new Element('span.size', {'text': release.info['size'] ? Math.floor(self.get(release, 'size')) : 'n/a'}),
+						new Element('span.age', {'text': self.get(release, 'age')}),
+						new Element('span.score', {'text': self.get(release, 'score')}),
+						new Element('span.provider', { 'text': provider, 'title': provider }),
+						release.info['detail_url'] ? new Element('a.info.icon2', {
+							'href': release.info['detail_url'],
+							'target': '_blank'
+						}) : new Element('a'),
+						new Element('a.download.icon2', {
+							'events': {
+								'click': function(e){
+									(e).preventDefault();
+									if(!this.hasClass('completed'))
+										self.download(release);
+								}
+							}
+						}),
+						new Element('a.delete.icon2', {
+							'events': {
+								'click': function(e){
+									(e).preventDefault();
+									self.ignore(release);
+								}
+							}
+						})
+					).inject(self.release_container);
+					release['el'] = item;
 
-			});
+					if(release.status == 'ignored' || release.status == 'failed' || release.status == 'snatched'){
+						if(!self.last_release || (self.last_release && self.last_release.status != 'snatched' && release.status == 'snatched'))
+							self.last_release = release;
+					}
+					else if(!self.next_release && release.status == 'available'){
+						self.next_release = release;
+					}
+
+					var update_handle = function(notification) {
+						if(notification.data._id != release._id) return;
+
+						var q = self.movie.quality.getElement('.q_' + release.quality),
+							new_status = notification.data.status;
+
+						release.el.set('class', 'item ' + new_status);
+
+						var status_el = release.el.getElement('.release_status');
+						status_el.set('class', 'release_status ' + new_status);
+						status_el.set('text', new_status);
+
+						if(!q && (new_status == 'snatched' || new_status == 'seeding' || new_status == 'done'))
+							var q = self.addQuality(release.quality_id);
+
+						if(q && !q.hasClass(new_status)) {
+							q.removeClass(release.status).addClass(new_status);
+							q.set('title', q.get('title').replace(release.status, new_status));
+						}
+					}
+
+					App.on('release.update_status', update_handle);
+
+				});
 
 			if(self.last_release)
 				self.release_container.getElements('#release_'+self.last_release._id).addClass('last_release');
@@ -314,16 +315,17 @@ MA.Release = new Class({
 		var has_available = false,
 			has_snatched = false;
 
-		self.movie.data.releases.each(function(release){
-			if(has_available && has_snatched) return;
+		if(self.movie.data.releases)
+			self.movie.data.releases.each(function(release){
+				if(has_available && has_snatched) return;
 
-			if(['snatched', 'downloaded', 'seeding'].contains(release.status))
-				has_snatched = true;
+				if(['snatched', 'downloaded', 'seeding'].contains(release.status))
+					has_snatched = true;
 
-			if(['available'].contains(release.status))
-				has_available = true;
+				if(['available'].contains(release.status))
+					has_available = true;
 
-		});
+			});
 
 		if(has_available || has_snatched){
 
@@ -698,7 +700,7 @@ MA.Readd = new Class({
 		var self = this;
 
 		var movie_done = self.movie.data.status == 'done';
-		if(!movie_done)
+		if(self.movie.data.releases && !movie_done)
 			var snatched = self.movie.data.releases.filter(function(release){
 				return release.status && (release.status == 'snatched' || release.status == 'downloaded' || release.status == 'done');
 			}).length;
@@ -832,15 +834,7 @@ MA.Files = new Class({
 
 	},
 
-	show: function(e){
-		var self = this;
-		(e).preventDefault();
-
-		self.showFiles();
-
-	},
-
-	showFiles: function(){
+	show: function(){
 		var self = this;
 
 		if(!self.options_container){
@@ -851,26 +845,26 @@ MA.Files = new Class({
 			// Header
 			new Element('div.item.head').adopt(
 				new Element('span.name', {'text': 'File'}),
-				new Element('span.type', {'text': 'Type'}),
-				new Element('span.is_available', {'text': 'Available'})
+				new Element('span.type', {'text': 'Type'})
 			).inject(self.files_container)
 
-			Array.each(self.releases, function(release){
+			if(self.movie.data.releases)
+				Array.each(self.movie.data.releases, function(release){
+					var rel = new Element('div.release').inject(self.files_container);
 
-				var rel = new Element('div.release').inject(self.files_container);
-
-				Array.each(release.files, function(file){
-					new Element('div.file.item').adopt(
-						new Element('span.name', {'text': file.path}),
-						new Element('span.type', {'text': File.Type.get(file.type_id).name}),
-						new Element('span.available', {'text': file.available})
-					).inject(rel)
+					Object.each(release.files, function(files, type){
+						Array.each(files, function(file){
+							new Element('div.file.item').adopt(
+								new Element('span.name', {'text': file}),
+								new Element('span.type', {'text': type})
+							).inject(rel)
+						});
+					});
 				});
-			});
 
 		}
 
 		self.movie.slide('in', self.options_container);
-	},
+	}
 
 });

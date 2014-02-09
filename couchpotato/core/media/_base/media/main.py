@@ -124,7 +124,7 @@ class MediaPlugin(MediaBase):
             if refresh_handler:
                 handlers.append(refresh_handler)
 
-        fireEvent('notify.frontend', type = 'media.busy', data = {'id': ids})
+        fireEvent('notify.frontend', type = 'media.busy', data = {'_id': ids})
         fireEventAsync('schedule.queue', handlers = handlers)
 
         return {
@@ -266,7 +266,7 @@ class MediaPlugin(MediaBase):
 
     def listView(self, **kwargs):
 
-        types = splitString(kwargs.get('types'))
+        types = splitString(kwargs.get('type'))
         status = splitString(kwargs.get('status'))
         release_status = splitString(kwargs.get('release_status'))
         limit_offset = kwargs.get('limit_offset')

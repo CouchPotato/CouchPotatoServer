@@ -1,3 +1,4 @@
+from couchpotato import get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, addEvent, fireEventAsync
 from couchpotato.core.helpers.encoding import sp
@@ -48,7 +49,6 @@ class Manage(Plugin):
 
         if not Env.get('dev') and self.conf('startup_scan'):
             addEvent('app.load', self.updateLibraryQuick)
-        addEvent('app.load', self.updateLibrary)
 
     def getProgress(self, **kwargs):
         return {
@@ -125,32 +125,34 @@ class Manage(Plugin):
                         fireEvent('media.delete', media_id = done_movie['id'], delete_from = 'all')
                     else:
 
-                        releases = fireEvent('release.for_movie', id = done_movie.get('_id'), single = True)
+                        db = get_db()
+                        releases = list(db.run('release', 'for_media', done_movie.get('_id')))
 
                         for release in releases:
                             if len(release.get('files', [])) > 0:
-                                for release_file in release.get('files', []):
-                                    # Remove release not available anymore
-                                    if not os.path.isfile(sp(release_file['path'])):
-                                        fireEvent('release.clean', release['id'])
-                                        break
+                                for file_type in release.get('files', {}):
+                                    for release_file in release['files'][file_type]:
+                                        # Remove release not available anymore
+                                        if not os.path.isfile(sp(release_file)):
+                                            fireEvent('release.clean', release['_id'])
+                                            break
 
                         # Check if there are duplicate releases (different quality) use the last one, delete the rest
                         if len(releases) > 1:
                             used_files = {}
                             for release in releases:
+                                for file_type in release.get('files', {}):
+                                    for release_file in release['files'][file_type]:
+                                        already_used = used_files.get(release_file)
 
-                                for release_file in release.get('files', []):
-                                    already_used = used_files.get(release_file['path'])
-
-                                    if already_used:
-                                        if already_used < release['id']:
-                                            fireEvent('release.delete', release['id'], single = True) # delete this one
+                                        if already_used:
+                                            if already_used.get('last_edit', 0) < release.get('last_edit', 0):
+                                                fireEvent('release.delete', release['_id'], single = True)  # delete current one
+                                            else:
+                                                fireEvent('release.delete', already_used['_id'], single = True)  # delete previous one
+                                            break
                                         else:
-                                            fireEvent('release.delete', already_used, single = True) # delete previous one
-                                        break
-                                    else:
-                                        used_files[release_file['path']] = release.get('id')
+                                            used_files[release_file] = release
                             del used_files
 
             Env.prop('manage.last_update', time.time())

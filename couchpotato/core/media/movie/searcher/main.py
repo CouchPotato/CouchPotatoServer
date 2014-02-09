@@ -133,7 +133,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
             fireEvent('media.delete', movie['_id'], single = True)
             return
 
-        fireEvent('notify.frontend', type = 'movie.searcher.started', data = {'id': movie['_id']}, message = 'Searching for "%s"' % default_title)
+        fireEvent('notify.frontend', type = 'movie.searcher.started', data = {'_id': movie['_id']}, message = 'Searching for "%s"' % default_title)
 
         db = get_db()
 
@@ -200,7 +200,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
         if len(too_early_to_search) > 0:
             log.info2('Too early to search for %s, %s', (too_early_to_search, default_title))
 
-        fireEvent('notify.frontend', type = 'movie.searcher.ended', data = {'id': movie['_id']})
+        fireEvent('notify.frontend', type = 'movie.searcher.ended', data = {'_id': movie['_id']})
 
         return ret
 

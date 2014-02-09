@@ -187,7 +187,7 @@ var Movie = new Class({
 			)
 		);
 
-		if(self.thumbnail.empty)
+		if(!self.thumbnail || self.thumbnail.empty)
 			self.el.addClass('no_thumbnail');
 
 		//self.changeView(self.view);

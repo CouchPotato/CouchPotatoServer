@@ -472,14 +472,14 @@ class Renamer(Plugin):
                                 if release_download['rls_id'] == release.id:
                                     if release_download['status'] == 'completed':
                                         # Set the release to downloaded
-                                        fireEvent('release.update_status', release.id, status = downloaded_status, single = True)
+                                        fireEvent('release.update_status', release.id, status = 'downloaded', single = True)
                                     elif release_download['status'] == 'seeding':
                                         # Set the release to seeding
-                                        fireEvent('release.update_status', release.id, status = seeding_status, single = True)
+                                        fireEvent('release.update_status', release.id, status = 'seeding', single = True)
 
                             elif release.quality.id is group['meta_data']['quality']['id']:
                                     # Set the release to downloaded
-                                    fireEvent('release.update_status', release.id, status = downloaded_status, single = True)
+                                    fireEvent('release.update_status', release.id, status = 'downloaded', single = True)
 
                 # Remove leftover files
                 if not remove_leftovers: # Don't remove anything

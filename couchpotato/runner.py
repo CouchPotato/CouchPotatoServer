@@ -13,7 +13,6 @@ from uuid import uuid4
 import locale
 import logging
 import os.path
-import shutil
 import sys
 import time
 import traceback

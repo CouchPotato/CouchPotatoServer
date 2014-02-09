@@ -111,41 +111,41 @@ class Release(Plugin):
         try:
             db = get_db()
 
-            identifier = '%s.%s.%s' % (group['identifier'], group['meta_data'].get('audio', 'unknown'), group['meta_data']['quality']['identifier'])
+            release_identifier = '%s.%s.%s' % (group['identifier'], group['meta_data'].get('audio', 'unknown'), group['meta_data']['quality']['identifier'])
 
             # Add movie if it doesn't exist
             try:
                 media = db.get('media', group['identifier'], with_doc = True)['doc']
-                media['status'] = 'done'
-                db.update(media)
             except:
-                media = {
-                    '_t': 'media',
+                media = fireEvent('movie.add', params = {
                     'identifier': group['identifier'],
                     'profile_id': None,
-                    'status': 'done'
-                }
-                m = db.insert(media)
-                media.update(m)
+                }, search_after = False, status = 'done', single = True)
 
             # Add Release
             release = {
                 '_t': 'release',
                 'media_id': media['_id'],
-                'identifier': identifier,
+                'identifier': release_identifier,
                 'quality': group['meta_data']['quality'].get('identifier'),
+                'last_edit': int(time.time()),
                 'status': 'done'
             }
             try:
-                r = db.get('release_identifier', identifier, with_doc = True)['doc']
-                release.update(r)
-                db.update(release)
+                r = db.get('release_identifier', release_identifier, with_doc = True)['doc']
+                r['media_id'] = media['_id']
             except:
                 r = db.insert(release)
-                release.update(r)
 
-            # Add each file type
+            # Update with ref and _id
+            release.update({
+                '_id': r['_id'],
+                '_rev': r['_rev'],
+            })
+
+            # Empty out empty file groups
             release['files'] = dict((k, v) for k, v in group['files'].items() if v)
+            db.update(release)
 
             fireEvent('media.restatus', media['_id'])
 
@@ -307,7 +307,7 @@ class Release(Plugin):
 
             # Mark release as snatched
             if renamer_enabled:
-                self.updateStatus(rls.id, status = snatched_status)
+                self.updateStatus(rls.id, status = 'snatched')
 
             # If renamer isn't used, mark media done if finished or release downloaded
             else:
@@ -318,7 +318,7 @@ class Release(Plugin):
                         log.info('Renamer disabled, marking media as finished: %s', log_movie)
 
                         # Mark release done
-                        self.updateStatus(rls.id, status = done_status)
+                        self.updateStatus(rls.id, status = 'done')
 
                         # Mark media done
                         mdia = db.query(Media).filter_by(id = media['id']).first()
@@ -329,7 +329,7 @@ class Release(Plugin):
                         return True
 
                 # Assume release downloaded
-                self.updateStatus(rls.id, status = downloaded_status)
+                self.updateStatus(rls.id, status = 'downloaded')
 
         except:
             log.error('Failed storing download status: %s', traceback.format_exc())
