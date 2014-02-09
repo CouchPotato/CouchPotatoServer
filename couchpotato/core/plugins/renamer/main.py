@@ -9,6 +9,7 @@ from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Library, File, Profile, \
     ReleaseInfo
 from couchpotato.environment import Env
+from scandir import scandir
 from unrar2 import RarFile
 import errno
 import fnmatch
@@ -186,7 +187,7 @@ class Renamer(Plugin):
             else:
                 # Get all files from the specified folder
                 try:
-                    for root, folders, names in os.walk(media_folder):
+                    for root, folders, names in scandir.walk(media_folder):
                         files.extend([sp(os.path.join(root, name)) for name in names])
                 except:
                     log.error('Failed getting files from %s: %s', (media_folder, traceback.format_exc()))
@@ -635,7 +636,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
             # Tag all files in release folder
             else:
-                for root, folders, names in os.walk(release_download['folder']):
+                for root, folders, names in scandir.walk(release_download['folder']):
                     tag_files.extend([os.path.join(root, name) for name in names])
 
         for filename in tag_files:
@@ -670,7 +671,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
             # Untag all files in release folder
             else:
-                for root, folders, names in os.walk(release_download['folder']):
+                for root, folders, names in scandir.walk(release_download['folder']):
                     tag_files.extend([sp(os.path.join(root, name)) for name in names if not os.path.splitext(name)[1] == '.ignore'])
 
             folder = release_download['folder']
@@ -682,7 +683,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
         # Find all .ignore files in folder
         ignore_files = []
-        for root, dirnames, filenames in os.walk(folder):
+        for root, dirnames, filenames in scandir.walk(folder):
             ignore_files.extend(fnmatch.filter([sp(os.path.join(root, filename)) for filename in filenames], '*%s.ignore' % tag))
 
         # Match all found ignore files with the tag_files and delete if found
@@ -711,11 +712,11 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
         # Find tag on all files in release folder
         else:
-            for root, folders, names in os.walk(release_download['folder']):
+            for root, folders, names in scandir.walk(release_download['folder']):
                 tag_files.extend([sp(os.path.join(root, name)) for name in names if not os.path.splitext(name)[1] == '.ignore'])
 
         # Find all .ignore files in folder
-        for root, dirnames, filenames in os.walk(folder):
+        for root, dirnames, filenames in scandir.walk(folder):
             ignore_files.extend(fnmatch.filter([sp(os.path.join(root, filename)) for filename in filenames], '*%s.ignore' % tag))
 
         # Match all found ignore files with the tag_files and return True found
@@ -818,7 +819,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         folder = sp(folder)
 
         loge = log.error if show_error else log.debug
-        for root, dirs, files in os.walk(folder):
+        for root, dirs, files in scandir.walk(folder):
 
             for dir_name in dirs:
                 full_path = os.path.join(root, dir_name)
@@ -1102,7 +1103,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
             check_file_date = False
 
         if not files:
-            for root, folders, names in os.walk(folder):
+            for root, folders, names in scandir.walk(folder):
                 files.extend([sp(os.path.join(root, name)) for name in names])
 
         # Find all archive files

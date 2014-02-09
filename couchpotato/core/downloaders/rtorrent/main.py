@@ -10,6 +10,7 @@ from hashlib import sha1
 from rtorrent import RTorrent
 from rtorrent.err import MethodError
 import os
+from scandir import scandir
 
 log = CPLog(__name__)
 
@@ -242,7 +243,7 @@ class rTorrent(Downloader):
             if torrent.is_multi_file() and torrent.directory.endswith(torrent.name):
                 # Remove empty directories bottom up
                 try:
-                    for path, _, _ in os.walk(torrent.directory, topdown = False):
+                    for path, _, _ in scandir.walk(torrent.directory, topdown = False):
                         os.rmdir(path)
                 except OSError:
                     log.info('Directory "%s" contains extra files, unable to remove', torrent.directory)

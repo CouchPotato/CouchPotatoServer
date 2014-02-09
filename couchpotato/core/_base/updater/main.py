@@ -13,6 +13,7 @@ import shutil
 import tarfile
 import time
 import traceback
+from scandir import scandir
 import version
 import zipfile
 from six.moves import filter
@@ -160,7 +161,7 @@ class BaseUpdater(Plugin):
 
     def deletePyc(self, only_excess = True):
 
-        for root, dirs, files in os.walk(ss(Env.get('app_dir'))):
+        for root, dirs, files in scandir.walk(ss(Env.get('app_dir'))):
 
             pyc_files = filter(lambda filename: filename.endswith('.pyc'), files)
             py_files = set(filter(lambda filename: filename.endswith('.py'), files))
@@ -308,11 +309,11 @@ class SourceUpdater(BaseUpdater):
         # Get list of files we want to overwrite
         self.deletePyc()
         existing_files = []
-        for root, subfiles, filenames in os.walk(app_dir):
+        for root, subfiles, filenames in scandir.walk(app_dir):
             for filename in filenames:
                 existing_files.append(os.path.join(root, filename))
 
-        for root, subfiles, filenames in os.walk(path):
+        for root, subfiles, filenames in scandir.walk(path):
             for filename in filenames:
                 fromfile = os.path.join(root, filename)
                 tofile = os.path.join(app_dir, fromfile.replace(path + os.path.sep, ''))
