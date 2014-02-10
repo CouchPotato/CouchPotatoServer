@@ -8,7 +8,6 @@ from couchpotato.core.plugins.base import Plugin
 from .index import ReleaseIndex, ReleaseStatusIndex, ReleaseIDIndex, ReleaseDownloadIndex
 from couchpotato.environment import Env
 from inspect import ismethod, isfunction
-from sqlalchemy.exc import InterfaceError
 import os
 import time
 import traceback
@@ -395,7 +394,7 @@ class Release(Plugin):
                             continue
 
                         rls['info'][info] = toUnicode(rel[info])
-                    except InterfaceError:
+                    except:
                         log.debug('Couldn\'t add %s to ReleaseInfo: %s', (info, traceback.format_exc()))
 
                 db.update(rls)

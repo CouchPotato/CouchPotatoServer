@@ -202,9 +202,8 @@ class QualityPlugin(Plugin):
 
         # Try again with loose testing
         for quality in qualities:
-            loose_score = self.guessLooseScore(quality, files = files, extra = extra)
+            loose_score = self.guessLooseScore(quality, extra = extra)
             self.calcScore(score, quality, loose_score)
-
 
         # Return nothing if all scores are 0
         has_non_zero = 0
@@ -262,7 +261,7 @@ class QualityPlugin(Plugin):
 
         return score
 
-    def guessLooseScore(self, quality, files = None, extra = None):
+    def guessLooseScore(self, quality, extra = None):
 
         score = 0
 

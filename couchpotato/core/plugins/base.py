@@ -110,7 +110,7 @@ class Plugin(object):
             f.write(content)
             f.close()
             os.chmod(path, Env.getPermission('file'))
-        except Exception as e:
+        except:
             log.error('Unable writing to file "%s": %s', (path, traceback.format_exc()))
             if os.path.isfile(path):
                 os.remove(path)

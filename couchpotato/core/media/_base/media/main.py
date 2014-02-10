@@ -181,7 +181,7 @@ class MediaPlugin(MediaBase):
             'media': media,
         }
 
-    def list(self, types = None, status = None, release_status = None, limit_offset = None, starts_with = None, search = None, order = None):
+    def list(self, types = None, status = None, release_status = None, limit_offset = None, starts_with = None, search = None):
 
         db = get_db()
 
@@ -270,7 +270,6 @@ class MediaPlugin(MediaBase):
         limit_offset = kwargs.get('limit_offset')
         starts_with = kwargs.get('starts_with')
         search = kwargs.get('search')
-        order = kwargs.get('order')
 
         total_movies, movies = self.list(
             types = types,
@@ -278,8 +277,7 @@ class MediaPlugin(MediaBase):
             release_status = release_status,
             limit_offset = limit_offset,
             starts_with = starts_with,
-            search = search,
-            order = order
+            search = search
         )
 
         return {

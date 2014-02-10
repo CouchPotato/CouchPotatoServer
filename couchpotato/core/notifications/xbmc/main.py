@@ -86,13 +86,13 @@ class XBMC(Notification):
 
                 # send the text message
                 resp = self.notifyXBMCnoJSON(host, {'title':self.default_title, 'message':message})
-                for result in resp:
-                    if result.get('result') and result['result'] == 'OK':
+                for r in resp:
+                    if r.get('result') and r['result'] == 'OK':
                         log.debug('Message delivered successfully!')
                         success = True
                         break
-                    elif result.get('error'):
-                        log.error('XBMC error; %s: %s (%s)', (result['id'], result['error']['message'], result['error']['code']))
+                    elif r.get('error'):
+                        log.error('XBMC error; %s: %s (%s)', (r['id'], r['error']['message'], r['error']['code']))
                         break
 
             elif result.get('result') and type(result['result']['version']).__name__ == 'dict':
@@ -109,13 +109,13 @@ class XBMC(Notification):
 
                 # send the text message
                 resp = self.request(host, [('GUI.ShowNotification', {'title':self.default_title, 'message':message, 'image': self.getNotificationImage('small')})])
-                for result in resp:
-                    if result.get('result') and result['result'] == 'OK':
+                for r in resp:
+                    if r.get('result') and r['result'] == 'OK':
                         log.debug('Message delivered successfully!')
                         success = True
                         break
-                    elif result.get('error'):
-                        log.error('XBMC error; %s: %s (%s)', (result['id'], result['error']['message'], result['error']['code']))
+                    elif r.get('error'):
+                        log.error('XBMC error; %s: %s (%s)', (r['id'], r['error']['message'], r['error']['code']))
                         break
 
             # error getting version info (we do have contact with XBMC though)
