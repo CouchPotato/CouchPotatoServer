@@ -55,3 +55,17 @@ class ReleaseIDIndex(HashIndex):
     def make_key_value(self, data):
         if data.get('_t') == 'release' and data.get('identifier'):
             return md5(data.get('identifier')).hexdigest(), {'media_id': data.get('media_id')}
+
+
+class ReleaseDownloadIndex(HashIndex):
+
+    def __init__(self, *args, **kwargs):
+        kwargs['key_format'] = '32s'
+        super(ReleaseDownloadIndex, self).__init__(*args, **kwargs)
+
+    def make_key(self, key):
+        return md5(key).hexdigest()
+
+    def make_key_value(self, data):
+        if data.get('_t') == 'release' and data.get('download_info') and data['download_info']['id'] and data['download_info']['downloader']:
+            return md5('%s-%s' % (data['download_info']['downloader'], data['download_info']['id'])).hexdigest(), None

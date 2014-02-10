@@ -251,9 +251,7 @@ class MediaPlugin(MediaBase):
 
             media = db.run('media', 'to_dict', media_id)
 
-            media['releases'] = []
-            for r in db.get_many('release', media_id, with_doc = True):
-                media['releases'].append(r['doc'])
+            media['releases'] = list(db.run('release', 'for_media', media_id))
 
             # Merge releases with movie dict
             medias.append(media)

@@ -1,4 +1,4 @@
-from couchpotato import get_session, get_db
+from couchpotato import get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
 from couchpotato.core.helpers.encoding import toUnicode, ss, sp
@@ -6,8 +6,6 @@ from couchpotato.core.helpers.variable import getExt, mergeDicts, getTitle, \
     getImdb, link, symlink, tryInt, splitString, fnEscape, isSubFolder
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.core.settings.model import Library, File, Profile, \
-    ReleaseInfo
 from couchpotato.environment import Env
 from scandir import scandir
 from unrar2 import RarFile
@@ -113,6 +111,9 @@ class Renamer(Plugin):
         # Get media folder to process
         media_folder = release_download.get('folder')
 
+        # Quality order for calculation quality priority
+        quality_order = fireEvent('quality.order', single = True)
+
         # Get all folders that should not be processed
         no_process = [to_folder]
         cat_list = fireEvent('category.all', single = True) or []
@@ -192,7 +193,7 @@ class Renamer(Plugin):
                 except:
                     log.error('Failed getting files from %s: %s', (media_folder, traceback.format_exc()))
 
-        db = get_session()
+        db = get_db()
 
         # Extend the download info with info stored in the downloaded release
         release_download = self.extendReleaseDownload(release_download)
@@ -223,36 +224,47 @@ class Renamer(Plugin):
             remove_files = []
             remove_releases = []
 
-            movie_title = getTitle(group)
+            media_title = getTitle(group)
 
             # Add _UNKNOWN_ if no library item is connected
-            if not group.get('info') or not movie_title:
+            if not group.get('info') or not media_title:
                 self.tagRelease(group = group, tag = 'unknown')
                 continue
             # Rename the files using the library data
             else:
-                group['media'] = fireEvent('movie.update_info', identifier = group['media']['identifier'], single = True)
-                if not group['media']:
+
+                # Media not in library, add it first
+                if not group['media'].get('_id'):
+                    group['media'] = fireEvent('movie.add', params = {
+                        'identifier': group['identifier'],
+                        'profile_id': None
+                    }, search_after = False, status = 'done')
+                else:
+                    group['media'] = fireEvent('movie.update_info', identifier = group['media']['identifier'], single = True)
+
+                if not group['media'] or not group['media'].get('_id'):
                     log.error('Could not rename, no library item to work with: %s', group_identifier)
                     continue
 
-                movie_title = getTitle(group['media'])
+                media = group['media']
+                media_title = getTitle(media)
 
                 # Overwrite destination when set in category
                 destination = to_folder
                 category_label = ''
-                for movie in library_ent.movies:
 
-                    if movie.category and movie.category.label:
-                        category_label = movie.category.label
+                if media.get('category_id'):
+                    try:
+                        category = db.get('id', media['category_id'])
+                        category_label = category['label']
 
-                    if movie.category and movie.category.destination and len(movie.category.destination) > 0 and movie.category.destination != 'None':
-                        destination = movie.category.destination
-                        log.debug('Setting category destination for "%s": %s' % (movie_title, destination))
-                    else:
-                        log.debug('No category destination found for "%s"' % movie_title)
-
-                    break
+                        if category['destination'] and len(category['destination']) > 0 and category['destination'] != 'None':
+                            destination = category['destination']
+                            log.debug('Setting category destination for "%s": %s' % (media_title, destination))
+                        else:
+                            log.debug('No category destination found for "%s"' % media_title)
+                    except:
+                        log.error('Failed getting category label: %s', traceback.format_exc())
 
                 # Find subtitle for renaming
                 group['before_rename'] = []
@@ -263,7 +275,7 @@ class Renamer(Plugin):
                     group['before_rename'].extend(extr_files)
 
                 # Remove weird chars from movie name
-                movie_name = re.sub(r"[\x00\/\\:\*\?\"<>\|]", '', movie_title)
+                movie_name = re.sub(r"[\x00\/\\:\*\?\"<>\|]", '', media_title)
 
                 # Put 'The' at the end
                 name_the = movie_name
@@ -274,7 +286,7 @@ class Renamer(Plugin):
                     'ext': 'mkv',
                     'namethe': name_the.strip(),
                     'thename': movie_name.strip(),
-                    'year': library['year'],
+                    'year': media['info']['year'],
                     'first': name_the[0].upper(),
                     'quality': group['meta_data']['quality']['label'],
                     'quality_type': group['meta_data']['quality_type'],
@@ -285,10 +297,10 @@ class Renamer(Plugin):
                     'resolution_width': group['meta_data'].get('resolution_width'),
                     'resolution_height': group['meta_data'].get('resolution_height'),
                     'audio_channels': group['meta_data'].get('audio_channels'),
-                    'imdb_id': library['identifier'],
+                    'imdb_id': group['identifier'],
                     'cd': '',
                     'cd_nr': '',
-                    'mpaa': library['info'].get('mpaa', ''),
+                    'mpaa': media['info'].get('mpaa', ''),
                     'category': category_label,
                 }
 
@@ -414,73 +426,73 @@ class Renamer(Plugin):
                 # Before renaming, remove the lower quality files
                 remove_leftovers = True
 
-                # Add it to the wanted list before we continue
-                if len(library_ent.movies) == 0:
-                    profile = db.query(Profile).filter_by(core = True, label = group['meta_data']['quality']['label']).first()
-                    fireEvent('movie.add', params = {'identifier': group['identifier'], 'profile_id': profile.id}, search_after = False)
-                    db.expire_all()
-                    library_ent = db.query(Library).filter_by(identifier = group['identifier']).first()
+                # Mark movie "done" once it's found the quality with the finish check
+                try:
+                    if media.get('status') == 'active' and media.get('profile_id'):
+                        profile = db.get('id', media['profile_id'])
+                        if group['meta_data']['quality']['identifier'] in profile.get('qualities', []):
+                            nr = profile['qualities'].index(group['meta_data']['quality']['identifier'])
+                            finish = profile['finish'][nr]
+                            if finish:
+                                mdia = db.get('id', media['_id'])
+                                mdia['status'] = 'done'
+                                mdia['last_edit'] = int(time.time())
+                                db.update(mdia)
 
-                for movie in library_ent.movies:
+                except Exception as e:
+                    log.error('Failed marking movie finished: %s', (traceback.format_exc()))
 
-                    # Mark movie "done" once it's found the quality with the finish check
-                    try:
-                        if movie.get('status') == 'active' and movie.get('profile_id'):
-                            for profile_type in movie.profile.types:
-                                if profile_type.quality_id == group['meta_data']['quality']['id'] and profile_type.finish:
-                                    movie['status'] = 'done'
-                                    movie['last_edit'] = int(time.time())
-                                    db.commit()
-                    except Exception as e:
-                        log.error('Failed marking movie finished: %s %s', (e, traceback.format_exc()))
-                        db.rollback()
+                # Go over current movie releases
+                for release in db.run('release', 'for_media', media['_id']):
 
-                    # Go over current movie releases
-                    for release in movie.releases:
+                    # When a release already exists
+                    if release.get('status') == 'done':
 
-                        # When a release already exists
-                        if release.get('status') == 'done':
+                        release_order = quality_order.index(release['quality'])
+                        group_quality_order = quality_order.index(group['meta_data']['quality']['identifier'])
 
-                            # This is where CP removes older, lesser quality releases
-                            if release.quality.order > group['meta_data']['quality']['order']:
-                                log.info('Removing lesser quality %s for %s.', (movie.library.titles[0].title, release.quality.label))
-                                for current_file in release.files:
-                                    remove_files.append(current_file)
-                                remove_releases.append(release)
-                            # Same quality, but still downloaded, so maybe repack/proper/unrated/directors cut etc
-                            elif release.quality.order is group['meta_data']['quality']['order']:
-                                log.info('Same quality release already exists for %s, with quality %s. Assuming repack.', (movie.library.titles[0].title, release.quality.label))
-                                for current_file in release.files:
-                                    remove_files.append(current_file)
-                                remove_releases.append(release)
+                        # This is where CP removes older, lesser quality releases
+                        if release_order > group_quality_order:
+                            log.info('Removing lesser quality %s for %s.', (media_title, release.get('quality')))
+                            for file_type in release.get('files', {}):
+                                for release_file in release['files'][file_type]:
+                                    remove_files.append(release_file)
+                            remove_releases.append(release)
+                        # Same quality, but still downloaded, so maybe repack/proper/unrated/directors cut etc
+                        elif release_order == group_quality_order:
+                            log.info('Same quality release already exists for %s, with quality %s. Assuming repack.', (media_title, release.get('quality')))
+                            for file_type in release.get('files', {}):
+                                for release_file in release['files'][file_type]:
+                                    remove_files.append(release_file)
+                            remove_releases.append(release)
 
-                            # Downloaded a lower quality, rename the newly downloaded files/folder to exclude them from scan
-                            else:
-                                log.info('Better quality release already exists for %s, with quality %s', (movie.library.titles[0].title, release.quality.label))
+                        # Downloaded a lower quality, rename the newly downloaded files/folder to exclude them from scan
+                        else:
+                            log.info('Better quality release already exists for %s, with quality %s', (media_title, release.get('quality')))
 
-                                # Add exists tag to the .ignore file
-                                self.tagRelease(group = group, tag = 'exists')
+                            # Add exists tag to the .ignore file
+                            self.tagRelease(group = group, tag = 'exists')
 
-                                # Notify on rename fail
-                                download_message = 'Renaming of %s (%s) cancelled, exists in %s already.' % (getTitle(movie), group['meta_data']['quality']['label'], release.quality.label)
-                                fireEvent('movie.renaming.canceled', message = download_message, data = group)
-                                remove_leftovers = False
+                            # Notify on rename fail
+                            download_message = 'Renaming of %s (%s) cancelled, exists in %s already.' % (media_title, group['meta_data']['quality']['label'], release.get('identifier'))
+                            fireEvent('movie.renaming.canceled', message = download_message, data = group)
+                            remove_leftovers = False
 
-                                break
+                            break
 
-                        elif release.get('status') in ['snatched', 'seeding']:
-                            if release_download and release_download.get('rls_id'):
-                                if release_download['rls_id'] == release.id:
-                                    if release_download['status'] == 'completed':
-                                        # Set the release to downloaded
-                                        fireEvent('release.update_status', release.id, status = 'downloaded', single = True)
-                                    elif release_download['status'] == 'seeding':
-                                        # Set the release to seeding
-                                        fireEvent('release.update_status', release.id, status = 'seeding', single = True)
-
-                            elif release.quality.id is group['meta_data']['quality']['id']:
+                    elif release.get('status') in ['snatched', 'seeding']:
+                        if release_download and release_download.get('release_id'):
+                            if release_download['release_id'] == release['_id']:
+                                if release_download['status'] == 'completed':
                                     # Set the release to downloaded
-                                    fireEvent('release.update_status', release.id, status = 'downloaded', single = True)
+                                    fireEvent('release.update_status', release['_id'], status = 'downloaded', single = True)
+                                elif release_download['status'] == 'seeding':
+                                    # Set the release to seeding
+                                    fireEvent('release.update_status', release['_id'], status = 'seeding', single = True)
+
+                        elif release.get('identifier') == group['meta_data']['quality']['identifier']:
+                                # Set the release to downloaded
+                                fireEvent('release.update_status', release['_id'], status = 'downloaded', single = True)
 
                 # Remove leftover files
                 if not remove_leftovers: # Don't remove anything
@@ -495,9 +507,6 @@ class Renamer(Plugin):
             # Remove files
             delete_folders = []
             for src in remove_files:
-
-                if isinstance(src, File):
-                    src = src.path
 
                 if rename_files.get(src):
                     log.debug('Not removing file that will be renamed: %s', src)
@@ -542,7 +551,7 @@ class Renamer(Plugin):
                         self.moveFile(src, dst, forcemove = not self.downloadIsTorrent(release_download) or self.fileIsAdded(src, group))
                         group['renamed_files'].append(dst)
                     except:
-                        log.error('Failed ranaming the file "%s" : %s', (os.path.basename(src), traceback.format_exc()))
+                        log.error('Failed renaming the file "%s" : %s', (os.path.basename(src), traceback.format_exc()))
                         failed_rename = True
                         break
 
@@ -581,7 +590,7 @@ class Renamer(Plugin):
                     log.error('Failed removing %s: %s', (group_folder, traceback.format_exc()))
 
             # Notify on download, search for trailers etc
-            download_message = 'Downloaded %s (%s)' % (movie_title, replacements['quality'])
+            download_message = 'Downloaded %s (%s)' % (media_title, replacements['quality'])
             try:
                 fireEvent('renamer.after', message = download_message, group = group, in_order = True)
             except:
@@ -1040,32 +1049,21 @@ Remove it if you want it to be renamed (again, or at least let it try again)
     def extendReleaseDownload(self, release_download):
 
         rls = None
+        db = get_db()
 
-        if release_download and release_download.get('id') and release_download.get('downloader'):
-
-            db = get_session()
-
-            rlsnfo_dwnlds = db.query(ReleaseInfo).filter_by(identifier = 'download_downloader', value = release_download.get('downloader')).all()
-            rlsnfo_ids = db.query(ReleaseInfo).filter_by(identifier = 'download_id', value = release_download.get('id')).all()
-
-            for rlsnfo_dwnld in rlsnfo_dwnlds:
-                for rlsnfo_id in rlsnfo_ids:
-                    if rlsnfo_id.release == rlsnfo_dwnld.release:
-                        rls = rlsnfo_id.release
-                        break
-                if rls: break
-
-            if not rls:
+        if release_download and release_download.get('id'):
+            try:
+                rls = db.get('release_download', '%s_%s' % (release_download.get('downloader'), release_download.get('id')), with_doc = True)['doc']
+            except:
                 log.error('Download ID %s from downloader %s not found in releases', (release_download.get('id'), release_download.get('downloader')))
 
         if rls:
-
-            rls_dict = rls.to_dict({'info':{}})
+            media = db.get('id', rls['media_id'])
             release_download.update({
-                'imdb_id': rls.movie.library.identifier,
-                'quality': rls.quality.identifier,
-                'protocol': rls_dict.get('info', {}).get('protocol') or rls_dict.get('info', {}).get('type'),
-                'rls_id': rls.id,
+                'imdb_id': media['identifier'],
+                'quality': rls['quality'],
+                'protocol': rls.get('info', {}).get('protocol') or rls.get('info', {}).get('type'),
+                'release_id': rls['_id'],
             })
 
         return release_download

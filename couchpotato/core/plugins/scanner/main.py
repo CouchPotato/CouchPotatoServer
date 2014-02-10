@@ -419,7 +419,7 @@ class Scanner(Plugin):
             if not group['media']:
                 log.error('Unable to determine media: %s', group['identifiers'])
             else:
-                group['identifier'] = group['media']['imdb']
+                group['identifier'] = group['media'].get('identifier') or group['media']['info'].get('imdb')
 
             processed_movies[identifier] = group
 
@@ -613,10 +613,13 @@ class Scanner(Plugin):
         if imdb_id:
             try:
                 db = get_db()
-                return db.get('media', imdb_id, with_doc = True)['doc']['info']
+                return db.get('media', imdb_id, with_doc = True)['doc']
             except:
                 log.debug('Movie "%s" not in library, just getting info', imdb_id)
-                return fireEvent('movie.info', identifier = imdb_id, merge = True, extended = False)
+                return {
+                    'identifier': imdb_id,
+                    'info': fireEvent('movie.info', identifier = imdb_id, merge = True, extended = False)
+                }
 
         log.error('No imdb_id found for %s. Add a NFO file with IMDB id or add the year to the filename.', group['identifiers'])
         return {}

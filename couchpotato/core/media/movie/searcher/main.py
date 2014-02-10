@@ -184,7 +184,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                     ret = True
 
                 # Remove releases that aren't found anymore
-                for release in movie.get('releases', []):
+                for release in db.run('release', 'for_media', movie['_id']):
                     if release.get('status') == 'available' and release.get('identifier') not in found_releases:
                         fireEvent('release.delete', release.get('_id'), single = True)
 

@@ -1,18 +1,14 @@
-from couchpotato import get_session, md5, get_db
+from couchpotato import md5, get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, addEvent
 from couchpotato.core.helpers.encoding import ss, toUnicode
 from couchpotato.core.helpers.variable import getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-from .index import ReleaseIndex, ReleaseStatusIndex, ReleaseIDIndex
-from couchpotato.core.plugins.scanner.main import Scanner
-from couchpotato.core.settings.model import Release as Relea, Media, \
-    ReleaseInfo
+from .index import ReleaseIndex, ReleaseStatusIndex, ReleaseIDIndex, ReleaseDownloadIndex
 from couchpotato.environment import Env
 from inspect import ismethod, isfunction
 from sqlalchemy.exc import InterfaceError
-from sqlalchemy.sql.expression import and_, or_
 import os
 import time
 import traceback
@@ -80,6 +76,13 @@ class Release(Plugin):
         except:
             log.debug('Index already exists')
             db.edit_index(ReleaseIDIndex(db.path, 'release_identifier'))
+
+        # Release identifier index
+        try:
+            db.add_index(ReleaseDownloadIndex(db.path, 'release_download'))
+        except:
+            log.debug('Index already exists')
+            db.edit_index(ReleaseDownloadIndex(db.path, 'release_download'))
 
     def cleanDone(self):
         log.debug('Removing releases from dashboard')
@@ -217,40 +220,35 @@ class Release(Plugin):
 
     def manualDownload(self, id = None, **kwargs):
 
-        db = get_session()
+        db = get_db()
 
-        rel = db.query(Relea).filter_by(id = id).first()
-        if not rel:
-            log.error('Couldn\'t find release with id: %s', id)
+        try:
+            release = db.get('id', id)
+            item = release['info']
+            movie = db.get('id', release['media_id'])
+
+            fireEvent('notify.frontend', type = 'release.manual_download', data = True, message = 'Snatching "%s"' % item['name'])
+
+            # Get matching provider
+            provider = fireEvent('provider.belongs_to', item['url'], provider = item.get('provider'), single = True)
+
+            if item.get('protocol') != 'torrent_magnet':
+                item['download'] = provider.loginDownload if provider.urls.get('login') else provider.download
+
+            success = self.download(data = item, media = movie, manual = True)
+
+            if success:
+                fireEvent('notify.frontend', type = 'release.manual_download', data = True, message = 'Successfully snatched "%s"' % item['name'])
+
+            return {
+                'success': success == True
+            }
+
+        except:
+            log.error('Couldn\'t find release with id: %s: %s', (id, traceback.format_exc()))
             return {
                 'success': False
             }
-
-        item = {}
-        for info in rel.info:
-            item[info.identifier] = info.value
-
-        fireEvent('notify.frontend', type = 'release.manual_download', data = True, message = 'Snatching "%s"' % item['name'])
-
-        # Get matching provider
-        provider = fireEvent('provider.belongs_to', item['url'], provider = item.get('provider'), single = True)
-
-        if item.get('protocol') != 'torrent_magnet':
-            item['download'] = provider.loginDownload if provider.urls.get('login') else provider.download
-
-        success = self.download(data = item, media = rel.movie.to_dict({
-            'profile': {'types': {'quality': {}}},
-            'releases': {'status': {}, 'quality': {}},
-            'library': {'titles': {}, 'files': {}},
-            'files': {}
-        }), manual = True)
-
-        if success:
-            fireEvent('notify.frontend', type = 'release.manual_download', data = True, message = 'Successfully snatched "%s"' % item['name'])
-
-        return {
-            'success': success == True
-        }
 
     def download(self, data, media, manual = False):
 
@@ -282,9 +280,11 @@ class Release(Plugin):
         log.debug('Downloader result: %s', download_result)
 
         try:
-            db = get_session()
-            rls = db.query(Relea).filter_by(identifier = md5(data['url'])).first()
-            if not rls:
+            db = get_db()
+
+            try:
+                rls = db.get('release_identifier', md5(data['url']), with_doc = True)['doc']
+            except:
                 log.error('No release found to store download information in')
                 return False
 
@@ -292,44 +292,44 @@ class Release(Plugin):
 
             # Save download-id info if returned
             if isinstance(download_result, dict):
-                for key in download_result:
-                    rls_info = ReleaseInfo(
-                        identifier = 'download_%s' % key,
-                        value = toUnicode(download_result.get(key))
-                    )
-                    rls.info.append(rls_info)
-                db.commit()
+                rls['download_info'] = download_result
+                db.update(rls)
 
-            log_movie = '%s (%s) in %s' % (getTitle(media), media['info']['year'], rls.quality.label)
+            log_movie = '%s (%s) in %s' % (getTitle(media), media['info']['year'], rls['quality'])
             snatch_message = 'Snatched "%s": %s' % (data.get('name'), log_movie)
             log.info(snatch_message)
-            fireEvent('%s.snatched' % data['type'], message = snatch_message, data = rls.to_dict())
+            fireEvent('%s.snatched' % data['type'], message = snatch_message, data = rls)
 
             # Mark release as snatched
             if renamer_enabled:
-                self.updateStatus(rls.id, status = 'snatched')
+                self.updateStatus(rls['_id'], status = 'snatched')
 
             # If renamer isn't used, mark media done if finished or release downloaded
             else:
+
                 if media['status'] == 'active':
-                    finished = next((True for profile_type in media['profile']['types']
-                                     if profile_type['quality_id'] == rls.quality.id and profile_type['finish']), False)
+                    profile = db.get('id', media['profile_id'])
+                    finished = False
+                    if rls['quality'] in profile['qualities']:
+                        nr = profile['qualities'].index(rls['quality'])
+                        finished = profile['finish'][nr]
+
                     if finished:
                         log.info('Renamer disabled, marking media as finished: %s', log_movie)
 
                         # Mark release done
-                        self.updateStatus(rls.id, status = 'done')
+                        self.updateStatus(rls['_id'], status = 'done')
 
                         # Mark media done
-                        mdia = db.query(Media).filter_by(id = media['id']).first()
-                        mdia.status = 'done'
-                        mdia.last_edit = int(time.time())
-                        db.commit()
+                        mdia = db.get('id', media['_id'])
+                        mdia['status'] = 'done'
+                        mdia['last_edit'] = int(time.time())
+                        db.update(mdia)
 
                         return True
 
                 # Assume release downloaded
-                self.updateStatus(rls.id, status = 'downloaded')
+                self.updateStatus(rls['_id'], status = 'downloaded')
 
         except:
             log.error('Failed storing download status: %s', traceback.format_exc())
@@ -420,10 +420,11 @@ class Release(Plugin):
 
                 release_name = rel.get('name')
                 if rel.get('files'):
-                    for file_item in rel.get('files', []):
-                        if file_item.get('type') == 'movie':
-                            release_name = os.path.basename(file_item.get('path'))
-                            break
+                    for file_type in rel.get('files', {}):
+                        if file_type == 'movie':
+                            for release_file in rel['files'][file_type]:
+                                release_name = os.path.basename(release_file)
+                                break
 
                 #update status in Db
                 log.debug('Marking release %s as %s', (release_name, status))

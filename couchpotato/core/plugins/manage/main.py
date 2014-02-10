@@ -129,7 +129,7 @@ class Manage(Plugin):
                         releases = list(db.run('release', 'for_media', done_movie.get('_id')))
 
                         for release in releases:
-                            if len(release.get('files', [])) > 0:
+                            if release.get('files'):
                                 for file_type in release.get('files', {}):
                                     for release_file in release['files'][file_type]:
                                         # Remove release not available anymore
