@@ -72,11 +72,10 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
         db = get_db()
 
-        movies = db.get_many('movie_status', 'active')
+        medias = [x['_id'] for x in db.run('media', 'with_status', 'active', with_doc = False)]
+        random.shuffle(medias)
 
-        #TODO: random.shuffle(movies_raw)
-
-        total = db.count(db.get_many, 'movie_status', 'active')
+        total = len(medias)
         self.in_progress = {
             'total': total,
             'to_go': total,
@@ -85,17 +84,17 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
         try:
             search_protocols = fireEvent('searcher.protocols', single = True)
 
-            for movie in movies:
+            for media_id in medias:
 
-                movie_dict = db.run('media', 'to_dict', movie['_id'])
+                media = db.run('media', 'to_dict', media_id)
 
                 try:
-                    self.single(movie_dict, search_protocols)
+                    self.single(media, search_protocols)
                 except IndexError:
-                    log.error('Forcing library update for %s, if you see this often, please report: %s', (movie['identifier'], traceback.format_exc()))
-                    fireEvent('movie.update_info', movie['_id'])
+                    log.error('Forcing library update for %s, if you see this often, please report: %s', (media['identifier'], traceback.format_exc()))
+                    fireEvent('movie.update_info', media_id)
                 except:
-                    log.error('Search failed for %s: %s', (movie['identifier'], traceback.format_exc()))
+                    log.error('Search failed for %s: %s', (media['identifier'], traceback.format_exc()))
 
                 self.in_progress['to_go'] -= 1
 

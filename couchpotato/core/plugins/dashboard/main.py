@@ -40,7 +40,7 @@ class Dashboard(Plugin):
             limit = tryInt(splt[0])
 
         # Get all active medias
-        active_ids = [x['_id'] for x in db.get_many('media_status', 'active')]
+        active_ids = [x['_id'] for x in db.run('media', 'with_status', 'active', with_doc = False)]
 
         medias = []
         if len(active_ids) > 0:
