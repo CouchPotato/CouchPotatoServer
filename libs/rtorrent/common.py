@@ -17,7 +17,8 @@
 # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
+import urlparse
+import os
 
 from rtorrent.compat import is_py3
 
@@ -84,3 +85,67 @@ def safe_repr(fmt, *args, **kwargs):
         return out.encode("utf-8")
     else:
         return fmt.format(*args, **kwargs)
+
+
+def split_path(path):
+    fragments = path.split('/')
+
+    if len(fragments) == 1:
+        return fragments
+
+    if not fragments[-1]:
+        return fragments[:-1]
+
+    return fragments
+
+
+def join_path(base, path):
+    # Return if we have a new absolute path
+    if os.path.isabs(path):
+        return path
+
+    # non-absolute base encountered
+    if base and not os.path.isabs(base):
+        raise NotImplementedError()
+
+    return '/'.join(split_path(base) + split_path(path))
+
+
+def join_uri(base, uri, construct=True):
+    p_uri = urlparse.urlparse(uri)
+
+    # Return if there is nothing to join
+    if not p_uri.path:
+        return base
+
+    scheme, netloc, path, params, query, fragment = urlparse.urlparse(base)
+
+    # Switch to 'uri' parts
+    _, _, _, params, query, fragment = p_uri
+
+    path = join_path(path, p_uri.path)
+
+    result = urlparse.ParseResult(scheme, netloc, path, params, query, fragment)
+
+    if not construct:
+        return result
+
+    # Construct from parts
+    return urlparse.urlunparse(result)
+
+
+def update_uri(uri, construct=True, **kwargs):
+    if isinstance(uri, urlparse.ParseResult):
+        uri = dict(uri._asdict())
+
+    if type(uri) is not dict:
+        raise ValueError("Unknown URI type")
+
+    uri.update(kwargs)
+
+    result = urlparse.ParseResult(**uri)
+
+    if not construct:
+        return result
+
+    return urlparse.urlunparse(result)
