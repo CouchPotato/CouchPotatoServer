@@ -18,6 +18,11 @@ log = CPLog(__name__)
 
 class CoreNotifier(Notification):
 
+    _database = {
+        'notification': NotificationIndex,
+        'notification_unread': NotificationUnreadIndex
+    }
+
     m_lock = None
 
     listen_to = [
@@ -60,27 +65,9 @@ class CoreNotifier(Notification):
         addEvent('app.load', self.clean)
         addEvent('app.load', self.checkMessages)
 
-        addEvent('database.setup', self.databaseSetup)
-
         self.messages = []
         self.listeners = []
         self.m_lock = threading.Lock()
-
-    def databaseSetup(self):
-
-        db = get_db()
-
-        try:
-            db.add_index(NotificationIndex(db.path, 'notification'))
-        except:
-            log.debug('Index already exists')
-            db.edit_index(NotificationIndex(db.path, 'notification'))
-
-        try:
-            db.add_index(NotificationUnreadIndex(db.path, 'notification_unread'))
-        except:
-            log.debug('Index already exists')
-            db.edit_index(NotificationUnreadIndex(db.path, 'notification_unread'))
 
     def clean(self):
         try:

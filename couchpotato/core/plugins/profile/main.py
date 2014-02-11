@@ -12,7 +12,9 @@ log = CPLog(__name__)
 
 class ProfilePlugin(Plugin):
 
-    to_dict = {'types': {}}
+    _database = {
+        'profile': ProfileIndex
+    }
 
     def __init__(self):
         addEvent('profile.all', self.all)
@@ -29,20 +31,8 @@ class ProfilePlugin(Plugin):
 }"""}
         })
 
-        addEvent('database.setup', self.databaseSetup)
-
         addEvent('app.initialize', self.fill, priority = 90)
         addEvent('app.load', self.forceDefaults)
-
-    def databaseSetup(self):
-
-        db = get_db()
-
-        try:
-            db.add_index(ProfileIndex(db.path, 'profile'))
-        except:
-            log.debug('Index already exists')
-            db.edit_index(ProfileIndex(db.path, 'profile'))
 
     def forceDefaults(self):
 

@@ -10,15 +10,6 @@ class MediaBase(Plugin):
 
     _type = None
 
-    default_dict = {
-        'profile': {'types': {'quality': {}}},
-        'releases': {'status': {}, 'quality': {}, 'files': {}, 'info': {}},
-        'library': {'titles': {}, 'files': {}},
-        'files': {},
-        'status': {},
-        'category': {},
-    }
-
     def initType(self):
         addEvent('media.types', self.getType)
 

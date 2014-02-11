@@ -47,9 +47,9 @@ class FileManager(Plugin):
                 for x in file_dict.keys():
                     files.extend(file_dict[x])
 
-            for file in scandir.scandir(cache_dir):
-                if os.path.splitext(file.name)[1] in ['.png', '.jpg', '.jpeg']:
-                    file_path = os.path.join(cache_dir, file.name)
+            for f in scandir.scandir(cache_dir):
+                if os.path.splitext(f.name)[1] in ['.png', '.jpg', '.jpeg']:
+                    file_path = os.path.join(cache_dir, f.name)
                     if toUnicode(file_path) not in files:
                         os.remove(file_path)
         except:

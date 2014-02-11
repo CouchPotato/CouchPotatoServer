@@ -93,6 +93,7 @@ class ApiHandler(RequestHandler):
 
             # Split array arguments
             kwargs = getParams(kwargs)
+            kwargs['_request'] = self
 
             # Remove t random string
             try: del kwargs['t']
@@ -126,6 +127,8 @@ class ApiHandler(RequestHandler):
             self.write({'success': False, 'error': 'Failed returning results'})
 
         api_locks[route].release()
+
+    post = get
 
 
 def addApiView(route, func, static = False, docs = None, **kwargs):

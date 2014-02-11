@@ -2,6 +2,7 @@ from CodernityDB.tree_index import TreeBasedIndex
 
 
 class CategoryIndex(TreeBasedIndex):
+    _version = 1
 
     def __init__(self, *args, **kwargs):
         kwargs['key_format'] = 'i'
@@ -16,6 +17,7 @@ class CategoryIndex(TreeBasedIndex):
 
 
 class CategoryMediaIndex(TreeBasedIndex):
+    _version = 1
 
     def __init__(self, *args, **kwargs):
         kwargs['key_format'] = '32s'

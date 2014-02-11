@@ -4,6 +4,7 @@ from CodernityDB.tree_index import TreeBasedIndex
 
 
 class ReleaseIndex(TreeBasedIndex):
+    _version = 1
 
     def __init__(self, *args, **kwargs):
         kwargs['key_format'] = '32s'
@@ -30,6 +31,7 @@ class ReleaseIndex(TreeBasedIndex):
 
 
 class ReleaseStatusIndex(TreeBasedIndex):
+    _version = 1
 
     def __init__(self, *args, **kwargs):
         kwargs['key_format'] = '32s'
@@ -44,6 +46,7 @@ class ReleaseStatusIndex(TreeBasedIndex):
 
 
 class ReleaseIDIndex(HashIndex):
+    _version = 1
 
     def __init__(self, *args, **kwargs):
         kwargs['key_format'] = '32s'
@@ -58,6 +61,7 @@ class ReleaseIDIndex(HashIndex):
 
 
 class ReleaseDownloadIndex(HashIndex):
+    _version = 1
 
     def __init__(self, *args, **kwargs):
         kwargs['key_format'] = '32s'

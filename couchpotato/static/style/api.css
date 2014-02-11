@@ -93,3 +93,51 @@ pre {
 			float: left;
 			width: 700px;
 		}
+
+.database table {
+	font-size: 11px;
+}
+
+	.database table th {
+		text-align: left;
+	}
+
+	.database table tr:hover {
+		position: relative;
+		z-index: 20;
+	}
+
+		.database table td {
+			vertical-align: top;
+			position: relative;
+		}
+
+		.database table .id {
+			width: 100px;
+		}
+
+		.database table ._rev {
+			width: 60px;
+		}
+
+		.database table ._t {
+			width: 60px;
+		}
+
+		.database table .form {
+			width: 600px;
+		}
+
+		.database table form {
+			width: 600px;
+		}
+
+			.database textarea {
+				font-size: 12px;
+				width: 100%;
+				height: 200px;
+			}
+
+			.database input[type=submit] {
+				display: block;
+			}

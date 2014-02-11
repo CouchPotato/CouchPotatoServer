@@ -14,6 +14,15 @@ log = CPLog(__name__)
 
 class MediaPlugin(MediaBase):
 
+    _database = {
+        'media': MediaIMDBIndex,
+        'media_search_title': MediaStatusIndex,
+        'media_status': MediaTypeIndex,
+        'media_by_type': TitleSearchIndex,
+        'media_title': TitleIndex,
+        'media_startswith': StartsWithIndex,
+    }
+
     def __init__(self):
 
         addApiView('media.refresh', self.refresh, docs = {
@@ -57,8 +66,6 @@ class MediaPlugin(MediaBase):
 
         addApiView('media.available_chars', self.charView)
 
-        addEvent('database.setup', self.databaseSetup)
-
         addEvent('app.load', self.addSingleRefreshView, priority = 100)
         addEvent('app.load', self.addSingleListView, priority = 100)
         addEvent('app.load', self.addSingleCharView, priority = 100)
@@ -68,51 +75,6 @@ class MediaPlugin(MediaBase):
         addEvent('media.list', self.list)
         addEvent('media.delete', self.delete)
         addEvent('media.restatus', self.restatus)
-
-    def databaseSetup(self):
-
-        db = get_db()
-
-        # IMDB index
-        try:
-            db.add_index(MediaIMDBIndex(db.path, 'media'))
-        except:
-            log.debug('Index already exists')
-            db.edit_index(MediaIMDBIndex(db.path, 'media'))
-
-        # Title index
-        try:
-            db.add_index(TitleSearchIndex(db.path, 'media_search_title'))
-        except:
-            log.debug('Index already exists')
-            db.edit_index(TitleSearchIndex(db.path, 'media_search_title'))
-
-        # Status index
-        try:
-            db.add_index(MediaStatusIndex(db.path, 'media_status'))
-        except:
-            log.debug('Index already exists')
-            db.edit_index(MediaStatusIndex(db.path, 'media_status'))
-
-        # Type index
-        try:
-            db.add_index(MediaTypeIndex(db.path, 'media_by_type'))
-        except:
-            log.debug('Index already exists')
-            db.edit_index(MediaTypeIndex(db.path, 'media_by_type'))
-
-        # Title index
-        try: db.add_index(TitleIndex(db.path, 'media_title'))
-        except:
-            log.debug('Index already exists')
-            db.edit_index(TitleIndex(db.path, 'media_title'))
-
-        # Startswith index
-        try: db.add_index(StartsWithIndex(db.path, 'media_startswith'))
-        except:
-            log.debug('Index already exists')
-            db.edit_index(StartsWithIndex(db.path, 'media_startswith'))
-
 
     def refresh(self, id = '', **kwargs):
         handlers = []

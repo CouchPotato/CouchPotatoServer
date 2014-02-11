@@ -1,0 +1,115 @@
+{% autoescape None %}
+<!doctype html>
+<html>
+	<head>
+		<link rel="stylesheet" href="{{ Env.get('static_path') }}style/api.css" type="text/css">
+
+        <script type="text/javascript" src="{{ Env.get('static_path') }}scripts/library/mootools.js"></script>
+
+        <script>
+
+            var api_base = '{{ Env.get('api_base') }}';
+
+            var createList = function(name, documents){
+                var list;
+
+                var el = new Element('div').adopt(
+                    new Element('h2', {'text': name}),
+                    list = new Element('table.documents').grab(
+                        new Element('tr').adopt(
+                            new Element('th.id', {'text': 'id'}),
+                            new Element('th._rev', {'text': 'rev'}),
+                            new Element('th._t', {'text': 'type'}),
+                            new Element('th.form', {'text': 'document'}),
+                            new Element('th.actions', {'text': ''})
+                        )
+                    )
+                );
+
+                documents.each(function(doc, nr){
+                    new Element('tr.document').adopt(
+                         new Element('td.id', {'text': doc['_id']}),
+                         new Element('td._rev', {'text': doc['_rev']}),
+                         new Element('td._t', {'text': doc['_t']}),
+                         new Element('td.form').grab(
+                             new Element('form', {'action': '', 'method': 'post'}).adopt(
+                                 new Element('textarea.document', {'text': JSON.stringify(doc, null, 4)}),
+                                 new Element('input.submit', {'text': 'save', 'type': 'submit', 'value': 'save'})
+                             )
+                         ),
+                         new Element('td.actions').grab(
+                            new Element('a.delete', {'text': 'delete', 'data-id': doc['_id']})
+                         )
+                    ).inject(list)
+                });
+
+                if(documents.length > 0)
+                    return el;
+            }
+
+            $(window).addEvent('domready', function(){
+                var c = $('container');
+
+                // Delete
+                c.addEvent('click:relay(.delete)', function(e){
+                    (e).stop();
+
+                    if(confirm('Are you sure?')){
+
+                        new Request.JSON({
+                            'url': api_base + 'database.document.delete',
+                            'data': this.get('data-id'),
+                            'onSuccess': function(){
+                                console.log(arguments);
+                            }
+                        }).send();
+                    }
+                });
+
+                // Form submit
+                c.addEvent('submit:relay(form)', function(e){
+                    (e).stop();
+
+                    var form = this;
+
+                    new Request.JSON({
+                        'url': api_base + 'database.document.update',
+                        'data': {
+                            'document': form.getElement('textarea').get('value')
+                        },
+                        'onSuccess': function(response){
+                            form.getElement('textarea').set('value', JSON.stringify(response.document, null, 4));
+                            form.getParent('tr').getElement('._rev').set('text', response.document['_rev']);
+                        }
+                    }).send();
+                });
+
+                new Request.JSON({
+                    'url': api_base + 'database.list_documents',
+                    'method': 'get',
+                    'onSuccess': function(data){
+
+                        Object.each(data, function(documents, name){
+                            var list = createList(name, documents);
+                            if(list)
+                                list.inject(c);
+                        })
+                    },
+                    'onFailure': function(){
+                        alert('Something went wrong retrieving all documents')
+                    }
+                }).send();
+
+            })
+
+        </script>
+
+		<title>CouchPotato Database Management</title>
+	</head>
+	<body>
+
+		<h1>CouchPotato Database Management</h1>
+        <div id="container" class="database"></div>
+
+	</body>
+</html>

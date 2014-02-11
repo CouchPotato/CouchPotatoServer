@@ -2,6 +2,7 @@ from CodernityDB.tree_index import TreeBasedIndex
 
 
 class ProfileIndex(TreeBasedIndex):
+    _version = 1
 
     def __init__(self, *args, **kwargs):
         kwargs['key_format'] = 'i'

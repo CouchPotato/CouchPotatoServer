@@ -12,6 +12,11 @@ log = CPLog(__name__)
 
 class CategoryPlugin(Plugin):
 
+    _database = {
+        'category': CategoryIndex,
+        'category_media': CategoryMediaIndex,
+    }
+
     def __init__(self):
         addApiView('category.save', self.save)
         addApiView('category.save_order', self.saveOrder)
@@ -25,25 +30,6 @@ class CategoryPlugin(Plugin):
         })
 
         addEvent('category.all', self.all)
-        addEvent('database.setup', self.databaseSetup)
-
-    def databaseSetup(self):
-
-        db = get_db()
-
-        # Category index
-        try:
-            db.add_index(CategoryIndex(db.path, 'category'))
-        except:
-            log.debug('Index already exists')
-            db.edit_index(CategoryIndex(db.path, 'category'))
-
-        # Category media_id index
-        try:
-            db.add_index(CategoryMediaIndex(db.path, 'category_media'))
-        except:
-            log.debug('Index already exists')
-            db.edit_index(CategoryMediaIndex(db.path, 'category_media'))
 
     def allView(self, **kwargs):
 

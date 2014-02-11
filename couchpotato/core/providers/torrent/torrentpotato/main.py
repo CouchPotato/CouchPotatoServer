@@ -75,7 +75,7 @@ class TorrentPotato(TorrentProvider):
         pass_keys = splitString(self.conf('pass_key'), clean = False)
         extra_score = splitString(self.conf('extra_score'), clean = False)
 
-        list = []
+        host_list = []
         for nr in range(len(hosts)):
 
             try: key = pass_keys[nr]
@@ -93,7 +93,7 @@ class TorrentPotato(TorrentProvider):
             try: seed_time = seed_times[nr]
             except: seed_time = ''
 
-            list.append({
+            host_list.append({
                 'use': uses[nr],
                 'host': host,
                 'name': name,
@@ -103,7 +103,7 @@ class TorrentPotato(TorrentProvider):
                 'extra_score': tryInt(extra_score[nr]) if len(extra_score) > nr else 0
             })
 
-        return list
+        return host_list
 
     def belongsTo(self, url, provider = None, host = None):
 

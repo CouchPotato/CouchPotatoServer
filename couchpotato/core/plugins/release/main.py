@@ -17,6 +17,13 @@ log = CPLog(__name__)
 
 class Release(Plugin):
 
+    _database = {
+        'release': ReleaseIndex,
+        'release_status': ReleaseStatusIndex,
+        'release_identifier': ReleaseIDIndex,
+        'release_download': ReleaseDownloadIndex
+    }
+
     def __init__(self):
         addApiView('release.manual_download', self.manualDownload, docs = {
             'desc': 'Send a release manually to the downloaders',
@@ -45,43 +52,9 @@ class Release(Plugin):
         addEvent('release.clean', self.clean)
         addEvent('release.update_status', self.updateStatus)
 
-        addEvent('database.setup', self.databaseSetup)
-
         # Clean releases that didn't have activity in the last week
         addEvent('app.load', self.cleanDone)
         fireEvent('schedule.interval', 'movie.clean_releases', self.cleanDone, hours = 4)
-
-    def databaseSetup(self):
-
-        db = get_db()
-
-        # Release media_id index
-        try:
-            db.add_index(ReleaseIndex(db.path, 'release'))
-        except:
-            log.debug('Index already exists')
-            db.edit_index(ReleaseIndex(db.path, 'release'))
-
-        # Release status index
-        try:
-            db.add_index(ReleaseStatusIndex(db.path, 'release_status'))
-        except:
-            log.debug('Index already exists')
-            db.edit_index(ReleaseStatusIndex(db.path, 'release_status'))
-
-        # Release identifier index
-        try:
-            db.add_index(ReleaseIDIndex(db.path, 'release_identifier'))
-        except:
-            log.debug('Index already exists')
-            db.edit_index(ReleaseIDIndex(db.path, 'release_identifier'))
-
-        # Release identifier index
-        try:
-            db.add_index(ReleaseDownloadIndex(db.path, 'release_download'))
-        except:
-            log.debug('Index already exists')
-            db.edit_index(ReleaseDownloadIndex(db.path, 'release_download'))
 
     def cleanDone(self):
         log.debug('Removing releases from dashboard')

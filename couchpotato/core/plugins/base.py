@@ -1,3 +1,4 @@
+from couchpotato import get_db
 from couchpotato.core.event import fireEvent, addEvent
 from couchpotato.core.helpers.encoding import ss, toSafeString, \
     toUnicode, sp
@@ -24,6 +25,7 @@ log = CPLog(__name__)
 class Plugin(object):
 
     _class_name = None
+    _database = None
     plugin_path = None
 
     enabled_option = 'enabled'
@@ -52,6 +54,22 @@ class Plugin(object):
 
         if self.auto_register_static:
             self.registerStatic(inspect.getfile(self.__class__))
+
+        # Setup database
+        if self._database:
+            addEvent('database.setup', self.databaseSetup)
+
+    def databaseSetup(self):
+
+        db = get_db()
+
+        for index_name in self._database:
+            klass = self._database[index_name]
+
+            fireEvent('database.setup_index', index_name, klass)
+
+    def afterDatabaseSetup(self):
+        print self._database_indexes
 
     def conf(self, attr, value = None, default = None, section = None):
         class_name = self.getName().lower().split(':')[0].lower()

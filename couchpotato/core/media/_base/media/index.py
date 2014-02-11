@@ -7,6 +7,7 @@ from couchpotato.core.helpers.encoding import toUnicode, simplifyString
 
 
 class MediaIMDBIndex(HashIndex):
+    _version = 1
 
     def __init__(self, *args, **kwargs):
         kwargs['key_format'] = 'I'
@@ -19,8 +20,8 @@ class MediaIMDBIndex(HashIndex):
         if data.get('_t') == 'media' and data.get('identifier'):
             return int(data['identifier'].strip('t')), None
 
-    def run_to_dict(self, db, media_id, dict = None):
-        if not dict: dict = {}
+    def run_to_dict(self, db, media_id, dict_dept = None):
+        if not dict_dept: dict_dept = {}
 
         return db.get('id', media_id)
 
@@ -34,6 +35,7 @@ class MediaIMDBIndex(HashIndex):
 
 
 class MediaStatusIndex(TreeBasedIndex):
+    _version = 1
 
     def __init__(self, *args, **kwargs):
         kwargs['key_format'] = '32s'
@@ -48,6 +50,7 @@ class MediaStatusIndex(TreeBasedIndex):
 
 
 class MediaTypeIndex(TreeBasedIndex):
+    _version = 1
 
     def __init__(self, *args, **kwargs):
         kwargs['key_format'] = '32s'
@@ -62,6 +65,7 @@ class MediaTypeIndex(TreeBasedIndex):
 
 
 class TitleSearchIndex(MultiTreeBasedIndex):
+    _version = 1
 
     custom_header = """from CodernityDB.tree_index import MultiTreeBasedIndex
 from itertools import izip
@@ -93,6 +97,7 @@ from couchpotato.core.helpers.encoding import simplifyString"""
 
 
 class TitleIndex(TreeBasedIndex):
+    _version = 1
 
     custom_header = """from CodernityDB.tree_index import TreeBasedIndex
 from string import ascii_letters
@@ -125,6 +130,7 @@ from couchpotato.core.helpers.encoding import toUnicode, simplifyString"""
 
 
 class StartsWithIndex(TreeBasedIndex):
+    _version = 1
 
     custom_header = """from CodernityDB.tree_index import TreeBasedIndex
 from string import ascii_letters

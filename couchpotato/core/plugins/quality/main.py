@@ -14,6 +14,10 @@ log = CPLog(__name__)
 
 class QualityPlugin(Plugin):
 
+    _database = {
+        'quality': QualityIndex
+    }
+
     qualities = [
         {'identifier': 'bd50', 'hd': True, 'size': (15000, 60000), 'label': 'BR-Disk', 'alternative': ['bd25'], 'allow': ['1080p'], 'ext':[], 'tags': ['bdmv', 'certificate', ('complete', 'bluray')]},
         {'identifier': '1080p', 'hd': True, 'size': (4000, 20000), 'label': '1080p', 'width': 1920, 'height': 1080, 'alternative': [], 'allow': [], 'ext':['mkv', 'm2ts'], 'tags': ['m2ts', 'x264', 'h264']},
@@ -49,7 +53,6 @@ class QualityPlugin(Plugin):
         })
 
         addEvent('app.initialize', self.fill, priority = 10)
-        addEvent('database.setup', self.databaseSetup)
 
         addEvent('app.test', self.doTest)
 
@@ -62,17 +65,6 @@ class QualityPlugin(Plugin):
 
     def getOrder(self):
         return self.order
-
-    def databaseSetup(self):
-
-        db = get_db()
-
-        # Quality index
-        try:
-            db.add_index(QualityIndex(db.path, 'quality'))
-        except:
-            log.debug('Index already exists')
-            db.edit_index(QualityIndex(db.path, 'quality'))
 
     def preReleases(self):
         return self.pre_releases

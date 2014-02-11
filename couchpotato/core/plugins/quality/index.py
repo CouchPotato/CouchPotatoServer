@@ -3,6 +3,7 @@ from hashlib import md5
 
 
 class QualityIndex(HashIndex):
+    _version = 1
 
     def __init__(self, *args, **kwargs):
         kwargs['key_format'] = '32s'

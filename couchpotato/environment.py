@@ -1,3 +1,4 @@
+from couchpotato.core.database import Database
 from couchpotato.core.event import fireEvent, addEvent
 from couchpotato.core.loader import Loader
 from couchpotato.core.settings import Settings
@@ -14,6 +15,7 @@ class Env(object):
     _debug = False
     _dev = False
     _settings = Settings()
+    _database = Database()
     _loader = Loader()
     _cache = None
     _options = None

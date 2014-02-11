@@ -1,11 +1,12 @@
 from __future__ import with_statement
 import traceback
+from CodernityDB.hash_index import HashIndex
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.variable import mergeDicts, tryInt, tryFloat
-from couchpotato.core.settings.index import PropertyIndex
 import ConfigParser
+from hashlib import md5
 
 
 class Settings(object):
@@ -73,7 +74,7 @@ class Settings(object):
         try:
             db.add_index(PropertyIndex(db.path, 'property'))
         except:
-            self.log.debug('Index already exists')
+            self.log.debug('Index for properties already exists')
             db.edit_index(PropertyIndex(db.path, 'property'))
 
     def parser(self):
@@ -250,3 +251,17 @@ class Settings(object):
                 'identifier': identifier,
                 'value': toUnicode(value),
             })
+
+class PropertyIndex(HashIndex):
+    _version = 1
+
+    def __init__(self, *args, **kwargs):
+        kwargs['key_format'] = '32s'
+        super(PropertyIndex, self).__init__(*args, **kwargs)
+
+    def make_key(self, key):
+        return md5(key).hexdigest()
+
+    def make_key_value(self, data):
+        if data.get('_t') == 'property':
+            return md5(data['identifier']).hexdigest(), None

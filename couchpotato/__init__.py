@@ -75,8 +75,16 @@ def apiDocs():
 addView('docs', apiDocs)
 
 
+# Database debug manager
+def databaseManage():
+    return template_loader.load('database.html').generate(fireEvent = fireEvent, Env = Env)
+
+addView('database', databaseManage)
+
+
 # Make non basic auth option to get api key
 class KeyHandler(RequestHandler):
+
     def get(self, *args, **kwargs):
         api_key = None
 
