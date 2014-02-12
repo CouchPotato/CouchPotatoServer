@@ -55,12 +55,15 @@
                     (e).stop();
 
                     if(confirm('Are you sure?')){
+                        var a = this;
 
                         new Request.JSON({
                             'url': api_base + 'database.document.delete',
-                            'data': this.get('data-id'),
+                            'data': {
+                                'id': a.get('data-id')
+                            },
                             'onSuccess': function(){
-                                console.log(arguments);
+                                a.getParent('tr').destroy();
                             }
                         }).send();
                     }

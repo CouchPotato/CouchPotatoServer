@@ -60,7 +60,9 @@ class Database(object):
         db = self.getDB()
 
         try:
-            document = db.get(id)
+
+            document_id = kwargs.get('_request').get_argument('id')
+            document = db.get('id', document_id)
             db.delete(document)
 
             return {
