@@ -38,7 +38,7 @@
                              )
                          ),
                          new Element('td.actions').grab(
-                            new Element('a.delete', {'text': 'delete', 'data-id': doc['_id']})
+                            new Element('a.delete[href=#]', {'text': 'delete', 'data-id': doc['_id']})
                          )
                     ).inject(list)
                 });
@@ -51,40 +51,44 @@
                 var c = $('container');
 
                 // Delete
-                c.addEvent('click:relay(.delete)', function(e){
-                    (e).stop();
+                c.addEvents({
 
-                    if(confirm('Are you sure?')){
-                        var a = this;
+                    // Delete delegate
+                   'click:relay(.delete)': function(e){
+                        (e).stop();
+
+                        if(!document.location.href.contains('no_confirm') && confirm('Are you sure?')){
+                            var a = this;
+
+                            new Request.JSON({
+                                'url': api_base + 'database.document.delete',
+                                'data': {
+                                    'id': a.get('data-id')
+                                },
+                                'onSuccess': function(){
+                                    a.getParent('tr').destroy();
+                                }
+                            }).send();
+                        }
+                    },
+
+                    // Form submit
+                    'submit:relay(form)': function(e){
+                        (e).stop();
+
+                        var form = this;
 
                         new Request.JSON({
-                            'url': api_base + 'database.document.delete',
+                            'url': api_base + 'database.document.update',
                             'data': {
-                                'id': a.get('data-id')
+                                'document': form.getElement('textarea').get('value')
                             },
-                            'onSuccess': function(){
-                                a.getParent('tr').destroy();
+                            'onSuccess': function(response){
+                                form.getElement('textarea').set('value', JSON.stringify(response.document, null, 4));
+                                form.getParent('tr').getElement('._rev').set('text', response.document['_rev']);
                             }
                         }).send();
                     }
-                });
-
-                // Form submit
-                c.addEvent('submit:relay(form)', function(e){
-                    (e).stop();
-
-                    var form = this;
-
-                    new Request.JSON({
-                        'url': api_base + 'database.document.update',
-                        'data': {
-                            'document': form.getElement('textarea').get('value')
-                        },
-                        'onSuccess': function(response){
-                            form.getElement('textarea').set('value', JSON.stringify(response.document, null, 4));
-                            form.getParent('tr').getElement('._rev').set('text', response.document['_rev']);
-                        }
-                    }).send();
                 });
 
                 new Request.JSON({
