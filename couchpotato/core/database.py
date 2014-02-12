@@ -21,13 +21,6 @@ class Database(object):
 
         addEvent('database.setup_index', self.setupIndex)
 
-        def test():
-            time.sleep(1)
-            self.listDocuments()
-
-        addEvent('app.load', test)
-
-
     def getDB(self):
 
         if not self.db:
@@ -103,6 +96,10 @@ class Database(object):
 
         for document in db.all('id'):
             key = document.get('_t', 'unknown')
+
+            if kwargs.get('show') and key != kwargs.get('show'):
+                continue
+
             if not results.get(key):
                 results[key] = []
             results[key].append(document)

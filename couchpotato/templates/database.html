@@ -91,12 +91,34 @@
                     }
                 });
 
+                var show_split = document.location.search.split('show='),
+                    show = show_split.length > 1 ? show_split[1] : null;
+
                 new Request.JSON({
                     'url': api_base + 'database.list_documents',
+                    'data': show ? 'show='+show : null,
                     'method': 'get',
                     'onSuccess': function(data){
 
+                        var nav = new Element('ul.nav').grab(
+                            new Element('li').grab(
+                                new Element('a', {
+                                    'href': './',
+                                    'text': 'All'
+                                })
+                            )
+                        ).inject(c, 'before');
+
                         Object.each(data, function(documents, name){
+
+                            if(documents.length > 0)
+                                new Element('li').grab(
+                                    new Element('a', {
+                                        'href': './?show=' + name,
+                                        'text': name
+                                    })
+                                ).inject(nav)
+
                             var list = createList(name, documents);
                             if(list)
                                 list.inject(c);
@@ -113,10 +135,10 @@
 
 		<title>Document Manager</title>
 	</head>
-	<body>
+	<body class="database">
 
 		<h1>Documents</h1>
-        <div id="container" class="database"></div>
+        <div id="container"></div>
 
 	</body>
 </html>
