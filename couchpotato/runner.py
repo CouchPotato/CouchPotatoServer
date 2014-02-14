@@ -89,6 +89,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     db_exists = db.exists()
     if db_exists:
         db.open()
+        db.compact()
     else:
         db.create()
 
@@ -223,6 +224,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     fireEvent('database.setup')
     if not db_exists:
         fireEvent('app.initialize', in_order = True)
+    fireEvent('app.migrate')
 
     # Go go go!
     from tornado.ioloop import IOLoop
