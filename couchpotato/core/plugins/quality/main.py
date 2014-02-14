@@ -1,3 +1,4 @@
+import traceback
 from couchpotato import get_session
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent
@@ -98,70 +99,88 @@ class QualityPlugin(Plugin):
 
     def saveSize(self, **kwargs):
 
-        db = get_session()
-        quality = db.query(Quality).filter_by(identifier = kwargs.get('identifier')).first()
+        try:
+            db = get_session()
+            quality = db.query(Quality).filter_by(identifier = kwargs.get('identifier')).first()
 
-        if quality:
-            setattr(quality, kwargs.get('value_type'), kwargs.get('value'))
-            db.commit()
+            if quality:
+                setattr(quality, kwargs.get('value_type'), kwargs.get('value'))
+                db.commit()
 
-        self.cached_qualities = None
+            self.cached_qualities = None
+
+            return {
+                'success': True
+            }
+        except:
+            log.error('Failed: %s', traceback.format_exc())
+            db.rollback()
+        finally:
+            db.close()
 
         return {
-            'success': True
+            'success': False
         }
 
     def fill(self):
 
-        db = get_session()
+        try:
+            db = get_session()
 
-        order = 0
-        for q in self.qualities:
+            order = 0
+            for q in self.qualities:
 
-            # Create quality
-            qual = db.query(Quality).filter_by(identifier = q.get('identifier')).first()
+                # Create quality
+                qual = db.query(Quality).filter_by(identifier = q.get('identifier')).first()
 
-            if not qual:
-                log.info('Creating quality: %s', q.get('label'))
-                qual = Quality()
-                qual.order = order
-                qual.identifier = q.get('identifier')
-                qual.label = toUnicode(q.get('label'))
-                qual.size_min, qual.size_max = q.get('size')
+                if not qual:
+                    log.info('Creating quality: %s', q.get('label'))
+                    qual = Quality()
+                    qual.order = order
+                    qual.identifier = q.get('identifier')
+                    qual.label = toUnicode(q.get('label'))
+                    qual.size_min, qual.size_max = q.get('size')
 
-                db.add(qual)
+                    db.add(qual)
 
-            # Create single quality profile
-            prof = db.query(Profile).filter(
+                # Create single quality profile
+                prof = db.query(Profile).filter(
                     Profile.core == True
                 ).filter(
                     Profile.types.any(quality = qual)
                 ).all()
 
-            if not prof:
-                log.info('Creating profile: %s', q.get('label'))
-                prof = Profile(
-                    core = True,
-                    label = toUnicode(qual.label),
-                    order = order
-                )
-                db.add(prof)
+                if not prof:
+                    log.info('Creating profile: %s', q.get('label'))
+                    prof = Profile(
+                        core = True,
+                        label = toUnicode(qual.label),
+                        order = order
+                    )
+                    db.add(prof)
 
-                profile_type = ProfileType(
-                    quality = qual,
-                    profile = prof,
-                    finish = True,
-                    order = 0
-                )
-                prof.types.append(profile_type)
+                    profile_type = ProfileType(
+                        quality = qual,
+                        profile = prof,
+                        finish = True,
+                        order = 0
+                    )
+                    prof.types.append(profile_type)
 
-            order += 1
+                order += 1
 
-        db.commit()
+            db.commit()
 
-        time.sleep(0.3) # Wait a moment
+            time.sleep(0.3) # Wait a moment
 
-        return True
+            return True
+        except:
+            log.error('Failed: %s', traceback.format_exc())
+            db.rollback()
+        finally:
+            db.close()
+
+        return False
 
     def guess(self, files, extra = None):
         if not extra: extra = {}

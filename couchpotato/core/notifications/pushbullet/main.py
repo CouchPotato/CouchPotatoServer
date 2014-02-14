@@ -79,7 +79,7 @@ class Pushbullet(Notification):
                 data = self.urlopen(self.url % method, headers = headers, data = kwargs)
                 return json.loads(data)
 
-        except Exception, ex:
+        except Exception as ex:
             log.error('Pushbullet request failed')
             log.debug(ex)
 

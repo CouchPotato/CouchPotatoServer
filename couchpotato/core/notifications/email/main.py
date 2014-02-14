@@ -40,7 +40,7 @@ class Email(Notification):
             log.debug("SMTP over SSL %s", ("enabled" if ssl == 1 else "disabled"))
             mailserver = smtplib.SMTP_SSL(smtp_server) if ssl == 1 else smtplib.SMTP(smtp_server)
 
-            if (starttls):
+            if starttls:
                 log.debug("Using StartTLS to initiate the connection with the SMTP server")
                 mailserver.starttls()
 

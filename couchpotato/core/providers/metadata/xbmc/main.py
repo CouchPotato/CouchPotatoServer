@@ -132,7 +132,7 @@ class XBMC(MetaDataBase):
         # Add trailer if found
         trailer_found = False
         if data.get('renamed_files'):
-            for  filename in data.get('renamed_files'):
+            for filename in data.get('renamed_files'):
                 if 'trailer' in filename:
                     trailer = SubElement(nfoxml, 'trailer')
                     trailer.text = toUnicode(filename)

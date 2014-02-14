@@ -9,12 +9,11 @@ import os
 import time
 import traceback
 
-log = CPLog(__name__)
 
+log = CPLog(__name__)
 
 views = {}
 template_loader = template.Loader(os.path.join(os.path.dirname(__file__), 'templates'))
-
 
 class BaseHandler(RequestHandler):
 
@@ -24,8 +23,9 @@ class BaseHandler(RequestHandler):
 
         if username and password:
             return self.get_secure_cookie('user')
-        else: # Login when no username or password are set
+        else:  # Login when no username or password are set
             return True
+
 
 # Main web handler
 class WebHandler(BaseHandler):
@@ -43,11 +43,13 @@ class WebHandler(BaseHandler):
             log.error("Failed doing web request '%s': %s", (route, traceback.format_exc()))
             self.write({'success': False, 'error': 'Failed returning results'})
 
+
 def addView(route, func, static = False):
     views[route] = func
 
-def get_session(engine = None):
-    return Env.getSession(engine)
+
+def get_session():
+    return Env.getSession()
 
 
 # Web view
@@ -55,12 +57,10 @@ def index():
     return template_loader.load('index.html').generate(sep = os.sep, fireEvent = fireEvent, Env = Env)
 addView('', index)
 
+
 # API docs
 def apiDocs():
-    routes = []
-
-    for route in api.iterkeys():
-        routes.append(route)
+    routes = list(api.keys())
 
     if api_docs.get(''):
         del api_docs['']
@@ -70,21 +70,22 @@ def apiDocs():
 
 addView('docs', apiDocs)
 
+
 # Make non basic auth option to get api key
 class KeyHandler(RequestHandler):
     def get(self, *args, **kwargs):
-        api = None
+        api_key = None
 
         try:
             username = Env.setting('username')
             password = Env.setting('password')
 
             if (self.get_argument('u') == md5(username) or not username) and (self.get_argument('p') == password or not password):
-                api = Env.setting('api_key')
+                api_key = Env.setting('api_key')
 
             self.write({
-                'success': api is not None,
-                'api_key': api
+                'success': api_key is not None,
+                'api_key': api_key
             })
         except:
             log.error('Failed doing key request: %s', (traceback.format_exc()))
@@ -102,19 +103,20 @@ class LoginHandler(BaseHandler):
 
     def post(self, *args, **kwargs):
 
-        api = None
+        api_key = None
 
         username = Env.setting('username')
         password = Env.setting('password')
 
         if (self.get_argument('username') == username or not username) and (md5(self.get_argument('password')) == password or not password):
-            api = Env.setting('api_key')
+            api_key = Env.setting('api_key')
 
-        if api:
+        if api_key:
             remember_me = tryInt(self.get_argument('remember_me', default = 0))
-            self.set_secure_cookie('user', api, expires_days = 30 if remember_me > 0 else None)
+            self.set_secure_cookie('user', api_key, expires_days = 30 if remember_me > 0 else None)
 
         self.redirect(Env.get('web_base'))
+
 
 class LogoutHandler(BaseHandler):
 
@@ -136,4 +138,3 @@ def page_not_found(rh):
 
         rh.set_status(404)
         rh.write('Wrong API key used')
-

@@ -9,18 +9,19 @@ log = CPLog(__name__)
 class Yify(TorrentMagnetProvider):
 
     urls = {
-        'test' : '%s/api',
-        'search' : '%s/api/list.json?keywords=%s&quality=%s',
+        'test': '%s/api',
+        'search': '%s/api/list.json?keywords=%s&quality=%s',
         'detail': '%s/api/movie.json?id=%s'
     }
 
-    http_time_between_calls = 1 #seconds
-    
+    http_time_between_calls = 1  #seconds
+
     proxy_list = [
-        'https://yify-torrents.im',
         'http://yify.unlocktorrent.com',
         'http://yify.ftwnet.co.uk',
         'http://yify-torrents.com.come.in',
+        'http://yts.re',
+        'https://yify-torrents.im',
     ]
 
     def search(self, movie, quality):
@@ -51,7 +52,7 @@ class Yify(TorrentMagnetProvider):
                         'id': result['MovieID'],
                         'name': title,
                         'url': result['TorrentMagnetUrl'],
-                        'detail_url': self.urls['detail'] % (self.getDomain(),result['MovieID']),
+                        'detail_url': self.urls['detail'] % (self.getDomain(), result['MovieID']),
                         'size': self.parseSize(result['Size']),
                         'seeders': tryInt(result['TorrentSeeds']),
                         'leechers': tryInt(result['TorrentPeers'])
@@ -61,4 +62,5 @@ class Yify(TorrentMagnetProvider):
                 log.error('Failed getting results from %s: %s', (self.getName(), traceback.format_exc()))
 
     def correctProxy(self, data):
-        return 'title="YIFY-Torrents RSS feed"' in data
+        data = data.lower()
+        return 'yify' in data and 'yts' in data

@@ -1,3 +1,4 @@
+import traceback
 from couchpotato import get_session, tryInt
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, fireEventAsync, addEvent
@@ -70,8 +71,6 @@ class MediaPlugin(MediaBase):
         addEvent('media.restatus', self.restatus)
 
     def refresh(self, id = '', **kwargs):
-        db = get_session()
-
         handlers = []
         ids = splitString(id)
 
@@ -97,12 +96,12 @@ class MediaPlugin(MediaBase):
 
             default_title = getTitle(media.library)
             identifier = media.library.identifier
-            db.expire_all()
+            event = 'library.update.%s' % media.type
 
             def handler():
-                fireEvent('library.update.%s' % media.type, identifier = identifier, default_title = default_title, force = True, on_complete = self.createOnComplete(id))
+                fireEvent(event, identifier = identifier, default_title = default_title, on_complete = self.createOnComplete(id))
 
-
+        if handler:
             return handler
 
     def addSingleRefreshView(self):
@@ -125,7 +124,6 @@ class MediaPlugin(MediaBase):
         if m:
             results = m.to_dict(self.default_dict)
 
-        db.expire_all()
         return results
 
     def getView(self, id = None, **kwargs):
@@ -254,14 +252,13 @@ class MediaPlugin(MediaBase):
 
             # Merge releases with movie dict
             movies.append(mergeDicts(movie_dict[media_id].to_dict({
-                'library': {'titles': {}, 'files':{}},
+                'library': {'titles': {}, 'files': {}},
                 'files': {},
             }), {
                 'releases': releases,
                 'releases_count': releases_count.get(media_id),
             }))
 
-        db.expire_all()
         return total_count, movies
 
     def listView(self, **kwargs):
@@ -355,7 +352,6 @@ class MediaPlugin(MediaBase):
             if len(chars) == 25:
                 break
 
-        db.expire_all()
         return ''.join(sorted(chars))
 
     def charView(self, **kwargs):
@@ -380,50 +376,55 @@ class MediaPlugin(MediaBase):
 
     def delete(self, media_id, delete_from = None):
 
-        db = get_session()
+        try:
+            db = get_session()
 
-        media = db.query(Media).filter_by(id = media_id).first()
-        if media:
-            deleted = False
-            if delete_from == 'all':
-                db.delete(media)
-                db.commit()
-                deleted = True
-            else:
-                done_status = fireEvent('status.get', 'done', single = True)
-
-                total_releases = len(media.releases)
-                total_deleted = 0
-                new_movie_status = None
-                for release in media.releases:
-                    if delete_from in ['wanted', 'snatched', 'late']:
-                        if release.status_id != done_status.get('id'):
-                            db.delete(release)
-                            total_deleted += 1
-                        new_movie_status = 'done'
-                    elif delete_from == 'manage':
-                        if release.status_id == done_status.get('id'):
-                            db.delete(release)
-                            total_deleted += 1
-                        new_movie_status = 'active'
-                db.commit()
-
-                if total_releases == total_deleted:
+            media = db.query(Media).filter_by(id = media_id).first()
+            if media:
+                deleted = False
+                if delete_from == 'all':
                     db.delete(media)
                     db.commit()
                     deleted = True
-                elif new_movie_status:
-                    new_status = fireEvent('status.get', new_movie_status, single = True)
-                    media.profile_id = None
-                    media.status_id = new_status.get('id')
-                    db.commit()
                 else:
-                    fireEvent('media.restatus', media.id, single = True)
+                    done_status = fireEvent('status.get', 'done', single = True)
 
-            if deleted:
-                fireEvent('notify.frontend', type = 'movie.deleted', data = media.to_dict())
+                    total_releases = len(media.releases)
+                    total_deleted = 0
+                    new_movie_status = None
+                    for release in media.releases:
+                        if delete_from in ['wanted', 'snatched', 'late']:
+                            if release.status_id != done_status.get('id'):
+                                db.delete(release)
+                                total_deleted += 1
+                            new_movie_status = 'done'
+                        elif delete_from == 'manage':
+                            if release.status_id == done_status.get('id'):
+                                db.delete(release)
+                                total_deleted += 1
+                            new_movie_status = 'active'
+                    db.commit()
 
-        db.expire_all()
+                    if total_releases == total_deleted:
+                        db.delete(media)
+                        db.commit()
+                        deleted = True
+                    elif new_movie_status:
+                        new_status = fireEvent('status.get', new_movie_status, single = True)
+                        media.profile_id = None
+                        media.status_id = new_status.get('id')
+                        db.commit()
+                    else:
+                        fireEvent('media.restatus', media.id, single = True)
+
+                if deleted:
+                    fireEvent('notify.frontend', type = 'movie.deleted', data = media.to_dict())
+        except:
+            log.error('Failed deleting media: %s', traceback.format_exc())
+            db.rollback()
+        finally:
+            db.close()
+
         return True
 
     def deleteView(self, id = '', **kwargs):
@@ -447,27 +448,33 @@ class MediaPlugin(MediaBase):
 
         active_status, done_status = fireEvent('status.get', ['active', 'done'], single = True)
 
-        db = get_session()
+        try:
+            db = get_session()
 
-        m = db.query(Media).filter_by(id = media_id).first()
-        if not m or len(m.library.titles) == 0:
-            log.debug('Can\'t restatus movie, doesn\'t seem to exist.')
-            return False
+            m = db.query(Media).filter_by(id = media_id).first()
+            if not m or len(m.library.titles) == 0:
+                log.debug('Can\'t restatus movie, doesn\'t seem to exist.')
+                return False
 
-        log.debug('Changing status for %s', m.library.titles[0].title)
-        if not m.profile:
-            m.status_id = done_status.get('id')
-        else:
-            move_to_wanted = True
+            log.debug('Changing status for %s', m.library.titles[0].title)
+            if not m.profile:
+                m.status_id = done_status.get('id')
+            else:
+                move_to_wanted = True
 
-            for t in m.profile.types:
-                for release in m.releases:
-                    if t.quality.identifier is release.quality.identifier and (release.status_id is done_status.get('id') and t.finish):
-                        move_to_wanted = False
+                for t in m.profile.types:
+                    for release in m.releases:
+                        if t.quality.identifier is release.quality.identifier and (release.status_id is done_status.get('id') and t.finish):
+                            move_to_wanted = False
 
-            m.status_id = active_status.get('id') if move_to_wanted else done_status.get('id')
+                m.status_id = active_status.get('id') if move_to_wanted else done_status.get('id')
 
-        db.commit()
+            db.commit()
 
-        return True
+            return True
+        except:
+            log.error('Failed restatus: %s', traceback.format_exc())
+            db.rollback()
+        finally:
+            db.close()
 

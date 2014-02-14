@@ -1,5 +1,6 @@
 from .main import Searcher
 
+
 def start():
     return Searcher()
 

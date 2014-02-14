@@ -1,5 +1,6 @@
 from .main import uTorrent
 
+
 def start():
     return uTorrent()
 
@@ -23,7 +24,7 @@ config = [{
                 {
                     'name': 'host',
                     'default': 'localhost:8000',
-                    'description': 'Hostname with port. Usually <strong>localhost:8000</strong>',
+                    'description': 'Port can be found in settings when enabling WebUI.',
                 },
                 {
                     'name': 'username',

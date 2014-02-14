@@ -25,7 +25,7 @@ class MetaDataBase(Plugin):
 
         # Update library to get latest info
         try:
-            updated_library = fireEvent('library.update.movie', group['library']['identifier'], force = True, single = True)
+            updated_library = fireEvent('library.update.movie', group['library']['identifier'], extended = True, single = True)
             group['library'] = mergeDicts(group['library'], updated_library)
         except:
             log.error('Failed to update movie, before creating metadata: %s', traceback.format_exc())

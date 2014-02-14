@@ -5,6 +5,7 @@ import traceback
 
 log = CPLog(__name__)
 
+
 class Pushalot(Notification):
 
     urls = {

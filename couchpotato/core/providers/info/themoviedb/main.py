@@ -1,5 +1,5 @@
 from couchpotato.core.event import addEvent
-from couchpotato.core.helpers.encoding import simplifyString, toUnicode
+from couchpotato.core.helpers.encoding import simplifyString, toUnicode, ss
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.info.base import MovieProvider
@@ -56,7 +56,7 @@ class TheMovieDb(MovieProvider):
 
                     self.setCache(cache_key, results)
                     return results
-                except SyntaxError, e:
+                except SyntaxError as e:
                     log.error('Failed to parse XML response: %s', e)
                     return False
 
@@ -145,7 +145,7 @@ class TheMovieDb(MovieProvider):
                 'actor_roles': actors
             }
 
-            movie_data = dict((k, v) for k, v in movie_data.iteritems() if v)
+            movie_data = dict((k, v) for k, v in movie_data.items() if v)
 
             # Add alternative names
             if extended:
@@ -166,7 +166,7 @@ class TheMovieDb(MovieProvider):
         try:
             image_url = getattr(movie, type).geturl(size = size)
         except:
-            log.debug('Failed getting %s.%s for "%s"', (type, size, str(movie)))
+            log.debug('Failed getting %s.%s for "%s"', (type, size, ss(str(movie))))
 
         return image_url
 

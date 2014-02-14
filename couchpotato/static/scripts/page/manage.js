@@ -119,7 +119,9 @@ Page.Manage = new Class({
 						sorted_table.each(function(folder){
 							var folder_progress = progress[folder]
 							new Element('div').adopt(
-								new Element('span.folder', {'text': folder}),
+								new Element('span.folder', {'text': folder +
+									(folder_progress.eta > 0 ? ', ' + new Date ().increment('second', folder_progress.eta).timeDiffInWords().replace('from now', 'to go') : '')
+								}),
 								new Element('span.percentage', {'text': folder_progress.total ? (((folder_progress.total-folder_progress.to_go)/folder_progress.total)*100).round() + '%' : '0%'})
 							).inject(self.progress_container)
 						});

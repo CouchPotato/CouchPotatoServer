@@ -147,7 +147,7 @@ var NotificationBase = new Class({
 		// Process data
 		if(json){
 			Array.each(json.result, function(result){
-				App.trigger(result.type, result);
+				App.trigger(result.type, [result]);
 				if(result.message && result.read === undefined)
 					self.showMessage(result.message);
 			})

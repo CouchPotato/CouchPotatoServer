@@ -1,7 +1,7 @@
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import simplifyString
-from couchpotato.core.helpers.variable import splitString
+from couchpotato.core.helpers.variable import splitString, removeEmpty, removeDuplicate
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.searcher.base import SearcherBase
 import datetime
@@ -107,10 +107,10 @@ class Searcher(SearcherBase):
         # Hack for older movies that don't contain quality tag
         year_name = fireEvent('scanner.name_year', name, single = True)
         if len(found) == 0 and movie_year < datetime.datetime.now().year - 3 and not year_name.get('year', None):
-            if size > 3000: # Assume dvdr
+            if size > 3000:  # Assume dvdr
                 log.info('Quality was missing in name, assuming it\'s a DVD-R based on the size: %s', size)
                 found['dvdr'] = True
-            else: # Assume dvdrip
+            else:  # Assume dvdrip
                 log.info('Quality was missing in name, assuming it\'s a DVD-Rip based on the size: %s', size)
                 found['dvdrip'] = True
 
@@ -150,12 +150,12 @@ class Searcher(SearcherBase):
         try: check_names.append(max(re.findall(r'[^[]*\[([^]]*)\]', check_name), key = len).strip())
         except: pass
 
-        for check_name in list(set(check_names)):
+        for check_name in removeDuplicate(check_names):
             check_movie = fireEvent('scanner.name_year', check_name, single = True)
 
             try:
-                check_words = filter(None, re.split('\W+', check_movie.get('name', '')))
-                movie_words = filter(None, re.split('\W+', simplifyString(movie_name)))
+                check_words = removeEmpty(re.split('\W+', check_movie.get('name', '')))
+                movie_words = removeEmpty(re.split('\W+', simplifyString(movie_name)))
 
                 if len(check_words) > 0 and len(movie_words) > 0 and len(list(set(check_words) - set(movie_words))) == 0:
                     return True
@@ -173,7 +173,7 @@ class Searcher(SearcherBase):
 
         # Make sure it has required words
         required_words = splitString(self.conf('required_words', section = 'searcher').lower())
-        try: required_words = list(set(required_words + splitString(media['category']['required'].lower())))
+        try: required_words = removeDuplicate(required_words + splitString(media['category']['required'].lower()))
         except: pass
 
         req_match = 0
@@ -187,7 +187,7 @@ class Searcher(SearcherBase):
 
         # Ignore releases
         ignored_words = splitString(self.conf('ignored_words', section = 'searcher').lower())
-        try: ignored_words = list(set(ignored_words + splitString(media['category']['ignored'].lower())))
+        try: ignored_words = removeDuplicate(ignored_words + splitString(media['category']['ignored'].lower()))
         except: pass
 
         ignored_match = 0

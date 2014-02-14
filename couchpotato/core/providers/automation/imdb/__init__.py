@@ -1,5 +1,6 @@
 from .main import IMDB
 
+
 def start():
     return IMDB()
 
@@ -11,7 +12,7 @@ config = [{
             'list': 'watchlist_providers',
             'name': 'imdb_automation_watchlist',
             'label': 'IMDB',
-            'description': 'From any <strong>public</strong> IMDB watchlists. Url should be the CSV link.',
+            'description': 'From any <strong>public</strong> IMDB watchlists.',
             'options': [
                 {
                     'name': 'automation_enabled',

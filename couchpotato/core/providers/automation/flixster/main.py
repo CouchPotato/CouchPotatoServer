@@ -42,6 +42,9 @@ class Flixster(Automation):
             data = self.getJsonData(self.url % user_id, decode_from = 'iso-8859-1')
 
             for movie in data:
-                movies.append({'title': movie['movie']['title'], 'year': movie['movie']['year'] })
+                movies.append({
+                    'title': movie['movie']['title'],
+                    'year': movie['movie']['year']
+                })
 
         return movies

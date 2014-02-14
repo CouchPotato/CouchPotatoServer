@@ -26,7 +26,7 @@ class Synoindex(Notification):
             out = p.communicate()
             log.info('Result from synoindex: %s', str(out))
             return True
-        except OSError, e:
+        except OSError as e:
             log.error('Unable to run synoindex: %s', e)
 
         return False

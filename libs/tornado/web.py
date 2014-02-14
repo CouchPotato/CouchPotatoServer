@@ -516,6 +516,10 @@ class RequestHandler(object):
 
         See `clear_cookie` for more information on the path and domain
         parameters.
+
+        .. versionchanged:: 3.2
+
+           Added the ``path`` and ``domain`` parameters.
         """
         for name in self.request.cookies:
             self.clear_cookie(name, path=path, domain=domain)
@@ -1849,6 +1853,11 @@ class StaticFileHandler(RequestHandler):
     Be sure to use the ``@classmethod`` decorator when overriding a
     class method.  Instance methods may use the attributes ``self.path``
     ``self.absolute_path``, and ``self.modified``.
+
+    Subclasses should only override methods discussed in this section;
+    overriding other methods is error-prone.  Overriding
+    ``StaticFileHandler.get`` is particularly problematic due to the
+    tight coupling with ``compute_etag`` and other methods.
 
     To change the way static urls are generated (e.g. to match the behavior
     of another server or CDN), override `make_static_url`, `parse_url_path`,

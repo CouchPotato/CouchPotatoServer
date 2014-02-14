@@ -1,5 +1,6 @@
 from .main import Kinepolis
 
+
 def start():
     return Kinepolis()
 

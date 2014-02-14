@@ -15,7 +15,7 @@ class TorrentPotato(TorrentProvider):
     urls = {}
     limits_reached = {}
 
-    http_time_between_calls = 1 # Seconds
+    http_time_between_calls = 1  # Seconds
 
     def search(self, movie, quality):
         hosts = self.getHosts()

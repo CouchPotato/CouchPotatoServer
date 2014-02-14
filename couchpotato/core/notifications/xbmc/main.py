@@ -1,7 +1,6 @@
 from couchpotato.core.helpers.variable import splitString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
-from urllib2 import URLError
 import base64
 import json
 import socket
@@ -46,7 +45,7 @@ class XBMC(Notification):
                 max_successful += len(calls)
                 response = self.request(host, calls)
             else:
-                response = self.notifyXBMCnoJSON(host, {'title':self.default_title, 'message':message})
+                response = self.notifyXBMCnoJSON(host, {'title': self.default_title, 'message': message})
 
                 if data and data.get('destination_dir') and (not self.conf('only_first') or hosts.index(host) == 0):
                     response += self.request(host, [('VideoLibrary.Scan', {})])

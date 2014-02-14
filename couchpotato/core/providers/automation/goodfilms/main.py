@@ -35,9 +35,12 @@ class Goodfilms(Automation):
             data = self.getHTMLData(url)
             soup = BeautifulSoup(data)
 
-            this_watch_list = soup.find_all('div', attrs = { 'class': 'movie', 'data-film-title': True })
+            this_watch_list = soup.find_all('div', attrs = {
+                'class': 'movie',
+                'data-film-title': True
+            })
 
-            if not this_watch_list: # No Movies
+            if not this_watch_list:  # No Movies
                 break
 
             for movie in this_watch_list:

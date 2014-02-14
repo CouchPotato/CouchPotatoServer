@@ -1,5 +1,6 @@
 from .main import Wizard
 
+
 def start():
     return Wizard()
 

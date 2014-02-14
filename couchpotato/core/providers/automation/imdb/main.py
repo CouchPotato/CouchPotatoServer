@@ -1,4 +1,5 @@
 import traceback
+import re
 
 from bs4 import BeautifulSoup
 from couchpotato import fireEvent
@@ -42,23 +43,55 @@ class IMDBWatchlist(IMDBBase):
         index = -1
         for watchlist_url in watchlist_urls:
 
+            try:
+                # Get list ID
+                ids = re.findall('(?:list/|list_id=)([a-zA-Z0-9\-_]{11})', watchlist_url)
+                if len(ids) == 1:
+                    watchlist_url = 'http://www.imdb.com/list/%s/?view=compact&sort=created:asc' % ids[0]
+                # Try find user id with watchlist
+                else:
+                    userids = re.findall('(ur\d{7,9})', watchlist_url)
+                    if len(userids) == 1:
+                        watchlist_url = 'http://www.imdb.com/user/%s/watchlist?view=compact&sort=created:asc' % userids[0]
+            except:
+                log.error('Failed getting id from watchlist: %s', traceback.format_exc())
+
             index += 1
             if not watchlist_enablers[index]:
                 continue
 
-            try:
-                log.debug('Started IMDB watchlists: %s', watchlist_url)
-                rss_data = self.getHTMLData(watchlist_url)
-                imdbs = getImdb(rss_data, multiple = True) if rss_data else []
+            start = 0
+            while True:
+                try:
 
-                for imdb in imdbs:
-                    movies.append(imdb)
+                    w_url = '%s&start=%s' % (watchlist_url, start)
+                    log.debug('Started IMDB watchlists: %s', w_url)
+                    html = self.getHTMLData(w_url)
 
-                    if self.shuttingDown():
+                    try:
+                        split = splitString(html, split_on="<div class=\"list compact\">")[1]
+                        html = splitString(split, split_on="<div class=\"pages\">")[0]
+                    except:
+                        pass
+
+                    imdbs = getImdb(html, multiple = True) if html else []
+
+                    for imdb in imdbs:
+                        if imdb not in movies:
+                            movies.append(imdb)
+
+                        if self.shuttingDown():
+                            break
+
+                    log.debug('Found %s movies on %s', (len(imdbs), w_url))
+
+                    if len(imdbs) < 250:
                         break
 
-            except:
-                log.error('Failed loading IMDB watchlist: %s %s', (watchlist_url, traceback.format_exc()))
+                    start += 250
+
+                except:
+                    log.error('Failed loading IMDB watchlist: %s %s', (watchlist_url, traceback.format_exc()))
 
         return movies
 

@@ -1,4 +1,5 @@
-from main import PassThePopcorn
+from .main import PassThePopcorn
+
 
 def start():
     return PassThePopcorn()

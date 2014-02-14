@@ -199,7 +199,7 @@ class RTorrent:
 
         return(func_name)
 
-    def load_torrent(self, torrent, start=False, verbose=False, verify_load=True):
+    def load_torrent(self, torrent, start=False, verbose=False, verify_load=True, verify_retries=3):
         """
         Loads torrent into rTorrent (with various enhancements)
 
@@ -244,9 +244,8 @@ class RTorrent:
         getattr(p, func_name)(torrent)
 
         if verify_load:
-            MAX_RETRIES = 3
             i = 0
-            while i < MAX_RETRIES:
+            while i < verify_retries:
                 self.get_torrents()
                 if info_hash in [t.info_hash for t in self.torrents]:
                     break

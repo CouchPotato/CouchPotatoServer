@@ -7,13 +7,14 @@ from couchpotato.core.settings.model import Library, LibraryTitle, File
 from string import ascii_letters
 import time
 import traceback
+import six
 
 log = CPLog(__name__)
 
 
 class MovieLibraryPlugin(LibraryBase):
 
-    default_dict = {'titles': {}, 'files':{}}
+    default_dict = {'titles': {}, 'files': {}}
 
     def __init__(self):
         addEvent('library.add.movie', self.add)
@@ -25,69 +26,70 @@ class MovieLibraryPlugin(LibraryBase):
 
         primary_provider = attrs.get('primary_provider', 'imdb')
 
-        db = get_session()
+        try:
+            db = get_session()
 
-        l = db.query(Library).filter_by(identifier = attrs.get('identifier')).first()
-        if not l:
-            status = fireEvent('status.get', 'needs_update', single = True)
-            l = Library(
-                year = attrs.get('year'),
-                identifier = attrs.get('identifier'),
-                plot = toUnicode(attrs.get('plot')),
-                tagline = toUnicode(attrs.get('tagline')),
-                status_id = status.get('id'),
-                info = {}
-            )
+            l = db.query(Library).filter_by(identifier = attrs.get('identifier')).first()
+            if not l:
+                status = fireEvent('status.get', 'needs_update', single = True)
+                l = Library(
+                    year = attrs.get('year'),
+                    identifier = attrs.get('identifier'),
+                    plot = toUnicode(attrs.get('plot')),
+                    tagline = toUnicode(attrs.get('tagline')),
+                    status_id = status.get('id'),
+                    info = {}
+                )
 
-            title = LibraryTitle(
-                title = toUnicode(attrs.get('title')),
-                simple_title = self.simplifyTitle(attrs.get('title')),
-            )
+                title = LibraryTitle(
+                    title = toUnicode(attrs.get('title')),
+                    simple_title = self.simplifyTitle(attrs.get('title')),
+                )
 
-            l.titles.append(title)
+                l.titles.append(title)
 
-            db.add(l)
-            db.commit()
+                db.add(l)
+                db.commit()
 
-        # Update library info
-        if update_after is not False:
-            handle = fireEventAsync if update_after is 'async' else fireEvent
-            handle('library.update.movie', identifier = l.identifier, default_title = toUnicode(attrs.get('title', '')))
+            # Update library info
+            if update_after is not False:
+                handle = fireEventAsync if update_after is 'async' else fireEvent
+                handle('library.update.movie', identifier = l.identifier, default_title = toUnicode(attrs.get('title', '')))
 
-        library_dict = l.to_dict(self.default_dict)
+            library_dict = l.to_dict(self.default_dict)
+            return library_dict
+        except:
+            log.error('Failed adding media: %s', traceback.format_exc())
+            db.rollback()
+        finally:
+            db.close()
 
-        db.expire_all()
-        return library_dict
+        return {}
 
-    def update(self, identifier, default_title = '', force = False):
+    def update(self, identifier, default_title = '', extended = False):
 
         if self.shuttingDown():
             return
 
-        db = get_session()
-        library = db.query(Library).filter_by(identifier = identifier).first()
-        done_status = fireEvent('status.get', 'done', single = True)
+        try:
+            db = get_session()
 
-        library_dict = None
-        if library:
-            library_dict = library.to_dict(self.default_dict)
+            library = db.query(Library).filter_by(identifier = identifier).first()
+            done_status = fireEvent('status.get', 'done', single = True)
 
-        do_update = True
+            info = fireEvent('movie.info', merge = True, extended = extended, identifier = identifier)
 
-        info = fireEvent('movie.info', merge = True, identifier = identifier)
+            # Don't need those here
+            try: del info['in_wanted']
+            except: pass
+            try: del info['in_library']
+            except: pass
 
-        # Don't need those here
-        try: del info['in_wanted']
-        except: pass
-        try: del info['in_library']
-        except: pass
+            if not info or len(info) == 0:
+                log.error('Could not update, no movie info to work with: %s', identifier)
+                return False
 
-        if not info or len(info) == 0:
-            log.error('Could not update, no movie info to work with: %s', identifier)
-            return False
-
-        # Main info
-        if do_update:
+            # Main info
             library.plot = toUnicode(info.get('plot', ''))
             library.tagline = toUnicode(info.get('tagline', ''))
             library.year = info.get('year', 0)
@@ -102,6 +104,17 @@ class MovieLibraryPlugin(LibraryBase):
             titles = info.get('titles', [])
             log.debug('Adding titles: %s', titles)
             counter = 0
+
+            def_title = None
+            for title in titles:
+                if (len(default_title) == 0 and counter == 0) or len(titles) == 1 or title.lower() == toUnicode(default_title.lower()) or (toUnicode(default_title) == six.u('') and toUnicode(titles[0]) == title):
+                    def_title = toUnicode(title)
+                    break
+                counter += 1
+
+            if not def_title:
+                def_title = toUnicode(titles[0])
+
             for title in titles:
                 if not title:
                     continue
@@ -109,10 +122,9 @@ class MovieLibraryPlugin(LibraryBase):
                 t = LibraryTitle(
                     title = title,
                     simple_title = self.simplifyTitle(title),
-                    default = (len(default_title) == 0 and counter == 0) or len(titles) == 1 or title.lower() == toUnicode(default_title.lower()) or (toUnicode(default_title) == u'' and toUnicode(titles[0]) == title)
+                    default = title == def_title
                 )
                 library.titles.append(t)
-                counter += 1
 
             db.commit()
 
@@ -134,30 +146,43 @@ class MovieLibraryPlugin(LibraryBase):
                             break
                         except:
                             log.debug('Failed to attach to library: %s', traceback.format_exc())
+                            db.rollback()
 
             library_dict = library.to_dict(self.default_dict)
+            return library_dict
+        except:
+            log.error('Failed update media: %s', traceback.format_exc())
+            db.rollback()
+        finally:
+            db.close()
 
-        db.expire_all()
-        return library_dict
+        return {}
 
     def updateReleaseDate(self, identifier):
 
-        db = get_session()
-        library = db.query(Library).filter_by(identifier = identifier).first()
+        try:
+            db = get_session()
+            library = db.query(Library).filter_by(identifier = identifier).first()
 
-        if not library.info:
-            library_dict = self.update(identifier, force = True)
-            dates = library_dict.get('info', {}).get('release_date')
-        else:
-            dates = library.info.get('release_date')
+            if not library.info:
+                library_dict = self.update(identifier)
+                dates = library_dict.get('info', {}).get('release_date')
+            else:
+                dates = library.info.get('release_date')
 
-        if dates and (dates.get('expires', 0) < time.time() or dates.get('expires', 0) > time.time() + (604800 * 4)) or not dates:
-            dates = fireEvent('movie.release_date', identifier = identifier, merge = True)
-            library.info.update({'release_date': dates })
-            db.commit()
+            if dates and (dates.get('expires', 0) < time.time() or dates.get('expires', 0) > time.time() + (604800 * 4)) or not dates:
+                dates = fireEvent('movie.release_date', identifier = identifier, merge = True)
+                library.info.update({'release_date': dates})
+                db.commit()
 
-        db.expire_all()
-        return dates
+            return dates
+        except:
+            log.error('Failed updating release dates: %s', traceback.format_exc())
+            db.rollback()
+        finally:
+            db.close()
+
+        return {}
 
 
     def simplifyTitle(self, title):

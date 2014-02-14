@@ -14,10 +14,10 @@ class ILoveTorrents(TorrentProvider):
     urls = {
         'download': 'http://www.ilovetorrents.me/%s',
         'detail': 'http://www.ilovetorrents.me/%s',
-        'search':  'http://www.ilovetorrents.me/browse.php?search=%s&page=%s&cat=%s',
-        'test' : 'http://www.ilovetorrents.me/',
-        'login' : 'http://www.ilovetorrents.me/takelogin.php',
-        'login_check' : 'http://www.ilovetorrents.me'
+        'search': 'http://www.ilovetorrents.me/browse.php?search=%s&page=%s&cat=%s',
+        'test': 'http://www.ilovetorrents.me/',
+        'login': 'http://www.ilovetorrents.me/takelogin.php',
+        'login_check': 'http://www.ilovetorrents.me'
     }
 
     cat_ids = [

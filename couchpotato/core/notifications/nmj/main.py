@@ -86,18 +86,17 @@ class NMJ(Notification):
             'arg3': '',
         }
         params = tryUrlencode(params)
-        UPDATE_URL = 'http://%(host)s:8008/metadata_database?%(params)s'
-        updateUrl = UPDATE_URL % {'host': host, 'params': params}
+        update_url = 'http://%(host)s:8008/metadata_database?%(params)s' % {'host': host, 'params': params}
 
         try:
-            response = self.urlopen(updateUrl)
+            response = self.urlopen(update_url)
         except:
             return False
 
         try:
             et = etree.fromstring(response)
             result = et.findtext('returnValue')
-        except SyntaxError, e:
+        except SyntaxError as e:
             log.error('Unable to parse XML returned from the Popcorn Hour: %s', e)
             return False
 

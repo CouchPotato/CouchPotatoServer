@@ -1,6 +1,7 @@
 import logging
 import re
 
+
 class CPLog(object):
 
     context = ''
@@ -37,7 +38,7 @@ class CPLog(object):
     def safeMessage(self, msg, replace_tuple = ()):
 
         from couchpotato.environment import Env
-        from couchpotato.core.helpers.encoding import ss
+        from couchpotato.core.helpers.encoding import ss, toUnicode
 
         msg = ss(msg)
 
@@ -49,8 +50,8 @@ class CPLog(object):
                     msg = msg % tuple([ss(x) for x in list(replace_tuple)])
                 else:
                     msg = msg % ss(replace_tuple)
-            except Exception, e:
-                self.logger.error(u'Failed encoding stuff to log "%s": %s' % (msg, e))
+            except Exception as e:
+                self.logger.error('Failed encoding stuff to log "%s": %s' % (msg, e))
 
         if not Env.get('dev'):
 
@@ -66,4 +67,4 @@ class CPLog(object):
             except:
                 pass
 
-        return msg
+        return toUnicode(msg)

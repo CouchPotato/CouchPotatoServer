@@ -1,5 +1,6 @@
 from .main import Toasty
 
+
 def start():
     return Toasty()
 

@@ -30,9 +30,9 @@ class Pushover(Notification):
             })
 
         http_handler.request('POST',
-            "/1/messages.json",
-            headers = {'Content-type': 'application/x-www-form-urlencoded'},
-            body = tryUrlencode(api_data)
+                             "/1/messages.json",
+                             headers = {'Content-type': 'application/x-www-form-urlencoded'},
+                             body = tryUrlencode(api_data)
         )
 
         response = http_handler.getresponse()

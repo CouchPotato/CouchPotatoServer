@@ -9,7 +9,7 @@ def getParams(params):
     reg = re.compile('^[a-z0-9_\.]+$')
 
     temp = {}
-    for param, value in sorted(params.iteritems()):
+    for param, value in sorted(params.items()):
 
         nest = re.split("([\[\]]+)", param)
         if len(nest) > 1:
@@ -37,13 +37,14 @@ def getParams(params):
 
     return dictToList(temp)
 
+
 def dictToList(params):
 
     if type(params) is dict:
         new = {}
-        for x, value in params.iteritems():
+        for x, value in params.items():
             try:
-                new_value = [dictToList(value[k]) for k in sorted(value.iterkeys(), cmp = natcmp)]
+                new_value = [dictToList(value[k]) for k in sorted(value.keys(), cmp = natcmp)]
             except:
                 new_value = value
 

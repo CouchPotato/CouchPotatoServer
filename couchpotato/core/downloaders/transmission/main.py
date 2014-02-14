@@ -105,7 +105,7 @@ class Transmission(Downloader):
         for torrent in queue['torrents']:
             if torrent['hashString'] in ids:
                 log.debug('name=%s / id=%s / downloadDir=%s / hashString=%s / percentDone=%s / status=%s / isStalled=%s / eta=%s / uploadRatio=%s / isFinished=%s / incomplete-dir-enabled=%s / incomplete-dir=%s',
-                    (torrent['name'], torrent['id'], torrent['downloadDir'], torrent['hashString'], torrent['percentDone'], torrent['status'], torrent.get('isStalled', 'N/A'), torrent['eta'], torrent['uploadRatio'], torrent['isFinished'], session['incomplete-dir-enabled'], session['incomplete-dir']))
+                          (torrent['name'], torrent['id'], torrent['downloadDir'], torrent['hashString'], torrent['percentDone'], torrent['status'], torrent.get('isStalled', 'N/A'), torrent['eta'], torrent['uploadRatio'], torrent['isFinished'], session['incomplete-dir-enabled'], session['incomplete-dir']))
 
                 status = 'busy'
                 if torrent.get('isStalled') and not torrent['percentDone'] == 1 and self.conf('stalled_as_failed'):
@@ -187,10 +187,10 @@ class TransmissionRPC(object):
             else:
                 log.debug('Unknown failure sending command to Transmission. Return text is: %s', response['result'])
                 return False
-        except httplib.InvalidURL, err:
+        except httplib.InvalidURL as err:
             log.error('Invalid Transmission host, check your config %s', err)
             return False
-        except urllib2.HTTPError, err:
+        except urllib2.HTTPError as err:
             if err.code == 401:
                 log.error('Invalid Transmission Username or Password, check your config')
                 return False
@@ -208,7 +208,7 @@ class TransmissionRPC(object):
                     log.error('Unable to get Transmission Session-Id %s', err)
             else:
                 log.error('TransmissionRPC HTTPError: %s', err)
-        except urllib2.URLError, err:
+        except urllib2.URLError as err:
             log.error('Unable to connect to Transmission %s', err)
 
     def get_session(self):

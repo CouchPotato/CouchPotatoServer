@@ -73,10 +73,10 @@ Page.Log = new Class({
 			.replace(/\u001b\[31m/gi, '</span><span class="error">')
 			.replace(/\u001b\[36m/gi, '</span><span class="debug">')
 			.replace(/\u001b\[33m/gi, '</span><span class="debug">')
-			.replace(/\u001b\[0m\n/gi, '</span><span class="time">')
+			.replace(/\u001b\[0m\n/gi, '</span></div><div><span class="time">')
 			.replace(/\u001b\[0m/gi, '</span><span>')
 
-		return '<span class="time">' + text + '</span>';
+		return '<div><span class="time">' + text + '</span></div>';
 	}
 
 })

@@ -85,7 +85,7 @@ class Plugin(object):
         class_name = re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
 
         # View path
-        path = 'static/plugin/%s/' % (class_name)
+        path = 'static/plugin/%s/' % class_name
 
         # Add handler to Tornado
         Env.get('app').add_handlers(".*$", [(Env.get('web_base') + path + '(.*)', StaticFileHandler, {'path': static_folder})])
@@ -110,7 +110,7 @@ class Plugin(object):
             f.write(content)
             f.close()
             os.chmod(path, Env.getPermission('file'))
-        except Exception, e:
+        except Exception as e:
             log.error('Unable writing to file "%s": %s', (path, traceback.format_exc()))
             if os.path.isfile(path):
                 os.remove(path)
@@ -121,7 +121,7 @@ class Plugin(object):
             if not os.path.isdir(path):
                 os.makedirs(path, Env.getPermission('folder'))
             return True
-        except Exception, e:
+        except Exception as e:
             log.error('Unable to create folder "%s": %s', (path, e))
 
         return False
@@ -169,7 +169,7 @@ class Plugin(object):
             }
             method = 'post' if len(data) > 0 or files else 'get'
 
-            log.info('Opening url: %s %s, data: %s', (method, url, [x for x in data.iterkeys()] if isinstance(data, dict) else 'with data'))
+            log.info('Opening url: %s %s, data: %s', (method, url, [x for x in data.keys()] if isinstance(data, dict) else 'with data'))
             response = r.request(method, url, verify = False, **kwargs)
 
             data = response.content
@@ -243,24 +243,27 @@ class Plugin(object):
             except:
                 log.error("Something went wrong when finishing the plugin function. Could not find the 'is_running' key")
 
-
     def getCache(self, cache_key, url = None, **kwargs):
-        cache_key_md5 = md5(cache_key)
-        cache = Env.get('cache').get(cache_key_md5)
-        if cache:
-            if not Env.get('dev'): log.debug('Getting cache %s', cache_key)
-            return cache
+
+        use_cache = not len(kwargs.get('data', {})) > 0 and not kwargs.get('files')
+
+        if use_cache:
+            cache_key_md5 = md5(cache_key)
+            cache = Env.get('cache').get(cache_key_md5)
+            if cache:
+                if not Env.get('dev'): log.debug('Getting cache %s', cache_key)
+                return cache
 
         if url:
             try:
 
                 cache_timeout = 300
-                if kwargs.has_key('cache_timeout'):
+                if 'cache_timeout' in kwargs:
                     cache_timeout = kwargs.get('cache_timeout')
                     del kwargs['cache_timeout']
 
                 data = self.urlopen(url, **kwargs)
-                if data and cache_timeout > 0:
+                if data and cache_timeout > 0 and use_cache:
                     self.setCache(cache_key, data, timeout = cache_timeout)
                 return data
             except:

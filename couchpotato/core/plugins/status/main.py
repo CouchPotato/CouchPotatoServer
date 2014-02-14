@@ -1,3 +1,4 @@
+import traceback
 from couchpotato import get_session
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent
@@ -33,7 +34,7 @@ class StatusPlugin(Plugin):
         addEvent('status.get_by_id', self.getById)
         addEvent('status.all', self.all)
         addEvent('app.initialize', self.fill)
-        addEvent('app.load', self.all) # Cache all statuses
+        addEvent('app.load', self.all)  # Cache all statuses
 
         addApiView('status.list', self.list, docs = {
             'desc': 'Check for available update',
@@ -79,47 +80,57 @@ class StatusPlugin(Plugin):
         if not isinstance(identifiers, list):
             identifiers = [identifiers]
 
-        db = get_session()
-        return_list = []
+        try:
+            db = get_session()
+            return_list = []
 
-        for identifier in identifiers:
+            for identifier in identifiers:
 
-            if self.status_cached.get(identifier):
-                return_list.append(self.status_cached.get(identifier))
-                continue
+                if self.status_cached.get(identifier):
+                    return_list.append(self.status_cached.get(identifier))
+                    continue
 
-            s = db.query(Status).filter_by(identifier = identifier).first()
-            if not s:
-                s = Status(
-                    identifier = identifier,
-                    label = toUnicode(identifier.capitalize())
-                )
-                db.add(s)
-                db.commit()
+                s = db.query(Status).filter_by(identifier = identifier).first()
+                if not s:
+                    s = Status(
+                        identifier = identifier,
+                        label = toUnicode(identifier.capitalize())
+                    )
+                    db.add(s)
+                    db.commit()
 
-            status_dict = s.to_dict()
+                status_dict = s.to_dict()
 
-            self.status_cached[identifier] = status_dict
-            return_list.append(status_dict)
+                self.status_cached[identifier] = status_dict
+                return_list.append(status_dict)
 
-        return return_list if len(identifiers) > 1 else return_list[0]
+            return return_list if len(identifiers) > 1 else return_list[0]
+        except:
+            log.error('Failed: %s', traceback.format_exc())
+            db.rollback()
+        finally:
+            db.close()
 
     def fill(self):
 
-        db = get_session()
+        try:
+            db = get_session()
 
-        for identifier, label in self.statuses.iteritems():
-            s = db.query(Status).filter_by(identifier = identifier).first()
-            if not s:
-                log.info('Creating status: %s', label)
-                s = Status(
-                    identifier = identifier,
-                    label = toUnicode(label)
-                )
-                db.add(s)
+            for identifier, label in self.statuses.items():
+                s = db.query(Status).filter_by(identifier = identifier).first()
+                if not s:
+                    log.info('Creating status: %s', label)
+                    s = Status(
+                        identifier = identifier,
+                        label = toUnicode(label)
+                    )
+                    db.add(s)
 
-            s.label = toUnicode(label)
-            db.commit()
-
-        #db.close()
+                s.label = toUnicode(label)
+                db.commit()
+        except:
+            log.error('Failed: %s', traceback.format_exc())
+            db.rollback()
+        finally:
+            db.close()
 

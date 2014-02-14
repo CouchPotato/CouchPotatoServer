@@ -1,5 +1,6 @@
 from .main import NZBVortex
 
+
 def start():
     return NZBVortex()
 

@@ -7,14 +7,15 @@ import traceback
 
 log = CPLog(__name__)
 
+
 class BiTHDTV(TorrentProvider):
 
     urls = {
-        'test' : 'http://www.bit-hdtv.com/',
-        'login' : 'http://www.bit-hdtv.com/takelogin.php',
+        'test': 'http://www.bit-hdtv.com/',
+        'login': 'http://www.bit-hdtv.com/takelogin.php',
         'login_check': 'http://www.bit-hdtv.com/messages.php',
-        'detail' : 'http://www.bit-hdtv.com/details.php?id=%s',
-        'search' : 'http://www.bit-hdtv.com/torrents.php?',
+        'detail': 'http://www.bit-hdtv.com/details.php?id=%s',
+        'search': 'http://www.bit-hdtv.com/torrents.php?',
     }
 
     # Searches for movies only - BiT-HDTV's subcategory and resolution search filters appear to be broken

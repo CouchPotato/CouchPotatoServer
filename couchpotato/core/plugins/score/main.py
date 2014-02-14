@@ -1,6 +1,6 @@
-from couchpotato.core.event import addEvent, fireEvent
+from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import toUnicode
-from couchpotato.core.helpers.variable import getTitle, splitString
+from couchpotato.core.helpers.variable import getTitle, splitString, removeDuplicate
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.plugins.score.scores import nameScore, nameRatioScore, \
@@ -21,7 +21,7 @@ class Score(Plugin):
 
         # Merge global and category
         preferred_words = splitString(Env.setting('preferred_words', section = 'searcher').lower())
-        try: preferred_words = list(set(preferred_words + splitString(movie['category']['preferred'].lower())))
+        try: preferred_words = removeDuplicate(preferred_words + splitString(movie['category']['preferred'].lower()))
         except: pass
 
         score = nameScore(toUnicode(nzb['name']), movie['library']['year'], preferred_words)
@@ -48,7 +48,7 @@ class Score(Plugin):
 
         # Merge global and category
         ignored_words = splitString(Env.setting('ignored_words', section = 'searcher').lower())
-        try: ignored_words = list(set(ignored_words + splitString(movie['category']['ignored'].lower())))
+        try: ignored_words = removeDuplicate(ignored_words + splitString(movie['category']['ignored'].lower()))
         except: pass
 
         # Partial ignored words

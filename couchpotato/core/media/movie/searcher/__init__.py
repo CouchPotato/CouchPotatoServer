@@ -1,6 +1,7 @@
 from .main import MovieSearcher
 import random
 
+
 def start():
     return MovieSearcher()
 

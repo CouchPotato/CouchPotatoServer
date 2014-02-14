@@ -115,7 +115,7 @@ class Dashboard(Plugin):
 
                 for movie_id in movie_ids:
                     movies.append(movie_dict[movie_id].to_dict({
-                        'library': {'titles': {}, 'files':{}},
+                        'library': {'titles': {}, 'files': {}},
                         'files': {},
                     }))
 

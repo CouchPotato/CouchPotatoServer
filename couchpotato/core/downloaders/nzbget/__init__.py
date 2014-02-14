@@ -1,5 +1,6 @@
 from .main import NZBGet
 
+
 def start():
     return NZBGet()
 

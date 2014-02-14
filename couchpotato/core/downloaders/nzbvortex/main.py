@@ -56,13 +56,13 @@ class NZBVortex(Downloader):
                     status = 'completed'
                 elif nzb['state'] in [21, 22, 24]:
                     status = 'failed'
-    
+
                 release_downloads.append({
                     'id': nzb['id'],
                     'name': nzb['uiTitle'],
                     'status': status,
                     'original_status': nzb['state'],
-                    'timeleft':-1,
+                    'timeleft': -1,
                     'folder': sp(nzb['destinationPath']),
                 })
 
@@ -102,7 +102,6 @@ class NZBVortex(Downloader):
         log.error('Login failed, please check you api-key')
         return False
 
-
     def call(self, call, parameters = None, repeat = False, auth = True, *args, **kwargs):
 
         # Login first
@@ -123,7 +122,7 @@ class NZBVortex(Downloader):
 
             if data:
                 return json.loads(data)
-        except URLError, e:
+        except URLError as e:
             if hasattr(e, 'code') and e.code == 403:
                 # Try login and do again
                 if not repeat:
@@ -145,7 +144,7 @@ class NZBVortex(Downloader):
             try:
                 data = self.urlopen(url, show_error = False)
                 self.api_level = float(json.loads(data).get('apilevel'))
-            except URLError, e:
+            except URLError as e:
                 if hasattr(e, 'code') and e.code == 403:
                     log.error('This version of NZBVortex isn\'t supported. Please update to 2.8.6 or higher')
                 else:
@@ -174,6 +173,7 @@ class HTTPSConnection(httplib.HTTPSConnection):
                 self._tunnel()
 
         self.sock = ssl.wrap_socket(sock, self.key_file, self.cert_file, ssl_version = ssl.PROTOCOL_TLSv1)
+
 
 class HTTPSHandler(urllib2.HTTPSHandler):
     def https_open(self, req):

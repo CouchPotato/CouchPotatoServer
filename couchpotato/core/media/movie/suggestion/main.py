@@ -1,7 +1,7 @@
 from couchpotato import get_session
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent
-from couchpotato.core.helpers.variable import splitString
+from couchpotato.core.helpers.variable import splitString, removeDuplicate
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.settings.model import Media, Library
 from couchpotato.environment import Env
@@ -40,7 +40,7 @@ class Suggestion(Plugin):
                 movies.extend(splitString(Env.prop('suggest_seen', default = '')))
 
             suggestions = fireEvent('movie.suggest', movies = movies, ignore = ignored, single = True)
-            self.setCache('suggestion_cached', suggestions, timeout = 6048000) # Cache for 10 weeks
+            self.setCache('suggestion_cached', suggestions, timeout = 6048000)  # Cache for 10 weeks
 
         return {
             'success': True,
@@ -79,8 +79,10 @@ class Suggestion(Plugin):
         seen = [] if not seen else seen
 
         if ignore_imdb:
+            suggested_imdbs = []
             for cs in cached_suggestion:
-                if cs.get('imdb') != ignore_imdb:
+                if cs.get('imdb') != ignore_imdb and cs.get('imdb') not in suggested_imdbs:
+                    suggested_imdbs.append(cs.get('imdb'))
                     new_suggestions.append(cs)
 
         # Get new results and add them
@@ -97,7 +99,7 @@ class Suggestion(Plugin):
             movies.extend(seen)
 
             ignored.extend([x.get('imdb') for x in cached_suggestion])
-            suggestions = fireEvent('movie.suggest', movies = movies, ignore = list(set(ignored)), single = True)
+            suggestions = fireEvent('movie.suggest', movies = movies, ignore = removeDuplicate(ignored), single = True)
 
             if suggestions:
                 new_suggestions.extend(suggestions)

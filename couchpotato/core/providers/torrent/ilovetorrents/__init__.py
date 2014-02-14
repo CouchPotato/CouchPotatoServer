@@ -1,4 +1,5 @@
-from main import ILoveTorrents
+from .main import ILoveTorrents
+
 
 def start():
     return ILoveTorrents()
@@ -18,14 +19,14 @@ config = [{
                     'type': 'enabler',
                     'default': False
                 },
-				{
+                {
                     'name': 'username',
                     'label': 'Username',
                     'type': 'string',
                     'default': '',
                     'description': 'The user name for your ILT account',
                 },
-				{
+                {
                     'name': 'password',
                     'label': 'Password',
                     'type': 'password',

@@ -1,7 +1,7 @@
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, addEvent, fireEventAsync
 from couchpotato.core.helpers.encoding import sp
-from couchpotato.core.helpers.variable import splitString, getTitle
+from couchpotato.core.helpers.variable import splitString, getTitle, tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
@@ -13,6 +13,7 @@ import traceback
 
 
 log = CPLog(__name__)
+
 
 class Manage(Plugin):
 
@@ -58,6 +59,7 @@ class Manage(Plugin):
         fireEventAsync('manage.update', full = True if full == '1' else False)
 
         return {
+            'progress': self.in_progress,
             'success': True
         }
 
@@ -83,15 +85,17 @@ class Manage(Plugin):
             added_identifiers = []
 
             # Add some progress
-            self.in_progress = {}
             for directory in directories:
                 self.in_progress[os.path.normpath(directory)] = {
+                    'started': False,
+                    'eta': -1,
                     'total': None,
                     'to_go': None,
                 }
 
             for directory in directories:
                 folder = os.path.normpath(directory)
+                self.in_progress[os.path.normpath(directory)]['started'] = tryInt(time.time())
 
                 if not os.path.isdir(folder):
                     if len(directory) > 0:
@@ -100,6 +104,7 @@ class Manage(Plugin):
 
                 log.info('Updating manage library: %s', folder)
                 fireEvent('notify.frontend', type = 'manage.update', data = True, message = 'Scanning for movies in "%s"' % folder)
+
 
                 onFound = self.createAddToLibrary(folder, added_identifiers)
                 fireEvent('scanner.scan', folder = folder, simple = True, newer_than = last_update if not full else 0, on_found = onFound, single = True)
@@ -174,10 +179,10 @@ class Manage(Plugin):
 
         def addToLibrary(group, total_found, to_go):
             if self.in_progress[folder]['total'] is None:
-                self.in_progress[folder] = {
+                self.in_progress[folder].update({
                     'total': total_found,
                     'to_go': total_found,
-                }
+                })
 
             if group['library'] and group['library'].get('identifier'):
                 identifier = group['library'].get('identifier')
@@ -185,9 +190,9 @@ class Manage(Plugin):
 
                 # Add it to release and update the info
                 fireEvent('release.add', group = group)
-                fireEventAsync('library.update.movie', identifier = identifier, on_complete = self.createAfterUpdate(folder, identifier))
+                fireEvent('library.update.movie', identifier = identifier, on_complete = self.createAfterUpdate(folder, identifier))
             else:
-                self.in_progress[folder]['to_go'] -= 1
+                self.updateProgress(folder)
 
         return addToLibrary
 
@@ -198,13 +203,22 @@ class Manage(Plugin):
             if not self.in_progress or self.shuttingDown():
                 return
 
-            self.in_progress[folder]['to_go'] -= 1
+            self.updateProgress(folder)
             total = self.in_progress[folder]['total']
             movie_dict = fireEvent('media.get', identifier, single = True)
 
             fireEvent('notify.frontend', type = 'movie.added', data = movie_dict, message = None if total > 5 else 'Added "%s" to manage.' % getTitle(movie_dict['library']))
 
         return afterUpdate
+
+    def updateProgress(self, folder):
+
+        pr = self.in_progress[folder]
+        pr['to_go'] -= 1
+
+        avg = (time.time() - pr['started'])/(pr['total'] - pr['to_go'])
+        pr['eta'] = tryInt(avg * pr['to_go'])
+
 
     def directories(self):
         try:
@@ -222,7 +236,7 @@ class Manage(Plugin):
         groups = fireEvent('scanner.scan', folder = folder, files = files, single = True)
 
         if groups:
-            for group in groups.itervalues():
+            for group in groups.values():
                 if group['library'] and group['library'].get('identifier'):
                     fireEvent('release.add', group = group)
 

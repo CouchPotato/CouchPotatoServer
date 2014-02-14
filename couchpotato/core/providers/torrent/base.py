@@ -1,3 +1,4 @@
+import traceback
 from couchpotato.core.helpers.variable import getImdb, md5, cleanHost
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.base import YarrProvider
@@ -13,22 +14,6 @@ class TorrentProvider(YarrProvider):
 
     proxy_domain = None
     proxy_list = []
-
-    def imdbMatch(self, url, imdbId):
-        if getImdb(url) == imdbId:
-            return True
-
-        if url[:4] == 'http':
-            try:
-                cache_key = md5(url)
-                data = self.getCache(cache_key, url)
-            except IOError:
-                log.error('Failed to open %s.', url)
-                return False
-
-            return getImdb(data) == imdbId
-
-        return False
 
     def getDomain(self, url = ''):
 
@@ -48,7 +33,7 @@ class TorrentProvider(YarrProvider):
                 try:
                     data = self.urlopen(proxy, timeout = 3, show_error = False)
                 except:
-                    log.debug('Failed %s proxy %s', (self.getName(), proxy))
+                    log.debug('Failed %s proxy %s: %s', (self.getName(), proxy, traceback.format_exc()))
 
                 if self.correctProxy(data):
                     log.debug('Using proxy for %s: %s', (self.getName(), proxy))
@@ -63,8 +48,9 @@ class TorrentProvider(YarrProvider):
 
         return cleanHost(self.proxy_domain).rstrip('/') + url
 
-    def correctProxy(self):
+    def correctProxy(self, data):
         return True
+
 
 class TorrentMagnetProvider(TorrentProvider):
 

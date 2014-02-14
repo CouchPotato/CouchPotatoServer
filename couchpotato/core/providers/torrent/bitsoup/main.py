@@ -12,7 +12,7 @@ class Bitsoup(TorrentProvider):
 
     urls = {
         'test': 'https://www.bitsoup.me/',
-        'login' : 'https://www.bitsoup.me/takelogin.php',
+        'login': 'https://www.bitsoup.me/takelogin.php',
         'login_check': 'https://www.bitsoup.me/my.php',
         'search': 'https://www.bitsoup.me/browse.php?',
         'baseurl': 'https://www.bitsoup.me/%s',

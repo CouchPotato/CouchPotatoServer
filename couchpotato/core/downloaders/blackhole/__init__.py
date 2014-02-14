@@ -1,6 +1,7 @@
 from .main import Blackhole
 from couchpotato.core.helpers.variable import getDownloadDir
 
+
 def start():
     return Blackhole()
 

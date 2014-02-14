@@ -1,5 +1,6 @@
 from .main import Email
 
+
 def start():
     return Email()
 
@@ -30,7 +31,7 @@ config = [{
                 },
                 {   'name': 'smtp_port',
                     'label': 'SMTP server port',
-                    'default': '25', 
+                    'default': '25',
                     'type': 'int',
                 },
                 {

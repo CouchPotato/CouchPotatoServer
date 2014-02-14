@@ -4,6 +4,7 @@ from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.torrent.base import TorrentProvider
 import traceback
+import six
 
 log = CPLog(__name__)
 
@@ -11,12 +12,12 @@ log = CPLog(__name__)
 class TorrentShack(TorrentProvider):
 
     urls = {
-        'test' : 'https://torrentshack.net/',
-        'login' : 'https://torrentshack.net/login.php',
+        'test': 'https://torrentshack.net/',
+        'login': 'https://torrentshack.net/login.php',
         'login_check': 'https://torrentshack.net/inbox.php',
-        'detail' : 'https://torrentshack.net/torrent/%s',
-        'search' : 'https://torrentshack.net/torrents.php?action=advanced&searchstr=%s&scene=%s&filter_cat[%d]=1',
-        'download' : 'https://torrentshack.net/%s',
+        'detail': 'https://torrentshack.net/torrent/%s',
+        'search': 'https://torrentshack.net/torrents.php?action=advanced&searchstr=%s&scene=%s&filter_cat[%d]=1',
+        'download': 'https://torrentshack.net/%s',
     }
 
     cat_ids = [
@@ -53,7 +54,7 @@ class TorrentShack(TorrentProvider):
 
                     results.append({
                         'id': link['href'].replace('torrents.php?torrentid=', ''),
-                        'name': unicode(link.span.string).translate({ord(u'\xad'): None}),
+                        'name': six.text_type(link.span.string).translate({ord(six.u('\xad')): None}),
                         'url': self.urls['download'] % url['href'],
                         'detail_url': self.urls['download'] % link['href'],
                         'size': self.parseSize(result.find_all('td')[4].string),

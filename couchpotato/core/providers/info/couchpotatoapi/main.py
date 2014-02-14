@@ -81,7 +81,7 @@ class CouchPotatoApi(MovieProvider):
 
         result = self.getJsonData(self.urls['info'] % identifier, headers = self.getRequestHeaders())
         if result:
-            return dict((k, v) for k, v in result.iteritems() if v)
+            return dict((k, v) for k, v in result.items() if v)
 
         return {}
 
@@ -110,5 +110,5 @@ class CouchPotatoApi(MovieProvider):
             'X-CP-Version': fireEvent('app.version', single = True),
             'X-CP-API': self.api_version,
             'X-CP-Time': time.time(),
-            'X-CP-Identifier': '+%s' % Env.setting('api_key', 'core')[:10], # Use first 10 as identifier, so we don't need to use IP address in api stats
+            'X-CP-Identifier': '+%s' % Env.setting('api_key', 'core')[:10],  # Use first 10 as identifier, so we don't need to use IP address in api stats
         }

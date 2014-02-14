@@ -267,7 +267,7 @@ def _encode_dict(data):
 def encode(data):
     if isinstance(data, bool):
         return False
-    elif isinstance(data, int):
+    elif isinstance(data, (int, long)):
         return _encode_int(data)
     elif isinstance(data, bytes):
         return _encode_string(data)

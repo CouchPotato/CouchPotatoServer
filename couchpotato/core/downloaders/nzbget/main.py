@@ -42,7 +42,7 @@ class NZBGet(Downloader):
         except socket.error:
             log.error('NZBGet is not responding. Please ensure that NZBGet is running and host setting is correct.')
             return False
-        except xmlrpclib.ProtocolError, e:
+        except xmlrpclib.ProtocolError as e:
             if e.errcode == 401:
                 log.error('Password is incorrect.')
             else:
@@ -56,7 +56,7 @@ class NZBGet(Downloader):
 
         if xml_response:
             log.info('NZB sent successfully to NZBGet')
-            nzb_id = md5(data['url']) # about as unique as they come ;)
+            nzb_id = md5(data['url'])  # about as unique as they come ;)
             couchpotato_id = "couchpotato=" + nzb_id
             groups = rpc.listgroups()
             file_id = [item['LastID'] for item in groups if item['NZBFilename'] == nzb_name]
@@ -83,7 +83,7 @@ class NZBGet(Downloader):
         except socket.error:
             log.error('NZBGet is not responding. Please ensure that NZBGet is running and host setting is correct.')
             return []
-        except xmlrpclib.ProtocolError, e:
+        except xmlrpclib.ProtocolError as e:
             if e.errcode == 401:
                 log.error('Password is incorrect.')
             else:
@@ -116,7 +116,7 @@ class NZBGet(Downloader):
                         timeleft = str(timedelta(seconds = nzb['RemainingSizeMB'] / status['DownloadRate'] * 2 ^ 20))
                 except:
                     pass
-    
+
                 release_downloads.append({
                     'id': nzb_id,
                     'name': nzb['NZBFilename'],
@@ -169,7 +169,7 @@ class NZBGet(Downloader):
         except socket.error:
             log.error('NZBGet is not responding. Please ensure that NZBGet is running and host setting is correct.')
             return False
-        except xmlrpclib.ProtocolError, e:
+        except xmlrpclib.ProtocolError as e:
             if e.errcode == 401:
                 log.error('Password is incorrect.')
             else:

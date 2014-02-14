@@ -2,9 +2,9 @@ from couchpotato.core.event import fireEvent, addEvent
 from couchpotato.core.loader import Loader
 from couchpotato.core.settings import Settings
 from sqlalchemy.engine import create_engine
-from sqlalchemy.orm import scoped_session
 from sqlalchemy.orm.session import sessionmaker
 import os
+
 
 class Env(object):
 
@@ -23,7 +23,7 @@ class Env(object):
     _quiet = False
     _daemonized = False
     _desktop = None
-    _session = None
+    _engine = None
 
     ''' Data paths and directories '''
     _app_dir = ""
@@ -53,20 +53,20 @@ class Env(object):
         return setattr(Env, '_' + attr, value)
 
     @staticmethod
-    def getSession(engine = None):
-        existing_session = Env.get('session')
-        if existing_session:
-            return existing_session
-
-        engine = Env.getEngine()
-        session = scoped_session(sessionmaker(bind = engine))
-        Env.set('session', session)
-
-        return session
+    def getSession():
+        session = sessionmaker(bind = Env.getEngine())
+        return session()
 
     @staticmethod
     def getEngine():
-        return create_engine(Env.get('db_path'), echo = False, pool_recycle = 30)
+        existing_engine = Env.get('engine')
+        if existing_engine:
+            return existing_engine
+
+        engine = create_engine(Env.get('db_path'), echo = False)
+        Env.set('engine', engine)
+
+        return engine
 
     @staticmethod
     def setting(attr, section = 'core', value = None, default = '', type = None):

@@ -22,7 +22,7 @@ class Prowl(Notification):
             'priority': self.conf('priority'),
         }
         headers = {
-           'Content-type': 'application/x-www-form-urlencoded'
+            'Content-type': 'application/x-www-form-urlencoded'
         }
 
         try:

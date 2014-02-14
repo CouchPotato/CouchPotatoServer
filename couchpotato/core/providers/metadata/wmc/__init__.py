@@ -1,5 +1,6 @@
 from .main import WindowsMediaCenter
 
+
 def start():
     return WindowsMediaCenter()
 

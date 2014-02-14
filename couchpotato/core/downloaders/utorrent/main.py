@@ -66,7 +66,7 @@ class uTorrent(Downloader):
             new_settings['seed_prio_limitul_flag'] = True
             log.info('Updated uTorrent settings to set a torrent to complete after it the seeding requirements are met.')
 
-        if settings.get('bt.read_only_on_complete'): #This doesn't work as this option seems to be not available through the api. Mitigated with removeReadOnly function
+        if settings.get('bt.read_only_on_complete'):  #This doesn't work as this option seems to be not available through the api. Mitigated with removeReadOnly function
             new_settings['bt.read_only_on_complete'] = False
             log.info('Updated uTorrent settings to not set the files to read only after completing.')
 
@@ -149,7 +149,7 @@ class uTorrent(Downloader):
                     torrent_files = [sp(os.path.join(torrent[26], torrent_file[0])) for torrent_file in torrent_files['files'][1]]
                 except:
                     log.debug('Failed getting files from torrent: %s', torrent[2])
-    
+
                 status = 'busy'
                 if (torrent[1] & self.status_flags['STARTED'] or torrent[1] & self.status_flags['QUEUED']) and torrent[4] == 1000:
                     status = 'seeding'
@@ -157,10 +157,10 @@ class uTorrent(Downloader):
                     status = 'failed'
                 elif torrent[4] == 1000:
                     status = 'completed'
-    
+
                 if not status == 'busy':
                     self.removeReadOnly(torrent_files)
-    
+
                 release_downloads.append({
                     'id': torrent[0],
                     'name': torrent[2],
@@ -231,14 +231,14 @@ class uTorrentAPI(object):
                 return response
             else:
                 log.debug('Unknown failure sending command to uTorrent. Return text is: %s', response)
-        except httplib.InvalidURL, err:
+        except httplib.InvalidURL as err:
             log.error('Invalid uTorrent host, check your config %s', err)
-        except urllib2.HTTPError, err:
+        except urllib2.HTTPError as err:
             if err.code == 401:
                 log.error('Invalid uTorrent Username or Password, check your config')
             else:
                 log.error('uTorrent HTTPError: %s', err)
-        except urllib2.URLError, err:
+        except urllib2.URLError as err:
             log.error('Unable to connect to uTorrent %s', err)
         return False
 
@@ -261,7 +261,7 @@ class uTorrentAPI(object):
 
     def set_torrent(self, hash, params):
         action = 'action=setprops&hash=%s' % hash
-        for k, v in params.iteritems():
+        for k, v in params.items():
             action += '&s=%s&v=%s' % (k, v)
         return self._request(action)
 
@@ -304,7 +304,7 @@ class uTorrentAPI(object):
 
             #log.debug('uTorrent settings: %s', settings_dict)
 
-        except Exception, err:
+        except Exception as err:
             log.error('Failed to get settings from uTorrent: %s', err)
 
         return settings_dict

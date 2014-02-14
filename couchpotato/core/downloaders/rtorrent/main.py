@@ -42,7 +42,7 @@ class rTorrent(Downloader):
         if self.rt is not None:
             return self.rt
 
-        url = cleanHost(self.conf('host'), protocol = True, ssl = self.conf('ssl')) + '/' + self.conf('rpc_url').strip('/ ') + '/'
+        url = cleanHost(self.conf('host'), protocol = True, ssl = self.conf('ssl')) + self.conf('rpc_url')
 
         if self.conf('username') and self.conf('password'):
             self.rt = RTorrent(
@@ -87,7 +87,7 @@ class rTorrent(Downloader):
                 # Reset group action and disable it
                 group.set_command()
                 group.disable()
-        except MethodError, err:
+        except MethodError as err:
             log.error('Unable to set group options: %s', err.msg)
             return False
 
@@ -110,7 +110,6 @@ class rTorrent(Downloader):
         torrent_params = {}
         if self.conf('label'):
             torrent_params['label'] = self.conf('label')
-
 
         if not filedata and data.get('protocol') == 'torrent':
             log.error('Failed sending torrent, no data')
@@ -135,7 +134,7 @@ class rTorrent(Downloader):
         # Send request to rTorrent
         try:
             # Send torrent to rTorrent
-            torrent = self.rt.load_torrent(filedata)
+            torrent = self.rt.load_torrent(filedata, verify_retries=10)
 
             if not torrent:
                 log.error('Unable to find the torrent, did it fail to load?')
@@ -156,7 +155,7 @@ class rTorrent(Downloader):
                 torrent.start()
 
             return self.downloadReturnId(torrent_hash)
-        except Exception, err:
+        except Exception as err:
             log.error('Failed to send torrent to rTorrent: %s', err)
             return False
 
@@ -173,9 +172,16 @@ class rTorrent(Downloader):
 
             for torrent in torrents:
                 if torrent.info_hash in ids:
+                    torrent_directory = os.path.normpath(torrent.directory)
                     torrent_files = []
-                    for file_item in torrent.get_files():
-                        torrent_files.append(sp(os.path.join(torrent.directory, file_item.path)))
+
+                    for file in torrent.get_files():
+                        if not os.path.normpath(file.path).startswith(torrent_directory):
+                            file_path = os.path.join(torrent_directory, file.path.lstrip('/'))
+                        else:
+                            file_path = file.path
+
+                        torrent_files.append(sp(file_path))
 
                     status = 'busy'
                     if torrent.complete:
@@ -197,7 +203,7 @@ class rTorrent(Downloader):
 
             return release_downloads
 
-        except Exception, err:
+        except Exception as err:
             log.error('Failed to get status from rTorrent: %s', err)
             return []
 
