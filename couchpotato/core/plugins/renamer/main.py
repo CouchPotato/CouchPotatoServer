@@ -317,7 +317,7 @@ class Renamer(Plugin):
                     cd = 1 if multiple else 0
 
                     for current_file in sorted(list(group['files'][file_type])):
-                        current_file = toUnicode(current_file)
+                        current_file = sp(current_file)
 
                         # Original filename
                         replacements['original'] = os.path.splitext(os.path.basename(current_file))[0]
@@ -607,7 +607,7 @@ class Renamer(Plugin):
         rename_files = {}
 
         def test(s):
-            return current_file[:-len(replacements['ext'])] in s
+            return current_file[:-len(replacements['ext'])] in sp(s)
 
         for extra in set(filter(test, group['files'][extra_type])):
             replacements['ext'] = getExt(extra)
