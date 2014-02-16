@@ -24,6 +24,7 @@ class rTorrent(Downloader):
         super(rTorrent, self).__init__()
 
         addEvent('app.load', self.migrate)
+        addEvent('setting.save.rtorrent.*.after', self.settingsChanged)
 
     def migrate(self):
 
@@ -36,6 +37,14 @@ class rTorrent(Downloader):
             self.conf('rpc_url', value = '/'.join(host_split[1:]))
 
             self.deleteConf('url')
+
+    def settingsChanged(self):
+        # Reset active connection if settings have changed
+        if self.rt:
+            log.debug('Settings have changed, closing active connection')
+
+        self.rt = None
+        return True
 
     def connect(self):
         # Already connected?
@@ -55,7 +64,7 @@ class rTorrent(Downloader):
 
         return self.rt
 
-    def _update_provider_group(self, name, data):
+    def updateProviderGroup(self, name, data):
         if data.get('seed_time'):
             log.info('seeding time ignored, not supported')
 
@@ -104,7 +113,7 @@ class rTorrent(Downloader):
             return False
 
         group_name = 'cp_' + data.get('provider').lower()
-        if not self._update_provider_group(group_name, data):
+        if not self.updateProviderGroup(group_name, data):
             return False
 
         torrent_params = {}
