@@ -196,13 +196,13 @@ Page.Settings = new Class({
 		});
 
 		setTimeout(function(){
-			self.fireEvent('create');
-			self.openTab();
-
 			self.el.adopt(
 				self.tabs_container,
 				self.containers
 			);
+
+			self.fireEvent('create');
+			self.openTab();
 		}, 0);
 
 	},

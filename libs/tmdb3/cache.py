@@ -7,20 +7,27 @@
 # Purpose: Caching framework to store TMDb API results
 #-----------------------
 
+import time
+import os
+
 from tmdb_exceptions import *
 from cache_engine import Engines
 
 import cache_null
 import cache_file
 
-class Cache( object ):
+
+class Cache(object):
     """
-    This class implements a persistent cache, backed in a file specified in
-    the object creation. The file is protected for safe, concurrent access
-    by multiple instances using flock.
-    This cache uses JSON for speed and storage efficiency, so only simple
-    data types are supported.
-    Data is stored in a simple format {key:(expiretimestamp, data)}
+    This class implements a cache framework, allowing selecting of a
+    pluggable engine. The framework stores data in a key/value manner,
+    along with a lifetime, after which data will be expired and
+    pulled fresh next time it is requested from the cache.
+
+    This class defines a wrapper to be used with query functions. The
+    wrapper will automatically cache the inputs and outputs of the
+    wrapped function, pulling the output from local storage for
+    subsequent calls with those inputs.
     """
     def __init__(self, engine=None, *args, **kwargs):
         self._engine = None
@@ -37,7 +44,7 @@ class Cache( object ):
                 self._age = max(self._age, obj.creation)
 
     def _expire(self):
-        for k,v in self._data.items():
+        for k, v in self._data.items():
             if v.expired:
                 del self._data[k]
 
@@ -87,19 +94,22 @@ class Cache( object ):
                 self.__doc__ = func.__doc__
 
         def __call__(self, *args, **kwargs):
-            if self.func is None: # decorator is waiting to be given a function
+            if self.func is None:
+                # decorator is waiting to be given a function
                 if len(kwargs) or (len(args) != 1):
-                    raise TMDBCacheError('Cache.Cached decorator must be called '+\
-                                         'a single callable argument before it '+\
-                                         'be used.')
+                    raise TMDBCacheError(
+                        'Cache.Cached decorator must be called a single ' +
+                        'callable argument before it be used.')
                 elif args[0] is None:
-                    raise TMDBCacheError('Cache.Cached decorator called before '+\
-                                         'being given a function to wrap.')
+                    raise TMDBCacheError(
+                        'Cache.Cached decorator called before being given ' +
+                        'a function to wrap.')
                 elif not callable(args[0]):
-                    raise TMDBCacheError('Cache.Cached must be provided a '+\
-                                         'callable object.')
+                    raise TMDBCacheError(
+                        'Cache.Cached must be provided a callable object.')
                 return self.__class__(self.cache, self.callback, args[0])
             elif self.inst.lifetime == 0:
+                # lifetime of zero means never cache
                 return self.func(*args, **kwargs)
             else:
                 key = self.callback()
@@ -118,4 +128,3 @@ class Cache( object ):
             func = self.func.__get__(inst, owner)
             callback = self.callback.__get__(inst, owner)
             return self.__class__(self.cache, callback, func, inst)
-
