@@ -172,7 +172,10 @@ class Plugin(object):
             log.info('Opening url: %s %s, data: %s', (method, url, [x for x in data.keys()] if isinstance(data, dict) else 'with data'))
             response = r.request(method, url, verify = False, **kwargs)
 
-            data = response.content
+            if response.status_code != requests.codes.ok:
+                data = response.content
+            else:
+                response.raise_for_status()
 
             self.http_failed_request[host] = 0
         except (IOError, MaxRetryError, Timeout):
