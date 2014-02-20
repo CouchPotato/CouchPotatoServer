@@ -168,6 +168,21 @@ class rTorrent(Downloader):
             log.error('Failed to send torrent to rTorrent: %s', err)
             return False
 
+    def getTorrentStatus(self, torrent):
+        if torrent.hashing or torrent.hash_checking or torrent.message:
+            return 'busy'
+
+        if not torrent.complete:
+            return 'busy'
+
+        if not torrent.open:
+            return 'completed'
+
+        if torrent.state and torrent.active:
+            return 'seeding'
+
+        return 'busy'
+
     def getAllDownloadStatus(self, ids):
         log.debug('Checking rTorrent download status.')
 
@@ -192,17 +207,10 @@ class rTorrent(Downloader):
 
                         torrent_files.append(sp(file_path))
 
-                    status = 'busy'
-                    if torrent.complete:
-                        if torrent.active:
-                            status = 'seeding'
-                        else:
-                            status = 'completed'
-
                     release_downloads.append({
                         'id': torrent.info_hash,
                         'name': torrent.name,
-                        'status': status,
+                        'status': self.getTorrentStatus(torrent),
                         'seed_ratio': torrent.ratio,
                         'original_status': torrent.state,
                         'timeleft': str(timedelta(seconds = float(torrent.left_bytes) / torrent.down_rate)) if torrent.down_rate > 0 else -1,
