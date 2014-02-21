@@ -166,7 +166,10 @@ class Downloader(Provider):
         return {'success': self.testable}
 
     def _test(self):
-        return {'success': self.test()}
+        t = self.test()
+        if isinstance(t,tuple):
+            return {'success': t[0], 'msg': t[1] }
+        return {'success': t }
 
     def test(self):
         return False
