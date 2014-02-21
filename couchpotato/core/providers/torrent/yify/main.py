@@ -18,9 +18,9 @@ class Yify(TorrentMagnetProvider):
 
     proxy_list = [
         'http://yify.unlocktorrent.com',
-        'http://yify.ftwnet.co.uk',
         'http://yify-torrents.com.come.in',
         'http://yts.re',
+        'http://yts.im'
         'https://yify-torrents.im',
     ]
 
