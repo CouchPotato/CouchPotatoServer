@@ -50,8 +50,10 @@ var DownloadersBase = new Class({
                                                 }).inject(button, 'after')
                                             }
                                             else {
+                                                var msg_text = 'Connection failed. Check logs for details.';
+                                                if(json.hasOwnProperty('msg')) msg_text = json.msg;
                                                 var message = new Element('span.failed', {
-                                                    'text': 'Connection failed. Check logs for details.'
+                                                    'text': msg_text
                                                 }).inject(button, 'after')
                                             }
 
