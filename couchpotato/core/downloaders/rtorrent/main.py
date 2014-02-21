@@ -1,14 +1,15 @@
-from base64 import b16encode, b32decode
-from bencode import bencode, bdecode
 from couchpotato.core.downloaders.base import Downloader, ReleaseDownloadList
 from couchpotato.core.event import fireEvent, addEvent
 from couchpotato.core.helpers.encoding import sp
 from couchpotato.core.helpers.variable import cleanHost, splitString
 from couchpotato.core.logger import CPLog
+from base64 import b16encode, b32decode
+from bencode import bencode, bdecode
 from datetime import timedelta
 from hashlib import sha1
 from rtorrent import RTorrent
 from rtorrent.err import MethodError
+from urlparse import urlparse
 import os
 
 log = CPLog(__name__)
@@ -51,7 +52,12 @@ class rTorrent(Downloader):
         if self.rt is not None:
             return self.rt
 
-        url = cleanHost(self.conf('host'), protocol = True, ssl = self.conf('ssl')) + self.conf('rpc_url')
+        url = cleanHost(self.conf('host'), protocol = True, ssl = self.conf('ssl'))
+        parsed = urlparse(url)
+
+        # rpc_url is only used on http/https scgi pass-through
+        if parsed.scheme in ['http', 'https']:
+            url += self.conf('rpc_url')
 
         if self.conf('username') and self.conf('password'):
             self.rt = RTorrent(
