@@ -19,6 +19,7 @@ class rTorrent(Downloader):
     protocol = ['torrent', 'torrent_magnet']
     rt = None
     testable = True
+    error_msg = ''
 
     # Migration url to host options
     def __init__(self):
@@ -54,15 +55,23 @@ class rTorrent(Downloader):
         else:
             self.rt = RTorrent(url)
 
-        if not self.rt.test_connection():
-            self.rt = None
+        self.error_msg = ''
+        try:
+             self.rt._verify_conn()
+        except AssertionError as e:
+             self.error_msg = e.message
+             self.rt = None
 
         return self.rt
 
     def test(self):
-        if not self.connect(True):
-            return False
-        return True
+        if self.connect(True):
+            return True
+
+        if self.error_msg:
+            return False, 'Connection failed: ' + self.error_msg
+
+        return False
 
     def _update_provider_group(self, name, data):
         if data.get('seed_time'):

@@ -26,6 +26,7 @@ class Sabnzbd(Downloader):
             if int(v[0]) == 0 and int(v[1]) < 7:
                 return False, 'Your Sabnzbd client is too old, please update to newest version.'
 
+            # the version check will work even with wrong api key, so we need the next check as well
             sab_data = self.call({
                 'mode': 'qstatus',
             })
