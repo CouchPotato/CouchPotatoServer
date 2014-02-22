@@ -89,11 +89,11 @@ class PassThePopcorn(TorrentProvider):
                     if 'GoldenPopcorn' in torrent and torrent['GoldenPopcorn']:
                         torrentdesc += ' HQ'
                         if self.conf('prefer_golden'):
-                            torrentscore += 200
+                            torrentscore += 5000
                     if 'Scene' in torrent and torrent['Scene']:
                         torrentdesc += ' Scene'
                         if self.conf('prefer_scene'):
-                            torrentscore += 50
+                            torrentscore += 2000
                     if 'RemasterTitle' in torrent and torrent['RemasterTitle']:
                         torrentdesc += self.htmlToASCII(' %s' % torrent['RemasterTitle'])
 
