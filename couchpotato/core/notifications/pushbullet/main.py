@@ -1,5 +1,5 @@
 from couchpotato.core.helpers.encoding import toUnicode
-from couchpotato.core.helpers.variable import tryInt
+from couchpotato.core.helpers.variable import splitString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
 import base64
@@ -32,7 +32,7 @@ class Pushbullet(Notification):
             response = self.request(
                 'pushes',
                 cache = False,
-                device_id = device,
+                device_iden = device,
                 type = 'note',
                 title = self.default_title,
                 body = toUnicode(message)
@@ -46,24 +46,7 @@ class Pushbullet(Notification):
         return successful == len(devices)
 
     def getDevices(self):
-        devices = [d.strip() for d in self.conf('devices').split(',')]
-
-        # Remove empty items
-        devices = [d for d in devices if len(d)]
-
-        # Break on any ids that aren't integers
-        valid_devices = []
-
-        for device_id in devices:
-            d = tryInt(device_id, None)
-
-            if not d:
-                log.error('Device ID "%s" is not valid', device_id)
-                return None
-
-            valid_devices.append(d)
-
-        return valid_devices
+        return splitString(self.conf('devices'))
 
     def request(self, method, cache = True, **kwargs):
         try:
