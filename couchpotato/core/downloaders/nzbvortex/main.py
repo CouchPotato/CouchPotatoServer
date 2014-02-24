@@ -42,6 +42,14 @@ class NZBVortex(Downloader):
             log.error('Something went wrong sending the NZB file: %s', traceback.format_exc())
             return False
 
+    def test(self):
+        try:
+            login_result = self.login()
+        except:
+            return False
+
+        return login_result
+
     def getAllDownloadStatus(self, ids):
 
         raw_statuses = self.call('nzb')

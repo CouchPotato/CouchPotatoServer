@@ -20,14 +20,14 @@ class Deluge(Downloader):
     log = CPLog(__name__)
     drpc = None
 
-    def connect(self):
+    def connect(self, reconnect = False):
         # Load host from config and split out port.
         host = cleanHost(self.conf('host'), protocol = False).split(':')
         if not isInt(host[1]):
             log.error('Config properties are not filled in correctly, port is missing.')
             return False
 
-        if not self.drpc:
+        if not self.drpc or reconnect:
             self.drpc = DelugeRPC(host[0], port = host[1], username = self.conf('username'), password = self.conf('password'))
 
         return self.drpc
@@ -85,6 +85,11 @@ class Deluge(Downloader):
 
         log.info('Torrent sent to Deluge successfully.')
         return self.downloadReturnId(remote_torrent)
+
+    def test(self):
+        if self.connect(True) and self.drpc.test():
+            return True
+        return False
 
     def getAllDownloadStatus(self, ids):
 
@@ -177,6 +182,13 @@ class DelugeRPC(object):
     def connect(self):
         self.client = DelugeClient()
         self.client.connect(self.host, int(self.port), self.username, self.password)
+
+    def test(self):
+        try:
+            self.connect()
+        except:
+            return False
+        return True
 
     def add_torrent_magnet(self, torrent, options):
         torrent_id = False

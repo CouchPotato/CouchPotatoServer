@@ -20,6 +20,7 @@ class rTorrent(Downloader):
 
     protocol = ['torrent', 'torrent_magnet']
     rt = None
+    error_msg = ''
 
     # Migration url to host options
     def __init__(self):
@@ -48,9 +49,9 @@ class rTorrent(Downloader):
         self.rt = None
         return True
 
-    def connect(self):
+    def connect(self, reconnect = False):
         # Already connected?
-        if self.rt is not None:
+        if not reconnect and self.rt is not None:
             return self.rt
 
         url = cleanHost(self.conf('host'), protocol = True, ssl = self.conf('ssl'))
@@ -69,9 +70,25 @@ class rTorrent(Downloader):
         else:
             self.rt = RTorrent(url)
 
+        self.error_msg = ''
+        try:
+             self.rt._verify_conn()
+        except AssertionError as e:
+             self.error_msg = e.message
+             self.rt = None
+
         return self.rt
 
-    def updateProviderGroup(self, name, data):
+    def test(self):
+        if self.connect(True):
+            return True
+
+        if self.error_msg:
+            return False, 'Connection failed: ' + self.error_msg
+
+        return False
+
+    def _update_provider_group(self, name, data):
         if data.get('seed_time'):
             log.info('seeding time ignored, not supported')
 

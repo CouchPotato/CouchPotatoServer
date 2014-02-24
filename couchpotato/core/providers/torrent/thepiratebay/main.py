@@ -31,15 +31,13 @@ class ThePirateBay(TorrentMagnetProvider):
     proxy_list = [
         'https://tpb.ipredator.se',
         'https://thepiratebay.se',
-        'https://depiraatbaai.be',
-        'https://piratereverse.info',
-        'https://tpb.pirateparty.org.uk',
-        'https://argumentomteemigreren.nl',
-        'https://livepirate.com',
+        'http://pirateproxy.ca',
+        'http://tpb.al',
+        'http://www.tpb.gr',
+        'http://nl.tpb.li',
+        'http://proxybay.eu',
         'https://www.getpirate.com',
-        'https://tpb.partipirate.org',
-        'https://tpb.piraten.lu',
-        'https://kuiken.co',
+        'http://pirateproxy.ca', 
     ]
 
     def _searchOnTitle(self, title, movie, quality, results):

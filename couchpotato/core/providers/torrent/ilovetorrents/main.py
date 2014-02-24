@@ -12,12 +12,12 @@ log = CPLog(__name__)
 class ILoveTorrents(TorrentProvider):
 
     urls = {
-        'download': 'http://www.ilovetorrents.me/%s',
-        'detail': 'http://www.ilovetorrents.me/%s',
-        'search': 'http://www.ilovetorrents.me/browse.php?search=%s&page=%s&cat=%s',
-        'test': 'http://www.ilovetorrents.me/',
-        'login': 'http://www.ilovetorrents.me/takelogin.php',
-        'login_check': 'http://www.ilovetorrents.me'
+        'download': 'https://www.ilovetorrents.me/%s',
+        'detail': 'https//www.ilovetorrents.me/%s',
+        'search': 'https://www.ilovetorrents.me/browse.php?search=%s&page=%s&cat=%s',
+        'test': 'https://www.ilovetorrents.me/',
+        'login': 'https://www.ilovetorrents.me/takelogin.php',
+        'login_check': 'https://www.ilovetorrents.me'
     }
 
     cat_ids = [
