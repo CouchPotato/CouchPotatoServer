@@ -64,6 +64,26 @@ class Sabnzbd(Downloader):
             log.error('Error getting data from SABNZBd: %s', sab_data)
             return False
 
+    def test(self):
+        try:
+            sab_data = self.call({
+                'mode': 'version',
+            })
+            v = sab_data.split('.')
+            if int(v[0]) == 0 and int(v[1]) < 7:
+                return False, 'Your Sabnzbd client is too old, please update to newest version.'
+
+            # the version check will work even with wrong api key, so we need the next check as well
+            sab_data = self.call({
+                'mode': 'qstatus',
+            })
+            if not sab_data:
+                return False
+        except:
+            return False
+
+        return True
+
     def getAllDownloadStatus(self, ids):
 
         log.debug('Checking SABnzbd download status.')

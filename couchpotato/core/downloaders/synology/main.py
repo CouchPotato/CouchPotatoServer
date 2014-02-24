@@ -45,6 +45,16 @@ class Synology(Downloader):
         finally:
             return self.downloadReturnId('') if response else False
 
+    def test(self):
+        host = cleanHost(self.conf('host'), protocol = False).split(':')
+        try:
+            srpc = SynologyRPC(host[0], host[1], self.conf('username'), self.conf('password'))
+            test_result = srpc.test()
+        except:
+            return False
+
+        return test_result
+
     def getEnabledProtocol(self):
         if self.conf('use_for') == 'both':
             return super(Synology, self).getEnabledProtocol()
@@ -147,3 +157,6 @@ class SynologyRPC(object):
             self._logout()
 
         return result
+
+    def test(self):
+        return bool(self._login())

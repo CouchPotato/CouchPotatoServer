@@ -1,4 +1,5 @@
 from base64 import b32decode, b16encode
+from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.variable import mergeDicts
 from couchpotato.core.logger import CPLog
@@ -42,6 +43,7 @@ class Downloader(Provider):
         addEvent('download.remove_failed', self._removeFailed)
         addEvent('download.pause', self._pause)
         addEvent('download.process_complete', self._processComplete)
+        addApiView('download.%s.test' % self.getName().lower(), self._test)
 
     def getEnabledProtocol(self):
         for download_protocol in self.protocol:
@@ -157,6 +159,15 @@ class Downloader(Provider):
         return super(Downloader, self).isEnabled() and \
             (d_manual and manual or d_manual is False) and \
             (not data or self.isCorrectProtocol(data.get('protocol')))
+
+    def _test(self):
+        t = self.test()
+        if isinstance(t, tuple):
+            return {'success': t[0], 'msg': t[1]}
+        return {'success': t}
+
+    def test(self):
+        return False
 
     def _pause(self, release_download, pause = True):
         if self.isDisabled(manual = True, data = {}):

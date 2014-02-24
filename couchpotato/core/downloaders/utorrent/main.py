@@ -115,6 +115,17 @@ class uTorrent(Downloader):
 
         return self.downloadReturnId(torrent_hash)
 
+    def test(self):
+        if self.connect():
+            build_version = self.utorrent_api.get_build()
+            if not build_version:
+                return False
+            if build_version < 25406:  # This build corresponds to version 3.0.0 stable
+                return False, 'Your uTorrent client is too old, please update to newest version.'
+            return True
+
+        return False
+
     def getAllDownloadStatus(self, ids):
 
         log.debug('Checking uTorrent download status.')
@@ -322,3 +333,10 @@ class uTorrentAPI(object):
     def get_files(self, hash):
         action = 'action=getfiles&hash=%s' % hash
         return self._request(action)
+
+    def get_build(self):
+        data = self._request('')
+        if not data:
+            return False
+        response = json.loads(data)
+        return int(response.get('build'))
