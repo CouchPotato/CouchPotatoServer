@@ -13,7 +13,7 @@ log = CPLog(__name__)
 class NZBClub(NZBProvider, RSS):
 
     urls = {
-        'search': 'http://www.nzbclub.com/nzbfeeds.aspx?%s',
+        'search': 'https://www.nzbclub.com/nzbfeeds.aspx?%s',
     }
 
     http_time_between_calls = 4  #seconds
