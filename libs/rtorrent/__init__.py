@@ -22,8 +22,8 @@ import os.path
 import time
 import xmlrpclib
 
-from rtorrent.common import find_torrent, \
-    is_valid_port, convert_version_tuple_to_str
+from rtorrent.common import find_torrent, join_uri, \
+    update_uri, is_valid_port, convert_version_tuple_to_str
 from rtorrent.lib.torrentparser import TorrentParser
 from rtorrent.lib.xmlrpc.http import HTTPServerProxy
 from rtorrent.lib.xmlrpc.scgi import SCGIServerProxy
@@ -48,18 +48,18 @@ class RTorrent:
 
     def __init__(self, uri, username=None, password=None,
                  verify=False, sp=None, sp_kwargs=None):
-        self.uri = uri  # : From X{__init__(self, url)}
+        self.uri = self._transform_uri(uri)  # : From X{__init__(self, url)}
 
         self.username = username
         self.password = password
 
-        self.schema = urllib.splittype(uri)[0]
+        self.scheme = urllib.splittype(self.uri)[0]
 
         if sp:
             self.sp = sp
-        elif self.schema in ['http', 'https']:
+        elif self.scheme in ['http', 'https']:
             self.sp = HTTPServerProxy
-        elif self.schema == 'scgi':
+        elif self.scheme == 'scgi':
             self.sp = SCGIServerProxy
         else:
             raise NotImplementedError()
@@ -74,10 +74,23 @@ class RTorrent:
         if verify is True:
             self._verify_conn()
 
+    def _transform_uri(self, uri):
+        scheme = urllib.splittype(uri)[0]
+
+        if scheme == 'httprpc' or scheme.startswith('httprpc+'):
+            # Try find HTTPRPC transport (token after '+' in 'httprpc+https'), otherwise assume HTTP
+            transport = scheme[scheme.index('+') + 1:] if '+' in scheme else 'http'
+
+            # Transform URI with new path and scheme
+            uri = join_uri(uri, 'plugins/httprpc/action.php', construct=False)
+            return update_uri(uri, scheme=transport)
+
+        return uri
+
     def _get_conn(self):
         """Get ServerProxy instance"""
         if self.username is not None and self.password is not None:
-            if self.schema == 'scgi':
+            if self.scheme == 'scgi':
                 raise NotImplementedError()
 
             return self.sp(

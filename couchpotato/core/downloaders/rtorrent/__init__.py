@@ -31,8 +31,8 @@ config = [{
                 {
                     'name': 'host',
                     'default': 'localhost:80',
-                    'description': 'Hostname with port or XML-RPC Endpoint URI. Usually <strong>scgi://localhost:5000</strong> '
-                                   'or <strong>localhost:80</strong>'
+                    'description': 'RPC Communication URI. Usually <strong>scgi://localhost:5000</strong>, '
+                                   '<strong>httprpc://localhost/rutorrent</strong> or <strong>localhost:80</strong>'
                 },
                 {
                     'name': 'ssl',
@@ -46,7 +46,7 @@ config = [{
                     'type': 'string',
                     'default': 'RPC2',
                     'advanced': True,
-                    'description': 'Change if you don\'t run rTorrent RPC at the default url.',
+                    'description': 'Change if your RPC mount is at a different path.',
                 },
                 {
                     'name': 'username',
