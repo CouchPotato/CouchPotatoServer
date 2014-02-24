@@ -16,30 +16,7 @@ log = CPLog(__name__)
 class NZBGet(Downloader):
 
     protocol = ['nzb']
-
     rpc = 'xmlrpc'
-    testable = True
-
-    def test(self):
-        url = cleanHost(host = self.conf('host'), ssl = self.conf('ssl'), username = self.conf('username'), password = self.conf('password')) + self.rpc
-        rpc = xmlrpclib.ServerProxy(url)
-
-        try:
-            if rpc.writelog('INFO', 'CouchPotato connected to test connection'):
-                log.debug('Successfully connected to NZBGet')
-            else:
-                log.info('Successfully connected to NZBGet, but unable to send a message')
-        except socket.error:
-            log.error('NZBGet is not responding. Please ensure that NZBGet is running and host setting is correct.')
-            return False
-        except xmlrpclib.ProtocolError as e:
-            if e.errcode == 401:
-                log.error('Password is incorrect.')
-            else:
-                log.error('Protocol Error: %s', e)
-            return False
-
-        return True
 
     def download(self, data = None, media = None, filedata = None):
         if not media: media = {}
@@ -53,8 +30,7 @@ class NZBGet(Downloader):
 
         nzb_name = ss('%s.nzb' % self.createNzbName(data, media))
 
-        url = cleanHost(host = self.conf('host'), ssl = self.conf('ssl'), username = self.conf('username'), password = self.conf('password')) + self.rpc
-        rpc = xmlrpclib.ServerProxy(url)
+        rpc = self.getRPC()
 
         try:
             if rpc.writelog('INFO', 'CouchPotato connected to drop off %s.' % nzb_name):
@@ -90,12 +66,31 @@ class NZBGet(Downloader):
             log.error('NZBGet could not add %s to the queue.', nzb_name)
             return False
 
+    def test(self):
+        rpc = self.getRPC()
+
+        try:
+            if rpc.writelog('INFO', 'CouchPotato connected to test connection'):
+                log.debug('Successfully connected to NZBGet')
+            else:
+                log.info('Successfully connected to NZBGet, but unable to send a message')
+        except socket.error:
+            log.error('NZBGet is not responding. Please ensure that NZBGet is running and host setting is correct.')
+            return False
+        except xmlrpclib.ProtocolError as e:
+            if e.errcode == 401:
+                log.error('Password is incorrect.')
+            else:
+                log.error('Protocol Error: %s', e)
+            return False
+
+        return True
+
     def getAllDownloadStatus(self, ids):
 
         log.debug('Checking NZBGet download status.')
 
-        url = cleanHost(host = self.conf('host'), ssl = self.conf('ssl'), username = self.conf('username'), password = self.conf('password')) + self.rpc
-        rpc = xmlrpclib.ServerProxy(url)
+        rpc = self.getRPC()
 
         try:
             if rpc.writelog('INFO', 'CouchPotato connected to check status'):
@@ -180,8 +175,7 @@ class NZBGet(Downloader):
 
         log.info('%s failed downloading, deleting...', release_download['name'])
 
-        url = cleanHost(host = self.conf('host'), ssl = self.conf('ssl'), username = self.conf('username'), password = self.conf('password')) + self.rpc
-        rpc = xmlrpclib.ServerProxy(url)
+        rpc = self.getRPC()
 
         try:
             if rpc.writelog('INFO', 'CouchPotato connected to delete some history'):
@@ -216,3 +210,7 @@ class NZBGet(Downloader):
             return False
 
         return True
+
+    def getRPC(self):
+        url = cleanHost(host = self.conf('host'), ssl = self.conf('ssl'), username = self.conf('username'), password = self.conf('password')) + self.rpc
+        return xmlrpclib.ServerProxy(url)

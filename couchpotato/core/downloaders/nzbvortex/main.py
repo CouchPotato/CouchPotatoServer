@@ -24,15 +24,6 @@ class NZBVortex(Downloader):
     protocol = ['nzb']
     api_level = None
     session_id = None
-    testable = True
-
-    def test(self):
-        try:
-            login_result = self.login()
-        except:
-            return False
-
-        return login_result
 
     def download(self, data = None, media = None, filedata = None):
         if not media: media = {}
@@ -50,6 +41,14 @@ class NZBVortex(Downloader):
         except:
             log.error('Something went wrong sending the NZB file: %s', traceback.format_exc())
             return False
+
+    def test(self):
+        try:
+            login_result = self.login()
+        except:
+            return False
+
+        return login_result
 
     def getAllDownloadStatus(self, ids):
 

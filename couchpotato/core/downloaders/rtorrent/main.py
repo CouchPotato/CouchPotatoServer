@@ -19,7 +19,6 @@ class rTorrent(Downloader):
 
     protocol = ['torrent', 'torrent_magnet']
     rt = None
-    testable = True
     error_msg = ''
 
     # Migration url to host options
@@ -49,7 +48,7 @@ class rTorrent(Downloader):
         self.rt = None
         return True
 
-    def connect(self):
+    def connect(self, reconnect = False):
         # Already connected?
         if not reconnect and self.rt is not None:
             return self.rt

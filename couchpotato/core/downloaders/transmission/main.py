@@ -18,7 +18,6 @@ class Transmission(Downloader):
     protocol = ['torrent', 'torrent_magnet']
     log = CPLog(__name__)
     trpc = None
-    testable = True
 
     def connect(self, reconnect = False):
         # Load host from config and split out port.
@@ -31,11 +30,6 @@ class Transmission(Downloader):
             self.trpc = TransmissionRPC(host[0], port = host[1], rpc_url = self.conf('rpc_url').strip('/ '), username = self.conf('username'), password = self.conf('password'))
 
         return self.trpc
-
-    def test(self):
-        if self.connect(True) and self.trpc.get_session():
-            return True
-        return False
 
     def download(self, data = None, media = None, filedata = None):
         if not media: media = {}
@@ -88,6 +82,11 @@ class Transmission(Downloader):
 
         log.info('Torrent sent to Transmission successfully.')
         return self.downloadReturnId(remote_torrent['torrent-added']['hashString'])
+
+    def test(self):
+        if self.connect(True) and self.trpc.get_session():
+            return True
+        return False
 
     def getAllDownloadStatus(self, ids):
 

@@ -27,48 +27,41 @@ var DownloadersBase = new Class({
 
 		if(button_name.contains('Downloaders')) return;
 
-		Api.request('download.'+plugin_name+'.is_testable',  {
-			'onComplete': function(json){
-                if(json.success){
-                    // Only add test button if downloader is testable
-                    new Element('.ctrlHolder.test_button').adopt(
-                        new Element('a.button', {
-                            'text': button_name,
-                            'events': {
-                                'click': function(){
-                                    var button = fieldset.getElement('.test_button .button');
-                                        button.set('text', 'Connecting...');
+		new Element('.ctrlHolder.test_button').adopt(
+			new Element('a.button', {
+				'text': button_name,
+				'events': {
+					'click': function(){
+						var button = fieldset.getElement('.test_button .button');
+							button.set('text', 'Connecting...');
 
-                                    Api.request('download.'+plugin_name+'.test', {
-                                        'onComplete': function(json){
+						Api.request('download.'+plugin_name+'.test', {
+							'onComplete': function(json){
 
-                                            button.set('text', button_name);
+								button.set('text', button_name);
 
-                                            if(json.success){
-                                                var message = new Element('span.success', {
-                                                    'text': 'Connection successful'
-                                                }).inject(button, 'after')
-                                            }
-                                            else {
-                                                var msg_text = 'Connection failed. Check logs for details.';
-                                                if(json.hasOwnProperty('msg')) msg_text = json.msg;
-                                                var message = new Element('span.failed', {
-                                                    'text': msg_text
-                                                }).inject(button, 'after')
-                                            }
+								if(json.success){
+									var message = new Element('span.success', {
+										'text': 'Connection successful'
+									}).inject(button, 'after')
+								}
+								else {
+									var msg_text = 'Connection failed. Check logs for details.';
+									if(json.hasOwnProperty('msg')) msg_text = json.msg;
+									var message = new Element('span.failed', {
+										'text': msg_text
+									}).inject(button, 'after')
+								}
 
-                                            (function(){
-                                                message.destroy();
-                                            }).delay(3000)
-                                        }
-                                    });
-                                }
-                            }
-                        })
-                    ).inject(fieldset);
-                }
-			}
-		});
+								(function(){
+									message.destroy();
+								}).delay(3000)
+							}
+						});
+					}
+				}
+			})
+		).inject(fieldset);
 
 	},
 

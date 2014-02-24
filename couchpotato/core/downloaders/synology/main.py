@@ -13,17 +13,6 @@ class Synology(Downloader):
 
     protocol = ['nzb', 'torrent', 'torrent_magnet']
     status_support = False
-    testable = True
-
-    def test(self):
-        host = cleanHost(self.conf('host'), protocol = False).split(':')
-        try:
-            srpc = SynologyRPC(host[0], host[1], self.conf('username'), self.conf('password'))
-            test_result = srpc.test()
-        except:
-            return False
-
-        return test_result
 
     def download(self, data = None, media = None, filedata = None):
         if not media: media = {}
@@ -55,6 +44,16 @@ class Synology(Downloader):
             log.error('Exception while adding torrent: %s', traceback.format_exc())
         finally:
             return self.downloadReturnId('') if response else False
+
+    def test(self):
+        host = cleanHost(self.conf('host'), protocol = False).split(':')
+        try:
+            srpc = SynologyRPC(host[0], host[1], self.conf('username'), self.conf('password'))
+            test_result = srpc.test()
+        except:
+            return False
+
+        return test_result
 
     def getEnabledProtocol(self):
         if self.conf('use_for') == 'both':
