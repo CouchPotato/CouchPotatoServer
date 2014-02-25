@@ -36,11 +36,19 @@ class NZBVortex(Downloader):
 
             time.sleep(10)
             raw_statuses = self.call('nzb')
-            nzb_id = [nzb['id'] for nzb in raw_statuses.get('nzbs', []) if os.path.basename(item['nzbFileName']) == nzb_filename][0]
+            nzb_id = [nzb['id'] for nzb in raw_statuses.get('nzbs', []) if os.path.basename(nzb['nzbFileName']) == nzb_filename][0]
             return self.downloadReturnId(nzb_id)
         except:
             log.error('Something went wrong sending the NZB file: %s', traceback.format_exc())
             return False
+
+    def test(self):
+        try:
+            login_result = self.login()
+        except:
+            return False
+
+        return login_result
 
     def getAllDownloadStatus(self, ids):
 

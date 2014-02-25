@@ -1,14 +1,15 @@
-from base64 import b16encode, b32decode
-from bencode import bencode, bdecode
 from couchpotato.core.downloaders.base import Downloader, ReleaseDownloadList
 from couchpotato.core.event import fireEvent, addEvent
 from couchpotato.core.helpers.encoding import sp
 from couchpotato.core.helpers.variable import cleanHost, splitString
 from couchpotato.core.logger import CPLog
+from base64 import b16encode, b32decode
+from bencode import bencode, bdecode
 from datetime import timedelta
 from hashlib import sha1
 from rtorrent import RTorrent
 from rtorrent.err import MethodError
+from urlparse import urlparse
 import os
 
 log = CPLog(__name__)
@@ -18,12 +19,14 @@ class rTorrent(Downloader):
 
     protocol = ['torrent', 'torrent_magnet']
     rt = None
+    error_msg = ''
 
     # Migration url to host options
     def __init__(self):
         super(rTorrent, self).__init__()
 
         addEvent('app.load', self.migrate)
+        addEvent('setting.save.rtorrent.*.after', self.settingsChanged)
 
     def migrate(self):
 
@@ -37,12 +40,25 @@ class rTorrent(Downloader):
 
             self.deleteConf('url')
 
-    def connect(self):
+    def settingsChanged(self):
+        # Reset active connection if settings have changed
+        if self.rt:
+            log.debug('Settings have changed, closing active connection')
+
+        self.rt = None
+        return True
+
+    def connect(self, reconnect = False):
         # Already connected?
-        if self.rt is not None:
+        if not reconnect and self.rt is not None:
             return self.rt
 
-        url = cleanHost(self.conf('host'), protocol = True, ssl = self.conf('ssl')) + self.conf('rpc_url')
+        url = cleanHost(self.conf('host'), protocol = True, ssl = self.conf('ssl'))
+        parsed = urlparse(url)
+
+        # rpc_url is only used on http/https scgi pass-through
+        if parsed.scheme in ['http', 'https']:
+            url += self.conf('rpc_url')
 
         if self.conf('username') and self.conf('password'):
             self.rt = RTorrent(
@@ -53,7 +69,23 @@ class rTorrent(Downloader):
         else:
             self.rt = RTorrent(url)
 
+        self.error_msg = ''
+        try:
+             self.rt._verify_conn()
+        except AssertionError as e:
+             self.error_msg = e.message
+             self.rt = None
+
         return self.rt
+
+    def test(self):
+        if self.connect(True):
+            return True
+
+        if self.error_msg:
+            return False, 'Connection failed: ' + self.error_msg
+
+        return False
 
     def _update_provider_group(self, name, data):
         if data.get('seed_time'):
@@ -104,7 +136,7 @@ class rTorrent(Downloader):
             return False
 
         group_name = 'cp_' + data.get('provider').lower()
-        if not self._update_provider_group(group_name, data):
+        if not self.updateProviderGroup(group_name, data):
             return False
 
         torrent_params = {}
@@ -159,6 +191,21 @@ class rTorrent(Downloader):
             log.error('Failed to send torrent to rTorrent: %s', err)
             return False
 
+    def getTorrentStatus(self, torrent):
+        if torrent.hashing or torrent.hash_checking or torrent.message:
+            return 'busy'
+
+        if not torrent.complete:
+            return 'busy'
+
+        if not torrent.open:
+            return 'completed'
+
+        if torrent.state and torrent.active:
+            return 'seeding'
+
+        return 'busy'
+
     def getAllDownloadStatus(self, ids):
         log.debug('Checking rTorrent download status.')
 
@@ -183,17 +230,10 @@ class rTorrent(Downloader):
 
                         torrent_files.append(sp(file_path))
 
-                    status = 'busy'
-                    if torrent.complete:
-                        if torrent.active:
-                            status = 'seeding'
-                        else:
-                            status = 'completed'
-
                     release_downloads.append({
                         'id': torrent.info_hash,
                         'name': torrent.name,
-                        'status': status,
+                        'status': self.getTorrentStatus(torrent),
                         'seed_ratio': torrent.ratio,
                         'original_status': torrent.state,
                         'timeleft': str(timedelta(seconds = float(torrent.left_bytes) / torrent.down_rate)) if torrent.down_rate > 0 else -1,

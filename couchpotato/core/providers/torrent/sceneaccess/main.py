@@ -15,7 +15,7 @@ class SceneAccess(TorrentProvider):
         'login': 'https://www.sceneaccess.eu/login',
         'login_check': 'https://www.sceneaccess.eu/inbox',
         'detail': 'https://www.sceneaccess.eu/details?id=%s',
-        'search': 'https://www.sceneaccess.eu/browse?method=2&c%d=%d',
+        'search': 'https://www.sceneaccess.eu/browse?c%d=%d',
         'download': 'https://www.sceneaccess.eu/%s',
     }
 
@@ -40,7 +40,7 @@ class SceneAccess(TorrentProvider):
 
         arguments = tryUrlencode({
             'search': movie['library']['identifier'],
-            'method': 1,
+            'method': 3,
         })
         url = "%s&%s" % (url, arguments)
 

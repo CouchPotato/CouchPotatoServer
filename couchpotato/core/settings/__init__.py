@@ -200,6 +200,7 @@ class Settings(object):
 
         # After save (for re-interval etc)
         fireEvent('setting.save.%s.%s.after' % (section, option), single = True)
+        fireEvent('setting.save.%s.*.after' % section, single = True)
 
         return {
             'success': True,
