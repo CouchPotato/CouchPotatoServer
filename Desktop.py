@@ -166,8 +166,8 @@ class CouchPotatoApp(wx.App, SoftwareUpdate):
     def OnInit(self):
 
         # Updater
-        base_url = 'https://couchpota.to/updates/%s'
-        self.InitUpdates(base_url % VERSION + '/', base_url % 'changelog.html',
+        base_url = 'https://api.couchpota.to/updates/%s'
+        self.InitUpdates(base_url % VERSION + '/', 'https://couchpota.to/updates/%s' % 'changelog.html',
                          icon = wx.Icon('icon.png'))
 
         self.frame = MainFrame(self)
