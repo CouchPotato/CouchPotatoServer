@@ -296,23 +296,18 @@ class Scanner(Plugin):
                 if not os.path.isfile(cur_file):
                     file_too_new = time.time()
                     break
-                file_time = [os.path.getmtime(cur_file), os.path.getctime(cur_file)]
-                for t in file_time:
-                    if t > time.time() - 60:
-                        file_too_new = tryInt(time.time() - t)
-                        break
+                file_time = os.path.getmtime(cur_file)
+                if file_time > time.time() - 60:
+                    file_too_new = tryInt(time.time() - file_time)
 
                 if file_too_new:
                     break
 
             if check_file_date and file_too_new:
                 try:
-                    time_string = time.ctime(file_time[0])
+                    time_string = time.ctime(file_time)
                 except:
-                    try:
-                        time_string = time.ctime(file_time[1])
-                    except:
-                        time_string = 'unknown'
+                    time_string = 'unknown'
 
                 log.info('Files seem to be still unpacking or just unpacked (created on %s), ignoring for now: %s', (time_string, identifier))
 
