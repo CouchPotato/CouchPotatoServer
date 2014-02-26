@@ -316,6 +316,8 @@ class QualityPlugin(Plugin):
             'Movie.Name.1999.DVD-Rip-Group': 'dvdrip',
             'Movie.Name.1999.DVD-R-Group': 'dvdr',
             'Movie.Name.Camelie.1999.720p.BluRay.x264-Group': '720p',
+            'Movie.Name.2008.German.DL.AC3.1080p.BluRay.x264-Group': '1080p',
+            'Movie.Name.2004.GERMAN.AC3D.DL.1080p.BluRay.x264-Group': '1080p',
         }
 
         correct = 0
