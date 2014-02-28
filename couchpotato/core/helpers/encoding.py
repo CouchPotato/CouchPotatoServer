@@ -11,7 +11,7 @@ log = CPLog(__name__)
 
 
 def toSafeString(original):
-    valid_chars = "-_.() %s%s" % (ascii_letters, digits)
+    valid_chars = "-_.(){} %s%s" % (ascii_letters, digits)
     cleaned_filename = unicodedata.normalize('NFKD', toUnicode(original)).encode('ASCII', 'ignore')
     valid_string = ''.join(c for c in cleaned_filename if c in valid_chars)
     return ' '.join(valid_string.split())
