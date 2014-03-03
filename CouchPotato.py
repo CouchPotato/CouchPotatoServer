@@ -136,7 +136,7 @@ if __name__ == '__main__':
     except socket.error as e:
         # log when socket receives SIGINT, but continue.
         # previous code would have skipped over other types of IO errors too.
-        if nr != 4:
+        if e != 4:
             try:
                 l.log.critical(traceback.format_exc())
             except:
