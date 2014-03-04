@@ -53,7 +53,7 @@ class MovieBase(MovieTypeBase):
             log.error(msg)
             fireEvent('notify.frontend', type = 'movie.is_tvshow', message = msg)
             return False
-        else:
+        elif not params.get('info'):
             try:
                 is_movie = fireEvent('movie.is_movie', identifier = params.get('identifier'), single = True)
                 if not is_movie:
@@ -64,7 +64,9 @@ class MovieBase(MovieTypeBase):
             except:
                 pass
 
-        info = fireEvent('movie.info', merge = True, extended = False, identifier = params.get('identifier'))
+        info = params.get('info')
+        if not info:
+            info = fireEvent('movie.info', merge = True, extended = False, identifier = params.get('identifier'))
 
         # Set default title
         default_title = toUnicode(info.get('title'))

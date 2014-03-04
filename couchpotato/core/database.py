@@ -4,7 +4,7 @@ import time
 import traceback
 from couchpotato import CPLog
 from couchpotato.api import addApiView
-from couchpotato.core.event import addEvent
+from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import toUnicode
 
 log = CPLog(__name__)
@@ -129,8 +129,10 @@ class Database(object):
                 'profiletype': ['id', 'order', 'finish', 'wait_for', 'quality_id', 'profile_id'],
                 'quality': ['id', 'identifier', 'order', 'size_min', 'size_max'],
                 'movie': ['id', 'last_edit', 'library_id', 'status_id', 'profile_id', 'category_id'],
-                'library': ['id', 'identifier'],
+                'library': ['id', 'identifier', 'info'],
+                'librarytitle': ['id', 'title', 'default', 'libraries_id'],
                 'release': ['id', 'identifier', 'movie_id', 'status_id', 'quality_id', 'last_edit'],
+                'releaseinfo': ['id', 'identifier', 'value', 'release_id'],
                 'status': ['id', 'identifier'],
                 'properties': ['id', 'identifier', 'value'],
             }
@@ -150,7 +152,7 @@ class Database(object):
             db = self.getDB()
 
             # Categories
-            categories = migrate_data['category']
+            categories = migrate_data.get('category', [])
             category_link = {}
             for x in categories:
                 continue
@@ -212,8 +214,88 @@ class Database(object):
                             new_profile['finish'].append(p_type['finish'])
                             new_profile['wait_for'].append(p_type['wait_for'])
                             new_profile['qualities'].append(migrate_data['quality'][p_type['quality_id']]['identifier'])
-                    print new_profile
 
                     new_profile.update(db.insert(new_profile))
 
                     profile_link[x] = new_profile.get('_id')
+
+            # Qualities
+            new_qualities = db.all('quality', with_doc = True)
+            new_qualities_by_identifier = {}
+            for x in new_qualities:
+                new_qualities_by_identifier[x['doc']['identifier']] = x['_id']
+
+            qualities = migrate_data['quality']
+            quality_link = {}
+            for x in qualities:
+                q = qualities[x]
+                q_id = new_qualities_by_identifier[q.get('identifier')]
+
+                quality = db.get('id', q_id)
+                quality['order'] = q.get('order')
+                quality['size_min'] = q.get('size_min')
+                quality['size_max'] = q.get('size_max')
+                db.update(quality)
+
+                quality_link[x] = quality
+
+            # Titles
+            titles = migrate_data['librarytitle']
+            titles_by_library = {}
+            for x in titles:
+                title = titles[x]
+                if title.get('default'):
+                    titles_by_library[title.get('libraries_id')] = title.get('title')
+
+            # Releases
+            releaseinfos = migrate_data['releaseinfo']
+            for x in releaseinfos:
+                info = releaseinfos[x]
+                if not migrate_data['release'][info.get('release_id')].get('info'):
+                    migrate_data['release'][info.get('release_id')]['info'] = {}
+
+                migrate_data['release'][info.get('release_id')]['info'][info.get('identifier')] = info.get('value')
+
+            releases = migrate_data['release']
+            releases_by_media = {}
+            for x in releases:
+                release = releases[x]
+                if not releases_by_media.get(release.get('movie_id')):
+                    releases_by_media[release.get('movie_id')] = []
+
+                releases_by_media[release.get('movie_id')].append(release)
+
+            # Media
+            statuses = migrate_data['status']
+            libraries = migrate_data['library']
+            medias = migrate_data['movie']
+            media_link = {}
+            for x in medias:
+                m = medias[x]
+
+                status = statuses.get(m['status_id']).get('identifier')
+                if status != 'active': continue
+
+                l = libraries[m['library_id']]
+                profile_id = profile_link.get(m['profile_id'])
+                category_id = category_link.get(m['category_id'])
+                title = titles_by_library.get(m['library_id'])
+                releases = releases_by_media.get(x, [])
+
+                added_media = fireEvent('movie.add', {
+                    'info': json.loads(l.get('info', '')),
+                    'identifier': l.get('identifier'),
+                    'profile_id': profile_id,
+                    'category_id': category_id,
+                    'title': title
+                }, force_readd = False, search_after = False, status = status, single = True)
+
+                for rel in releases:
+                    if not rel.get('info'): continue
+
+                    quality = quality_link[rel.get('quality_id')]
+                    added_rel = fireEvent('release.create_from_search', [rel['info']], added_media, quality, single = True)
+
+                    # Update status
+                    added_id = db.get('release_identifier', added_rel[0])
+                    fireEvent('release.update_status', added_id.get('_id'), statuses[rel.get('status_id')].get('identifier'))
