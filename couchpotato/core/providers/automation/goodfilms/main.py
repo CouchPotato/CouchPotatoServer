@@ -7,7 +7,7 @@ log = CPLog(__name__)
 
 class Goodfilms(Automation):
 
-    url = 'http://goodfil.ms/%s/queue?page=%d&without_layout=1'
+    url = 'https://goodfil.ms/%s/queue?page=%d&without_layout=1'
 
     interval = 1800
 
