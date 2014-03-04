@@ -295,3 +295,20 @@ def dictIsSubset(a, b):
 def isSubFolder(sub_folder, base_folder):
     # Returns True if sub_folder is the same as or inside base_folder
     return base_folder and sub_folder and ss(os.path.normpath(base_folder).rstrip(os.path.sep) + os.path.sep) in ss(os.path.normpath(sub_folder).rstrip(os.path.sep) + os.path.sep)
+
+RE_PASSWORD1 = re.compile(r'([^/\\]+)[/\\](.+)')
+RE_PASSWORD2 = re.compile(r'(.+){{([^{}]+)}}$')
+RE_PASSWORD3 = re.compile(r'(.+)\s+password\s*=\s*(.+)$', re.I)
+def scanPassword(name):
+    if 'http://' in name or 'https://' in name:
+        return name, None
+
+    m = RE_PASSWORD1.search(name)
+    if not m:
+        m = RE_PASSWORD2.search(name)
+    if not m:
+        m = RE_PASSWORD3.search(name)
+    if m:
+        return m.group(1).strip('. '), m.group(2).strip()
+    else:
+        return name.strip('. '), None

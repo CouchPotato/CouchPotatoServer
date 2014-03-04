@@ -1,7 +1,7 @@
 from couchpotato.core.event import fireEvent, addEvent
 from couchpotato.core.helpers.encoding import ss, toSafeString, \
     toUnicode, sp
-from couchpotato.core.helpers.variable import getExt, md5, isLocalIP
+from couchpotato.core.helpers.variable import getExt, md5, isLocalIP, scanPassword
 from couchpotato.core.logger import CPLog
 from couchpotato.environment import Env
 import requests
@@ -284,7 +284,11 @@ class Plugin(object):
 
     def createNzbName(self, data, media):
         tag = self.cpTag(media)
-        return '%s%s' % (tag, toSafeString(toUnicode(data.get('name'))[:127 - len(tag)]))
+        split_string = scanPassword(data.get('name'))
+        if split_string[1] != None:
+            return '%s%s{{%s}}' % (toSafeString(toUnicode(split_string[0])[:123 - len(tag) - len(split_string[1])]), tag, split_string[1])
+        else:
+            return '%s%s' % (toSafeString(toUnicode(data.get('name'))[:127 - len(tag)]), tag)
 
     def createFileName(self, data, filedata, media):
         name = sp(os.path.join(self.createNzbName(data, media)))
