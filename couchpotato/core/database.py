@@ -167,9 +167,8 @@ class Database(object):
             categories = migrate_data.get('category', [])
             category_link = {}
             for x in categories:
-                continue
-
                 c = categories[x]
+                
                 new_c = db.insert({
                     '_t': 'category',
                     'order': c.get('order', 999),
@@ -329,8 +328,8 @@ class Database(object):
                     quality = quality_link[rel.get('quality_id')]
 
                     # Add status to keys
-                    rel['info']['status'] = status
-                    added_rel_identifiers = fireEvent('release.create_from_search', [rel['info']], added_media, quality, single = True)
+                    rel['info']['status'] = statuses.get(rel.get('status_id')).get('identifier')
+                    fireEvent('release.create_from_search', [rel['info']], added_media, quality, single = True)
 
         # rename old database
         os.rename(old_db, old_db + '.old')
