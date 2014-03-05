@@ -111,6 +111,7 @@ class Database(object):
         return results
 
     def migrate(self):
+
         time.sleep(1)
 
         from couchpotato import Env
@@ -131,10 +132,13 @@ class Database(object):
                 'movie': ['id', 'last_edit', 'library_id', 'status_id', 'profile_id', 'category_id'],
                 'library': ['id', 'identifier', 'info'],
                 'librarytitle': ['id', 'title', 'default', 'libraries_id'],
+                'library_files__file_library': ['library_id', 'file_id'],
                 'release': ['id', 'identifier', 'movie_id', 'status_id', 'quality_id', 'last_edit'],
                 'releaseinfo': ['id', 'identifier', 'value', 'release_id'],
                 'status': ['id', 'identifier'],
                 'properties': ['id', 'identifier', 'value'],
+                'file': ['id', 'path', 'type_id'],
+                'filetype': ['identifier', 'id']
             }
 
             migrate_data = {}
@@ -147,7 +151,13 @@ class Database(object):
                     columns = {}
                     for row in migrate_list[ml]:
                         columns[row] = p[rows.index(row)]
-                    migrate_data[ml][p[0]] = columns
+
+                    if not migrate_data[ml].get(p[0]):
+                        migrate_data[ml][p[0]] = columns
+                    else:
+                        if not isinstance(migrate_data[ml][p[0]], list):
+                            migrate_data[ml][p[0]] = [migrate_data[ml][p[0]]]
+                        migrate_data[ml][p[0]].append(columns)
 
             db = self.getDB()
 
@@ -268,12 +278,17 @@ class Database(object):
             # Media
             statuses = migrate_data['status']
             libraries = migrate_data['library']
+            library_files = migrate_data['library_files__file_library']
+            all_files = migrate_data['file']
+            poster_type = migrate_data['filetype']['poster']
             medias = migrate_data['movie']
             media_link = {}
             for x in medias:
                 m = medias[x]
 
                 status = statuses.get(m['status_id']).get('identifier')
+
+                # Only migrate wanted movies
                 if status != 'active': continue
 
                 l = libraries[m['library_id']]
@@ -281,6 +296,9 @@ class Database(object):
                 category_id = category_link.get(m['category_id'])
                 title = titles_by_library.get(m['library_id'])
                 releases = releases_by_media.get(x, [])
+                files = library_files.get(m['library_id'], [])
+                if not isinstance(files, list):
+                    files = [files]
 
                 added_media = fireEvent('movie.add', {
                     'info': json.loads(l.get('info', '')),
@@ -290,6 +308,17 @@ class Database(object):
                     'title': title
                 }, force_readd = False, search_after = False, status = status, single = True)
 
+                for f in files:
+                    file = all_files[f.get('file_id')]
+
+                    # Only migrate posters
+                    if file.get('type_id') == poster_type.get('id'):
+                        if not added_media['files'].get('image_poster'):
+                            added_media['files']['image_poster'] = []
+                        if file.get('path') not in added_media['files']['image_poster']:
+                            added_media['files']['image_poster'].append(file.get('path'))
+                db.update(added_media)
+
                 for rel in releases:
                     if not rel.get('info'): continue
 
@@ -297,5 +326,18 @@ class Database(object):
                     added_rel = fireEvent('release.create_from_search', [rel['info']], added_media, quality, single = True)
 
                     # Update status
-                    added_id = db.get('release_identifier', added_rel[0])
-                    fireEvent('release.update_status', added_id.get('_id'), statuses[rel.get('status_id')].get('identifier'))
+                    added_rel['status'] = status
+                    added_rel['last_edit'] = int(time.time())
+                    db.update(added_rel)
+
+                break
+
+        return
+
+        # rename old database
+        os.rename(old_db, old_db + '.old')
+
+        if os.path.isfile(old_db + '-wal'):
+            os.rename(old_db + '-wal', old_db + '-wal.old')
+        if os.path.isfile(old_db + '-shm'):
+            os.rename(old_db + '-shm', old_db + '-shm.old')
