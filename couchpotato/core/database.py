@@ -6,6 +6,7 @@ from couchpotato import CPLog
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import toUnicode
+from couchpotato.core.helpers.variable import getImdb
 
 log = CPLog(__name__)
 
@@ -112,10 +113,11 @@ class Database(object):
 
     def migrate(self):
 
-        time.sleep(1)
-
         from couchpotato import Env
         old_db = os.path.join(Env.get('data_dir'), 'couchpotato.db')
+        if not os.path.isfile(old_db): return
+
+        time.sleep(1)
 
         if os.path.isfile(old_db):
 
@@ -282,31 +284,33 @@ class Database(object):
             all_files = migrate_data['file']
             poster_type = migrate_data['filetype']['poster']
             medias = migrate_data['movie']
-            media_link = {}
             for x in medias:
                 m = medias[x]
 
                 status = statuses.get(m['status_id']).get('identifier')
-
-                # Only migrate wanted movies
-                if status != 'active': continue
-
                 l = libraries[m['library_id']]
+
+                # Only migrate wanted movies, Skip if no identifier present
+                if status != 'active' or not getImdb(l.get('identifier')): continue
+
                 profile_id = profile_link.get(m['profile_id'])
                 category_id = category_link.get(m['category_id'])
                 title = titles_by_library.get(m['library_id'])
                 releases = releases_by_media.get(x, [])
+                info = json.loads(l.get('info', ''))
+
                 files = library_files.get(m['library_id'], [])
                 if not isinstance(files, list):
                     files = [files]
 
                 added_media = fireEvent('movie.add', {
-                    'info': json.loads(l.get('info', '')),
+                    'info': info,
                     'identifier': l.get('identifier'),
                     'profile_id': profile_id,
                     'category_id': category_id,
                     'title': title
-                }, force_readd = False, search_after = False, status = status, single = True)
+                },  force_readd = False, search_after = False, update_after = False, notify_after = False, status = status, single = True)
+                added_media['files'] = added_media.get('files', {})
 
                 for f in files:
                     file = all_files[f.get('file_id')]
@@ -323,16 +327,10 @@ class Database(object):
                     if not rel.get('info'): continue
 
                     quality = quality_link[rel.get('quality_id')]
-                    added_rel = fireEvent('release.create_from_search', [rel['info']], added_media, quality, single = True)
 
-                    # Update status
-                    added_rel['status'] = status
-                    added_rel['last_edit'] = int(time.time())
-                    db.update(added_rel)
-
-                break
-
-        return
+                    # Add status to keys
+                    rel['info']['status'] = status
+                    added_rel_identifiers = fireEvent('release.create_from_search', [rel['info']], added_media, quality, single = True)
 
         # rename old database
         os.rename(old_db, old_db + '.old')
