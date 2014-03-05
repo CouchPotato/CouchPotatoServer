@@ -16,8 +16,8 @@ class MediaPlugin(MediaBase):
 
     _database = {
         'media': MediaIMDBIndex,
-        'media_search_title': MediaStatusIndex,
-        'media_status': MediaTypeIndex,
+        'media_search_title': TitleSearchIndex,
+        'media_status': MediaStatusIndex,
         'media_by_type': MediaTypeIndex,
         'media_title': TitleIndex,
         'media_startswith': StartsWithIndex,
@@ -163,7 +163,7 @@ class MediaPlugin(MediaBase):
         else:
             all_media_ids = set([x['_id'] for x in db.all('media')])
 
-        media_ids = all_media_ids
+        media_ids = list(all_media_ids)
         filter_by = {}
 
         # Filter on movie status
