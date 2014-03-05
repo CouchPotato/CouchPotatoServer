@@ -42,10 +42,11 @@ class ProfilePlugin(Plugin):
             medias = db.run('media', 'with_status', ['active'])
 
             profile_ids = [x.get('_id') for x in self.all()]
+            default_id = profile_ids[0]
 
             for media in medias:
                 if media.get('profile_id') not in profile_ids:
-                    media['profile_id'] = profile_ids[0].get('_id')
+                    media['profile_id'] = default_id
                     db.update(media)
         except:
             log.error('Failed: %s', traceback.format_exc())
