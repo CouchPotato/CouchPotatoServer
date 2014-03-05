@@ -3,7 +3,7 @@ from couchpotato import get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, fireEventAsync, addEvent
 from couchpotato.core.helpers.encoding import toUnicode
-from couchpotato.core.helpers.variable import splitString, tryInt, getTitle
+from couchpotato.core.helpers.variable import splitString, getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media.movie import MovieTypeBase
 import time
@@ -45,7 +45,7 @@ class MovieBase(MovieTypeBase):
         addEvent('movie.update_info', self.updateInfo)
         addEvent('movie.update_release_dates', self.updateReleaseDate)
 
-    def add(self, params = None, force_readd = True, search_after = True, status = None):
+    def add(self, params = None, force_readd = True, search_after = True, update_after = True, notify_after = True, status = None):
         if not params: params = {}
 
         if not params.get('identifier'):
@@ -150,7 +150,8 @@ class MovieBase(MovieTypeBase):
                 db.update(m)
 
                 # Do full update to get images etc
-                fireEventAsync('movie.update_info', m['_id'], default_title = params.get('title'), on_complete = onComplete)
+                if update_after:
+                    fireEventAsync('movie.update_info', m['_id'], default_title = params.get('title'), on_complete = onComplete)
 
             # Remove releases
             for rel in db.run('release', 'for_media', m['_id']):
@@ -163,7 +164,8 @@ class MovieBase(MovieTypeBase):
                 onComplete = self.createOnComplete(m['_id'])
                 onComplete()
 
-            if added:
+            if added and notify_after:
+
                 if params.get('title'):
                     message = 'Successfully added "%s" to your wanted list.' % params.get('title', '')
                 else:
