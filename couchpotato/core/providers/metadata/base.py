@@ -89,19 +89,12 @@ class MetaDataBase(Plugin):
     def getThumbnail(self, movie_info = None, data = None, wanted_file_type = 'poster_original'):
         if not data: data = {}
         if not movie_info: movie_info = {}
-        file_types = fireEvent('file.types', single = True)
-        file_type = {}
-
-        for ft in file_types:
-            # TODO: change type to "image_"+wanted_file_type
-            if ft.get('identifier') == wanted_file_type:
-                file_type = ft
-                break
 
         # See if it is in current files
-        for cur_file in data.get('files', []):
-            if cur_file.get('type_id') is file_type.get('id') and os.path.isfile(cur_file.get('path')):
-                return cur_file.get('path')
+        files = data.get('files', {})
+        if files.get('image_'+wanted_file_type):
+            if os.path.isfile(files['image_'+wanted_file_type][0]):
+                return files['image_'+wanted_file_type][0]
 
         # Download using existing info
         try:
