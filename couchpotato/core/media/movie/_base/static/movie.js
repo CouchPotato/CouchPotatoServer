@@ -158,7 +158,7 @@ var Movie = new Class({
 			}),
 			self.thumbnail = (self.data.files && self.data.files.image_poster) ? new Element('img', {
 				'class': 'type_image poster',
-				'src': Api.createUrl('file.cache') + (self.data.files || {})['image_poster'][0]
+				'src': Api.createUrl('file.cache') + self.data.files.image_poster[0].split(Api.getOption('path_sep')).pop()
 			}): null,
 			self.data_container = new Element('div.data.inlay.light').adopt(
 				self.info_container = new Element('div.info').adopt(
