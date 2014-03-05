@@ -349,7 +349,7 @@ class Release(Plugin):
                     'identifier': rel_identifier,
                     'media_id': media.get('_id'),
                     'quality': quality.get('identifier'),
-                    'status': 'available',
+                    'status': rel.get('status', 'available'),
                     'last_edit': int(time.time()),
                     'info': {}
                 }
