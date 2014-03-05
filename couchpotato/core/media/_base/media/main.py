@@ -18,7 +18,7 @@ class MediaPlugin(MediaBase):
         'media': MediaIMDBIndex,
         'media_search_title': MediaStatusIndex,
         'media_status': MediaTypeIndex,
-        'media_by_type': TitleSearchIndex,
+        'media_by_type': MediaTypeIndex,
         'media_title': TitleIndex,
         'media_startswith': StartsWithIndex,
     }
