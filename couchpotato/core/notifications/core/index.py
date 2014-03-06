@@ -17,10 +17,7 @@ import time"""
 
     def make_key_value(self, data):
         if data.get('_t') == 'notification':
-            added = data.get('added', time.time())
-            data['added'] = added
-
-            return added, None
+            return data.get('time'), None
 
 
 class NotificationUnreadIndex(TreeBasedIndex):
@@ -38,7 +35,4 @@ import time"""
 
     def make_key_value(self, data):
         if data.get('_t') == 'notification' and not data.get('read'):
-            added = data.get('added', time.time())
-            data['added'] = added
-
-            return added, None
+            return data.get('time'), None
