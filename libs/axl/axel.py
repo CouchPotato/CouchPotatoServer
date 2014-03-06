@@ -11,7 +11,7 @@
 # Source: http://pypi.python.org/pypi/axel
 # Docs:   http://packages.python.org/axel
 
-from couchpotato.core.helpers.variable import natcmp
+from couchpotato.core.helpers.variable import natsortKey
 import Queue
 import hashlib
 import sys
@@ -158,7 +158,10 @@ class Event(object):
                 t.daemon = True
                 t.start()
 
-            for handler in sorted(self.handlers.iterkeys(), cmp = natcmp):
+            handler_keys = self.handlers.keys()
+            handler_keys.sort(key = natsortKey)
+
+            for handler in handler_keys:
                 self.queue.put(handler)
 
                 if self.asynchronous:
