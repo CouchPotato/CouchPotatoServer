@@ -214,16 +214,9 @@ def tryFloat(s):
             return float(s)
     except: return 0
 
-
-def natsortKey(s):
-    return map(tryInt, re.findall(r'(\d+|\D+)', s))
-
-
-def natcmp(a, b):
-    a2 = natsortKey(a)
-    b2 = natsortKey(b)
-
-    return (a2 > b2) - (a2 < b2)
+def natsortKey(string_):
+    """See http://www.codinghorror.com/blog/archives/001018.html"""
+    return [int(s) if s.isdigit() else s for s in re.split(r'(\d+)', string_)]
 
 
 def toIterable(value):
