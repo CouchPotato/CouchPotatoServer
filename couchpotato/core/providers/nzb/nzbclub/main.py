@@ -5,6 +5,7 @@ from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.nzb.base import NZBProvider
 from dateutil.parser import parse
+from collections import OrderedDict
 import time
 
 log = CPLog(__name__)
@@ -22,14 +23,19 @@ class NZBClub(NZBProvider, RSS):
 
         q = '"%s %s"' % (title, movie['library']['year'])
 
-        params = tryUrlencode({
-            'q': q,
+        # Parameter q must come first, otherwise replies will be empty
+        params = OrderedDict({'q': q})
+
+        # Add remaining parameters in arbitrary order
+        params.update({
             'ig': 1,
             'rpp': 200,
             'st': 5,
             'sp': 1,
             'ns': 1,
         })
+
+        params = tryUrlencode(params)
 
         nzbs = self.getRSSData(self.urls['search'] % params)
 
