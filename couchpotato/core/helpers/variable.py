@@ -295,3 +295,14 @@ def dictIsSubset(a, b):
 def isSubFolder(sub_folder, base_folder):
     # Returns True if sub_folder is the same as or inside base_folder
     return base_folder and sub_folder and ss(os.path.normpath(base_folder).rstrip(os.path.sep) + os.path.sep) in ss(os.path.normpath(sub_folder).rstrip(os.path.sep) + os.path.sep)
+
+# From SABNZBD
+re_password = [re.compile(r'([^/\\]+)[/\\](.+)'), re.compile(r'(.+){{([^{}]+)}}$'), re.compile(r'(.+)\s+password\s*=\s*(.+)$', re.I)]
+def scanForPassword(name):
+    m = None
+    for reg in re_password:
+        m = reg.search(name)
+        if m: break
+
+    if m:
+        return m.group(1).strip('. '), m.group(2).strip()
