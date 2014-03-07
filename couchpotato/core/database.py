@@ -117,6 +117,7 @@ class Database(object):
         old_db = os.path.join(Env.get('data_dir'), 'couchpotato.db')
         if not os.path.isfile(old_db): return
 
+        log.info('Migrating database, hold on..')
         time.sleep(1)
 
         if os.path.isfile(old_db):
@@ -164,6 +165,7 @@ class Database(object):
             db = self.getDB()
 
             # Categories
+            log.debug('Importing categories')
             categories = migrate_data.get('category', [])
             category_link = {}
             for x in categories:
@@ -182,6 +184,7 @@ class Database(object):
                 category_link[x] = new_c.get('_id')
 
             # Profiles
+            log.debug('Importing profiles')
             new_profiles = db.all('profile', with_doc = True)
             new_profiles_by_label = {}
             for x in new_profiles:
@@ -231,6 +234,7 @@ class Database(object):
                     profile_link[x] = new_profile.get('_id')
 
             # Qualities
+            log.debug('Importing quality sizes')
             new_qualities = db.all('quality', with_doc = True)
             new_qualities_by_identifier = {}
             for x in new_qualities:
@@ -277,6 +281,7 @@ class Database(object):
                 releases_by_media[release.get('movie_id')].append(release)
 
             # Media
+            log.debug('Importing media: processing %s', len(migrate_data['movie']))
             statuses = migrate_data['status']
             libraries = migrate_data['library']
             library_files = migrate_data['library_files__file_library']
@@ -316,7 +321,7 @@ class Database(object):
 
                     # Only migrate posters
                     if ffile.get('type_id') == poster_type.get('id'):
-                        if ffile.get('path') not in added_media['files']['image_poster'] and os.path.isfile(ffile.get('path')):
+                        if ffile.get('path') not in added_media['files'].get('image_poster', []) and os.path.isfile(ffile.get('path')):
                             added_media['files']['image_poster'] = [ffile.get('path')]
                             break
 
@@ -332,6 +337,7 @@ class Database(object):
                     fireEvent('release.create_from_search', [rel['info']], added_media, quality, single = True)
 
         # rename old database
+        log.info('Renaming old database to %s ', old_db + '.old')
         os.rename(old_db, old_db + '.old')
 
         if os.path.isfile(old_db + '-wal'):
