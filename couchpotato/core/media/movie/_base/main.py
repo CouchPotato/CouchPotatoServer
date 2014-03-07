@@ -1,3 +1,4 @@
+import os
 import traceback
 from couchpotato import get_db
 from couchpotato.api import addApiView
@@ -298,11 +299,17 @@ class MovieBase(MovieTypeBase):
                         continue
 
                     file_type = 'image_%s' % image_type
-                    if file_type not in media['files']:
-                        file_path = fireEvent('file.download', url = image, single = True)
-                        media['files']['image_%s' % image_type] = [file_path];
+                    existing_files = list(set(media['files'].get(file_type, [])))
+                    for ef in media['files'].get(file_type, []):
+                        if not os.path.isfile(ef):
+                            existing_files.remove(ef)
+                    media['files'][file_type] = existing_files
 
-                    break
+                    if file_type not in media['files'] or len(media['files'].get(file_type, [])) == 0:
+                        file_path = fireEvent('file.download', url = image, single = True)
+                        media['files']['image_%s' % image_type] = [file_path]
+
+                    break 
 
             db.update(media)
 
