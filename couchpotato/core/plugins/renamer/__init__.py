@@ -82,6 +82,14 @@ config = [{
                     'default': False,
                 },
                 {
+                    'advanced': True,
+                    'name': 'unrar_modify_date',
+                    'label': 'Unrar modify date',
+                    'type': 'bool',
+                    'description': ('Set modify date of unrar-ed files to the rar-file\'s date.', 'This will allow XBMC to recognize extracted files as recently added even if the movie was released some time ago.'),
+                    'default': False,
+                },
+                {
                     'name': 'cleanup',
                     'type': 'bool',
                     'description': 'Cleanup leftover files after successful rename.',
