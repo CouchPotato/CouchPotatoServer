@@ -197,19 +197,21 @@ class MediaPlugin(MediaBase):
         if total_count == 0:
             return 0, []
 
+        offset = 0
+        limit = -1
         if limit_offset:
             splt = splitString(limit_offset) if isinstance(limit_offset, (str, unicode)) else limit_offset
             limit = tryInt(splt[0])
             offset = tryInt(0 if len(splt) is 1 else splt[1])
-            start = offset * limit
-            end = start + limit
-            media_ids = media_ids[start:end]
 
         # List movies based on title order
         medias = []
         for m in db.all('media_title'):
             media_id = m['_id']
             if media_id not in media_ids: continue
+            if offset > 0:
+                offset -= 1
+                continue
 
             media = db.run('media', 'to_dict', media_id)
 
@@ -220,7 +222,7 @@ class MediaPlugin(MediaBase):
 
             # remove from media ids
             media_ids.remove(media_id)
-            if len(media_ids) == 0: break
+            if len(media_ids) == 0 or len(medias) == limit: break
 
         return total_count, medias
 
