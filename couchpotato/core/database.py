@@ -164,6 +164,13 @@ class Database(object):
 
             db = self.getDB()
 
+            # Use properties
+            log.debug('Importing properties')
+            properties = migrate_data['properties']
+            for x in properties:
+                property = properties[x]
+                Env.prop(property.get('identifier'), property.get('value'))
+
             # Categories
             log.debug('Importing categories')
             categories = migrate_data.get('category', [])
