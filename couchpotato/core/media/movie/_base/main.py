@@ -296,22 +296,31 @@ class MovieBase(MovieTypeBase):
             images = info.get('images', [])
             media['files'] = media.get('files', {})
             for image_type in ['poster']:
+
+                # Remove non-existing files
+                file_type = 'image_%s' % image_type
+                existing_files = list(set(media['files'].get(file_type, [])))
+                for ef in media['files'].get(file_type, []):
+                    if not os.path.isfile(ef):
+                        existing_files.remove(ef)
+
+                # Replace new files list
+                media['files'][file_type] = existing_files
+                if len(existing_files) == 0:
+                    del media['files'][file_type]
+
+                # Loop over type
                 for image in images.get(image_type, []):
                     if not isinstance(image, (str, unicode)):
                         continue
 
-                    file_type = 'image_%s' % image_type
-                    existing_files = list(set(media['files'].get(file_type, [])))
-                    for ef in media['files'].get(file_type, []):
-                        if not os.path.isfile(ef):
-                            existing_files.remove(ef)
-                    media['files'][file_type] = existing_files
-
                     if file_type not in media['files'] or len(media['files'].get(file_type, [])) == 0:
                         file_path = fireEvent('file.download', url = image, single = True)
-                        media['files']['image_%s' % image_type] = [file_path]
-
-                    break 
+                        if file_path:
+                            media['files'][file_type] = [file_path]
+                            break
+                    else:
+                        break
 
             db.update(media)
 
