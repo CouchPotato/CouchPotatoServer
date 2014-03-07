@@ -168,7 +168,7 @@ class Database(object):
             category_link = {}
             for x in categories:
                 c = categories[x]
-                
+
                 new_c = db.insert({
                     '_t': 'category',
                     'order': c.get('order', 999),
@@ -318,8 +318,9 @@ class Database(object):
                     if file.get('type_id') == poster_type.get('id'):
                         if not added_media['files'].get('image_poster'):
                             added_media['files']['image_poster'] = []
-                        if file.get('path') not in added_media['files']['image_poster']:
+                        if file.get('path') not in added_media['files']['image_poster'] and os.path.isfile(file.get('path')):
                             added_media['files']['image_poster'].append(file.get('path'))
+
                 db.update(added_media)
 
                 for rel in releases:
