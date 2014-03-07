@@ -140,6 +140,8 @@ class MovieBase(MovieTypeBase):
                 m['profile_id'] = params.get('profile_id', default_profile.get('id'))
                 m['category_id'] = cat_id if cat_id is not None and len(cat_id) > 0 else (m.get('category_id') or None)
             else:
+                try: del params['info']
+                except: pass
                 log.debug('Movie already exists, not updating: %s', params)
                 added = False
 
