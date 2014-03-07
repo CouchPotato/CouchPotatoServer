@@ -312,14 +312,13 @@ class Database(object):
                 added_media['files'] = added_media.get('files', {})
 
                 for f in files:
-                    file = all_files[f.get('file_id')]
+                    ffile = all_files[f.get('file_id')]
 
                     # Only migrate posters
-                    if file.get('type_id') == poster_type.get('id'):
-                        if not added_media['files'].get('image_poster'):
-                            added_media['files']['image_poster'] = []
-                        if file.get('path') not in added_media['files']['image_poster'] and os.path.isfile(file.get('path')):
-                            added_media['files']['image_poster'].append(file.get('path'))
+                    if ffile.get('type_id') == poster_type.get('id'):
+                        if ffile.get('path') not in added_media['files']['image_poster'] and os.path.isfile(ffile.get('path')):
+                            added_media['files']['image_poster'] = [ffile.get('path')]
+                            break
 
                 db.update(added_media)
 
