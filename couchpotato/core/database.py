@@ -125,8 +125,6 @@ class Database(object):
             import sqlite3
             conn = sqlite3.connect(old_db)
 
-            c = conn.cursor()
-
             migrate_list = {
                 'category': ['id', 'label', 'order', 'required', 'preferred', 'ignored', 'destination'],
                 'profile': ['id', 'label', 'order', 'core', 'hide'],
@@ -146,10 +144,13 @@ class Database(object):
 
             migrate_data = {}
 
+            c = conn.cursor()
+
             for ml in migrate_list:
                 migrate_data[ml] = {}
                 rows = migrate_list[ml]
                 c.execute('SELECT %s FROM `%s`' % ('`' + '`,`'.join(rows) + '`', ml))
+
                 for p in c.fetchall():
                     columns = {}
                     for row in migrate_list[ml]:
@@ -162,18 +163,20 @@ class Database(object):
                             migrate_data[ml][p[0]] = [migrate_data[ml][p[0]]]
                         migrate_data[ml][p[0]].append(columns)
 
+            c.close()
+
             db = self.getDB()
 
             # Use properties
-            log.debug('Importing properties')
             properties = migrate_data['properties']
+            log.info('Importing %s properties', len(properties))
             for x in properties:
                 property = properties[x]
                 Env.prop(property.get('identifier'), property.get('value'))
 
             # Categories
-            log.debug('Importing categories')
             categories = migrate_data.get('category', [])
+            log.info('Importing %s categories', len(categories))
             category_link = {}
             for x in categories:
                 c = categories[x]
@@ -288,7 +291,7 @@ class Database(object):
                 releases_by_media[release.get('movie_id')].append(release)
 
             # Media
-            log.debug('Importing media: processing %s', len(migrate_data['movie']))
+            log.debug('Importing %s media items', len(migrate_data['movie']))
             statuses = migrate_data['status']
             libraries = migrate_data['library']
             library_files = migrate_data['library_files__file_library']
@@ -343,11 +346,11 @@ class Database(object):
                     rel['info']['status'] = statuses.get(rel.get('status_id')).get('identifier')
                     fireEvent('release.create_from_search', [rel['info']], added_media, quality, single = True)
 
-        # rename old database
-        log.info('Renaming old database to %s ', old_db + '.old')
-        os.rename(old_db, old_db + '.old')
+            # rename old database
+            log.info('Renaming old database to %s ', old_db + '.old')
+            os.rename(old_db, old_db + '.old')
 
-        if os.path.isfile(old_db + '-wal'):
-            os.rename(old_db + '-wal', old_db + '-wal.old')
-        if os.path.isfile(old_db + '-shm'):
-            os.rename(old_db + '-shm', old_db + '-shm.old')
+            if os.path.isfile(old_db + '-wal'):
+                os.rename(old_db + '-wal', old_db + '-wal.old')
+            if os.path.isfile(old_db + '-shm'):
+                os.rename(old_db + '-shm', old_db + '-shm.old')
