@@ -1127,29 +1127,9 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
             # Check if archive is fresh and maybe still copying/moving/downloading, ignore files newer than 1 minute
             if check_file_date:
-                file_too_new = False
-                for cur_file in archive['files']:
-                    if not os.path.isfile(cur_file):
-                        file_too_new = time.time()
-                        break
-                    file_time = [os.path.getmtime(cur_file), os.path.getctime(cur_file)]
-                    for t in file_time:
-                        if t > time.time() - 60:
-                            file_too_new = tryInt(time.time() - t)
-                            break
+                files_too_new, time_string = self.checkFilesChanged(archive['files'])
 
-                    if file_too_new:
-                        break
-
-                if file_too_new:
-                    try:
-                        time_string = time.ctime(file_time[0])
-                    except:
-                        try:
-                            time_string = time.ctime(file_time[1])
-                        except:
-                            time_string = 'unknown'
-
+                if files_too_new:
                     log.info('Archive seems to be still copying/moving/downloading or just copied/moved/downloaded (created on %s), ignoring for now: %s', (time_string, os.path.basename(archive['file'])))
                     continue
 
