@@ -26,7 +26,7 @@ class MetaDataBase(Plugin):
 
         # Update library to get latest info
         try:
-            group['media'] = fireEvent('movie.update_info', group['media']['identifier'], extended = True, single = True)
+            group['media'] = fireEvent('movie.update_info', group['media'].get('_id'), identifier = group['media']['identifier'], extended = True, single = True)
         except:
             log.error('Failed to update movie, before creating metadata: %s', traceback.format_exc())
 
@@ -91,14 +91,14 @@ class MetaDataBase(Plugin):
         if not movie_info: movie_info = {}
 
         # See if it is in current files
-        files = data.get('files', {})
-        if files.get('image_'+wanted_file_type):
-            if os.path.isfile(files['image_'+wanted_file_type][0]):
-                return files['image_'+wanted_file_type][0]
+        files = data['media'].get('files')
+        if files.get('image_' + wanted_file_type):
+            if os.path.isfile(files['image_' + wanted_file_type][0]):
+                return files['image_' + wanted_file_type][0]
 
         # Download using existing info
         try:
-            images = data['info']['images'][wanted_file_type]
+            images = movie_info['images'][wanted_file_type]
             file_path = fireEvent('file.download', url = images[0], single = True)
             return file_path
         except:
