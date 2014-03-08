@@ -825,12 +825,13 @@ MA.Files = new Class({
 	create: function(){
 		var self = this;
 
-		self.el = new Element('a.directory', {
-			'title': 'Available files',
-			'events': {
-				'click': self.show.bind(self)
-			}
-		});
+		if(self.movie.data.releases && self.movie.data.releases.length > 0)
+			self.el = new Element('a.directory', {
+				'title': 'Available files',
+				'events': {
+					'click': self.show.bind(self)
+				}
+			});
 
 	},
 

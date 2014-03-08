@@ -111,7 +111,6 @@ class MediaPlugin(MediaBase):
         except:
             log.error('Refresh handler for non existing media: %s', traceback.format_exc())
 
-
     def addSingleRefreshView(self):
 
         for media_type in fireEvent('media.types', merge = True):
@@ -143,7 +142,7 @@ class MediaPlugin(MediaBase):
             'media': media,
         }
 
-    def list(self, types = None, status = None, release_status = None, limit_offset = None, starts_with = None, search = None):
+    def list(self, types = None, status = None, release_status = None, status_or = False, limit_offset = None, starts_with = None, search = None):
 
         db = get_db()
 
@@ -189,6 +188,12 @@ class MediaPlugin(MediaBase):
         if search:
             filter_by['search'] = [x['_id'] for x in db.get_many('media_search_title', search)]
 
+        if status_or and 'media_status' in filter_by and 'release_status' in filter_by:
+            filter_by['status'] = list(filter_by['media_status']) + list(filter_by['release_status'])
+            del filter_by['media_status']
+            del filter_by['release_status']
+
+
         # Filter by combining ids
         for x in filter_by:
             media_ids = [n for n in media_ids if n in filter_by[x]]
@@ -228,20 +233,14 @@ class MediaPlugin(MediaBase):
 
     def listView(self, **kwargs):
 
-        types = splitString(kwargs.get('type'))
-        status = splitString(kwargs.get('status'))
-        release_status = splitString(kwargs.get('release_status'))
-        limit_offset = kwargs.get('limit_offset')
-        starts_with = kwargs.get('starts_with')
-        search = kwargs.get('search')
-
         total_movies, movies = self.list(
-            types = types,
-            status = status,
-            release_status = release_status,
-            limit_offset = limit_offset,
-            starts_with = starts_with,
-            search = search
+            types = splitString(kwargs.get('type')),
+            status = splitString(kwargs.get('status')),
+            release_status = splitString(kwargs.get('release_status')),
+            status_or = kwargs.get('status_or') is not None,
+            limit_offset = kwargs.get('limit_offset'),
+            starts_with = kwargs.get('starts_with'),
+            search = kwargs.get('search')
         )
 
         return {
