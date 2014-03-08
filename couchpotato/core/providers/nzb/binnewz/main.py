@@ -38,7 +38,7 @@ class BinNewz(NZBProvider):
     urls = {
         'download': 'http://www.binnews.in/',
         'detail': 'http://www.binnews.in/',
-        'search': 'http://www.binnews.in/',
+        'search': 'http://www.binnews.in/_bin/search2.php',
     }
 
     http_time_between_calls = 4 # Seconds
@@ -51,7 +51,6 @@ class BinNewz(NZBProvider):
         movieyear = movie['library']['year']
         if self.conf('true_french_only'):
             FilterTrueFrench = '&cats%5B%5D=2&cats%5B%5D=7&cats%5B%5D=9&cats%5B%5D=5'
-        
         if moviequality in ("720p","1080p","bd50"):
             cat1='39'
             cat2='49'
@@ -69,12 +68,10 @@ class BinNewz(NZBProvider):
             TitleStringReal = str(MovieTitle.encode("utf-8").replace('-',' '))
             data = 'chkInit=1&edTitre='+TitleStringReal+'&chkTitre=on&chkFichier=on&chkCat=on&cats%5B%5D='+cat1+'&cats%5B%5D='+cat2+'&edAge=&edYear=' + FilterTrueFrench
             try:
-                soup = BeautifulSoup( urllib2.urlopen("http://www.binnews.in/_bin/search2.php", data) )
+                soup = BeautifulSoup( urllib2.urlopen(self.urls['search'], data) )
             except Exception, e:
                 log.error(u"Error trying to load BinNewz response: "+e)
                 return []
-            
-            #results = []
     
             tables = soup.findAll("table", id="tabliste")
             for table in tables:
@@ -177,6 +174,8 @@ class BinNewz(NZBProvider):
                             newsgroup = "alt.binaries.bloaf"
                         elif newsgroup == "ab.hdtv.german":
                             newsgroup = "alt.binaries.hdtv.german"
+                        elif newsgroup == "abmd":
+                            newsgroup = "alt.binaries.movies.divx"
                         else:
                             log.error(u"Unknown binnewz newsgroup: " + newsgroup)
                             continue
@@ -204,6 +203,8 @@ class BinNewz(NZBProvider):
                     if m:
                         name = m.group(1)
                         year = m.group(2)
+                        if int(year) > movieyear + 1 or int(year) < movieyear - 1:
+                            continue
         
                     m =  re.search("(.+)\((\d{2}/\d{2}/\d{4})\)", name)
                     dateStr = ""
@@ -211,7 +212,7 @@ class BinNewz(NZBProvider):
                         name = m.group(1)
                         dateStr = m.group(2)
                         year = dateStr[-5:].strip(")").strip("/")
-        
+
                     m =  re.search("(.+)\s+S(\d{2})\s+E(\d{2})(.*)", name)
                     if m:
                         name = m.group(1) + " S" + m.group(2) + "E" + m.group(3) + m.group(4)
@@ -219,8 +220,7 @@ class BinNewz(NZBProvider):
                     m =  re.search("(.+)\s+S(\d{2})\s+Ep(\d{2})(.*)", name)
                     if m:
                         name = m.group(1) + " S" + m.group(2) + "E" + m.group(3) + m.group(4)
-                        
-                            
+
                     filenameLower = filename.lower()                                
                     searchItems = []
                     if qualityStr=="":
@@ -244,7 +244,7 @@ class BinNewz(NZBProvider):
                         resultno=1
                         for downloader in nzbDownloaders:
                             
-                            log.info2("Searching for download : " + name + ", search string = "+ searchItem + " on " + downloader.__class__.__name__)
+                            log.info("Searching for download : " + name + ", search string = "+ searchItem + " on " + downloader.__class__.__name__)
                             try:
                                 binsearch_result =  downloader.search(searchItem, minSize, newsgroup )
                                 if binsearch_result:
@@ -263,7 +263,7 @@ class BinNewz(NZBProvider):
                                     results.append(new)
                                     
                                     resultno=resultno+1
-                                    log.info2("Found : " + searchItem + " on " + downloader.__class__.__name__)
+                                    log.info("Found : " + searchItem + " on " + downloader.__class__.__name__)
                                     if resultno==3:
                                         break
                             except Exception, e:
