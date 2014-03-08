@@ -81,7 +81,7 @@ class Release(Plugin):
                 elif rel['status'] in ['snatched', 'downloaded']:
                     self.updateStatus(rel['_id'], status = 'ignore')
 
-    def add(self, group):
+    def add(self, group, update_info = True):
 
         try:
             db = get_db()
@@ -95,7 +95,7 @@ class Release(Plugin):
                 media = fireEvent('movie.add', params = {
                     'identifier': group['identifier'],
                     'profile_id': None,
-                }, search_after = False, status = 'done', single = True)
+                }, search_after = False, update_after = update_info, notify_after = False, status = 'done', single = True)
 
             # Add Release
             release = {

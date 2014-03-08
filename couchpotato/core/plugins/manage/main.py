@@ -106,7 +106,6 @@ class Manage(Plugin):
                 log.info('Updating manage library: %s', folder)
                 fireEvent('notify.frontend', type = 'manage.update', data = True, message = 'Scanning for movies in "%s"' % folder)
 
-
                 onFound = self.createAddToLibrary(folder, added_identifiers)
                 fireEvent('scanner.scan', folder = folder, simple = True, newer_than = last_update if not full else 0, on_found = onFound, single = True)
 
@@ -122,7 +121,7 @@ class Manage(Plugin):
 
                 for done_movie in done_movies:
                     if done_movie['identifier'] not in added_identifiers:
-                        fireEvent('media.delete', media_id = done_movie['id'], delete_from = 'all')
+                        fireEvent('media.delete', media_id = done_movie['_id'], delete_from = 'all')
                     else:
 
                         db = get_db()
@@ -191,7 +190,7 @@ class Manage(Plugin):
                 added_identifiers.append(group['identifier'])
 
                 # Add it to release and update the info
-                fireEvent('release.add', group = group)
+                fireEvent('release.add', group = group, update_info = False)
                 fireEvent('movie.update_info', identifier = group['identifier'], on_complete = self.createAfterUpdate(folder, group['identifier']))
             else:
                 self.updateProgress(folder)
@@ -239,7 +238,7 @@ class Manage(Plugin):
 
         if groups:
             for group in groups.values():
-                if group.get('info'):
+                if group.get('media'):
                     fireEvent('release.add', group = group)
 
     def getDiskSpace(self):
