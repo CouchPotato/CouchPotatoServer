@@ -24,7 +24,7 @@ from nzbdownloader import NZBPostURLSearchResult
 from couchpotato.core.helpers.variable import tryInt
 
 class BinSearch(NZBDownloader):
-    
+
     def search(self, filename, minSize, newsgroup=None):
 
         if newsgroup != None:
@@ -39,7 +39,7 @@ class BinSearch(NZBDownloader):
 
             foundName = None
             sizeInMegs = None
-            for elem in binSearchSoup.findAll(lambda tag: tag.name=='tr' and (tag.get('bgcolor') == '#FFFFFF') and 'size:' in tag.text):
+            for elem in binSearchSoup.findAll(lambda tag: tag.name=='tr' and 'size:' in tag.text):
                 if foundName:
                     break
                 for checkbox in elem.findAll(lambda tag: tag.name=='input' and tag.get('type') == 'checkbox'):
@@ -64,4 +64,4 @@ class BinSearch(NZBDownloader):
                 postData = foundName
                 nzbURL = "https://binsearch.info/?adv_age=&" + suffixURL
                 return NZBPostURLSearchResult( self, nzbURL, postData, sizeInMegs, binSearchURL, age, nzbid )
-                    
+
