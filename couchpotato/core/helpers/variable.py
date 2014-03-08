@@ -236,8 +236,11 @@ def getTitle(media_dict):
                 try:
                     return media_dict['info']['titles'][0]
                 except:
-                    log.error('Could not get title for %s', media_dict.get('identifier'))
-                    return None
+                    try:
+                        return media_dict['media']['info']['titles'][0]
+                    except:
+                        log.error('Could not get title for %s', media_dict.get('identifier'))
+                        return None
 
         log.error('Could not get title for %s', media_dict['identifier'])
         return None
