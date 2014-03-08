@@ -309,6 +309,7 @@ class Plugin(object):
 
     def checkFilesChanged(self, files, unchanged_for = 60):
         now = time.time()
+        file_too_new = False
 
         for cur_file in files:
 
