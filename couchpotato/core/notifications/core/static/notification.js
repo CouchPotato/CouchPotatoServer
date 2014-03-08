@@ -103,7 +103,9 @@ var NotificationBase = new Class({
 
 		self.request = Api.request('notification.listener', {
     		'data': {'init':true},
-    		'onSuccess': self.processData.bind(self)
+    		'onSuccess': function(json){
+				self.processData(json, true)
+			}
 		}).send()
 
 		setInterval(function(){
@@ -124,7 +126,9 @@ var NotificationBase = new Class({
 			return;
 
 		self.request = Api.request('nonblock/notification.listener', {
-    		'onSuccess': self.processData.bind(self),
+    		'onSuccess': function(json){
+				self.processData(json, false)
+			},
     		'data': {
     			'last_id': self.last_id
     		},
@@ -141,14 +145,14 @@ var NotificationBase = new Class({
 		this.stopped = true;
 	},
 
-	processData: function(json){
+	processData: function(json, init){
 		var self = this;
 
 		// Process data
 		if(json){
 			Array.each(json.result, function(result){
 				App.trigger(result._t || result.type, [result]);
-				if(result.message && result.read === undefined)
+				if(result.message && result.read === undefined && !init)
 					self.showMessage(result.message);
 			})
 
