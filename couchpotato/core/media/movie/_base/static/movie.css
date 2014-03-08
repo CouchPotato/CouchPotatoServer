@@ -127,6 +127,7 @@
 			margin: 0;
 			padding: 0;
 			vertical-align: top;
+			line-height: 0;
 		}
 
 			@media all and (max-width: 800px) {
