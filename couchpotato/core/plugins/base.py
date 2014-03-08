@@ -336,7 +336,7 @@ class Plugin(object):
                 break
 
             # File has changed in last 60 seconds
-            file_time = self.self.getFileTimes(cur_file)
+            file_time = self.getFileTimes(cur_file)
             for t in file_time:
                 if t > now - unchanged_for:
                     file_too_new = tryInt(time.time() - t)
