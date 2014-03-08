@@ -862,12 +862,14 @@ Remove it if you want it to be renamed (again, or at least let it try again)
             no_status_support = []
             try:
                 for rel in rels:
-                    if rel['info'].get('download_id') and rel['info'].get('download_downloader'):
-                        download_ids.append({'id': rel['info']['download_id'], 'downloader': rel['info']['download_downloader']})
+                    if not rel.get('download_info'): continue
 
-                    ds = rel['info'].get('download_status_support')
+                    if rel['download_info'].get('id') and rel['download_info'].get('downloader'):
+                        download_ids.append(rel['download_info'])
+
+                    ds = rel['download_info'].get('status_support')
                     if ds is False or ds == 'False':
-                        no_status_support.append(ss(rel['info'].get('download_downloader')))
+                        no_status_support.append(ss(rel['download_info'].get('downloader')))
             except:
                 log.error('Error getting download IDs from database')
                 self.checking_snatched = False
@@ -893,15 +895,16 @@ Remove it if you want it to be renamed (again, or at least let it try again)
             try:
                 for rel in rels:
                     movie_dict = db.get('id', rel.get('media_id'))
+                    download_info = rel.get('download_info')
 
-                    if not isinstance(rel['info'], dict):
+                    if not isinstance(download_info, dict):
                         log.error('Faulty release found without any info, ignoring.')
                         fireEvent('release.update_status', rel.get('_id'), status = 'ignored', single = True)
                         continue
 
                     # Check if download ID is available
-                    if not rel['info'].get('download_id') or not rel['info'].get('download_downloader'):
-                        log.debug('Download status functionality is not implemented for downloader (%s) of release %s.', (rel['info'].get('download_downloader', 'unknown'), rel['info']['name']))
+                    if not download_info.get('id') or not download_info.get('downloader'):
+                        log.debug('Download status functionality is not implemented for downloader (%s) of release %s.', (download_info.get('downloader', 'unknown'), rel['info']['name']))
                         scan_required = True
 
                         # Continue with next release
@@ -913,8 +916,8 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                     found_release = False
                     for release_download in release_downloads:
                         found_release = False
-                        if rel['info'].get('download_id'):
-                            if release_download['id'] == rel['info']['download_id'] and release_download['downloader'] == rel['info']['download_downloader']:
+                        if download_info.get('id'):
+                            if release_download['id'] == download_info['id'] and release_download['downloader'] == download_info['downloader']:
                                 log.debug('Found release by id: %s', release_download['id'])
                                 found_release = True
                                 break
