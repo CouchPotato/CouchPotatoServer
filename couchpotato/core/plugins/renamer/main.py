@@ -227,7 +227,7 @@ class Renamer(Plugin):
             media_title = getTitle(group)
 
             # Add _UNKNOWN_ if no library item is connected
-            if not group.get('info') or not media_title:
+            if not group.get('media') or not media_title:
                 self.tagRelease(group = group, tag = 'unknown')
                 continue
             # Rename the files using the library data
@@ -238,7 +238,7 @@ class Renamer(Plugin):
                     group['media'] = fireEvent('movie.add', params = {
                         'identifier': group['identifier'],
                         'profile_id': None
-                    }, search_after = False, status = 'done')
+                    }, search_after = False, status = 'done', single = True)
                 else:
                     group['media'] = fireEvent('movie.update_info', identifier = group['media']['identifier'], single = True)
 
