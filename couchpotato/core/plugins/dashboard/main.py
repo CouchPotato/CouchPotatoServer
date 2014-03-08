@@ -1,3 +1,4 @@
+from datetime import date
 from couchpotato import get_session
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent
@@ -65,6 +66,7 @@ class Dashboard(Plugin):
 
         active = q.all()
         movies = []
+        now_year = date.today().year
 
         if len(active) > 0:
 
@@ -91,8 +93,8 @@ class Dashboard(Plugin):
                 if coming_soon:
 
                     # Don't list older movies
-                    if ((not late and (not eta.get('dvd') and not eta.get('theater') or eta.get('dvd') and eta.get('dvd') > (now - 2419200))) or
-                            (late and (eta.get('dvd', 0) > 0 or eta.get('theater')) and eta.get('dvd') < (now - 2419200))):
+                    if ((not late and (year >= now_year-1) and (not eta.get('dvd') and not eta.get('theater') or eta.get('dvd') and eta.get('dvd') > (now - 2419200))) or
+                            (late and ((year < now_year-1) or ((eta.get('dvd', 0) > 0 or eta.get('theater')) and eta.get('dvd') < (now - 2419200))))):
                         movie_ids.append(movie_id)
 
                         if len(movie_ids) >= limit:
