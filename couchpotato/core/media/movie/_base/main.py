@@ -359,22 +359,3 @@ class MovieBase(MovieTypeBase):
             log.error('Failed updating release dates: %s', traceback.format_exc())
 
         return {}
-
-    def simplifyTitle(self, title):
-        """
-        Removes all special chars from a title so it's easier to make sortable
-        @param title: media title
-        @return: string, simplified title
-        """
-
-        title = toUnicode(title)
-
-        nr_prefix = '' if title[0] in ascii_letters else '#'
-        title = simplifyString(title)
-
-        for prefix in ['the ']:
-            if prefix == title[:len(prefix)]:
-                title = title[len(prefix):]
-                break
-
-        return nr_prefix + title
