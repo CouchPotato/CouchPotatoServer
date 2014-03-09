@@ -139,6 +139,7 @@ class Database(object):
                 'library_files__file_library': ['library_id', 'file_id'],
                 'release': ['id', 'identifier', 'movie_id', 'status_id', 'quality_id', 'last_edit'],
                 'releaseinfo': ['id', 'identifier', 'value', 'release_id'],
+                'release_files__file_release': ['release_id', 'file_id'],
                 'status': ['id', 'identifier'],
                 'properties': ['id', 'identifier', 'value'],
                 'file': ['id', 'path', 'type_id'],
@@ -295,11 +296,19 @@ class Database(object):
 
                 releases_by_media[release.get('movie_id')].append(release)
 
+            # Type ids
+            types = migrate_data['filetype']
+            type_by_id = {}
+            for t in types:
+                type = types[t]
+                type_by_id[type.get('id')] = type
+
             # Media
             log.info('Importing %s media items', len(migrate_data['movie']))
             statuses = migrate_data['status']
             libraries = migrate_data['library']
             library_files = migrate_data['library_files__file_library']
+            releases_files = migrate_data['release_files__file_release']
             all_files = migrate_data['file']
             poster_type = migrate_data['filetype']['poster']
             medias = migrate_data['movie']
@@ -340,16 +349,76 @@ class Database(object):
                             added_media['files']['image_poster'] = [ffile.get('path')]
                             break
 
-                db.update(added_media)
+                if 'image_poster' in added_media['files']:
+                    db.update(added_media)
 
                 for rel in releases:
-                    if not rel.get('info'): continue
+
+                    empty_info = False
+                    if not rel.get('info'):
+                        empty_info = True
+                        rel['info'] = {}
 
                     quality = quality_link[rel.get('quality_id')]
+                    release_status = statuses.get(rel.get('status_id')).get('identifier')
+
+                    if rel['info'].get('download_id'):
+                        status_support = rel['info'].get('download_status_support', False) in [True, 'true', 'True']
+                        rel['info']['download_info'] = {
+                            'id': rel['info'].get('download_id'),
+                            'downloader': rel['info'].get('download_downloader'),
+                            'status_support': status_support,
+                        }
 
                     # Add status to keys
-                    rel['info']['status'] = statuses.get(rel.get('status_id')).get('identifier')
-                    fireEvent('release.create_from_search', [rel['info']], added_media, quality, single = True)
+                    rel['info']['status'] = release_status
+                    if not empty_info:
+                        fireEvent('release.create_from_search', [rel['info']], added_media, quality, single = True)
+                    else:
+                        release = {
+                            '_t': 'release',
+                            'identifier': rel.get('identifier'),
+                            'media_id': added_media.get('_id'),
+                            'quality': quality.get('identifier'),
+                            'status': release_status,
+                            'last_edit': int(time.time()),
+                            'files': {}
+                        }
+
+                        # Add downloader info if provided
+                        try:
+                            release['download_info'] = rel['info']['download_info']
+                            del rel['download_info']
+                        except:
+                            pass
+
+                        # Add files
+                        release_files = releases_files.get(rel.get('id'), [])
+                        if not isinstance(release_files, list):
+                            release_files = [release_files]
+
+                        if len(release_files) == 0:
+                            continue
+
+                        for f in release_files:
+                            rfile = all_files[f.get('file_id')]
+                            file_type = type_by_id.get(rfile.get('type_id')).get('identifier')
+
+                            if not release['files'].get(file_type):
+                                release['files'][file_type] = []
+
+                            release['files'][file_type].append(rfile.get('path'))
+
+                        try:
+                            rls = db.get('release_identifier', rel.get('identifier'), with_doc = True)['doc']
+                            rls.update(release)
+                            db.update(rls)
+                        except:
+                            db.insert(release)
+
+            log.info('Total migration took %s', time.time() - migrate_start)
+            log.info('=' * 30)
+
 
             # rename old database
             log.info('Renaming old database to %s ', old_db + '.old')
@@ -359,6 +428,3 @@ class Database(object):
                 os.rename(old_db + '-wal', old_db + '-wal.old')
             if os.path.isfile(old_db + '-shm'):
                 os.rename(old_db + '-shm', old_db + '-shm.old')
-
-            log.info('Total migration took %s', time.time() - migrate_start)
-            log.info('=' * 30)
