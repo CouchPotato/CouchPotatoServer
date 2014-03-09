@@ -170,8 +170,8 @@ MA.Release = new Class({
 				self.movie.data.releases.each(function(release){
 
 					var quality = Quality.getQuality(release.quality) || {},
-						info = release.info,
-						provider = self.get(release, 'provider') + (release.info['provider_extra'] ? self.get(release, 'provider_extra') : '');
+						info = release.info || {},
+						provider = self.get(release, 'provider') + (info['provider_extra'] ? self.get(release, 'provider_extra') : '');
 
 					var release_name = self.get(release, 'name');
 					if(release.files && release.files.length > 0){
@@ -193,12 +193,12 @@ MA.Release = new Class({
 						new Element('span.name', {'text': release_name, 'title': release_name}),
 						new Element('span.status', {'text': release.status, 'class': 'release_status '+release.status}),
 						new Element('span.quality', {'text': quality.label || 'n/a'}),
-						new Element('span.size', {'text': release.info['size'] ? Math.floor(self.get(release, 'size')) : 'n/a'}),
+						new Element('span.size', {'text': info['size'] ? Math.floor(self.get(release, 'size')) : 'n/a'}),
 						new Element('span.age', {'text': self.get(release, 'age')}),
 						new Element('span.score', {'text': self.get(release, 'score')}),
 						new Element('span.provider', { 'text': provider, 'title': provider }),
-						release.info['detail_url'] ? new Element('a.info.icon2', {
-							'href': release.info['detail_url'],
+						info['detail_url'] ? new Element('a.info.icon2', {
+							'href': info['detail_url'],
 							'target': '_blank'
 						}) : new Element('a'),
 						new Element('a.download.icon2', {
@@ -358,7 +358,7 @@ MA.Release = new Class({
 	},
 
 	get: function(release, type){
-		return release.info[type] !== undefined ? release.info[type] : 'n/a'
+		return (release.info && release.info[type] !== undefined) ? release.info[type] : 'n/a'
 	},
 
 	download: function(release){
