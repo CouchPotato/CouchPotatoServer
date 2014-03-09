@@ -396,6 +396,7 @@ class MediaPlugin(MediaBase):
             db = get_db()
 
             m = db.get('id', media_id)
+            previous_status = m['status']
 
             log.debug('Changing status for %s', getTitle(m))
             if not m['profile_id']:
@@ -404,18 +405,20 @@ class MediaPlugin(MediaBase):
                 move_to_wanted = True
 
                 profile = db.get('id', m['profile_id'])
-                media_releases = db.run('release', 'for_media', m['_id'])
+                media_releases = list(db.run('release', 'for_media', m['_id']))
 
                 for q_identifier in profile['qualities']:
                     index = profile['qualities'].index(q_identifier)
 
                     for release in media_releases:
-                        if q_identifier is release['quality'] and (release.get('status') == 'done' and profile['finish'][index]):
+                        if q_identifier == release['quality'] and (release.get('status') == 'done' and profile['finish'][index]):
                             move_to_wanted = False
 
                 m['status'] = 'active' if move_to_wanted else 'done'
 
-            db.update(m)
+            # Only update when status has changed
+            if previous_status != m['status']:
+                db.update(m)
 
             return True
         except:
