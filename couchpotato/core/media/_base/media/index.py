@@ -83,12 +83,17 @@ from couchpotato.core.helpers.encoding import simplifyString"""
             out = set()
             title = str(simplifyString(data.get('title').lower()))
             l = self.__l
-            max_l = len(title)
-            for x in xrange(l - 1, max_l):
-                m = (title, )
-                for y in xrange(0, x):
-                    m += (title[y + 1:],)
-                out.update(set(''.join(x).rjust(32, '_').lower() for x in izip(*m)))
+            title_split = title.split()
+
+            for x in range(len(title_split)):
+                combo = ' '.join(title_split[x:])[:32].strip()
+                out.add(combo.rjust(32, '_'))
+                combo_range = max(l, min(len(combo), 32))
+
+                for cx in range(1, combo_range):
+                    ccombo = combo[:-cx].strip()
+                    if len(ccombo) > l:
+                        out.add(ccombo.rjust(32, '_'))
 
             return out, None
 
