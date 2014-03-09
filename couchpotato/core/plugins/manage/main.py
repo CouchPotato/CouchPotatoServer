@@ -68,7 +68,7 @@ class Manage(Plugin):
         return self.updateLibrary(full = False)
 
     def updateLibrary(self, full = True):
-        last_update = 0 #float(Env.prop('manage.last_update', default = 0))
+        last_update = float(Env.prop('manage.last_update', default = 0))
 
         if self.in_progress:
             log.info('Already updating library: %s', self.in_progress)
