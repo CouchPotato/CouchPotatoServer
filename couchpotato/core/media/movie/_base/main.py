@@ -4,7 +4,7 @@ from couchpotato import get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, fireEventAsync, addEvent
 from couchpotato.core.helpers.encoding import toUnicode
-from couchpotato.core.helpers.variable import splitString, getTitle
+from couchpotato.core.helpers.variable import splitString, getTitle, getImdb
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media.movie import MovieTypeBase
 import time
@@ -48,6 +48,9 @@ class MovieBase(MovieTypeBase):
 
     def add(self, params = None, force_readd = True, search_after = True, update_after = True, notify_after = True, status = None):
         if not params: params = {}
+
+        # Make sure it's a correct zero filled imdb id
+        params['identifier'] = getImdb(params.get('identifier', ''))
 
         if not params.get('identifier'):
             msg = 'Can\'t add movie without imdb identifier.'

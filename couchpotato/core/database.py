@@ -337,9 +337,13 @@ class Database(object):
                     'profile_id': profile_id,
                     'category_id': category_id,
                     'title': title
-                },  force_readd = False, search_after = False, update_after = False, notify_after = False, status = status, single = True)
-                added_media['files'] = added_media.get('files', {})
+                }, force_readd = False, search_after = False, update_after = False, notify_after = False, status = status, single = True)
 
+                if not added_media:
+                    log.error('Failed adding media %s: %s', (l.get('identifier'), info))
+                    continue
+
+                added_media['files'] = added_media.get('files', {})
                 for f in files:
                     ffile = all_files[f.get('file_id')]
 
