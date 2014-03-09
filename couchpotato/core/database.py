@@ -117,10 +117,13 @@ class Database(object):
         old_db = os.path.join(Env.get('data_dir'), 'couchpotato.db')
         if not os.path.isfile(old_db): return
 
+        log.info('=' * 30)
         log.info('Migrating database, hold on..')
         time.sleep(1)
 
         if os.path.isfile(old_db):
+
+            migrate_start = time.time()
 
             import sqlite3
             conn = sqlite3.connect(old_db)
@@ -165,6 +168,8 @@ class Database(object):
 
             c.close()
 
+            log.info('Getting data took %s', time.time() - migrate_start)
+
             db = self.getDB()
 
             # Use properties
@@ -194,7 +199,7 @@ class Database(object):
                 category_link[x] = new_c.get('_id')
 
             # Profiles
-            log.debug('Importing profiles')
+            log.info('Importing profiles')
             new_profiles = db.all('profile', with_doc = True)
             new_profiles_by_label = {}
             for x in new_profiles:
@@ -244,7 +249,7 @@ class Database(object):
                     profile_link[x] = new_profile.get('_id')
 
             # Qualities
-            log.debug('Importing quality sizes')
+            log.info('Importing quality sizes')
             new_qualities = db.all('quality', with_doc = True)
             new_qualities_by_identifier = {}
             for x in new_qualities:
@@ -291,7 +296,7 @@ class Database(object):
                 releases_by_media[release.get('movie_id')].append(release)
 
             # Media
-            log.debug('Importing %s media items', len(migrate_data['movie']))
+            log.info('Importing %s media items', len(migrate_data['movie']))
             statuses = migrate_data['status']
             libraries = migrate_data['library']
             library_files = migrate_data['library_files__file_library']
@@ -305,7 +310,7 @@ class Database(object):
                 l = libraries[m['library_id']]
 
                 # Only migrate wanted movies, Skip if no identifier present
-                if status != 'active' or not getImdb(l.get('identifier')): continue
+                if not getImdb(l.get('identifier')): continue
 
                 profile_id = profile_link.get(m['profile_id'])
                 category_id = category_link.get(m['category_id'])
@@ -354,3 +359,6 @@ class Database(object):
                 os.rename(old_db + '-wal', old_db + '-wal.old')
             if os.path.isfile(old_db + '-shm'):
                 os.rename(old_db + '-shm', old_db + '-shm.old')
+
+            log.info('Total migration took %s', time.time() - migrate_start)
+            log.info('=' * 30)
