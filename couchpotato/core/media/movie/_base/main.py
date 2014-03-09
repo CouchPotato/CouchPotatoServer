@@ -84,7 +84,9 @@ class MovieBase(MovieTypeBase):
             def_title = toUnicode(titles[0])
 
         # Default profile and category
-        default_profile = fireEvent('profile.default', single = True)
+        default_profile = {}
+        if not params.get('profile_id'):
+            default_profile = fireEvent('profile.default', single = True)
         cat_id = params.get('category_id')
 
         try:
@@ -100,6 +102,13 @@ class MovieBase(MovieTypeBase):
                 'category_id': cat_id if cat_id is not None and len(cat_id) > 0 else None,
             }
 
+            # Update movie info
+            try: del info['in_wanted']
+            except: pass
+            try: del info['in_library']
+            except: pass
+            media['info'] = info
+
             new = False
             try:
                 m = db.get('media', params.get('identifier'), with_doc = True)['doc']
@@ -109,13 +118,6 @@ class MovieBase(MovieTypeBase):
 
             # Update dict to be usable
             m.update(media)
-
-            # Update movie info
-            try: del info['in_wanted']
-            except: pass
-            try: del info['in_library']
-            except: pass
-            m['info'] = info
 
             added = True
             do_search = False
@@ -139,22 +141,20 @@ class MovieBase(MovieTypeBase):
 
                 m['profile_id'] = params.get('profile_id', default_profile.get('id'))
                 m['category_id'] = cat_id if cat_id is not None and len(cat_id) > 0 else (m.get('category_id') or None)
+                m['last_edit'] = int(time.time())
+
+                do_search = True
+                db.update(m)
             else:
                 try: del params['info']
                 except: pass
                 log.debug('Movie already exists, not updating: %s', params)
                 added = False
 
-            if force_readd:
-                m['last_edit'] = int(time.time())
-                do_search = True
-
-            if added:
-                db.update(m)
-
+            # Trigger update info
+            if added and update_after:
                 # Do full update to get images etc
-                if update_after:
-                    fireEventAsync('movie.update_info', m['_id'], default_title = params.get('title'), on_complete = onComplete)
+                fireEventAsync('movie.update_info', m['_id'], default_title = params.get('title'), on_complete = onComplete)
 
             # Remove releases
             for rel in db.run('release', 'for_media', m['_id']):
