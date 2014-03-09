@@ -354,6 +354,13 @@ class Release(Plugin):
                     'info': {}
                 }
 
+                # Add downloader info if provided
+                try:
+                    release['download_info'] = rel['download_info']
+                    del rel['download_info']
+                except:
+                    pass
+
                 try:
                     rls = db.get('release_identifier', rel_identifier, with_doc = True)['doc']
                 except:
