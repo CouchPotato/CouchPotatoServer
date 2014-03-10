@@ -69,7 +69,7 @@ class MovieBase(MovieTypeBase):
                 pass
 
         info = params.get('info')
-        if not info:
+        if not info or (info and len(info.get('titles', [])) == 0):
             info = fireEvent('movie.info', merge = True, extended = False, identifier = params.get('identifier'))
 
         # Set default title
