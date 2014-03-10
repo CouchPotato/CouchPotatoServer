@@ -373,7 +373,7 @@ class Release(Plugin):
                         if not isinstance(rel[info], (str, unicode, int, long, float)):
                             continue
 
-                        rls['info'][info] = toUnicode(rel[info])
+                        rls['info'][info] = toUnicode(rel[info]) if isinstance(rel[info], (str, unicode)) else rel[info]
                     except:
                         log.debug('Couldn\'t add %s to ReleaseInfo: %s', (info, traceback.format_exc()))
 
