@@ -88,7 +88,7 @@ class ThePirateBay(TorrentMagnetProvider):
 
                             results.append({
                                 'id': re.search('/(?P<id>\d+)/', link['href']).group('id'),
-                                'name': link.string,
+                                'name': unicode(link.string),
                                 'url': download['href'],
                                 'detail_url': self.getDomain(link['href']),
                                 'size': self.parseSize(size),

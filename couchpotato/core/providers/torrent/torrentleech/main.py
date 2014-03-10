@@ -56,7 +56,7 @@ class TorrentLeech(TorrentProvider):
 
                     results.append({
                         'id': link['href'].replace('/torrent/', ''),
-                        'name': link.string,
+                        'name': unicode(link.string),
                         'url': self.urls['download'] % url['href'],
                         'detail_url': self.urls['download'] % details['href'],
                         'size': self.parseSize(result.find_all('td')[4].string),

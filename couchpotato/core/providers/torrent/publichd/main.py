@@ -54,7 +54,7 @@ class PublicHD(TorrentMagnetProvider):
 
                         results.append({
                             'id': url['id'][0],
-                            'name': info_url.string,
+                            'name': unicode(info_url.string),
                             'url': download['href'],
                             'detail_url': self.urls['detail'] % url['id'][0],
                             'size': self.parseSize(result.find_all('td')[7].string),
