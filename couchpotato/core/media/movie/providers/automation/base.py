@@ -1,6 +1,6 @@
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.logger import CPLog
-from couchpotato.core.media._base.providers.automation.base import BaseAutomation
+from couchpotato.core.media._base.providers.automation.base import AutomationBase
 from couchpotato.environment import Env
 from couchpotato.core.helpers.variable import splitString
 import time
@@ -8,7 +8,7 @@ import time
 log = CPLog(__name__)
 
 
-class Automation(BaseAutomation):
+class Automation(AutomationBase):
 
     enabled_option = 'automation_enabled'
     http_time_between_calls = 2

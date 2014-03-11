@@ -4,5 +4,5 @@ from couchpotato.core.media._base.providers.base import Provider
 log = CPLog(__name__)
 
 
-class BaseAutomation(Provider):
+class AutomationBase(Provider):
     pass

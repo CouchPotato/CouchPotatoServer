@@ -11,6 +11,8 @@ from string import ascii_lowercase
 
 log = CPLog(__name__)
 
+autoload = 'MediaPlugin'
+
 
 class MediaPlugin(MediaBase):
 
