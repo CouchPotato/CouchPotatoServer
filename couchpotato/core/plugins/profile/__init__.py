@@ -1,7 +1,5 @@
 from .main import ProfilePlugin
 
 
-def start():
+def autoload():
     return ProfilePlugin()
-
-config = []

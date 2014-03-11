@@ -17,6 +17,9 @@ if os.name == 'nt':
     else:
         import win32file  #@UnresolvedImport
 
+autoload = 'FileBrowser'
+
+
 class FileBrowser(Plugin):
 
     def __init__(self):

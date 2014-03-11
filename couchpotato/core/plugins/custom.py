@@ -6,6 +6,8 @@ import os
 
 log = CPLog(__name__)
 
+autoload = 'Custom'
+
 
 class Custom(Plugin):
 

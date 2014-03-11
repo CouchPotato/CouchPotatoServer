@@ -10,6 +10,8 @@ import time
 
 log = CPLog(__name__)
 
+autoload = 'Dashboard'
+
 
 class Dashboard(Plugin):
 

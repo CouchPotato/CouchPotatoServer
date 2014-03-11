@@ -14,6 +14,8 @@ import traceback
 
 log = CPLog(__name__)
 
+autoload = 'FileManager'
+
 
 class FileManager(Plugin):
 

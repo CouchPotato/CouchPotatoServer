@@ -1,7 +1,5 @@
 from .main import Logging
 
 
-def start():
+def autoload():
     return Logging()
-
-config = []

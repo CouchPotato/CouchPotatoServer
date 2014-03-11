@@ -1,7 +1,7 @@
 from .main import QualityPlugin
 
 
-def start():
+def autoload():
     return QualityPlugin()
 
 config = []
