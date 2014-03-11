@@ -5,6 +5,8 @@ import traceback
 
 log = CPLog(__name__)
 
+autoload = 'Toasty'
+
 
 class Toasty(Notification):
 
@@ -29,3 +31,33 @@ class Toasty(Notification):
             log.error('Toasty failed: %s', traceback.format_exc())
 
         return False
+
+
+config = [{
+    'name': 'toasty',
+    'groups': [
+        {
+            'tab': 'notifications',
+            'list': 'notification_providers',
+            'name': 'toasty',
+            'options': [
+                {
+                    'name': 'enabled',
+                    'default': 0,
+                    'type': 'enabler',
+                },
+                {
+                    'name': 'api_key',
+                    'label': 'Device ID',
+                },
+                {
+                    'name': 'on_snatch',
+                    'default': 0,
+                    'type': 'bool',
+                    'advanced': True,
+                    'description': 'Also send message when movie is snatched.',
+                },
+            ],
+        }
+    ],
+}]

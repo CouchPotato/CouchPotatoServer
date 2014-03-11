@@ -4,6 +4,8 @@ from couchpotato.core.notifications.base import Notification
 
 log = CPLog(__name__)
 
+autoload = 'Boxcar2'
+
 
 class Boxcar2(Notification):
 
@@ -37,3 +39,33 @@ class Boxcar2(Notification):
 
     def isEnabled(self):
         return super(Boxcar2, self).isEnabled() and self.conf('token')
+
+
+config = [{
+    'name': 'boxcar2',
+    'groups': [
+        {
+            'tab': 'notifications',
+            'list': 'notification_providers',
+            'name': 'boxcar2',
+            'options': [
+                {
+                    'name': 'enabled',
+                    'default': 0,
+                    'type': 'enabler',
+                },
+                {
+                    'name': 'token',
+                    'description': ('Your Boxcar access token.', 'Can be found in the app under settings')
+                },
+                {
+                    'name': 'on_snatch',
+                    'default': 0,
+                    'type': 'bool',
+                    'advanced': True,
+                    'description': 'Also send message when movie is snatched.',
+                },
+            ],
+        }
+    ],
+}]
