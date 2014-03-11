@@ -5,6 +5,8 @@ from couchpotato.core.plugins.base import Plugin
 
 log = CPLog(__name__)
 
+autoload = 'Scheduler'
+
 
 class Scheduler(Plugin):
 

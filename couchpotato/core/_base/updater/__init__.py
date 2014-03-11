@@ -3,7 +3,7 @@ from couchpotato.environment import Env
 import os
 
 
-def start():
+def autoload():
     return Updater()
 
 config = [{

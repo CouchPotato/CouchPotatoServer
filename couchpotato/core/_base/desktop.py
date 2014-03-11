@@ -5,6 +5,9 @@ from couchpotato.environment import Env
 
 log = CPLog(__name__)
 
+autoload = 'Desktop'
+
+
 if Env.get('desktop'):
 
     class Desktop(Plugin):

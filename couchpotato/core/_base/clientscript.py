@@ -13,6 +13,8 @@ import traceback
 
 log = CPLog(__name__)
 
+autoload = 'ClientScript'
+
 
 class ClientScript(Plugin):
 
