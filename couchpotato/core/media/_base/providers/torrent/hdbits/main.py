@@ -1,15 +1,15 @@
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
-from couchpotato.core.providers.torrent.base import TorrentProvider
 
 import re
 import json
 import traceback
+from couchpotato.core.media._base.providers.torrent.base import TorrentProvider
 
 log = CPLog(__name__)
 
 
-class HDBits(TorrentProvider):
+class Base(TorrentProvider):
 
     urls = {
         'test': 'https://hdbits.org/',

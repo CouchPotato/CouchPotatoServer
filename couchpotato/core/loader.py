@@ -24,9 +24,6 @@ class Loader(object):
             'downloaders': (20, 'couchpotato.core.downloaders', os.path.join(core, 'downloaders')),
         }
 
-        # Add providers to loader
-        self.addPath(root, ['couchpotato', 'core', 'providers'], 25, recursive = False)
-
         # Add media to loader
         self.addPath(root, ['couchpotato', 'core', 'media'], 25, recursive = True)
 
@@ -103,7 +100,7 @@ class Loader(object):
     def loadSettings(self, module, name, save = True):
 
         if not hasattr(module, 'config'):
-            log.debug('Skip loading settings for plugin %s as it has no config section' % module.__file__)
+            #log.debug('Skip loading settings for plugin %s as it has no config section' % module.__file__)
             return False
 
         try:

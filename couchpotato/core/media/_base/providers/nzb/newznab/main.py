@@ -2,8 +2,7 @@ from couchpotato.core.helpers.encoding import tryUrlencode, toUnicode
 from couchpotato.core.helpers.rss import RSS
 from couchpotato.core.helpers.variable import cleanHost, splitString, tryInt
 from couchpotato.core.logger import CPLog
-from couchpotato.core.providers.base import ResultList
-from couchpotato.core.providers.nzb.base import NZBProvider
+from couchpotato.core.media._base.providers.nzb.base import NZBProvider
 from couchpotato.environment import Env
 from dateutil.parser import parse
 from urllib2 import HTTPError
@@ -15,39 +14,35 @@ import urllib2
 log = CPLog(__name__)
 
 
-class Newznab(NZBProvider, RSS):
+class Base(NZBProvider, RSS):
 
     urls = {
-        'download': 'get&id=%s',
         'detail': 'details&id=%s',
-        'search': 'movie',
+        'download': 't=get&id=%s'
     }
 
     limits_reached = {}
 
     http_time_between_calls = 1  # Seconds
 
-    def search(self, movie, quality):
+    def search(self, media, quality):
         hosts = self.getHosts()
 
-        results = ResultList(self, movie, quality, imdb_results = True)
+        results = ResultList(self, media, quality, imdb_results = True)
 
         for host in hosts:
             if self.isDisabled(host):
                 continue
 
-            self._searchOnHost(host, movie, quality, results)
+            self._searchOnHost(host, media, quality, results)
 
         return results
 
-    def _searchOnHost(self, host, movie, quality, results):
+    def _searchOnHost(self, host, media, quality, results):
 
-        arguments = tryUrlencode({
-            'imdbid': movie['identifier'].replace('tt', ''),
-            'apikey': host['api_key'],
-            'extended': 1
-        }) + ('&%s' % host['custom_tag'] if host.get('custom_tag') else '')
-        url = '%s&%s' % (self.getUrl(host['host'], self.urls['search']), arguments)
+        query = self.buildUrl(media, host['api_key'])
+
+        url = '%s&%s' % (self.getUrl(host['host']), query)
 
         nzbs = self.getRSSData(url, cache_timeout = 1800, headers = {'User-Agent': Env.getIdentifier()})
 
@@ -136,11 +131,11 @@ class Newznab(NZBProvider, RSS):
             if result:
                 return result
 
-    def getUrl(self, host, type):
+    def getUrl(self, host):
         if '?page=newznabapi' in host:
-            return cleanHost(host)[:-1] + '&t=' + type
+            return cleanHost(host)[:-1] + '&'
 
-        return cleanHost(host) + 'api?t=' + type
+        return cleanHost(host) + 'api?'
 
     def isDisabled(self, host = None):
         return not self.isEnabled(host)

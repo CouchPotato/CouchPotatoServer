@@ -1,16 +1,14 @@
 from bs4 import BeautifulSoup
-from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
-from couchpotato.core.providers.nzb.base import NZBProvider
-from couchpotato.environment import Env
 import re
 import traceback
+from couchpotato.core.media._base.providers.nzb.base import NZBProvider
 
 log = CPLog(__name__)
 
 
-class BinSearch(NZBProvider):
+class Base(NZBProvider):
 
     urls = {
         'download': 'https://www.binsearch.info/fcgi/nzb.fcgi?q=%s',
@@ -18,23 +16,11 @@ class BinSearch(NZBProvider):
         'search': 'https://www.binsearch.info/index.php?%s',
     }
 
-    http_time_between_calls = 4  # Seconds
+    http_time_between_calls = 4 # Seconds
 
-    def _search(self, movie, quality, results):
+    def _search(self, media, quality, results):
 
-        arguments = tryUrlencode({
-            'q': movie['identifier'],
-            'm': 'n',
-            'max': 400,
-            'adv_age': Env.setting('retention', 'nzb'),
-            'adv_sort': 'date',
-            'adv_col': 'on',
-            'adv_nfo': 'on',
-            'minsize': quality.get('size_min'),
-            'maxsize': quality.get('size_max'),
-        })
-
-        data = self.getHTMLData(self.urls['search'] % arguments)
+        data = self.getHTMLData(self.urls['search'] % self.buildUrl(media, quality))
 
         if data:
             try:
@@ -101,4 +87,3 @@ class BinSearch(NZBProvider):
             log.error('Failed getting nzb from %s: %s', (self.getName(), traceback.format_exc()))
 
         return 'try_next'
-

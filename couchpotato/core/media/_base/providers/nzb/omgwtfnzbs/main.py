@@ -3,7 +3,7 @@ from couchpotato.core.helpers.encoding import toUnicode, tryUrlencode
 from couchpotato.core.helpers.rss import RSS
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
-from couchpotato.core.providers.nzb.base import NZBProvider
+from couchpotato.core.media._base.providers.nzb.base import NZBProvider
 from dateutil.parser import parse
 from urlparse import urlparse, parse_qs
 import time
@@ -11,7 +11,7 @@ import time
 log = CPLog(__name__)
 
 
-class OMGWTFNZBs(NZBProvider, RSS):
+class Base(NZBProvider, RSS):
 
     urls = {
         'search': 'https://rss.omgwtfnzbs.org/rss-search.php?%s',

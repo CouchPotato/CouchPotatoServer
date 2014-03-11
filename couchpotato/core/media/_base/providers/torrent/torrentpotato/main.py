@@ -1,45 +1,37 @@
-from couchpotato.core.helpers.encoding import tryUrlencode, toUnicode
+from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.variable import splitString, tryInt, tryFloat
 from couchpotato.core.logger import CPLog
-from couchpotato.core.providers.base import ResultList
-from couchpotato.core.providers.torrent.base import TorrentProvider
 from urlparse import urlparse
 import re
 import traceback
+from couchpotato.core.media._base.providers.torrent.base import TorrentProvider
 
 log = CPLog(__name__)
 
 
-class TorrentPotato(TorrentProvider):
+class Base(TorrentProvider):
 
     urls = {}
     limits_reached = {}
 
     http_time_between_calls = 1  # Seconds
 
-    def search(self, movie, quality):
+    def search(self, media, quality):
         hosts = self.getHosts()
 
-        results = ResultList(self, movie, quality, imdb_results = True)
+        results = ResultList(self, media, quality, imdb_results = True)
 
         for host in hosts:
             if self.isDisabled(host):
                 continue
 
-            self._searchOnHost(host, movie, quality, results)
+            self._searchOnHost(host, media, quality, results)
 
         return results
 
-    def _searchOnHost(self, host, movie, quality, results):
+    def _searchOnHost(self, host, media, quality, results):
 
-        arguments = tryUrlencode({
-            'user': host['name'],
-            'passkey': host['pass_key'],
-            'imdbid': movie['identifier']
-        })
-        url = '%s?%s' % (host['host'], arguments)
-
-        torrents = self.getJsonData(url, cache_timeout = 1800)
+        torrents = self.getJsonData(self.buildUrl(media, host), cache_timeout = 1800)
 
         if torrents:
             try:
@@ -110,7 +102,7 @@ class TorrentPotato(TorrentProvider):
         hosts = self.getHosts()
 
         for host in hosts:
-            result = super(TorrentPotato, self).belongsTo(url, host = host['host'], provider = provider)
+            result = super(Base, self).belongsTo(url, host = host['host'], provider = provider)
             if result:
                 return result
 

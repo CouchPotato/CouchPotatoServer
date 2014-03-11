@@ -1,8 +1,3 @@
-from .main import Bitsoup
-
-
-def start():
-    return Bitsoup()
 
 config = [{
     'name': 'bitsoup',

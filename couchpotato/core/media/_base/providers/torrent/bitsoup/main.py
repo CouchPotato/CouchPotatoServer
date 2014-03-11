@@ -2,13 +2,13 @@ from bs4 import BeautifulSoup
 from couchpotato.core.helpers.encoding import simplifyString, tryUrlencode
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
-from couchpotato.core.providers.torrent.base import TorrentProvider
 import traceback
+from couchpotato.core.media._base.providers.torrent.base import TorrentProvider
 
 log = CPLog(__name__)
 
 
-class Bitsoup(TorrentProvider):
+class Base(TorrentProvider):
 
     urls = {
         'test': 'https://www.bitsoup.me/',
@@ -28,6 +28,7 @@ class Bitsoup(TorrentProvider):
         })
         url = "%s&%s" % (self.urls['search'], arguments)
 
+        url = self.urls['search'] % self.buildUrl(media, quality)
         data = self.getHTMLData(url)
 
         if data:
@@ -84,4 +85,3 @@ class Bitsoup(TorrentProvider):
         return 'logout.php' in output.lower()
 
     loginCheckSuccess = loginSuccess
-

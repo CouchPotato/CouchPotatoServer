@@ -1,8 +1,3 @@
-from .main import Yify
-
-
-def start():
-    return Yify()
 
 config = [{
     'name': 'yify',

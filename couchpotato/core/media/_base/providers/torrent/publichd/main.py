@@ -2,15 +2,16 @@ from bs4 import BeautifulSoup
 from couchpotato.core.helpers.encoding import tryUrlencode, toUnicode
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
-from couchpotato.core.providers.torrent.base import TorrentMagnetProvider
 from urlparse import parse_qs
 import re
 import traceback
+from couchpotato.core.media._base.providers.torrent.base import TorrentMagnetProvider
+import six
 
 log = CPLog(__name__)
 
 
-class PublicHD(TorrentMagnetProvider):
+class Base(TorrentMagnetProvider):
 
     urls = {
         'test': 'https://publichd.se',
@@ -24,13 +25,15 @@ class PublicHD(TorrentMagnetProvider):
         if not quality.get('hd', False):
             return []
 
-        return super(PublicHD, self).search(movie, quality)
+        return super(Base, self).search(movie, quality)
 
-    def _searchOnTitle(self, title, movie, quality, results):
+    def _search(self, media, quality, results):
+
+        query = self.buildUrl(media)
 
         params = tryUrlencode({
             'page':'torrents',
-            'search': '%s %s' % (title, movie['info']['year']),
+            'search': query,
             'active': 1,
         })
 
@@ -54,7 +57,7 @@ class PublicHD(TorrentMagnetProvider):
 
                         results.append({
                             'id': url['id'][0],
-                            'name': unicode(info_url.string),
+                            'name': six.text_type(info_url.string),
                             'url': download['href'],
                             'detail_url': self.urls['detail'] % url['id'][0],
                             'size': self.parseSize(result.find_all('td')[7].string),

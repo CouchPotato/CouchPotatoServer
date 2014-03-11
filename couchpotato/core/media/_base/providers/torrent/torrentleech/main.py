@@ -1,15 +1,14 @@
 from bs4 import BeautifulSoup
-from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
-from couchpotato.core.providers.torrent.base import TorrentProvider
 import traceback
-
+from couchpotato.core.media._base.providers.torrent.base import TorrentProvider
+import six
 
 log = CPLog(__name__)
 
 
-class TorrentLeech(TorrentProvider):
+class Base(TorrentProvider):
 
     urls = {
         'test': 'http://www.torrentleech.org/',
@@ -20,22 +19,13 @@ class TorrentLeech(TorrentProvider):
         'download': 'http://www.torrentleech.org%s',
     }
 
-    cat_ids = [
-        ([13], ['720p', '1080p']),
-        ([8], ['cam']),
-        ([9], ['ts', 'tc']),
-        ([10], ['r5', 'scr']),
-        ([11], ['dvdrip']),
-        ([14], ['brrip']),
-        ([12], ['dvdr']),
-    ]
-
     http_time_between_calls = 1 #seconds
     cat_backup_id = None
 
-    def _searchOnTitle(self, title, movie, quality, results):
+    def _search(self, media, quality, results):
 
-        url = self.urls['search'] % (tryUrlencode('%s %s' % (title.replace(':', ''), movie['info']['year'])), self.getCatId(quality['identifier'])[0])
+        url = self.urls['search'] % self.buildUrl(media, quality)
+
         data = self.getHTMLData(url)
 
         if data:
@@ -56,7 +46,7 @@ class TorrentLeech(TorrentProvider):
 
                     results.append({
                         'id': link['href'].replace('/torrent/', ''),
-                        'name': unicode(link.string),
+                        'name': six.text_type(link.string),
                         'url': self.urls['download'] % url['href'],
                         'detail_url': self.urls['download'] % details['href'],
                         'size': self.parseSize(result.find_all('td')[4].string),

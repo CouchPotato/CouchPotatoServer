@@ -1,40 +1,26 @@
 from bs4 import BeautifulSoup
-from couchpotato.core.helpers.encoding import toUnicode, tryUrlencode
+from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.rss import RSS
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
-from couchpotato.core.providers.nzb.base import NZBProvider
+from couchpotato.core.media._base.providers.nzb.base import NZBProvider
 from dateutil.parser import parse
 import time
 
 log = CPLog(__name__)
 
 
-class NZBClub(NZBProvider, RSS):
+class Base(NZBProvider, RSS):
 
     urls = {
         'search': 'https://www.nzbclub.com/nzbfeeds.aspx?%s',
     }
 
-    http_time_between_calls = 4  #seconds
+    http_time_between_calls = 4 #seconds
 
-    def _searchOnTitle(self, title, movie, quality, results):
+    def _search(self, media, quality, results):
 
-        q = '"%s %s"' % (title, movie['info']['year'])
-
-        q_param = tryUrlencode({
-            'q': q,
-        })
-
-        params = tryUrlencode({
-            'ig': 1,
-            'rpp': 200,
-            'st': 5,
-            'sp': 1,
-            'ns': 1,
-        })
-
-        nzbs = self.getRSSData(self.urls['search'] % ('%s&%s' % (q_param, params)))
+        nzbs = self.getRSSData(self.urls['search'] % self.buildUrl(media))
 
         for nzb in nzbs:
 

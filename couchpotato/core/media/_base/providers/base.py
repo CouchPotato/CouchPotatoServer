@@ -14,7 +14,6 @@ import xml.etree.ElementTree as XMLTree
 
 log = CPLog(__name__)
 
-
 class MultiProvider(Plugin):
 
     def __init__(self):
@@ -102,7 +101,6 @@ class Provider(Plugin):
 class YarrProvider(Provider):
 
     protocol = None  # nzb, torrent, torrent_magnet
-    type = 'movie'
 
     cat_ids = {}
     cat_backup_id = None
@@ -180,7 +178,7 @@ class YarrProvider(Provider):
 
         return 'try_next'
 
-    def search(self, movie, quality):
+    def search(self, media, quality):
 
         if self.isDisabled():
             return []
@@ -192,15 +190,17 @@ class YarrProvider(Provider):
 
         # Create result container
         imdb_results = hasattr(self, '_search')
-        results = ResultList(self, movie, quality, imdb_results = imdb_results)
+        results = ResultList(self, media, quality, imdb_results = imdb_results)
 
         # Do search based on imdb id
         if imdb_results:
-            self._search(movie, quality, results)
+            self._search(media, quality, results)
         # Search possible titles
         else:
-            for title in possibleTitles(getTitle(movie)):
-                self._searchOnTitle(title, movie, quality, results)
+            media_title = fireEvent('library.query', media['library'], single = True)
+
+            for title in possibleTitles(media_title):
+                self._searchOnTitle(title, media, quality, results)
 
         return results
 
@@ -243,8 +243,7 @@ class YarrProvider(Provider):
 
     def getCatId(self, identifier):
 
-        for cats in self.cat_ids:
-            ids, qualities = cats
+        for ids, qualities in self.cat_ids:
             if identifier in qualities:
                 return ids
 

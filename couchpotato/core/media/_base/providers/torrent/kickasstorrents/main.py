@@ -1,14 +1,14 @@
 from bs4 import BeautifulSoup
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
-from couchpotato.core.providers.torrent.base import TorrentMagnetProvider
 import re
 import traceback
+from couchpotato.core.media._base.providers.torrent.base import TorrentMagnetProvider
 
 log = CPLog(__name__)
 
 
-class KickAssTorrents(TorrentMagnetProvider):
+class Base(TorrentMagnetProvider):
 
     urls = {
         'detail': '%s/%s',
@@ -34,9 +34,9 @@ class KickAssTorrents(TorrentMagnetProvider):
         'http://www.kickassproxy.info',
     ]
 
-    def _search(self, movie, quality, results):
+    def _search(self, media, quality, results):
 
-        data = self.getHTMLData(self.urls['search'] % (self.getDomain(), 'm', movie['identifier'].replace('tt', '')))
+        data = self.getHTMLData(self.urls['search'] % (self.getDomain(), 'm', media['identifier'].replace('tt', '')))
 
         if data:
 

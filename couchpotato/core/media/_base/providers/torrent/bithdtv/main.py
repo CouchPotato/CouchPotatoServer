@@ -1,14 +1,14 @@
 from bs4 import BeautifulSoup
-from couchpotato.core.helpers.encoding import tryUrlencode, toUnicode
+from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
-from couchpotato.core.providers.torrent.base import TorrentProvider
 import traceback
+from couchpotato.core.media._base.providers.torrent.base import TorrentProvider
 
 log = CPLog(__name__)
 
 
-class BiTHDTV(TorrentProvider):
+class Base(TorrentProvider):
 
     urls = {
         'test': 'http://www.bit-hdtv.com/',
@@ -19,18 +19,13 @@ class BiTHDTV(TorrentProvider):
     }
 
     # Searches for movies only - BiT-HDTV's subcategory and resolution search filters appear to be broken
-    cat_id_movies = 7
-
     http_time_between_calls = 1 #seconds
 
-    def _searchOnTitle(self, title, movie, quality, results):
+    def _search(self, media, quality, results):
 
-        arguments = tryUrlencode({
-            'search': '%s %s' % (title.replace(':', ''), movie['info']['year']),
-            'cat': self.cat_id_movies
-        })
+        query = self.buildUrl(media)
 
-        url = "%s&%s" % (self.urls['search'], arguments)
+        url = "%s&%s" % (self.urls['search'], query)
 
         data = self.getHTMLData(url)
 

@@ -1,12 +1,12 @@
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
-from couchpotato.core.providers.torrent.base import TorrentMagnetProvider
 import traceback
+from couchpotato.core.media._base.providers.torrent.base import TorrentProvider
 
 log = CPLog(__name__)
 
 
-class Yify(TorrentMagnetProvider):
+class Base(TorrentProvider):
 
     urls = {
         'test': '%s/api',

@@ -2,13 +2,13 @@ from bs4 import BeautifulSoup
 from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
-from couchpotato.core.providers.torrent.base import TorrentProvider
 import traceback
+from couchpotato.core.media._base.providers.torrent.base import TorrentProvider
 
 log = CPLog(__name__)
 
 
-class TorrentBytes(TorrentProvider):
+class Base(TorrentProvider):
 
     urls = {
         'test': 'https://www.torrentbytes.net/',

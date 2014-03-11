@@ -1,28 +1,21 @@
 from bs4 import BeautifulSoup
-from couchpotato.core.helpers.encoding import toUnicode, tryUrlencode
+from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
-from couchpotato.core.providers.torrent.base import TorrentMagnetProvider
 import re
 import traceback
+from couchpotato.core.media._base.providers.torrent.base import TorrentMagnetProvider
 import six
 
 log = CPLog(__name__)
 
 
-class ThePirateBay(TorrentMagnetProvider):
+class Base(TorrentMagnetProvider):
 
     urls = {
-        'detail': '%s/torrent/%s',
-        'search': '%s/search/%s/%s/7/%s'
+         'detail': '%s/torrent/%s',
+         'search': '%s/search/%%s/%%s/7/%%s'
     }
-
-    cat_ids = [
-        ([207], ['720p', '1080p']),
-        ([201], ['cam', 'ts', 'dvdrip', 'tc', 'r5', 'scr']),
-        ([201, 207], ['brrip']),
-        ([202], ['dvdr'])
-    ]
 
     cat_backup_id = 200
     disable_provider = False
@@ -37,18 +30,21 @@ class ThePirateBay(TorrentMagnetProvider):
         'http://nl.tpb.li',
         'http://proxybay.eu',
         'https://www.getpirate.com',
-        'http://piratebay.io', 
+        'http://piratebay.io',
     ]
 
-    def _searchOnTitle(self, title, movie, quality, results):
+    def _search(self, media, quality, results):
 
         page = 0
         total_pages = 1
         cats = self.getCatId(quality['identifier'])
 
+        search_url = self.urls['search'] % self.getDomain()
+
         while page < total_pages:
 
-            search_url = self.urls['search'] % (self.getDomain(), tryUrlencode('"%s" %s' % (title, movie['info']['year'])), page, ','.join(str(x) for x in cats))
+            search_url = search_url % self.buildUrl(media, page, cats)
+
             page += 1
 
             data = self.getHTMLData(search_url)
@@ -88,7 +84,7 @@ class ThePirateBay(TorrentMagnetProvider):
 
                             results.append({
                                 'id': re.search('/(?P<id>\d+)/', link['href']).group('id'),
-                                'name': unicode(link.string),
+                                'name': six.text_type(link.string),
                                 'url': download['href'],
                                 'detail_url': self.getDomain(link['href']),
                                 'size': self.parseSize(size),
@@ -102,7 +98,7 @@ class ThePirateBay(TorrentMagnetProvider):
                     log.error('Failed getting results from %s: %s', (self.getName(), traceback.format_exc()))
 
     def isEnabled(self):
-        return super(ThePirateBay, self).isEnabled() and self.getDomain()
+        return super(Base, self).isEnabled() and self.getDomain()
 
     def correctProxy(self, data):
         return 'title="Pirate Search"' in data
@@ -110,7 +106,7 @@ class ThePirateBay(TorrentMagnetProvider):
     def getMoreInfo(self, item):
         full_description = self.getCache('tpb.%s' % item['id'], item['detail_url'], cache_timeout = 25920000)
         html = BeautifulSoup(full_description)
-        nfo_pre = html.find('div', attrs = {'class': 'nfo'})
+        nfo_pre = html.find('div', attrs = {'class':'nfo'})
         description = toUnicode(nfo_pre.text) if nfo_pre else ''
 
         item['description'] = description

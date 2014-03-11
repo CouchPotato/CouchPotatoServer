@@ -1,14 +1,15 @@
 from bs4 import BeautifulSoup
-from couchpotato.core.helpers.encoding import tryUrlencode, toSafeString
+from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
-from couchpotato.core.providers.torrent.base import TorrentProvider
 import traceback
+from couchpotato.core.media._base.providers.torrent.base import TorrentProvider
+import six
 
 log = CPLog(__name__)
 
 
-class IPTorrents(TorrentProvider):
+class Base(TorrentProvider):
 
     urls = {
         'test': 'https://www.iptorrents.com/',
@@ -18,26 +19,33 @@ class IPTorrents(TorrentProvider):
         'search': 'https://www.iptorrents.com/torrents/?l%d=1%s&q=%s&qf=ti&p=%d',
     }
 
-    cat_ids = [
-        ([48], ['720p', '1080p', 'bd50']),
-        ([72], ['cam', 'ts', 'tc', 'r5', 'scr']),
-        ([7], ['dvdrip', 'brrip']),
-        ([6], ['dvdr']),
-    ]
-
     http_time_between_calls = 1 #seconds
     cat_backup_id = None
 
-    def _searchOnTitle(self, title, movie, quality, results):
+    def buildUrl(self, title, media, quality):
+        return self._buildUrl(title.replace(':', ''), quality['identifier'])
+
+    def _buildUrl(self, query, quality_identifier):
+
+        cat_ids = self.getCatId(quality_identifier)
+
+        if not cat_ids:
+            log.warning('Unable to find category ids for identifier "%s"', quality_identifier)
+            return None
+
+        return self.urls['search'] % ("&".join(("l%d=" % x) for x in cat_ids), tryUrlencode(query).replace('%', '%%'))
+
+    def _searchOnTitle(self, title, media, quality, results):
 
         freeleech = '' if not self.conf('freeleech') else '&free=on'
+
+        base_url = self.buildUrl(title, media, quality)
+        if not base_url: return
 
         pages = 1
         current_page = 1
         while current_page <= pages and not self.shuttingDown():
-
-            url = self.urls['search'] % (self.getCatId(quality['identifier'])[0], freeleech, tryUrlencode('%s %s' % (title.replace(':', ''), movie['info']['year'])), current_page)
-            data = self.getHTMLData(url)
+            data = self.getHTMLData(base_url % (freeleech, current_page))
 
             if data:
                 html = BeautifulSoup(data)
@@ -57,27 +65,21 @@ class IPTorrents(TorrentProvider):
 
                     entries = result_table.find_all('tr')
 
-                    columns = self.getColumns(entries)
-
-                    if 'seeders' not in columns or 'leechers' not in columns:
-                        log.warning('Unrecognized table format returned')
-                        return
-
                     for result in entries[1:]:
 
-                        cells = result.find_all('td')
-                        if len(cells) <= 1:
+                        torrent = result.find_all('td')
+                        if len(torrent) <= 1:
                             break
 
-                        torrent = cells[1].find('a')
+                        torrent = torrent[1].find('a')
 
                         torrent_id = torrent['href'].replace('/details.php?id=', '')
-                        torrent_name = unicode(torrent.string)
+                        torrent_name = six.text_type(torrent.string)
                         torrent_download_url = self.urls['base_url'] + (result.find_all('td')[3].find('a'))['href'].replace(' ', '.')
                         torrent_details_url = self.urls['base_url'] + torrent['href']
                         torrent_size = self.parseSize(result.find_all('td')[5].string)
-                        torrent_seeders = tryInt(cells[columns['seeders']].string)
-                        torrent_leechers = tryInt(cells[columns['leechers']].string)
+                        torrent_seeders = tryInt(result.find('td', attrs = {'class' : 'ac t_seeders'}).string)
+                        torrent_leechers = tryInt(result.find('td', attrs = {'class' : 'ac t_leechers'}).string)
 
                         results.append({
                             'id': torrent_id,
@@ -94,20 +96,6 @@ class IPTorrents(TorrentProvider):
                     break
 
             current_page += 1
-
-    def getColumns(self, entries):
-        result = {}
-
-        for x, col in enumerate(entries[0].find_all('th')):
-            name = col.text or col.find('img')['title']
-            key = toSafeString(name).strip().lower()
-
-            if not key:
-                continue
-
-            result[key] = x
-
-        return result
 
     def getLoginParams(self):
         return {

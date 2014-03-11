@@ -1,5 +1,5 @@
-from couchpotato.core.providers.base import Provider
+from couchpotato.core.media._base.providers.base import Provider
 
 
-class MovieProvider(Provider):
-    type = 'movie'
+class BaseInfoProvider(Provider):
+    type = 'unknown'

@@ -1,4 +1,4 @@
-from couchpotato.core.providers.base import YarrProvider
+from couchpotato.core.media._base.providers.base import YarrProvider
 import time
 
 

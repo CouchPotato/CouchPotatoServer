@@ -2,14 +2,14 @@ from bs4 import BeautifulSoup
 from couchpotato.core.helpers.encoding import toUnicode, tryUrlencode
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
-from couchpotato.core.providers.torrent.base import TorrentProvider
 import re
 import traceback
+from couchpotato.core.media._base.providers.torrent.base import TorrentProvider
 
 log = CPLog(__name__)
 
 
-class ILoveTorrents(TorrentProvider):
+class Base(TorrentProvider):
 
     urls = {
         'download': 'https://www.ilovetorrents.me/%s',
