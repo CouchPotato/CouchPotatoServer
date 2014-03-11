@@ -93,7 +93,12 @@ class Loader(object):
             self.addModule(priority, plugin_type, module, os.path.basename(dir_name))
 
         for name in os.listdir(dir_name):
-            if os.path.isdir(os.path.join(dir_name, name)) and name != 'static' and os.path.isfile(os.path.join(dir_name, name, '__init__.py')):
+            path = os.path.join(dir_name, name)
+            ext = os.path.splitext(path)[1]
+            ext_length = len(ext)
+            if name != 'static' and ((os.path.isdir(path) and os.path.isfile(os.path.join(path, '__init__.py')))
+                                     or (os.path.isfile(path) and ext == '.py')):
+                name = name[:-ext_length] if ext_length > 0 else name
                 module_name = '%s.%s' % (module, name)
                 self.addModule(priority, plugin_type, module_name, name)
 
@@ -118,11 +123,16 @@ class Loader(object):
 
     def loadPlugins(self, module, name):
 
-        if not hasattr(module, 'start'):
+        if not hasattr(module, 'autoload'):
             log.debug('Skip startup for plugin %s as it has no start section' % module.__file__)
             return False
         try:
-            module.start()
+            # Load single file plugin
+            if isinstance(module.autoload, (str, unicode)):
+                getattr(module, module.autoload)()
+            # Load folder plugin
+            else:
+                module.autoload()
             return True
         except:
             log.error('Failed loading plugin "%s": %s', (module.__file__, traceback.format_exc()))
