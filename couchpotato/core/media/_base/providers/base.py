@@ -14,6 +14,7 @@ import xml.etree.ElementTree as XMLTree
 
 log = CPLog(__name__)
 
+
 class MultiProvider(Plugin):
 
     def __init__(self):

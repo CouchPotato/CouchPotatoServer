@@ -1,7 +1,7 @@
 from .main import MovieBase
 
 
-def start():
+def autoload():
     return MovieBase()
 
 config = []
