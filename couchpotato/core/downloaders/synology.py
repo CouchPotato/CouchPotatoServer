@@ -8,6 +8,8 @@ import traceback
 
 log = CPLog(__name__)
 
+autoload = 'Synology'
+
 
 class Synology(Downloader):
 
@@ -160,3 +162,52 @@ class SynologyRPC(object):
 
     def test(self):
         return bool(self._login())
+
+
+config = [{
+    'name': 'synology',
+    'groups': [
+        {
+            'tab': 'downloaders',
+            'list': 'download_providers',
+            'name': 'synology',
+            'label': 'Synology',
+            'description': 'Use <a href="http://www.synology.com/dsm/home_home_applications_download_station.php" target="_blank">Synology Download Station</a> to download.',
+            'wizard': True,
+            'options': [
+                {
+                    'name': 'enabled',
+                    'default': 0,
+                    'type': 'enabler',
+                    'radio_group': 'nzb,torrent',
+                },
+                {
+                    'name': 'host',
+                    'default': 'localhost:5000',
+                    'description': 'Hostname with port. Usually <strong>localhost:5000</strong>',
+                },
+                {
+                    'name': 'username',
+                },
+                {
+                    'name': 'password',
+                    'type': 'password',
+                },
+                {
+                    'name': 'use_for',
+                    'label': 'Use for',
+                    'default': 'both',
+                    'type': 'dropdown',
+                    'values': [('usenet & torrents', 'both'), ('usenet', 'nzb'), ('torrent', 'torrent')],
+                },
+                {
+                    'name': 'manual',
+                    'default': 0,
+                    'type': 'bool',
+                    'advanced': True,
+                    'description': 'Disable this downloader for automated searches, but use it when I manually send a release.',
+                },
+            ],
+        }
+    ],
+}]
