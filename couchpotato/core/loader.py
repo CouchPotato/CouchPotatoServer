@@ -56,12 +56,10 @@ class Loader(object):
                     if m is None:
                         continue
 
-                    log.info('Loading %s: %s', (plugin['type'], plugin['name']))
-
                     # Save default settings for plugin/provider
                     did_save += self.loadSettings(m, module_name, save = False)
 
-                    self.loadPlugins(m, plugin.get('name'))
+                    self.loadPlugins(m, plugin.get('type'), plugin.get('name'))
                 except ImportError as e:
                     # todo:: subclass ImportError for missing requirements.
                     if e.message.lower().startswith("missing"):
@@ -123,7 +121,7 @@ class Loader(object):
             log.debug('Failed loading settings for "%s": %s', (name, traceback.format_exc()))
             return False
 
-    def loadPlugins(self, module, name):
+    def loadPlugins(self, module, type, name):
 
         if not hasattr(module, 'autoload'):
             #log.debug('Skip startup for plugin %s as it has no start section' % module.__file__)
@@ -135,6 +133,8 @@ class Loader(object):
             # Load folder plugin
             else:
                 module.autoload()
+
+            log.info('Loaded %s: %s', (type, name))
             return True
         except:
             log.error('Failed loading plugin "%s": %s', (module.__file__, traceback.format_exc()))
