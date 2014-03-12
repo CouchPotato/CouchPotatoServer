@@ -106,7 +106,11 @@ class MovieResultModifier(Plugin):
 
                 for release in db.run('release', 'for_media', media.get('_id')):
                     if release.get('status') == 'done':
-                        temp['in_library'] = media
+                        if not temp['in_library']:
+                            temp['in_library'] = media
+                            temp['in_library']['releases'] = []
+
+                        temp['in_library']['releases'].append(release)
         except:
             log.error('Tried getting more info on searched movies: %s', traceback.format_exc())
 

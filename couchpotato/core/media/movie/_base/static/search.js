@@ -134,8 +134,8 @@ Block.Search.MovieItem = new Class({
 
 			if(self.info.in_library){
 				var in_library = [];
-				self.info.in_library.releases.each(function(release){
-					in_library.include(release.quality.label)
+				(self.info.in_library.releases || []).each(function(release){
+					in_library.include(release.quality)
 				});
 			}
 
