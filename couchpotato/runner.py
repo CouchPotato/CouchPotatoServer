@@ -178,6 +178,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     logger.addHandler(hdlr2)
 
     # Start logging & enable colors
+    import color_logs
     from couchpotato.core.logger import CPLog
     log = CPLog(__name__)
     log.debug('Started with options %s', options)

@@ -146,6 +146,9 @@ class Loader(object):
             self.modules[priority] = {}
 
         module = module.lstrip('.')
+        if plugin_type.startswith('couchpotato_core'):
+            plugin_type = plugin_type[17:]
+
         self.modules[priority][module] = {
             'priority': priority,
             'module': module,
