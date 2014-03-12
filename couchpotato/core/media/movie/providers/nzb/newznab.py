@@ -5,6 +5,8 @@ from couchpotato.core.media.movie.providers.base import MovieProvider
 
 log = CPLog(__name__)
 
+autoload = 'Newznab'
+
 
 class Newznab(MovieProvider, Base):
 

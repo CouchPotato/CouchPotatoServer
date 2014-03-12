@@ -6,6 +6,8 @@ from couchpotato.environment import Env
 
 log = CPLog(__name__)
 
+autoload = 'BinSearch'
+
 
 class BinSearch(MovieProvider, Base):
 

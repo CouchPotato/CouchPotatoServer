@@ -7,6 +7,8 @@ from couchpotato.environment import Env
 
 log = CPLog(__name__)
 
+autoload = 'NzbIndex'
+
 
 class NzbIndex(MovieProvider, Base):
 

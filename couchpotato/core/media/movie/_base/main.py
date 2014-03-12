@@ -14,6 +14,8 @@ import six
 
 log = CPLog(__name__)
 
+autoload = 'MovieBase'
+
 
 class MovieBase(MovieTypeBase):
 

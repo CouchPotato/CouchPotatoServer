@@ -21,6 +21,8 @@ from six.moves import filter, map, zip
 
 log = CPLog(__name__)
 
+autoload = 'Scanner'
+
 
 class Scanner(Plugin):
 
