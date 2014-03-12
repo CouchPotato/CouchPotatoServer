@@ -1,5 +1,5 @@
 from couchpotato.core.downloaders.base import Downloader, ReleaseDownloadList
-from couchpotato.core.event import fireEvent, addEvent
+from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import sp
 from couchpotato.core.helpers.variable import cleanHost, splitString
 from couchpotato.core.logger import CPLog

@@ -1,6 +1,6 @@
 from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.logger import CPLog
-from couchpotato.core.media._base.providers.nzb.binsearch.main import Base
+from couchpotato.core.media._base.providers.nzb.binsearch import Base
 from couchpotato.core.media.movie.providers.base import MovieProvider
 from couchpotato.environment import Env
 
