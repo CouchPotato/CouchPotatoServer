@@ -1,8 +1,10 @@
+import re
+
 from bs4 import BeautifulSoup
 from couchpotato.core.helpers.variable import tryInt, splitString, removeEmpty
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media.movie.providers.automation.base import Automation
-import re
+
 
 log = CPLog(__name__)
 

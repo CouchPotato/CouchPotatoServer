@@ -1,11 +1,13 @@
+import datetime
+import re
+
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import simplifyString
 from couchpotato.core.helpers.variable import splitString, removeEmpty, removeDuplicate
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.searcher.base import SearcherBase
-import datetime
-import re
+
 
 log = CPLog(__name__)
 

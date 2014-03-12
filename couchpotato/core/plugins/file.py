@@ -1,3 +1,7 @@
+import os.path
+import time
+import traceback
+
 from couchpotato import get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent
@@ -8,9 +12,7 @@ from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
 from scandir import scandir
 from tornado.web import StaticFileHandler
-import os.path
-import time
-import traceback
+
 
 log = CPLog(__name__)
 

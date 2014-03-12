@@ -1,11 +1,13 @@
 from base64 import b32decode, b16encode
+import random
+import re
+
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.variable import mergeDicts
 from couchpotato.core.logger import CPLog
-import random
-import re
 from couchpotato.core.media._base.providers.base import Provider
+
 
 log = CPLog(__name__)
 

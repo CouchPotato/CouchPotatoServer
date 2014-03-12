@@ -1,4 +1,6 @@
 import traceback
+from string import ascii_lowercase
+
 from couchpotato import tryInt, get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, fireEventAsync, addEvent
@@ -7,7 +9,7 @@ from couchpotato.core.helpers.variable import splitString, getImdb, getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media import MediaBase
 from .index import MediaIMDBIndex, MediaStatusIndex, MediaTypeIndex, TitleSearchIndex, TitleIndex, StartsWithIndex
-from string import ascii_lowercase
+
 
 log = CPLog(__name__)
 

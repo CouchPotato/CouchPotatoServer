@@ -1,10 +1,12 @@
-from couchpotato.core.event import fireEvent
-from couchpotato.core.logger import CPLog
-from importhelper import import_module
 import os
 import sys
 import traceback
+
+from couchpotato.core.event import fireEvent
+from couchpotato.core.logger import CPLog
+from importhelper import import_module
 import six
+
 
 log = CPLog(__name__)
 
@@ -124,7 +126,7 @@ class Loader(object):
     def loadPlugins(self, module, name):
 
         if not hasattr(module, 'autoload'):
-            log.debug('Skip startup for plugin %s as it has no start section' % module.__file__)
+            #log.debug('Skip startup for plugin %s as it has no start section' % module.__file__)
             return False
         try:
             # Load single file plugin

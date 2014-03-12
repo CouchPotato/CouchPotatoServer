@@ -1,11 +1,13 @@
+from string import digits, ascii_letters
+from urllib2 import HTTPError
+import re
+
 from bs4 import SoupStrainer, BeautifulSoup
 from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.helpers.variable import mergeDicts, getTitle
 from couchpotato.core.logger import CPLog
-from string import digits, ascii_letters
-from urllib2 import HTTPError
-import re
 from couchpotato.core.media.movie.providers.trailer.base import TrailerProvider
+
 
 log = CPLog(__name__)
 

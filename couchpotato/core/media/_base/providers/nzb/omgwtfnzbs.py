@@ -1,3 +1,6 @@
+from urlparse import urlparse, parse_qs
+import time
+
 from couchpotato.core.event import fireEvent
 from couchpotato.core.helpers.encoding import toUnicode, tryUrlencode
 from couchpotato.core.helpers.rss import RSS
@@ -5,8 +8,7 @@ from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.providers.nzb.base import NZBProvider
 from dateutil.parser import parse
-from urlparse import urlparse, parse_qs
-import time
+
 
 log = CPLog(__name__)
 

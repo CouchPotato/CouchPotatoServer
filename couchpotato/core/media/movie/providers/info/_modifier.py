@@ -1,11 +1,13 @@
+import copy
+import traceback
+
 from CodernityDB.database import RecordNotFound
 from couchpotato import get_db
 from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.variable import mergeDicts, randomString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-import copy
-import traceback
+
 
 log = CPLog(__name__)
 

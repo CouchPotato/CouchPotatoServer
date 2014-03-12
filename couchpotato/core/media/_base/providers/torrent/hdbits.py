@@ -1,10 +1,11 @@
-from couchpotato.core.helpers.variable import tryInt
-from couchpotato.core.logger import CPLog
-
 import re
 import json
 import traceback
+
+from couchpotato.core.helpers.variable import tryInt
+from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.providers.torrent.base import TorrentProvider
+
 
 log = CPLog(__name__)
 

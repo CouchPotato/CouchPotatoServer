@@ -1,10 +1,12 @@
-from couchpotato.api import addApiView
-from couchpotato.core.helpers.variable import getUserDir
-from couchpotato.core.plugins.base import Plugin
 import ctypes
 import os
 import string
+
+from couchpotato.api import addApiView
+from couchpotato.core.helpers.variable import getUserDir
+from couchpotato.core.plugins.base import Plugin
 import six
+
 
 if os.name == 'nt':
     import imp

@@ -1,5 +1,7 @@
 import os
 import traceback
+import time
+
 from couchpotato import get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, fireEventAsync, addEvent
@@ -7,8 +9,8 @@ from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.variable import splitString, getTitle, getImdb
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media.movie import MovieTypeBase
-import time
 import six
+
 
 log = CPLog(__name__)
 

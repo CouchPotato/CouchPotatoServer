@@ -2,11 +2,13 @@ import json
 import os
 import time
 import traceback
+
 from couchpotato import CPLog
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.variable import getImdb
+
 
 log = CPLog(__name__)
 

@@ -1,8 +1,8 @@
-from itertools import izip
 from string import ascii_letters
+from hashlib import md5
+
 from CodernityDB.hash_index import HashIndex
 from CodernityDB.tree_index import MultiTreeBasedIndex, TreeBasedIndex
-from hashlib import md5
 from couchpotato.core.helpers.encoding import toUnicode, simplifyString
 
 

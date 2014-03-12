@@ -1,8 +1,10 @@
+from httplib import HTTPSConnection
+
 from couchpotato.core.helpers.encoding import toUnicode, tryUrlencode
 from couchpotato.core.helpers.variable import getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
-from httplib import HTTPSConnection
+
 
 log = CPLog(__name__)
 

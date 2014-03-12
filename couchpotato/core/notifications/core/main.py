@@ -1,3 +1,9 @@
+from operator import itemgetter
+import threading
+import time
+import traceback
+import uuid
+
 from couchpotato import get_db
 from couchpotato.api import addApiView, addNonBlockApiView
 from couchpotato.core.event import addEvent, fireEvent
@@ -7,11 +13,7 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
 from .index import NotificationIndex, NotificationUnreadIndex
 from couchpotato.environment import Env
-from operator import itemgetter
-import threading
-import time
-import traceback
-import uuid
+
 
 log = CPLog(__name__)
 

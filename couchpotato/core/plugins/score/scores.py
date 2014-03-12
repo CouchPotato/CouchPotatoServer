@@ -1,10 +1,12 @@
+import re
+import traceback
+
 from couchpotato.core.event import fireEvent
 from couchpotato.core.helpers.encoding import simplifyString
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.environment import Env
-import re
-import traceback
+
 
 log = CPLog(__name__)
 

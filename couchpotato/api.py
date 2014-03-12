@@ -1,14 +1,16 @@
-from couchpotato.core.helpers.request import getParams
-from couchpotato.core.logger import CPLog
 from functools import wraps
 from threading import Thread
-from tornado.gen import coroutine
-from tornado.web import RequestHandler, asynchronous
 import json
 import threading
-import tornado
 import traceback
 import urllib
+
+from couchpotato.core.helpers.request import getParams
+from couchpotato.core.logger import CPLog
+from tornado.gen import coroutine
+from tornado.web import RequestHandler, asynchronous
+import tornado
+
 
 log = CPLog(__name__)
 

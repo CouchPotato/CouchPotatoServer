@@ -1,9 +1,11 @@
+from urlparse import urlparse
+
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import simplifyString
 from couchpotato.core.helpers.variable import getImdb, md5
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-from urlparse import urlparse
+
 
 log = CPLog(__name__)
 

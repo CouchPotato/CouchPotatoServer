@@ -1,10 +1,12 @@
+import re
+import telnetlib
+
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
-import re
-import telnetlib
+
 
 try:
     import xml.etree.cElementTree as etree

@@ -1,4 +1,3 @@
-import time
 from CodernityDB.tree_index import TreeBasedIndex
 
 

@@ -1,12 +1,14 @@
+from urlparse import parse_qs
+import re
+import traceback
+
 from bs4 import BeautifulSoup
 from couchpotato.core.helpers.encoding import tryUrlencode, toUnicode
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
-from urlparse import parse_qs
-import re
-import traceback
 from couchpotato.core.media._base.providers.torrent.base import TorrentMagnetProvider
 import six
+
 
 log = CPLog(__name__)
 

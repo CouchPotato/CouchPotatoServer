@@ -1,8 +1,4 @@
 from base64 import b64encode
-from couchpotato.core.downloaders.base import Downloader, ReleaseDownloadList
-from couchpotato.core.helpers.encoding import tryUrlencode, sp
-from couchpotato.core.helpers.variable import cleanHost
-from couchpotato.core.logger import CPLog
 from urllib2 import URLError
 from uuid import uuid4
 import hashlib
@@ -15,6 +11,12 @@ import sys
 import time
 import traceback
 import urllib2
+
+from couchpotato.core.downloaders.base import Downloader, ReleaseDownloadList
+from couchpotato.core.helpers.encoding import tryUrlencode, sp
+from couchpotato.core.helpers.variable import cleanHost
+from couchpotato.core.logger import CPLog
+
 
 log = CPLog(__name__)
 

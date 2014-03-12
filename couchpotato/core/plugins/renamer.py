@@ -1,3 +1,10 @@
+import fnmatch
+import os
+import re
+import shutil
+import time
+import traceback
+
 from couchpotato import get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
@@ -9,14 +16,9 @@ from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
 from scandir import scandir
 from unrar2 import RarFile
-import fnmatch
-import os
-import re
-import shutil
-import time
-import traceback
 import six
 from six.moves import filter
+
 
 log = CPLog(__name__)
 

@@ -1,16 +1,18 @@
-from couchpotato.core.event import addEvent, fireEvent
-from couchpotato.core.helpers.encoding import ss
-from couchpotato.core.helpers.variable import tryFloat, mergeDicts, md5, \
-    possibleTitles, getTitle
-from couchpotato.core.logger import CPLog
-from couchpotato.core.plugins.base import Plugin
-from couchpotato.environment import Env
 from urlparse import urlparse
 import json
 import re
 import time
 import traceback
 import xml.etree.ElementTree as XMLTree
+
+from couchpotato.core.event import addEvent, fireEvent
+from couchpotato.core.helpers.encoding import ss
+from couchpotato.core.helpers.variable import tryFloat, mergeDicts, md5, \
+    possibleTitles
+from couchpotato.core.logger import CPLog
+from couchpotato.core.plugins.base import Plugin
+from couchpotato.environment import Env
+
 
 log = CPLog(__name__)
 

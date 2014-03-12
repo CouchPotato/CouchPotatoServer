@@ -1,13 +1,15 @@
-from couchpotato.core.downloaders.base import Downloader, ReleaseDownloadList
-from couchpotato.core.helpers.encoding import tryUrlencode, ss, sp
-from couchpotato.core.helpers.variable import cleanHost, mergeDicts
-from couchpotato.core.logger import CPLog
-from couchpotato.environment import Env
 from datetime import timedelta
 from urllib2 import URLError
 import json
 import os
 import traceback
+
+from couchpotato.core.downloaders.base import Downloader, ReleaseDownloadList
+from couchpotato.core.helpers.encoding import tryUrlencode, ss, sp
+from couchpotato.core.helpers.variable import cleanHost, mergeDicts
+from couchpotato.core.logger import CPLog
+from couchpotato.environment import Env
+
 
 log = CPLog(__name__)
 

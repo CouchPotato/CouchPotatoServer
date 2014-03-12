@@ -1,3 +1,7 @@
+import os
+import re
+import traceback
+
 from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import ss
 from couchpotato.core.helpers.variable import tryInt
@@ -7,9 +11,7 @@ from couchpotato.environment import Env
 from minify.cssmin import cssmin
 from minify.jsmin import jsmin
 from tornado.web import StaticFileHandler
-import os
-import re
-import traceback
+
 
 log = CPLog(__name__)
 

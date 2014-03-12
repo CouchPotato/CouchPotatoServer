@@ -1,8 +1,9 @@
+import os
+
 from couchpotato.core.database import Database
 from couchpotato.core.event import fireEvent, addEvent
 from couchpotato.core.loader import Loader
 from couchpotato.core.settings import Settings
-import os
 
 
 class Env(object):

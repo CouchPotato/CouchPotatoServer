@@ -1,17 +1,19 @@
+from base64 import b16encode, b32decode
+from datetime import timedelta
+from hashlib import sha1
+from urlparse import urlparse
+import os
+
 from couchpotato.core.downloaders.base import Downloader, ReleaseDownloadList
 from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import sp
 from couchpotato.core.helpers.variable import cleanHost, splitString
 from couchpotato.core.logger import CPLog
-from base64 import b16encode, b32decode
 from bencode import bencode, bdecode
-from datetime import timedelta
-from hashlib import sha1
 from rtorrent import RTorrent
 from rtorrent.err import MethodError
-from urlparse import urlparse
-import os
 from scandir import scandir
+
 
 log = CPLog(__name__)
 

@@ -1,9 +1,11 @@
+import re
+import traceback
+
 from bs4 import BeautifulSoup
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
-import re
-import traceback
 from couchpotato.core.media._base.providers.torrent.base import TorrentProvider
+
 
 log = CPLog(__name__)
 

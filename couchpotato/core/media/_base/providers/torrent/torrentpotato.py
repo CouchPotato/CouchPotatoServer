@@ -1,10 +1,12 @@
-from couchpotato.core.helpers.encoding import toUnicode
-from couchpotato.core.helpers.variable import splitString, tryInt, tryFloat
-from couchpotato.core.logger import CPLog
 from urlparse import urlparse
 import re
 import traceback
+
+from couchpotato.core.helpers.encoding import toUnicode
+from couchpotato.core.helpers.variable import splitString, tryInt, tryFloat
+from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.providers.torrent.base import TorrentProvider
+
 
 log = CPLog(__name__)
 

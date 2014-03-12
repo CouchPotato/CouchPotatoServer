@@ -1,12 +1,14 @@
 from datetime import date
+import random as rndm
+import time
+
 from couchpotato import get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent
 from couchpotato.core.helpers.variable import splitString, tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-import random as rndm
-import time
+
 
 log = CPLog(__name__)
 

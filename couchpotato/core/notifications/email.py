@@ -1,12 +1,14 @@
+from email.mime.text import MIMEText
+from email.utils import formatdate, make_msgid
+import smtplib
+import traceback
+
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.variable import splitString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
 from couchpotato.environment import Env
-from email.mime.text import MIMEText
-from email.utils import formatdate, make_msgid
-import smtplib
-import traceback
+
 
 log = CPLog(__name__)
 

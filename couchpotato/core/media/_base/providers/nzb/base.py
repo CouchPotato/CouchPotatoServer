@@ -1,5 +1,6 @@
-from couchpotato.core.media._base.providers.base import YarrProvider
 import time
+
+from couchpotato.core.media._base.providers.base import YarrProvider
 
 
 class NZBProvider(YarrProvider):

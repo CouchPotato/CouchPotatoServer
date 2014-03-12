@@ -1,12 +1,14 @@
-from couchpotato.core.media.movie.providers.metadata.base import MovieMetaData
-from couchpotato.core.helpers.encoding import toUnicode
-from couchpotato.core.helpers.variable import getTitle
-from couchpotato.core.logger import CPLog
 from xml.etree.ElementTree import Element, SubElement, tostring
 import os
 import re
 import traceback
 import xml.dom.minidom
+
+from couchpotato.core.media.movie.providers.metadata.base import MovieMetaData
+from couchpotato.core.helpers.encoding import toUnicode
+from couchpotato.core.helpers.variable import getTitle
+from couchpotato.core.logger import CPLog
+
 
 log = CPLog(__name__)
 

@@ -68,6 +68,8 @@ class Scheduler(Plugin):
             'job': self.sched.add_interval_job(handle, hours = hours, minutes = minutes, seconds = seconds)
         }
 
+        return True
+
     def queue(self, handlers = None):
         if not handlers: handlers = []
 
