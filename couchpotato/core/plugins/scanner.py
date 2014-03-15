@@ -1,3 +1,9 @@
+import os
+import re
+import threading
+import time
+import traceback
+
 from couchpotato import get_db
 from couchpotato.core.event import fireEvent, addEvent
 from couchpotato.core.helpers.encoding import toUnicode, simplifyString, sp
@@ -10,14 +16,12 @@ from guessit import guess_movie_info
 from scandir import scandir
 from subliminal.videos import Video
 import enzyme
-import os
-import re
-import threading
-import time
-import traceback
 from six.moves import filter, map, zip
 
+
 log = CPLog(__name__)
+
+autoload = 'Scanner'
 
 
 class Scanner(Plugin):

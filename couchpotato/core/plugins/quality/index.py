@@ -1,5 +1,6 @@
-from CodernityDB.hash_index import HashIndex
 from hashlib import md5
+
+from CodernityDB.hash_index import HashIndex
 
 
 class QualityIndex(HashIndex):

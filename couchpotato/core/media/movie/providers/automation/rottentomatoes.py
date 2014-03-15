@@ -1,10 +1,12 @@
+from xml.etree.ElementTree import QName
+import datetime
+import re
+
 from couchpotato.core.helpers.rss import RSS
 from couchpotato.core.helpers.variable import tryInt, splitString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media.movie.providers.automation.base import Automation
-from xml.etree.ElementTree import QName
-import datetime
-import re
+
 
 log = CPLog(__name__)
 

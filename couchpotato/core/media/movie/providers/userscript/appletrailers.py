@@ -1,5 +1,7 @@
-from couchpotato.core.media._base.providers.userscript.base import UserscriptBase
 import re
+
+from couchpotato.core.media._base.providers.userscript.base import UserscriptBase
+
 
 autoload = 'AppleTrailers'
 

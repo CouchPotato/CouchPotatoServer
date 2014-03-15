@@ -1,8 +1,10 @@
+import os
+
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.variable import getExt, getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-import os
+
 
 log = CPLog(__name__)
 

@@ -1,3 +1,12 @@
+from urlparse import urlparse
+import glob
+import inspect
+import os.path
+import re
+import time
+import traceback
+import urllib2
+
 from couchpotato import get_db
 from couchpotato.core.event import fireEvent, addEvent
 from couchpotato.core.helpers.encoding import ss, toSafeString, \
@@ -10,14 +19,7 @@ from requests.packages.urllib3 import Timeout
 from requests.packages.urllib3.exceptions import MaxRetryError
 from tornado import template
 from tornado.web import StaticFileHandler
-from urlparse import urlparse
-import glob
-import inspect
-import os.path
-import re
-import time
-import traceback
-import urllib2
+
 
 log = CPLog(__name__)
 

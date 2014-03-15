@@ -1,11 +1,13 @@
+import os
+import shutil
+import traceback
+
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import sp
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.providers.metadata.base import MetaDataBase
 from couchpotato.environment import Env
-import os
-import shutil
-import traceback
+
 
 log = CPLog(__name__)
 

@@ -1,3 +1,9 @@
+import ctypes
+import os
+import sys
+import time
+import traceback
+
 from couchpotato import get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, addEvent, fireEventAsync
@@ -6,11 +12,7 @@ from couchpotato.core.helpers.variable import splitString, getTitle, tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
-import ctypes
-import os
-import sys
-import time
-import traceback
+
 
 log = CPLog(__name__)
 

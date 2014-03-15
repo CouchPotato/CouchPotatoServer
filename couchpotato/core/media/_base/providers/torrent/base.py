@@ -1,8 +1,10 @@
+import time
+
 from couchpotato.core.helpers.variable import getImdb, md5, cleanHost
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.providers.base import YarrProvider
 from couchpotato.environment import Env
-import time
+
 
 log = CPLog(__name__)
 

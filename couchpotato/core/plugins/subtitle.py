@@ -1,3 +1,5 @@
+import traceback
+
 from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import toUnicode, sp
 from couchpotato.core.helpers.variable import splitString
@@ -5,7 +7,7 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
 import subliminal
-import traceback
+
 
 log = CPLog(__name__)
 

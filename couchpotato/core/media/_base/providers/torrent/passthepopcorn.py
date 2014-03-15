@@ -1,14 +1,16 @@
-from couchpotato.core.helpers.encoding import tryUrlencode
-from couchpotato.core.helpers.variable import getTitle, tryInt, mergeDicts
-from couchpotato.core.logger import CPLog
-from couchpotato.core.media._base.providers.torrent.base import TorrentProvider
-from dateutil.parser import parse
 import htmlentitydefs
 import json
 import re
 import time
 import traceback
+
+from couchpotato.core.helpers.encoding import tryUrlencode
+from couchpotato.core.helpers.variable import getTitle, tryInt, mergeDicts
+from couchpotato.core.logger import CPLog
+from couchpotato.core.media._base.providers.torrent.base import TorrentProvider
+from dateutil.parser import parse
 import six
+
 
 log = CPLog(__name__)
 

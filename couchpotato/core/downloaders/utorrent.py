@@ -1,12 +1,6 @@
 from base64 import b16encode, b32decode
-from bencode import bencode as benc, bdecode
-from couchpotato.core.downloaders.base import Downloader, ReleaseDownloadList
-from couchpotato.core.helpers.encoding import isInt, ss, sp
-from couchpotato.core.helpers.variable import tryInt, tryFloat, cleanHost
-from couchpotato.core.logger import CPLog
 from datetime import timedelta
 from hashlib import sha1
-from multipartpost import MultipartPostHandler
 import cookielib
 import httplib
 import json
@@ -16,6 +10,14 @@ import stat
 import time
 import urllib
 import urllib2
+
+from bencode import bencode as benc, bdecode
+from couchpotato.core.downloaders.base import Downloader, ReleaseDownloadList
+from couchpotato.core.helpers.encoding import isInt, ss, sp
+from couchpotato.core.helpers.variable import tryInt, tryFloat, cleanHost
+from couchpotato.core.logger import CPLog
+from multipartpost import MultipartPostHandler
+
 
 log = CPLog(__name__)
 

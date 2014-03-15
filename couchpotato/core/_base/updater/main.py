@@ -1,22 +1,25 @@
-from couchpotato.api import addApiView
-from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
-from couchpotato.core.helpers.encoding import ss
-from couchpotato.core.logger import CPLog
-from couchpotato.core.plugins.base import Plugin
-from couchpotato.environment import Env
-from datetime import datetime
-from dateutil.parser import parse
-from git.repository import LocalRepository
 import json
 import os
 import shutil
 import tarfile
 import time
 import traceback
+import zipfile
+from datetime import datetime
+from threading import RLock
+
+from couchpotato.api import addApiView
+from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
+from couchpotato.core.helpers.encoding import ss
+from couchpotato.core.logger import CPLog
+from couchpotato.core.plugins.base import Plugin
+from couchpotato.environment import Env
+from dateutil.parser import parse
+from git.repository import LocalRepository
 from scandir import scandir
 import version
-import zipfile
 from six.moves import filter
+
 
 log = CPLog(__name__)
 
@@ -24,6 +27,7 @@ log = CPLog(__name__)
 class Updater(Plugin):
 
     available_notified = False
+    _lock = RLock()
 
     def __init__(self):
 
@@ -101,7 +105,17 @@ class Updater(Plugin):
         return False
 
     def info(self, **kwargs):
-        return self.updater.info()
+        self._lock.acquire()
+
+        info = {}
+        try:
+            info = self.updater.info()
+        except:
+            log.error('Failed getting updater info: %s', traceback.format_exc())
+
+        self._lock.release()
+
+        return info
 
     def checkView(self, **kwargs):
         return {
@@ -145,12 +159,15 @@ class BaseUpdater(Plugin):
         pass
 
     def info(self):
+
+        version = self.getVersion()
+
         return {
             'last_check': self.last_check,
             'update_version': self.update_version,
-            'version': self.getVersion(),
+            'version': version,
             'repo_name': '%s/%s' % (self.repo_user, self.repo_name),
-            'branch': self.branch,
+            'branch': version.get('branch', self.branch),
         }
 
     def getVersion(self):
@@ -213,10 +230,11 @@ class GitUpdater(BaseUpdater):
                 output = self.repo.getHead()  # Yes, please
                 log.debug('Git version output: %s', output.hash)
                 self.version = {
-                    'repr': 'git:(%s:%s % s) %s (%s)' % (self.repo_user, self.repo_name, self.branch, output.hash[:8], datetime.fromtimestamp(output.getDate())),
+                    'repr': 'git:(%s:%s % s) %s (%s)' % (self.repo_user, self.repo_name, self.repo.getCurrentBranch().name or self.branch, output.hash[:8], datetime.fromtimestamp(output.getDate())),
                     'hash': output.hash[:8],
                     'date': output.getDate(),
                     'type': 'git',
+                    'branch': self.repo.getCurrentBranch().name
                 }
             except Exception as e:
                 log.error('Failed using GIT updater, running from source, you need to have GIT installed. %s', e)

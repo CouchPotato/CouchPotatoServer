@@ -1,8 +1,10 @@
+import os
+import subprocess
+
 from couchpotato.core.event import addEvent
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
-import os
-import subprocess
+
 
 log = CPLog(__name__)
 

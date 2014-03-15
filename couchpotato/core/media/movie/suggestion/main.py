@@ -6,6 +6,9 @@ from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
 
 
+autoload = 'Suggestion'
+
+
 class Suggestion(Plugin):
 
     def __init__(self):

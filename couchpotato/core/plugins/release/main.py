@@ -1,3 +1,8 @@
+from inspect import ismethod, isfunction
+import os
+import time
+import traceback
+
 from couchpotato import md5, get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, addEvent
@@ -7,10 +12,7 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from .index import ReleaseIndex, ReleaseStatusIndex, ReleaseIDIndex, ReleaseDownloadIndex
 from couchpotato.environment import Env
-from inspect import ismethod, isfunction
-import os
-import time
-import traceback
+
 
 log = CPLog(__name__)
 

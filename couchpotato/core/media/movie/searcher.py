@@ -1,3 +1,9 @@
+from datetime import date
+import random
+import re
+import time
+import traceback
+
 from couchpotato import get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
@@ -7,13 +13,11 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.searcher.base import SearcherBase
 from couchpotato.core.media.movie import MovieTypeBase
 from couchpotato.environment import Env
-from datetime import date
-import random
-import re
-import time
-import traceback
+
 
 log = CPLog(__name__)
+
+autoload = 'MovieSearcher'
 
 
 class MovieSearcher(SearcherBase, MovieTypeBase):

@@ -1,11 +1,13 @@
 from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.logger import CPLog
 from couchpotato.core.event import fireEvent
-from couchpotato.core.media._base.providers.nzb.nzbindex.main import Base
+from couchpotato.core.media._base.providers.nzb.nzbindex import Base
 from couchpotato.core.media.movie.providers.base import MovieProvider
 from couchpotato.environment import Env
 
 log = CPLog(__name__)
+
+autoload = 'NzbIndex'
 
 
 class NzbIndex(MovieProvider, Base):

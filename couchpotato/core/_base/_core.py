@@ -1,10 +1,3 @@
-from couchpotato.api import addApiView
-from couchpotato.core.event import fireEvent, addEvent
-from couchpotato.core.helpers.variable import cleanHost, md5
-from couchpotato.core.logger import CPLog
-from couchpotato.core.plugins.base import Plugin
-from couchpotato.environment import Env
-from tornado.ioloop import IOLoop
 from uuid import uuid4
 import os
 import platform
@@ -12,6 +5,15 @@ import signal
 import time
 import traceback
 import webbrowser
+
+from couchpotato.api import addApiView
+from couchpotato.core.event import fireEvent, addEvent
+from couchpotato.core.helpers.variable import cleanHost, md5
+from couchpotato.core.logger import CPLog
+from couchpotato.core.plugins.base import Plugin
+from couchpotato.environment import Env
+from tornado.ioloop import IOLoop
+
 
 log = CPLog(__name__)
 

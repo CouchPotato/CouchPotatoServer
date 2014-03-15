@@ -1,4 +1,6 @@
 import traceback
+import re
+
 from couchpotato import get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent
@@ -7,7 +9,7 @@ from couchpotato.core.helpers.variable import mergeDicts, getExt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.plugins.quality.index import QualityIndex
-import re
+
 
 log = CPLog(__name__)
 

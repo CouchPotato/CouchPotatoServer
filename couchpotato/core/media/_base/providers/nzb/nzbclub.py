@@ -1,3 +1,5 @@
+import time
+
 from bs4 import BeautifulSoup
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.rss import RSS
@@ -5,7 +7,7 @@ from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.providers.nzb.base import NZBProvider
 from dateutil.parser import parse
-import time
+
 
 log = CPLog(__name__)
 

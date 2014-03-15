@@ -1,9 +1,11 @@
+import time
+
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.providers.automation.base import AutomationBase
 from couchpotato.environment import Env
 from couchpotato.core.helpers.variable import splitString
-import time
+
 
 log = CPLog(__name__)
 

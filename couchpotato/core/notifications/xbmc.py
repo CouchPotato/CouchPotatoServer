@@ -1,13 +1,15 @@
-from couchpotato.core.helpers.variable import splitString, getTitle
-from couchpotato.core.logger import CPLog
-from couchpotato.core.notifications.base import Notification
 import base64
 import json
 import socket
 import traceback
 import urllib
+
+from couchpotato.core.helpers.variable import splitString, getTitle
+from couchpotato.core.logger import CPLog
+from couchpotato.core.notifications.base import Notification
 import requests
 from requests.packages.urllib3.exceptions import MaxRetryError
+
 
 log = CPLog(__name__)
 

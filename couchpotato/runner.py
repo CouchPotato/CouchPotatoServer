@@ -1,15 +1,4 @@
-from CodernityDB.database_thread_safe import ThreadSafeDatabase
-from argparse import ArgumentParser
-from cache import FileSystemCache
-from couchpotato import KeyHandler, LoginHandler, LogoutHandler
-from couchpotato.api import NonBlockHandler, ApiHandler
-from couchpotato.core.event import fireEventAsync, fireEvent
-from couchpotato.core.helpers.encoding import toUnicode
-from couchpotato.core.helpers.variable import getDataDir, tryInt
 from logging import handlers
-from scandir import scandir
-from tornado.httpserver import HTTPServer
-from tornado.web import Application, StaticFileHandler, RedirectHandler
 from uuid import uuid4
 import locale
 import logging
@@ -20,6 +9,18 @@ import traceback
 import warnings
 import re
 import tarfile
+
+from CodernityDB.database_thread_safe import ThreadSafeDatabase
+from argparse import ArgumentParser
+from cache import FileSystemCache
+from couchpotato import KeyHandler, LoginHandler, LogoutHandler
+from couchpotato.api import NonBlockHandler, ApiHandler
+from couchpotato.core.event import fireEventAsync, fireEvent
+from couchpotato.core.helpers.encoding import toUnicode
+from couchpotato.core.helpers.variable import getDataDir, tryInt
+from scandir import scandir
+from tornado.httpserver import HTTPServer
+from tornado.web import Application, StaticFileHandler, RedirectHandler
 
 
 def getOptions(base_path, args):
@@ -152,7 +153,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     for logger_name in ['enzyme', 'guessit', 'subliminal', 'apscheduler', 'tornado', 'requests']:
         logging.getLogger(logger_name).setLevel(logging.ERROR)
 
-    for logger_name in ['gntp', 'migrate']:
+    for logger_name in ['gntp']:
         logging.getLogger(logger_name).setLevel(logging.WARNING)
 
     # Use reloader

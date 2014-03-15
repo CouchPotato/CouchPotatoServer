@@ -1,8 +1,10 @@
+import base64
+
 from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.variable import sha1
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media.movie.providers.automation.base import Automation
-import base64
+
 
 log = CPLog(__name__)
 

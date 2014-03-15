@@ -1,14 +1,16 @@
 from base64 import standard_b64encode
-from couchpotato.core.downloaders.base import Downloader, ReleaseDownloadList
-from couchpotato.core.helpers.encoding import ss, sp
-from couchpotato.core.helpers.variable import tryInt, md5, cleanHost
-from couchpotato.core.logger import CPLog
 from datetime import timedelta
 import re
 import shutil
 import socket
 import traceback
 import xmlrpclib
+
+from couchpotato.core.downloaders.base import Downloader, ReleaseDownloadList
+from couchpotato.core.helpers.encoding import ss, sp
+from couchpotato.core.helpers.variable import tryInt, md5, cleanHost
+from couchpotato.core.logger import CPLog
+
 
 log = CPLog(__name__)
 

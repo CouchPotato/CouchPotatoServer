@@ -1,4 +1,5 @@
 import traceback
+
 from couchpotato import get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent
@@ -6,6 +7,7 @@ from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from .index import CategoryIndex, CategoryMediaIndex
+
 
 log = CPLog(__name__)
 

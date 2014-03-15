@@ -2,11 +2,13 @@ import json
 import os
 import time
 import traceback
+
 from couchpotato import CPLog
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import toUnicode
-from couchpotato.core.helpers.variable import getImdb
+from couchpotato.core.helpers.variable import getImdb, tryInt
+
 
 log = CPLog(__name__)
 
@@ -221,7 +223,8 @@ class Database(object):
                 # Update existing with order only
                 if exists and p.get('core'):
                     profile = db.get('id', exists)
-                    profile['order'] = p.get('order')
+                    profile['order'] = tryInt(p.get('order'))
+                    profile['hide'] = p.get('hide') in [1, True, 'true', 'True']
                     db.update(profile)
 
                     profile_link[x] = profile.get('_id')

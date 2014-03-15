@@ -5,7 +5,6 @@ from bs4 import BeautifulSoup
 from couchpotato import fireEvent
 from couchpotato.core.helpers.rss import RSS
 from couchpotato.core.helpers.variable import getImdb, splitString, tryInt
-
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.providers.base import MultiProvider
 from couchpotato.core.media.movie.providers.automation.base import Automation

@@ -1,10 +1,13 @@
 from __future__ import with_statement
-from couchpotato.core.downloaders.base import Downloader
-from couchpotato.core.helpers.encoding import sp
-from couchpotato.core.logger import CPLog
-from couchpotato.environment import Env
 import os
 import traceback
+
+from couchpotato.core.downloaders.base import Downloader
+from couchpotato.core.helpers.encoding import sp
+from couchpotato.core.helpers.variable import getDownloadDir
+from couchpotato.core.logger import CPLog
+from couchpotato.environment import Env
+
 
 log = CPLog(__name__)
 

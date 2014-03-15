@@ -1,6 +1,8 @@
+import re
+
 from couchpotato.core.event import fireEvent
 from couchpotato.core.media._base.providers.userscript.base import UserscriptBase
-import re
+
 
 autoload = 'TMDB'
 

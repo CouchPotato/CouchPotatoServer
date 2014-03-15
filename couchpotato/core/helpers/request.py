@@ -1,7 +1,8 @@
-from couchpotato.core.helpers.encoding import toUnicode
-from couchpotato.core.helpers.variable import natsortKey
 from urllib import unquote
 import re
+
+from couchpotato.core.helpers.encoding import toUnicode
+from couchpotato.core.helpers.variable import natsortKey
 
 
 def getParams(params):

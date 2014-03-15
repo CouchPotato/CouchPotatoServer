@@ -1,11 +1,13 @@
-from couchpotato.core.helpers.rss import RSS
-from couchpotato.core.helpers.variable import md5, splitString, tryInt
-from couchpotato.core.logger import CPLog
-from couchpotato.core.media.movie.providers.automation.base import Automation
 from xml.etree.ElementTree import QName
 import datetime
 import traceback
 import xml.etree.ElementTree as XMLTree
+
+from couchpotato.core.helpers.rss import RSS
+from couchpotato.core.helpers.variable import md5, splitString, tryInt
+from couchpotato.core.logger import CPLog
+from couchpotato.core.media.movie.providers.automation.base import Automation
+
 
 log = CPLog(__name__)
 

@@ -1,7 +1,9 @@
+import datetime
+
 from couchpotato.core.helpers.rss import RSS
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media.movie.providers.automation.base import Automation
-import datetime
+
 
 log = CPLog(__name__)
 

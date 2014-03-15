@@ -1,8 +1,10 @@
-from couchpotato.core.logger import CPLog
-from couchpotato.core.notifications.base import Notification
 from time import sleep
 import traceback
+
+from couchpotato.core.logger import CPLog
+from couchpotato.core.notifications.base import Notification
 import xmpp
+
 
 log = CPLog(__name__)
 

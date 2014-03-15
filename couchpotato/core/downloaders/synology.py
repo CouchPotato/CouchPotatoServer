@@ -1,10 +1,12 @@
+import json
+import traceback
+
 from couchpotato.core.downloaders.base import Downloader
 from couchpotato.core.helpers.encoding import isInt
 from couchpotato.core.helpers.variable import cleanHost
 from couchpotato.core.logger import CPLog
-import json
 import requests
-import traceback
+
 
 log = CPLog(__name__)
 

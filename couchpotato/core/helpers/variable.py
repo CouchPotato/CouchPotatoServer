@@ -1,5 +1,3 @@
-from couchpotato.core.helpers.encoding import simplifyString, toSafeString, ss
-from couchpotato.core.logger import CPLog
 import collections
 import hashlib
 import os
@@ -8,8 +6,12 @@ import random
 import re
 import string
 import sys
+
+from couchpotato.core.helpers.encoding import simplifyString, toSafeString, ss
+from couchpotato.core.logger import CPLog
 import six
 from six.moves import map, zip, filter
+
 
 log = CPLog(__name__)
 

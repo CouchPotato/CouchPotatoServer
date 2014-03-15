@@ -1,9 +1,11 @@
 from __future__ import with_statement
+import os
+import traceback
+
 from couchpotato.core.downloaders.base import Downloader
 from couchpotato.core.helpers.encoding import sp
 from couchpotato.core.logger import CPLog
-import os
-import traceback
+
 
 log = CPLog(__name__)
 

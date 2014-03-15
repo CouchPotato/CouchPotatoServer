@@ -1,9 +1,11 @@
+import base64
+import json
+
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.variable import splitString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
-import base64
-import json
+
 
 log = CPLog(__name__)
 

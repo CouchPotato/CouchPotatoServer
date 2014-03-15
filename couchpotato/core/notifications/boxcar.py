@@ -1,7 +1,9 @@
+import time
+
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
-import time
+
 
 log = CPLog(__name__)
 
