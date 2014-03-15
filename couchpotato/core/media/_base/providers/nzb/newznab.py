@@ -86,7 +86,7 @@ class Base(NZBProvider, RSS):
                 'name_extra': name_extra,
                 'age': self.calculateAge(int(time.mktime(parse(date).timetuple()))),
                 'size': int(self.getElement(nzb, 'enclosure').attrib['length']) / 1024 / 1024,
-                'url': (self.getUrl(host['host'], self.urls['download']) % tryUrlencode(nzb_id)) + self.getApiExt(host),
+                'url': ((self.getUrl(host['host']) + self.urls['download']) % tryUrlencode(nzb_id)) + self.getApiExt(host),
                 'detail_url': '%sdetails/%s' % (cleanHost(host['host']), tryUrlencode(nzb_id)),
                 'content': self.getTextElement(nzb, 'description'),
                 'score': host['extra_score'],
