@@ -37,7 +37,7 @@ class ThePirateBay(TorrentMagnetProvider):
         'http://nl.tpb.li',
         'http://proxybay.eu',
         'https://www.getpirate.com',
-        'http://pirateproxy.ca', 
+        'http://piratebay.io', 
     ]
 
     def _searchOnTitle(self, title, movie, quality, results):

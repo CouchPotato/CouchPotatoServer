@@ -282,13 +282,15 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
         now = int(time.time())
         now_year = date.today().year
+        now_month = date.today().month
 
         if (year is None or year < now_year - 1) and (not dates or (dates.get('theater', 0) == 0 and dates.get('dvd', 0) == 0)):
             return True
         else:
 
             # Don't allow movies with years to far in the future
-            if year is not None and year > now_year + 1:
+            add_year = 1 if now_month > 10 else 0 # Only allow +1 year if end of the year
+            if year is not None and year > (now_year + add_year):
                 return False
 
             # For movies before 1972

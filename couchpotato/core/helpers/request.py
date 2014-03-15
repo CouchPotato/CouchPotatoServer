@@ -1,5 +1,5 @@
 from couchpotato.core.helpers.encoding import toUnicode
-from couchpotato.core.helpers.variable import natcmp
+from couchpotato.core.helpers.variable import natsortKey
 from urllib import unquote
 import re
 
@@ -8,8 +8,13 @@ def getParams(params):
 
     reg = re.compile('^[a-z0-9_\.]+$')
 
+    # Sort keys
+    param_keys = params.keys()
+    param_keys.sort(key = natsortKey)
+
     temp = {}
-    for param, value in sorted(params.items()):
+    for param in param_keys:
+        value = params[param]
 
         nest = re.split("([\[\]]+)", param)
         if len(nest) > 1:

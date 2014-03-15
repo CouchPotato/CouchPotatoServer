@@ -736,8 +736,15 @@ Remove it if you want it to be renamed (again, or at least let it try again)
     def moveFile(self, old, dest, forcemove = False):
         dest = ss(dest)
         try:
-            if forcemove:
-                shutil.move(old, dest)
+            if forcemove or self.conf('file_action') not in ['copy', 'link']:
+                try:
+                    shutil.move(old, dest)
+                except:
+                    if os.path.exists(dest):
+                        log.error('Successfully moved file "%s", but something went wrong: %s', (dest, traceback.format_exc()))
+                        os.unlink(old)
+                    else:
+                        raise
             elif self.conf('file_action') == 'copy':
                 shutil.copy(old, dest)
             elif self.conf('file_action') == 'link':
@@ -755,8 +762,6 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                         os.rename(old + '.link', old)
                     except:
                         log.error('Couldn\'t symlink file "%s" to "%s". Copied instead. Error: %s. ', (old, dest, traceback.format_exc()))
-            else:
-                shutil.move(old, dest)
 
             try:
                 os.chmod(dest, Env.getPermission('file'))
@@ -764,15 +769,6 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                     os.popen('icacls "' + dest + '"* /reset /T')
             except:
                 log.error('Failed setting permissions for file: %s, %s', (dest, traceback.format_exc(1)))
-
-        except OSError as err:
-            # Copying from a filesystem with octal permission to an NTFS file system causes a permission error.  In this case ignore it.
-            if not hasattr(os, 'chmod') or err.errno != errno.EPERM:
-                raise
-            else:
-                if os.path.exists(dest):
-                    os.unlink(old)
-
         except:
             log.error('Couldn\'t move file "%s" to "%s": %s', (old, dest, traceback.format_exc()))
             raise
@@ -1127,29 +1123,9 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
             # Check if archive is fresh and maybe still copying/moving/downloading, ignore files newer than 1 minute
             if check_file_date:
-                file_too_new = False
-                for cur_file in archive['files']:
-                    if not os.path.isfile(cur_file):
-                        file_too_new = time.time()
-                        break
-                    file_time = [os.path.getmtime(cur_file), os.path.getctime(cur_file)]
-                    for t in file_time:
-                        if t > time.time() - 60:
-                            file_too_new = tryInt(time.time() - t)
-                            break
+                files_too_new, time_string = self.checkFilesChanged(archive['files'])
 
-                    if file_too_new:
-                        break
-
-                if file_too_new:
-                    try:
-                        time_string = time.ctime(file_time[0])
-                    except:
-                        try:
-                            time_string = time.ctime(file_time[1])
-                        except:
-                            time_string = 'unknown'
-
+                if files_too_new:
                     log.info('Archive seems to be still copying/moving/downloading or just copied/moved/downloaded (created on %s), ignoring for now: %s', (time_string, os.path.basename(archive['file'])))
                     continue
 

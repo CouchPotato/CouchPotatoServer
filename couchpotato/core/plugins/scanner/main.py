@@ -291,41 +291,21 @@ class Scanner(Plugin):
                 break
 
             # Check if movie is fresh and maybe still unpacking, ignore files newer than 1 minute
-            file_too_new = False
-            for cur_file in group['unsorted_files']:
-                if not os.path.isfile(cur_file):
-                    file_too_new = time.time()
-                    break
-                file_time = [os.path.getmtime(cur_file), os.path.getctime(cur_file)]
-                for t in file_time:
-                    if t > time.time() - 60:
-                        file_too_new = tryInt(time.time() - t)
-                        break
+            if check_file_date:
+                files_too_new, time_string = self.checkFilesChanged(group['unsorted_files'])
+                if files_too_new:
+                    log.info('Files seem to be still unpacking or just unpacked (created on %s), ignoring for now: %s', (time_string, identifier))
 
-                if file_too_new:
-                    break
+                    # Delete the unsorted list
+                    del group['unsorted_files']
 
-            if check_file_date and file_too_new:
-                try:
-                    time_string = time.ctime(file_time[0])
-                except:
-                    try:
-                        time_string = time.ctime(file_time[1])
-                    except:
-                        time_string = 'unknown'
-
-                log.info('Files seem to be still unpacking or just unpacked (created on %s), ignoring for now: %s', (time_string, identifier))
-
-                # Delete the unsorted list
-                del group['unsorted_files']
-
-                continue
+                    continue
 
             # Only process movies newer than x
             if newer_than and newer_than > 0:
                 has_new_files = False
                 for cur_file in group['unsorted_files']:
-                    file_time = [os.path.getmtime(cur_file), os.path.getctime(cur_file)]
+                    file_time = self.getFileTimes(cur_file)
                     if file_time[0] > newer_than or file_time[1] > newer_than:
                         has_new_files = True
                         break
