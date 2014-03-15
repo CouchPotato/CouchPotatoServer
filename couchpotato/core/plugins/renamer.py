@@ -823,25 +823,6 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
         return string
 
-    def deleteEmptyFolder(self, folder, show_error = True):
-        folder = sp(folder)
-
-        loge = log.error if show_error else log.debug
-        for root, dirs, files in scandir.walk(folder):
-
-            for dir_name in dirs:
-                full_path = os.path.join(root, dir_name)
-                if len(os.listdir(full_path)) == 0:
-                    try:
-                        os.rmdir(full_path)
-                    except:
-                        loge('Couldn\'t remove empty directory %s: %s', (full_path, traceback.format_exc()))
-
-        try:
-            os.rmdir(folder)
-        except:
-            loge('Couldn\'t remove empty directory %s: %s', (folder, traceback.format_exc()))
-
     def checkSnatched(self, fire_scan = True):
 
         if self.checking_snatched:
