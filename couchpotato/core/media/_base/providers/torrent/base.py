@@ -1,4 +1,5 @@
 import time
+import traceback
 
 from couchpotato.core.helpers.variable import getImdb, md5, cleanHost
 from couchpotato.core.logger import CPLog

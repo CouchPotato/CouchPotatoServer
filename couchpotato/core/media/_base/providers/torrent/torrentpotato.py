@@ -5,6 +5,7 @@ import traceback
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.variable import splitString, tryInt, tryFloat
 from couchpotato.core.logger import CPLog
+from couchpotato.core.media._base.providers.base import ResultList
 from couchpotato.core.media._base.providers.torrent.base import TorrentProvider
 
 
