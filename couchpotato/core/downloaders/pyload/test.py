@@ -1,4 +1,4 @@
-from .main import pyload
+from couchpotato.core.downloaders.pyload.main import pyload
 
 
 def start():
@@ -79,4 +79,9 @@ config = [{
     ],
 }]
 
+## TEST
+pyload_dl = start()
+pyload_dl.conf('host') = config.pop(op)
+
+pyload_dl.connect()
 

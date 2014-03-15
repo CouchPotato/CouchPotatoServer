@@ -48,93 +48,60 @@ class pyload(Downloader):
             log.error('Config properties are not filled in correctly, port is missing.')
             return False
 
-        self.utorrent_api = uTorrentAPI(host[0], port = host[1], username = self.conf('username'), password = self.conf('password'))
+        self.pyload_api = pyloadAPI(host[0], port = host[1], username = self.conf('username'), password = self.conf('password'))
 
-        return self.utorrent_api
+        return self.pyload_api
 
     def download(self, data = None, media = None, filedata = None):
         if not media: media = {}
         if not data: data = {}
 
-        log.debug("Sending '%s' (%s) to uTorrent.", (data.get('name'), data.get('protocol')))
+        log.debug("Sending '%s' (%s) to pyload.", (data.get('name'), data.get('protocol')))
 
         if not self.connect():
             return False
 
-        settings = self.utorrent_api.get_settings()
+        settings = self.pyload_api.get_settings()
         if not settings:
             return False
 
-        #Fix settings in case they are not set for CPS compatibility
-        new_settings = {}
-        if not (settings.get('seed_prio_limitul') == 0 and settings['seed_prio_limitul_flag']):
-            new_settings['seed_prio_limitul'] = 0
-            new_settings['seed_prio_limitul_flag'] = True
-            log.info('Updated uTorrent settings to set a torrent to complete after it the seeding requirements are met.')
-
-        if settings.get('bt.read_only_on_complete'):  #This doesn't work as this option seems to be not available through the api. Mitigated with removeReadOnly function
-            new_settings['bt.read_only_on_complete'] = False
-            log.info('Updated uTorrent settings to not set the files to read only after completing.')
-
-        if new_settings:
-            self.utorrent_api.set_settings(new_settings)
-
-        torrent_params = {}
+        OCH_params = {}
         if self.conf('label'):
-            torrent_params['label'] = self.conf('label')
+            OCH_params['label'] = self.conf('label')
 
-        if not filedata and data.get('protocol') == 'torrent':
-            log.error('Failed sending torrent, no data')
+        if not filedata and data.get('protocol') == 'OCH':
+            log.error('Failed sending OCH-Link, no data')
             return False
 
-        if data.get('protocol') == 'torrent_magnet':
-            torrent_hash = re.findall('urn:btih:([\w]{32,40})', data.get('url'))[0].upper()
-            torrent_params['trackers'] = '%0D%0A%0D%0A'.join(self.torrent_trackers)
-        else:
-            info = bdecode(filedata)['info']
-            torrent_hash = sha1(benc(info)).hexdigest().upper()
-
-        torrent_filename = self.createFileName(data, filedata, media)
-
-        if data.get('seed_ratio'):
-            torrent_params['seed_override'] = 1
-            torrent_params['seed_ratio'] = tryInt(tryFloat(data['seed_ratio']) * 1000)
-
-        if data.get('seed_time'):
-            torrent_params['seed_override'] = 1
-            torrent_params['seed_time'] = tryInt(data['seed_time']) * 3600
-
-        # Convert base 32 to hex
-        if len(torrent_hash) == 32:
-            torrent_hash = b16encode(b32decode(torrent_hash))
+        OCH_filename = self.createFileName(data, filedata, media)
 
         # Send request to uTorrent
         if data.get('protocol') == 'torrent_magnet':
-            self.utorrent_api.add_torrent_uri(torrent_filename, data.get('url'))
+            self.pyload_api.add_torrent_uri(OCH_filename, data.get('url'))
         else:
-            self.utorrent_api.add_torrent_file(torrent_filename, filedata)
+            self.pyload_api.add_torrent_file(OCH_filename, filedata)
 
         # Change settings of added torrent
-        self.utorrent_api.set_torrent(torrent_hash, torrent_params)
+        self.pyload_api.set_torrent(torrent_hash, OCH_params)
         if self.conf('paused', default = 0):
-            self.utorrent_api.pause_torrent(torrent_hash)
+            self.pyload_api.pause_torrent(torrent_hash)
 
         return self.downloadReturnId(torrent_hash)
 
     def test(self):
         if self.connect():
-            build_version = self.utorrent_api.get_build()
+            build_version = self.pyload_api.get_build()
             if not build_version:
                 return False
             if build_version < 25406:  # This build corresponds to version 3.0.0 stable
-                return False, 'Your uTorrent client is too old, please update to newest version.'
+                return False, 'Your pyload client is too old, please update to newest version.'
             return True
 
         return False
 
     def getAllDownloadStatus(self, ids):
 
-        log.debug('Checking uTorrent download status.')
+        log.debug('Checking pyload download status.')
 
         if not self.connect():
             return []
@@ -143,12 +110,12 @@ class pyload(Downloader):
 
         data = self.utorrent_api.get_status()
         if not data:
-            log.error('Error getting data from uTorrent')
+            log.error('Error getting data from pyload')
             return []
 
         queue = json.loads(data)
         if queue.get('error'):
-            log.error('Error getting data from uTorrent: %s', queue.get('error'))
+            log.error('Error getting data from pyload: %s', queue.get('error'))
             return []
 
         if not queue.get('torrents'):
@@ -194,19 +161,19 @@ class pyload(Downloader):
     def pause(self, release_download, pause = True):
         if not self.connect():
             return False
-        return self.utorrent_api.pause_torrent(release_download['id'], pause)
+        return self.pyload_api.pause_torrent(release_download['id'], pause)
 
     def removeFailed(self, release_download):
         log.info('%s failed downloading, deleting...', release_download['name'])
         if not self.connect():
             return False
-        return self.utorrent_api.remove_torrent(release_download['id'], remove_data = True)
+        return self.pyload_api.remove_torrent(release_download['id'], remove_data = True)
 
     def processComplete(self, release_download, delete_files = False):
         log.debug('Requesting uTorrent to remove the torrent %s%s.', (release_download['name'], ' and cleanup the downloaded files' if delete_files else ''))
         if not self.connect():
             return False
-        return self.utorrent_api.remove_torrent(release_download['id'], remove_data = delete_files)
+        return self.pyload_api.remove_torrent(release_download['id'], remove_data = delete_files)
 
     def removeReadOnly(self, files):
         #Removes all read-on ly flags in a for all files
@@ -215,14 +182,16 @@ class pyload(Downloader):
                 #Windows only needs S_IWRITE, but we bitwise-or with current perms to preserve other permission bits on Linux
                 os.chmod(filepath, stat.S_IWRITE | os.stat(filepath).st_mode)
 
-class uTorrentAPI(object):
+class pyloadAPI(object):
 
     def __init__(self, host = 'localhost', port = 8000, username = None, password = None):
 
-        super(uTorrentAPI, self).__init__()
+        super(pyloadAPI, self).__init__()
 
         self.url = 'http://' + str(host) + ':' + str(port) + '/api/'
-        self.session = ''
+        self.username = username
+        self.password = password
+        self.sessionID = ''
         self.last_time = time.time()
         cookies = cookielib.CookieJar()
         self.opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookies), MultipartPostHandler)
@@ -234,13 +203,14 @@ class uTorrentAPI(object):
             self.opener.add_handler(urllib2.HTTPDigestAuthHandler(password_manager))
         elif username or password:
             log.debug('User or password missing, not using authentication.')
-        self.session = self.get_session(username, password)
+        self.sessionID = self.get_sessionID(username, password)
 
     def _request(self, action, data = None):
         if time.time() > self.last_time + 1800:
             self.last_time = time.time()
-            self.token = self.get_token()
-        request = urllib2.Request(self.url + '?token=' + self.token + '&' + action, data)
+            self.sessionID = self.get_sessionID()
+        data = urllib.urlencode({'session': self.sessionID}) + '&' + data
+        request = urllib2.Request(self.url + action, data)
         try:
             open_request = self.opener.open(request)
             response = open_request.read()
@@ -256,13 +226,14 @@ class uTorrentAPI(object):
             else:
                 log.error('uTorrent HTTPError: %s', err)
         except urllib2.URLError as err:
-            log.error('Unable to connect to uTorrent %s', err)
+            log.error('Unable to connect to pyload %s', err)
         return False
 
-    def get_session(self, username, password):
-        post_data = urllib.urlencode({'username': username, "password": password})
-        session = self.opener.open(self.url + 'login',post_data)
-        return session
+    def get_sessionID(self):
+        post_data = urllib.urlencode({'username': str(self.username), "password": str(self.password)})
+        session_request = self.opener.open(self.url + 'login',post_data)
+        sessionID = session_request.read()
+        return sessionID
 
     def add_torrent_uri(self, filename, torrent, add_folder = False):
         action = 'action=add-url&s=%s' % urllib.quote(torrent)
