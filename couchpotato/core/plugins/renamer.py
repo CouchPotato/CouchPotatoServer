@@ -1036,7 +1036,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
         if release_download and release_download.get('id'):
             try:
-                rls = db.get('release_download', '%s_%s' % (release_download.get('downloader'), release_download.get('id')), with_doc = True)['doc']
+                rls = db.get('release_download', '%s-%s' % (release_download.get('downloader'), release_download.get('id')), with_doc = True)['doc']
             except:
                 log.error('Download ID %s from downloader %s not found in releases', (release_download.get('id'), release_download.get('downloader')))
 
