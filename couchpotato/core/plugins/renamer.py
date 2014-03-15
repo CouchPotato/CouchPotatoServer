@@ -256,7 +256,7 @@ class Renamer(Plugin):
                 destination = to_folder
                 category_label = ''
 
-                if media.get('category_id'):
+                if media.get('category_id') and media.get('category_id') != '-1':
                     try:
                         category = db.get('id', media['category_id'])
                         category_label = category['label']

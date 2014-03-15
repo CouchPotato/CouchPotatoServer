@@ -106,7 +106,7 @@ class MovieBase(MovieTypeBase):
                 'identifier': params.get('identifier'),
                 'status': status if status else 'active',
                 'profile_id': params.get('profile_id', default_profile.get('_id')),
-                'category_id': cat_id if cat_id is not None and len(cat_id) > 0 else None,
+                'category_id': cat_id if cat_id is not None and len(cat_id) > 0 and cat_id != '-1' else None,
             }
 
             # Update movie info
