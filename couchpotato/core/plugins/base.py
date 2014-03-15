@@ -64,15 +64,10 @@ class Plugin(object):
 
     def databaseSetup(self):
 
-        db = get_db()
-
         for index_name in self._database:
             klass = self._database[index_name]
 
             fireEvent('database.setup_index', index_name, klass)
-
-    def afterDatabaseSetup(self):
-        print self._database_indexes
 
     def conf(self, attr, value = None, default = None, section = None):
         class_name = self.getName().lower().split(':')[0].lower()
