@@ -935,7 +935,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
                         #Check status if already missing and for how long, if > 1 week, set to ignored else to missing
                         if rel.get('status') == 'missing':
-                            if rel.last_edit < int(time.time()) - 7 * 24 * 60 * 60:
+                            if rel.get('last_edit') < int(time.time()) - 7 * 24 * 60 * 60:
                                 fireEvent('release.update_status', rel.get('_id'), status = 'ignored', single = True)
                         else:
                             # Set the release to missing
