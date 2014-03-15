@@ -178,6 +178,32 @@ class BinNewz(NZBProvider):
                             newsgroup = "alt.binaries.ath"
                         elif newsgroup == "a.b.town":
                             newsgroup = "alt.binaries.town"
+                        elif newsgroup == "a.b.u-4all":
+                            newsgroup = "alt.binaries.u-4all"
+                        elif newsgroup == "ab.amazing":
+                            newsgroup = "alt.binaries.amazing"
+                        elif newsgroup == "ab.astronomy":
+                            newsgroup = "alt.binaries.astronomy"
+                        elif newsgroup == "ab.nospam.cheer":
+                            newsgroup = "alt.binaries.nospam.cheerleaders"
+                        elif newsgroup == "ab.worms":
+                            newsgroup = "alt.binaries.worms"
+                        elif newsgroup == "abcores":
+                            newsgroup = "alt.binaries.cores"
+                        elif newsgroup == "abdvdclassics":
+                            newsgroup = "alt.binaries.dvd.classics"
+                        elif newsgroup == "abdvdf":
+                            newsgroup = "alt.binaries.dvd.french"
+                        elif newsgroup == "abdvds":
+                            newsgroup = "alt.binaries.dvds"
+                        elif newsgroup == "abmdfrance":
+                            newsgroup = "alt.binaries.movies.divx.france"
+                        elif newsgroup == "abmisc":
+                            newsgroup = "alt.binaries.misc"
+                        elif newsgroup == "abnl":
+                            newsgroup = "alt.binaries.nl"
+                        elif newsgroup == "abx":
+                            newsgroup = "alt.binaries.x"
                         else:
                             log.error(u"Unknown binnewz newsgroup: " + newsgroup)
                             continue
