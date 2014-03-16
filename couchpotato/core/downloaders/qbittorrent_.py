@@ -68,12 +68,13 @@ class qBittorrent(Downloader):
             data['protocol'] = 'torrent'
 
         info = bdecode(filedata)["info"]
-        torrent_hash = sha1(bencode(info)).hexdigest().upper()
+        torrent_hash = sha1(bencode(info)).hexdigest()
 
         # Convert base 32 to hex
         if len(torrent_hash) == 32:
             torrent_hash = b16encode(b32decode(torrent_hash))
 
+        print torrent_hash
         # Send request to qBittorrent
         try:
             self.qb.add_file(filedata)
@@ -106,7 +107,7 @@ class qBittorrent(Downloader):
 
             for torrent in torrents:
                 if torrent.hash in ids:
-                    self.qb.update_general() # get extra info
+                    torrent.update_general() # get extra info
                     torrent_files = []
                     t_files = torrent.get_files()
 
