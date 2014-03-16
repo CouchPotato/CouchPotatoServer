@@ -192,7 +192,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                         fireEvent('release.delete', release.get('_id'), single = True)
 
             else:
-                log.info('Better quality (%s) already available or snatched for %s', (quality['label'], default_title))
+                log.info('Better quality (%s) already available or snatched for %s', (q_identifier, default_title))
                 fireEvent('media.restatus', movie['_id'])
                 break
 
