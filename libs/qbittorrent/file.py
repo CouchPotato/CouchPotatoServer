@@ -11,3 +11,5 @@ class File(Base):
         self.priority = None
 
         self.is_seed = None
+
+        self.size = None
