@@ -28,7 +28,7 @@ log = CPLog(__name__)
 
 class pyload(Downloader):
 
-    protocol = ['OCH']
+    protocol = ['och']
     pyload_api = None
     status_flags = {
         'STARTED'     : 1,

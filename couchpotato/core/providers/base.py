@@ -101,7 +101,7 @@ class Provider(Plugin):
 
 class YarrProvider(Provider):
 
-    protocol = None  # nzb, torrent, torrent_magnet
+    protocol = None  # nzb, torrent, torrent_magnet, och
     type = 'movie'
 
     cat_ids = {}
