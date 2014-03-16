@@ -56,7 +56,7 @@ FreeBSD :
 * Run `git clone https://github.com/RuudBurger/CouchPotatoServer.git`
 * Then run `sudo python CouchPotatoServer/CouchPotato.py` to start for the first time
 * To run on boot copy the init script. `sudo cp CouchPotatoServer/init/freebsd /etc/rc.d/couchpotato`
-* Change the paths inside the init script. `sudo vim /etc/init.d/couchpotato`
+* Change the paths inside the init script. `sudo vim /etc/rc.d/couchpotato`
 * Make init script executable. `sudo chmod +x /etc/rc.d/couchpotato`
 * Add init to startup. `sudo echo 'couchpotato_enable="YES"' >> /etc/rc.conf`
 * Open your browser and go to: `http://server:5050/`

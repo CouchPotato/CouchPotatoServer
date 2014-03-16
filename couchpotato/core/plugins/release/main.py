@@ -174,13 +174,13 @@ class Release(Plugin):
 
         return False
 
-    def ignore(self, release_id = None, **kwargs):
+    def ignore(self, id = None, **kwargs):
 
         db = get_db()
 
         try:
-            rel = db.get('id', release_id, with_doc = True)
-            self.updateStatus(release_id, 'available' if rel['status'] in ['ignored', 'failed'] else 'ignored')
+            rel = db.get('id', id, with_doc = True)
+            self.updateStatus(id, 'available' if rel['status'] in ['ignored', 'failed'] else 'ignored')
 
             return {
                 'success': True

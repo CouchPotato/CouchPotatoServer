@@ -142,6 +142,10 @@ class Updater(Plugin):
             'success': success
         }
 
+    def doShutdown(self):
+        self.updater.deletePyc(show_logs = False)
+        return super(Updater, self).doShutdown()
+
 
 class BaseUpdater(Plugin):
 
@@ -176,7 +180,7 @@ class BaseUpdater(Plugin):
     def check(self):
         pass
 
-    def deletePyc(self, only_excess = True):
+    def deletePyc(self, only_excess = True, show_logs = True):
 
         for root, dirs, files in scandir.walk(ss(Env.get('app_dir'))):
 
@@ -186,7 +190,7 @@ class BaseUpdater(Plugin):
 
             for excess_pyc_file in excess_pyc_files:
                 full_path = os.path.join(root, excess_pyc_file)
-                log.debug('Removing old PYC file: %s', full_path)
+                if show_logs: log.debug('Removing old PYC file: %s', full_path)
                 try:
                     os.remove(full_path)
                 except:
@@ -211,9 +215,6 @@ class GitUpdater(BaseUpdater):
         try:
             log.info('Updating to latest version')
             self.repo.pull()
-
-            # Delete leftover .pyc files
-            self.deletePyc()
 
             return True
         except:

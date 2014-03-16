@@ -8,6 +8,7 @@ from couchpotato.core.helpers.encoding import tryUrlencode, toUnicode
 from couchpotato.core.helpers.rss import RSS
 from couchpotato.core.helpers.variable import cleanHost, splitString, tryInt
 from couchpotato.core.logger import CPLog
+from couchpotato.core.media._base.providers.base import ResultList
 from couchpotato.core.media._base.providers.nzb.base import NZBProvider
 from couchpotato.environment import Env
 from dateutil.parser import parse
@@ -85,7 +86,7 @@ class Base(NZBProvider, RSS):
                 'name_extra': name_extra,
                 'age': self.calculateAge(int(time.mktime(parse(date).timetuple()))),
                 'size': int(self.getElement(nzb, 'enclosure').attrib['length']) / 1024 / 1024,
-                'url': (self.getUrl(host['host'], self.urls['download']) % tryUrlencode(nzb_id)) + self.getApiExt(host),
+                'url': ((self.getUrl(host['host']) + self.urls['download']) % tryUrlencode(nzb_id)) + self.getApiExt(host),
                 'detail_url': '%sdetails/%s' % (cleanHost(host['host']), tryUrlencode(nzb_id)),
                 'content': self.getTextElement(nzb, 'description'),
                 'score': host['extra_score'],
@@ -129,7 +130,7 @@ class Base(NZBProvider, RSS):
         hosts = self.getHosts()
 
         for host in hosts:
-            result = super(Newznab, self).belongsTo(url, host = host['host'], provider = provider)
+            result = super(Base, self).belongsTo(url, host = host['host'], provider = provider)
             if result:
                 return result
 

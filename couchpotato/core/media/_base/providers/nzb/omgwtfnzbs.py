@@ -35,7 +35,7 @@ class Base(NZBProvider, RSS):
         if quality['identifier'] in fireEvent('quality.pre_releases', single = True):
             return []
 
-        return super(OMGWTFNZBs, self).search(movie, quality)
+        return super(Base, self).search(movie, quality)
 
     def _searchOnTitle(self, title, movie, quality, results):
 

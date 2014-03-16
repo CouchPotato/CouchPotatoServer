@@ -1,3 +1,4 @@
+from couchpotato import fireEvent
 from couchpotato.core.helpers.encoding import tryUrlencode
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.providers.torrent.torrentleech import Base
