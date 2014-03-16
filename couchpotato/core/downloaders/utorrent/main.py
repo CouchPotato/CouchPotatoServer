@@ -2,7 +2,7 @@ from base64 import b16encode, b32decode
 from bencode import bencode as benc, bdecode
 from couchpotato.core.downloaders.base import Downloader, ReleaseDownloadList
 from couchpotato.core.helpers.encoding import isInt, ss, sp
-from couchpotato.core.helpers.variable import tryInt, tryFloat
+from couchpotato.core.helpers.variable import tryInt, tryFloat, cleanHost
 from couchpotato.core.logger import CPLog
 from datetime import timedelta
 from hashlib import sha1
@@ -24,10 +24,20 @@ class uTorrent(Downloader):
 
     protocol = ['torrent', 'torrent_magnet']
     utorrent_api = None
+    status_flags = {
+        'STARTED'     : 1,
+        'CHECKING'    : 2,
+        'CHECK-START' : 4,
+        'CHECKED'     : 8,
+        'ERROR'       : 16,
+        'PAUSED'      : 32,
+        'QUEUED'      : 64,
+        'LOADED'      : 128
+    }
 
     def connect(self):
         # Load host from config and split out port.
-        host = self.conf('host').split(':')
+        host = cleanHost(self.conf('host'), protocol = False).split(':')
         if not isInt(host[1]):
             log.error('Config properties are not filled in correctly, port is missing.')
             return False
@@ -36,11 +46,11 @@ class uTorrent(Downloader):
 
         return self.utorrent_api
 
-    def download(self, data = None, movie = None, filedata = None):
-        if not movie: movie = {}
+    def download(self, data = None, media = None, filedata = None):
+        if not media: media = {}
         if not data: data = {}
 
-        log.debug('Sending "%s" (%s) to uTorrent.', (data.get('name'), data.get('protocol')))
+        log.debug("Sending '%s' (%s) to uTorrent.", (data.get('name'), data.get('protocol')))
 
         if not self.connect():
             return False
@@ -56,7 +66,7 @@ class uTorrent(Downloader):
             new_settings['seed_prio_limitul_flag'] = True
             log.info('Updated uTorrent settings to set a torrent to complete after it the seeding requirements are met.')
 
-        if settings.get('bt.read_only_on_complete'): #This doesn't work as this option seems to be not available through the api. Mitigated with removeReadOnly function
+        if settings.get('bt.read_only_on_complete'):  #This doesn't work as this option seems to be not available through the api. Mitigated with removeReadOnly function
             new_settings['bt.read_only_on_complete'] = False
             log.info('Updated uTorrent settings to not set the files to read only after completing.')
 
@@ -75,9 +85,10 @@ class uTorrent(Downloader):
             torrent_hash = re.findall('urn:btih:([\w]{32,40})', data.get('url'))[0].upper()
             torrent_params['trackers'] = '%0D%0A%0D%0A'.join(self.torrent_trackers)
         else:
-            info = bdecode(filedata)["info"]
+            info = bdecode(filedata)['info']
             torrent_hash = sha1(benc(info)).hexdigest().upper()
-        torrent_filename = self.createFileName(data, filedata, movie)
+
+        torrent_filename = self.createFileName(data, filedata, media)
 
         if data.get('seed_ratio'):
             torrent_params['seed_override'] = 1
@@ -104,72 +115,73 @@ class uTorrent(Downloader):
 
         return self.downloadReturnId(torrent_hash)
 
-    def getAllDownloadStatus(self):
+    def test(self):
+        if self.connect():
+            build_version = self.utorrent_api.get_build()
+            if not build_version:
+                return False
+            if build_version < 25406:  # This build corresponds to version 3.0.0 stable
+                return False, 'Your uTorrent client is too old, please update to newest version.'
+            return True
+
+        return False
+
+    def getAllDownloadStatus(self, ids):
 
         log.debug('Checking uTorrent download status.')
 
         if not self.connect():
-            return False
+            return []
 
         release_downloads = ReleaseDownloadList(self)
 
         data = self.utorrent_api.get_status()
         if not data:
             log.error('Error getting data from uTorrent')
-            return False
+            return []
 
         queue = json.loads(data)
         if queue.get('error'):
             log.error('Error getting data from uTorrent: %s', queue.get('error'))
-            return False
+            return []
 
         if not queue.get('torrents'):
             log.debug('Nothing in queue')
-            return False
+            return []
 
         # Get torrents
         for torrent in queue['torrents']:
+            if torrent[0] in ids:
 
-            #Get files of the torrent
-            torrent_files = []
-            try:
-                torrent_files = json.loads(self.utorrent_api.get_files(torrent[0]))
-                torrent_files = [sp(os.path.join(torrent[26], torrent_file[0])) for torrent_file in torrent_files['files'][1]]
-            except:
-                log.debug('Failed getting files from torrent: %s', torrent[2])
+                #Get files of the torrent
+                torrent_files = []
+                try:
+                    torrent_files = json.loads(self.utorrent_api.get_files(torrent[0]))
+                    torrent_files = [sp(os.path.join(torrent[26], torrent_file[0])) for torrent_file in torrent_files['files'][1]]
+                except:
+                    log.debug('Failed getting files from torrent: %s', torrent[2])
 
-            status_flags = {
-                "STARTED"     : 1,
-                "CHECKING"    : 2,
-                "CHECK-START" : 4,
-                "CHECKED"     : 8,
-                "ERROR"       : 16,
-                "PAUSED"      : 32,
-                "QUEUED"      : 64,
-                "LOADED"      : 128
-            }
+                status = 'busy'
+                if (torrent[1] & self.status_flags['STARTED'] or torrent[1] & self.status_flags['QUEUED']) and torrent[4] == 1000:
+                    status = 'seeding'
+                elif (torrent[1] & self.status_flags['ERROR']):
+                    status = 'failed'
+                elif torrent[4] == 1000:
+                    status = 'completed'
 
-            status = 'busy'
-            if (torrent[1] & status_flags["STARTED"] or torrent[1] & status_flags["QUEUED"]) and torrent[4] == 1000:
-                status = 'seeding'
-            elif (torrent[1] & status_flags["ERROR"]):
-                status = 'failed'
-            elif torrent[4] == 1000:
-                status = 'completed'
+                if not status == 'busy':
+                    self.removeReadOnly(torrent_files)
 
-            if not status == 'busy':
-                self.removeReadOnly(torrent_files)
-
-            release_downloads.append({
-                'id': torrent[0],
-                'name': torrent[2],
-                'status': status,
-                'seed_ratio': float(torrent[7]) / 1000,
-                'original_status': torrent[1],
-                'timeleft': str(timedelta(seconds = torrent[10])),
-                'folder': sp(torrent[26]),
-                'files': '|'.join(torrent_files)
-            })
+                release_downloads.append({
+                    'id': torrent[0],
+                    'name': torrent[2],
+                    'status': status,
+                    'seed_ratio': float(torrent[7]) / 1000,
+                    'original_status': torrent[1],
+                    'timeleft': str(timedelta(seconds = torrent[10])),
+                    'folder': sp(torrent[26]),
+                    'files': '|'.join(torrent_files)
+                })
 
         return release_downloads
 
@@ -222,7 +234,7 @@ class uTorrentAPI(object):
         if time.time() > self.last_time + 1800:
             self.last_time = time.time()
             self.token = self.get_token()
-        request = urllib2.Request(self.url + "?token=" + self.token + "&" + action, data)
+        request = urllib2.Request(self.url + '?token=' + self.token + '&' + action, data)
         try:
             open_request = self.opener.open(request)
             response = open_request.read()
@@ -230,64 +242,64 @@ class uTorrentAPI(object):
                 return response
             else:
                 log.debug('Unknown failure sending command to uTorrent. Return text is: %s', response)
-        except httplib.InvalidURL, err:
+        except httplib.InvalidURL as err:
             log.error('Invalid uTorrent host, check your config %s', err)
-        except urllib2.HTTPError, err:
+        except urllib2.HTTPError as err:
             if err.code == 401:
                 log.error('Invalid uTorrent Username or Password, check your config')
             else:
                 log.error('uTorrent HTTPError: %s', err)
-        except urllib2.URLError, err:
+        except urllib2.URLError as err:
             log.error('Unable to connect to uTorrent %s', err)
         return False
 
     def get_token(self):
-        request = self.opener.open(self.url + "token.html")
-        token = re.findall("<div.*?>(.*?)</", request.read())[0]
+        request = self.opener.open(self.url + 'token.html')
+        token = re.findall('<div.*?>(.*?)</', request.read())[0]
         return token
 
     def add_torrent_uri(self, filename, torrent, add_folder = False):
-        action = "action=add-url&s=%s" % urllib.quote(torrent)
+        action = 'action=add-url&s=%s' % urllib.quote(torrent)
         if add_folder:
-            action += "&path=%s" % urllib.quote(filename)
+            action += '&path=%s' % urllib.quote(filename)
         return self._request(action)
 
     def add_torrent_file(self, filename, filedata, add_folder = False):
-        action = "action=add-file"
+        action = 'action=add-file'
         if add_folder:
-            action += "&path=%s" % urllib.quote(filename)
-        return self._request(action, {"torrent_file": (ss(filename), filedata)})
+            action += '&path=%s' % urllib.quote(filename)
+        return self._request(action, {'torrent_file': (ss(filename), filedata)})
 
     def set_torrent(self, hash, params):
-        action = "action=setprops&hash=%s" % hash
-        for k, v in params.iteritems():
-            action += "&s=%s&v=%s" % (k, v)
+        action = 'action=setprops&hash=%s' % hash
+        for k, v in params.items():
+            action += '&s=%s&v=%s' % (k, v)
         return self._request(action)
 
     def pause_torrent(self, hash, pause = True):
         if pause:
-            action = "action=pause&hash=%s" % hash
+            action = 'action=pause&hash=%s' % hash
         else:
-            action = "action=unpause&hash=%s" % hash
+            action = 'action=unpause&hash=%s' % hash
         return self._request(action)
 
     def stop_torrent(self, hash):
-        action = "action=stop&hash=%s" % hash
+        action = 'action=stop&hash=%s' % hash
         return self._request(action)
 
     def remove_torrent(self, hash, remove_data = False):
         if remove_data:
-            action = "action=removedata&hash=%s" % hash
+            action = 'action=removedata&hash=%s' % hash
         else:
-            action = "action=remove&hash=%s" % hash
+            action = 'action=remove&hash=%s' % hash
         return self._request(action)
 
     def get_status(self):
-        action = "list=1"
+        action = 'list=1'
         return self._request(action)
 
     def get_settings(self):
-        action = "action=getsettings"
+        action = 'action=getsettings'
         settings_dict = {}
         try:
             utorrent_settings = json.loads(self._request(action))
@@ -303,7 +315,7 @@ class uTorrentAPI(object):
 
             #log.debug('uTorrent settings: %s', settings_dict)
 
-        except Exception, err:
+        except Exception as err:
             log.error('Failed to get settings from uTorrent: %s', err)
 
         return settings_dict
@@ -319,5 +331,12 @@ class uTorrentAPI(object):
         return self._request(action)
 
     def get_files(self, hash):
-        action = "action=getfiles&hash=%s" % hash
+        action = 'action=getfiles&hash=%s' % hash
         return self._request(action)
+
+    def get_build(self):
+        data = self._request('')
+        if not data:
+            return False
+        response = json.loads(data)
+        return int(response.get('build'))

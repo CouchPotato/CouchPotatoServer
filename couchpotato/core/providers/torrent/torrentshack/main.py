@@ -4,6 +4,7 @@ from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.torrent.base import TorrentProvider
 import traceback
+import six
 
 log = CPLog(__name__)
 
@@ -11,12 +12,12 @@ log = CPLog(__name__)
 class TorrentShack(TorrentProvider):
 
     urls = {
-        'test' : 'https://torrentshack.net/',
-        'login' : 'https://torrentshack.net/login.php',
+        'test': 'https://torrentshack.net/',
+        'login': 'https://torrentshack.net/login.php',
         'login_check': 'https://torrentshack.net/inbox.php',
-        'detail' : 'https://torrentshack.net/torrent/%s',
-        'search' : 'https://torrentshack.net/torrents.php?action=advanced&searchstr=%s&scene=%s&filter_cat[%d]=1',
-        'download' : 'https://torrentshack.net/%s',
+        'detail': 'https://torrentshack.net/torrent/%s',
+        'search': 'https://torrentshack.net/torrents.php?action=advanced&searchstr=%s&scene=%s&filter_cat[%d]=1',
+        'download': 'https://torrentshack.net/%s',
     }
 
     cat_ids = [
@@ -34,7 +35,7 @@ class TorrentShack(TorrentProvider):
         scene_only = '1' if self.conf('scene_only') else ''
 
         url = self.urls['search'] % (tryUrlencode('%s %s' % (title.replace(':', ''), movie['library']['year'])), scene_only, self.getCatId(quality['identifier'])[0])
-        data = self.getHTMLData(url, opener = self.login_opener)
+        data = self.getHTMLData(url)
 
         if data:
             html = BeautifulSoup(data)
@@ -53,7 +54,7 @@ class TorrentShack(TorrentProvider):
 
                     results.append({
                         'id': link['href'].replace('torrents.php?torrentid=', ''),
-                        'name': unicode(link.span.string).translate({ord(u'\xad'): None}),
+                        'name': six.text_type(link.span.string).translate({ord(six.u('\xad')): None}),
                         'url': self.urls['download'] % url['href'],
                         'detail_url': self.urls['download'] % link['href'],
                         'size': self.parseSize(result.find_all('td')[4].string),
@@ -65,12 +66,12 @@ class TorrentShack(TorrentProvider):
                 log.error('Failed to parsing %s: %s', (self.getName(), traceback.format_exc()))
 
     def getLoginParams(self):
-        return tryUrlencode({
+        return {
             'username': self.conf('username'),
             'password': self.conf('password'),
             'keeplogged': '1',
             'login': 'Login',
-        })
+        }
 
     def loginSuccess(self, output):
         return 'logout.php' in output.lower()

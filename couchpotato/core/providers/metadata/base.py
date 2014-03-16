@@ -1,4 +1,5 @@
 from couchpotato.core.event import addEvent, fireEvent
+from couchpotato.core.helpers.encoding import sp
 from couchpotato.core.helpers.variable import mergeDicts
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
@@ -25,7 +26,7 @@ class MetaDataBase(Plugin):
 
         # Update library to get latest info
         try:
-            updated_library = fireEvent('library.update.movie', group['library']['identifier'], force = True, single = True)
+            updated_library = fireEvent('library.update.movie', group['library']['identifier'], extended = True, single = True)
             group['library'] = mergeDicts(group['library'], updated_library)
         except:
             log.error('Failed to update movie, before creating metadata: %s', traceback.format_exc())
@@ -48,6 +49,9 @@ class MetaDataBase(Plugin):
                     if content:
                         log.debug('Creating %s file: %s', (file_type, name))
                         if os.path.isfile(content):
+                            content = sp(content)
+                            name = sp(name)
+
                             shutil.copy2(content, name)
                             shutil.copyfile(content, name)
 
@@ -59,7 +63,7 @@ class MetaDataBase(Plugin):
                             group['renamed_files'].append(name)
 
                         try:
-                            os.chmod(name, Env.getPermission('file'))
+                            os.chmod(sp(name), Env.getPermission('file'))
                         except:
                             log.debug('Failed setting permissions for %s: %s', (name, traceback.format_exc()))
 

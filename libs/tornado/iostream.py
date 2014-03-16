@@ -55,6 +55,7 @@ _ERRNO_WOULDBLOCK = (errno.EWOULDBLOCK, errno.EAGAIN)
 # They should be caught and handled less noisily than other errors.
 _ERRNO_CONNRESET = (errno.ECONNRESET, errno.ECONNABORTED, errno.EPIPE)
 
+
 class StreamClosedError(IOError):
     """Exception raised by `IOStream` methods when the stream is closed.
 
@@ -738,7 +739,7 @@ class IOStream(BaseIOStream):
             # localhost, so handle them the same way as an error
             # reported later in _handle_connect.
             if (e.args[0] != errno.EINPROGRESS and
-                e.args[0] not in _ERRNO_WOULDBLOCK):
+                    e.args[0] not in _ERRNO_WOULDBLOCK):
                 gen_log.warning("Connect error on fd %d: %s",
                                 self.socket.fileno(), e)
                 self.close(exc_info=True)
@@ -774,7 +775,7 @@ class IOStream(BaseIOStream):
                 # Sometimes setsockopt will fail if the socket is closed
                 # at the wrong time.  This can happen with HTTPServer
                 # resetting the value to false between requests.
-                if e.errno != errno.EINVAL:
+                if e.errno not in (errno.EINVAL, errno.ECONNRESET):
                     raise
 
 

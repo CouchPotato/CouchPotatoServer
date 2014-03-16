@@ -1,5 +1,6 @@
 from .main import Synology
 
+
 def start():
     return Synology()
 

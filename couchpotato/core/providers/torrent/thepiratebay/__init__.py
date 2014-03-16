@@ -1,4 +1,5 @@
-from main import ThePirateBay
+from .main import ThePirateBay
+
 
 def start():
     return ThePirateBay()

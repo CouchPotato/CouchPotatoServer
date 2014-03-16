@@ -7,14 +7,15 @@ import traceback
 
 log = CPLog(__name__)
 
+
 class BiTHDTV(TorrentProvider):
 
     urls = {
-        'test' : 'http://www.bit-hdtv.com/',
-        'login' : 'http://www.bit-hdtv.com/takelogin.php',
+        'test': 'http://www.bit-hdtv.com/',
+        'login': 'http://www.bit-hdtv.com/takelogin.php',
         'login_check': 'http://www.bit-hdtv.com/messages.php',
-        'detail' : 'http://www.bit-hdtv.com/details.php?id=%s',
-        'search' : 'http://www.bit-hdtv.com/torrents.php?',
+        'detail': 'http://www.bit-hdtv.com/details.php?id=%s',
+        'search': 'http://www.bit-hdtv.com/torrents.php?',
     }
 
     # Searches for movies only - BiT-HDTV's subcategory and resolution search filters appear to be broken
@@ -31,7 +32,7 @@ class BiTHDTV(TorrentProvider):
 
         url = "%s&%s" % (self.urls['search'], arguments)
 
-        data = self.getHTMLData(url, opener = self.login_opener)
+        data = self.getHTMLData(url)
 
         if data:
             # Remove BiT-HDTV's output garbage so outdated BS4 versions successfully parse the HTML
@@ -68,10 +69,10 @@ class BiTHDTV(TorrentProvider):
                 log.error('Failed getting results from %s: %s', (self.getName(), traceback.format_exc()))
 
     def getLoginParams(self):
-        return tryUrlencode({
+        return {
             'username': self.conf('username'),
             'password': self.conf('password'),
-        })
+        }
 
     def getMoreInfo(self, item):
         full_description = self.getCache('bithdtv.%s' % item['id'], item['detail_url'], cache_timeout = 25920000)

@@ -1,5 +1,6 @@
 from .main import Xmpp
 
+
 def start():
     return Xmpp()
 

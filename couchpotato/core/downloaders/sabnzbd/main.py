@@ -16,8 +16,8 @@ class Sabnzbd(Downloader):
 
     protocol = ['nzb']
 
-    def download(self, data = None, movie = None, filedata = None):
-        if not movie: movie = {}
+    def download(self, data = None, media = None, filedata = None):
+        if not media: media = {}
         if not data: data = {}
 
         log.info('Sending "%s" to SABnzbd.', data.get('name'))
@@ -25,7 +25,7 @@ class Sabnzbd(Downloader):
         req_params = {
             'cat': self.conf('category'),
             'mode': 'addurl',
-            'nzbname': self.createNzbName(data, movie),
+            'nzbname': self.createNzbName(data, media),
             'priority': self.conf('priority'),
         }
 
@@ -36,14 +36,14 @@ class Sabnzbd(Downloader):
                 return False
 
             # If it's a .rar, it adds the .rar extension, otherwise it stays .nzb
-            nzb_filename = self.createFileName(data, filedata, movie)
+            nzb_filename = self.createFileName(data, filedata, media)
             req_params['mode'] = 'addfile'
         else:
             req_params['name'] = data.get('url')
 
         try:
             if nzb_filename and req_params.get('mode') is 'addfile':
-                sab_data = self.call(req_params, params = {'nzbfile': (ss(nzb_filename), filedata)}, multipart = True)
+                sab_data = self.call(req_params, files = {'nzbfile': (ss(nzb_filename), filedata)})
             else:
                 sab_data = self.call(req_params)
         except URLError:
@@ -64,7 +64,27 @@ class Sabnzbd(Downloader):
             log.error('Error getting data from SABNZBd: %s', sab_data)
             return False
 
-    def getAllDownloadStatus(self):
+    def test(self):
+        try:
+            sab_data = self.call({
+                'mode': 'version',
+            })
+            v = sab_data.split('.')
+            if int(v[0]) == 0 and int(v[1]) < 7:
+                return False, 'Your Sabnzbd client is too old, please update to newest version.'
+
+            # the version check will work even with wrong api key, so we need the next check as well
+            sab_data = self.call({
+                'mode': 'qstatus',
+            })
+            if not sab_data:
+                return False
+        except:
+            return False
+
+        return True
+
+    def getAllDownloadStatus(self, ids):
 
         log.debug('Checking SABnzbd download status.')
 
@@ -75,7 +95,7 @@ class Sabnzbd(Downloader):
             })
         except:
             log.error('Failed getting queue: %s', traceback.format_exc(1))
-            return False
+            return []
 
         # Go through history items
         try:
@@ -85,41 +105,42 @@ class Sabnzbd(Downloader):
             })
         except:
             log.error('Failed getting history json: %s', traceback.format_exc(1))
-            return False
+            return []
 
         release_downloads = ReleaseDownloadList(self)
 
         # Get busy releases
         for nzb in queue.get('slots', []):
-            status = 'busy'
-            if 'ENCRYPTED / ' in nzb['filename']:
-                status = 'failed'
+            if nzb['nzo_id'] in ids:
+                status = 'busy'
+                if 'ENCRYPTED / ' in nzb['filename']:
+                    status = 'failed'
 
-            release_downloads.append({
-                'id': nzb['nzo_id'],
-                'name': nzb['filename'],
-                'status': status,
-                'original_status': nzb['status'],
-                'timeleft': nzb['timeleft'] if not queue['paused'] else -1,
-            })
+                release_downloads.append({
+                    'id': nzb['nzo_id'],
+                    'name': nzb['filename'],
+                    'status': status,
+                    'original_status': nzb['status'],
+                    'timeleft': nzb['timeleft'] if not queue['paused'] else -1,
+                })
 
         # Get old releases
         for nzb in history.get('slots', []):
+            if nzb['nzo_id'] in ids:
+                status = 'busy'
+                if nzb['status'] == 'Failed' or (nzb['status'] == 'Completed' and nzb['fail_message'].strip()):
+                    status = 'failed'
+                elif nzb['status'] == 'Completed':
+                    status = 'completed'
 
-            status = 'busy'
-            if nzb['status'] == 'Failed' or (nzb['status'] == 'Completed' and nzb['fail_message'].strip()):
-                status = 'failed'
-            elif nzb['status'] == 'Completed':
-                status = 'completed'
-
-            release_downloads.append({
-                'id': nzb['nzo_id'],
-                'name': nzb['name'],
-                'status': status,
-                'original_status': nzb['status'],
-                'timeleft': str(timedelta(seconds = 0)),
-                'folder': sp(os.path.dirname(nzb['storage']) if os.path.isfile(nzb['storage']) else nzb['storage']),
-            })
+                release_downloads.append({
+                    'id': nzb['nzo_id'],
+                    'name': nzb['name'],
+                    'status': status,
+                    'original_status': nzb['status'],
+                    'timeleft': str(timedelta(seconds = 0)),
+                    'folder': sp(os.path.dirname(nzb['storage']) if os.path.isfile(nzb['storage']) else nzb['storage']),
+                })
 
         return release_downloads
 
@@ -164,9 +185,9 @@ class Sabnzbd(Downloader):
 
     def call(self, request_params, use_json = True, **kwargs):
 
-        url = cleanHost(self.conf('host')) + 'api?' + tryUrlencode(mergeDicts(request_params, {
-           'apikey': self.conf('api_key'),
-           'output': 'json'
+        url = cleanHost(self.conf('host'), ssl = self.conf('ssl')) + 'api?' + tryUrlencode(mergeDicts(request_params, {
+            'apikey': self.conf('api_key'),
+            'output': 'json'
         }))
 
         data = self.urlopen(url, timeout = 60, show_error = False, headers = {'User-Agent': Env.getIdentifier()}, **kwargs)

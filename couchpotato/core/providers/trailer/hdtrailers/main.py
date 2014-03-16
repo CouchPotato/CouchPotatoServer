@@ -29,7 +29,7 @@ class HDTrailers(TrailerProvider):
             log.debug('No page found for: %s', movie_name)
             data = None
 
-        result_data = {'480p':[], '720p':[], '1080p':[]}
+        result_data = {'480p': [], '720p': [], '1080p': []}
 
         if not data:
             return result_data
@@ -100,7 +100,7 @@ class HDTrailers(TrailerProvider):
                         continue
                     resolutions = tr.find_all('td', attrs = {'class':'bottomTableResolution'})
                     for res in resolutions:
-                        if res.a:
+                        if res.a and str(res.a.contents[0]) in results:
                             results[str(res.a.contents[0])].insert(0, res.a['href'])
 
         except AttributeError:

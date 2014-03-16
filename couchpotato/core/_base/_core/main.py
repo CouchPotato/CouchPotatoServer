@@ -55,6 +55,10 @@ class Core(Plugin):
         if not Env.get('desktop'):
             self.signalHandler()
 
+        # Set default urlopen timeout
+        import socket
+        socket.setdefaulttimeout(30)
+
     def md5Password(self, value):
         return md5(value) if value else ''
 
@@ -113,7 +117,7 @@ class Core(Plugin):
 
             if len(still_running) == 0:
                 break
-            elif starttime < time.time() - 30: # Always force break after 30s wait
+            elif starttime < time.time() - 30:  # Always force break after 30s wait
                 break
 
             running = list(set(still_running) - set(self.ignore_restart))

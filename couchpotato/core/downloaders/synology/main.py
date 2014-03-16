@@ -1,5 +1,6 @@
 from couchpotato.core.downloaders.base import Downloader
 from couchpotato.core.helpers.encoding import isInt
+from couchpotato.core.helpers.variable import cleanHost
 from couchpotato.core.logger import CPLog
 import json
 import requests
@@ -11,17 +12,17 @@ log = CPLog(__name__)
 class Synology(Downloader):
 
     protocol = ['nzb', 'torrent', 'torrent_magnet']
-    log = CPLog(__name__)
+    status_support = False
 
-    def download(self, data = None, movie = None, filedata = None):
-        if not movie: movie = {}
+    def download(self, data = None, media = None, filedata = None):
+        if not media: media = {}
         if not data: data = {}
 
         response = False
         log.error('Sending "%s" (%s) to Synology.', (data['name'], data['protocol']))
 
         # Load host from config and split out port.
-        host = self.conf('host').split(':')
+        host = cleanHost(self.conf('host'), protocol = False).split(':')
         if not isInt(host[1]):
             log.error('Config properties are not filled in correctly, port is missing.')
             return False
@@ -42,7 +43,17 @@ class Synology(Downloader):
         except:
             log.error('Exception while adding torrent: %s', traceback.format_exc())
         finally:
-            return response
+            return self.downloadReturnId('') if response else False
+
+    def test(self):
+        host = cleanHost(self.conf('host'), protocol = False).split(':')
+        try:
+            srpc = SynologyRPC(host[0], host[1], self.conf('username'), self.conf('password'))
+            test_result = srpc.test()
+        except:
+            return False
+
+        return test_result
 
     def getEnabledProtocol(self):
         if self.conf('use_for') == 'both':
@@ -63,6 +74,7 @@ class Synology(Downloader):
 
         return super(Synology, self).isEnabled(manual, data) and\
                ((self.conf('use_for') in for_protocol))
+
 
 class SynologyRPC(object):
 
@@ -106,11 +118,11 @@ class SynologyRPC(object):
             if response['success']:
                 log.info('Synology action successfull')
             return response
-        except requests.ConnectionError, err:
+        except requests.ConnectionError as err:
             log.error('Synology connection error, check your config %s', err)
-        except requests.HTTPError, err:
+        except requests.HTTPError as err:
             log.error('SynologyRPC HTTPError: %s', err)
-        except Exception, err:
+        except Exception as err:
             log.error('Exception: %s', err)
         finally:
             return response
@@ -145,3 +157,6 @@ class SynologyRPC(object):
             self._logout()
 
         return result
+
+    def test(self):
+        return bool(self._login())

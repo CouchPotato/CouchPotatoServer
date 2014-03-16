@@ -45,7 +45,7 @@ class Subtitle(Plugin):
         if self.isDisabled(): return
 
         try:
-            available_languages = sum(group['subtitle_language'].itervalues(), [])
+            available_languages = sum(group['subtitle_language'].values(), [])
             downloaded = []
             files = [toUnicode(x) for x in group['files']['movie']]
             log.debug('Searching for subtitles for: %s', files)

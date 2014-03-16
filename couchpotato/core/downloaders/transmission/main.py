@@ -1,7 +1,7 @@
 from base64 import b64encode
 from couchpotato.core.downloaders.base import Downloader, ReleaseDownloadList
 from couchpotato.core.helpers.encoding import isInt, sp
-from couchpotato.core.helpers.variable import tryInt, tryFloat
+from couchpotato.core.helpers.variable import tryInt, tryFloat, cleanHost
 from couchpotato.core.logger import CPLog
 from datetime import timedelta
 import httplib
@@ -19,19 +19,21 @@ class Transmission(Downloader):
     log = CPLog(__name__)
     trpc = None
 
-    def connect(self):
+    def connect(self, reconnect = False):
         # Load host from config and split out port.
-        host = self.conf('host').split(':')
+        host = cleanHost(self.conf('host'), protocol = False).split(':')
         if not isInt(host[1]):
             log.error('Config properties are not filled in correctly, port is missing.')
             return False
 
-        if not self.trpc:
-            self.trpc = TransmissionRPC(host[0], port = host[1], rpc_url = self.conf('rpc_url'), username = self.conf('username'), password = self.conf('password'))
+        if not self.trpc or reconnect:
+            self.trpc = TransmissionRPC(host[0], port = host[1], rpc_url = self.conf('rpc_url').strip('/ '), username = self.conf('username'), password = self.conf('password'))
 
         return self.trpc
 
-    def download(self, data, movie, filedata = None):
+    def download(self, data = None, media = None, filedata = None):
+        if not media: media = {}
+        if not data: data = {}
 
         log.info('Sending "%s" (%s) to Transmission.', (data.get('name'), data.get('protocol')))
 
@@ -81,12 +83,17 @@ class Transmission(Downloader):
         log.info('Torrent sent to Transmission successfully.')
         return self.downloadReturnId(remote_torrent['torrent-added']['hashString'])
 
-    def getAllDownloadStatus(self):
+    def test(self):
+        if self.connect(True) and self.trpc.get_session():
+            return True
+        return False
+
+    def getAllDownloadStatus(self, ids):
 
         log.debug('Checking Transmission download status.')
 
         if not self.connect():
-            return False
+            return []
 
         release_downloads = ReleaseDownloadList(self)
 
@@ -94,37 +101,44 @@ class Transmission(Downloader):
             'fields': ['id', 'name', 'hashString', 'percentDone', 'status', 'eta', 'isStalled', 'isFinished', 'downloadDir', 'uploadRatio', 'secondsSeeding', 'seedIdleLimit', 'files']
         }
 
+        session = self.trpc.get_session()
         queue = self.trpc.get_alltorrents(return_params)
         if not (queue and queue.get('torrents')):
             log.debug('Nothing in queue or error')
-            return False
+            return []
 
         for torrent in queue['torrents']:
-            log.debug('name=%s / id=%s / downloadDir=%s / hashString=%s / percentDone=%s / status=%s / eta=%s / uploadRatio=%s / isFinished=%s',
-                (torrent['name'], torrent['id'], torrent['downloadDir'], torrent['hashString'], torrent['percentDone'], torrent['status'], torrent['eta'], torrent['uploadRatio'], torrent['isFinished']))
+            if torrent['hashString'] in ids:
+                log.debug('name=%s / id=%s / downloadDir=%s / hashString=%s / percentDone=%s / status=%s / isStalled=%s / eta=%s / uploadRatio=%s / isFinished=%s / incomplete-dir-enabled=%s / incomplete-dir=%s',
+                          (torrent['name'], torrent['id'], torrent['downloadDir'], torrent['hashString'], torrent['percentDone'], torrent['status'], torrent.get('isStalled', 'N/A'), torrent['eta'], torrent['uploadRatio'], torrent['isFinished'], session['incomplete-dir-enabled'], session['incomplete-dir']))
 
-            torrent_files = []
-            for file_item in torrent['files']:
-                torrent_files.append(sp(os.path.join(torrent['downloadDir'], file_item['name'])))
+                status = 'busy'
+                if torrent.get('isStalled') and not torrent['percentDone'] == 1 and self.conf('stalled_as_failed'):
+                    status = 'failed'
+                elif torrent['status'] == 0 and torrent['percentDone'] == 1:
+                    status = 'completed'
+                elif torrent['status'] in [5, 6]:
+                    status = 'seeding'
 
-            status = 'busy'
-            if torrent.get('isStalled') and self.conf('stalled_as_failed'):
-                status = 'failed'
-            elif torrent['status'] == 0 and torrent['percentDone'] == 1:
-                status = 'completed'
-            elif torrent['status'] in [5, 6]:
-                status = 'seeding'
+                if session['incomplete-dir-enabled'] and status == 'busy':
+                    torrent_folder = session['incomplete-dir']
+                else:
+                    torrent_folder = torrent['downloadDir']
 
-            release_downloads.append({
-                'id': torrent['hashString'],
-                'name': torrent['name'],
-                'status': status,
-                'original_status': torrent['status'],
-                'seed_ratio': torrent['uploadRatio'],
-                'timeleft': str(timedelta(seconds = torrent['eta'])),
-                'folder': sp(torrent['downloadDir'] if len(torrent_files) == 1 else os.path.join(torrent['downloadDir'], torrent['name'])),
-                'files': '|'.join(torrent_files)
-            })
+                torrent_files = []
+                for file_item in torrent['files']:
+                    torrent_files.append(sp(os.path.join(torrent_folder, file_item['name'])))
+
+                release_downloads.append({
+                    'id': torrent['hashString'],
+                    'name': torrent['name'],
+                    'status': status,
+                    'original_status': torrent['status'],
+                    'seed_ratio': torrent['uploadRatio'],
+                    'timeleft': str(timedelta(seconds = torrent['eta'])),
+                    'folder': sp(torrent_folder if len(torrent_files) == 1 else os.path.join(torrent_folder, torrent['name'])),
+                    'files': '|'.join(torrent_files)
+                })
 
         return release_downloads
 
@@ -178,10 +192,10 @@ class TransmissionRPC(object):
             else:
                 log.debug('Unknown failure sending command to Transmission. Return text is: %s', response['result'])
                 return False
-        except httplib.InvalidURL, err:
+        except httplib.InvalidURL as err:
             log.error('Invalid Transmission host, check your config %s', err)
             return False
-        except urllib2.HTTPError, err:
+        except urllib2.HTTPError as err:
             if err.code == 401:
                 log.error('Invalid Transmission Username or Password, check your config')
                 return False
@@ -199,7 +213,7 @@ class TransmissionRPC(object):
                     log.error('Unable to get Transmission Session-Id %s', err)
             else:
                 log.error('TransmissionRPC HTTPError: %s', err)
-        except urllib2.URLError, err:
+        except urllib2.URLError as err:
             log.error('Unable to connect to Transmission %s', err)
 
     def get_session(self):

@@ -282,7 +282,8 @@ class HTTPRequest(object):
         :arg int max_redirects: Limit for ``follow_redirects``
         :arg string user_agent: String to send as ``User-Agent`` header
         :arg bool use_gzip: Request gzip encoding from the server
-        :arg string network_interface: Network interface to use for request
+        :arg string network_interface: Network interface to use for request.
+           ``curl_httpclient`` only; see note below.
         :arg callable streaming_callback: If set, ``streaming_callback`` will
            be run with each chunk of data as it is received, and
            ``HTTPResponse.body`` and ``HTTPResponse.buffer`` will be empty in
@@ -310,22 +311,35 @@ class HTTPRequest(object):
         :arg bool validate_cert: For HTTPS requests, validate the server's
            certificate?
         :arg string ca_certs: filename of CA certificates in PEM format,
-           or None to use defaults.  Note that in ``curl_httpclient``, if
-           any request uses a custom ``ca_certs`` file, they all must (they
-           don't have to all use the same ``ca_certs``, but it's not possible
-           to mix requests with ``ca_certs`` and requests that use the defaults.
+           or None to use defaults.  See note below when used with
+           ``curl_httpclient``.
         :arg bool allow_ipv6: Use IPv6 when available?  Default is false in
            ``simple_httpclient`` and true in ``curl_httpclient``
-        :arg string client_key: Filename for client SSL key, if any
-        :arg string client_cert: Filename for client SSL certificate, if any
+        :arg string client_key: Filename for client SSL key, if any.  See
+           note below when used with ``curl_httpclient``.
+        :arg string client_cert: Filename for client SSL certificate, if any.
+           See note below when used with ``curl_httpclient``.
+
+        .. note::
+
+            When using ``curl_httpclient`` certain options may be
+            inherited by subsequent fetches because ``pycurl`` does
+            not allow them to be cleanly reset.  This applies to the
+            ``ca_certs``, ``client_key``, ``client_cert``, and
+            ``network_interface`` arguments.  If you use these
+            options, you should pass them on every request (you don't
+            have to always use the same values, but it's not possible
+            to mix requests that specify these options with ones that
+            use the defaults).
 
         .. versionadded:: 3.1
            The ``auth_mode`` argument.
         """
-        if headers is None:
-            headers = httputil.HTTPHeaders()
+        # Note that some of these attributes go through property setters
+        # defined below.
+        self.headers = headers
         if if_modified_since:
-            headers["If-Modified-Since"] = httputil.format_timestamp(
+            self.headers["If-Modified-Since"] = httputil.format_timestamp(
                 if_modified_since)
         self.proxy_host = proxy_host
         self.proxy_port = proxy_port
@@ -333,8 +347,7 @@ class HTTPRequest(object):
         self.proxy_password = proxy_password
         self.url = url
         self.method = method
-        self.headers = headers
-        self.body = utf8(body)
+        self.body = body
         self.auth_username = auth_username
         self.auth_password = auth_password
         self.auth_mode = auth_mode
@@ -345,9 +358,9 @@ class HTTPRequest(object):
         self.user_agent = user_agent
         self.use_gzip = use_gzip
         self.network_interface = network_interface
-        self.streaming_callback = stack_context.wrap(streaming_callback)
-        self.header_callback = stack_context.wrap(header_callback)
-        self.prepare_curl_callback = stack_context.wrap(prepare_curl_callback)
+        self.streaming_callback = streaming_callback
+        self.header_callback = header_callback
+        self.prepare_curl_callback = prepare_curl_callback
         self.allow_nonstandard_methods = allow_nonstandard_methods
         self.validate_cert = validate_cert
         self.ca_certs = ca_certs
@@ -355,6 +368,49 @@ class HTTPRequest(object):
         self.client_key = client_key
         self.client_cert = client_cert
         self.start_time = time.time()
+
+    @property
+    def headers(self):
+        return self._headers
+
+    @headers.setter
+    def headers(self, value):
+        if value is None:
+            self._headers = httputil.HTTPHeaders()
+        else:
+            self._headers = value
+
+    @property
+    def body(self):
+        return self._body
+
+    @body.setter
+    def body(self, value):
+        self._body = utf8(value)
+
+    @property
+    def streaming_callback(self):
+        return self._streaming_callback
+
+    @streaming_callback.setter
+    def streaming_callback(self, value):
+        self._streaming_callback = stack_context.wrap(value)
+
+    @property
+    def header_callback(self):
+        return self._header_callback
+
+    @header_callback.setter
+    def header_callback(self, value):
+        self._header_callback = stack_context.wrap(value)
+
+    @property
+    def prepare_curl_callback(self):
+        return self._prepare_curl_callback
+
+    @prepare_curl_callback.setter
+    def prepare_curl_callback(self, value):
+        self._prepare_curl_callback = stack_context.wrap(value)
 
 
 class HTTPResponse(object):
@@ -371,6 +427,9 @@ class HTTPResponse(object):
       server's actual response)
 
     * headers: `tornado.httputil.HTTPHeaders` object
+
+    * effective_url: final location of the resource after following any
+      redirects
 
     * buffer: ``cStringIO`` object for response body
 

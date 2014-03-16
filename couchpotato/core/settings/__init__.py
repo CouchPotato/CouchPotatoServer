@@ -1,4 +1,5 @@
 from __future__ import with_statement
+import traceback
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import toUnicode
@@ -77,7 +78,7 @@ class Settings(object):
 
         self.addSection(section_name)
 
-        for option_name, option in options.iteritems():
+        for option_name, option in options.items():
             self.setDefault(section_name, option_name, option.get('default', ''))
 
             # Migrate old settings from old location to the new location
@@ -109,6 +110,10 @@ class Settings(object):
 
         except:
             return default
+
+    def delete(self, option = '', section = 'core'):
+        self.p.remove_option(section, option)
+        self.save()
 
     def getEnabler(self, section, option):
         return self.getBool(section, option)
@@ -195,6 +200,7 @@ class Settings(object):
 
         # After save (for re-interval etc)
         fireEvent('setting.save.%s.%s.after' % (section, option), single = True)
+        fireEvent('setting.save.%s.*.after' % section, single = True)
 
         return {
             'success': True,
@@ -216,14 +222,20 @@ class Settings(object):
     def setProperty(self, identifier, value = ''):
         from couchpotato import get_session
 
-        db = get_session()
+        try:
+            db = get_session()
 
-        p = db.query(Properties).filter_by(identifier = identifier).first()
-        if not p:
-            p = Properties()
-            db.add(p)
+            p = db.query(Properties).filter_by(identifier = identifier).first()
+            if not p:
+                p = Properties()
+                db.add(p)
 
-        p.identifier = identifier
-        p.value = toUnicode(value)
+            p.identifier = identifier
+            p.value = toUnicode(value)
 
-        db.commit()
+            db.commit()
+        except:
+            self.log.error('Failed: %s', traceback.format_exc())
+            db.rollback()
+        finally:
+            db.close()

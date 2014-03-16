@@ -1,4 +1,5 @@
-from main import Yify
+from .main import Yify
+
 
 def start():
     return Yify()
@@ -17,6 +18,12 @@ config = [{
                     'name': 'enabled',
                     'type': 'enabler',
                     'default': 0
+                },
+                {
+                    'name': 'domain',
+                    'advanced': True,
+                    'label': 'Proxy server',
+                    'description': 'Domain for requests, keep empty to let CouchPotato pick.',
                 },
                 {
                     'name': 'seed_ratio',

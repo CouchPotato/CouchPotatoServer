@@ -1,4 +1,5 @@
 from base64 import b32decode, b16encode
+from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.variable import mergeDicts
 from couchpotato.core.logger import CPLog
@@ -13,6 +14,7 @@ class Downloader(Provider):
 
     protocol = []
     http_time_between_calls = 0
+    status_support = True
 
     torrent_sources = [
         'http://torrage.com/torrent/%s.torrent',
@@ -41,6 +43,7 @@ class Downloader(Provider):
         addEvent('download.remove_failed', self._removeFailed)
         addEvent('download.pause', self._pause)
         addEvent('download.process_complete', self._processComplete)
+        addApiView('download.%s.test' % self.getName().lower(), self._test)
 
     def getEnabledProtocol(self):
         for download_protocol in self.protocol:
@@ -49,22 +52,27 @@ class Downloader(Provider):
 
         return []
 
-    def _download(self, data = None, movie = None, manual = False, filedata = None):
-        if not movie: movie = {}
+    def _download(self, data = None, media = None, manual = False, filedata = None):
+        if not media: media = {}
         if not data: data = {}
 
         if self.isDisabled(manual, data):
             return
-        return self.download(data = data, movie = movie, filedata = filedata)
+        return self.download(data = data, media = media, filedata = filedata)
 
-    def _getAllDownloadStatus(self):
+    def _getAllDownloadStatus(self, download_ids):
         if self.isDisabled(manual = True, data = {}):
             return
 
-        return self.getAllDownloadStatus()
+        ids = [download_id['id'] for download_id in download_ids if download_id['downloader'] == self.getName()]
 
-    def getAllDownloadStatus(self):
-        return
+        if ids:
+            return self.getAllDownloadStatus(ids)
+        else:
+            return
+
+    def getAllDownloadStatus(self, ids):
+        return []
 
     def _removeFailed(self, release_download):
         if self.isDisabled(manual = True, data = {}):
@@ -128,6 +136,7 @@ class Downloader(Provider):
     def downloadReturnId(self, download_id):
         return {
             'downloader': self.getName(),
+            'status_support': self.status_support,
             'id': download_id
         }
 
@@ -150,6 +159,15 @@ class Downloader(Provider):
         return super(Downloader, self).isEnabled() and \
             (d_manual and manual or d_manual is False) and \
             (not data or self.isCorrectProtocol(data.get('protocol')))
+
+    def _test(self):
+        t = self.test()
+        if isinstance(t, tuple):
+            return {'success': t[0], 'msg': t[1]}
+        return {'success': t}
+
+    def test(self):
+        return False
 
     def _pause(self, release_download, pause = True):
         if self.isDisabled(manual = True, data = {}):

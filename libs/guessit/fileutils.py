@@ -44,13 +44,14 @@ def split_path(path):
     result = []
     while True:
         head, tail = os.path.split(path)
+        headlen = len(head)
 
         # on Unix systems, the root folder is '/'
-        if head == '/' and tail == '':
+        if head and head == '/'*headlen and tail == '':
             return ['/'] + result
 
         # on Windows, the root folder is a drive letter (eg: 'C:\') or for shares \\
-        if ((len(head) == 3 and head[1:] == ':\\') or (len(head) == 2 and head == '\\\\')) and tail == '':
+        if ((headlen == 3 and head[1:] == ':\\') or (headlen == 2 and head == '\\\\')) and tail == '':
             return [head] + result
 
         if head == '' and tail == '':
@@ -61,6 +62,7 @@ def split_path(path):
             path = head
             continue
 
+        # otherwise, add the last path fragment and keep splitting
         result = [tail] + result
         path = head
 

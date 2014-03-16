@@ -1,5 +1,6 @@
 from .main import rTorrent
 
+
 def start():
     return rTorrent()
 
@@ -20,11 +21,32 @@ config = [{
                     'type': 'enabler',
                     'radio_group': 'torrent',
                 },
+# @RuudBurger: How do I migrate this?
+#                {
+#                    'name': 'url',
+#                    'default': 'http://localhost:80/RPC2',
+#                    'description': 'XML-RPC Endpoint URI. Usually <strong>scgi://localhost:5000</strong> '
+#                                   'or <strong>http://localhost:80/RPC2</strong>'
+#                },
                 {
-                    'name': 'url',
-                    'default': 'http://localhost:80/RPC2',
-                    'description': 'XML-RPC Endpoint URI. Usually <strong>scgi://localhost:5000</strong> '
-                                   'or <strong>http://localhost:80/RPC2</strong>'
+                    'name': 'host',
+                    'default': 'localhost:80',
+                    'description': 'RPC Communication URI. Usually <strong>scgi://localhost:5000</strong>, '
+                                   '<strong>httprpc://localhost/rutorrent</strong> or <strong>localhost:80</strong>'
+                },
+                {
+                    'name': 'ssl',
+                    'default': 0,
+                    'type': 'bool',
+                    'advanced': True,
+                    'description': 'Use HyperText Transfer Protocol Secure, or <strong>https</strong>',
+                },
+                {
+                    'name': 'rpc_url',
+                    'type': 'string',
+                    'default': 'RPC2',
+                    'advanced': True,
+                    'description': 'Change if your RPC mount is at a different path.',
                 },
                 {
                     'name': 'username',
@@ -57,14 +79,6 @@ config = [{
                     'type': 'bool',
                     'advanced': True,
                     'description': 'Also remove the leftover files.',
-                },
-                {
-                    'name': 'append_label',
-                    'label': 'Append Label',
-                    'default': False,
-                    'advanced': True,
-                    'type': 'bool',
-                    'description': 'Append label to download location. Requires you to set the download location above.',
                 },
                 {
                     'name': 'paused',

@@ -1,5 +1,6 @@
 from .main import NZBGet
 
+
 def start():
     return NZBGet()
 
@@ -24,6 +25,13 @@ config = [{
                     'name': 'host',
                     'default': 'localhost:6789',
                     'description': 'Hostname with port. Usually <strong>localhost:6789</strong>',
+                },
+                {
+                    'name': 'ssl',
+                    'default': 0,
+                    'type': 'bool',
+                    'advanced': True,
+                    'description': 'Use HyperText Transfer Protocol Secure, or <strong>https</strong>',
                 },
                 {
                     'name': 'username',

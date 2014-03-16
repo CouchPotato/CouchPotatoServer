@@ -1,5 +1,6 @@
 from .main import TorrentShack
 
+
 def start():
     return TorrentShack()
 
@@ -10,7 +11,7 @@ config = [{
             'tab': 'searcher',
             'list': 'torrent_providers',
             'name': 'TorrentShack',
-            'description': 'See <a href="http://www.torrentshack.net/">TorrentShack</a>',
+            'description': 'See <a href="https://www.torrentshack.net/">TorrentShack</a>',
             'options': [
                 {
                     'name': 'enabled',

@@ -64,7 +64,7 @@ var addStyle = function(css) {
 
 // Styles
 addStyle('\
-    #cp_popup { font-family: "Helvetica Neue", Helvetica, Arial, Geneva, sans-serif; -moz-border-radius: 6px 0px 0px 6px; -webkit-border-radius: 6px 0px 0px 6px; border-radius: 6px 0px 0px 6px; -moz-box-shadow: 0 0 20px rgba(0,0,0,0.5); -webkit-box-shadow: 0 0 20px rgba(0,0,0,0.5); box-shadow: 0 0 20px rgba(0,0,0,0.5); position:fixed; z-index:9999; bottom:0; right:0; font-size:15px; margin: 20px 0; display: block; background:#4E5969; } \
+    #cp_popup { font-family: "Helvetica Neue", Helvetica, Arial, Geneva, sans-serif; -moz-border-radius: 6px 0px 0px 6px; -webkit-border-radius: 6px 0px 0px 6px; border-radius: 6px 0px 0px 6px; -moz-box-shadow: 0 0 20px rgba(0,0,0,0.5); -webkit-box-shadow: 0 0 20px rgba(0,0,0,0.5); box-shadow: 0 0 20px rgba(0,0,0,0.5); position:fixed; z-index:20000; bottom:0; right:0; font-size:15px; margin: 20px 0; display: block; background:#4E5969; } \
     #cp_popup.opened { width: 492px; } \
     #cp_popup a#add_to { cursor:pointer; text-align:center; text-decoration:none; color: #000; display:block; padding:5px 0 5px 5px; } \
     #cp_popup a#close_button { cursor:pointer; float: right; padding:120px 10px 10px; } \

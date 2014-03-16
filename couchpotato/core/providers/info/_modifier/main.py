@@ -21,14 +21,17 @@ class MovieResultModifier(Plugin):
             'poster': [],
             'backdrop': [],
             'poster_original': [],
-            'backdrop_original': []
+            'backdrop_original': [],
+            'actors': {}
         },
         'runtime': 0,
         'plot': '',
         'tagline': '',
         'imdb': '',
         'genres': [],
-        'mpaa': None
+        'mpaa': None,
+        'actors': [],
+        'actor_roles': {}
     }
 
     def __init__(self):
@@ -41,13 +44,13 @@ class MovieResultModifier(Plugin):
         new_results = {}
         for r in results:
             type_name = r.get('type', 'movie') + 's'
-            if not new_results.has_key(type_name):
+            if type_name not in new_results:
                 new_results[type_name] = []
 
             new_results[type_name].append(r)
 
         # Combine movies, needs a cleaner way..
-        if new_results.has_key('movies'):
+        if 'movies' in new_results:
             new_results['movies'] = self.combineOnIMDB(new_results['movies'])
 
         return new_results
@@ -93,11 +96,11 @@ class MovieResultModifier(Plugin):
 
                 for movie in l.movies:
                     if movie.status_id == active_status['id']:
-                        temp['in_wanted'] = fireEvent('movie.get', movie.id, single = True)
+                        temp['in_wanted'] = fireEvent('media.get', movie.id, single = True)
 
                     for release in movie.releases:
                         if release.status_id == done_status['id']:
-                            temp['in_library'] = fireEvent('movie.get', movie.id, single = True)
+                            temp['in_library'] = fireEvent('media.get', movie.id, single = True)
         except:
             log.error('Tried getting more info on searched movies: %s', traceback.format_exc())
 

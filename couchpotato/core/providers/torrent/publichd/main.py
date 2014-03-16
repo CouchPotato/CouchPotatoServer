@@ -76,7 +76,7 @@ class PublicHD(TorrentMagnetProvider):
             try:
                 full_description = self.urlopen(item['detail_url'])
                 html = BeautifulSoup(full_description)
-                nfo_pre = html.find('div', attrs = {'id':'torrmain'})
+                nfo_pre = html.find('div', attrs = {'id': 'torrmain'})
                 description = toUnicode(nfo_pre.text) if nfo_pre else ''
             except:
                 log.error('Failed getting more info for %s', item['name'])

@@ -13,17 +13,20 @@ log = CPLog(__name__)
 class NZBClub(NZBProvider, RSS):
 
     urls = {
-        'search': 'http://www.nzbclub.com/nzbfeed.aspx?%s',
+        'search': 'https://www.nzbclub.com/nzbfeeds.aspx?%s',
     }
 
-    http_time_between_calls = 4 #seconds
+    http_time_between_calls = 4  #seconds
 
     def _searchOnTitle(self, title, movie, quality, results):
 
         q = '"%s %s"' % (title, movie['library']['year'])
 
-        params = tryUrlencode({
+        q_param = tryUrlencode({
             'q': q,
+        })
+
+        params = tryUrlencode({
             'ig': 1,
             'rpp': 200,
             'st': 5,
@@ -31,7 +34,7 @@ class NZBClub(NZBProvider, RSS):
             'ns': 1,
         })
 
-        nzbs = self.getRSSData(self.urls['search'] % params)
+        nzbs = self.getRSSData(self.urls['search'] % ('%s&%s' % (q_param, params)))
 
         for nzb in nzbs:
 

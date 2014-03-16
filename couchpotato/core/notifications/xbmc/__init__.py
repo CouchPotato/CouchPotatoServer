@@ -1,5 +1,6 @@
 from .main import XBMC
 
+
 def start():
     return XBMC()
 
@@ -45,6 +46,14 @@ config = [{
                     'type': 'bool',
                     'advanced': True,
                     'description': 'Only scan new movie folder at remote XBMC servers. Works if movie location is the same.',
+                },
+                {
+                    'name': 'force_full_scan',
+                    'label': 'Always do a full scan',
+                    'default': 0,
+                    'type': 'bool',
+                    'advanced': True,
+                    'description': 'Do a full scan instead of only the new movie. Useful if the XBMC path is different from the path CPS uses.',
                 },
                 {
                     'name': 'on_snatch',

@@ -1,5 +1,6 @@
 from .main import Rottentomatoes
 
+
 def start():
     return Rottentomatoes()
 

@@ -1,5 +1,5 @@
 // MooTools: the javascript framework.
-// Load this file's selection again by visiting: http://mootools.net/more/43db227db7a621ebb062ee621432ae3d 
+// Load this file's selection again by visiting: http://mootools.net/more/0f75cfbac1aabbedaba7630beef8d10c 
 // Or build this file again with packager using: packager build More/Events.Pseudos More/Date More/Date.Extras More/Element.Forms More/Element.Position More/Element.Shortcuts More/Fx.Scroll More/Fx.Slide More/Sortables More/Request.JSONP More/Request.Periodical
 /*
 ---

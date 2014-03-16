@@ -66,7 +66,6 @@ class FileManager(Plugin):
         time.sleep(3)
         log.debug('Cleaning up unused files')
 
-        python_cache = Env.get('cache')._path
         try:
             db = get_session()
             for root, dirs, walk_files in os.walk(Env.get('cache_dir')):
@@ -78,10 +77,12 @@ class FileManager(Plugin):
                             os.remove(file_path)
         except:
             log.error('Failed removing unused file: %s', traceback.format_exc())
+            db.rollback()
+        finally:
+            db.close()
 
     def showCacheFile(self, route, **kwargs):
         Env.get('app').add_handlers(".*$", [('%s%s' % (Env.get('api_base'), route), StaticFileHandler, {'path': Env.get('cache_dir')})])
-
 
     def download(self, url = '', dest = None, overwrite = False, urlopen_kwargs = None):
         if not urlopen_kwargs: urlopen_kwargs = {}
@@ -104,42 +105,56 @@ class FileManager(Plugin):
     def add(self, path = '', part = 1, type_tuple = (), available = 1, properties = None):
         if not properties: properties = {}
 
-        type_id = self.getType(type_tuple).get('id')
-        db = get_session()
+        try:
+            db = get_session()
+            type_id = self.getType(type_tuple).get('id')
 
-        f = db.query(File).filter(File.path == toUnicode(path)).first()
-        if not f:
-            f = File()
-            db.add(f)
+            f = db.query(File).filter(File.path == toUnicode(path)).first()
+            if not f:
+                f = File()
+                db.add(f)
 
-        f.path = toUnicode(path)
-        f.part = part
-        f.available = available
-        f.type_id = type_id
+            f.path = toUnicode(path)
+            f.part = part
+            f.available = available
+            f.type_id = type_id
 
-        db.commit()
+            db.commit()
 
-        file_dict = f.to_dict()
+            file_dict = f.to_dict()
 
-        return file_dict
+            return file_dict
+        except:
+            log.error('Failed adding file: %s, %s', (path, traceback.format_exc()))
+            db.rollback()
+        finally:
+            db.close()
 
     def getType(self, type_tuple):
 
-        db = get_session()
-        type_type, type_identifier = type_tuple
+        try:
+            db = get_session()
+            type_type, type_identifier = type_tuple
 
-        ft = db.query(FileType).filter_by(identifier = type_identifier).first()
-        if not ft:
-            ft = FileType(
-                type = toUnicode(type_type),
-                identifier = type_identifier,
-                name = toUnicode(type_identifier[0].capitalize() + type_identifier[1:])
-            )
-            db.add(ft)
-            db.commit()
+            ft = db.query(FileType).filter_by(identifier = type_identifier).first()
+            if not ft:
+                ft = FileType(
+                    type = toUnicode(type_type),
+                    identifier = type_identifier,
+                    name = toUnicode(type_identifier[0].capitalize() + type_identifier[1:])
+                )
+                db.add(ft)
+                db.commit()
 
-        type_dict = ft.to_dict()
-        return type_dict
+            type_dict = ft.to_dict()
+
+            return type_dict
+        except:
+            log.error('Failed getting type: %s, %s', (type_tuple, traceback.format_exc()))
+            db.rollback()
+        finally:
+            db.close()
+
 
     def getTypes(self):
 

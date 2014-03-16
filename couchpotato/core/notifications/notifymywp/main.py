@@ -2,13 +2,15 @@ from couchpotato.core.helpers.variable import splitString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.notifications.base import Notification
 from pynmwp import PyNMWP
+import six
 
 log = CPLog(__name__)
 
 
 class NotifyMyWP(Notification):
 
-    def notify(self, message = '', data = {}, listener = None):
+    def notify(self, message = '', data = None, listener = None):
+        if not data: data = {}
 
         keys = splitString(self.conf('api_key'))
         p = PyNMWP(keys, self.conf('dev_key'))
@@ -16,7 +18,7 @@ class NotifyMyWP(Notification):
         response = p.push(application = self.default_title, event = message, description = message, priority = self.conf('priority'), batch_mode = len(keys) > 1)
 
         for key in keys:
-            if not response[key]['Code'] == u'200':
+            if not response[key]['Code'] == six.u('200'):
                 log.error('Could not send notification to NotifyMyWindowsPhone (%s). %s', (key, response[key]['message']))
                 return False
 

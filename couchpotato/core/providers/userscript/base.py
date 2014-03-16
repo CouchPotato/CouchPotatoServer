@@ -25,7 +25,7 @@ class UserscriptBase(Plugin):
         result = fireEvent('movie.search', q = '%s %s' % (name, year), limit = 1, merge = True)
 
         if len(result) > 0:
-            movie = fireEvent('movie.info', identifier = result[0].get('imdb'), merge = True)
+            movie = fireEvent('movie.info', identifier = result[0].get('imdb'), extended = False, merge = True)
             return movie
         else:
             return None
@@ -54,7 +54,7 @@ class UserscriptBase(Plugin):
         return self.getInfo(getImdb(data))
 
     def getInfo(self, identifier):
-        return fireEvent('movie.info', identifier = identifier, merge = True)
+        return fireEvent('movie.info', identifier = identifier, extended = False, merge = True)
 
     def getInclude(self):
         return self.includes

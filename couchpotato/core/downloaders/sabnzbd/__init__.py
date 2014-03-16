@@ -1,5 +1,6 @@
 from .main import Sabnzbd
 
+
 def start():
     return Sabnzbd()
 
@@ -23,6 +24,13 @@ config = [{
                 {
                     'name': 'host',
                     'default': 'localhost:8080',
+                },
+                {
+                    'name': 'ssl',
+                    'default': 0,
+                    'type': 'bool',
+                    'advanced': True,
+                    'description': 'Use HyperText Transfer Protocol Secure, or <strong>https</strong>',
                 },
                 {
                     'name': 'api_key',

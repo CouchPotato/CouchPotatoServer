@@ -24,7 +24,7 @@ class KickAssTorrents(TorrentMagnetProvider):
         (['dvd'], ['dvdr']),
     ]
 
-    http_time_between_calls = 1 #seconds
+    http_time_between_calls = 1  #seconds
     cat_backup_id = None
 
     proxy_list = [
@@ -45,7 +45,7 @@ class KickAssTorrents(TorrentMagnetProvider):
 
             try:
                 html = BeautifulSoup(data)
-                resultdiv = html.find('div', attrs = {'class':'tabs'})
+                resultdiv = html.find('div', attrs = {'class': 'tabs'})
                 for result in resultdiv.find_all('div', recursive = False):
                     if result.get('id').lower().strip('tab-') not in cat_ids:
                         continue
@@ -106,7 +106,6 @@ class KickAssTorrents(TorrentMagnetProvider):
             age += tryInt(nr) * mult
 
         return tryInt(age)
-
 
     def isEnabled(self):
         return super(KickAssTorrents, self).isEnabled() and self.getDomain()

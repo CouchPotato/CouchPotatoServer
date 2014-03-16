@@ -1,5 +1,6 @@
 from .main import IMDB
 
+
 def start():
     return IMDB()
 
@@ -11,7 +12,7 @@ config = [{
             'list': 'watchlist_providers',
             'name': 'imdb_automation_watchlist',
             'label': 'IMDB',
-            'description': 'From any <strong>public</strong> IMDB watchlists. Url should be the CSV link.',
+            'description': 'From any <strong>public</strong> IMDB watchlists.',
             'options': [
                 {
                     'name': 'automation_enabled',
@@ -59,7 +60,7 @@ config = [{
                 {
                     'name': 'automation_charts_boxoffice',
                     'type': 'bool',
-                    'label': 'Box offce TOP 10',
+                    'label': 'Box office TOP 10',
                     'description': 'IMDB Box office <a href="http://www.imdb.com/chart/">TOP 10</a> chart',
                     'default': True,
                 },

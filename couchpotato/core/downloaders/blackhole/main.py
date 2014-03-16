@@ -1,5 +1,6 @@
 from __future__ import with_statement
 from couchpotato.core.downloaders.base import Downloader
+from couchpotato.core.helpers.encoding import sp
 from couchpotato.core.logger import CPLog
 from couchpotato.environment import Env
 import os
@@ -11,9 +12,10 @@ log = CPLog(__name__)
 class Blackhole(Downloader):
 
     protocol = ['nzb', 'torrent', 'torrent_magnet']
+    status_support = False
 
-    def download(self, data = None, movie = None, filedata = None):
-        if not movie: movie = {}
+    def download(self, data = None, media = None, filedata = None):
+        if not media: media = {}
         if not data: data = {}
 
         directory = self.conf('directory')
@@ -33,7 +35,7 @@ class Blackhole(Downloader):
                         log.error('No nzb/torrent available: %s', data.get('url'))
                         return False
 
-                file_name = self.createFileName(data, filedata, movie)
+                file_name = self.createFileName(data, filedata, media)
                 full_path = os.path.join(directory, file_name)
 
                 if self.conf('create_subdir'):
@@ -51,10 +53,10 @@ class Blackhole(Downloader):
                         with open(full_path, 'wb') as f:
                             f.write(filedata)
                         os.chmod(full_path, Env.getPermission('file'))
-                        return True
+                        return self.downloadReturnId('')
                     else:
                         log.info('File %s already exists.', full_path)
-                        return True
+                        return self.downloadReturnId('')
 
                 except:
                     log.error('Failed to download to blackhole %s', traceback.format_exc())
@@ -63,6 +65,20 @@ class Blackhole(Downloader):
             except:
                 log.info('Failed to download file %s: %s', (data.get('name'), traceback.format_exc()))
                 return False
+
+        return False
+
+    def test(self):
+        directory = self.conf('directory')
+        if directory and os.path.isdir(directory):
+
+            test_file = sp(os.path.join(directory, 'couchpotato_test.txt'))
+
+            # Check if folder is writable
+            self.createFile(test_file, 'This is a test file')
+            if os.path.isfile(test_file):
+                os.remove(test_file)
+                return True
 
         return False
 

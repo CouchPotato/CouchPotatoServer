@@ -1,5 +1,6 @@
 from .main import NotifyMyAndroid
 
+
 def start():
     return NotifyMyAndroid()
 

@@ -1,5 +1,6 @@
 from .main import Deluge
 
+
 def start():
     return Deluge()
 

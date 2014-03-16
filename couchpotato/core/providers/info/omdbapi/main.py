@@ -39,14 +39,14 @@ class OMDBAPI(MovieProvider):
         if cached:
             result = self.parseMovie(cached)
             if result.get('titles') and len(result.get('titles')) > 0:
-                log.info('Found: %s', result['titles'][0] + ' (' + str(result['year']) + ')')
+                log.info('Found: %s', result['titles'][0] + ' (' + str(result.get('year')) + ')')
                 return [result]
 
             return []
 
         return []
 
-    def getInfo(self, identifier = None):
+    def getInfo(self, identifier = None, **kwargs):
 
         if not identifier:
             return {}
@@ -107,7 +107,7 @@ class OMDBAPI(MovieProvider):
                 'writers': splitString(movie.get('Writer', '')),
                 'actors': splitString(movie.get('Actors', '')),
             }
-            movie_data = dict((k, v) for k, v in movie_data.iteritems() if v)
+            movie_data = dict((k, v) for k, v in movie_data.items() if v)
         except:
             log.error('Failed parsing IMDB API json: %s', traceback.format_exc())
 

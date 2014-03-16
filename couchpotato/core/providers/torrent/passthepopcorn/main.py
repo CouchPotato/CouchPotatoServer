@@ -8,6 +8,7 @@ import json
 import re
 import time
 import traceback
+import six
 
 log = CPLog(__name__)
 
@@ -15,12 +16,12 @@ log = CPLog(__name__)
 class PassThePopcorn(TorrentProvider):
 
     urls = {
-         'domain': 'https://tls.passthepopcorn.me',
-         'detail': 'https://tls.passthepopcorn.me/torrents.php?torrentid=%s',
-         'torrent': 'https://tls.passthepopcorn.me/torrents.php',
-         'login': 'https://tls.passthepopcorn.me/ajax.php?action=login',
-         'login_check': 'https://tls.passthepopcorn.me/ajax.php?action=login',
-         'search': 'https://tls.passthepopcorn.me/search/%s/0/7/%d'
+        'domain': 'https://tls.passthepopcorn.me',
+        'detail': 'https://tls.passthepopcorn.me/torrents.php?torrentid=%s',
+        'torrent': 'https://tls.passthepopcorn.me/torrents.php',
+        'login': 'https://tls.passthepopcorn.me/ajax.php?action=login',
+        'login_check': 'https://tls.passthepopcorn.me/ajax.php?action=login',
+        'search': 'https://tls.passthepopcorn.me/search/%s/0/7/%d'
     }
 
     http_time_between_calls = 2
@@ -65,7 +66,7 @@ class PassThePopcorn(TorrentProvider):
         })
 
         url = '%s?json=noredirect&%s' % (self.urls['torrent'], tryUrlencode(params))
-        res = self.getJsonData(url, opener = self.login_opener)
+        res = self.getJsonData(url)
 
         try:
             if not 'Movies' in res:
@@ -88,11 +89,11 @@ class PassThePopcorn(TorrentProvider):
                     if 'GoldenPopcorn' in torrent and torrent['GoldenPopcorn']:
                         torrentdesc += ' HQ'
                         if self.conf('prefer_golden'):
-                            torrentscore += 200
+                            torrentscore += 5000
                     if 'Scene' in torrent and torrent['Scene']:
                         torrentdesc += ' Scene'
                         if self.conf('prefer_scene'):
-                            torrentscore += 50
+                            torrentscore += 2000
                     if 'RemasterTitle' in torrent and torrent['RemasterTitle']:
                         torrentdesc += self.htmlToASCII(' %s' % torrent['RemasterTitle'])
 
@@ -178,7 +179,7 @@ class PassThePopcorn(TorrentProvider):
                 except KeyError:
                     pass
             return text # leave as is
-        return re.sub("&#?\w+;", fixup, u'%s' % text)
+        return re.sub("&#?\w+;", fixup, six.u('%s') % text)
 
     def unicodeToASCII(self, text):
         import unicodedata
@@ -188,13 +189,13 @@ class PassThePopcorn(TorrentProvider):
         return self.unicodeToASCII(self.htmlToUnicode(text))
 
     def getLoginParams(self):
-        return tryUrlencode({
+        return {
              'username': self.conf('username'),
              'password': self.conf('password'),
              'passkey': self.conf('passkey'),
              'keeplogged': '1',
              'login': 'Login'
-        })
+        }
 
     def loginSuccess(self, output):
         try:

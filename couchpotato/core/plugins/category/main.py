@@ -1,3 +1,4 @@
+import traceback
 from couchpotato import get_session
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent
@@ -41,81 +42,116 @@ class CategoryPlugin(Plugin):
         for category in categories:
             temp.append(category.to_dict())
 
-        db.expire_all()
         return temp
 
     def save(self, **kwargs):
 
-        db = get_session()
+        try:
+            db = get_session()
 
-        c = db.query(Category).filter_by(id = kwargs.get('id')).first()
-        if not c:
-            c = Category()
-            db.add(c)
+            c = db.query(Category).filter_by(id = kwargs.get('id')).first()
+            if not c:
+                c = Category()
+                db.add(c)
 
-        c.order = kwargs.get('order', c.order if c.order else 0)
-        c.label = toUnicode(kwargs.get('label', ''))
-        c.ignored = toUnicode(kwargs.get('ignored', ''))
-        c.preferred = toUnicode(kwargs.get('preferred', ''))
-        c.required = toUnicode(kwargs.get('required', ''))
-        c.destination = toUnicode(kwargs.get('destination', ''))
+            c.order = kwargs.get('order', c.order if c.order else 0)
+            c.label = toUnicode(kwargs.get('label', ''))
+            c.ignored = toUnicode(kwargs.get('ignored', ''))
+            c.preferred = toUnicode(kwargs.get('preferred', ''))
+            c.required = toUnicode(kwargs.get('required', ''))
+            c.destination = toUnicode(kwargs.get('destination', ''))
 
-        db.commit()
+            db.commit()
 
-        category_dict = c.to_dict()
+            category_dict = c.to_dict()
+
+            return {
+                'success': True,
+                'category': category_dict
+            }
+        except:
+            log.error('Failed: %s', traceback.format_exc())
+            db.rollback()
+        finally:
+            db.close()
 
         return {
-            'success': True,
-            'category': category_dict
+            'success': False,
+            'category': None
         }
 
     def saveOrder(self, **kwargs):
 
-        db = get_session()
+        try:
+            db = get_session()
 
-        order = 0
-        for category_id in kwargs.get('ids', []):
-            c = db.query(Category).filter_by(id = category_id).first()
-            c.order = order
+            order = 0
+            for category_id in kwargs.get('ids', []):
+                c = db.query(Category).filter_by(id = category_id).first()
+                c.order = order
 
-            order += 1
+                order += 1
 
-        db.commit()
+            db.commit()
+
+            return {
+                'success': True
+            }
+        except:
+            log.error('Failed: %s', traceback.format_exc())
+            db.rollback()
+        finally:
+            db.close()
 
         return {
-            'success': True
+            'success': False
         }
 
     def delete(self, id = None, **kwargs):
 
-        db = get_session()
-
-        success = False
-        message = ''
         try:
-            c = db.query(Category).filter_by(id = id).first()
-            db.delete(c)
-            db.commit()
+            db = get_session()
 
-            # Force defaults on all empty category movies
-            self.removeFromMovie(id)
+            success = False
+            message = ''
+            try:
+                c = db.query(Category).filter_by(id = id).first()
+                db.delete(c)
+                db.commit()
 
-            success = True
-        except Exception, e:
-            message = log.error('Failed deleting category: %s', e)
+                # Force defaults on all empty category movies
+                self.removeFromMovie(id)
 
-        db.expire_all()
+                success = True
+            except Exception as e:
+                message = log.error('Failed deleting category: %s', e)
+
+            return {
+                'success': success,
+                'message': message
+            }
+        except:
+            log.error('Failed: %s', traceback.format_exc())
+            db.rollback()
+        finally:
+            db.close()
+
         return {
-            'success': success,
-            'message': message
+            'success': False
         }
 
     def removeFromMovie(self, category_id):
 
-        db = get_session()
-        movies = db.query(Media).filter(Media.category_id == category_id).all()
+        try:
+            db = get_session()
+            movies = db.query(Media).filter(Media.category_id == category_id).all()
 
-        if len(movies) > 0:
-            for movie in movies:
-                movie.category_id = None
-                db.commit()
+            if len(movies) > 0:
+                for movie in movies:
+                    movie.category_id = None
+                    db.commit()
+        except:
+            log.error('Failed: %s', traceback.format_exc())
+            db.rollback()
+        finally:
+            db.close()

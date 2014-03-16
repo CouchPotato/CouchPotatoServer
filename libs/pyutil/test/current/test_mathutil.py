@@ -42,6 +42,13 @@ class MathUtilTestCase(unittest.TestCase):
         self.failUnlessEqual(f(5, 3), 2)
         self.failUnlessEqual(f(6, 3), 2)
         self.failUnlessEqual(f(7, 3), 3)
+        self.failUnless(isinstance(f(0.0, 1), int))
+        self.failUnlessEqual(f(7.0, 3.0), 3)
+        self.failUnlessEqual(f(7, 3.0), 3)
+        self.failUnlessEqual(f(7.0, 3), 3)
+        self.failUnlessEqual(f(6.0, 3.0), 2)
+        self.failUnlessEqual(f(6.0, 3), 2)
+        self.failUnlessEqual(f(6, 3.0), 2)
 
     def test_next_multiple(self):
         f = mathutil.next_multiple

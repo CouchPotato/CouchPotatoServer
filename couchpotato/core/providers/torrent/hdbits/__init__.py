@@ -1,5 +1,6 @@
 from .main import HDBits
 
+
 def start():
     return HDBits()
 
@@ -20,11 +21,6 @@ config = [{
                 {
                     'name': 'username',
                     'default': '',
-                },
-                {
-                    'name': 'password',
-                    'default': '',
-                    'type': 'password',
                 },
                 {
                     'name': 'passkey',

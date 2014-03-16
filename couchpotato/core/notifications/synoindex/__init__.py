@@ -1,5 +1,6 @@
 from .main import Synoindex
 
+
 def start():
     return Synoindex()
 

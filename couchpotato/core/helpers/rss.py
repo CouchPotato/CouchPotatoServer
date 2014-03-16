@@ -3,6 +3,7 @@ import xml.etree.ElementTree as XMLTree
 
 log = CPLog(__name__)
 
+
 class RSS(object):
 
     def getTextElements(self, xml, path):
@@ -46,6 +47,6 @@ class RSS(object):
     def getItems(self, data, path = 'channel/item'):
         try:
             return XMLTree.parse(data).findall(path)
-        except Exception, e:
+        except Exception as e:
             log.error('Error parsing RSS. %s', e)
             return []

@@ -21,6 +21,12 @@ class CoreNotifier(Notification):
 
     m_lock = None
 
+    listen_to = [
+        'renamer.after', 'movie.snatched',
+        'updater.available', 'updater.updated',
+        'core.message', 'core.message.important',
+    ]
+
     def __init__(self):
         super(CoreNotifier, self).__init__()
 
@@ -61,28 +67,42 @@ class CoreNotifier(Notification):
 
     def clean(self):
 
-        db = get_session()
-        db.query(Notif).filter(Notif.added <= (int(time.time()) - 2419200)).delete()
-        db.commit()
-
+        try:
+            db = get_session()
+            db.query(Notif).filter(Notif.added <= (int(time.time()) - 2419200)).delete()
+            db.commit()
+        except:
+            log.error('Failed cleaning notification: %s', traceback.format_exc())
+            db.rollback()
+        finally:
+            db.close()
 
     def markAsRead(self, ids = None, **kwargs):
 
         ids = splitString(ids) if ids else None
 
-        db = get_session()
+        try:
+            db = get_session()
 
-        if ids:
-            q = db.query(Notif).filter(or_(*[Notif.id == tryInt(s) for s in ids]))
-        else:
-            q = db.query(Notif).filter_by(read = False)
+            if ids:
+                q = db.query(Notif).filter(or_(*[Notif.id == tryInt(s) for s in ids]))
+            else:
+                q = db.query(Notif).filter_by(read = False)
 
-        q.update({Notif.read: True})
+            q.update({Notif.read: True})
+            db.commit()
 
-        db.commit()
+            return {
+                'success': True
+            }
+        except:
+            log.error('Failed mark as read: %s', traceback.format_exc())
+            db.rollback()
+        finally:
+            db.close()
 
         return {
-            'success': True
+            'success': False
         }
 
     def listView(self, limit_offset = None, **kwargs):
@@ -121,7 +141,10 @@ class CoreNotifier(Notification):
 
         for message in messages:
             if message.get('time') > last_check:
-                fireEvent('core.message', message = message.get('message'), data = message)
+                message['sticky'] = True # Always sticky core messages
+
+                message_type = 'core.message.important' if message.get('important') else 'core.message'
+                fireEvent(message_type, message = message.get('message'), data = message)
 
             if last_check < message.get('time'):
                 last_check = message.get('time')
@@ -131,24 +154,30 @@ class CoreNotifier(Notification):
     def notify(self, message = '', data = None, listener = None):
         if not data: data = {}
 
-        db = get_session()
+        try:
+            db = get_session()
 
-        data['notification_type'] = listener if listener else 'unknown'
+            data['notification_type'] = listener if listener else 'unknown'
 
-        n = Notif(
-            message = toUnicode(message),
-            data = data
-        )
-        db.add(n)
-        db.commit()
+            n = Notif(
+                message = toUnicode(message),
+                data = data
+            )
+            db.add(n)
+            db.commit()
 
-        ndict = n.to_dict()
-        ndict['type'] = 'notification'
-        ndict['time'] = time.time()
+            ndict = n.to_dict()
+            ndict['type'] = 'notification'
+            ndict['time'] = time.time()
 
-        self.frontend(type = listener, data = data)
+            self.frontend(type = listener, data = data)
 
-        return True
+            return True
+        except:
+            log.error('Failed notify: %s', traceback.format_exc())
+            db.rollback()
+        finally:
+            db.close()
 
     def frontend(self, type = 'notification', data = None, message = None):
         if not data: data = {}

@@ -8,7 +8,8 @@
 
 from collections import Sequence, Iterator
 
-class PagedIterator( Iterator ):
+
+class PagedIterator(Iterator):
     def __init__(self, parent):
         self._parent = parent
         self._index = -1
@@ -23,7 +24,8 @@ class PagedIterator( Iterator ):
             raise StopIteration
         return self._parent[self._index]
 
-class UnpagedData( object ):
+
+class UnpagedData(object):
     def copy(self):
         return self.__class__()
 
@@ -33,10 +35,11 @@ class UnpagedData( object ):
     def __rmul__(self, other):
         return (self.copy() for a in range(other))
 
-class PagedList( Sequence ):
+
+class PagedList(Sequence):
     """
-    List-like object, with support for automatically grabbing additional
-    pages from a data source.
+    List-like object, with support for automatically grabbing
+    additional pages from a data source.
     """
     _iter_class = None
 
@@ -87,17 +90,19 @@ class PagedList( Sequence ):
                 pagestart += 1
 
     def _getpage(self, page):
-        raise NotImplementedError("PagedList._getpage() must be provided "+\
+        raise NotImplementedError("PagedList._getpage() must be provided " +
                                   "by subclass")
 
-class PagedRequest( PagedList ):
+
+class PagedRequest(PagedList):
     """
-    Derived PageList that provides a list-like object with automatic paging
-    intended for use with search requests.
+    Derived PageList that provides a list-like object with automatic
+    paging intended for use with search requests.
     """
     def __init__(self, request, handler=None):
         self._request = request
-        if handler: self._handler = handler
+        if handler:
+            self._handler = handler
         super(PagedRequest, self).__init__(self._getpage(1), 20)
 
     def _getpage(self, page):
@@ -105,5 +110,7 @@ class PagedRequest( PagedList ):
         res = req.readJSON()
         self._len = res['total_results']
         for item in res['results']:
-            yield self._handler(item)
-
+            if item is None:
+                yield None
+            else:
+                yield self._handler(item)

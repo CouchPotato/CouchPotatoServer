@@ -111,23 +111,25 @@ Page.Settings = new Class({
 		Cookie.write('advanced_toggle_checked', +self.advanced_toggle.checked, {'duration': 365});
 	},
 
+    sortByOrder: function(a, b){
+			return (a.order || 100) - (b.order || 100)
+	},
+
 	create: function(json){
 		var self = this;
 
-		self.el.adopt(
-			self.tabs_container = new Element('ul.tabs'),
-			self.containers = new Element('form.uniForm.containers').adopt(
-				new Element('label.advanced_toggle').adopt(
-					new Element('span', {
-						'text': 'Show advanced settings'
-					}),
-					self.advanced_toggle = new Element('input[type=checkbox].inlay', {
-						'checked': +Cookie.read('advanced_toggle_checked'),
-						'events': {
-							'change': self.showAdvanced.bind(self)
-						}
-					})
-				)
+		self.tabs_container = new Element('ul.tabs');
+		self.containers = new Element('form.uniForm.containers').adopt(
+			new Element('label.advanced_toggle').adopt(
+				new Element('span', {
+					'text': 'Show advanced settings'
+				}),
+				self.advanced_toggle = new Element('input[type=checkbox].inlay', {
+					'checked': +Cookie.read('advanced_toggle_checked'),
+					'events': {
+						'change': self.showAdvanced.bind(self)
+					}
+				})
 			)
 		);
 		self.showAdvanced();
@@ -141,13 +143,11 @@ Page.Settings = new Class({
 			options.include(section);
 		});
 
-		options.sort(function(a, b){
-			return (a.order || 100) - (b.order || 100)
-		}).each(function(section){
+		options.stableSort(self.sortByOrder).each(function(section){
 			var section_name = section.section_name;
 
 			// Add groups to content
-			section.groups.sortBy('order').each(function(group){
+			section.groups.stableSort(self.sortByOrder).each(function(group){
 				if(group.hidden) return;
 
 				if(self.wizard_only && !group.wizard)
@@ -184,9 +184,7 @@ Page.Settings = new Class({
 				}
 
 				// Add options to group
-				group.options.sort(function(a, b){
-					return (a.order || 100) - (b.order || 100)
-				}).each(function(option){
+				group.options.stableSort(self.sortByOrder).each(function(option){
 					if(option.hidden) return;
 					var class_name = (option.type || 'string').capitalize();
 					var input = new Option[class_name](section_name, option.name, self.getValue(section_name, option.name), option);
@@ -197,8 +195,15 @@ Page.Settings = new Class({
 			});
 		});
 
-		self.fireEvent('create');
-		self.openTab();
+		setTimeout(function(){
+			self.el.adopt(
+				self.tabs_container,
+				self.containers
+			);
+
+			self.fireEvent('create');
+			self.openTab();
+		}, 0);
 
 	},
 
@@ -265,16 +270,27 @@ Page.Settings = new Class({
 	},
 
 	createGroup: function(group){
+
+		if((typeOf(group.description) == 'array')){
+			var hint = new Element('span.hint.more_hint', {
+				'html': group.description[0]
+			});
+
+			createTooltip(group.description[1]).inject(hint, 'top');
+		}
+		else {
+			var hint = new Element('span.hint', {
+				'html': group.description || ''
+			})
+		}
+
+
 		return new Element('fieldset', {
 			'class': (group.advanced ? 'inlineLabels advanced' : 'inlineLabels') + ' group_' + (group.name || '') + ' subtab_' + (group.subtab || '')
-		}).adopt(
+		}).grab(
 				new Element('h2', {
 					'text': group.label || (group.name).capitalize()
-				}).adopt(
-						new Element('span.hint', {
-							'html': group.description || ''
-						})
-					)
+				}).grab(hint)
 			);
 	},
 
@@ -343,10 +359,22 @@ var OptionBase = new Class({
 
 	createHint: function(){
 		var self = this;
-		if(self.options.description)
-			new Element('p.formHint', {
-				'html': self.options.description
-			}).inject(self.el);
+		if(self.options.description){
+
+
+			if((typeOf(self.options.description) == 'array')){
+				var hint = new Element('p.formHint.more_hint', {
+					'html': self.options.description[0]
+				}).inject(self.el);
+
+				createTooltip(self.options.description[1]).inject(hint, 'top');
+			}
+			else {
+				var hint = new Element('p.formHint', {
+					'html': self.options.description || ''
+				}).inject(self.el)
+			}
+		}
 	},
 
 	afterInject: function(){
@@ -1264,6 +1292,7 @@ Option.Combined = new Class({
 		self.inputs = {};
 		self.items = [];
 		self.labels = {};
+		self.descriptions = {};
 
 		self.options.combine.each(function(name){
 
@@ -1284,9 +1313,12 @@ Option.Combined = new Class({
 
 		Object.each(self.inputs, function(input, name){
 			self.labels[name] = input.getPrevious().get('text');
+			self.descriptions[name] = (_in = input.getNext()) ? _in.get('text') : '';
+
 			new Element('abbr', {
 				'class': name,
-				'text': self.labels[name]
+				'text': self.labels[name],
+				'title': self.descriptions[name]
 			}).inject(head)
 		});
 
@@ -1413,3 +1445,24 @@ Option.Combined = new Class({
 	}
 
 });
+
+var createTooltip = function(description){
+
+	var tip = new Element('div.tooltip', {
+			'events': {
+				'mouseenter': function(){
+					tip.addClass('shown')
+				},
+				'mouseleave': function(){
+					tip.removeClass('shown')
+				}
+			}
+		}).adopt(
+			new Element('a.icon2.info'),
+			new Element('div.tip', {
+				'html': description
+			})
+		);
+
+	return tip;
+}

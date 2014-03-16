@@ -1,5 +1,6 @@
 from .main import Automation
 
+
 def start():
     return Automation()
 
@@ -41,7 +42,7 @@ config = [{
                     'label': 'Required Genres',
                     'default': '',
                     'placeholder': 'Example: Action, Crime & Drama',
-                    'description': 'Ignore movies that don\'t contain at least one set of genres. Sets are separated by "," and each word within a set must be separated with "&"'
+                    'description': ('Ignore movies that don\'t contain at least one set of genres.', 'Sets are separated by "," and each word within a set must be separated with "&"')
                 },
                 {
                     'name': 'ignored_genres',

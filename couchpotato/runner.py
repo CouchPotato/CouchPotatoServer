@@ -8,6 +8,7 @@ from couchpotato.core.helpers.variable import getDataDir, tryInt
 from logging import handlers
 from tornado.httpserver import HTTPServer
 from tornado.web import Application, StaticFileHandler, RedirectHandler
+from uuid import uuid4
 import locale
 import logging
 import os.path
@@ -16,6 +17,7 @@ import sys
 import time
 import traceback
 import warnings
+
 
 def getOptions(base_path, args):
 
@@ -50,6 +52,7 @@ def getOptions(base_path, args):
     options.pid_file = os.path.expanduser(options.pid_file)
 
     return options
+
 
 # Tornado monkey patch logging..
 def _log(status_code, request):
@@ -120,7 +123,6 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
                 os.rmdir(backup)
                 total_backups -= 1
 
-
     # Register environment settings
     Env.set('app_dir', toUnicode(base_path))
     Env.set('data_dir', toUnicode(data_dir))
@@ -144,7 +146,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     Env.set('dev', development)
 
     # Disable logging for some modules
-    for logger_name in ['enzyme', 'guessit', 'subliminal', 'apscheduler']:
+    for logger_name in ['enzyme', 'guessit', 'subliminal', 'apscheduler', 'tornado', 'requests']:
         logging.getLogger(logger_name).setLevel(logging.ERROR)
 
     for logger_name in ['gntp', 'migrate']:
@@ -167,7 +169,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
         logger.addHandler(hdlr)
 
     # To file
-    hdlr2 = handlers.RotatingFileHandler(Env.get('log_path'), 'a', 500000, 10)
+    hdlr2 = handlers.RotatingFileHandler(Env.get('log_path'), 'a', 500000, 10, encoding = Env.get('encoding'))
     hdlr2.setFormatter(formatter)
     logger.addHandler(hdlr2)
 
@@ -215,6 +217,10 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     Env.set('web_base', web_base)
 
     api_key = Env.setting('api_key')
+    if not api_key:
+        api_key = uuid4().hex
+        Env.setting('api_key', value = api_key)
+
     api_base = r'%sapi/%s/' % (web_base, api_key)
     Env.set('api_base', api_base)
 
@@ -229,10 +235,9 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
         'ssl_key': Env.setting('ssl_key', default = None),
     }
 
-
     # Load the app
     application = Application([],
-        log_function = lambda x : None,
+        log_function = lambda x: None,
         debug = config['use_reloader'],
         gzip = True,
         cookie_secret = api_key,
@@ -245,9 +250,9 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
         (r'%snonblock/(.*)(/?)' % api_base, NonBlockHandler),
 
         # API handlers
-        (r'%s(.*)(/?)' % api_base, ApiHandler), # Main API handler
-        (r'%sgetkey(/?)' % web_base, KeyHandler), # Get API key
-        (r'%s' % api_base, RedirectHandler, {"url": web_base + 'docs/'}), # API docs
+        (r'%s(.*)(/?)' % api_base, ApiHandler),  # Main API handler
+        (r'%sgetkey(/?)' % web_base, KeyHandler),  # Get API key
+        (r'%s' % api_base, RedirectHandler, {"url": web_base + 'docs/'}),  # API docs
 
         # Login handlers
         (r'%slogin(/?)' % web_base, LoginHandler),
@@ -262,37 +267,32 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     static_path = '%sstatic/' % web_base
     for dir_name in ['fonts', 'images', 'scripts', 'style']:
         application.add_handlers(".*$", [
-             ('%s%s/(.*)' % (static_path, dir_name), StaticFileHandler, {'path': toUnicode(os.path.join(base_path, 'couchpotato', 'static', dir_name))})
+            ('%s%s/(.*)' % (static_path, dir_name), StaticFileHandler, {'path': toUnicode(os.path.join(base_path, 'couchpotato', 'static', dir_name))})
         ])
     Env.set('static_path', static_path)
-
 
     # Load configs & plugins
     loader = Env.get('loader')
     loader.preload(root = toUnicode(base_path))
     loader.run()
 
-
     # Fill database with needed stuff
     if not db_exists:
         fireEvent('app.initialize', in_order = True)
 
-
     # Go go go!
     from tornado.ioloop import IOLoop
     loop = IOLoop.current()
-
 
     # Some logging and fire load event
     try: log.info('Starting server on port %(port)s', config)
     except: pass
     fireEventAsync('app.load')
 
-
     if config['ssl_cert'] and config['ssl_key']:
         server = HTTPServer(application, no_keep_alive = True, ssl_options = {
-           "certfile": config['ssl_cert'],
-           "keyfile": config['ssl_key'],
+            'certfile': config['ssl_cert'],
+            'keyfile': config['ssl_key'],
         })
     else:
         server = HTTPServer(application, no_keep_alive = True)
@@ -304,7 +304,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
         try:
             server.listen(config['port'], config['host'])
             loop.start()
-        except Exception, e:
+        except Exception as e:
             log.error('Failed starting: %s', traceback.format_exc())
             try:
                 nr, msg = e

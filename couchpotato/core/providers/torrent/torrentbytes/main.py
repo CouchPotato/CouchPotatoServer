@@ -11,21 +11,21 @@ log = CPLog(__name__)
 class TorrentBytes(TorrentProvider):
 
     urls = {
-        'test' : 'https://www.torrentbytes.net/',
-        'login' : 'https://www.torrentbytes.net/takelogin.php',
-        'login_check' : 'https://www.torrentbytes.net/inbox.php',
-        'detail' : 'https://www.torrentbytes.net/details.php?id=%s',
-        'search' : 'https://www.torrentbytes.net/browse.php?search=%s&cat=%d',
-        'download' : 'https://www.torrentbytes.net/download.php?id=%s&name=%s',
+        'test': 'https://www.torrentbytes.net/',
+        'login': 'https://www.torrentbytes.net/takelogin.php',
+        'login_check': 'https://www.torrentbytes.net/inbox.php',
+        'detail': 'https://www.torrentbytes.net/details.php?id=%s',
+        'search': 'https://www.torrentbytes.net/browse.php?search=%s&cat=%d',
+        'download': 'https://www.torrentbytes.net/download.php?id=%s&name=%s',
     }
 
     cat_ids = [
-        ([5], ['720p', '1080p']),
+        ([5], ['720p', '1080p', 'bd50']),
         ([19], ['cam']),
         ([19], ['ts', 'tc']),
         ([19], ['r5', 'scr']),
         ([19], ['dvdrip']),
-        ([5], ['brrip']),
+        ([19], ['brrip']),
         ([20], ['dvdr']),
     ]
 
@@ -35,7 +35,7 @@ class TorrentBytes(TorrentProvider):
     def _searchOnTitle(self, title, movie, quality, results):
 
         url = self.urls['search'] % (tryUrlencode('%s %s' % (title.replace(':', ''), movie['library']['year'])), self.getCatId(quality['identifier'])[0])
-        data = self.getHTMLData(url, opener = self.login_opener)
+        data = self.getHTMLData(url)
 
         if data:
             html = BeautifulSoup(data)
@@ -69,11 +69,11 @@ class TorrentBytes(TorrentProvider):
                 log.error('Failed to parsing %s: %s', (self.getName(), traceback.format_exc()))
 
     def getLoginParams(self):
-        return tryUrlencode({
+        return {
             'username': self.conf('username'),
             'password': self.conf('password'),
             'login': 'submit',
-        })
+        }
 
     def loginSuccess(self, output):
         return 'logout.php' in output.lower() or 'Welcome' in output.lower()

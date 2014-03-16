@@ -18,7 +18,7 @@ class BinSearch(NZBProvider):
         'search': 'https://www.binsearch.info/index.php?%s',
     }
 
-    http_time_between_calls = 4 # Seconds
+    http_time_between_calls = 4  # Seconds
 
     def _search(self, movie, quality, results):
 
@@ -90,13 +90,13 @@ class BinSearch(NZBProvider):
 
     def download(self, url = '', nzb_id = ''):
 
-        params = {
+        data = {
             'action': 'nzb',
             nzb_id: 'on'
         }
 
         try:
-            return self.urlopen(url, params = params, show_error = False)
+            return self.urlopen(url, data = data, show_error = False)
         except:
             log.error('Failed getting nzb from %s: %s', (self.getName(), traceback.format_exc()))
 

@@ -8,6 +8,7 @@ import re
 
 log = CPLog(__name__)
 
+
 class Rottentomatoes(Automation, RSS):
 
     interval = 1800

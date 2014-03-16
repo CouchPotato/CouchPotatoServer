@@ -318,10 +318,12 @@ def _curl_setup_request(curl, request, buffer, headers):
                     [native_str("%s: %s" % i) for i in request.headers.items()])
 
     if request.header_callback:
-        curl.setopt(pycurl.HEADERFUNCTION, request.header_callback)
+        curl.setopt(pycurl.HEADERFUNCTION,
+                    lambda line: request.header_callback(native_str(line)))
     else:
         curl.setopt(pycurl.HEADERFUNCTION,
-                    lambda line: _curl_header_callback(headers, line))
+                    lambda line: _curl_header_callback(headers,
+                                                       native_str(line)))
     if request.streaming_callback:
         write_function = request.streaming_callback
     else:
@@ -360,6 +362,7 @@ def _curl_setup_request(curl, request, buffer, headers):
             curl.setopt(pycurl.PROXYUSERPWD, credentials)
     else:
         curl.setopt(pycurl.PROXY, '')
+        curl.unsetopt(pycurl.PROXYUSERPWD)
     if request.validate_cert:
         curl.setopt(pycurl.SSL_VERIFYPEER, 1)
         curl.setopt(pycurl.SSL_VERIFYHOST, 2)
@@ -382,6 +385,8 @@ def _curl_setup_request(curl, request, buffer, headers):
         # that we can't reach, so allow ipv6 unless the user asks to disable.
         # (but see version check in _process_queue above)
         curl.setopt(pycurl.IPRESOLVE, pycurl.IPRESOLVE_V4)
+    else:
+        curl.setopt(pycurl.IPRESOLVE, pycurl.IPRESOLVE_WHATEVER)
 
     # Set the request method through curl's irritating interface which makes
     # up names for almost every single method
@@ -404,6 +409,11 @@ def _curl_setup_request(curl, request, buffer, headers):
 
     # Handle curl's cryptic options for every individual HTTP method
     if request.method in ("POST", "PUT"):
+        if request.body is None:
+            raise AssertionError(
+                'Body must not be empty for "%s" request'
+                % request.method)
+
         request_buffer = BytesIO(utf8(request.body))
         curl.setopt(pycurl.READFUNCTION, request_buffer.read)
         if request.method == "POST":
@@ -414,6 +424,9 @@ def _curl_setup_request(curl, request, buffer, headers):
             curl.setopt(pycurl.POSTFIELDSIZE, len(request.body))
         else:
             curl.setopt(pycurl.INFILESIZE, len(request.body))
+    elif request.method == "GET":
+        if request.body is not None:
+            raise AssertionError('Body must be empty for GET request')
 
     if request.auth_username is not None:
         userpwd = "%s:%s" % (request.auth_username, request.auth_password or '')

@@ -1,20 +1,28 @@
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
-from couchpotato.core.providers.torrent.base import TorrentProvider
+from couchpotato.core.providers.torrent.base import TorrentMagnetProvider
 import traceback
 
 log = CPLog(__name__)
 
 
-class Yify(TorrentProvider):
+class Yify(TorrentMagnetProvider):
 
     urls = {
-        'test' : 'https://yify-torrents.com/api',
-        'search' : 'https://yify-torrents.com/api/list.json?keywords=%s&quality=%s',
-        'detail': 'https://yify-torrents.com/api/movie.json?id=%s'
+        'test': '%s/api',
+        'search': '%s/api/list.json?keywords=%s&quality=%s',
+        'detail': '%s/api/movie.json?id=%s'
     }
 
-    http_time_between_calls = 1 #seconds
+    http_time_between_calls = 1  #seconds
+
+    proxy_list = [
+        'http://yify.unlocktorrent.com',
+        'http://yify-torrents.com.come.in',
+        'http://yts.re',
+        'http://yts.im'
+        'https://yify-torrents.im',
+    ]
 
     def search(self, movie, quality):
 
@@ -25,7 +33,9 @@ class Yify(TorrentProvider):
 
     def _search(self, movie, quality, results):
 
-        data = self.getJsonData(self.urls['search'] % (movie['library']['identifier'], quality['identifier']))
+        search_url = self.urls['search'] % (self.getDomain(), movie['library']['identifier'], quality['identifier'])
+
+        data = self.getJsonData(search_url)
 
         if data and data.get('MovieList'):
             try:
@@ -41,8 +51,8 @@ class Yify(TorrentProvider):
                     results.append({
                         'id': result['MovieID'],
                         'name': title,
-                        'url': result['TorrentUrl'],
-                        'detail_url': self.urls['detail'] % result['MovieID'],
+                        'url': result['TorrentMagnetUrl'],
+                        'detail_url': self.urls['detail'] % (self.getDomain(), result['MovieID']),
                         'size': self.parseSize(result['Size']),
                         'seeders': tryInt(result['TorrentSeeds']),
                         'leechers': tryInt(result['TorrentPeers'])
@@ -51,3 +61,6 @@ class Yify(TorrentProvider):
             except:
                 log.error('Failed getting results from %s: %s', (self.getName(), traceback.format_exc()))
 
+    def correctProxy(self, data):
+        data = data.lower()
+        return 'yify' in data and 'yts' in data

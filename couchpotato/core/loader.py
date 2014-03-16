@@ -1,9 +1,10 @@
 from couchpotato.core.event import fireEvent
 from couchpotato.core.logger import CPLog
-from importlib import import_module
+from importhelper import import_module
 import os
 import sys
 import traceback
+import six
 
 log = CPLog(__name__)
 
@@ -37,7 +38,7 @@ class Loader(object):
             self.paths['custom_plugins'] = (30, '', custom_plugin_dir)
 
         # Loop over all paths and add to module list
-        for plugin_type, plugin_tuple in self.paths.iteritems():
+        for plugin_type, plugin_tuple in self.paths.items():
             priority, module, dir_name = plugin_tuple
             self.addFromDir(plugin_type, priority, module, dir_name)
 
@@ -45,7 +46,7 @@ class Loader(object):
         did_save = 0
 
         for priority in sorted(self.modules):
-            for module_name, plugin in sorted(self.modules[priority].iteritems()):
+            for module_name, plugin in sorted(self.modules[priority].items()):
 
                 # Load module
                 try:
@@ -81,7 +82,7 @@ class Loader(object):
         for filename in os.listdir(root_path):
             path = os.path.join(root_path, filename)
             if os.path.isdir(path) and filename[:2] != '__':
-                if u'__init__.py' in os.listdir(path):
+                if six.u('__init__.py') in os.listdir(path):
                     new_base_path = ''.join(s + '.' for s in base_path) + filename
                     self.paths[new_base_path.replace('.', '_')] = (priority, new_base_path, path)
 

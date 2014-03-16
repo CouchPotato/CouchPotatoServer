@@ -42,7 +42,7 @@ class Logging(Plugin):
             'desc': 'Log errors',
             'params': {
                 'type': {'desc': 'Type of logging, default "error"'},
-                '**kwargs': {'type':'object', 'desc': 'All other params will be printed in the log string.'},
+                '**kwargs': {'type': 'object', 'desc': 'All other params will be printed in the log string.'},
             }
         })
 

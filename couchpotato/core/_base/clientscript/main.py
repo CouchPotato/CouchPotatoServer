@@ -34,6 +34,8 @@ class ClientScript(Plugin):
             'scripts/library/question.js',
             'scripts/library/scrollspy.js',
             'scripts/library/spin.js',
+            'scripts/library/Array.stableSort.js',
+            'scripts/library/async.js',
             'scripts/couchpotato.js',
             'scripts/api.js',
             'scripts/library/history.js',
@@ -47,13 +49,14 @@ class ClientScript(Plugin):
             'scripts/page/settings.js',
             'scripts/page/about.js',
             'scripts/page/manage.js',
+            'scripts/misc/downloaders.js',
         ],
     }
 
 
-    urls = {'style': {}, 'script': {}, }
-    minified = {'style': {}, 'script': {}, }
-    paths = {'style': {}, 'script': {}, }
+    urls = {'style': {}, 'script': {}}
+    minified = {'style': {}, 'script': {}}
+    paths = {'style': {}, 'script': {}}
     comment = {
        'style': '/*** %s:%d ***/\n',
        'script': '// %s:%d\n'

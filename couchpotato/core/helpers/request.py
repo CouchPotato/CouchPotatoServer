@@ -1,5 +1,5 @@
 from couchpotato.core.helpers.encoding import toUnicode
-from couchpotato.core.helpers.variable import natcmp
+from couchpotato.core.helpers.variable import natsortKey
 from urllib import unquote
 import re
 
@@ -8,8 +8,13 @@ def getParams(params):
 
     reg = re.compile('^[a-z0-9_\.]+$')
 
+    # Sort keys
+    param_keys = params.keys()
+    param_keys.sort(key = natsortKey)
+
     temp = {}
-    for param, value in sorted(params.iteritems()):
+    for param in param_keys:
+        value = params[param]
 
         nest = re.split("([\[\]]+)", param)
         if len(nest) > 1:
@@ -37,13 +42,17 @@ def getParams(params):
 
     return dictToList(temp)
 
+
 def dictToList(params):
 
     if type(params) is dict:
         new = {}
-        for x, value in params.iteritems():
+        for x, value in params.items():
             try:
-                new_value = [dictToList(value[k]) for k in sorted(value.iterkeys(), cmp = natcmp)]
+                convert = lambda text: int(text) if text.isdigit() else text.lower()
+                alphanum_key = lambda key: [convert(c) for c in re.split('([0-9]+)', key)]
+                sorted_keys = sorted(value.keys(), key = alphanum_key)
+                new_value = [dictToList(value[k]) for k in sorted_keys]
             except:
                 new_value = value
 
