@@ -110,7 +110,7 @@ class Base(TorrentMagnetProvider):
         return tryInt(age)
 
     def isEnabled(self):
-        return super(KickAssTorrents, self).isEnabled() and self.getDomain()
+        return super(Base, self).isEnabled() and self.getDomain()
 
     def correctProxy(self, data):
         return 'search query' in data.lower()
