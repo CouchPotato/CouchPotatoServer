@@ -32,6 +32,10 @@ class Torrent(Base):
         self.seeds = None
         self.leechs = None
 
+        # General properties
+        self.comment = None
+        self.save_path = None
+
     #
     # Commands
     #
@@ -62,3 +66,16 @@ class Torrent(Base):
 
     def get_trackers(self):
         pass
+
+    #
+    # Update torrent details
+    #
+
+    def update_general(self):
+        r = self._get('json/propertiesGeneral/%s' % self.hash)
+
+        if r:
+            self._fill(r)
+            return True
+
+        return False
