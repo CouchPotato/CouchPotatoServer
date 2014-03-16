@@ -1,14 +1,3 @@
-from couchpotato.core.event import fireEvent, addEvent
-from couchpotato.core.helpers.encoding import ss, toSafeString, \
-    toUnicode, sp
-from couchpotato.core.helpers.variable import getExt, md5, isLocalIP, scanForPassword, tryInt
-from couchpotato.core.logger import CPLog
-from couchpotato.environment import Env
-import requests
-from requests.packages.urllib3 import Timeout
-from requests.packages.urllib3.exceptions import MaxRetryError
-from tornado import template
-from tornado.web import StaticFileHandler
 from urlparse import urlparse
 import glob
 import inspect
@@ -18,12 +7,28 @@ import time
 import traceback
 import urllib2
 
+from couchpotato import get_db
+from couchpotato.core.event import fireEvent, addEvent
+from couchpotato.core.helpers.encoding import ss, toSafeString, \
+    toUnicode, sp
+from couchpotato.core.helpers.variable import getExt, md5, isLocalIP, scanForPassword, tryInt
+from couchpotato.core.logger import CPLog
+from couchpotato.environment import Env
+import requests
+from requests.packages.urllib3 import Timeout
+from requests.packages.urllib3.exceptions import MaxRetryError
+from scandir import scandir
+from tornado import template
+from tornado.web import StaticFileHandler
+
+
 log = CPLog(__name__)
 
 
 class Plugin(object):
 
     _class_name = None
+    _database = None
     plugin_path = None
 
     enabled_option = 'enabled'
@@ -52,6 +57,17 @@ class Plugin(object):
 
         if self.auto_register_static:
             self.registerStatic(inspect.getfile(self.__class__))
+
+        # Setup database
+        if self._database:
+            addEvent('database.setup', self.databaseSetup)
+
+    def databaseSetup(self):
+
+        for index_name in self._database:
+            klass = self._database[index_name]
+
+            fireEvent('database.setup_index', index_name, klass)
 
     def conf(self, attr, value = None, default = None, section = None):
         class_name = self.getName().lower().split(':')[0].lower()
@@ -125,6 +141,26 @@ class Plugin(object):
             log.error('Unable to create folder "%s": %s', (path, e))
 
         return False
+
+    def deleteEmptyFolder(self, folder, show_error = True):
+        folder = sp(folder)
+
+        for root, dirs, files in scandir.walk(folder):
+
+            for dir_name in dirs:
+                full_path = os.path.join(root, dir_name)
+                if len(os.listdir(full_path)) == 0:
+                    try:
+                        os.rmdir(full_path)
+                    except:
+                        if show_error:
+                            log.error('Couldn\'t remove empty directory %s: %s', (full_path, traceback.format_exc()))
+
+        try:
+            os.rmdir(folder)
+        except:
+            if show_error:
+                log.error('Couldn\'t remove empty directory %s: %s', (folder, traceback.format_exc()))
 
     # http request
     def urlopen(self, url, timeout = 30, data = None, headers = None, files = None, show_error = True):
@@ -303,7 +339,7 @@ class Plugin(object):
 
     def cpTag(self, media):
         if Env.setting('enabled', 'renamer'):
-            return '.cp(' + media['library'].get('identifier') + ')' if media['library'].get('identifier') else ''
+            return '.cp(' + media.get('identifier') + ')' if media.get('identifier') else ''
 
         return ''
 

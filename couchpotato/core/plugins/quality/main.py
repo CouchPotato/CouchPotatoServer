@@ -1,20 +1,24 @@
 import traceback
-from couchpotato import get_session
+import re
+
+from couchpotato import get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import toUnicode, ss
 from couchpotato.core.helpers.variable import mergeDicts, getExt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
-from couchpotato.core.settings.model import Quality, Profile, ProfileType
-from sqlalchemy.sql.expression import or_
-import re
-import time
+from couchpotato.core.plugins.quality.index import QualityIndex
+
 
 log = CPLog(__name__)
 
 
 class QualityPlugin(Plugin):
+
+    _database = {
+        'quality': QualityIndex
+    }
 
     qualities = [
         {'identifier': 'bd50', 'hd': True, 'size': (15000, 60000), 'label': 'BR-Disk', 'alternative': ['bd25'], 'allow': ['1080p'], 'ext':[], 'tags': ['bdmv', 'certificate', ('complete', 'bluray')]},
@@ -39,6 +43,7 @@ class QualityPlugin(Plugin):
         addEvent('quality.single', self.single)
         addEvent('quality.guess', self.guess)
         addEvent('quality.pre_releases', self.preReleases)
+        addEvent('quality.order', self.getOrder)
 
         addApiView('quality.size.save', self.saveSize)
         addApiView('quality.list', self.allView, docs = {
@@ -52,6 +57,16 @@ class QualityPlugin(Plugin):
         addEvent('app.initialize', self.fill, priority = 10)
 
         addEvent('app.test', self.doTest)
+
+        self.addOrder()
+
+    def addOrder(self):
+        self.order = []
+        for q in self.qualities:
+            self.order.append(q.get('identifier'))
+
+    def getOrder(self):
+        return self.order
 
     def preReleases(self):
         return self.pre_releases
@@ -68,26 +83,28 @@ class QualityPlugin(Plugin):
         if self.cached_qualities:
             return self.cached_qualities
 
-        db = get_session()
+        db = get_db()
 
-        qualities = db.query(Quality).all()
+        qualities = db.all('quality', with_doc = True)
 
         temp = []
         for quality in qualities:
-            q = mergeDicts(self.getQuality(quality.identifier), quality.to_dict())
+            quality = quality['doc']
+            q = mergeDicts(self.getQuality(quality.get('identifier')), quality)
             temp.append(q)
 
         self.cached_qualities = temp
+
         return temp
 
     def single(self, identifier = ''):
 
-        db = get_session()
+        db = get_db()
         quality_dict = {}
 
-        quality = db.query(Quality).filter(or_(Quality.identifier == identifier, Quality.id == identifier)).first()
+        quality = db.get('quality', identifier, with_doc = True)['doc']
         if quality:
-            quality_dict = dict(self.getQuality(quality.identifier), **quality.to_dict())
+            quality_dict = mergeDicts(self.getQuality(quality['identifier']), quality)
 
         return quality_dict
 
@@ -100,12 +117,12 @@ class QualityPlugin(Plugin):
     def saveSize(self, **kwargs):
 
         try:
-            db = get_session()
-            quality = db.query(Quality).filter_by(identifier = kwargs.get('identifier')).first()
+            db = get_db()
+            quality = db.get('quality', kwargs.get('identifier'), with_doc = True)
 
             if quality:
-                setattr(quality, kwargs.get('value_type'), kwargs.get('value'))
-                db.commit()
+                quality['doc'][kwargs.get('value_type')] = kwargs.get('value')
+                db.update(quality['doc'])
 
             self.cached_qualities = None
 
@@ -114,9 +131,6 @@ class QualityPlugin(Plugin):
             }
         except:
             log.error('Failed: %s', traceback.format_exc())
-            db.rollback()
-        finally:
-            db.close()
 
         return {
             'success': False
@@ -125,60 +139,35 @@ class QualityPlugin(Plugin):
     def fill(self):
 
         try:
-            db = get_session()
+            db = get_db()
 
             order = 0
             for q in self.qualities:
 
-                # Create quality
-                qual = db.query(Quality).filter_by(identifier = q.get('identifier')).first()
+                db.insert({
+                    '_t': 'quality',
+                    'order': order,
+                    'identifier': q.get('identifier'),
+                    'size_min': q.get('size')[0],
+                    'size_max': q.get('size')[1]
+                })
 
-                if not qual:
-                    log.info('Creating quality: %s', q.get('label'))
-                    qual = Quality()
-                    qual.order = order
-                    qual.identifier = q.get('identifier')
-                    qual.label = toUnicode(q.get('label'))
-                    qual.size_min, qual.size_max = q.get('size')
-
-                    db.add(qual)
-
-                # Create single quality profile
-                prof = db.query(Profile).filter(
-                    Profile.core == True
-                ).filter(
-                    Profile.types.any(quality = qual)
-                ).all()
-
-                if not prof:
-                    log.info('Creating profile: %s', q.get('label'))
-                    prof = Profile(
-                        core = True,
-                        label = toUnicode(qual.label),
-                        order = order
-                    )
-                    db.add(prof)
-
-                    profile_type = ProfileType(
-                        quality = qual,
-                        profile = prof,
-                        finish = True,
-                        order = 0
-                    )
-                    prof.types.append(profile_type)
+                log.info('Creating profile: %s', q.get('label'))
+                db.insert({
+                    '_t': 'profile',
+                    'order': order + 20,  # Make sure it goes behind other profiles
+                    'core': True,
+                    'qualities': [q.get('identifier')],
+                    'label': toUnicode(q.get('label')),
+                    'finish': [True],
+                    'wait_for': [0],
+                })
 
                 order += 1
-
-            db.commit()
-
-            time.sleep(0.3) # Wait a moment
 
             return True
         except:
             log.error('Failed: %s', traceback.format_exc())
-            db.rollback()
-        finally:
-            db.close()
 
         return False
 
@@ -207,9 +196,8 @@ class QualityPlugin(Plugin):
 
         # Try again with loose testing
         for quality in qualities:
-            loose_score = self.guessLooseScore(quality, files = files, extra = extra)
+            loose_score = self.guessLooseScore(quality, extra = extra)
             self.calcScore(score, quality, loose_score)
-
 
         # Return nothing if all scores are 0
         has_non_zero = 0
@@ -267,7 +255,7 @@ class QualityPlugin(Plugin):
 
         return score
 
-    def guessLooseScore(self, quality, files = None, extra = None):
+    def guessLooseScore(self, quality, extra = None):
 
         score = 0
 

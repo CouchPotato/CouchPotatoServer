@@ -1,7 +1,7 @@
 from .main import Wizard
 
 
-def start():
+def autoload():
     return Wizard()
 
 config = [{

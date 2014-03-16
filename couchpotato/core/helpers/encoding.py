@@ -1,11 +1,13 @@
-from couchpotato.core.logger import CPLog
 from string import ascii_letters, digits
 from urllib import quote_plus
 import os
 import re
 import traceback
 import unicodedata
+
+from couchpotato.core.logger import CPLog
 import six
+
 
 log = CPLog(__name__)
 
@@ -76,7 +78,7 @@ def sp(path, *args):
     # Replace *NIX ambiguous '//' at the beginning of a path with '/' (crashes guessit)
     path = re.sub('^//', '/', path)
 
-    return path
+    return toUnicode(path)
 
 
 def ek(original, *args):

@@ -127,6 +127,7 @@
 			margin: 0;
 			padding: 0;
 			vertical-align: top;
+			line-height: 0;
 		}
 
 			@media all and (max-width: 800px) {
@@ -343,6 +344,7 @@
 					top: auto;
 					right: auto;
 					color: #FFF;
+					line-height: 18px;
 				}
 
 				.touch_enabled .movies.list_list .movie .info .year {

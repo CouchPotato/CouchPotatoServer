@@ -1,5 +1,7 @@
-from couchpotato.core.logger import CPLog
 import xml.etree.ElementTree as XMLTree
+
+from couchpotato.core.logger import CPLog
+
 
 log = CPLog(__name__)
 

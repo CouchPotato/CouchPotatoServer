@@ -1,7 +1,5 @@
 from .main import Userscript
 
 
-def start():
+def autoload():
     return Userscript()
-
-config = []

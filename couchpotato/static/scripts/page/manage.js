@@ -28,7 +28,9 @@ Page.Manage = new Class({
 			self.list = new MovieList({
 				'identifier': 'manage',
 				'filter': {
-					'release_status': 'done'
+					'status': 'done',
+					'release_status': 'done',
+					'status_or': 1
 				},
 				'actions': [MA.IMDB, MA.Trailer, MA.Files, MA.Readd, MA.Edit, MA.Delete],
 				'menu': [self.refresh_button, self.refresh_quick],

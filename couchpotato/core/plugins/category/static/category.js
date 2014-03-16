@@ -86,7 +86,7 @@ var CategoryListBase = new Class({
 
 	getCategory: function(id){
 		return this.categories.filter(function(category){
-			return category.data.id == id
+			return category.data._id == id
 		}).pick()
 	},
 
@@ -121,7 +121,7 @@ var CategoryListBase = new Class({
 		).inject(self.content)
 
 		Array.each(self.categories, function(category){
-			new Element('li', {'data-id': category.data.id}).adopt(
+			new Element('li', {'data-id': category.data._id}).adopt(
 				new Element('span.category_label', {
 					'text': category.data.label
 				}),
@@ -258,7 +258,7 @@ var Category = new Class({
 		var self = this;
 
 		var data = {
-			'id' : self.data.id,
+			'id' : self.data._id,
 			'label' : self.el.getElement('.category_label input').get('value'),
 			'required' : self.el.getElement('.category_required input').get('value'),
 			'preferred' : self.el.getElement('.category_preferred input').get('value'),
@@ -271,7 +271,7 @@ var Category = new Class({
 
 	del: function(){
 		var self = this;
-		
+
 		if(self.data.label == undefined){
 			self.el.destroy();
 			return;
@@ -286,7 +286,7 @@ var Category = new Class({
 					(e).preventDefault();
 					Api.request('category.delete', {
 						'data': {
-							'id': self.data.id
+							'id': self.data._id
 						},
 						'useSpinner': true,
 						'spinnerOptions': {

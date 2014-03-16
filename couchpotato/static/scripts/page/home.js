@@ -62,7 +62,7 @@ Page.Home = new Class({
 
 				// Track movie added
 				var after_search = function(data){
-					if(notification.data.id != data.data.id) return;
+					if(notification.data._id != data.data._id) return;
 
 					// Force update after search
 					self.available_list.update();
@@ -106,10 +106,9 @@ Page.Home = new Class({
 				timer,
 				highest = 100;
 
-			images.each(function(img_container){
-				img_container.getElements('img').addEvent('load', function(){
-					var img = this,
-						height = img.getSize().y;
+			images.each(function(img){
+				img.addEvent('load', function(){
+					var height = img.getSize().y;
 					if(!highest || highest < height){
 						highest = height;
 						if(timer) clearTimeout(timer);
@@ -124,10 +123,8 @@ Page.Home = new Class({
 				if(timer) clearTimeout(timer);
 				timer = (function(){
 					var highest = 100;
-					images.each(function(img_container){
-						var img = img_container.getElement('img');
-						if(!img) return
-
+					images.each(function(img){
+						img.setStyle('height', null);
 						var height = img.getSize().y;
 						if(!highest || highest < height)
 							highest = height;

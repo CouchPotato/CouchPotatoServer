@@ -1,14 +1,16 @@
-from couchpotato.core.helpers.request import getParams
-from couchpotato.core.logger import CPLog
 from functools import wraps
 from threading import Thread
-from tornado.gen import coroutine
-from tornado.web import RequestHandler, asynchronous
 import json
 import threading
-import tornado
 import traceback
 import urllib
+
+from couchpotato.core.helpers.request import getParams
+from couchpotato.core.logger import CPLog
+from tornado.gen import coroutine
+from tornado.web import RequestHandler, asynchronous
+import tornado
+
 
 log = CPLog(__name__)
 
@@ -93,6 +95,7 @@ class ApiHandler(RequestHandler):
 
             # Split array arguments
             kwargs = getParams(kwargs)
+            kwargs['_request'] = self
 
             # Remove t random string
             try: del kwargs['t']
@@ -126,6 +129,8 @@ class ApiHandler(RequestHandler):
             self.write({'success': False, 'error': 'Failed returning results'})
 
         api_locks[route].release()
+
+    post = get
 
 
 def addApiView(route, func, static = False, docs = None, **kwargs):

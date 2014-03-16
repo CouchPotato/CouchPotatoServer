@@ -1,7 +1,7 @@
 from .main import Searcher
 
 
-def start():
+def autoload():
     return Searcher()
 
 config = [{

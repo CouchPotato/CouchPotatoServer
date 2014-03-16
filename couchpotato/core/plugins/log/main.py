@@ -1,11 +1,13 @@
+import os
+import traceback
+
 from couchpotato.api import addApiView
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
-import os
-import traceback
+
 
 log = CPLog(__name__)
 

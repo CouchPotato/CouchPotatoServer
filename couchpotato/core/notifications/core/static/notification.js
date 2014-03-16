@@ -77,7 +77,7 @@ var NotificationBase = new Class({
 
 			var ids = []
 			rn.each(function(n){
-				ids.include(n.id)
+				ids.include(n._id)
 			})
 		}
 
@@ -103,7 +103,9 @@ var NotificationBase = new Class({
 
 		self.request = Api.request('notification.listener', {
     		'data': {'init':true},
-    		'onSuccess': self.processData.bind(self)
+    		'onSuccess': function(json){
+				self.processData(json, true)
+			}
 		}).send()
 
 		setInterval(function(){
@@ -124,7 +126,9 @@ var NotificationBase = new Class({
 			return;
 
 		self.request = Api.request('nonblock/notification.listener', {
-    		'onSuccess': self.processData.bind(self),
+    		'onSuccess': function(json){
+				self.processData(json, false)
+			},
     		'data': {
     			'last_id': self.last_id
     		},
@@ -141,14 +145,14 @@ var NotificationBase = new Class({
 		this.stopped = true;
 	},
 
-	processData: function(json){
+	processData: function(json, init){
 		var self = this;
 
 		// Process data
 		if(json){
 			Array.each(json.result, function(result){
-				App.trigger(result.type, [result]);
-				if(result.message && result.read === undefined)
+				App.trigger(result._t || result.type, [result]);
+				if(result.message && result.read === undefined && !init)
 					self.showMessage(result.message);
 			})
 
@@ -187,7 +191,7 @@ var NotificationBase = new Class({
 				new Element('a.close.icon2', {
 					'events': {
 						'click': function(){
-							self.markAsRead([data.id]);
+							self.markAsRead([data._id]);
 							hide_message();
 						}
 					}
