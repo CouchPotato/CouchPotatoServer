@@ -1,4 +1,5 @@
 from base64 import b16encode, b32decode
+from bencode import bencode, bdecode
 from hashlib import sha1
 import os
 
@@ -12,7 +13,6 @@ from qbittorrent.client import QBittorrentClient
 log = CPLog(__name__)
 
 autoload = 'qBittorrent'
-
 
 class qBittorrent(Downloader):
 
@@ -45,7 +45,6 @@ class qBittorrent(Downloader):
 
         return False
 
-
     def download(self, data = None, media = None, filedata = None):
         if not media: media = {}
         if not data: data = {}
@@ -59,6 +58,15 @@ class qBittorrent(Downloader):
             log.error('Failed sending torrent, no data')
             return False
 
+
+        if data.get('protocol') == 'torrent_magnet':
+            filedata = self.magnetToTorrent(data.get('url'))
+
+            if filedata is False:
+                return False
+
+            data['protocol'] = 'torrent'
+
         info = bdecode(filedata)["info"]
         torrent_hash = sha1(bencode(info)).hexdigest().upper()
 
@@ -68,14 +76,7 @@ class qBittorrent(Downloader):
 
         # Send request to qBittorrent
         try:
-            if data.get('protocol') == 'torrent_magnet':
-                torrent = self.qb.add_url(filedata)
-            else:
-                torrent = self.qb.add_file(filedata)
-
-            if not torrent:
-                log.error('Unable to find the torrent, did it fail to load?')
-                return False
+            self.qb.add_file(filedata)
 
             return self.downloadReturnId(torrent_hash)
         except Exception as e:
@@ -100,18 +101,18 @@ class qBittorrent(Downloader):
 
         try:
             torrents = self.qb.get_torrents()
-            self.qb.update_general() # get extra info
 
             release_downloads = ReleaseDownloadList(self)
 
             for torrent in torrents:
                 if torrent.hash in ids:
+                    self.qb.update_general() # get extra info
                     torrent_files = []
                     t_files = torrent.get_files()
 
                     check_dir = os.path.join(torrent.save_path, torrent.name)
                     if os.path.isdir(check_dir):
-                        torrent.save_path = os.path.isdir(check_dir)
+                        torrent.save_path = check_dir
 
                     if len(t_files) > 1 and os.path.isdir(torrent.save_path): # multi file torrent
                         for root, _, files in os.walk(torrent.save_path):
