@@ -36,6 +36,11 @@ class Torrent(Base):
         self.comment = None
         self.save_path = None
 
+        self.eta = None
+        self.size = None
+        self.dlspeed = None
+        self.upspeed = None
+
     #
     # Commands
     #
