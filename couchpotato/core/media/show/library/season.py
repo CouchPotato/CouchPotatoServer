@@ -1,9 +1,8 @@
-from string import ascii_letters
 import traceback
 
 from couchpotato import get_session
-from couchpotato.core.event import addEvent, fireEventAsync, fireEvent
-from couchpotato.core.helpers.encoding import toUnicode, simplifyString
+from couchpotato.core.event import addEvent, fireEvent
+from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.library.base import LibraryBase
 from couchpotato.core.helpers.variable import tryInt
@@ -16,14 +15,10 @@ autload = 'SeasonLibraryPlugin'
 
 class SeasonLibraryPlugin(LibraryBase):
 
-    default_dict = {'titles': {}, 'files':{}}
-
     def __init__(self):
         addEvent('library.query', self.query)
         addEvent('library.identifier', self.identifier)
-        addEvent('library.add.season', self.add)
         addEvent('library.update.season', self.update)
-        addEvent('library.update.season_release_date', self.updateReleaseDate)
 
     def query(self, library, first = True, condense = True, include_identifier = True, **kwargs):
         if library is list or library.get('type') != 'season':
@@ -72,51 +67,6 @@ class SeasonLibraryPlugin(LibraryBase):
         return {
             'season': tryInt(library['season_number'], None)
         }
-
-    def add(self, attrs = {}, update_after = True):
-        type = attrs.get('type', 'season')
-        primary_provider = attrs.get('primary_provider', 'thetvdb')
-
-        db = get_session()
-        parent_identifier = attrs.get('parent_identifier',  None)
-
-        parent = None
-        if parent_identifier:
-            parent = db.query(ShowLibrary).filter_by(primary_provider = primary_provider,  identifier = attrs.get('parent_identifier')).first()
-
-        l = db.query(SeasonLibrary).filter_by(type = type, identifier = attrs.get('identifier')).first()
-        if not l:
-            status = fireEvent('status.get', 'needs_update', single = True)
-            l = SeasonLibrary(
-                type = type,
-                primary_provider = primary_provider,
-                year = attrs.get('year'),
-                identifier = attrs.get('identifier'),
-                plot = toUnicode(attrs.get('plot')),
-                tagline = toUnicode(attrs.get('tagline')),
-                status_id = status.get('id'),
-                info = {},
-                parent = parent,
-            )
-
-            title = LibraryTitle(
-                title = toUnicode(attrs.get('title')),
-                simple_title = self.simplifyTitle(attrs.get('title')),
-            )
-
-            l.titles.append(title)
-
-            db.add(l)
-            db.commit()
-
-        # Update library info
-        if update_after is not False:
-            handle = fireEventAsync if update_after is 'async' else fireEvent
-            handle('library.update.season', identifier = l.identifier, default_title = toUnicode(attrs.get('title', '')))
-
-        library_dict = l.to_dict(self.default_dict)
-        db.expire_all()
-        return library_dict
 
     def update(self, identifier, default_title = '', force = False):
 
@@ -206,39 +156,3 @@ class SeasonLibraryPlugin(LibraryBase):
         library_dict = library.to_dict(self.default_dict)
         db.expire_all()
         return library_dict
-
-    def updateReleaseDate(self, identifier):
-        '''XXX:  Not sure what this is for yet in relation to a tvshow'''
-        pass
-        #db = get_session()
-        #library = db.query(SeasonLibrary).filter_by(identifier = identifier).first()
-
-        #if not library.info:
-            #library_dict = self.update(identifier, force = True)
-            #dates = library_dict.get('info', {}).get('release_date')
-        #else:
-            #dates = library.info.get('release_date')
-
-        #if dates and dates.get('expires', 0) < time.time() or not dates:
-            #dates = fireEvent('movie.release_date', identifier = identifier, merge = True)
-            #library.info.update({'release_date': dates })
-            #db.commit()
-
-        #db.expire_all()
-        #return dates
-
-
-    #TODO: Add to base class
-    def simplifyTitle(self, title):
-
-        title = toUnicode(title)
-
-        nr_prefix = '' if title[0] in ascii_letters else '#'
-        title = simplifyString(title)
-
-        for prefix in ['the ']:
-            if prefix == title[:len(prefix)]:
-                title = title[len(prefix):]
-                break
-
-        return nr_prefix + title

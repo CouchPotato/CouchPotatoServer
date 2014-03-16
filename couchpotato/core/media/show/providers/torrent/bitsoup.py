@@ -13,7 +13,7 @@ autoload = 'Bitsoup'
 class Bitsoup(MultiProvider):
 
     def getTypes(self):
-        return [Movie, Season, Episode]
+        return [Season, Episode]
 
 
 class Season(SeasonProvider, Base):

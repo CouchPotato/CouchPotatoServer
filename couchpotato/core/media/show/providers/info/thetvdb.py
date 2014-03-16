@@ -8,7 +8,7 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.media.show.providers.base import ShowProvider
 from couchpotato.environment import Env
 from tvdb_api import tvdb_exceptions
-import tvdb_api
+from tvdb_api.tvdb_api import Tvdb
 
 
 log = CPLog(__name__)
@@ -39,7 +39,7 @@ class TheTVDb(ShowProvider):
         self._setup()
 
     def _setup(self):
-        self.tvdb = tvdb_api.Tvdb(**self.tvdb_api_parms)
+        self.tvdb = Tvdb(**self.tvdb_api_parms)
         self.valid_languages = self.tvdb.config['valid_languages']
 
     def search(self, q, limit = 12, language = 'en'):

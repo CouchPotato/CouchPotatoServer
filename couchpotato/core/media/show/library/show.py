@@ -194,39 +194,3 @@ class ShowLibraryPlugin(LibraryBase):
 
         db.expire_all()
         return library_dict
-
-    def updateReleaseDate(self, identifier):
-        '''XXX:  Not sure what this is for yet in relation to a show'''
-        pass
-        #db = get_session()
-        #library = db.query(ShowLibrary).filter_by(identifier = identifier).first()
-
-        #if not library.info:
-            #library_dict = self.update(identifier, force = True)
-            #dates = library_dict.get('info', {}).get('release_date')
-        #else:
-            #dates = library.info.get('release_date')
-
-        #if dates and dates.get('expires', 0) < time.time() or not dates:
-            #dates = fireEvent('movie.release_date', identifier = identifier, merge = True)
-            #library.info.update({'release_date': dates })
-            #db.commit()
-
-        #db.expire_all()
-        #return dates
-
-
-    #TODO: Add to base class
-    def simplifyTitle(self, title):
-
-        title = toUnicode(title)
-
-        nr_prefix = '' if title[0] in ascii_letters else '#'
-        title = simplifyString(title)
-
-        for prefix in ['the ']:
-            if prefix == title[:len(prefix)]:
-                title = title[len(prefix):]
-                break
-
-        return nr_prefix + title

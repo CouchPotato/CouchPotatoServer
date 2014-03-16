@@ -7,7 +7,7 @@ from couchpotato.core.media._base.providers.torrent.bithdtv import Base
 
 log = CPLog(__name__)
 
-autoload = 'BitHDTV'
+autoload = 'BiTHDTV'
 
 
 class BiTHDTV(MultiProvider):

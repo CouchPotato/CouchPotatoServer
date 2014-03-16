@@ -1,10 +1,9 @@
-from string import ascii_letters
 import time
 import traceback
 
-from couchpotato import get_session
-from couchpotato.core.event import addEvent, fireEventAsync, fireEvent
-from couchpotato.core.helpers.encoding import toUnicode, simplifyString
+from couchpotato import get_db
+from couchpotato.core.event import addEvent, fireEvent
+from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.library.base import LibraryBase
 from couchpotato.core.helpers.variable import tryInt
@@ -22,9 +21,7 @@ class EpisodeLibraryPlugin(LibraryBase):
     def __init__(self):
         addEvent('library.query', self.query)
         addEvent('library.identifier', self.identifier)
-        addEvent('library.add.episode', self.add)
         addEvent('library.update.episode', self.update)
-        addEvent('library.update.episode_release_date', self.updateReleaseDate)
 
     def query(self, library, first = True, condense = True, include_identifier = True, **kwargs):
         if library is list or library.get('type') != 'episode':
@@ -86,80 +83,29 @@ class EpisodeLibraryPlugin(LibraryBase):
 
         return identifier
 
-    def add(self, attrs = {}, update_after = True):
-        type = attrs.get('type', 'episode')
-        primary_provider = attrs.get('primary_provider', 'thetvdb')
-
-        db = get_session()
-        parent_identifier = attrs.get('parent_identifier',  None)
-
-        parent = None
-        if parent_identifier:
-            parent = db.query(SeasonLibrary).filter_by(primary_provider = primary_provider,  identifier = attrs.get('parent_identifier')).first()
-
-        l = db.query(EpisodeLibrary).filter_by(type = type, identifier = attrs.get('identifier')).first()
-        if not l:
-            status = fireEvent('status.get', 'needs_update', single = True)
-            l = EpisodeLibrary(
-                type = type,
-                primary_provider = primary_provider,
-                year = attrs.get('year'),
-                identifier = attrs.get('identifier'),
-                plot = toUnicode(attrs.get('plot')),
-                tagline = toUnicode(attrs.get('tagline')),
-                status_id = status.get('id'),
-                info = {},
-                parent = parent,
-                season_number = tryInt(attrs.get('seasonnumber', None)),
-                episode_number = tryInt(attrs.get('episodenumber', None)),
-                absolute_number = tryInt(attrs.get('absolute_number', None))
-            )
-
-            title = LibraryTitle(
-                title = toUnicode(attrs.get('title')),
-                simple_title = self.simplifyTitle(attrs.get('title')),
-            )
-
-            l.titles.append(title)
-
-            db.add(l)
-            db.commit()
-
-        # Update library info
-        if update_after is not False:
-            handle = fireEventAsync if update_after is 'async' else fireEvent
-            handle('library.update.episode', identifier = l.identifier, default_title = toUnicode(attrs.get('title', '')))
-
-        library_dict = l.to_dict(self.default_dict)
-
-        db.expire_all()
-        return library_dict
-
-    def update(self, identifier, default_title = '', force = False):
+    def update(self, media_id = None, identifier = None, default_title = '', force = False):
 
         if self.shuttingDown():
             return
 
-        db = get_session()
-        library = db.query(EpisodeLibrary).filter_by(identifier = identifier).first()
-        done_status = fireEvent('status.get', 'done', single = True)
+        db = get_db()
 
-        if library:
-            library_dict = library.to_dict(self.default_dict)
+        if media_id:
+            media = db.get('id', media_id)
+        else:
+            media = db.get('media', identifier, with_doc = True)['doc']
 
         do_update = True
 
-        parent_identifier =  None
-        if library.parent is not None:
-            parent_identifier =  library.parent.identifier
-
-        if library.status_id == done_status.get('id') and not force:
+        if media.get('status') == 'done' and not force:
             do_update = False
 
-        episode_params = {'season_identifier':  parent_identifier,
-                          'episode_identifier': identifier,
-                          'episode': library.episode_number,
-                          'absolute':  library.absolute_number,}
+        episode_params = {
+            'season_identifier': media.get('parent'),
+            'episode_identifier': media.get('identifier'),
+            'episode': media.get('episode_number'),
+            'absolute': media.get('episode_number'),
+        }
         info = fireEvent('episode.info', merge = True, params = episode_params)
 
         # Don't need those here
@@ -174,23 +120,16 @@ class EpisodeLibraryPlugin(LibraryBase):
 
         # Main info
         if do_update:
-            library.plot = toUnicode(info.get('plot', ''))
-            library.tagline = toUnicode(info.get('tagline', ''))
-            library.year = info.get('year', 0)
-            library.status_id = done_status.get('id')
-            library.season_number = tryInt(info.get('seasonnumber', None))
-            library.episode_number = tryInt(info.get('episodenumber', None))
-            library.absolute_number = tryInt(info.get('absolute_number', None))
-            try:
-                library.last_updated = int(info.get('lastupdated'))
-            except:
-                library.last_updated = int(time.time())
-            library.info.update(info)
-            db.commit()
-
-            # Titles
-            [db.delete(title) for title in library.titles]
-            db.commit()
+            episode = {
+                'plot': toUnicode(info.get('plot', '')),
+                'tagline': toUnicode(info.get('tagline', '')),
+                'year': info.get('year', 0),
+                'status_id': 'done',
+                'season_number': tryInt(info.get('seasonnumber', None)),
+                'episode_number': tryInt(info.get('episodenumber', None)),
+                'absolute_number': tryInt(info.get('absolute_number', None)),
+                'last_updated': tryInt(info.get('lastupdated', time.time())),
+            }
 
             titles = info.get('titles', [])
             log.debug('Adding titles: %s', titles)
@@ -207,7 +146,8 @@ class EpisodeLibraryPlugin(LibraryBase):
                 library.titles.append(t)
                 counter += 1
 
-            db.commit()
+            media.update(episode)
+            db.update(media)
 
             # Files
             images = info.get('images', [])
@@ -231,39 +171,3 @@ class EpisodeLibraryPlugin(LibraryBase):
         library_dict = library.to_dict(self.default_dict)
         db.expire_all()
         return library_dict
-
-    def updateReleaseDate(self, identifier):
-        '''XXX:  Not sure what this is for yet in relation to an episode'''
-        pass
-        #db = get_session()
-        #library = db.query(EpisodeLibrary).filter_by(identifier = identifier).first()
-
-        #if not library.info:
-            #library_dict = self.update(identifier, force = True)
-            #dates = library_dict.get('info', {}).get('release_date')
-        #else:
-            #dates = library.info.get('release_date')
-
-        #if dates and dates.get('expires', 0) < time.time() or not dates:
-            #dates = fireEvent('movie.release_date', identifier = identifier, merge = True)
-            #library.info.update({'release_date': dates })
-            #db.commit()
-
-        #db.expire_all()
-        #return dates
-
-
-    #TODO: Add to base class
-    def simplifyTitle(self, title):
-
-        title = toUnicode(title)
-
-        nr_prefix = '' if title[0] in ascii_letters else '#'
-        title = simplifyString(title)
-
-        for prefix in ['the ']:
-            if prefix == title[:len(prefix)]:
-                title = title[len(prefix):]
-                break
-
-        return nr_prefix + title

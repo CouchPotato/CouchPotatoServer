@@ -188,3 +188,6 @@ class ShowSearcher(SearcherBase, ShowTypeBase):
             episode = episode[0] if len(episode) else None
 
         return show, season, episode
+
+    def searchAll(self):
+        pass
