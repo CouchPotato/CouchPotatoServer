@@ -162,7 +162,7 @@ class Downloader(Provider):
             (d_manual and manual or d_manual is False) and \
             (not data or self.isCorrectProtocol(data.get('protocol')))
 
-    def _test(self):
+    def _test(self, **kwargs):
         t = self.test()
         if isinstance(t, tuple):
             return {'success': t[0], 'msg': t[1]}

@@ -17,6 +17,7 @@ from couchpotato.environment import Env
 import requests
 from requests.packages.urllib3 import Timeout
 from requests.packages.urllib3.exceptions import MaxRetryError
+from scandir import scandir
 from tornado import template
 from tornado.web import StaticFileHandler
 
@@ -63,15 +64,10 @@ class Plugin(object):
 
     def databaseSetup(self):
 
-        db = get_db()
-
         for index_name in self._database:
             klass = self._database[index_name]
 
             fireEvent('database.setup_index', index_name, klass)
-
-    def afterDatabaseSetup(self):
-        print self._database_indexes
 
     def conf(self, attr, value = None, default = None, section = None):
         class_name = self.getName().lower().split(':')[0].lower()
@@ -145,6 +141,26 @@ class Plugin(object):
             log.error('Unable to create folder "%s": %s', (path, e))
 
         return False
+
+    def deleteEmptyFolder(self, folder, show_error = True):
+        folder = sp(folder)
+
+        for root, dirs, files in scandir.walk(folder):
+
+            for dir_name in dirs:
+                full_path = os.path.join(root, dir_name)
+                if len(os.listdir(full_path)) == 0:
+                    try:
+                        os.rmdir(full_path)
+                    except:
+                        if show_error:
+                            log.error('Couldn\'t remove empty directory %s: %s', (full_path, traceback.format_exc()))
+
+        try:
+            os.rmdir(folder)
+        except:
+            if show_error:
+                log.error('Couldn\'t remove empty directory %s: %s', (folder, traceback.format_exc()))
 
     # http request
     def urlopen(self, url, timeout = 30, data = None, headers = None, files = None, show_error = True):

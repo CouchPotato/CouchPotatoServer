@@ -51,6 +51,7 @@ class Core(Plugin):
         addEvent('app.api_url', self.createApiUrl)
         addEvent('app.version', self.version)
         addEvent('app.load', self.checkDataDir)
+        addEvent('app.load', self.cleanUpFolders)
 
         addEvent('setting.save.core.password', self.md5Password)
         addEvent('setting.save.core.api_key', self.checkApikey)
@@ -74,6 +75,9 @@ class Core(Plugin):
             log.error('You should NOT use your CouchPotato directory to save your settings in. Files will get overwritten or be deleted.')
 
         return True
+
+    def cleanUpFolders(self):
+        self.deleteEmptyFolder(Env.get('app_dir'), show_error = False)
 
     def available(self, **kwargs):
         return {

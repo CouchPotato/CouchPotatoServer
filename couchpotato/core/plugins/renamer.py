@@ -256,7 +256,7 @@ class Renamer(Plugin):
                 destination = to_folder
                 category_label = ''
 
-                if media.get('category_id'):
+                if media.get('category_id') and media.get('category_id') != '-1':
                     try:
                         category = db.get('id', media['category_id'])
                         category_label = category['label']
@@ -823,25 +823,6 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
         return string
 
-    def deleteEmptyFolder(self, folder, show_error = True):
-        folder = sp(folder)
-
-        loge = log.error if show_error else log.debug
-        for root, dirs, files in scandir.walk(folder):
-
-            for dir_name in dirs:
-                full_path = os.path.join(root, dir_name)
-                if len(os.listdir(full_path)) == 0:
-                    try:
-                        os.rmdir(full_path)
-                    except:
-                        loge('Couldn\'t remove empty directory %s: %s', (full_path, traceback.format_exc()))
-
-        try:
-            os.rmdir(folder)
-        except:
-            loge('Couldn\'t remove empty directory %s: %s', (folder, traceback.format_exc()))
-
     def checkSnatched(self, fire_scan = True):
 
         if self.checking_snatched:
@@ -1055,7 +1036,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
         if release_download and release_download.get('id'):
             try:
-                rls = db.get('release_download', '%s_%s' % (release_download.get('downloader'), release_download.get('id')), with_doc = True)['doc']
+                rls = db.get('release_download', '%s-%s' % (release_download.get('downloader'), release_download.get('id')), with_doc = True)['doc']
             except:
                 log.error('Download ID %s from downloader %s not found in releases', (release_download.get('id'), release_download.get('downloader')))
 
