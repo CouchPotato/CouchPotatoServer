@@ -23,7 +23,7 @@ class Base(TorrentProvider):
         'http://yify-torrents.com.come.in',
         'http://yts.re',
         'http://yts.im'
-        'https://yify-torrents.im',
+        'http://yify-torrents.im',
     ]
 
     def search(self, movie, quality):
