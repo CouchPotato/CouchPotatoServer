@@ -10,7 +10,8 @@ class Reddit(UserscriptBase):
     includes = ['*://www.reddit.com/r/Ijustwatched/comments/*']
 
     def getMovie(self, url):
-        name = splitString(url, '/')[-1]
+        name = splitString(splitString(url, '/ijw_')[-1], '/')[0]
+
         if name.startswith('ijw_'):
             name = name[4:]
 
