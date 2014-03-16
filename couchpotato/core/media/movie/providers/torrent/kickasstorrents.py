@@ -4,6 +4,8 @@ from couchpotato.core.media.movie.providers.base import MovieProvider
 
 log = CPLog(__name__)
 
+autoload = 'KickAssTorrents'
+
 
 class KickAssTorrents(MovieProvider, Base):
     pass
