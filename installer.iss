@@ -1,5 +1,5 @@
 #define MyAppName "CouchPotato"
-#define MyAppVer "2.3.1"
+#define MyAppVer "2.4.0"
 
 [Setup]
 AppName={#MyAppName}
@@ -22,7 +22,7 @@ UsePreviousAppDir=no
 [Messages]
 WelcomeLabel1=Installing [name]!
 WelcomeLabel2=This wizard will install [name] to your AppData folder. It does this so it can use the build in updater without needing admin rights.
-       
+
 [CustomMessages]
 LaunchProgram=Launch {#MyAppName} right now.
 
