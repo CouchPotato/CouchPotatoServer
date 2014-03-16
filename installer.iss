@@ -1,5 +1,7 @@
-#define MyAppName "CouchPotato"
+#define MyAppName "CouchPotato"   
 #define MyAppVer "2.4.0"
+#define MyAppBit "win32" 
+//#define MyAppBit "win-amd64" 
 
 [Setup]
 AppName={#MyAppName}
@@ -11,7 +13,7 @@ DisableDirPage=yes
 UninstallDisplayIcon=./icon.ico
 SetupIconFile=./icon.ico
 OutputDir=./dist
-OutputBaseFilename={#MyAppName}-{#MyAppVer}.win32.installer
+OutputBaseFilename={#MyAppName}-{#MyAppVer}.{#MyAppBit}.installer
 AppPublisher=Your Mom
 AppPublisherURL=http://couchpota.to
 PrivilegesRequired=none
@@ -27,7 +29,7 @@ WelcomeLabel2=This wizard will install [name] to your AppData folder. It does th
 LaunchProgram=Launch {#MyAppName} right now.
 
 [Files]
-Source: "./dist/{#MyAppName}-{#MyAppVer}.win32/*"; Flags: recursesubdirs; DestDir: "{app}"
+Source: "./dist/{#MyAppName}-{#MyAppVer}.{#MyAppBit}/*"; Flags: recursesubdirs; DestDir: "{app}"
 
 [Icons]
 Name: "{commonprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppName}.exe"
