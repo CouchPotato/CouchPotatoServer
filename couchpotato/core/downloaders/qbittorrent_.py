@@ -74,7 +74,6 @@ class qBittorrent(Downloader):
         if len(torrent_hash) == 32:
             torrent_hash = b16encode(b32decode(torrent_hash))
 
-        print torrent_hash
         # Send request to qBittorrent
         try:
             self.qb.add_file(filedata)
