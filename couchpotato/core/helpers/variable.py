@@ -214,16 +214,9 @@ def tryFloat(s):
             return float(s)
     except: return 0
 
-
-def natsortKey(s):
-    return map(tryInt, re.findall(r'(\d+|\D+)', s))
-
-
-def natcmp(a, b):
-    a2 = natsortKey(a)
-    b2 = natsortKey(b)
-
-    return (a2 > b2) - (a2 < b2)
+def natsortKey(string_):
+    """See http://www.codinghorror.com/blog/archives/001018.html"""
+    return [int(s) if s.isdigit() else s for s in re.split(r'(\d+)', string_)]
 
 
 def toIterable(value):
@@ -295,3 +288,14 @@ def dictIsSubset(a, b):
 def isSubFolder(sub_folder, base_folder):
     # Returns True if sub_folder is the same as or inside base_folder
     return base_folder and sub_folder and ss(os.path.normpath(base_folder).rstrip(os.path.sep) + os.path.sep) in ss(os.path.normpath(sub_folder).rstrip(os.path.sep) + os.path.sep)
+
+# From SABNZBD
+re_password = [re.compile(r'([^/\\]+)[/\\](.+)'), re.compile(r'(.+){{([^{}]+)}}$'), re.compile(r'(.+)\s+password\s*=\s*(.+)$', re.I)]
+def scanForPassword(name):
+    m = None
+    for reg in re_password:
+        m = reg.search(name)
+        if m: break
+
+    if m:
+        return m.group(1).strip('. '), m.group(2).strip()
