@@ -18,10 +18,10 @@ class PublicHD(MultiProvider):
 class Season(SeasonProvider, Base):
 
     def buildUrl(self, media):
-        return fireEvent('library.query', media, single = True)
+        return fireEvent('media.search_query', media, single = True)
 
 
 class Episode(EpisodeProvider, Base):
 
     def buildUrl(self, media):
-        return fireEvent('library.query', media, single = True)
+        return fireEvent('media.search_query', media, single = True)

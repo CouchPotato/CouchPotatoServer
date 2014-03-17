@@ -21,7 +21,7 @@ class Season(SeasonProvider, Base):
 
     def buildUrl(self, media, quality):
         query = tryUrlencode({
-            'q': fireEvent('library.query', media, single = True),
+            'q': fireEvent('media.search_query', media, single = True),
             'age': Env.setting('retention', 'nzb'),
             'sort': 'agedesc',
             'minsize': quality.get('size_min'),
@@ -38,7 +38,7 @@ class Episode(EpisodeProvider, Base):
 
     def buildUrl(self, media, quality):
         query = tryUrlencode({
-            'q': fireEvent('library.query', media, single = True),
+            'q': fireEvent('media.search_query', media, single = True),
             'age': Env.setting('retention', 'nzb'),
             'sort': 'agedesc',
             'minsize': quality.get('size_min'),

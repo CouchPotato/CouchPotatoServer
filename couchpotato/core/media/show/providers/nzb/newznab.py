@@ -19,8 +19,8 @@ class Newznab(MultiProvider):
 class Season(SeasonProvider, Base):
 
     def buildUrl(self, media, api_key):
-        search_title = fireEvent('library.query', media, include_identifier = False, single = True)
-        identifier = fireEvent('library.identifier', media, single = True)
+        search_title = fireEvent('media.search_query', media, include_identifier = False, single = True)
+        identifier = fireEvent('media.identifier', media, single = True)
 
         query = tryUrlencode({
             't': 'tvsearch',
@@ -35,8 +35,8 @@ class Season(SeasonProvider, Base):
 class Episode(EpisodeProvider, Base):
 
     def buildUrl(self, media, api_key):
-        search_title = fireEvent('library.query', media, include_identifier = False, single = True)
-        identifier = fireEvent('library.identifier', media, single = True)
+        search_title = fireEvent('media.search_query', media, include_identifier = False, single = True)
+        identifier = fireEvent('media.identifier', media, single = True)
 
         query = tryUrlencode({
             't': 'tvsearch',

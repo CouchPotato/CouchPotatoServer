@@ -5,7 +5,6 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.searcher.base import SearcherBase
 from couchpotato.core.media._base.searcher.main import SearchSetupError
 from couchpotato.core.media.show import ShowTypeBase
-from couchpotato.core.media.show._base import ShowBase
 from qcond import QueryCondenser
 
 log = CPLog(__name__)
@@ -61,7 +60,7 @@ class ShowSearcher(SearcherBase, ShowTypeBase):
         found_releases = []
         too_early_to_search = []
 
-        default_title = fireEvent('library.query', media['library'], condense = False, single=True)
+        default_title = fireEvent('media.search_query', media['library'], condense = False, single=True)
         if not default_title:
             log.error('No proper info found for episode, removing it from library to cause it from having more issues.')
             #fireEvent('episode.delete', episode['id'], single = True)

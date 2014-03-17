@@ -96,7 +96,7 @@ class Episode(Base):
             log.info2('Wrong: releases with identifier ranges are not supported yet')
             return False
 
-        required = fireEvent('library.identifier', media['library'], single = True)
+        required = fireEvent('media.identifier', media['library'], single = True)
 
         # TODO - Support air by date episodes
         # TODO - Support episode parts
@@ -121,7 +121,7 @@ class Season(Base):
             log.info2('Wrong: releases with identifier ranges are not supported yet')
             return False
 
-        required = fireEvent('library.identifier', media['library'], single = True)
+        required = fireEvent('media.identifier', media['library'], single = True)
 
         if identifier != required:
             log.info2('Wrong: required identifier (%s) does not match release identifier (%s)', (required, identifier))

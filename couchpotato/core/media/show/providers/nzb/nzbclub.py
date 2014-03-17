@@ -21,7 +21,7 @@ class Season(SeasonProvider, Base):
     def buildUrl(self, media):
 
         q = tryUrlencode({
-            'q': fireEvent('library.query', media, single = True),
+            'q': fireEvent('media.search_query', media, single = True),
         })
 
         query = tryUrlencode({
@@ -39,7 +39,7 @@ class Episode(EpisodeProvider, Base):
     def buildUrl(self, media):
 
         q = tryUrlencode({
-            'q': fireEvent('library.query', media, single = True),
+            'q': fireEvent('media.search_query', media, single = True),
         })
 
         query = tryUrlencode({

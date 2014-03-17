@@ -22,7 +22,7 @@ class Season(SeasonProvider, Base):
         arguments = tryUrlencode({
             'user': host['name'],
             'passkey': host['pass_key'],
-            'search': fireEvent('library.query', media, single = True)
+            'search': fireEvent('media.search_query', media, single = True)
         })
         return '%s?%s' % (host['host'], arguments)
 
@@ -33,6 +33,6 @@ class Episode(EpisodeProvider, Base):
         arguments = tryUrlencode({
             'user': host['name'],
             'passkey': host['pass_key'],
-            'search': fireEvent('library.query', media, single = True)
+            'search': fireEvent('media.search_query', media, single = True)
         })
         return '%s?%s' % (host['host'], arguments)

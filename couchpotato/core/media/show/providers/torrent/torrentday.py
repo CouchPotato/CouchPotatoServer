@@ -21,7 +21,7 @@ class Season(SeasonProvider, Base):
         ([14], ['hdtv_sd', 'hdtv_720p', 'webdl_720p', 'webdl_1080p']),
     ]
     def buildUrl(self, media):
-        return fireEvent('library.query', media, single = True)
+        return fireEvent('media.search_query', media, single = True)
 
 
 class Episode(EpisodeProvider, Base):
@@ -30,5 +30,5 @@ class Episode(EpisodeProvider, Base):
         ([2], [24], [26], ['hdtv_sd'])
     ]
     def buildUrl(self, media):
-        return fireEvent('library.query', media, single = True)
+        return fireEvent('media.search_query', media, single = True)
 

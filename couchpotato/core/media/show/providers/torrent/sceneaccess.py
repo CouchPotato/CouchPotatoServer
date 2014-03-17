@@ -30,7 +30,7 @@ class Season(SeasonProvider, Base):
         )
 
         arguments = tryUrlencode({
-            'search': fireEvent('library.query', media, single = True),
+            'search': fireEvent('media.search_query', media, single = True),
             'method': 3,
         })
         query = "%s&%s" % (url, arguments)
@@ -52,7 +52,7 @@ class Episode(EpisodeProvider, Base):
         )
 
         arguments = tryUrlencode({
-            'search': fireEvent('library.query', media, single = True),
+            'search': fireEvent('media.search_query', media, single = True),
             'method': 3,
         })
         query = "%s&%s" % (url, arguments)

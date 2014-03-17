@@ -20,7 +20,7 @@ class Season(SeasonProvider, Base):
     # For season bundles, bitsoup currently only has one category
     def buildUrl(self, media, quality):
         query = tryUrlencode({
-            'search': fireEvent('library.query', media, single = True),
+            'search': fireEvent('media.search_query', media, single = True),
             'cat': 45 # TV-Packs Category
         })
         return query
@@ -35,7 +35,7 @@ class Episode(EpisodeProvider, Base):
 
     def buildUrl(self, media, quality):
         query = tryUrlencode({
-            'search': fireEvent('library.query', media, single = True),
+            'search': fireEvent('media.search_query', media, single = True),
             'cat': self.getCatId(quality['identifier'])[0],
         })
         return query
