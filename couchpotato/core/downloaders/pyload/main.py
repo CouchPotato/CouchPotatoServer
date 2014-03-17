@@ -55,38 +55,27 @@ class pyload(Downloader):
     def download(self, data = None, media = None, filedata = None):
         if not media: media = {}
         if not data: data = {}
-
-        log.debug("Sending '%s' (%s) to pyload.", (data.get('name'), data.get('protocol')))
+        log.debug("Sending '%s' (%s) with url %s to pyload.", (data.get('name'), data.get('protocol'), data.get('url')))
 
         if not self.connect():
             return False
 
-        settings = self.pyload_api.get_settings()
-        if not settings:
-            return False
-
-        OCH_params = {}
+        och_params = {}
         if self.conf('label'):
-            OCH_params['label'] = self.conf('label')
+            och_params['label'] = self.conf('label')
 
-        if not filedata and data.get('protocol') == 'OCH':
-            log.error('Failed sending OCH-Link, no data')
+        if not filedata and data.get('protocol') == 'och':
+            log.error('Failed sending och-Link, no data')
             return False
 
-        OCH_filename = self.createFileName(data, filedata, media)
+        py_packagename = self.createFileName(data, filedata, media)
 
-        # Send request to uTorrent
-        if data.get('protocol') == 'torrent_magnet':
-            self.pyload_api.add_torrent_uri(OCH_filename, data.get('url'))
-        else:
-            self.pyload_api.add_torrent_file(OCH_filename, filedata)
+        # Send request to pyload
+        pid = 0 #package id
+        if data.get('protocol') == 'och':
+            pid = self.pyload_api.add_uri(py_packagename, data.get('url'))
 
-        # Change settings of added torrent
-        self.pyload_api.set_torrent(torrent_hash, OCH_params)
-        if self.conf('paused', default = 0):
-            self.pyload_api.pause_torrent(torrent_hash)
-
-        return self.downloadReturnId(torrent_hash)
+        return self.downloadReturnId(pid)
 
     def test(self):
         if self.connect():
@@ -203,13 +192,11 @@ class pyloadAPI(object):
             self.opener.add_handler(urllib2.HTTPDigestAuthHandler(password_manager))
         elif username or password:
             log.debug('User or password missing, not using authentication.')
-        self.sessionID = self.get_sessionID(username, password)
+        self.sessionID = self.get_sessionID()
 
-    def _request(self, action, data = None):
-        if time.time() > self.last_time + 1800:
-            self.last_time = time.time()
-            self.sessionID = self.get_sessionID()
-        data = urllib.urlencode({'session': self.sessionID}) + '&' + data
+    def _request(self, action, data = {}):
+        self.sessionID = self.get_sessionID()
+        data.update({'session': self.sessionID})
         request = urllib2.Request(self.url + action, data)
         try:
             open_request = self.opener.open(request)
@@ -219,27 +206,39 @@ class pyloadAPI(object):
             else:
                 log.debug('Unknown failure sending command to pyload. Return text is: %s', response)
         except httplib.InvalidURL as err:
-            log.error('Invalid pyload host, check your config %s', err)
+            log.error('Invalid pyLoad host, check your config %s', err)
         except urllib2.HTTPError as err:
             if err.code == 401:
-                log.error('Invalid pyload Username or Password, check your config')
+                log.error('Invalid pyLoad Username or Password, check your config')
             else:
-                log.error('uTorrent HTTPError: %s', err)
+                log.error('pyLoad HTTPError: %s', err)
         except urllib2.URLError as err:
-            log.error('Unable to connect to pyload %s', err)
+            log.error('Unable to connect to pyLoad %s', err)
         return False
 
     def get_sessionID(self):
-        post_data = urllib.urlencode({'username': str(self.username), "password": str(self.password)})
-        session_request = self.opener.open(self.url + 'login',post_data)
-        sessionID = session_request.read()
-        return sessionID
+        post_data = urllib.urlencode({'username': self.username, "password": self.password})
+        session_request = self.opener.open(self.url + 'login', post_data)
+        response = session_request.read()
+        sessionID = self.sessionID
+        if response != "true":
+            sessionID = response
+        return sessionID.replace('"', '')
 
-    def add_torrent_uri(self, filename, torrent, add_folder = False):
-        action = 'action=add-url&s=%s' % urllib.quote(torrent)
-        if add_folder:
-            action += '&path=%s' % urllib.quote(filename)
-        return self._request(action)
+    def check_uri(self, url):
+        action = 'checkURLs'
+        data = {'urls': json.dumps(url)}
+        return self._request(action, data)
+
+    def add_uri(self, packagename, url):
+        #purl = self.check_uri(url) #plugin: url
+
+        #TODO: Implementierung der DefaultQueue
+        action = 'addPackage'
+        data = {'name': "'%s'" % packagename.encode("ascii", "ignore"),
+                'links': str([url])}
+                #'dest': 1}
+        return self._request(action, data) #packageId
 
     def add_torrent_file(self, filename, filedata, add_folder = False):
         action = 'action=add-file'
@@ -312,8 +311,7 @@ class pyloadAPI(object):
         return self._request(action)
 
     def get_build(self):
-        data = self._request('')
+        data = self._request('getServerVersion')
         if not data:
             return False
-        response = json.loads(data)
-        return int(response.get('build'))
+        return data.replace('"', '')

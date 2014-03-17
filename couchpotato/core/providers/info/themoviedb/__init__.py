@@ -21,5 +21,19 @@ config = [{
                 },
             ],
         },
+        {
+            'tab': 'searcher',
+            'name': 'searcher',
+            'label': 'Basics',
+            'description': 'General search options',
+            'options': [
+                {
+                    'name': 'lang',
+                    'label': 'Language',
+                    'description': 'Countrycode used for fetching alternate Titles',
+                    'default': 'US',
+                },
+            ],
+        },
     ],
 }]

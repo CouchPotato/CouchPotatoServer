@@ -5,7 +5,7 @@ def start():
     return hdarea()
 
 config = [{
-    'name': 'HD-Area',
+    'name': 'hdarea',
     'groups': [
         {
             'tab': 'searcher',
@@ -25,7 +25,14 @@ config = [{
                     'type': 'int',
                     'default': 0,
                     'description': 'Starting score for each release found via this provider.',
-                }
+                },
+                {
+                    'name': 'hosters',
+                    'label': 'accepted Hosters',
+                    'default': '',
+                    'placeholder': 'Example: uploaded,share-online',
+                    'description': 'List of Hosters separated by ","'
+                },
             ],
         },
     ],
