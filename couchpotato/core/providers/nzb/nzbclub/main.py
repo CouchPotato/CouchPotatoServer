@@ -22,8 +22,11 @@ class NZBClub(NZBProvider, RSS):
 
         q = '"%s %s"' % (title, movie['library']['year'])
 
-        params = tryUrlencode({
+        q_param = tryUrlencode({
             'q': q,
+        })
+
+        params = tryUrlencode({
             'ig': 1,
             'rpp': 200,
             'st': 5,
@@ -31,7 +34,7 @@ class NZBClub(NZBProvider, RSS):
             'ns': 1,
         })
 
-        nzbs = self.getRSSData(self.urls['search'] % params)
+        nzbs = self.getRSSData(self.urls['search'] % ('%s&%s' % (q_param, params)))
 
         for nzb in nzbs:
 
