@@ -2,6 +2,7 @@ import re
 import traceback
 from datetime import date
 import bs4
+from couchpotato.core.helpers.encoding import simplifyString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.och.base import OCHProvider
 from couchpotato.core.helpers.variable import tryInt
@@ -14,24 +15,24 @@ class hdarea(OCHProvider):
     urls = {
         'search': 'http://www.hd-area.org/?s=search&q=%s',
     }
-    acceptedHosters = ['uploaded']  # descending Priority
 
     def _searchOnTitle(self, title, movie, quality, results):
+        titles = movie['library']['info'].get('alt_titles', [])
+        titles.append(title)
+        for title in titles:
+            query = '"%s"' % (simplifyString(title))
+            searchUrl = self.urls['search'] % query
 
-        #Creating searchquery
-        query = '"%s %s"' % (title, movie['library']['year'])
-        searchUrl = self.urls['search'] % query
+            log.debug('fetching data from %s' % searchUrl)
+            data = self.getHTMLData(searchUrl)
 
-        log.debug('fetching data from %s' % searchUrl)
-        data = self.getHTMLData(searchUrl)
-
-        linksToMovieDetails = self.parseSearchResult(data)
-        for movieDetailLink in linksToMovieDetails:
-            data = self.getHTMLData(movieDetailLink)
-            result = self.parseMovieDetailPage(data)
-            if len(result):
-                result['id'] = movieDetailLink.split('id=')[1]
-                results.append(result)
+            linksToMovieDetails = self.parseSearchResult(data)
+            for movieDetailLink in linksToMovieDetails:
+                data = self.getHTMLData(movieDetailLink)
+                result = self.parseMovieDetailPage(data)
+                if len(result):
+                    result['id'] = movieDetailLink.split('id=')[1]
+                    results.append(result)
 
 
     #===============================================================================
@@ -48,7 +49,7 @@ class hdarea(OCHProvider):
                         for link in links:
                             url = link.a["href"]
                             hoster = link.text
-                            for acceptedHoster in self.acceptedHosters:
+                            for acceptedHoster in self.conf('hosters'):
                                 if acceptedHoster in hoster.lower():
                                     res["url"] = url
                                     return res
@@ -78,8 +79,7 @@ class hdarea(OCHProvider):
                                                           tryInt(relDate[0]))).days
                         #res["category"] = match.group('category').split(" > ")
                 except AttributeError:
-                    log.debug("date could not be parsed")
-
+                    log.error("error parsing topbox of release %s" % res['name'])
                 if not isinstance(child, NavigableString) and ("boxrechts" in child["class"]):
                     res['description'] = child.a["href"].split("/")[-2] #adding imdb-id
                 elif not isinstance(child, NavigableString) and "title" in child["class"]:
