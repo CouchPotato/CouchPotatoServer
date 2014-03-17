@@ -133,6 +133,7 @@ class TheMovieDb(MovieProvider):
                 'via_tmdb': True,
                 'tmdb_id': movie.id,
                 'titles': [toUnicode(movie.title)],
+                'alt_titles': [x.title for x in movie.alternate_titles if x.country == 'DE'],
                 'original_title': movie.originaltitle,
                 'images': images,
                 'imdb': movie.imdb,
