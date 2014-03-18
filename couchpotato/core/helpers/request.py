@@ -2,7 +2,7 @@ from urllib import unquote
 import re
 
 from couchpotato.core.helpers.encoding import toUnicode
-from couchpotato.core.helpers.variable import natsortKey
+from couchpotato.core.helpers.variable import natsortKey, tryInt
 
 
 def getParams(params):
@@ -43,7 +43,7 @@ def getParams(params):
 
     return dictToList(temp)
 
-
+non_decimal = re.compile(r'[^\d.]+')
 def dictToList(params):
 
     if type(params) is dict:
@@ -53,7 +53,15 @@ def dictToList(params):
                 convert = lambda text: int(text) if text.isdigit() else text.lower()
                 alphanum_key = lambda key: [convert(c) for c in re.split('([0-9]+)', key)]
                 sorted_keys = sorted(value.keys(), key = alphanum_key)
-                new_value = [dictToList(value[k]) for k in sorted_keys]
+
+                all_ints = 0
+                for pnr in sorted_keys:
+                    all_ints += 1 if non_decimal.sub('', pnr) == pnr else 0
+
+                if all_ints == len(sorted_keys):
+                    new_value = [dictToList(value[k]) for k in sorted_keys]
+                else:
+                    new_value = value
             except:
                 new_value = value
 
