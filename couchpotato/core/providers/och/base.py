@@ -12,5 +12,7 @@ class OCHProvider(YarrProvider):
 
     protocol = 'och'
 
+    # TODO: Option einfuegen fuer Sprachwahl
+
     def download(self, url = '', nzb_id = ''):
         return url

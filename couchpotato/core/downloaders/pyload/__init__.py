@@ -74,6 +74,13 @@ config = [{
                     'type': 'bool',
                     'description': 'Delete a release after the download has failed.',
                 },
+                {
+                    'name': 'download_collect',
+                    'default': 1,
+                    'advanced': True,
+                    'type': 'dropdown',
+                    'values': [('start downloading', 1), ('add to linkcollector', 0)],
+                },
             ],
         }
     ],

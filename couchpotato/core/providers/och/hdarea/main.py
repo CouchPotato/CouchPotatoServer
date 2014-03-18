@@ -43,7 +43,7 @@ class hdarea(OCHProvider):
         try:
             for child in download.descendants:
                 if not isinstance(child, NavigableString) and "cover" in child["class"]:
-                    #TODO: Sprache + Grösse Parsen
+                    #TODO: Sprache + Groesse Parsen
                     if "beschreibung" in child.div["class"]:
                         descr = child.div
                         links = descr.findAll('span', attrs={"style": "display:inline;"}, recursive=True)
@@ -52,7 +52,7 @@ class hdarea(OCHProvider):
                             hoster = link.text
                             for acceptedHoster in self.conf('hosters'):
                                 if acceptedHoster in hoster.lower():
-                                    if self.config('hoster') != '':
+                                    if self.conf('hosters') != '':
                                         res["url"] = url
                                         return res
                                     else:

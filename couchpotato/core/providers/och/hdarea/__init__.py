@@ -31,7 +31,7 @@ config = [{
                     'label': 'accepted Hosters',
                     'default': '',
                     'placeholder': 'Example: uploaded,share-online',
-                    'description': 'List of Hosters separated by ","'
+                    'description': 'List of Hosters separated by ",". Should be at least one!'
                 },
             ],
         },

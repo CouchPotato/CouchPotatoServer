@@ -73,7 +73,7 @@ class pyload(Downloader):
         # Send request to pyload
         pid = 0 #package id
         if data.get('protocol') == 'och':
-            pid = self.pyload_api.add_uri(py_packagename, data.get('url'))
+            pid = self.pyload_api.add_uri(py_packagename, data.get('url'), tryInt(self.conf('download_collect', default=1)))
 
         return self.downloadReturnId(pid)
 
@@ -176,7 +176,6 @@ class pyloadAPI(object):
     def __init__(self, host = 'localhost', port = 8000, username = None, password = None):
 
         super(pyloadAPI, self).__init__()
-
         self.url = 'http://' + str(host) + ':' + str(port) + '/api/'
         self.username = username
         self.password = password
@@ -230,14 +229,11 @@ class pyloadAPI(object):
         data = {'urls': json.dumps(url)}
         return self._request(action, data)
 
-    def add_uri(self, packagename, url):
-        #purl = self.check_uri(url) #plugin: url
-
-        #TODO: Implementierung der DefaultQueue
+    def add_uri(self, packagename, url, dest=1):
         action = 'addPackage'
         data = {'name': "'%s'" % packagename.encode("ascii", "ignore"),
-                'links': str([url])}
-                #'dest': 1}
+                'links': str([url]),
+                'dest': dest}
         return self._request(action, data) #packageId
 
     def add_torrent_file(self, filename, filedata, add_folder = False):
