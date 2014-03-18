@@ -17,7 +17,7 @@ class hdarea(OCHProvider):
     }
 
     def _searchOnTitle(self, title, movie, quality, results):
-        titles = movie['library']['info'].get('alt_titles', [])
+        titles = movie['library']['info'].get('local_titles', [])
         titles.append(title)
         for title in titles:
             query = '"%s"' % (simplifyString(title))
@@ -43,6 +43,7 @@ class hdarea(OCHProvider):
         try:
             for child in download.descendants:
                 if not isinstance(child, NavigableString) and "cover" in child["class"]:
+                    #TODO: Sprache + Grösse Parsen
                     if "beschreibung" in child.div["class"]:
                         descr = child.div
                         links = descr.findAll('span', attrs={"style": "display:inline;"}, recursive=True)
@@ -51,10 +52,15 @@ class hdarea(OCHProvider):
                             hoster = link.text
                             for acceptedHoster in self.conf('hosters'):
                                 if acceptedHoster in hoster.lower():
-                                    res["url"] = url
-                                    return res
+                                    if self.config('hoster') != '':
+                                        res["url"] = url
+                                        return res
+                                    else:
+                                        log.debug('Hosterlist seems to be empty, please check settings.')
+                                        return None
         except (TypeError, KeyError):
             return None
+        return None
 
     def parseTopBox(self, topbox):
         def _getCentury(year):
