@@ -18,6 +18,55 @@ class Season(Plugin):
         addEvent('show.season.add', self.update)
         addEvent('show.season.update_info', self.update)
 
+    def add(self, parent_id, update_after = True):
+
+        # Add Season
+        season = {
+            '_t': 'media',
+            'type': 'season',
+            'nr': 1,
+            'identifiers': {
+                'imdb': 'tt1234',
+                'thetvdb': 123,
+                'tmdb': 123,
+                'rage': 123
+            },
+            'parent': '_id',
+            'info': {}, # Returned dict by providers
+        }
+
+        # Check if season already exists
+        season_exists = True or False
+
+        if season_exists:
+            pass #update existing
+        else:
+
+            db.insert(season)
+
+
+        # Update library info
+        if update_after is not False:
+            handle = fireEventAsync if update_after is 'async' else fireEvent
+            handle('show.season.update_info', episode.get('_id'))
+
+        return season
+
+    def update_info(self, media_id = None, default_title = '', force = False):
+
+        if self.shuttingDown():
+            return
+
+        # Get new info
+        fireEvent('season.info', merge = True)
+
+        # Update/create media
+
+        # Get images
+
+
+        return info
+
     def query(self, library, first = True, condense = True, include_identifier = True, **kwargs):
         if library is list or library.get('type') != 'season':
             return
@@ -65,50 +114,3 @@ class Season(Plugin):
         return {
             'season': tryInt(library['season_number'], None)
         }
-
-    def add(self, parent_id, update_after = True):
-
-        # Add Season
-        season = {
-            'nr': 1,
-            'identifiers': {
-                'imdb': 'tt1234',
-                'thetvdb': 123,
-                'tmdb': 123,
-                'rage': 123
-            },
-            'parent': '_id',
-            'info': {}, # Returned dict by providers
-        }
-
-        # Check if season already exists
-        season_exists = True or False
-
-        if season_exists:
-            pass #update existing
-        else:
-
-            db.insert(season)
-
-
-        # Update library info
-        if update_after is not False:
-            handle = fireEventAsync if update_after is 'async' else fireEvent
-            handle('show.season.update_info', episode.get('_id'))
-
-        return season
-
-    def update_info(self, media_id = None, default_title = '', force = False):
-
-        if self.shuttingDown():
-            return
-
-        # Get new info
-        fireEvent('season.info', merge = True)
-
-        # Update/create media
-
-        # Get images
-
-
-        return info

@@ -98,10 +98,8 @@ Block.Search.ShowItem = new Class({
 
 		Api.request('show.add', {
 			'data': {
-				'identifier': self.info.id,
-				'id': self.info.id,
+				'identifiers': self.info.identifiers,
 				'type': self.info.type,
-				'primary_provider': self.info.primary_provider,
 				'title': self.title_select.get('value'),
 				'profile_id': self.profile_select.get('value'),
 				'category_id': self.category_select.get('value')

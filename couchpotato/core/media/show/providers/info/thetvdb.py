@@ -1,12 +1,14 @@
 from datetime import datetime
-import traceback
 import os
+import traceback
+
+from couchpotato import Env
 
 from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import simplifyString, toUnicode
+from couchpotato.core.helpers.variable import splitString, tryInt, tryFloat
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media.show.providers.base import ShowProvider
-from couchpotato.environment import Env
 from tvdb_api import tvdb_exceptions
 from tvdb_api.tvdb_api import Tvdb
 
@@ -35,7 +37,7 @@ class TheTVDb(ShowProvider):
             'banners': True,
             'language': 'en',
             'cache': os.path.join(Env.get('cache_dir'), 'thetvdb_api'),
-            }
+        }
         self._setup()
 
     def _setup(self):
@@ -59,11 +61,12 @@ class TheTVDb(ShowProvider):
             self._setup()
 
         search_string = simplifyString(q)
-        cache_key = 'thetvdb.cache.%s.%s' % (search_string, limit)
+        cache_key = 'thetvdb.cache.search.%s.%s' % (search_string, limit)
         results = self.getCache(cache_key)
 
         if not results:
             log.debug('Searching for show: %s', q)
+
             raw = None
             try:
                 raw = self.tvdb.search(search_string)
@@ -76,17 +79,19 @@ class TheTVDb(ShowProvider):
                 try:
                     nr = 0
                     for show_info in raw:
-                        show = self.tvdb[int(show_info['id'])]
-                        results.append(self._parseShow(show))
+
+                        results.append(self._parseShow(show_info))
                         nr += 1
                         if nr == limit:
                             break
+
                     log.info('Found: %s', [result['titles'][0] + ' (' + str(result.get('year', 0)) + ')' for result in results])
                     self.setCache(cache_key, results)
                     return results
                 except (tvdb_exceptions.tvdb_error, IOError), e:
-                    log.error('Failed parsing TheTVDB for "%s": %s', (show, traceback.format_exc()))
+                    log.error('Failed parsing TheTVDB for "%s": %s', (q, traceback.format_exc()))
                     return False
+
         return results
 
     def getShow(self, identifier = None):
@@ -100,13 +105,20 @@ class TheTVDb(ShowProvider):
 
         return show
 
-    def getShowInfo(self, identifier = None):
-        if not identifier:
+    def getShowInfo(self, identifiers = None):
+        """
+
+        @param identifiers: dict with identifiers per provider
+        @return: Full show info including season and episode info
+        """
+
+        if not identifiers or not identifiers.get('thetvdb'):
             return None
 
-        cache_key = 'thetvdb.cache.%s' % identifier
-        log.debug('Getting showInfo: %s', cache_key)
-        result = self.getCache(cache_key) or {}
+        identifier = tryInt(identifiers.get('thetvdb'))
+
+        cache_key = 'thetvdb.cache.show.%s' % identifier
+        result = self.getCache(cache_key)
         if result:
             return result
 
@@ -115,7 +127,7 @@ class TheTVDb(ShowProvider):
             result = self._parseShow(show)
             self.setCache(cache_key, result)
 
-        return result
+        return result or {}
 
     def getSeasonInfo(self, identifier = None, params = {}):
         """Either return a list of all seasons or a single season by number.
@@ -203,65 +215,33 @@ class TheTVDb(ShowProvider):
         return result
 
     def _parseShow(self, show):
-        """
-        'actors': u'|Bryan Cranston|Aaron Paul|Dean Norris|RJ Mitte|Betsy Brandt|Anna Gunn|Laura Fraser|Jesse Plemons|Christopher Cousins|Steven Michael Quezada|Jonathan Banks|Giancarlo Esposito|Bob Odenkirk|',
-        'added': None,
-        'addedby': None,
-        'airs_dayofweek': u'Sunday',
-        'airs_time': u'9:00 PM',
-        'banner': u'http://thetvdb.com/banners/graphical/81189-g13.jpg',
-        'contentrating': u'TV-MA',
-        'fanart': u'http://thetvdb.com/banners/fanart/original/81189-28.jpg',
-        'firstaired': u'2008-01-20',
-        'genre': u'|Crime|Drama|Suspense|',
-        'id': u'81189',
-        'imdb_id': u'tt0903747',
-        'language': u'en',
-        'lastupdated': u'1376620212',
-        'network': u'AMC',
-        'networkid': None,
-        'overview': u"Walter White, a struggling high school chemistry teacher is diagnosed with advanced lung cancer. He turns to a life of crime, producing and selling methamphetamine accompanied by a former student, Jesse Pinkman with the aim of securing his family's financial future before he dies.",
-        'poster': u'http://thetvdb.com/banners/posters/81189-22.jpg',
-        'rating': u'9.3',
-        'ratingcount': u'473',
-        'runtime': u'60',
-        'seriesid': u'74713',
-        'seriesname': u'Breaking Bad',
-        'status': u'Continuing',
-        'zap2it_id': u'SH01009396'
-        """
 
         #
         # NOTE: show object only allows direct access via
         # show['id'], not show.get('id')
         #
-
-        # TODO: Make sure we have a valid show id, not '' or None
-        #if len (show['id']) is 0:
-        #    return None
+        def get(name):
+            return show.get(name) if not hasattr(show, 'search') else show[name]
 
         ## Images
-        poster = show['poster'] or None
-        backdrop = show['fanart'] or None
+        poster = get('poster')
+        backdrop = get('fanart')
 
-        genres = [] if show['genre'] is None else show['genre'].strip('|').split('|')
-        if show['firstaired'] is not None:
-            try: year = datetime.strptime(show['firstaired'], '%Y-%m-%d').year
+        genres = splitString(get('genre'), '|')
+        if get('firstaired') is not None:
+            try: year = datetime.strptime(get('firstaired'), '%Y-%m-%d').year
             except: year = None
         else:
             year = None
 
-        try:
-            id = int(show['id'])
-        except:
-            id =  None
-
         show_data = {
-            'id': id,
+            'identifiers': {
+              'thetvdb': tryInt(get('seriesid')),
+              'imdb': get('imdb_id'),
+              'zap2it': get('zap2it_id'),
+            },
             'type': 'show',
-            'primary_provider': 'thetvdb',
-            'titles': [show['seriesname'] or u'', ],
-            'original_title': show['seriesname'] or u'',
+            'titles': [get('seriesname')],
             'images': {
                 'poster': [poster] if poster else [],
                 'backdrop': [backdrop] if backdrop else [],
@@ -270,37 +250,37 @@ class TheTVDb(ShowProvider):
             },
             'year': year,
             'genres': genres,
-            'imdb': show['imdb_id'] or None,
-            'zap2it_id': show['zap2it_id'] or None,
-            'seriesid': show['seriesid'] or None,
-            'network': show['network'] or None,
-            'networkid': show['networkid'] or None,
-            'airs_dayofweek': show['airs_dayofweek'] or None,
-            'airs_time': show['airs_time'] or None,
-            'firstaired': show['firstaired'] or None,
-            'released': show['firstaired'] or None,
-            'runtime': show['runtime'] or None,
-            'contentrating': show['contentrating'] or None,
-            'rating': show['rating'] or None,
-            'ratingcount': show['ratingcount'] or None,
-            'actors': show['actors'] or None,
-            'lastupdated': show['lastupdated'] or None,
-            'status': show['status'] or None,
-            'language': show['language'] or None,
+            'network': get('network'),
+            'plot': get('overview'),
+            'networkid': get('networkid'),
+            'airs_dayofweek': get('airs_dayofweek'),
+            'airs_time': get('airs_time'),
+            'firstaired': get('firstaired'),
+            'released': get('firstaired'),
+            'runtime': get('runtime'),
+            'contentrating': get('contentrating'),
+            'rating': {
+                'thetvdb': [tryFloat(get('rating')), tryInt(get('ratingcount'))],
+            },
+            'actors': splitString(get('actors'), '|'),
+            'lastupdated': get('lastupdated'),
+            'status': get('status'),
+            'language': get('language'),
         }
 
         show_data = dict((k, v) for k, v in show_data.iteritems() if v)
 
         # Add alternative titles
-        try:
-            raw = self.tvdb.search(show['seriesname'])
-            if raw:
-                for show_info in raw:
-                    if show_info['id'] == show_data['id'] and show_info.get('aliasnames', None):
-                        for alt_name in show_info['aliasnames'].split('|'):
-                            show_data['titles'].append(toUnicode(alt_name))
-        except (tvdb_exceptions.tvdb_error, IOError), e:
-            log.error('Failed searching TheTVDB for "%s": %s', (show['seriesname'], traceback.format_exc()))
+        # try:
+        #     raw = self.tvdb.search(show['seriesname'])
+        #     if raw:
+        #         for show_info in raw:
+        #             print show_info
+        #             if show_info['id'] == show_data['id'] and show_info.get('aliasnames', None):
+        #                 for alt_name in show_info['aliasnames'].split('|'):
+        #                     show_data['titles'].append(toUnicode(alt_name))
+        # except (tvdb_exceptions.tvdb_error, IOError), e:
+        #     log.error('Failed searching TheTVDB for "%s": %s', (show['seriesname'], traceback.format_exc()))
 
         return show_data
 

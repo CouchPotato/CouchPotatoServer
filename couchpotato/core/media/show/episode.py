@@ -16,7 +16,55 @@ class Episode(Plugin):
         addEvent('media.identifier', self.identifier)
 
         addEvent('show.episode.add', self.add)
-        addEvent('show.episode.update_info', self.update)
+        addEvent('show.episode.update_info', self.updateInfo)
+
+    def add(self, parent_id, update_after = True):
+
+        # Add Season
+        season = {
+            '_t': 'media',
+            'type': 'episode',
+            'nr': 1,
+            'identifiers': {
+                'imdb': 'tt1234',
+                'thetvdb': 123,
+                'tmdb': 123,
+                'rage': 123
+            },
+            'parent': '_id',
+            'info': {}, # Returned dict by providers
+        }
+
+        episode_exists = True or False
+
+        if episode_exists:
+            pass #update existing
+        else:
+            pass # Add Episode
+
+
+        # Update library info
+        if update_after is not False:
+            handle = fireEventAsync if update_after is 'async' else fireEvent
+            handle('show.episode.update_info', season.get('_id'), default_title = toUnicode(attrs.get('title', '')))
+
+        return season
+
+    def updateInfo(self, media_id = None, default_title = '', force = False):
+
+        if self.shuttingDown():
+            return
+
+        # Get new info
+        fireEvent('episode.info', merge = True)
+
+        # Update/create media
+
+
+        # Get images
+
+
+        return info
 
     def query(self, library, first = True, condense = True, include_identifier = True, **kwargs):
         if library is list or library.get('type') != 'episode':
@@ -77,49 +125,3 @@ class Episode(Plugin):
         identifier['episode'] = tryInt(identifier['episode'], None)
 
         return identifier
-
-    def add(self, parent_id, update_after = True):
-
-        # Add Season
-        season = {
-            'nr': 1,
-            'identifiers': {
-                'imdb': 'tt1234',
-                'thetvdb': 123,
-                'tmdb': 123,
-                'rage': 123
-            },
-            'parent': '_id',
-            'info': {}, # Returned dict by providers
-        }
-
-        episode_exists = True or False
-
-        if episode_exists:
-            pass #update existing
-        else:
-            pass # Add Episode
-
-
-        # Update library info
-        if update_after is not False:
-            handle = fireEventAsync if update_after is 'async' else fireEvent
-            handle('show.episode.update_info', season.get('_id'), default_title = toUnicode(attrs.get('title', '')))
-
-        return season
-
-    def update_info(self, media_id = None, default_title = '', force = False):
-
-        if self.shuttingDown():
-            return
-
-        # Get new info
-        fireEvent('episode.info', merge = True)
-
-        # Update/create media
-
-
-        # Get images
-
-
-        return info
