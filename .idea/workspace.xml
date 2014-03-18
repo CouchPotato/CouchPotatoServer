@@ -2,8 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="0e836cb7-a3bc-4a5a-87f0-7d3aa02cdd92" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/CouchPotatoServer.iml" afterPath="$PROJECT_DIR$/.idea/CouchPotatoServer.iml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/misc.xml" afterPath="$PROJECT_DIR$/.idea/misc.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="CouchPotatoServer.iws" />
@@ -30,7 +28,7 @@
       <file leaf-file-name="main.py" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/couchpotato/core/downloaders/pyload/main.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="68" column="26" selection-start="2092" selection-end="2092" vertical-scroll-proportion="-34.653847" vertical-offset="255" max-vertical-offset="5525">
+            <state line="27" column="0" selection-start="881" selection-end="881" vertical-scroll-proportion="-17.653847" vertical-offset="0" max-vertical-offset="5525">
               <folding>
                 <element signature="e#0#39#0" expanded="true" />
               </folding>
@@ -41,7 +39,7 @@
       <file leaf-file-name="main_test.py" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/couchpotato/core/downloaders/pyload/main_test.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="56" column="30" selection-start="1789" selection-end="1789" vertical-scroll-proportion="0.44570136" vertical-offset="269" max-vertical-offset="5236">
+            <state line="61" column="8" selection-start="1892" selection-end="1923" vertical-scroll-proportion="0.84615386" vertical-offset="0" max-vertical-offset="5236">
               <folding />
             </state>
           </provider>
@@ -534,12 +532,16 @@
       <created>1394890148600</created>
       <updated>1394890148600</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="First implementation for Pyload OCH integration...">
+      <created>1394890183359</created>
+      <updated>1394890183359</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="0" width="1887" height="1040" extended-state="0" />
-    <editor active="true" />
+    <editor active="false" />
     <layout>
       <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32857144" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32967034" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
@@ -547,7 +549,7 @@
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25164837" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.24918744" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.18702702" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.18702702" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3989011" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33547696" sideWeight="0.23411018" order="7" side_tool="true" content_ui="tabs" />
@@ -812,7 +814,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/couchpotato/core/downloaders/pyload/main.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="68" column="26" selection-start="2092" selection-end="2092" vertical-scroll-proportion="-34.653847" vertical-offset="255" max-vertical-offset="5525">
+        <state line="27" column="0" selection-start="881" selection-end="881" vertical-scroll-proportion="-17.653847" vertical-offset="0" max-vertical-offset="5525">
           <folding>
             <element signature="e#0#39#0" expanded="true" />
           </folding>
@@ -821,7 +823,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/couchpotato/core/downloaders/pyload/main_test.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="56" column="30" selection-start="1789" selection-end="1789" vertical-scroll-proportion="0.44570136" vertical-offset="269" max-vertical-offset="5236">
+        <state line="61" column="8" selection-start="1892" selection-end="1923" vertical-scroll-proportion="0.84615386" vertical-offset="0" max-vertical-offset="5236">
           <folding />
         </state>
       </provider>
