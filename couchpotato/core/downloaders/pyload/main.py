@@ -131,7 +131,7 @@ class pyload(Downloader):
                 for unfinishedFile in [i for i in files if i not in finishedFiles]:
                         allFailed = True
                         for l in files[unfinishedFile]:
-                            if self.status_flags.get(l['status']) not in ['TEMPOFFLINE', 'OFFLINE', 'FAILED'] or 'captcha' in l['error']: #exclude captcha errors
+                            if (self.status_flags.get(l['status']) not in ['TEMPOFFLINE', 'OFFLINE', 'FAILED']) or ('captcha' in l['error']): #exclude captcha errors
                                 allFailed = False
                         if allFailed:
                             status = 'failed'
