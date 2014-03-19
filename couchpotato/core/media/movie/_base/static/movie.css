@@ -344,6 +344,7 @@
 					top: auto;
 					right: auto;
 					color: #FFF;
+					line-height: 18px;
 				}
 
 				.touch_enabled .movies.list_list .movie .info .year {

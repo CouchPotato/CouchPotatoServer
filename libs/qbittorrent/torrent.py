@@ -36,6 +36,21 @@ class Torrent(Base):
         self.comment = None
         self.save_path = None
 
+        self.eta = None
+        self.size = None
+        self.dlspeed = None
+        self.upspeed = None
+        self.nb_connections = None
+        self.share_ratio = None
+        self.piece_size = None
+        self.total_wasted = None
+        self.total_downloaded = None
+        self.total_uploaded = None
+        self.creation_date  = None
+        self.time_elapsed = None
+        self.up_limit = None
+        self.dl_limit = None
+
     #
     # Commands
     #

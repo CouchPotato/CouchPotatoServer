@@ -41,11 +41,11 @@ class Base(TorrentMagnetProvider):
         total_pages = 1
         cats = self.getCatId(quality['identifier'])
 
-        search_url = self.urls['search'] % self.getDomain()
+        base_search_url = self.urls['search'] % self.getDomain()
 
         while page < total_pages:
 
-            search_url = search_url % self.buildUrl(media, page, cats)
+            search_url = base_search_url % self.buildUrl(media, page, cats)
 
             page += 1
 
