@@ -17,6 +17,6 @@ class IPTorrents(MovieProvider, Base):
     ]
 
     def buildUrl(self, title, media, quality):
-        query = '%s %s' % (title.replace(':', ''), media['year'])
+        query = '%s %s' % (title.replace(':', ''), media['info']['year'])
 
         return self._buildUrl(query, quality['identifier'])
