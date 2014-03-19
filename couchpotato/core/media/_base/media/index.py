@@ -6,7 +6,7 @@ from couchpotato.core.helpers.encoding import toUnicode, simplifyString
 
 
 class MediaIndex(MultiTreeBasedIndex):
-    _version = 2
+    _version = 3
 
     custom_header = """from CodernityDB.tree_index import MultiTreeBasedIndex"""
 
@@ -26,7 +26,7 @@ class MediaIndex(MultiTreeBasedIndex):
 
             ids = []
             for x in identifiers:
-                ids.append(md5('%s-%s' % (x, data['identifiers'][x])).hexdigest())
+                ids.append(md5('%s-%s' % (x, identifiers[x])).hexdigest())
 
             return ids, None
 
