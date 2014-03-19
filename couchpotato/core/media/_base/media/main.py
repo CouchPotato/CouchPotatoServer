@@ -8,18 +8,16 @@ from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.variable import splitString, getImdb, getTitle
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media import MediaBase
-from .index import MediaIMDBIndex, MediaStatusIndex, MediaTypeIndex, TitleSearchIndex, TitleIndex, StartsWithIndex
+from .index import MediaIndex, MediaStatusIndex, MediaTypeIndex, TitleSearchIndex, TitleIndex, StartsWithIndex
 
 
 log = CPLog(__name__)
-
-autoload = 'MediaPlugin'
 
 
 class MediaPlugin(MediaBase):
 
     _database = {
-        'media': MediaIMDBIndex,
+        'media': MediaIndex,
         'media_search_title': TitleSearchIndex,
         'media_status': MediaStatusIndex,
         'media_by_type': MediaTypeIndex,

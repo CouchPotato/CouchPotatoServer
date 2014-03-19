@@ -1,29 +1,47 @@
 from string import ascii_letters
 from hashlib import md5
 
-from CodernityDB.hash_index import HashIndex
 from CodernityDB.tree_index import MultiTreeBasedIndex, TreeBasedIndex
 from couchpotato.core.helpers.encoding import toUnicode, simplifyString
 
 
-class MediaIMDBIndex(HashIndex):
-    _version = 1
+class MediaIndex(MultiTreeBasedIndex):
+    _version = 2
+
+    custom_header = """from CodernityDB.tree_index import MultiTreeBasedIndex"""
 
     def __init__(self, *args, **kwargs):
-        kwargs['key_format'] = 'I'
-        super(MediaIMDBIndex, self).__init__(*args, **kwargs)
+        kwargs['key_format'] = '32s'
+        super(MediaIndex, self).__init__(*args, **kwargs)
 
     def make_key(self, key):
-        return int(key.strip('t'))
+        return md5(key).hexdigest()
 
     def make_key_value(self, data):
-        if data.get('_t') == 'media' and data.get('identifier'):
-            return int(data['identifier'].strip('t')), None
+        if data.get('_t') == 'media' and (data.get('identifier') or data.get('identifiers')):
+
+            identifiers = data.get('identifiers', {})
+            if data.get('identifier') and 'imdb' not in identifiers:
+                identifiers['imdb'] = data.get('identifier')
+
+            ids = []
+            for x in identifiers:
+                ids.append(md5('%s-%s' % (x, data['identifiers'][x])).hexdigest())
+
+            return ids, None
 
     def run_to_dict(self, db, media_id, dict_dept = None):
         if not dict_dept: dict_dept = {}
 
         return db.get('id', media_id)
+
+    def run_identifiers(self, db, identifiers, with_doc = False):
+        for x in identifiers:
+            try:
+                media = db.get('media', '%s-%s' % (x, identifiers[x]), with_doc = with_doc)
+                return media
+            except:
+                pass
 
     def run_with_status(self, db, status = [], with_doc = True):
 
