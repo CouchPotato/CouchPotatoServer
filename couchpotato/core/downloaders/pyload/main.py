@@ -2,7 +2,7 @@ from base64 import b16encode, b32decode
 from bencode import bencode as benc, bdecode
 from couchpotato.core.downloaders.base import Downloader, ReleaseDownloadList
 from couchpotato.core.helpers.encoding import isInt, ss, sp
-from couchpotato.core.helpers.variable import tryInt, tryFloat, cleanHost
+from couchpotato.core.helpers.variable import tryInt, tryFloat, cleanHost, mergeDicts
 from couchpotato.core.logger import CPLog
 from datetime import timedelta
 from hashlib import sha1
@@ -31,14 +31,21 @@ class pyload(Downloader):
     protocol = ['och']
     pyload_api = None
     status_flags = {
-        'STARTED'     : 1,
-        'CHECKING'    : 2,
-        'CHECK-START' : 4,
-        'CHECKED'     : 8,
-        'ERROR'       : 16,
-        'PAUSED'      : 32,
-        'QUEUED'      : 64,
-        'LOADED'      : 128
+        0:      'FINISHED',
+        1:      'OFFLINE',
+        2:      'ONLINE',
+        3:      'QUEUED',
+        4:      'SKIPPED',
+        5:      'WAITING',
+        6:      'TEMPOFFLINE',
+        7:      'STARTING',
+        8:      'FAILED',
+        9:      'ABORTED',
+        10:     'DECRYPTING',
+        11:     'CUSTOM',
+        12:     'DOWNLOADING',
+        13:     'PROCESSING',
+        14:     'UNKNOWN'
     }
 
     def connect(self):
@@ -97,23 +104,54 @@ class pyload(Downloader):
 
         release_downloads = ReleaseDownloadList(self)
 
-        data = self.utorrent_api.get_status()
-        if not data:
-            log.error('Error getting data from pyload')
-            return []
+        queue = self.getAllPackageIDs()
 
-        queue = json.loads(data)
-        if queue.get('error'):
-            log.error('Error getting data from pyload: %s', queue.get('error'))
-            return []
-
-        if not queue.get('torrents'):
+        if not queue:
             log.debug('Nothing in queue')
             return []
 
-        # Get torrents
-        for torrent in queue['torrents']:
-            if torrent[0] in ids:
+        # Determine Package state
+        for pid in queue:
+            package = self.pyload_api.get_package_data(pid)
+            status = None
+            files = {}
+            for link in package['links']:
+                if not files.has_key(link['name']):
+                    files[link['name']] = []
+                files[link['name']].append(link)
+
+            finishedFiles = []
+            for file in files:
+                if 'FINISHED' in [self.status_flags.get(l['status']) for l in files[file]]:
+                    finishedFiles.append(file)
+
+            if len(finishedFiles) == len(files):
+                status = 'finished'
+            else:
+                for unfinishedFile in [i for i in files if i not in finishedFiles]:
+                        allFailed = True
+                        for l in files[unfinishedFile]:
+                            if self.status_flags.get(l['status']) not in ['TEMPOFFLINE', 'OFFLINE', 'FAILED'] or 'captcha' in l['error']: #exclude captcha errors
+                                allFailed = False
+                        if allFailed:
+                            status = 'failed'
+                        else:
+                            status = 'busy'
+
+            release_downloads.append({
+                    'id': pid,
+                    'name': package['name'] if package else '',
+                    'status': status if status else '',
+                    #'original_status': package[''],
+                    'timeleft': -1,
+                    'folder': sp(package['folder']),
+                    #'files': '|'.join(torrent_files)
+            })
+
+        return release_downloads
+
+        for dl in queue:
+            if dl['packageID'] in ids:
 
                 #Get files of the torrent
                 torrent_files = []
@@ -147,6 +185,11 @@ class pyload(Downloader):
 
         return release_downloads
 
+    def getAllPackageIDs(self):
+        coll = self.pyload_api.get_Collector()
+        queue = self.pyload_api.get_Queue()
+        return [p['pid'] for p in (coll + queue)]
+
     def pause(self, release_download, pause = True):
         if not self.connect():
             return False
@@ -156,7 +199,7 @@ class pyload(Downloader):
         log.info('%s failed downloading, deleting...', release_download['name'])
         if not self.connect():
             return False
-        return self.pyload_api.remove_torrent(release_download['id'], remove_data = True)
+        return self.pyload_api.remove_pids([release_download['id']])
 
     def processComplete(self, release_download, delete_files = False):
         log.debug('Requesting uTorrent to remove the torrent %s%s.', (release_download['name'], ' and cleanup the downloaded files' if delete_files else ''))
@@ -236,6 +279,34 @@ class pyloadAPI(object):
                 'dest': dest}
         return self._request(action, data) #packageId
 
+    def get_package_data(self, id):
+        action = 'getPackageData'
+        data = {'pid': id}
+        try:
+            return json.loads(self._request(action, data))
+        except TypeError, err:
+            log.debug("There's no pyLoad package with id %s" % id)
+
+    def get_status(self):
+        action = 'statusDownloads'
+        return self._request(action)
+
+    def get_Queue(self):
+        action = 'getQueue'
+        return json.loads(self._request(action))
+
+    def get_Collector(self):
+        action = 'getCollector'
+        return json.loads(self._request(action))
+
+    def remove_pids(self, pids):
+        assert isinstance(pids, list)
+        action = 'deletePackages'
+        data = {'pids': json.dumps(pids)}
+        self._request(action, data)
+
+    ######################################### COPIED CONTENT #########################################
+
     def add_torrent_file(self, filename, filedata, add_folder = False):
         action = 'action=add-file'
         if add_folder:
@@ -266,9 +337,9 @@ class pyloadAPI(object):
             action = 'action=remove&hash=%s' % hash
         return self._request(action)
 
-    def get_status(self):
-        action = 'list=1'
-        return self._request(action)
+
+
+
 
     def get_settings(self):
         action = 'action=getsettings'
