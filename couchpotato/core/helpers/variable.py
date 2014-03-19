@@ -227,6 +227,10 @@ def toIterable(value):
     return [value]
 
 
+def getIdentifier(media):
+    return media.get('identifier') or media.get('identifiers', {}).get('imdb')
+
+
 def getTitle(media_dict):
     try:
         try:
@@ -241,10 +245,10 @@ def getTitle(media_dict):
                     try:
                         return media_dict['media']['info']['titles'][0]
                     except:
-                        log.error('Could not get title for %s', media_dict.get('identifier'))
+                        log.error('Could not get title for %s', getIdentifier(media_dict))
                         return None
 
-        log.error('Could not get title for %s', media_dict['identifier'])
+        log.error('Could not get title for %s', getIdentifier(media_dict))
         return None
     except:
         log.error('Could not get title for library item: %s', media_dict)

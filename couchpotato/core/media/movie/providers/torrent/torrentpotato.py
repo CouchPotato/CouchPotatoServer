@@ -1,4 +1,5 @@
 from couchpotato.core.helpers.encoding import tryUrlencode
+from couchpotato.core.helpers.variable import getIdentifier
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.providers.torrent.torrentpotato import Base
 from couchpotato.core.media.movie.providers.base import MovieProvider
@@ -14,6 +15,6 @@ class TorrentPotato(MovieProvider, Base):
         arguments = tryUrlencode({
             'user': host['name'],
             'passkey': host['pass_key'],
-            'imdbid': media['identifier']
+            'imdbid': getIdentifier(media),
         })
         return '%s?%s' % (host['host'], arguments)

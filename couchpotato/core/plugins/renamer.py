@@ -10,7 +10,7 @@ from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
 from couchpotato.core.helpers.encoding import toUnicode, ss, sp
 from couchpotato.core.helpers.variable import getExt, mergeDicts, getTitle, \
-    getImdb, link, symlink, tryInt, splitString, fnEscape, isSubFolder
+    getImdb, link, symlink, tryInt, splitString, fnEscape, isSubFolder, getIdentifier
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
@@ -1043,7 +1043,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         if rls:
             media = db.get('id', rls['media_id'])
             release_download.update({
-                'imdb_id': media['identifier'],
+                'imdb_id': getIdentifier(media),
                 'quality': rls['quality'],
                 'protocol': rls.get('info', {}).get('protocol') or rls.get('info', {}).get('type'),
                 'release_id': rls['_id'],

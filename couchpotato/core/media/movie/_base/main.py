@@ -6,7 +6,7 @@ from couchpotato import get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, fireEventAsync, addEvent
 from couchpotato.core.helpers.encoding import toUnicode
-from couchpotato.core.helpers.variable import splitString, getTitle, getImdb
+from couchpotato.core.helpers.variable import splitString, getTitle, getImdb, getIdentifier
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media.movie import MovieTypeBase
 import six
@@ -266,7 +266,7 @@ class MovieBase(MovieTypeBase):
             else:
                 media = db.get('media', 'imdb-%s' % identifier, with_doc = True)['doc']
 
-            info = fireEvent('movie.info', merge = True, extended = extended, identifier = media.get('identifier'))
+            info = fireEvent('movie.info', merge = True, extended = extended, identifier = getIdentifier(media))
 
             # Don't need those here
             try: del info['in_wanted']
@@ -275,7 +275,7 @@ class MovieBase(MovieTypeBase):
             except: pass
 
             if not info or len(info) == 0:
-                log.error('Could not update, no movie info to work with: %s', media.get('identifier'))
+                log.error('Could not update, no movie info to work with: %s', identifier)
                 return False
 
             # Update basic info
@@ -285,19 +285,20 @@ class MovieBase(MovieTypeBase):
             log.debug('Adding titles: %s', titles)
 
             # Define default title
-            def_title = None
             if default_title:
-                counter = 0
-                for title in titles:
-                    if title.lower() == toUnicode(default_title.lower()) or (toUnicode(default_title) == six.u('') and toUnicode(titles[0]) == title):
-                        def_title = toUnicode(title)
-                        break
-                    counter += 1
+                def_title = None
+                if default_title:
+                    counter = 0
+                    for title in titles:
+                        if title.lower() == toUnicode(default_title.lower()) or (toUnicode(default_title) == six.u('') and toUnicode(titles[0]) == title):
+                            def_title = toUnicode(title)
+                            break
+                        counter += 1
 
-            if not def_title:
-                def_title = toUnicode(titles[0])
+                if not def_title:
+                    def_title = toUnicode(titles[0])
 
-            media['title'] = def_title
+                media['title'] = def_title
 
             # Files
             images = info.get('images', [])
@@ -357,7 +358,7 @@ class MovieBase(MovieTypeBase):
                 dates = media.get('info').get('release_date')
 
             if dates and (dates.get('expires', 0) < time.time() or dates.get('expires', 0) > time.time() + (604800 * 4)) or not dates:
-                dates = fireEvent('movie.info.release_date', identifier = media['identifier'], merge = True)
+                dates = fireEvent('movie.info.release_date', identifier = getIdentifier(media), merge = True)
                 media['info'].update({'release_date': dates})
                 db.update(media)
 

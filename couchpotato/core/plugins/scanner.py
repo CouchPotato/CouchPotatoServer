@@ -8,7 +8,7 @@ from couchpotato import get_db
 from couchpotato.core.event import fireEvent, addEvent
 from couchpotato.core.helpers.encoding import toUnicode, simplifyString, sp
 from couchpotato.core.helpers.variable import getExt, getImdb, tryInt, \
-    splitString
+    splitString, getIdentifier
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from enzyme.exceptions import NoParserError, ParseError
@@ -403,7 +403,7 @@ class Scanner(Plugin):
             if not group['media']:
                 log.error('Unable to determine media: %s', group['identifiers'])
             else:
-                group['identifier'] = group['media'].get('identifier') or group['media']['info'].get('imdb')
+                group['identifier'] = getIdentifier(group['media']) or group['media']['info'].get('imdb')
 
             processed_movies[identifier] = group
 

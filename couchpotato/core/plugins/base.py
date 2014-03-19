@@ -10,7 +10,7 @@ import urllib2
 from couchpotato.core.event import fireEvent, addEvent
 from couchpotato.core.helpers.encoding import ss, toSafeString, \
     toUnicode, sp
-from couchpotato.core.helpers.variable import getExt, md5, isLocalIP, scanForPassword, tryInt
+from couchpotato.core.helpers.variable import getExt, md5, isLocalIP, scanForPassword, tryInt, getIdentifier
 from couchpotato.core.logger import CPLog
 from couchpotato.environment import Env
 import requests
@@ -338,7 +338,8 @@ class Plugin(object):
 
     def cpTag(self, media):
         if Env.setting('enabled', 'renamer'):
-            return '.cp(' + media.get('identifier') + ')' if media.get('identifier') else ''
+            identifier = getIdentifier(media)
+            return '.cp(' + identifier + ')' if identifier else ''
 
         return ''
 

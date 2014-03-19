@@ -8,7 +8,7 @@ from couchpotato import get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
 from couchpotato.core.helpers.encoding import simplifyString
-from couchpotato.core.helpers.variable import getTitle, possibleTitles, getImdb
+from couchpotato.core.helpers.variable import getTitle, possibleTitles, getImdb, getIdentifier
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.searcher.base import SearcherBase
 from couchpotato.core.media.movie import MovieTypeBase
@@ -95,10 +95,10 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                 try:
                     self.single(media, search_protocols)
                 except IndexError:
-                    log.error('Forcing library update for %s, if you see this often, please report: %s', (media['identifier'], traceback.format_exc()))
+                    log.error('Forcing library update for %s, if you see this often, please report: %s', (getIdentifier(media), traceback.format_exc()))
                     fireEvent('movie.update_info', media_id)
                 except:
-                    log.error('Search failed for %s: %s', (media['identifier'], traceback.format_exc()))
+                    log.error('Search failed for %s: %s', (getIdentifier(media), traceback.format_exc()))
 
                 self.in_progress['to_go'] -= 1
 
@@ -257,7 +257,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
             return True
 
         # Check if nzb contains imdb link
-        if getImdb(nzb.get('description', '')) == media['identifier']:
+        if getImdb(nzb.get('description', '')) == getIdentifier(media):
             return True
 
         for raw_title in media['info']['titles']:

@@ -99,13 +99,10 @@ class MediaPlugin(MediaBase):
 
         try:
             media = get_db().get('id', media_id)
-
-
-            default_title = getTitle(media)
             event = '%s.update_info' % media.get('type')
 
             def handler():
-                fireEvent(event, identifier = media.get('identifier'), default_title = default_title, on_complete = self.createOnComplete(media_id))
+                fireEvent(event, media_id = media_id, on_complete = self.createOnComplete(media_id))
 
             if handler:
                 return handler

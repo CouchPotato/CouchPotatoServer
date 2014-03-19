@@ -5,7 +5,7 @@ import time
 import traceback
 
 from couchpotato.core.helpers.encoding import tryUrlencode
-from couchpotato.core.helpers.variable import getTitle, tryInt, mergeDicts
+from couchpotato.core.helpers.variable import getTitle, tryInt, mergeDicts, getIdentifier
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.providers.torrent.base import TorrentProvider
 from dateutil.parser import parse
@@ -36,7 +36,7 @@ class Base(TorrentProvider):
         params = mergeDicts(self.quality_search_params[quality_id].copy(), {
             'order_by': 'relevance',
             'order_way': 'descending',
-            'searchstr': media['identifier']
+            'searchstr': getIdentifier(media)
         })
 
         url = '%s?json=noredirect&%s' % (self.urls['torrent'], tryUrlencode(params))
