@@ -134,6 +134,7 @@ class MediaPlugin(MediaBase):
         results = None
         if m:
             results = db.run('media', 'to_dict', m['_id'])
+            results['releases'] = list(db.run('release', 'for_media', m['_id']))
 
         return results
 
