@@ -233,12 +233,12 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
 
         # File to small
-        if nzb['size'] and preferred_quality['size_min'] > nzb['size']:
+        if nzb['size'] and int(preferred_quality['size_min']) > int(nzb['size']):
             log.info2('Wrong: "%s" is too small to be %s. %sMB instead of the minimal of %sMB.', (nzb['name'], preferred_quality['label'], nzb['size'], preferred_quality['size_min']))
             return False
 
         # File to large
-        if nzb['size'] and preferred_quality.get('size_max') < nzb['size']:
+        if nzb['size'] and int(preferred_quality['size_max']) < int(nzb['size']):
             log.info2('Wrong: "%s" is too large to be %s. %sMB instead of the maximum of %sMB.', (nzb['name'], preferred_quality['label'], nzb['size'], preferred_quality['size_max']))
             return False
 
