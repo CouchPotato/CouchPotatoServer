@@ -42,17 +42,21 @@ class Database(object):
         db = self.getDB()
 
         # Category index
+        index_instance = klass(db.path, index_name)
         try:
-            db.add_index(klass(db.path, index_name))
+            db.add_index(index_instance)
             db.reindex_index(index_name)
         except:
-            previous_version = db.indexes_names[index_name]._version
+            previous = db.indexes_names[index_name]
+            previous_version = previous._version
             current_version = klass._version
 
             # Only edit index if versions are different
             if previous_version < current_version:
                 log.debug('Index "%s" already exists, updating and reindexing', index_name)
-                db.edit_index(klass(db.path, index_name), reindex = True)
+                db.destroy_index(previous)
+                db.add_index(index_instance)
+                db.reindex_index(index_name)
 
     def deleteDocument(self, **kwargs):
 
