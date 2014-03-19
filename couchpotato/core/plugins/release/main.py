@@ -92,7 +92,7 @@ class Release(Plugin):
 
             # Add movie if it doesn't exist
             try:
-                media = db.get('media', group['identifier'], with_doc = True)['doc']
+                media = db.get('media', 'imdb-%s' % group['identifier'], with_doc = True)['doc']
             except:
                 media = fireEvent('movie.add', params = {
                     'identifier': group['identifier'],

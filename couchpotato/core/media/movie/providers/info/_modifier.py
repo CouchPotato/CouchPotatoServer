@@ -95,7 +95,7 @@ class MovieResultModifier(Plugin):
 
             media = None
             try:
-                media = db.get('media', imdb, with_doc = True)['doc']
+                media = db.get('media', 'imdb-%s' % imdb, with_doc = True)['doc']
             except RecordNotFound:
                 pass
 
