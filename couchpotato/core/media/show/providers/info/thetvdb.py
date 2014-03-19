@@ -270,6 +270,22 @@ class TheTVDb(ShowProvider):
 
         show_data = dict((k, v) for k, v in show_data.iteritems() if v)
 
+        # Parse season and episode data
+        seasons = {}
+        episodes = get('episodes')
+        for episode in episodes:
+            episode_nr = episode.get('nr')
+            episode_season = episode.get('season')
+
+            # Create season
+            if seasons.get(episode_season):
+                seasons[episode_season] = {
+                    'episodes': {}
+                }
+
+            # Add episode information
+            seasons[episode_season]['episodes'][episode_nr] = self._parseEpisode(show, episode)
+
         # Add alternative titles
         # try:
         #     raw = self.tvdb.search(show['seriesname'])

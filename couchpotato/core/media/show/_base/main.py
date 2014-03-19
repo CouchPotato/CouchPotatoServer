@@ -86,7 +86,7 @@ class ShowBase(MediaBase):
             # Can we make a base function to do this stuff?
 
             # Remove season info for later use (save separately)
-            season_info = info.get('seasons', [])
+            season_info = info.get('seasons', {})
 
             # Make sure we don't nest in_wanted data
             del info['identifiers']
