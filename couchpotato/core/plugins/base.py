@@ -296,7 +296,7 @@ class Plugin(object):
         return '%s%s' % (toSafeString(toUnicode(release_name)[:max_length]), tag)
 
     def createFileName(self, data, filedata, media):
-        name = sp(os.path.join(self.createNzbName(data, media)))
+        name = self.createNzbName(data, media)
         if data.get('protocol') == 'nzb' and 'DOCTYPE nzb' not in filedata and '</nzb>' not in filedata:
             return '%s.%s' % (name, 'rar')
         return '%s.%s' % (name, data.get('protocol'))
