@@ -125,7 +125,7 @@ class MediaPlugin(MediaBase):
         imdb_id = getImdb(str(media_id))
 
         if imdb_id:
-            m = db.get('media', imdb_id, with_doc = True)['doc']
+            m = db.get('media', 'imdb-%s' % imdb_id, with_doc = True)['doc']
         else:
             m = db.get('id', media_id)
 

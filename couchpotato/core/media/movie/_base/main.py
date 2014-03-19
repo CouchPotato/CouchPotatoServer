@@ -101,7 +101,9 @@ class MovieBase(MovieTypeBase):
                 '_t': 'media',
                 'type': 'movie',
                 'title': def_title,
-                'identifier': params.get('identifier'),
+                'identifiers': {
+                    'imdb': params.get('identifier')
+                },
                 'status': status if status else 'active',
                 'profile_id': params.get('profile_id', default_profile.get('_id')),
                 'category_id': cat_id if cat_id is not None and len(cat_id) > 0 and cat_id != '-1' else None,
@@ -116,7 +118,7 @@ class MovieBase(MovieTypeBase):
 
             new = False
             try:
-                m = db.get('media', params.get('identifier'), with_doc = True)['doc']
+                m = db.get('media', 'imdb-%s' % params.get('identifier'), with_doc = True)['doc']
             except:
                 new = True
                 m = db.insert(media)
@@ -262,7 +264,7 @@ class MovieBase(MovieTypeBase):
             if media_id:
                 media = db.get('id', media_id)
             else:
-                media = db.get('media', identifier, with_doc = True)['doc']
+                media = db.get('media', 'imdb-%s' % identifier, with_doc = True)['doc']
 
             info = fireEvent('movie.info', merge = True, extended = extended, identifier = media.get('identifier'))
 
