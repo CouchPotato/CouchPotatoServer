@@ -159,7 +159,15 @@ class Database(object):
             for ml in migrate_list:
                 migrate_data[ml] = {}
                 rows = migrate_list[ml]
-                c.execute('SELECT %s FROM `%s`' % ('`' + '`,`'.join(rows) + '`', ml))
+
+                try:
+                    c.execute('SELECT %s FROM `%s`' % ('`' + '`,`'.join(rows) + '`', ml))
+                except:
+                    # ignore faulty destination_id database
+                    if ml == 'category':
+                        migrate_data[ml] = {}
+                    else:
+                        raise
 
                 for p in c.fetchall():
                     columns = {}
