@@ -50,7 +50,7 @@ class hdarea(OCHProvider):
                         for link in links:
                             url = link.a["href"]
                             hoster = link.text
-                            for acceptedHoster in self.conf('hosters'):
+                            for acceptedHoster in self.conf('hosters').replace(' ', '').split(','):
                                 if acceptedHoster in hoster.lower():
                                     if self.conf('hosters') != '':
                                         res["url"] = url
