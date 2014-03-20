@@ -29,7 +29,7 @@ class Synology(Downloader):
 
         try:
             # Send request to Synology
-            srpc = SynologyRPC(host[0], host[1], self.conf('username'), self.conf('password'))
+            srpc = SynologyRPC(host[0], host[1], self.conf('username'), self.conf('password'), self.conf('destination'))
             if data['protocol'] == 'torrent_magnet':
                 log.info('Adding torrent URL %s', data['url'])
                 response = srpc.create_task(url = data['url'])
@@ -80,7 +80,7 @@ class SynologyRPC(object):
 
     """SynologyRPC lite library"""
 
-    def __init__(self, host = 'localhost', port = 5000, username = None, password = None):
+    def __init__(self, host = 'localhost', port = 5000, username = None, password = None, destination = None):
 
         super(SynologyRPC, self).__init__()
 
@@ -88,6 +88,7 @@ class SynologyRPC(object):
         self.auth_url = 'http://%s:%s/webapi/auth.cgi' % (host, port)
         self.username = username
         self.password = password
+        self.destination = destination
         self.session_name = 'DownloadStation'
 
     def _login(self):
@@ -140,6 +141,10 @@ class SynologyRPC(object):
                     'version': '1',
                     'method': 'create',
                     '_sid': self.sid}
+
+            if self.destination:
+                args['destination'] = self.destination
+
             if url:
                 log.info('Login success, adding torrent URI')
                 args['uri'] = url

@@ -34,6 +34,11 @@ config = [{
                     'type': 'password',
                 },
                 {
+                    'name': 'destination',
+                    'description': 'Specify <strong>existing</strong> destination share to where your files will be downloaded, usually <strong>Downloads</strong>',
+                    'advanced': True,
+                },
+                {
                     'name': 'use_for',
                     'label': 'Use for',
                     'default': 'both',
