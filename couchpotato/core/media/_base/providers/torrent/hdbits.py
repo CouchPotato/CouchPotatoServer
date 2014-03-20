@@ -2,7 +2,7 @@ import re
 import json
 import traceback
 
-from couchpotato.core.helpers.variable import tryInt
+from couchpotato.core.helpers.variable import tryInt, getIdentifier
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.providers.torrent.base import TorrentProvider
 
@@ -44,7 +44,7 @@ class Base(TorrentProvider):
 
     def _search(self, movie, quality, results):
 
-        match = re.match(r'tt(\d{7})', movie['identifier'])
+        match = re.match(r'tt(\d{7})', getIdentifier(movie))
 
         data = self._post_query(imdb = {'id': match.group(1)})
 
