@@ -56,7 +56,7 @@ class Base(TorrentProvider):
                         'name': result['name'],
                         'url': self.urls['download'] % (result['id'], self.conf('passkey')),
                         'detail_url': self.urls['detail'] % result['id'],
-                        'size': self.parseSize(result['size']),
+                        'size': tryInt(result['size'])/1024/1024,
                         'seeders': tryInt(result['seeders']),
                         'leechers': tryInt(result['leechers'])
                     })
