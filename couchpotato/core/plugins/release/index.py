@@ -18,10 +18,6 @@ class ReleaseIndex(TreeBasedIndex):
         if data.get('_t') == 'release' and data.get('media_id'):
             return data['media_id'], None
 
-    def run_for_media(self, db, media_id):
-        for release in db.get_many('release', media_id, with_doc = True):
-            yield release['doc']
-
 
 class ReleaseStatusIndex(TreeBasedIndex):
     _version = 1

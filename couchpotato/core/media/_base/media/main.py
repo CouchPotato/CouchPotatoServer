@@ -134,7 +134,7 @@ class MediaPlugin(MediaBase):
             if media.get('category_id'):
                 media['category'] = db.get('id', media.get('category_id'))
 
-            media['releases'] = list(db.run('release', 'for_media', media['_id']))
+            media['releases'] = list(fireEvent('release.for_media', media['_id'], single = True))
 
         return media
 
@@ -352,7 +352,7 @@ class MediaPlugin(MediaBase):
                     deleted = True
                 else:
 
-                    media_releases = list(db.run('release', 'for_media', media['_id']))
+                    media_releases = list(fireEvent('release.for_media', media['_id'], single = True))
 
                     total_releases = len(media_releases)
                     total_deleted = 0
@@ -418,7 +418,7 @@ class MediaPlugin(MediaBase):
                 move_to_wanted = True
 
                 profile = db.get('id', m['profile_id'])
-                media_releases = list(db.run('release', 'for_media', m['_id']))
+                media_releases = list(fireEvent('release.for_media', m['_id'], single = True))
 
                 for q_identifier in profile['qualities']:
                     index = profile['qualities'].index(q_identifier)

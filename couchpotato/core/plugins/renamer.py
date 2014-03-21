@@ -446,7 +446,7 @@ class Renamer(Plugin):
                     log.error('Failed marking movie finished: %s', (traceback.format_exc()))
 
                 # Go over current movie releases
-                for release in db.run('release', 'for_media', media['_id']):
+                for release in fireEvent('release.for_media', media['_id'], single = True):
 
                     # When a release already exists
                     if release.get('status') == 'done':

@@ -54,6 +54,7 @@ class Release(Plugin):
         addEvent('release.clean', self.clean)
         addEvent('release.update_status', self.updateStatus)
         addEvent('release.with_status', self.withStatus)
+        addEvent('release.for_media', self.forMedia)
 
         # Clean releases that didn't have activity in the last week
         addEvent('app.load', self.cleanDone)
@@ -74,7 +75,7 @@ class Release(Plugin):
             if media.get('last_edit', 0) > (now - week):
                 continue
 
-            for rel in db.run('release', 'for_media', media['_id']):
+            for rel in fireEvent('release.for_media', media['_id'], single = True):
 
                 # Remove all available releases
                 if rel['status'] in ['available']:
@@ -433,3 +434,10 @@ class Release(Plugin):
         for s in status:
             for ms in db.get_many('release_status', s, with_doc = with_doc):
                 yield ms['doc'] if with_doc else ms
+
+    def forMedia(self, media_id):
+
+        db = get_db()
+
+        for release in db.get_many('release', media_id, with_doc = True):
+            yield release['doc']

@@ -138,7 +138,7 @@ class MovieBase(MovieTypeBase):
             elif force_readd:
 
                 # Clean snatched history
-                for release in db.run('release', 'for_media', m['_id']):
+                for release in fireEvent('release.for_media', m['_id'], single = True):
                     if release.get('status') in ['downloaded', 'snatched', 'done']:
                         if params.get('ignore_previous', False):
                             release['status'] = 'ignored'
@@ -164,7 +164,7 @@ class MovieBase(MovieTypeBase):
                 fireEventAsync('movie.update_info', m['_id'], default_title = params.get('title'), on_complete = onComplete)
 
             # Remove releases
-            for rel in db.run('release', 'for_media', m['_id']):
+            for rel in fireEvent('release.for_media', m['_id'], single = True):
                 if rel['status'] is 'available':
                     db.delete(rel)
 
@@ -215,7 +215,7 @@ class MovieBase(MovieTypeBase):
                         m['category_id'] = cat_id if len(cat_id) > 0 else None
 
                     # Remove releases
-                    for rel in db.run('release', 'for_media', m['_id']):
+                    for rel in fireEvent('release.for_media', m['_id'], single = True):
                         if rel['status'] is 'available':
                             db.delete(rel)
 
