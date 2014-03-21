@@ -15,6 +15,8 @@ except ImportError:
 
 log = CPLog(__name__)
 
+autoload = 'NMJ'
+
 
 class NMJ(Notification):
 

@@ -9,6 +9,8 @@ from couchpotato.core.notifications.base import Notification
 
 log = CPLog(__name__)
 
+autoload = 'Pushbullet'
+
 
 class Pushbullet(Notification):
 

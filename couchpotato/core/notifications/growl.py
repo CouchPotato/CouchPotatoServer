@@ -9,6 +9,8 @@ from gntp import notifier
 
 log = CPLog(__name__)
 
+autoload = 'Growl'
+
 
 class Growl(Notification):
 

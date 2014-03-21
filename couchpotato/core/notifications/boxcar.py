@@ -7,6 +7,8 @@ from couchpotato.core.notifications.base import Notification
 
 log = CPLog(__name__)
 
+autoload = 'Boxcar'
+
 
 class Boxcar(Notification):
 
