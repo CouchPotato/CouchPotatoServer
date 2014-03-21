@@ -4,7 +4,7 @@ import traceback
 
 from couchpotato import get_db
 from couchpotato.api import addApiView
-from couchpotato.core.event import addEvent
+from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.helpers.variable import md5, getExt
 from couchpotato.core.logger import CPLog
@@ -32,12 +32,11 @@ class FileManager(Plugin):
             'return': {'type': 'file'}
         })
 
-        addEvent('app.load', self.cleanup)
+        fireEvent('schedule.interval', 'file.cleanup', self.cleanup, hours = 24)
 
     def cleanup(self):
 
         # Wait a bit after starting before cleanup
-        time.sleep(2)
         log.debug('Cleaning up unused files')
 
         try:

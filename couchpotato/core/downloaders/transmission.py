@@ -141,7 +141,7 @@ class Transmission(Downloader):
                     'seed_ratio': torrent['uploadRatio'],
                     'timeleft': str(timedelta(seconds = torrent['eta'])),
                     'folder': sp(torrent_folder if len(torrent_files) == 1 else os.path.join(torrent_folder, torrent['name'])),
-                    'files': '|'.join(torrent_files)
+                    'files': torrent_files
                 })
 
         return release_downloads

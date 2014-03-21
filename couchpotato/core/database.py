@@ -279,8 +279,8 @@ class Database(object):
 
                 quality = db.get('id', q_id)
                 quality['order'] = q.get('order')
-                quality['size_min'] = q.get('size_min')
-                quality['size_max'] = q.get('size_max')
+                quality['size_min'] = tryInt(q.get('size_min'))
+                quality['size_max'] = tryInt(q.get('size_max'))
                 db.update(quality)
 
                 quality_link[x] = quality

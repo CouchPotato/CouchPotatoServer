@@ -8,7 +8,7 @@ from couchpotato import get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
 from couchpotato.core.helpers.encoding import simplifyString
-from couchpotato.core.helpers.variable import getTitle, possibleTitles, getImdb
+from couchpotato.core.helpers.variable import getTitle, possibleTitles, getImdb, getIdentifier, tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.searcher.base import SearcherBase
 from couchpotato.core.media.movie import MovieTypeBase
@@ -38,7 +38,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
         addApiView('movie.searcher.try_next', self.tryNextReleaseView, docs = {
             'desc': 'Marks the snatched results as ignored and try the next best release',
             'params': {
-                'id': {'desc': 'The id of the movie'},
+                'media_id': {'desc': 'The id of the media'},
             },
         })
 
@@ -74,9 +74,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
         self.in_progress = True
         fireEvent('notify.frontend', type = 'movie.searcher.started', data = True, message = 'Full search started')
 
-        db = get_db()
-
-        medias = [x['_id'] for x in db.run('media', 'with_status', 'active', with_doc = False)]
+        medias = [x['_id'] for x in fireEvent('media.with_status', 'active', with_doc = False, single = True)]
         random.shuffle(medias)
 
         total = len(medias)
@@ -90,15 +88,15 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
             for media_id in medias:
 
-                media = db.run('media', 'to_dict', media_id)
+                media = fireEvent('media.get', media_id, single = True)
 
                 try:
                     self.single(media, search_protocols)
                 except IndexError:
-                    log.error('Forcing library update for %s, if you see this often, please report: %s', (media['identifier'], traceback.format_exc()))
+                    log.error('Forcing library update for %s, if you see this often, please report: %s', (getIdentifier(media), traceback.format_exc()))
                     fireEvent('movie.update_info', media_id)
                 except:
-                    log.error('Search failed for %s: %s', (media['identifier'], traceback.format_exc()))
+                    log.error('Search failed for %s: %s', (getIdentifier(media), traceback.format_exc()))
 
                 self.in_progress['to_go'] -= 1
 
@@ -142,7 +140,6 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
         profile = db.get('id', movie['profile_id'])
         quality_order = fireEvent('quality.order', single = True)
-        media_releases = db.run('release', 'for_media', movie['_id'])
 
         ret = False
 
@@ -161,7 +158,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
             has_better_quality = 0
 
             # See if better quality is available
-            for release in media_releases:
+            for release in movie.get('releases', []):
                 if quality_order.index(release['quality']) <= quality_order.index(q_identifier) and release['status'] not in ['available', 'ignored', 'failed']:
                     has_better_quality += 1
 
@@ -187,7 +184,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                     ret = True
 
                 # Remove releases that aren't found anymore
-                for release in db.run('release', 'for_media', movie['_id']):
+                for release in movie.get('releases', []):
                     if release.get('status') == 'available' and release.get('identifier') not in found_releases:
                         fireEvent('release.delete', release.get('_id'), single = True)
 
@@ -233,12 +230,12 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
 
         # File to small
-        if nzb['size'] and preferred_quality['size_min'] > nzb['size']:
+        if nzb['size'] and tryInt(preferred_quality['size_min']) > tryInt(nzb['size']):
             log.info2('Wrong: "%s" is too small to be %s. %sMB instead of the minimal of %sMB.', (nzb['name'], preferred_quality['label'], nzb['size'], preferred_quality['size_min']))
             return False
 
         # File to large
-        if nzb['size'] and preferred_quality.get('size_max') < nzb['size']:
+        if nzb['size'] and tryInt(preferred_quality['size_max']) < tryInt(nzb['size']):
             log.info2('Wrong: "%s" is too large to be %s. %sMB instead of the maximum of %sMB.', (nzb['name'], preferred_quality['label'], nzb['size'], preferred_quality['size_max']))
             return False
 
@@ -257,7 +254,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
             return True
 
         # Check if nzb contains imdb link
-        if getImdb(nzb.get('description', '')) == media['identifier']:
+        if getImdb(nzb.get('description', '')) == getIdentifier(media):
             return True
 
         for raw_title in media['info']['titles']:
@@ -317,9 +314,9 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
         return False
 
-    def tryNextReleaseView(self, id = None, **kwargs):
+    def tryNextReleaseView(self, media_id = None, **kwargs):
 
-        trynext = self.tryNextRelease(id, manual = True)
+        trynext = self.tryNextRelease(media_id, manual = True)
 
         return {
             'success': trynext
@@ -329,13 +326,13 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
         try:
             db = get_db()
-            rels = db.run('media', 'with_status', media_id, status = ['snatched', 'done'])
+            rels = fireEvent('media.with_status', ['snatched', 'done'], single = True)
 
             for rel in rels:
                 rel['status'] = 'ignored'
                 db.update(rel)
 
-            movie_dict = db.run('media', 'to_dict', media_id)
+            movie_dict = fireEvent('media.get', media_id, single = True)
             log.info('Trying next release for: %s', getTitle(movie_dict))
             self.single(movie_dict, manual = manual)
 

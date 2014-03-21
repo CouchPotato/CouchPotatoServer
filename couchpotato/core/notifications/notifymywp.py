@@ -6,6 +6,8 @@ import six
 
 log = CPLog(__name__)
 
+autoload = 'NotifyMyWP'
+
 
 class NotifyMyWP(Notification):
 

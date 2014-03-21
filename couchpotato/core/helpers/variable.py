@@ -227,6 +227,10 @@ def toIterable(value):
     return [value]
 
 
+def getIdentifier(media):
+    return media.get('identifier') or media.get('identifiers', {}).get('imdb')
+
+
 def getTitle(media_dict):
     try:
         try:
@@ -241,10 +245,10 @@ def getTitle(media_dict):
                     try:
                         return media_dict['media']['info']['titles'][0]
                     except:
-                        log.error('Could not get title for %s', media_dict.get('identifier'))
+                        log.error('Could not get title for %s', getIdentifier(media_dict))
                         return None
 
-        log.error('Could not get title for %s', media_dict['identifier'])
+        log.error('Could not get title for %s', getIdentifier(media_dict))
         return None
     except:
         log.error('Could not get title for library item: %s', media_dict)
@@ -293,7 +297,7 @@ def isSubFolder(sub_folder, base_folder):
     return base_folder and sub_folder and ss(os.path.normpath(base_folder).rstrip(os.path.sep) + os.path.sep) in ss(os.path.normpath(sub_folder).rstrip(os.path.sep) + os.path.sep)
 
 # From SABNZBD
-re_password = [re.compile(r'([^/\\]+)[/\\](.+)'), re.compile(r'(.+){{([^{}]+)}}$'), re.compile(r'(.+)\s+password\s*=\s*(.+)$', re.I)]
+re_password = [re.compile(r'(.+){{([^{}]+)}}$'), re.compile(r'(.+)\s+password\s*=\s*(.+)$', re.I)]
 def scanForPassword(name):
     m = None
     for reg in re_password:

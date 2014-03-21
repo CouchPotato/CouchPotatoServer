@@ -21,7 +21,7 @@ class Bitsoup(MovieProvider, Base):
         query = tryUrlencode({
             'search': '"%s" %s' % (
                 fireEvent('library.query', media, include_year = False, single = True),
-                media['year']
+                media['info']['year']
             ),
             'cat': self.getCatId(quality['identifier'])[0],
         })

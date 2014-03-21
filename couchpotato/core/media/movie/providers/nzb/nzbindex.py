@@ -14,7 +14,7 @@ class NzbIndex(MovieProvider, Base):
 
     def buildUrl(self, media, quality):
         title = fireEvent('library.query', media, include_year = False, single = True)
-        year =  media['year']
+        year = media['info']['year']
 
         query = tryUrlencode({
             'q': '"%s %s" | "%s (%s)"' % (title, year, title, year),

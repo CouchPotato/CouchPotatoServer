@@ -10,7 +10,7 @@ from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
 from couchpotato.core.helpers.encoding import toUnicode, ss, sp
 from couchpotato.core.helpers.variable import getExt, mergeDicts, getTitle, \
-    getImdb, link, symlink, tryInt, splitString, fnEscape, isSubFolder
+    getImdb, link, symlink, tryInt, splitString, fnEscape, isSubFolder, getIdentifier
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
@@ -79,16 +79,22 @@ class Renamer(Plugin):
 
         downloader = kwargs.get('downloader')
         download_id = kwargs.get('download_id')
-        files = '|'.join([sp(filename) for filename in splitString(kwargs.get('files'), '|')])
+        files = [sp(filename) for filename in splitString(kwargs.get('files'), '|')]
         status = kwargs.get('status', 'completed')
 
         release_download = None
         if not base_folder and media_folder:
             release_download = {'folder': media_folder}
-            release_download.update({'id': download_id, 'downloader': downloader, 'status': status, 'files': files} if download_id else {})
+
+            if download_id:
+                release_download.update({
+                    'id': download_id,
+                    'downloader': downloader,
+                    'status': status,
+                    'files': files
+                })
 
         fire_handle = fireEvent if not async else fireEventAsync
-
         fire_handle('renamer.scan', base_folder = base_folder, release_download = release_download)
 
         return {
@@ -142,7 +148,7 @@ class Renamer(Plugin):
             log.debug('The provided media folder %s does not exist. Trying to find it in the \'from\' folder.', media_folder)
 
             # Update to the from folder
-            if len(splitString(release_download.get('files'), '|')) == 1:
+            if len(release_download.get('files'), []) == 1:
                 new_media_folder = from_folder
             else:
                 new_media_folder = os.path.join(from_folder, os.path.basename(media_folder))
@@ -152,7 +158,7 @@ class Renamer(Plugin):
                 return
 
             # Update the files
-            new_files = [os.path.join(new_media_folder, os.path.relpath(filename, media_folder)) for filename in splitString(release_download.get('files'), '|')]
+            new_files = [os.path.join(new_media_folder, os.path.relpath(filename, media_folder)) for filename in release_download.get('files', [])]
             if new_files and not os.path.isfile(new_files[0]):
                 log.error('The provided media folder %s does not exist and its files could also not be found in the \'from\' folder.', media_folder)
                 return
@@ -160,7 +166,7 @@ class Renamer(Plugin):
             # Update release_download info to the from folder
             log.debug('Release %s found in the \'from\' folder.', media_folder)
             release_download['folder'] = new_media_folder
-            release_download['files'] = '|'.join(new_files)
+            release_download['files'] = new_files
             media_folder = new_media_folder
 
         if media_folder:
@@ -182,11 +188,10 @@ class Renamer(Plugin):
             log.info('Scanning media folder %s...', media_folder)
             folder = os.path.dirname(media_folder)
 
-            if release_download.get('files', ''):
-                files = splitString(release_download['files'], '|')
-
+            release_files = release_download.get('files', [])
+            if release_files:
                 # If there is only one file in the torrent, the downloader did not create a subfolder
-                if len(files) == 1:
+                if len(release_files) == 1:
                     folder = media_folder
             else:
                 # Get all files from the specified folder
@@ -446,7 +451,7 @@ class Renamer(Plugin):
                     log.error('Failed marking movie finished: %s', (traceback.format_exc()))
 
                 # Go over current movie releases
-                for release in db.run('release', 'for_media', media['_id']):
+                for release in fireEvent('release.for_media', media['_id'], single = True):
 
                     # When a release already exists
                     if release.get('status') == 'done':
@@ -643,8 +648,8 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
         elif isinstance(release_download, dict):
             # Tag download_files if they are known
-            if release_download['files']:
-                tag_files = splitString(release_download['files'], '|')
+            if release_download.get('files', []):
+                tag_files = release_download.get('files', [])
 
             # Tag all files in release folder
             else:
@@ -678,8 +683,8 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
         elif isinstance(release_download, dict):
             # Untag download_files if they are known
-            if release_download['files']:
-                tag_files = splitString(release_download['files'], '|')
+            if release_download.get('files'):
+                tag_files = release_download.get('files', [])
 
             # Untag all files in release folder
             else:
@@ -719,8 +724,8 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         ignore_files = []
 
         # Find tag on download_files if they are known
-        if release_download['files']:
-            tag_files = splitString(release_download['files'], '|')
+        if release_download.get('files'):
+            tag_files = release_download.get('files', [])
 
         # Find tag on all files in release folder
         else:
@@ -834,7 +839,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         try:
             db = get_db()
 
-            rels = list(db.run('release', 'with_status', ['snatched', 'seeding', 'missing']))
+            rels = list(fireEvent('release.with_status', ['snatched', 'seeding', 'missing'], single = True))
 
             if not rels:
                 #No releases found that need status checking
@@ -906,7 +911,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                                 found_release = True
                                 break
                         else:
-                            if release_download['name'] == nzbname or rel['info']['name'] in release_download['name'] or getImdb(release_download['name']) == movie_dict['identifier']:
+                            if release_download['name'] == nzbname or rel['info']['name'] in release_download['name'] or getImdb(release_download['name']) == getIdentifier(movie_dict):
                                 log.debug('Found release by release name or imdb ID: %s', release_download['name'])
                                 found_release = True
                                 break
@@ -1043,7 +1048,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         if rls:
             media = db.get('id', rls['media_id'])
             release_download.update({
-                'imdb_id': media['identifier'],
+                'imdb_id': getIdentifier(media),
                 'quality': rls['quality'],
                 'protocol': rls.get('info', {}).get('protocol') or rls.get('info', {}).get('type'),
                 'release_id': rls['_id'],

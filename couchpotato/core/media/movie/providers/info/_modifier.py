@@ -3,7 +3,7 @@ import traceback
 
 from CodernityDB.database import RecordNotFound
 from couchpotato import get_db
-from couchpotato.core.event import addEvent
+from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.variable import mergeDicts, randomString
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
@@ -104,7 +104,7 @@ class MovieResultModifier(Plugin):
                 if media.get('status') == 'active':
                     temp['in_wanted'] = media
 
-                for release in db.run('release', 'for_media', media.get('_id')):
+                for release in fireEvent('release.for_media', media['_id'], single = True):
                     if release.get('status') == 'done':
                         if not temp['in_library']:
                             temp['in_library'] = media

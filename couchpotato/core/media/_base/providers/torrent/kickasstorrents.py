@@ -2,7 +2,7 @@ import re
 import traceback
 
 from bs4 import BeautifulSoup
-from couchpotato.core.helpers.variable import tryInt
+from couchpotato.core.helpers.variable import tryInt, getIdentifier
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.providers.torrent.base import TorrentMagnetProvider
 
@@ -38,7 +38,7 @@ class Base(TorrentMagnetProvider):
 
     def _search(self, media, quality, results):
 
-        data = self.getHTMLData(self.urls['search'] % (self.getDomain(), 'm', media['identifier'].replace('tt', '')))
+        data = self.getHTMLData(self.urls['search'] % (self.getDomain(), 'm', getIdentifier(media).replace('tt', '')))
 
         if data:
 

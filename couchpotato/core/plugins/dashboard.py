@@ -45,7 +45,7 @@ class Dashboard(Plugin):
             limit = tryInt(splt[0])
 
         # Get all active medias
-        active_ids = [x['_id'] for x in db.run('media', 'with_status', 'active', with_doc = False)]
+        active_ids = [x['_id'] for x in fireEvent('media.with_status', 'active', with_doc = False, single = True)]
 
         medias = []
         now_year = date.today().year

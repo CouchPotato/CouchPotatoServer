@@ -74,6 +74,8 @@ class MediaPlugin(MediaBase):
         addEvent('app.load', self.addSingleDeleteView, priority = 100)
 
         addEvent('media.get', self.get)
+        addEvent('media.with_status', self.withStatus)
+        addEvent('media.with_identifiers', self.withIdentifiers)
         addEvent('media.list', self.list)
         addEvent('media.delete', self.delete)
         addEvent('media.restatus', self.restatus)
@@ -99,13 +101,10 @@ class MediaPlugin(MediaBase):
 
         try:
             media = get_db().get('id', media_id)
-
-
-            default_title = getTitle(media)
             event = '%s.update_info' % media.get('type')
 
             def handler():
-                fireEvent(event, identifier = media.get('identifier'), default_title = default_title, on_complete = self.createOnComplete(media_id))
+                fireEvent(event, media_id = media_id, on_complete = self.createOnComplete(media_id))
 
             if handler:
                 return handler
@@ -124,16 +123,21 @@ class MediaPlugin(MediaBase):
 
         imdb_id = getImdb(str(media_id))
 
+        media = None
         if imdb_id:
-            m = db.get('media', 'imdb-%s' % imdb_id, with_doc = True)['doc']
+            media = db.get('media', 'imdb-%s' % imdb_id, with_doc = True)['doc']
         else:
-            m = db.get('id', media_id)
+            media = db.get('id', media_id)
 
-        results = None
-        if m:
-            results = db.run('media', 'to_dict', m['_id'])
+        if media:
 
-        return results
+            # Attach category
+            if media.get('category_id'):
+                media['category'] = db.get('id', media.get('category_id'))
+
+            media['releases'] = list(fireEvent('release.for_media', media['_id'], single = True))
+
+        return media
 
     def getView(self, id = None, **kwargs):
 
@@ -143,6 +147,29 @@ class MediaPlugin(MediaBase):
             'success': media is not None,
             'media': media,
         }
+
+    def withStatus(self, status, with_doc = True):
+
+        db = get_db()
+
+        status = list(status if isinstance(status, (list, tuple)) else [status])
+
+        for s in status:
+            for ms in db.get_many('media_status', s, with_doc = with_doc):
+                yield ms['doc'] if with_doc else ms
+
+    def withIdentifiers(self, identifiers, with_doc = False):
+
+        db = get_db()
+
+        for x in identifiers:
+            try:
+                media = db.get('media', '%s-%s' % (x, identifiers[x]), with_doc = with_doc)
+                return media
+            except:
+                pass
+
+        log.error('No media found with identifiers: %s', identifiers)
 
     def list(self, types = None, status = None, release_status = None, status_or = False, limit_offset = None, starts_with = None, search = None):
 
@@ -170,13 +197,13 @@ class MediaPlugin(MediaBase):
         # Filter on movie status
         if status and len(status) > 0:
             filter_by['media_status'] = set()
-            for media_status in db.run('media', 'with_status', status, with_doc = False):
+            for media_status in fireEvent('media.with_status', status, with_doc = False, single = True):
                 filter_by['media_status'].add(media_status.get('_id'))
 
         # Filter on release status
         if release_status and len(release_status) > 0:
             filter_by['release_status'] = set()
-            for release_status in db.run('release', 'with_status', release_status, with_doc = False):
+            for release_status in fireEvent('release.with_status', release_status, with_doc = False, single = True):
                 filter_by['release_status'].add(release_status.get('media_id'))
 
         # Add search filters
@@ -220,9 +247,7 @@ class MediaPlugin(MediaBase):
                 offset -= 1
                 continue
 
-            media = db.run('media', 'to_dict', media_id)
-
-            media['releases'] = list(db.run('release', 'for_media', media_id))
+            media = fireEvent('media.get', media_id, single = True)
 
             # Merge releases with movie dict
             medias.append(media)
@@ -285,13 +310,13 @@ class MediaPlugin(MediaBase):
         # Filter on movie status
         if status and len(status) > 0:
             filter_by['media_status'] = set()
-            for media_status in db.run('media', 'with_status', status, with_doc = False):
+            for media_status in fireEvent('media.with_status', status, with_doc = False, single = True):
                 filter_by['media_status'].add(media_status.get('_id'))
 
         # Filter on release status
         if release_status and len(release_status) > 0:
             filter_by['release_status'] = set()
-            for release_status in db.run('release', 'with_status', release_status, with_doc = False):
+            for release_status in fireEvent('release.with_status', release_status, with_doc = False, single = True):
                 filter_by['release_status'].add(release_status.get('media_id'))
 
         # Filter by combining ids
@@ -341,7 +366,7 @@ class MediaPlugin(MediaBase):
                     deleted = True
                 else:
 
-                    media_releases = list(db.run('release', 'for_media', media['_id']))
+                    media_releases = list(fireEvent('release.for_media', media['_id'], single = True))
 
                     total_releases = len(media_releases)
                     total_deleted = 0
@@ -407,7 +432,7 @@ class MediaPlugin(MediaBase):
                 move_to_wanted = True
 
                 profile = db.get('id', m['profile_id'])
-                media_releases = list(db.run('release', 'for_media', m['_id']))
+                media_releases = list(fireEvent('release.for_media', m['_id'], single = True))
 
                 for q_identifier in profile['qualities']:
                     index = profile['qualities'].index(q_identifier)

@@ -2,7 +2,7 @@ import re
 import traceback
 
 from bs4 import BeautifulSoup
-from couchpotato.core.helpers.variable import tryInt
+from couchpotato.core.helpers.variable import tryInt, getIdentifier
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.providers.torrent.base import TorrentProvider
 
@@ -22,7 +22,7 @@ class Base(TorrentProvider):
 
     def _search(self, movie, quality, results):
 
-        data = self.getHTMLData(self.urls['search'] % (self.conf('passkey'), movie['identifier'], self.conf('only_internal')))
+        data = self.getHTMLData(self.urls['search'] % (self.conf('passkey'), getIdentifier(movie), self.conf('only_internal')))
 
         if data:
             try:

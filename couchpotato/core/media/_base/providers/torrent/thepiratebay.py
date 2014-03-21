@@ -29,9 +29,9 @@ class Base(TorrentMagnetProvider):
         'http://pirateproxy.ca',
         'http://tpb.al',
         'http://www.tpb.gr',
-        'http://nl.tpb.li',
+        'http://bayproxy.me',
         'http://proxybay.eu',
-        'https://www.getpirate.com',
+        'http://www.getpirate.com',
         'http://piratebay.io',
     ]
 

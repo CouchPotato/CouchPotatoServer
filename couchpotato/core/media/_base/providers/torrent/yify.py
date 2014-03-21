@@ -1,6 +1,6 @@
 import traceback
 
-from couchpotato.core.helpers.variable import tryInt
+from couchpotato.core.helpers.variable import tryInt, getIdentifier
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.providers.torrent.base import TorrentProvider
 
@@ -35,7 +35,7 @@ class Base(TorrentProvider):
 
     def _search(self, movie, quality, results):
 
-        search_url = self.urls['search'] % (self.getDomain(), movie['identifier'], quality['identifier'])
+        search_url = self.urls['search'] % (self.getDomain(), getIdentifier(movie), quality['identifier'])
 
         data = self.getJsonData(search_url)
 

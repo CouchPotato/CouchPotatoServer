@@ -7,11 +7,10 @@ import time
 import traceback
 import urllib2
 
-from couchpotato import get_db
 from couchpotato.core.event import fireEvent, addEvent
 from couchpotato.core.helpers.encoding import ss, toSafeString, \
     toUnicode, sp
-from couchpotato.core.helpers.variable import getExt, md5, isLocalIP, scanForPassword, tryInt
+from couchpotato.core.helpers.variable import getExt, md5, isLocalIP, scanForPassword, tryInt, getIdentifier
 from couchpotato.core.logger import CPLog
 from couchpotato.environment import Env
 import requests
@@ -327,19 +326,22 @@ class Plugin(object):
         if name_password:
             release_name, password = name_password
             tag += '{{%s}}' % password
+        elif data.get('password'):
+            tag += '{{%s}}' % data.get('password')
 
         max_length = 127 - len(tag) # Some filesystems don't support 128+ long filenames
         return '%s%s' % (toSafeString(toUnicode(release_name)[:max_length]), tag)
 
     def createFileName(self, data, filedata, media):
-        name = sp(os.path.join(self.createNzbName(data, media)))
+        name = self.createNzbName(data, media)
         if data.get('protocol') == 'nzb' and 'DOCTYPE nzb' not in filedata and '</nzb>' not in filedata:
             return '%s.%s' % (name, 'rar')
         return '%s.%s' % (name, data.get('protocol'))
 
     def cpTag(self, media):
         if Env.setting('enabled', 'renamer'):
-            return '.cp(' + media.get('identifier') + ')' if media.get('identifier') else ''
+            identifier = getIdentifier(media)
+            return '.cp(' + identifier + ')' if identifier else ''
 
         return ''
 

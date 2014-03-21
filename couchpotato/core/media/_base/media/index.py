@@ -6,7 +6,7 @@ from couchpotato.core.helpers.encoding import toUnicode, simplifyString
 
 
 class MediaIndex(MultiTreeBasedIndex):
-    _version = 2
+    _version = 3
 
     custom_header = """from CodernityDB.tree_index import MultiTreeBasedIndex"""
 
@@ -26,30 +26,9 @@ class MediaIndex(MultiTreeBasedIndex):
 
             ids = []
             for x in identifiers:
-                ids.append(md5('%s-%s' % (x, data['identifiers'][x])).hexdigest())
+                ids.append(md5('%s-%s' % (x, identifiers[x])).hexdigest())
 
             return ids, None
-
-    def run_to_dict(self, db, media_id, dict_dept = None):
-        if not dict_dept: dict_dept = {}
-
-        return db.get('id', media_id)
-
-    def run_identifiers(self, db, identifiers, with_doc = False):
-        for x in identifiers:
-            try:
-                media = db.get('media', '%s-%s' % (x, identifiers[x]), with_doc = with_doc)
-                return media
-            except:
-                pass
-
-    def run_with_status(self, db, status = [], with_doc = True):
-
-        status = list(status if isinstance(status, (list, tuple)) else [status])
-
-        for s in status:
-            for ms in db.get_many('media_status', s, with_doc = with_doc):
-                yield ms['doc'] if with_doc else ms
 
 
 class MediaStatusIndex(TreeBasedIndex):

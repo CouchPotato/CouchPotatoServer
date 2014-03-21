@@ -59,20 +59,22 @@ class rTorrent(Downloader):
             return self.rt
 
         url = cleanHost(self.conf('host'), protocol = True, ssl = self.conf('ssl'))
+
+        # Automatically add '+https' to 'httprpc' protocol if SSL is enabled
+        if self.conf('ssl') and url.startswith('httprpc://'):
+            url = url.replace('httprpc://', 'httprpc+https://')
+
         parsed = urlparse(url)
 
         # rpc_url is only used on http/https scgi pass-through
         if parsed.scheme in ['http', 'https']:
             url += self.conf('rpc_url')
 
-        if self.conf('username') and self.conf('password'):
-            self.rt = RTorrent(
-                url,
-                self.conf('username'),
-                self.conf('password')
-            )
-        else:
-            self.rt = RTorrent(url)
+        self.rt = RTorrent(
+            url,
+            self.conf('username'),
+            self.conf('password')
+        )
 
         self.error_msg = ''
         try:
@@ -243,7 +245,7 @@ class rTorrent(Downloader):
                         'original_status': torrent.state,
                         'timeleft': str(timedelta(seconds = float(torrent.left_bytes) / torrent.down_rate)) if torrent.down_rate > 0 else -1,
                         'folder': sp(torrent.directory),
-                        'files': '|'.join(torrent_files)
+                        'files': torrent_files
                     })
 
             return release_downloads

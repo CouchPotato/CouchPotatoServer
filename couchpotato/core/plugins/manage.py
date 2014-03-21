@@ -8,7 +8,7 @@ from couchpotato import get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import fireEvent, addEvent, fireEventAsync
 from couchpotato.core.helpers.encoding import sp
-from couchpotato.core.helpers.variable import splitString, getTitle, tryInt
+from couchpotato.core.helpers.variable import splitString, getTitle, tryInt, getIdentifier
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
@@ -123,12 +123,11 @@ class Manage(Plugin):
                 total_movies, done_movies = fireEvent('media.list', types = 'movie', status = 'done', single = True)
 
                 for done_movie in done_movies:
-                    if done_movie['identifier'] not in added_identifiers:
+                    if getIdentifier(done_movie) not in added_identifiers:
                         fireEvent('media.delete', media_id = done_movie['_id'], delete_from = 'all')
                     else:
 
-                        db = get_db()
-                        releases = list(db.run('release', 'for_media', done_movie.get('_id')))
+                        releases = done_movie.get('releases', [])
 
                         for release in releases:
                             if release.get('files'):
