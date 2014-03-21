@@ -38,14 +38,6 @@ class MediaIndex(MultiTreeBasedIndex):
             except:
                 pass
 
-    def run_with_status(self, db, status = [], with_doc = True):
-
-        status = list(status if isinstance(status, (list, tuple)) else [status])
-
-        for s in status:
-            for ms in db.get_many('media_status', s, with_doc = with_doc):
-                yield ms['doc'] if with_doc else ms
-
 
 class MediaStatusIndex(TreeBasedIndex):
     _version = 1

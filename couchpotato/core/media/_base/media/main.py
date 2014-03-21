@@ -74,6 +74,7 @@ class MediaPlugin(MediaBase):
         addEvent('app.load', self.addSingleDeleteView, priority = 100)
 
         addEvent('media.get', self.get)
+        addEvent('media.with_status', self.withStatus)
         addEvent('media.list', self.list)
         addEvent('media.delete', self.delete)
         addEvent('media.restatus', self.restatus)
@@ -146,6 +147,16 @@ class MediaPlugin(MediaBase):
             'media': media,
         }
 
+    def withStatus(self, status, with_doc = True):
+
+        db = get_db()
+
+        status = list(status if isinstance(status, (list, tuple)) else [status])
+
+        for s in status:
+            for ms in db.get_many('media_status', s, with_doc = with_doc):
+                yield ms['doc'] if with_doc else ms
+
     def list(self, types = None, status = None, release_status = None, status_or = False, limit_offset = None, starts_with = None, search = None):
 
         db = get_db()
@@ -172,13 +183,13 @@ class MediaPlugin(MediaBase):
         # Filter on movie status
         if status and len(status) > 0:
             filter_by['media_status'] = set()
-            for media_status in db.run('media', 'with_status', status, with_doc = False):
+            for media_status in fireEvent('media.with_status', status, with_doc = False, single = True):
                 filter_by['media_status'].add(media_status.get('_id'))
 
         # Filter on release status
         if release_status and len(release_status) > 0:
             filter_by['release_status'] = set()
-            for release_status in db.run('release', 'with_status', release_status, with_doc = False):
+            for release_status in fireEvent('media.with_status', release_status, with_doc = False, single = True):
                 filter_by['release_status'].add(release_status.get('media_id'))
 
         # Add search filters
@@ -285,13 +296,13 @@ class MediaPlugin(MediaBase):
         # Filter on movie status
         if status and len(status) > 0:
             filter_by['media_status'] = set()
-            for media_status in db.run('media', 'with_status', status, with_doc = False):
+            for media_status in fireEvent('media.with_status', status, with_doc = False, single = True):
                 filter_by['media_status'].add(media_status.get('_id'))
 
         # Filter on release status
         if release_status and len(release_status) > 0:
             filter_by['release_status'] = set()
-            for release_status in db.run('release', 'with_status', release_status, with_doc = False):
+            for release_status in fireEvent('media.with_status', release_status, with_doc = False, single = True):
                 filter_by['release_status'].add(release_status.get('media_id'))
 
         # Filter by combining ids

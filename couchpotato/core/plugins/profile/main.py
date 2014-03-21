@@ -2,7 +2,7 @@ import traceback
 
 from couchpotato import get_db, tryInt
 from couchpotato.api import addApiView
-from couchpotato.core.event import addEvent
+from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
@@ -41,7 +41,7 @@ class ProfilePlugin(Plugin):
         # Get all active movies without profile
         try:
             db = get_db()
-            medias = db.run('media', 'with_status', ['active'])
+            medias = fireEvent('media.with_status', 'active', single = True)
 
             profile_ids = [x.get('_id') for x in self.all()]
             default_id = profile_ids[0]

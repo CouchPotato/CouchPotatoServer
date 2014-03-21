@@ -67,7 +67,7 @@ class Release(Plugin):
         db = get_db()
 
         # get movies last_edit more than a week ago
-        medias = db.run('media', 'with_status', ['done'])
+        medias = fireEvent('media.with_status', 'done', single = True)
 
         for media in medias:
             if media.get('last_edit', 0) > (now - week):

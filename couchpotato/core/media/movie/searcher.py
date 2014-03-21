@@ -74,9 +74,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
         self.in_progress = True
         fireEvent('notify.frontend', type = 'movie.searcher.started', data = True, message = 'Full search started')
 
-        db = get_db()
-
-        medias = [x['_id'] for x in db.run('media', 'with_status', 'active', with_doc = False)]
+        medias = [x['_id'] for x in fireEvent('media.with_status', 'active', with_doc = False, single = True)]
         random.shuffle(medias)
 
         total = len(medias)
@@ -316,9 +314,9 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
         return False
 
-    def tryNextReleaseView(self, id = None, **kwargs):
+    def tryNextReleaseView(self, media_id = None, **kwargs):
 
-        trynext = self.tryNextRelease(id, manual = True)
+        trynext = self.tryNextRelease(media_id, manual = True)
 
         return {
             'success': trynext
@@ -328,7 +326,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
         try:
             db = get_db()
-            rels = db.run('media', 'with_status', media_id, status = ['snatched', 'done'])
+            rels = fireEvent('media.with_status', ['snatched', 'done'], single = True)
 
             for rel in rels:
                 rel['status'] = 'ignored'
