@@ -245,7 +245,7 @@ class rTorrent(Downloader):
                         'original_status': torrent.state,
                         'timeleft': str(timedelta(seconds = float(torrent.left_bytes) / torrent.down_rate)) if torrent.down_rate > 0 else -1,
                         'folder': sp(torrent.directory),
-                        'files': '|'.join(torrent_files)
+                        'files': torrent_files
                     })
 
             return release_downloads

@@ -184,7 +184,7 @@ class uTorrent(Downloader):
                     'original_status': torrent[1],
                     'timeleft': str(timedelta(seconds = torrent[10])),
                     'folder': sp(torrent[26]),
-                    'files': '|'.join(torrent_files)
+                    'files': torrent_files
                 })
 
         return release_downloads

@@ -135,7 +135,7 @@ class qBittorrent(Downloader):
                         'original_status': torrent.state,
                         'timeleft': torrent.progress * 100 if torrent.progress else -1, # percentage
                         'folder': sp(torrent.save_path),
-                        'files': '|'.join(torrent_files)
+                        'files': torrent_files
                     })
 
             return release_downloads
