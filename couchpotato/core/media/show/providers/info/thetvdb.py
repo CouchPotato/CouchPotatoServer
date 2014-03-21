@@ -259,14 +259,15 @@ class TheTVDb(ShowProvider):
             'released': get('firstaired'),
             'runtime': get('runtime'),
             'contentrating': get('contentrating'),
-            'rating': {
-                'thetvdb': [tryFloat(get('rating')), tryInt(get('ratingcount'))],
-            },
+            'rating': {},
             'actors': splitString(get('actors'), '|'),
             'lastupdated': get('lastupdated'),
             'status': get('status'),
             'language': get('language'),
         }
+
+        if tryFloat(get('rating')):
+            show_data['rating']['thetvdb'] = [tryFloat(get('rating')), tryInt(get('ratingcount'))],
 
         show_data = dict((k, v) for k, v in show_data.iteritems() if v)
 
