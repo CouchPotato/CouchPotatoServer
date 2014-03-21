@@ -22,14 +22,6 @@ class ReleaseIndex(TreeBasedIndex):
         for release in db.get_many('release', media_id, with_doc = True):
             yield release['doc']
 
-    def run_with_status(self, db, status = [], with_doc = True):
-
-        status = list(status if isinstance(status, (list, tuple)) else [status])
-
-        for s in status:
-            for ms in db.get_many('release_status', s, with_doc = with_doc):
-                yield ms['doc'] if with_doc else ms
-
 
 class ReleaseStatusIndex(TreeBasedIndex):
     _version = 1

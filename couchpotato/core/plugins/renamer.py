@@ -834,7 +834,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         try:
             db = get_db()
 
-            rels = list(db.run('release', 'with_status', ['snatched', 'seeding', 'missing']))
+            rels = list(fireEvent('release.with_status', ['snatched', 'seeding', 'missing'], single = True))
 
             if not rels:
                 #No releases found that need status checking

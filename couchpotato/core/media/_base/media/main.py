@@ -189,7 +189,7 @@ class MediaPlugin(MediaBase):
         # Filter on release status
         if release_status and len(release_status) > 0:
             filter_by['release_status'] = set()
-            for release_status in fireEvent('media.with_status', release_status, with_doc = False, single = True):
+            for release_status in fireEvent('release.with_status', release_status, with_doc = False, single = True):
                 filter_by['release_status'].add(release_status.get('media_id'))
 
         # Add search filters
@@ -302,7 +302,7 @@ class MediaPlugin(MediaBase):
         # Filter on release status
         if release_status and len(release_status) > 0:
             filter_by['release_status'] = set()
-            for release_status in fireEvent('media.with_status', release_status, with_doc = False, single = True):
+            for release_status in fireEvent('release.with_status', release_status, with_doc = False, single = True):
                 filter_by['release_status'].add(release_status.get('media_id'))
 
         # Filter by combining ids

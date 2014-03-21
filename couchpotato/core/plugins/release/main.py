@@ -53,6 +53,7 @@ class Release(Plugin):
         addEvent('release.delete', self.delete)
         addEvent('release.clean', self.clean)
         addEvent('release.update_status', self.updateStatus)
+        addEvent('release.with_status', self.withStatus)
 
         # Clean releases that didn't have activity in the last week
         addEvent('app.load', self.cleanDone)
@@ -422,3 +423,13 @@ class Release(Plugin):
             log.error('Failed: %s', traceback.format_exc())
 
         return False
+
+    def withStatus(self, status, with_doc = True):
+
+        db = get_db()
+
+        status = list(status if isinstance(status, (list, tuple)) else [status])
+
+        for s in status:
+            for ms in db.get_many('release_status', s, with_doc = with_doc):
+                yield ms['doc'] if with_doc else ms
