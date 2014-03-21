@@ -428,7 +428,7 @@ MA.Release = new Class({
 
 		Api.request('movie.searcher.try_next', {
 			'data': {
-				'id': self.movie.get('_id')
+				'media_id': self.movie.get('_id')
 			}
 		});
 

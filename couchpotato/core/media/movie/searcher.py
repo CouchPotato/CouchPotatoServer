@@ -38,7 +38,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
         addApiView('movie.searcher.try_next', self.tryNextReleaseView, docs = {
             'desc': 'Marks the snatched results as ignored and try the next best release',
             'params': {
-                'id': {'desc': 'The id of the movie'},
+                'media_id': {'desc': 'The id of the media'},
             },
         })
 
