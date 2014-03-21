@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import re
 import traceback
 from datetime import date
@@ -17,22 +19,36 @@ class hdarea(OCHProvider):
     }
 
     def _searchOnTitle(self, title, movie, quality, results):
-        titles = movie['library']['info'].get('local_titles', [])
-        titles.append(title)
+        #Nach Lokalem Titel (abh. vom def. Laendercode) und original Titel suchen
+        alt_titles = movie['library']['info'].get('alternate_titles', [])
+        titles = []
+        titles.extend(alt_titles); titles.append(title)
         for title in titles:
-            query = '"%s"' % (simplifyString(title))
-            searchUrl = self.urls['search'] % query
+            self.do_search(title, results)
+        if not results:
+            shortenedAltTitles = []
+             # trying to delete original title string from alt title string
+            for alt_title in alt_titles:
+                if alt_title != title and title in alt_title:
+                    shortenedAltTitle = simplifyString(alt_title).replace(simplifyString(title), "")
+                    self.do_search(shortenedAltTitle, results)
 
-            log.debug('fetching data from %s' % searchUrl)
-            data = self.getHTMLData(searchUrl)
 
-            linksToMovieDetails = self.parseSearchResult(data)
-            for movieDetailLink in linksToMovieDetails:
-                data = self.getHTMLData(movieDetailLink)
-                result = self.parseMovieDetailPage(data)
-                if len(result):
-                    result['id'] = movieDetailLink.split('id=')[1]
-                    results.append(result)
+    def do_search(self, title, results):
+        query = '"%s"' % (simplifyString(title))
+        searchUrl = self.urls['search'] % query
+
+        log.debug('fetching data from %s' % searchUrl)
+        data = self.getHTMLData(searchUrl)
+
+        linksToMovieDetails = self.parseSearchResult(data)
+        for movieDetailLink in linksToMovieDetails:
+            data = self.getHTMLData(movieDetailLink)
+            result = self.parseMovieDetailPage(data)
+            if len(result):
+                result['id'] = movieDetailLink.split('id=')[1]
+                results.append(result)
+        return len(linksToMovieDetails)
 
 
     #===============================================================================
@@ -41,11 +57,31 @@ class hdarea(OCHProvider):
     def parseDownload(self, download):
         res = {}
         try:
+            #child-Abschnitte des Page-Src. nach div.beschreibung durchsuchen
             for child in download.descendants:
                 if not isinstance(child, NavigableString) and "cover" in child["class"]:
                     #TODO: Sprache + Groesse Parsen
                     if "beschreibung" in child.div["class"]:
                         descr = child.div
+
+                        #Suche nach Jahr und der Release-Groesse des Film-Releases
+                        log.debug("Look for release info on Movie's detail page.")
+                        try:
+                            matches = descr.findAll('strong', attrs={"class": "main"}, recursive=True)
+                            for match in matches:
+                                if "Jahr:" in match:
+                                    year = re.search(r"[0-9]{4}", str(match.nextSibling)).group()
+                                    res["year"] = year
+                                    log.debug('Found release year of movie: %s' % year)
+                                if u"Größe:" in match:
+                                    size_raw = re.search(r"[0-9]+([,.][0-9]+)?\s+\w+", str(match.nextSibling)).group()
+                                    size = self.parseSize(size_raw)
+                                    res["size"] = size
+                                    log.debug('Found size of release: %s Mb' % size)
+                        except AttributeError:
+                            log.error('Could not fetch release details from Website.')
+
+                        #Suche nach Links und pruefe auf invisible (teilw. veraltete Links im Code). Filtere Hoster.
                         links = descr.findAll('span', attrs={"style": "display:inline;"}, recursive=True)
                         for link in links:
                             url = link.a["href"]
@@ -54,10 +90,12 @@ class hdarea(OCHProvider):
                                 if acceptedHoster in hoster.lower():
                                     if self.conf('hosters') != '':
                                         res["url"] = url
+                                        log.debug('Found DL-Link %s on Hoster %s' % url, hoster)
                                         return res
                                     else:
-                                        log.debug('Hosterlist seems to be empty, please check settings.')
+                                        log.error('Hosterlist seems to be empty, please check settings.')
                                         return None
+
         except (TypeError, KeyError):
             return None
         return None
