@@ -30,14 +30,6 @@ class MediaIndex(MultiTreeBasedIndex):
 
             return ids, None
 
-    def run_identifiers(self, db, identifiers, with_doc = False):
-        for x in identifiers:
-            try:
-                media = db.get('media', '%s-%s' % (x, identifiers[x]), with_doc = with_doc)
-                return media
-            except:
-                pass
-
 
 class MediaStatusIndex(TreeBasedIndex):
     _version = 1

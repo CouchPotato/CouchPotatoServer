@@ -75,6 +75,7 @@ class MediaPlugin(MediaBase):
 
         addEvent('media.get', self.get)
         addEvent('media.with_status', self.withStatus)
+        addEvent('media.with_identifiers', self.withIdentifiers)
         addEvent('media.list', self.list)
         addEvent('media.delete', self.delete)
         addEvent('media.restatus', self.restatus)
@@ -156,6 +157,19 @@ class MediaPlugin(MediaBase):
         for s in status:
             for ms in db.get_many('media_status', s, with_doc = with_doc):
                 yield ms['doc'] if with_doc else ms
+
+    def withIdentifiers(self, identifiers, with_doc = False):
+
+        db = get_db()
+
+        for x in identifiers:
+            try:
+                media = db.get('media', '%s-%s' % (x, identifiers[x]), with_doc = with_doc)
+                return media
+            except:
+                pass
+
+        log.error('No media found with identifiers: %s', identifiers)
 
     def list(self, types = None, status = None, release_status = None, status_or = False, limit_offset = None, starts_with = None, search = None):
 
