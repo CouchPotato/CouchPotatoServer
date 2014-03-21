@@ -326,6 +326,8 @@ class Plugin(object):
         if name_password:
             release_name, password = name_password
             tag += '{{%s}}' % password
+        elif data.get('password'):
+            tag += '{{%s}}' % data.get('password')
 
         max_length = 127 - len(tag) # Some filesystems don't support 128+ long filenames
         return '%s%s' % (toSafeString(toUnicode(release_name)[:max_length]), tag)
