@@ -48,10 +48,6 @@ def addView(route, func, static = False):
     views[route] = func
 
 
-def get_session():
-    return None
-
-
 def get_db():
     return Env.get('db')
 
