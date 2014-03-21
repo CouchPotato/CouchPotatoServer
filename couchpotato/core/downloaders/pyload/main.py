@@ -139,7 +139,7 @@ class pyload(Downloader):
                             status = 'busy'
 
             release_downloads.append({
-                    'id': pid,
+                    #'id': pid,
                     'name': package['name'] if package else '',
                     'status': status if status else '',
                     #'original_status': package[''],
