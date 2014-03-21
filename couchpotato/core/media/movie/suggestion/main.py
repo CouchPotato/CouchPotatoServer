@@ -30,7 +30,7 @@ class Suggestion(Plugin):
             if not movies or len(movies) == 0:
                 db = get_db()
                 active_movies = db.run('media', 'with_status', ['active', 'done'])
-                movies = [x['identifier'] for x in active_movies]
+                movies = [getIdentifier(x) for x in active_movies]
 
             if not ignored or len(ignored) == 0:
                 ignored = splitString(Env.prop('suggest_ignore', default = ''))
