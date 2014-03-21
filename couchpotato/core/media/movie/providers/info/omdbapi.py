@@ -81,6 +81,9 @@ class OMDBAPI(MovieProvider):
             if movie.get('Response') == 'Parse Error' or movie.get('Response') == 'False':
                 return movie_data
 
+            if movie.get('Type').lower() != 'movie':
+                return movie_data
+
             tmp_movie = movie.copy()
             for key in tmp_movie:
                 if tmp_movie.get(key).lower() == 'n/a':
