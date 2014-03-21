@@ -38,8 +38,7 @@ class MediaBase(Plugin):
 
         def notifyFront():
             try:
-                db = get_db()
-                media = db.get('id', media_id)
+                media = fireEvent('media.get', media_id, single = True)
                 event_name = '%s.update' % media.get('type')
 
                 fireEvent('notify.frontend', type = event_name, data = media)
