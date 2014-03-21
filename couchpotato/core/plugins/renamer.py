@@ -911,7 +911,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                                 found_release = True
                                 break
                         else:
-                            if release_download['name'] == nzbname or rel['info']['name'] in release_download['name'] or getImdb(release_download['name']) == movie_dict['identifier']:
+                            if release_download['name'] == nzbname or rel['info']['name'] in release_download['name'] or getImdb(release_download['name']) == getIdentifier(movie_dict):
                                 log.debug('Found release by release name or imdb ID: %s', release_download['name'])
                                 found_release = True
                                 break
@@ -1044,8 +1044,6 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                 rls = db.get('release_download', '%s-%s' % (release_download.get('downloader'), release_download.get('id')), with_doc = True)['doc']
             except:
                 log.error('Download ID %s from downloader %s not found in releases', (release_download.get('id'), release_download.get('downloader')))
-
-        print rls
 
         if rls:
             media = db.get('id', rls['media_id'])
