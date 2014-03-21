@@ -25,7 +25,7 @@ class Boxcar2(Notification):
 
             data = {
                 'user_credentials': self.conf('token'),
-                'notification[title]': toUnicode(message),
+                'notification[title]': toUnicode('%s - %s' % (self.default_title, message)),
                 'notification[long_message]': toUnicode(long_message),
             }
 
