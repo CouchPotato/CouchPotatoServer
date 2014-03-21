@@ -8,7 +8,7 @@ from couchpotato import get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
 from couchpotato.core.helpers.encoding import simplifyString
-from couchpotato.core.helpers.variable import getTitle, possibleTitles, getImdb, getIdentifier
+from couchpotato.core.helpers.variable import getTitle, possibleTitles, getImdb, getIdentifier, tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.searcher.base import SearcherBase
 from couchpotato.core.media.movie import MovieTypeBase
@@ -232,12 +232,12 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
 
         # File to small
-        if nzb['size'] and int(preferred_quality['size_min']) > int(nzb['size']):
+        if nzb['size'] and tryInt(preferred_quality['size_min']) > tryInt(nzb['size']):
             log.info2('Wrong: "%s" is too small to be %s. %sMB instead of the minimal of %sMB.', (nzb['name'], preferred_quality['label'], nzb['size'], preferred_quality['size_min']))
             return False
 
         # File to large
-        if nzb['size'] and int(preferred_quality['size_max']) < int(nzb['size']):
+        if nzb['size'] and tryInt(preferred_quality['size_max']) < tryInt(nzb['size']):
             log.info2('Wrong: "%s" is too large to be %s. %sMB instead of the maximum of %sMB.', (nzb['name'], preferred_quality['label'], nzb['size'], preferred_quality['size_max']))
             return False
 

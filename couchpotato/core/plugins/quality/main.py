@@ -5,7 +5,7 @@ from couchpotato import get_db
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import toUnicode, ss
-from couchpotato.core.helpers.variable import mergeDicts, getExt
+from couchpotato.core.helpers.variable import mergeDicts, getExt, tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.core.plugins.quality.index import QualityIndex
@@ -121,7 +121,7 @@ class QualityPlugin(Plugin):
             quality = db.get('quality', kwargs.get('identifier'), with_doc = True)
 
             if quality:
-                quality['doc'][kwargs.get('value_type')] = kwargs.get('value')
+                quality['doc'][kwargs.get('value_type')] = tryInt(kwargs.get('value'))
                 db.update(quality['doc'])
 
             self.cached_qualities = None
@@ -148,8 +148,8 @@ class QualityPlugin(Plugin):
                     '_t': 'quality',
                     'order': order,
                     'identifier': q.get('identifier'),
-                    'size_min': q.get('size')[0],
-                    'size_max': q.get('size')[1]
+                    'size_min': tryInt(q.get('size')[0]),
+                    'size_max': tryInt(q.get('size')[1]),
                 })
 
                 log.info('Creating profile: %s', q.get('label'))
