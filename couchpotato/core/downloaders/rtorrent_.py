@@ -70,8 +70,6 @@ class rTorrent(Downloader):
         if parsed.scheme in ['http', 'https']:
             url += self.conf('rpc_url')
 
-        print url
-
         self.rt = RTorrent(
             url,
             self.conf('username'),
