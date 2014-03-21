@@ -133,6 +133,8 @@ class MediaPlugin(MediaBase):
             if media.get('category_id'):
                 media['category'] = db.get('id', media.get('category_id'))
 
+            media['releases'] = list(db.run('release', 'for_media', media['_id']))
+
         return media
 
     def getView(self, id = None, **kwargs):
@@ -221,8 +223,6 @@ class MediaPlugin(MediaBase):
                 continue
 
             media = fireEvent('media.get', media_id, single = True)
-
-            media['releases'] = list(db.run('release', 'for_media', media_id))
 
             # Merge releases with movie dict
             medias.append(media)

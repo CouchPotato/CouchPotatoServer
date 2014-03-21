@@ -142,7 +142,6 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
         profile = db.get('id', movie['profile_id'])
         quality_order = fireEvent('quality.order', single = True)
-        media_releases = db.run('release', 'for_media', movie['_id'])
 
         ret = False
 
@@ -161,7 +160,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
             has_better_quality = 0
 
             # See if better quality is available
-            for release in media_releases:
+            for release in movie.get('releases', []):
                 if quality_order.index(release['quality']) <= quality_order.index(q_identifier) and release['status'] not in ['available', 'ignored', 'failed']:
                     has_better_quality += 1
 
@@ -187,7 +186,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                     ret = True
 
                 # Remove releases that aren't found anymore
-                for release in db.run('release', 'for_media', movie['_id']):
+                for release in movie.get('releases', []):
                     if release.get('status') == 'available' and release.get('identifier') not in found_releases:
                         fireEvent('release.delete', release.get('_id'), single = True)
 
