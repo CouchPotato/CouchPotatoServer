@@ -168,7 +168,7 @@ class MovieBase(MovieTypeBase):
                 if rel['status'] is 'available':
                     db.delete(rel)
 
-            movie_dict = db.run('media', 'to_dict', m['_id'])
+            movie_dict = fireEvent('media.get', m['_id'], single = True)
 
             if do_search and search_after:
                 onComplete = self.createOnComplete(m['_id'])
@@ -229,7 +229,7 @@ class MovieBase(MovieTypeBase):
 
                     m = db.get('id', media_id)
 
-                    movie_dict = db.run('media', 'to_dict', m['_id'])
+                    movie_dict = fireEvent('media.get', m['_id'], single = True)
                     fireEventAsync('movie.searcher.single', movie_dict, on_complete = self.createNotifyFront(media_id))
 
                 except:

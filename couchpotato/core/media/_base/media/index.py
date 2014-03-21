@@ -30,11 +30,6 @@ class MediaIndex(MultiTreeBasedIndex):
 
             return ids, None
 
-    def run_to_dict(self, db, media_id, dict_dept = None):
-        if not dict_dept: dict_dept = {}
-
-        return db.get('id', media_id)
-
     def run_identifiers(self, db, identifiers, with_doc = False):
         for x in identifiers:
             try:

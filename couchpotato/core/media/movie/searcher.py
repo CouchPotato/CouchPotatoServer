@@ -90,7 +90,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
             for media_id in medias:
 
-                media = db.run('media', 'to_dict', media_id)
+                media = fireEvent('media.get', media_id, single = True)
 
                 try:
                     self.single(media, search_protocols)
@@ -335,7 +335,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                 rel['status'] = 'ignored'
                 db.update(rel)
 
-            movie_dict = db.run('media', 'to_dict', media_id)
+            movie_dict = fireEvent('media.get', media_id, single = True)
             log.info('Trying next release for: %s', getTitle(movie_dict))
             self.single(movie_dict, manual = manual)
 

@@ -25,7 +25,7 @@ class MediaBase(Plugin):
         def onComplete():
             try:
                 db = get_db()
-                media = db.get('id', media_id)
+                media = fireEvent('media.get', media_id, single = True)
                 event_name = '%s.searcher.single' % media.get('type')
 
                 fireEventAsync(event_name, media, on_complete = self.createNotifyFront(media_id))

@@ -121,16 +121,19 @@ class MediaPlugin(MediaBase):
 
         imdb_id = getImdb(str(media_id))
 
+        media = None
         if imdb_id:
-            m = db.get('media', 'imdb-%s' % imdb_id, with_doc = True)['doc']
+            media = db.get('media', 'imdb-%s' % imdb_id, with_doc = True)['doc']
         else:
-            m = db.get('id', media_id)
+            media = db.get('id', media_id)
 
-        results = None
-        if m:
-            results = db.run('media', 'to_dict', m['_id'])
+        if media:
 
-        return results
+            # Attach category
+            if media.get('category_id'):
+                media['category'] = db.get('id', media.get('category_id'))
+
+        return media
 
     def getView(self, id = None, **kwargs):
 
@@ -217,7 +220,7 @@ class MediaPlugin(MediaBase):
                 offset -= 1
                 continue
 
-            media = db.run('media', 'to_dict', media_id)
+            media = fireEvent('media.get', media_id, single = True)
 
             media['releases'] = list(db.run('release', 'for_media', media_id))
 
