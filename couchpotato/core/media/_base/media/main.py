@@ -132,8 +132,8 @@ class MediaPlugin(MediaBase):
         if media:
 
             # Attach category
-            if media.get('category_id'):
-                media['category'] = db.get('id', media.get('category_id'))
+            try: media['category'] = db.get('id', media.get('category_id'))
+            except: pass
 
             media['releases'] = list(fireEvent('release.for_media', media['_id'], single = True))
 
