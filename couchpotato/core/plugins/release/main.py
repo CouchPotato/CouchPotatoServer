@@ -438,6 +438,10 @@ class Release(Plugin):
     def forMedia(self, media_id):
 
         db = get_db()
+        raw_releases = list(db.get_many('release', media_id, with_doc = True))
 
-        for release in db.get_many('release', media_id, with_doc = True):
-            yield release['doc']
+        releases = []
+        for r in sorted(raw_releases, key = lambda k: k['doc']['info']['score'], reverse = True):
+            releases.append(r['doc'])
+
+        return releases
