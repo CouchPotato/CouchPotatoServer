@@ -188,11 +188,11 @@ class ProfilePlugin(Plugin):
                 'qualities': ['dvdrip', 'dvdr']
             }, {
                 'label': 'Prefer 3D HD',
-                'qualities': ['720p', '1080p', '720p', '1080p'],
+                'qualities': ['1080p', '720p', '720p', '1080p'],
                 '3d': [True, True]
             }, {
                 'label': '3D HD',
-                'qualities': ['720p', '1080p'],
+                'qualities': ['1080p', '720p'],
                 '3d': [True, True]
             }]
 

@@ -143,13 +143,16 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
         ret = False
 
+        index = 0
         for q_identifier in profile.get('qualities'):
-            index = profile['qualities'].index(q_identifier)
             quality_custom = {
                 'quality': q_identifier,
                 'finish': profile['finish'][index],
-                'wait_for': profile['wait_for'][index]
+                'wait_for': profile['wait_for'][index],
+                '3d': profile['3d'][index] if profile['3d'] else False
             }
+
+            index += 1
 
             if not self.conf('always_search') and not self.couldBeReleased(q_identifier in pre_releases, release_dates, movie['info']['year']):
                 too_early_to_search.append(q_identifier)
@@ -167,6 +170,9 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
 
                 quality = fireEvent('quality.single', identifier = q_identifier, single = True)
                 log.info('Search for %s in %s', (default_title, quality['label']))
+
+                # Extend quality with profile customs
+                quality['custom'] = quality_custom
 
                 results = fireEvent('searcher.search', search_protocols, movie, quality, single = True) or []
                 if len(results) == 0:
@@ -221,13 +227,17 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
         if not fireEvent('searcher.correct_words', nzb['name'], media, single = True):
             return False
 
-        preferred_quality = fireEvent('quality.single', identifier = quality['identifier'], single = True)
+        preferred_quality = quality if quality else fireEvent('quality.single', identifier = quality['identifier'], single = True)
 
         # Contains lower quality string
         if fireEvent('searcher.contains_other_quality', nzb, movie_year = media['info']['year'], preferred_quality = preferred_quality, single = True):
             log.info2('Wrong: %s, looking for %s', (nzb['name'], quality['label']))
             return False
 
+        # Contains lower quality string
+        if not fireEvent('searcher.correct_3d', nzb, preferred_quality = preferred_quality, single = True):
+            log.info2('Wrong: %s, %slooking for %s in 3D', (nzb['name'], ('' if preferred_quality['custom'].get('3d') else 'NOT '), quality['label']))
+            return False
 
         # File to small
         if nzb['size'] and tryInt(preferred_quality['size_min']) > tryInt(nzb['size']):

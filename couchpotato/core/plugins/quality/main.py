@@ -190,14 +190,19 @@ class QualityPlugin(Plugin):
         # Start with 0
         score = {}
         for quality in qualities:
-            score[quality.get('identifier')] = 0
+            score[quality.get('identifier')] = {
+                'score': 0,
+                '3d': {}
+            }
 
         for cur_file in files:
             words = re.split('\W+', cur_file.lower())
 
             for quality in qualities:
                 contains_score = self.containsTagScore(quality, words, cur_file)
-                self.calcScore(score, quality, contains_score)
+                threedscore = self.contains3D(quality, words, cur_file) if quality.get('allow_3d') else (0, None)
+
+                self.calcScore(score, quality, contains_score, threedscore)
 
         # Try again with loose testing
         for quality in qualities:
@@ -213,10 +218,13 @@ class QualityPlugin(Plugin):
         if not has_non_zero:
             return None
 
-        heighest_quality = max(score, key = score.get)
+        heighest_quality = max(score, key = lambda p: score[p]['score'])
         if heighest_quality:
             for quality in qualities:
                 if quality.get('identifier') == heighest_quality:
+                    quality['is_3d'] = False
+                    if score[heighest_quality].get('3d'):
+                        quality['is_3d'] = True
                     return self.setCache(cache_key, quality)
 
         return None
@@ -260,6 +268,23 @@ class QualityPlugin(Plugin):
 
         return score
 
+    def contains3D(self, quality, words, cur_file = ''):
+        cur_file = ss(cur_file)
+
+        for key in self.threed_tags:
+            tags = self.threed_tags.get(key, [])
+
+            for tag in tags:
+                if (isinstance(tag, tuple) and '.'.join(tag) in '.'.join(words)) or (isinstance(tag, (str, unicode)) and ss(tag.lower()) in cur_file.lower()):
+                    log.debug('Found %s in %s', (tag, cur_file))
+                    return 1, key
+
+            if list(set([key]) & set(words)):
+                log.debug('Found %s in %s', (tag, cur_file))
+                return 1, key
+
+        return 0, None
+
     def guessLooseScore(self, quality, extra = None):
 
         score = 0
@@ -282,9 +307,16 @@ class QualityPlugin(Plugin):
 
         return score
 
-    def calcScore(self, score, quality, add_score):
+    def calcScore(self, score, quality, add_score, threedscore = (0, None)):
 
-        score[quality['identifier']] += add_score
+        score[quality['identifier']]['score'] += add_score
+
+        threedscore, threedtag = threedscore
+        if threedscore and threedtag:
+            if threedscore not in score[quality['identifier']]['3d']:
+                score[quality['identifier']]['3d'][threedtag] = 0
+
+            score[quality['identifier']]['3d'][threedtag] += threedscore
 
         # Set order for allow calculation (and cache)
         if not self.cached_order:
@@ -294,7 +326,7 @@ class QualityPlugin(Plugin):
 
         if add_score != 0:
             for allow in quality.get('allow', []):
-                score[allow] -= 40 if self.cached_order[allow] < self.cached_order[quality['identifier']] else 5
+                score[allow]['score'] -= 40 if self.cached_order[allow] < self.cached_order[quality['identifier']] else 5
 
     def doTest(self):
 

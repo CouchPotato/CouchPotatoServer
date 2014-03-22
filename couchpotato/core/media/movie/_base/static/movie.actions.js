@@ -192,7 +192,7 @@ MA.Release = new Class({
 					}).adopt(
 						new Element('span.name', {'text': release_name, 'title': release_name}),
 						new Element('span.status', {'text': release.status, 'class': 'release_status '+release.status}),
-						new Element('span.quality', {'text': quality.label || 'n/a'}),
+						new Element('span.quality', {'text': quality.label + (release.is_3d ? ' 3D' : '') || 'n/a'}),
 						new Element('span.size', {'text': info['size'] ? Math.floor(self.get(release, 'size')) : 'n/a'}),
 						new Element('span.age', {'text': self.get(release, 'age')}),
 						new Element('span.score', {'text': self.get(release, 'score')}),

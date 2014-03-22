@@ -343,6 +343,10 @@ class Release(Plugin):
 
             found_releases = []
 
+            is_3d = False
+            try: is_3d = quality['custom']['3d']
+            except: pass
+
             for rel in search_results:
 
                 rel_identifier = md5(rel['url'])
@@ -353,6 +357,7 @@ class Release(Plugin):
                     'identifier': rel_identifier,
                     'media_id': media.get('_id'),
                     'quality': quality.get('identifier'),
+                    'is_3d': is_3d,
                     'status': rel.get('status', 'available'),
                     'last_edit': int(time.time()),
                     'info': {}

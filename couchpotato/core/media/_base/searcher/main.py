@@ -17,6 +17,7 @@ class Searcher(SearcherBase):
     def __init__(self):
         addEvent('searcher.protocols', self.getSearchProtocols)
         addEvent('searcher.contains_other_quality', self.containsOtherQuality)
+        addEvent('searcher.correct_3d', self.correct3D)
         addEvent('searcher.correct_year', self.correctYear)
         addEvent('searcher.correct_name', self.correctName)
         addEvent('searcher.correct_words', self.correctWords)
@@ -122,6 +123,17 @@ class Searcher(SearcherBase):
                 del found[allowed]
 
         return not (found.get(preferred_quality['identifier']) and len(found) == 1)
+
+    def correct3D(self, nzb, preferred_quality = None):
+        if not preferred_quality: preferred_quality = {}
+        if not preferred_quality.get('custom'): return
+
+        threed = preferred_quality['custom'].get('3d')
+
+        # Try guessing via quality tags
+        guess = fireEvent('quality.guess', [nzb.get('name')], single = True)
+
+        return threed == guess.get('is_3d')
 
     def correctYear(self, haystack, year, year_range):
 
