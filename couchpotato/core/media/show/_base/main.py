@@ -86,7 +86,8 @@ class ShowBase(MediaBase):
             # Can we make a base function to do this stuff?
 
             # Remove season info for later use (save separately)
-            season_info = info.get('seasons', {})
+            seasons_info = info.get('seasons', {})
+            identifiers = info.get('identifiers', {})
 
             # Make sure we don't nest in_wanted data
             del info['identifiers']
@@ -103,7 +104,7 @@ class ShowBase(MediaBase):
 
             new = False
             try:
-                m = db.run('media', 'identifiers', params.get('identifiers'), with_doc = True)['doc']
+                m = fireEvent('media.with_identifiers', params.get('identifiers'), with_doc = True, single = True)['doc']
             except:
                 new = True
                 m = db.insert(media)
@@ -124,7 +125,7 @@ class ShowBase(MediaBase):
             elif force_readd:
 
                 # Clean snatched history
-                for release in db.run('release', 'for_media', m['_id']):
+                for release in fireEvent('release.for_media', m['_id'], single = True):
                     if release.get('status') in ['downloaded', 'snatched', 'done']:
                         if params.get('ignore_previous', False):
                             release['status'] = 'ignored'
@@ -147,18 +148,31 @@ class ShowBase(MediaBase):
             # Trigger update info
             if added and update_after:
                 # Do full update to get images etc
-                fireEventAsync('show.update_info', m['_id'], on_complete = onComplete)
+                fireEventAsync('show.update_info', m['_id'], info = info, on_complete = onComplete)
 
             # Remove releases
-            for rel in db.run('release', 'for_media', m['_id']):
+            for rel in fireEvent('release.for_media', m['_id'], single = True):
                 if rel['status'] is 'available':
                     db.delete(rel)
 
-            movie_dict = db.run('media', 'to_dict', m['_id'])
+            movie_dict = fireEvent('media.get', m['_id'], single = True)
 
             if do_search and search_after:
                 onComplete = self.createOnComplete(m['_id'])
                 onComplete()
+
+            # Add Seasons
+            for season_nr in seasons_info:
+
+                season_info = seasons_info[season_nr]
+                season = fireEvent('show.season.add', media.get('_id'), season_info, single = True)
+
+                # Add Episodes
+                for episode_nr in season_info.get('episodes', {}):
+
+                    episode_info = season_info['episodes'][episode_nr]
+                    fireEvent('show.episode.add', season.get('_id'), episode_info, single = True)
+
 
             if added and notify_after:
 
@@ -170,22 +184,17 @@ class ShowBase(MediaBase):
                         message = 'Successfully added "%s" to your wanted list.' % title
                     else:
                         message = 'Successfully added to your wanted list.'
-                fireEvent('notify.frontend', type = 'movie.added', data = movie_dict, message = message)
+                fireEvent('notify.frontend', type = 'show.added', data = movie_dict, message = message)
+
 
             return movie_dict
         except:
             log.error('Failed adding media: %s', traceback.format_exc())
 
-            # Add Seasons
-            for season_info in info.get('seasons', []):
+    def updateInfo(self, media_id = None, identifiers = None, info = None):
+        if not info: info = {}
+        if not identifiers: identifiers = {}
 
-                season = fireEvent('show.season.add', media.get('_id'), season_info)
-
-                for episode_info in season_info.get('seasons', []):
-
-                    fireEvent('show.episode.add', season.get('_id'), episode_info)
-
-    def updateInfo(self, media_id = None, identifiers = None):
         """
         Update movie information inside media['doc']['info']
 
@@ -211,9 +220,14 @@ class ShowBase(MediaBase):
             else:
                 media = db.get('media', identifiers, with_doc = True)['doc']
 
-            info = fireEvent('show.info', identifiers = media.get('identifiers'), merge = True)
+            if not info:
+                info = fireEvent('show.info', identifiers = media.get('identifiers'), merge = True)
 
             # Don't need those here
+            try: del info['seasons']
+            except: pass
+            try: del info['identifiers']
+            except: pass
             try: del info['in_wanted']
             except: pass
             try: del info['in_library']

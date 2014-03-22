@@ -1,4 +1,4 @@
-from couchpotato import Env, get_session
+from couchpotato import Env
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.variable import getTitle, toIterable
 from couchpotato.core.logger import CPLog
@@ -30,8 +30,6 @@ class ShowSearcher(SearcherBase, ShowTypeBase):
 
     def single(self, media, search_protocols = None, manual = False):
         show, season, episode = self.getLibraries(media['library'])
-
-        db = get_session()
 
         if media['type'] == 'show':
             for library in season:
