@@ -22,7 +22,7 @@
 		.profile > .delete:hover {
 			opacity: 1;
 		}
-		
+
 	.profile .ctrlHolder:hover {
 		background: none;
 	}
@@ -120,7 +120,7 @@
 				}
 
 		.profile .types .type .handle {
-			background: url('../../plugin/profile_plugin/handle.png') center;
+			background: url('../../images/handle.png') center;
 			display: inline-block;
 			height: 20px;
 			width: 20px;
@@ -180,7 +180,7 @@
 			}
 
 			#profile_ordering li .handle {
-				background: url('../../plugin/profile_plugin/handle.png') center;
+				background: url('../../images/handle.png') center;
 				width: 20px;
 				float: right;
 			}
