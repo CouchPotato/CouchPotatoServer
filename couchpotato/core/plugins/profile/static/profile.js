@@ -100,7 +100,7 @@ var Profile = new Class({
 				'onComplete': function(json){
 					if(json.success){
 						self.data = json.profile;
-						self.type_container.getElement('li:first-child input[type=checkbox]')
+						self.type_container.getElement('li:first-child input.finish[type=checkbox]')
 							.set('checked', true)
 							.getParent().addClass('checked');
 					}
@@ -278,7 +278,7 @@ Profile.Type = new Class({
 			self['3d_container'] = new Element('label.threed').adopt(
 				new Element('span.3d').grab(
 					self['3d'] = new Element('input.inlay.3d[type=checkbox]', {
-						'checked': data['3d'] !== undefined ? data['3d'] : 1,
+						'checked': data['3d'] !== undefined ? data['3d'] : 0,
 						'events': {
 							'change': function(e){
 								self.fireEvent('change');
