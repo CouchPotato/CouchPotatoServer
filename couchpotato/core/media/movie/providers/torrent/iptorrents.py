@@ -11,6 +11,7 @@ class IPTorrents(MovieProvider, Base):
 
     cat_ids = [
         ([48], ['720p', '1080p', 'bd50']),
+        ([87], ['3d']),
         ([72], ['cam', 'ts', 'tc', 'r5', 'scr']),
         ([7], ['dvdrip', 'brrip']),
         ([6], ['dvdr']),
