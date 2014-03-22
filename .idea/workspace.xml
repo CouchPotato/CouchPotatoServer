@@ -5,7 +5,6 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="0e836cb7-a3bc-4a5a-87f0-7d3aa02cdd92" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/couchpotato/core/downloaders/pyload/main.py" afterPath="$PROJECT_DIR$/couchpotato/core/downloaders/pyload/main.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="CouchPotatoServer.iws" />
@@ -747,7 +746,11 @@
       <created>1395432109374</created>
       <updated>1395432109374</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="Revert pyload ID and deleted test.py!">
+      <created>1395492074562</created>
+      <updated>1395492074562</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="ToolWindowManager">
