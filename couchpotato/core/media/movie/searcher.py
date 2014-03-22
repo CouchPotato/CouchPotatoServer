@@ -149,7 +149,7 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
                 'quality': q_identifier,
                 'finish': profile['finish'][index],
                 'wait_for': profile['wait_for'][index],
-                '3d': profile['3d'][index] if profile['3d'] else False
+                '3d': profile['3d'][index] if profile.get('3d') else False
             }
 
             index += 1

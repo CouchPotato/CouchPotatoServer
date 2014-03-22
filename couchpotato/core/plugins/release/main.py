@@ -446,7 +446,7 @@ class Release(Plugin):
         raw_releases = list(db.get_many('release', media_id, with_doc = True))
 
         releases = []
-        for r in sorted(raw_releases, key = lambda k: k['doc']['info']['score'], reverse = True):
+        for r in sorted(raw_releases, key = lambda k: k['doc'].get('info', {}).get('score', 0), reverse = True):
             releases.append(r['doc'])
 
         return releases
