@@ -4,6 +4,7 @@ import traceback
 
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import sp
+from couchpotato.core.helpers.variable import getIdentifier
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.providers.metadata.base import MetaDataBase
 from couchpotato.environment import Env
@@ -27,7 +28,7 @@ class MovieMetaData(MetaDataBase):
 
         # Update library to get latest info
         try:
-            group['media'] = fireEvent('movie.update_info', group['media'].get('_id'), identifier = group['media']['identifier'], extended = True, single = True)
+            group['media'] = fireEvent('movie.update_info', group['media'].get('_id'), identifier = getIdentifier(group['media']), extended = True, single = True)
         except:
             log.error('Failed to update movie, before creating metadata: %s', traceback.format_exc())
 

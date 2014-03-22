@@ -248,7 +248,7 @@ class Renamer(Plugin):
                         'profile_id': None
                     }, search_after = False, status = 'done', single = True)
                 else:
-                    group['media'] = fireEvent('movie.update_info', identifier = group['media']['identifier'], single = True)
+                    group['media'] = fireEvent('movie.update_info', identifier = getIdentifier(group['media']), single = True)
 
                 if not group['media'] or not group['media'].get('_id'):
                     log.error('Could not rename, no library item to work with: %s', group_identifier)
