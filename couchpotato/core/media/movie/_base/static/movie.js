@@ -197,7 +197,7 @@ var Movie = new Class({
 		if(self.profile.data)
 			self.profile.getTypes().each(function(type){
 
-				var q = self.addQuality(type.get('quality'));
+				var q = self.addQuality(type.get('quality'), type.get('3d'));
 				if((type.finish == true || type.get('finish')) && !q.hasClass('finish')){
 					q.addClass('finish');
 					q.set('title', q.get('title') + ' Will finish searching for this movie if this quality is found.')
@@ -222,11 +222,11 @@ var Movie = new Class({
 
 		self.data.releases.each(function(release){
 
-			var q = self.quality.getElement('.q_'+ release.quality),
+			var q = self.quality.getElement('.q_'+ release.quality+(release.is_3d ? '.is_3d' : ':not(.is_3d)')),
 				status = release.status;
 
 			if(!q && (status == 'snatched' || status == 'seeding' || status == 'done'))
-				var q = self.addQuality(release.quality)
+				var q = self.addQuality(release.quality, release.is_3d || false)
 
 			if (q && !q.hasClass(status)){
 				q.addClass(status);
@@ -236,13 +236,13 @@ var Movie = new Class({
 		});
 	},
 
-	addQuality: function(quality){
+	addQuality: function(quality, is_3d){
 		var self = this;
 
 		var q = Quality.getQuality(quality);
 		return new Element('span', {
-			'text': q.label,
-			'class': 'q_'+q.identifier,
+			'text': q.label + (is_3d ? ' 3D' : ''),
+			'class': 'q_'+q.identifier + (is_3d ? ' is_3d' : ''),
 			'title': ''
 		}).inject(self.quality);
 
