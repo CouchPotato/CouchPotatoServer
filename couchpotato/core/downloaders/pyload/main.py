@@ -236,6 +236,8 @@ class pyloadAPI(object):
             log.debug('User or password missing, not using authentication.')
         self.sessionID = self.get_sessionID()
 
+    # Logs into PyLoad and calls a various HTTP API-Request.
+    #-Return: Return Message from API-Function
     def _request(self, action, data = {}):
         self.sessionID = self.get_sessionID()
         data.update({'session': self.sessionID})
@@ -258,6 +260,12 @@ class pyloadAPI(object):
             log.error('Unable to connect to pyLoad %s', err)
         return False
 
+
+## Implementation of PyLoad API FUNCTIONS ###
+#############################################
+
+    #Login into pyLoad, this must be called when using rpc before any methods can be used.
+    #-Return: SessionID
     def get_sessionID(self):
         post_data = urllib.urlencode({'username': self.username, "password": self.password})
         session_request = self.opener.open(self.url + 'login', post_data)
@@ -267,11 +275,28 @@ class pyloadAPI(object):
             sessionID = response
         return sessionID.replace('"', '')
 
-    def check_uri(self, url):
+    #Gets urls and returns pluginname mapped to list of matches urls.
+    #-Return: {plugin: urls}
+    def check_urls(self, urls):
         action = 'checkURLs'
+        data = {'urls': json.dumps(urls)}
+        return self._request(action, data)
+
+    # Initiates online status check of urls
+    #- Returns: online check
+    def check_onlineStatus(self, url):
+        action = 'checkOnlineStatus'
         data = {'urls': json.dumps(url)}
         return self._request(action, data)
 
+    # Status off all currently running downloads.
+    #- Returns: NONE
+    def check_downloadStatus(self):
+        action = 'statusDownloads'
+        return self._request(action)
+
+    #Adds a package, with links to desired destination.
+    #- Returns:	package_id of the new package
     def add_uri(self, packagename, url, dest=1):
         action = 'addPackage'
         data = {'name': "'%s'" % packagename.encode("ascii", "ignore"),
@@ -279,26 +304,40 @@ class pyloadAPI(object):
                 'dest': dest}
         return self._request(action, data) #packageId
 
-    def get_package_data(self, id):
+    #Returns complete information about package with packageID (PID), and included files.
+    #- Returns: PackageData with .links attribute
+    def get_package_data(self, pid):
         action = 'getPackageData'
-        data = {'pid': id}
+        data = {'pid': pid}
         try:
             return json.loads(self._request(action, data))
         except TypeError, err:
-            log.debug("There's no pyLoad package with id %s" % id)
+            log.debug("There's no pyLoad package with id %s" % pid)
 
-    def get_status(self):
-        action = 'statusDownloads'
-        return self._request(action)
+    #Get complete information about a specific file with fileID (FID)
+    #- Returns: FileData
+    def get_file_data(self, fid):
+        action = 'getFileData'
+        data = {'fid': fid}
+        try:
+            return json.loads(self._request(action, data))
+        except TypeError, err:
+            log.debug("There's no pyLoad File with id %s" % fid)
 
+    #Returns info about queue and packages,
+    #- Returns: List of PackageInfo
     def get_Queue(self):
         action = 'getQueue'
         return json.loads(self._request(action))
 
+    #Returns info about collector and packages,
+    #- Returns: List of PackageInfo
     def get_Collector(self):
         action = 'getCollector'
         return json.loads(self._request(action))
 
+    #Deletes packages and containing links.
+    #- Returns: NONE
     def remove_pids(self, pids):
         assert isinstance(pids, list)
         action = 'deletePackages'

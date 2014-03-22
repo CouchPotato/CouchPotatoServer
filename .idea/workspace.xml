@@ -5,8 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="0e836cb7-a3bc-4a5a-87f0-7d3aa02cdd92" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/couchpotato/core/providers/info/themoviedb/main.py" afterPath="$PROJECT_DIR$/couchpotato/core/providers/info/themoviedb/main.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/couchpotato/core/providers/och/hdarea/main.py" afterPath="$PROJECT_DIR$/couchpotato/core/providers/och/hdarea/main.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/couchpotato/core/downloaders/pyload/main.py" afterPath="$PROJECT_DIR$/couchpotato/core/downloaders/pyload/main.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="CouchPotatoServer.iws" />
@@ -30,13 +29,31 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="main.py" pinned="false" current="true" current-in-tab="true">
+      <file leaf-file-name="main.py" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/couchpotato/core/providers/och/hdarea/main.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="23" column="19" selection-start="720" selection-end="720" vertical-scroll-proportion="0.5515267" vertical-offset="102" max-vertical-offset="2890">
+            <state line="40" column="54" selection-start="1447" selection-end="1447" vertical-scroll-proportion="0.0" vertical-offset="1738" max-vertical-offset="2890">
               <folding>
                 <element signature="e#25#34#0" expanded="true" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="ioloop.py" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/libs/tornado/ioloop.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="687" column="0" selection-start="26146" selection-end="26146" vertical-scroll-proportion="0.0" vertical-offset="11217" max-vertical-offset="14076">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="socket.py" pinned="false" current="true" current-in-tab="true">
+        <entry file="file://C:/Program Files (x86)/Python-2.7.6/Lib/socket.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="228" column="10" selection-start="7837" selection-end="7837" vertical-scroll-proportion="0.5093555" vertical-offset="3580" max-vertical-offset="9792">
+              <folding />
             </state>
           </provider>
         </entry>
@@ -116,8 +133,8 @@
   <component name="Git.Settings">
     <option name="PREVIOUS_COMMIT_AUTHORS">
       <list>
-        <option value="Jojo" />
         <option value="Jochen" />
+        <option value="Jojo" />
       </list>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -127,7 +144,6 @@
       <list>
         <option value="$PROJECT_DIR$/couchpotato/core/downloaders/sabnzbd/main.py" />
         <option value="$PROJECT_DIR$/couchpotato/core/downloaders/rtorrent/main.py" />
-        <option value="$PROJECT_DIR$/couchpotato/core/downloaders/pyload/main.py" />
         <option value="$PROJECT_DIR$/couchpotato/core/downloaders/pyload/test" />
         <option value="$PROJECT_DIR$/couchpotato/core/downloaders/__init__.py" />
         <option value="$PROJECT_DIR$/couchpotato/core/downloaders/pyload/__init__.py" />
@@ -135,13 +151,13 @@
         <option value="$PROJECT_DIR$/couchpotato/core/providers/info/themoviedb/main.py" />
         <option value="$PROJECT_DIR$/couchpotato/core/providers/info/couchpotatoapi/main.py" />
         <option value="$PROJECT_DIR$/couchpotato/core/providers/och/hdarea/main.py" />
+        <option value="$PROJECT_DIR$/couchpotato/core/downloaders/pyload/main.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="330" />
-    <option name="y" value="28" />
-    <option name="width" value="1384" />
+    <option name="x" value="960" />
+    <option name="width" value="960" />
     <option name="height" value="1040" />
   </component>
   <component name="ProjectInspectionProfilesVisibleTreeState">
@@ -400,6 +416,54 @@
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
+              <option name="myItemId" value="downloaders" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="CouchPotatoServer" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="CouchPotatoServer" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="couchpotato" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="core" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="downloaders" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="pyload" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="CouchPotatoServer" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="CouchPotatoServer" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="couchpotato" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="core" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
               <option name="myItemId" value="_base" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
@@ -433,6 +497,7 @@
     <property name="FileHistory.git4idea.history.GitHistoryProvider_treeWidth3" value="703" />
     <property name="FileHistory.git4idea.history.GitHistoryProvider_treeOrder3" value="3" />
     <property name="restartRequiresConfirmation" value="true" />
+    <property name="SearchEverywhereHistory" value="" />
   </component>
   <component name="PyConsoleOptionsProvider">
     <option name="myPythonConsoleState">
@@ -674,20 +739,29 @@
       <created>1394890183359</created>
       <updated>1394890183359</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="HD-Area &quot;Release Size&quot; and &quot;Movie Year&quot; Support.">
+      <created>1395431795819</created>
+      <updated>1395431795819</updated>
+    </task>
+    <task id="LOCAL-00004" summary="Revert pyload ID and deleted test.py!">
+      <created>1395432109374</created>
+      <updated>1395432109374</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="330" y="28" width="1384" height="1040" extended-state="0" />
+    <frame x="960" y="0" width="960" height="1040" extended-state="0" />
     <editor active="false" />
     <layout>
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32857144" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32967034" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33736265" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.2510965" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25054947" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.24918744" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.16852264" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
-      <window_info id="Debug" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.39692983" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.24593717" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Debug" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.3967033" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33547696" sideWeight="0.23411018" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3508772" sideWeight="0.7658898" order="2" side_tool="false" content_ui="tabs" />
@@ -695,7 +769,6 @@
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32857144" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="SLIDING" type="SLIDING" visible="false" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
@@ -714,21 +787,19 @@
       <TodoPanelSettings />
     </option>
     <MESSAGE value="First implementation for Pyload OCH integration..." />
-    <option name="LAST_COMMIT_MESSAGE" value="First implementation for Pyload OCH integration..." />
+    <MESSAGE value="HD-Area &quot;Release Size&quot; and &quot;Movie Year&quot; Support." />
+    <MESSAGE value="Revert pyload ID and deleted test.py!" />
+    <option name="LAST_COMMIT_MESSAGE" value="Revert pyload ID and deleted test.py!" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <option name="time" value="19" />
+      <breakpoints-dialog>
+        <breakpoints-dialog />
+      </breakpoints-dialog>
+      <option name="time" value="21" />
     </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/CouchPotato.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="41" column="24" selection-start="976" selection-end="976" vertical-scroll-proportion="0.0" vertical-offset="697" max-vertical-offset="2754">
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/couchpotato/core/downloaders/rtorrent/main.py">
       <provider selected="true" editor-type-id="text-editor">
         <state line="138" column="11" selection-start="4042" selection-end="4042" vertical-scroll-proportion="0.0" vertical-offset="2216" max-vertical-offset="5066">
@@ -867,32 +938,9 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/couchpotato/core/downloaders/base.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="12" column="19" selection-start="343" selection-end="343" vertical-scroll-proportion="0.43037975" vertical-offset="0" max-vertical-offset="3757">
-          <folding>
-            <element signature="e#0#39#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/couchpotato/core/downloaders/pyload/test.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="83" column="39" selection-start="2810" selection-end="2810" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1581">
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/couchpotato/core/downloaders/pyload/__init__.py">
       <provider selected="true" editor-type-id="text-editor">
         <state line="80" column="0" selection-start="2810" selection-end="2810" vertical-scroll-proportion="0.0" vertical-offset="1360" max-vertical-offset="1615">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/couchpotato/core/downloaders/pyload/main.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="27" column="0" selection-start="893" selection-end="893" vertical-scroll-proportion="0.0" vertical-offset="459" max-vertical-offset="6341">
           <folding />
         </state>
       </provider>
@@ -1032,12 +1080,40 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/couchpotato/core/downloaders/base.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="215" column="0" selection-start="6661" selection-end="6661" vertical-scroll-proportion="0.9151414" vertical-offset="2986" max-vertical-offset="3638">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/couchpotato/core/downloaders/pyload/main.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="114" column="32" selection-start="3593" selection-end="3593" vertical-scroll-proportion="0.0" vertical-offset="1100" max-vertical-offset="7004">
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/couchpotato/core/providers/och/hdarea/main.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="23" column="19" selection-start="720" selection-end="720" vertical-scroll-proportion="0.5515267" vertical-offset="102" max-vertical-offset="2890">
+        <state line="40" column="54" selection-start="1447" selection-end="1447" vertical-scroll-proportion="0.0" vertical-offset="357" max-vertical-offset="2890">
           <folding>
             <element signature="e#25#34#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/libs/tornado/ioloop.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="687" column="0" selection-start="26146" selection-end="26146" vertical-scroll-proportion="0.0" vertical-offset="11217" max-vertical-offset="14076">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://C:/Program Files (x86)/Python-2.7.6/Lib/socket.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="228" column="10" selection-start="7837" selection-end="7837" vertical-scroll-proportion="0.5093555" vertical-offset="3580" max-vertical-offset="9792">
+          <folding />
         </state>
       </provider>
     </entry>
