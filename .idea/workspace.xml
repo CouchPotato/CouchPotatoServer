@@ -5,6 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="0e836cb7-a3bc-4a5a-87f0-7d3aa02cdd92" name="Default" comment="">
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/couchpotato/core/providers/och/hdarea/main.py" afterPath="$PROJECT_DIR$/couchpotato/core/providers/och/hdarea/main.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="CouchPotatoServer.iws" />
@@ -28,10 +29,10 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="main.py" pinned="false" current="false" current-in-tab="false">
+      <file leaf-file-name="main.py" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/couchpotato/core/providers/och/hdarea/main.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="40" column="54" selection-start="1447" selection-end="1447" vertical-scroll-proportion="0.0" vertical-offset="1738" max-vertical-offset="2890">
+            <state line="79" column="0" selection-start="3452" selection-end="4327" vertical-scroll-proportion="0.036324788" vertical-offset="1326" max-vertical-offset="2890">
               <folding>
                 <element signature="e#25#34#0" expanded="true" />
               </folding>
@@ -48,10 +49,10 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="socket.py" pinned="false" current="true" current-in-tab="true">
+      <file leaf-file-name="socket.py" pinned="false" current="false" current-in-tab="false">
         <entry file="file://C:/Program Files (x86)/Python-2.7.6/Lib/socket.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="228" column="10" selection-start="7837" selection-end="7837" vertical-scroll-proportion="0.5093555" vertical-offset="3580" max-vertical-offset="9792">
+            <state line="225" column="25" selection-start="7781" selection-end="7781" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="9792">
               <folding />
             </state>
           </provider>
@@ -149,8 +150,8 @@
         <option value="$PROJECT_DIR$/couchpotato/core/downloaders/pyload/test.py" />
         <option value="$PROJECT_DIR$/couchpotato/core/providers/info/themoviedb/main.py" />
         <option value="$PROJECT_DIR$/couchpotato/core/providers/info/couchpotatoapi/main.py" />
-        <option value="$PROJECT_DIR$/couchpotato/core/providers/och/hdarea/main.py" />
         <option value="$PROJECT_DIR$/couchpotato/core/downloaders/pyload/main.py" />
+        <option value="$PROJECT_DIR$/couchpotato/core/providers/och/hdarea/main.py" />
       </list>
     </option>
   </component>
@@ -750,7 +751,11 @@
       <created>1395492074562</created>
       <updated>1395492074562</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="More detailed comments in Pyload-API functions">
+      <created>1395492172511</created>
+      <updated>1395492172511</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="ToolWindowManager">
@@ -764,7 +769,7 @@
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25054947" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.24918744" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.24593717" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
-      <window_info id="Debug" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.3967033" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.3967033" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33547696" sideWeight="0.23411018" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3508772" sideWeight="0.7658898" order="2" side_tool="false" content_ui="tabs" />
@@ -792,14 +797,15 @@
     <MESSAGE value="First implementation for Pyload OCH integration..." />
     <MESSAGE value="HD-Area &quot;Release Size&quot; and &quot;Movie Year&quot; Support." />
     <MESSAGE value="Revert pyload ID and deleted test.py!" />
-    <option name="LAST_COMMIT_MESSAGE" value="Revert pyload ID and deleted test.py!" />
+    <MESSAGE value="More detailed comments in Pyload-API functions" />
+    <option name="LAST_COMMIT_MESSAGE" value="More detailed comments in Pyload-API functions" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints-dialog>
         <breakpoints-dialog />
       </breakpoints-dialog>
-      <option name="time" value="21" />
+      <option name="time" value="23" />
     </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
@@ -1097,15 +1103,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/couchpotato/core/providers/och/hdarea/main.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="40" column="54" selection-start="1447" selection-end="1447" vertical-scroll-proportion="0.0" vertical-offset="357" max-vertical-offset="2890">
-          <folding>
-            <element signature="e#25#34#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/libs/tornado/ioloop.py">
       <provider selected="true" editor-type-id="text-editor">
         <state line="687" column="0" selection-start="26146" selection-end="26146" vertical-scroll-proportion="0.0" vertical-offset="11217" max-vertical-offset="14076">
@@ -1115,8 +1112,17 @@
     </entry>
     <entry file="file://C:/Program Files (x86)/Python-2.7.6/Lib/socket.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="228" column="10" selection-start="7837" selection-end="7837" vertical-scroll-proportion="0.5093555" vertical-offset="3580" max-vertical-offset="9792">
+        <state line="225" column="25" selection-start="7781" selection-end="7781" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="9792">
           <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/couchpotato/core/providers/och/hdarea/main.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="79" column="0" selection-start="3452" selection-end="4327" vertical-scroll-proportion="0.036324788" vertical-offset="1326" max-vertical-offset="2890">
+          <folding>
+            <element signature="e#25#34#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>

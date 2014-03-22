@@ -90,7 +90,7 @@ class hdarea(OCHProvider):
                                 if acceptedHoster in hoster.lower():
                                     if self.conf('hosters') != '':
                                         res["url"] = url
-                                        log.debug('Found DL-Link %s on Hoster %s' % url, hoster)
+                                        log.debug('Found DL-Link %s on Hoster %s' % (url, hoster))
                                         return res
                                     else:
                                         log.error('Hosterlist seems to be empty, please check settings.')
