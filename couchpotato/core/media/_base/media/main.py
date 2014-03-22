@@ -169,7 +169,7 @@ class MediaPlugin(MediaBase):
             except:
                 pass
 
-        log.error('No media found with identifiers: %s', identifiers)
+        log.debug('No media found with identifiers: %s', identifiers)
 
     def list(self, types = None, status = None, release_status = None, status_or = False, limit_offset = None, starts_with = None, search = None):
 
