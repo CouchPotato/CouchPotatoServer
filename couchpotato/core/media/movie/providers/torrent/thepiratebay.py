@@ -12,8 +12,8 @@ autoload = 'ThePirateBay'
 class ThePirateBay(MovieProvider, Base):
 
     cat_ids = [
-       ([207], ['720p', '1080p']),
        ([209], ['3d']),
+       ([207], ['720p', '1080p']),
        ([201], ['cam', 'ts', 'dvdrip', 'tc', 'r5', 'scr']),
        ([201, 207], ['brrip']),
        ([202], ['dvdr'])

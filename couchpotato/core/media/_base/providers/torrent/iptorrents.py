@@ -25,14 +25,14 @@ class Base(TorrentProvider):
     cat_backup_id = None
 
     def buildUrl(self, title, media, quality):
-        return self._buildUrl(title.replace(':', ''), quality['identifier'])
+        return self._buildUrl(title.replace(':', ''), quality)
 
-    def _buildUrl(self, query, quality_identifier):
+    def _buildUrl(self, query, quality):
 
-        cat_ids = self.getCatId(quality_identifier)
+        cat_ids = self.getCatId(quality)
 
         if not cat_ids:
-            log.warning('Unable to find category ids for identifier "%s"', quality_identifier)
+            log.warning('Unable to find category ids for identifier "%s"', quality.get('identifier'))
             return None
 
         return self.urls['search'] % ("&".join(("l%d=" % x) for x in cat_ids), tryUrlencode(query).replace('%', '%%'))

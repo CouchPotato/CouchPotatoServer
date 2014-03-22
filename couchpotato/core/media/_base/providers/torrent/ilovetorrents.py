@@ -36,7 +36,7 @@ class Base(TorrentProvider):
 
         page = 0
         total_pages = 1
-        cats = self.getCatId(quality['identifier'])
+        cats = self.getCatId(quality)
 
         while page < total_pages:
 

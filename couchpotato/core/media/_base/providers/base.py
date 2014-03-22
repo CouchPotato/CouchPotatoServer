@@ -244,10 +244,16 @@ class YarrProvider(Provider):
 
         return 0
 
-    def getCatId(self, identifier):
+    def getCatId(self, quality = None):
+        if not quality: quality = {}
+        identifier = quality.get('identifier')
+
+        want_3d = False
+        if quality.get('custom'):
+            want_3d = quality['custom'].get('3d')
 
         for ids, qualities in self.cat_ids:
-            if identifier in qualities:
+            if identifier in qualities or (want_3d and '3d' in qualities):
                 return ids
 
         if self.cat_backup_id:
