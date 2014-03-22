@@ -181,7 +181,7 @@ class Database(object):
                             migrate_data[ml][p[0]] = [migrate_data[ml][p[0]]]
                         migrate_data[ml][p[0]].append(columns)
 
-            c.close()
+            conn.close()
 
             log.info('Getting data took %s', time.time() - migrate_start)
 
