@@ -81,7 +81,7 @@ config = [{
                 {
                     'name': 'enabled',
                     'type': 'enabler',
-                    'default': 0
+                    'default': False
                 },
                 {
                     'name': 'domain',
