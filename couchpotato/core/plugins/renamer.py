@@ -204,7 +204,8 @@ class Renamer(Plugin):
         db = get_db()
 
         # Extend the download info with info stored in the downloaded release
-        release_download = self.extendReleaseDownload(release_download)
+        if release_download:
+            release_download = self.extendReleaseDownload(release_download)
 
         # Unpack any archives
         extr_files = None
