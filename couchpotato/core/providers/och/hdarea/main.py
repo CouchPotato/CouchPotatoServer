@@ -11,7 +11,7 @@ from couchpotato.core.helpers.variable import tryInt
 from bs4 import BeautifulSoup, NavigableString
 
 log = CPLog(__name__)
-
+rarPassword = 'hd-area.org'
 
 class hdarea(OCHProvider):
     urls = {
@@ -143,6 +143,7 @@ class hdarea(OCHProvider):
         assert len(topbox) == len(download) == len(dlbottom)
 
         res = {}
+        res['pwd'] = rarPassword
         if len(topbox) > 0 and len(download) > 0:
             tb = self.parseTopBox(topbox[0])
             dl = self.parseDownload(download[0])

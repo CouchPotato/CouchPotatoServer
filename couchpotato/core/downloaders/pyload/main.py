@@ -81,7 +81,14 @@ class pyload(Downloader):
         pid = 0 #package id
         if data.get('protocol') == 'och':
             pid = self.pyload_api.add_uri(py_packagename, data.get('url'), tryInt(self.conf('download_collect', default=1)))
-
+            # Cause of PID change after captcha entry:
+            # Safe Package-ID (= in future CP download ID) to unused Packet-Data key 'site' to recognize release for renamer
+            newName = {'name': self.pyload_api.get_package_data(pid)['name'] + '.dlID(%s)' %pid}
+            self.pyload_api.set_package_data(pid, newName)
+            # Add Password to unrar downloaded Files
+            if data.get('pwd') != '':
+                newData = {'password': data.get('pwd')}
+                self.pyload_api.set_package_data(pid, newData)
         return self.downloadReturnId(pid)
 
     def test(self):
@@ -95,6 +102,9 @@ class pyload(Downloader):
 
         return False
 
+
+
+    #Get Download-Status from Pyload of the snatched release IDs in Couchpotato
     def getAllDownloadStatus(self, ids):
 
         log.debug('Checking pyload download status.')
@@ -102,88 +112,73 @@ class pyload(Downloader):
         if not self.connect():
             return []
 
-        release_downloads = ReleaseDownloadList(self)
-
+        #get PackageIDs (PID) from PyLoad collector and queue
         queue = self.getAllPackageIDs()
-
         if not queue:
             log.debug('Nothing in queue')
             return []
 
-        # Determine Package state
+        #list of snatched download Releases of this Downloader
+        release_downloads = ReleaseDownloadList(self)
+
+        # Get Package data and determine file state
         for pid in queue:
             package = self.pyload_api.get_package_data(pid)
-            status = None
-            files = {}
-            for link in package['links']:
-                if not files.has_key(link['name']):
-                    files[link['name']] = []
-                files[link['name']].append(link)
+            match_dl_ID = re.search(r'dlID\((?P<id>[0-9]+)\)',package['name'])
+            if match_dl_ID != None:
+                dl_id = tryInt(match_dl_ID.group('id'))
+                if dl_id in ids:
+                        log.debug('Found snatched release ID %s in PyLoad with Packet-ID %s.' % (dl_id, pid))
+                        # Get Files in package and find Mirrors by file name.
+                        status = None
+                        files = {}
+                        for link in package['links']:
+                            if not files.has_key(link['name']):
+                                files[link['name']] = []
+                            files[link['name']].append(link)
 
-            finishedFiles = []
-            for file in files:
-                if 'FINISHED' in [self.status_flags.get(l['status']) for l in files[file]]:
-                    finishedFiles.append(file)
+                        # Determine Download state from file Status (analog State_list above)
 
-            if len(finishedFiles) == len(files):
-                status = 'finished'
-            else:
-                for unfinishedFile in [i for i in files if i not in finishedFiles]:
-                        allFailed = True
-                        for l in files[unfinishedFile]:
-                            if (self.status_flags.get(l['status']) not in ['TEMPOFFLINE', 'OFFLINE', 'FAILED']) or ('captcha' in l['error']): #exclude captcha errors
-                                allFailed = False
-                        if allFailed:
-                            status = 'failed'
+                        # - finished: all files (minimum one per mirror) have finished downloading
+                        finishedFiles = []
+                        for file in files:
+                            if 'FINISHED' in [self.status_flags.get(l['status']) for l in files[file]]:
+                                finishedFiles.append(file)
+
+                        if len(finishedFiles) == len(files):
+                            status = 'completed'
+                        # - failed: Download of a file (on all mirrors) has failed or all mirrors of a file are offline.
                         else:
-                            status = 'busy'
+                            for unfinishedFile in [i for i in files if i not in finishedFiles]:
+                                    allMirrorsFailed = True
+                                    waitForCatptcha = False
+                                    for l in files[unfinishedFile]:
+                                        if (self.status_flags.get(l['status']) not in ['TEMPOFFLINE', 'OFFLINE', 'FAILED']):
+                                            allMirrorsFailed = False
+                                        if ('captcha' in l['error']): #exclude captcha errors
+                                            waitForCatptcha = True
 
-            release_downloads.append({
-                    'id': pid,
-                    'name': package['name'] if package else '',
-                    'status': status if status else '',
-                    #'original_status': package[''],
-                    'timeleft': -1,
-                    'folder': sp(package['folder']),
-                    #'files': '|'.join(torrent_files)
-            })
+                                    if allMirrorsFailed and not waitForCatptcha:
+                                        log.debug('The download of all mirrors of the file %s failed or are offline. DL aborted!', l['name'])
+                                        status = 'failed'
+                                        break
+                        # - unfinished: At least one file is still downloading or waiting for captcha
+                                    else:
+                                        if waitForCatptcha:
+                                            log.debug('At least one Download in Pyload is waiting for Captcha!')
+                                        status = 'busy'
 
+                        release_downloads.append({
+                                'id': dl_id,
+                                'name': package['name'] if package else '',
+                                'status': status if status else '',
+                                #'original_status': package[''],
+                                'timeleft': -1,
+                                'folder': sp(package['folder']),
+                                #'files': '|'.join(torrent_files)
+                        })
         return release_downloads
 
-        for dl in queue:
-            if dl['packageID'] in ids:
-
-                #Get files of the torrent
-                torrent_files = []
-                try:
-                    torrent_files = json.loads(self.utorrent_api.get_files(torrent[0]))
-                    torrent_files = [sp(os.path.join(torrent[26], torrent_file[0])) for torrent_file in torrent_files['files'][1]]
-                except:
-                    log.debug('Failed getting files from torrent: %s', torrent[2])
-
-                status = 'busy'
-                if (torrent[1] & self.status_flags['STARTED'] or torrent[1] & self.status_flags['QUEUED']) and torrent[4] == 1000:
-                    status = 'seeding'
-                elif (torrent[1] & self.status_flags['ERROR']):
-                    status = 'failed'
-                elif torrent[4] == 1000:
-                    status = 'completed'
-
-                if not status == 'busy':
-                    self.removeReadOnly(torrent_files)
-
-                release_downloads.append({
-                    'id': torrent[0],
-                    'name': torrent[2],
-                    'status': status,
-                    'seed_ratio': float(torrent[7]) / 1000,
-                    'original_status': torrent[1],
-                    'timeleft': str(timedelta(seconds = torrent[10])),
-                    'folder': sp(torrent[26]),
-                    'files': '|'.join(torrent_files)
-                })
-
-        return release_downloads
 
     def getAllPackageIDs(self):
         coll = self.pyload_api.get_Collector()
@@ -202,10 +197,10 @@ class pyload(Downloader):
         return self.pyload_api.remove_pids([release_download['id']])
 
     def processComplete(self, release_download, delete_files = False):
-        log.debug('Requesting uTorrent to remove the torrent %s%s.', (release_download['name'], ' and cleanup the downloaded files' if delete_files else ''))
+        log.debug('Requesting pyLoad to remove the Packet of %s%s.', (release_download['name'], ' and cleanup the downloaded files' if delete_files else ''))
         if not self.connect():
             return False
-        return self.pyload_api.remove_torrent(release_download['id'], remove_data = delete_files)
+        return self.pyload_api.remove_pids(release_download['id'])
 
     def removeReadOnly(self, files):
         #Removes all read-on ly flags in a for all files
@@ -313,6 +308,17 @@ class pyloadAPI(object):
             return json.loads(self._request(action, data))
         except TypeError, err:
             log.debug("There's no pyLoad package with id %s" % pid)
+
+    #Returns complete information about package with packageID (PID), and included files.
+    #- Returns: PackageData with .links attribute
+    def set_package_data(self, pid, data):
+        action = 'setPackageData'
+        data = {'pid': json.dumps(pid),
+                'data': json.dumps(data) }
+        try:
+            json.loads(self._request(action, data))
+        except TypeError, err:
+            log.debug("Package data %s of PID%s could not be changed." % (data, pid))
 
     #Get complete information about a specific file with fileID (FID)
     #- Returns: FileData
