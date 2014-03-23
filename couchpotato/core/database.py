@@ -297,6 +297,11 @@ class Database(object):
             releaseinfos = migrate_data['releaseinfo']
             for x in releaseinfos:
                 info = releaseinfos[x]
+
+                # Skip if release doesn't exist for this info
+                if not migrate_data['release'].get(info.get('release_id')):
+                    continue
+
                 if not migrate_data['release'][info.get('release_id')].get('info'):
                     migrate_data['release'][info.get('release_id')]['info'] = {}
 
