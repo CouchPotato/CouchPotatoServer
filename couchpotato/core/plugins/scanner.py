@@ -597,7 +597,7 @@ class Scanner(Plugin):
         if imdb_id:
             try:
                 db = get_db()
-                return db.get('media', imdb_id, with_doc = True)['doc']
+                return db.get('media', 'imdb-%s' % imdb_id, with_doc = True)['doc']
             except:
                 log.debug('Movie "%s" not in library, just getting info', imdb_id)
                 return {
