@@ -89,7 +89,7 @@ class ProfilePlugin(Plugin):
                 profile['qualities'].append(type.get('quality'))
                 profile['wait_for'].append(tryInt(type.get('wait_for')))
                 profile['finish'].append((tryInt(type.get('finish')) == 1) if order > 0 else True)
-                profile['3d'].append((tryInt(type.get('3d')) == 1) if order > 0 else True)
+                profile['3d'].append(tryInt(type.get('3d')))
                 order += 1
 
             id = kwargs.get('id')
