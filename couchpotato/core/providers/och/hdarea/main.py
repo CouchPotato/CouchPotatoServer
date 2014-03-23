@@ -75,7 +75,7 @@ class hdarea(OCHProvider):
                                     log.debug('Found release year of movie: %s' % year)
                                 if u"Größe:" in match:
                                     size_raw = re.search(r"[0-9]+([,.][0-9]+)?\s+\w+", str(match.nextSibling)).group()
-                                    size = self.parseSize(size_raw)
+                                    size = self.parseSize(str(size_raw,).replace(',','.'))
                                     res["size"] = size
                                     log.debug('Found size of release: %s Mb' % size)
                         except AttributeError:
