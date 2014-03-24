@@ -9,6 +9,7 @@ from couchpotato.core.logger import CPLog
 from couchpotato.core.providers.och.base import OCHProvider
 from couchpotato.core.helpers.variable import tryInt
 from bs4 import BeautifulSoup, NavigableString
+import json
 
 log = CPLog(__name__)
 rarPassword = 'hd-area.org'
@@ -31,7 +32,8 @@ class hdarea(OCHProvider):
             for alt_title in alt_titles:
                 if alt_title != title and title in alt_title:
                     shortenedAltTitle = simplifyString(alt_title).replace(simplifyString(title), "")
-                    self.do_search(shortenedAltTitle, results)
+                    if shortenedAltTitle != "":
+                        self.do_search(shortenedAltTitle, results)
 
 
     def do_search(self, title, results):
@@ -39,10 +41,13 @@ class hdarea(OCHProvider):
         searchUrl = self.urls['search'] % query
 
         log.debug('fetching data from %s' % searchUrl)
+
+        #TODO: Search result has more than one page <vorwaerts> link
         data = self.getHTMLData(searchUrl)
 
         linksToMovieDetails = self.parseSearchResult(data)
         for movieDetailLink in linksToMovieDetails:
+            log.debug("fetching data from Movie's detail page %s" % movieDetailLink)
             data = self.getHTMLData(movieDetailLink)
             result = self.parseMovieDetailPage(data)
             if len(result):
@@ -58,45 +63,55 @@ class hdarea(OCHProvider):
         res = {}
         try:
             #child-Abschnitte des Page-Src. nach div.beschreibung durchsuchen
-            for child in download.descendants:
-                if not isinstance(child, NavigableString) and "cover" in child["class"]:
-                    #TODO: Sprache + Groesse Parsen
-                    if "beschreibung" in child.div["class"]:
-                        descr = child.div
-
-                        #Suche nach Jahr und der Release-Groesse des Film-Releases
-                        log.debug("Look for release info on Movie's detail page.")
+            descr = download.find(attrs={"class": "beschreibung"})
+            #Suche nach Jahr und der Release-Groesse des Film-Releases
+            log.debug("Look for release info and dl-links on Movie's detail page.")
+            try:
+                matches = descr.findAll('strong', attrs={"class": "main"}, recursive=True)
+                for match in matches:
+                    if "Jahr:" in match:
                         try:
-                            matches = descr.findAll('strong', attrs={"class": "main"}, recursive=True)
-                            for match in matches:
-                                if "Jahr:" in match:
-                                    year = re.search(r"[0-9]{4}", str(match.nextSibling)).group()
-                                    res["year"] = year
-                                    log.debug('Found release year of movie: %s' % year)
-                                if u"Größe:" in match:
-                                    size_raw = re.search(r"[0-9]+([,.][0-9]+)?\s+\w+", str(match.nextSibling)).group()
-                                    size = self.parseSize(str(size_raw,).replace(',','.'))
-                                    res["size"] = size
-                                    log.debug('Found size of release: %s Mb' % size)
-                        except AttributeError:
-                            log.error('Could not fetch release details from Website.')
+                            year = re.search(r"[0-9]{4}", str(match.nextSibling)).group()
+                            res["year"] = year
+                            log.debug('Found release year of movie: %s' % year)
+                        except (AttributeError, TypeError):
+                            log.debug('Release year of movie not found!')
+                    if u"Größe:" in match:
+                        try:
+                            size_raw = re.search(r"[0-9]+([,.][0-9]+)?\s+\w+", str(match.nextSibling)).group()
+                            size = self.parseSize(str(size_raw,).replace(',','.'))
+                            res["size"] = size
+                            log.debug('Found size of release: %s Mb' % size)
+                        except (AttributeError, TypeError):
+                            log.debug('Size of movie release not found!')
+            except (AttributeError, TypeError, KeyError):
+                log.error('Could not fetch release details from Release Website.')
 
-                        #Suche nach Links und pruefe auf invisible (teilw. veraltete Links im Code). Filtere Hoster.
-                        links = descr.findAll('span', attrs={"style": "display:inline;"}, recursive=True)
-                        for link in links:
-                            url = link.a["href"]
-                            hoster = link.text
-                            for acceptedHoster in self.conf('hosters').replace(' ', '').split(','):
-                                if acceptedHoster in hoster.lower():
-                                    if self.conf('hosters') != '':
-                                        res["url"] = url
-                                        log.debug('Found DL-Link %s on Hoster %s' % (url, hoster))
-                                        return res
-                                    else:
-                                        log.error('Hosterlist seems to be empty, please check settings.')
-                                        return None
+            #Suche nach Links und pruefe auf invisible (teilw. veraltete Links im Code). Filtere Hoster.
+            try:
+                if self.conf('hosters') == '':
+                    log.error('Hosterlist seems to be empty, please check settings.')
+                    return None
 
-        except (TypeError, KeyError):
+                links = descr.findAll('span', attrs={"style": "display:inline;"}, recursive=True)
+                res["url"] = []
+                for link in links:
+                    url = link.a["href"]
+                    hoster = link.text
+                    for acceptedHoster in self.conf('hosters').replace(' ', '').split(','):
+                        if acceptedHoster in hoster.lower() and url not in res["url"]:
+                            res["url"].append(url)
+                            log.debug('Found new DL-Link %s on Hoster %s' % (url, hoster))
+                            #return res
+                if res["url"] != []:
+                    res["url"] = json.dumps(res["url"])    #List 2 string for db-compatibility
+                    return res
+                else:
+                    log.debug('No DL-Links on Hoster(s) [%s] found :(' % (self.conf('hosters')))
+                    return None
+            except (AttributeError, TypeError, KeyError):
+                log.error('Could not fetch dl-Links from Release Website.')
+        except (AttributeError, TypeError, KeyError):
             return None
         return None
 
@@ -143,13 +158,13 @@ class hdarea(OCHProvider):
         assert len(topbox) == len(download) == len(dlbottom)
 
         res = {}
-        res['pwd'] = rarPassword
         if len(topbox) > 0 and len(download) > 0:
             tb = self.parseTopBox(topbox[0])
             dl = self.parseDownload(download[0])
             if tb is not None and dl is not None:
                 res.update(tb)
                 res.update(dl)
+                res['pwd'] = rarPassword
         return res
 
     def parseSearchResult(self, data):
@@ -160,6 +175,6 @@ class hdarea(OCHProvider):
         MovieEntries = content.find(attrs={"class": "whitecontent contentheight"}, recursive=False)
 
         linksToMovieDetails = []
-        for link in MovieEntries.findAll('a'):
+        for link in MovieEntries.findAll('a', recursive=False):
             linksToMovieDetails.append(link['href'])
         return linksToMovieDetails
