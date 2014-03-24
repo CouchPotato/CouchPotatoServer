@@ -578,11 +578,11 @@ class Renamer(Plugin):
 
             # Remove matching releases
             for release in remove_releases:
-                log.debug('Removing release %s', release.identifier)
+                log.debug('Removing release %s', release.get('identifier'))
                 try:
                     db.delete(release)
                 except:
-                    log.error('Failed removing %s: %s', (release.identifier, traceback.format_exc()))
+                    log.error('Failed removing %s: %s', (release, traceback.format_exc()))
 
             if group['dirname'] and group['parentdir'] and not self.downloadIsTorrent(release_download):
                 if media_folder:
