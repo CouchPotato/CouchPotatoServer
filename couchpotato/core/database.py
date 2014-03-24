@@ -21,6 +21,8 @@ class Database(object):
     def __init__(self):
 
         addApiView('database.list_documents', self.listDocuments)
+        addApiView('database.reindex', self.reindex)
+        addApiView('database.compact', self.compact)
         addApiView('database.document.update', self.updateDocument)
         addApiView('database.document.delete', self.deleteDocument)
 
@@ -116,6 +118,34 @@ class Database(object):
 
 
         return results
+
+    def reindex(self, **kwargs):
+
+        success = True
+        try:
+            db = self.getDB()
+            db.reindex()
+        except:
+            log.error('Failed index: %s', traceback.format_exc())
+            success = False
+
+        return {
+            'success': success
+        }
+
+    def compact(self, **kwargs):
+
+        success = True
+        try:
+            db = self.getDB()
+            db.compact()
+        except:
+            log.error('Failed compact: %s', traceback.format_exc())
+            success = False
+
+        return {
+            'success': success
+        }
 
     def migrate(self):
 
