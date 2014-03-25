@@ -8,6 +8,7 @@ from urllib2 import URLError
 import json
 import os
 import traceback
+import re
 
 log = CPLog(__name__)
 
@@ -19,6 +20,15 @@ class Sabnzbd(Downloader):
     def download(self, data = None, media = None, filedata = None):
         if not media: media = {}
         if not data: data = {}
+
+        # Check NZB File for Password if in Header
+        if filedata.startswith('HTTP'):
+            filename = re.findall('filename="([^;]+).nzb"', filedata)
+            if filename:
+                data = {'name':filename[0]}
+                cut = filedata.find('<?xml')
+                
+            filedata = filedata[cut:]
 
         log.info('Sending "%s" to SABnzbd.', data.get('name'))
 
