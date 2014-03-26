@@ -179,7 +179,7 @@ class hdarea(OCHProvider):
             for link in MovieEntries.findAll('a', recursive=False):
                 linksToMovieDetails.append(link['href'])
             num_results = len(linksToMovieDetails)
-            log.info('Found %s', (num_results, 'release' if num_results == 1 else 'releases', 'on search.'))
+            log.info('Found %s %s on search.', (num_results, 'release' if num_results == 1 else 'releases'))
             return linksToMovieDetails
         except:
             log.debug('There are no search results to parse!')
