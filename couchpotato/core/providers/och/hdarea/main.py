@@ -169,12 +169,20 @@ class hdarea(OCHProvider):
 
     def parseSearchResult(self, data):
         #print data
-        dom = BeautifulSoup(data)
+        try:
+            dom = BeautifulSoup(data)
 
-        content = dom.find(id='content')
-        MovieEntries = content.find(attrs={"class": "whitecontent contentheight"}, recursive=False)
+            content = dom.find(id='content')
+            MovieEntries = content.find(attrs={"class": "whitecontent contentheight"}, recursive=False)
 
-        linksToMovieDetails = []
-        for link in MovieEntries.findAll('a', recursive=False):
-            linksToMovieDetails.append(link['href'])
-        return linksToMovieDetails
+            linksToMovieDetails = []
+            for link in MovieEntries.findAll('a', recursive=False):
+                linksToMovieDetails.append(link['href'])
+            num_results = linksToMovieDetails.count()
+            log.info('Found %s', num_results, 'release' if num_results == 1 else 'releases', 'on search.')
+            return linksToMovieDetails
+        except:
+            log.error('There are no search results to parse!')
+            return []
+
+
