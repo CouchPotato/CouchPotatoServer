@@ -18,7 +18,7 @@ class Base(TorrentProvider):
         'base_url': 'https://www.iptorrents.com',
         'login': 'https://www.iptorrents.com/torrents/',
         'login_check': 'https://www.iptorrents.com/inbox.php',
-        'search': 'https://www.iptorrents.com/torrents/?l%d=1%s&q=%s&qf=ti&p=%d',
+        'search': 'https://www.iptorrents.com/torrents/?%s%%s&q=%s&qf=ti&p=%%d',
     }
 
     http_time_between_calls = 1  # Seconds
