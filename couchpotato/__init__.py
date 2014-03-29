@@ -55,7 +55,7 @@ def get_db():
 
 # Web view
 def index():
-    return template_loader.load('index.thtml').generate(sep = os.sep, fireEvent = fireEvent, Env = Env)
+    return template_loader.load('index.html').generate(sep = os.sep, fireEvent = fireEvent, Env = Env)
 addView('', index)
 
 
@@ -67,14 +67,14 @@ def apiDocs():
         del api_docs['']
         del api_docs_missing['']
 
-    return template_loader.load('api.thtml').generate(fireEvent = fireEvent, routes = sorted(routes), api_docs = api_docs, api_docs_missing = sorted(api_docs_missing), Env = Env)
+    return template_loader.load('api.html').generate(fireEvent = fireEvent, routes = sorted(routes), api_docs = api_docs, api_docs_missing = sorted(api_docs_missing), Env = Env)
 
 addView('docs', apiDocs)
 
 
 # Database debug manager
 def databaseManage():
-    return template_loader.load('database.thtml').generate(fireEvent = fireEvent, Env = Env)
+    return template_loader.load('database.html').generate(fireEvent = fireEvent, Env = Env)
 
 addView('database', databaseManage)
 
@@ -108,7 +108,7 @@ class LoginHandler(BaseHandler):
         if self.get_current_user():
             self.redirect(Env.get('web_base'))
         else:
-            self.write(template_loader.load('login.thtml').generate(sep = os.sep, fireEvent = fireEvent, Env = Env))
+            self.write(template_loader.load('login.html').generate(sep = os.sep, fireEvent = fireEvent, Env = Env))
 
     def post(self, *args, **kwargs):
 
