@@ -281,7 +281,7 @@ class QualityPlugin(Plugin):
                     return 1, key
 
             if list(set([key]) & set(words)):
-                log.debug('Found %s in %s', (tag, cur_file))
+                log.debug('Found %s in %s', (key, cur_file))
                 return 1, key
 
         return 0, None
