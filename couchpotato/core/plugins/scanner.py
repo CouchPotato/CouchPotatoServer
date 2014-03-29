@@ -450,6 +450,7 @@ class Scanner(Plugin):
         data['quality'] = None
         if release_download and release_download.get('quality'):
             data['quality'] = fireEvent('quality.single', release_download.get('quality'), single = True)
+            data['quality']['is_3d'] = release_download.get('is_3d', False)
 
         if not data['quality']:
             data['quality'] = fireEvent('quality.guess', files = files, extra = data, single = True)
