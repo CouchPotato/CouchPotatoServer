@@ -21,7 +21,7 @@ class QualityPlugin(Plugin):
     }
 
     qualities = [
-        {'identifier': 'bd50', 'hd': True, 'allow_3d': True, 'size': (15000, 60000), 'label': 'BR-Disk', 'alternative': ['bd25'], 'allow': ['1080p'], 'ext':[], 'tags': ['bdmv', 'certificate', ('complete', 'bluray')]},
+        {'identifier': 'bd50', 'hd': True, 'allow_3d': True, 'size': (20000, 60000), 'label': 'BR-Disk', 'alternative': ['bd25'], 'allow': ['1080p'], 'ext':['iso', 'img'], 'tags': ['bdmv', 'certificate', ('complete', 'bluray'), 'avc', 'mvc']},
         {'identifier': '1080p', 'hd': True, 'allow_3d': True, 'size': (4000, 20000), 'label': '1080p', 'width': 1920, 'height': 1080, 'alternative': [], 'allow': [], 'ext':['mkv', 'm2ts'], 'tags': ['m2ts', 'x264', 'h264']},
         {'identifier': '720p', 'hd': True, 'allow_3d': True, 'size': (3000, 10000), 'label': '720p', 'width': 1280, 'height': 720, 'alternative': [], 'allow': [], 'ext':['mkv', 'ts'], 'tags': ['x264', 'h264']},
         {'identifier': 'brrip', 'hd': True, 'size': (700, 7000), 'label': 'BR-Rip', 'alternative': ['bdrip'], 'allow': ['720p', '1080p'], 'ext':[], 'tags': ['hdtv', 'hdrip', 'webdl', ('web', 'dl')]},
@@ -213,7 +213,7 @@ class QualityPlugin(Plugin):
         # Return nothing if all scores are 0
         has_non_zero = 0
         for s in score:
-            if score[s] > 0:
+            if score[s]['score'] > 0:
                 has_non_zero += 1
 
         if not has_non_zero:
@@ -344,6 +344,7 @@ class QualityPlugin(Plugin):
             'Movie.Name.Camelie.1999.720p.BluRay.x264-Group': '720p',
             'Movie.Name.2008.German.DL.AC3.1080p.BluRay.x264-Group': '1080p',
             'Movie.Name.2004.GERMAN.AC3D.DL.1080p.BluRay.x264-Group': '1080p',
+            'Movie.Name.2013.BR-Disk-Group.iso': 'bd50',
         }
 
         correct = 0
