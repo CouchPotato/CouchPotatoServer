@@ -94,44 +94,6 @@ class rTorrent(Downloader):
 
         return False
 
-    def updateProviderGroup(self, name, data):
-        if data.get('seed_time'):
-            log.info('seeding time ignored, not supported')
-
-        if not name:
-            return False
-
-        if not self.connect():
-            return False
-
-        views = self.rt.get_views()
-
-        if name not in views:
-            self.rt.create_group(name)
-
-        group = self.rt.get_group(name)
-
-        try:
-            if data.get('seed_ratio'):
-                ratio = int(float(data.get('seed_ratio')) * 100)
-                log.debug('Updating provider ratio to %s, group name: %s', (ratio, name))
-
-                # Explicitly set all group options to ensure it is setup correctly
-                group.set_upload('1M')
-                group.set_min(ratio)
-                group.set_max(ratio)
-                group.set_command('d.stop')
-                group.enable()
-            else:
-                # Reset group action and disable it
-                group.set_command()
-                group.disable()
-        except MethodError as err:
-            log.error('Unable to set group options: %s', err.msg)
-            return False
-
-        return True
-
 
     def download(self, data = None, media = None, filedata = None):
         if not media: media = {}
@@ -140,10 +102,6 @@ class rTorrent(Downloader):
         log.debug('Sending "%s" to rTorrent.', (data.get('name')))
 
         if not self.connect():
-            return False
-
-        group_name = 'cp_' + data.get('provider').lower()
-        if not self.updateProviderGroup(group_name, data):
             return False
 
         torrent_params = {}
@@ -185,9 +143,6 @@ class rTorrent(Downloader):
 
             if self.conf('directory'):
                 torrent.set_directory(self.conf('directory'))
-
-            # Set Ratio Group
-            torrent.set_visible(group_name)
 
             # Start torrent
             if not self.conf('paused', default = 0):
