@@ -16,7 +16,7 @@ class Base(TorrentProvider):
         'detail': '%s/api/movie.json?id=%s'
     }
 
-    http_time_between_calls = 1  #seconds
+    http_time_between_calls = 1  # seconds
 
     proxy_list = [
         'http://yify.unlocktorrent.com',

@@ -222,7 +222,6 @@ class MediaPlugin(MediaBase):
             del filter_by['media_status']
             del filter_by['release_status']
 
-
         # Filter by combining ids
         for x in filter_by:
             media_ids = [n for n in media_ids if n in filter_by[x]]
@@ -281,7 +280,7 @@ class MediaPlugin(MediaBase):
 
         for media_type in fireEvent('media.types', merge = True):
             def tempList(*args, **kwargs):
-                return self.listView(types = media_type, *args, **kwargs)
+                return self.listView(types = media_type, **kwargs)
             addApiView('%s.list' % media_type, tempList)
 
     def availableChars(self, types = None, status = None, release_status = None):
@@ -350,7 +349,7 @@ class MediaPlugin(MediaBase):
 
         for media_type in fireEvent('media.types', merge = True):
             def tempChar(*args, **kwargs):
-                return self.charView(types = media_type, *args, **kwargs)
+                return self.charView(types = media_type, **kwargs)
             addApiView('%s.available_chars' % media_type, tempChar)
 
     def delete(self, media_id, delete_from = None):
@@ -382,9 +381,8 @@ class MediaPlugin(MediaBase):
                             if release.get('status') == 'done':
                                 db.delete(release)
                                 total_deleted += 1
-                            new_media_status = 'active'
 
-                    if total_releases == total_deleted:
+                    if total_releases == total_deleted and media['status'] != 'active':
                         db.delete(media)
                         deleted = True
                     elif new_media_status:

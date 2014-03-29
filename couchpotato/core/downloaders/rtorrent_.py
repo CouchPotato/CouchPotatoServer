@@ -78,10 +78,10 @@ class rTorrent(Downloader):
 
         self.error_msg = ''
         try:
-             self.rt._verify_conn()
+            self.rt._verify_conn()
         except AssertionError as e:
-             self.error_msg = e.message
-             self.rt = None
+            self.error_msg = e.message
+            self.rt = None
 
         return self.rt
 

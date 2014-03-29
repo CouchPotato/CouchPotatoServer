@@ -164,14 +164,14 @@ class BaseUpdater(Plugin):
 
     def info(self):
 
-        version = self.getVersion()
+        current_version = self.getVersion()
 
         return {
             'last_check': self.last_check,
             'update_version': self.update_version,
-            'version': version,
+            'version': current_version,
             'repo_name': '%s/%s' % (self.repo_user, self.repo_name),
-            'branch': version.get('branch', self.branch),
+            'branch': current_version.get('branch', self.branch),
         }
 
     def getVersion(self):

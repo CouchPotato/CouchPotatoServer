@@ -16,7 +16,7 @@ class Base(TorrentProvider):
         'download': 'http://www.td.af/download.php/%s/%s',
     }
 
-    http_time_between_calls = 1 #seconds
+    http_time_between_calls = 1  # Seconds
 
     def _search(self, media, quality, results):
 

@@ -62,7 +62,7 @@ class Bluray(Automation, RSS):
             name = self.getTextElement(movie, 'title').lower().split('blu-ray')[0].strip('(').rstrip()
             year = self.getTextElement(movie, 'description').split('|')[1].strip('(').strip()
 
-            if not name.find('/') == -1: # make sure it is not a double movie release
+            if not name.find('/') == -1:  # make sure it is not a double movie release
                 continue
 
             if tryInt(year) < self.getMinimal('year'):

@@ -5,6 +5,7 @@ from couchpotato import get_db, CPLog
 from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
 from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.plugins.base import Plugin
+import six
 
 
 log = CPLog(__name__)

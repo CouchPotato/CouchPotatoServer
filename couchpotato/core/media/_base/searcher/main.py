@@ -14,6 +14,7 @@ log = CPLog(__name__)
 
 class Searcher(SearcherBase):
 
+    # noinspection PyMissingConstructor
     def __init__(self):
         addEvent('searcher.protocols', self.getSearchProtocols)
         addEvent('searcher.contains_other_quality', self.containsOtherQuality)
@@ -195,7 +196,7 @@ class Searcher(SearcherBase):
             req = splitString(req_set, '&')
             req_match += len(list(set(rel_words) & set(req))) == len(req)
 
-        if len(required_words) > 0  and req_match == 0:
+        if len(required_words) > 0 and req_match == 0:
             log.info2('Wrong: Required word missing: %s', rel_name)
             return False
 

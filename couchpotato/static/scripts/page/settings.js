@@ -370,7 +370,7 @@ var OptionBase = new Class({
 				createTooltip(self.options.description[1]).inject(hint, 'top');
 			}
 			else {
-				var hint = new Element('p.formHint', {
+				new Element('p.formHint', {
 					'html': self.options.description || ''
 				}).inject(self.el)
 			}
@@ -1312,8 +1312,9 @@ Option.Combined = new Class({
 		var head = new Element('div.head').inject(self.combined_list);
 
 		Object.each(self.inputs, function(input, name){
+			var _in = input.getNext();
 			self.labels[name] = input.getPrevious().get('text');
-			self.descriptions[name] = (_in = input.getNext()) ? _in.get('text') : '';
+			self.descriptions[name] = _in ? _in.get('text') : '';
 
 			new Element('abbr', {
 				'class': name,
@@ -1465,4 +1466,4 @@ var createTooltip = function(description){
 		);
 
 	return tip;
-}
+};

@@ -188,6 +188,7 @@ class Downloader(Provider):
     def pause(self, release_download, pause):
         return
 
+
 class ReleaseDownloadList(list):
 
     provider = None

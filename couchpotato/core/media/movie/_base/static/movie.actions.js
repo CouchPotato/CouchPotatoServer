@@ -60,22 +60,6 @@ var MovieAction = new Class({
 				'z-index': '1'
 			}
 		}).inject(self.movie, 'top').fade('hide');
-		//self.positionMask();
-	},
-
-	positionMask: function(){
-		var self = this,
-			movie = $(self.movie),
-			s = movie.getSize()
-
-		return;
-
-		return self.mask.setStyles({
-			'width': s.x,
-			'height': s.y
-		}).position({
-			'relativeTo': movie
-		})
 	},
 
 	toElement: function(){
@@ -122,7 +106,7 @@ MA.Release = new Class({
 		});
 
 		if(!self.movie.data.releases || self.movie.data.releases.length == 0)
-			self.el.hide()
+			self.el.hide();
 		else
 			self.showHelper();
 
@@ -164,7 +148,7 @@ MA.Release = new Class({
 				new Element('span.age', {'text': 'Age'}),
 				new Element('span.score', {'text': 'Score'}),
 				new Element('span.provider', {'text': 'Provider'})
-			).inject(self.release_container)
+			).inject(self.release_container);
 
 			if(self.movie.data.releases)
 				self.movie.data.releases.each(function(release){
@@ -186,7 +170,7 @@ MA.Release = new Class({
 					}
 
 					// Create release
-					var item = new Element('div', {
+					release['el'] = new Element('div', {
 						'class': 'item '+release.status,
 						'id': 'release_'+release._id
 					}).adopt(
@@ -219,7 +203,6 @@ MA.Release = new Class({
 							}
 						})
 					).inject(self.release_container);
-					release['el'] = item;
 
 					if(release.status == 'ignored' || release.status == 'failed' || release.status == 'snatched'){
 						if(!self.last_release || (self.last_release && self.last_release.status != 'snatched' && release.status == 'snatched'))
@@ -242,13 +225,13 @@ MA.Release = new Class({
 						status_el.set('text', new_status);
 
 						if(!q && (new_status == 'snatched' || new_status == 'seeding' || new_status == 'done'))
-							var q = self.addQuality(release.quality_id);
+							q = self.addQuality(release.quality_id);
 
 						if(q && !q.hasClass(new_status)) {
 							q.removeClass(release.status).addClass(new_status);
 							q.set('title', q.get('title').replace(release.status, new_status));
 						}
-					}
+					};
 
 					App.on('release.update_status', update_handle);
 
@@ -391,12 +374,11 @@ MA.Release = new Class({
 	},
 
 	ignore: function(release){
-		var self = this;
 
 		Api.request('release.ignore', {
 			'data': {
 				'id': release._id
-			},
+			}
 		})
 
 	},
@@ -456,7 +438,7 @@ MA.Trailer = new Class({
 	watch: function(offset){
 		var self = this;
 
-		var data_url = 'https://gdata.youtube.com/feeds/videos?vq="{title}" {year} trailer&max-results=1&alt=json-in-script&orderby=relevance&sortorder=descending&format=5&fmt=18'
+		var data_url = 'https://gdata.youtube.com/feeds/videos?vq="{title}" {year} trailer&max-results=1&alt=json-in-script&orderby=relevance&sortorder=descending&format=5&fmt=18';
 		var url = data_url.substitute({
 				'title': encodeURI(self.getTitle()),
 				'year': self.get('year'),
@@ -515,7 +497,7 @@ MA.Trailer = new Class({
 
 						}
 					}
-				}
+				};
 				self.player.addEventListener('onStateChange', change_quality);
 
 			}
@@ -532,7 +514,7 @@ MA.Trailer = new Class({
 		$(self.movie).setStyle('height', null);
 
 		setTimeout(function(){
-			self.container.destroy()
+			self.container.destroy();
 			self.close_button.destroy();
 		}, 1800)
 	}
@@ -661,7 +643,7 @@ MA.Edit = new Class({
 		self.movie.slide('out');
 	}
 
-})
+});
 
 MA.Refresh = new Class({
 
@@ -847,7 +829,7 @@ MA.Files = new Class({
 			new Element('div.item.head').adopt(
 				new Element('span.name', {'text': 'File'}),
 				new Element('span.type', {'text': 'Type'})
-			).inject(self.files_container)
+			).inject(self.files_container);
 
 			if(self.movie.data.releases)
 				Array.each(self.movie.data.releases, function(release){

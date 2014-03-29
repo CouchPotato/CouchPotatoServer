@@ -369,7 +369,7 @@
 
 		// Create parallel callback
 		var callbacks = [];
-		self.global_events[name].each(function(handle, nr){
+		self.global_events[name].each(function(handle){
 
 			callbacks.push(function(callback){
 				var results = handle.apply(handle, args || []);

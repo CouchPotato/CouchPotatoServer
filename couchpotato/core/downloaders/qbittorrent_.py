@@ -14,6 +14,7 @@ log = CPLog(__name__)
 
 autoload = 'qBittorrent'
 
+
 class qBittorrent(Downloader):
 
     protocol = ['torrent', 'torrent_magnet']

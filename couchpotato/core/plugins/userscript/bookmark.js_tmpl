@@ -32,7 +32,7 @@ var isCorrectUrl = function() {
 }
 var addUserscript = function() {
 	// Add window param
-	document.body.setAttribute('cp_auto_open', true)
+	document.body.setAttribute('cp_auto_open', 'true')
 
 	// Load userscript
 	var e = document.createElement('script');

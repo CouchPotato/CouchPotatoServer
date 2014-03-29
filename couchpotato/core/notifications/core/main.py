@@ -131,7 +131,7 @@ class CoreNotifier(Notification):
 
         for message in messages:
             if message.get('time') > last_check:
-                message['sticky'] = True # Always sticky core messages
+                message['sticky'] = True  # Always sticky core messages
 
                 message_type = 'core.message.important' if message.get('important') else 'core.message'
                 fireEvent(message_type, message = message.get('message'), data = message)

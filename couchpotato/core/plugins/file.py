@@ -1,5 +1,4 @@
 import os.path
-import time
 import traceback
 
 from couchpotato import get_db
@@ -64,7 +63,7 @@ class FileManager(Plugin):
     def download(self, url = '', dest = None, overwrite = False, urlopen_kwargs = None):
         if not urlopen_kwargs: urlopen_kwargs = {}
 
-        if not dest: # to Cache
+        if not dest:  # to Cache
             dest = os.path.join(Env.get('cache_dir'), '%s.%s' % (md5(url), getExt(url)))
 
         if not overwrite and os.path.isfile(dest):

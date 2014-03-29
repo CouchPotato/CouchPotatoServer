@@ -46,7 +46,10 @@ class Goodfilms(Automation):
                 break
 
             for movie in this_watch_list:
-                movies.append({ 'title': movie['data-film-title'], 'year': movie['data-film-year'] })
+                movies.append({
+                    'title': movie['data-film-title'],
+                    'year': movie['data-film-year']
+                })
 
             if not 'next page' in data.lower():
                 break

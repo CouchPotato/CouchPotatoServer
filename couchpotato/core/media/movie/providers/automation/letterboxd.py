@@ -50,7 +50,10 @@ class Letterboxd(Automation):
 
             for movie in soup.find_all('a', attrs = {'class': 'frame'}):
                 match = removeEmpty(self.pattern.split(movie['title']))
-                movies.append({'title': match[0], 'year': match[1] })
+                movies.append({
+                    'title': match[0],
+                    'year': match[1]
+                })
 
         return movies
 

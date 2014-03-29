@@ -12,7 +12,7 @@ Page.Userscript = new Class({
 		}
 	},
 
-	indexAction: function(param){
+	indexAction: function(){
 		var self = this;
 
 		self.el.adopt(
@@ -60,7 +60,7 @@ var UserscriptSettingTab = new Class({
 	addSettings: function(){
 		var self = this;
 
-		self.settings = App.getPage('Settings')
+		self.settings = App.getPage('Settings');
 		self.settings.addEvent('create', function(){
 
 			var host_url = window.location.protocol + '//' + window.location.host;
@@ -74,7 +74,7 @@ var UserscriptSettingTab = new Class({
 					'text': 'Install userscript',
 					'href': Api.createUrl('userscript.get')+randomString()+'/couchpotato.user.js',
 					'target': '_blank'
-				}), 
+				}),
 				new Element('span.or[text=or]'),
 				new Element('span.bookmarklet').adopt(
 					new Element('a.button.green', {
@@ -86,7 +86,7 @@ var UserscriptSettingTab = new Class({
 						'target': '',
 						'events': {
 							'click': function(e){
-								(e).stop()
+								(e).stop();
 								alert('Drag it to your bookmark ;)')
 							}
 						}

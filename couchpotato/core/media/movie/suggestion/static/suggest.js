@@ -116,7 +116,7 @@ var SuggestList = new Class({
 								}
 							}
 						}) : null
-					)
+					);
 
 				$(m).inject(self.el);
 
@@ -150,4 +150,4 @@ var SuggestList = new Class({
 		return this.el;
 	}
 
-})
+});

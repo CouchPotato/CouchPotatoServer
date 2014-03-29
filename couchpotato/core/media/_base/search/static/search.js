@@ -16,7 +16,7 @@ Block.Search = new Class({
 						'keyup': self.keyup.bind(self),
 						'focus': function(){
 							if(focus_timer) clearTimeout(focus_timer);
-							self.el.addClass('focused')
+							self.el.addClass('focused');
 							if(this.get('value'))
 								self.hideResults(false)
 						},
@@ -57,17 +57,17 @@ Block.Search = new Class({
 		(e).preventDefault();
 
 		if(self.last_q === ''){
-			self.input.blur()
+			self.input.blur();
 			self.last_q = null;
 		}
 		else {
 
 			self.last_q = '';
 			self.input.set('value', '');
-			self.input.focus()
+			self.input.focus();
 
-			self.media = {}
-			self.results.empty()
+			self.media = {};
+			self.results.empty();
 			self.el.removeClass('filled')
 
 		}
@@ -92,16 +92,16 @@ Block.Search = new Class({
 		self.hidden = bool;
 	},
 
-	keyup: function(e){
+	keyup: function(){
 		var self = this;
 
-		self.el[self.q() ? 'addClass' : 'removeClass']('filled')
+		self.el[self.q() ? 'addClass' : 'removeClass']('filled');
 
 		if(self.q() != self.last_q){
 			if(self.api_request && self.api_request.isRunning())
 				self.api_request.cancel();
 
-			if(self.autocomplete_timer) clearTimeout(self.autocomplete_timer)
+			if(self.autocomplete_timer) clearTimeout(self.autocomplete_timer);
 			self.autocomplete_timer = self.autocomplete.delay(300, self)
 		}
 
@@ -111,7 +111,7 @@ Block.Search = new Class({
 		var self = this;
 
 		if(!self.q()){
-			self.hideResults(true)
+			self.hideResults(true);
 			return
 		}
 
@@ -139,7 +139,7 @@ Block.Search = new Class({
 			})
 		}
 		else
-			self.fill(q, cache)
+			self.fill(q, cache);
 
 		self.last_q = q;
 
@@ -148,31 +148,31 @@ Block.Search = new Class({
 	fill: function(q, json){
 		var self = this;
 
-		self.cache[q] = json
+		self.cache[q] = json;
 
-		self.media = {}
-		self.results.empty()
-		
-		Object.each(json, function(media, type){
+		self.media = {};
+		self.results.empty();
+
+		Object.each(json, function(media){
 			if(typeOf(media) == 'array'){
 				Object.each(media, function(m){
-		
+
 					var m = new Block.Search[m.type.capitalize() + 'Item'](m);
-					$(m).inject(self.results)
-					self.media[m.imdb || 'r-'+Math.floor(Math.random()*10000)] = m
-		
+					$(m).inject(self.results);
+					self.media[m.imdb || 'r-'+Math.floor(Math.random()*10000)] = m;
+
 					if(q == m.imdb)
 						m.showOptions()
-		
+
 				});
 			}
-		})
+		});
 
 		// Calculate result heights
 		var w = window.getSize(),
 			rc = self.result_container.getCoordinates();
 
-		self.results.setStyle('max-height', (w.y - rc.top - 50) + 'px')
+		self.results.setStyle('max-height', (w.y - rc.top - 50) + 'px');
 		self.mask.fade('out')
 
 	},

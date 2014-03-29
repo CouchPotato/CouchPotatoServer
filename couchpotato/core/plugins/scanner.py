@@ -28,7 +28,7 @@ class Scanner(Plugin):
 
     ignored_in_path = [os.path.sep + 'extracted' + os.path.sep, 'extracting', '_unpack', '_failed_', '_unknown_', '_exists_', '_failed_remove_',
                        '_failed_rename_', '.appledouble', '.appledb', '.appledesktop', os.path.sep + '._', '.ds_store', 'cp.cpnfo',
-                       'thumbs.db', 'ehthumbs.db', 'desktop.ini']  #unpacking, smb-crap, hidden files
+                       'thumbs.db', 'ehthumbs.db', 'desktop.ini']  # unpacking, smb-crap, hidden files
     ignore_names = ['extract', 'extracting', 'extracted', 'movie', 'movies', 'film', 'films', 'download', 'downloads', 'video_ts', 'audio_ts', 'bdmv', 'certificate']
     extensions = {
         'movie': ['mkv', 'wmv', 'avi', 'mpg', 'mpeg', 'mp4', 'm2ts', 'iso', 'img', 'mdf', 'ts', 'm4v'],
@@ -589,7 +589,7 @@ class Scanner(Plugin):
 
                         if len(movie) > 0:
                             imdb_id = movie[0].get('imdb')
-                            log.debug('Found movie via search: %s', cur_file)
+                            log.debug('Found movie via search: %s', identifier)
                             if imdb_id: break
                 else:
                     log.debug('Identifier to short to use for search: %s', identifier)
@@ -835,6 +835,7 @@ class Scanner(Plugin):
         cleaned = ' '.join(re.split('\W+', simplifyString(release_name)))
         cleaned = re.sub(self.clean, ' ', cleaned)
 
+        year = None
         for year_str in [file_name, release_name, cleaned]:
             if not year_str: continue
             year = self.findYear(year_str)
@@ -843,7 +844,7 @@ class Scanner(Plugin):
 
         cp_guess = {}
 
-        if year: # Split name on year
+        if year:  # Split name on year
             try:
                 movie_name = cleaned.rsplit(year, 1).pop(0).strip()
                 if movie_name:

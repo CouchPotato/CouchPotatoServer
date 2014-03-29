@@ -30,7 +30,7 @@ class Pushalot(Notification):
         }
 
         headers = {
-           'Content-type': 'application/x-www-form-urlencoded'
+            'Content-type': 'application/x-www-form-urlencoded'
         }
 
         try:

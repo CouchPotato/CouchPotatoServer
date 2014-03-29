@@ -63,6 +63,7 @@ class QualityPlugin(Plugin):
 
         addEvent('app.test', self.doTest)
 
+        self.order = []
         self.addOrder()
 
     def addOrder(self):
@@ -247,12 +248,12 @@ class QualityPlugin(Plugin):
             qualities = [qualities] if isinstance(qualities, (str, unicode)) else qualities
 
             for alt in qualities:
-                if (isinstance(alt, tuple)):
+                if isinstance(alt, tuple):
                     if len(set(words) & set(alt)) == len(alt):
                         log.debug('Found %s via %s %s in %s', (quality['identifier'], tag_type, quality.get(tag_type), cur_file))
                         score += points.get(tag_type)
 
-                if (isinstance(alt, (str, unicode)) and ss(alt.lower()) in cur_file.lower()):
+                if isinstance(alt, (str, unicode)) and ss(alt.lower()) in cur_file.lower():
                     log.debug('Found %s via %s %s in %s', (quality['identifier'], tag_type, quality.get(tag_type), cur_file))
                     score += points.get(tag_type) / 2
 

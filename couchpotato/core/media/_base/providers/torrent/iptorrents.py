@@ -21,7 +21,7 @@ class Base(TorrentProvider):
         'search': 'https://www.iptorrents.com/torrents/?l%d=1%s&q=%s&qf=ti&p=%d',
     }
 
-    http_time_between_calls = 1 #seconds
+    http_time_between_calls = 1  # Seconds
     cat_backup_id = None
 
     def buildUrl(self, title, media, quality):
@@ -53,14 +53,14 @@ class Base(TorrentProvider):
                 html = BeautifulSoup(data)
 
                 try:
-                    page_nav = html.find('span', attrs = {'class' : 'page_nav'})
+                    page_nav = html.find('span', attrs = {'class': 'page_nav'})
                     if page_nav:
                         next_link = page_nav.find("a", text = "Next")
                         if next_link:
                             final_page_link = next_link.previous_sibling.previous_sibling
                             pages = int(final_page_link.string)
 
-                    result_table = html.find('table', attrs = {'class' : 'torrents'})
+                    result_table = html.find('table', attrs = {'class': 'torrents'})
 
                     if not result_table or 'nothing found!' in data.lower():
                         return
@@ -80,8 +80,8 @@ class Base(TorrentProvider):
                         torrent_download_url = self.urls['base_url'] + (result.find_all('td')[3].find('a'))['href'].replace(' ', '.')
                         torrent_details_url = self.urls['base_url'] + torrent['href']
                         torrent_size = self.parseSize(result.find_all('td')[5].string)
-                        torrent_seeders = tryInt(result.find('td', attrs = {'class' : 'ac t_seeders'}).string)
-                        torrent_leechers = tryInt(result.find('td', attrs = {'class' : 'ac t_leechers'}).string)
+                        torrent_seeders = tryInt(result.find('td', attrs = {'class': 'ac t_seeders'}).string)
+                        torrent_leechers = tryInt(result.find('td', attrs = {'class': 'ac t_leechers'}).string)
 
                         results.append({
                             'id': torrent_id,

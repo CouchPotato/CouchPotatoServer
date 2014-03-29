@@ -2,7 +2,7 @@ from urllib import unquote
 import re
 
 from couchpotato.core.helpers.encoding import toUnicode
-from couchpotato.core.helpers.variable import natsortKey, tryInt
+from couchpotato.core.helpers.variable import natsortKey
 
 
 def getParams(params):
@@ -44,6 +44,7 @@ def getParams(params):
     return dictToList(temp)
 
 non_decimal = re.compile(r'[^\d.]+')
+
 def dictToList(params):
 
     if type(params) is dict:

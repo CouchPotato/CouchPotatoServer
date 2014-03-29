@@ -26,7 +26,7 @@
                     )
                 );
 
-                documents.each(function(doc, nr){
+                documents.each(function(doc){
                     new Element('tr.document').adopt(
                          new Element('td.id', {'text': doc['_id']}),
                          new Element('td._rev', {'text': doc['_rev']}),

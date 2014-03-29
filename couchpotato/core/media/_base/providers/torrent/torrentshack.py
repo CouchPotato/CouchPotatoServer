@@ -21,7 +21,7 @@ class Base(TorrentProvider):
         'download': 'https://torrentshack.net/%s',
     }
 
-    http_time_between_calls = 1 #seconds
+    http_time_between_calls = 1  # Seconds
 
     def _search(self, media, quality, results):
 
@@ -32,16 +32,16 @@ class Base(TorrentProvider):
             html = BeautifulSoup(data)
 
             try:
-                result_table = html.find('table', attrs = {'id' : 'torrent_table'})
+                result_table = html.find('table', attrs = {'id': 'torrent_table'})
                 if not result_table:
                     return
 
-                entries = result_table.find_all('tr', attrs = {'class' : 'torrent'})
+                entries = result_table.find_all('tr', attrs = {'class': 'torrent'})
 
                 for result in entries:
 
-                    link = result.find('span', attrs = {'class' : 'torrent_name_link'}).parent
-                    url = result.find('td', attrs = {'class' : 'torrent_td'}).find('a')
+                    link = result.find('span', attrs = {'class': 'torrent_name_link'}).parent
+                    url = result.find('td', attrs = {'class': 'torrent_td'}).find('a')
 
                     results.append({
                         'id': link['href'].replace('torrents.php?torrentid=', ''),

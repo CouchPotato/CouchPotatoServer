@@ -67,7 +67,7 @@ Page.Home = new Class({
 					// Force update after search
 					self.available_list.update();
 					App.off('movie.searcher.ended', after_search);
-				}
+				};
 				App.on('movie.searcher.ended', after_search);
 
 			}

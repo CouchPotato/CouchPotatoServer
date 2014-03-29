@@ -100,14 +100,14 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
         if not os.path.isdir(backup_path): os.makedirs(backup_path)
 
         for root, dirs, files in scandir.walk(backup_path):
-            for file in files:
-                ints = re.findall('\d+', file)
+            for backup_file in files:
+                ints = re.findall('\d+', backup_file)
 
                 # Delete non zip files
                 if len(ints) != 1:
-                    os.remove(os.path.join(backup_path, file))
+                    os.remove(os.path.join(backup_path, backup_file))
                 else:
-                    existing_backups.append((int(ints[0]), file))
+                    existing_backups.append((int(ints[0]), backup_file))
 
         # Remove all but the last 5
         for eb in existing_backups[:-backup_count]:
@@ -117,8 +117,8 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
         new_backup = toUnicode(os.path.join(backup_path, '%s.tar.gz' % int(time.time())))
         zipf = tarfile.open(new_backup, 'w:gz')
         for root, dirs, files in scandir.walk(db_path):
-            for file in files:
-                zipf.add(os.path.join(root, file), arcname = 'database/%s' % os.path.join(root[len(db_path)+1:], file))
+            for zfilename in files:
+                zipf.add(os.path.join(root, zfilename), arcname = 'database/%s' % os.path.join(root[len(db_path) + 1:], zfilename))
         zipf.close()
 
         # Open last
@@ -178,6 +178,7 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     logger.addHandler(hdlr2)
 
     # Start logging & enable colors
+    # noinspection PyUnresolvedReferences
     import color_logs
     from couchpotato.core.logger import CPLog
     log = CPLog(__name__)
@@ -212,7 +213,8 @@ def runCouchPotato(options, base_path, args, data_dir = None, log_dir = None, En
     }
 
     # Load the app
-    application = Application([],
+    application = Application(
+        [],
         log_function = lambda x: None,
         debug = config['use_reloader'],
         gzip = True,

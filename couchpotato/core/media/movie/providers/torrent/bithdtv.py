@@ -14,6 +14,6 @@ class BiTHDTV(MovieProvider, Base):
     def buildUrl(self, media):
         query = tryUrlencode({
             'search': fireEvent('library.query', media, single = True),
-            'cat': 7 # Movie cat
+            'cat': 7  # Movie cat
         })
         return query

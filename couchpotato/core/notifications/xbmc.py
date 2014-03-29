@@ -89,7 +89,7 @@ class XBMC(Notification):
                 self.use_json_notifications[host] = False
 
                 # send the text message
-                resp = self.notifyXBMCnoJSON(host, {'title':self.default_title, 'message':message})
+                resp = self.notifyXBMCnoJSON(host, {'title': self.default_title, 'message': message})
                 for r in resp:
                     if r.get('result') and r['result'] == 'OK':
                         log.debug('Message delivered successfully!')

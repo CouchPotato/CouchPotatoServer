@@ -23,7 +23,7 @@ var Movie = new Class({
 	addEvents: function(){
 		var self = this;
 
-		self.global_events = {}
+		self.global_events = {};
 
 		// Do refresh with new data
 		self.global_events['movie.update'] = function(notification){
@@ -32,7 +32,7 @@ var Movie = new Class({
 			self.busy(false);
 			self.removeView();
 			self.update.delay(2000, self, notification);
-		}
+		};
 		App.on('movie.update', self.global_events['movie.update']);
 
 		// Add spinner on load / search
@@ -40,20 +40,20 @@ var Movie = new Class({
 			self.global_events[listener] = function(notification){
 				if(notification.data && (self.data._id == notification.data._id || (typeOf(notification.data._id) == 'array' && notification.data._id.indexOf(self.data._id) > -1)))
 					self.busy(true);
-			}
+			};
 			App.on(listener, self.global_events[listener]);
-		})
+		});
 
 		// Remove spinner
 		self.global_events['movie.searcher.ended'] = function(notification){
 			if(notification.data && self.data._id == notification.data._id)
 				self.busy(false)
-		}
+		};
 		App.on('movie.searcher.ended', self.global_events['movie.searcher.ended']);
 
 		// Reload when releases have updated
 		self.global_events['release.update_status'] = function(notification){
-			var data = notification.data
+			var data = notification.data;
 			if(data && self.data._id == data.movie_id){
 
 				if(!self.data.releases)
@@ -62,7 +62,7 @@ var Movie = new Class({
 				self.data.releases.push({'quality': data.quality, 'status': data.status});
 				self.updateReleases();
 			}
-		}
+		};
 
 		App.on('release.update_status', self.global_events['release.update_status']);
 
@@ -73,7 +73,7 @@ var Movie = new Class({
 
 		self.el.destroy();
 		delete self.list.movies_added[self.get('id')];
-		self.list.movies.erase(self)
+		self.list.movies.erase(self);
 
 		self.list.checkIfEmpty();
 
@@ -115,18 +115,6 @@ var Movie = new Class({
 				'z-index': 4
 			}
 		}).inject(self.el, 'top').fade('hide');
-	},
-
-	positionMask: function(){
-		var self = this,
-			s = self.el.getSize()
-
-		return self.mask.setStyles({
-			'width': s.x,
-			'height': s.y
-		}).position({
-			'relativeTo': self.el
-		})
 	},
 
 	update: function(notification){
@@ -209,7 +197,7 @@ var Movie = new Class({
 		self.updateReleases();
 
 		Object.each(self.options.actions, function(action, key){
-			self.action[key.toLowerCase()] = action = new self.options.actions[key](self)
+			self.action[key.toLowerCase()] = action = new self.options.actions[key](self);
 			if(action.el)
 				self.actions.adopt(action)
 		});
@@ -226,7 +214,7 @@ var Movie = new Class({
 				status = release.status;
 
 			if(!q && (status == 'snatched' || status == 'seeding' || status == 'done'))
-				var q = self.addQuality(release.quality, release.is_3d || false)
+				q = self.addQuality(release.quality, release.is_3d || false);
 
 			if (q && !q.hasClass(status)){
 				q.addClass(status);
@@ -252,9 +240,9 @@ var Movie = new Class({
 		var self = this;
 
 		if(self.data.title)
-			return self.getUnprefixedTitle(self.data.title)
+			return self.getUnprefixedTitle(self.data.title);
 		else if(self.data.info.titles.length > 0)
-			return self.getUnprefixedTitle(self.data.info.titles[0])
+			return self.getUnprefixedTitle(self.data.info.titles[0]);
 
 		return 'Unknown movie'
 	},
@@ -275,12 +263,12 @@ var Movie = new Class({
 			self.el.addEvent('outerClick', function(){
 				self.removeView();
 				self.slide('out')
-			})
+			});
 			el.show();
 			self.data_container.addClass('hide_right');
 		}
 		else {
-			self.el.removeEvents('outerClick')
+			self.el.removeEvents('outerClick');
 
 			setTimeout(function(){
 				if(self.el)
@@ -297,7 +285,7 @@ var Movie = new Class({
 		if(self.el)
 			self.el
 				.removeClass(self.view+'_view')
-				.addClass(new_view+'_view')
+				.addClass(new_view+'_view');
 
 		self.view = new_view;
 	},

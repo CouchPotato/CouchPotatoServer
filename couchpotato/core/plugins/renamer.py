@@ -148,7 +148,7 @@ class Renamer(Plugin):
             log.debug('The provided media folder %s does not exist. Trying to find it in the \'from\' folder.', media_folder)
 
             # Update to the from folder
-            if len(release_download.get('files'), []) == 1:
+            if len(release_download.get('files', [])) == 1:
                 new_media_folder = from_folder
             else:
                 new_media_folder = os.path.join(from_folder, os.path.basename(media_folder))
@@ -504,7 +504,7 @@ class Renamer(Plugin):
                                 fireEvent('release.update_status', release['_id'], status = 'downloaded', single = True)
 
                 # Remove leftover files
-                if not remove_leftovers: # Don't remove anything
+                if not remove_leftovers:  # Don't remove anything
                     break
 
                 log.debug('Removing leftover files')
@@ -529,8 +529,8 @@ class Renamer(Plugin):
 
                         parent_dir = os.path.dirname(src)
                         if delete_folders.count(parent_dir) == 0 and os.path.isdir(parent_dir) and \
-                            not isSubFolder(destination, parent_dir) and not isSubFolder(media_folder, parent_dir) and \
-                            not isSubFolder(parent_dir, base_folder):
+                                not isSubFolder(destination, parent_dir) and not isSubFolder(media_folder, parent_dir) and \
+                                not isSubFolder(parent_dir, base_folder):
 
                             delete_folders.append(parent_dir)
 
@@ -659,7 +659,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
         for filename in tag_files:
 
-            # Dont tag .ignore files
+            # Don't tag .ignore files
             if os.path.splitext(filename)[1] == '.ignore':
                 continue
 
@@ -1017,7 +1017,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                     if release_download['pause'] and self.conf('file_action') == 'link':
                         fireEvent('download.pause', release_download = release_download, pause = False, single = True)
                 if release_download['process_complete']:
-                    #First make sure the files were succesfully processed
+                    # First make sure the files were successfully processed
                     if not self.hastagRelease(release_download = release_download, tag = 'failed_rename'):
                         # Remove the seeding tag if it exists
                         self.untagRelease(release_download = release_download, tag = 'renamed_already')

@@ -26,7 +26,7 @@ class Base(TorrentMagnetProvider):
         (['dvd'], ['dvdr']),
     ]
 
-    http_time_between_calls = 1  #seconds
+    http_time_between_calls = 1  # Seconds
     cat_backup_id = None
 
     proxy_list = [

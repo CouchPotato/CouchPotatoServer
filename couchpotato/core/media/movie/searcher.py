@@ -249,7 +249,6 @@ class MovieSearcher(SearcherBase, MovieTypeBase):
             log.info2('Wrong: "%s" is too large to be %s. %sMB instead of the maximum of %sMB.', (nzb['name'], preferred_quality['label'], nzb['size'], preferred_quality['size_max']))
             return False
 
-
         # Provider specific functions
         get_more = nzb.get('get_more_info')
         if get_more:

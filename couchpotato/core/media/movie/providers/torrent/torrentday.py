@@ -16,5 +16,6 @@ class TorrentDay(MovieProvider, Base):
         ([3], ['dvdr']),
         ([5], ['bd50']),
     ]
+
     def buildUrl(self, media):
         return fireEvent('library.query', media, single = True)

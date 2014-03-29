@@ -119,7 +119,7 @@ var Profile = new Class({
 			'label' : self.el.getElement('.quality_label input').get('value'),
 			'wait_for' : self.el.getElement('.wait_for input').get('value'),
 			'types': []
-		}
+		};
 
 		Array.each(self.type_container.getElements('.type'), function(type){
 			if(!type.hasClass('deleted') && type.getElement('select').get('value') != -1)
@@ -129,7 +129,7 @@ var Profile = new Class({
 					'3d': +type.getElement('input.3d[type=checkbox]').checked,
 					'wait_for': 0
 				});
-		})
+		});
 
 		return data
 	},
@@ -261,10 +261,10 @@ Profile.Type = new Class({
 					self.finish = new Element('input.inlay.finish[type=checkbox]', {
 						'checked': data.finish !== undefined ? data.finish : 1,
 						'events': {
-							'change': function(e){
+							'change': function(){
 								if(self.el == self.el.getParent().getElement(':first-child')){
 									self.finish_class.check();
-									alert('Top quality always finishes the search')
+									alert('Top quality always finishes the search');
 									return;
 								}
 
@@ -280,7 +280,7 @@ Profile.Type = new Class({
 					self['3d'] = new Element('input.inlay.3d[type=checkbox]', {
 						'checked': data['3d'] !== undefined ? data['3d'] : 0,
 						'events': {
-							'change': function(e){
+							'change': function(){
 								self.fireEvent('change');
 							}
 						}
@@ -363,4 +363,4 @@ Profile.Type = new Class({
 		return this.el;
 	}
 
-})
+});

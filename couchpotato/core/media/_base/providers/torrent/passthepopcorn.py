@@ -18,12 +18,12 @@ log = CPLog(__name__)
 class Base(TorrentProvider):
 
     urls = {
-         'domain': 'https://tls.passthepopcorn.me',
-         'detail': 'https://tls.passthepopcorn.me/torrents.php?torrentid=%s',
-         'torrent': 'https://tls.passthepopcorn.me/torrents.php',
-         'login': 'https://tls.passthepopcorn.me/ajax.php?action=login',
-         'login_check': 'https://tls.passthepopcorn.me/ajax.php?action=login',
-         'search': 'https://tls.passthepopcorn.me/search/%s/0/7/%d'
+        'domain': 'https://tls.passthepopcorn.me',
+        'detail': 'https://tls.passthepopcorn.me/torrents.php?torrentid=%s',
+        'torrent': 'https://tls.passthepopcorn.me/torrents.php',
+        'login': 'https://tls.passthepopcorn.me/ajax.php?action=login',
+        'login_check': 'https://tls.passthepopcorn.me/ajax.php?action=login',
+        'search': 'https://tls.passthepopcorn.me/search/%s/0/7/%d'
     }
 
     http_time_between_calls = 2
@@ -136,23 +136,23 @@ class Base(TorrentProvider):
 
     def htmlToUnicode(self, text):
         def fixup(m):
-            text = m.group(0)
-            if text[:2] == "&#":
+            txt = m.group(0)
+            if txt[:2] == "&#":
                 # character reference
                 try:
-                    if text[:3] == "&#x":
-                        return unichr(int(text[3:-1], 16))
+                    if txt[:3] == "&#x":
+                        return unichr(int(txt[3:-1], 16))
                     else:
-                        return unichr(int(text[2:-1]))
+                        return unichr(int(txt[2:-1]))
                 except ValueError:
                     pass
             else:
                 # named entity
                 try:
-                    text = unichr(htmlentitydefs.name2codepoint[text[1:-1]])
+                    txt = unichr(htmlentitydefs.name2codepoint[txt[1:-1]])
                 except KeyError:
                     pass
-            return text # leave as is
+            return txt  # leave as is
         return re.sub("&#?\w+;", fixup, six.u('%s') % text)
 
     def unicodeToASCII(self, text):
@@ -164,11 +164,11 @@ class Base(TorrentProvider):
 
     def getLoginParams(self):
         return {
-             'username': self.conf('username'),
-             'password': self.conf('password'),
-             'passkey': self.conf('passkey'),
-             'keeplogged': '1',
-             'login': 'Login'
+            'username': self.conf('username'),
+            'password': self.conf('password'),
+            'passkey': self.conf('passkey'),
+            'keeplogged': '1',
+            'login': 'Login'
         }
 
     def loginSuccess(self, output):

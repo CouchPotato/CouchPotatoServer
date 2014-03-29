@@ -111,10 +111,10 @@ Page.Wizard = new Class({
 		var form = self.el.getElement('.uniForm');
 		var tabs = self.el.getElement('.tabs');
 
-		self.groups.each(function(group, nr){
+		self.groups.each(function(group){
 
 			if(self.headers[group]){
-				group_container = new Element('.wgroup_'+group, {
+				var group_container = new Element('.wgroup_'+group, {
 					'styles': {
 						'opacity': 0.2
 					},
@@ -129,7 +129,7 @@ Page.Wizard = new Class({
 					})
 				}
 
-				var content = self.headers[group].content
+				var content = self.headers[group].content;
 				group_container.adopt(
 					new Element('h1', {
 						'text': self.headers[group].title
@@ -144,7 +144,7 @@ Page.Wizard = new Class({
 			var tab_navigation = tabs.getElement('.t_'+group);
 
 			if(!tab_navigation && self.headers[group] && self.headers[group].include){
-				tab_navigation = []
+				tab_navigation = [];
 				self.headers[group].include.each(function(inc){
 					tab_navigation.include(tabs.getElement('.t_'+inc));
 				})
@@ -157,7 +157,7 @@ Page.Wizard = new Class({
 
 					self.headers[group].include.each(function(inc){
 						self.el.getElement('.tab_'+inc).inject(group_container);
-					})
+					});
 
 					new Element('li.t_'+group).adopt(
 						new Element('a', {
@@ -215,9 +215,9 @@ Page.Wizard = new Class({
 				self.groups.each(function(groups2, nr2){
 					var t2 = self.el.getElement('.t_'+groups2);
 						t2[nr2 > nr ? 'removeClass' : 'addClass' ]('done');
-				})
+				});
 				g.tween('opacity', 1);
-			}
+			};
 
 			if(nr == 0)
 				func();

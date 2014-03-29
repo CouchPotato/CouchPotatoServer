@@ -33,10 +33,9 @@ class Pushover(Notification):
                 'url_title': toUnicode('%s on IMDb' % getTitle(data)),
             })
 
-        http_handler.request('POST',
-            "/1/messages.json",
-            headers = {'Content-type': 'application/x-www-form-urlencoded'},
-            body = tryUrlencode(api_data)
+        http_handler.request('POST', '/1/messages.json',
+                             headers = {'Content-type': 'application/x-www-form-urlencoded'},
+                             body = tryUrlencode(api_data)
         )
 
         response = http_handler.getresponse()

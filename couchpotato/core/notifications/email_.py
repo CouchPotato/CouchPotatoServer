@@ -97,7 +97,8 @@ config = [{
                     'name': 'smtp_server',
                     'label': 'SMTP server',
                 },
-                {   'name': 'smtp_port',
+                {
+                    'name': 'smtp_port',
                     'label': 'SMTP server port',
                     'default': '25',
                     'type': 'int',

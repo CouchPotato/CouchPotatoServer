@@ -77,8 +77,8 @@ class Dashboard(Plugin):
                 if coming_soon:
 
                     # Don't list older movies
-                    if ((not late and (media['info']['year'] >= now_year-1) and (not eta.get('dvd') and not eta.get('theater') or eta.get('dvd') and eta.get('dvd') > (now - 2419200))) or
-                            (late and ((media['info']['year'] < now_year-1) or ((eta.get('dvd', 0) > 0 or eta.get('theater')) and eta.get('dvd') < (now - 2419200))))):
+                    if ((not late and (media['info']['year'] >= now_year - 1) and (not eta.get('dvd') and not eta.get('theater') or eta.get('dvd') and eta.get('dvd') > (now - 2419200))) or
+                            (late and (media['info']['year'] < now_year - 1 or (eta.get('dvd', 0) > 0 or eta.get('theater')) and eta.get('dvd') < (now - 2419200)))):
                         medias.append(media)
 
                         if len(medias) >= limit:

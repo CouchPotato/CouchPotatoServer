@@ -116,7 +116,6 @@ class Database(object):
                 results[key] = []
             results[key].append(document)
 
-
         return results
 
     def reindex(self, **kwargs):
@@ -472,7 +471,6 @@ class Database(object):
 
             log.info('Total migration took %s', time.time() - migrate_start)
             log.info('=' * 30)
-
 
             # rename old database
             log.info('Renaming old database to %s ', old_db + '.old')

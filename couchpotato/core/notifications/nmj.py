@@ -20,6 +20,7 @@ autoload = 'NMJ'
 
 class NMJ(Notification):
 
+    # noinspection PyMissingConstructor
     def __init__(self):
         addEvent('renamer.after', self.addToLibrary)
         addApiView(self.testNotifyName(), self.test)

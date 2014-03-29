@@ -57,13 +57,12 @@ class ClientScript(Plugin):
         ],
     }
 
-
     urls = {'style': {}, 'script': {}}
     minified = {'style': {}, 'script': {}}
     paths = {'style': {}, 'script': {}}
     comment = {
-       'style': '/*** %s:%d ***/\n',
-       'script': '// %s:%d\n'
+        'style': '/*** %s:%d ***/\n',
+        'script': '// %s:%d\n'
     }
 
     html = {
@@ -94,7 +93,6 @@ class ClientScript(Plugin):
                     self.registerScript(core_url, file_path, position = 'front')
                 else:
                     self.registerStyle(core_url, file_path, position = 'front')
-
 
     def minify(self):
 
@@ -129,7 +127,7 @@ class ClientScript(Plugin):
                 data = cssmin(data)
                 data = data.replace('../images/', '../static/images/')
                 data = data.replace('../fonts/', '../static/fonts/')
-                data = data.replace('../../static/', '../static/') # Replace inside plugins
+                data = data.replace('../../static/', '../static/')  # Replace inside plugins
 
             raw.append({'file': file_path, 'date': int(os.path.getmtime(file_path)), 'data': data})
 
@@ -192,6 +190,7 @@ class ClientScript(Plugin):
 
     prefix_properties = ['border-radius', 'transform', 'transition', 'box-shadow']
     prefix_tags = ['ms', 'moz', 'webkit']
+
     def prefix(self, data):
 
         trimmed_data = re.sub('(\t|\n|\r)+', '', data)

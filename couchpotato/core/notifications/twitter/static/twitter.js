@@ -59,7 +59,7 @@ var TwitterNotification = new Class({
 			).inject(fieldset.getElement('.test_button'), 'before');
 		})
 
-	},
+	}
 
 });
 
