@@ -81,8 +81,7 @@ class pyload(Downloader):
         # Send request to pyload
         pid = 0 #package id
         if data.get('protocol') == 'och':
-            data.get('url')
-            pid = self.pyload_api.add_uri(py_packagename, data.get('url'), tryInt(self.conf('download_collect', default=1)))
+            pid = self.pyload_api.add_uri(py_packagename, json.loads(data.get('url')), tryInt(self.conf('download_collect', default=1)))
             # Cause of PID change after captcha entry:
             # Safe Package-ID (= in future CP download ID) to unused Packet-Data key 'site' to recognize release for renamer
             newName = self.pyload_api.get_package_data(pid)['name'] + '.dlID(%s)' % pid
