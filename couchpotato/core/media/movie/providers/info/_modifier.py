@@ -104,6 +104,9 @@ class MovieResultModifier(Plugin):
                 if media.get('status') == 'active':
                     temp['in_wanted'] = media
 
+                    try: temp['in_wanted']['profile'] = db.get('id', media['profile_id'])
+                    except: temp['in_wanted']['profile'] = {'label': ''}
+
                 for release in fireEvent('release.for_media', media['_id'], single = True):
                     if release.get('status') == 'done':
                         if not temp['in_library']:
