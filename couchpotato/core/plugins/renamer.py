@@ -190,6 +190,8 @@ class Renamer(Plugin):
 
             release_files = release_download.get('files', [])
             if release_files:
+                files = release_files
+
                 # If there is only one file in the torrent, the downloader did not create a subfolder
                 if len(release_files) == 1:
                     folder = media_folder
