@@ -5,8 +5,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="0e836cb7-a3bc-4a5a-87f0-7d3aa02cdd92" name="Default" comment="v0.0.1 - Fixed many many Bugs. Now first working Version!&#10;- Search: On HD-Area with multi Hoster Support.&#10;- DL: Pyload API implemented with DL-Status&#10;- Renamer: Also Working.&#10;&#10;Kiss my ASS :P">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/couchpotato/core/providers/och/hdarea/main.py" afterPath="$PROJECT_DIR$/couchpotato/core/providers/och/hdarea/main.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/.idea/.name" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/.idea/CouchPotatoServer.iml" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/.idea/dictionaries/Jochen.xml" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/.idea/encodings.xml" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/.idea/misc.xml" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/.idea/modules.xml" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/.idea/scopes/scope_settings.xml" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/.idea/vcs.xml" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="" />
     </list>
     <ignored path="CouchPotatoServer.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -32,7 +39,7 @@
       <file leaf-file-name="main.py" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/couchpotato/core/providers/och/hdarea/main.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="47" column="0" selection-start="1653" selection-end="1653" vertical-scroll-proportion="0.33333334" vertical-offset="475" max-vertical-offset="3145">
+            <state line="47" column="0" selection-start="1653" selection-end="1653" vertical-scroll-proportion="0.0" vertical-offset="799" max-vertical-offset="3298">
               <folding />
             </state>
           </provider>
@@ -41,7 +48,7 @@
       <file leaf-file-name="iostream.py" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/libs/tornado/iostream.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="685" column="0" selection-start="28916" selection-end="28916" vertical-scroll-proportion="0.0" vertical-offset="11215" max-vertical-offset="17612">
+            <state line="685" column="0" selection-start="28916" selection-end="28916" vertical-scroll-proportion="0.0" vertical-offset="11645" max-vertical-offset="17867">
               <folding />
             </state>
           </provider>
@@ -68,7 +75,7 @@
       <file leaf-file-name="encoding.py" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/couchpotato/core/helpers/encoding.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="42" column="0" selection-start="1278" selection-end="1278" vertical-scroll-proportion="0.0" vertical-offset="376" max-vertical-offset="2006">
+            <state line="42" column="0" selection-start="1278" selection-end="1278" vertical-scroll-proportion="0.0" vertical-offset="714" max-vertical-offset="2125">
               <folding />
             </state>
           </provider>
@@ -77,7 +84,7 @@
       <file leaf-file-name="main.py" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/couchpotato/core/downloaders/pyload/main.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="249" column="157" selection-start="10104" selection-end="10253" vertical-scroll-proportion="0.0" vertical-offset="3756" max-vertical-offset="8211">
+            <state line="249" column="157" selection-start="10104" selection-end="10253" vertical-scroll-proportion="0.0" vertical-offset="4233" max-vertical-offset="8500">
               <folding />
             </state>
           </provider>
@@ -154,10 +161,10 @@
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="192" />
-    <option name="y" value="4" />
-    <option name="width" value="1272" />
-    <option name="height" value="1040" />
+    <option name="x" value="1" />
+    <option name="y" value="1" />
+    <option name="width" value="1918" />
+    <option name="height" value="1038" />
   </component>
   <component name="ProjectInspectionProfilesVisibleTreeState">
     <entry key="Project Default">
@@ -211,10 +218,6 @@
             <PATH_ELEMENT>
               <option name="myItemId" value="CouchPotatoServer" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="External Libraries" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ExternalLibrariesNode" />
             </PATH_ELEMENT>
           </PATH>
           <PATH>
@@ -513,7 +516,7 @@
   </component>
   <component name="PropertiesComponent">
     <property name="last_opened_file_path" value="$PROJECT_DIR$/couchpotato/core/downloaders/pyload/__init__.py" />
-    <property name="options.lastSelected" value="com.jetbrains.python.configuration.PythonSdkConfigurable" />
+    <property name="options.lastSelected" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
     <property name="options.splitter.main.proportions" value="0.3" />
     <property name="options.splitter.details.proportions" value="0.2" />
     <property name="options.searchVisible" value="true" />
@@ -842,16 +845,15 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="192" y="4" width="1272" height="1040" extended-state="0" />
+    <frame x="1" y="1" width="1918" height="1038" extended-state="0" />
     <editor active="false" />
     <layout>
-      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32857144" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32967034" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33736265" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32894737" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.24918744" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.28906882" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.37032968" sideWeight="0.68039006" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.28867623" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.36949515" sideWeight="0.68039006" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3967033" sideWeight="0.31852654" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3508772" sideWeight="0.7658898" order="2" side_tool="false" content_ui="tabs" />
@@ -860,6 +862,7 @@
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25054947" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32857144" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="SLIDING" type="SLIDING" visible="false" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
@@ -915,6 +918,27 @@
     </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/couchpotato/core/providers/och/base.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="17" column="0" selection-start="387" selection-end="387" vertical-scroll-proportion="0.0" vertical-offset="289" max-vertical-offset="391">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/couchpotato/core/plugins/manage/main.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="24" column="0" selection-start="647" selection-end="647" vertical-scroll-proportion="0.0" vertical-offset="408" max-vertical-offset="4675">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/couchpotato/core/downloaders/rtorrent/main.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="263" column="70" selection-start="8182" selection-end="8248" vertical-scroll-proportion="0.0" vertical-offset="4471" max-vertical-offset="5066">
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/couchpotato/core/downloaders/nzbget/main.py">
       <provider selected="true" editor-type-id="text-editor">
         <state line="14" column="0" selection-start="407" selection-end="407" vertical-scroll-proportion="-0.12615955" vertical-offset="306" max-vertical-offset="3774" />
@@ -1000,21 +1024,9 @@
         <state line="63" column="0" selection-start="2185" selection-end="2185" vertical-scroll-proportion="0.3824092" vertical-offset="803" max-vertical-offset="1326" />
       </provider>
     </entry>
-    <entry file="file://C:/Program Files (x86)/Python-2.7.6/Lib/socket.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="228" column="47" selection-start="7874" selection-end="7874" vertical-scroll-proportion="0.4952381" vertical-offset="3565" max-vertical-offset="9792" />
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/libs/axl/axel.py">
       <provider selected="true" editor-type-id="text-editor">
         <state line="221" column="0" selection-start="7461" selection-end="7461" vertical-scroll-proportion="0.0" vertical-offset="3521" max-vertical-offset="6460" />
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/.PyCharm30/system/python_stubs/86050252/__builtin__.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="3283" column="6" selection-start="112655" selection-end="112655" vertical-scroll-proportion="0.12474438" vertical-offset="55750" max-vertical-offset="86683">
-          <folding />
-        </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/libs/tornado/ioloop.py">
@@ -1070,11 +1082,6 @@
     <entry file="file://$PROJECT_DIR$/couchpotato/environment.py">
       <provider selected="true" editor-type-id="text-editor">
         <state line="55" column="8" selection-start="1210" selection-end="1210" vertical-scroll-proportion="0.3215434" vertical-offset="650" max-vertical-offset="2142" />
-      </provider>
-    </entry>
-    <entry file="file://C:/Program Files (x86)/Python-2.7.6/Lib/threading.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="762" column="0" selection-start="27028" selection-end="27028" vertical-scroll-proportion="0.0" vertical-offset="12794" max-vertical-offset="22729" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/couchpotato/core/media/_base/searcher/main.py">
@@ -1189,7 +1196,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/couchpotato/core/providers/och/hdarea/main.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="47" column="0" selection-start="1653" selection-end="1653" vertical-scroll-proportion="0.33333334" vertical-offset="475" max-vertical-offset="3145">
+        <state line="47" column="0" selection-start="1653" selection-end="1653" vertical-scroll-proportion="0.0" vertical-offset="799" max-vertical-offset="3298">
           <folding />
         </state>
       </provider>

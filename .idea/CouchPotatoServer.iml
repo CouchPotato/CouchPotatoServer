@@ -5,7 +5,7 @@
       <sourceFolder url="file://$MODULE_DIR$" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/.idea" isTestSource="false" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 3.3.5 (C:/Program Files (x86)/Python-3.3/python.exe)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 2.7.6 (C:/Python27/python.exe)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
 </module>
