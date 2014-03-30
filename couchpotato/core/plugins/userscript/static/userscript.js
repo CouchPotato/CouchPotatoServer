@@ -67,12 +67,12 @@ var UserscriptSettingTab = new Class({
 
 			self.settings.createGroup({
 				'name': 'userscript',
-				'label': 'Install the bookmarklet or userscript',
+				'label': 'Install the browser extension or bookmarklet',
 				'description': 'Easily add movies via imdb.com, appletrailers and more'
 			}).inject(self.settings.tabs.automation.content, 'top').adopt(
 				new Element('a.userscript.button', {
-					'text': 'Install userscript',
-					'href': Api.createUrl('userscript.get')+randomString()+'/couchpotato.user.js',
+					'text': 'Install extension',
+					'href': 'https://couchpota.to/extension/',
 					'target': '_blank'
 				}),
 				new Element('span.or[text=or]'),

@@ -317,8 +317,8 @@
 
 		return new Element('div.group_userscript').adopt(
 			new Element('a.userscript.button', {
-				'text': 'Install userscript',
-				'href': Api.createUrl('userscript.get')+randomString()+'/couchpotato.user.js',
+				'text': 'Install extension',
+				'href': 'https://couchpota.to/extension/',
 				'target': '_blank'
 			}),
 			new Element('span.or[text=or]'),
