@@ -35,7 +35,7 @@ Page.Wizard = new Class({
 		},
 		'automation': {
 			'title': 'Easily add movies to your wanted list!',
-			'description': 'You can easily add movies from your favorite movie site, like IMDB, Rotten Tomatoes, Apple Trailers and more. Just install the userscript or drag the bookmarklet to your browsers bookmarks.' +
+			'description': 'You can easily add movies from your favorite movie site, like IMDB, Rotten Tomatoes, Apple Trailers and more. Just install the extension or drag the bookmarklet to your bookmarks.' +
 				'<br />Once installed, just click the bookmarklet on a movie page and watch the magic happen ;)',
 			'content': function(){
 				return App.createUserscriptButtons().setStyles({
