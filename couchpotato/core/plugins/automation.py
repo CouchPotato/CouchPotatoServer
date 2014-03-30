@@ -35,7 +35,7 @@ class Automation(Plugin):
             prop_name = 'automation.added.%s' % imdb_id
             added = Env.prop(prop_name, default = False)
             if not added:
-                added_movie = fireEvent('movie.add', params = {'identifier': imdb_id}, force_readd = False, search_after = False, update_library = True, single = True)
+                added_movie = fireEvent('movie.add', params = {'identifier': imdb_id}, force_readd = False, search_after = False, update_after = True, single = True)
                 if added_movie:
                     movie_ids.append(added_movie['id'])
                 Env.prop(prop_name, True)
