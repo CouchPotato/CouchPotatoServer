@@ -25,6 +25,7 @@ class Pushover(Notification):
             'token': self.app_token,
             'message': toUnicode(message),
             'priority': self.conf('priority'),
+            'sound': self.conf('sound'),
         }
 
         if data and data.get('identifier'):
@@ -81,6 +82,11 @@ config = [{
                     'type': 'bool',
                     'advanced': True,
                     'description': 'Also send message when movie is snatched.',
+                },
+                {
+                    'name': 'sound',
+                    'advanced': True,
+                    'description': 'Define <a href="https://pushover.net/api%23sounds" target="_blank">custom sound</a> for Pushover alert.'
                 },
             ],
         }
