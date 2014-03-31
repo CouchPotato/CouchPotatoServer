@@ -14,6 +14,27 @@ autoload = 'Pushover'
 class Pushover(Notification):
 
     app_token = 'YkxHMYDZp285L265L3IwH3LmzkTaCy'
+    
+    def __init__(self):
+        log.info('Fetching Sounds')
+        http_handler = HTTPSConnection("api.pushover.net:443")
+
+        http_handler.request('GET', '/1/sounds.json?token=%s' % self.app_token)
+            
+        response = http_handler.getresponse()
+        request_status = response.status
+        
+        
+        if request_status == 200:
+            log.info('Fetch custom sounds request successful.')
+            log.info('Sound Response: %s', response.read())
+        elif request_status == 401:
+            log.error('Fetch custom sounds auth failed: %s', response.reason)
+        elif request_status == 403:
+            log.error('Fetch custom sounds failed: %s', response.reason)
+        else:
+            log.error('Fetch custom sounds failed. Don\'t know why')
+
 
     def notify(self, message = '', data = None, listener = None):
         if not data: data = {}
