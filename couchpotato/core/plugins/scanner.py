@@ -164,7 +164,7 @@ class Scanner(Plugin):
                 identifiers = [identifier]
 
                 # Identifier with quality
-                quality = fireEvent('quality.guess', [file_path], single = True) if not is_dvd_file else {'identifier':'dvdr'}
+                quality = fireEvent('quality.guess', files = [file_path], size = self.getFileSize(file_path), single = True) if not is_dvd_file else {'identifier':'dvdr'}
                 if quality:
                     identifier_with_quality = '%s %s' % (identifier, quality.get('identifier', ''))
                     identifiers = [identifier_with_quality, identifier]
@@ -450,7 +450,7 @@ class Scanner(Plugin):
         data['quality'] = None
         if release_download and release_download.get('quality'):
             data['quality'] = fireEvent('quality.single', release_download.get('quality'), single = True)
-            data['quality']['is_3d'] = release_download.get('is_3d', False)
+            data['quality']['is_3d'] = release_download.get('is_3d', 0)
 
         if not data['quality']:
             data['quality'] = fireEvent('quality.guess', files = files, extra = data, single = True)
@@ -709,11 +709,17 @@ class Scanner(Plugin):
         if not file_size: file_size = []
 
         try:
-            return (file_size.get('min', 0) * 1048576) < os.path.getsize(file) < (file_size.get('max', 100000) * 1048576)
+            return file_size.get('min', 0) < self.getFileSize(file) < file_size.get('max', 100000)
         except:
             log.error('Couldn\'t get filesize of %s.', file)
 
         return False
+
+    def getFileSize(self, file):
+        try:
+            return os.path.getsize(file) / 1024 / 1024
+        except:
+            return None
 
     def createStringIdentifier(self, file_path, folder = '', exclude_filename = False):
 

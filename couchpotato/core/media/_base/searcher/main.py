@@ -87,28 +87,17 @@ class Searcher(SearcherBase):
     def containsOtherQuality(self, nzb, movie_year = None, preferred_quality = None):
         if not preferred_quality: preferred_quality = {}
 
-        name = nzb['name']
-        size = nzb.get('size', 0)
-        nzb_words = re.split('\W+', simplifyString(name))
-
-        qualities = fireEvent('quality.all', single = True)
-
-        found = {}
-        for quality in qualities:
-            # Main in words
-            if quality['identifier'] in nzb_words:
-                found[quality['identifier']] = True
-
-            # Alt in words
-            if list(set(nzb_words) & set(quality['alternative'])):
-                found[quality['identifier']] = True
-
         # Try guessing via quality tags
-        guess = fireEvent('quality.guess', [nzb.get('name')], single = True)
+        guess = fireEvent('quality.guess', [nzb.get('name')], nzb.get('size', None), single = True)
         if guess:
-            found[guess['identifier']] = True
+            return not guess['identifier'] == preferred_quality.get('identifier')
+
 
         # Hack for older movies that don't contain quality tag
+        name = nzb['name']
+        size = nzb.get('size', 0)
+
+        found = {}
         year_name = fireEvent('scanner.name_year', name, single = True)
         if len(found) == 0 and movie_year < datetime.datetime.now().year - 3 and not year_name.get('year', None):
             if size > 20000:  # Assume bd50
@@ -120,11 +109,6 @@ class Searcher(SearcherBase):
             else:  # Assume dvdrip
                 log.info('Quality was missing in name, assuming it\'s a DVD-Rip based on the size: %s', size)
                 found['dvdrip'] = True
-
-        # Allow other qualities
-        for allowed in preferred_quality.get('allow'):
-            if found.get(allowed):
-                del found[allowed]
 
         return not (found.get(preferred_quality['identifier']) and len(found) == 1)
 

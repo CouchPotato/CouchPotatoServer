@@ -177,7 +177,7 @@ class QualityPlugin(Plugin):
 
         return False
 
-    def guess(self, files, extra = None):
+    def guess(self, files, extra = None, size = None):
         if not extra: extra = {}
 
         # Create hash for cache
@@ -204,6 +204,11 @@ class QualityPlugin(Plugin):
                 threedscore = self.contains3D(quality, words, cur_file) if quality.get('allow_3d') else (0, None)
 
                 self.calcScore(score, quality, contains_score, threedscore)
+
+        # Evaluate score based on size
+        for quality in qualities:
+            size_score = self.guessSizeScore(quality, size = size)
+            self.calcScore(score, quality, size_score)
 
         # Try again with loose testing
         for quality in qualities:
@@ -305,6 +310,19 @@ class QualityPlugin(Plugin):
             if quality.get('identifier') == 'dvdrip' and 480 <= extra.get('resolution_width', 0) <= 720:
                 log.debug('Add point for correct dvdrip resolutions')
                 score += 1
+
+        return score
+
+
+    def guessSizeScore(self, quality, size = None):
+
+        score = 0
+
+        if size:
+
+            if tryInt(size) >= tryInt(quality['size_min']) and tryInt(size) < tryInt(quality['size_max']):
+                log.info2('Found %s via release size: %s MB < %s MB < %s MB', (quality['identifier'], quality['size_min'], size, quality['size_max']))
+                score += 5
 
         return score
 
