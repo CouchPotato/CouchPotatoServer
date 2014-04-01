@@ -179,7 +179,7 @@ class pyload(Downloader):
                         pid_states[pid] = 'completed'
                     # - failed: Download of a file (on all mirrors) has failed or all mirrors of a file are offline.
                     else:
-                        for unfinishedFile in [i for i in files if i not in finishedFiles]:
+                        for unfinishedFile in [i for i in files if i not in finishedFiles and i.split(".")[-1] != 'html']:
                                 allMirrorsFailed = True
                                 waitForCatptcha = False
                                 for l in files[unfinishedFile]:
