@@ -96,7 +96,7 @@ var UserscriptSettingTab = new Class({
 					})
 				)
 			).setStyles({
-				'background-image': "url('"+App.createUrl('static/plugin/userscript/userscript.png')+"')"
+				'background-image': "url('"+App.createUrl('static/plugin/userscript/userscript.gif')+"')"
 			});
 
 		});
