@@ -52,7 +52,7 @@ class pyload(Downloader):
             log.error('Config properties are not filled in correctly, port is missing.')
             return False
 
-        self.pyload_api = pyloadAPI(host[0], port = host[1], username = "seppi", password = "jochen1")
+        self.pyload_api = pyloadAPI(host[0], port = host[1], username = self.conf('username'), password = self.conf('password'))
 
         return self.pyload_api
 
