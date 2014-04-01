@@ -156,13 +156,14 @@ class pyload(Downloader):
                 pid_states[pid] = None
                 try:
                     package = self.pyload_api.get_package_data(pid)
+                    if package is None: return;
 
                     # Get Files in package and find Mirrors by file name.
                     files = {}
                     for link in package['links']:
                         if not files.has_key(link['name']):
                             files[link['name']] = []
-                        if i.split(".")[-1] != 'html': # filter wrong decrypted links
+                        if link['name'].split(".")[-1] != 'html': # filter wrong decrypted links
                             files[link['name']].append(link)
 
                     # Determine Download state from file Status (analog State_list above)
@@ -373,7 +374,7 @@ class pyloadAPI(object):
     def set_package_data(self, pid, data):
         action = 'setPackageData'
         data = {'pid': json.dumps(pid),
-                'data': json.dumps(data) }
+                'data': json.dumps(data)}
         try:
             json.loads(self._request(action, data))
         except TypeError, err:
