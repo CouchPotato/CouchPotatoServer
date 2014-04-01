@@ -47,7 +47,7 @@ class pyload(Downloader):
 
     def connect(self):
         # Load host from config and split out port.
-        host = cleanHost("http://ubuntuserver:8000", protocol = False).split(':')
+        host = cleanHost(self.conf('host'), protocol = False).split(':')
         if not isInt(host[1]):
             log.error('Config properties are not filled in correctly, port is missing.')
             return False
