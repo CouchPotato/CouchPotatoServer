@@ -88,7 +88,6 @@ config = [{
                     'advanced': True,
                     'description': 'Define <a href="https://pushover.net/api%23sounds" target="_blank">custom sound</a> for Pushover alert.'
                 },
-
             ],
         }
     ],
