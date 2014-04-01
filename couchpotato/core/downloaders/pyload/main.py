@@ -1,12 +1,9 @@
-from base64 import b16encode, b32decode
-from bencode import bencode as benc, bdecode
+
 from couchpotato.core.downloaders.base import Downloader, ReleaseDownloadList
 from couchpotato.core.helpers.encoding import isInt, ss, sp
 from couchpotato.core.helpers.variable import tryInt, tryFloat, cleanHost, mergeDicts
 from couchpotato.core.logger import CPLog
-from datetime import timedelta
-from hashlib import sha1
-from multipartpost import MultipartPostHandler
+from libs.multipartpost import MultipartPostHandler
 import cookielib
 import httplib
 import json
@@ -50,12 +47,12 @@ class pyload(Downloader):
 
     def connect(self):
         # Load host from config and split out port.
-        host = cleanHost(self.conf('host'), protocol = False).split(':')
+        host = cleanHost("http://ubuntuserver:8000", protocol = False).split(':')
         if not isInt(host[1]):
             log.error('Config properties are not filled in correctly, port is missing.')
             return False
 
-        self.pyload_api = pyloadAPI(host[0], port = host[1], username = self.conf('username'), password = self.conf('password'))
+        self.pyload_api = pyloadAPI(host[0], port = host[1], username = "seppi", password = "jochen1")
 
         return self.pyload_api
 
@@ -165,7 +162,8 @@ class pyload(Downloader):
                     for link in package['links']:
                         if not files.has_key(link['name']):
                             files[link['name']] = []
-                        files[link['name']].append(link)
+                        if i.split(".")[-1] != 'html': # filter wrong decrypted links
+                            files[link['name']].append(link)
 
                     # Determine Download state from file Status (analog State_list above)
 
@@ -179,7 +177,7 @@ class pyload(Downloader):
                         pid_states[pid] = 'completed'
                     # - failed: Download of a file (on all mirrors) has failed or all mirrors of a file are offline.
                     else:
-                        for unfinishedFile in [i for i in files if i not in finishedFiles and i.split(".")[-1] != 'html']:
+                        for unfinishedFile in [i for i in files if i not in finishedFiles]:
                                 allMirrorsFailed = True
                                 waitForCatptcha = False
                                 for l in files[unfinishedFile]:
@@ -491,3 +489,7 @@ class pyloadAPI(object):
         if not data:
             return False
         return data.replace('"', '')
+
+if __name__ == '__main__':
+    p = pyload()
+    p.getAllDownloadStatus([295])
