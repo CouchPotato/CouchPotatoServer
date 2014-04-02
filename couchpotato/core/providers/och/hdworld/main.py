@@ -76,7 +76,7 @@ class hdworld(OCHProvider):
 
         entry = post.find(attrs={"class":"entry"}, recursive=False)
 
-        size_raw = str(entry.find('strong', text=re.compile(u'Größe:\s?', re.UNICODE)).nextSibling).strip()
+        size_raw = str(entry.find('strong', text=re.compile(u'Größe:?\s?', re.UNICODE)).nextSibling).strip()
         size = self.parseSize(size_raw.replace(',', '.'))
 
         #release = str(post.find('strong', text='Release:').nextSibling).strip()
@@ -98,7 +98,7 @@ class hdworld(OCHProvider):
         return {"id":      id,
                 "name":    title,
                 "size":    size,
-                "url":     json.dumps([url])}
+                "url":     json.dumps(url)}
 
     def parseMovieDetailPage(self, data):
         dom = BeautifulSoup(data)
