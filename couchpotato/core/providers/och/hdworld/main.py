@@ -76,7 +76,7 @@ class hdworld(OCHProvider):
 
         entry = post.find(attrs={"class":"entry"}, recursive=False)
 
-        size_raw = str(entry.find('strong', text=u'Größe: ').nextSibling).strip()
+        size_raw = str(entry.find('strong', text=re.compile(u'Größe:\s?', re.UNICODE)).nextSibling).strip()
         size = self.parseSize(size_raw.replace(',', '.'))
 
         #release = str(post.find('strong', text='Release:').nextSibling).strip()
