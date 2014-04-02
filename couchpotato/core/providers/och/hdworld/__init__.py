@@ -11,7 +11,7 @@ config = [{
             'tab': 'searcher',
             'list': 'och_providers',
             'name': 'HD-World',
-            'description': 'See <a href="https://www.hd-world.org">HD-World.org</a>',
+            'description': 'See <a href="https://www.hd-world.org">HD-World.org</a>. Less accurate!',
             'wizard': True,
             'options': [
                 {

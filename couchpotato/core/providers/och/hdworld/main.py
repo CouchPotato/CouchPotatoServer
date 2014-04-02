@@ -76,20 +76,20 @@ class hdworld(OCHProvider):
 
         entry = post.find(attrs={"class":"entry"}, recursive=False)
 
-        size_raw = str(entry.find('strong', text=re.compile(u'Größe:?\s?', re.UNICODE)).nextSibling).strip()
+        size_raw = str(entry.find('strong', text=re.compile(u'Größe:\s?', re.UNICODE)).nextSibling).strip()
         size = self.parseSize(size_raw.replace(',', '.'))
 
         #release = str(post.find('strong', text='Release:').nextSibling).strip()
 
         url = []
-        download = entry.find('strong', text=re.compile("Download:\s?")).findNextSibling('a')
+        download = entry.find('strong', text=re.compile("Download:?\s?")).findNextSibling('a')
         hoster = download.text
         for acceptedHoster in self.conf('hosters').replace(' ', '').split(','):
             if acceptedHoster in hoster.lower():
                 url.append(download["href"])
 
         for i in xrange(1,5): #support up to 5 mirrors
-            for mirrorTxt in entry.findAll('strong', text=re.compile('Mirror #?%i:\s?' % i)):
+            for mirrorTxt in entry.findAll('strong', text=re.compile('Mirror #?%i:?\s?' % i)):
                 hoster = mirrorTxt.findNextSibling('a').text
                 for acceptedHoster in self.conf('hosters').replace(' ', '').split(','):
                     if acceptedHoster in hoster.lower():
@@ -107,8 +107,13 @@ class hdworld(OCHProvider):
         post = content.find(attrs={"class": "post"}, recursive=False)
         info = content.find(id="info", recursive=False)
 
-        postContent = self.parsePost(post)
+        try:
+            postContent = self.parsePost(post)
         #infoContent = self.parseInfo(info)
+        except:
+            postContent = None
+            # :TODO something is wrong here - but usually it works as expected
+            log.error("something went wrong when parsing post of release.")
 
         res = {}
         if postContent is not None:
