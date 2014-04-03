@@ -88,7 +88,7 @@ class Searcher(SearcherBase):
         if not preferred_quality: preferred_quality = {}
 
         # Try guessing via quality tags
-        guess = fireEvent('quality.guess', [nzb.get('name')], nzb.get('size', None), single = True)
+        guess = fireEvent('quality.guess', files = [nzb.get('name')], size = nzb.get('size', None), single = True)
         if guess:
             return not guess['identifier'] == preferred_quality.get('identifier')
 
