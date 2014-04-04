@@ -129,7 +129,7 @@ class Scanner(Plugin):
             check_file_date = True
             try:
                 files = []
-                for root, dirs, walk_files in scandir.walk(folder):
+                for root, dirs, walk_files in scandir.walk(folder, followlinks=True):
                     files.extend([sp(os.path.join(root, filename)) for filename in walk_files])
 
                     # Break if CP wants to shut down
