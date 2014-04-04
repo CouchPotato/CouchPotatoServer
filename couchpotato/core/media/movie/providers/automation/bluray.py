@@ -14,6 +14,8 @@ class Bluray(Automation, RSS):
     interval = 1800
     rss_url = 'http://www.blu-ray.com/rss/newreleasesfeed.xml'
     backlog_url = 'http://www.blu-ray.com/movies/movies.php?show=newreleases&page=%s'
+    display_url = 'http://www.blu-ray.com/movies/movies.php?show=newreleases'
+    chart_order = 1
 
     def getIMDBids(self):
 
@@ -77,6 +79,32 @@ class Bluray(Automation, RSS):
         return movies
 
 
+    def getChartList(self):
+        # Nearly identical to 'getIMDBids', but we don't care about minimalMovie and return all movie data (not just id)
+        movie_list = {'name': 'Blu-ray.com - New Releases', 'url': self.display_url, 'order': self.chart_order, 'list': []}
+        max_items = int(self.conf('max_items', section='charts', default=5))
+        rss_movies = self.getRSSData(self.rss_url)
+
+        for movie in rss_movies:
+            name = self.getTextElement(movie, 'title').lower().split('blu-ray')[0].strip('(').rstrip()
+            year = self.getTextElement(movie, 'description').split('|')[1].strip('(').strip()
+
+            if not name.find('/') == -1: # make sure it is not a double movie release
+                continue
+
+            movie = self.search(name, year)
+
+            if movie:
+                movie_list['list'].append( movie )
+                if len(movie_list['list']) >= max_items:
+                    break
+
+        if not movie_list['list']:
+            return
+
+        return [ movie_list ]
+
+
 config = [{
     'name': 'bluray',
     'groups': [
@@ -98,6 +126,20 @@ config = [{
                     'description': 'Parses the history until the minimum movie year is reached. (Will be disabled once it has completed)',
                     'default': False,
                     'type': 'bool',
+                },
+            ],
+        },
+        {
+            'tab': 'display',
+            'list': 'charts_providers',
+            'name': 'bluray_charts_display',
+            'label': 'Blu-ray.com',
+            'description': 'Display <a href="http://www.blu-ray.com/movies/movies.php?show=newreleases">new releases</a> from Blu-ray.com',
+            'options': [
+                {
+                    'name': 'chart_display_enabled',
+                    'default': True,
+                    'type': 'enabler',
                 },
             ],
         },
