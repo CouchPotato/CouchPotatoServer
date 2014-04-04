@@ -655,7 +655,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                 tag_files = release_download.get('files', [])
 
             # Tag all files in release folder
-            else:
+            elif release_download['folder']:
                 for root, folders, names in scandir.walk(release_download['folder']):
                     tag_files.extend([os.path.join(root, name) for name in names])
 
@@ -685,18 +685,19 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                 return False
 
         elif isinstance(release_download, dict):
+
+            folder = release_download['folder']
+            if not os.path.isdir(folder):
+                return False
+
             # Untag download_files if they are known
             if release_download.get('files'):
                 tag_files = release_download.get('files', [])
 
             # Untag all files in release folder
             else:
-                for root, folders, names in scandir.walk(release_download['folder']):
+                for root, folders, names in scandir.walk(folder):
                     tag_files.extend([sp(os.path.join(root, name)) for name in names if not os.path.splitext(name)[1] == '.ignore'])
-
-            folder = release_download['folder']
-            if not os.path.isdir(folder):
-                return False
 
         if not folder:
             return False
@@ -732,7 +733,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
         # Find tag on all files in release folder
         else:
-            for root, folders, names in scandir.walk(release_download['folder']):
+            for root, folders, names in scandir.walk(folder):
                 tag_files.extend([sp(os.path.join(root, name)) for name in names if not os.path.splitext(name)[1] == '.ignore'])
 
         # Find all .ignore files in folder
