@@ -446,7 +446,14 @@ class Release(Plugin):
         raw_releases = list(db.get_many('release', media_id, with_doc = True))
 
         releases = []
-        for r in sorted(raw_releases, key = lambda k: k['doc'].get('info', {}).get('score', 0), reverse = True):
+        for r in raw_releases:
             releases.append(r['doc'])
+
+        releases = sorted(releases, key = lambda k: k.get('info', {}).get('score', 0), reverse = True)
+
+        # Sort based on preferred search method
+        download_preference = self.conf('preferred_method', section = 'searcher')
+        if download_preference != 'both':
+            releases = sorted(releases, key = lambda k: k.get('info', {}).get('protocol', '')[:3], reverse = (download_preference == 'torrent'))
 
         return releases
