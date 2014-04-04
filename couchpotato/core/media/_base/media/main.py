@@ -382,7 +382,7 @@ class MediaPlugin(MediaBase):
                                 db.delete(release)
                                 total_deleted += 1
 
-                    if total_releases == total_deleted and media['status'] != 'active':
+                    if (total_releases == total_deleted and media['status'] != 'active') or (delete_from == 'wanted' and media['status'] == 'active'):
                         db.delete(media)
                         deleted = True
                     elif new_media_status:
