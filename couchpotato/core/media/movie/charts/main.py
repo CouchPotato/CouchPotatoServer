@@ -20,8 +20,6 @@ class Charts(Plugin):
 
     def setCrons(self):
         fireEvent('schedule.interval', 'charts.update_cache', self.updateViewCache, hours = self.conf('update_interval', default = 12))
-        self.updateViewCache()
-
 
     def automationView(self, force_update = False, **kwargs):
 
