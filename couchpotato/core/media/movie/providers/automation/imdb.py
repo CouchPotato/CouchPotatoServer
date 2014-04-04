@@ -265,7 +265,7 @@ config = [{
             'options': [
                 {
                     'name': 'chart_display_enabled',
-                    'default': False,
+                    'default': True,
                     'type': 'enabler',
                 },
                 {

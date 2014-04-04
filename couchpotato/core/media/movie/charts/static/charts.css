@@ -15,7 +15,6 @@
 .charts div.refresh {
 	margin-top: 10px;
 	clear:both;
-	background-color: rgba(255,255,255,0.1);
 	text-align:center;
 }
 
@@ -169,14 +168,10 @@
 	color: white;
 	position: absolute;
 	top: 0;
-	background: rgb(0, 0, 0); /* fallback color */
-	background: rgba(0, 0, 0, 0.3);
 	padding: 10px;
-	border-bottom-left-radius: 6px;
-	border-top-left-radius: 6px;
 	font: bold 2em/1em Helvetica, Sans-Serif;
 	width: 50px;
-	height: 60px;
+	height: 100%;
 }
 
 .charts .chart .media_result div.chart_number.chart_in_wanted {
@@ -220,18 +215,19 @@
 	display: block;
 	width: 50%;
 	float: left;
-	color: #fff;
+	color: rgba(255,255,255,.6);
 	border-bottom: 1px solid rgba(255, 255, 255, 0.0666667);
-	text-align: center;
 }
 
 .toggle_menu a:hover {
 	border-color: #047792;
 	border-width: 4px;
+	color: #fff;
 }
 
 .toggle_menu a.active {
 	border-bottom: 4px solid #04bce6;
+	color: #fff;
 }
 
 .toggle_menu a:last-child {

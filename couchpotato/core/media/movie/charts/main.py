@@ -1,13 +1,13 @@
 import time
 
+from couchpotato import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent,fireEvent
 from couchpotato.core.plugins.base import Plugin
 
-log = CPLog(__name__)
 
-autoload = 'Charts'
+log = CPLog(__name__)
 
 
 class Charts(Plugin):
@@ -51,39 +51,10 @@ class Charts(Plugin):
         try:
             self.update_in_progress = True
             charts = fireEvent('automation.get_chart_list', merge = True)
-            self.setCache('charts_cached', charts, timeout = 2*3600*self.conf('update_interval', default = 12))
+            self.setCache('charts_cached', charts, timeout = 7200 * tryInt(self.conf('update_interval', default = 12)))
         except:
             log.error('Failed refreshing charts')
 
         self.update_in_progress = False
 
         return charts
-
-
-config = [{
-    'name': 'charts',
-    'groups': [
-        {
-            'label': 'Charts',
-            'description': 'Displays selected charts on the home page',
-            'type': 'list',
-            'name': 'charts_providers',
-            'tab': 'display',
-            'options': [
-                {
-                    'name': 'max_items',
-                    'default': 10,
-                    'type': 'int',
-                    'description': 'Maximum number of items displayed from each chart.',
-                },
-                {
-                    'name': 'update_interval',
-                    'default': 12,
-                    'type': 'int',
-                    'advanced': True,
-                    'description': '(hours)',
-                },
-            ],
-        },
-    ],
-}]

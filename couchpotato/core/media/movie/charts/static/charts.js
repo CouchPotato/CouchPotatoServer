@@ -12,25 +12,43 @@ var Charts = new Class({
 	create: function(){
 		var self = this;
 
-		self.el_refreshing_text = new Element('span.refreshing', {'text': 'Refreshing charts...'});
-		self.el_refresh_link = new Element('a.refresh', { 'href': '#', 'text': 'Refresh charts', 'events': { 'click': function(e) {
-			e.preventDefault();
-			self.el.getChildren('div.chart').destroy();
-			self.el_refreshing_text.show();
-			self.el_refresh_link.hide();
-			self.api_request = Api.request('charts.view', {
-				'data': { 'force_update': 1 },
-				'onComplete': self.fill.bind(self)
-			});
-		}}}).hide();
-		self.el_refresh_container = new Element('div.refresh').grab( self.el_refreshing_text ).grab( self.el_refresh_link );
-		self.el_no_charts_enabled = new Element('p.no_charts_enabled', {
-			'html':'Hey, it looks like you have no charts enabled at the moment. If you\'d like some great movie suggestions you can go to <a href="' + App.createUrl('settings/display') + '">settings</a> and turn on some charts of your choice.'
+		self.el_refreshing_text = new Element('span.refreshing', {
+			'text': 'Refreshing charts...'
+		});
+
+		self.el_refresh_link = new Element('a.refresh', {
+			'href': '#',
+			'text': 'Refresh charts',
+			'events': {
+				'click': function(e) {
+					e.preventDefault();
+					self.el.getChildren('div.chart').destroy();
+					self.el_refreshing_text.show();
+					self.el_refresh_link.hide();
+					self.api_request = Api.request('charts.view', {
+						'data': { 'force_update': 1 },
+						'onComplete': self.fill.bind(self)
+					});
+				}
+			}
 		}).hide();
 
-		self.el = new Element('div.charts').grab(self.el_no_charts_enabled).grab( self.el_refresh_container );
+		self.el_refresh_container = new Element('div.refresh').grab(
+			self.el_refreshing_text
+		).grab(self.el_refresh_link);
 
-		if( Cookie.read('suggestions_charts_menu_selected') === 'charts') self.el.show(); else self.el.hide();
+		self.el_no_charts_enabled = new Element('p.no_charts_enabled', {
+			'html': 'Hey, it looks like you have no charts enabled at the moment. If you\'d like some great movie suggestions you can go to <a href="' + App.createUrl('settings/display') + '">settings</a> and turn on some charts of your choice.'
+		}).hide();
+
+		self.el = new Element('div.charts').grab(
+			self.el_no_charts_enabled
+		).grab(self.el_refresh_container);
+
+		if( Cookie.read('suggestions_charts_menu_selected') === 'charts')
+			self.el.show();
+		else
+			self.el.hide();
 
 		self.api_request = Api.request('charts.view', {
 			'onComplete': self.fill.bind(self)
@@ -50,8 +68,7 @@ var Charts = new Class({
 		    self.el_refresh_link.show();
 		    self.el_refreshing_text.hide();
 		}
-		else
-		{
+		else {
 			self.el_no_charts_enabled.hide();
 
 		    json.charts.sort(function(a, b) {
@@ -136,8 +153,9 @@ var Charts = new Class({
 	afterAdded: function(m, movie){
 		var self = this;
 
-		$(m).getElement('div.chart_number').addClass('chart_in_wanted').setProperty('title','Movie in wanted list');
-
+		$(m).getElement('div.chart_number')
+			.addClass('chart_in_wanted')
+			.set('title', 'Movie in wanted list');
 
 	},
 
