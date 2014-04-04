@@ -871,7 +871,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
             release_downloads = fireEvent('download.status', download_ids, merge = True) if download_ids else []
 
             if len(no_status_support) > 0:
-                log.debug('Download status functionality is not implemented for one of the active downloaders: %s', no_status_support)
+                log.debug('Download status functionality is not implemented for one of the active downloaders: %s', list(set(no_status_support)))
 
             if not release_downloads:
                 if fire_scan:
