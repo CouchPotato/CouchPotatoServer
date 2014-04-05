@@ -49,10 +49,8 @@ class ClientScript(Plugin):
             'scripts/block/footer.js',
             'scripts/block/menu.js',
             'scripts/page/home.js',
-            'scripts/page/wanted.js',
             'scripts/page/settings.js',
             'scripts/page/about.js',
-            'scripts/page/manage.js',
             'scripts/misc/downloaders.js',
         ],
     }

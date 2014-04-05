@@ -14,7 +14,7 @@ var NotificationBase = new Class({
 		App.on('message', self.showMessage.bind(self));
 
 		// Add test buttons to settings page
-		App.addEvent('load', self.addTestButtons.bind(self));
+		App.addEvent('loadSettings', self.addTestButtons.bind(self));
 
 		// Notification bar
 		self.notifications = [];

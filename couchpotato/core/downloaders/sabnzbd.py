@@ -4,7 +4,7 @@ import json
 import os
 import traceback
 
-from couchpotato.core.downloaders.base import Downloader, ReleaseDownloadList
+from couchpotato.core._base.downloader.main import DownloaderBase, ReleaseDownloadList
 from couchpotato.core.helpers.encoding import tryUrlencode, ss, sp
 from couchpotato.core.helpers.variable import cleanHost, mergeDicts
 from couchpotato.core.logger import CPLog
@@ -16,7 +16,7 @@ log = CPLog(__name__)
 autoload = 'Sabnzbd'
 
 
-class Sabnzbd(Downloader):
+class Sabnzbd(DownloaderBase):
 
     protocol = ['nzb']
 

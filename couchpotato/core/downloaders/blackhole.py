@@ -2,7 +2,7 @@ from __future__ import with_statement
 import os
 import traceback
 
-from couchpotato.core.downloaders.base import Downloader
+from couchpotato.core._base.downloader.main import DownloaderBase
 from couchpotato.core.helpers.encoding import sp
 from couchpotato.core.helpers.variable import getDownloadDir
 from couchpotato.core.logger import CPLog
@@ -14,7 +14,7 @@ log = CPLog(__name__)
 autoload = 'Blackhole'
 
 
-class Blackhole(Downloader):
+class Blackhole(DownloaderBase):
 
     protocol = ['nzb', 'torrent', 'torrent_magnet']
     status_support = False

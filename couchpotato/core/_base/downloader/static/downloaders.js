@@ -6,7 +6,7 @@ var DownloadersBase = new Class({
 		var self = this;
 
 		// Add test buttons to settings page
-		App.addEvent('load', self.addTestButtons.bind(self));
+		App.addEvent('loadSettings', self.addTestButtons.bind(self));
 
 	},
 
@@ -72,4 +72,4 @@ var DownloadersBase = new Class({
 
 });
 
-window.Downloaders = new DownloadersBase();
+var Downloaders = new DownloadersBase();

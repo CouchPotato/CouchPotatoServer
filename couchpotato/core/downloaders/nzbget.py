@@ -6,7 +6,7 @@ import socket
 import traceback
 import xmlrpclib
 
-from couchpotato.core.downloaders.base import Downloader, ReleaseDownloadList
+from couchpotato.core._base.downloader.main import DownloaderBase, ReleaseDownloadList
 from couchpotato.core.helpers.encoding import ss, sp
 from couchpotato.core.helpers.variable import tryInt, md5, cleanHost
 from couchpotato.core.logger import CPLog
@@ -17,7 +17,7 @@ log = CPLog(__name__)
 autoload = 'NZBGet'
 
 
-class NZBGet(Downloader):
+class NZBGet(DownloaderBase):
 
     protocol = ['nzb']
     rpc = 'xmlrpc'

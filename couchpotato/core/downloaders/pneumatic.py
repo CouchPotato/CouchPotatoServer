@@ -2,7 +2,7 @@ from __future__ import with_statement
 import os
 import traceback
 
-from couchpotato.core.downloaders.base import Downloader
+from couchpotato.core._base.downloader.main import DownloaderBase
 from couchpotato.core.helpers.encoding import sp
 from couchpotato.core.logger import CPLog
 
@@ -12,7 +12,7 @@ log = CPLog(__name__)
 autoload = 'Pneumatic'
 
 
-class Pneumatic(Downloader):
+class Pneumatic(DownloaderBase):
 
     protocol = ['nzb']
     strm_syntax = 'plugin://plugin.program.pneumatic/?mode=strm&type=add_file&nzb=%s&nzbname=%s'

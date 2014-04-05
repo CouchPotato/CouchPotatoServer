@@ -141,6 +141,8 @@
 			var pg = new Page[class_name](self, {});
 			self.pages[class_name] = pg;
 
+			self.fireEvent('load'+class_name);
+
 			$(pg).inject(self.content);
 		});
 

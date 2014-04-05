@@ -6,7 +6,7 @@ import os.path
 import re
 import urllib2
 
-from couchpotato.core.downloaders.base import Downloader, ReleaseDownloadList
+from couchpotato.core._base.downloader.main import DownloaderBase, ReleaseDownloadList
 from couchpotato.core.helpers.encoding import isInt, sp
 from couchpotato.core.helpers.variable import tryInt, tryFloat, cleanHost
 from couchpotato.core.logger import CPLog
@@ -17,7 +17,7 @@ log = CPLog(__name__)
 autoload = 'Transmission'
 
 
-class Transmission(Downloader):
+class Transmission(DownloaderBase):
 
     protocol = ['torrent', 'torrent_magnet']
     log = CPLog(__name__)
