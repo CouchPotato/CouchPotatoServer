@@ -159,3 +159,20 @@ from couchpotato.core.helpers.encoding import toUnicode, simplifyString"""
                 break
 
         return str(title[0] if title and len(title) > 0 and title[0] in ascii_letters else '#').lower()
+
+
+
+class MediaChildrenIndex(TreeBasedIndex):
+    _version = 1
+
+    def __init__(self, *args, **kwargs):
+        kwargs['key_format'] = '32s'
+        super(MediaChildrenIndex, self).__init__(*args, **kwargs)
+
+    def make_key(self, key):
+        return key
+
+    def make_key_value(self, data):
+        if data.get('_t') == 'media' and data.get('parent_id'):
+            return data.get('parent_id'), None
+
