@@ -28,18 +28,9 @@ class ShowSearcher(SearcherBase, ShowTypeBase):
         addEvent('episode.searcher.single', self.singleEpisode)
 
         addEvent('searcher.correct_release', self.correctRelease)
+        addEvent('searcher.get_search_title', self.getSearchTitle)
 
 
-        def test():
-            time.sleep(.2)
-            db = get_db()
-            medias = db.get_many('media_by_type', 'show', with_doc = True)
-            for x in medias:
-                media = x['doc']
-                break
-            self.single(media)
-
-        addEvent('app.load', test)
 
     def single(self, media, search_protocols = None, manual = False):
 
@@ -67,6 +58,10 @@ class ShowSearcher(SearcherBase, ShowTypeBase):
 
         seasons = media.get('seasons', {})
         for sx in seasons:
+
+            # Skip specials for now TODO: set status for specials to skipped by default
+            if sx == 0: continue
+
             season = seasons.get(sx)
 
             # Check if full season can be downloaded TODO: add
@@ -80,12 +75,13 @@ class ShowSearcher(SearcherBase, ShowTypeBase):
 
                     self.singleEpisode(episode, season, media, profile, quality_order, search_protocols)
 
+                    # TODO
+                    return
 
+            # TODO
+            return
 
-
-        fireEvent('notify.frontend', type = 'show.searcher.ended.%s' % media['id'], data = True)
-
-        return ret
+        fireEvent('notify.frontend', type = 'show.searcher.ended.%s' % media['_id'], data = True)
 
     def singleSeason(self, media, show, profile):
 
@@ -125,6 +121,10 @@ class ShowSearcher(SearcherBase, ShowTypeBase):
         releases = fireEvent('release.for_media', media['_id'], single = True)
         show_title = getTitle(show)
         episode_identifier = '%s S%02d%s' % (show_title, season['info'].get('number', 0), "E%02d" % media['info'].get('number'))
+
+        # Add parents
+        media['show'] = show
+        media['season'] = season
 
         index = 0
         for q_identifier in profile.get('qualities'):
@@ -223,3 +223,10 @@ class ShowSearcher(SearcherBase, ShowTypeBase):
 
     def searchAll(self):
         pass
+
+    def getSearchTitle(self, media):
+        # TODO: this should be done for season and episode
+        if media['type'] == 'season':
+            return getTitle(media)
+        elif media['type'] == 'episode':
+            return getTitle(media)

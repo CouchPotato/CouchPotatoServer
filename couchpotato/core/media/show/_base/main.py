@@ -173,6 +173,7 @@ class ShowBase(MediaBase):
                 for episode_nr in episodes:
 
                     episode_info = episodes[episode_nr]
+                    episode_info['season_number'] = season_nr
                     fireEvent('show.episode.add', season.get('_id'), episode_info, single = True)
 
 

@@ -118,8 +118,8 @@ class Episode(MediaBase):
         return titles
 
 
-    def identifier(self, library):
-        if library.get('type') != 'episode':
+    def identifier(self, media):
+        if media.get('type') != 'episode':
             return
 
         identifier = {
@@ -127,16 +127,16 @@ class Episode(MediaBase):
             'episode': None
         }
 
-        scene_map = library['info'].get('map_episode', {}).get('scene')
+        scene_map = media['info'].get('map_episode', {}).get('scene')
 
         if scene_map:
             # Use scene mappings if they are available
-            identifier['season'] = scene_map.get('season')
-            identifier['episode'] = scene_map.get('episode')
+            identifier['season'] = scene_map.get('season_nr')
+            identifier['episode'] = scene_map.get('episode_nr')
         else:
             # Fallback to normal season/episode numbers
-            identifier['season'] = library.get('season_number')
-            identifier['episode'] = library.get('episode_number')
+            identifier['season'] = media['info'].get('season_number')
+            identifier['episode'] = media['info'].get('number')
 
 
         # Cast identifiers to integers
