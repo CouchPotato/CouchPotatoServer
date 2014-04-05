@@ -4,14 +4,14 @@ from hashlib import sha1
 from urlparse import urlparse
 import os
 
-from couchpotato.core.downloaders.base import Downloader, ReleaseDownloadList
+from couchpotato.core._base.downloader.main import DownloaderBase, ReleaseDownloadList
+
 from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.encoding import sp
 from couchpotato.core.helpers.variable import cleanHost, splitString
 from couchpotato.core.logger import CPLog
 from bencode import bencode, bdecode
 from rtorrent import RTorrent
-from rtorrent.err import MethodError
 from scandir import scandir
 
 
@@ -20,7 +20,7 @@ log = CPLog(__name__)
 autoload = 'rTorrent'
 
 
-class rTorrent(Downloader):
+class rTorrent(DownloaderBase):
 
     protocol = ['torrent', 'torrent_magnet']
     rt = None

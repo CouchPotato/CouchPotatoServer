@@ -1,7 +1,7 @@
 import json
 import traceback
 
-from couchpotato.core.downloaders.base import Downloader
+from couchpotato.core._base.downloader.main import DownloaderBase
 from couchpotato.core.helpers.encoding import isInt
 from couchpotato.core.helpers.variable import cleanHost
 from couchpotato.core.logger import CPLog
@@ -13,7 +13,7 @@ log = CPLog(__name__)
 autoload = 'Synology'
 
 
-class Synology(Downloader):
+class Synology(DownloaderBase):
 
     protocol = ['nzb', 'torrent', 'torrent_magnet']
     status_support = False

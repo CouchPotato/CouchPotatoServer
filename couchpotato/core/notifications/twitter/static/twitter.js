@@ -2,7 +2,7 @@ var TwitterNotification = new Class({
 
 	initialize: function(){
 		var self = this;
-		App.addEvent('load', self.addRegisterButton.bind(self));
+		App.addEvent('loadSettings', self.addRegisterButton.bind(self));
 	},
 
 	addRegisterButton: function(){

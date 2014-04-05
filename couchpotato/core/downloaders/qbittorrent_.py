@@ -1,21 +1,21 @@
 from base64 import b16encode, b32decode
-from bencode import bencode, bdecode
 from hashlib import sha1
 import os
 
-from couchpotato.core.downloaders.base import Downloader, ReleaseDownloadList
+from bencode import bencode, bdecode
+from couchpotato.core._base.downloader.main import DownloaderBase, ReleaseDownloadList
 from couchpotato.core.helpers.encoding import sp
 from couchpotato.core.helpers.variable import cleanHost
 from couchpotato.core.logger import CPLog
-
 from qbittorrent.client import QBittorrentClient
+
 
 log = CPLog(__name__)
 
 autoload = 'qBittorrent'
 
 
-class qBittorrent(Downloader):
+class qBittorrent(DownloaderBase):
 
     protocol = ['torrent', 'torrent_magnet']
     qb = None

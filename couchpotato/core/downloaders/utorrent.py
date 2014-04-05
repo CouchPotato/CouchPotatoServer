@@ -12,7 +12,7 @@ import urllib
 import urllib2
 
 from bencode import bencode as benc, bdecode
-from couchpotato.core.downloaders.base import Downloader, ReleaseDownloadList
+from couchpotato.core._base.downloader.main import DownloaderBase, ReleaseDownloadList
 from couchpotato.core.helpers.encoding import isInt, ss, sp
 from couchpotato.core.helpers.variable import tryInt, tryFloat, cleanHost
 from couchpotato.core.logger import CPLog
@@ -24,7 +24,7 @@ log = CPLog(__name__)
 autoload = 'uTorrent'
 
 
-class uTorrent(Downloader):
+class uTorrent(DownloaderBase):
 
     protocol = ['torrent', 'torrent_magnet']
     utorrent_api = None

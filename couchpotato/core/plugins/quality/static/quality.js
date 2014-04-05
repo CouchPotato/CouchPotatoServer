@@ -11,7 +11,7 @@ var QualityBase = new Class({
 		self.profiles = [];
 		Array.each(data.profiles, self.createProfilesClass.bind(self));
 
-		App.addEvent('load', self.addSettings.bind(self))
+		App.addEvent('loadSettings', self.addSettings.bind(self))
 
 	},
 

@@ -7,12 +7,18 @@ from couchpotato.core.event import addEvent
 from couchpotato.core.helpers.variable import mergeDicts
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media._base.providers.base import Provider
+from couchpotato.core.plugins.base import Plugin
 
 
 log = CPLog(__name__)
 
 
-class Downloader(Provider):
+## This is here to load the static files
+class Downloader(Plugin):
+    pass
+
+
+class DownloaderBase(Provider):
 
     protocol = []
     http_time_between_calls = 0
