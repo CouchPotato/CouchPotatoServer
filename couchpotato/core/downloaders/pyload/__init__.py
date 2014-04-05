@@ -38,6 +38,14 @@ config = [{
                     'description': 'Label to add download as.',
                 },
                 {
+                    'name': 'wait_time',
+                    'advanced': True,
+                    'label': 'Wait Time',
+                    'type': 'int',
+                    'default': 90,
+                    'description': 'Wait x seconds for post processing after files have finished downloading.',
+                },
+                {
                     'name': 'remove_complete',
                     'label': 'Remove torrent',
                     'default': True,

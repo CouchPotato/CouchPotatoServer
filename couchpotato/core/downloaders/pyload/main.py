@@ -24,7 +24,7 @@ log = CPLog(__name__)
 # Examples: http://forum.pyload.org/viewtopic.php?f=7&t=2596
 
 class pyload(Downloader):
-
+    time_pending = {}   #saves the time when all files finished downloading in a PID
     protocol = ['och']
     pyload_api = None
     status_flags = {
@@ -175,17 +175,30 @@ class pyload(Downloader):
                             finishedFiles.append(file)
 
                     if len(finishedFiles) == len(files):
-                        pid_states[pid] = 'completed'
+                        if pid in self.time_pending:
+                            if (self.time_pending[pid] - time.clock()) >= self.conf('wait_time'):
+                                pid_states[pid] = 'completed'
+                                del self.time_pending[pid] # clean time cache of pending packages
+                            else:
+                                pid_states[pid] = 'pending'
+                        else:
+                            self.time_pending[pid] = time.clock()
+                            pid_states[pid] = 'pending'
+                            log.debug("Download of all files in Package %s finished. Waiting %s seconds for possible post processing in pyload.", (pid, self.conf('wait_time')))
+                        break
                     # - failed: Download of a file (on all mirrors) has failed or all mirrors of a file are offline.
                     else:
                         for unfinishedFile in [i for i in files if i not in finishedFiles]:
                                 allMirrorsFailed = True
                                 waitForCatptcha = False
+                                waitForExtracting = False
                                 for l in files[unfinishedFile]:
                                     if (self.status_flags.get(l['status']) not in ['TEMPOFFLINE', 'OFFLINE', 'FAILED']):
                                         allMirrorsFailed = False
-                                    if ('captcha' in l['error']): #exclude captcha errors
+                                    if ('captcha' in l['error']):       #exclude captcha errors
                                         waitForCatptcha = True
+                                    if (self.status_flags.get(l['status'])) in ['PROCESSING']: #postprocessing in pyload
+                                        waitForExtracting = True
 
                                 if allMirrorsFailed and not waitForCatptcha:
                                     log.debug('The download of all mirrors of the file %s failed or are offline. DL aborted!', l['name'])
@@ -195,6 +208,8 @@ class pyload(Downloader):
                                 else:
                                     if waitForCatptcha:
                                         log.debug('At least one Download in Pyload is waiting for Captcha!')
+                                    if waitForExtracting:
+                                        log.debug('Pyload is extracting Package %s', pid)
                                     pid_states[pid] = 'busy'
                 except:
                     log.debug("Can not evaluate download state of PID %s on pyLoad. Package will be removed!", pid)
@@ -212,6 +227,8 @@ class pyload(Downloader):
             for pid in pid_states:
                 if pid_states[pid] == 'failed':
                     self.pyload_api.remove_pids([pid])
+                if pid in self.time_pending[pid]: # clean time cache of pending packages
+                    del self.time_pending[pid]
 
             release_downloads.append({
                     'id': dl_id,
