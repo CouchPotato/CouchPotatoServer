@@ -165,12 +165,14 @@ class ShowBase(MediaBase):
             for season_nr in seasons_info:
 
                 season_info = seasons_info[season_nr]
-                season = fireEvent('show.season.add', media.get('_id'), season_info, single = True)
+                episodes = season_info.get('episodes', {})
+
+                season = fireEvent('show.season.add', m.get('_id'), season_info, single = True)
 
                 # Add Episodes
-                for episode_nr in season_info.get('episodes', {}):
+                for episode_nr in episodes:
 
-                    episode_info = season_info['episodes'][episode_nr]
+                    episode_info = episodes[episode_nr]
                     fireEvent('show.episode.add', season.get('_id'), episode_info, single = True)
 
 

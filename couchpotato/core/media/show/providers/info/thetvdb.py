@@ -318,7 +318,7 @@ class TheTVDb(ShowProvider):
             'identifiers': {
                 'thetvdb': show.get('seriesid') if show.get('seriesid') else show[number][1]['seasonid']
             },
-            'number': number,
+            'number': tryInt(number),
             'images': {
                 'poster': poster,
             },
@@ -369,8 +369,8 @@ class TheTVDb(ShowProvider):
         poster = get('filename', [])
 
         episode_data = {
-            'number': get('episodenumber'),
-            'absolute_number': get('absolute_number'),
+            'number': tryInt(get('episodenumber')),
+            'absolute_number': tryInt(get('absolute_number')),
             'identifiers': {
                 'thetvdb': tryInt(episode['id'])
             },

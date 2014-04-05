@@ -17,7 +17,7 @@ class Season(MediaBase):
         addEvent('media.identifier', self.identifier)
 
         addEvent('show.season.add', self.add)
-        addEvent('show.season.update_info', self.update_info)
+        addEvent('show.season.update_info', self.updateInfo)
 
     def add(self, parent_id, info = None, update_after = True):
         if not info: info = {}
@@ -25,14 +25,16 @@ class Season(MediaBase):
         identifiers = info.get('identifiers')
         try: del info['identifiers']
         except: pass
+        try: del info['episodes']
+        except: pass
 
         # Add Season
         season_info = {
             '_t': 'media',
             'type': 'season',
             'identifiers': identifiers,
-            'parent': parent_id,
-            'info': info, # Returned dict by providers
+            'parent_id': parent_id,
+            'info': info,  # Returned dict by providers
         }
 
         # Check if season already exists
@@ -54,7 +56,7 @@ class Season(MediaBase):
 
         return season
 
-    def update_info(self, media_id = None, info = None, force = False):
+    def updateInfo(self, media_id = None, info = None, force = False):
         if not info: info = {}
 
         if self.shuttingDown():

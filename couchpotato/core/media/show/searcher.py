@@ -1,4 +1,5 @@
-from couchpotato import Env
+import time
+from couchpotato import Env, get_db
 from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.variable import getTitle, toIterable
 from couchpotato.core.logger import CPLog
@@ -23,22 +24,24 @@ class ShowSearcher(SearcherBase, ShowTypeBase):
 
         self.query_condenser = QueryCondenser()
 
-        for type in toIterable(self.type):
-            addEvent('%s.searcher.single' % type, self.single)
+        addEvent('season.searcher.single', self.singleSeason)
+        addEvent('episode.searcher.single', self.singleEpisode)
 
         addEvent('searcher.correct_release', self.correctRelease)
 
+
+        def test():
+            time.sleep(.2)
+            db = get_db()
+            medias = db.get_many('media_by_type', 'show', with_doc = True)
+            for x in medias:
+                media = x['doc']
+                break
+            self.single(media)
+
+        addEvent('app.load', test)
+
     def single(self, media, search_protocols = None, manual = False):
-        show, season, episode = self.getLibraries(media['library'])
-
-        if media['type'] == 'show':
-            for library in season:
-                # TODO ideally we shouldn't need to fetch the media for each season library here
-                m = db.query(Media).filter_by(library_id = library['library_id']).first()
-
-                fireEvent('season.searcher.single', m.to_dict(ShowBase.search_dict))
-
-            return
 
         # Find out search type
         try:
@@ -47,78 +50,123 @@ class ShowSearcher(SearcherBase, ShowTypeBase):
         except SearchSetupError:
             return
 
-        done_status, available_status, ignored_status, failed_status = fireEvent('status.get', ['done', 'available', 'ignored', 'failed'], single = True)
-
-        if not media['profile'] or media['status_id'] == done_status.get('id'):
-            log.debug('Episode doesn\'t have a profile or already done, assuming in manage tab.')
+        if not media['profile_id'] or media['status'] == 'done':
+            log.debug('Show doesn\'t have a profile or already done, assuming in manage tab.')
             return
 
-        #pre_releases = fireEvent('quality.pre_releases', single = True)
+        show_title = fireEvent('media.search_query', media, condense = False, single = True)
 
-        found_releases = []
-        too_early_to_search = []
+        fireEvent('notify.frontend', type = 'show.searcher.started.%s' % media['_id'], data = True, message = 'Searching for "%s"' % show_title)
 
-        default_title = fireEvent('media.search_query', media['library'], condense = False, single=True)
-        if not default_title:
-            log.error('No proper info found for episode, removing it from library to cause it from having more issues.')
-            #fireEvent('episode.delete', episode['id'], single = True)
-            return
+        media = self.extendShow(media)
 
-        if not show or not season:
-            log.error('Unable to find show or season library in database, missing required data for searching')
-            return
+        db = get_db()
 
-        fireEvent('notify.frontend', type = 'show.searcher.started.%s' % media['id'], data = True, message = 'Searching for "%s"' % default_title)
+        profile = db.get('id', media['profile_id'])
+        quality_order = fireEvent('quality.order', single = True)
+
+        seasons = media.get('seasons', {})
+        for sx in seasons:
+            season = seasons.get(sx)
+
+            # Check if full season can be downloaded TODO: add
+            season_success = self.singleSeason(season, media, profile)
+
+            # Do each episode seperately
+            if not season_success:
+                episodes = season.get('episodes', {})
+                for ex in episodes:
+                    episode = episodes.get(ex)
+
+                    self.singleEpisode(episode, season, media, profile, quality_order, search_protocols)
+
+
+
+
+        fireEvent('notify.frontend', type = 'show.searcher.ended.%s' % media['id'], data = True)
+
+        return ret
+
+    def singleSeason(self, media, show, profile):
+
+        # Check if any episode is already snatched
+        active = 0
+        episodes = media.get('episodes', {})
+        for ex in episodes:
+            episode = episodes.get(ex)
+
+            if episode.get('status') in ['active']:
+                active += 1
+
+        if active != len(episodes):
+            return False
+
+        # Try and search for full season
+        # TODO:
+
+        return False
+
+    def singleEpisode(self, media, season, show, profile, quality_order, search_protocols = None, manual = False):
+
+
+        # TODO: check episode status
+
+
+        # TODO: check air date
+        #if not self.conf('always_search') and not self.couldBeReleased(quality_type['quality']['identifier'] in pre_releases, release_dates, movie['library']['year']):
+        #    too_early_to_search.append(quality_type['quality']['identifier'])
+        #    return
 
         ret = False
         has_better_quality = None
+        found_releases = []
+        too_early_to_search = []
 
-        for quality_type in media['profile']['types']:
-            # TODO check air date?
-            #if not self.conf('always_search') and not self.couldBeReleased(quality_type['quality']['identifier'] in pre_releases, release_dates, movie['library']['year']):
-            #    too_early_to_search.append(quality_type['quality']['identifier'])
-            #    continue
+        releases = fireEvent('release.for_media', media['_id'], single = True)
+        show_title = getTitle(show)
+        episode_identifier = '%s S%02d%s' % (show_title, season['info'].get('number', 0), "E%02d" % media['info'].get('number'))
+
+        index = 0
+        for q_identifier in profile.get('qualities'):
+            quality_custom = {
+                'quality': q_identifier,
+                'finish': profile['finish'][index],
+                'wait_for': profile['wait_for'][index],
+                '3d': profile['3d'][index] if profile.get('3d') else False
+            }
 
             has_better_quality = 0
 
             # See if better quality is available
-            for release in media['releases']:
-                if release['quality']['order'] <= quality_type['quality']['order'] and release['status_id'] not in [available_status.get('id'), ignored_status.get('id'), failed_status.get('id')]:
+            for release in releases:
+                if quality_order.index(release['quality']) <= quality_order.index(q_identifier) and release['status'] not in ['available', 'ignored', 'failed']:
                     has_better_quality += 1
 
             # Don't search for quality lower then already available.
             if has_better_quality is 0:
 
-                log.info('Search for %s S%02d%s in %s', (
-                    getTitle(show),
-                    season['season_number'],
-                    "E%02d" % episode['episode_number'] if episode and len(episode) == 1 else "",
-                    quality_type['quality']['label'])
-                )
-                quality = fireEvent('quality.single', identifier = quality_type['quality']['identifier'], single = True)
+                log.info('Searching for %s in %s', (episode_identifier, q_identifier))
+                quality = fireEvent('quality.single', identifier = q_identifier, single = True)
+                quality['custom'] = quality_custom
 
                 results = fireEvent('searcher.search', search_protocols, media, quality, single = True)
                 if len(results) == 0:
-                    log.debug('Nothing found for %s in %s', (default_title, quality_type['quality']['label']))
-
-                # Check if movie isn't deleted while searching
-                if not db.query(Media).filter_by(id = media.get('id')).first():
-                    break
+                    log.debug('Nothing found for %s in %s', (episode_identifier, q_identifier))
 
                 # Add them to this movie releases list
-                found_releases += fireEvent('release.create_from_search', results, media, quality_type, single = True)
+                found_releases += fireEvent('release.create_from_search', results, media, quality, single = True)
 
                 # Try find a valid result and download it
-                if fireEvent('release.try_download_result', results, media, quality_type, manual, single = True):
+                if fireEvent('release.try_download_result', results, media, quality, manual, single = True):
                     ret = True
 
                 # Remove releases that aren't found anymore
-                for release in media.get('releases', []):
-                    if release.get('status_id') == available_status.get('id') and release.get('identifier') not in found_releases:
+                for release in releases:
+                    if release.get('status') == 'available' and release.get('identifier') not in found_releases:
                         fireEvent('release.delete', release.get('id'), single = True)
             else:
-                log.info('Better quality (%s) already available or snatched for %s', (quality_type['quality']['label'], default_title))
-                fireEvent('media.restatus', media['id'])
+                log.info('Better quality (%s) already available or snatched for %s', (q_identifier, episode_identifier))
+                fireEvent('media.restatus', media['_id'])
                 break
 
             # Break if CP wants to shut down
@@ -126,21 +174,7 @@ class ShowSearcher(SearcherBase, ShowTypeBase):
                 break
 
         if len(too_early_to_search) > 0:
-            log.info2('Too early to search for %s, %s', (too_early_to_search, default_title))
-        elif media['type'] == 'season' and not ret and has_better_quality is 0:
-            # If nothing was found, start searching for episodes individually
-            log.info('No season pack found, starting individual episode search')
-
-            for library in episode:
-                # TODO ideally we shouldn't need to fetch the media for each episode library here
-                m = db.query(Media).filter_by(library_id = library['library_id']).first()
-
-                fireEvent('episode.searcher.single', m.to_dict(ShowBase.search_dict))
-
-
-        fireEvent('notify.frontend', type = 'show.searcher.ended.%s' % media['id'], data = True)
-
-        return ret
+            log.info2('Too early to search for %s, %s', (too_early_to_search, episode_identifier))
 
     def correctRelease(self, release = None, media = None, quality = None, **kwargs):
 
@@ -163,28 +197,29 @@ class ShowSearcher(SearcherBase, ShowTypeBase):
 
         return False
 
-    def getLibraries(self, library):
-        if 'related_libraries' not in library:
-            log.warning("'related_libraries' missing from media library, unable to continue searching")
-            return None, None, None
+    def extendShow(self, media):
 
-        libraries = library['related_libraries']
+        db = get_db()
 
-        # Show always collapses as there can never be any multiples
-        show = libraries.get('show', [])
-        show = show[0] if len(show) else None
+        seasons = db.get_many('media_children', media['_id'], with_doc = True)
 
-        # Season collapses if the subject is a season or episode
-        season = libraries.get('season', [])
-        if library['type'] in ['season', 'episode']:
-            season = season[0] if len(season) else None
+        media['seasons'] = {}
 
-        # Episode collapses if the subject is a episode
-        episode = libraries.get('episode', [])
-        if library['type'] == 'episode':
-            episode = episode[0] if len(episode) else None
+        for sx in seasons:
+            season = sx['doc']
 
-        return show, season, episode
+            # Add episode info
+            season['episodes'] = {}
+            episodes = db.get_many('media_children', sx['_id'], with_doc = True)
+
+            for se in episodes:
+                episode = se['doc']
+                season['episodes'][episode['info'].get('number')] = episode
+
+            # Add season to show
+            media['seasons'][season['info'].get('number', 0)] = season
+
+        return media
 
     def searchAll(self):
         pass

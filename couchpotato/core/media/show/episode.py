@@ -1,6 +1,5 @@
 from couchpotato import get_db
 from couchpotato.core.event import addEvent, fireEvent, fireEventAsync
-from couchpotato.core.helpers.encoding import toUnicode
 from couchpotato.core.logger import CPLog
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.media import MediaBase
@@ -9,6 +8,7 @@ from couchpotato.core.media import MediaBase
 log = CPLog(__name__)
 
 autoload = 'Episode'
+
 
 class Episode(MediaBase):
 
@@ -31,7 +31,7 @@ class Episode(MediaBase):
             '_t': 'media',
             'type': 'episode',
             'identifiers': identifiers,
-            'parent': parent_id,
+            'parent_id': parent_id,
             'info': info, # Returned dict by providers
         }
 
@@ -54,7 +54,7 @@ class Episode(MediaBase):
 
         return episode
 
-    def update_info(self, media_id = None, info = None, force = False):
+    def updateInfo(self, media_id = None, info = None, force = False):
         if not info: info = {}
 
         if self.shuttingDown():
