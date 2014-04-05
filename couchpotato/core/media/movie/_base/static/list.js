@@ -552,7 +552,7 @@ var MovieList = new Class({
 
 		Api.request(self.options.api_call || 'media.list', {
 			'data': Object.merge({
-				'type': 'movie',
+				'type': self.options.type || 'movie',
 				'status': self.options.status,
 				'limit_offset': self.options.limit ? self.options.limit + ',' + self.offset : null
 			}, self.filter),
