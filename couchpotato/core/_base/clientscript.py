@@ -51,7 +51,6 @@ class ClientScript(Plugin):
             'scripts/page/home.js',
             'scripts/page/settings.js',
             'scripts/page/about.js',
-            'scripts/misc/downloaders.js',
         ],
     }
 
