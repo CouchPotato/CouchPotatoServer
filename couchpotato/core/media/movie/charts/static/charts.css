@@ -1,5 +1,6 @@
 .charts {
 	clear: both;
+	margin-bottom: 30px;
 }
 
 .charts > h2 {
@@ -12,18 +13,37 @@
 	vertical-align: top;
 }
 
-.charts div.refresh {
-	margin-top: 10px;
+.charts .refresh {
 	clear:both;
-	text-align:center;
+	position: relative;
 }
+
+	.charts .refresh .refreshing {
+		display: block;
+		padding: 20px;
+		font-size: 20px;
+		text-align:center;
+	}
+
+	.charts .refresh a {
+		text-align: center;
+		padding: 0;
+		display: none;
+		width: 30px;
+		height: 30px;
+		position: absolute;
+		right: 10px;
+		top: -40px;
+		opacity: .7;
+	}
+
+	.charts .refresh a:hover {
+		opacity: 1;
+	}
 
 .charts p.no_charts_enabled {
 	padding: 0.7em 1em;
-}
-
-.charts div.refresh a {
-	display:block;
+	display: none;
 }
 
 .charts .chart h3 a {
@@ -164,7 +184,7 @@
 	left: 50px;
 }
 
-.charts .chart .media_result div.chart_number {
+.charts .chart .media_result .chart_number {
 	color: white;
 	position: absolute;
 	top: 0;
@@ -172,16 +192,17 @@
 	font: bold 2em/1em Helvetica, Sans-Serif;
 	width: 50px;
 	height: 100%;
+	text-align: center;
+	border-left: 8px solid transparent;
 }
 
-.charts .chart .media_result div.chart_number.chart_in_wanted {
-	background: rgb(0, 255, 40); /* fallback color */
-	background: rgba(0, 255, 40, 0.3);
-}
-.charts .chart .media_result div.chart_number.chart_in_library {
-	background: rgb(0, 202, 32); /* fallback color */
-	background: rgba(0, 202, 32, 0.3);
-}
+	.charts .chart .media_result.chart_in_wanted .chart_number {
+		border-color: rgba(0, 255, 40, 0.3);
+	}
+
+	.charts .chart .media_result.chart_in_library .chart_number {
+		border-color: rgba(0, 202, 32, 0.3);
+	}
 
 
 .charts .chart .media_result .actions {

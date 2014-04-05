@@ -1,6 +1,7 @@
 .suggestions {
     clear: both;
     padding-top: 10px;
+	margin-bottom: 30px;
 }
 
 	.suggestions > h2 {

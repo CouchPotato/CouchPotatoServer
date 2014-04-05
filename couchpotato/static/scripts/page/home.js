@@ -160,7 +160,7 @@ Page.Home = new Class({
 
 		// Charts
 		self.charts = new Charts({
-			'onLoaded': function(){
+			'onCreated': function(){
 				self.chain.callChain();
 			}
 		});

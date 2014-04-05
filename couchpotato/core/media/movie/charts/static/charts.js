@@ -12,38 +12,31 @@ var Charts = new Class({
 	create: function(){
 		var self = this;
 
-		self.el_refreshing_text = new Element('span.refreshing', {
-			'text': 'Refreshing charts...'
-		});
-
-		self.el_refresh_link = new Element('a.refresh', {
-			'href': '#',
-			'text': 'Refresh charts',
-			'events': {
-				'click': function(e) {
-					e.preventDefault();
-					self.el.getChildren('div.chart').destroy();
-					self.el_refreshing_text.show();
-					self.el_refresh_link.hide();
-					self.api_request = Api.request('charts.view', {
-						'data': { 'force_update': 1 },
-						'onComplete': self.fill.bind(self)
-					});
-				}
-			}
-		}).hide();
-
-		self.el_refresh_container = new Element('div.refresh').grab(
-			self.el_refreshing_text
-		).grab(self.el_refresh_link);
-
-		self.el_no_charts_enabled = new Element('p.no_charts_enabled', {
-			'html': 'Hey, it looks like you have no charts enabled at the moment. If you\'d like some great movie suggestions you can go to <a href="' + App.createUrl('settings/display') + '">settings</a> and turn on some charts of your choice.'
-		}).hide();
-
-		self.el = new Element('div.charts').grab(
-			self.el_no_charts_enabled
-		).grab(self.el_refresh_container);
+		self.el = new Element('div.charts').adopt(
+			self.el_no_charts_enabled = new Element('p.no_charts_enabled', {
+				'html': 'Hey, it looks like you have no charts enabled at the moment. If you\'d like some great movie suggestions you can go to <a href="' + App.createUrl('settings/display') + '">settings</a> and turn on some charts of your choice.'
+			}),
+			self.el_refresh_container = new Element('div.refresh').adopt(
+				self.el_refresh_link = new Element('a.refresh.icon2', {
+					'href': '#',
+					'events': {
+						'click': function(e) {
+							e.preventDefault();
+							self.el.getChildren('div.chart').destroy();
+							self.el_refreshing_text.show();
+							self.el_refresh_link.hide();
+							self.api_request = Api.request('charts.view', {
+								'data': { 'force_update': 1 },
+								'onComplete': self.fill.bind(self)
+							});
+						}
+					}
+				}),
+				self.el_refreshing_text = new Element('span.refreshing', {
+					'text': 'Refreshing charts...'
+				})
+			)
+		);
 
 		if( Cookie.read('suggestions_charts_menu_selected') === 'charts')
 			self.el.show();
@@ -53,6 +46,8 @@ var Charts = new Class({
 		self.api_request = Api.request('charts.view', {
 			'onComplete': self.fill.bind(self)
 		});
+
+		self.fireEvent.delay(0, self, 'created');
 
 	},
 
@@ -93,9 +88,19 @@ var Charts = new Class({
 							self.afterAdded(m, movie)
 						}
 					});
-					var in_database_class = movie.in_wanted ? '.chart_in_wanted' : (movie.in_library ? '.chart_in_library' : '');
-					var in_database_title = movie.in_wanted ? 'Movie in wanted list' : (movie.in_library ? 'Movie in library' : '');
-					m.el.grab( new Element('div.chart_number' + in_database_class, { 'text': it++, 'title': in_database_title }));
+
+					var in_database_class = movie.in_wanted ? 'chart_in_wanted' : (movie.in_library ? 'chart_in_library' : ''),
+						in_database_title = movie.in_wanted ? 'Movie in wanted list' : (movie.in_library ? 'Movie in library' : '');
+
+					m.el
+						.addClass(in_database_class)
+						.grab(
+							new Element('div.chart_number', {
+								'text': it++,
+								'title': in_database_title
+							})
+						);
+
 					m.data_container.grab(
 						new Element('div.actions').adopt(
 							new Element('a.add.icon2', {
@@ -134,13 +139,13 @@ var Charts = new Class({
 								}
 							}
 						}) : null
-					)
+					);
 
 					$(m).inject(c);
 
 				});
 
-				$(c).inject(self.el_refresh_container, 'before');
+				c.inject(self.el);
 
 			});
 
@@ -150,8 +155,7 @@ var Charts = new Class({
 
 	},
 
-	afterAdded: function(m, movie){
-		var self = this;
+	afterAdded: function(m){
 
 		$(m).getElement('div.chart_number')
 			.addClass('chart_in_wanted')
@@ -163,4 +167,4 @@ var Charts = new Class({
 		return this.el;
 	}
 
-})
+});
