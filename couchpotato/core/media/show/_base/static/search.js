@@ -108,7 +108,7 @@ Block.Search.ShowItem = new Class({
 				self.options_el.empty();
 				self.options_el.adopt(
 					new Element('div.message', {
-						'text': json.added ? 'Show successfully added.' : 'Show didn\'t add properly. Check logs'
+						'text': json.success ? 'Show successfully added.' : 'Show didn\'t add properly. Check logs'
 					})
 				);
 				self.mask.fade('out');

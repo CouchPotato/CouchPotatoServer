@@ -10,7 +10,7 @@ from couchpotato.core.helpers.variable import splitString, tryInt, tryFloat
 from couchpotato.core.logger import CPLog
 from couchpotato.core.media.show.providers.base import ShowProvider
 from tvdb_api import tvdb_exceptions
-from tvdb_api.tvdb_api import Tvdb
+from tvdb_api.tvdb_api import Tvdb, Show
 
 
 log = CPLog(__name__)
@@ -269,17 +269,20 @@ class TheTVDb(ShowProvider):
 
         show_data = dict((k, v) for k, v in show_data.iteritems() if v)
 
-        # Parse season and episode data
-        show_data['seasons'] = {}
+        # Only load season info when available
+        if type(show) == Show:
 
-        for season_nr in show:
-            season = self._parseSeason(show, season_nr, show[season_nr])
-            season['episodes'] = {}
+            # Parse season and episode data
+            show_data['seasons'] = {}
 
-            for episode_nr in show[season_nr]:
-                season['episodes'][episode_nr] = self._parseEpisode(show[season_nr][episode_nr])
+            for season_nr in show:
+                season = self._parseSeason(show, season_nr, show[season_nr])
+                season['episodes'] = {}
 
-            show_data['seasons'][season_nr] = season
+                for episode_nr in show[season_nr]:
+                    season['episodes'][episode_nr] = self._parseEpisode(show[season_nr][episode_nr])
+
+                show_data['seasons'][season_nr] = season
 
         # Add alternative titles
         # try:
@@ -313,7 +316,7 @@ class TheTVDb(ShowProvider):
 
         season_data = {
             'identifiers': {
-                'thetvdb': show[number][1]['seasonid']
+                'thetvdb': show.get('seriesid') if show.get('seriesid') else show[number][1]['seasonid']
             },
             'number': number,
             'images': {
