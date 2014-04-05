@@ -67,14 +67,14 @@ class Logging(Plugin):
             if x is nr:
                 current_path = path
 
-        log = ''
+        log_content = ''
         if current_path:
             f = open(current_path, 'r')
-            log = f.read()
+            log_content = f.read()
 
         return {
             'success': True,
-            'log': toUnicode(log),
+            'log': toUnicode(log_content),
             'total': total,
         }
 

@@ -14,6 +14,7 @@ log = CPLog(__name__)
 
 autoload = 'qBittorrent'
 
+
 class qBittorrent(Downloader):
 
     protocol = ['torrent', 'torrent_magnet']
@@ -107,25 +108,24 @@ class qBittorrent(Downloader):
             for torrent in torrents:
                 if torrent.hash in ids:
                     torrent.update_general() # get extra info
+                    torrent_filelist = torrent.get_files()
+
                     torrent_files = []
-                    t_files = torrent.get_files()
+                    torrent_dir = os.path.join(torrent.save_path, torrent.name)
 
-                    check_dir = os.path.join(torrent.save_path, torrent.name)
-                    if os.path.isdir(check_dir):
-                        torrent.save_path = check_dir
+                    if os.path.isdir(torrent_dir):
+                        torrent.save_path = torrent_dir
 
-                    if len(t_files) > 1 and os.path.isdir(torrent.save_path): # multi file torrent
+                    if len(torrent_filelist) > 1 and os.path.isdir(torrent_dir): # multi file torrent, path.isdir check makes sure we're not in the root download folder
                         for root, _, files in os.walk(torrent.save_path):
                             for f in files:
-                                p = os.path.join(root, f)
-                                if os.path.isfile(p):
-                                    torrent_files.append(sp(p))
+                                torrent_files.append(sp(os.path.join(root, f)))
 
                     else: # multi or single file placed directly in torrent.save_path
-                        for f in t_files:
-                            p = os.path.join(torrent.save_path, f.name)
-                            if os.path.isfile(p):
-                                torrent_files.append(sp(p))
+                        for f in torrent_filelist:
+                            file_path = os.path.join(torrent.save_path, f.name)
+                            if os.path.isfile(file_path):
+                                torrent_files.append(sp(file_path))
 
                     release_downloads.append({
                         'id': torrent.hash,

@@ -26,7 +26,7 @@ var MovieList = new Class({
 		self.filter = self.options.filter || {
 			'starts_with': null,
 			'search': null
-		}
+		};
 
 		self.el = new Element('div.movies').adopt(
 			self.title = self.options.title ? new Element('h2', {
@@ -52,7 +52,7 @@ var MovieList = new Class({
 
 		self.getMovies();
 
-		App.on('movie.added', self.movieAdded.bind(self))
+		App.on('movie.added', self.movieAdded.bind(self));
 		App.on('movie.deleted', self.movieDeleted.bind(self))
 	},
 
@@ -96,7 +96,7 @@ var MovieList = new Class({
 		if(self.options.load_more)
 			self.scrollspy = new ScrollSpy({
 				min: function(){
-					var c = self.load_more.getCoordinates()
+					var c = self.load_more.getCoordinates();
 					return c.top - window.document.getSize().y - 300
 				},
 				onEnter: self.loadMore.bind(self)
@@ -179,7 +179,7 @@ var MovieList = new Class({
 
 		m.fireEvent('injected');
 
-		self.movies.include(m)
+		self.movies.include(m);
 		self.movies_added[movie._id] = true;
 	},
 
@@ -187,7 +187,7 @@ var MovieList = new Class({
 		var self = this;
 		var chars = '#ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
-		self.el.addClass('with_navigation')
+		self.el.addClass('with_navigation');
 
 		self.navigation = new Element('div.alph_nav').adopt(
 			self.mass_edit_form = new Element('div.mass_edit_form').adopt(
@@ -242,7 +242,7 @@ var MovieList = new Class({
 							this.addClass(a);
 
 							el.inject(el.getParent(), 'top');
-							el.getSiblings().hide()
+							el.getSiblings().hide();
 							setTimeout(function(){
 								el.getSiblings().setStyle('display', null);
 							}, 100)
@@ -286,7 +286,7 @@ var MovieList = new Class({
 						'status': self.options.status
 					}, self.filter),
 					'onSuccess': function(json){
-						available_chars = json.chars
+						available_chars = json.chars;
 
 						available_chars.each(function(c){
 							self.letters[c.capitalize()].addClass('available')
@@ -300,7 +300,7 @@ var MovieList = new Class({
 			self.navigation_alpha = new Element('ul.numbers', {
 				'events': {
 					'click:relay(li.available)': function(e, el){
-						self.activateLetter(el.get('data-letter'))
+						self.activateLetter(el.get('data-letter'));
 						self.getMovies(true)
 					}
 				}
@@ -318,7 +318,7 @@ var MovieList = new Class({
 
 		// All
 		self.letters['all'] = new Element('li.letter_all.available.active', {
-			'text': 'ALL',
+			'text': 'ALL'
 		}).inject(self.navigation_alpha);
 
 		// Chars
@@ -334,7 +334,7 @@ var MovieList = new Class({
 		if (self.options.menu.length > 0)
 			self.options.menu.each(function(menu_item){
 				self.navigation_menu.addLink(menu_item);
-			})
+			});
 		else
 			self.navigation_menu.hide();
 
@@ -347,15 +347,15 @@ var MovieList = new Class({
 			movies = self.movies.length;
 		self.movies.each(function(movie){
 			selected += movie.isSelected() ? 1 : 0
-		})
+		});
 
 		var indeterminate = selected > 0 && selected < movies,
 			checked = selected == movies && selected > 0;
 
-		self.mass_edit_select.set('indeterminate', indeterminate)
+		self.mass_edit_select.set('indeterminate', indeterminate);
 
-		self.mass_edit_select_class[checked ? 'check' : 'uncheck']()
-		self.mass_edit_select_class.element[indeterminate ? 'addClass' : 'removeClass']('indeterminate')
+		self.mass_edit_select_class[checked ? 'check' : 'uncheck']();
+		self.mass_edit_select_class.element[indeterminate ? 'addClass' : 'removeClass']('indeterminate');
 
 		self.mass_edit_selected.set('text', selected);
 	},
@@ -371,7 +371,7 @@ var MovieList = new Class({
 			'events': {
 				'click': function(e){
 					(e).preventDefault();
-					this.set('text', 'Deleting..')
+					this.set('text', 'Deleting..');
 					Api.request('media.delete', {
 						'data': {
 							'id': ids.join(','),
@@ -383,7 +383,7 @@ var MovieList = new Class({
 							var erase_movies = [];
 							self.movies.each(function(movie){
 								if (movie.isSelected()){
-									$(movie).destroy()
+									$(movie).destroy();
 									erase_movies.include(movie);
 								}
 							});
@@ -410,7 +410,7 @@ var MovieList = new Class({
 
 	changeQualitySelected: function(){
 		var self = this;
-		var ids = self.getSelectedMovies()
+		var ids = self.getSelectedMovies();
 
 		Api.request('movie.edit', {
 			'data': {
@@ -423,11 +423,11 @@ var MovieList = new Class({
 
 	refreshSelected: function(){
 		var self = this;
-		var ids = self.getSelectedMovies()
+		var ids = self.getSelectedMovies();
 
 		Api.request('media.refresh', {
 			'data': {
-				'id': ids.join(','),
+				'id': ids.join(',')
 			}
 		});
 	},
@@ -435,7 +435,7 @@ var MovieList = new Class({
 	getSelectedMovies: function(){
 		var self = this;
 
-		var ids = []
+		var ids = [];
 		self.movies.each(function(movie){
 			if (movie.isSelected())
 				ids.include(movie.get('_id'))
@@ -459,11 +459,11 @@ var MovieList = new Class({
 	reset: function(){
 		var self = this;
 
-		self.movies = []
+		self.movies = [];
 		if(self.mass_edit_select)
-			self.calculateSelected()
+			self.calculateSelected();
 		if(self.navigation_alpha)
-			self.navigation_alpha.getElements('.active').removeClass('active')
+			self.navigation_alpha.getElements('.active').removeClass('active');
 
 		self.offset = 0;
 		if(self.scrollspy){
@@ -475,7 +475,7 @@ var MovieList = new Class({
 	activateLetter: function(letter){
 		var self = this;
 
-		self.reset()
+		self.reset();
 
 		self.letters[letter || 'all'].addClass('active');
 		self.filter.starts_with = letter;
@@ -487,7 +487,7 @@ var MovieList = new Class({
 
 		self.el
 			.removeClass(self.current_view+'_list')
-			.addClass(new_view+'_list')
+			.addClass(new_view+'_list');
 
 		self.current_view = new_view;
 		Cookie.write(self.options.identifier+'_view2', new_view, {duration: 1000});
@@ -504,9 +504,9 @@ var MovieList = new Class({
 		if(self.search_timer) clearTimeout(self.search_timer);
 		self.search_timer = (function(){
 			var search_value = self.navigation_search_input.get('value');
-			if (search_value == self.last_search_value) return
+			if (search_value == self.last_search_value) return;
 
-			self.reset()
+			self.reset();
 
 			self.activateLetter();
 			self.filter.search = search_value;
@@ -563,7 +563,7 @@ var MovieList = new Class({
 
 				if(self.loader_first){
 					var lf = self.loader_first;
-					self.loader_first.addClass('hide')
+					self.loader_first.addClass('hide');
 					self.loader_first = null;
 					setTimeout(function(){
 						lf.destroy();
@@ -603,10 +603,10 @@ var MovieList = new Class({
 		var is_empty = self.movies.length == 0 && (self.total_movies == 0 || self.total_movies === undefined);
 
 		if(self.title)
-			self.title[is_empty ? 'hide' : 'show']()
+			self.title[is_empty ? 'hide' : 'show']();
 
 		if(self.description)
-			self.description.setStyle('display', [is_empty ? 'none' : ''])
+			self.description.setStyle('display', [is_empty ? 'none' : '']);
 
 		if(is_empty && self.options.on_empty_element){
 			self.options.on_empty_element.inject(self.loader_first || self.title || self.movie_list, 'after');

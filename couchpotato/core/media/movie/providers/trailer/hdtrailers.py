@@ -52,7 +52,7 @@ class HDTrailers(TrailerProvider):
         return result_data
 
     def findViaAlternative(self, group):
-        results = {'480p':[], '720p':[], '1080p':[]}
+        results = {'480p': [], '720p': [], '1080p': []}
 
         movie_name = getTitle(group)
 

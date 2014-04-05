@@ -10,6 +10,7 @@ autoload = 'IPTorrents'
 class IPTorrents(MovieProvider, Base):
 
     cat_ids = [
+        ([87], ['3d']),
         ([48], ['720p', '1080p', 'bd50']),
         ([72], ['cam', 'ts', 'tc', 'r5', 'scr']),
         ([7], ['dvdrip', 'brrip']),
@@ -19,4 +20,4 @@ class IPTorrents(MovieProvider, Base):
     def buildUrl(self, title, media, quality):
         query = '%s %s' % (title.replace(':', ''), media['info']['year'])
 
-        return self._buildUrl(query, quality['identifier'])
+        return self._buildUrl(query, quality)

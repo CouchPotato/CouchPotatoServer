@@ -23,9 +23,9 @@ class Base(TorrentProvider):
     }
 
     cat_ids = [
-       (['41'], ['720p', '1080p', 'brrip']),
-       (['19'], ['cam', 'ts', 'dvdrip', 'tc', 'r5', 'scr']),
-       (['20'], ['dvdr'])
+        (['41'], ['720p', '1080p', 'brrip']),
+        (['19'], ['cam', 'ts', 'dvdrip', 'tc', 'r5', 'scr']),
+        (['20'], ['dvdr'])
     ]
 
     cat_backup_id = 200
@@ -36,7 +36,7 @@ class Base(TorrentProvider):
 
         page = 0
         total_pages = 1
-        cats = self.getCatId(quality['identifier'])
+        cats = self.getCatId(quality)
 
         while page < total_pages:
 
@@ -79,7 +79,7 @@ class Base(TorrentProvider):
                                 return confirmed + trusted + vip + moderated
 
                             id = re.search('id=(?P<id>\d+)&', link).group('id')
-                            url = self.urls['download'] % (download)
+                            url = self.urls['download'] % download
 
                             fileSize = self.parseSize(result.select('td.rowhead')[5].text)
                             results.append({
@@ -113,7 +113,7 @@ class Base(TorrentProvider):
             try:
                 full_description = self.getHTMLData(item['detail_url'])
                 html = BeautifulSoup(full_description)
-                nfo_pre = html.find('td', attrs = {'class':'main'}).findAll('table')[1]
+                nfo_pre = html.find('td', attrs = {'class': 'main'}).findAll('table')[1]
                 description = toUnicode(nfo_pre.text) if nfo_pre else ''
             except:
                 log.error('Failed getting more info for %s', item['name'])

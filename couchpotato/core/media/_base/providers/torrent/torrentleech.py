@@ -21,7 +21,7 @@ class Base(TorrentProvider):
         'download': 'http://www.torrentleech.org%s',
     }
 
-    http_time_between_calls = 1 #seconds
+    http_time_between_calls = 1  # Seconds
     cat_backup_id = None
 
     def _search(self, media, quality, results):
@@ -34,7 +34,7 @@ class Base(TorrentProvider):
             html = BeautifulSoup(data)
 
             try:
-                result_table = html.find('table', attrs = {'id' : 'torrenttable'})
+                result_table = html.find('table', attrs = {'id': 'torrenttable'})
                 if not result_table:
                     return
 
@@ -42,9 +42,9 @@ class Base(TorrentProvider):
 
                 for result in entries[1:]:
 
-                    link = result.find('td', attrs = {'class' : 'name'}).find('a')
-                    url = result.find('td', attrs = {'class' : 'quickdownload'}).find('a')
-                    details = result.find('td', attrs = {'class' : 'name'}).find('a')
+                    link = result.find('td', attrs = {'class': 'name'}).find('a')
+                    url = result.find('td', attrs = {'class': 'quickdownload'}).find('a')
+                    details = result.find('td', attrs = {'class': 'name'}).find('a')
 
                     results.append({
                         'id': link['href'].replace('/torrent/', ''),
@@ -52,8 +52,8 @@ class Base(TorrentProvider):
                         'url': self.urls['download'] % url['href'],
                         'detail_url': self.urls['download'] % details['href'],
                         'size': self.parseSize(result.find_all('td')[4].string),
-                        'seeders': tryInt(result.find('td', attrs = {'class' : 'seeders'}).string),
-                        'leechers': tryInt(result.find('td', attrs = {'class' : 'leechers'}).string),
+                        'seeders': tryInt(result.find('td', attrs = {'class': 'seeders'}).string),
+                        'leechers': tryInt(result.find('td', attrs = {'class': 'leechers'}).string),
                     })
 
             except:

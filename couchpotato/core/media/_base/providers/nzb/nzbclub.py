@@ -18,7 +18,7 @@ class Base(NZBProvider, RSS):
         'search': 'https://www.nzbclub.com/nzbfeeds.aspx?%s',
     }
 
-    http_time_between_calls = 4 #seconds
+    http_time_between_calls = 4  # seconds
 
     def _search(self, media, quality, results):
 
@@ -55,7 +55,7 @@ class Base(NZBProvider, RSS):
     def getMoreInfo(self, item):
         full_description = self.getCache('nzbclub.%s' % item['id'], item['detail_url'], cache_timeout = 25920000)
         html = BeautifulSoup(full_description)
-        nfo_pre = html.find('pre', attrs = {'class':'nfo'})
+        nfo_pre = html.find('pre', attrs = {'class': 'nfo'})
         description = toUnicode(nfo_pre.text) if nfo_pre else ''
 
         item['description'] = description

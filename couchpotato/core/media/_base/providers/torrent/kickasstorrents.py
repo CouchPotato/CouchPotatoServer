@@ -26,7 +26,7 @@ class Base(TorrentMagnetProvider):
         (['dvd'], ['dvdr']),
     ]
 
-    http_time_between_calls = 1  #seconds
+    http_time_between_calls = 1  # Seconds
     cat_backup_id = None
 
     proxy_list = [
@@ -42,7 +42,7 @@ class Base(TorrentMagnetProvider):
 
         if data:
 
-            cat_ids = self.getCatId(quality['identifier'])
+            cat_ids = self.getCatId(quality)
             table_order = ['name', 'size', None, 'age', 'seeds', 'leechers']
 
             try:

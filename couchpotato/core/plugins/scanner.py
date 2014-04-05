@@ -28,7 +28,7 @@ class Scanner(Plugin):
 
     ignored_in_path = [os.path.sep + 'extracted' + os.path.sep, 'extracting', '_unpack', '_failed_', '_unknown_', '_exists_', '_failed_remove_',
                        '_failed_rename_', '.appledouble', '.appledb', '.appledesktop', os.path.sep + '._', '.ds_store', 'cp.cpnfo',
-                       'thumbs.db', 'ehthumbs.db', 'desktop.ini']  #unpacking, smb-crap, hidden files
+                       'thumbs.db', 'ehthumbs.db', 'desktop.ini']  # unpacking, smb-crap, hidden files
     ignore_names = ['extract', 'extracting', 'extracted', 'movie', 'movies', 'film', 'films', 'download', 'downloads', 'video_ts', 'audio_ts', 'bdmv', 'certificate']
     extensions = {
         'movie': ['mkv', 'wmv', 'avi', 'mpg', 'mpeg', 'mp4', 'm2ts', 'iso', 'img', 'mdf', 'ts', 'm4v'],
@@ -85,7 +85,7 @@ class Scanner(Plugin):
         'hdtv': ['hdtv']
     }
 
-    clean = '[ _\,\.\(\)\[\]\-]?(extended.cut|directors.cut|french|swedisch|danish|dutch|swesub|spanish|german|ac3|dts|custom|dc|divx|divx5|dsr|dsrip|dutch|dvd|dvdr|dvdrip|dvdscr|dvdscreener|screener|dvdivx|cam|fragment|fs|hdtv|hdrip' \
+    clean = '[ _\,\.\(\)\[\]\-]?(3d|hsbs|sbs|extended.cut|directors.cut|french|swedisch|danish|dutch|swesub|spanish|german|ac3|dts|custom|dc|divx|divx5|dsr|dsrip|dutch|dvd|dvdr|dvdrip|dvdscr|dvdscreener|screener|dvdivx|cam|fragment|fs|hdtv|hdrip' \
             '|hdtvrip|internal|limited|multisubs|ntsc|ogg|ogm|pal|pdtv|proper|repack|rerip|retail|r3|r5|bd5|se|svcd|swedish|german|read.nfo|nfofix|unrated|ws|telesync|ts|telecine|tc|brrip|bdrip|video_ts|audio_ts|480p|480i|576p|576i|720p|720i|1080p|1080i|hrhd|hrhdtv|hddvd|bluray|x264|h264|xvid|xvidvd|xxx|www.www|cd[1-9]|\[.*\])([ _\,\.\(\)\[\]\-]|$)'
     multipart_regex = [
         '[ _\.-]+cd[ _\.-]*([0-9a-d]+)',  #*cd1
@@ -129,7 +129,7 @@ class Scanner(Plugin):
             check_file_date = True
             try:
                 files = []
-                for root, dirs, walk_files in scandir.walk(folder):
+                for root, dirs, walk_files in scandir.walk(folder, followlinks=True):
                     files.extend([sp(os.path.join(root, filename)) for filename in walk_files])
 
                     # Break if CP wants to shut down
@@ -589,7 +589,7 @@ class Scanner(Plugin):
 
                         if len(movie) > 0:
                             imdb_id = movie[0].get('imdb')
-                            log.debug('Found movie via search: %s', cur_file)
+                            log.debug('Found movie via search: %s', identifier)
                             if imdb_id: break
                 else:
                     log.debug('Identifier to short to use for search: %s', identifier)
@@ -597,7 +597,7 @@ class Scanner(Plugin):
         if imdb_id:
             try:
                 db = get_db()
-                return db.get('media', imdb_id, with_doc = True)['doc']
+                return db.get('media', 'imdb-%s' % imdb_id, with_doc = True)['doc']
             except:
                 log.debug('Movie "%s" not in library, just getting info', imdb_id)
                 return {
@@ -835,6 +835,7 @@ class Scanner(Plugin):
         cleaned = ' '.join(re.split('\W+', simplifyString(release_name)))
         cleaned = re.sub(self.clean, ' ', cleaned)
 
+        year = None
         for year_str in [file_name, release_name, cleaned]:
             if not year_str: continue
             year = self.findYear(year_str)
@@ -843,7 +844,7 @@ class Scanner(Plugin):
 
         cp_guess = {}
 
-        if year: # Split name on year
+        if year:  # Split name on year
             try:
                 movie_name = cleaned.rsplit(year, 1).pop(0).strip()
                 if movie_name:

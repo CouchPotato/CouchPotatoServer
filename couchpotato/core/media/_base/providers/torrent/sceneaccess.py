@@ -22,7 +22,7 @@ class Base(TorrentProvider):
         'download': 'https://www.sceneaccess.eu/%s',
     }
 
-    http_time_between_calls = 1 #seconds
+    http_time_between_calls = 1  # Seconds
 
     def _search(self, media, quality, results):
 
@@ -33,16 +33,16 @@ class Base(TorrentProvider):
             html = BeautifulSoup(data)
 
             try:
-                resultsTable = html.find('table', attrs = {'id' : 'torrents-table'})
+                resultsTable = html.find('table', attrs = {'id': 'torrents-table'})
                 if resultsTable is None:
                     return
 
-                entries = resultsTable.find_all('tr', attrs = {'class' : 'tt_row'})
+                entries = resultsTable.find_all('tr', attrs = {'class': 'tt_row'})
                 for result in entries:
 
-                    link = result.find('td', attrs = {'class' : 'ttr_name'}).find('a')
-                    url = result.find('td', attrs = {'class' : 'td_dl'}).find('a')
-                    leechers = result.find('td', attrs = {'class' : 'ttr_leechers'}).find('a')
+                    link = result.find('td', attrs = {'class': 'ttr_name'}).find('a')
+                    url = result.find('td', attrs = {'class': 'td_dl'}).find('a')
+                    leechers = result.find('td', attrs = {'class': 'ttr_leechers'}).find('a')
                     torrent_id = link['href'].replace('details?id=', '')
 
                     results.append({
@@ -50,8 +50,8 @@ class Base(TorrentProvider):
                         'name': link['title'],
                         'url': self.urls['download'] % url['href'],
                         'detail_url': self.urls['detail'] % torrent_id,
-                        'size': self.parseSize(result.find('td', attrs = {'class' : 'ttr_size'}).contents[0]),
-                        'seeders': tryInt(result.find('td', attrs = {'class' : 'ttr_seeders'}).find('a').string),
+                        'size': self.parseSize(result.find('td', attrs = {'class': 'ttr_size'}).contents[0]),
+                        'seeders': tryInt(result.find('td', attrs = {'class': 'ttr_seeders'}).find('a').string),
                         'leechers': tryInt(leechers.string) if leechers else 0,
                         'get_more_info': self.getMoreInfo,
                     })
@@ -62,7 +62,7 @@ class Base(TorrentProvider):
     def getMoreInfo(self, item):
         full_description = self.getCache('sceneaccess.%s' % item['id'], item['detail_url'], cache_timeout = 25920000)
         html = BeautifulSoup(full_description)
-        nfo_pre = html.find('div', attrs = {'id':'details_table'})
+        nfo_pre = html.find('div', attrs = {'id': 'details_table'})
         description = toUnicode(nfo_pre.text) if nfo_pre else ''
 
         item['description'] = description

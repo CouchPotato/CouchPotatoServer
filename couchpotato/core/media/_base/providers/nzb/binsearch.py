@@ -18,7 +18,7 @@ class Base(NZBProvider):
         'search': 'https://www.binsearch.info/index.php?%s',
     }
 
-    http_time_between_calls = 4 # Seconds
+    http_time_between_calls = 4  # Seconds
 
     def _search(self, media, quality, results):
 
@@ -28,7 +28,7 @@ class Base(NZBProvider):
             try:
 
                 html = BeautifulSoup(data)
-                main_table = html.find('table', attrs = {'id':'r2'})
+                main_table = html.find('table', attrs = {'id': 'r2'})
 
                 if not main_table:
                     return
@@ -36,11 +36,11 @@ class Base(NZBProvider):
                 items = main_table.find_all('tr')
 
                 for row in items:
-                    title = row.find('span', attrs = {'class':'s'})
+                    title = row.find('span', attrs = {'class': 's'})
 
                     if not title: continue
 
-                    nzb_id = row.find('input', attrs = {'type':'checkbox'})['name']
+                    nzb_id = row.find('input', attrs = {'type': 'checkbox'})['name']
                     info = row.find('span', attrs = {'class':'d'})
                     size_match = re.search('size:.(?P<size>[0-9\.]+.[GMB]+)', info.text)
 

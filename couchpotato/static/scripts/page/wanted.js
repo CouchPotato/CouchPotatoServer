@@ -73,7 +73,7 @@ Page.Wanted = new Class({
 					}
 					else {
 						var progress = json.movie;
-						self.manual_search.set('text', 'Searching.. (' + (((progress.total-progress.to_go)/progress.total)*100).round() + '%)');
+						self.manual_search.set('text', 'Searching.. (' + Math.round(((progress.total-progress.to_go)/progress.total)*100) + '%)');
 					}
 				}
 			});
@@ -87,7 +87,7 @@ Page.Wanted = new Class({
         var self = this;
         var options = {
         	'name': 'Scan_folder'
-        }
+        };
 
         if(!self.folder_browser){
             self.folder_browser = new Option['Directory']("Scan", "folder", "", options);
@@ -96,9 +96,9 @@ Page.Wanted = new Class({
                 var folder = self.folder_browser.getValue();
                 Api.request('renamer.scan', {
                     'data': {
-                        'base_folder': folder,
-                    },
-                });
+                        'base_folder': folder
+					}
+				});
             };
 
             self.folder_browser.inject(self.el, 'top');

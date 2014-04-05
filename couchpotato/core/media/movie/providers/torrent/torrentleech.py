@@ -24,5 +24,5 @@ class TorrentLeech(MovieProvider, Base):
     def buildUrl(self, media, quality):
         return (
             tryUrlencode(fireEvent('library.query', media, single = True)),
-            self.getCatId(quality['identifier'])[0]
+            self.getCatId(quality)[0]
         )

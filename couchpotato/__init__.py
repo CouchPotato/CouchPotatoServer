@@ -15,6 +15,7 @@ log = CPLog(__name__)
 views = {}
 template_loader = template.Loader(os.path.join(os.path.dirname(__file__), 'templates'))
 
+
 class BaseHandler(RequestHandler):
 
     def get_current_user(self):

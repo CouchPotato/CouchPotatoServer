@@ -160,7 +160,7 @@ class Manage(Plugin):
         except:
             log.error('Failed updating library: %s', (traceback.format_exc()))
 
-        while True and not self.shuttingDown():
+        while self.in_progress and len(self.in_progress) > 0 and not self.shuttingDown():
 
             delete_me = {}
 
@@ -171,14 +171,12 @@ class Manage(Plugin):
             for delete in delete_me:
                 del self.in_progress[delete]
 
-            if len(self.in_progress) == 0:
-                break
-
             time.sleep(1)
 
         fireEvent('notify.frontend', type = 'manage.updating', data = False)
         self.in_progress = False
 
+    # noinspection PyDefaultArgument
     def createAddToLibrary(self, folder, added_identifiers = []):
 
         def addToLibrary(group, total_found, to_go):
@@ -219,7 +217,7 @@ class Manage(Plugin):
         pr = self.in_progress[folder]
         pr['to_go'] -= 1
 
-        avg = (time.time() - pr['started'])/(pr['total'] - pr['to_go'])
+        avg = (time.time() - pr['started']) / (pr['total'] - pr['to_go'])
         pr['eta'] = tryInt(avg * pr['to_go'])
 
 

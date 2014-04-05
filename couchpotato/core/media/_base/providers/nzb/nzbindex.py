@@ -91,7 +91,7 @@ class Base(NZBProvider, RSS):
                 nfo_url = re.search('href=\"(?P<nfo>.+)\" ', item['description']).group('nfo')
                 full_description = self.getCache('nzbindex.%s' % item['id'], url = nfo_url, cache_timeout = 25920000)
                 html = BeautifulSoup(full_description)
-                item['description'] = toUnicode(html.find('pre', attrs = {'id':'nfo0'}).text)
+                item['description'] = toUnicode(html.find('pre', attrs = {'id': 'nfo0'}).text)
         except:
             pass
 

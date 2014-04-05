@@ -99,7 +99,7 @@ from couchpotato.core.helpers.encoding import simplifyString"""
 
 
 class TitleIndex(TreeBasedIndex):
-    _version = 1
+    _version = 2
 
     custom_header = """from CodernityDB.tree_index import TreeBasedIndex
 from string import ascii_letters
@@ -113,14 +113,14 @@ from couchpotato.core.helpers.encoding import toUnicode, simplifyString"""
         return self.simplify(key)
 
     def make_key_value(self, data):
-        if data.get('_t') == 'media' and data.get('title') is not None:
+        if data.get('_t') == 'media' and data.get('title') is not None and len(data.get('title')) > 0:
             return self.simplify(data['title']), None
 
     def simplify(self, title):
 
         title = toUnicode(title)
 
-        nr_prefix = '' if title[0] in ascii_letters else '#'
+        nr_prefix = '' if title and len(title) > 0 and title[0] in ascii_letters else '#'
         title = simplifyString(title)
 
         for prefix in ['the ']:
@@ -132,7 +132,7 @@ from couchpotato.core.helpers.encoding import toUnicode, simplifyString"""
 
 
 class StartsWithIndex(TreeBasedIndex):
-    _version = 1
+    _version = 2
 
     custom_header = """from CodernityDB.tree_index import TreeBasedIndex
 from string import ascii_letters
@@ -158,4 +158,4 @@ from couchpotato.core.helpers.encoding import toUnicode, simplifyString"""
                 title = title[len(prefix):]
                 break
 
-        return str(title[0] if title[0] in ascii_letters else '#').lower()
+        return str(title[0] if title and len(title) > 0 and title[0] in ascii_letters else '#').lower()

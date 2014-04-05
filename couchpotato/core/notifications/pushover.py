@@ -25,6 +25,7 @@ class Pushover(Notification):
             'token': self.app_token,
             'message': toUnicode(message),
             'priority': self.conf('priority'),
+            'sound': self.conf('sound'),
         }
 
         if data and data.get('identifier'):
@@ -33,10 +34,9 @@ class Pushover(Notification):
                 'url_title': toUnicode('%s on IMDb' % getTitle(data)),
             })
 
-        http_handler.request('POST',
-            "/1/messages.json",
-            headers = {'Content-type': 'application/x-www-form-urlencoded'},
-            body = tryUrlencode(api_data)
+        http_handler.request('POST', '/1/messages.json',
+                             headers = {'Content-type': 'application/x-www-form-urlencoded'},
+                             body = tryUrlencode(api_data)
         )
 
         response = http_handler.getresponse()
@@ -82,6 +82,11 @@ config = [{
                     'type': 'bool',
                     'advanced': True,
                     'description': 'Also send message when movie is snatched.',
+                },
+                {
+                    'name': 'sound',
+                    'advanced': True,
+                    'description': 'Define <a href="https://pushover.net/api%23sounds" target="_blank">custom sound</a> for Pushover alert.'
                 },
             ],
         }

@@ -5,7 +5,7 @@ var UpdaterBase = new Class({
 	initialize: function(){
 		var self = this;
 
-		App.addEvent('load', self.info.bind(self, 2000))
+		App.addEvent('load', self.info.bind(self, 2000));
 		App.addEvent('unload', function(){
 			if(self.timer)
 				clearTimeout(self.timer);
@@ -66,7 +66,7 @@ var UpdaterBase = new Class({
 
 		var changelog = 'https://github.com/'+data.repo_name+'/compare/'+data.version.hash+'...'+data.branch;
 		if(data.update_version.changelog)
-			changelog = data.update_version.changelog + '#' + data.version.hash+'...'+data.update_version.hash
+			changelog = data.update_version.changelog + '#' + data.version.hash+'...'+data.update_version.hash;
 
 		self.message = new Element('div.message.update').adopt(
 			new Element('span', {

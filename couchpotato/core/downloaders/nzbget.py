@@ -146,7 +146,7 @@ class NZBGet(Downloader):
                     'timeleft': timeleft,
                 })
 
-        for nzb in queue: # 'Parameters' is not passed in rpc.postqueue
+        for nzb in queue:  # 'Parameters' is not passed in rpc.postqueue
             if nzb['NZBID'] in ids:
                 log.debug('Found %s in NZBGet postprocessing queue', nzb['NZBFilename'])
                 release_downloads.append({

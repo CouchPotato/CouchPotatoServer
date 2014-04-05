@@ -148,7 +148,7 @@ class Renamer(Plugin):
             log.debug('The provided media folder %s does not exist. Trying to find it in the \'from\' folder.', media_folder)
 
             # Update to the from folder
-            if len(release_download.get('files'), []) == 1:
+            if len(release_download.get('files', [])) == 1:
                 new_media_folder = from_folder
             else:
                 new_media_folder = os.path.join(from_folder, os.path.basename(media_folder))
@@ -190,6 +190,8 @@ class Renamer(Plugin):
 
             release_files = release_download.get('files', [])
             if release_files:
+                files = release_files
+
                 # If there is only one file in the torrent, the downloader did not create a subfolder
                 if len(release_files) == 1:
                     folder = media_folder
@@ -204,7 +206,8 @@ class Renamer(Plugin):
         db = get_db()
 
         # Extend the download info with info stored in the downloaded release
-        release_download = self.extendReleaseDownload(release_download)
+        if release_download:
+            release_download = self.extendReleaseDownload(release_download)
 
         # Unpack any archives
         extr_files = None
@@ -248,7 +251,7 @@ class Renamer(Plugin):
                         'profile_id': None
                     }, search_after = False, status = 'done', single = True)
                 else:
-                    group['media'] = fireEvent('movie.update_info', identifier = getIdentifier(group['media']), single = True)
+                    group['media'] = fireEvent('movie.update_info', media_id = group['media'].get('_id'), single = True)
 
                 if not group['media'] or not group['media'].get('_id'):
                     log.error('Could not rename, no library item to work with: %s', group_identifier)
@@ -503,7 +506,7 @@ class Renamer(Plugin):
                                 fireEvent('release.update_status', release['_id'], status = 'downloaded', single = True)
 
                 # Remove leftover files
-                if not remove_leftovers: # Don't remove anything
+                if not remove_leftovers:  # Don't remove anything
                     break
 
                 log.debug('Removing leftover files')
@@ -528,8 +531,8 @@ class Renamer(Plugin):
 
                         parent_dir = os.path.dirname(src)
                         if delete_folders.count(parent_dir) == 0 and os.path.isdir(parent_dir) and \
-                            not isSubFolder(destination, parent_dir) and not isSubFolder(media_folder, parent_dir) and \
-                            not isSubFolder(parent_dir, base_folder):
+                                not isSubFolder(destination, parent_dir) and not isSubFolder(media_folder, parent_dir) and \
+                                not isSubFolder(parent_dir, base_folder):
 
                             delete_folders.append(parent_dir)
 
@@ -577,11 +580,11 @@ class Renamer(Plugin):
 
             # Remove matching releases
             for release in remove_releases:
-                log.debug('Removing release %s', release.identifier)
+                log.debug('Removing release %s', release.get('identifier'))
                 try:
                     db.delete(release)
                 except:
-                    log.error('Failed removing %s: %s', (release.identifier, traceback.format_exc()))
+                    log.error('Failed removing %s: %s', (release, traceback.format_exc()))
 
             if group['dirname'] and group['parentdir'] and not self.downloadIsTorrent(release_download):
                 if media_folder:
@@ -652,13 +655,13 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                 tag_files = release_download.get('files', [])
 
             # Tag all files in release folder
-            else:
+            elif release_download['folder']:
                 for root, folders, names in scandir.walk(release_download['folder']):
                     tag_files.extend([os.path.join(root, name) for name in names])
 
         for filename in tag_files:
 
-            # Dont tag .ignore files
+            # Don't tag .ignore files
             if os.path.splitext(filename)[1] == '.ignore':
                 continue
 
@@ -682,18 +685,19 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                 return False
 
         elif isinstance(release_download, dict):
+
+            folder = release_download['folder']
+            if not os.path.isdir(folder):
+                return False
+
             # Untag download_files if they are known
             if release_download.get('files'):
                 tag_files = release_download.get('files', [])
 
             # Untag all files in release folder
             else:
-                for root, folders, names in scandir.walk(release_download['folder']):
+                for root, folders, names in scandir.walk(folder):
                     tag_files.extend([sp(os.path.join(root, name)) for name in names if not os.path.splitext(name)[1] == '.ignore'])
-
-            folder = release_download['folder']
-            if not os.path.isdir(folder):
-                return False
 
         if not folder:
             return False
@@ -729,7 +733,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
 
         # Find tag on all files in release folder
         else:
-            for root, folders, names in scandir.walk(release_download['folder']):
+            for root, folders, names in scandir.walk(folder):
                 tag_files.extend([sp(os.path.join(root, name)) for name in names if not os.path.splitext(name)[1] == '.ignore'])
 
         # Find all .ignore files in folder
@@ -867,7 +871,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
             release_downloads = fireEvent('download.status', download_ids, merge = True) if download_ids else []
 
             if len(no_status_support) > 0:
-                log.debug('Download status functionality is not implemented for one of the active downloaders: %s', no_status_support)
+                log.debug('Download status functionality is not implemented for one of the active downloaders: %s', list(set(no_status_support)))
 
             if not release_downloads:
                 if fire_scan:
@@ -1016,7 +1020,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
                     if release_download['pause'] and self.conf('file_action') == 'link':
                         fireEvent('download.pause', release_download = release_download, pause = False, single = True)
                 if release_download['process_complete']:
-                    #First make sure the files were succesfully processed
+                    # First make sure the files were successfully processed
                     if not self.hastagRelease(release_download = release_download, tag = 'failed_rename'):
                         # Remove the seeding tag if it exists
                         self.untagRelease(release_download = release_download, tag = 'renamed_already')

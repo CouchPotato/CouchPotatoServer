@@ -79,7 +79,8 @@ class ProfilePlugin(Plugin):
                 'core': kwargs.get('core', False),
                 'qualities': [],
                 'wait_for': [],
-                'finish': []
+                'finish': [],
+                '3d': []
             }
 
             # Update types
@@ -88,6 +89,7 @@ class ProfilePlugin(Plugin):
                 profile['qualities'].append(type.get('quality'))
                 profile['wait_for'].append(tryInt(type.get('wait_for')))
                 profile['finish'].append((tryInt(type.get('finish')) == 1) if order > 0 else True)
+                profile['3d'].append(tryInt(type.get('3d')))
                 order += 1
 
             id = kwargs.get('id')
@@ -184,6 +186,14 @@ class ProfilePlugin(Plugin):
             }, {
                 'label': 'SD',
                 'qualities': ['dvdrip', 'dvdr']
+            }, {
+                'label': 'Prefer 3D HD',
+                'qualities': ['1080p', '720p', '720p', '1080p'],
+                '3d': [True, True]
+            }, {
+                'label': '3D HD',
+                'qualities': ['1080p', '720p'],
+                '3d': [True, True]
             }]
 
             # Create default quality profile
@@ -197,12 +207,15 @@ class ProfilePlugin(Plugin):
                     'order': order,
                     'qualities': profile.get('qualities'),
                     'finish': [],
-                    'wait_for': []
+                    'wait_for': [],
+                    '3d': []
                 }
 
+                threed = profile.get('3d', [])
                 for q in profile.get('qualities'):
                     pro['finish'].append(True)
                     pro['wait_for'].append(0)
+                    pro['3d'].append(threed.pop() if threed else False)
 
                 db.insert(pro)
                 order += 1

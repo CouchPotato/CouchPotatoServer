@@ -216,6 +216,7 @@ def tryFloat(s):
             return float(s)
     except: return 0
 
+
 def natsortKey(string_):
     """See http://www.codinghorror.com/blog/archives/001018.html"""
     return [int(s) if s.isdigit() else s for s in re.split(r'(\d+)', string_)]
@@ -247,9 +248,6 @@ def getTitle(media_dict):
                     except:
                         log.error('Could not get title for %s', getIdentifier(media_dict))
                         return None
-
-        log.error('Could not get title for %s', getIdentifier(media_dict))
-        return None
     except:
         log.error('Could not get title for library item: %s', media_dict)
         return None
@@ -296,8 +294,11 @@ def isSubFolder(sub_folder, base_folder):
     # Returns True if sub_folder is the same as or inside base_folder
     return base_folder and sub_folder and ss(os.path.normpath(base_folder).rstrip(os.path.sep) + os.path.sep) in ss(os.path.normpath(sub_folder).rstrip(os.path.sep) + os.path.sep)
 
+
 # From SABNZBD
 re_password = [re.compile(r'(.+){{([^{}]+)}}$'), re.compile(r'(.+)\s+password\s*=\s*(.+)$', re.I)]
+
+
 def scanForPassword(name):
     m = None
     for reg in re_password:

@@ -25,13 +25,16 @@ var version = {{version}},
     host = '{{host}}',
     api = '{{api}}';
 
-function create() {
+var create = function() {
+    var A, B;
     switch (arguments.length) {
     case 1:
-        var A = document.createTextNode(arguments[0]);
+        A = document.createTextNode(arguments[0]);
         break;
     default:
-        var A = document.createElement(arguments[0]), B = arguments[1];
+        A = document.createElement(arguments[0]);
+        B = arguments[1];
+
         for ( var b in B) {
             if (b.indexOf("on") == 0){
                 A.addEventListener(b.substring(2), B[b], false);

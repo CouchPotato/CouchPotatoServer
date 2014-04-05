@@ -21,9 +21,9 @@ class QualityPlugin(Plugin):
     }
 
     qualities = [
-        {'identifier': 'bd50', 'hd': True, 'size': (15000, 60000), 'label': 'BR-Disk', 'alternative': ['bd25'], 'allow': ['1080p'], 'ext':[], 'tags': ['bdmv', 'certificate', ('complete', 'bluray')]},
-        {'identifier': '1080p', 'hd': True, 'size': (4000, 20000), 'label': '1080p', 'width': 1920, 'height': 1080, 'alternative': [], 'allow': [], 'ext':['mkv', 'm2ts'], 'tags': ['m2ts', 'x264', 'h264']},
-        {'identifier': '720p', 'hd': True, 'size': (3000, 10000), 'label': '720p', 'width': 1280, 'height': 720, 'alternative': [], 'allow': [], 'ext':['mkv', 'ts'], 'tags': ['x264', 'h264']},
+        {'identifier': 'bd50', 'hd': True, 'allow_3d': True, 'size': (15000, 60000), 'label': 'BR-Disk', 'alternative': ['bd25'], 'allow': ['1080p'], 'ext':[], 'tags': ['bdmv', 'certificate', ('complete', 'bluray')]},
+        {'identifier': '1080p', 'hd': True, 'allow_3d': True, 'size': (4000, 20000), 'label': '1080p', 'width': 1920, 'height': 1080, 'alternative': [], 'allow': [], 'ext':['mkv', 'm2ts'], 'tags': ['m2ts', 'x264', 'h264']},
+        {'identifier': '720p', 'hd': True, 'allow_3d': True, 'size': (3000, 10000), 'label': '720p', 'width': 1280, 'height': 720, 'alternative': [], 'allow': [], 'ext':['mkv', 'ts'], 'tags': ['x264', 'h264']},
         {'identifier': 'brrip', 'hd': True, 'size': (700, 7000), 'label': 'BR-Rip', 'alternative': ['bdrip'], 'allow': ['720p', '1080p'], 'ext':[], 'tags': ['hdtv', 'hdrip', 'webdl', ('web', 'dl')]},
         {'identifier': 'dvdr', 'size': (3000, 10000), 'label': 'DVD-R', 'alternative': ['br2dvd'], 'allow': [], 'ext':['iso', 'img', 'vob'], 'tags': ['pal', 'ntsc', 'video_ts', 'audio_ts', ('dvd', 'r')]},
         {'identifier': 'dvdrip', 'size': (600, 2400), 'label': 'DVD-Rip', 'width': 720, 'alternative': [], 'allow': [], 'ext':[], 'tags': [('dvd', 'rip'), ('dvd', 'xvid'), ('dvd', 'divx')]},
@@ -34,6 +34,11 @@ class QualityPlugin(Plugin):
         {'identifier': 'cam', 'size': (600, 1000), 'label': 'Cam', 'alternative': ['camrip', 'hdcam'], 'allow': [], 'ext':[]}
     ]
     pre_releases = ['cam', 'ts', 'tc', 'r5', 'scr']
+    threed_tags = {
+        'hsbs': [('half', 'sbs')],
+        'fsbs': [('full', 'sbs')],
+        '3d': [],
+    }
 
     cached_qualities = None
     cached_order = None
@@ -58,6 +63,7 @@ class QualityPlugin(Plugin):
 
         addEvent('app.test', self.doTest)
 
+        self.order = []
         self.addOrder()
 
     def addOrder(self):
@@ -185,14 +191,19 @@ class QualityPlugin(Plugin):
         # Start with 0
         score = {}
         for quality in qualities:
-            score[quality.get('identifier')] = 0
+            score[quality.get('identifier')] = {
+                'score': 0,
+                '3d': {}
+            }
 
         for cur_file in files:
             words = re.split('\W+', cur_file.lower())
 
             for quality in qualities:
                 contains_score = self.containsTagScore(quality, words, cur_file)
-                self.calcScore(score, quality, contains_score)
+                threedscore = self.contains3D(quality, words, cur_file) if quality.get('allow_3d') else (0, None)
+
+                self.calcScore(score, quality, contains_score, threedscore)
 
         # Try again with loose testing
         for quality in qualities:
@@ -208,10 +219,13 @@ class QualityPlugin(Plugin):
         if not has_non_zero:
             return None
 
-        heighest_quality = max(score, key = score.get)
+        heighest_quality = max(score, key = lambda p: score[p]['score'])
         if heighest_quality:
             for quality in qualities:
                 if quality.get('identifier') == heighest_quality:
+                    quality['is_3d'] = False
+                    if score[heighest_quality].get('3d'):
+                        quality['is_3d'] = True
                     return self.setCache(cache_key, quality)
 
         return None
@@ -234,12 +248,12 @@ class QualityPlugin(Plugin):
             qualities = [qualities] if isinstance(qualities, (str, unicode)) else qualities
 
             for alt in qualities:
-                if (isinstance(alt, tuple)):
+                if isinstance(alt, tuple):
                     if len(set(words) & set(alt)) == len(alt):
                         log.debug('Found %s via %s %s in %s', (quality['identifier'], tag_type, quality.get(tag_type), cur_file))
                         score += points.get(tag_type)
 
-                if (isinstance(alt, (str, unicode)) and ss(alt.lower()) in cur_file.lower()):
+                if isinstance(alt, (str, unicode)) and ss(alt.lower()) in cur_file.lower():
                     log.debug('Found %s via %s %s in %s', (quality['identifier'], tag_type, quality.get(tag_type), cur_file))
                     score += points.get(tag_type) / 2
 
@@ -254,6 +268,23 @@ class QualityPlugin(Plugin):
                 score += points['ext']
 
         return score
+
+    def contains3D(self, quality, words, cur_file = ''):
+        cur_file = ss(cur_file)
+
+        for key in self.threed_tags:
+            tags = self.threed_tags.get(key, [])
+
+            for tag in tags:
+                if (isinstance(tag, tuple) and '.'.join(tag) in '.'.join(words)) or (isinstance(tag, (str, unicode)) and ss(tag.lower()) in cur_file.lower()):
+                    log.debug('Found %s in %s', (tag, cur_file))
+                    return 1, key
+
+            if list(set([key]) & set(words)):
+                log.debug('Found %s in %s', (tag, cur_file))
+                return 1, key
+
+        return 0, None
 
     def guessLooseScore(self, quality, extra = None):
 
@@ -277,9 +308,16 @@ class QualityPlugin(Plugin):
 
         return score
 
-    def calcScore(self, score, quality, add_score):
+    def calcScore(self, score, quality, add_score, threedscore = (0, None)):
 
-        score[quality['identifier']] += add_score
+        score[quality['identifier']]['score'] += add_score
+
+        threedscore, threedtag = threedscore
+        if threedscore and threedtag:
+            if threedscore not in score[quality['identifier']]['3d']:
+                score[quality['identifier']]['3d'][threedtag] = 0
+
+            score[quality['identifier']]['3d'][threedtag] += threedscore
 
         # Set order for allow calculation (and cache)
         if not self.cached_order:
@@ -289,7 +327,7 @@ class QualityPlugin(Plugin):
 
         if add_score != 0:
             for allow in quality.get('allow', []):
-                score[allow] -= 40 if self.cached_order[allow] < self.cached_order[quality['identifier']] else 5
+                score[allow]['score'] -= 40 if self.cached_order[allow] < self.cached_order[quality['identifier']] else 5
 
     def doTest(self):
 

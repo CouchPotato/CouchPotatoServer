@@ -20,7 +20,7 @@ class Base(NZBProvider, RSS):
         'detail_url': 'https://omgwtfnzbs.org/details.php?id=%s',
     }
 
-    http_time_between_calls = 1  #seconds
+    http_time_between_calls = 1   # Seconds
 
     cat_ids = [
         ([15], ['dvdrip']),
@@ -42,7 +42,7 @@ class Base(NZBProvider, RSS):
         q = '%s %s' % (title, movie['info']['year'])
         params = tryUrlencode({
             'search': q,
-            'catid': ','.join([str(x) for x in self.getCatId(quality['identifier'])]),
+            'catid': ','.join([str(x) for x in self.getCatId(quality)]),
             'user': self.conf('username', default = ''),
             'api': self.conf('api_key', default = ''),
         })

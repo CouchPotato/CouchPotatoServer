@@ -21,6 +21,8 @@ class Database(object):
     def __init__(self):
 
         addApiView('database.list_documents', self.listDocuments)
+        addApiView('database.reindex', self.reindex)
+        addApiView('database.compact', self.compact)
         addApiView('database.document.update', self.updateDocument)
         addApiView('database.document.delete', self.deleteDocument)
 
@@ -114,8 +116,35 @@ class Database(object):
                 results[key] = []
             results[key].append(document)
 
-
         return results
+
+    def reindex(self, **kwargs):
+
+        success = True
+        try:
+            db = self.getDB()
+            db.reindex()
+        except:
+            log.error('Failed index: %s', traceback.format_exc())
+            success = False
+
+        return {
+            'success': success
+        }
+
+    def compact(self, **kwargs):
+
+        success = True
+        try:
+            db = self.getDB()
+            db.compact()
+        except:
+            log.error('Failed compact: %s', traceback.format_exc())
+            success = False
+
+        return {
+            'success': success
+        }
 
     def migrate(self):
 
@@ -181,7 +210,7 @@ class Database(object):
                             migrate_data[ml][p[0]] = [migrate_data[ml][p[0]]]
                         migrate_data[ml][p[0]].append(columns)
 
-            c.close()
+            conn.close()
 
             log.info('Getting data took %s', time.time() - migrate_start)
 
@@ -297,6 +326,11 @@ class Database(object):
             releaseinfos = migrate_data['releaseinfo']
             for x in releaseinfos:
                 info = releaseinfos[x]
+
+                # Skip if release doesn't exist for this info
+                if not migrate_data['release'].get(info.get('release_id')):
+                    continue
+
                 if not migrate_data['release'][info.get('release_id')].get('info'):
                     migrate_data['release'][info.get('release_id')]['info'] = {}
 
@@ -437,7 +471,6 @@ class Database(object):
 
             log.info('Total migration took %s', time.time() - migrate_start)
             log.info('=' * 30)
-
 
             # rename old database
             log.info('Renaming old database to %s ', old_db + '.old')

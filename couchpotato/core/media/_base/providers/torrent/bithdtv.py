@@ -21,7 +21,7 @@ class Base(TorrentProvider):
     }
 
     # Searches for movies only - BiT-HDTV's subcategory and resolution search filters appear to be broken
-    http_time_between_calls = 1 #seconds
+    http_time_between_calls = 1  # Seconds
 
     def _search(self, media, quality, results):
 
@@ -40,7 +40,7 @@ class Base(TorrentProvider):
             html = BeautifulSoup(data)
 
             try:
-                result_table = html.find('table', attrs = {'width' : '750', 'class' : ''})
+                result_table = html.find('table', attrs = {'width': '750', 'class': ''})
                 if result_table is None:
                     return
 
@@ -74,7 +74,7 @@ class Base(TorrentProvider):
     def getMoreInfo(self, item):
         full_description = self.getCache('bithdtv.%s' % item['id'], item['detail_url'], cache_timeout = 25920000)
         html = BeautifulSoup(full_description)
-        nfo_pre = html.find('table', attrs = {'class':'detail'})
+        nfo_pre = html.find('table', attrs = {'class': 'detail'})
         description = toUnicode(nfo_pre.text) if nfo_pre else ''
 
         item['description'] = description

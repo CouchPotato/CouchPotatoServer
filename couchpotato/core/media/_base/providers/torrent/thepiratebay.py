@@ -39,7 +39,7 @@ class Base(TorrentMagnetProvider):
 
         page = 0
         total_pages = 1
-        cats = self.getCatId(quality['identifier'])
+        cats = self.getCatId(quality)
 
         base_search_url = self.urls['search'] % self.getDomain()
 
@@ -108,7 +108,7 @@ class Base(TorrentMagnetProvider):
     def getMoreInfo(self, item):
         full_description = self.getCache('tpb.%s' % item['id'], item['detail_url'], cache_timeout = 25920000)
         html = BeautifulSoup(full_description)
-        nfo_pre = html.find('div', attrs = {'class':'nfo'})
+        nfo_pre = html.find('div', attrs = {'class': 'nfo'})
         description = toUnicode(nfo_pre.text) if nfo_pre else ''
 
         item['description'] = description

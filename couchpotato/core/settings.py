@@ -56,6 +56,10 @@ class Settings(object):
 
         addEvent('database.setup', self.databaseSetup)
 
+        self.file = None
+        self.p = None
+        self.log = None
+
     def setFile(self, config_file):
         self.file = config_file
 
@@ -195,7 +199,6 @@ class Settings(object):
     def getOptions(self):
         return self.options
 
-
     def view(self, **kwargs):
         return {
             'options': self.getOptions(),
@@ -253,6 +256,7 @@ class Settings(object):
                 'identifier': identifier,
                 'value': toUnicode(value),
             })
+
 
 class PropertyIndex(HashIndex):
     _version = 1

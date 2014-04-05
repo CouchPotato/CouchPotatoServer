@@ -11,6 +11,7 @@ autoload = 'Bitsoup'
 
 class Bitsoup(MovieProvider, Base):
     cat_ids = [
+        ([17], ['3d']),
         ([41], ['720p', '1080p']),
         ([20], ['dvdr']),
         ([19], ['brrip', 'dvdrip']),
@@ -23,6 +24,6 @@ class Bitsoup(MovieProvider, Base):
                 fireEvent('library.query', media, include_year = False, single = True),
                 media['info']['year']
             ),
-            'cat': self.getCatId(quality['identifier'])[0],
+            'cat': self.getCatId(quality)[0],
         })
         return query

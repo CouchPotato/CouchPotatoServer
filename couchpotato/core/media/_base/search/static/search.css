@@ -6,12 +6,11 @@
 	top: 0;
 	text-align: right;
 	height: 100%;
-	border-bottom: 4px solid transparent;
 	transition: all .4s cubic-bezier(0.9,0,0.1,1);
 	position: absolute;
 	z-index: 20;
-	border: 1px solid transparent;
-	border-width: 0 0 4px;
+	border: 0 solid transparent;
+	border-bottom-width: 4px;
 }
 	.search_form:hover {
 		border-color: #047792;
@@ -22,19 +21,19 @@
 			right: 44px;
 		}
 	}
-	
+
 	.search_form.focused,
 	.search_form.shown {
 		border-color: #04bce6;
 	}
-	
+
 	.search_form .input {
 		height: 100%;
 		overflow: hidden;
 		width: 45px;
 		transition: all .4s cubic-bezier(0.9,0,0.1,1);
 	}
-	
+
 		.search_form.focused .input,
 		.search_form.shown .input  {
 			width: 380px;
@@ -49,7 +48,6 @@
 				color: #FFF;
 				font-size: 25px;
 				height: 100%;
-				padding: 10px;
 				width: 100%;
 				opacity: 0;
 				padding: 0 40px 0 10px;
@@ -59,23 +57,23 @@
 				.search_form.shown .input input {
 					opacity: 1;
 				}
-				
+
 				.search_form input::-ms-clear {
 				    width : 0;
 					height: 0;
 				}
-					
+
 			@media all and (max-width: 480px) {
 				.search_form .input input {
 					font-size: 15px;
 				}
-				
+
 				.search_form.focused .input,
 				.search_form.shown .input {
 					width: 277px;
 				}
 			}
-	
+
 	.search_form .input a  {
 		position: absolute;
 		top: 0;
@@ -89,7 +87,7 @@
 		font-size: 15px;
 		color: #FFF;
 	}
-		
+
 		.search_form .input a:after {
 			content: "\e03e";
 		}
@@ -97,7 +95,7 @@
 		.search_form.shown.filled .input a:after {
 			content: "\e04e";
 		}
-		
+
 		@media all and (max-width: 480px) {
 			.search_form .input a  {
 				line-height: 44px;
@@ -167,13 +165,13 @@
 				.media_result .options select[name=title] { width: 170px; }
 				.media_result .options select[name=profile] { width: 90px; }
 				.media_result .options select[name=category] { width: 80px; }
-				
+
 				@media all and (max-width: 480px) {
-				
+
 					.media_result .options select[name=title] { width: 90px; }
 					.media_result .options select[name=profile] { width: 50px; }
 					.media_result .options select[name=category] { width: 50px; }
-					
+
 				}
 
 			.media_result .options .button {
@@ -227,14 +225,14 @@
 				right: 7px;
 				vertical-align: middle;
 			}
-			
+
 				.media_result .info h2 {
 					margin: 0;
 					font-weight: normal;
 					font-size: 20px;
 					padding: 0;
 				}
-				
+
 					.search_form .info h2 {
 						position: absolute;
 						width: 100%;
@@ -247,12 +245,12 @@
 					overflow: hidden;
 					white-space: nowrap;
 				}
-				
+
 					.search_form .info h2 .title {
 						position: absolute;
 						width: 88%;
 					}
-	
+
 					.media_result .info h2 .year {
 						padding: 0 5px;
 						text-align: center;
@@ -260,14 +258,14 @@
 						width: 12%;
 						right: 0;
 					}
-					
+
 					@media all and (max-width: 480px) {
-					
+
 						.search_form .info h2 .year {
 							font-size: 12px;
 							margin-top: 7px;
 						}
-						
+
 					}
 
 .search_form .mask,

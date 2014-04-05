@@ -31,19 +31,19 @@ class Base(TorrentProvider):
         ([20], ['dvdr']),
     ]
 
-    http_time_between_calls = 1 #seconds
+    http_time_between_calls = 1  # Seconds
     cat_backup_id = None
 
     def _searchOnTitle(self, title, movie, quality, results):
 
-        url = self.urls['search'] % (tryUrlencode('%s %s' % (title.replace(':', ''), movie['info']['year'])), self.getCatId(quality['identifier'])[0])
+        url = self.urls['search'] % (tryUrlencode('%s %s' % (title.replace(':', ''), movie['info']['year'])), self.getCatId(quality)[0])
         data = self.getHTMLData(url)
 
         if data:
             html = BeautifulSoup(data)
 
             try:
-                result_table = html.find('table', attrs = {'border' : '1'})
+                result_table = html.find('table', attrs = {'border': '1'})
                 if not result_table:
                     return
 
@@ -52,7 +52,7 @@ class Base(TorrentProvider):
                 for result in entries[1:]:
                     cells = result.find_all('td')
 
-                    link = cells[1].find('a', attrs = {'class' : 'index'})
+                    link = cells[1].find('a', attrs = {'class': 'index'})
 
                     full_id = link['href'].replace('details.php?id=', '')
                     torrent_id = full_id[:6]

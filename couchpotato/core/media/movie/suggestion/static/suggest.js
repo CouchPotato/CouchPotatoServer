@@ -42,11 +42,10 @@ var SuggestList = new Class({
 
 				}
 			}
-		}).grab(
-			new Element('h2', {
-				'text': 'You might like these'
-			})
-		);
+		});
+
+        var cookie_menu_select = Cookie.read('suggestions_charts_menu_selected');
+        if( cookie_menu_select === 'suggestions' || cookie_menu_select === null ) self.el.show(); else self.el.hide();
 
 		self.api_request = Api.request('suggestion.view', {
 			'onComplete': self.fill.bind(self)
@@ -116,7 +115,7 @@ var SuggestList = new Class({
 								}
 							}
 						}) : null
-					)
+					);
 
 				$(m).inject(self.el);
 
@@ -150,4 +149,4 @@ var SuggestList = new Class({
 		return this.el;
 	}
 
-})
+});

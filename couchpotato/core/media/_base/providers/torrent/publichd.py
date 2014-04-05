@@ -34,7 +34,7 @@ class Base(TorrentMagnetProvider):
         query = self.buildUrl(media)
 
         params = tryUrlencode({
-            'page':'torrents',
+            'page': 'torrents',
             'search': query,
             'active': 1,
         })

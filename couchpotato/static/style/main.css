@@ -111,7 +111,7 @@ body > .spinner, .mask{
 		width: 100%;
 		padding: 200px;
 	}
-	
+
 	@media all and (max-width: 480px) {
 		body > .mask {
 			padding: 20px;
@@ -185,9 +185,9 @@ body > .spinner, .mask{
 .icon2.completed:before { content: "\e070"; }
 .icon2.info:before { content: "\e089"; }
 .icon2.attention:before { content: "\e009"; }
-.icon2.readd:before { 
-	display: inline-block; 
-	content: "\e04b"; 
+.icon2.readd:before {
+	display: inline-block;
+	content: "\e04b";
 	transform: scale(-1, 1);
 }
 .icon2.imdb:before {
@@ -200,8 +200,8 @@ body > .spinner, .mask{
 	position: relative;
 	top: -3px;
 }
-.icon2.menu:before { 
-	content: "\e076\00a0 \e076\00a0 \e076\00a0"; 
+.icon2.menu:before {
+	content: "\e076\00a0 \e076\00a0 \e076\00a0";
 	line-height: 6px;
 	transform: scaleX(2);
 	width: 20px;
@@ -213,7 +213,7 @@ body > .spinner, .mask{
 	margin-left: 5px;
 }
 	@media screen and (-webkit-min-device-pixel-ratio:0) {
-		.icon2.menu:before { 
+		.icon2.menu:before {
 			margin-top: -7px;
 		}
 	}
@@ -229,7 +229,7 @@ body > .spinner, .mask{
 	box-shadow: 0 0 10px rgba(0,0,0,.1);
 	transition: all .4s ease-in-out;
 }
-	
+
 	@media all and (max-width: 480px) {
 		.header {
 			height: 44px;
@@ -253,7 +253,7 @@ body > .spinner, .mask{
 		left: 0;
 		bottom: 0;
 	}
-	
+
 		.header .foldout {
 			width: 44px;
 			height: 100%;
@@ -264,7 +264,7 @@ body > .spinner, .mask{
 			line-height: 42px;
 			color: #FFF;
 		}
-		
+
 		.header .logo {
 			display: inline-block;
 			font-size: 3em;
@@ -274,36 +274,36 @@ body > .spinner, .mask{
 			color: #FFF;
 			font-weight: normal;
 			vertical-align: top;
-			font-family: Lobster;
+			font-family: Lobster, sans-serif;
 		}
-		
+
 			@media all and (max-width: 480px) {
 				.header .foldout {
 					display: inline-block;
 				}
-				
+
 				.header .logo {
 					padding-top: 7px;
 					border: 0;
 					font-size: 1.7em;
 				}
 			}
-			
+
 			@media all and (min-width: 481px) and (max-width: 640px) {
-			
+
 				.header .logo {
 					display: none;
 				}
-				
+
 			}
-	
+
 		.header .navigation ul {
 			display: inline-block;
 			margin: 0;
 			padding: 0;
 			height: 100%;
 		}
-		
+
 			.header .navigation li {
 				color: #fff;
 				display: inline-block;
@@ -317,7 +317,7 @@ body > .spinner, .mask{
 				.header .navigation li:first-child {
 					border: none;
 				}
-		
+
 				.header .navigation li a {
 					display: block;
 					padding: 15px;
@@ -327,13 +327,13 @@ body > .spinner, .mask{
 					border-width: 0 0 4px 0;
 					font-weight: normal;
 				}
-				
+
 				.header .navigation li:hover a { border-color: #047792; }
 				.header .navigation li.active a { border-color: #04bce6; }
-		
+
 				.header .navigation li.disabled { color: #e5e5e5; }
 				.header .navigation li a { color: #fff; }
-		
+
 				.header .navigation .backtotop {
 					opacity: 0;
 					display: block;
@@ -349,24 +349,24 @@ body > .spinner, .mask{
 				    font-weight: normal;
 				}
 					.header:hover .navigation .backtotop { color: #fff; }
-					
+
 		@media all and (max-width: 480px) {
-		
+
 			body {
 				position: absolute;
 				width: 100%;
 				transition: all .5s cubic-bezier(0.9,0,0.1,1);
 				left: 0;
 			}
-			
+
 			.menu_shown body {
 				left: 240px;
 			}
-			
+
 			.header .navigation {
 				height: 100%;
 			}
-			
+
 				.menu_shown .header .navigation .overlay {
 					position: fixed;
 					right: 0;
@@ -374,7 +374,7 @@ body > .spinner, .mask{
 					bottom: 0;
 					left: 240px;
 				}
-			
+
 				.header .navigation ul {
 					width: 240px;
 					position: fixed;
@@ -382,11 +382,11 @@ body > .spinner, .mask{
 					background: rgba(0,0,0,.5);
 					transition: all .5s cubic-bezier(0.9,0,0.1,1);
 				}
-				
+
 					.menu_shown .header .navigation ul {
 						left: 0;
 					}
-				
+
 					.header .navigation ul li {
 						display: block;
 						text-align: left;
@@ -397,7 +397,7 @@ body > .spinner, .mask{
 							border-width: 0 4px 0 0;
 							padding: 5px 20px;
 						}
-						
+
 					.header .navigation ul li.separator {
 						background-color: rgba(255,255,255, .07);
 						height: 5px;
@@ -410,31 +410,31 @@ body > .spinner, .mask{
 		height: 100%;
 		border-left: 1px solid rgba(255,255,255,.07);
 	}
-		
+
 		@media all and (max-width: 480px) {
 			.header .more_menu {
 				display: none;
 			}
 		}
-	
+
 		.header .more_menu .button {
 			height: 100%;
 			line-height: 66px;
 			text-align: center;
 			padding: 0;
 		}
-		
+
 		.header .more_menu .wrapper {
 			width: 200px;
 			margin-left: -106px;
 			margin-top: 22px;
 		}
-		
+
 			@media all and (max-width: 480px) {
 				.header .more_menu .button {
 					line-height: 44px;
 				}
-				
+
 				.header .more_menu .wrapper {
 					margin-top: 0;
 				}
@@ -454,12 +454,12 @@ body > .spinner, .mask{
 		top: 0;
 		right: 0;
 	}
-	
+
 	.header .notification_menu {
 		right: 60px;
 		display: block;
 	}
-		
+
 		@media all and (max-width: 480px) {
 			.header .notification_menu {
 				right: 0;
@@ -685,15 +685,15 @@ body > .spinner, .mask{
 		border-bottom: 4px solid transparent;
 		border-radius: 0;
 	}
-	
+
 		.more_menu .button:hover {
 			border-color: #047792;
 		}
-	
+
 		.more_menu.show .button {
 			border-color: #04bce6;
 		}
-	
+
 	.more_menu .wrapper {
 		display: none;
 		top: 0;
@@ -706,23 +706,23 @@ body > .spinner, .mask{
 		color: #444;
 		background: #fff;
 	}
-	
+
 		.more_menu.show .wrapper {
 			display: block;
 			top: 44px;
 		}
-	
+
 		.more_menu ul {
 			padding: 0;
 			margin: 0;
 			list-style: none;
 		}
-	
+
 		.more_menu .wrapper li {
 			width: 100%;
 			height: auto;
 		}
-	
+
 			.more_menu .wrapper li a {
 				display: block;
 				border-bottom: 1px solid rgba(255,255,255,0.2);
@@ -735,21 +735,21 @@ body > .spinner, .mask{
 			}
 				.more_menu .wrapper li:first-child a { padding-top: 5px; }
 				.more_menu .wrapper li:last-child a { padding-bottom: 5px; }
-			
+
 			.more_menu .wrapper li .separator {
 				border-bottom: 1px solid rgba(0,0,0,.1);
 				display: block;
 				height: 1px;
 				margin: 5px 0;
 			}
-	
+
 			.more_menu .wrapper li:last-child a {
 				border: none;
 			}
 			.more_menu .wrapper li a:hover {
 				background: rgba(0,0,0,0.05);
 			}
-			
+
 .messages {
 	position: fixed;
 	right: 0;
@@ -823,7 +823,7 @@ body > .spinner, .mask{
 		margin: -200px 0 0 -200px;
 	}
 		@media all and (max-width: 480px) {
-		
+
 			.login form {
 				padding: 0;
 				height: 300px;
@@ -833,9 +833,9 @@ body > .spinner, .mask{
 				top: 10px;
 				margin: 0;
 			}
-			
+
 		}
-	
+
 	.page.login .ctrlHolder {
 		padding: 0;
 		margin: 0 0 20px;
@@ -843,31 +843,31 @@ body > .spinner, .mask{
 		.page.login .ctrlHolder:hover {
 			background: none;
 		}
-	
+
 	.page.login input[type=text],
 	.page.login input[type=password] {
 		width: 100% !important;
 		font-size: 25px;
 		padding: 14px !important;
 	}
-	
+
 	.page.login .remember_me {
 		font-size: 15px;
 		float: left;
 		width: 150px;
 		padding: 20px 0;
 	}
-	
+
 		.page.login .remember_me .check {
 			margin: 5px 5px 0 0;
 		}
-	
+
 	.page.login .button {
 		font-size: 25px;
 		padding: 20px;
 		float: right;
 	}
-		
+
 /* Fonts */
 @font-face {
   font-family: 'Elusive-Icons';

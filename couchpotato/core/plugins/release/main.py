@@ -343,6 +343,10 @@ class Release(Plugin):
 
             found_releases = []
 
+            is_3d = False
+            try: is_3d = quality['custom']['3d']
+            except: pass
+
             for rel in search_results:
 
                 rel_identifier = md5(rel['url'])
@@ -353,6 +357,7 @@ class Release(Plugin):
                     'identifier': rel_identifier,
                     'media_id': media.get('_id'),
                     'quality': quality.get('identifier'),
+                    'is_3d': is_3d,
                     'status': rel.get('status', 'available'),
                     'last_edit': int(time.time()),
                     'info': {}
@@ -438,6 +443,17 @@ class Release(Plugin):
     def forMedia(self, media_id):
 
         db = get_db()
+        raw_releases = list(db.get_many('release', media_id, with_doc = True))
 
-        for release in db.get_many('release', media_id, with_doc = True):
-            yield release['doc']
+        releases = []
+        for r in raw_releases:
+            releases.append(r['doc'])
+
+        releases = sorted(releases, key = lambda k: k.get('info', {}).get('score', 0), reverse = True)
+
+        # Sort based on preferred search method
+        download_preference = self.conf('preferred_method', section = 'searcher')
+        if download_preference != 'both':
+            releases = sorted(releases, key = lambda k: k.get('info', {}).get('protocol', '')[:3], reverse = (download_preference == 'torrent'))
+
+        return releases

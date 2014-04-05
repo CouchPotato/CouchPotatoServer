@@ -24,17 +24,21 @@ class Downloader(Provider):
     ]
 
     torrent_trackers = [
-        'http://tracker.publicbt.com/announce',
         'udp://tracker.istole.it:80/announce',
-        'udp://fr33domtracker.h33t.com:3310/announce',
         'http://tracker.istole.it/announce',
-        'http://tracker.ccc.de/announce',
+        'udp://fr33domtracker.h33t.com:3310/announce',
+        'http://tracker.publicbt.com/announce',
         'udp://tracker.publicbt.com:80/announce',
+        'http://tracker.ccc.de/announce',
         'udp://tracker.ccc.de:80/announce',
         'http://exodus.desync.com/announce',
         'http://exodus.desync.com:6969/announce',
         'http://tracker.publichd.eu/announce',
+        'udp://tracker.publichd.eu:80/announce',
         'http://tracker.openbittorrent.com/announce',
+        'udp://tracker.openbittorrent.com/announce',
+        'udp://tracker.openbittorrent.com:80/announce',
+        'udp://open.demonii.com:1337/announce',
     ]
 
     def __init__(self):
@@ -183,6 +187,7 @@ class Downloader(Provider):
 
     def pause(self, release_download, pause):
         return
+
 
 class ReleaseDownloadList(list):
 

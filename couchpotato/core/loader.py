@@ -12,19 +12,22 @@ log = CPLog(__name__)
 
 
 class Loader(object):
-    plugins = {}
-    providers = {}
-    modules = {}
+
+    def __init__(self):
+        self.plugins = {}
+        self.providers = {}
+        self.modules = {}
+        self.paths = {}
 
     def preload(self, root = ''):
         core = os.path.join(root, 'couchpotato', 'core')
 
-        self.paths = {
+        self.paths.update({
             'core': (0, 'couchpotato.core._base', os.path.join(core, '_base')),
             'plugin': (1, 'couchpotato.core.plugins', os.path.join(core, 'plugins')),
             'notifications': (20, 'couchpotato.core.notifications', os.path.join(core, 'notifications')),
             'downloaders': (20, 'couchpotato.core.downloaders', os.path.join(core, 'downloaders')),
-        }
+        })
 
         # Add media to loader
         self.addPath(root, ['couchpotato', 'core', 'media'], 25, recursive = True)

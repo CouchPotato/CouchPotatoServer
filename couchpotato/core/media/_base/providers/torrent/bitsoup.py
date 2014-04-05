@@ -20,7 +20,7 @@ class Base(TorrentProvider):
         'baseurl': 'https://www.bitsoup.me/%s',
     }
 
-    http_time_between_calls = 1 #seconds
+    http_time_between_calls = 1  # Seconds
 
     def _searchOnTitle(self, title, movie, quality, results):
 
@@ -30,7 +30,7 @@ class Base(TorrentProvider):
         })
         url = "%s&%s" % (self.urls['search'], arguments)
 
-        url = self.urls['search'] % self.buildUrl(media, quality)
+        url = self.urls['search'] % self.buildUrl(movie, quality)
         data = self.getHTMLData(url)
 
         if data:
@@ -74,14 +74,12 @@ class Base(TorrentProvider):
             except:
                 log.error('Failed getting results from %s: %s', (self.getName(), traceback.format_exc()))
 
-
     def getLoginParams(self):
         return {
             'username': self.conf('username'),
             'password': self.conf('password'),
             'ssl': 'yes',
         }
-
 
     def loginSuccess(self, output):
         return 'logout.php' in output.lower()

@@ -74,6 +74,7 @@ class TheMovieDb(MovieProvider):
         if not result:
             try:
                 log.debug('Getting info: %s', cache_key)
+                # noinspection PyArgumentList
                 movie = tmdb3.Movie(identifier)
                 try: exists = movie.title is not None
                 except: exists = False

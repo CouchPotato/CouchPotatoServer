@@ -13,6 +13,7 @@ log = CPLog(__name__)
 class Automation(AutomationBase):
 
     enabled_option = 'automation_enabled'
+    chart_enabled_option = 'chart_display_enabled'
     http_time_between_calls = 2
 
     interval = 1800
@@ -20,6 +21,7 @@ class Automation(AutomationBase):
 
     def __init__(self):
         addEvent('automation.get_movies', self._getMovies)
+        addEvent('automation.get_chart_list', self._getChartList)
 
     def _getMovies(self):
 
@@ -33,6 +35,13 @@ class Automation(AutomationBase):
         self.last_checked = time.time()
 
         return self.getIMDBids()
+
+    def _getChartList(self):
+
+        if not (self.conf(self.chart_enabled_option) or self.conf(self.chart_enabled_option) is None):
+            return
+
+        return self.getChartList()
 
     def search(self, name, year = None, imdb_only = False):
 
@@ -93,6 +102,10 @@ class Automation(AutomationBase):
 
     def getIMDBids(self):
         return []
+
+    def getChartList(self):
+        # Example return: [ {'name': 'Display name of list', 'url': 'http://example.com/', 'order': 1, 'list': []} ]
+        return
 
     def canCheck(self):
         return time.time() > self.last_checked + self.interval

@@ -18,10 +18,8 @@ class SceneAccess(MovieProvider, Base):
     ]
 
     def buildUrl(self, media, quality):
-        url = self.urls['search'] % (
-            self.getCatId(quality['identifier'])[0],
-            self.getCatId(quality['identifier'])[0]
-        )
+        cat_id = self.getCatId(quality)[0]
+        url = self.urls['search'] % (cat_id, cat_id)
 
         arguments = tryUrlencode({
             'search': fireEvent('library.query', media, single = True),

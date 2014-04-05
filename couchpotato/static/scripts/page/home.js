@@ -21,7 +21,9 @@ Page.Home = new Class({
 		self.chain.chain(
 			self.createAvailable.bind(self),
 			self.createSoon.bind(self),
+			self.createSuggestionsChartsMenu.bind(self),
 			self.createSuggestions.bind(self),
+			self.createCharts.bind(self),
 			self.createLate.bind(self)
 		);
 
@@ -67,7 +69,7 @@ Page.Home = new Class({
 					// Force update after search
 					self.available_list.update();
 					App.off('movie.searcher.ended', after_search);
-				}
+				};
 				App.on('movie.searcher.ended', after_search);
 
 			}
@@ -151,7 +153,78 @@ Page.Home = new Class({
 
 		$(self.suggestion_list).inject(self.el);
 
+	},
 
+	createCharts: function(){
+		var self = this;
+
+		// Charts
+		self.charts = new Charts({
+			'onCreated': function(){
+				self.chain.callChain();
+			}
+		});
+
+		$(self.charts).inject(self.el);
+
+	},
+
+	createSuggestionsChartsMenu: function(){
+		var self = this;
+
+		self.el_toggle_menu_suggestions = new Element('a.toggle_suggestions.active', {
+                'href': '#',
+                'events': { 'click': function(e) {
+                        e.preventDefault();
+                        self.toggleSuggestionsCharts('suggestions');
+                    }
+                }
+            }).grab( new Element('h2', {'text': 'Suggestions'}));
+
+        self.el_toggle_menu_charts = new Element('a.toggle_charts', {
+                'href': '#',
+                'events': { 'click': function(e) {
+                        e.preventDefault();
+                        self.toggleSuggestionsCharts('charts');
+                    }
+                }
+            }).grab( new Element('h2', {'text': 'Charts'}));
+
+        self.el_toggle_menu = new Element('div.toggle_menu').grab(
+                self.el_toggle_menu_suggestions
+            ).grab(
+                self.el_toggle_menu_charts
+            );
+
+        var menu_selected = Cookie.read('suggestions_charts_menu_selected');
+        if( menu_selected === null ) menu_selected = 'suggestions';
+        self.toggleSuggestionsCharts( menu_selected );
+
+		self.el_toggle_menu.inject(self.el);
+
+		self.chain.callChain();
+
+	},
+
+	toggleSuggestionsCharts: function(menu_id){
+	    var self = this;
+
+	    switch(menu_id) {
+            case 'suggestions':
+                if($(self.suggestion_list)) $(self.suggestion_list).show();
+                self.el_toggle_menu_suggestions.addClass('active');
+                if($(self.charts)) $(self.charts).hide();
+                self.el_toggle_menu_charts.removeClass('active');
+                break;
+            case 'charts':
+                if($(self.charts)) $(self.charts).show();
+                self.el_toggle_menu_charts.addClass('active');
+                if($(self.suggestion_list)) $(self.suggestion_list).hide();
+                self.el_toggle_menu_suggestions.removeClass('active');
+                break;
+        }
+
+		Cookie.write('suggestions_charts_menu_selected', menu_id, {'duration': 365});
 	},
 
 	createLate: function(){

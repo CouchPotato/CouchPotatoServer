@@ -160,6 +160,7 @@ class Transmission(Downloader):
         log.debug('Requesting Transmission to remove the torrent %s%s.', (release_download['name'], ' and cleanup the downloaded files' if delete_files else ''))
         return self.trpc.remove_torrent(release_download['id'], delete_files)
 
+
 class TransmissionRPC(object):
 
     """TransmissionRPC lite library"""

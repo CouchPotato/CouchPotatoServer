@@ -19,7 +19,7 @@ class Base(TorrentProvider):
         'api': 'https://hdbits.org/api/torrents'
     }
 
-    http_time_between_calls = 1 #seconds
+    http_time_between_calls = 1  # Seconds
 
     def _post_query(self, **params):
 
@@ -56,7 +56,7 @@ class Base(TorrentProvider):
                         'name': result['name'],
                         'url': self.urls['download'] % (result['id'], self.conf('passkey')),
                         'detail_url': self.urls['detail'] % result['id'],
-                        'size': tryInt(result['size'])/1024/1024,
+                        'size': tryInt(result['size']) / 1024 / 1024,
                         'seeders': tryInt(result['seeders']),
                         'leechers': tryInt(result['leechers'])
                     })

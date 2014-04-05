@@ -29,14 +29,14 @@ class uTorrent(Downloader):
     protocol = ['torrent', 'torrent_magnet']
     utorrent_api = None
     status_flags = {
-        'STARTED'     : 1,
-        'CHECKING'    : 2,
-        'CHECK-START' : 4,
-        'CHECKED'     : 8,
-        'ERROR'       : 16,
-        'PAUSED'      : 32,
-        'QUEUED'      : 64,
-        'LOADED'      : 128
+        'STARTED': 1,
+        'CHECKING': 2,
+        'CHECK-START': 4,
+        'CHECKED': 8,
+        'ERROR': 16,
+        'PAUSED': 32,
+        'QUEUED': 64,
+        'LOADED': 128
     }
 
     def connect(self):

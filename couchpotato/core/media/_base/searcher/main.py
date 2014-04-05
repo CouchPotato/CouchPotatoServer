@@ -14,9 +14,11 @@ log = CPLog(__name__)
 
 class Searcher(SearcherBase):
 
+    # noinspection PyMissingConstructor
     def __init__(self):
         addEvent('searcher.protocols', self.getSearchProtocols)
         addEvent('searcher.contains_other_quality', self.containsOtherQuality)
+        addEvent('searcher.correct_3d', self.correct3D)
         addEvent('searcher.correct_year', self.correctYear)
         addEvent('searcher.correct_name', self.correctName)
         addEvent('searcher.correct_words', self.correctWords)
@@ -123,6 +125,17 @@ class Searcher(SearcherBase):
 
         return not (found.get(preferred_quality['identifier']) and len(found) == 1)
 
+    def correct3D(self, nzb, preferred_quality = None):
+        if not preferred_quality: preferred_quality = {}
+        if not preferred_quality.get('custom'): return
+
+        threed = preferred_quality['custom'].get('3d')
+
+        # Try guessing via quality tags
+        guess = fireEvent('quality.guess', [nzb.get('name')], single = True)
+
+        return threed == guess.get('is_3d')
+
     def correctYear(self, haystack, year, year_range):
 
         if not isinstance(haystack, (list, tuple, set)):
@@ -183,7 +196,7 @@ class Searcher(SearcherBase):
             req = splitString(req_set, '&')
             req_match += len(list(set(rel_words) & set(req))) == len(req)
 
-        if len(required_words) > 0  and req_match == 0:
+        if len(required_words) > 0 and req_match == 0:
             log.info2('Wrong: Required word missing: %s', rel_name)
             return False
 
