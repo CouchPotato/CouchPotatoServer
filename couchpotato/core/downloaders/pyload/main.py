@@ -176,7 +176,7 @@ class pyload(Downloader):
 
                     if len(finishedFiles) == len(files):
                         if pid in self.time_pending:
-                            if (self.time_pending[pid] - time.clock()) >= self.conf('wait_time'):
+                            if (time.clock() - self.time_pending[pid]) >= self.conf('wait_time'):
                                 pid_states[pid] = 'completed'
                                 del self.time_pending[pid] # clean time cache of pending packages
                             else:
@@ -227,8 +227,8 @@ class pyload(Downloader):
             for pid in pid_states:
                 if pid_states[pid] == 'failed':
                     self.pyload_api.remove_pids([pid])
-                if self.time_pending.has_key(pid): # clean time cache of pending packages
-                    del self.time_pending[pid]
+                    if self.time_pending.has_key(pid): # clean time cache of pending packages
+                        del self.time_pending[pid]
 
             release_downloads.append({
                     'id': dl_id,
@@ -276,7 +276,7 @@ class pyload(Downloader):
         elif map_id2pid[dl_id] == []:
             log.debug('No package of release with ID %s found on PyLoad. Already deleted! Nothing to do..', dl_id)
         else:
-            self.pyload_api.remove_pids([map_id2pid[dl_id]])
+            self.pyload_api.remove_pids(map_id2pid[dl_id])
         return True
 
     def removeReadOnly(self, files):
