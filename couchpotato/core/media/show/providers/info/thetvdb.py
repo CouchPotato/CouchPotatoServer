@@ -236,7 +236,7 @@ class TheTVDb(ShowProvider):
 
         show_data = {
             'identifiers': {
-              'thetvdb': tryInt(get('seriesid')),
+              'thetvdb': tryInt(get('id')),
               'imdb': get('imdb_id'),
               'zap2it': get('zap2it_id'),
             },
@@ -316,7 +316,7 @@ class TheTVDb(ShowProvider):
 
         season_data = {
             'identifiers': {
-                'thetvdb': show.get('seriesid') if show.get('seriesid') else show[number][1]['seasonid']
+                'thetvdb': show['id'] if show.get('id') else show[number][1]['seasonid']
             },
             'number': tryInt(number),
             'images': {
