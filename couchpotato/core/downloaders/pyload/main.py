@@ -227,7 +227,7 @@ class pyload(Downloader):
             for pid in pid_states:
                 if pid_states[pid] == 'failed':
                     self.pyload_api.remove_pids([pid])
-                if pid in self.time_pending[pid]: # clean time cache of pending packages
+                if self.time_pending.has_key(pid): # clean time cache of pending packages
                     del self.time_pending[pid]
 
             release_downloads.append({
