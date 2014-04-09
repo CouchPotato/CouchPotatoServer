@@ -55,6 +55,7 @@ class ClientScript(Plugin):
 
     watcher = None
 
+    original_paths = {'style': {}, 'script': {}}
     paths = {'style': {}, 'script': {}}
     comment = {
         'style': '/*** %s:%d ***/\n',
@@ -116,7 +117,7 @@ class ClientScript(Plugin):
 
         for file_type in ['style', 'script']:
             ext = 'js' if file_type is 'script' else 'css'
-            positions = self.paths.get(file_type, {})
+            positions = self.original_paths.get(file_type, {})
             for position in positions:
                 files = positions.get(position)
                 self._compile(file_type, files, position, position + '.' + ext)
@@ -132,7 +133,7 @@ class ClientScript(Plugin):
         raw = []
         new_paths = []
         for x in paths:
-            file_path, urls = x
+            file_path, url_path = x
 
             f = open(file_path, 'r').read()
 
@@ -147,14 +148,12 @@ class ClientScript(Plugin):
                 if Env.get('dev'):
                     self.watcher.watch(file_path, self.compile)
 
-                    url_path = urls.get('original_url')
                     compiled_file_name = position + '_%s.css' % url_path.replace('/', '_').split('.scss')[0]
                     compiled_file_path = os.path.join(minified_dir, compiled_file_name)
                     self.createFile(compiled_file_path, f.strip())
 
                     # Remove scss path
-                    urls['url'] = 'minified/%s?%s' % (compiled_file_name, tryInt(time.time()))
-                    new_paths.append((file_path, urls))
+                    x = (file_path, 'minified/%s?%s' % (compiled_file_name, tryInt(time.time())))
 
             if not Env.get('dev'):
 
@@ -190,7 +189,7 @@ class ClientScript(Plugin):
 
     def get(self, type, location = 'head'):
         paths = self.paths[type][location]
-        return [x[1].get('url', x[1].get('original_url')) for x in paths]
+        return [x[1] for x in paths]
 
     def registerStyle(self, api_path, file_path, position = 'head'):
         self.register(api_path, file_path, 'style', position)
@@ -202,9 +201,13 @@ class ClientScript(Plugin):
 
         api_path = '%s?%s' % (api_path, tryInt(os.path.getmtime(file_path)))
 
+        if not self.original_paths[type].get(location):
+            self.original_paths[type][location] = []
+        self.original_paths[type][location].append((file_path, api_path))
+
         if not self.paths[type].get(location):
             self.paths[type][location] = []
-        self.paths[type][location].append((file_path, {'original_url': api_path}))
+        self.paths[type][location].append((file_path, api_path))
 
     prefix_properties = ['border-radius', 'transform', 'transition', 'box-shadow']
     prefix_tags = ['ms', 'moz', 'webkit']
