@@ -35,5 +35,3 @@ var BlockBase = new Class({
 	}
 
 });
-
-var Block = BlockBase;

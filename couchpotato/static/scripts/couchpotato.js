@@ -69,18 +69,18 @@
 	createLayout: function(){
 		var self = this;
 
-		self.block.header = new Block();
+		self.block.header = new BlockBase();
 
 		self.c.adopt(
 			$(self.block.header).addClass('header').adopt(
 				new Element('div').adopt(
-					self.block.navigation = new Block.Navigation(self, {}),
-					self.block.search = new Block.Search(self, {}),
-					self.block.more = new Block.Menu(self, {'button_class': 'icon2.cog'})
+					self.block.navigation = new BlockNavigation(self, {}),
+					self.block.search = new BlockSearch(self, {}),
+					self.block.more = new BlockMenu(self, {'button_class': 'icon2.cog'})
 				)
 			),
 			self.content = new Element('div.content'),
-			self.block.footer = new Block.Footer(self, {})
+			self.block.footer = new BlockFooter(self, {})
 		);
 
 		var setting_links = [

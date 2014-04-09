@@ -1,4 +1,4 @@
-Block.Menu = new Class({
+var BlockMenu = new Class({
 
 	Extends: BlockBase,
 

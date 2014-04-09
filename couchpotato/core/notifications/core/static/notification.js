@@ -20,7 +20,7 @@ var NotificationBase = new Class({
 		self.notifications = [];
 		App.addEvent('load', function(){
 
-			App.block.notification = new Block.Menu(self, {
+			App.block.notification = new BlockMenu(self, {
 				'button_class': 'icon2.eye-open',
 				'class': 'notification_menu',
 				'onOpen': self.markAsRead.bind(self)

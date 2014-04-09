@@ -1,4 +1,4 @@
-Block.Footer = new Class({
+var BlockFooter = new Class({
 
 	Extends: BlockBase,
 

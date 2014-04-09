@@ -1,4 +1,4 @@
-Block.Navigation = new Class({
+var BlockNavigation = new Class({
 
 	Extends: BlockBase,
 
@@ -38,7 +38,7 @@ Block.Navigation = new Class({
 				self.backtotop.fade('in')
 			}
 		});
-		
+
 		self.nav.addEvents({
 			'click:relay(a)': function(){
 				if($(document.body).getParent().hasClass('menu_shown'))
@@ -70,7 +70,7 @@ Block.Navigation = new Class({
 				if(nr <= 2) return;
 				if(el.get('tag') == 'a')
 					self.nav.grab(new Element('li').grab(el.clone().cloneEvents(el)));
-				else	
+				else
 					self.nav.grab(new Element('li.separator'));
 			});
 

@@ -64,7 +64,7 @@ var SuggestList = new Class({
 
 			Object.each(json.suggestions, function(movie){
 
-				var m = new Block.Search.MovieItem(movie, {
+				var m = new BlockSearchMovieItem(movie, {
 					'onAdded': function(){
 						self.afterAdded(m, movie)
 					}

@@ -130,7 +130,9 @@ class ClientScript(Plugin):
         data_combined = ''
 
         raw = []
-        for file_path in paths:
+        new_paths = []
+        for x in paths:
+            file_path, urls = x
 
             f = open(file_path, 'r').read()
 
@@ -145,13 +147,14 @@ class ClientScript(Plugin):
                 if Env.get('dev'):
                     self.watcher.watch(file_path, self.compile)
 
-                    url_path = paths[file_path].get('original_url')
+                    url_path = urls.get('original_url')
                     compiled_file_name = position + '_%s.css' % url_path.replace('/', '_').split('.scss')[0]
                     compiled_file_path = os.path.join(minified_dir, compiled_file_name)
                     self.createFile(compiled_file_path, f.strip())
 
                     # Remove scss path
-                    paths[file_path]['url'] = 'minified/%s?%s' % (compiled_file_name, tryInt(time.time()))
+                    urls['url'] = 'minified/%s?%s' % (compiled_file_name, tryInt(time.time()))
+                    new_paths.append((file_path, urls))
 
             if not Env.get('dev'):
 
@@ -165,16 +168,19 @@ class ClientScript(Plugin):
 
                 data_combined += self.comment.get(file_type) % (ss(file_path), int(os.path.getmtime(file_path)))
                 data_combined += data + '\n\n'
-
-                del paths[file_path]
+            else:
+                new_paths.append(x)
 
         # Combine all files together with some comments
         if not Env.get('dev'):
 
-            self.createFile(os.path.join(minified_dir, out_name), data_combined.strip())
+            out_path = os.path.join(minified_dir, out_name)
+            self.createFile(out_path, data_combined.strip())
 
             minified_url = 'minified/%s?%s' % (out_name, tryInt(os.path.getmtime(out)))
-            self.minified[file_type][position].append(minified_url)
+            new_paths.append((out_path, {'url': minified_url}))
+
+        self.paths[file_type][position] = new_paths
 
     def getStyles(self, *args, **kwargs):
         return self.get('style', *args, **kwargs)
@@ -184,7 +190,7 @@ class ClientScript(Plugin):
 
     def get(self, type, location = 'head'):
         paths = self.paths[type][location]
-        return [paths[x].get('url', paths[x].get('original_url')) for x in paths]
+        return [x[1].get('url', x[1].get('original_url')) for x in paths]
 
     def registerStyle(self, api_path, file_path, position = 'head'):
         self.register(api_path, file_path, 'style', position)
@@ -197,8 +203,8 @@ class ClientScript(Plugin):
         api_path = '%s?%s' % (api_path, tryInt(os.path.getmtime(file_path)))
 
         if not self.paths[type].get(location):
-            self.paths[type][location] = {}
-        self.paths[type][location][file_path] = {'original_url': api_path}
+            self.paths[type][location] = []
+        self.paths[type][location].append((file_path, {'original_url': api_path}))
 
     prefix_properties = ['border-radius', 'transform', 'transition', 'box-shadow']
     prefix_tags = ['ms', 'moz', 'webkit']

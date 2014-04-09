@@ -230,7 +230,7 @@ var MovieList = new Class({
 			),
 			new Element('div.menus').adopt(
 				self.navigation_counter = new Element('span.counter[title=Total]'),
-				self.filter_menu = new Block.Menu(self, {
+				self.filter_menu = new BlockMenu(self, {
 					'class': 'filter'
 				}),
 				self.navigation_actions = new Element('ul.actions', {
@@ -249,7 +249,7 @@ var MovieList = new Class({
 						}
 					}
 				}),
-				self.navigation_menu = new Block.Menu(self, {
+				self.navigation_menu = new BlockMenu(self, {
 					'class': 'extra'
 				})
 			)

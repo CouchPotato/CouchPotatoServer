@@ -1,4 +1,4 @@
-Block.Search = new Class({
+var BlockSearch = new Class({
 
 	Extends: BlockBase,
 
@@ -157,7 +157,7 @@ Block.Search = new Class({
 			if(typeOf(media) == 'array'){
 				Object.each(media, function(m){
 
-					var m = new Block.Search[m.type.capitalize() + 'Item'](m);
+					var m = new BlockSearch[m.type.capitalize() + 'Item'](m);
 					$(m).inject(self.results);
 					self.media[m.imdb || 'r-'+Math.floor(Math.random()*10000)] = m;
 

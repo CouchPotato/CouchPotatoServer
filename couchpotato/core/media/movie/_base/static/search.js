@@ -1,4 +1,4 @@
-Block.Search.MovieItem = new Class({
+var BlockSearchMovieItem = new Class({
 
 	Implements: [Options, Events],
 
