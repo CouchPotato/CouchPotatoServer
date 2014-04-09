@@ -1,15 +1,14 @@
 import os
 import re
-import traceback
+import time
 
-from couchpotato.core.event import addEvent
+from couchpotato.core.event import addEvent, fireEvent
 from couchpotato.core.helpers.encoding import ss
 from couchpotato.core.helpers.variable import tryInt
 from couchpotato.core.logger import CPLog
 from couchpotato.core.plugins.base import Plugin
 from couchpotato.environment import Env
-from minify.cssmin import cssmin
-from minify.jsmin import jsmin
+from scss import Scss
 from tornado.web import StaticFileHandler
 
 
@@ -22,7 +21,7 @@ class ClientScript(Plugin):
 
     core_static = {
         'style': [
-            'style/main.css',
+            'style/main.scss',
             'style/uniform.generic.css',
             'style/uniform.css',
             'style/settings.css',
@@ -54,8 +53,8 @@ class ClientScript(Plugin):
         ],
     }
 
-    urls = {'style': {}, 'script': {}}
-    minified = {'style': {}, 'script': {}}
+    watcher = None
+
     paths = {'style': {}, 'script': {}}
     comment = {
         'style': '/*** %s:%d ***/\n',
@@ -74,10 +73,25 @@ class ClientScript(Plugin):
         addEvent('clientscript.get_styles', self.getStyles)
         addEvent('clientscript.get_scripts', self.getScripts)
 
-        if not Env.get('dev'):
-            addEvent('app.load', self.minify)
+        addEvent('app.load', self.livereload, priority = 1)
+        addEvent('app.load', self.compile)
 
         self.addCore()
+
+    def livereload(self):
+
+        if Env.get('dev'):
+            from livereload import Server
+            from livereload.watcher import Watcher
+
+            self.livereload_server = Server()
+            self.livereload_server.watch('%s/minified/*.css' % Env.get('cache_dir'))
+            self.livereload_server.watch('%s/*.css' % os.path.join(Env.get('app_dir'), 'couchpotato', 'static', 'style'))
+
+            self.watcher = Watcher()
+            fireEvent('schedule.interval', 'livereload.watcher', self.watcher.examine, seconds = .5)
+
+            self.livereload_server.serve(port = 35729)
 
     def addCore(self):
 
@@ -91,7 +105,7 @@ class ClientScript(Plugin):
                 else:
                     self.registerStyle(core_url, file_path, position = 'front')
 
-    def minify(self):
+    def compile(self):
 
         # Create cache dir
         cache = Env.get('cache_dir')
@@ -105,44 +119,62 @@ class ClientScript(Plugin):
             positions = self.paths.get(file_type, {})
             for position in positions:
                 files = positions.get(position)
-                self._minify(file_type, files, position, position + '.' + ext)
+                self._compile(file_type, files, position, position + '.' + ext)
 
-    def _minify(self, file_type, files, position, out):
+    def _compile(self, file_type, paths, position, out):
 
         cache = Env.get('cache_dir')
         out_name = out
-        out = os.path.join(cache, 'minified', out_name)
+        minified_dir = os.path.join(cache, 'minified')
+
+        data_combined = ''
 
         raw = []
-        for file_path in files:
+        for file_path in paths:
+
             f = open(file_path, 'r').read()
 
-            if file_type == 'script':
-                data = jsmin(f)
-            else:
-                data = self.prefix(f)
-                data = cssmin(data)
-                data = data.replace('../images/', '../static/images/')
-                data = data.replace('../fonts/', '../static/fonts/')
-                data = data.replace('../../static/', '../static/')  # Replace inside plugins
+            # Compile scss
+            if file_path[-5:] == '.scss':
 
-            raw.append({'file': file_path, 'date': int(os.path.getmtime(file_path)), 'data': data})
+                # Compile to css
+                compiler = Scss(live_errors = True, search_paths = [os.path.dirname(file_path)])
+                f = compiler.compile(f)
+
+                # Reload watcher
+                if Env.get('dev'):
+                    self.watcher.watch(file_path, self.compile)
+
+                    url_path = paths[file_path].get('original_url')
+                    compiled_file_name = position + '_%s.css' % url_path.replace('/', '_').split('.scss')[0]
+                    compiled_file_path = os.path.join(minified_dir, compiled_file_name)
+                    self.createFile(compiled_file_path, f.strip())
+
+                    # Remove scss path
+                    paths[file_path]['url'] = 'minified/%s?%s' % (compiled_file_name, tryInt(time.time()))
+
+            if not Env.get('dev'):
+
+                if file_type == 'script':
+                    data = f
+                else:
+                    data = self.prefix(f)
+                    data = data.replace('../images/', '../static/images/')
+                    data = data.replace('../fonts/', '../static/fonts/')
+                    data = data.replace('../../static/', '../static/')  # Replace inside plugins
+
+                data_combined += self.comment.get(file_type) % (ss(file_path), int(os.path.getmtime(file_path)))
+                data_combined += data + '\n\n'
+
+                del paths[file_path]
 
         # Combine all files together with some comments
-        data = ''
-        for r in raw:
-            data += self.comment.get(file_type) % (ss(r.get('file')), r.get('date'))
-            data += r.get('data') + '\n\n'
+        if not Env.get('dev'):
 
-        self.createFile(out, data.strip())
+            self.createFile(os.path.join(minified_dir, out_name), data_combined.strip())
 
-        if not self.minified.get(file_type):
-            self.minified[file_type] = {}
-        if not self.minified[file_type].get(position):
-            self.minified[file_type][position] = []
-
-        minified_url = 'minified/%s?%s' % (out_name, tryInt(os.path.getmtime(out)))
-        self.minified[file_type][position].append(minified_url)
+            minified_url = 'minified/%s?%s' % (out_name, tryInt(os.path.getmtime(out)))
+            self.minified[file_type][position].append(minified_url)
 
     def getStyles(self, *args, **kwargs):
         return self.get('style', *args, **kwargs)
@@ -150,22 +182,9 @@ class ClientScript(Plugin):
     def getScripts(self, *args, **kwargs):
         return self.get('script', *args, **kwargs)
 
-    def get(self, type, as_html = False, location = 'head'):
-
-        data = '' if as_html else []
-
-        try:
-            try:
-                if not Env.get('dev'):
-                    return self.minified[type][location]
-            except:
-                pass
-
-            return self.urls[type][location]
-        except:
-            log.error('Error getting minified %s, %s: %s', (type, location, traceback.format_exc()))
-
-        return data
+    def get(self, type, location = 'head'):
+        paths = self.paths[type][location]
+        return [paths[x].get('url', paths[x].get('original_url')) for x in paths]
 
     def registerStyle(self, api_path, file_path, position = 'head'):
         self.register(api_path, file_path, 'style', position)
@@ -177,13 +196,9 @@ class ClientScript(Plugin):
 
         api_path = '%s?%s' % (api_path, tryInt(os.path.getmtime(file_path)))
 
-        if not self.urls[type].get(location):
-            self.urls[type][location] = []
-        self.urls[type][location].append(api_path)
-
         if not self.paths[type].get(location):
-            self.paths[type][location] = []
-        self.paths[type][location].append(file_path)
+            self.paths[type][location] = {}
+        self.paths[type][location][file_path] = {'original_url': api_path}
 
     prefix_properties = ['border-radius', 'transform', 'transition', 'box-shadow']
     prefix_tags = ['ms', 'moz', 'webkit']
