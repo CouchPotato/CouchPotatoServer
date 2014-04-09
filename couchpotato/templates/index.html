@@ -7,14 +7,14 @@
 		<meta name="mobile-web-app-capable" content="yes">
 
 
-		{% for url in fireEvent('clientscript.get_styles', as_html = True, location = 'front', single = True) %}
+		{% for url in fireEvent('clientscript.get_styles', location = 'front', single = True) %}
 		<link rel="stylesheet" href="{{ Env.get('web_base') }}{{ url }}" type="text/css">{% end %}
-		{% for url in fireEvent('clientscript.get_scripts', as_html = True, location = 'front', single = True) %}
+		{% for url in fireEvent('clientscript.get_scripts', location = 'front', single = True) %}
 		<script type="text/javascript" src="{{ Env.get('web_base') }}{{ url }}"></script>{% end %}
 
-		{% for url in fireEvent('clientscript.get_scripts', as_html = True, location = 'head', single = True) %}
+		{% for url in fireEvent('clientscript.get_scripts', location = 'head', single = True) %}
 		<script type="text/javascript" src="{{ Env.get('web_base') }}{{ url }}"></script>{% end %}
-		{% for url in fireEvent('clientscript.get_styles', as_html = True, location = 'head', single = True) %}
+		{% for url in fireEvent('clientscript.get_styles', location = 'head', single = True) %}
 		<link rel="stylesheet" href="{{ Env.get('web_base') }}{{ url }}" type="text/css">{% end %}
 
 		<link href="{{ Env.get('static_path') }}images/favicon.ico" rel="icon" type="image/x-icon" />

@@ -1,0 +1,19 @@
+@import "fonts";
+
+body, html {
+	font-size: 12px;
+	line-height: 1.5;
+	font-family: OpenSans, "Helvetica Neue", Helvetica, Arial, Geneva, sans-serif;
+	height: 100%;
+	margin: 0;
+	padding: 0;
+	background: #FFF;
+	-webkit-font-smoothing: subpixel-antialiased;
+
+    &.noscroll {
+        overflow: hidden;
+    }
+}
+
+body { overflow-y: scroll; }
+
