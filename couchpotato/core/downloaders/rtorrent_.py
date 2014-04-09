@@ -154,19 +154,13 @@ class rTorrent(DownloaderBase):
             return False
 
     def getTorrentStatus(self, torrent):
-        if torrent.hashing or torrent.hash_checking or torrent.message:
-            return 'busy'
-
         if not torrent.complete:
             return 'busy'
 
-        if not torrent.open:
-            return 'completed'
-
-        if torrent.state and torrent.active:
+        if torrent.open:
             return 'seeding'
 
-        return 'busy'
+        return 'completed'
 
     def getAllDownloadStatus(self, ids):
         log.debug('Checking rTorrent download status.')
