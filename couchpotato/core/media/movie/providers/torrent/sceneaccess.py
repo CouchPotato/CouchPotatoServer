@@ -23,7 +23,7 @@ class SceneAccess(MovieProvider, Base):
 
         arguments = tryUrlencode({
             'search': fireEvent('library.query', media, single = True),
-            'method': 3,
+            'method': 2,
         })
         query = "%s&%s" % (url, arguments)
 
