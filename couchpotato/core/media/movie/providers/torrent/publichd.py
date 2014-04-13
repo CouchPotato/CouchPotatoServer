@@ -11,4 +11,4 @@ autoload = 'PublicHD'
 class PublicHD(MovieProvider, Base):
 
     def buildUrl(self, media):
-        return fireEvent('library.query', media, single = True)
+        return fireEvent('library.query', media, single = True).replace(':', '')
