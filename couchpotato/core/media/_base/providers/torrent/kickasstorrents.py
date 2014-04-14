@@ -65,8 +65,8 @@ class Base(TorrentMagnetProvider):
                                 if column_name:
 
                                     if column_name == 'name':
-                                        link = td.find('div', {'class': 'torrentname'}).find_all('a')[1]
-                                        new['id'] = temp.get('id')[-8:]
+                                        link = td.find('div', {'class': 'torrentname'}).find_all('a')[2]
+                                        new['id'] = temp.get('id')[-7:]
                                         new['name'] = link.text
                                         new['url'] = td.find('a', 'imagnet')['href']
                                         new['detail_url'] = self.urls['detail'] % (self.getDomain(), link['href'][1:])
