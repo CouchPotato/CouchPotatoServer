@@ -652,7 +652,7 @@ Remove it if you want it to be renamed (again, or at least let it try again)
         elif isinstance(release_download, dict):
             # Tag download_files if they are known
             if release_download.get('files', []):
-                tag_files = release_download.get('files', [])
+                tag_files = [filename for filename in release_download.get('files', []) if os.path.exists(filename)]
 
             # Tag all files in release folder
             elif release_download['folder']:
