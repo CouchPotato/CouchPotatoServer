@@ -316,6 +316,7 @@ class Renamer(Plugin):
                     'mpaa': media['info'].get('mpaa', ''),
                     'category': category_label,
                     '3d': '3D' if group['meta_data']['quality'].get('is_3d', 0) else '',
+                    '3d_type': group['meta_data'].get('3d_type'),
                 }
 
                 for file_type in group['files']:
@@ -1198,6 +1199,7 @@ rename_options = {
         'quality': 'Quality (720p)',
         'quality_type': '(HD) or (SD)',
         '3d': '3D',
+        '3d_type': '3D Type (Full SBS)',
         'video': 'Video (x264)',
         'audio': 'Audio (DTS)',
         'group': 'Releasegroup name',

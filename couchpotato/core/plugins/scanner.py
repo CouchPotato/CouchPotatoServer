@@ -6,7 +6,7 @@ import traceback
 
 from couchpotato import get_db
 from couchpotato.core.event import fireEvent, addEvent
-from couchpotato.core.helpers.encoding import toUnicode, simplifyString, sp
+from couchpotato.core.helpers.encoding import toUnicode, simplifyString, sp, ss
 from couchpotato.core.helpers.variable import getExt, getImdb, tryInt, \
     splitString, getIdentifier
 from couchpotato.core.logger import CPLog
@@ -38,6 +38,17 @@ class Scanner(Plugin):
         'subtitle': ['sub', 'srt', 'ssa', 'ass'],
         'subtitle_extra': ['idx'],
         'trailer': ['mov', 'mp4', 'flv']
+    }
+
+    threed_types = {
+        'Half SBS': [('half', 'sbs'), ('h', 'sbs'), 'hsbs'],
+        'Full SBS': [('full', 'sbs'), ('f', 'sbs'), 'fsbs'],
+        'SBS': 'sbs',
+        'Half OU': [('half', 'ou'), ('h', 'ou'), 'hou'],
+        'Full OU': [('full', 'ou'), ('h', 'ou'), 'fou'],
+        'OU': 'ou',
+        'Frame Packed': ['mvc', ('complete', 'bluray')],
+        '3D': '3d'
     }
 
     file_types = {
@@ -470,8 +481,23 @@ class Scanner(Plugin):
         filename = re.sub('(.cp\(tt[0-9{7}]+\))', '', files[0])
         data['group'] = self.getGroup(filename[len(folder):])
         data['source'] = self.getSourceMedia(filename)
-
+        data['3d_type'] = self.get3dType(filename)
         return data
+
+    def get3dType(self, filename):
+        filename = ss(filename)
+
+        words = re.split('\W+', filename.lower())
+
+        for key in self.threed_types:
+            tags = self.threed_types.get(key, [])
+
+            for tag in tags:
+                if (isinstance(tag, tuple) and '.'.join(tag) in '.'.join(words)) or (isinstance(tag, (str, unicode)) and ss(tag.lower()) in filename.lower()):
+                    log.debug('Found %s in %s', (tag, filename))
+                    return key
+
+        return ''
 
     def getMeta(self, filename):
 
