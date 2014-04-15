@@ -431,29 +431,36 @@ class Scanner(Plugin):
         for cur_file in files:
             if not self.filesizeBetween(cur_file, self.file_sizes['movie']): continue  # Ignore smaller files
 
-            meta = self.getMeta(cur_file)
+            if not data.get('audio'): # Only get metadata from first media file
+                meta = self.getMeta(cur_file)
 
-            try:
-                data['video'] = meta.get('video', self.getCodec(cur_file, self.codecs['video']))
-                data['audio'] = meta.get('audio', self.getCodec(cur_file, self.codecs['audio']))
-                data['resolution_width'] = meta.get('resolution_width', 720)
-                data['resolution_height'] = meta.get('resolution_height', 480)
-                data['audio_channels'] = meta.get('audio_channels', 2.0)
-                data['aspect'] = round(float(meta.get('resolution_width', 720)) / meta.get('resolution_height', 480), 2)
-            except:
-                log.debug('Error parsing metadata: %s %s', (cur_file, traceback.format_exc()))
-                pass
+                try:
+                    data['video'] = meta.get('video', self.getCodec(cur_file, self.codecs['video']))
+                    data['audio'] = meta.get('audio', self.getCodec(cur_file, self.codecs['audio']))
+                    data['resolution_width'] = meta.get('resolution_width', 720)
+                    data['resolution_height'] = meta.get('resolution_height', 480)
+                    data['audio_channels'] = meta.get('audio_channels', 2.0)
+                    data['aspect'] = round(float(meta.get('resolution_width', 720)) / meta.get('resolution_height', 480), 2)
+                except:
+                    log.debug('Error parsing metadata: %s %s', (cur_file, traceback.format_exc()))
+                    pass
 
-            if data.get('audio'): break
+            data['size'] = data.get('size', 0) + self.getFileSize(cur_file)
 
-        # Use the quality guess first, if that failes use the quality we wanted to download
         data['quality'] = None
+        quality = fireEvent('quality.guess', size = data['size'], files = files, extra = data, single = True)
+
+        # Use the quality that we snatched but check if it matches our guess
         if release_download and release_download.get('quality'):
             data['quality'] = fireEvent('quality.single', release_download.get('quality'), single = True)
             data['quality']['is_3d'] = release_download.get('is_3d', 0)
+            if data['quality']['identifier'] != quality['identifier']:
+                log.info('Different quality snatched than detected for %s: %s vs. %s. Assuming snatched quality is correct.', (files[0], data['quality']['identifier'], quality['identifier']))
+            if data['quality']['is_3d'] != quality['is_3d']:
+                log.info('Different 3d snatched than detected for %s: %s vs. %s. Assuming snatched 3d is correct.', (files[0], data['quality']['is_3d'], quality['is_3d']))
 
         if not data['quality']:
-            data['quality'] = fireEvent('quality.guess', files = files, extra = data, single = True)
+            data['quality'] = quality
 
             if not data['quality']:
                 data['quality'] = fireEvent('quality.single', 'dvdr' if group['is_dvd'] else 'dvdrip', single = True)
