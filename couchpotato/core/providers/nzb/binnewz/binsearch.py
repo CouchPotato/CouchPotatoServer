@@ -26,7 +26,7 @@ from couchpotato.core.helpers.variable import tryInt
 class BinSearch(NZBDownloader):
 
     def search(self, filename, minSize, newsgroup=None):
-
+        filename=filename.encode('utf8')
         if newsgroup != None:
             binSearchURLs = [  urllib.urlencode({'server' : 1, 'max': '250', 'adv_g' : newsgroup, 'q' : filename}), urllib.urlencode({'server' : 2, 'max': '250', 'adv_g' : newsgroup, 'q' : filename})]
         else:
