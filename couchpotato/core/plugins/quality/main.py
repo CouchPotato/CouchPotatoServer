@@ -1,4 +1,3 @@
-import traceback
 from couchpotato import get_session
 from couchpotato.api import addApiView
 from couchpotato.core.event import addEvent
@@ -18,8 +17,8 @@ class QualityPlugin(Plugin):
 
     qualities = [
         {'identifier': 'bd50', 'hd': True, 'size': (15000, 60000), 'label': 'BR-Disk', 'alternative': ['bd25'], 'allow': ['1080p'], 'ext':[], 'tags': ['bdmv', 'certificate', ('complete', 'bluray')]},
-        {'identifier': '1080p', 'hd': True, 'size': (4000, 20000), 'label': '1080p', 'width': 1920, 'height': 1080, 'alternative': [], 'allow': [], 'ext':['mkv', 'm2ts'], 'tags': ['m2ts', 'x264', 'h264']},
-        {'identifier': '720p', 'hd': True, 'size': (3000, 10000), 'label': '720p', 'width': 1280, 'height': 720, 'alternative': [], 'allow': [], 'ext':['mkv', 'ts'], 'tags': ['x264', 'h264']},
+        {'identifier': '1080p', 'hd': True, 'size': (4000, 20000), 'label': '1080p', 'width': 1920, 'height': 1080, 'alternative': [], 'allow': [], 'ext':['mkv', 'm2ts'], 'tags': ['m2ts']},
+        {'identifier': '720p', 'hd': True, 'size': (3000, 10000), 'label': '720p', 'width': 1280, 'height': 720, 'alternative': [], 'allow': [], 'ext':['mkv', 'ts'], 'tags': []},
         {'identifier': 'brrip', 'hd': True, 'size': (700, 7000), 'label': 'BR-Rip', 'alternative': ['bdrip'], 'allow': ['720p', '1080p'], 'ext':[], 'tags': ['hdtv', 'hdrip', 'webdl', ('web', 'dl')]},
         {'identifier': 'dvdr', 'size': (3000, 10000), 'label': 'DVD-R', 'alternative': ['br2dvd'], 'allow': [], 'ext':['iso', 'img', 'vob'], 'tags': ['pal', 'ntsc', 'video_ts', 'audio_ts', ('dvd', 'r')]},
         {'identifier': 'dvdrip', 'size': (600, 2400), 'label': 'DVD-Rip', 'width': 720, 'alternative': [], 'allow': [], 'ext':[], 'tags': [('dvd', 'rip'), ('dvd', 'xvid'), ('dvd', 'divx')]},
@@ -99,88 +98,70 @@ class QualityPlugin(Plugin):
 
     def saveSize(self, **kwargs):
 
-        try:
-            db = get_session()
-            quality = db.query(Quality).filter_by(identifier = kwargs.get('identifier')).first()
+        db = get_session()
+        quality = db.query(Quality).filter_by(identifier = kwargs.get('identifier')).first()
 
-            if quality:
-                setattr(quality, kwargs.get('value_type'), kwargs.get('value'))
-                db.commit()
+        if quality:
+            setattr(quality, kwargs.get('value_type'), kwargs.get('value'))
+            db.commit()
 
-            self.cached_qualities = None
-
-            return {
-                'success': True
-            }
-        except:
-            log.error('Failed: %s', traceback.format_exc())
-            db.rollback()
-        finally:
-            db.close()
+        self.cached_qualities = None
 
         return {
-            'success': False
+            'success': True
         }
 
     def fill(self):
 
-        try:
-            db = get_session()
+        db = get_session()
 
-            order = 0
-            for q in self.qualities:
+        order = 0
+        for q in self.qualities:
 
-                # Create quality
-                qual = db.query(Quality).filter_by(identifier = q.get('identifier')).first()
+            # Create quality
+            qual = db.query(Quality).filter_by(identifier = q.get('identifier')).first()
 
-                if not qual:
-                    log.info('Creating quality: %s', q.get('label'))
-                    qual = Quality()
-                    qual.order = order
-                    qual.identifier = q.get('identifier')
-                    qual.label = toUnicode(q.get('label'))
-                    qual.size_min, qual.size_max = q.get('size')
+            if not qual:
+                log.info('Creating quality: %s', q.get('label'))
+                qual = Quality()
+                qual.order = order
+                qual.identifier = q.get('identifier')
+                qual.label = toUnicode(q.get('label'))
+                qual.size_min, qual.size_max = q.get('size')
 
-                    db.add(qual)
+                db.add(qual)
 
-                # Create single quality profile
-                prof = db.query(Profile).filter(
+            # Create single quality profile
+            prof = db.query(Profile).filter(
                     Profile.core == True
                 ).filter(
                     Profile.types.any(quality = qual)
                 ).all()
 
-                if not prof:
-                    log.info('Creating profile: %s', q.get('label'))
-                    prof = Profile(
-                        core = True,
-                        label = toUnicode(qual.label),
-                        order = order
-                    )
-                    db.add(prof)
+            if not prof:
+                log.info('Creating profile: %s', q.get('label'))
+                prof = Profile(
+                    core = True,
+                    label = toUnicode(qual.label),
+                    order = order
+                )
+                db.add(prof)
 
-                    profile_type = ProfileType(
-                        quality = qual,
-                        profile = prof,
-                        finish = True,
-                        order = 0
-                    )
-                    prof.types.append(profile_type)
+                profile_type = ProfileType(
+                    quality = qual,
+                    profile = prof,
+                    finish = True,
+                    order = 0
+                )
+                prof.types.append(profile_type)
 
-                order += 1
+            order += 1
 
-            db.commit()
+        db.commit()
 
-            time.sleep(0.3) # Wait a moment
+        time.sleep(0.3) # Wait a moment
 
-            return True
-        except:
-            log.error('Failed: %s', traceback.format_exc())
-            db.rollback()
-        finally:
-            db.close()
-
-        return False
+        return True
 
     def guess(self, files, extra = None):
         if not extra: extra = {}
@@ -316,8 +297,6 @@ class QualityPlugin(Plugin):
             'Movie.Name.1999.DVD-Rip-Group': 'dvdrip',
             'Movie.Name.1999.DVD-R-Group': 'dvdr',
             'Movie.Name.Camelie.1999.720p.BluRay.x264-Group': '720p',
-            'Movie.Name.2008.German.DL.AC3.1080p.BluRay.x264-Group': '1080p',
-            'Movie.Name.2004.GERMAN.AC3D.DL.1080p.BluRay.x264-Group': '1080p',
         }
 
         correct = 0
@@ -333,5 +312,3 @@ class QualityPlugin(Plugin):
             return True
         else:
             log.error('Quality test failed: %s out of %s succeeded', (correct, len(tests)))
-
-
