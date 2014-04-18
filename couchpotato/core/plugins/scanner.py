@@ -106,7 +106,7 @@ class Scanner(Plugin):
         'HDTV': ['hdtv']
     }
 
-    clean = '([ _\,\.\(\)\[\]\-]|^)(3d|hsbs|sbs|extended.cut|directors.cut|french|swedisch|danish|dutch|swesub|spanish|german|ac3|dts|custom|dc|divx|divx5|dsr|dsrip|dutch|dvd|dvdr|dvdrip|dvdscr|dvdscreener|screener|dvdivx|cam|fragment|fs|hdtv|hdrip' \
+    clean = '([ _\,\.\(\)\[\]\-]|^)(3d|hsbs|sbs|ou|extended.cut|directors.cut|french|fr|swedisch|sw|danish|dutch|nl|swesub|subs|spanish|german|ac3|dts|custom|dc|divx|divx5|dsr|dsrip|dutch|dvd|dvdr|dvdrip|dvdscr|dvdscreener|screener|dvdivx|cam|fragment|fs|hdtv|hdrip' \
             '|hdtvrip|webdl|web.dl|webrip|web.rip|internal|limited|multisubs|ntsc|ogg|ogm|pal|pdtv|proper|repack|rerip|retail|r3|r5|bd5|se|svcd|swedish|german|read.nfo|nfofix|unrated|ws|telesync|ts|telecine|tc|brrip|bdrip|video_ts|audio_ts|480p|480i|576p|576i|720p|720i|1080p|1080i|hrhd|hrhdtv|hddvd|bluray|x264|h264|xvid|xvidvd|xxx|www.www|hc|\[.*\])(?=[ _\,\.\(\)\[\]\-]|$)'
     multipart_regex = [
         '[ _\.-]+cd[ _\.-]*([0-9a-d]+)',  #*cd1
@@ -507,7 +507,7 @@ class Scanner(Plugin):
             tags = self.threed_types.get(key, [])
 
             for tag in tags:
-                if (isinstance(tag, tuple) and '.'.join(tag) in '.'.join(words)) or (isinstance(tag, (str, unicode)) and ss(tag.lower()) in filename.lower()):
+                if (isinstance(tag, tuple) and '.'.join(tag) in '.'.join(words)) or (isinstance(tag, (str, unicode)) and ss(tag.lower()) in words):
                     log.debug('Found %s in %s', (tag, filename))
                     return key
 
@@ -770,8 +770,6 @@ class Scanner(Plugin):
 
     def createStringIdentifier(self, file_path, folder = '', exclude_filename = False):
 
-        year = self.findYear(file_path)
-
         identifier = file_path.replace(folder, '').lstrip(os.path.sep) # root folder
         identifier = os.path.splitext(identifier)[0] # ext
 
@@ -794,6 +792,8 @@ class Scanner(Plugin):
 
         # simplify the string
         identifier = simplifyString(identifier)
+
+        year = self.findYear(file_path)
 
         # groups, release tags, scenename cleaner
         identifier = re.sub(self.clean, '::', identifier).strip(':')
@@ -848,7 +848,7 @@ class Scanner(Plugin):
     def getResolution(self, filename):
         try:
             for key in self.resolutions:
-                if key in filename and key != 'default':
+                if key in filename.lower() and key != 'default':
                     return self.resolutions[key]
         except:
             return self.resolutions['default']

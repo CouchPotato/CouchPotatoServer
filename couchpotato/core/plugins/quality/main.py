@@ -35,9 +35,9 @@ class QualityPlugin(Plugin):
     ]
     pre_releases = ['cam', 'ts', 'tc', 'r5', 'scr']
     threed_tags = {
-        'hsbs': [('half', 'sbs')],
-        'fsbs': [('full', 'sbs')],
-        '3d': [],
+        'sbs': [('half', 'sbs'), 'hsbs', ('full', 'sbs'), 'fsbs'],
+        'ou': [('half', 'ou'), 'hou', ('full', 'ou'), 'fou'],
+        '3d': ['2d3d', '3d2d'],
     }
 
     cached_qualities = None
