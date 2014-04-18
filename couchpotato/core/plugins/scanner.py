@@ -43,12 +43,12 @@ class Scanner(Plugin):
     threed_types = {
         'Half SBS': [('half', 'sbs'), ('h', 'sbs'), 'hsbs'],
         'Full SBS': [('full', 'sbs'), ('f', 'sbs'), 'fsbs'],
-        'SBS': 'sbs',
+        'SBS': ['sbs'],
         'Half OU': [('half', 'ou'), ('h', 'ou'), 'hou'],
         'Full OU': [('full', 'ou'), ('h', 'ou'), 'fou'],
-        'OU': 'ou',
+        'OU': ['ou'],
         'Frame Packed': ['mvc', ('complete', 'bluray')],
-        '3D': '3d'
+        '3D': ['3d']
     }
 
     file_types = {
@@ -75,6 +75,16 @@ class Scanner(Plugin):
         'video': ['x264', 'H264', 'DivX', 'Xvid']
     }
 
+    resolutions = {
+        '1080p': {'resolution_width': 1920, 'resolution_height': 1080, 'aspect': 1.78},
+        '1080i': {'resolution_width': 1920, 'resolution_height': 1080, 'aspect': 1.78},
+        '720p': {'resolution_width': 1280, 'resolution_height': 720, 'aspect': 1.78},
+        '720i': {'resolution_width': 1280, 'resolution_height': 720, 'aspect': 1.78},
+        '480p': {'resolution_width': 640, 'resolution_height': 480, 'aspect': 1.33},
+        '480i': {'resolution_width': 640, 'resolution_height': 480, 'aspect': 1.33},
+        'default': {'resolution_width': 0, 'resolution_height': 0, 'aspect': 1},
+    }
+
     audio_codec_map = {
         0x2000: 'AC3',
         0x2001: 'DTS',
@@ -96,8 +106,8 @@ class Scanner(Plugin):
         'HDTV': ['hdtv']
     }
 
-    clean = '[ _\,\.\(\)\[\]\-]?(3d|hsbs|sbs|extended.cut|directors.cut|french|swedisch|danish|dutch|swesub|spanish|german|ac3|dts|custom|dc|divx|divx5|dsr|dsrip|dutch|dvd|dvdr|dvdrip|dvdscr|dvdscreener|screener|dvdivx|cam|fragment|fs|hdtv|hdrip' \
-            '|hdtvrip|internal|limited|multisubs|ntsc|ogg|ogm|pal|pdtv|proper|repack|rerip|retail|r3|r5|bd5|se|svcd|swedish|german|read.nfo|nfofix|unrated|ws|telesync|ts|telecine|tc|brrip|bdrip|video_ts|audio_ts|480p|480i|576p|576i|720p|720i|1080p|1080i|hrhd|hrhdtv|hddvd|bluray|x264|h264|xvid|xvidvd|xxx|www.www|cd[1-9]|\[.*\])([ _\,\.\(\)\[\]\-]|$)'
+    clean = '([ _\,\.\(\)\[\]\-]|^)(3d|hsbs|sbs|extended.cut|directors.cut|french|swedisch|danish|dutch|swesub|spanish|german|ac3|dts|custom|dc|divx|divx5|dsr|dsrip|dutch|dvd|dvdr|dvdrip|dvdscr|dvdscreener|screener|dvdivx|cam|fragment|fs|hdtv|hdrip' \
+            '|hdtvrip|webdl|web.dl|webrip|web.rip|internal|limited|multisubs|ntsc|ogg|ogm|pal|pdtv|proper|repack|rerip|retail|r3|r5|bd5|se|svcd|swedish|german|read.nfo|nfofix|unrated|ws|telesync|ts|telecine|tc|brrip|bdrip|video_ts|audio_ts|480p|480i|576p|576i|720p|720i|1080p|1080i|hrhd|hrhdtv|hddvd|bluray|x264|h264|xvid|xvidvd|xxx|www.www|hc|\[.*\])(?=[ _\,\.\(\)\[\]\-]|$)'
     multipart_regex = [
         '[ _\.-]+cd[ _\.-]*([0-9a-d]+)',  #*cd1
         '[ _\.-]+dvd[ _\.-]*([0-9a-d]+)',  #*dvd1
@@ -448,10 +458,13 @@ class Scanner(Plugin):
                 try:
                     data['video'] = meta.get('video', self.getCodec(cur_file, self.codecs['video']))
                     data['audio'] = meta.get('audio', self.getCodec(cur_file, self.codecs['audio']))
-                    data['resolution_width'] = meta.get('resolution_width', 720)
-                    data['resolution_height'] = meta.get('resolution_height', 480)
                     data['audio_channels'] = meta.get('audio_channels', 2.0)
-                    data['aspect'] = round(float(meta.get('resolution_width', 720)) / meta.get('resolution_height', 480), 2)
+                    if meta.get('resolution_width'):
+                        data['resolution_width'] = meta.get('resolution_width')
+                        data['resolution_height'] = meta.get('resolution_height')
+                        data['aspect'] = round(float(meta.get('resolution_width')) / meta.get('resolution_height', 1), 2)
+                    else:
+                        data.update(self.getResolution(cur_file))
                 except:
                     log.debug('Error parsing metadata: %s %s', (cur_file, traceback.format_exc()))
                     pass
@@ -481,7 +494,8 @@ class Scanner(Plugin):
         filename = re.sub('(.cp\(tt[0-9{7}]+\))', '', files[0])
         data['group'] = self.getGroup(filename[len(folder):])
         data['source'] = self.getSourceMedia(filename)
-        data['3d_type'] = self.get3dType(filename)
+        if data['quality'].get('is_3d', 0):
+            data['3d_type'] = self.get3dType(filename)
         return data
 
     def get3dType(self, filename):
@@ -761,6 +775,9 @@ class Scanner(Plugin):
         identifier = file_path.replace(folder, '').lstrip(os.path.sep) # root folder
         identifier = os.path.splitext(identifier)[0] # ext
 
+        # Make sure the identifier is lower case as all regex is with lower case tags
+        identifier = identifier.lower()
+
         try:
             path_split = splitString(identifier, os.path.sep)
             identifier = path_split[-2] if len(path_split) > 1 and len(path_split[-2]) > len(path_split[-1]) else path_split[-1] # Only get filename
@@ -775,8 +792,11 @@ class Scanner(Plugin):
         # remove cptag
         identifier = self.removeCPTag(identifier)
 
-        # groups, release tags, scenename cleaner, regex isn't correct
-        identifier = re.sub(self.clean, '::', simplifyString(identifier)).strip(':')
+        # simplify the string
+        identifier = simplifyString(identifier)
+
+        # groups, release tags, scenename cleaner
+        identifier = re.sub(self.clean, '::', identifier).strip(':')
 
         # Year
         if year and identifier[:4] != year:
@@ -824,6 +844,14 @@ class Scanner(Plugin):
             return (codec and codec.group('codec')) or ''
         except:
             return ''
+
+    def getResolution(self, filename):
+        try:
+            for key in self.resolutions:
+                if key in filename and key != 'default':
+                    return self.resolutions[key]
+        except:
+            return self.resolutions['default']
 
     def getGroup(self, file):
         try:
