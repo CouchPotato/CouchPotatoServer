@@ -290,8 +290,9 @@ class Renamer(Plugin):
 
                 # Put 'The' at the end
                 name_the = movie_name
-                if movie_name[:4].lower() == 'the ':
-                    name_the = movie_name[4:] + ', The'
+                for prefix in ['the ', 'an ', 'a ']:
+                    if prefix == movie_name[:len(prefix)].lower():
+                        name_the = movie_name[len(prefix):] + ', ' + prefix.strip().capitalize() 
 
                 replacements = {
                     'ext': 'mkv',
