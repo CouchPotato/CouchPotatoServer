@@ -292,7 +292,8 @@ class Renamer(Plugin):
                 name_the = movie_name
                 for prefix in ['the ', 'an ', 'a ']:
                     if prefix == movie_name[:len(prefix)].lower():
-                        name_the = movie_name[len(prefix):] + ', ' + prefix.strip().capitalize() 
+                        name_the = movie_name[len(prefix):] + ', ' + prefix.strip().capitalize()
+                        break
 
                 replacements = {
                     'ext': 'mkv',
