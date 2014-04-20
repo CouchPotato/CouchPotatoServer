@@ -250,6 +250,10 @@ var Movie = new Class({
 	getUnprefixedTitle: function(t){
 		if(t.substr(0, 4).toLowerCase() == 'the ')
 			t = t.substr(4) + ', The';
+		else if(t.substr(0, 3).toLowerCase() == 'an ')
+			t = t.substr(3) + ', An';
+		else if(t.substr(0, 2).toLowerCase() == 'a ')
+			t = t.substr(2) + ', A';
 		return t;
 	},
 
